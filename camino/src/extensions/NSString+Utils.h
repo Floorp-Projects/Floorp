@@ -52,6 +52,7 @@ typedef enum
 @interface NSString (ChimeraStringUtils)
 
 + (id)ellipsisString;
++ (id)escapedURLString:(NSString *)unescapedString;
 + (id)stringWithPRUnichars:(const PRUnichar*)inString;
 + (id)stringWith_nsAString:(const nsAString&)inString;
 - (void)assignTo_nsAString:(nsAString&)ioString;
@@ -60,6 +61,9 @@ typedef enum
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
 - (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;
 - (NSString *)stringByTrimmingWhitespace;
+-(NSString *)stringByRemovingAmpEscapes;
+-(NSString *)stringByAddingAmpEscapes;
+-(NSString *)stripWWW;
 
 // allocate a new unicode buffer with the contents of the current string. Caller
 // is responsible for freeing the buffer.

@@ -43,9 +43,13 @@
 #import "ChimeraUIConstants.h"
 #import "MainController.h"
 #import "BrowserWindowController.h"
-#import "BookmarksMenu.h"
-#import "BookmarksService.h"
-#import "BookmarkInfoController.h";
+#import "BookmarkMenu.h"
+#import "Bookmark.h"
+#import "BookmarkFolder.h"
+#import "BookmarkInfoController.h"
+#import "BookmarkManager.h"
+#import "BookmarkToolbar.h"
+#import "RunLoopMessenger.h"
 #import "CHBrowserService.h"
 #import "AboutBox.h"
 #import "UserDefaults.h"
@@ -54,6 +58,11 @@
 #import "ProgressDlgController.h"
 #import "JSConsole.h"
 #import "NetworkServices.h"
+#import "MVPreferencesController.h"
+#import "SplashScreenWindow.h"
+#import "FindDlgController.h"
+#import "PreferenceManager.h"
+#import "SharedMenusObj.h"
 
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
@@ -93,12 +102,9 @@ const int kReuseWindowOnAE = 2;
 // over to doing things the right way when the time comes.
 #define kFixedDockMenuAppKitVersion 632
 
-@interface MainController(MainControllerPrivate)
+@interface MainController(Private)<NetworkServicesClient>
 
 - (void)setupStartpage;
-- (void)setupNetworkBrowser;
-- (void)foundService:(NSNetService*)inService moreComing:(BOOL)more;
-- (void)rebuildNetServiceMenu;
 
 @end
 
@@ -142,7 +148,6 @@ const int kReuseWindowOnAE = 2;
     mMenuBookmarks = nil;
     
     [NSApp setServicesProvider:self];
-        
     // Initialize shared menu support
     mSharedMenusObj = [[SharedMenusObj alloc] init];
   }
@@ -169,10 +174,14 @@ const int kReuseWindowOnAE = 2;
 #ifdef _BUILD_STATIC_BIN
   [self updatePrebinding];
 #endif
-  
   // initialize if we haven't already.
-  [self preferenceManager];
-  
+  PreferenceManager *pm = [PreferenceManager sharedInstance];
+
+  // start bookmarks
+  RunLoopMessenger *mainThreadRunLoopMessenger = [[RunLoopMessenger alloc] init];
+  [NSThread detachNewThreadSelector:@selector(startBookmarksManager:) toTarget:[BookmarkManager class] withObject:mainThreadRunLoopMessenger];
+  [mainThreadRunLoopMessenger release]; //bookmark manager retains this
+
   [self setupStartpage];
 
   // register our app components with the embed layer
@@ -180,46 +189,15 @@ const int kReuseWindowOnAE = 2;
   const nsModuleComponentInfo* comps = GetAppComponents(&numComps);
   CHBrowserService::RegisterAppComponents(comps, numComps);
 
-  // make sure we have a bookmarks manager
-  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
-
   // don't open a new browser window if we already have one
   // (for example, from an GetURL Apple Event)
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
   if (!browserWindow)
     [self newWindow: self];
   
-  [mSplashScreen close];
+  [mSplashScreen close]; //deallocs on close
+  mSplashScreen = nil;
 
-  [mBookmarksMenu setAutoenablesItems: NO];
-
-  // menubar bookmarks
-  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-  mMenuBookmarks = [[BookmarksMenu alloc] initWithMenu: mBookmarksMenu
-                                             firstItem: firstBookmarkItem
-                                           rootContent: [bmManager getRootContent]
-                                         watchedFolder: eBookmarksFolderRoot];
-  [bmManager addBookmarksClient:mMenuBookmarks];
-
-  // dock bookmarks. Note that we disable them on 10.1 because of a bug noted here:
-  // http://developer.apple.com/samplecode/Sample_Code/Cocoa/DeskPictAppDockMenu.htm
-  if (NSAppKitVersionNumber >= kFixedDockMenuAppKitVersion)
-  {
-    [mDockMenu setAutoenablesItems:NO];
-    int firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-    mDockBookmarks = [[BookmarksMenu alloc] initWithMenu: mDockMenu
-                                              firstItem: firstBookmarkItem
-                                            rootContent: [bmManager getDockMenuRoot]
-                                          watchedFolder: eBookmarksFolderDockMenu];
-    [bmManager addBookmarksClient:mDockBookmarks];
-  }
-  else
-  {
-    // just empty the menu
-    while ([mDockMenu numberOfItems] > 0)
-      [mDockMenu removeItemAtIndex:0];
-  }
-  
   // Initialize offline mode.
   mOffline = NO;
   nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
@@ -228,27 +206,28 @@ const int kReuseWindowOnAE = 2;
   PRBool offline = PR_FALSE;
   ioService->GetOffline(&offline);
   mOffline = offline;
-    
+  
   // Initialize the keychain service.
   mKeychainService = [KeychainService instance];
   
   // bring up the JS console service
   BOOL success;
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
+  if ([pm getBooleanPref:"chimera.log_js_to_console" withSuccess:&success])
     [JSConsole sharedJSConsole];
 
   BOOL doingRendezvous = NO;
   
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success])
+  if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success])
   {
     // are we on 10.2.3 or higher? The DNS resolution stuff is broken before 10.2.3
     long systemVersion;
     OSErr err = ::Gestalt(gestaltSystemVersion, &systemVersion);
     if ((err == noErr) && (systemVersion >= 0x00001023))
     {
-      mNetworkServices = [[NetworkServices alloc] init];
-      [mNetworkServices registerClient:self];
-      [mNetworkServices startServices];
+      NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+      [nc addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
+      [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
+      [nc addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
       doingRendezvous = YES;
     }
   }
@@ -277,9 +256,10 @@ const int kReuseWindowOnAE = 2;
   NSLog(@"App will terminate notification");
 #endif
   
-  [mNetworkServices unregisterClient:self];
-  [mNetworkServices release];
-  
+  [NetworkServices shutdownNetworkServices];
+
+  [[BookmarkManager sharedBookmarkManager] shutdown];
+
   // Autosave one of the windows.
   [[[mApplication mainWindow] windowController] autosaveWindowFrame];
   
@@ -288,18 +268,10 @@ const int kReuseWindowOnAE = 2;
   
   // make sure the info window is closed
   [BookmarkInfoController closeBookmarkInfoController];
-  
-  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManagerDontAlloc];
-  if (bmManager)
-  {
-    [bmManager removeBookmarksClient:mMenuBookmarks];
-    [bmManager removeBookmarksClient:mDockBookmarks];
-  }
-  
+    
   // Release before calling TermEmbedding since we need to access XPCOM
   // to save preferences
   [mPreferencesController release];
-  [mPreferenceManager release];
   
   CHBrowserService::TermEmbedding();
   
@@ -339,6 +311,39 @@ const int kReuseWindowOnAE = 2;
   }
 }
 
+//
+// this gets called by bookmark load background thread, so it's a possible
+// point of contention.  but, it's only called once on startup, so probably
+// won't be a problem.
+//
+- (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager
+{
+  [mBookmarksMenu setAutoenablesItems: NO];
+
+  // menubar bookmarks
+  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+  mMenuBookmarks = [[BookmarkMenu alloc] initWithMenu: mBookmarksMenu
+                                               firstItem: firstBookmarkItem
+                                    rootBookmarkFolder: [BookmarkManager bookmarkMenuFolder]];
+
+  // dock bookmarks. Note that we disable them on 10.1 because of a bug noted here:
+  // http://developer.apple.com/samplecode/Sample_Code/Cocoa/DeskPictAppDockMenu.htm
+  if (NSAppKitVersionNumber >= kFixedDockMenuAppKitVersion)
+  {
+    [mDockMenu setAutoenablesItems:NO];
+    int firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+    mDockBookmarks = [[BookmarkMenu alloc] initWithMenu: mDockMenu
+                                                 firstItem: firstBookmarkItem
+                                      rootBookmarkFolder: [BookmarkManager dockMenuFolder]];
+  }
+  else
+  {
+    // just empty the menu
+    while ([mDockMenu numberOfItems] > 0)
+      [mDockMenu removeItemAtIndex:0];
+  }
+}
+
 
 -(IBAction)newWindow:(id)aSender
 {
@@ -349,7 +354,7 @@ const int kReuseWindowOnAE = 2;
     [[mainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
-  NSString* homePage = mStartURL ? mStartURL : [mPreferenceManager homePage:YES];
+  NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:YES];
   BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil];
 
   if ([homePage isEqualToString: @"about:blank"])
@@ -612,9 +617,9 @@ const int kReuseWindowOnAE = 2;
 
 - (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
 {
-  [mAddBookmarkMenuItem 							setEnabled:inBrowserWindowFrontmost];
-  [mCreateBookmarksFolderMenuItem 		setEnabled:inBrowserWindowFrontmost];
-  [mCreateBookmarksSeparatorMenuItem 	setEnabled:NO];		// separators are not implemented yet
+  [mAddBookmarkMenuItem setEnabled:inBrowserWindowFrontmost];
+  [mCreateBookmarksFolderMenuItem setEnabled:inBrowserWindowFrontmost];
+  [mCreateBookmarksSeparatorMenuItem setEnabled:YES];
 }
 
 - (NSView*)getSavePanelView
@@ -671,7 +676,7 @@ const int kReuseWindowOnAE = 2;
 - (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer: (NSString*)aReferrer
 {
   // make sure we're initted
-  [self preferenceManager];
+  [PreferenceManager sharedInstance];
   
   PRInt32 reuseWindow = 0;
   PRBool loadInBackground = PR_FALSE;
@@ -712,31 +717,7 @@ const int kReuseWindowOnAE = 2;
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender
 {
-  // IE favorites: ~/Library/Preferences/Explorer/Favorites.html
-  // Omniweb favorites: ~/Library/Application Support/Omniweb/Bookmarks.html
-  // For now, open the panel to IE's favorites.
-  NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-  [openPanel setCanChooseFiles: YES];
-  [openPanel setCanChooseDirectories: NO];
-  [openPanel setAllowsMultipleSelection: NO];
-  NSArray* array = [NSArray arrayWithObjects: @"htm",@"html",@"xml", nil];
-  int result = [openPanel runModalForDirectory: @"~/Library/Preferences/Explorer/"
-                                          file: @"Favorites.html"
-                                         types: array];
-  if (result == NSOKButton) {
-    NSArray* urlArray = [openPanel URLs];
-    if ([urlArray count] == 0)
-      return;
-    NSURL* url = [urlArray objectAtIndex: 0];
-
-    NSWindow* browserWindow = [self getFrontmostBrowserWindow];
-    if (!browserWindow) {
-      [self newWindow: self];
-      browserWindow = [mApplication mainWindow];
-    }
-    
-    [[browserWindow windowController] importBookmarks: [url absoluteString]];
-  }
+  [[BookmarkManager sharedBookmarkManager] startImportBookmarks];
 }
 
 -(IBAction) exportBookmarks:(id)aSender
@@ -748,10 +729,7 @@ const int kReuseWindowOnAE = 2;
   int saveResult = [savePanel runModalForDirectory:@"" file:@"Exported Bookmarks"];
   if (saveResult != NSFileHandlingPanelOKButton)
     return;
-
-  nsAutoString filePath;
-  [[savePanel filename] assignTo_nsAString:filePath];
-  BookmarksService::ExportBookmarksToHTML(filePath);
+  [[BookmarkManager sharedBookmarkManager] writeHTMLFile:[savePanel filename]];
 }
 
 -(IBAction) addBookmark:(id)aSender
@@ -778,11 +756,15 @@ const int kReuseWindowOnAE = 2;
   if ([aSender isMemberOfClass:[NSApplication class]])
     return;		// 10.1. Don't do anything.
 
-  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
-  BookmarkItem*     item = [bmManager getWrapperForID:[aSender tag]];
-
-  if ([item isGroup])
-  {
+  BookmarkItem*  item = [aSender representedObject];
+  BrowserWindowController* browserController;
+  if ([item isKindOfClass:[Bookmark class]]) {
+    browserController = [self getMainWindowBrowserController];
+    if (browserController)
+      [browserController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
+    else
+      [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil];
+  } else { // item is a group, no doubt. 
     NSWindow* browserWindow = [self getFrontmostBrowserWindow];
     if (browserWindow)
     {
@@ -794,20 +776,8 @@ const int kReuseWindowOnAE = 2;
       [self newWindow:self];
       browserWindow = [self getFrontmostBrowserWindow];
     }
-  
-    BrowserWindowController* browserController = (BrowserWindowController*)[browserWindow delegate];
-    
-    NSArray* uriList = [bmManager getBookmarkGroupURIs:item];
-    [browserController openTabGroup:uriList replaceExistingTabs:YES];
-  }
-  else
-  {
-    NSString* url = [item url];
-    BrowserWindowController* browserController = [self getMainWindowBrowserController];
-    if (browserController)
-      [browserController loadURL:url referrer:nil activate:YES];
-    else
-      [self openBrowserWindowWithURL:url andReferrer:nil];
+    browserController = (BrowserWindowController*)[browserWindow delegate];
+    [browserController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
   }
 
 }
@@ -830,13 +800,6 @@ const int kReuseWindowOnAE = 2;
     [[browserWindow windowController] manageBookmarks: aSender];
   else
     [[browserWindow windowController] manageHistory: aSender];
-}
-
-- (PreferenceManager *)preferenceManager
-{
-  if (!mPreferenceManager)
-    mPreferenceManager = [[PreferenceManager sharedInstance] retain];
-  return mPreferenceManager;
 }
 
 - (MVPreferencesController *)preferencesController
@@ -1004,7 +967,7 @@ const int kReuseWindowOnAE = 2;
   // out this menu.
   if (action == @selector(toggleBookmarksToolbar:)) {
     if (browserController) {
-      NSView* bookmarkToolbar = [browserController bookmarksToolbar];
+      NSView* bookmarkToolbar = [browserController bookmarkToolbar];
       if ( bookmarkToolbar ) {
         float height = [bookmarkToolbar frame].size.height;
         BOOL toolbarShowing = (height > 0);
@@ -1022,21 +985,10 @@ const int kReuseWindowOnAE = 2;
   }
 
   if (action == @selector(toggleSidebar:)) {
-      if (browserController) {
-          NSDrawer *sidebar = [browserController sidebarDrawer];
-          if (sidebar) {
-              int sidebarState = [sidebar state]; 
-              if (sidebarState == NSDrawerOpenState)
-                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"HideSidebarMenuItem",@"")];
-              else
-                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"ShowSidebarMenuItem",@"")];
-              return YES;
-          }
-          else
-              return NO;
-      }
-      else
-          return NO;
+    if (browserController)
+      return YES;
+    else
+      return NO;
   }
   
   if ( action == @selector(getInfo:) )
@@ -1103,10 +1055,10 @@ const int kReuseWindowOnAE = 2;
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (!browserController) return;
 
-  float height = [[browserController bookmarksToolbar] frame].size.height;
+  float height = [[browserController bookmarkToolbar] frame].size.height;
   BOOL showToolbar = (BOOL)(!(height > 0));
   
-  [[browserController bookmarksToolbar] showBookmarksToolbar: showToolbar];
+  [[browserController bookmarkToolbar] showBookmarksToolbar: showToolbar];
   
   // save prefs here
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
@@ -1262,26 +1214,30 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   return [[item1 objectForKey:@"protocol"] compare:[item2 objectForKey:@"protocol"] options:NSCaseInsensitiveSearch];
 }
 
-- (void)rebuildNetServiceMenu
+// NetworkServicesClient implementation
+
+- (void)availableServicesChanged:(NSNotification *)note
 {
   // rebuild the submenu, leaving the first item
   while ([mServersSubmenu numberOfItems] > 1)
     [mServersSubmenu removeItemAtIndex:[mServersSubmenu numberOfItems] - 1];
-  
-  NSEnumerator* keysEnumerator = [mNetworkServices serviceEnumerator];
+
+  NetworkServices *netserv = [note object];
+
+  NSEnumerator* keysEnumerator = [netserv serviceEnumerator];
   // build an array of dictionaries, so we can sort it
-  
+
   NSMutableArray* servicesArray = [[NSMutableArray alloc] initWithCapacity:10];
-  
+
   id key;
   while ((key = [keysEnumerator nextObject]))
   {
     NSDictionary* serviceDict = [NSDictionary dictionaryWithObjectsAndKeys:
-                                                           key, @"id",
-                 [mNetworkServices serviceName:[key intValue]], @"name",
-             [mNetworkServices serviceProtocol:[key intValue]], @"protocol",
-                                                                nil];
-    
+      key, @"id",
+      [netserv serviceName:[key intValue]], @"name",
+      [netserv serviceProtocol:[key intValue]], @"protocol",
+      nil];
+
     [servicesArray addObject:serviceDict];
   }
 
@@ -1302,7 +1258,8 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
     // sort on protocol, then name
     [servicesArray sortUsingFunction:SortByProtocolAndName context:NULL];
     
-    for (unsigned int i = 0; i < [servicesArray count]; i ++)
+    unsigned count = [servicesArray count];
+    for (unsigned int i = 0; i < count; i ++)
     {
       NSDictionary* serviceDict = [servicesArray objectAtIndex:i];
       NSString* itemName = [[serviceDict objectForKey:@"name"] stringByAppendingString:NSLocalizedString([serviceDict objectForKey:@"protocol"], @"")];
@@ -1312,40 +1269,40 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
       [newItem setTarget:self];
     }
   }
+  // when you alloc, you've got to release . . .
+  [servicesArray release];
 }
 
-// NetworkServicesClient implementation
-
-- (void)availableServicesChanged:(NetworkServices*)servicesProvider
+- (void)serviceResolved:(NSNotification *)note
 {
-  [self rebuildNetServiceMenu];
+  NSDictionary *dict = [note userInfo];
+  if ([dict objectForKey:NetworkServicesClientKey] == self)
+    [self openNewWindowOrTabWithURL:[dict objectForKey:NetworkServicesResolvedURLKey] andReferrer:nil];
 }
 
-- (void)serviceResolved:(int)serviceID withURL:(NSString*)url
+//
+// handles resolution failure for everybody else
+//
+- (void)serviceResolutionFailed:(NSNotification *)note
 {
-	[self openNewWindowOrTabWithURL:url andReferrer:nil];
-}
-
-- (void)serviceResolutionFailed:(int)serviceID
-{
-  NSString* serviceName = [mNetworkServices serviceName:serviceID];
-  
+  NSDictionary *dict = [note userInfo];
+  NSString* serviceName = [dict objectForKey:NetworkServicesServiceKey];
   NSBeginAlertSheet(NSLocalizedString(@"ServiceResolutionFailedTitle", @""),
-                                      @"",		// default button
-                                      nil,		// cancel buttton
-                                      nil,		// other button
-                                      [NSApp mainWindow],		// window
-                                      nil,		// delegate 
-                                      nil,		// end sel
-                                      nil,		// dismiss sel
-                                      NULL,		// context
-                                      [NSString stringWithFormat:NSLocalizedString(@"ServiceResolutionFailedMsgFormat", @""), serviceName]
-                                      );
+                    @"",               // default button
+                    nil,               // cancel buttton
+                    nil,               // other button
+                    [NSApp mainWindow],                // window
+                    nil,               // delegate
+                    nil,               // end sel
+                    nil,               // dismiss sel
+                    NULL,              // context
+                    [NSString stringWithFormat:NSLocalizedString(@"ServiceResolutionFailedMsgFormat", @""), serviceName]
+                    );
 }
 
 -(IBAction) connectToServer:(id)aSender
 {
-  [mNetworkServices attemptResolveService:[aSender tag]];
+  [[NetworkServices sharedNetworkServices] attemptResolveService:[aSender tag] forSender:self];
 }
 
 -(IBAction) aboutServers:(id)aSender

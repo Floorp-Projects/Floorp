@@ -81,7 +81,7 @@ AppDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_
   *_retval = nsnull;
   *persistant = PR_TRUE;
   
-  if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+  if (strcmp(prop, NS_APP_USER_PROFILE_50_DIR) == 0)
   {
     rv = GetProductDirectory(getter_AddRefs(localFile));
   }

@@ -40,6 +40,7 @@
 
 #import "RDFOutlineViewDataSource.h"
 #import "CHBrowserService.h"
+#import "ExtendedOutlineView.h"
 
 #include "nsCRT.h"
 #include "nsIRDFDataSource.h"
@@ -333,8 +334,12 @@
   
   // The table column's identifier is the last part of the RDF Resource URI of the property
   // being displayed in that column, e.g. "http://home.netscape.com/NC-rdf#Name"
+  // little hack inserted until history moves to new bookmark format
+  NSString *identifier = [aTableColumn identifier];
+  if ([identifier isEqualToString:@"title"])
+    identifier = [NSString stringWithString:@"Name"];
   NSString* columnPropertyURI = [NSString stringWithFormat:@"http://home.netscape.com/NC-rdf#%@",
-                                  [aTableColumn identifier]];
+                                  identifier];
   NSString* propString = [self getPropertyString:columnPropertyURI forItem:aItem];
 
   return [self createCellContents:propString withColumn:columnPropertyURI byItem:aItem];

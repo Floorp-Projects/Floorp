@@ -36,17 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
-#import "BrowserWindowController.h"
-#import "MVPreferencesController.h"
-#import "SplashScreenWindow.h"
-#import "FindDlgController.h"
-#import "PreferenceManager.h"
-#import "SharedMenusObj.h"
-#import "NetworkServices.h"
 
-@class BookmarksMenu;
+@class BookmarkMenu;
+@class BookmarkManager;
 @class KeychainService;
-@class NetworkServices;
+@class BrowserWindowController;
+@class SplashScreenWindow;
+@class SharedMenusObj;
+@class PreferenceManager;
+@class FindDlgController;
+@class MVPreferencesController;
 
 @interface MainController : NSObject 
 {
@@ -74,10 +73,8 @@
 
     SplashScreenWindow*   	mSplashScreen;
     
-    PreferenceManager*    	mPreferenceManager;
-
-    BookmarksMenu*          mMenuBookmarks;
-    BookmarksMenu*          mDockBookmarks;
+    BookmarkMenu*           mMenuBookmarks;
+    BookmarkMenu*           mDockBookmarks;
     
     KeychainService*        mKeychainService;
 
@@ -88,8 +85,6 @@
     NSString*               mStartURL;
     
     SharedMenusObj*         mSharedMenusObj;
-    NetworkServices*        mNetworkServices;
-    
     NSMutableDictionary*    mCharsets;
 }
 
@@ -161,9 +156,9 @@
 - (NSView*)getSavePanelView;
 - (NSWindow*)getFrontmostBrowserWindow;
 
+- (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager;
 - (MVPreferencesController *)preferencesController;
 - (void)displayPreferencesWindow:sender;
-- (PreferenceManager *)preferenceManager;
 - (BOOL)isMainWindowABrowserWindow;
 
 // if the main window is a browser window, return its controller, otherwise nil

@@ -293,7 +293,7 @@
   NSWindowController *windowController = [[[mTabViewItem view] window] windowController];
   if ([windowController isMemberOfClass:[BrowserWindowController class]])
   {
-    if (sender == [windowController proxyIconView])
+    if (sender == [(BrowserWindowController *)windowController proxyIconView])
       return NO;
   }
   
@@ -421,7 +421,7 @@
 {
   // set the tag of every menu item to the tab view item's tag,
   // so that the target of the menu commands know which one they apply to.
-  for (unsigned int i = 0; i < [aMenu numberOfItems]; i ++)
+  for (int i = 0; i < [aMenu numberOfItems]; i ++)
     [[aMenu itemAtIndex:i] setTag:[mTabViewItem tag]];
 
   [super setMenu:aMenu];

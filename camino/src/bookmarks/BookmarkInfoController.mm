@@ -24,17 +24,17 @@
 */
 
 #import "NSString+Utils.h"
-
 #import "BookmarkInfoController.h"
+#import "Bookmark.h"
+#import "BookmarkFolder.h"
 
-#include "nsIContent.h"
+// determined through weeks of trial and error
+#define kMaxLengthOfWindowTitle 49
 
 @interface BookmarkInfoController(Private)
 
-- (void)showUIElementPair: (id)aLabel control: (id) aControl;
-- (void)hideUIElementPair: (id)aLabel control: (id) aControl;
 - (void)commitChanges:(id)sender;
-- (BOOL)commitField:(id)textField toProperty:(nsIAtom*)propertyAtom;
+- (void)updateUI:(BookmarkItem *)anItem;
 
 @end;
 
@@ -48,7 +48,6 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   if (!sharedBookmarkInfoController) {
     sharedBookmarkInfoController = [[BookmarkInfoController alloc] initWithWindowNibName:@"BookmarkInfoPanel"];
   }
-  
   return sharedBookmarkInfoController;
 }
 
@@ -66,26 +65,31 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
     mFieldEditor = [[NSTextView alloc] init];
     [mFieldEditor setAllowsUndo:YES];
     [mFieldEditor setFieldEditor:YES];
-    
   }
   return self;
 }
 
-- (void)awakeFromNib
+- (void)windowDidLoad
 {
   // keep a ref so that we can remove and add to the its superview with impunity
-  [mNameField retain];
-  [mLocationField retain];
-  [mKeywordField retain];
-  [mDescriptionField retain];
-  [mNameLabel retain];
-  [mLocationLabel retain];
-  [mKeywordLabel retain];
-  [mDescriptionLabel retain];
-  [mDockMenuCheckbox retain];
+  [mFolderKeywordField retain];
+  [mFolderKeywordLabel retain];
   [mTabgroupCheckbox retain];
-  
-  [[BookmarksManager sharedBookmarksManager] addBookmarksClient:self];
+  // find the TabViewItems & retain them, too.  Like to do this
+  // in IB, but just doesn't want to connect.  So do it here.
+  int tabIndex = [mTabView indexOfTabViewItemWithIdentifier:@"bminfo"];
+  mBookmarkInfoTabView = [[mTabView tabViewItemAtIndex:tabIndex] retain];
+  tabIndex = [mTabView indexOfTabViewItemWithIdentifier:@"bmupdate"];
+  mBookmarkUpdateTabView = [[mTabView tabViewItemAtIndex:tabIndex] retain];
+  tabIndex = [mTabView indexOfTabViewItemWithIdentifier:@"folinfo"];
+  mFolderInfoTabView = [[mTabView tabViewItemAtIndex:tabIndex] retain];
+ // it would be nice to do this in IB, but I can't make it connect.
+  [mBookmarkInfoTabView setInitialFirstResponder:mBookmarkNameField];
+  [mFolderInfoTabView setInitialFirstResponder:mFolderNameField];
+  [mBookmarkUpdateTabView setInitialFirstResponder:mClearNumberVisitsButton];
+  // Generic notifications for Bookmark Client - only care if there's a deletion
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
 }
 
 -(void)dealloc
@@ -94,21 +98,16 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   if (self == sharedBookmarkInfoController)
     sharedBookmarkInfoController = nil;
 
-  [[BookmarksManager sharedBookmarksManagerDontAlloc] removeBookmarksClient:self];
-
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [mBookmarkItem release];
+  mBookmarkItem = nil;
   [mFieldEditor release];
-
-  [mNameField release];
-  [mLocationField release];
-  [mKeywordField release];
-  [mDescriptionField release];
-  [mNameLabel release];
-  [mLocationLabel release];
-  [mKeywordLabel release];
-  [mDescriptionLabel release];
-  [mDockMenuCheckbox release];
+  [mFolderKeywordField release];
+  [mFolderKeywordLabel release];
   [mTabgroupCheckbox release];
-  
+  [mBookmarkInfoTabView release];
+  [mBookmarkUpdateTabView release];
+  [mFolderInfoTabView release];
   [super dealloc];
 }
 
@@ -120,160 +119,221 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 
 -(void)windowDidBecomeKey:(NSNotification*) aNotification
 {
-  [[self window] makeFirstResponder:mNameField];
+  NSTabViewItem *tabViewItem = [mTabView selectedTabViewItem];
+  if (tabViewItem == mBookmarkInfoTabView)
+    [[self window] makeFirstResponder:mBookmarkNameField];
+  else if (tabViewItem == mFolderInfoTabView)
+    [[self window] makeFirstResponder:mFolderNameField];
+  else if (tabViewItem == mBookmarkUpdateTabView)
+    [[self window] makeFirstResponder:mClearNumberVisitsButton];
 }
 
 -(void)windowDidResignKey:(NSNotification*) aNotification
 {
   [[self window] makeFirstResponder:[self window]];
-	if (![[self window] isVisible])
-    mBookmarkItem = nil;
+  if (![[self window] isVisible])
+    [self setBookmark:nil];
 }
 
 - (void)windowWillClose:(NSNotification *)aNotification
 {
   [self commitChanges:nil];
-  mBookmarkItem = nil;
+  [self setBookmark:nil];
 }
 
 - (void)commitChanges:(id)changedField
 {
-  if (![mBookmarkItem contentNode])
-    return;
-
-  BOOL changed = NO;
-  // Name
-  if ((!changedField && [mNameField superview]) || changedField == mNameField)
-    changed |= [self commitField:mNameField toProperty:BookmarksService::gNameAtom];
-  
-  // Location
-  if ((!changedField && [mLocationField superview]) || changedField == mLocationField)
-    changed |= [self commitField:mLocationField toProperty:BookmarksService::gHrefAtom];
-
-  // Keyword
-  if ((!changedField && [mKeywordField superview]) || changedField == mKeywordField)
-    changed |= [self commitField:mKeywordField toProperty:BookmarksService::gKeywordAtom];
-
-  // Description
-  if ((!changedField && [mDescriptionField superview]) || changedField == mDescriptionField)
-    changed |= [self commitField:mDescriptionField toProperty:BookmarksService::gDescriptionAtom];
-
-  [[mFieldEditor undoManager] removeAllActions];
-  if (changed)
-    [mBookmarkItem itemChanged:YES];
-}
-
-// return YES if changed
-- (BOOL)commitField:(id)textField toProperty:(nsIAtom*)propertyAtom
-{
-  NSString* newValue = [textField stringValue];
-  NSString* oldValue = [mBookmarkItem getAttributeValue:propertyAtom];
-  
-  if (![newValue isEqualToString:oldValue])
-  {
-    [mBookmarkItem setAttribute:propertyAtom toValue:newValue];
-    return YES;
+  NSTabViewItem *tabViewItem = [mTabView selectedTabViewItem];
+  BOOL isBookmark;
+  if ((isBookmark = [mBookmarkItem isKindOfClass:[Bookmark class]])) {
+    if ([(Bookmark *)mBookmarkItem isSeparator] || ![[mBookmarkItem parent] isKindOfClass:[BookmarkItem class]])
+      return;
   }
-
-  return NO;
+  if (!changedField) {
+    if ((tabViewItem == mBookmarkInfoTabView) && isBookmark) {
+      [mBookmarkItem setTitle:[mBookmarkNameField stringValue]];
+      [mBookmarkItem setDescription:[mBookmarkDescField stringValue]];
+      [mBookmarkItem setKeyword:[mBookmarkKeywordField stringValue]];
+      [(Bookmark *)mBookmarkItem setUrl:[mBookmarkLocationField stringValue]];
+    }
+    else if (tabViewItem == mFolderInfoTabView && !isBookmark) {
+      [mBookmarkItem setTitle:[mFolderNameField stringValue]];
+      [mBookmarkItem setDescription:[mFolderDescField stringValue]];
+      if ([(BookmarkFolder *)mBookmarkItem isGroup])
+        [mBookmarkItem setKeyword:[mFolderKeywordField stringValue]];
+    }
+  }
+  else if ((changedField == mBookmarkNameField) || (changedField == mFolderNameField))
+    [mBookmarkItem setTitle:[changedField stringValue]];
+  else if ((changedField == mBookmarkKeywordField) || (changedField == mFolderKeywordField))
+    [mBookmarkItem setKeyword:[changedField stringValue]];
+  else if ((changedField == mBookmarkDescField) || (changedField == mFolderDescField))
+    [mBookmarkItem setDescription:[changedField stringValue]];
+  else if ((changedField == mBookmarkLocationField) && isBookmark)
+    [(Bookmark *)mBookmarkItem setUrl:[changedField stringValue]];
+    
+  [[mFieldEditor undoManager] removeAllActions];
 }
 
-- (IBAction)dockMenuCheckboxClicked:(id)sender
+// there's a bug on first load. I don't know why.  But this fixes it, so I'll leave it in.
+-(IBAction)showWindow:(id)sender
 {
-  if ([sender state] == NSOnState)
-    BookmarksService::SetDockMenuRoot([mBookmarkItem contentNode]);
-  else
-    BookmarksService::SetDockMenuRoot(NULL);
+  [self updateUI:mBookmarkItem];
+  [super showWindow:sender];
 }
 
 - (IBAction)tabGroupCheckboxClicked:(id)sender
 {
-  [mBookmarkItem setIsGroup:[sender state] == NSOnState];
-  [mBookmarkItem itemChanged:YES];
+  if ([mBookmarkItem isKindOfClass:[BookmarkFolder class]])
+    [(BookmarkFolder *)mBookmarkItem setIsGroup:[sender state] == NSOnState];
+}
+
+- (IBAction)dockMenuCheckboxClicked:(id)sender
+{
+  if ([mBookmarkItem isKindOfClass:[BookmarkFolder class]]) {
+    [(BookmarkFolder *)mBookmarkItem setIsDockMenu:([sender state] == NSOnState)];
+    [mDockMenuCheckbox setEnabled:NO];
+  }
+}
+
+- (IBAction)clearVisitCount:(id)sender
+{
+  if ([mBookmarkItem isKindOfClass:[Bookmark class]])
+    [(Bookmark *)mBookmarkItem setNumberOfVisits:0];
+  [mNumberVisitsField setIntValue:0];
 }
 
 -(void)setBookmark: (BookmarkItem*) aBookmark
 {
-  // See bug 154081 - don't show this window if Bookmark doesn't exist
-  // after fix - this should never happen unless disaster strikes.
-  if (![aBookmark contentNode])
-    return;
-
-  BOOL isGroup  = [aBookmark isGroup];
-  BOOL isFolder = !isGroup && [aBookmark isFolder];
-
-  // First, Show/Hide the appropriate UI
-  if (isGroup) 
-  {
-    [self showUIElementPair: mNameLabel        control: mNameField];
-    [self hideUIElementPair: mLocationLabel    control: mLocationField];
-    [self showUIElementPair: mKeywordLabel     control: mKeywordField];
-    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-
-    [mVariableFieldsContainer addSubview:mTabgroupCheckbox];
-    [mVariableFieldsContainer addSubview:mDockMenuCheckbox];
-    [mNameField        setNextKeyView:mTabgroupCheckbox];
-    [mTabgroupCheckbox setNextKeyView:mDockMenuCheckbox];
-    [mDockMenuCheckbox setNextKeyView:mKeywordField];
-    [mKeywordField     setNextKeyView:mDescriptionField];
-
-    [mTabgroupCheckbox setEnabled:![aBookmark isToobarRoot]];
+  // to avoid a hard-to-find bug, we do UI stuff before setting
+  if (aBookmark) {
+    [self updateUI:aBookmark];
+    [aBookmark retain];
   }
-  else if (isFolder)
-  {
-    [self showUIElementPair: mNameLabel        control: mNameField];
-    [self hideUIElementPair: mLocationLabel    control: mLocationField];
-    [self hideUIElementPair: mKeywordLabel     control: mKeywordField];
-    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
+  [mBookmarkItem release];
+  mBookmarkItem = aBookmark;
+}
 
-    [mVariableFieldsContainer addSubview:mDockMenuCheckbox];
-    [mVariableFieldsContainer addSubview:mTabgroupCheckbox];
-    [mNameField        setNextKeyView:mDockMenuCheckbox];
-    [mDockMenuCheckbox setNextKeyView:mTabgroupCheckbox];
-    [mTabgroupCheckbox setNextKeyView:mDescriptionField];
-    
-    [mTabgroupCheckbox setEnabled:![aBookmark isToobarRoot]];
+-(void)updateUI:(BookmarkItem *)aBookmark
+{
+  if (aBookmark) {
+    //
+    // setup for bookmarks
+    //
+    int numTabs = [mTabView numberOfTabViewItems];
+    if ([aBookmark isKindOfClass:[Bookmark class]]) {
+      if (numTabs == 1) {
+        [mTabView removeTabViewItem:mFolderInfoTabView];
+        [mTabView setTabViewType:NSTopTabsBezelBorder];
+        [mTabView insertTabViewItem:mBookmarkInfoTabView atIndex:0];
+        [mTabView insertTabViewItem:mBookmarkUpdateTabView atIndex:1];
+        [mTabView selectLastTabViewItem:self];//have to do this to avoid "2 selected tabs" ugliness
+        [mTabView selectFirstTabViewItem:self];
+      }
+      else if (numTabs == 3) {
+        [mTabView removeTabViewItem:mFolderInfoTabView];
+        [mTabView selectFirstTabViewItem:self];
+      }
+      [mBookmarkNameField setStringValue: [aBookmark title]];
+      [mBookmarkDescField setStringValue: [aBookmark description]];
+      [mBookmarkKeywordField setStringValue: [aBookmark keyword]];
+      [mBookmarkLocationField setStringValue: [(Bookmark *)aBookmark url]];
+      [mNumberVisitsField setIntValue:[(Bookmark *)aBookmark numberOfVisits]];
+      [mLastVisitField setStringValue: [[(Bookmark *)aBookmark lastVisit] descriptionWithCalendarFormat:[[mLastVisitField formatter] dateFormat] timeZone:[NSTimeZone localTimeZone] locale:nil]];
+      NSString *statusString = nil;
+      unsigned status = [(Bookmark *)aBookmark status];
+      switch (status) {
+        case (kBookmarkOKStatus):
+        case (kBookmarkSpacerStatus):
+          statusString = NSLocalizedString(@"OK",@"OK");
+          break;
+        case (kBookmarkBrokenLinkStatus):
+          statusString = NSLocalizedString(@"Link Broken",@"Link Broken");
+          break;
+        case (kBookmarkMovedLinkStatus):
+          statusString = NSLocalizedString(@"Link has Moved",@"Link has Moved");
+          break;
+        case (kBookmarkServerErrorStatus):
+          statusString = NSLocalizedString(@"Server Unreachable",@"Server Unreachable");
+          break;
+        case (kBookmarkNeverCheckStatus):
+          statusString = NSLocalizedString(@"Uncheckable",@"Uncheckable");
+          break;
+        default:
+          statusString = [NSString string];
+      }
+      [mStatusField setStringValue:statusString];
+      // if it's parent is a smart folder or it's a menu separator,
+      // we turn off all the fields.  if it isn't, then we turn them all on
+      id parent = [aBookmark parent];
+      if (([parent isKindOfClass:[BookmarkItem class]]) &&
+          (![parent isSmartFolder]) &&
+          (![(Bookmark *)aBookmark isSeparator]))
+      {
+        [mBookmarkNameField setEditable:YES];
+        [mBookmarkDescField setEditable:YES];
+        [mBookmarkKeywordField setEditable:YES];
+        [mBookmarkLocationField setEditable:YES];
+      } else
+      {
+        [mBookmarkNameField setEditable:NO];
+        [mBookmarkDescField setEditable:NO];
+        [mBookmarkKeywordField setEditable:NO];
+        [mBookmarkLocationField setEditable:NO];
+      }
+    }
+    //
+    // Folders
+    //
+    else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
+      if (numTabs == 2) {
+        [mTabView removeTabViewItem:mBookmarkInfoTabView];
+        [mTabView removeTabViewItem:mBookmarkUpdateTabView];
+        [mTabView insertTabViewItem:mFolderInfoTabView atIndex:0];
+        [mTabView setTabViewType:NSNoTabsNoBorder];
+      }
+      else if (numTabs == 3) {
+        [mTabView removeTabViewItem:mBookmarkInfoTabView];
+        [mTabView removeTabViewItem:mBookmarkUpdateTabView];
+        [mTabView setTabViewType:NSNoTabsNoBorder];
+      }
+      NSView *superview = [mFolderKeywordField superview];
+      if ([(BookmarkFolder *)aBookmark isGroup]) {
+        if (!superview) {
+          superview = [mFolderNameField superview];
+          [superview addSubview:mFolderKeywordField];
+          [superview addSubview:mFolderKeywordLabel];
+          [mFolderNameField setNextKeyView:mFolderKeywordField];
+        }
+        [mTabgroupCheckbox setState:NSOnState];
+      }
+      else {
+        if (superview) {
+          [mFolderKeywordField removeFromSuperview];
+          [mFolderKeywordLabel removeFromSuperview];
+          [mFolderNameField setNextKeyView:mFolderDescField];
+        }
+        [mTabgroupCheckbox setState:NSOffState];
+      }
+      [mFolderNameField setStringValue: [aBookmark title]];
+      [mFolderDescField setStringValue: [aBookmark description]];
+      //
+      // we can't just unselect dock menu - we have to pick a new one
+      //
+      if ([(BookmarkFolder *)aBookmark isDockMenu]) {
+        [mDockMenuCheckbox setState:NSOnState];
+        [mDockMenuCheckbox setEnabled:NO];
+      } else {
+        [mDockMenuCheckbox setState:NSOffState];
+        [mDockMenuCheckbox setEnabled:YES];
+      }
+    }
+    // Header
+    NSMutableString *truncatedTitle = [NSMutableString stringWithString:[aBookmark title]];
+    [truncatedTitle truncateTo:kMaxLengthOfWindowTitle at:kTruncateAtEnd];
+    NSString* infoForString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkInfoTitle", @"Info for "), truncatedTitle];
+    [[self window] setTitle: infoForString];
   }
-  else
-  {
-    [self showUIElementPair: mNameLabel        control: mNameField];
-    [self showUIElementPair: mLocationLabel    control: mLocationField];
-    [self showUIElementPair: mKeywordLabel     control: mKeywordField];
-    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-
-    [mDockMenuCheckbox removeFromSuperview];
-    [mTabgroupCheckbox removeFromSuperview];
-    [mNameField 			setNextKeyView:mLocationField];
-    [mLocationField 	setNextKeyView:mKeywordField];
-    [mKeywordField    setNextKeyView:mDescriptionField];
-  }
-  
-  // Then, fill with appropriate values from Bookmarks
-  NSString* bookmarkName = [aBookmark name];
-  NSString* infoForString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkInfoTitle", @"Info for "), bookmarkName];
-  [[self window] setTitle: infoForString];
-
-  if (isGroup)
-  {
-    [mDockMenuCheckbox setState:([aBookmark isDockMenuRoot] ? NSOnState : NSOffState)];
-    [mTabgroupCheckbox setState:NSOnState];
-    [mKeywordField setStringValue: [aBookmark keyword]];
-  }
-  else if (isFolder)
-  {
-    [mDockMenuCheckbox setState:([aBookmark isDockMenuRoot] ? NSOnState : NSOffState)];
-    [mTabgroupCheckbox setState:NSOffState];
-  }
-  else
-  {
-    [mKeywordField setStringValue: [aBookmark keyword]];
-    [mLocationField setStringValue: [aBookmark url]];
-  }
-  
-  [mNameField setStringValue: bookmarkName];
-  [mDescriptionField setStringValue: [aBookmark descriptionString]];
-  
-  mBookmarkItem = aBookmark;  
 }
 
 -(BookmarkItem *)bookmark
@@ -281,29 +341,6 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   return mBookmarkItem;
 }
 
--(void)showUIElementPair: (id)aLabel control:(id)aControl
-{
-  if ([aLabel superview] == nil)
-    [mVariableFieldsContainer addSubview: aLabel];
-
-  if ([aControl superview] == nil)
-    [mVariableFieldsContainer addSubview: aControl];
-    
-  // we need to resize the fields in case the user resized the window when they were hidden
-  NSRect containerBounds = [mVariableFieldsContainer bounds];
-  NSRect controlFrame    = [aControl frame];
-  controlFrame.size.width = (containerBounds.size.width - controlFrame.origin.x - 20.0);
-  [aControl setFrame:controlFrame];
-}
-
--(void)hideUIElementPair: (id)aLabel control:(id)aControl
-{
-  if ([aLabel superview] != nil)
-    [aLabel removeFromSuperview];
-
-  if ([aControl superview] != nil)
-    [aControl removeFromSuperview];
-}
 
 -(NSText *)windowWillReturnFieldEditor:(NSWindow *)aPanel toObject:(id)aObject
 {
@@ -312,21 +349,21 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 
 #pragma mark -
 
-- (void)bookmarkAdded:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
+- (void)bookmarkAdded:(NSNotification *)aNote
 {
 }
 
-- (void)bookmarkRemoved:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
+- (void)bookmarkRemoved:(NSNotification *)aNote
 {
-  if ([mBookmarkItem contentNode] == bookmark)
-    mBookmarkItem = nil;
+  NSDictionary *dict = [aNote userInfo];
+  BookmarkItem *item = [dict objectForKey:BookmarkFolderChildKey];
+  if ((item == [self bookmark]) && ![item parent]) {
+    [self setBookmark:nil];
+    [[self window] close];
+  }
 }
 
-- (void)bookmarkChanged:(nsIContent*)bookmark
-{
-}
-
-- (void)specialFolder:(EBookmarksFolderType)folderType changedTo:(nsIContent*)newFolderContent
+- (void)bookmarkChanged:(NSNotification *)aNote
 {
 }
 

@@ -28,7 +28,7 @@
 #include "nsIAutoCompleteResults.h"
 #include "nsIAutoCompleteListener.h"
 
-@class BookmarksOutlineView, PageProxyIcon;
+@class PageProxyIcon;
 
 @interface AutoCompleteTextField : NSTextField
 {

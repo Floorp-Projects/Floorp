@@ -45,9 +45,9 @@
 
 @protocol NetworkServicesClient
 
-- (void)availableServicesChanged:(NetworkServices*)servicesProvider;
-- (void)serviceResolved:(int)serviceID withURL:(NSString*)url;
-- (void)serviceResolutionFailed:(int)serviceID;
+- (void)availableServicesChanged:(NSNotification *)note;
+- (void)serviceResolved:(NSNotification *)note;
+- (void)serviceResolutionFailed:(NSNotification *)note;
 
 @end
 
@@ -60,22 +60,27 @@
     NSNetServiceBrowser*    mFtpBrowser;
 
     int                     mCurServiceID;      // unique ID for each service
-    NSMutableDictionary*    mNetworkServices;		// services keyed by ID
+    NSMutableDictionary*    mNetworkServices;  // services keyed by ID
     
-    NSMutableArray*         mClients;           // array of id<NetworkServicesClient>    
+    NSMutableDictionary*    mClients;           // dictionary of cliend id's for a request    
 }
 
++ (id)sharedNetworkServices;
++ (void)shutdownNetworkServices;
 - (void)startServices;
 - (void)stopServices;
-
-- (void)registerClient:(id<NetworkServicesClient>)client;
-- (void)unregisterClient:(id<NetworkServicesClient>)client;
-
-- (void)attemptResolveService:(int)serviceID;
+- (void)attemptResolveService:(int)serviceID forSender:(id)aSender;
 
 - (NSString*)serviceName:(int)serviceID;
 - (NSString*)serviceProtocol:(int)serviceID;
-
 - (NSEnumerator*)serviceEnumerator;
+
+// Notifications
+  extern NSString *NetworkServicesAvailableServicesChanged;
+  extern NSString *NetworkServicesResolutionSuccess;
+  extern NSString *NetworkServicesResolutionFailure;
+  extern NSString *NetworkServicesClientKey;
+  extern NSString *NetworkServicesResolvedURLKey;
+  extern NSString *NetworkServicesServiceKey;
 
 @end

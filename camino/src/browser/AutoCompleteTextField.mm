@@ -509,7 +509,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   if (url) {
     [self clearResults];
     NSTextView *fieldEditor = [self fieldEditor];
-    [[fieldEditor undoManager] removeAllActions];
+    [[fieldEditor undoManager] removeAllActionsWithTarget:self];
     [fieldEditor setString:url];
     [fieldEditor selectAll:self];
   }
@@ -679,7 +679,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void)controlTextDidEndEditing:(NSNotification *)aNote
 {
   [self clearResults];
-  [[[[aNote userInfo] objectForKey:@"NSFieldEditor"] undoManager] removeAllActions];
+  id fieldEditor = [[aNote userInfo] objectForKey:@"NSFieldEditor"];
+  [[fieldEditor undoManager] removeAllActionsWithTarget:fieldEditor];
 }
   
 - (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command

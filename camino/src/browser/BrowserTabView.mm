@@ -39,11 +39,14 @@
 
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
+#import "NSArray+Utils.h"
 
 #import "BrowserTabView.h"
-#import "BookmarksService.h"
 #import "BrowserWrapper.h"
 #import "BrowserWindowController.h"
+#import "BookmarkFolder.h"
+#import "Bookmark.h"
+#import "BookmarkToolbar.h"
 
 //////////////////////////
 //     NEEDS IMPLEMENTED : Implement drag tracking for moving tabs around.
@@ -228,7 +231,7 @@
     
     if (tabVisibilityChanged)
     {
-      [[[[self window] windowController] bookmarksToolbar] setDrawBottomBorder:!tabsVisible];
+      [[[[self window] windowController] bookmarkToolbar] setDrawBottomBorder:!tabsVisible];
 
       // tell the superview to resize its subviews
       [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
@@ -363,27 +366,30 @@ const float kTabsInvisibleTopGap  = -7.0;		// space removed to push tab content 
   
   if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
   {
-    NSArray* contentIds = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-    if (contentIds)
+    NSArray* draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+    if (draggedItems)
     {
-      BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
-      
-      // drag type is chimera bookmarks
-      for (unsigned int i = 0; i < [contentIds count]; ++i)
-      {
-        BookmarkItem* item = [bmManager getWrapperForNumber:[contentIds objectAtIndex:i]];
-        if ([item isGroup])
-        {
-          NSArray* groupURLs = [bmManager getBookmarkGroupURIs:item];
-          [[[self window] windowController] openTabGroup:groupURLs replaceExistingTabs:YES];
+      id aBookmark;
+      if ([draggedItems count] == 1) {
+        aBookmark = [draggedItems objectAtIndex:0];
+        if ([aBookmark isKindOfClass:[Bookmark class]])
+          return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[aBookmark url]];
+        else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
+          [[[self window] windowController] openTabGroup:[aBookmark childURLs] replaceExistingTabs:YES];
+          return YES;
         }
-        else
-        {
-          // handle multiple items?
-          return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[item url]];
+      } else if ([draggedItems count] > 1) {
+        NSMutableArray *urlArray = [NSMutableArray arrayWithCapacity:[draggedItems count]];
+        NSEnumerator *enumerator = [draggedItems objectEnumerator];
+        while ((aBookmark = [enumerator nextObject])) {
+          if ([aBookmark isKindOfClass:[Bookmark class]])
+            [urlArray addObject:[aBookmark url]];
+          else if ([aBookmark isKindOfClass:[BookmarkFolder class]])
+            [urlArray addObjectsFromArray:[aBookmark childURLs]];
         }
-
-      }	// for each item
+        [[[self window] windowController] openTabGroup:urlArray replaceExistingTabs:YES];
+        return YES;
+      }
     }
   }
   else if ([pasteBoardTypes containsObject: @"MozURLType"])

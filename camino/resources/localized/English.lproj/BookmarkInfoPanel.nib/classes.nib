@@ -1,25 +1,32 @@
 {
     IBClasses = (
         {
-            ACTIONS = {dockMenuCheckboxClicked = id; tabGroupCheckboxClicked = id; }; 
+            ACTIONS = {
+                clearVisitCount = id; 
+                dockMenuCheckboxClicked = id; 
+                tabGroupCheckboxClicked = id; 
+            }; 
             CLASS = BookmarkInfoController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mDescriptionField = NSTextField; 
-                mDescriptionLabel = NSTextField; 
+                mBookmarkDescField = NSTextField; 
+                mBookmarkKeywordField = NSTextField; 
+                mBookmarkLocationField = NSTextField; 
+                mBookmarkNameField = NSTextField; 
+                mClearNumberVisitsButton = NSButton; 
                 mDockMenuCheckbox = NSButton; 
-                mKeywordField = NSTextField; 
-                mKeywordLabel = NSTextField; 
-                mLocationField = NSTextField; 
-                mLocationLabel = NSTextField; 
-                mNameField = NSTextField; 
-                mNameLabel = NSTextField; 
+                mFolderDescField = NSTextField; 
+                mFolderKeywordField = NSTextField; 
+                mFolderKeywordLabel = NSTextField; 
+                mFolderNameField = NSTextField; 
+                mLastVisitField = NSTextField; 
+                mNumberVisitsField = NSTextField; 
+                mStatusField = NSTextField; 
+                mTabView = NSTabView; 
                 mTabgroupCheckbox = NSButton; 
-                mVariableFieldsContainer = NSView; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
-        {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
     ); 
     IBVersion = 1; 

@@ -36,15 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Foundation/Foundation.h>
 #import <Appkit/Appkit.h>
-#import "ExtendedOutlineView.h"
 
 class nsIRDFDataSource;
 class nsIRDFContainer;
 class nsIRDFContainerUtils;
 class nsIRDFResource;
 class nsIRDFService;
+@class ExtendedOutlineView;
 
 
 // RDF Resource Wrapper to make the Outline View happy

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Simon Fraser <sfraser@netscape.com>
+ *    David Haas   <haasd@cae.wisc.edu>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -51,6 +52,14 @@
 
 @class NSNetServiceBrowser;
 
+// client notifications
+NSString *NetworkServicesAvailableServicesChanged = @"netserv_asc";
+NSString *NetworkServicesResolutionSuccess = @"netserv_resok";
+NSString *NetworkServicesClientKey = @"netserv_clikey";
+NSString *NetworkServicesResolvedURLKey = @"netserv_urlkey";
+NSString *NetworkServicesResolutionFailure = @"netserv_resbad";
+NSString *NetworkServicesServiceKey = @"netserv_srvkey";
+
 
 @interface NetworkServices(Private)
 
@@ -59,25 +68,39 @@
 
 - (void)notifyClientsOfServicesChange;
 
-- (void)notifyClientsOfServiceResolution:(int)serviceID withURL:(NSString*)url;
-- (void)notifyClientsOfServiceResolutionFailure:(int)serviceID;
+- (void)notifyClientsOfServiceResolution:(NSNetService *)aService withURL:(NSString*)url;
+- (void)notifyClientsOfServiceResolutionFailure:(NSNetService *)aService;
 
 - (void)serviceAppeared:(NSNetService*)service;
 - (void)serviceDisappeared:(NSNetService*)service;
 - (void)serviceResolved:(NSNetService*)service;
 
-- (int)getServiceID:(NSNetService*)service;
-
 @end
 
 @implementation NetworkServices
+
+static NetworkServices* gNetworkServices = nil;
+
++(id)sharedNetworkServices
+{
+  if (!gNetworkServices)
+    gNetworkServices = [[NetworkServices alloc] init];
+  return gNetworkServices;
+}
+
++(void)shutdownNetworkServices
+{
+  [gNetworkServices release]; //this'll put the hammer on things
+}
 
 - (id)init
 {
   if ((self = [super init]))
   {
     mNetworkServices = [[NSMutableDictionary alloc] initWithCapacity:5];
+    mClients = [[NSMutableDictionary alloc] initWithCapacity:2];
     mCurServiceID = 0;
+    [self setupNetworkBrowsers];
   }
   
   return self;
@@ -88,6 +111,8 @@
   [self stopServices];
   [mNetworkServices release];
   [mClients release];
+  if (self == gNetworkServices)
+    gNetworkServices = nil;
   [super dealloc];
 }
 
@@ -120,20 +145,6 @@
   }
 }
 
-- (void)registerClient:(id<NetworkServicesClient>)client
-{
-  if (!mClients)
-    mClients = [[NSMutableArray alloc] initWithCapacity:2];
-
-  if ([mClients indexOfObject:client] == NSNotFound)
-    [mClients addObject:client];
-}
-
-- (void)unregisterClient:(id<NetworkServicesClient>)client
-{
-  [mClients removeObject:client];
-}
-
 - (NSString*)serviceName:(int)serviceID
 {
   NSNetService* service = [mNetworkServices objectForKey:[NSNumber numberWithInt:serviceID]];
@@ -150,11 +161,12 @@
   return [service type];
 }
 
-- (void)attemptResolveService:(int)serviceID
+- (void)attemptResolveService:(int)serviceID forSender:(id)aSender;
 {
-  NSNetService* service = [mNetworkServices objectForKey:[NSNumber numberWithInt:serviceID]];
+  NSNumber *serviceKey = [NSNumber numberWithInt:serviceID];
+  NSNetService* service = [mNetworkServices objectForKey:serviceKey];
   if (!service) return;
-  
+  [mClients setObject:aSender forKey:serviceKey];
   [service resolve];
 }
 
@@ -164,13 +176,6 @@
 }
 
 #pragma mark -
-
-- (int)getServiceID:(NSNetService*)service
-{
-  NSArray* serviceKeys = [mNetworkServices allKeysForObject:service];
-  // there should only ever be one key
-  return [[serviceKeys objectAtIndex:0] intValue];
-}
 
 - (void)setupNetworkBrowsers
 {
@@ -190,33 +195,27 @@
 
 - (void)notifyClientsOfServicesChange
 {
-  for (unsigned int i = 0; i < [mClients count]; i ++)
-  {
-    id<NetworkServicesClient> client = [mClients objectAtIndex:i];
-    [client availableServicesChanged:self];
-  }
+  NSNotification *note = [NSNotification notificationWithName:NetworkServicesAvailableServicesChanged object:self userInfo:nil];
+  NSNotificationQueue *nc = [NSNotificationQueue defaultQueue];
+  [nc enqueueNotification:note postingStyle:NSPostWhenIdle coalesceMask:NSNotificationCoalescingOnName forModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
 }
 
-- (void)notifyClientsOfServiceResolution:(int)serviceID withURL:(NSString*)url
+- (void)notifyClientsOfServiceResolution:(NSNetService *)aService withURL:(NSString*)url
 {
-  // ldeally we'd keep track of which client issued the attemptResolveService
-  // request, and only give it the callback. But we don't do that yet.
-  for (unsigned int i = 0; i < [mClients count]; i ++)
-  {
-    id<NetworkServicesClient> client = [mClients objectAtIndex:i];
-    [client serviceResolved:serviceID withURL:url];
-  }
+  NSNumber *serviceKey = [[mNetworkServices allKeysForObject:aService] objectAtIndex:0];
+  id aClient = [mClients objectForKey:serviceKey];
+  NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:aClient,NetworkServicesClientKey,url,NetworkServicesResolvedURLKey,[aService name],NetworkServicesServiceKey,nil];
+  [[NSNotificationCenter defaultCenter] postNotificationName:NetworkServicesResolutionSuccess object:self userInfo:userInfo];
+  [mClients removeObjectForKey:aService];
 }
 
-- (void)notifyClientsOfServiceResolutionFailure:(int)serviceID
+- (void)notifyClientsOfServiceResolutionFailure:(NSNetService *)aService
 {
-  // ldeally we'd keep track of which client issued the attemptResolveService
-  // request, and only give it the callback. But we don't do that yet.
-  for (unsigned int i = 0; i < [mClients count]; i ++)
-  {
-    id<NetworkServicesClient> client = [mClients objectAtIndex:i];
-    [client serviceResolutionFailed:serviceID];
-  }
+  NSNumber *serviceKey = [[mNetworkServices allKeysForObject:aService] objectAtIndex:0];
+  id aClient = [mClients objectForKey:serviceKey];
+  NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:aClient, NetworkServicesClientKey, [aService name],NetworkServicesServiceKey,nil];
+  [[NSNotificationCenter defaultCenter] postNotificationName:NetworkServicesResolutionFailure object:self userInfo:userInfo];
+  [mClients removeObjectForKey:aService];
 }
 
 - (void)serviceAppeared:(NSNetService*)service
@@ -365,7 +364,7 @@ static inline u_int ns_get16(u_char* buffer)
           else
             urlString = [NSString stringWithFormat:@"%s//%s:%u%s", protocol, escapedTarget, port, pathBuffer];
 
-          [self notifyClientsOfServiceResolution:[self getServiceID:netService] withURL:urlString];
+          [self notifyClientsOfServiceResolution:netService withURL:urlString];
           return;
         }
       }
@@ -373,7 +372,7 @@ static inline u_int ns_get16(u_char* buffer)
   }
 
   // only get here on failure
-  [self notifyClientsOfServiceResolutionFailure:[self getServiceID:netService]];
+  [self notifyClientsOfServiceResolutionFailure:netService];
 }
 
 - (void)netServiceDidResolveAddress:(NSNetService *)netService
@@ -385,7 +384,7 @@ static inline u_int ns_get16(u_char* buffer)
 
 - (void)netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict
 {
-  [self notifyClientsOfServiceResolutionFailure:[self getServiceID:sender]];
+  [self notifyClientsOfServiceResolutionFailure:sender];
   // now clear out the state of the service
   [sender stop];
 }
@@ -401,8 +400,7 @@ static inline u_int ns_get16(u_char* buffer)
 {
   [self serviceAppeared:aNetService];
   [aNetService setDelegate:self];
-  
-  // rebuild the menu
+  // trigger notification
   if (!moreComing)
     [self notifyClientsOfServicesChange];
 }

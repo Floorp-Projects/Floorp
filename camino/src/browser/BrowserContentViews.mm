@@ -38,7 +38,7 @@
 
 #import "BrowserContentViews.h"
 
-#import "BookmarksToolbar.h"
+#import "BookmarkToolbar.h"
 #import "BrowserTabView.h"
 
 
@@ -65,7 +65,7 @@
  |  _________________________________________________________________
     | BrowserContentView                                            |
     | ____________________________________________________________  |
-    | | BookmarksToolbar                                          | |
+    | | BookmarkToolbar                                          | |
     | |___________________________________________________________| |
     |                                                               |
     | ____________________________________________________________  |

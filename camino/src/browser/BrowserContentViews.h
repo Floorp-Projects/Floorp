@@ -38,12 +38,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class BookmarksToolbar;
+@class BookmarkToolbar;
 @class BrowserTabView;
 
 @interface BrowserContentView : NSView
 {
-  IBOutlet BookmarksToolbar *mBookmarksToolbar;
+  IBOutlet BookmarkToolbar *mBookmarksToolbar;
   IBOutlet NSView           *mBrowserContainerView;   // manages tabs and web content
   IBOutlet NSView           *mBookmarkManagerView;    // swapped in and out by activating bm manager, replacing browser container
   IBOutlet NSView           *mStatusBar;

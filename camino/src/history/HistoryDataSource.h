@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Foundation/Foundation.h>
-
 #import "RDFOutlineViewDataSource.h"
 
 class nsAString;

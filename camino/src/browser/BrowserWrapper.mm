@@ -40,7 +40,7 @@
 #import "PreferenceManager.h"
 #import "BrowserWrapper.h"
 #import "BrowserWindowController.h"
-#import "BookmarksService.h"
+#import "BookmarksClient.h"
 #import "SiteIconProvider.h"
 #import "BrowserTabViewItem.h"
 #import "ToolTip.h"
@@ -92,7 +92,6 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 {
   mTabItem = aTab;
   mWindow = aWindow;
-  mIsBookmarksImport = NO;
   return [self initWithFrame: NSZeroRect];
 }
 
@@ -388,26 +387,17 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   mProgress = 1.0;
   mIsBusy = NO;
 
-  // need to check succeeded here because for a charset-induced reload,
-  // this can get called initially with a failure code.
-  if (mIsBookmarksImport && succeeded)
-  {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([mBrowserView getWebBrowser]);
-    webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow)
-    {
-      nsCOMPtr<nsIDOMDocument> domDocument;
-      domWindow->GetDocument(getter_AddRefs(domDocument));
-      if (domDocument)
-        BookmarksService::ImportBookmarks(domDocument);
-    }
-    [self windowClosed];
-    [self removeFromSuperview];
-  }
-
   if (mWindowController)
     [mWindowController loadingDone];
+  // send a little love to the bookmarks
+  NSString *urlString = nil;
+  NSString *titleString = nil;
+  [self getTitle:&titleString andHref:&urlString];
+  NSDictionary *userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:0] forKey:URLLoadSuccessKey];
+  if (urlString && ![urlString isEqualToString:@"about:blank"]) {
+    NSNotification *note = [NSNotification notificationWithName:URLLoadNotification object:urlString userInfo:userInfo];
+    [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
+  }
 }
 
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes 
@@ -438,7 +428,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     // if the favicon uri has changed, fire off favicon load. When it completes, our
     // imageLoadedNotification selector gets called.
     if (![faviconURI isEqualToString:mSiteIconURI])
-      siteIconLoadInitiated = [faviconProvider loadFavoriteIcon:self forURI:urlSpec withUserData:nil allowNetwork:YES];
+      siteIconLoadInitiated = [faviconProvider loadFavoriteIcon:self forURI:urlSpec allowNetwork:YES];
   }
   else
   {
@@ -675,11 +665,6 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     *outTitle = [NSString stringWithString:*outHrefString];
 }
 
--(void)setIsBookmarksImport:(BOOL)aIsImport
-{
-  mIsBookmarksImport = aIsImport;
-}
-
 - (void)offlineModeChanged: (NSNotification*)aNotification
 {
     nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
@@ -827,10 +812,6 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     if (resetTabIcon || ![tabItem tabIcon])
       [tabItem setTabIcon:mSiteIconImage isDraggable:tabIconDraggable];
   }
-  
-  // make sure any bookmark items that use this favicon uri are updated
-  if (inSiteIcon)
-    [[BookmarksManager sharedBookmarksManager] updateProxyImage:inSiteIcon forSiteIcon:inSiteIconURI];
 }
 
 - (void)registerNotificationListener

@@ -38,14 +38,12 @@
 #import <Cocoa/Cocoa.h>
 #import "BrowserWrapper.h"
 #import "Find.h"
-#import "BookmarksToolbar.h"
 
 class nsIURIFixup;
 class nsIBrowserHistory;
 class nsIDOMEvent;
 class nsIDOMNode;
 
-@class BookmarksController;
 
 //
 // ThrobberHandler
@@ -87,7 +85,8 @@ typedef enum
   
 } ENewTabContents;
 
-@class BookmarksDataSource;
+@class BookmarkViewController;
+@class BookmarkToolbar;
 @class HistoryDataSource;
 @class BrowserTabView;
 @class PageProxyIcon;
@@ -99,9 +98,6 @@ typedef enum
 @interface BrowserWindowController : NSWindowController<Find>
 {
   IBOutlet BrowserTabView*    mTabBrowser;
-  IBOutlet NSDrawer*          mSidebarDrawer;
-  IBOutlet NSTabView*         mSidebarTabView;
-  IBOutlet NSTabView*         mSidebarSourceTabView;
   IBOutlet NSView*            mLocationToolbarView;
   IBOutlet AutoCompleteTextField* mURLBar;
   IBOutlet NSTextField*       mStatus;
@@ -114,12 +110,9 @@ typedef enum
   IBOutlet PageProxyIcon*     mProxyIcon;
   IBOutlet BrowserContentView*  mContentView;
   
-  IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
+  IBOutlet BookmarkViewController* mBookmarkViewController;
+  IBOutlet BookmarkToolbar*    mPersonalToolbar;
   IBOutlet HistoryDataSource*   mHistoryDataSource;
-  IBOutlet BookmarksController* mBookmarksController;
-
-  IBOutlet BookmarksToolbar*    mPersonalToolbar;
-
   IBOutlet NSWindow*            mAddBookmarkSheetWindow;
   IBOutlet NSTextField*         mAddBookmarkTitleField;
   IBOutlet NSPopUpButton*       mAddBookmarkFolderField;
@@ -158,10 +151,6 @@ typedef enum
   BOOL mShouldAutosave;
   BOOL mShouldLoadHomePage;
 
-  BOOL mDrawerCachedFrame;
-  NSRect mCachedFrameBeforeDrawerOpen; // This is used by the drawer to figure out if the window should
-                                       // be returned to its original position when the drawer closes.
-  NSRect mCachedFrameAfterDrawerOpen;
 
   unsigned int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
 
@@ -171,7 +160,7 @@ typedef enum
   nsIDOMNode* mContextMenuNode;
 
   // Cached bookmark ds used when adding through a sheet
-  BookmarksDataSource* mCachedBMDS;
+  BookmarkViewController* mCachedBMVC;
 
   // Throbber state variables.
   ThrobberHandler* mThrobberHandler;
@@ -229,7 +218,7 @@ typedef enum
 
 - (IBAction)cancelAddBookmarkSheet:(id)sender;
 - (IBAction)endAddBookmarkSheet:(id)sender;
-- (void)cacheBookmarkDS:(BookmarksDataSource*)aDS;
+- (void)cacheBookmarkVC:(BookmarkViewController *)aDS;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize;
 
@@ -259,7 +248,6 @@ typedef enum
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 - (IBAction)manageBookmarks: (id)aSender;
 - (IBAction)manageHistory: (id)aSender;
-- (void)importBookmarks: (NSString*)aURLSpec;
 - (IBAction)toggleSidebar:(id)aSender;
 - (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection;
 
@@ -290,7 +278,7 @@ typedef enum
 - (IBAction)frameToThisWindow:(id)sender;
 
 - (void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
-- (void)openNewWindowWithGroup: (nsIContent*)aFolderContent loadInBackground: (BOOL)aLoadInBG;
+- (void)openNewWindowWithGroupURLs: (NSArray *)urlArray loadInBackground: (BOOL)aLoadInBG;
 - (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
 
 - (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting;
@@ -334,7 +322,7 @@ typedef enum
 - (IBAction)copyImage:(id)sender;
 - (IBAction)copyImageLocation:(id)sender;
 
-- (BookmarksToolbar*) bookmarksToolbar;
+- (BookmarkToolbar*) bookmarkToolbar;
 
 - (NSProgressIndicator*) progressIndicator;
 - (void) showProgressIndicator;
@@ -357,14 +345,11 @@ typedef enum
 // cache the toolbar defaults we parse from a plist
 + (NSArray*) toolbarDefaults;
 
-// Accessor to get the sidebar drawer
-- (NSDrawer *)sidebarDrawer;
-
 // Accessor to get the proxy icon view
 - (PageProxyIcon *)proxyIconView;
 
 // Accessor for the bm data source
-- (BookmarksDataSource*)bookmarksDataSource;
+- (BookmarkViewController *)bookmarkViewController;
 
 - (void)toggleBookmarkManager:(id)sender;
 - (void)ensureBrowserVisible:(id)sender;

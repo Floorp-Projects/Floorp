@@ -40,19 +40,22 @@
 #import "BrowserWindowController.h"
 #import "BrowserWindow.h"
 
+#import "BookmarkToolbar.h"
+#import "BookmarkViewController.h"
+#import "BookmarkManager.h"
+
 #import "BrowserContentViews.h"
 #import "BrowserWrapper.h"
 #import "PreferenceManager.h"
-#import "BookmarksDataSource.h"
 #import "HistoryDataSource.h"
 #import "BrowserTabView.h"
 #import "UserDefaults.h"
 #import "PageProxyIcon.h"
 #import "AutoCompleteTextField.h"
-#import "BookmarksController.h"
 #import "SearchTextField.h"
 #import "SearchTextFieldCell.h"
 #import "STFPopUpButtonCell.h"
+#import "MainController.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMDocument.h"
@@ -121,6 +124,7 @@ static NSArray* sToolbarDefaults = nil;
 @interface AutoCompleteTextFieldEditor : NSTextView
 {
   NSFont* mDefaultFont;	// will be needed if editing empty field
+  NSUndoManager *mUndoManager; //we handle our own undo to avoid stomping on bookmark undo
 }
 - (id)initWithFrame:(NSRect)bounds defaultFont:(NSFont*)defaultFont;
 @end
@@ -132,8 +136,16 @@ static NSArray* sToolbarDefaults = nil;
 {
   if ((self = [super initWithFrame:bounds])) {
     mDefaultFont = defaultFont;
+    mUndoManager = [[NSUndoManager alloc] init];
+    [self setDelegate:self];
   }
   return self;
+}
+
+-(void) dealloc
+{
+  [mUndoManager release];
+  [super dealloc];
 }
 
 -(void)paste:(id)sender
@@ -158,6 +170,13 @@ static NSArray* sToolbarDefaults = nil;
       return;
     }
   }
+}
+
+- (NSUndoManager *)undoManagerForTextView:(NSTextView *)aTextView
+{
+  if (aTextView == self)
+    return mUndoManager;
+  return nil;
 }
 
 @end
@@ -344,8 +363,6 @@ static NSArray* sToolbarDefaults = nil;
 #if DEBUG
   NSLog(@"Window will close notification.");
 #endif
-  [mSidebarBookmarksDataSource windowClosing];
-
   [self autosaveWindowFrame];
   
   { // scope...
@@ -511,8 +528,6 @@ static NSArray* sToolbarDefaults = nil;
       mustResizeChrome = YES;
     
     mInitialized = YES;
-
-    mDrawerCachedFrame = NO;
         
     [[self window] setAcceptsMouseMovedEvents: YES];
     
@@ -542,11 +557,6 @@ static NSArray* sToolbarDefaults = nil;
       mPendingURL = mPendingReferrer = nil;
     }
     
-#if USE_DRAWER_FOR_BOOKMARKS
-    [mSidebarDrawer setDelegate: self];
-    [self setupSidebarTabs];
-#endif
-
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR) ) {
       // remove the personal toolbar and adjust the content area upwards. Removing it
       // from the parent view releases it, so we have to clear out the member var.
@@ -557,7 +567,7 @@ static NSArray* sToolbarDefaults = nil;
     }
     else
     {
-      [mPersonalToolbar initializeToolbar];
+      [mPersonalToolbar buildButtonList];
     
       if (![self shouldShowBookmarkToolbar])
         [mPersonalToolbar showBookmarksToolbar:NO];
@@ -590,7 +600,7 @@ static NSArray* sToolbarDefaults = nil;
     }
     
     // let the in-window bookmark controller finish up some initialization
-    [mBookmarksController windowDidLoad];
+    [mBookmarkViewController windowDidLoad];
 }
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
@@ -604,7 +614,7 @@ static NSArray* sToolbarDefaults = nil;
 #if 0
 - (void)drawerWillOpen: (NSNotification*)aNotification
 {
-  [mSidebarBookmarksDataSource ensureBookmarks];
+  [mBookmarkViewController ensureBookmarks];
 
   if ([[[mSidebarTabView selectedTabViewItem] identifier] isEqual:@"historySidebarCHIconTabViewItem"]) {
     [mHistoryDataSource ensureDataSourceLoaded];
@@ -1100,19 +1110,19 @@ static NSArray* sToolbarDefaults = nil;
 {
   [mAddBookmarkSheetWindow orderOut:self];
   [NSApp endSheet:mAddBookmarkSheetWindow returnCode:0];
-  [mCachedBMDS endAddBookmark: 0];
+  [mCachedBMVC endAddBookmark: 0];
 }
 
 -(IBAction)endAddBookmarkSheet:(id)sender
 {
   [mAddBookmarkSheetWindow orderOut:self];
   [NSApp endSheet:mAddBookmarkSheetWindow returnCode:0];
-  [mCachedBMDS endAddBookmark: 1];
+  [mCachedBMVC endAddBookmark: 1];
 }
 
-- (void)cacheBookmarkDS:(BookmarksDataSource*)aDS
+- (void)cacheBookmarkVC:(BookmarkViewController *)aVC
 {
-  mCachedBMDS = aDS;
+  mCachedBMVC = aVC;
 }
 
 -(IBAction)manageBookmarks: (id)aSender
@@ -1120,7 +1130,7 @@ static NSArray* sToolbarDefaults = nil;
   if ( ![mContentView isBookmarkManagerVisible] )
     [self toggleBookmarkManager: self];
 
-  [mBookmarksController selectContainer:kBookmarksMenuContainer];
+  [mBookmarkViewController selectContainer:kBookmarkMenuContainerIndex];
 }
 
 -(IBAction)manageHistory: (id)aSender
@@ -1128,20 +1138,7 @@ static NSArray* sToolbarDefaults = nil;
   if ( ![mContentView isBookmarkManagerVisible] )
     [self toggleBookmarkManager: self];
 
-  [mBookmarksController selectContainer:kHistoryContainer];
-}
-
-- (void)importBookmarks: (NSString*)aURLSpec
-{
-  // Open the bookmarks sidebar.
-  [self manageBookmarks: self];
-
-  // Now do the importing.
-  BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: nil andWindow: [self window]] autorelease];
-  [newView setFrame: NSZeroRect];
-  [newView setIsBookmarksImport: YES];
-  [[[self window] contentView] addSubview: newView];
-  [newView loadURI:aURLSpec referrer: nil flags:NSLoadFlagsNone activate:NO];
+  [mBookmarkViewController selectContainer:kHistoryContainerIndex];
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
@@ -1150,7 +1147,7 @@ static NSArray* sToolbarDefaults = nil;
   NSString *theURL = [[sender stringValue] stringByTrimmingWhitespace];
   
   // look for bookmarks keywords match
-  NSArray *resolvedURLs = [[BookmarksManager sharedBookmarksManager] resolveBookmarksKeyword:theURL];
+  NSArray *resolvedURLs = [[BookmarkManager sharedBookmarkManager] resolveBookmarksKeyword:theURL];
 
   NSString* resolvedURL = nil;
   if ([resolvedURLs count] == 1)
@@ -1466,14 +1463,13 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
-  [mSidebarBookmarksDataSource ensureBookmarks];
+  [mBookmarkViewController ensureBookmarks];
   BOOL useSel = aIsFromMenu;
   if (aIsFromMenu) {
     // Use selection only if the sidebar is open and the bookmarks panel is displaying.
     useSel = [self bookmarksAreVisible:NO];
   }
-  
-  [mSidebarBookmarksDataSource addBookmark: self useSelection: useSel isFolder: aIsFolder URL:aURL title:aTitle];
+  [mBookmarkViewController addItem: self useSelection: useSel isFolder: aIsFolder URL:aURL title:aTitle];
 }
 
 - (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection
@@ -1481,7 +1477,7 @@ static NSArray* sToolbarDefaults = nil;
   BOOL bookmarksShowing = [mContentView isBookmarkManagerVisible];
             
   if (inRequireSelection)
-    bookmarksShowing &= ([mSidebarBookmarksDataSource haveSelectedRow]);
+    bookmarksShowing &= ([mBookmarkViewController haveSelectedRow]);
   
   return bookmarksShowing;
 }
@@ -1849,21 +1845,6 @@ static NSArray* sToolbarDefaults = nil;
   }
 }
 
-- (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
-{
-  // we'll get called for browser tab views as well. ignore any calls coming from
-  // there, we're only interested in the sidebar.
-  if (tabView != mSidebarTabView)
-    return;
-
-  if ([[tabViewItem identifier] isEqual:@"historySidebarCHIconTabViewItem"]) {
-    [mHistoryDataSource ensureDataSourceLoaded];
-    [mHistoryDataSource enableObserver];
-  }
-  else
-    [mHistoryDataSource disableObserver];
-}
-
 - (void)tabView:(NSTabView *)aTabView didSelectTabViewItem:(NSTabViewItem *)aTabViewItem
 {
   // we'll get called for the sidebar tabs as well. ignore any calls coming from
@@ -1922,7 +1903,7 @@ static NSArray* sToolbarDefaults = nil;
     [browser showWindow:self];
 }
 
-- (void)openNewWindowWithGroup: (nsIContent*)aFolderContent loadInBackground: (BOOL)aLoadInBG
+- (void)openNewWindowWithGroupURLs: (NSArray *)urlArray loadInBackground: (BOOL)aLoadInBG
 {
   // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
   [self autosaveWindowFrame];
@@ -1938,12 +1919,7 @@ static NSArray* sToolbarDefaults = nil;
   }
   else
     [browser showWindow:self];
-
-  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
-  BookmarkItem*     item			= [bmManager getWrapperForContent:aFolderContent];
-
-  NSArray* groupURLs = [bmManager getBookmarkGroupURIs:item];
-	[browser openTabGroup:groupURLs replaceExistingTabs:YES];
+  [browser openTabGroup:urlArray replaceExistingTabs:YES];
 }
 
 -(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
@@ -2103,8 +2079,8 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)getInfo:(id)sender
 {
-  [mSidebarBookmarksDataSource ensureBookmarks];
-  [mSidebarBookmarksDataSource showBookmarkInfo:sender];
+  [mBookmarkViewController ensureBookmarks];
+  [mBookmarkViewController showBookmarkInfo:sender];
 }
 
 - (BOOL)canGetInfo
@@ -2343,7 +2319,7 @@ static NSArray* sToolbarDefaults = nil;
   }  
 }
 
-- (BookmarksToolbar*) bookmarksToolbar
+- (BookmarkToolbar*) bookmarkToolbar
 {
   return mPersonalToolbar;
 }
@@ -2553,19 +2529,15 @@ static NSArray* sToolbarDefaults = nil;
     [[mBrowserView getBrowserView] setActive:newResponderIsGecko];
 }
 
-- (NSDrawer *)sidebarDrawer
-{
-    return mSidebarDrawer;
-}
 
 - (PageProxyIcon *)proxyIconView
 {
   return mProxyIcon;
 }
 
-- (BookmarksDataSource*)bookmarksDataSource
+- (BookmarkViewController *)bookmarkViewController
 {
-  return mSidebarBookmarksDataSource;
+  return mBookmarkViewController;
 }
 
 - (id)windowWillReturnFieldEditor:(NSWindow *)aWindow toObject:(id)anObject
@@ -2582,6 +2554,10 @@ static NSArray* sToolbarDefaults = nil;
   return nil;
 }
 
+- (NSUndoManager *)windowWillReturnUndoManager:(NSWindow *)sender
+{
+  return [[BookmarkManager sharedBookmarkManager] undoManager];
+}
 
 - (IBAction)reloadWithNewCharset:(NSString*)charset
 {
@@ -2618,10 +2594,10 @@ static NSArray* sToolbarDefaults = nil;
     // cancel all pending loads. safari does this, i think we should too
     [self stopAllPendingLoads];
     
-    [mBookmarksController selectLastContainer];
+    [mBookmarkViewController selectLastContainer];
 
     // set focus to appropriate area of bm manager
-    [mBookmarksController focus];
+    [mBookmarkViewController focus];
   }
   else {
     CHBrowserView* browserView = [mBrowserView getBrowserView];

@@ -41,6 +41,7 @@
 #import "BrowserWindowController.h"
 #import "HistoryDataSource.h"
 #import "CHBrowserView.h"
+#import "ExtendedOutlineView.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -265,7 +266,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 //
 -(id) createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
 {
-  if ([inValue length] == 0)
+  NSString *fragment = [[NSURL URLWithString:inColumn] fragment];
+  if (([inValue length] == 0) && [fragment isEqualToString:@"Name"])
     inValue = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
   return inValue;
 }
@@ -430,7 +432,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 - (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
   // set the image on the name column. the url column doesn't have an image.
-  if ([[tableColumn identifier] isEqualToString: @"Name"]) {
+ if ([[tableColumn identifier] isEqualToString: @"title"]) {
     if ( [outlineView isExpandable: item] )
       [inCell setImage:[NSImage imageNamed:@"folder"]];
     else

@@ -211,6 +211,7 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   if ((self = [super init]))
   {
     mMissedIconsCacheHelper = new NeckoCacheHelper("Favicon", "Missed");
+    mRequestDict = [[NSMutableDictionary alloc] initWithCapacity:5];
     nsresult rv = mMissedIconsCacheHelper->Init("MissedIconsCache");
     if (NS_FAILED(rv)) {
       delete mMissedIconsCacheHelper;
@@ -224,6 +225,7 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
 - (void)dealloc
 {
   delete mMissedIconsCacheHelper;
+  [mRequestDict release];
   [super dealloc];
 }
 
@@ -246,7 +248,7 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   return inCache;
 }
 
-- (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI withUserData:(id)userData allowNetwork:(BOOL)inAllowNetwork
+- (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI allowNetwork:(BOOL)inAllowNetwork
 {
   // look for a favicon
   nsAutoString uriString;
@@ -264,9 +266,10 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   {
     return NO;
   }
-  
+  // preserve requesting URI for later notification
+  [mRequestDict setObject:inURI forKey:faviconString];
   RemoteDataProvider* dataProvider = [RemoteDataProvider sharedRemoteDataProvider];
-  return [dataProvider loadURI:faviconString forTarget:sender withListener:self withUserData:userData allowNetworking:inAllowNetwork];
+  return [dataProvider loadURI:faviconString forTarget:sender withListener:self withUserData:nil allowNetworking:inAllowNetwork];
 }
 
 #define SITE_ICON_EXPIRATION_SECONDS (60 * 60 * 24 * 7)    // 1 week
@@ -304,17 +307,23 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
     [faviconImage setScalesWhenResized:YES];
     [faviconImage setSize:NSMakeSize(16, 16)];
   }
+  // figure out what URL triggered this favicon request
+
+  NSString *requestURL = [mRequestDict objectForKey:inURI];
+  if (!requestURL)
+    requestURL = [NSString string];
   
   // we always send out the notification, so that clients know
   // about failed requests
   NSDictionary*	notificationData = [NSDictionary dictionaryWithObjectsAndKeys:
                                        inURI, SiteIconLoadURIKey,
                                 faviconImage, SiteIconLoadImageKey,	// may be nil
-                                    userData, SiteIconLoadUserDataKey,
+                                  requestURL, SiteIconLoadUserDataKey,
                                          nil];
-
-  [[NSNotificationCenter defaultCenter] postNotificationName: SiteIconLoadNotificationName
-        object:target userInfo:notificationData];  
+  NSNotification *note = [NSNotification notificationWithName: SiteIconLoadNotificationName object:target userInfo:notificationData];
+  [[NSNotificationQueue defaultQueue] enqueueNotification: note postingStyle:NSPostWhenIdle];
+  // cleanup our key holder
+  [mRequestDict removeObjectForKey:inURI];  
 }
 
 #pragma mark -

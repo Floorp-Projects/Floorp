@@ -23,10 +23,9 @@
 
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
-
+#import "BrowserWindowController.h"
 #import "PageProxyIcon.h"
 
-#import "BookmarksService.h"
 #import "MainController.h"
 
 #include "nsCRT.h"
