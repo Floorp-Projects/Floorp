@@ -76,8 +76,10 @@ public:
   nsCMSMessage(NSSCMSMessage* aCMSMsg);
   virtual ~nsCMSMessage();
   
+  void referenceContext(nsIInterfaceRequestor* aContext) {m_ctx = aContext;}
   NSSCMSMessage* getCMS() {return m_cmsMsg;};
 private:
+  nsCOMPtr<nsIInterfaceRequestor> m_ctx;
   NSSCMSMessage * m_cmsMsg;
   NSSCMSSignerInfo* GetTopLevelSignerInfo();
   nsresult CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen);
