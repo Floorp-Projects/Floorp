@@ -794,3 +794,50 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsWindowsShellService::GetRegistryEntry(PRInt32 aHKEYConstant,
+                                        const char *aSubKeyName,
+                                        const char *aValueName,
+                                        char **aResult)
+{
+  HKEY hKey, fullKey;
+
+  *aResult = 0;
+  // Calculate HKEY_* base key
+  switch (aHKEYConstant) {
+  case HKCR:
+    hKey = HKEY_CLASSES_ROOT;
+    break;
+  case HKCC:
+    hKey = HKEY_CURRENT_CONFIG;
+    break;
+  case HKCU:
+    hKey = HKEY_CURRENT_USER;
+    break;
+  case HKLM:
+    hKey = HKEY_LOCAL_MACHINE;
+    break;
+  case HKU:
+    hKey = HKEY_USERS;
+    break;
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
+  
+  // Open Key
+  LONG rv = ::RegOpenKeyEx(hKey, aSubKeyName, 0, KEY_READ, &fullKey);
+
+  if (rv == ERROR_SUCCESS) {
+    char buffer[4096] = { 0 };
+    DWORD len = sizeof buffer;
+    rv = ::RegQueryValueEx(fullKey, aValueName, NULL, NULL,
+                           (LPBYTE)buffer, &len);
+
+    if (rv == ERROR_SUCCESS)
+      *aResult = PL_strdup(buffer);
+  }
+
+  ::RegCloseKey(fullKey);
+
+  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
