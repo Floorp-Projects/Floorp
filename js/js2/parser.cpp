@@ -21,6 +21,8 @@
 #include "parser.h"
 #include "world.h"
 
+#include <algorithm>
+
 namespace JS = JavaScript;
 
 
@@ -1252,6 +1254,13 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression()
 }
 
 
+JS::ExprNode *JS::Parser::parseMember(ExprNode *target, const Token &t, ExprNode::Kind kind, ExprNode::Kind parenKind)
+{
+    // stub to get linux to link.
+    return 0;
+}
+
+
 // Parse an ArgumentsList followed by a closing parenthesis or bracket and return
 // the resulting InvokeExprNode.  The target function, indexed object, or created class
 // is supplied.  The opening parenthesis or bracket has already been read.
@@ -1267,7 +1276,7 @@ JS::InvokeExprNode *JS::Parser::parseInvoke(ExprNode *target, uint32 pos, Token:
 			ExprNode *value = parseAssignmentExpression(false);
 			if (lexer.eat(false, Token::colon)) {
 				field = value;
-				if (!isFieldKind(field->getKind()))
+				if (!ExprNode::isFieldKind(field->getKind()))
 					syntaxError("Argument name must be an identifier, string, or number");
 				hasNamedArgument = true;
 				value = parseAssignmentExpression(false);
@@ -1347,21 +1356,20 @@ JS::ExprNode *JS::Parser::parsePostfixExpression(bool newExpression)
 	}
 }
 
-
-#if 0
 // Parse and return a NonAssignmentExpression.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool noIn)
 {
 	checkStackSize();
+    return 0;
 }
-
 
 // Parse and return an AssignmentExpression.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
 {
 	checkStackSize();
+    return 0;
 }
 
 
@@ -1370,5 +1378,6 @@ JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
 JS::ExprNode *JS::Parser::parseExpression(bool noIn)
 {
 	checkStackSize();
+    return 0;
 }
-#endif
+
