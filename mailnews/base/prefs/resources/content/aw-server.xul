@@ -42,10 +42,13 @@ Rights Reserved.
     <spring class="spacer"/>
     <box>
       <text class="label" value="&incomingServerTypeLabel.label;"/>
-      <html:select id="servertype" name="servertype">
-        <html:option value="pop3">&popType.label;</html:option>
-        <html:option value="imap">&imapType.label;</html:option>
-      </html:select>
+      <menulist id="servertypeMenulist" oncommand="onTypeChanged(event)">
+        <menupopup>
+          <menuitem data="pop3" value="&popType.label;"/>
+          <menuitem data="imap" value="&imapType.label;"/>
+        </menupopup>
+      </menulist>
+      <html:input type="hidden" id="servertype" name="servertype"/>
     </box>
     <spring class="spacer"/>
     <html>&incomingServerNameDesc.label;</html>

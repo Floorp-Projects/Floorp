@@ -39,6 +39,18 @@ function validate() {
 
 function onInit() {
 
+  // hack hack - initialize the menulist
+  var hiddenInput = document.getElementById("servertype");
+  dump("hiddenInput = " + hiddenInput.value + "\n");
+
+  var servertypeMenulist = document.getElementById("servertypeMenulist");
+  if (hiddenInput.value) {
+    var selectedElements =
+      servertypeMenulist.getElementsByAttribute("data", hiddenInput.value);
+    if (selectedElements && selectedElements.length>0)
+      servertypeMenulist.selectedItem = selectedElements[0];
+  }
+  
   var smtpTextField = document.getElementById("smtphostname");
 
   var smtpServer = parent.smtpService.defaultServer;
@@ -50,6 +62,14 @@ function onInit() {
 
   
   hideShowSmtpSettings(smtpServer);
+}
+
+function onTypeChanged(event)
+{
+  dump("onTypeChanged(<" + event.target.localName + ">)\n");
+  var hiddenInput = document.getElementById("servertype");
+  hiddenInput.value = event.target.getAttribute("data");
+  
 }
 
 function setDivText(id, value) {
