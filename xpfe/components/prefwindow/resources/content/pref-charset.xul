@@ -21,9 +21,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<!-- somebody is apparently messing with pref.css, taking it out for now - bug 39448 
-   <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
--->
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
