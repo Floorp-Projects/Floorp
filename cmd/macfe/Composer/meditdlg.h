@@ -376,7 +376,8 @@ public:
 class CEditContain: public CEditorPrefContain, public LBroadcaster
 {
 public:
-						CEditContain(LStream* inStream): CEditorPrefContain( inStream ){ pExtra = NULL; }
+						CEditContain(LStream* inStream): CEditorPrefContain( inStream )
+						    { fContext = NULL; fLinkName = NULL; pExtra = NULL; } // initialize everything to NULL
 						~CEditContain(){ XP_FREEIF(pExtra); }
 	
 	void				SetContext(MWContext*	context) {fContext = context;}				

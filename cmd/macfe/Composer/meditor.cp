@@ -248,18 +248,47 @@ void FE_FinishedSave( MWContext * /* pMWContext */, int /* status */, char * /* 
 {
 }
 
-ED_CharsetEncode FE_EncodingDialog( MWContext* pContext )
+ED_CharsetEncode FE_EncodingDialog( MWContext* pContext, char *pCharset )
 {
-#if 0
-	switch (HandleModalDialog( EDITDLG_ENCODING, NULL, NULL ))
-	{
-		case ED_ENCODE_CANCEL:			return ED_ENCODE_CANCEL;
-		case ED_ENCODE_CHANGE_CHARSET:	return ED_ENCODE_CHANGE_CHARSET;
-		case ED_ENCODE_CHANGE_METATAG:	return ED_ENCODE_CHANGE_METATAG;
-	}
-#endif
+	StPrepareForDialog		prepare;
+	
+	StBlockingDialogHandler handler( EDITDLG_ENCODING, NULL );
+	LDialogBox* dialog = (LDialogBox *)handler.GetDialog();
+	LGARadioButton *change_charset = (LGARadioButton *)dialog->FindPaneByID( 'ccst' );	//radio button for Change Charset
+	LGARadioButton *change_metatag = (LGARadioButton *)dialog->FindPaneByID( 'cmta' );	//radio button for Change Meta-tag
+	LCaption *charset_capt = (LCaption *)dialog->FindPaneByID( 'cap1' );
+	LCaption *metatag_capt = (LCaption *)dialog->FindPaneByID( 'cap2' );
+	
+    int iBufLen = 255;
+    char buf[256];
+    char *pCharsetMsg = NULL;
+    char *pMetatagMsg = NULL;
+    PR_snprintf(buf, iBufLen, "Convert the Current Page to \"%s\"", pCharset);
+    pCharsetMsg = PR_sprintf_append(pCharsetMsg, buf);
+    PR_snprintf(buf, iBufLen, "Change the Character Set Label to \"%s\"", pCharset);
+    pMetatagMsg = PR_sprintf_append(pMetatagMsg, buf);
+	
+	change_charset->SetDescriptor ( (CStr255) pCharsetMsg );
+	change_metatag->SetDescriptor ( (CStr255) pMetatagMsg );
+	charset_capt->SetDescriptor ( (CStr255) XP_GetString(XP_EDT_CHARSET_CONVERT_PAGE) );
+	metatag_capt->SetDescriptor ( (CStr255) XP_GetString(XP_EDT_CHARSET_SET_METATAG) );
+	
+	MessageT message;
+	do {
+		dialog->Show();
+		message = handler.DoDialog();
+	} while ( message == 0 || message == msg_ControlClicked );
+		// doesn't matter if the user merely switches between radio buttons (msg_ControlClicked)
+		// stop only when the message is msg_OK or msg_Cancel
 
-	return ED_ENCODE_CANCEL;    // shouldn't get here...
+	switch (message)
+	{
+		case msg_OK:
+			if ( change_charset->GetValue() ) return ED_ENCODE_CHANGE_CHARSET;
+			else if ( change_metatag->GetValue() ) return ED_ENCODE_CHANGE_METATAG;
+		default: // only msg_Cancel should get here, since there is always one radio button selected at any given time
+			return ED_ENCODE_CANCEL;
+	}
 }
 
 // in xp_file.h

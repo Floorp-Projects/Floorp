@@ -3331,8 +3331,8 @@ void CEDParagraphContain::PrefsFromControls()
 			switch (fListStylePopup->GetValue()) {
 				case 1: list->iTagType = P_UNUM_LIST; break;
 				case 2: list->iTagType = P_NUM_LIST; break;
-				case 3: list->iTagType = P_DIRECTORY; break;
-				case 4: list->iTagType = P_MENU; break;
+//				case 3: list->iTagType = P_DIRECTORY; break;
+//				case 4: list->iTagType = P_MENU; break;
 				case 5: list->iTagType = P_DESC_LIST; break;
 			}
 			
@@ -3410,8 +3410,8 @@ void CEDParagraphContain::ControlsFromPref()
 		switch (list->iTagType) {
 			case P_UNUM_LIST:	fListStylePopup->SetValue(1); break;
 			case P_NUM_LIST:	fListStylePopup->SetValue(2); break;
-			case P_DIRECTORY:	fListStylePopup->SetValue(3); break;
-			case P_MENU:		fListStylePopup->SetValue(4); break;
+//			case P_DIRECTORY:	fListStylePopup->SetValue(3); break;
+//			case P_MENU:		fListStylePopup->SetValue(4); break;
 			case P_DESC_LIST:	fListStylePopup->SetValue(5); break;
 			default: 			fListStylePopup->SetValue(1); break;	// assert?
 		}
@@ -3643,9 +3643,11 @@ void CEDLinkContain::Show()
 
 void CEDLinkContain::Hide()
 {
-	if ( *fLinkName )
-		XP_FREE( *fLinkName );
-	*fLinkName = fLinkedTextEdit->GetLongDescriptor();
+	if ( fLinkName )
+	{
+		XP_FREEIF( *fLinkName );
+	    *fLinkName = fLinkedTextEdit->GetLongDescriptor();
+    }
 	CEditContain::Hide();
 }
 
