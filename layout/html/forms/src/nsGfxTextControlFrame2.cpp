@@ -1351,7 +1351,8 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   aRendContext->GetWidth(aveStr, charWidth);
   charWidth /= aveStr.Length();
   // Round to the nearest twip
-  charWidth = nscoord((float(charWidth) / p2t) + 0.5)*nscoord(p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);  // get the rounding right
+  charWidth = nscoord((float(charWidth) / float(onePixel)) + 0.5)*onePixel;
 #endif
   aDesiredSize.width = charWidth;
 
