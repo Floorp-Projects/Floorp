@@ -28,6 +28,7 @@
 #include "nsIMIMEService.h"
 #include "nsAutoLock.h"
 #include "nsIFileStreams.h"
+#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -545,6 +546,17 @@ nsJARChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP
 nsJARChannel::GetOwner(nsISupports* *aOwner)
 {
+    if (!mOwner)
+    {
+        nsIPrincipal* principal;
+        nsresult rv = mJAR->GetPrincipal(mJAREntry, &principal);
+        if (NS_SUCCEEDED(rv) && principal)
+            mOwner = do_QueryInterface(principal);
+        else
+            mOwner = null_nsCOMPtr();
+        NS_IF_RELEASE(principal);
+    }
+
     *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
     return NS_OK;
