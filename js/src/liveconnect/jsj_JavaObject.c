@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "jsobj.h"
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */
 
@@ -911,11 +912,20 @@ JSClass JavaObject_class = {
 
 extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
+// This is just a wrapper around the JS engine's newObjectMap() function,
+// required to avoid the JS engine confusing a JavaObject for a native 
+// object.  See bug #12367 for details
+JSObjectMap *
+jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
+                         JSClass *clasp, JSObject *obj)
+{
+    return js_ObjectOps.newObjectMap(cx, nrefs, ops, clasp, obj);
+}
 
 JSBool
 jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
 {
-    JavaObject_ops.newObjectMap = js_ObjectOps.newObjectMap;
+    JavaObject_ops.newObjectMap = jsj_wrapper_newObjectMap;
     JavaObject_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
 
     if (!JS_InitClass(cx, global_obj, 

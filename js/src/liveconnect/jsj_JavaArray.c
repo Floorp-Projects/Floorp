@@ -444,7 +444,7 @@ extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 JSBool
 jsj_init_JavaArray(JSContext *cx, JSObject *global_obj)
 {
-    JavaArray_ops.newObjectMap = js_ObjectOps.newObjectMap;
+    JavaArray_ops.newObjectMap = jsj_wrapper_newObjectMap;
     JavaArray_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
 
     if (!JS_InitClass(cx, global_obj, 
