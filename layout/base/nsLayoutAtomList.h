@@ -139,7 +139,8 @@ LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
   // Alphabetical list of frame property names
 LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
-LAYOUT_ATOM(inlineFrameAnnotation, "InlineFrameAnnotation")    // BOOL
+LAYOUT_ATOM(IBSplitSpecialPrevSibling, "IBSplitSpecialPrevSibling")// nsIFrame*
+LAYOUT_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
 LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")  // nsSize*
 LAYOUT_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*

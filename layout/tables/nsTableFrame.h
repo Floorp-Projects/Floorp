@@ -381,6 +381,10 @@ public:
 
   nsFrameList& GetColGroups();
 
+  NS_IMETHOD GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                        nsIFrame**      aProviderFrame,
+                                        PRBool*         aIsChild);
+
   /**
    * Get the "type" of the frame
    *

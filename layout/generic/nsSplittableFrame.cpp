@@ -55,19 +55,6 @@ nsSplittableFrame::Init(nsIPresContext*  aPresContext,
     // Hook the frame into the flow
     mPrevInFlow = aPrevInFlow;
     aPrevInFlow->SetNextInFlow(this);
-
-    // Make sure the general flags bits are the same
-    nsFrameState  state;
-    aPrevInFlow->GetFrameState(&state);
-    if ((state & NS_FRAME_SYNC_FRAME_AND_VIEW) == 0) {
-      mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    }
-    if (state & NS_FRAME_REPLACED_ELEMENT) {
-      mState |= NS_FRAME_REPLACED_ELEMENT;
-    }
-    if (state & NS_FRAME_SELECTED_CONTENT) {
-      mState |= NS_FRAME_SELECTED_CONTENT;
-    }
   }
 
   return rv;

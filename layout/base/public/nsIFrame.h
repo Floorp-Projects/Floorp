@@ -1091,15 +1091,25 @@ public:
                                  PRBool               aCommandAdded) = 0;
 
   /**
-   * Get the frame that is the primary frame associated with the content. 
-   * aProviderFrame == this except in the case of an outer table, in
-   * which case it is the inner table.
+   * Get the frame whose style context should be the parent of this
+   * frame's style context (i.e., provide the parent style context).
+   * This frame must either be an ancestor of this frame or a child.  If
+   * this frame returns a child frame, then the child frame must be sure
+   * to return a grandparent or higher!
    *
    * @param aPresContext:   PresContext
-   * @param aProviderFrame: Set to the primary frame associated with the content
+   * @param aProviderFrame: The frame whose style context should be the
+   *                        parent of this frame's style context.  Null
+   *                        is permitted, and means that this frame's
+   *                        style context should be the root of the
+   *                        style context tree.
+   * @param aIsChild:       True if |aProviderFrame| is set to a child
+   *                        of this frame; false if it is an ancestor or
+   *                        null.
    */
-  NS_IMETHOD GetStyleContextProvider(nsIPresContext* aPresContext,
-                                     nsIFrame**      aProviderFrame) = 0;
+  NS_IMETHOD GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                        nsIFrame**      aProviderFrame,
+                                        PRBool*         aIsChild) = 0;
 
   /**
    * Determines whether a frame is visible for painting

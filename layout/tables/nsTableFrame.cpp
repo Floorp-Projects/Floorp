@@ -175,6 +175,19 @@ struct BCPropertyData
   PRUint8 mLeftBorderWidth;
 };
 
+NS_IMETHODIMP 
+nsTableFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                         nsIFrame**      aProviderFrame,
+                                         PRBool*         aIsChild)
+{
+  // Since our parent, the table outer frame, returned this frame, we
+  // must return whatever our parent would normally have returned.
+
+  NS_PRECONDITION(mParent, "table constructed without outer table");
+  return NS_STATIC_CAST(nsFrame*, mParent)->
+          DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
+}
+
 
 NS_IMETHODIMP
 nsTableFrame::GetFrameType(nsIAtom** aType) const

@@ -58,6 +58,7 @@
 #include "nsRuleWalker.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef MOZ_PERF_METRICS
   #include "nsITimeRecorder.h"
@@ -1109,7 +1110,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
         mDocRuleProcessors   ||
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
-      result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
+      result = GetContext(aPresContext, aParentContext,
+                          nsHTMLAtoms::mozNonElementPseudo, aForceUnique);
       NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     }
   }

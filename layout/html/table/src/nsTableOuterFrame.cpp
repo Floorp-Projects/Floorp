@@ -414,20 +414,30 @@ NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
   return result;
 }
 
-// GetStyleContextProvider:
-//  The innerTableFame is the style context provider, which is cached in a data member
 NS_IMETHODIMP 
-nsTableOuterFrame::GetStyleContextProvider(nsIPresContext* aPresContext,
-                                           nsIFrame**      aProviderFrame)
+nsTableOuterFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                              nsIFrame**      aProviderFrame,
+                                              PRBool*         aIsChild)
 {
-  NS_ASSERTION(aProviderFrame && aPresContext, "null argument: aPresContext and-or aProviderFrame");
-  if (aProviderFrame) {
-    if (mInnerTableFrame) 
-      *aProviderFrame = mInnerTableFrame;
-    else 
-      *aProviderFrame = this;
+  // The table outer frame and the (inner) table frame split the style
+  // data by giving the table frame the style context associated with
+  // the table content node and creating a style context for the outer
+  // frame that is a *child* of the table frame's style context,
+  // matching the :table-outer (should be :-moz-table-outer!)
+  // pseudo-element.  html.css has a rule that causes that
+  // pseudo-element (and thus the outer table) to inherit *some* style
+  // properties from the table frame.  The children of the table inherit
+  // directly from the inner table, and the outer table's style context
+  // is a leaf.
+
+  if (!mInnerTableFrame) {
+    *aProviderFrame = this;
+    *aIsChild = PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
-  return (aProviderFrame && mInnerTableFrame) ? NS_OK : NS_ERROR_FAILURE;
+  *aProviderFrame = mInnerTableFrame;
+  *aIsChild = PR_TRUE;
+  return NS_OK;
 }
 
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
