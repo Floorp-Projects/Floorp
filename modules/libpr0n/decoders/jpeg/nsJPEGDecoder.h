@@ -35,7 +35,9 @@
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 
+extern "C" {
 #include "jpeglib.h"
+}
 
 #include <setjmp.h>
 
