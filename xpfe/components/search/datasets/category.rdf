@@ -202,7 +202,7 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:8">
-	<NC:Name>Netscape Search</NC:Name>
+	<NC:Name>.Netscape Search</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:9">
