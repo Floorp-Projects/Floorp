@@ -16,12 +16,16 @@
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
 <!-- taskbar -->
+<!-- LOCALIZATION NOTE  mozillaButton.label: Do NOT localize "Mozilla" -->
 <!ENTITY  mozillaButton.label "Mozilla">
 <!ENTITY  shoppingButton.label "Shopping">
 <!ENTITY  entertainment.label "Entertainment">
 <!ENTITY  openWinButton.label "Open Windows">
 <!-- taskbar popups -->
+<!-- LOCALIZATION NOTE  bugzillaButton.label: Do NOT localize "Bugzilla" -->
 <!ENTITY  bugzillaButton.label "Go to Bugzilla">
+<!-- LOCALIZATION NOTE  tinderboxButton.label: Do NOT localize "Tinderbox" -->
 <!ENTITY  tinderboxButton.label "Look at Tinderbox">
+<!-- LOCALIZATION NOTE  bonsai.label: Do NOT localize "Bonsai" -->
 <!ENTITY  bonsai.label "Look at Bonsai">
 
