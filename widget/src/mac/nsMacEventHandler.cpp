@@ -379,11 +379,13 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	// get the focused widget
-	nsWindow* focusedWidget = mTopLevelWidget;
+	nsWindow* focusedWidget = mTopLevelWidget;	
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
 	
+	if (!focusedWidget) return PR_FALSE;
+
 	// nsEvent
 	nsKeyEvent	keyEvent;
 	keyEvent.eventStructType = NS_KEY_EVENT;
