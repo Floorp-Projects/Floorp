@@ -861,7 +861,18 @@ NS_IMETHODIMP nsEditor::Paste()
       rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, nsIDataFlavor::GetIID(), (void**) getter_AddRefs(flavor));
       if (NS_OK == rv) {
         // Initialize the DataFlavor and set it into the GenericTransferable
-        flavor->Init(kTextMime, "Text");
+        flavor->Init(kTextMime, kTextMime);
+
+//#define TEST_IS_DATA_FLAVOR_SUPPORTED 1
+#ifdef TEST_IS_DATA_FLAVOR_SUPPORTED
+        // For testing IsDataFlavorSupported:
+        rv = trans->IsDataFlavorSupported(flavor);
+        if (!NS_SUCCEEDED(rv)) {
+          printf("\07>>>>>>>>>>>>> transferable doesn't support text data flavor\n");
+          //return rv;
+        }
+#endif /* TEST_IS_DATA_FLAVOR_SUPPORTED */
+
         genericTrans->AddDataFlavor(flavor);
 
         // Get the Data from the clipboard
