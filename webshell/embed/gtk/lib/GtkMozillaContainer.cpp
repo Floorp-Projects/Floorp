@@ -64,6 +64,8 @@ void
 GtkMozillaContainer::Show()
 {
   GtkAllocation *alloc = &GTK_WIDGET(mozilla)->allocation;
+
+  // g_print("GtkMozillaContainer::Show\n");
     
   nsresult rv = nsRepository::CreateInstance(kWebShellCID, 
                                              nsnull,
@@ -87,6 +89,7 @@ GtkMozillaContainer::Show()
     mMozArea = gtk_mozarea_new();
     gtk_container_add(GTK_CONTAINER(mozilla), mMozArea);
     gtk_widget_realize(mMozArea);
+    gtk_widget_show(mMozArea);
     mSuperWin = GTK_MOZAREA(mMozArea)->superwin;
     
     //printf("Init, size: %d, %d\n", width, height);
@@ -116,11 +119,10 @@ GtkMozillaContainer::Show()
 void
 GtkMozillaContainer::Resize(gint w, gint h)
 {
-  int new_size;
   GtkAllocation alloc;
-  //  printf("GtkMozillaContainer::Resize called width: %d, %d\n", w, h);
-  new_size = ((width != w) || (height != h));
-  if (new_size && mWebShell) {
+
+  // g_print("GtkMozillaContainer::Resize called width: %d, %d\n", w, h);
+  if (mWebShell) {
     width = w;
     height = h;
     //printf("GtkMozillaContainer::Resize setting to: %d, %d\n", width, height);
@@ -128,7 +130,7 @@ GtkMozillaContainer::Resize(gint w, gint h)
     alloc.y = GTK_WIDGET(mozilla)->allocation.y;
     alloc.width = w;
     alloc.height = h;
-    gtk_widget_size_allocate(GTK_WIDGET(mozilla), &alloc); 
+    // gtk_widget_size_allocate(GTK_WIDGET(mozilla), &alloc); 
     gdk_superwin_resize(mSuperWin, width, height);
     mWebShell->SetBounds(0, 0, width, height);
   }
