@@ -2662,6 +2662,9 @@ public:
             nsIRDFResource* aProperty,
             nsIRDFNode* aTarget);
 
+    PRBool
+    IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aParent);
+
     nsresult
     RemoveMember(nsIContent* aContainerElement,
                  nsIRDFResource* aMember,
@@ -5973,6 +5976,77 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 }
 
 
+PRBool
+nsXULTemplateBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aParent)
+{
+    // This routine uses the <template> to determine if aChild is
+    // "directly contained by" aParent. It does so by walking up the
+    // template subtree in parallel with the generated subtree.
+    NS_PRECONDITION(aChild != nsnull, "null ptr");
+    if (! aChild)
+        return PR_FALSE;
+
+    nsresult rv;
+
+    // Every generated element has a "template" attribute that gives
+    // us the ID of the template node that it was created from.
+    nsAutoString tmplID;
+    rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, tmplID);
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        return PR_FALSE;
+
+    // We've got the template ID; find the element in the content
+    // model.
+    nsCOMPtr<nsIDOMXULDocument> xuldoc( do_QueryInterface(mDocument) );
+    NS_ASSERTION(xuldoc != nsnull, "not an nsIDOMXULDocument");
+    if (! xuldoc)
+        return PR_FALSE;
+
+    nsCOMPtr<nsIDOMElement> tmplele;
+    xuldoc->GetElementById(tmplID, getter_AddRefs(tmplele));
+    NS_ASSERTION(tmplele != nsnull, "couldn't find template element");
+    if (! tmplele)
+        return PR_FALSE;
+
+    nsCOMPtr<nsIContent> tmpl( do_QueryInterface(tmplele) );
+    NS_ASSERTION(tmpl != nsnull, "not an nsIContent");
+    if (! tmpl)
+        return PR_FALSE;
+
+    // Now walk up the template subtree in parallel with the generated
+    // subtree.
+    nsCOMPtr<nsIAtom> tag;
+    nsCOMPtr<nsIContent> generated(aChild);
+
+    do {
+        // Walk up the generated tree
+        nsCOMPtr<nsIContent> generatedParent;
+        generated->GetParent(*getter_AddRefs(generatedParent));
+        if (! generatedParent)
+            return PR_FALSE;
+
+        generated = generatedParent;
+
+        // Walk up the template tree
+        nsCOMPtr<nsIContent> tmplParent;
+        tmpl->GetParent(*getter_AddRefs(tmplParent));
+        if (! tmplParent)
+            return PR_FALSE;
+
+        tmpl = tmplParent;
+
+        // The content within a template ends when we hit the
+        // <template> or <rule> element in the simple syntax, or the
+        // <action> element in the extended syntax.
+        tmpl->GetTag(*getter_AddRefs(tag));
+    } while (tag.get() != nsXULAtoms::Template &&
+             tag.get() != nsXULAtoms::rule &&
+             tag.get() != nsXULAtoms::action);
+
+    // Did we find the generated parent?
+    return PRBool(generated.get() == aParent);
+}
+
 
 nsresult
 nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
@@ -6000,7 +6074,7 @@ nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
         nsCOMPtr<nsIContent> child( do_QueryInterface(isupports) );
         NS_IF_RELEASE(isupports);
 
-        if (! gXULUtils->IsContainedBy(child, aContainerElement))
+        if (! IsDirectlyContainedBy(child, aContainerElement))
             continue;
 
         nsCOMPtr<nsIContent> parent;
