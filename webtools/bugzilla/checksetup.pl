@@ -132,8 +132,8 @@ if ($ARGV[0]) {
 #
 
 print "\nChecking perl modules ...\n" unless $silent;
-unless (eval "require 5.005") {
-    die "Sorry, you need at least Perl 5.005\n";
+unless ($] >= 5.006) {
+    die "Sorry, you need at least Perl 5.6\n";
 }
 
 # vers_cmp is adapted from Sort::Versions 1.3 1996/07/11 13:37:00 kjahds,
