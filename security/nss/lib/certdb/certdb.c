@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.1 2000/03/31 19:42:32 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.2 2000/06/20 16:15:32 chrisk%netscape.com Exp $
  */
 
 #include "prlock.h"
@@ -1042,7 +1042,8 @@ CERT_CheckKeyUsage(CERTCertificate *cert, unsigned int requiredUsage)
      */
     if ( requiredUsage & KU_KEY_AGREEMENT_OR_ENCIPHERMENT ) {
 	key = CERT_ExtractPublicKey(cert);
-	if ( ( key->keyType == keaKey ) || ( key->keyType == fortezzaKey ) ) {
+	if ( ( key->keyType == keaKey ) || ( key->keyType == fortezzaKey ) ||
+	     ( key->keyType == dhKey ) ) {
 	    requiredUsage |= KU_KEY_AGREEMENT;
 	} else {
 	    requiredUsage |= KU_KEY_ENCIPHERMENT;
