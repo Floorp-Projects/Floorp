@@ -12,7 +12,7 @@
 # under the License.
 #
 # The Original Code is the Gnats To Bugzilla Conversion Utility.
-# 
+#
 # Contributor(s): Tom Schutter <tom@platte.com>
 
 
@@ -42,7 +42,7 @@
 #      exist, goto step 2.
 #   8) Create a new, empty Bugzilla database.
 #   9) Import the data using the command:
-#      mysql -uroot -p'ROOT_PASSWORD' < gnats2bz_data.sql
+#      mysql -uroot -p'ROOT_PASSWORD' bugs < gnats2bz_data.sql
 #   10) Verify that the database is ok.  If it is not, goto step 2.
 #
 # Important notes:
@@ -90,8 +90,12 @@ my($gnats_username) = "gnats\@platte.com";
 # do not screw up any fields.
 my($cleanup_with_edit_pr) = 0;
 
+# Component name and description for bugs imported from GNATS.
+my($default_component) = "GNATS Import";
+my($default_component_description) = "Bugs imported from GNATS.";
+
 # First generated userid.
-my($userid_base) = 10;
+my($userid_base) = 1;
 
 # Output filenames.
 my($cleanup_pathname) = "gnats2bz_cleanup.sh";
@@ -696,13 +700,12 @@ sub write_bugs {
     $version = SqlQuote($version);
 
     my($product) = "";
-    my($component) = "";
     if (defined($pr_data{"Category"})) {
         $product = $pr_data{"Category"};
-        $component = $product;
     }
     $product = SqlQuote($product);
-    $component = SqlQuote($component);
+
+    my($component) = SqlQuote($default_component);
 
     my($target_milestone) = "";
     $target_milestone = SqlQuote($target_milestone);
@@ -734,8 +737,9 @@ sub write_non_bugs_tables {
 
     my($categories_record);
     foreach $categories_record (@categories_list) {
+        my($component) = SqlQuote($default_component);
         my($product) = SqlQuote(@$categories_record[0]);
-        my($description) = SqlQuote(@$categories_record[1]);
+        my($description) = SqlQuote($default_component_description);
         my($initialowner) = SqlQuote(@$categories_record[2] . $username_suffix);
 
         print DATA "\ninsert into products (\n";
@@ -751,7 +755,7 @@ sub write_non_bugs_tables {
             "  value, program, initialowner, initialqacontact, description\n";
         print DATA ") values (\n";
         print DATA
-            "  $product, $product, $initialowner, '', $description\n";
+            "  $component, $product, $initialowner, '', $description\n";
         print DATA ");\n";
     }
 
@@ -1009,4 +1013,3 @@ sub month2number {
 
     return(1);
 }
-
