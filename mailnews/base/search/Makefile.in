@@ -24,9 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src resources
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+#xxx Need to write tests/Makefile.in
+#ifdef ENABLE_TESTS
+#DIRS += tests
+#endif
 
 include $(topsrcdir)/config/config.mk
 
