@@ -1232,12 +1232,14 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
   }
   mPreedit->Reset();
 
+#if XlibSpecificationRelease >= 6
   /* restore conversion state after resetting ic later */
   XIMPreeditState preedit_state = XIMPreeditUnKnown;
   PRBool is_preedit_state = PR_FALSE;
   if (!XGetICValues(mIC->xic, XNPreeditState, &preedit_state, NULL)) {
     is_preedit_state = PR_TRUE;
   }
+#endif
 
   PRInt32 uniCharSize = 0;
   char *uncommitted_text = XmbResetIC(mIC->xic);
@@ -1251,11 +1253,13 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
       aUnichar[uniCharSize] = 0;
     }
   }
+#if XlibSpecificationRelease >= 6
   if (is_preedit_state) {
     XSetICValues(mIC->xic,
                  XNPreeditState, preedit_state,
                  NULL);
   }
+#endif
   return uniCharSize;
 }
 
@@ -1267,6 +1271,7 @@ nsIMEGtkIC::IsPreeditComposing()
       return PR_TRUE;
     }
   } else {
+#if XlibSpecificationRelease >= 6
     int preedit_state;
     if (!XGetICValues(mIC->xic, XNPreeditState, &preedit_state, NULL)) {
       if (preedit_state == XIMPreeditEnable) {
@@ -1276,6 +1281,7 @@ nsIMEGtkIC::IsPreeditComposing()
       // kinput2 does not support XGetICValues(XNPreeditState)
       return PR_TRUE;
     }
+#endif
   }
   return PR_FALSE;
 }
