@@ -44,6 +44,7 @@ public:
 
 	NS_IMETHOD CreateImapConnection (nsIEventQueue *aEventQueue, nsIImapUrl * aImapUrl,
                                      nsIImapProtocol ** aImapConnection);
+    NS_IMETHOD LoadNextQueuedUrl();
 
 	NS_IMETHOD SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder *aImapMailFolder, 
@@ -153,16 +154,14 @@ public:
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            nsString2& folderName);
-	nsresult GetImapConnectionAndUrl(nsIEventQueue * aClientEventQueue,
-                                     nsIImapUrl  * &imapUrl,
-                                     nsIMsgFolder* &aImapFolder,
-                                     nsIImapProtocol * &protocolInstance,
-                                     nsString2 &urlSpec);
-
-	nsresult CreateStartOfImapUrl(nsIImapUrl &imapUrl, 
-                                  nsString2 &urlString,
-                                  const char* hostName,
-                                  const char* userName);
+	nsresult CreateStartOfImapUrl(nsIImapUrl  * &imapUrl,
+                                  nsIMsgFolder* &aImapFolder,
+                                  nsString2 &urlSpec);
+    nsresult GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue, 
+                                         nsIImapUrl* aImapUrl,
+                                         nsIUrlListener* aUrlListener,
+                                         nsISupports* aConsumer,
+                                         nsIURL** aURL);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                               nsIImapUrl* aImapUrl);
 	nsresult DiddleFlags(nsIEventQueue * aClientEventQueue,
@@ -179,7 +178,8 @@ protected:
 	// we just iterate over all known connections and see if one of the connections can run 
 	// our current request...we can look into making a more sophisticated cache later...
 	nsCOMPtr<nsISupportsArray> m_connectionCache;
-   
+    nsCOMPtr<nsISupportsArray> m_urlQueue;
+    nsVoidArray m_urlConsumers;
 };
 
 #endif /* nsImapService_h___ */

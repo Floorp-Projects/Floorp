@@ -52,6 +52,8 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
 
+#define MAXIMUM_CONNECTION 5
+
 NS_IMPL_THREADSAFE_ADDREF(nsImapService);
 NS_IMPL_THREADSAFE_RELEASE(nsImapService);
 
@@ -67,6 +69,7 @@ nsImapService::nsImapService()
 
 	// I don't know how we're going to report this error if we failed to create the isupports array...
 	rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
+    rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));
 }
 
 nsImapService::~nsImapService()
@@ -112,16 +115,32 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
 {
 	nsresult rv = NS_OK;
 	PRBool canRunUrl = PR_FALSE;
+    PRBool hasToWait = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
+    nsCOMPtr<nsIImapProtocol> freeConnection;
+    PRBool isBusy = PR_FALSE;
+    PRBool isInboxConnection = PR_FALSE;
+
+    PR_CEnterMonitor(this);
+
+    *aImapConnection = nsnull;
+
 	// iterate through the connection cache for a connection that can handle this url.
 	PRUint32 cnt;
     rv = m_connectionCache->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
-    for (PRUint32 i = 0; i < cnt && !canRunUrl; i++) 
+    for (PRUint32 i = 0; i < cnt && !canRunUrl && !hasToWait; i++) 
 	{
         connection = do_QueryInterface(m_connectionCache->ElementAt(i));
 		if (connection)
-			connection->CanHandleUrl(aImapUrl, canRunUrl);
+			connection->CanHandleUrl(aImapUrl, canRunUrl, hasToWait);
+        
+        if (!freeConnection && !canRunUrl && !hasToWait && connection)
+        {
+            connection->IsBusy(isBusy, isInboxConnection);
+            if (!isBusy && !isInboxConnection)
+                freeConnection = connection;
+        }
 	}
 
 	// if we got here and we have a connection, then we should return it!
@@ -130,13 +149,25 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
 		*aImapConnection = connection;
 		NS_IF_ADDREF(*aImapConnection);
 	}
-	else
+    else if (hasToWait)
+    {
+        // do nothing; return NS_OK; for queuing
+    }
+    else if (freeConnection)
+    {
+        *aImapConnection = freeConnection;
+        NS_IF_ADDREF(*aImapConnection);
+    }
+	else if (cnt < MAXIMUM_CONNECTION && aEventQueue)
 	{	
 		// create a new connection and add it to the connection cache
-		// we may need to flag the protocol connection as busy so we don't get a race
+		// we may need to flag the protocol connection as busy so we don't get
+        // a race 
 		// condition where someone else goes through this code 
 		nsIImapProtocol * protocolInstance = nsnull;
-		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &protocolInstance);
+		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
+                                                nsIImapProtocol::GetIID(),
+                                                (void **) &protocolInstance);
 		if (NS_SUCCEEDED(rv) && protocolInstance)
 			rv = protocolInstance->Initialize(m_sessionList, aEventQueue);
 		
@@ -146,7 +177,12 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
 		*aImapConnection = protocolInstance; // this is already ref counted.
 
 	}
+    else // cannot get anyone to handle the url queue it
+    {
+        // queue the url
+    }
 
+    PR_CExitMonitor(this);
 	return rv;
 }
 
@@ -173,6 +209,42 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
 }
 
 NS_IMETHODIMP
+nsImapService::LoadNextQueuedUrl()
+{
+    PRUint32 cnt = 0;
+    nsresult rv = NS_OK;
+    m_urlQueue->Count(&cnt);
+    if (cnt > 0)
+    {
+        nsCOMPtr<nsIImapUrl>
+            aImapUrl(do_QueryInterface(m_urlQueue->ElementAt(0)));
+
+        if (aImapUrl)
+        {
+            nsISupports *aConsumer =
+                (nsISupports*)m_urlConsumers.ElementAt(0);
+
+            NS_IF_ADDREF(aConsumer);
+            
+            nsIImapProtocol * protocolInstance = nsnull;
+            rv = CreateImapConnection(nsnull, aImapUrl,
+                                               &protocolInstance);
+            if (NS_SUCCEEDED(rv) && protocolInstance)
+            {
+                rv = protocolInstance->LoadUrl(aImapUrl, aConsumer);
+                if (NS_SUCCEEDED(rv))
+                {
+                    m_urlQueue->RemoveElementAt(0);
+                    m_urlConsumers.RemoveElementAt(0);
+                }
+            }
+            NS_IF_RELEASE(aConsumer);
+        }
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
 nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
@@ -188,16 +260,13 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec(eOneByte);
     nsresult rv;
-	rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, aImapMailFolder,
-                                 protocolInstance, urlSpec);
+	rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
-		PRBool gotFolder = PR_FALSE;
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
@@ -205,19 +274,17 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 		{
             nsString2 folderName("", eOneByte);
             GetFolderName(aImapMailFolder, folderName);
-			gotFolder = folderName.Length() > 0;
 			urlSpec.Append("/select>/");
             urlSpec.Append(folderName.GetBuffer());
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-		} // if we got a host name
-
-		imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-		if (gotFolder)
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-		if (aURL)
-			*aURL = imapUrl; 
-		else
-			NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+                                                 imapUrl,
+                                                 aUrlListener,
+                                                 nsnull,
+                                                 aURL);
+		}
+        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	} // if we have a url to run....
 
 	return rv;
@@ -239,14 +306,12 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("", eOneByte);
 
 	nsresult rv;
     
-    rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, aImapMailFolder,
-                                 protocolInstance, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -263,14 +328,11 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-		} // if we got a host name
-
-		imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-		protocolInstance->LoadUrl(imapUrl, nsnull);
-		if (aURL)
-			*aURL = imapUrl; 
-		else
-			NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
+		}
+        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	} // if we have a url to run....
 
 	return rv;
@@ -352,8 +414,7 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
 	nsString2 urlSpec("",eOneByte);
 
     nsresult rv;
-    rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, aImapMailFolder,
-                                 protocolInstance, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -376,21 +437,20 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, aDisplayConsumer);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener,
+                                                 aDisplayConsumer, aURL);
 		}
+        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
-// utility function to handle basic setup - will probably change when the real connection stuff is done.
-nsresult nsImapService::GetImapConnectionAndUrl(
-    nsIEventQueue * aClientEventQueue, nsIImapUrl * &imapUrl,
-    nsIMsgFolder* &aImapMailFolder, nsIImapProtocol * &protocolInstance, 
-    nsString2 &urlSpec)
+
+nsresult 
+nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
+                                    nsIMsgFolder* &aImapMailFolder,
+                                    nsString2 &urlSpec)
 {
 	nsresult rv = NS_OK;
     char *hostname = nsnull;
@@ -404,45 +464,63 @@ nsresult nsImapService::GetImapConnectionAndUrl(
         PR_FREEIF(hostname);
         return rv;
     }
-	// now we need to create an imap url to load into the connection. The url needs to represent a select folder action.
+	// now we need to create an imap url to load into the connection. The url
+    // needs to represent a select folder action. 
 	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
                                             nsIImapUrl::GetIID(), (void **)
                                             &imapUrl);
 	if (NS_SUCCEEDED(rv) && imapUrl)
-		rv = CreateStartOfImapUrl(*imapUrl, urlSpec, hostname, username);
+    {
+        // *** jefft -- let's only do hostname now. I'll do username later
+        // when the incoming server works were done. We might also need to
+        // pass in the port number
+        urlSpec = "imap://";
+#if 0
+        urlSpec.Append(username);
+        urlSpec.Append('@');
+#endif 
+        urlSpec.Append(hostname);
+        // *** jefft - force to parse the urlSpec in order to search for
+        // the correct incoming server
+        imapUrl->SetSpec(urlSpec.GetBuffer());
 
-	// Create a imap connection to run the url inside of....
-	rv = CreateImapConnection(aClientEventQueue, imapUrl, &protocolInstance);
-
-	if (NS_FAILED(rv))
-		NS_IF_RELEASE(imapUrl); // release the imap url before we return it because the whole command failed...
+    }
 
     PR_FREEIF(hostname);
     PR_FREEIF(username);
 	return rv;
 }
 
-// these are all the urls we know how to generate. I'm going to make service methods
-// for most of these...and use nsString2's to build up the string.
-nsresult nsImapService::CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2
-                                             &urlString, const char* hostName,
-                                             const char* userName)
+nsresult
+nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
+                                           nsIImapUrl* aImapUrl,
+                                           nsIUrlListener* aUrlListener,
+                                           nsISupports* aConsumer,
+                                           nsIURL** aURL)
 {
     nsresult rv = NS_OK;
-    // *** jefft -- let's only do hostname now. I'll do username later when
-    // the incoming server works were done. We might also need to pass in the
-    // port number
-    urlString = "imap://";
-#if 0
-    uriString.Append(userName);
-    uriString.Append("@");
-#endif 
-    urlString.Append(hostName);
+    nsIImapProtocol* aProtocol = nsnull;
+    
+    rv = CreateImapConnection(aClientEventQueue, aImapUrl, &aProtocol);
+    if (NS_FAILED(rv)) return rv;
+    aImapUrl->RegisterListener(aUrlListener);
+    if (aProtocol)
+    {
+        rv = aProtocol->LoadUrl(aImapUrl, aConsumer);
+    }
+    else
+    {
+        m_urlQueue->AppendElement(aImapUrl);
+        m_urlConsumers.AppendElement((void*)aConsumer);
+        NS_IF_ADDREF(aConsumer);
+    }
+    if (aURL)
+    {
+        *aURL = aImapUrl;
+        NS_IF_RELEASE(*aURL);
+    }
 
-    imapUrl.SetSpec(urlString.GetBuffer()); // *** jefft - force to parse the
-                                            // urlSpec in order to search for
-                                            // the correct incoming server
-	return rv;
+    return rv;
 }
 
 /* fetching the headers of RFC822 messages */
@@ -465,12 +543,11 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("", eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, 
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl, 
+                                          aImapMailFolder,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -492,13 +569,14 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
             urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
+
 		}
+        NS_RELEASE(imapUrl); // release our ref count from the
+                             // create instance call...
 	}
 	return rv;
 }
@@ -516,12 +594,11 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("", eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl,
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -539,13 +616,11 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
-		}
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
+        }
+        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
@@ -562,12 +637,11 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("",eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl,
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -585,13 +659,11 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
 		}
+        NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
 }
@@ -611,12 +683,11 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("",eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl,
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -636,13 +707,11 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(uidHighWater, 10);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
 		}
+        NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
 }
@@ -663,12 +732,11 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("",eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl,
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -690,13 +758,12 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
-		}
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
+
+        }
+        NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
 }
@@ -713,12 +780,11 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("",eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl,
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -736,13 +802,11 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
             GetFolderName(aImapMailFolder, folderName);
 			urlSpec.Append(folderName.GetBuffer());
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
 		}
+        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
@@ -807,12 +871,11 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
     if (!aImapMailFolder || !aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
 	
-	nsIImapProtocol * protocolInstance = nsnull;
 	nsIImapUrl * imapUrl = nsnull;
 	nsString2 urlSpec("",eOneByte);
 
-	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl,
-                                          aImapMailFolder, protocolInstance,
+	nsresult rv = CreateStartOfImapUrl(imapUrl,
+                                          aImapMailFolder,
                                           urlSpec); 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -838,13 +901,11 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append('>');
 			urlSpec.Append(flags, 10);
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
-			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
-			protocolInstance->LoadUrl(imapUrl, nsnull);
-			if (aURL)
-				*aURL = imapUrl; 
-			else
-				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                                 aUrlListener, nsnull, aURL);
 		}
+        NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
 	return rv;
 }
@@ -908,14 +969,13 @@ nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapProtocol* aProtocol = nsnull;
     nsIImapUrl* aImapUrl = nsnull;
     nsString2 urlSpec("", eOneByte);
 
-    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
-                                          aImapMailFolder, aProtocol,
+    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
-    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
@@ -924,19 +984,11 @@ nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
             urlSpec.Append("/discoverallboxes");
             rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
-            {
-                aImapUrl->RegisterListener(aUrlListener);
-                aProtocol->LoadUrl(aImapUrl, nsnull);
-                if (aURL)
-                {
-                    *aURL = aImapUrl;
-                    NS_ADDREF(*aURL);
-                }
-            }
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
+                                                 aUrlListener, nsnull, aURL);
         }
+        NS_RELEASE(aImapUrl);
     }
-    NS_IF_RELEASE(aImapUrl);
-    NS_IF_RELEASE(aProtocol);
     return rv;
 }
 
@@ -951,14 +1003,13 @@ nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapProtocol* aProtocol = nsnull;
     nsIImapUrl* aImapUrl = nsnull;
     nsString2 urlSpec("",eOneByte);
 
-    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
-                                          aImapMailFolder, aProtocol,
+    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
-    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
@@ -967,19 +1018,11 @@ nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
             urlSpec.Append("/discoverallandsubscribedboxes");
             rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
-            {
-                aImapUrl->RegisterListener(aUrlListener);
-                aProtocol->LoadUrl(aImapUrl, nsnull);
-                if (aURL)
-                {
-                    *aURL = aImapUrl;
-                    NS_ADDREF(*aURL);
-                }
-            }
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
+                                                 aUrlListener, nsnull, aURL);
         }
+        NS_RELEASE(aImapUrl);
     }
-    NS_IF_RELEASE(aImapUrl);
-    NS_IF_RELEASE(aProtocol);
     return rv;
 }
 
@@ -994,14 +1037,13 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapProtocol* aProtocol = nsnull;
     nsIImapUrl* aImapUrl = nsnull;
     nsString2 urlSpec("", eOneByte);
 
-    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
-                                          aImapMailFolder, aProtocol,
+    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+                                          aImapMailFolder,
                                           urlSpec);
-    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
@@ -1016,24 +1058,18 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
                 urlSpec.Append(folderName.GetBuffer());
                 rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
-                {
-                    aImapUrl->RegisterListener(aUrlListener);
-                    aProtocol->LoadUrl(aImapUrl, nsnull);
-                    if (aURL)
-                    {
-                        *aURL = aImapUrl;
-                        NS_ADDREF(*aURL);
-                    }
-                }
+                    rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+                                                     aImapUrl,
+                                                     aUrlListener,
+                                                     nsnull, aURL);
             }
             else
             {
                 rv = NS_ERROR_NULL_POINTER;
             }
         }
+        NS_RELEASE(aImapUrl);
     }
-    NS_IF_RELEASE(aImapUrl);
-    NS_IF_RELEASE(aProtocol);
     return rv;
 }
 
@@ -1049,13 +1085,12 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
     if (!aImapMailFolder || ! aClientEventQueue)
         return NS_ERROR_NULL_POINTER;
     
-    nsIImapProtocol* aProtocol = nsnull;
     nsIImapUrl* aImapUrl = nsnull;
     nsString2 urlSpec("", eOneByte);
 
-    nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, aImapUrl,
-                                          aImapMailFolder, aProtocol, urlSpec);
-    if (NS_SUCCEEDED (rv) && aImapUrl && aProtocol)
+    nsresult rv = CreateStartOfImapUrl(aImapUrl,
+                                          aImapMailFolder, urlSpec);
+    if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
@@ -1072,24 +1107,18 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                 urlSpec.Append(folderName.GetBuffer());
                 rv = aImapUrl->SetSpec(urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
-                {
-                    aImapUrl->RegisterListener(aUrlListener);
-                    aProtocol->LoadUrl(aImapUrl, nsnull);
-                    if (aURL)
-                    {
-                        *aURL = aImapUrl;
-                        NS_ADDREF(*aURL);
-                    }
-                }
+                    rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+                                                     aImapUrl,
+                                                     aUrlListener,
+                                                     nsnull, aURL);
             }
             else
             {
                 rv = NS_ERROR_NULL_POINTER;
             }
         }
+        NS_RELEASE(aImapUrl);
     }
-    NS_IF_RELEASE(aImapUrl);
-    NS_IF_RELEASE(aProtocol);
     return rv;
 }
 
@@ -1146,12 +1175,11 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         return NS_ERROR_FAILURE;
     }
 
-    nsIImapProtocol* protocolInstance = nsnull;
     nsIImapUrl* imapUrl = nsnull;
     nsString2 urlSpec("", eOneByte);
 
-    rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, aSrcFolder,
-                                 protocolInstance, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, aSrcFolder,
+                                 urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         SetImapUrlSink(aSrcFolder, imapUrl);
@@ -1180,14 +1208,9 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         urlSpec.Append(folderName);
         rv = imapUrl->SetSpec(urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
-        {
-            imapUrl->RegisterListener(aUrlListener);
-            protocolInstance->LoadUrl(imapUrl, nsnull);
-            if (aURL)
-                *aURL = imapUrl;
-            else
-                NS_RELEASE(imapUrl);
-        }
+            rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                             aUrlListener, nsnull, aURL);
+        NS_RELEASE(imapUrl);
     }
     PR_FREEIF(srcHostname);
     PR_FREEIF(srcUsername);
