@@ -278,15 +278,6 @@ NS_IMETHODIMP nsAccessible::GetNextSibling(nsIAccessible * *aNextSibling)
     // This node has been shut down
     return NS_ERROR_FAILURE;
   }
-  if (!mParent) {
-    nsCOMPtr<nsIAccessible> parent;
-    GetParent(getter_AddRefs(parent));
-    if (parent) {
-      PRInt32 numChildren;
-      parent->GetChildCount(&numChildren);  // Make sure we cache all of the children
-    }
-  }
-
   if (mNextSibling || !mParent) {
     // If no parent, don't try to calculate a new sibling
     // It either means we're at the root or shutting down the parent
@@ -296,7 +287,22 @@ NS_IMETHODIMP nsAccessible::GetNextSibling(nsIAccessible * *aNextSibling)
     return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  // Last argument of PR_TRUE indicates to walk anonymous content
+  nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
+
+  if (NS_SUCCEEDED(walker.GetNextSibling())) {
+    *aNextSibling = walker.mState.accessible;
+    NS_ADDREF(*aNextSibling);
+    nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(*aNextSibling));
+    privateAcc->SetParent(mParent);
+
+    mNextSibling = *aNextSibling;
+  }
+
+  if (!mNextSibling)
+    mNextSibling = DEAD_END_ACCESSIBLE;
+
+  return NS_OK;  
 }
 
   /* readonly attribute nsIAccessible previousSibling; */
@@ -309,26 +315,17 @@ NS_IMETHODIMP nsAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling
     return NS_ERROR_FAILURE;
   }
 
-  if (!mParent) {
-    nsCOMPtr<nsIAccessible> parent;
-    if (NS_FAILED(GetParent(getter_AddRefs(parent)))) {
-      return NS_ERROR_FAILURE;
-    }
+  // Last argument of PR_TRUE indicates to walk anonymous content
+  nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
+  if (NS_SUCCEEDED(walker.GetPreviousSibling())) {
+    *aPreviousSibling = walker.mState.accessible;
+    NS_ADDREF(*aPreviousSibling);
+    // Use last walker state to cache data on prev accessible
+    nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(*aPreviousSibling));
+    privateAcc->SetParent(mParent);
   }
 
-  nsCOMPtr<nsIAccessible> testAccessible, prevSibling;
-  mParent->GetFirstChild(getter_AddRefs(testAccessible));
-  while (testAccessible) {
-    prevSibling = testAccessible;
-    prevSibling->GetNextSibling(getter_AddRefs(testAccessible));
-  }
-
-  if (!prevSibling) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ADDREF(*aPreviousSibling = prevSibling);
-  return NS_OK;
+  return NS_OK;  
 }
 
   /* readonly attribute nsIAccessible firstChild; */
@@ -394,7 +391,7 @@ void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
     // Seed the frame hint early while we're still on a container node.
     // This is better than doing the GetPrimaryFrameFor() later on
     // a text node, because text nodes aren't in the frame map.
-    walker.mState.frame = GetFrame();
+    walker.mState.frameHint = GetFrame();
 
     nsCOMPtr<nsPIAccessible> privatePrevAccessible;
     mAccChildCount = 0;
