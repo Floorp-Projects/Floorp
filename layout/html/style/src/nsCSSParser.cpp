@@ -21,6 +21,10 @@
 #include "nsCSSScanner.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
+#include "nsICSSImportRule.h"
+#include "nsICSSMediaRule.h"
+#include "nsICSSCharsetRule.h"
+#include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIStyleSet.h"
 #include "nsICSSStyleSheet.h"
@@ -31,6 +35,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
 #include "nsCSSAtoms.h"
@@ -106,10 +111,11 @@ void SelectorList::Dump()
 class CSSParserImpl : public nsICSSParser {
 public:
   CSSParserImpl();
-  CSSParserImpl(nsICSSStyleSheet* aSheet);
   virtual ~CSSParserImpl();
 
   NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Init(nsICSSStyleSheet* aSheet);
 
   NS_IMETHOD GetInfoMask(PRUint32& aResult);
 
@@ -137,18 +143,30 @@ protected:
   PRBool GetURLToken(PRInt32& aErrorCode, PRBool aSkipWS);
   void UngetToken();
 
-  PRBool ExpectSymbol(PRInt32& aErrorCode, char aSymbol, PRBool aSkipWS);
+  PRBool ExpectSymbol(PRInt32& aErrorCode, PRUnichar aSymbol, PRBool aSkipWS);
   PRBool ExpectEndProperty(PRInt32& aErrorCode, PRBool aSkipWS);
   nsString* NextIdent(PRInt32& aErrorCode);
   void SkipUntil(PRInt32& aErrorCode, PRUnichar aStopSymbol);
   void SkipRuleSet(PRInt32& aErrorCode);
+  PRBool SkipAtRule(PRInt32& aErrorCode);
   PRBool SkipDeclaration(PRInt32& aErrorCode, PRBool aCheckForBraces);
+
+  PRBool PushGroup(nsICSSGroupRule* aRule);
+  void PopGroup(void);
+  void AppendRule(nsICSSRule* aRule);
 
   PRBool ParseRuleSet(PRInt32& aErrorCode);
   PRBool ParseAtRule(PRInt32& aErrorCode);
+  PRBool ParseCharsetRule(PRInt32& aErrorCode);
   PRBool ParseImportRule(PRInt32& aErrorCode);
-  PRBool GatherMedia(PRInt32& aErrorCode, nsString& aMedia);
+  PRBool GatherMedia(PRInt32& aErrorCode, nsString& aMedia, nsISupportsArray* aMediaAtoms);
   PRBool ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia);
+  PRBool ParseMediaRule(PRInt32& aErrorCode);
+  PRBool ParseNameSpaceRule(PRInt32& aErrorCode);
+  PRBool ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPrefix, 
+                          const nsString& aURLSpec);
+  PRBool ParseFontFaceRule(PRInt32& aErrorCode);
+  PRBool ParsePageRule(PRInt32& aErrorCode);
 
   PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList*& aListHead);
   PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList*& aListHead);
@@ -234,10 +252,21 @@ protected:
   PRInt32 mChildSheetCount;
   nsICSSLoader* mChildLoader; // not ref counted, it owns us
 
-  PRBool mInHead;
+  enum nsCSSSection { 
+    eCSSSection_Charset, 
+    eCSSSection_Import, 
+    eCSSSection_NameSpace,
+    eCSSSection_General 
+  };
+
+  nsCSSSection  mSection;
 
   PRBool  mNavQuirkMode;
   PRBool  mCaseSensitive;
+
+  nsINameSpace* mNameSpace;
+
+  nsISupportsArray* mGroupStack;
 };
 
 NS_HTML nsresult
@@ -253,34 +282,44 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 }
 
 CSSParserImpl::CSSParserImpl()
+  : mToken(),
+    mHavePushBack(PR_FALSE),
+    mScanner(nsnull),
+    mURL(nsnull),
+    mSheet(nsnull),
+    mChildSheetCount(0),
+    mChildLoader(nsnull),
+    mSection(eCSSSection_Charset),
+    mNavQuirkMode(PR_TRUE),
+    mCaseSensitive(PR_FALSE),
+    mNameSpace(nsnull),
+    mGroupStack(nsnull)
 {
   NS_INIT_REFCNT();
   nsCSSAtoms::AddrefAtoms();
-  mScanner = nsnull;
-  mSheet = nsnull;
-  mHavePushBack = PR_FALSE;
-  mNavQuirkMode = PR_TRUE;
-  mCaseSensitive = PR_FALSE;
-  mChildSheetCount = 0;
-  mChildLoader = nsnull;
 }
 
-CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
+NS_IMETHODIMP
+CSSParserImpl::Init(nsICSSStyleSheet* aSheet)
 {
-  NS_INIT_REFCNT();
-  nsCSSAtoms::AddrefAtoms();
-  mScanner = nsnull;
-  mSheet = aSheet; NS_ADDREF(aSheet);
-  mHavePushBack = PR_FALSE;
-  mNavQuirkMode = PR_TRUE;
-  mCaseSensitive = PR_FALSE;
-  mChildSheetCount = mSheet->StyleSheetCount();
+  NS_IF_RELEASE(mGroupStack);
+  NS_IF_RELEASE(mNameSpace);
+  NS_IF_RELEASE(mSheet);
+  mSheet = aSheet;
+  if (mSheet) {
+    NS_ADDREF(aSheet);
+    mSheet->StyleSheetCount(mChildSheetCount);
+    mSheet->GetNameSpace(mNameSpace);
+  }
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
 
 CSSParserImpl::~CSSParserImpl()
 {
+  NS_IF_RELEASE(mGroupStack);
+  NS_IF_RELEASE(mNameSpace);
   NS_IF_RELEASE(mSheet);
   nsCSSAtoms::ReleaseAtoms();
 }
@@ -302,10 +341,13 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 
   if (aSheet != mSheet) {
     // Switch to using the new sheet
+    NS_IF_RELEASE(mGroupStack);
+    NS_IF_RELEASE(mNameSpace);
     NS_IF_RELEASE(mSheet);
     mSheet = aSheet;
     NS_ADDREF(mSheet);
-    mChildSheetCount = mSheet->StyleSheetCount();
+    mSheet->StyleSheetCount(mChildSheetCount);
+    mSheet->GetNameSpace(mNameSpace);
   }
 
   return NS_OK;
@@ -333,9 +375,12 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 {
   NS_ASSERTION(nsnull != aInputURL, "need base URL");
 
-  if (nsnull == mSheet) {
+  if (! mSheet) {
     NS_NewCSSStyleSheet(&mSheet, aInputURL);
     mChildSheetCount = 0;
+  }
+  if (! mSheet) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   PRInt32 errorCode = NS_OK;
@@ -346,7 +391,34 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   mScanner->Init(aInput);
   mURL = aInputURL;
   NS_IF_ADDREF(aInputURL);
-  mInHead = PR_TRUE;
+
+  PRInt32 ruleCount = 0;
+  mSheet->StyleRuleCount(ruleCount);
+  if (0 < ruleCount) {
+    nsICSSRule* lastRule = nsnull;
+    mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
+    if (lastRule) {
+      PRInt32 type;
+      lastRule->GetType(type);
+      switch (type) {
+        case nsICSSRule::CHARSET_RULE:
+        case nsICSSRule::IMPORT_RULE:     
+          mSection = eCSSSection_Import;    
+          break;
+        case nsICSSRule::NAMESPACE_RULE:  
+          mSection = eCSSSection_NameSpace; 
+          break;
+        default:  
+          mSection = eCSSSection_General; 
+          break;
+      }
+      NS_RELEASE(lastRule);
+    }
+  }
+  else {
+    mSection = eCSSSection_Charset; // sheet is empty, any rules are fair
+  }
+
   nsCSSToken* tk = &mToken;
   for (;;) {
     // Get next non-whitespace token
@@ -360,9 +432,10 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
       ParseAtRule(errorCode);
       continue;
     }
-    mInHead = PR_FALSE;
     UngetToken();
-    ParseRuleSet(errorCode);
+    if (ParseRuleSet(errorCode)) {
+      mSection = eCSSSection_General;
+    }
   }
   delete mScanner;
   mScanner = nsnull;
@@ -403,7 +476,7 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
   mURL = aBaseURL;
   NS_IF_ADDREF(mURL);
 
-  mInHead = PR_FALSE;
+  mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
 
   nsICSSDeclaration* declaration = ParseDeclarationBlock(errorCode, PR_FALSE);
@@ -456,7 +529,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
   mURL = aBaseURL;
   NS_IF_ADDREF(mURL);
 
-  mInHead = PR_FALSE;
+  mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
 
   PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
@@ -516,14 +589,13 @@ void CSSParserImpl::UngetToken()
 }
 
 PRBool CSSParserImpl::ExpectSymbol(PRInt32& aErrorCode,
-                                   char aSymbol,
+                                   PRUnichar aSymbol,
                                    PRBool aSkipWS)
 {
   if (!GetToken(aErrorCode, aSkipWS)) {
     return PR_FALSE;
   }
-  nsCSSToken* tk = &mToken;
-  if ((eCSSToken_Symbol == tk->mType) && (aSymbol == tk->mSymbol)) {
+  if (mToken.IsSymbol(aSymbol)) {
     return PR_TRUE;
   }
   UngetToken();
@@ -559,24 +631,14 @@ nsString* CSSParserImpl::NextIdent(PRInt32& aErrorCode)
   return &mToken.mIdent;
 }
 
-// XXX @media type {, types } '{' rules '}'
-// XXX @font-face
-// XXX @page { :left | :right } '{' declarations '}'
-PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
+PRBool CSSParserImpl::SkipAtRule(PRInt32& aErrorCode)
 {
-  nsCSSToken* tk = &mToken;
-  if (mInHead && tk->mIdent.EqualsIgnoreCase("import")) {
-    ParseImportRule(aErrorCode);
-    return PR_TRUE;
-  }
-
-  // Skip over unsupported at rule
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       return PR_FALSE;
     }
-    if (eCSSToken_Symbol == tk->mType) {
-      PRUnichar symbol = tk->mSymbol;
+    if (eCSSToken_Symbol == mToken.mType) {
+      PRUnichar symbol = mToken.mSymbol;
       if (symbol == ';') {
         break;
       }
@@ -590,11 +652,70 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
       }
     }
   }
-  mInHead = PR_FALSE;
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
+// XXX @media type {, types } '{' rules '}'
+// XXX @font-face
+// XXX @page { :left | :right } '{' declarations '}'
+PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
+{
+  if ((mSection <= eCSSSection_Charset) && 
+      (mToken.mIdent.EqualsIgnoreCase("charset"))) {
+    if (ParseCharsetRule(aErrorCode)) {
+      mSection = eCSSSection_Import;  // only one charset allowed
+      return PR_TRUE;
+    }
+  }
+  if ((mSection <= eCSSSection_Import) && 
+      mToken.mIdent.EqualsIgnoreCase("import")) {
+    if (ParseImportRule(aErrorCode)) {
+      mSection = eCSSSection_Import;
+      return PR_TRUE;
+    }
+  }
+  if ((mSection <= eCSSSection_NameSpace) && 
+      mToken.mIdent.EqualsIgnoreCase("namespace")) {
+    if (ParseNameSpaceRule(aErrorCode)) {
+      mSection = eCSSSection_NameSpace;
+      return PR_TRUE;
+    }
+  }
+  if (mToken.mIdent.EqualsIgnoreCase("media")) {
+    if (ParseMediaRule(aErrorCode)) {
+      mSection = eCSSSection_General;
+      return PR_TRUE;
+    }
+  }
+  if (mToken.mIdent.EqualsIgnoreCase("font-face")) {
+    if (ParseFontFaceRule(aErrorCode)) {
+      mSection = eCSSSection_General;
+      return PR_TRUE;
+    }
+  }
+  if (mToken.mIdent.EqualsIgnoreCase("page")) {
+    if (ParsePageRule(aErrorCode)) {
+      mSection = eCSSSection_General;
+      return PR_TRUE;
+    }
+  }
+
+  // Skip over unsupported at rule, don't advance section
+  return SkipAtRule(aErrorCode);
+}
+
+PRBool CSSParserImpl::ParseCharsetRule(PRInt32& aErrorCode)
+{
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  // XXX not yet implemented
+  return PR_FALSE;
+}
+
+PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia, 
+                                  nsISupportsArray* aMediaAtoms)
 {
   PRBool first = PR_TRUE;
   PRBool expectIdent = PR_TRUE;
@@ -604,16 +725,15 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
     }
     if (eCSSToken_Symbol == mToken.mType) {
       PRUnichar symbol = mToken.mSymbol;
-      if (';' == symbol) {
+      if ((';' == symbol) || ('{' == symbol)) {
         UngetToken();
-        aMedia.ToLowerCase(); // case insensitive from CSS - must be lower cased
         return PR_TRUE;
       } else if (',' != symbol) {
         UngetToken();
-        return PR_FALSE;
+        break;
       } else if (expectIdent) {
         UngetToken();
-        return PR_FALSE;
+        break;
       }
       else {
         expectIdent = PR_TRUE;
@@ -624,13 +744,19 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
         if (! first) {
           aMedia.Append(',');
         }
+        mToken.mIdent.ToLowerCase();  // case insensitive from CSS - must be lower cased
+        if (aMediaAtoms) {
+          nsIAtom* medium = NS_NewAtom(mToken.mIdent);
+          aMediaAtoms->AppendElement(medium);
+          NS_RELEASE(medium);
+        }
         aMedia.Append(mToken.mIdent);
         first = PR_FALSE;
         expectIdent = PR_FALSE;
       }
       else {
         UngetToken();
-        return PR_FALSE;
+        break;
       }
     }
     else {
@@ -639,10 +765,13 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
     }
   }
   aMedia.Truncate();
+  if (aMediaAtoms) {
+    aMediaAtoms->Clear();
+  }
   return PR_FALSE;
 }
 
-// Parse a CSS1 import rule: "@import STRING | URL [medium [, mdeium]]"
+// Parse a CSS2 import rule: "@import STRING | URL [medium [, mdeium]]"
 PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -653,20 +782,21 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 
   if (eCSSToken_String == mToken.mType) {
     url = mToken.mIdent;
-    if (GatherMedia(aErrorCode, media)) {
+    if (GatherMedia(aErrorCode, media, nsnull)) {
       if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
         ProcessImport(aErrorCode, url, media);
         return PR_TRUE;
       }
     }
   }
-  else if (eCSSToken_Function == mToken.mType) {
+  else if ((eCSSToken_Function == mToken.mType) && 
+           (mToken.mIdent.EqualsIgnoreCase("url"))) {
     if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
       if (GetURLToken(aErrorCode, PR_TRUE)) {
         if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
           url = mToken.mIdent;
           if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-            if (GatherMedia(aErrorCode, media)) {
+            if (GatherMedia(aErrorCode, media, nsnull)) {
               if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
                 ProcessImport(aErrorCode, url, media);
                 return PR_TRUE;
@@ -677,38 +807,21 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
       }
     }
   }
-  // invalid @import
-  if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
-    // Skip over trailing cruft
-    for (;;) {
-      if (!GetToken(aErrorCode, PR_TRUE)) {
-        return PR_FALSE;
-      }
-      if (eCSSToken_Symbol == mToken.mType) {
-        PRUnichar symbol = mToken.mSymbol;
-        if (symbol == ';') {
-          break;
-        }
-        if (symbol == '{') {
-          SkipUntil(aErrorCode, '}');
-          break;
-        } else if (symbol == '(') {
-          SkipUntil(aErrorCode, ')');
-        } else if (symbol == '[') {
-          SkipUntil(aErrorCode, ']');
-        }
-      }
-    }
-  }
-
-//  mInHead = PR_FALSE; // an invalid @import doesn't block other @imports (I think) awaiting clarification
-  return PR_TRUE;
+  // don't advance section, simply ignore invalid @import
+  return PR_FALSE;
 }
 
 
 PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia)
 {
   PRBool result = PR_FALSE;
+
+  nsICSSImportRule* rule = nsnull;
+  NS_NewCSSImportRule(&rule, aURLSpec, aMedia);
+  if (rule) {
+    AppendRule(rule);
+    NS_RELEASE(rule);
+  }
 
   if (mChildLoader) {
     // XXX probably need a way to encode unicode junk for the part of
@@ -730,13 +843,160 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
       return PR_FALSE;
     }
 
-    if (PR_FALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
+    if (NS_COMFALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
       mChildLoader->LoadChildSheet(mSheet, url, aMedia, mChildSheetCount++);
     }
     NS_RELEASE(url);
   }
   
   return result;
+}
+
+// Parse a CSS2 media rule: "@media medium [, mdeium] { ... }"
+PRBool CSSParserImpl::ParseMediaRule(PRInt32& aErrorCode)
+{
+  nsAutoString  mediaStr;
+  nsISupportsArray* media = nsnull;
+  NS_NewISupportsArray(&media);
+  if (media) {
+    if (GatherMedia(aErrorCode, mediaStr, media)) {
+      if ((0 < mediaStr.Length()) &&
+          ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
+        // push media rule on stack, loop over children
+        nsICSSMediaRule*  rule = nsnull;
+        NS_NewCSSMediaRule(&rule);
+        if (rule) {
+          if (PushGroup(rule)) {
+
+            nsCSSSection holdSection = mSection;
+            mSection = eCSSSection_General;
+
+            for (;;) {
+              // Get next non-whitespace token
+              if (! GetToken(aErrorCode, PR_TRUE)) {
+                break;
+              }
+              if (mToken.IsSymbol('}')) { // done!
+                UngetToken();
+                break;
+              }
+              if (eCSSToken_AtKeyword == mToken.mType) {
+                SkipAtRule(aErrorCode); // @media cannot contain @rules
+                continue;
+              }
+              UngetToken();
+              ParseRuleSet(aErrorCode);
+            }
+            PopGroup();
+
+            if (ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
+              rule->SetMedia(media);
+              AppendRule(rule);
+              NS_RELEASE(rule);
+              NS_RELEASE(media);
+              return PR_TRUE;
+            }
+            mSection = holdSection;
+          }
+          NS_RELEASE(rule);
+        }
+        else {  // failed to create rule, backup and skip block
+          UngetToken();
+        }
+      }
+    }
+    NS_RELEASE(media);
+  }
+
+  return PR_FALSE;
+}
+
+// Parse a CSS3 namespace rule: "@namespace [prefix] STRING | URL;"
+PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode)
+{
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  nsAutoString  prefix;
+  nsAutoString  url;
+
+  if (eCSSToken_Ident == mToken.mType) {
+    prefix = mToken.mIdent;
+    if (! GetToken(aErrorCode, PR_TRUE)) {
+      return PR_FALSE;
+    }
+  }
+
+  if (eCSSToken_String == mToken.mType) {
+    url = mToken.mIdent;
+    if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+      ProcessNameSpace(aErrorCode, prefix, url);
+      return PR_TRUE;
+    }
+  }
+  else if ((eCSSToken_Function == mToken.mType) && 
+           (mToken.mIdent.EqualsIgnoreCase("url"))) {
+    if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
+      if (GetURLToken(aErrorCode, PR_TRUE)) {
+        if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
+          url = mToken.mIdent;
+          if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+            if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+              ProcessNameSpace(aErrorCode, prefix, url);
+              return PR_TRUE;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
+PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPrefix, 
+                                       const nsString& aURLSpec)
+{
+  PRBool result = PR_FALSE;
+
+  nsICSSNameSpaceRule*  rule = nsnull;
+  nsIAtom*  prefix = nsnull;
+
+  if (0 < aPrefix.Length()) {
+    prefix = NS_NewAtom(aPrefix);
+  }
+
+  NS_NewCSSNameSpaceRule(&rule, prefix, aURLSpec);
+  if (rule) {
+    AppendRule(rule);
+    NS_RELEASE(rule);
+    NS_IF_RELEASE(mNameSpace);
+    mSheet->GetNameSpace(mNameSpace);
+  }
+
+  NS_IF_RELEASE(prefix);
+  return result;
+}
+
+PRBool CSSParserImpl::ParseFontFaceRule(PRInt32& aErrorCode)
+{
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  // XXX not yet implemented
+  return PR_FALSE;
+}
+
+PRBool CSSParserImpl::ParsePageRule(PRInt32& aErrorCode)
+{
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  // XXX not yet implemented
+  return PR_FALSE;
 }
 
 void CSSParserImpl::SkipUntil(PRInt32& aErrorCode, PRUnichar aStopSymbol)
@@ -814,6 +1074,45 @@ void CSSParserImpl::SkipRuleSet(PRInt32& aErrorCode)
   }
 }
 
+PRBool CSSParserImpl::PushGroup(nsICSSGroupRule* aRule)
+{
+  if (! mGroupStack) {
+    NS_NewISupportsArray(&mGroupStack);
+  }
+  if (mGroupStack) {
+    mGroupStack->AppendElement(aRule);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+void CSSParserImpl::PopGroup(void)
+{
+  if (mGroupStack) {
+    PRUint32 count;
+    mGroupStack->Count(&count);
+    if (0 < count) {
+      mGroupStack->RemoveElementAt(count - 1);
+    }
+  }
+}
+
+void CSSParserImpl::AppendRule(nsICSSRule* aRule)
+{
+  PRUint32 count = 0;
+  if (mGroupStack) {
+    mGroupStack->Count(&count);
+  }
+  if (0 < count) {
+    nsICSSGroupRule* group = (nsICSSGroupRule*)mGroupStack->ElementAt(count - 1);
+    group->AppendStyleRule(aRule);
+    NS_RELEASE(group);
+  }
+  else {
+    mSheet->AppendStyleRule(aRule);
+  }
+}
+
 PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
 {
   // First get the list of selectors for the rule
@@ -856,7 +1155,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
       rule->SetWeight(list->mWeight);
       rule->SetSourceSelectorText(list->mSourceString); // capture the original input (need this for namespace prefixes)
 //      rule->List();
-      mSheet->AppendStyleRule(rule);
+      AppendRule(rule);
       NS_RELEASE(rule);
     }
 
@@ -1053,7 +1352,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
 
 /**
  * This is the format for selectors:
- * operator? [namespace \:]? element_name? [ ID | class | attrib | pseudo ]*
+ * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
  */
 PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
                                     nsCSSSelector& aSelector,
@@ -1065,18 +1364,140 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
   if (! GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
   }
-  if ((eCSSToken_Symbol == mToken.mType) && ('*' == mToken.mSymbol)) {  // universal element selector
-    // don't set any tag in the selector
+  if (mToken.IsSymbol('*')) {  // universal element selector, or universal namespace
     mToken.AppendToString(aSource);
-    dataMask |= SEL_MASK_ELEM;
+    if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
+      mToken.AppendToString(aSource);
+      dataMask |= SEL_MASK_NSPACE;
+      aSelector.SetNameSpace(kNameSpaceID_Unknown); // namespace wildcard
+
+      if (! GetToken(aErrorCode, PR_FALSE)) {
+        return PR_FALSE;
+      }
+      mToken.AppendToString(aSource);
+      if (eCSSToken_Ident == mToken.mType) {  // element name
+        dataMask |= SEL_MASK_ELEM;
+        if (mCaseSensitive) {
+          aSelector.SetTag(mToken.mIdent);
+        }
+        else {
+          mToken.mIdent.ToLowerCase(buffer);
+          aSelector.SetTag(buffer);
+        }
+      }
+      else if (mToken.IsSymbol('*')) {  // universal selector
+        dataMask |= SEL_MASK_ELEM;
+        // don't set tag
+      }
+      else {
+        UngetToken();
+        return PR_FALSE;
+      }
+    }
+    else {  // was universal element selector
+      aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
+      if (mNameSpace) { // look for default namespace
+        nsINameSpace* defaultNameSpace = nsnull;
+        mNameSpace->FindNameSpace(nsnull, defaultNameSpace);
+        if (defaultNameSpace) {
+          PRInt32 defaultID;
+          defaultNameSpace->GetNameSpaceID(defaultID);
+          aSelector.SetNameSpace(defaultID);
+          NS_RELEASE(defaultNameSpace);
+        }
+      }
+      dataMask |= SEL_MASK_ELEM;
+      // don't set any tag in the selector
+    }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
       return PR_TRUE;
     }
   }
-  else if (eCSSToken_Ident == mToken.mType) {    // element name
+  else if (eCSSToken_Ident == mToken.mType) {    // element name or namespace name
     mToken.AppendToString(aSource);
-    PRInt32 colon = mToken.mIdent.Find(':');
-    if (-1 == colon) {  // no namespace
+    buffer = mToken.mIdent; // hang on to ident
+
+    if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
+      mToken.AppendToString(aSource);
+      dataMask |= SEL_MASK_NSPACE;
+      PRInt32 nameSpaceID = kNameSpaceID_Unknown;
+      if (mNameSpace) {
+        nsIAtom* prefix;
+        if (mCaseSensitive) {
+          prefix = NS_NewAtom(buffer);
+        }
+        else {
+          buffer.ToLowerCase();
+          prefix = NS_NewAtom(buffer);
+        }
+        mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+        NS_IF_RELEASE(prefix);
+      } // else, no delcared namespaces
+      if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
+        return PR_FALSE;
+      }
+      aSelector.SetNameSpace(nameSpaceID);
+
+      if (! GetToken(aErrorCode, PR_FALSE)) {
+        return PR_FALSE;
+      }
+      mToken.AppendToString(aSource);
+      if (eCSSToken_Ident == mToken.mType) {  // element name
+        dataMask |= SEL_MASK_ELEM;
+        if (mCaseSensitive) {
+          aSelector.SetTag(mToken.mIdent);
+        }
+        else {
+          mToken.mIdent.ToLowerCase(buffer);
+          aSelector.SetTag(buffer);
+        }
+      }
+      else if (mToken.IsSymbol('*')) {  // universal selector
+        dataMask |= SEL_MASK_ELEM;
+        // don't set tag
+      }
+      else {
+        UngetToken();
+        return PR_FALSE;
+      }
+    }
+    else {  // was element name
+      aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
+      if (mNameSpace) { // look for default namespace
+        nsINameSpace* defaultNameSpace = nsnull;
+        mNameSpace->FindNameSpace(nsnull, defaultNameSpace);
+        if (defaultNameSpace) {
+          PRInt32 defaultID;
+          defaultNameSpace->GetNameSpaceID(defaultID);
+          aSelector.SetNameSpace(defaultID);
+          NS_RELEASE(defaultNameSpace);
+        }
+      }
+      if (mCaseSensitive) {
+        aSelector.SetTag(buffer);
+      }
+      else {
+        buffer.ToLowerCase();
+        aSelector.SetTag(buffer);
+      }
+      dataMask |= SEL_MASK_ELEM;
+    }
+    if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
+      return PR_TRUE;
+    }
+  }
+  else if (mToken.IsSymbol('|')) {  // No namespace
+    mToken.AppendToString(aSource);
+    dataMask |= SEL_MASK_NSPACE;
+    aSelector.SetNameSpace(kNameSpaceID_None);  // explicit NO namespace
+
+    // get mandatory tag
+    if (! GetToken(aErrorCode, PR_FALSE)) {
+      return PR_FALSE;
+    }
+    mToken.AppendToString(aSource);
+    if (eCSSToken_Ident == mToken.mType) {  // element name
+      dataMask |= SEL_MASK_ELEM;
       if (mCaseSensitive) {
         aSelector.SetTag(mToken.mIdent);
       }
@@ -1085,18 +1506,14 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         aSelector.SetTag(buffer);
       }
     }
-    else {  // pull out the namespace
-      nsAutoString  nameSpace;
-      mToken.mIdent.Left(nameSpace, colon);
-      mToken.mIdent.Right(buffer, (mToken.mIdent.Length() - (colon + 1)));
-      if (! mCaseSensitive) {
-        buffer.ToLowerCase();
-      }
-      // XXX lookup namespace, set it
-      // deal with * namespace (== unknown)
-      aSelector.SetTag(buffer);
+    else if (mToken.IsSymbol('*')) {  // universal selector
+      dataMask |= SEL_MASK_ELEM;
+      // don't set tag
     }
-    dataMask |= SEL_MASK_ELEM;
+    else {
+      UngetToken();
+      return PR_FALSE;
+    }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
       return PR_TRUE;
     }
@@ -1115,7 +1532,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         return PR_FALSE;
       }
     }
-    else if ((eCSSToken_Symbol == mToken.mType) && ('.' == mToken.mSymbol)) {  // .class
+    else if (mToken.IsSymbol('.')) {  // .class
       mToken.AppendToString(aSource);
       if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
         return PR_FALSE;
@@ -1128,7 +1545,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       dataMask |= SEL_MASK_CLASS;
       aSelector.AddClass(mToken.mIdent);  // class always case sensitive
     }
-    else if ((eCSSToken_Symbol == mToken.mType) && (':' == mToken.mSymbol)) { // :pseudo
+    else if (mToken.IsSymbol(':')) { // :pseudo
       mToken.AppendToString(aSource);
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
         return PR_FALSE;
@@ -1156,8 +1573,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           // ensure selector ends here, must be followed by EOF, space, '{' or ','
           if (GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
             if ((eCSSToken_WhiteSpace == mToken.mType) || 
-                ((eCSSToken_Symbol == mToken.mType) &&
-                 (('{' == mToken.mSymbol) || (',' == mToken.mSymbol)))) {
+                (mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
               UngetToken();
               return PR_TRUE;
             }
@@ -1173,17 +1589,86 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
       NS_RELEASE(pseudo);
     }
-    else if ((eCSSToken_Symbol == mToken.mType) && ('[' == mToken.mSymbol)) {  // attribute
+    else if (mToken.IsSymbol('[')) {  // attribute
       mToken.AppendToString(aSource);
       if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
         return PR_FALSE;
       }
-      if (eCSSToken_Ident != mToken.mType) {  // malformed selector
+      mToken.AppendToString(aSource);
+
+      PRInt32 nameSpaceID = kNameSpaceID_None;
+      nsAutoString  attr;
+      if (mToken.IsSymbol('*')) { // wildcard namespace
+        nameSpaceID = kNameSpaceID_Unknown;
+        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
+          mToken.AppendToString(aSource);
+          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+            return PR_FALSE;
+          }
+          mToken.AppendToString(aSource);
+          if (eCSSToken_Ident == mToken.mType) { // attr name
+            attr = mToken.mIdent;
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
+        }
+        else {
+          return PR_FALSE;
+        }
+      }
+      else if (mToken.IsSymbol('|')) { // NO namespace
+        if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+          return PR_FALSE;
+        }
+        mToken.AppendToString(aSource);
+        if (eCSSToken_Ident == mToken.mType) { // attr name
+          attr = mToken.mIdent;
+        }
+        else {
+          UngetToken();
+          return PR_FALSE;
+        }
+      }
+      else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
+        attr = mToken.mIdent; // hang on to it
+        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
+          mToken.AppendToString(aSource);
+          nameSpaceID = kNameSpaceID_Unknown;
+          if (mNameSpace) {
+            nsIAtom* prefix;
+            if (mCaseSensitive) {
+              prefix = NS_NewAtom(attr);
+            }
+            else {
+              attr.ToLowerCase();
+              prefix = NS_NewAtom(attr);
+            }
+            mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+            NS_IF_RELEASE(prefix);
+          } // else, no delcared namespaces
+          if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
+            return PR_FALSE;
+          }
+          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+            return PR_FALSE;
+          }
+          mToken.AppendToString(aSource);
+          if (eCSSToken_Ident == mToken.mType) { // attr name
+            attr = mToken.mIdent;
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
+        }
+      }
+      else {  // malformed
         UngetToken();
         return PR_FALSE;
       }
-      mToken.AppendToString(aSource);
-      nsAutoString  attr(mToken.mIdent);
+
       if (! mCaseSensitive) {
         attr.ToLowerCase();
       }
@@ -1195,7 +1680,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         PRUint8 func;
         if (']' == mToken.mSymbol) {
           dataMask |= SEL_MASK_ATTRIB;
-          aSelector.AddAttribute(attr);
+          aSelector.AddAttribute(nameSpaceID, attr);
           func = NS_ATTR_FUNC_SET;
         }
         else if ('=' == mToken.mSymbol) {
@@ -1206,7 +1691,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             return PR_FALSE;
           }
           mToken.AppendToString(aSource);
-          if ((eCSSToken_Symbol == mToken.mType) && ('=' == mToken.mSymbol)) {
+          if (mToken.IsSymbol('=')) {
             func = NS_ATTR_FUNC_INCLUDES;
           }
           else {
@@ -1219,7 +1704,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             return PR_FALSE;
           }
           mToken.AppendToString(aSource);
-          if ((eCSSToken_Symbol == mToken.mType) && ('=' == mToken.mSymbol)) {
+          if (mToken.IsSymbol('=')) {
             func = NS_ATTR_FUNC_DASHMATCH;
           }
           else {
@@ -1241,10 +1726,10 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
               return PR_FALSE;
             }
-            if ((eCSSToken_Symbol == mToken.mType) && (']' == mToken.mSymbol)) {
+            if (mToken.IsSymbol(']')) {
               mToken.AppendToString(aSource);
               dataMask |= SEL_MASK_ATTRIB;
-              aSelector.AddAttribute(attr, func, value, mCaseSensitive);
+              aSelector.AddAttribute(nameSpaceID, attr, func, value, mCaseSensitive);
             }
             else {
               UngetToken();
@@ -1339,18 +1824,20 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
       }
       break;
     case eCSSToken_Function:
-      // rgb ( component , component , component )
-      PRUint8 r, g, b;
-      if (ExpectSymbol(aErrorCode, '(', PR_FALSE) &&
-          ParseColorComponent(aErrorCode, r, ',') &&
-          ParseColorComponent(aErrorCode, g, ',') &&
-          ParseColorComponent(aErrorCode, b, ')')) {
-        nscolor rgba = NS_RGB(r,g,b);
-        aValue.SetColorValue(rgba);
-        return PR_TRUE;
+      if (mToken.mIdent.EqualsIgnoreCase("rgb")) {
+        // rgb ( component , component , component )
+        PRUint8 r, g, b;
+        if (ExpectSymbol(aErrorCode, '(', PR_FALSE) &&
+            ParseColorComponent(aErrorCode, r, ',') &&
+            ParseColorComponent(aErrorCode, g, ',') &&
+            ParseColorComponent(aErrorCode, b, ')')) {
+          nscolor rgba = NS_RGB(r,g,b);
+          aValue.SetColorValue(rgba);
+          return PR_TRUE;
+        }
+        return PR_FALSE;  // already pushed back
       }
-      return PR_FALSE;  // already pushed back
-
+      break;
     default:
       break;
   }
@@ -1414,7 +1901,7 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
       }
       break;
     }
-    if ((eCSSToken_Symbol == tk->mType) && (';' == tk->mSymbol)) {
+    if (tk->IsSymbol(';')) {
       // dangling semicolons are skipped
       continue;
     }
@@ -1739,7 +2226,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
     }
   }
   if (((aVariantMask & (VARIANT_LENGTH | VARIANT_ANGLE | VARIANT_FREQUENCY | VARIANT_TIME)) != 0) && 
-      tk->isDimension()) {
+      tk->IsDimension()) {
     return TranslateDimension(aValue, aVariantMask, tk->mNumber, tk->mIdent);
   }
   if (((aVariantMask & VARIANT_PERCENT) != 0) &&
@@ -1888,24 +2375,81 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
 {
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
     if (GetToken(aErrorCode, PR_TRUE)) {
-      if ((eCSSToken_String == mToken.mType) || 
-          (eCSSToken_Ident == mToken.mType)) {
-        nsAutoString  attr;
-        if (eCSSToken_String == mToken.mType) {
-          attr.Append(mToken.mSymbol);
-          attr.Append(mToken.mIdent);
-          attr.Append(mToken.mSymbol);
+      nsAutoString attr;
+      if (eCSSToken_Ident == mToken.mType) {  // attr name or namespace
+        nsAutoString  holdIdent(mToken.mIdent);
+        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // namespace
+          PRInt32 nameSpaceID = kNameSpaceID_Unknown;
+          if (mNameSpace) {
+            nsIAtom* prefix;
+            if (mCaseSensitive) {
+              prefix = NS_NewAtom(holdIdent);
+            }
+            else {
+              holdIdent.ToLowerCase();
+              prefix = NS_NewAtom(holdIdent);
+            }
+            mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+            NS_IF_RELEASE(prefix);
+          } // else, no delcared namespaces
+          if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
+            return PR_FALSE;
+          }
+          attr.Append(nameSpaceID, 10);
+          attr.Append('|');
+          if (! GetToken(aErrorCode, PR_FALSE)) {
+            return PR_FALSE;
+          }
+          if (eCSSToken_Ident == mToken.mType) {
+            attr.Append(mToken.mIdent);
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
+        }
+        else {  // no namespace
+          attr = holdIdent;
+        }
+      }
+      else if (mToken.IsSymbol('*')) {  // namespace wildcard
+        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
+          attr.Append(kNameSpaceID_Unknown, 10);
+          attr.Append('|');
+          if (! GetToken(aErrorCode, PR_FALSE)) {
+            return PR_FALSE;
+          }
+          if (eCSSToken_Ident == mToken.mType) {
+            attr.Append(mToken.mIdent);
+          }
+          else {
+            UngetToken();
+            return PR_FALSE;
+          }
         }
         else {
+          return PR_FALSE;
+        }
+      }
+      else if (mToken.IsSymbol('|')) {  // explicit NO namespace
+        if (! GetToken(aErrorCode, PR_FALSE)) {
+          return PR_FALSE;
+        }
+        if (eCSSToken_Ident == mToken.mType) {
           attr.Append(mToken.mIdent);
         }
-        if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-          aValue.SetStringValue(attr, eCSSUnit_Attr);
-          return PR_TRUE;
+        else {
+          UngetToken();
+          return PR_FALSE;
         }
       }
       else {
         UngetToken();
+        return PR_FALSE;
+      }
+      if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+        aValue.SetStringValue(attr, eCSSUnit_Attr);
+        return PR_TRUE;
       }
     }
   }
