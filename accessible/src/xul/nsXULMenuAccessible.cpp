@@ -357,7 +357,9 @@ nsXULMenubarAccessible::nsXULMenubarAccessible(nsIDOMNode* aDOMNode, nsIWeakRefe
 
 NS_IMETHODIMP nsXULMenubarAccessible::GetAccState(PRUint32 *_retval)
 {
-  return nsAccessible::GetAccState(_retval);
+  nsresult rv = nsAccessible::GetAccState(_retval);
+  *_retval &= ~STATE_FOCUSABLE; // Menu bar iteself is not actually focusable
+  return rv;
 }
 
 
