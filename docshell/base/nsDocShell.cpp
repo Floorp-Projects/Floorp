@@ -1263,9 +1263,12 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
     rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
                                           getter_AddRefs(currentEntry));
     if (currentEntry) {
+      PRUint32 cloneID=0;
       nsCOMPtr<nsISHEntry> nextEntry; //(do_CreateInstance(NS_SHENTRY_CONTRACTID));
       //   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-      rv = CloneAndReplace(currentEntry, aCloneRef, aNewEntry,
+      if (aCloneRef)
+          aCloneRef->GetID(&cloneID);
+      rv = CloneAndReplace(currentEntry, cloneID, aNewEntry,
                            getter_AddRefs(nextEntry));
       
       if (NS_SUCCEEDED(rv)) {
@@ -4125,17 +4128,19 @@ nsDocShell::PersistLayoutHistoryState()
 }
 
 NS_IMETHODIMP
-nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
+nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
 							nsISHEntry * replaceEntry, nsISHEntry ** resultEntry)
 {
 	nsresult result = NS_OK;
 	NS_ENSURE_ARG_POINTER(resultEntry);
-	if (!src || !replaceEntry || !cloneRef)
+	if (!src || !replaceEntry)
 		return NS_ERROR_FAILURE;
     nsISHEntry * dest = (nsISHEntry *) nsnull;
 
-	if (src == cloneRef) {
-		
+    PRUint32 srcID;
+    src->GetID(&srcID);
+ 
+    if (srcID == aCloneID) {		
       dest = replaceEntry;
 	  *resultEntry = dest;
 	  NS_IF_ADDREF(*resultEntry);
@@ -4146,6 +4151,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 	nsCOMPtr<nsILayoutHistoryState> LHS;
 	PRUnichar * title=nsnull;
 	nsCOMPtr<nsISHEntry> parent;
+    PRUint32 id;
 	result = nsComponentManager::CreateInstance(NS_SHENTRY_CONTRACTID, NULL,
 			NS_GET_IID(nsISHEntry), (void **) &dest);
 	if (!NS_SUCCEEDED(result))
@@ -4157,6 +4163,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 	src->GetLayoutHistoryState(getter_AddRefs(LHS));
 	//XXX Is this correct? parent is a weak ref in nsISHEntry
 	src->GetParent(getter_AddRefs(parent));
+    src->GetID(&id);
 
 	// XXX do we care much about valid values for these uri, title etc....
 	dest->SetURI(uri);
@@ -4164,6 +4171,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 	dest->SetLayoutHistoryState(LHS);
 	dest->SetTitle(title);
 	dest->SetParent(parent);
+    dest->SetID(id);
 	*resultEntry = dest;
 
 	PRInt32 childCount= 0;
@@ -4183,7 +4191,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 		nsCOMPtr<nsISHEntry>  destChild;
 		if (!NS_SUCCEEDED(result))
 			return result;
-		result = CloneAndReplace(srcChild, cloneRef, replaceEntry, getter_AddRefs(destChild));
+		result = CloneAndReplace(srcChild, aCloneID, replaceEntry, getter_AddRefs(destChild));
 		if (!NS_SUCCEEDED(result))
 			return result;
 		result = destContainer->AddChild(destChild, i);
