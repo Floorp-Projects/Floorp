@@ -50,7 +50,7 @@
 
   <RDF:Description about='urn:clienturl:srchmenu:srchinternet'>
     <NC:title>Search Internet</NC:title>
-    <NC:content>http://search.netscape.com/</NC:content>
+    <NC:content>http://home.netscape.com/bookmark/6_0/ssearch.html</NC:content>
   </RDF:Description>
 
 </RDF:RDF>
