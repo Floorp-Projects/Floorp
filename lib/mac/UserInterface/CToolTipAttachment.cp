@@ -38,6 +38,7 @@ CToolTipPane* CToolTipAttachment::sActiveTip = NULL;
 // dispatch and reset the interval there if necessary.
 
 const UInt32 ToolTipsTicks_Indefinite = 0xFFFFFFFF;
+const UInt32 ToolTipsTicks_AutoRemoveAfter = 3600;
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	CToolTipAttachment
@@ -114,7 +115,11 @@ void CToolTipAttachment::ExecuteSelf(
 	else if ( inMessage == msg_HideTooltip )
 		HideToolTip();
 	else
+	{
+		if (sActiveTip && inMessage == msg_MouseWithin)
+			((SMouseTrackParms*)ioParam)->paneOfAttachment = sActiveTip;
 		CMouseTrackAttachment::ExecuteSelf(inMessage, ioParam);
+	}
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -127,7 +132,7 @@ void CToolTipAttachment::MouseEnter(
 	Point				/* inPortPt */,
 	const EventRecord&	/* inMacEvent */)
 {
-	if (!mOwningPane || !mOwningPane->IsActive() || !mOwningPane->IsEnabled())
+	if (!EnsureOwningPane())
 		return;
 
 	ResetTriggerInterval(::LMGetTicks());
@@ -141,10 +146,10 @@ void CToolTipAttachment::MouseEnter(
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 void CToolTipAttachment::MouseWithin(
-	Point				/* inPortPt */,
+	Point				inPortPt,
 	const EventRecord&	inMacEvent)
 {
-	if (!mOwningPane || !mOwningPane->IsActive() || !mOwningPane->IsEnabled())
+	if (!EnsureOwningPane())
 		return;
 
 	if (!sTipsEnabled)
@@ -160,8 +165,17 @@ void CToolTipAttachment::MouseWithin(
 		
 	// If the tip is active and the corresponding event is one that should
 	// cancel the tip, kill it.
-	else if (IsToolTipActive() && IsTipCancellingEvent(inMacEvent))
-		HideToolTip();
+	else if (IsToolTipActive())
+	{
+		if (IsTipCancelingEvent(inMacEvent)
+		|| ::LMGetTicks() - mEnterTicks > ToolTipsTicks_AutoRemoveAfter)
+			HideToolTip();
+		else if (sActiveTip->WantsToCancel(inPortPt))
+		{
+			HideToolTip();
+			ShowToolTip(inMacEvent); // in the new location
+		}
+	}
 		
 	// If the tip is not active and the trigger interval has elapsed
 	// then we need to show the new tip.
@@ -173,23 +187,25 @@ void CToolTipAttachment::MouseWithin(
 //	¥	MouseLeave
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CToolTipAttachment::MouseLeave(void)
+void CToolTipAttachment::MouseLeave()
 {
-	if (!mOwningPane || !mOwningPane->IsActive() || !mOwningPane->IsEnabled())
+	if (!EnsureOwningPane())
 		return;
 
 	HideToolTip();
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	IsTipCancellingEvent
+//	¥	IsTipCancelingEvent
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-Boolean CToolTipAttachment::IsTipCancellingEvent(const EventRecord& inMacEvent) const
+Boolean CToolTipAttachment::IsTipCancelingEvent(const EventRecord& inMacEvent) const
 {
-	Boolean bShouldCancel = ((inMacEvent.what != nullEvent) &&
-							 (inMacEvent.what != updateEvt) &&
-							((inMacEvent.what != osEvt) || ((inMacEvent.message & osEvtMessageMask) != (mouseMovedMessage << 24))));
+	Boolean bShouldCancel = (inMacEvent.what != nullEvent &&
+							 inMacEvent.what != updateEvt &&
+							(inMacEvent.what != osEvt
+								|| (inMacEvent.message & osEvtMessageMask)
+								!= (mouseMovedMessage << 24)));
 	return bShouldCancel;
 }
 
@@ -199,11 +215,10 @@ Boolean CToolTipAttachment::IsTipCancellingEvent(const EventRecord& inMacEvent) 
 
 void CToolTipAttachment::CalcTipText(
 	LWindow*				inOwningWindow,
-	LPane*					inOwningPane,
 	const EventRecord&		inMacEvent,
 	StringPtr				outTipText)
 {
-	sActiveTip->CalcTipText(inOwningWindow, inOwningPane, inMacEvent, outTipText);
+	sActiveTip->CalcTipText(inOwningWindow, inMacEvent, outTipText);
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -227,6 +242,7 @@ void CToolTipAttachment::ShowToolTip(const EventRecord&	inMacEvent)
 		sActiveTip = dynamic_cast<CToolTipPane*>(UReanimator::CreateView(mTipPaneResID, theWindow, theWindow));
 		ThrowIfNULL_(sActiveTip);
 		sActiveTip->SetParent(this);
+		sActiveTip->SetOwningPane(mOwningPane);
 		
 		// Calculate the tip text first because the size and positioning rely on it.
 		// The practice of having the tip pane calculate the text and then have that
@@ -236,18 +252,30 @@ void CToolTipAttachment::ShowToolTip(const EventRecord&	inMacEvent)
 		//
 		// If no text is returned, abort instead of showing an empty tooltip
 		Str255 theTipText;
-		this->CalcTipText(theWindow, mOwningPane, inMacEvent, theTipText);
-		if ( !theTipText[0] )
-			throw (0);
-		sActiveTip->SetDescriptor(theTipText);
-
+		this->CalcTipText(theWindow, inMacEvent, theTipText);
 		Rect theTipPortFrame;
-		theWindow->FocusDraw();
-		sActiveTip->CalcFrameWithRespectTo(theWindow, mOwningPane, inMacEvent, theTipPortFrame);
-		
-		sActiveTip->ResizeFrameTo(RectWidth(theTipPortFrame), RectHeight(theTipPortFrame), false);		
-		sActiveTip->PlaceInSuperFrameAt(theTipPortFrame.left, theTipPortFrame.top, false);
-		sActiveTip->Show();
+		if ( theTipText[0] )
+			{
+			sActiveTip->SetDescriptor(theTipText);
+
+			theWindow->FocusDraw();
+			sActiveTip->CalcFrameWithRespectTo(theWindow, inMacEvent, theTipPortFrame);
+			// Returning a zero-width rectangle is another way that the tip pane can
+			// say "don't show me".
+			if (RectWidth(theTipPortFrame) == 0)
+				theTipText[0] = 0;
+			}
+		if ( theTipText[0] )
+			{
+			sActiveTip->ResizeFrameTo(RectWidth(theTipPortFrame), RectHeight(theTipPortFrame), false);		
+			sActiveTip->PlaceInSuperFrameAt(theTipPortFrame.left, theTipPortFrame.top, false);
+			sActiveTip->Show();
+			}
+		else
+			{
+			delete sActiveTip;
+			sActiveTip = NULL;
+			}
 		}
 	catch(...)	
 		{
@@ -260,7 +288,7 @@ void CToolTipAttachment::ShowToolTip(const EventRecord&	inMacEvent)
 //	¥	HideToolTip
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CToolTipAttachment::HideToolTip(void)
+void CToolTipAttachment::HideToolTip()
 {
 	// calc the tip's port rect 
 	if (IsToolTipActive())
@@ -283,9 +311,10 @@ void CToolTipAttachment::HideToolTip(void)
 
 CToolTipPane::CToolTipPane(LStream* inStream)
 	:	LPane(inStream)
+	,	mOwningPane(nil)
+	,	mParent(nil)
 {
 	*inStream >> mTipTraitsID;
-	mParent = NULL;
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -308,12 +337,20 @@ void CToolTipPane::SetParent(CToolTipAttachment* inParent)
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	SetOwningPane
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+void CToolTipPane::SetOwningPane(LPane* inOwningPane)
+{
+	mOwningPane = inOwningPane;
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	CalcFrameWithRespectTo
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 void CToolTipPane::CalcFrameWithRespectTo(
 	LWindow*				inOwningWindow,
-	LPane*					inOwningPane,
 	const EventRecord&		/* inMacEvent */,
 	Rect& 					outPortFrame)
 {
@@ -328,7 +365,7 @@ void CToolTipPane::CalcFrameWithRespectTo(
 	inOwningWindow->FocusDraw();	
 
 	Rect theOwningPortFrame;
-	inOwningPane->CalcPortFrameRect(theOwningPortFrame);
+	mOwningPane->CalcPortFrameRect(theOwningPortFrame);
 	
 	outPortFrame.left = ((theOwningPortFrame.left + theOwningPortFrame.right) >> 1) - (theTextWidth >> 1);
 	outPortFrame.top = theOwningPortFrame.bottom + 3;
@@ -349,11 +386,10 @@ void CToolTipPane::CalcFrameWithRespectTo(
 
 void CToolTipPane::CalcTipText(
 	LWindow*	/* inOwningWindow */,
-	LPane*		inOwningPane,
 	const EventRecord&	/* inMacEvent */,
 	StringPtr	outTipText)
 {
-	inOwningPane->GetDescriptor(outTipText);
+	mOwningPane->GetDescriptor(outTipText);
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -409,7 +445,7 @@ void CToolTipPane::SetDescriptor(ConstStringPtr inDescriptor)
 //	override this method.
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CToolTipPane::DrawSelf(void)
+void CToolTipPane::DrawSelf()
 {
 	StColorPenState thePenSaver;
 	thePenSaver.Normalize();
@@ -443,6 +479,11 @@ void CToolTipPane::DrawSelf(void)
 	UGraphicGizmos::CenterStringInRect(mTip, theFrame);
 }
 	
+Boolean CToolTipPane::WantsToCancel(Point inMouseLocal)
+{
+	return false;
+}
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	CSharedToolTipAttachment
 //
@@ -460,7 +501,6 @@ CSharedToolTipAttachment::CSharedToolTipAttachment(LStream* inStream)
 
 void CSharedToolTipAttachment::CalcTipText(
 	LWindow*	/* inOwningWindow */,
-	LPane*		/* inOwningPane */,
 	const EventRecord&	/* inMacEvent */,
 	StringPtr	outTipText)
 {

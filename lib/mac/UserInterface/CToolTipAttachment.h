@@ -19,8 +19,9 @@
 #pragma once
 
 #include <LPane.h>
-#include <LString.h>
 #include "CMouseDispatcher.h"
+#include "PascalString.h"
+
 
 class CToolTipPane;
 
@@ -76,12 +77,11 @@ class CToolTipAttachment : public CMouseTrackAttachment
 		
 		Boolean				IsDelayElapsed(Uint32 inTicks) const;
 		Boolean				IsToolTipActive(void) const;
-		Boolean				IsTipCancellingEvent(const EventRecord& inMacEvent) const;
+		Boolean				IsTipCancelingEvent(const EventRecord& inMacEvent) const;
 		void				ResetTriggerInterval(Uint32 inWithTicks);
 
 		virtual void		CalcTipText(
 									LWindow*				inOwningWindow,
-									LPane*					inOwningPane,
 									const EventRecord&		inMacEvent,
 									StringPtr				outTipText);
 
@@ -126,21 +126,23 @@ class CToolTipPane : public LPane
 							CToolTipPane(LStream* inStream);
 		virtual				~CToolTipPane();
 	
-		virtual void		SetParent(CToolTipAttachment* inParent);
+		virtual void		SetParent(CToolTipAttachment*	inParent);
+							
+		virtual void		SetOwningPane(LPane*			inOwningPane);
 							
 		virtual void		CalcFrameWithRespectTo(
 									LWindow*				inOwningWindow,
-									LPane*					inOwningPane,
 									const EventRecord&		inMacEvent,
 									Rect& 					outTipFrame);
 	
 		virtual	void 		CalcTipText(
 									LWindow*				inOwningWindow,
-									LPane*					inOwningPane,
 									const EventRecord&		inMacEvent,
 									StringPtr				outTipText);
 
-		virtual void		SetDescriptor(ConstStringPtr inDescriptor);
+		virtual void		SetDescriptor(ConstStringPtr	inDescriptor);
+		
+		virtual Boolean		WantsToCancel(Point				inMouseLocal);
 
 	protected:
 
@@ -151,8 +153,9 @@ class CToolTipPane : public LPane
 		virtual	void		DrawSelf(void);
 	
 		ResIDT				mTipTraitsID;
-		TString<Str255>		mTip;
+		CStr255				mTip;		// I hate that this needs to be a CStr255
 		CToolTipAttachment*	mParent;
+		LPane*				mOwningPane;
 };
 
 
@@ -165,7 +168,6 @@ class CSharedToolTipAttachment : public CToolTipAttachment
 	protected:
 		virtual void		CalcTipText(
 									LWindow*				inOwningWindow,
-									LPane*					inOwningPane,
 									const EventRecord&		inMacEvent,
 									StringPtr				outTipText);
 
