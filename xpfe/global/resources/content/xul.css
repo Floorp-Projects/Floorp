@@ -125,7 +125,7 @@ browser {
 
 tabbrowser {
   display: -moz-inline-stack;
-  -moz-binding: url("chrome://global/content/bindings/browser.xml#tabbrowser");
+  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser");
 }
 
 editor {
