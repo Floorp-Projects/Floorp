@@ -33,7 +33,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#if XP_NEW_SELECTION
+#if 1
 #include "nsICollection.h"
 #else
 #include "nsISelection.h"
@@ -71,7 +71,7 @@ static NS_DEFINE_IID(kITextContentIID,    NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_IID(kIWebShellIID,       NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,    NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDTDIID,            NS_IDTD_IID);
-#if XP_NEW_SELECTION
+#if 1
 static NS_DEFINE_IID(kICollectionIID,     NS_ICOLLECTION_IID);
 #else
 static NS_DEFINE_IID(kISelectionIID,      NS_ISELECTION_IID);
@@ -85,7 +85,7 @@ static NS_DEFINE_CID(kRDFSimpleDataBaseCID,   NS_RDFSIMPLEDATABASE_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,       NS_WELLFORMEDDTD_CID);
-#if XP_NEW_SELECTION
+#if 1
 static NS_DEFINE_CID(kRangeListCID,           NS_RANGELIST_CID);
 #else
 static NS_DEFINE_CID(kSelectionCID,           NS_SELECTION_CID);
@@ -118,7 +118,7 @@ nsRDFDocument::nsRDFDocument()
     nsresult rv;
 
     // construct a selection object
-#if XP_NEW_SELECTION
+#if 1
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRangeListCID,
                                                     nsnull,
                                                     kICollectionIID,
@@ -725,7 +725,7 @@ nsRDFDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 
 NS_IMETHODIMP 
 nsRDFDocument::GetSelection(
-#if XP_NEW_SELECTION
+#if 1
                             nsICollection** aSelection
 #else
                             nsISelection *& aSelection
@@ -734,7 +734,7 @@ nsRDFDocument::GetSelection(
 {
     if (!mSelection) {
         PR_ASSERT(0);
-#if XP_NEW_SELECTION
+#if 1
         *aSelection = nsnull;
 #else
         aSelection = nsnull;
@@ -742,7 +742,7 @@ nsRDFDocument::GetSelection(
         return NS_ERROR_NOT_INITIALIZED;
     }
     NS_ADDREF(mSelection);
-#if XP_NEW_SELECTION
+#if 1
     *aSelection = mSelection;
 #else
     aSelection = mSelection;
