@@ -67,7 +67,7 @@ nsMimeEmitter::nsMimeEmitter()
   mDocHeader = PR_FALSE;
   mAttachContentType = NULL;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_rhp
   mLogFile = NULL;    /* Temp file to put generated HTML into. */
   mReallyOutput = PR_FALSE;
 #endif
@@ -101,7 +101,7 @@ nsMimeEmitter::Initialize(nsINetOStream *outStream)
   mTotalWritten = 0;
   mTotalRead = 0;
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   PR_Delete("C:\\email.html");
   mLogFile = PR_Open("C:\\email.html", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
 #endif /* DEBUG */
@@ -129,7 +129,7 @@ nsMimeEmitter::Complete()
   printf("TOTAL WRITTEN = %d\n", mTotalWritten);
   printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   if (mLogFile) 
     PR_Close(mLogFile);
 #endif
@@ -391,7 +391,7 @@ nsMimeEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   unsigned int        written = 0;
   PRUint32            rc, aReadyCount = 0;
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
   if ((mLogFile) && (mReallyOutput))
     PR_Write(mLogFile, buf, size);
 #endif

@@ -77,7 +77,7 @@ protected:
     // For content type...
     char          *mAttachContentType;
 
-#ifdef DEBUG
+#ifdef DEBUG_rhp
     PRBool        mReallyOutput;
     PRFileDesc    *mLogFile;        /* Temp file to put generated HTML into. */ 
 #endif 

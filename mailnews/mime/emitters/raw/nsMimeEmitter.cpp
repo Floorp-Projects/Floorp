@@ -71,7 +71,7 @@ nsMimeEmitter::nsMimeEmitter()
   mTotalWritten = 0;
   mTotalRead = 0;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_rhp
   mLogFile = NULL;    /* Temp file to put generated XML into. */
   mReallyOutput = PR_FALSE;
 #endif
