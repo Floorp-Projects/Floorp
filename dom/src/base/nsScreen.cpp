@@ -175,37 +175,81 @@ ScreenImpl::GetColorDepth(PRInt32* aColorDepth)
 NS_IMETHODIMP
 ScreenImpl::GetAvailWidth(PRInt32* aAvailWidth)
 {
-	//XXX not implmented
-  // Really should subtract out chrome
- return GetWidth( aAvailWidth); 
+
+  
+  nsIDeviceContext* context = GetDeviceContext();
+  if ( context )
+  {
+	nsRect rect;
+	context->GetClientRect( rect  );
+	float devUnits;
+	context->GetDevUnitsToAppUnits(devUnits);
+	*aAvailWidth = NSToIntRound(float( rect.width) / devUnits );
+	NS_RELEASE( context );
+	return NS_OK;
+ }
+
+  *aAvailWidth = -1;
+  return NS_ERROR_FAILURE;
 
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailHeight(PRInt32* aAvailHeight)
 {
-	//XXX not implmented
-   // Really should subtract out chrome
- return GetHeight(aAvailHeight);
+ nsIDeviceContext* context = GetDeviceContext();
+  if ( context )
+  {
+	nsRect rect;
+	context->GetClientRect( rect  );
+	float devUnits;
+	context->GetDevUnitsToAppUnits(devUnits);
+	*aAvailHeight = NSToIntRound(float( rect.height) / devUnits );
+	NS_RELEASE( context );
+	return NS_OK;
+ }
+
+  *aAvailHeight = -1;
+  return NS_ERROR_FAILURE;
 
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailLeft(PRInt32* aAvailLeft)
 {
- 	//XXX not implmented
-   // have to factor in chrome  someday
-  *aAvailLeft = 0;
-  return NS_OK;
+ 	 nsIDeviceContext* context = GetDeviceContext();
+  if ( context )
+  {
+	nsRect rect;
+	context->GetClientRect( rect  );
+	float devUnits;
+	context->GetDevUnitsToAppUnits(devUnits);
+	*aAvailLeft = NSToIntRound(float( rect.x) / devUnits );
+	NS_RELEASE( context );
+	return NS_OK;
+ }
+
+  *aAvailLeft = -1;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
 {
-  //XXX not implmented
-  // have to factor in chrome  someday
-  *aAvailTop = 0;
-  return NS_OK;
+  	 nsIDeviceContext* context = GetDeviceContext();
+  if ( context )
+  {
+	nsRect rect;
+	context->GetClientRect( rect  );
+	float devUnits;
+	context->GetDevUnitsToAppUnits(devUnits);
+	*aAvailTop = NSToIntRound(float( rect.y) / devUnits );
+	NS_RELEASE( context );
+	return NS_OK;
+ }
+
+  *aAvailTop = -1;
+  return NS_ERROR_FAILURE;
 }
 
 nsIDeviceContext* ScreenImpl::GetDeviceContext()
