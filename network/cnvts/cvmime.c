@@ -796,11 +796,10 @@ NET_RegisterMIMEDecoders (void)
 									(void *) 1, IL_ViewStream);
 #endif
 
-#ifdef XP_UNIX  /* #### do this on other platforms too, once those platforms
-                    are linking against libmime. */
+#ifdef SMART_MAIL
   /* Decoders for libmime/mimemoz.c */
   MIME_RegisterConverters();
-#endif
+#endif /* SMART_MAIL */
 
 #ifdef MOZ_MAIL_NEWS
   /* Decoders for libmsg/compose.c */
