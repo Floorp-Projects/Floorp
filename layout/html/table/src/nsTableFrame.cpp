@@ -6568,18 +6568,34 @@ CalcVerCornerOffset(PRUint8 aCornerOwnerSide,
   return NSToCoordRound(aPixelsToTwips * (float)offset);
 }
 
+/** Compute the horizontal offset of a horizontal border segment
+  * @param aCornerOwnerSide - which side owns the corner
+  * @param aCornerSubWidth  - how wide is the nonwinning side of the corner
+  * @param aVerWidth        - how wide is the vertical edge of the corner
+  * @param aIsStartOfSeg    - does this corner start a new segment
+  * @param aIsBevel         - is this corner beveled
+  * @param aPixelsToTwips   - conversion factor
+  * @param aTableIsLTR      - direction, the computation depends on ltr or rtl
+  * @return                 - offset in pixel
+  */
 static nscoord
 CalcHorCornerOffset(PRUint8 aCornerOwnerSide,
                     nscoord aCornerSubWidth,
                     nscoord aVerWidth,
                     PRBool  aIsStartOfSeg,
                     PRBool  aIsBevel,
-                    float   aPixelsToTwips)
+                    float   aPixelsToTwips,
+                    PRBool  aTableIsLTR)
 {
   nscoord offset = 0;
   nscoord smallHalf, largeHalf;
   if ((NS_SIDE_LEFT == aCornerOwnerSide) || (NS_SIDE_RIGHT == aCornerOwnerSide)) {
-    DivideBCBorderSize(aCornerSubWidth, smallHalf, largeHalf);
+    if (aTableIsLTR) {
+      DivideBCBorderSize(aCornerSubWidth, smallHalf, largeHalf);
+    }
+    else {
+      DivideBCBorderSize(aCornerSubWidth, largeHalf, smallHalf);
+    }
     if (aIsBevel) {
       offset = (aIsStartOfSeg) ? -largeHalf : smallHalf;
     }
@@ -6588,7 +6604,12 @@ CalcHorCornerOffset(PRUint8 aCornerOwnerSide,
     }
   }
   else {
-    DivideBCBorderSize(aVerWidth, smallHalf, largeHalf);
+    if (aTableIsLTR) {
+      DivideBCBorderSize(aVerWidth, smallHalf, largeHalf);
+    }
+    else {
+      DivideBCBorderSize(aVerWidth, largeHalf, smallHalf);
+    }
     if (aIsBevel) {
       offset = (aIsStartOfSeg) ? -largeHalf : smallHalf;
     }
@@ -6681,7 +6702,8 @@ struct BCHorizontalSeg
              nscoord              aBottomVerSegWidth,
              nscoord              aHorSegHeight,
              nsTableCellFrame*    aLastCell,
-             float                aPixelsToTwips);
+             float                aPixelsToTwips,
+             PRBool               aTableIsLTR);
   
   nscoord            x;
   nscoord            y;
@@ -6701,7 +6723,19 @@ BCHorizontalSeg::BCHorizontalSeg()
   firstCell = ajaCell = nsnull;
 }
   
-  
+/** Initialize a horizontal border segment for painting
+  * @param aIter              - iterator storing the current and adjacent frames
+  * @param aBorderOwner       - which frame owns the border
+  * @param aCornerOwnerSide   - which side owns the starting corner
+  * @param aSubWidth          - how wide is the nonowning width of the corner
+  * @param aBevel             - is the corner beveled
+  * @param aTopVerSegWidth    - vertical segment width going down
+  * @param aBottomVerSegWidth - vertical segment width comming from up
+  * @param aHorSegHeight      - the height of the segment
+  * @param aLastCell          - cell frame above this segment
+  * @param aPixelsToTwips     - conversion factor
+  * @param aTableIsLTR        - direction, the computation depends on ltr or rtl
+  */
 void
 BCHorizontalSeg::Start(BCMapBorderIterator& aIter,
                        BCBorderOwner        aBorderOwner,
@@ -6712,16 +6746,22 @@ BCHorizontalSeg::Start(BCMapBorderIterator& aIter,
                        nscoord              aBottomVerSegWidth,
                        nscoord              aHorSegHeight,
                        nsTableCellFrame*    aLastCell,
-                       float                aPixelsToTwips)
+                       float                aPixelsToTwips,
+                       PRBool               aTableIsLTR)
 {
   owner = aBorderOwner;
   leftBevel = (aHorSegHeight > 0) ? aBevel : PR_FALSE;
   nscoord maxVerSegWidth = PR_MAX(aTopVerSegWidth, aBottomVerSegWidth);
   nscoord offset = CalcHorCornerOffset(aCornerOwnerSide, aSubWidth, maxVerSegWidth, 
-                                       PR_TRUE, leftBevel, aPixelsToTwips);
+                                       PR_TRUE, leftBevel, aPixelsToTwips, aTableIsLTR);
   leftBevelOffset = (leftBevel && (aHorSegHeight > 0)) ? maxVerSegWidth : 0;
   leftBevelSide   = (aBottomVerSegWidth > 0) ? NS_SIDE_BOTTOM : NS_SIDE_TOP;
-  x              += offset;
+  if (aTableIsLTR) {
+    x            += offset;
+  }
+  else {
+    x            -= offset;
+  }
   width           = -offset;
   height          = aHorSegHeight;
   firstCell       = aIter.cell;
@@ -6737,7 +6777,6 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
   nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT0();
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
 
-  PRInt32 startColX = childAreaOffset.left;                    // x position of first col in damage area
   PRInt32 startRowY = (mPrevInFlow) ? 0 : childAreaOffset.top; // y position of first row in damage area
 
   const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(mStyleContext);
@@ -6793,14 +6832,30 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
     return;  
   if (!inFlowRG || !inFlowRow) ABORT0();
 
+  PRInt32 startColX;
   // find startColIndex, endColIndex, startColX
   haveIntersect = PR_FALSE;
   PRUint32 numCols = GetColCount();
   if (0 == numCols) return;
 
+  PRInt32 leftCol, rightCol, colInc; // columns are in the range [leftCol, rightCol)
+  PRBool tableIsLTR = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+  if (tableIsLTR) {
+    startColX = childAreaOffset.left; // x position of first col in damage area
+    leftCol = 0;
+    rightCol = numCols;
+    colInc = 1;
+  } else {
+    startColX = mRect.width - childAreaOffset.right; // x position of first col in damage area
+    leftCol = numCols-1;
+    rightCol = -1;
+    colInc = -1;
+  }
+
   nscoord x = 0;
-  for (PRUint32 colX = 0; colX < numCols; colX++) {
-    nsTableColFrame* colFrame = firstInFlow->GetColFrame(colX); if (!colFrame) ABORT0();
+  for (PRInt32 colX = leftCol; colX != rightCol; colX += colInc) {
+    nsTableColFrame* colFrame = firstInFlow->GetColFrame(colX);
+    if (!colFrame) ABORT0();
     // conservatively estimate the half border widths outside the col
     nscoord leftBorderHalf    = colFrame->GetLeftBorderWidth(&p2t) + onePixel; 
     nscoord rightBorderHalf   = colFrame->GetRightBorderWidth(&p2t) + onePixel;
@@ -6818,16 +6873,28 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
         haveIntersect = PR_TRUE;
       }
       else {
-        startColX += size.width;
+        startColX += colInc * size.width;
       }
     }
     x += size.width;
   }
 
+  if (!tableIsLTR) {
+    PRUint32 temp;
+    startColX = mRect.width - childAreaOffset.right;
+    temp = startColIndex; startColIndex = endColIndex; endColIndex = temp;
+    for (colX = 0; colX < startColIndex; colX++) {
+      nsTableColFrame* colFrame = firstInFlow->GetColFrame(colX);
+      if (!colFrame) ABORT0();
+      nsSize size = colFrame->GetSize();
+      startColX += colInc * size.width;
+    }
+  }
   if (!haveIntersect)
     return;
   // iterate the cell map and build up border segments
-  nsRect damageArea(startColIndex, startRowIndex, 1 + endColIndex - startColIndex, 
+  nsRect damageArea(startColIndex, startRowIndex,
+                    1 + PR_ABS(PRInt32(endColIndex - startColIndex)), 
                     1 + endRowIndex - startRowIndex);
   BCVerticalSeg* verInfo = new BCVerticalSeg[damageArea.width + 1]; if (!verInfo) ABORT0();
 
@@ -6862,13 +6929,14 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
     }
     BCVerticalSeg& info = verInfo[xAdj];
     if (!info.col) { // on the first damaged row and the first segment in the col
-      info.col = iter.IsRightMostTable() ? verInfo[xAdj - 1].col : firstInFlow->GetColFrame(iter.x); if (!info.col) ABORT0();
+      info.col = iter.IsRightMostTable() ? verInfo[xAdj - 1].col : firstInFlow->GetColFrame(iter.x);
+      if (!info.col) ABORT0();
       if (0 == xAdj) {
         info.colX = startColX;
       }
       // set colX for the next column
       if (!iter.IsRightMost()) {
-        verInfo[xAdj + 1].colX = info.colX + info.col->GetSize().width;
+        verInfo[xAdj + 1].colX = info.colX + colInc * info.col->GetSize().width;
       }
       info.segY = startRowY; 
       info.Start(iter, borderOwner, verSegWidth, prevHorSegHeight, horSegHeight, p2t, verInfo);
@@ -6951,20 +7019,21 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
           nsRect segRect(info.colX - NSToCoordRound(p2t * (float)largeHalf), info.segY, 
                          NSToCoordRound(p2t * (float)info.segWidth), info.segHeight);
           nscoord bottomBevelOffset = (endBevel) ? NSToCoordRound(p2t * (float)bottomHorSegHeight) : 0;
-          PRUint8 bottomBevelSide = (horSegHeight > 0) ? NS_SIDE_RIGHT : NS_SIDE_LEFT;
+          PRUint8 bottomBevelSide = ((horSegHeight > 0) ^ !tableIsLTR) ? NS_SIDE_RIGHT : NS_SIDE_LEFT;
+          PRUint8 topBevelSide = ((info.bevelSide == NS_SIDE_RIGHT) ^ !tableIsLTR)?  NS_SIDE_RIGHT : NS_SIDE_LEFT;
           nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color, bgColor, segRect, p2t, 
-                                                 info.bevelSide, NSToCoordRound(p2t * (float)info.bevelOffset), 
+                                                 topBevelSide, NSToCoordRound(p2t * (float)info.bevelOffset), 
                                                  bottomBevelSide, bottomBevelOffset);
-        } // if (info.segWidth > 0) { 
+        } // if (info.segWidth > 0) 
         info.segY = info.segY + info.segHeight - endOffset;
       } // if (info.segHeight > 0)
       info.Start(iter, borderOwner, verSegWidth, prevHorSegHeight, horSegHeight, p2t, verInfo);
-    } // if (!iter.IsTopMost() && (isSegStart || iter.IsBottomMost())) {
+    } // if (!iter.IsTopMost() && (isSegStart || iter.IsBottomMost()))
 
     info.lastCell   = iter.cell;
     info.segHeight += rowRect.height;
     prevHorSegHeight = horSegHeight;
-  } // for (iter.First(); !iter.atEnd; iter.Next()) {
+  } // for (iter.First(); !iter.atEnd; iter.Next())
 
   // Next, paint all of the horizontal border segments from top to bottom reuse the verInfo 
   // array to keep tract of col widths and vertical segments for corner calculations
@@ -6998,14 +7067,14 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
       nextY    = nextY + iter.row->GetSize().height;
       horSeg.x = startColX;
       horSeg.Start(iter, borderOwner, ownerSide, cornerSubWidth, bevel, verInfo[xAdj].segWidth, 
-                   leftSegWidth, topSegHeight, verInfo[xAdj].lastCell, p2t);
+                   leftSegWidth, topSegHeight, verInfo[xAdj].lastCell, p2t, tableIsLTR);
     }
     PRBool verOwnsCorner = (NS_SIDE_TOP == ownerSide) || (NS_SIDE_BOTTOM == ownerSide);
     if (!iter.IsLeftMost() && (isSegStart || iter.IsRightMost() || verOwnsCorner)) {
       // paint the previous seg or the current one if iter.IsRightMost()
       if (horSeg.width > 0) {
         PRBool endBevel = (horSeg.height > 0) ? bevel : 0;
-        nscoord endOffset = CalcHorCornerOffset(ownerSide, cornerSubWidth, verWidth, PR_FALSE, endBevel, p2t);
+        nscoord endOffset = CalcHorCornerOffset(ownerSide, cornerSubWidth, verWidth, PR_FALSE, endBevel, p2t, tableIsLTR);
         horSeg.width += endOffset;
         if (horSeg.height > 0) {
           // get the border style, color and paint the segment
@@ -7066,20 +7135,31 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
             }
             break;
           }
+          
           DivideBCBorderSize(horSeg.height, smallHalf, largeHalf);
-          nsRect segRec(horSeg.x, horSeg.y - NSToCoordRound(p2t * (float)largeHalf), horSeg.width, 
-                        NSToCoordRound(p2t * (float)horSeg.height));
+          nsRect segRect(horSeg.x, horSeg.y - NSToCoordRound(p2t * (float)largeHalf), horSeg.width, 
+                         NSToCoordRound(p2t * (float)horSeg.height));
+           if (!tableIsLTR)
+            segRect.x -= segRect.width;
+
           nscoord rightBevelOffset = (endBevel) ? NSToCoordRound(p2t * (float)verWidth) : 0;
           PRUint8 rightBevelSide = (leftSegWidth > 0) ? NS_SIDE_BOTTOM : NS_SIDE_TOP;
-          nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color, bgColor, segRec, p2t, horSeg.leftBevelSide, 
+          if (tableIsLTR) {
+            nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color, bgColor, segRect, p2t, horSeg.leftBevelSide,
                                                  NSToCoordRound(p2t * (float)horSeg.leftBevelOffset), 
                                                  rightBevelSide, rightBevelOffset);
-        } // if (horSeg.height > 0) {
-        horSeg.x = horSeg.x + horSeg.width - endOffset;
-      } // if (horSeg.width > 0) {
+          }
+          else {
+            nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color, bgColor, segRect, p2t, rightBevelSide, rightBevelOffset,
+                                                 horSeg.leftBevelSide,  NSToCoordRound(p2t * (float)horSeg.leftBevelOffset));
+          }
+
+        } // if (horSeg.height > 0)
+        horSeg.x += colInc * (horSeg.width - endOffset);
+      } // if (horSeg.width > 0)
       horSeg.Start(iter, borderOwner, ownerSide, cornerSubWidth, bevel, verInfo[xAdj].segWidth, 
-                   leftSegWidth, topSegHeight, verInfo[xAdj].lastCell, p2t);
-    } // if (!iter.IsLeftMost() && (isSegStart || iter.IsRightMost() || verOwnsCorner)) {
+                   leftSegWidth, topSegHeight, verInfo[xAdj].lastCell, p2t, tableIsLTR);
+    } // if (!iter.IsLeftMost() && (isSegStart || iter.IsRightMost() || verOwnsCorner))
     horSeg.width += verInfo[xAdj].colWidth;
     verInfo[xAdj].segWidth = leftSegWidth;
     verInfo[xAdj].lastCell = iter.cell;
