@@ -256,6 +256,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, 
+								  "component://netscape/messenger/messageservice;type=mailbox_message", 
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
   rv = compMgr->RegisterComponent(kMailboxParserCID, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
