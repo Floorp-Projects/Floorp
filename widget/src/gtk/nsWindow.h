@@ -74,11 +74,11 @@ public:
     virtual PRBool IsChild() const;
 
     void SetIsDestroying(PRBool val) {
-      mIsDestroying = val;
+      mIsDestroyingWindow = val;
     }
 
     PRBool IsDestroying() const {
-      return mIsDestroying;
+      return mIsDestroyingWindow;
     }
 
      // Utility methods
@@ -120,7 +120,7 @@ protected:
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
-  PRBool      mIsDestroying;
+  PRBool      mIsDestroyingWindow;
 
   GtkWindowType mBorderStyle;
 
@@ -141,8 +141,9 @@ protected:
 //
 class ChildWindow : public nsWindow {
 public:
-    ChildWindow();
-    virtual PRBool IsChild() const;
+  ChildWindow();
+  virtual PRBool IsChild() const;
+  NS_IMETHOD Destroy(void);
 };
 
 #endif // Window_h__
