@@ -234,7 +234,7 @@ build_platform::
     cd $(MOZ_SRC)\.
 
 build_julian:: 
-!if !defined(MOZ_TREX_FREE)
+!if !defined(MOZ_ZULU_FREE)
     cd $(MOZ_SRC)\ns\modules\libnls
     nmake -f makefile.win
 !endif
@@ -255,7 +255,7 @@ depend_dist::
     cd $(MOZ_SRC)\.
 
 depend_julian::
-!if !defined(MOZ_TREX_FREE)
+!if !defined(MOZ_ZULU_FREE)
     cd $(MOZ_SRC)\ns\modules\libnls
     nmake -f makefile.win depend
 !endif
@@ -274,7 +274,7 @@ clobber_dist::
     cd $(MOZ_SRC)\.
 
 clobber_julian::
-!if !defined(MOZ_TREX_FREE)
+!if !defined(MOZ_ZULU_FREE)
     cd $(MOZ_SRC)\ns\modules\libnls
 !endif
     nmake -f makefile.win clobber_all
