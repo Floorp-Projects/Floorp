@@ -548,7 +548,8 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 
 
 
-NS_IMPL_ISUPPORTS3(InternetSearchDataSource, nsIInternetSearchService, nsIRDFDataSource, nsIStreamListener);
+NS_IMPL_ISUPPORTS4(InternetSearchDataSource, nsIInternetSearchService, 
+		nsIRDFDataSource, nsIStreamListener, nsIStreamObserver);
 
 
 
