@@ -343,6 +343,8 @@ CERTCertList * PK11_FindCertsFromNickname(char *nickname, void *wincx);
 SECKEYPrivateKey * PK11_FindPrivateKeyFromNickname(char *nickname, void *wincx);
 PK11SlotInfo *PK11_ImportCertForKey(CERTCertificate *cert, char *nickname,
 								void *wincx);
+PK11SlotInfo *PK11_ImportDERCertForKey(SECItem *derCert, char *nickname,
+								void *wincx);
 CK_OBJECT_HANDLE * PK11_FindObjectsFromNickname(char *nickname,
 	PK11SlotInfo **slotptr, CK_OBJECT_CLASS objclass, int *returnCount, 
 								void *wincx);
