@@ -140,12 +140,10 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /* Create a top level observer         */
     /***************************************/
 
-    mTopLevelObserver = new nsTopProgressNotifier();
-    
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
     RegisterNotifier(logger);
 
-//#if 0
+#if 0
     nsInstallProgressDialog *dialog = new nsInstallProgressDialog();
     nsInstallProgressDialog *proxy; 
     nsISupports *dialogBase;
@@ -168,7 +166,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 
     if (dialog)
         dialog->Release();
-//#endif
+#endif
 }
 
 
@@ -217,30 +215,24 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
     }
     else
     {
-        /* Initialize result. */
-        *anInstancePtr = 0;
         /* Check for IIDs we support and cast this appropriately. */
         if ( anIID.Equals( nsISoftwareUpdate::GetIID() ) ) 
-        {
             *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
-            NS_ADDREF_THIS();
-        }
         else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) 
-        {
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
-            NS_ADDREF_THIS();
-        }
         else if ( anIID.Equals( kISupportsIID ) )
-        {
             *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
-            NS_ADDREF_THIS();
-        }
         else
         {
-            /* Not an interface we support. */\
+            /* Not an interface we support. */
+            *anInstancePtr = 0;
             rv = NS_NOINTERFACE;
         }
     }
+
+    if (NS_SUCCEEDED(rv))
+        NS_ADDREF_THIS();
+
     return rv;
 }
 
@@ -273,19 +265,29 @@ nsSoftwareUpdate::RegisterNotifier(nsIXPINotifier *notifier)
     // register a notifier, you can not remove it.  This should at some
     // point be fixed.
 
-    (void) mTopLevelObserver->RegisterNotifier(notifier);
+    (void) mMasterNotifier.RegisterNotifier(notifier);
     
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSoftwareUpdate::GetTopLevelNotifier(nsIXPINotifier **notifier)
+nsSoftwareUpdate::GetMasterNotifier(nsIXPINotifier **notifier)
 {
-    *notifier = mTopLevelObserver;
-    NS_ADDREF(*notifier);
+    NS_ASSERTION(notifier, "getter has invalid return pointer");
+    if (!notifier)
+        return NS_ERROR_NULL_POINTER;
+
+    *notifier = &mMasterNotifier;
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsSoftwareUpdate::SetActiveNotifier(nsIXPINotifier *notifier)
+{
+    mMasterNotifier.SetActiveNotifier(notifier);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
@@ -310,20 +312,6 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
     return NS_OK;
 }
 
-#if 0   // Can't see why we need this one
-NS_IMETHODIMP
-nsSoftwareUpdate::InstallPending(void)
-{
-    if (mInstalling || mJarInstallQueue->GetSize() > 0)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-#endif
 
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJarCallBack()

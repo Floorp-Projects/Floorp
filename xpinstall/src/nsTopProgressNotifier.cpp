@@ -20,6 +20,7 @@
  *
  * Contributors:
  *     Douglas Turner <dougt@netscape.com>
+ *     Daniel Veditz <dveditz@netscape.com>
  */
 
 #include "nsIXPINotifier.h"
@@ -29,6 +30,7 @@ nsTopProgressNotifier::nsTopProgressNotifier()
 {
     NS_INIT_ISUPPORTS();
     mNotifiers = new nsVector();
+    mActive = 0;
 }
 
 nsTopProgressNotifier::~nsTopProgressNotifier()
@@ -54,14 +56,17 @@ NS_IMPL_ISUPPORTS(nsTopProgressNotifier, nsIXPINotifier::GetIID());
 long
 nsTopProgressNotifier::RegisterNotifier(nsIXPINotifier * newNotifier)
 {
-     return mNotifiers->Add( newNotifier );
+    NS_IF_ADDREF( newNotifier );
+    return mNotifiers->Add( newNotifier );
 }
 
 
 void
 nsTopProgressNotifier::UnregisterNotifier(long id)
 {
-     mNotifiers->Set(id, NULL);
+    nsIXPINotifier *item = (nsIXPINotifier*)mNotifiers->Get(id);
+    NS_IF_RELEASE(item);
+    mNotifiers->Set(id, NULL);
 }
 
 
@@ -69,6 +74,9 @@ nsTopProgressNotifier::UnregisterNotifier(long id)
 NS_IMETHODIMP
 nsTopProgressNotifier::BeforeJavascriptEvaluation()
 {
+    if (mActive)
+        mActive->BeforeJavascriptEvaluation();
+
     if (mNotifiers)
     {
         PRUint32 i=0;
@@ -86,6 +94,9 @@ nsTopProgressNotifier::BeforeJavascriptEvaluation()
 NS_IMETHODIMP
 nsTopProgressNotifier::AfterJavascriptEvaluation(void)
 {
+    if (mActive)
+        mActive->AfterJavascriptEvaluation();
+
     if (mNotifiers)
     {
         PRUint32 i=0;
@@ -102,6 +113,9 @@ nsTopProgressNotifier::AfterJavascriptEvaluation(void)
 NS_IMETHODIMP
 nsTopProgressNotifier::InstallStarted(const char* UIPackageName)
 {
+    if (mActive)
+        mActive->InstallStarted(UIPackageName);
+
     if (mNotifiers)
     {
         PRUint32 i=0;
@@ -119,6 +133,9 @@ NS_IMETHODIMP
 nsTopProgressNotifier::ItemScheduled( const char* message )
 {
     long rv = 0;
+
+    if (mActive && mActive->ItemScheduled( message ) != 0 )
+        rv = -1;
 
     if (mNotifiers)
     {
@@ -138,6 +155,9 @@ nsTopProgressNotifier::ItemScheduled( const char* message )
 NS_IMETHODIMP
 nsTopProgressNotifier::InstallFinalization( const char* message, PRInt32 itemNum, PRInt32 totNum )
 {
+    if (mActive)
+        mActive->InstallFinalization( message, itemNum, totNum );
+
     if (mNotifiers)
     {
         PRUint32 i=0;
@@ -154,7 +174,10 @@ nsTopProgressNotifier::InstallFinalization( const char* message, PRInt32 itemNum
 NS_IMETHODIMP
 nsTopProgressNotifier::InstallAborted(void)
 {
-   if (mNotifiers)
+    if (mActive)
+        mActive->InstallAborted();
+
+    if (mNotifiers)
     {
         PRUint32 i=0;
         for (; i < mNotifiers->GetSize(); i++) 

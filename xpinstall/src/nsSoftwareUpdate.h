@@ -38,10 +38,9 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
 
         NS_IMETHOD RegisterNotifier(nsIXPINotifier *notifier);
         
-//        NS_IMETHOD InstallPending(void);
-
         NS_IMETHOD InstallJarCallBack();
-        NS_IMETHOD GetTopLevelNotifier(nsIXPINotifier **notifier);
+        NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier);
+        NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier);
 
 
     private:
@@ -52,7 +51,7 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
         PRLock*           mLock;
         PRBool            mInstalling;
         nsVector*         mJarInstallQueue;
-        nsTopProgressNotifier   *mTopLevelObserver;
+        nsTopProgressNotifier   mMasterNotifier;
 };
 
 

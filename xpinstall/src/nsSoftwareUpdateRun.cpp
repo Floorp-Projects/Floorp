@@ -307,27 +307,23 @@ extern "C" void RunInstallOnThread(void *data)
     JSRuntime   *rt;
 	JSContext   *cx;
     JSObject    *glob;
-    
-    nsISoftwareUpdate *softwareUpdate;
 
-    nsresult rv = nsServiceManager::GetService( kSoftwareUpdateCID, 
-                                                kISoftwareUpdateIID,
-                                                (nsISupports**)&softwareUpdate);
-    
     nsIXPINotifier *notifier;
+    nsresult    rv;
 
-    if (NS_SUCCEEDED(rv))
+    NS_WITH_SERVICE(nsISoftwareUpdate, softwareUpdate, kSoftwareUpdateCID, &rv );
+
+    if (!NS_SUCCEEDED(rv))
     {
-        softwareUpdate->GetTopLevelNotifier(&notifier);
-    }
-    else
-    {
+        NS_WARNING("shouldn't have RunInstall() if we can't get SoftwareUpdate");
         return;
     }
+
+    softwareUpdate->SetActiveNotifier( installInfo->GetNotifier() );
+    softwareUpdate->GetMasterNotifier(&notifier);
     
     if(notifier)
         notifier->BeforeJavascriptEvaluation();
-    
     
     nsString args;
     installInfo->GetArguments(args);
@@ -368,11 +364,12 @@ extern "C" void RunInstallOnThread(void *data)
     JS_DestroyRuntime(rt);
 
 bail:
-    if(notifier)
+    if(notifier) 
         notifier->AfterJavascriptEvaluation();
 
     if (scriptBuffer) delete [] scriptBuffer;
     if (jarpath) nsCRT::free(jarpath);
 
+    softwareUpdate->SetActiveNotifier(0);
     softwareUpdate->InstallJarCallBack();
 }

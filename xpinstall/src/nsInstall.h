@@ -69,6 +69,8 @@ class nsInstallInfo
     void GetArguments(nsString& aArgs) { aArgs = mArgs; }
     
     long GetFlags() { return mFlags; }
+
+    nsIXPINotifier* GetNotifier() { return mNotifier; };
     
   private:
     
