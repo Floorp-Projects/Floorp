@@ -28,6 +28,7 @@
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIView.h"
+#include "nsVoidArray.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -520,20 +521,36 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     // If there's more than one trapezoid that means there are floaters
     PRInt32 i;
 
-    // Stop when we get to space occupied by a right floater
+    // Stop when we get to space occupied by a right floater, or when we've
+    // looked at every trapezoid and none are right floaters
     for (i = 0; i < bandData.count; i++) {
       nsBandTrapezoid*  trapezoid = &trapezoids[i];
 
       if (trapezoid->state != nsBandTrapezoid::Available) {
         nsStyleDisplay* display;
       
-        // XXX Handle the case of multiple frames
-        trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
-        if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-          break;
+        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+          PRInt32 numFrames = trapezoid->frames->Count();
+
+          NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
+          for (PRInt32 i = 0; i < numFrames; i++) {
+            nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(i);
+
+            f->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+            if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+              goto foundRightFloater;
+            }
+          }
+
+        } else {
+          trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+          if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+            break;
+          }
         }
       }
     }
+  foundRightFloater:
 
     if (i > 0) {
       trapezoid = &trapezoids[i - 1];
