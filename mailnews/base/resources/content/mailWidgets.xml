@@ -349,8 +349,6 @@
         </getter>
         <setter>
           <![CDATA[
-            dump("<searchterm>: setting scope to " + val + "\n");
-            document.getAnonymousNodes(this)[0].setAttribute("value","scope: " + val);
             var searchAttribute = this.searchattribute;
             if (searchAttribute) searchAttribute.searchScope=val;
            ]]>
