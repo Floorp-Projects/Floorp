@@ -77,6 +77,7 @@ enum JS2Op {
     eString,            // <string pointer:u32>
     eThis,
     eNewObject,         // <argCount:u16>
+
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
     eLexicalRef,        // <multiname index:u16>
@@ -86,11 +87,13 @@ enum JS2Op {
     eBracketRead,
     eBracketWrite,
     eBracketRef,
+    eBracketReadForRef,
+    eBracketWriteRef,
+
     eReturn,
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
     ePopFrame,
-    eToBoolean,
     eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
     eBranchTrue,        // <branch displacement:s32>
     eBranch,            // <branch displacement:s32>

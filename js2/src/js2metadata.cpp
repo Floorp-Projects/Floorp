@@ -1157,6 +1157,10 @@ namespace MetaData {
         case ExprNode::bitwiseAndEquals:
         case ExprNode::bitwiseXorEquals:
         case ExprNode::bitwiseOrEquals:
+        case ExprNode::logicalAndEquals:
+        case ExprNode::logicalXorEquals:
+        case ExprNode::logicalOrEquals:
+
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 ValidateExpression(cxt, env, b->op1);
@@ -1274,6 +1278,9 @@ namespace MetaData {
         case ExprNode::bitwiseXorEquals:
             op = eBitwiseXor;
             goto doAssignBinary;
+        case ExprNode::logicalXorEquals:
+            op = eLogicalXor;
+            goto doAssignBinary;
         case ExprNode::bitwiseOrEquals:
             op = eBitwiseOr;
             goto doAssignBinary;
@@ -1387,6 +1394,46 @@ doUnary:
             }
             break;
 
+        case ExprNode::logicalAndEquals:
+            {
+                if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) 
+                    lVal->emitReadForWriteBackBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
+                bCon->emitOp(eDup, p->pos);
+                bCon->emitBranch(eBranchFalse, skipOverSecondHalf, p->pos);
+                bCon->emitOp(ePop, p->pos);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->setLabel(skipOverSecondHalf);
+                lVal->emitWriteBackBytecode(bCon, p->pos);
+            }
+            break;
+
+        case ExprNode::logicalOrEquals:
+            {
+                if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) 
+                    lVal->emitReadForWriteBackBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
+                bCon->emitOp(eDup, p->pos);
+                bCon->emitBranch(eBranchTrue, skipOverSecondHalf, p->pos);
+                bCon->emitOp(ePop, p->pos);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->setLabel(skipOverSecondHalf);
+                lVal->emitWriteBackBytecode(bCon, p->pos);
+            }
+            break;
+
         case ExprNode::logicalAnd:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
@@ -1407,10 +1454,8 @@ doUnary:
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 Reference *lVal = EvalExprNode(env, phase, b->op1);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eToBoolean, p->pos);
                 Reference *rVal = EvalExprNode(env, phase, b->op2);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eToBoolean, p->pos);
                 bCon->emitOp(eLogicalXor, p->pos);
             }
             break;
@@ -2875,95 +2920,6 @@ readClassProperty:
         reportError(kind, message, pos, str.c_str());
     }
 
-/************************************************************************************
- *
- *  Pond
- *
- ************************************************************************************/
-
-    Pond::Pond(size_t sz, Pond *next) : sanity(POND_SANITY), pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondTop(pondBase), freeHeader(NULL), nextPond(next) 
-    { 
-    }
-    
-    // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(int32 sz)
-    {
-        // Try scannning the free list...
-        PondScum *p = freeHeader;
-        PondScum *pre = NULL;
-        while (p) {
-            ASSERT(p->getSize() > 0);
-            if (p->getSize() >= sz) {
-                if (pre)
-                    pre->owner = p->owner;
-                else
-                    freeHeader = (PondScum *)(p->owner);
-                p->owner = this;
-                p->resetMark();      // might have lingering mark from previous gc
-#ifdef DEBUG
-                memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
-#endif
-                return (p + 1);
-            }
-            pre = p;
-            p = (PondScum *)(p->owner);
-        }
-
-        // See if there's room left...
-        if (sz > (pondSize - (pondTop - pondBase))) {
-            if (nextPond == NULL)
-                nextPond = new Pond(sz, nextPond);
-            return nextPond->allocFromPond(sz);
-        }
-        p = (PondScum *)pondTop;
-        p->owner = this;
-        p->setSize(sz);
-        pondTop += sz;
-#ifdef DEBUG
-        memset((p + 1), 0xB7, sz - sizeof(PondScum));
-#endif
-        return (p + 1);
-    }
-
-    // Stick the chunk at the start of the free list
-    void Pond::returnToPond(PondScum *p)
-    {
-        p->owner = (Pond *)freeHeader;
-        uint8 *t = (uint8 *)(p + 1);
-#ifdef DEBUG
-        memset(t, 0xB3, p->getSize() - sizeof(PondScum));
-#endif
-        freeHeader = p;
-    }
-
-    // Clear the mark bit from all PondScums
-    void Pond::resetMarks()
-    {
-        uint8 *t = pondBase;
-        while (t != pondTop) {
-            PondScum *p = (PondScum *)t;
-            p->resetMark();
-            t += p->getSize();
-        }
-        if (nextPond)
-            nextPond->resetMarks();
-    }
-
-    // Anything left unmarked is now moved to the free list
-    void Pond::moveUnmarkedToFreeList()
-    {
-        uint8 *t = pondBase;
-        while (t != pondTop) {
-            PondScum *p = (PondScum *)t;
-            if (!p->isMarked() && (p->owner == this))   // (owner != this) ==> already on free list
-                returnToPond(p);
-            t += p->getSize();
-        }
-        if (nextPond)
-            nextPond->moveUnmarkedToFreeList();
-    }
-
-
  /************************************************************************************
  *
  *  JS2Class
@@ -3034,17 +2990,11 @@ readClassProperty:
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
-                if (JS2VAL_IS_OBJECT(slots[i].value)) {
-                    JS2Object *obj = JS2VAL_TO_OBJECT(slots[i].value);
-                    GCMARKOBJECT(obj)
-                }
+                GCMARKVALUE(slots[i].value)
             }
         }
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            if (JS2VAL_IS_OBJECT(i->second)) {
-                JS2Object *obj = JS2VAL_TO_OBJECT(i->second);
-                GCMARKOBJECT(obj)
-            }
+            GCMARKVALUE(i->second)
         }        
     }
 
@@ -3086,10 +3036,7 @@ readClassProperty:
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
-                if (JS2VAL_IS_OBJECT(slots[i].value)) {
-                    JS2Object *obj = JS2VAL_TO_OBJECT(slots[i].value);
-                    GCMARKOBJECT(obj)
-                }
+                GCMARKVALUE(slots[i].value)
             }
         }
     }
@@ -3106,10 +3053,7 @@ readClassProperty:
     {
         GCMARKOBJECT(parent)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            if (JS2VAL_IS_OBJECT(i->second)) {
-                JS2Object *obj = JS2VAL_TO_OBJECT(i->second);
-                GCMARKOBJECT(obj)
-            }
+            GCMARKVALUE(i->second)
         }        
     }
 
@@ -3123,10 +3067,7 @@ readClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void MethodClosure::markChildren()     
     { 
-        if (JS2VAL_IS_OBJECT(thisObject))  {
-            JS2Object *obj = JS2VAL_TO_OBJECT(thisObject);
-            GCMARKOBJECT(obj)
-        }
+        GCMARKVALUE(thisObject)
         GCMARKOBJECT(method->fInst)
     }
 
@@ -3163,10 +3104,7 @@ readClassProperty:
         Frame::markChildren();
         GCMARKOBJECT(internalNamespace)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            if (JS2VAL_IS_OBJECT(i->second)) {
-                JS2Object *obj = JS2VAL_TO_OBJECT(i->second);
-                GCMARKOBJECT(obj)
-            }
+            GCMARKVALUE(i->second)
         }        
     }
 
@@ -3186,10 +3124,7 @@ readClassProperty:
     void ParameterFrame::markChildren()
     {
         Frame::markChildren();
-        if (JS2VAL_IS_OBJECT(thisObject)) {
-            JS2Object *obj = JS2VAL_TO_OBJECT(thisObject);
-            GCMARKOBJECT(obj)
-        }
+        GCMARKVALUE(thisObject)
     }
 
 
@@ -3324,7 +3259,7 @@ readClassProperty:
         pond.moveUnmarkedToFreeList();
     }
 
-    // Allocate a chink of size s and mark whether it's a JS2Object or not
+    // Allocate a chunk of size s
     void *JS2Object::alloc(size_t s)
     {
         s += sizeof(PondScum);
@@ -3341,6 +3276,97 @@ readClassProperty:
         ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
         p->owner->returnToPond(p);
     }
+
+
+/************************************************************************************
+ *
+ *  Pond
+ *
+ ************************************************************************************/
+
+    Pond::Pond(size_t sz, Pond *next) : sanity(POND_SANITY), pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondTop(pondBase), freeHeader(NULL), nextPond(next) 
+    { 
+    }
+    
+    // Allocate from this or the next Pond (make a new one if necessary)
+    void *Pond::allocFromPond(int32 sz)
+    {
+        // Try scannning the free list...
+        PondScum *p = freeHeader;
+        PondScum *pre = NULL;
+        while (p) {
+            ASSERT(p->getSize() > 0);
+            if (p->getSize() >= sz) {
+                if (pre)
+                    pre->owner = p->owner;
+                else
+                    freeHeader = (PondScum *)(p->owner);
+                p->owner = this;
+                p->resetMark();      // might have lingering mark from previous gc
+#ifdef DEBUG
+                memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
+#endif
+                return (p + 1);
+            }
+            pre = p;
+            p = (PondScum *)(p->owner);
+        }
+
+        // See if there's room left...
+        if (sz > (pondSize - (pondTop - pondBase))) {
+            if (nextPond == NULL)
+                nextPond = new Pond(sz, nextPond);
+            return nextPond->allocFromPond(sz);
+        }
+        p = (PondScum *)pondTop;
+        p->owner = this;
+        p->setSize(sz);
+        pondTop += sz;
+#ifdef DEBUG
+        memset((p + 1), 0xB7, sz - sizeof(PondScum));
+#endif
+        return (p + 1);
+    }
+
+    // Stick the chunk at the start of the free list
+    void Pond::returnToPond(PondScum *p)
+    {
+        p->owner = (Pond *)freeHeader;
+        uint8 *t = (uint8 *)(p + 1);
+#ifdef DEBUG
+        memset(t, 0xB3, p->getSize() - sizeof(PondScum));
+#endif
+        freeHeader = p;
+    }
+
+    // Clear the mark bit from all PondScums
+    void Pond::resetMarks()
+    {
+        uint8 *t = pondBase;
+        while (t != pondTop) {
+            PondScum *p = (PondScum *)t;
+            p->resetMark();
+            t += p->getSize();
+        }
+        if (nextPond)
+            nextPond->resetMarks();
+    }
+
+    // Anything left unmarked is now moved to the free list
+    void Pond::moveUnmarkedToFreeList()
+    {
+        uint8 *t = pondBase;
+        while (t != pondTop) {
+            PondScum *p = (PondScum *)t;
+            if (!p->isMarked() && (p->owner == this))   // (owner != this) ==> already on free list
+                returnToPond(p);
+            t += p->getSize();
+        }
+        if (nextPond)
+            nextPond->moveUnmarkedToFreeList();
+    }
+
+
 
 }; // namespace MetaData
 }; // namespace Javascript

@@ -48,7 +48,7 @@
 
         case eFalse: 
             {
-	        push(JS2VAL_TRUE);
+	        push(JS2VAL_FALSE);
 	    }
 	    break;
 
@@ -65,3 +65,11 @@
 	    }
 	    break;
 
+        case eThis: // XXX literal?
+            {
+                js2val rval = meta->env.findThis(true);
+                if (JS2VAL_IS_INACCESSIBLE(rval))
+                    meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
+                push(rval);
+            }
+            break;

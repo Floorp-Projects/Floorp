@@ -148,14 +148,33 @@
             push(rval);
         }
         break;
-
-    case eThis:
+    
+    // Leave the base object and index value, push the value
+    case eBracketReadForRef:
         {
-            js2val rval = meta->env.findThis(true);
-            if (JS2VAL_IS_INACCESSIBLE(rval))
-                meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
+            LookupKind lookup(false, NULL);
+            js2val indexVal = pop();
+            js2val baseVal = top();
+            js2val rval;
+            String *indexStr = toString(indexVal);
+            push(STRING_TO_JS2VAL(indexStr));
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(rval);
         }
         break;
 
-
+    // Beneath the value is a reference pair (base and index), write to that location but leave just the value
+    case eBracketWriteRef:
+        {
+            LookupKind lookup(false, NULL);
+            js2val rval = pop();
+            js2val indexVal = pop();
+            ASSERT(JS2VAL_IS_STRING(indexVal));
+            js2val baseVal = pop();
+            Multiname mn(meta->world.identifiers[*JS2VAL_TO_STRING(indexVal)], meta->publicNamespace);
+            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
+            push(rval);
+        }
+        break;

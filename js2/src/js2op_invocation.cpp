@@ -51,14 +51,6 @@
         }
         break;
 
-    case eToBoolean:
-        {
-            js2val v = pop();
-            bool b = toBoolean(v);
-            push(BOOLEAN_TO_JS2VAL(b));
-        }
-        break;
-
     case eNew:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);

@@ -105,13 +105,13 @@ namespace MetaData {
             if (*float64Table[hash] == x)
                 return float64Table[hash];
             else {
-                float64 *p = (float64 *)malloc(sizeof(float64));
+                float64 *p = (float64 *)JS2Object::alloc(sizeof(float64));
                 *p = x;
                 return p;
             }
         }
         else {
-            float64 *p = (float64 *)malloc(sizeof(float64));
+            float64 *p = (float64 *)JS2Object::alloc(sizeof(float64));
             float64Table[hash] = p;
             *p = x;
             return p;
@@ -370,9 +370,6 @@ namespace MetaData {
         case ePopv:         // pop a statement result value
             return -1;      
 
-        case eToBoolean:    // pop object, push boolean
-            return 0;
-
         case ePushFrame:    // affect the frame stack...
         case ePopFrame:     // ...not the exec stack
             return 0;
@@ -410,6 +407,12 @@ namespace MetaData {
 
         case eBracketAssignOp:  // pop base, pop index, push result
             return 0;
+
+        case eBracketReadForRef:    // leave base and index, push value
+            return 1;
+
+        case eBracketWriteRef:      // pop base and index, leave value
+            return -2;
 
         default:
             ASSERT(false);
@@ -497,6 +500,11 @@ namespace MetaData {
         if (JS2VAL_IS_OBJECT(retval)) {
             JS2Object *obj = JS2VAL_TO_OBJECT(retval);
             GCMARKOBJECT(obj)
+        }
+        else {
+            if (JS2VAL_IS_DOUBLE(retval)) {
+                JS2Object::mark(JS2VAL_TO_DOUBLE(retval));
+            }
         }
     }
 

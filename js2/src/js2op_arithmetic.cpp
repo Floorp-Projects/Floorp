@@ -169,8 +169,7 @@
         {
 	    js2val b = pop();
 	    js2val a = pop();
-            ASSERT(JS2VAL_IS_BOOLEAN(a) && JS2VAL_IS_BOOLEAN(b));
-            push(BOOLEAN_TO_JS2VAL(JS2VAL_TO_BOOLEAN(a) ^ JS2VAL_TO_BOOLEAN(b)));
+            push(BOOLEAN_TO_JS2VAL(toBoolean(a) ^ toBoolean(b)));
         }
         break;
 
@@ -413,6 +412,11 @@
                     rval = allocNumber(toInteger(a) | toInteger(b));
                 }
                 break;
+            case eLogicalXor:
+                {
+                    rval = allocNumber(toBoolean(a) ^ toBoolean(b));
+                }
+                break;
             }
             meta->env.lexicalWrite(meta, mn, rval, true, phase);
             push(rval);
@@ -559,6 +563,11 @@
             case eBitwiseOr:
                 {
                     rval = allocNumber(toInteger(a) | toInteger(b));
+                }
+                break;
+            case eLogicalXor:
+                {
+                    rval = allocNumber(toBoolean(a) ^ toBoolean(b));
                 }
                 break;
             }
@@ -724,6 +733,11 @@
             case eBitwiseOr:
                 {
                     rval = allocNumber(toInteger(a) | toInteger(b));
+                }
+                break;
+            case eLogicalXor:
+                {
+                    rval = allocNumber(toBoolean(a) ^ toBoolean(b));
                 }
                 break;
             }

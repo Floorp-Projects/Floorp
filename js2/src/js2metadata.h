@@ -126,6 +126,8 @@ public:
 };
 
 #define GCMARKOBJECT(n) if ((n) && !(n)->isMarked()) { (n)->mark(); (n)->markChildren(); }
+#define GCMARKVALUE(v) if (JS2VAL_IS_OBJECT(v)) { JS2Object *_obj = JS2VAL_TO_OBJECT(v); GCMARKOBJECT(_obj) } \
+                       else { if (JS2VAL_IS_DOUBLE(v)) { JS2Object::mark(JS2VAL_TO_DOUBLE(v)); } }
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -577,13 +579,14 @@ public:
 
 // Base class for all references (lvalues)
 // References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
-// XXX use an arena new/delete. (N.B. the contained multinames make it into the bytecode stream)
 class Reference {
 public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)              { ASSERT(false); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)             { ASSERT(false); }
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); };
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { ASSERT(false); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { ASSERT(false); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { ASSERT(false); }
 
     virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
@@ -611,6 +614,8 @@ public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
     virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(variableMultiname); }
@@ -628,6 +633,8 @@ public:
     DotReference(const StringAtom &name) : propertyMultiname(new Multiname(name)) { }
     DotReference(Multiname *mn) : propertyMultiname(mn) { }
 
+    // In this implementation, the base is established by the execution of the preceding expression and
+    // is available on the execution stack, not in the reference object (which is a codegen-time only)
     // js2val base;                 // The object whose property was referenced (a in the examples above). The
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
@@ -638,6 +645,8 @@ public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
     virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(propertyMultiname); }
@@ -670,6 +679,8 @@ public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eBracketRead, pos); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eBracketWrite, pos); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eBracketRef, pos); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { bCon->emitOp(eBracketReadForRef, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { bCon->emitOp(eBracketWriteRef, pos); }
 /*
     js2val base;                    // The object whose property was referenced (a in the examples above). The object may be a
                                     // LIMITEDINSTANCE if a is a super expression, in which case the property lookup will be
