@@ -627,12 +627,12 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
   }
 
   // now composite
-  for (int y=0; y<height; y++) {
+  for (unsigned y=0; y<height; y++) {
     unsigned char *targetRow = readData+3*y*width;
     unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
     unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
     
-    for (int i=0; i<width; i++) {
+    for (unsigned i=0; i<width; i++) {
       targetRow[3*i] =   (unsigned(targetRow[3*i])*(255-alphaRow[i]) +
                            unsigned(imageRow[3*i])*alphaRow[i])>>8;
       targetRow[3*i+1] = (unsigned(targetRow[3*i+1])*(255-alphaRow[i]) +
@@ -684,9 +684,9 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   }
   readHeight = aHeight-destY;
   readWidth = aWidth-destX;
-  if (aY+aHeight>surfaceHeight)
+  if (aY+aHeight>(int)surfaceHeight)
     readHeight = surfaceHeight-readY;
-  if (aX+aWidth>surfaceWidth)
+  if (aX+aWidth>(int)surfaceWidth)
     readWidth = surfaceWidth-readX;
 
 
