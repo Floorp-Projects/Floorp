@@ -54,6 +54,10 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 
+// Charset converter
+#include "nsMetaCharsetCID.h"
+#include "nsIMetaCharsetService.h"
+
 #define DIALOG_FONT      "Helvetica"
 #define DIALOG_FONT_SIZE 10
 
@@ -89,6 +93,8 @@ static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 
+static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
+static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 #define DEFAULT_WIDTH 620
 #define DEFAULT_HEIGHT 400
@@ -181,9 +187,22 @@ nsViewerApp::AutoregisterComponents()
 nsresult
 nsViewerApp::SetupRegistry()
 {
+  nsresult rv;
   AutoregisterComponents();
 
   NS_SetupRegistry();
+
+  nsIMetaCharsetService* metacharset;
+  rv = nsServiceManager::GetService(kMetaCharsetCID,
+                                    kIMetaCharsetServiceIID,
+                                    (nsISupports **) &metacharset);
+  if(!NS_FAILED(rv)) {
+    rv = metacharset->Start();
+  }
+
+  if(!NS_FAILED(rv)) {
+    rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
+  }
 
   // Register our browser window factory
   nsIFactory* bwf;
