@@ -34,12 +34,7 @@ MODULE=raptor
 DEFINES =-D_IMPL_NS_WIDGET
 
 OBJS =                             \
-	.\$(OBJDIR)\nsMenuButton.obj  \
 	.\$(OBJDIR)\nsPopUpMenu.obj  \
-	.\$(OBJDIR)\nsToolbarItemHolder.obj  \
-	.\$(OBJDIR)\nsToolbarManager.obj  \
-	.\$(OBJDIR)\nsImageButton.obj  \
-	.\$(OBJDIR)\nsToolBar.obj  \
 	.\$(OBJDIR)\nsMenuBar.obj  \
 	.\$(OBJDIR)\nsMenu.obj  \
 	.\$(OBJDIR)\nsMenuItem.obj  \
@@ -69,6 +64,7 @@ OBJS =                             \
 LINCS=                                  \
 	-I$(PUBLIC)\raptor              \
 	-I$(PUBLIC)\xpcom               \
+	-I..               \
 	$(NULL)
 
 LCFLAGS =                               \
