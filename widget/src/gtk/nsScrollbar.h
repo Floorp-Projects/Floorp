@@ -20,11 +20,10 @@
 #define nsScrollbar_h__
 
 #include "nsWidget.h"
-
 #include "nsIScrollbar.h"
 
 /**
- * Native Motif scrollbar wrapper.
+ * Native GTK scrollbar wrapper.
  */
 
 class nsScrollbar : public nsWidget,
@@ -52,7 +51,6 @@ public:
     NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                PRUint32 aPosition, PRUint32 aLineIncrement);
 
-
   NS_IMETHOD Create(nsIWidget *aParent,
               const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
@@ -75,12 +73,10 @@ public:
     virtual PRBool    OnResize(nsSizeEvent &aEvent);
 
 private:
-
-  PRUint32 mLineIncrement;
-  int      mOrientation;
+  int             mOrientation;
+  GtkObject*      mAdjustment;
 
   int AdjustScrollBarPosition(int aPosition);
-
 };
 
 #endif // nsScrollbar_
