@@ -138,7 +138,11 @@ CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
 !if "$(NSS_CO_TAG)" != ""
 NSS_CO_FLAGS=-r $(NSS_CO_TAG)
 !else
+!ifdef MOZ_NSS_AUTOCONF
+NSS_CO_FLAGS= -r NSS_CLIENT_BRANCH
+!else
 NSS_CO_FLAGS= -r NSS_CLIENT_TAG
+!endif
 !endif
 
 CVSCO_NSS = cvs -q $(CVS_FLAGS) co $(NSS_CO_FLAGS) -P
