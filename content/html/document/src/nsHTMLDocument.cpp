@@ -265,7 +265,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
         NS_NewNavHTMLDTD(&theDTD);
         mParser->RegisterDTD(theDTD);
         mParser->SetCommand(aCommand);
-        mParser->SetContentSink(sink);
+        mParser->SetContentSink(sink); 
         mParser->Parse(aURL);
       }
       NS_RELEASE(sink);
