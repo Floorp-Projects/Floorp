@@ -146,7 +146,7 @@ nsPK11Token::Login(PRBool force)
   PRBool test;
   rv = this->NeedsLogin(&test);
   if (NS_FAILED(rv)) return rv;
-  if (test || force) {
+  if (test && force) {
     rv = this->Logout();
     if (NS_FAILED(rv)) return rv;
   }

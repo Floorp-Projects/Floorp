@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.32 2001/06/17 05:28:46 bryner%uiuc.edu Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.33 2001/06/19 05:29:56 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -45,6 +45,7 @@
 #include "nsILocalFile.h"
 #include "nsNSSCertificate.h"
 #include "nsPKCS12Blob.h"
+#include "nsPK11TokenDB.h"
 #include "nsIX509Cert.h"
 #include "nsINSSDialogs.h"
 #include "nsNSSASN1Object.h"
@@ -2722,6 +2723,14 @@ nsNSSCertificateDB::ExportPKCS12File(nsIPK11Token     *aToken,
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
   if (count == 0) return NS_OK;
+  nsCOMPtr<nsIPK11Token> localRef;
+  if (!aToken) {
+    PK11SlotInfo *keySlot = PK11_GetInternalKeySlot();
+    NS_ASSERTION(keySlot,"Failed to get the internal key slot");
+    localRef = new nsPK11Token(keySlot);
+    PK11_FreeSlot(keySlot);
+    aToken = localRef;
+  }
   blob.SetToken(aToken);
   //blob.LoadCerts(aCertNames, count);
   //return blob.ExportToFile(aFile);

@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.9 2001/05/22 21:19:31 ddrinan%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.10 2001/06/19 05:29:55 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -53,6 +53,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsNSSHelper.h"
 #include "nsNSSCertificate.h"
+#include "nsKeygenHandler.h" //For GetSlotWithMechanism
+#include "nsPK11TokenDB.h"
 
 #include "pk11func.h"
 #include "secerr.h"
@@ -70,13 +72,12 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 #define PIP_PKCS12_USER_CANCELED 3
 
 // constructor
-nsPKCS12Blob::nsPKCS12Blob() 
+nsPKCS12Blob::nsPKCS12Blob():mTmpFile(nsnull),
+                             mTmpFilePath(nsnull),
+                             mTokenSet(PR_FALSE),
+                             mCertArray(0)
 {
-  mToken = nsnull;
-  mCertArray = nsnull;
   mUIContext = new PipUIContext();
-  mTmpFile = NULL;
-  mTmpFilePath = NULL;
 }
 
 // destructor
@@ -90,15 +91,18 @@ nsPKCS12Blob::~nsPKCS12Blob()
 void 
 nsPKCS12Blob::SetToken(nsIPK11Token *token)
 {
-  if (token) {
-    // free the old one, how?
-    mToken = getter_AddRefs(token);
-  } else {
-    // set it to internal token
-    nsCOMPtr<nsIPK11TokenDB> tokendb = 
-                                  do_GetService(NS_PK11TOKENDB_CONTRACTID);
-    tokendb->GetInternalKeyToken(getter_AddRefs(mToken));
-  }
+ if (token) {
+   mToken = token;
+ } else {
+   PK11SlotInfo *slot;
+   nsresult rv = GetSlotWithMechanism(CKM_RSA_PKCS, mUIContext,&slot);
+   if (NS_FAILED(rv)) {
+      mToken = 0;  
+   } else {
+     mToken = new nsPK11Token(slot);
+   }
+ }
+ mTokenSet = PR_TRUE;
 }
 
 // nsPKCS12Blob::ImportFromFile
@@ -111,10 +115,21 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   nsresult rv;
   SECStatus srv = SECSuccess;
   SEC_PKCS12DecoderContext *dcx = NULL;
-  PK11SlotInfo *slot = PK11_GetInternalKeySlot(); /* XXX fix me! */
   SECItem unicodePw;
-  if (!mToken)
-    SetToken(NULL); // uses internal slot
+
+  PK11SlotInfo *slot=nsnull;
+  nsXPIDLString tokenName;
+  nsXPIDLCString tokenNameCString;
+  const char *tokNameRef;
+
+  if (!mToken && !mTokenSet) {
+    SetToken(NULL); // Ask the user to pick a slot
+  } else if (!mToken && mTokenSet) {
+    // Someone tried setting the token before, but that failed.
+    // Probably because the user canceled.
+    handleError(PIP_PKCS12_USER_CANCELED);
+    return NS_OK;
+  }
   // init slot
   rv = mToken->Login(PR_TRUE);
   if (NS_FAILED(rv)) goto finish;
@@ -126,6 +141,19 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
     handleError(PIP_PKCS12_USER_CANCELED);
     return NS_OK;
   }
+
+  mToken->GetTokenName(getter_Copies(tokenName));
+  tokenNameCString.Adopt(NS_ConvertUCS2toUTF8(tokenName).ToNewCString());
+  tokNameRef = tokenNameCString; //I do this here so that the
+                                 //NS_CONST_CAST below doesn't
+                                 //break the build on Win32
+
+  slot = PK11_FindSlotByName(NS_CONST_CAST(char*,tokNameRef));
+  if (!slot) {
+    srv = SECFailure;
+    goto finish;
+  }
+
   // initialize the decoder
   dcx = SEC_PKCS12DecoderStart(&unicodePw, slot, NULL,
                                digest_open, digest_close,
@@ -211,7 +239,6 @@ nsPKCS12Blob::LoadCerts(const PRUnichar **certNames, int numCerts)
 //       open output file as nsIFileStream object?
 //       set appropriate error codes
 nsresult
-//nsPKCS12Blob::ExportToFile(nsILocalFile *file)
 nsPKCS12Blob::ExportToFile(nsILocalFile *file, 
                            nsIX509Cert **certs, int numCerts)
 {
@@ -221,8 +248,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   SEC_PKCS12SafeInfo *certSafe = NULL, *keySafe = NULL;
   SECItem unicodePw;
   int i;
-  if (!mToken)
-    SetToken(NULL); // uses internal slot
+  NS_ASSERTION(mToken, "Need to set the token before exporting");
   // init slot
   rv = mToken->Login(PR_TRUE);
   if (NS_FAILED(rv)) goto finish;
@@ -265,6 +291,16 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
       rv = NS_ERROR_FAILURE;
       goto finish;
     }
+    // We can only successfully export certs that are on 
+    // internal token.  Most, if not all, smart card vendors
+    // won't let you extract the private key (in any way
+    // shape or form) from the card.  So let's punt if 
+    // the cert is not in the internal db.
+    if (nssCert->slot && !PK11_IsInternal(nssCert->slot)) {
+      CERT_DestroyCertificate(nssCert);
+      continue;
+    }
+
     // XXX this is why, to verify the slot is the same
     // PK11_FindObjectForCert(nssCert, NULL, slot);
     // create the cert and key safes
