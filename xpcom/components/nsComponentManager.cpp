@@ -145,6 +145,30 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     NS_INIT_REFCNT();
 }
 
+PRBool
+nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
+    delete entry;
+    return PR_TRUE;
+}
+
+PRBool
+nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsCID* entry = NS_STATIC_CAST(nsCID*, aData);
+    delete entry;
+    return PR_TRUE;
+}
+
+PRBool
+nsDll_Destroy(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsDll* entry = NS_STATIC_CAST(nsDll*, aData);
+    delete entry;
+    return PR_TRUE;
+}
+
 nsresult nsComponentManagerImpl::Init(void) 
 {
     if (nsComponentManagerLog == NULL)
@@ -153,12 +177,16 @@ nsresult nsComponentManagerImpl::Init(void)
     }
 
     if (mFactories == NULL) {
-        mFactories = new nsHashtable(256, /* Thread Safe */ PR_TRUE);
+        mFactories = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
+                                           nsFactoryEntry_Destroy, nsnull, 
+                                           256, /* Thread Safe */ PR_TRUE);
         if (mFactories == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mProgIDs == NULL) {
-        mProgIDs = new nsHashtable(256, /* Thread Safe */ PR_TRUE);
+        mProgIDs = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
+                                         nsCID_Destroy, nsnull,
+                                         256, /* Thread Safe */ PR_TRUE);
         if (mProgIDs == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -168,7 +196,9 @@ nsresult nsComponentManagerImpl::Init(void)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mDllStore == NULL) {
-        mDllStore = new nsHashtable(256, /* Thead Safe */ PR_TRUE);
+        mDllStore = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
+                                          nsDll_Destroy, nsnull,
+                                          256, /* Thead Safe */ PR_TRUE);
         if (mDllStore == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -338,6 +338,9 @@ NS_NewServiceManager(nsIServiceManager* *result);
 extern NS_COM nsresult
 NS_InitXPCOM(nsIServiceManager* *result);
 
+extern NS_COM nsresult
+NS_ShutdownXPCOM(nsIServiceManager* servMgr);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsIServiceManager_h___ */
