@@ -79,6 +79,8 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsRDFCID.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgLocalCID.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL   "netlib.dll"
@@ -307,19 +309,18 @@ void nsMailboxTestDriver::InitializeTestDriver()
 
 	// propogating bienvenu's preferences hack.....
 	#define ROOT_PATH_LENGTH 128 
-	char rootPath[ROOT_PATH_LENGTH];
-	int rootLen = ROOT_PATH_LENGTH;
+	char* rootPath;
 	nsIPref* prefs;
 	nsresult rv;
 	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
     if (prefs && NS_SUCCEEDED(rv))
 	{
 		prefs->Startup("prefs50.js");
-		rv = prefs->GetCharPref(kMsgRootFolderPref, rootPath, &rootLen);
+		rv = prefs->GetCharPref(kMsgRootFolderPref, &rootPath);
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
-	if (rootLen > 0) // how many bytes did they write into our buffer?
+	if (NS_SUCCEEDED(rv)))
 	{
 		m_folderSpec = rootPath;
 	}
