@@ -3097,8 +3097,7 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
       mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
                                              nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIDOMEvent> domEvent;
-      HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+      HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
     }
 
