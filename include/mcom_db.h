@@ -107,7 +107,7 @@
 # endif
 #endif /* __linux */
 
-#if defined(SCO) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC)
+#if defined(SCO) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
 #include <sys/types.h>
 #include <sys/byteorder.h>
 #endif
