@@ -1507,7 +1507,8 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
   // Clear existing attributes
   for (i = 0; i < destCount; i++)
   {
-    if( NS_SUCCEEDED(destAttributes->Item(i, &attrNode)) && attrNode)
+    // always remove item number 0 (first item in list)
+    if( NS_SUCCEEDED(destAttributes->Item(0, &attrNode)) && attrNode)
     {
       nsCOMPtr<nsIDOMAttr> destAttribute = do_QueryInterface(attrNode);
       if (destAttribute)
