@@ -71,6 +71,9 @@
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
 #include "nsEventListenerManager.h"
+#include "nsIBoxObject.h"
+#include "nsPIBoxObject.h"
+#include "nsIDOMNSDocument.h"
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -1226,6 +1229,12 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
       if (bindingManager) {
         bindingManager->ChangeDocumentFor(mContent, mDocument, aDocument);
       }
+
+      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
+      if (domElement) {
+        nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
+        nsDoc->SetBoxObjectFor(domElement, nsnull);
+      }
     }
 
     mDocument = aDocument;
@@ -1521,6 +1530,17 @@ nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
 nsresult 
 nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 {
+  nsAutoString disabled;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled))
+    return NS_OK;
+ 
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    
+    esm->SetContentState(mContent, NS_EVENT_STATE_FOCUS);
+    NS_RELEASE(esm);
+  }
+  
   return NS_OK;
 }
 

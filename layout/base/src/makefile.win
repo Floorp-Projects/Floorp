@@ -131,7 +131,7 @@ CPP_OBJS=					\
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
     -I$(PUBLIC)\pref -I..\..\html\base\src -I..\..\html\style\src \
-    -I..\..\xul\base\src \
+    -I..\..\xul\base\src -I..\..\xul\content\src \
     -I$(PUBLIC)\lwbrk -I$(PUBLIC)\plugin
 
 LCFLAGS = \
