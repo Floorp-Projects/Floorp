@@ -424,6 +424,10 @@ public:
 	BOOL m_bSynchronizing;  //Are we currently synchronizing
 #endif /* MOZ_OFFLINE */
 
+#ifndef PRIVACY_POLICIES
+    BOOL m_bAnon;
+#endif
+
     // preference type stuff
     int    m_nConfig;
     int    m_iNumTypesInINIFile;

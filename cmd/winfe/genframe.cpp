@@ -2236,12 +2236,26 @@ void CGenericFrame::OnShowBookmarkWindow()
 
 void CGenericFrame::OnTogglePrivacyAnonymous()
 {
+#ifdef PRIVACY_POLICIES
     PRVCY_ToggleAnonymous();
+#else
+    if (theApp.m_bAnon) {
+        NET_UnanonymizeCookies();
+        theApp.m_bAnon = FALSE;
+    } else {
+        NET_AnonymizeCookies();
+        theApp.m_bAnon = TRUE;
+    }
+#endif
 }
 
 void CGenericFrame::OnUpdatePrivacyAnonymous(CCmdUI* pCmdUI)
 {
+#ifdef PRIVACY_POLICIES
     pCmdUI->SetCheck(PRVCY_IsAnonymous());
+#else
+    pCmdUI->SetCheck(theApp.m_bAnon);
+#endif
 }
 
 void CGenericFrame::OnTogglePrivacyReceipt()
