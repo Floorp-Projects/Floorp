@@ -32,6 +32,8 @@
                 promptPanelCheck = id; 
                 promptPanelInput = id; 
                 promptPanelText = id; 
+                securityMismatchPanel = id; 
+                securityUnknownPanel = id; 
                 usernamePanel = id; 
                 usernamePanelCheck = id; 
                 usernamePanelPassword = id; 

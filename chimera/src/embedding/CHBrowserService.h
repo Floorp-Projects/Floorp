@@ -40,12 +40,18 @@
 
 #import "nsAlertController.h"
 #include "nsEmbedAPI.h"
+#include "nsCOMPtr.h"
 #include "nsIWindowCreator.h"
 #include "nsIPromptService.h"
+#include "nsIBadCertListener.h"
+#include "nsISecurityWarningDialogs.h"
+#include "nsINSSDialogs.h"
+#include "nsIStringBundle.h"
 
 class nsCocoaBrowserService :  public nsIWindowCreator,
                                public nsIPromptService,
-                               public nsIFactory
+                               public nsIFactory, 
+                               public nsIBadCertListener, public nsISecurityWarningDialogs, public nsINSSDialogs
 {
 public:
   nsCocoaBrowserService();
@@ -55,7 +61,10 @@ public:
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIPROMPTSERVICE
   NS_DECL_NSIFACTORY
-
+  NS_DECL_NSINSSDIALOGS
+  NS_DECL_NSIBADCERTLISTENER
+  NS_DECL_NSISECURITYWARNINGDIALOGS
+  
   static nsresult InitEmbedding();
   static void TermEmbedding();
   static void BrowserClosed();
@@ -67,6 +76,13 @@ public:
   static PRUint32 sNumBrowsers;
 
 private:
+
+  nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
+                   const PRUnichar *messageName,
+                   const PRUnichar *showAgainName);
+  
+  nsCOMPtr<nsIStringBundle> mSecurityStringBundle;
+  
   static nsCocoaBrowserService* sSingleton;
   static nsAlertController* sController;
   static PRBool sCanTerminate;
