@@ -64,23 +64,22 @@ NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
 NS_IMETHODIMP
 nsCertificatePrincipal::GetCertificateID(char** aCertificateID) 
 {
-    *aCertificateID = nsCRT::strdup(mCertificateID);
+    *aCertificateID = ToNewCString(mCertificateID);
     return *aCertificateID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::GetCommonName(char** aCommonName)
 {
-    *aCommonName = nsCRT::strdup(mCommonName);
+    *aCommonName = ToNewCString(mCommonName);
     return *aCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::SetCommonName(const char* aCommonName)
 {
-    PR_FREEIF(mCommonName);
-    mCommonName = nsCRT::strdup(aCommonName);
-    return mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    mCommonName = aCommonName;
+    return NS_OK;
 }
 
 ///////////////////////////////////////
@@ -113,12 +112,10 @@ NS_IMETHODIMP
 nsCertificatePrincipal::GetPreferences(char** aPrefName, char** aID, 
                                        char** aGrantedList, char** aDeniedList)
 {
-    if (!mPrefName) {
-        nsCAutoString s;
-        s.Assign("capability.principal.certificate.p");
-        s.AppendInt(mCapabilitiesOrdinal++);
-        s.Append(".id");
-        mPrefName = ToNewCString(s);
+    if (mPrefName.IsEmpty()) {
+        mPrefName.Assign("capability.principal.certificate.p");
+        mPrefName.AppendInt(mCapabilitiesOrdinal++);
+        mPrefName.Append(".id");
     }
     return nsBasePrincipal::GetPreferences(aPrefName, aID, 
                                            aGrantedList, aDeniedList);
@@ -147,7 +144,7 @@ nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
         PR_FREEIF(otherID);
         return rv;
     }
-    *result = (PL_strcmp(mCertificateID, otherID) == 0);
+    *result = mCertificateID.Equals(otherID);
     PR_FREEIF(otherID);
     return NS_OK;
 }
@@ -174,10 +171,10 @@ nsCertificatePrincipal::Read(nsIObjectInputStream* aStream)
     rv = nsBasePrincipal::Read(aStream);
     if (NS_FAILED(rv)) return rv;
 
-    rv = aStream->ReadStringZ(&mCertificateID);
+    rv = aStream->ReadCString(mCertificateID);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_ReadOptionalStringZ(aStream, &mCommonName);
+    rv = NS_ReadOptionalCString(aStream, mCommonName);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -191,10 +188,10 @@ nsCertificatePrincipal::Write(nsIObjectOutputStream* aStream)
     rv = nsBasePrincipal::Write(aStream);
     if (NS_FAILED(rv)) return rv;
 
-    rv = aStream->WriteStringZ(mCertificateID);
+    rv = aStream->WriteStringZ(mCertificateID.get());
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_WriteOptionalStringZ(aStream, mCommonName);
+    rv = NS_WriteOptionalStringZ(aStream, mCommonName.get());
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -217,19 +214,15 @@ nsCertificatePrincipal::InitFromPersistent(const char* aPrefName, const char*  a
 NS_IMETHODIMP
 nsCertificatePrincipal::Init(const char* aCertificateID)
 {
-    mCertificateID = nsCRT::strdup(aCertificateID);
-    if (!mCertificateID) return NS_ERROR_OUT_OF_MEMORY;
+    mCertificateID = aCertificateID;
     return NS_OK;
 }
 
-nsCertificatePrincipal::nsCertificatePrincipal() : mCertificateID(nsnull),
-                                                   mCommonName(nsnull)
+nsCertificatePrincipal::nsCertificatePrincipal()
 {
     NS_INIT_ISUPPORTS();
 }
 
 nsCertificatePrincipal::~nsCertificatePrincipal()
 {
-    PR_FREEIF(mCertificateID);
-    PR_FREEIF(mCommonName);
 }

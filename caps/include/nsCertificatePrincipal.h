@@ -82,8 +82,8 @@ public:
 	virtual ~nsCertificatePrincipal(void);
 
 protected:
-    char* mCertificateID;
-    char* mCommonName;
+    nsCString mCertificateID;
+    nsCString mCommonName;
 };
 
 #endif // _NS_CERTIFICATE_PRINCIPAL_H_

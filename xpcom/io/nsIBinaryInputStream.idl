@@ -50,18 +50,12 @@ interface nsIBinaryInputStream : nsIInputStream {
     /**
      * Read a NUL-terminated 8-bit char* string from a binary stream.
      */
-    string readStringZ();
+    ACString readCString();
 
     /**
      * Read a NUL-terminated 16-bit PRUnichar* string from a binary stream.
      */
-    wstring readWStringZ();
-
-    /**
-     * Read a NUL-terminated UTF8-encoded string from a binary stream, producing
-     * a NUL-terminated 16-bit PRUnichar* string argument as a result.
-     */
-    wstring readUtf8Z();
+    AString readString();
 
     /**
      * Read an opaque byte array from a binary stream.
@@ -75,29 +69,29 @@ NS_COM nsresult
 NS_NewBinaryInputStream(nsIBinaryInputStream* *aResult, nsIInputStream* aSrcStream);
 
 inline nsresult
-NS_ReadOptionalStringZ(nsIBinaryInputStream* aStream, char* *aResult)
+NS_ReadOptionalCString(nsIBinaryInputStream* aStream, nsACString& aResult)
 {
     PRBool nonnull;
     nsresult rv = aStream->ReadBoolean(&nonnull);
     if (NS_SUCCEEDED(rv)) {
         if (nonnull)
-            rv = aStream->ReadStringZ(aResult);
+            rv = aStream->ReadCString(aResult);
         else
-            *aResult = nsnull;
+            aResult.Truncate();
     }
     return rv;
 }
 
 inline nsresult
-NS_ReadOptionalWStringZ(nsIBinaryInputStream* aStream, PRUnichar* *aResult)
+NS_ReadOptionalString(nsIBinaryInputStream* aStream, nsAString& aResult)
 {
     PRBool nonnull;
     nsresult rv = aStream->ReadBoolean(&nonnull);
     if (NS_SUCCEEDED(rv)) {
         if (nonnull)
-            rv = aStream->ReadWStringZ(aResult);
+            rv = aStream->ReadString(aResult);
         else
-            *aResult = nsnull;
+            aResult.Truncate();
     }
     return rv;
 }

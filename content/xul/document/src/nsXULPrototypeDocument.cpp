@@ -47,6 +47,7 @@
 */
 
 #include "nsCOMPtr.h"
+#include "nsAString.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
@@ -373,10 +374,10 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     NS_ENSURE_TRUE(nodeInfos, rv);
 
     rv |= aStream->Read32(&referenceCount);
-    nsXPIDLString namespaceURI, qualifiedName;
+    nsAutoString namespaceURI, qualifiedName;
     for (i = 0; i < referenceCount; ++i) {
-        rv |= aStream->ReadWStringZ(getter_Copies(namespaceURI));
-        rv |= aStream->ReadWStringZ(getter_Copies(qualifiedName));
+        rv |= aStream->ReadString(namespaceURI);
+        rv |= aStream->ReadString(qualifiedName);
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
         rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(nodeInfo));
