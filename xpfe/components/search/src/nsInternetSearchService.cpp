@@ -1174,14 +1174,14 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 
 	if (mInner)
 	{	
-		rv = mInner->GetTargets(source, property, tv, targets);
-
 		// defer search engine discovery until needed; small startup time improvement
 		if (((source == kNC_SearchEngineRoot) || isSearchURI(source)) && (property == kNC_Child)
 			&& (mEngineListBuilt == PR_FALSE))
 		{
 			DeferredInit();
 		}
+
+		rv = mInner->GetTargets(source, property, tv, targets);
 	}
 	if (isSearchURI(source))
 	{
