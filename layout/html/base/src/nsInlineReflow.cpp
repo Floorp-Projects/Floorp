@@ -28,6 +28,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsStyleConsts.h"
+#include "nsCRT.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
@@ -661,6 +662,53 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
       }
     }
   }
+}
+
+void
+nsInlineReflow::AddFrame(nsIFrame* aFrame, const nsHTMLReflowMetrics& aMetrics)
+{
+  SetFrame(aFrame);
+  PerFrameData* pfd = mFrameDataBase + mFrameNum;
+  mFrameNum++;
+  pfd->mAscent = aMetrics.ascent;
+  pfd->mDescent = aMetrics.descent;
+  pfd->mMargin.SizeTo(0, 0, 0, 0);
+  aFrame->GetRect(pfd->mBounds);/* XXX not right, but its ok for now */
+  pfd->mCombinedArea = aMetrics.mCombinedArea;
+  pfd->mMaxElementSize.width = pfd->mBounds.width;
+  pfd->mMaxElementSize.height = pfd->mBounds.height;
+}
+
+void
+nsInlineReflow::RemoveFrame(nsIFrame* aFrame)
+{
+  PerFrameData* pfd = mFrameDataBase;
+  PerFrameData* last = pfd + mFrameNum - 1;
+  while (pfd <= last) {
+    if (pfd->mFrame == aFrame) {
+      mFrameNum--;
+      if (pfd != last) {
+        // Slide down the other structs over the vacancy
+        nsCRT::memmove(pfd, pfd + 1, (last - pfd) * sizeof(PerFrameData));
+      }
+      break;
+    }
+    pfd++;
+  }
+}
+
+PRBool
+nsInlineReflow::IsZeroHeight() const
+{
+  PerFrameData* pfd = mFrameDataBase;
+  PerFrameData* last = pfd + mFrameNum - 1;
+  while (pfd <= last) {
+    if (0 != pfd->mBounds.height) {
+      return PR_FALSE;
+    }
+    pfd++;
+  }
+  return PR_TRUE;
 }
 
 // XXX what about ebina's center vs. ncsa-center?
