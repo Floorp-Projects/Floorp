@@ -762,8 +762,7 @@ FileSystemDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSo
                                        nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                        PRBool* aResult)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
@@ -773,8 +772,7 @@ FileSystemDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
