@@ -442,7 +442,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         /**
          * Append the given unsigned integer to this string
          */
-      NS_COM void AppendInt( PRUint32 aInteger, PRInt32 aRadix = kRadix10 )
+      inline void AppendInt( PRUint32 aInteger, PRInt32 aRadix = kRadix10 )
         {
           AppendInt(PRInt32(aInteger), aRadix);
         }
