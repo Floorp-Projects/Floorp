@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.17 2001/09/21 03:07:35 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.18 2001/11/02 04:24:20 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -718,7 +718,9 @@ struct sslSessionIDStr {
 
     SSL3ProtocolVersion   version;
 
-    PRUint32              time;
+    PRUint32              creationTime;		/* seconds since Jan 1, 1970 */
+    PRUint32              lastAccessTime;	/* seconds since Jan 1, 1970 */
+    PRUint32              expirationTime;	/* seconds since Jan 1, 1970 */
     Cached                cached;
     int                   references;
 

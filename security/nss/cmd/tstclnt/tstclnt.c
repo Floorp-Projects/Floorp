@@ -131,21 +131,26 @@ void printSecurityInfo(PRFileDesc *fd)
     CERTCertificate * cert;
     SSL3Statistics * ssl3stats = SSL_GetStatistics();
     SECStatus result;
-    SSLChannelInfo info;
+    SSLChannelInfo    channel;
+    SSLCipherSuiteInfo suite;
 
-    result = SSL_GetChannelInfo(fd, &info, sizeof info);
-    if (result != SECSuccess)
-    	return;
-    if (info.length >= offsetof(SSLChannelInfo, reserved)) {
-	fprintf(stderr, 
-	       "SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
-	       info.protocolVersion >> 8, info.protocolVersion & 0xff,
-	       info.effectiveKeyBits, info.symCipherName, 
-	       info.macBits, info.macAlgorithmName);
-	fprintf(stderr, 
-	       "Server Authentication: %d-bit %s, Key Exchange: %d-bit %s\n",
-	       info.authKeyBits, info.authAlgorithmName,
-	       info.keaKeyBits,  info.keaTypeName);
+    result = SSL_GetChannelInfo(fd, &channel, sizeof channel);
+    if (result == SECSuccess && 
+        channel.length == sizeof channel && 
+	channel.cipherSuite) {
+	result = SSL_GetCipherSuiteInfo(channel.cipherSuite, 
+					&suite, sizeof suite);
+	if (result == SECSuccess) {
+	    FPRINTF(stderr, 
+	    "tstclnt: SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
+	       channel.protocolVersion >> 8, channel.protocolVersion & 0xff,
+	       suite.effectiveKeyBits, suite.symCipherName, 
+	       suite.macBits, suite.macAlgorithmName);
+	    FPRINTF(stderr, 
+	    "tstclnt: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n",
+	       channel.authKeyBits, suite.authAlgorithmName,
+	       channel.keaKeyBits,  suite.keaTypeName);
+    	}
     }
     cert = SSL_RevealCert(fd);
     if (cert) {

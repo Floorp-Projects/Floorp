@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.13 2001/10/31 20:03:29 relyea%netscape.com Exp $
+ * $Id: sslcon.c,v 1.14 2001/11/02 04:24:19 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -76,8 +76,8 @@ static const PRUint8 allCipherSuites[] = {
  */
 static const PRUint8 implementedCipherSuites[ssl2_NUM_SUITES_IMPLEMENTED * 3] = {
     SSL_CK_RC4_128_WITH_MD5,			0x00, 0x80,
-    SSL_CK_DES_192_EDE3_CBC_WITH_MD5,		0x00, 0xC0,
     SSL_CK_RC2_128_CBC_WITH_MD5,		0x00, 0x80,
+    SSL_CK_DES_192_EDE3_CBC_WITH_MD5,		0x00, 0xC0,
     SSL_CK_DES_64_CBC_WITH_MD5,			0x00, 0x40,
     SSL_CK_RC4_128_EXPORT40_WITH_MD5,		0x00, 0x80,
     SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5,	0x00, 0x80
@@ -1367,6 +1367,8 @@ ssl2_FillInSID(sslSessionID * sid,
     sid->authKeyBits          = authKeyBits;
     sid->keaType              = keaType;
     sid->keaKeyBits           = keaKeyBits;
+    sid->lastAccessTime = sid->creationTime = ssl_Time();
+    sid->expirationTime = sid->creationTime + ssl_sid_timeout;
 
     if (caLen) {
 	sid->u.ssl2.cipherArg.data = (PRUint8*) PORT_Alloc(caLen);
@@ -3084,32 +3086,36 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     } else {
 	sid = ssl_LookupSID(&ci->peer, ci->port, ss->peerID, ss->url);
     }
-    if (sid) {
+    while (sid) {  /* this isn't really a loop */
 	/* if we're not doing this SID's protocol any more, drop it. */
-	if (((sid->version == SSL_LIBRARY_VERSION_2)   && !ss->enableSSL2) ||
+	if (((sid->version  < SSL_LIBRARY_VERSION_3_0) && !ss->enableSSL2) ||
 	    ((sid->version == SSL_LIBRARY_VERSION_3_0) && !ss->enableSSL3) ||
-	    ((sid->version == SSL_LIBRARY_VERSION_3_1_TLS) && !ss->enableTLS)) {
+	    ((sid->version >  SSL_LIBRARY_VERSION_3_0) && !ss->enableTLS)) {
 	    sec->uncache(sid);
 	    ssl_FreeSID(sid);
-	    goto invalid;
+	    sid = NULL;
+	    break;
 	}
 	if (ss->enableSSL2 && sid->version < SSL_LIBRARY_VERSION_3_0) {
 	    /* If the cipher in this sid is not enabled, drop it. */
 	    for (i = 0; i < ss->sizeCipherSpecs; i += 3) {
 		if (ss->cipherSpecs[i] == sid->u.ssl2.cipherType)
-		    goto sid_cipher_match;
+		    break;
 	    }
-	    sec->uncache(sid);
-	    ssl_FreeSID(sid);
-	    goto invalid;
+	    if (i >= ss->sizeCipherSpecs) {
+		sec->uncache(sid);
+		ssl_FreeSID(sid);
+		sid = NULL;
+		break;
+	    }
 	}
-sid_cipher_match:
 	sidLen = sizeof(sid->u.ssl2.sessionID);
 	PRINT_BUF(4, (ss, "client, found session-id:", sid->u.ssl2.sessionID,
 		      sidLen));
 	ss->version = sid->version;
-    } else {
-invalid:
+	break;  /* this isn't really a loop */
+    } 
+    if (!sid) {
 	sidLen = 0;
 	sid = (sslSessionID*) PORT_ZAlloc(sizeof(sslSessionID));
 	if (!sid) {
@@ -3621,7 +3627,8 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     if (sid) {
 	/* Got a good session-id. Short cut! */
 	SSL_TRC(1, ("%d: SSL[%d]: server, using session-id for 0x%08x (age=%d)",
-		    SSL_GETPID(), ss->fd, ci->peer, ssl_Time() - sid->time));
+		    SSL_GETPID(), ss->fd, ci->peer, 
+		    ssl_Time() - sid->creationTime));
 	PRINT_BUF(1, (ss, "session-id value:", sd, sdLen));
 	ci->sid = sid;
 	ci->elements = CIS_HAVE_MASTER_KEY;

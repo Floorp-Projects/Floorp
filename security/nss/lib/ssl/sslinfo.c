@@ -30,72 +30,21 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslinfo.c,v 1.1 2001/09/18 01:59:20 nelsonb%netscape.com Exp $
+ * $Id: sslinfo.c,v 1.2 2001/11/02 04:24:21 nelsonb%netscape.com Exp $
  */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
 
-typedef struct BulkCipherInfoStr {
-    SSLCipherAlgorithm  symCipher;
-    PRUint16		symKeyBits;
-    PRUint16		symKeySpace;
-    PRUint16		effectiveKeyBits;
-} BulkCipherInfo;
-
-static const BulkCipherInfo ssl2CipherInfo[] = {
-/* NONE                                 */ { ssl_calg_null,   0,   0,   0 },
-/* SSL_CK_RC4_128_WITH_MD5		*/ { ssl_calg_rc4,  128, 128, 128 },
-/* SSL_CK_RC4_128_EXPORT40_WITH_MD5	*/ { ssl_calg_rc4,  128,  40,  40 },
-/* SSL_CK_RC2_128_CBC_WITH_MD5		*/ { ssl_calg_rc2,  128, 128, 128 },
-/* SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5	*/ { ssl_calg_rc2,  128,  40,  40 },
-/* SSL_CK_IDEA_128_CBC_WITH_MD5		*/ { ssl_calg_idea,   0,   0,   0 },
-/* SSL_CK_DES_64_CBC_WITH_MD5		*/ { ssl_calg_des,   64,  56,  56 },
-/* SSL_CK_DES_192_EDE3_CBC_WITH_MD5	*/ { ssl_calg_3des, 192, 168, 112 }
-};
-
-static const char * const authName[] = {
-  { "NULL" },
-  { "RSA"  },
-  { "DSA"  }
-};
-
-static const char * const keaName[] = {
-  { "NULL" },
-  { "RSA"  },
-  { "DH"   },
-  { "KEA"  },
-  { "BOGUS" }
-};
-
-static const char * const cipherName[] = {
-  { "NULL" },
-  { "RC4"  },
-  { "RC2"  },
-  { "DES"  },
-  { "3DES" },
-  { "IDEA" },
-  { "SKIPJACK" },
-  { "AES"  }
-};
-
-static const char * const macName[] = {
-  { "NULL" },
-  { "MD5"  },
-  { "SHA"  },
-  { "MD5"  },
-  { "SHA"  }
-};
-
-#define SSL_OFFSETOF(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
-
-SECStatus SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
+SECStatus 
+SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 {
     sslSocket *      ss;
     sslSecurityInfo *sec;
     SSLChannelInfo   inf;
+    sslSessionID *   sid;
 
-    if (!info) {  /* He doesn't want it?  OK. */
+    if (!info || len < sizeof inf.length) { 
     	return SECSuccess;
     }
 
@@ -107,99 +56,144 @@ SECStatus SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     }
 
     memset(&inf, 0, sizeof inf);
-    inf.length = SSL_OFFSETOF(SSLChannelInfo, reserved);
-    inf.length = PR_MIN(inf.length, len);
+    inf.length = PR_MIN(sizeof inf, len);
 
     sec = ss->sec;
     if (ss->useSecurity && ss->firstHsDone && sec) {
-	if (ss->version < SSL_LIBRARY_VERSION_3_0) {
-	    /* SSL2 */
-	    const BulkCipherInfo * bulk = ssl2CipherInfo + ss->sec->cipherType;
-
-	    inf.protocolVersion  = ss->version;
+        sid = sec->ci.sid;
+	inf.protocolVersion  = ss->version;
+	inf.authKeyBits      = ss->sec->authKeyBits;
+	inf.keaKeyBits       = ss->sec->keaKeyBits;
+	if (ss->version < SSL_LIBRARY_VERSION_3_0) { /* SSL2 */
 	    inf.cipherSuite      = ss->sec->cipherType | 0xff00;
+	} else if (ss->ssl3) { 		/* SSL3 and TLS */
 
-	    /* server auth */
-	    inf.authAlgorithm    = ss->sec->authAlgorithm;
-	    inf.authKeyBits      = ss->sec->authKeyBits;
-
-	    /* key exchange */
-	    inf.keaType          = ss->sec->keaType;
-	    inf.keaKeyBits       = ss->sec->keaKeyBits;
-
-	    /* symmetric cipher */
-	    inf.symCipher        = bulk->symCipher;
-	    inf.symKeyBits       = bulk->symKeyBits;
-	    inf.symKeySpace      = bulk->symKeySpace;
-	    inf.effectiveKeyBits = bulk->effectiveKeyBits;
-
-	    /* MAC info */
-	    inf.macAlgorithm     = ssl_mac_md5;
-	    inf.macBits          = MD5_LENGTH * BPB;
-
+	    /* XXX  These should come from crSpec */
+	    inf.cipherSuite      = ss->ssl3->hs.cipher_suite;
+#if 0
 	    /* misc */
-	    inf.isFIPS           = 0;
-
-	} else if (ss->ssl3 && ss->ssl3->crSpec && 
-	           ss->ssl3->crSpec->cipher_def) {
-	    /* SSL3 and TLS */
-	    ssl3CipherSpec *          crSpec     = ss->ssl3->crSpec;
-	    const ssl3BulkCipherDef * cipher_def = crSpec->cipher_def;
-
-	    /* XXX NBB These should come from crSpec */
-	    inf.protocolVersion      = ss->version;
-	    inf.cipherSuite          = ss->ssl3->hs.cipher_suite;
-
-	    /* server auth */
-	    inf.authAlgorithm        = ss->sec->authAlgorithm;
-	    inf.authKeyBits          = ss->sec->authKeyBits;
-
-	    /* key exchange */
-	    inf.keaType              = ss->sec->keaType;
-	    inf.keaKeyBits           = ss->sec->keaKeyBits;
-
-	    /* symmetric cipher */
-	    inf.symCipher            = cipher_def->calg;
-	    switch (inf.symCipher) {
-	    case ssl_calg_des:
-		inf.symKeyBits       = cipher_def->key_size        * 8 ;
-		inf.symKeySpace      = \
-		inf.effectiveKeyBits = cipher_def->secret_key_size * 7 ;
-		break;
-	    case ssl_calg_3des:
-		inf.symKeyBits       = cipher_def->key_size        * 8 ;
-		inf.symKeySpace      = cipher_def->secret_key_size * 7 ;
-		inf.effectiveKeyBits = (inf.symKeySpace / 3 ) * 2;
-		break;
-	    default:
-		inf.symKeyBits       = cipher_def->key_size * BPB ;
-		inf.symKeySpace      = \
-		inf.effectiveKeyBits = cipher_def->secret_key_size * BPB ;
-		break;
-            }
-
-	    /* MAC info */
-	    inf.macAlgorithm         = crSpec->mac_def->mac;
-	    inf.macBits              = crSpec->mac_def->mac_size * BPB;
-
-	    /* misc */
-	    inf.isFIPS =  (inf.symCipher == ssl_calg_des ||
-	                   inf.symCipher == ssl_calg_3des ||
-	                   inf.symCipher == ssl_calg_aes)
-		       && (inf.macAlgorithm == ssl_mac_sha ||
-		           inf.macAlgorithm == ssl_hmac_sha)
+	    inf.isFIPS =  (inf.symCipher == ssl_calg_des   || inf.symCipher == ssl_calg_3des)
+		       && (inf.macAlgorithm == ssl_mac_sha || inf.macAlgorithm == ssl_hmac_sha)
 		       && (inf.protocolVersion > SSL_LIBRARY_VERSION_3_0 ||
 		           inf.cipherSuite >= 0xfef0);
+#endif
 	}
-
+	if (sid) {
+	    inf.creationTime   = sid->creationTime;
+	    inf.lastAccessTime = sid->lastAccessTime;
+	    inf.expirationTime = sid->expirationTime;
+	    if (ss->version < SSL_LIBRARY_VERSION_3_0) { /* SSL2 */
+	        inf.sessionIDLength = SSL2_SESSIONID_BYTES;
+		memcpy(inf.sessionID, sid->u.ssl2.sessionID, SSL2_SESSIONID_BYTES);
+	    } else {
+		unsigned int sidLen = sid->u.ssl3.sessionIDLength;
+	        sidLen = PR_MIN(sidLen, sizeof inf.sessionID);
+	        inf.sessionIDLength = sidLen;
+		memcpy(inf.sessionID, sid->u.ssl3.sessionID, sidLen);
+	    }
+	}
     }
-    inf.authAlgorithmName = authName[  inf.authAlgorithm];
-    inf.keaTypeName       = keaName[   inf.keaType      ];
-    inf.symCipherName     = cipherName[inf.symCipher    ];
-    inf.macAlgorithmName  = macName[   inf.macAlgorithm ];
 
     memcpy(info, &inf, inf.length);
 
     return SECSuccess;
 }
 
+#define kt_kea kt_fortezza
+#define calg_sj calg_fortezza
+
+#define CS(x) x, #x
+#define CK(x) x | 0xff00, #x
+
+#define S_DSA   "DSA", ssl_auth_dsa
+#define S_RSA	"RSA", ssl_auth_rsa
+#define S_KEA   "KEA", ssl_auth_kea
+
+#define K_DHE	"DHE", kt_dh
+#define K_RSA	"RSA", kt_rsa
+#define K_KEA	"KEA", kt_kea
+
+#define C_AES	"AES", calg_aes
+#define C_RC4	"RC4", calg_rc4
+#define C_RC2	"RC2", calg_rc2
+#define C_DES	"DES", calg_des
+#define C_3DES	"3DES", calg_3des
+#define C_NULL  "NULL", calg_null
+#define C_SJ 	"SKIPJACK", calg_sj
+
+#define B_256	256, 256, 256
+#define B_128	128, 128, 128
+#define B_3DES  192, 156, 112
+#define B_SJ     96,  80,  80
+#define B_DES    64,  56,  56
+#define B_56    128,  56,  56
+#define B_40    128,  40,  40
+#define B_0  	  0,   0,   0
+
+#define M_SHA	"SHA1", ssl_mac_sha, 160
+#define M_MD5	"MD5",  ssl_mac_md5, 128
+
+static const SSLCipherSuiteInfo suiteInfo[] = {
+/* <------ Cipher suite --------------------> <auth> <KEA>  <bulk cipher> <MAC> <FIPS> */
+{0,CS(TLS_DHE_RSA_WITH_AES_256_CBC_SHA),      S_RSA, K_DHE, C_AES, B_256, M_SHA, 0, },
+{0,CS(TLS_DHE_DSS_WITH_AES_256_CBC_SHA),      S_DSA, K_DHE, C_AES, B_256, M_SHA, 0, },
+{0,CS(TLS_RSA_WITH_AES_256_CBC_SHA),          S_RSA, K_RSA, C_AES, B_256, M_SHA, 0, },
+
+{0,CS(SSL_FORTEZZA_DMS_WITH_RC4_128_SHA),     S_KEA, K_KEA, C_RC4, B_128, M_SHA, 0, },
+{0,CS(TLS_DHE_DSS_WITH_RC4_128_SHA),          S_DSA, K_DHE, C_RC4, B_128, M_SHA, 0, },
+{0,CS(TLS_DHE_RSA_WITH_AES_128_CBC_SHA),      S_RSA, K_DHE, C_AES, B_128, M_SHA, 0, },
+{0,CS(TLS_DHE_DSS_WITH_AES_128_CBC_SHA),      S_DSA, K_DHE, C_AES, B_128, M_SHA, 0, },
+{0,CS(SSL_RSA_WITH_RC4_128_MD5),              S_RSA, K_RSA, C_RC4, B_128, M_MD5, 0, },
+{0,CS(SSL_RSA_WITH_RC4_128_SHA),              S_RSA, K_RSA, C_RC4, B_128, M_SHA, 0, },
+{0,CS(TLS_RSA_WITH_AES_128_CBC_SHA),          S_RSA, K_RSA, C_AES, B_128, M_SHA, 0, },
+
+{0,CS(SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA),     S_RSA, K_DHE, C_3DES,B_3DES,M_SHA, 0, },
+{0,CS(SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA),     S_DSA, K_DHE, C_3DES,B_3DES,M_SHA, 0, },
+{0,CS(SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA),    S_RSA, K_RSA, C_3DES,B_3DES,M_SHA, 1, },
+{0,CS(SSL_RSA_WITH_3DES_EDE_CBC_SHA),         S_RSA, K_RSA, C_3DES,B_3DES,M_SHA, 1, },
+
+{0,CS(SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA),S_KEA, K_KEA, C_SJ,  B_SJ,  M_SHA, 1, },
+{0,CS(SSL_DHE_RSA_WITH_DES_CBC_SHA),          S_RSA, K_DHE, C_DES, B_DES, M_SHA, 0, },
+{0,CS(SSL_DHE_DSS_WITH_DES_CBC_SHA),          S_DSA, K_DHE, C_DES, B_DES, M_SHA, 0, },
+{0,CS(SSL_RSA_FIPS_WITH_DES_CBC_SHA),         S_RSA, K_RSA, C_DES, B_DES, M_SHA, 1, },
+{0,CS(SSL_RSA_WITH_DES_CBC_SHA),              S_RSA, K_RSA, C_DES, B_DES, M_SHA, 1, },
+
+{0,CS(TLS_RSA_EXPORT1024_WITH_RC4_56_SHA),    S_RSA, K_RSA, C_RC4, B_56,  M_SHA, 0, },
+{0,CS(TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA),   S_RSA, K_RSA, C_DES, B_DES, M_SHA, 1, },
+{0,CS(SSL_RSA_EXPORT_WITH_RC4_40_MD5),        S_RSA, K_RSA, C_RC4, B_40,  M_MD5, 0, },
+{0,CS(SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5),    S_RSA, K_RSA, C_RC2, B_40,  M_MD5, 0, },
+{0,CS(SSL_FORTEZZA_DMS_WITH_NULL_SHA),        S_KEA, K_KEA, C_NULL,B_0,   M_SHA, 0, },
+{0,CS(SSL_RSA_WITH_NULL_MD5),                 S_RSA, K_RSA, C_NULL,B_0,   M_MD5, 0, },
+
+/* SSL 2 table */
+{0,CK(SSL_CK_RC4_128_WITH_MD5),               S_RSA, K_RSA, C_RC4, B_128, M_MD5, 0, },
+{0,CK(SSL_CK_RC2_128_CBC_WITH_MD5),           S_RSA, K_RSA, C_RC2, B_128, M_MD5, 0, },
+{0,CK(SSL_CK_DES_192_EDE3_CBC_WITH_MD5),      S_RSA, K_RSA, C_3DES,B_3DES,M_MD5, 0, },
+{0,CK(SSL_CK_DES_64_CBC_WITH_MD5),            S_RSA, K_RSA, C_DES, B_DES, M_MD5, 0, },
+{0,CK(SSL_CK_RC4_128_EXPORT40_WITH_MD5),      S_RSA, K_RSA, C_RC4, B_40,  M_MD5, 0, },
+{0,CK(SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5),  S_RSA, K_RSA, C_RC2, B_40,  M_MD5, 0, }
+};
+
+#define NUM_SUITEINFOS ((sizeof suiteInfo) / (sizeof suiteInfo[0]))
+
+
+SECStatus SSL_GetCipherSuiteInfo(PRUint16 cipherSuite, 
+                                 SSLCipherSuiteInfo *info, PRUintn len)
+{
+    unsigned int i;
+
+    len = PR_MIN(len, sizeof suiteInfo[0]);
+    if (!info || len < sizeof suiteInfo[0].length) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    	return SECFailure;
+    }
+    for (i = 0; i < NUM_SUITEINFOS; i++) {
+    	if (suiteInfo[i].cipherSuite == cipherSuite) {
+	    memcpy(info, &suiteInfo[i], len);
+	    info->length = len;
+	    return SECSuccess;
+	}
+    }
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+}
