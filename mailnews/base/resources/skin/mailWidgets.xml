@@ -73,19 +73,16 @@
       <property name="value" onget="return this.anonymousContent[0].selectedItem.data">
         <setter>
           <![CDATA[
-            dump("(" + this.tagName + "): preselecting " + val + "\n");
             var menulist = this.anonymousContent[0];
             var dataItems = menulist.getElementsByAttribute("data", val);
-            dump("Found " + dataItems.length + " items\n");
-            menulist.selectedItem = dataItems[0];
-            dump("done.\n");
+            if (dataItems.length > 0)
+                menulist.selectedItem = dataItems[0];
           ]]>
         </setter>
       </property>
       <method name="refreshList">
         <body>
           <![CDATA[
-            dump("Refreshing " + this.tagName + " id=" + this.id + "\n");
             var menuItemIds = this.valueIds;
             var menuItemStrings = this.valueStrings;
 
@@ -244,9 +241,9 @@
           this.internalValue = val;
           var attrib = val.attrib;
           this.searchAttribute = attrib;
-          if (type == Components.interfaces.nsMsgSearchAttrib.Priority)
+          if (attrib == Components.interfaces.nsMsgSearchAttrib.Priority)
             this.anonymousContent[1].data=val.priority;
-          else if (type == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
+          else if (attrib == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
             this.anonymousContent[2].data=val.status;
           else
             this.anonymousContent[0].value = val.str;
@@ -256,9 +253,6 @@
     </interface>
   </binding>
   <binding id="searchterm" extends="xul:box">
-    <content>
-      <xul:text value="searchterm"/>
-    </content>
     <interface>
       <!-- the three tags that make up a term - to use, set the
            attribute in the XUL to the ID of the term.
@@ -274,11 +268,8 @@
             var searchOperator=this.searchoperator;
             var searchValue=this.searchvalue;
 
-            dump("Setting searchAttribute.value\n");
             if (searchAttribute) searchAttribute.value = term.attrib;
-            dump("Setting searchOperator.value\n");
             if (searchOperator) searchOperator.value = val.op;
-            dump("Setting searchValue.value\n");
             if (searchValue) searchValue.value = term.value;
           ]]>
         </setter>
@@ -287,15 +278,15 @@
       <property name="searchScope">
         <getter>
           <![CDATA[
-             var searchAttribute = this.searchAttribute;
+             var searchAttribute = this.searchattribute;
              if (searchAttribute)
-               return this.searchAttribute.searchScope;
+               return searchAttribute.searchScope;
              return undefined;
            ]]>
         </getter>
         <setter>
           <![CDATA[
-            var searchAttribute = this.searchAttribute;
+            var searchAttribute = this.searchattribute;
             if (searchAttribute) searchAttribute.searchScope=val;
            ]]>
         </setter>
