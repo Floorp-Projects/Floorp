@@ -33,7 +33,7 @@ class nsILocale : public nsISupports {
 
 public:
 	
-	NS_IMETHOD GetCatagory(const nsString* catagory, nsString* result) = 0;
+	NS_IMETHOD GetCategory(const nsString* category, nsString* result) = 0;
 
 };
 

@@ -30,10 +30,10 @@ class nsLocale : public nsILocale {
 
 public:
 	
-	nsLocale(nsString** catagoryList,nsString** valueList, PRUint32 count);
+	nsLocale(nsString** categoryList,nsString** valueList, PRUint32 count);
 	virtual ~nsLocale(void);
 	
-	NS_IMETHOD GetCatagory(const nsString* catagory, nsString* result);
+	NS_IMETHOD GetCategory(const nsString* category, nsString* result);
 
 private:
 	
@@ -42,7 +42,7 @@ private:
 	static PRIntn Hash_EnmerateDelete(PLHashEntry *he, PRIntn index, void *arg);
 
 	PLHashTable*	fHashtable;
-	PRUint32		fCatagoryCount;
+	PRUint32		fCategoryCount;
 
 };
 

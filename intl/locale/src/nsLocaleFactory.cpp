@@ -50,8 +50,8 @@ NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 
 NS_IMPL_ISUPPORTS(nsLocaleFactory,kILocaleFactoryIID)
 
-#define LOCALE_CATAGORY_LISTLEN 6
-char* localeCatagoryList[LOCALE_CATAGORY_LISTLEN] = 
+#define LOCALE_CATEGORY_LISTLEN 6
+char* localeCategoryList[LOCALE_CATEGORY_LISTLEN] = 
 {
 								"NSILOCALE_COLLATE",
 								"NSILOCALE_CTYPE",
@@ -69,7 +69,7 @@ char* localeCatagoryList[LOCALE_CATAGORY_LISTLEN] =
 // exist on a platform LC_CTYPE is probably the cloest approximation
 //
 
-int posix_locale_catagory[LOCALE_CATAGORY_LISTLEN] =
+int posix_locale_category[LOCALE_CATEGORY_LISTLEN] =
 {
   LC_TIME,
   LC_COLLATE,
@@ -92,10 +92,10 @@ nsLocaleFactory::nsLocaleFactory(void)
   nsresult result;
   NS_INIT_REFCNT();
 
-  fCatagoryList = new nsString*[LOCALE_CATAGORY_LISTLEN];
+  fCategoryList = new nsString*[LOCALE_CATEGORY_LISTLEN];
 
-  for(i=0;i< LOCALE_CATAGORY_LISTLEN;i++)
-	fCatagoryList[i] = new nsString(localeCatagoryList[i]);
+  for(i=0;i< LOCALE_CATEGORY_LISTLEN;i++)
+	fCategoryList[i] = new nsString(localeCategoryList[i]);
 
 #ifdef XP_PC
    fWin32LocaleInterface = nsnull;
@@ -119,10 +119,10 @@ nsLocaleFactory::~nsLocaleFactory(void)
 {
 	int i;
 
-	for(i=0;i< LOCALE_CATAGORY_LISTLEN;i++)
-		delete fCatagoryList[i];
+	for(i=0;i< LOCALE_CATEGORY_LISTLEN;i++)
+		delete fCategoryList[i];
 
-	delete []fCatagoryList;
+	delete []fCategoryList;
 
 	if (fSystemLocale)
 		fSystemLocale->Release();
@@ -158,12 +158,12 @@ nsLocaleFactory::LockFactory(PRBool	aBool)
 }
 
 NS_IMETHODIMP
-nsLocaleFactory::NewLocale(nsString** catagoryList,nsString**  
+nsLocaleFactory::NewLocale(nsString** categoryList,nsString**  
       valueList, PRUint8 count, nsILocale** locale)
 {
 	nsLocale*	newLocale;
 
-	newLocale = new nsLocale(catagoryList,valueList,count);
+	newLocale = new nsLocale(categoryList,valueList,count);
 	NS_ASSERTION(newLocale!=NULL,"nsLocaleFactory: failed to create nsLocale instance");
 	newLocale->AddRef();
 
@@ -179,18 +179,18 @@ nsLocaleFactory::NewLocale(const nsString* localeName, nsILocale** locale)
 	nsString**	valueList;
 	nsLocale*	newLocale;
 
-	valueList = new nsString*[LOCALE_CATAGORY_LISTLEN];
-	for(i=0;i< LOCALE_CATAGORY_LISTLEN;i++)
+	valueList = new nsString*[LOCALE_CATEGORY_LISTLEN];
+	for(i=0;i< LOCALE_CATEGORY_LISTLEN;i++)
 		valueList[i] = new nsString(*localeName);
 
-	newLocale = new nsLocale(fCatagoryList,valueList,LOCALE_CATAGORY_LISTLEN);
+	newLocale = new nsLocale(fCategoryList,valueList,LOCALE_CATEGORY_LISTLEN);
 	NS_ASSERTION(newLocale!=NULL,"nsLocaleFactory: failed to create nsLocale");
 	newLocale->AddRef();
 
 	//
 	// delete temporary strings
 	//
-	for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++)
+	for(i=0;i<LOCALE_CATEGORY_LISTLEN;i++)
 		delete valueList[i];
 	delete [] valueList;
 
@@ -254,7 +254,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
   char* lc_all = setlocale(LC_ALL,NULL);
   char* lc_temp;
   char* lang = getenv("LANG");
-  nsString* lc_values[LOCALE_CATAGORY_LISTLEN];
+  nsString* lc_values[LOCALE_CATEGORY_LISTLEN];
   int i;
 
   NS_ASSERTION(fPosixLocaleInterface!=nsnull,"nsLocale::GetSystemLocale failed");
@@ -287,17 +287,17 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
     lang = "en";
   }
 
-  for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++) {
-    lc_temp = setlocale(posix_locale_catagory[i],"");
+  for(i=0;i<LOCALE_CATEGORY_LISTLEN;i++) {
+    lc_temp = setlocale(posix_locale_category[i],"");
     if (lc_temp==NULL) lc_temp = lang;
     lc_values[i] = new nsString();
     fPosixLocaleInterface->GetXPLocale(lc_temp,lc_values[i]);
   }
 
-  result = NewLocale(fCatagoryList,(nsString**)lc_values,
-                     LOCALE_CATAGORY_LISTLEN,&fSystemLocale);
+  result = NewLocale(fCategoryList,(nsString**)lc_values,
+                     LOCALE_CATEGORY_LISTLEN,&fSystemLocale);
   if (result!=NS_OK) {
-    for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++) {
+    for(i=0;i<LOCALE_CATEGORY_LISTLEN;i++) {
       delete lc_values[i];
     }
     *systemLocale = (nsILocale*)nsnull;
@@ -305,7 +305,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
     return result;
   }
 
-  for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++) {
+  for(i=0;i<LOCALE_CATEGORY_LISTLEN;i++) {
     delete lc_values[i];
   }
   *systemLocale = fSystemLocale;

@@ -134,7 +134,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   if (locale != nsnull) {
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
-    nsresult res = locale->GetCatagory(&aCategory, &aLocale);
+    nsresult res = locale->GetCategory(&aCategory, &aLocale);
     if (NS_FAILED(res)) {
       return res;
     }

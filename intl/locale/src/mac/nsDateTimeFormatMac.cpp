@@ -262,7 +262,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   if (locale != nsnull) {
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
-    res = locale->GetCatagory(&aCategory, &aLocale);
+    res = locale->GetCategory(&aCategory, &aLocale);
     if (NS_FAILED(res)) {
       return res;
     }

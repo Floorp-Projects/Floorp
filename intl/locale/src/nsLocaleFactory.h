@@ -38,7 +38,7 @@ class nsLocaleFactory : public nsILocaleFactory
 
 private:
 
-  nsString**	fCatagoryList;
+  nsString**	fCategoryList;
   nsILocale*	fSystemLocale;
   nsILocale*	fApplicationLocale;
 #ifdef XP_PC
@@ -58,7 +58,7 @@ public:
 
 	NS_IMETHOD LockFactory(PRBool aLock);
 
-	NS_IMETHOD NewLocale(nsString** catagoryList,nsString** valueList,
+	NS_IMETHOD NewLocale(nsString** categoryList,nsString** valueList,
 		PRUint8 count, nsILocale** locale);
 
 	NS_IMETHOD NewLocale(const nsString* localeName, nsILocale** locale);
