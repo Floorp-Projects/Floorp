@@ -28,13 +28,16 @@ import org.mozilla.webclient.test.EMWindow;
 import org.mozilla.webclient.test.EmbeddedMozilla;
 import org.mozilla.util.Assert;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  *
 
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: WCRandom.java,v 1.1 2001/05/23 22:27:01 edburns%acm.org Exp $
+ * @version $Id: WCRandom.java,v 1.2 2001/07/19 19:02:16 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -115,15 +118,21 @@ public static void main(String [] arg)
 
 public void run()
 {
-  for (;;) {
-    try {
-      Thread.sleep(10000);
+    Calendar calendar;
+    Date date;
+    for (;;) {
+        try {
+            Thread.sleep(10000);
+        }
+        catch (Exception e) {
+        }
+        calendar = Calendar.getInstance();
+        date = calendar.getTime();
+        System.out.println("Loading " + url + " at " + date.toString());
+        navigation.stop();
+        navigation.loadURL(url);
+        
     }
-    catch (Exception e) {
-    }
-    navigation.stop();
-    navigation.loadURL(url);
-  }
 }
 
 
