@@ -105,7 +105,6 @@ public:
 
 protected:
   nsCOMPtr<nsIPrompt>   mPrompt;
-  static PRBool         mgRegisteredObserver;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
