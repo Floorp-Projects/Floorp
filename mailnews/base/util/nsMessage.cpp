@@ -311,6 +311,13 @@ NS_IMETHODIMP nsMessage::AndFlags(PRUint32 flags, PRUint32 *result)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMessage::MarkRead(PRBool bRead)
+{
+	if(mMsgHdr)
+		return mMsgHdr->MarkRead(bRead);
+	else
+		return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP nsMessage::GetMessageKey(nsMsgKey *result)
 {
