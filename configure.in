@@ -2479,9 +2479,10 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
   MOZ_UPDATE_XTERM=1)
 
 dnl Creating the makefiles incrementally obsoletes allmakefiles.sh
-MOZ_ARG_ENABLE_BOOL(incremental-makefiles,
-[  --enable-incremental-makefiles Create Makefile's on the fly],
-  MOZ_INCREMENTAL_MAKEFILES=1)
+_INCREMENTAL_MAKEFILES=1
+MOZ_ARG_DISABLE_BOOL(incremental-makefiles,
+[  --disable-incremental-makefiles Create Makefile's on the fly],
+  _INCREMENTAL_MAKEFILES=)
 
 dnl Need the contents of config-defs.h in the build logs
 VERBOSE_CONFIG_DEFS=1
@@ -2596,7 +2597,6 @@ AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
-AC_SUBST(MOZ_INCREMENTAL_MAKEFILES) 
 AC_SUBST(NECKO)
 AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_TIMER_LIBS)
@@ -3152,7 +3152,7 @@ EOF
   fi
 fi
 
-if test "$MOZ_INCREMENTAL_MAKEFILES"; then
+if test "$_INCREMENTAL_MAKEFILES"; then
   MAKEFILES="
     Makefile
     build/unix/nspr_my_config.mk
