@@ -33,7 +33,6 @@
 #include "nsITabWidget.h"
 #include "nsIToolkit.h"
 #include "nsIWidget.h"
-#include "nsIDialog.h"
 #include "nsICheckButton.h"
 #include "nsIScrollbar.h"
 #include "nsIRadioButton.h"
@@ -49,37 +48,10 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
-
-
-NS_WIDGET nsresult 
-NS_CreateDialog(nsISupports* aParent, 
-									nsIDialog* aDialog, 
-									const nsRect& aRect, 
-									EVENT_CALLBACK aHandleEventFunction,
-								  const nsFont* aFont)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	widget;
-	if (NS_OK == aDialog->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
-  	widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    if (aFont != nsnull)
-	    widget->SetFont(*aFont);
-		NS_IF_RELEASE(widget); 
-	}
-  if (aParent != nsnull)
-    NS_IF_RELEASE(parent);
-  return NS_OK;
-}
 
 
 NS_WIDGET nsresult 

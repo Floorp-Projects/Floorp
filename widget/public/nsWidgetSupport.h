@@ -39,24 +39,17 @@ class nsIMouseListener;
 class nsITabWidget;
 class nsIToolkit;
 class nsIWidget;
-class nsIDialog;
 class nsICheckButton;
 class nsIScrollbar;
 class nsIRadioButton;
 class nsITooltipWidget;
 class nsITextWidget;
+class nsIBrowserWindow;
 
 // These are a series of support methods which help in the creation
 // of widgets. They are not needed, but are provided as a convenience
 // mechanism when creating widgets
 
-
-extern NS_WIDGET nsresult 
-NS_CreateDialog(nsISupports* aParent, 
-								nsIDialog* aDialog, 
-								const nsRect& aRect, 
-								EVENT_CALLBACK aHandleEventFunction,
-								const nsFont* aFont = nsnull);
 
 extern NS_WIDGET nsresult 
 NS_CreateButton( nsISupports* aParent, 
