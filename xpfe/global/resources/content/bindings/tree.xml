@@ -1017,7 +1017,7 @@
   <binding id="treecol" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
       <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
-      <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection"/>
+      <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection,hidden=hideheader"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
