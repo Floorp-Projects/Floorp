@@ -180,7 +180,9 @@ void nsSimpleCharString::CopyFrom(const char* inData, PRUint32 inLength)
     ReallocData(inLength);
     if (!mData)
         return;
-    nsCRT::memcpy(mData->mString, inData, inLength);
+    if (inLength != 0) {
+        nsCRT::memcpy(mData->mString, inData, inLength);
+    }
     mData->mString[inLength] = '\0';
 } // nsSimpleCharString::CopyFrom
 
