@@ -133,7 +133,7 @@ void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
      */
   size += aString.Length() * sizeof(PRUnichar);
   AtomImpl* ii = (AtomImpl*) ::operator new(size);
-  *copy_string(aString.BeginReading(), aString.EndReading(), ii->mString) = PRUnichar(0);
+  *copy_string(aString.BeginReading(), aString.EndReading(), NS_STATIC_CAST(PRUnichar *, ii->mString)) = PRUnichar(0);
   return ii;
 }
 
