@@ -43,7 +43,7 @@
   </html:div>
 
   <!-- The two-pane -->
-  <box align="horizontal">
+  <box align="horizontal" flex="1*">
 
     <!-- All of the panels that are available -->
     <box align="vertical" flex="1*">
@@ -148,7 +148,7 @@
         </box>
       </box>
 
-      <box align="horizontal" class="button-group" flex="100%">
+      <box align="horizontal" class="button-group">
         <titledbutton id="customize-button" onclick="CustomizePanel();" 
           class="dialog push"
           value="&sidebar.customize.customize.label;" />
