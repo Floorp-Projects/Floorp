@@ -32,14 +32,14 @@ PR_BEGIN_EXTERN_C
 **      [<sep><root_component><sep>]*(<component><sep>)<leaf_name>
 */
 
-PR_EXTERN(char) PR_GetDirectorySeparator(void);
+NSPR_API(char) PR_GetDirectorySeparator(void);
 
 /*
 ** OBSOLETE -- the function name is misspelled.
 ** Use PR_GetDirectorySeparator instead.
 */
 
-PR_EXTERN(char) PR_GetDirectorySepartor(void);
+NSPR_API(char) PR_GetDirectorySepartor(void);
 
 
 /* Types of information available via PR_GetSystemInfo(...) */
@@ -62,17 +62,17 @@ typedef enum {
 
 #define SYS_INFO_BUFFER_LENGTH 256
 
-PR_EXTERN(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 buflen);
+NSPR_API(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 buflen);
 
 /*
 ** Return the number of bytes in a page
 */
-PR_EXTERN(PRInt32) PR_GetPageSize(void);
+NSPR_API(PRInt32) PR_GetPageSize(void);
 
 /*
 ** Return log2 of the size of a page
 */
-PR_EXTERN(PRInt32) PR_GetPageShift(void);
+NSPR_API(PRInt32) PR_GetPageShift(void);
 
 PR_END_EXTERN_C
 

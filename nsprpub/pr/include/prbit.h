@@ -37,12 +37,12 @@ typedef unsigned long prbitmap_t;
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
 */
-PR_EXTERN(PRIntn) PR_CeilingLog2(PRUint32 i); 
+NSPR_API(PRIntn) PR_CeilingLog2(PRUint32 i); 
 
 /*
 ** Compute the log of the greatest power of 2 less than or equal to n
 */
-PR_EXTERN(PRIntn) PR_FloorLog2(PRUint32 i); 
+NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i); 
 
 /*
 ** Macro version of PR_CeilingLog2: Compute the log of the least power of

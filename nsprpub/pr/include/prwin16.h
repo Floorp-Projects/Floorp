@@ -62,17 +62,17 @@ typedef PRInt32 (PR_CALLBACK *PRStdinRead)( void *buf, PRInt32 amount);
 typedef PRInt32 (PR_CALLBACK *PRStdoutWrite)( void *buf, PRInt32 amount);
 typedef PRInt32 (PR_CALLBACK *PRStderrWrite)( void *buf, PRInt32 amount);
 
-PR_EXTERN(PRStatus)
+NSPR_API(PRStatus)
 PR_MD_RegisterW16StdioCallbacks( 
     PRStdinRead inReadf,            /* i: function pointer for stdin read       */
     PRStdoutWrite outWritef,        /* i: function pointer for stdout write     */
     PRStderrWrite errWritef         /* i: function pointer for stderr write     */
     );
 
-PR_EXTERN(PRInt32)
+NSPR_API(PRInt32)
 _PL_W16StdioWrite( void *buf, PRInt32 amount );
 
-PR_EXTERN(PRInt32)
+NSPR_API(PRInt32)
 _PL_W16StdioRead( void *buf, PRInt32 amount );
 
 #define PR_STDIO_INIT() PR_MD_RegisterW16StdioCallbacks( \
@@ -95,7 +95,7 @@ struct PRMethodCallbackStr {
 //    void *  (PR_CALLBACK *perror)( const char *prefix );
 };
 
-PR_EXTERN(void) PR_MDRegisterCallbacks(struct PRMethodCallbackStr *);
+NSPR_API(void) PR_MDRegisterCallbacks(struct PRMethodCallbackStr *);
 
 int PR_CALLBACK _PL_W16CallBackPuts( const char *outputString );
 size_t PR_CALLBACK _PL_W16CallBackStrftime( 
@@ -120,17 +120,17 @@ int PR_CALLBACK _PL_W16CallBackPutenv( const char *assoc );
 ** ... Don't do this! ... alas, It may never go away.
 ** 
 */
-PR_EXTERN(int)     PR_MD_printf(const char *, ...);
-PR_EXTERN(void)    PR_MD_exit(int);
-PR_EXTERN(size_t)  PR_MD_strftime(char *, size_t, const char *, const struct tm *); 
-PR_EXTERN(int)     PR_MD_sscanf(const char *, const char *, ...);
-PR_EXTERN(void*)   PR_MD_malloc( size_t size );
-PR_EXTERN(void*)   PR_MD_calloc( size_t n, size_t size );
-PR_EXTERN(void*)   PR_MD_realloc( void* old_blk, size_t size );
-PR_EXTERN(void)    PR_MD_free( void *ptr );
-PR_EXTERN(char*)   PR_MD_getenv( const char *name );
-PR_EXTERN(int)     PR_MD_putenv( const char *assoc );
-PR_EXTERN(int)     PR_MD_fprintf(FILE *fPtr, const char *fmt, ...);
+NSPR_API(int)     PR_MD_printf(const char *, ...);
+NSPR_API(void)    PR_MD_exit(int);
+NSPR_API(size_t)  PR_MD_strftime(char *, size_t, const char *, const struct tm *); 
+NSPR_API(int)     PR_MD_sscanf(const char *, const char *, ...);
+NSPR_API(void*)   PR_MD_malloc( size_t size );
+NSPR_API(void*)   PR_MD_calloc( size_t n, size_t size );
+NSPR_API(void*)   PR_MD_realloc( void* old_blk, size_t size );
+NSPR_API(void)    PR_MD_free( void *ptr );
+NSPR_API(char*)   PR_MD_getenv( const char *name );
+NSPR_API(int)     PR_MD_putenv( const char *assoc );
+NSPR_API(int)     PR_MD_fprintf(FILE *fPtr, const char *fmt, ...);
 
 #define PR_INIT_CALLBACKS()                         \
     {                                               \
@@ -151,11 +151,11 @@ PR_EXTERN(int)     PR_MD_fprintf(FILE *fPtr, const char *fmt, ...);
 /*
 ** Get the exception context for Win16 MFC applications threads
 */
-PR_EXTERN(void *) PR_W16GetExceptionContext(void);
+NSPR_API(void *) PR_W16GetExceptionContext(void);
 /*
 ** Set the exception context for Win16 MFC applications threads
 */
-PR_EXTERN(void) PR_W16SetExceptionContext(void *context);
+NSPR_API(void) PR_W16SetExceptionContext(void *context);
 
 PR_END_EXTERN_C
 #else

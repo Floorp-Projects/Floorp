@@ -33,10 +33,10 @@ PR_BEGIN_EXTERN_C
 ** Lookup a variable in the environment. Return NULL if it's not found,
 ** otherwise return it's value.
 */
-PR_EXTERN(char*) PR_GetEnv(const char *var);
+NSPR_API(char*) PR_GetEnv(const char *var);
 
 #ifdef XP_MAC
-PR_EXTERN(PRIntn) PR_PutEnv(const char *string);
+NSPR_API(PRIntn) PR_PutEnv(const char *string);
 #endif
 
 PR_END_EXTERN_C

@@ -224,7 +224,7 @@ void _MD_EarlyInit(void);
 #define _MD_INIT_RUNNING_CPU(cpu) _MD_unix_init_running_cpu(cpu)
 #define _MD_INIT_THREAD         _MD_InitializeThread
 #ifdef _VMS_NOT_YET
-PR_EXTERN(void) _PR_InitThreads(
+NSPR_API(void) _PR_InitThreads(
   PRThreadType type, PRThreadPriority priority, PRUintn maxPTDs);
 #endif
 #define _MD_EXIT_THREAD(thread)
@@ -242,8 +242,8 @@ extern int __poll(struct pollfd filedes[], unsigned int nfds, int timeout);
 #endif
 
 #ifdef __VMS
-PR_EXTERN(void) _PR_InitCPUs(void);
-PR_EXTERN(void) _PR_MD_START_INTERRUPTS(void);
+NSPR_API(void) _PR_InitCPUs(void);
+NSPR_API(void) _PR_MD_START_INTERRUPTS(void);
 #endif
 
 /*

@@ -62,23 +62,23 @@
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 
 /* Initialization entry points */
-PR_EXTERN(void) _MD_EarlyInit(void);
+NSPR_API(void) _MD_EarlyInit(void);
 #define _MD_EARLY_INIT _MD_EarlyInit
 
-PR_EXTERN(void) _MD_IrixInit(void);
+NSPR_API(void) _MD_IrixInit(void);
 #define _MD_FINAL_INIT _MD_IrixInit
 
 #define _MD_INIT_IO()
 
 /* Timer operations */
-PR_EXTERN(PRIntervalTime) _MD_IrixGetInterval(void);
+NSPR_API(PRIntervalTime) _MD_IrixGetInterval(void);
 #define _MD_GET_INTERVAL _MD_IrixGetInterval
 
-PR_EXTERN(PRIntervalTime) _MD_IrixIntervalPerSec(void);
+NSPR_API(PRIntervalTime) _MD_IrixIntervalPerSec(void);
 #define _MD_INTERVAL_PER_SEC _MD_IrixIntervalPerSec
 
 /* GC operations */
-PR_EXTERN(void *) _MD_GetSP(PRThread *thread);
+NSPR_API(void *) _MD_GetSP(PRThread *thread);
 #define    _MD_GET_SP _MD_GetSP
 
 /* The atomic operations */
@@ -134,8 +134,8 @@ extern char *_nspr_sproc_private;
 #define _MD_SET_SPROC_PID(_val) (_PR_PRDA()->sproc_pid = _val)
 #define _MD_GET_SPROC_PID() (_PR_PRDA()->sproc_pid)
 
-PR_EXTERN(struct PRThread*) _MD_get_attached_thread(void);
-PR_EXTERN(struct PRThread*) _MD_get_current_thread(void);
+NSPR_API(struct PRThread*) _MD_get_attached_thread(void);
+NSPR_API(struct PRThread*) _MD_get_current_thread(void);
 #define _MD_GET_ATTACHED_THREAD()	_MD_get_attached_thread()
 #define _MD_CURRENT_THREAD()	_MD_get_current_thread()
 
@@ -218,8 +218,8 @@ struct _MDLock {
 			_PR_FAST_INTSON(_is); 				\
 	}
 
-PR_EXTERN(PRStatus) _MD_NEW_LOCK(struct _MDLock *md);
-PR_EXTERN(void) _MD_FREE_LOCK(struct _MDLock *lockp);
+NSPR_API(PRStatus) _MD_NEW_LOCK(struct _MDLock *md);
+NSPR_API(void) _MD_FREE_LOCK(struct _MDLock *lockp);
 
 #define _MD_LOCK(_lockp) _PR_LOCK((_lockp)->lock)
 #define _MD_UNLOCK(_lockp) _PR_UNLOCK((_lockp)->lock)
@@ -345,27 +345,27 @@ struct _MDCPU {
     longjmp(jb, 1); \
     PR_END_MACRO
 
-PR_EXTERN(PRStatus) _MD_InitThread(struct PRThread *thread,
+NSPR_API(PRStatus) _MD_InitThread(struct PRThread *thread,
 								PRBool wakeup_parent);
-PR_EXTERN(PRStatus) _MD_InitAttachedThread(struct PRThread *thread,
+NSPR_API(PRStatus) _MD_InitAttachedThread(struct PRThread *thread,
 									PRBool wakeup_parent);
 #define _MD_INIT_THREAD(thread) 			_MD_InitThread(thread, PR_TRUE)
 #define _MD_INIT_ATTACHED_THREAD(thread)		\
 						_MD_InitAttachedThread(thread, PR_FALSE)
 
-PR_EXTERN(void) _MD_ExitThread(struct PRThread *thread);
+NSPR_API(void) _MD_ExitThread(struct PRThread *thread);
 #define _MD_EXIT_THREAD _MD_ExitThread
 
-PR_EXTERN(void) _MD_SuspendThread(struct PRThread *thread);
+NSPR_API(void) _MD_SuspendThread(struct PRThread *thread);
 #define _MD_SUSPEND_THREAD _MD_SuspendThread
 
-PR_EXTERN(void) _MD_ResumeThread(struct PRThread *thread);
+NSPR_API(void) _MD_ResumeThread(struct PRThread *thread);
 #define _MD_RESUME_THREAD _MD_ResumeThread
 
-PR_EXTERN(void) _MD_SuspendCPU(struct _PRCPU *thread);
+NSPR_API(void) _MD_SuspendCPU(struct _PRCPU *thread);
 #define _MD_SUSPEND_CPU _MD_SuspendCPU
 
-PR_EXTERN(void) _MD_ResumeCPU(struct _PRCPU *thread);
+NSPR_API(void) _MD_ResumeCPU(struct _PRCPU *thread);
 #define _MD_RESUME_CPU _MD_ResumeCPU
 
 #define _MD_BEGIN_SUSPEND_ALL()
@@ -373,10 +373,10 @@ PR_EXTERN(void) _MD_ResumeCPU(struct _PRCPU *thread);
 #define _MD_BEGIN_RESUME_ALL()
 #define _MD_END_RESUME_ALL()
 
-PR_EXTERN(void) _MD_InitLocks(void);
+NSPR_API(void) _MD_InitLocks(void);
 #define _MD_INIT_LOCKS _MD_InitLocks
 
-PR_EXTERN(void) _MD_CleanThread(struct PRThread *thread);
+NSPR_API(void) _MD_CleanThread(struct PRThread *thread);
 #define _MD_CLEAN_THREAD _MD_CleanThread
 
 #define _MD_YIELD()    sginap(0)
@@ -384,25 +384,25 @@ PR_EXTERN(void) _MD_CleanThread(struct PRThread *thread);
 /* The _PR_MD_WAIT_LOCK and _PR_MD_WAKEUP_WAITER functions put to sleep and
  * awaken a thread which is waiting on a lock or cvar.
  */
-PR_EXTERN(PRStatus) _MD_wait(struct PRThread *, PRIntervalTime timeout);
+NSPR_API(PRStatus) _MD_wait(struct PRThread *, PRIntervalTime timeout);
 #define _MD_WAIT _MD_wait
 
-PR_EXTERN(void) _PR_MD_primordial_cpu();
-PR_EXTERN(void) _PR_MD_WAKEUP_PRIMORDIAL_CPU();
+NSPR_API(void) _PR_MD_primordial_cpu();
+NSPR_API(void) _PR_MD_WAKEUP_PRIMORDIAL_CPU();
 
-PR_EXTERN(PRStatus) _MD_WakeupWaiter(struct PRThread *);
+NSPR_API(PRStatus) _MD_WakeupWaiter(struct PRThread *);
 #define _MD_WAKEUP_WAITER _MD_WakeupWaiter
 
-PR_EXTERN(void ) _MD_exit(PRIntn status);
+NSPR_API(void ) _MD_exit(PRIntn status);
 #define _MD_EXIT	_MD_exit
 
 #include "prthread.h"
 
-PR_EXTERN(void) _MD_SetPriority(struct _MDThread *thread,
+NSPR_API(void) _MD_SetPriority(struct _MDThread *thread,
 	PRThreadPriority newPri);
 #define _MD_SET_PRIORITY _MD_SetPriority
 
-PR_EXTERN(PRStatus) _MD_CreateThread(
+NSPR_API(PRStatus) _MD_CreateThread(
                         struct PRThread *thread,
                         void (*start) (void *),
                         PRThreadPriority priority,
@@ -414,7 +414,7 @@ PR_EXTERN(PRStatus) _MD_CreateThread(
 extern void _MD_CleanupBeforeExit(void);
 #define _MD_CLEANUP_BEFORE_EXIT _MD_CleanupBeforeExit
 
-PR_EXTERN(void) _PR_MD_PRE_CLEANUP(PRThread *me);
+NSPR_API(void) _PR_MD_PRE_CLEANUP(PRThread *me);
 
 
 /* The following defines the unwrapped versions of select() and poll(). */
@@ -430,10 +430,10 @@ extern int _poll(struct pollfd *fds, unsigned long nfds, int timeout);
 
 #define HAVE_THREAD_AFFINITY 1
 
-PR_EXTERN(PRInt32) _MD_GetThreadAffinityMask(PRThread *unused, PRUint32 *mask);
+NSPR_API(PRInt32) _MD_GetThreadAffinityMask(PRThread *unused, PRUint32 *mask);
 #define _MD_GETTHREADAFFINITYMASK _MD_GetThreadAffinityMask
 
-PR_EXTERN(void) _MD_InitRunningCPU(struct _PRCPU *cpu);
+NSPR_API(void) _MD_InitRunningCPU(struct _PRCPU *cpu);
 #define    _MD_INIT_RUNNING_CPU _MD_InitRunningCPU
 
 #endif  /* defined(_PR_PTHREADS) */

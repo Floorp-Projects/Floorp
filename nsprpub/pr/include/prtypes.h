@@ -84,10 +84,10 @@
 
 #elif defined(XP_BEOS)
 
-#define PR_EXPORT(__type) extern _declspec(dllexport) __type
-#define PR_EXPORT_DATA(__type) extern _declspec(dllexport) __type
-#define PR_IMPORT(__type) extern _declspec(dllexport) __type
-#define PR_IMPORT_DATA(__type) extern _declspec(dllexport) __type
+#define PR_EXPORT(__type) extern __declspec(dllexport) __type
+#define PR_EXPORT_DATA(__type) extern __declspec(dllexport) __type
+#define PR_IMPORT(__type) extern __declspec(dllexport) __type
+#define PR_IMPORT_DATA(__type) extern __declspec(dllexport) __type
 
 #define PR_EXTERN(__type) extern __declspec(dllexport) __type
 #define PR_IMPLEMENT(__type) __declspec(dllexport) __type
@@ -133,10 +133,10 @@
 
 #elif defined(XP_MAC)
 
-#define PR_EXPORT(__type) extern _declspec(export) __type
-#define PR_EXPORT_DATA(__type) extern _declspec(export) __type
-#define PR_IMPORT(__type) extern _declspec(export) __type
-#define PR_IMPORT_DATA(__type) extern _declspec(export) __type
+#define PR_EXPORT(__type) extern __declspec(export) __type
+#define PR_EXPORT_DATA(__type) extern __declspec(export) __type
+#define PR_IMPORT(__type) extern __declspec(export) __type
+#define PR_IMPORT_DATA(__type) extern __declspec(export) __type
 
 #define PR_EXTERN(__type) extern __declspec(export) __type
 #define PR_IMPLEMENT(__type) __declspec(export) __type

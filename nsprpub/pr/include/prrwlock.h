@@ -54,7 +54,7 @@ typedef struct PRRWLock PRRWLock;
 **   is returned.
 **  
 ***********************************************************************/
-PR_EXTERN(PRRWLock*) PR_NewRWLock(PRUint32 lock_rank, const char *lock_name);
+NSPR_API(PRRWLock*) PR_NewRWLock(PRUint32 lock_rank, const char *lock_name);
 
 /***********************************************************************
 ** FUNCTION:    PR_DestroyRWLock
@@ -64,7 +64,7 @@ PR_EXTERN(PRRWLock*) PR_NewRWLock(PRUint32 lock_rank, const char *lock_name);
 ** OUTPUTS:     void
 ** RETURN:      None
 ***********************************************************************/
-PR_EXTERN(void) PR_DestroyRWLock(PRRWLock *lock);
+NSPR_API(void) PR_DestroyRWLock(PRRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    PR_RWLock_Rlock
@@ -74,7 +74,7 @@ PR_EXTERN(void) PR_DestroyRWLock(PRRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      None
 ***********************************************************************/
-PR_EXTERN(void) PR_RWLock_Rlock(PRRWLock *lock);
+NSPR_API(void) PR_RWLock_Rlock(PRRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    PR_RWLock_Wlock
@@ -84,7 +84,7 @@ PR_EXTERN(void) PR_RWLock_Rlock(PRRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      None
 ***********************************************************************/
-PR_EXTERN(void) PR_RWLock_Wlock(PRRWLock *lock);
+NSPR_API(void) PR_RWLock_Wlock(PRRWLock *lock);
 
 /***********************************************************************
 ** FUNCTION:    PR_RWLock_Unlock
@@ -94,7 +94,7 @@ PR_EXTERN(void) PR_RWLock_Wlock(PRRWLock *lock);
 ** OUTPUTS:     void
 ** RETURN:      void
 ***********************************************************************/
-PR_EXTERN(void) PR_RWLock_Unlock(PRRWLock *lock);
+NSPR_API(void) PR_RWLock_Unlock(PRRWLock *lock);
 
 PR_END_EXTERN_C
 

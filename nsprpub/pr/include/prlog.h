@@ -143,19 +143,19 @@ typedef struct PRLogModuleInfo {
 /*
 ** Create a new log module.
 */
-PR_EXTERN(PRLogModuleInfo*) PR_NewLogModule(const char *name);
+NSPR_API(PRLogModuleInfo*) PR_NewLogModule(const char *name);
 
 /*
 ** Set the file to use for logging. Returns PR_FALSE if the file cannot
 ** be created
 */
-PR_EXTERN(PRBool) PR_SetLogFile(const char *name);
+NSPR_API(PRBool) PR_SetLogFile(const char *name);
 
 /*
 ** Set the size of the logging buffer. If "buffer_size" is zero then the
 ** logging becomes "synchronous" (or unbuffered).
 */
-PR_EXTERN(void) PR_SetLogBuffering(PRIntn buffer_size);
+NSPR_API(void) PR_SetLogBuffering(PRIntn buffer_size);
 
 /*
 ** Print a string to the log. "fmt" is a PR_snprintf format type. All
@@ -163,16 +163,16 @@ PR_EXTERN(void) PR_SetLogBuffering(PRIntn buffer_size);
 ** and a time stamp. Also, the routine provides a missing newline if one
 ** is not provided.
 */
-PR_EXTERN(void) PR_LogPrint(const char *fmt, ...);
+NSPR_API(void) PR_LogPrint(const char *fmt, ...);
 
 /*
 ** Flush the log to its file.
 */
-PR_EXTERN(void) PR_LogFlush(void);
+NSPR_API(void) PR_LogFlush(void);
 
 /* Need external access to this on Mac so we can first set up our faux environment vars */
 #ifdef XP_MAC
-PR_EXTERN(void) PR_Init_Log(void);
+NSPR_API(void) PR_Init_Log(void);
 #endif
 
 
@@ -224,7 +224,7 @@ PR_EXTERN(void) PR_Init_Log(void);
 
 #if defined(DEBUG)
 
-PR_EXTERN(void) PR_Assert(const char *s, const char *file, PRIntn ln);
+NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln);
 #define PR_ASSERT(_expr) \
     ((_expr)?((void)0):PR_Assert(# _expr,__FILE__,__LINE__))
 

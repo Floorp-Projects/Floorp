@@ -379,189 +379,189 @@ struct protoent* getprotobynumber(int number);
 
 /* Miscellaneous */
 
-PR_EXTERN(void) _MD_cleanup_before_exit(void);
-PR_EXTERN(void) _MD_exit(PRIntn status);
+NSPR_API(void) _MD_cleanup_before_exit(void);
+NSPR_API(void) _MD_exit(PRIntn status);
 
-PR_EXTERN(char*) _MD_get_env(const char *name);
-PR_EXTERN(PRIntn) _MD_put_env(const char *name);
+NSPR_API(char*) _MD_get_env(const char *name);
+NSPR_API(PRIntn) _MD_put_env(const char *name);
 
-PR_EXTERN(void) _MD_early_init(void);
-PR_EXTERN(void) _MD_final_init(void);
+NSPR_API(void) _MD_early_init(void);
+NSPR_API(void) _MD_final_init(void);
 
 /* CPU Stuff */
 
-PR_EXTERN(void) _MD_init_cpus();
-PR_EXTERN(void) _MD_wakeup_cpus();
-PR_EXTERN(void) _MD_start_interrupts(void);
-PR_EXTERN(void) _MD_stop_interrupts(void);
-PR_EXTERN(void) _MD_disable_clock_interrupts(void);
-PR_EXTERN(void) _MD_block_clock_interrupts(void);
-PR_EXTERN(void) _MD_unblock_clock_interrupts(void);
-PR_EXTERN(void) _MD_clock_interrupt(void);
-// PR_EXTERN(void) _MD_init_stack(PRThreadStack *ts, PRIntn redzone);
-// PR_EXTERN(void) _MD_clear_stack(PRThreadStack* ts);
-// PR_EXTERN(PRInt32) _MD_get_intsoff(void);
-// PR_EXTERN(void) _MD_set_intsoff(PRInt32 _val);
-// PR_EXTERN(_PRCPU*) _MD_current_cpu(void);
-// PR_EXTERN(void) _MD_set_current_cpu(_PRCPU *cpu);
-// PR_EXTERN(void) _MD_init_running_cpu(_PRCPU *cpu);
-PR_EXTERN(PRInt32) _MD_pause_cpu(PRIntervalTime timeout);
+NSPR_API(void) _MD_init_cpus();
+NSPR_API(void) _MD_wakeup_cpus();
+NSPR_API(void) _MD_start_interrupts(void);
+NSPR_API(void) _MD_stop_interrupts(void);
+NSPR_API(void) _MD_disable_clock_interrupts(void);
+NSPR_API(void) _MD_block_clock_interrupts(void);
+NSPR_API(void) _MD_unblock_clock_interrupts(void);
+NSPR_API(void) _MD_clock_interrupt(void);
+// NSPR_API(void) _MD_init_stack(PRThreadStack *ts, PRIntn redzone);
+// NSPR_API(void) _MD_clear_stack(PRThreadStack* ts);
+// NSPR_API(PRInt32) _MD_get_intsoff(void);
+// NSPR_API(void) _MD_set_intsoff(PRInt32 _val);
+// NSPR_API(_PRCPU*) _MD_current_cpu(void);
+// NSPR_API(void) _MD_set_current_cpu(_PRCPU *cpu);
+// NSPR_API(void) _MD_init_running_cpu(_PRCPU *cpu);
+NSPR_API(PRInt32) _MD_pause_cpu(PRIntervalTime timeout);
 
 /* Thread stuff */
 
-// PR_EXTERN(PRThread*) _MD_current_thread(void);
-PR_EXTERN(PRThread*) _MD_get_attached_thread(void);
-PR_EXTERN(PRThread*) _MD_last_thread(void);
-PR_EXTERN(void) _MD_set_current_thread(PRThread *thread);
-PR_EXTERN(void) _MD_set_last_thread(PRThread *thread);
-PR_EXTERN(PRStatus) _MD_init_thread(PRThread *thread);
-PR_EXTERN(void) _MD_exit_thread(PRThread *thread);
-PR_EXTERN(PRStatus) _MD_init_attached_thread(PRThread *thread);
+// NSPR_API(PRThread*) _MD_current_thread(void);
+NSPR_API(PRThread*) _MD_get_attached_thread(void);
+NSPR_API(PRThread*) _MD_last_thread(void);
+NSPR_API(void) _MD_set_current_thread(PRThread *thread);
+NSPR_API(void) _MD_set_last_thread(PRThread *thread);
+NSPR_API(PRStatus) _MD_init_thread(PRThread *thread);
+NSPR_API(void) _MD_exit_thread(PRThread *thread);
+NSPR_API(PRStatus) _MD_init_attached_thread(PRThread *thread);
 
-PR_EXTERN(void) _MD_suspend_thread(PRThread *thread);
-PR_EXTERN(void) _MD_resume_thread(PRThread *thread);
-// PR_EXTERN(void) _MD_suspend_cpu(_PRCPU  *cpu);
-// PR_EXTERN(void) _MD_resume_cpu(_PRCPU  *cpu);
-PR_EXTERN(void) _MD_begin_suspend_all(void);
-PR_EXTERN(void) _MD_end_suspend_all(void);
-PR_EXTERN(void) _MD_begin_resume_all(void);
-PR_EXTERN(void) _MD_end_resume_all(void);
+NSPR_API(void) _MD_suspend_thread(PRThread *thread);
+NSPR_API(void) _MD_resume_thread(PRThread *thread);
+// NSPR_API(void) _MD_suspend_cpu(_PRCPU  *cpu);
+// NSPR_API(void) _MD_resume_cpu(_PRCPU  *cpu);
+NSPR_API(void) _MD_begin_suspend_all(void);
+NSPR_API(void) _MD_end_suspend_all(void);
+NSPR_API(void) _MD_begin_resume_all(void);
+NSPR_API(void) _MD_end_resume_all(void);
 
-PR_EXTERN(void *) _MD_get_sp(PRThread *thread);
+NSPR_API(void *) _MD_get_sp(PRThread *thread);
 
-PR_EXTERN(void) _MD_clean_thread(PRThread *thread);
-PR_EXTERN(void) _MD_create_primordial_user_thread(PRThread *);
-PR_EXTERN(PRThread*) _MD_create_user_thread(PRUint32 stacksize, void (*start)(void *), void *arg);
-PR_EXTERN(void) _MD_init_primordial_thread(PRThread *thread);
-PR_EXTERN(PRStatus) _MD_create_thread(PRThread *thread, void (*start)(void *), PRThreadPriority priority, PRThreadScope scope, PRThreadState state, PRUint32 stackSize);
-PR_EXTERN(void) _MD_yield(void);
-PR_EXTERN(void) _MD_set_priority(struct _MDThread *md, PRThreadPriority newPri);
+NSPR_API(void) _MD_clean_thread(PRThread *thread);
+NSPR_API(void) _MD_create_primordial_user_thread(PRThread *);
+NSPR_API(PRThread*) _MD_create_user_thread(PRUint32 stacksize, void (*start)(void *), void *arg);
+NSPR_API(void) _MD_init_primordial_thread(PRThread *thread);
+NSPR_API(PRStatus) _MD_create_thread(PRThread *thread, void (*start)(void *), PRThreadPriority priority, PRThreadScope scope, PRThreadState state, PRUint32 stackSize);
+NSPR_API(void) _MD_yield(void);
+NSPR_API(void) _MD_set_priority(struct _MDThread *md, PRThreadPriority newPri);
 
-PR_EXTERN(void) _MD_suspendall(void);
-PR_EXTERN(void) _MD_resumeall(void);
+NSPR_API(void) _MD_suspendall(void);
+NSPR_API(void) _MD_resumeall(void);
 
-PR_EXTERN(void) _MD_init_context(PRThread *thread, char *top, void (*start) (void), PRBool *status);
-PR_EXTERN(void) _MD_switch_context(PRThread *thread);
-PR_EXTERN(void) _MD_restore_context(PRThread *thread);
+NSPR_API(void) _MD_init_context(PRThread *thread, char *top, void (*start) (void), PRBool *status);
+NSPR_API(void) _MD_switch_context(PRThread *thread);
+NSPR_API(void) _MD_restore_context(PRThread *thread);
 
-PR_EXTERN(PRStatus) _MD_wait(PRThread *, PRIntervalTime timeout);
-PR_EXTERN(PRStatus) _MD_wakeup_waiter(PRThread *);
+NSPR_API(PRStatus) _MD_wait(PRThread *, PRIntervalTime timeout);
+NSPR_API(PRStatus) _MD_wakeup_waiter(PRThread *);
 
-PR_EXTERN(PRInt32) _MD_setthreadaffinitymask(PRThread *thread, PRUint32 mask );
-PR_EXTERN(PRInt32) _MD_getthreadaffinitymask(PRThread *thread, PRUint32 *mask);
+NSPR_API(PRInt32) _MD_setthreadaffinitymask(PRThread *thread, PRUint32 mask );
+NSPR_API(PRInt32) _MD_getthreadaffinitymask(PRThread *thread, PRUint32 *mask);
 
 /* Thread Synchronization */
 
-PR_EXTERN(void) _MD_init_locks(void);
-PR_EXTERN(PRStatus) _MD_new_lock(struct _MDLock *md);
-PR_EXTERN(void) _MD_free_lock(struct _MDLock *md);
-PR_EXTERN(void) _MD_lock(struct _MDLock *md);
-PR_EXTERN(PRBool) _MD_test_and_lock(struct _MDLock *md);
-PR_EXTERN(void) _MD_unlock(struct _MDLock *md);
-PR_EXTERN(void) _MD_ioq_lock(void);
-PR_EXTERN(void) _MD_ioq_unlock(void);
-PR_EXTERN(void) _MD_new_sem(struct _MDSemaphore *md, PRUintn value);
-PR_EXTERN(void) _MD_destroy_sem(struct _MDSemaphore *md);
-PR_EXTERN(PRStatus) _MD_timed_wait_sem(struct _MDSemaphore *md, PRIntervalTime timeout);
-PR_EXTERN(PRStatus) _MD_wait_sem(struct _MDSemaphore *md);
-PR_EXTERN(void) _MD_post_sem(struct _MDSemaphore *md);
-// PR_EXTERN(PRInt32) _MD_new_cv(struct _MDCVar *md);
-// PR_EXTERN(void) _MD_free_cv(struct _MDCVar *md);
-// PR_EXTERN(void) _MD_wait_cv(struct _MDCVar *mdCVar, struct _MDLock *mdLock, PRIntervalTime timeout);
-// PR_EXTERN(void) _MD_notify_cv(struct _MDCVar *md, struct _MDLock *lock);
-// PR_EXTERN(void) _MD_notifyall_cv(struct _MDCVar *md, struct _MDLock *lock);
+NSPR_API(void) _MD_init_locks(void);
+NSPR_API(PRStatus) _MD_new_lock(struct _MDLock *md);
+NSPR_API(void) _MD_free_lock(struct _MDLock *md);
+NSPR_API(void) _MD_lock(struct _MDLock *md);
+NSPR_API(PRBool) _MD_test_and_lock(struct _MDLock *md);
+NSPR_API(void) _MD_unlock(struct _MDLock *md);
+NSPR_API(void) _MD_ioq_lock(void);
+NSPR_API(void) _MD_ioq_unlock(void);
+NSPR_API(void) _MD_new_sem(struct _MDSemaphore *md, PRUintn value);
+NSPR_API(void) _MD_destroy_sem(struct _MDSemaphore *md);
+NSPR_API(PRStatus) _MD_timed_wait_sem(struct _MDSemaphore *md, PRIntervalTime timeout);
+NSPR_API(PRStatus) _MD_wait_sem(struct _MDSemaphore *md);
+NSPR_API(void) _MD_post_sem(struct _MDSemaphore *md);
+// NSPR_API(PRInt32) _MD_new_cv(struct _MDCVar *md);
+// NSPR_API(void) _MD_free_cv(struct _MDCVar *md);
+// NSPR_API(void) _MD_wait_cv(struct _MDCVar *mdCVar, struct _MDLock *mdLock, PRIntervalTime timeout);
+// NSPR_API(void) _MD_notify_cv(struct _MDCVar *md, struct _MDLock *lock);
+// NSPR_API(void) _MD_notifyall_cv(struct _MDCVar *md, struct _MDLock *lock);
 
 /* File I/O */
 
-// PR_EXTERN(void) _MD_init_io(void);
-PR_EXTERN(PRStatus) _MD_open_dir(struct _MDDir *md,const char *name);
-PR_EXTERN(char *) _MD_read_dir(struct _MDDir *md, PRIntn flags);
-PR_EXTERN(PRInt32) _MD_close_dir(struct _MDDir *md);
-PR_EXTERN(void) _MD_make_nonblock(PRFileDesc *fd);
-PR_EXTERN(PRInt32) _MD_open(const char *name, PRIntn osflags, PRIntn mode);
-PR_EXTERN(PRInt32) _MD_close_file(PRInt32 osfd);
-PR_EXTERN(PRInt32) _MD_read(PRFileDesc *fd, void *buf, PRInt32 amount);
-PR_EXTERN(PRInt32) _MD_write(PRFileDesc *fd, const void *buf, PRInt32 amount);
-PR_EXTERN(PRInt32) _MD_writev(PRFileDesc *fd, struct PRIOVec *iov, PRInt32 iov_size, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_lseek(PRFileDesc *fd, PRInt32 offset, int whence);
-PR_EXTERN(PRInt64) _MD_lseek64(PRFileDesc *fd, PRInt64 offset, int whence);
-PR_EXTERN(PRInt32) _MD_fsync(PRFileDesc *fd);
-PR_EXTERN(PRInt32) _MD_delete(const char *name);
-PR_EXTERN(PRInt32) _MD_getfileinfo(const char *fn, PRFileInfo *info);
-PR_EXTERN(PRInt32) _MD_getfileinfo64(const char *fn, PRFileInfo64 *info);
-PR_EXTERN(PRInt32) _MD_getopenfileinfo(const PRFileDesc *fd, PRFileInfo *info);
-PR_EXTERN(PRInt32) _MD_getopenfileinfo64(const PRFileDesc *fd, PRFileInfo64 *info);
-PR_EXTERN(PRInt32) _MD_rename(const char *from, const char *to);
-PR_EXTERN(PRInt32) _MD_access(const char *name, PRIntn how);
-PR_EXTERN(PRInt32) _MD_stat(const char *name, struct stat *buf);
-PR_EXTERN(PRInt32) _MD_mkdir(const char *name, PRIntn mode);
-PR_EXTERN(PRInt32) _MD_rmdir(const char *name);
-PR_EXTERN(PRInt32) _MD_pr_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout);
+// NSPR_API(void) _MD_init_io(void);
+NSPR_API(PRStatus) _MD_open_dir(struct _MDDir *md,const char *name);
+NSPR_API(char *) _MD_read_dir(struct _MDDir *md, PRIntn flags);
+NSPR_API(PRInt32) _MD_close_dir(struct _MDDir *md);
+NSPR_API(void) _MD_make_nonblock(PRFileDesc *fd);
+NSPR_API(PRInt32) _MD_open(const char *name, PRIntn osflags, PRIntn mode);
+NSPR_API(PRInt32) _MD_close_file(PRInt32 osfd);
+NSPR_API(PRInt32) _MD_read(PRFileDesc *fd, void *buf, PRInt32 amount);
+NSPR_API(PRInt32) _MD_write(PRFileDesc *fd, const void *buf, PRInt32 amount);
+NSPR_API(PRInt32) _MD_writev(PRFileDesc *fd, struct PRIOVec *iov, PRInt32 iov_size, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_lseek(PRFileDesc *fd, PRInt32 offset, int whence);
+NSPR_API(PRInt64) _MD_lseek64(PRFileDesc *fd, PRInt64 offset, int whence);
+NSPR_API(PRInt32) _MD_fsync(PRFileDesc *fd);
+NSPR_API(PRInt32) _MD_delete(const char *name);
+NSPR_API(PRInt32) _MD_getfileinfo(const char *fn, PRFileInfo *info);
+NSPR_API(PRInt32) _MD_getfileinfo64(const char *fn, PRFileInfo64 *info);
+NSPR_API(PRInt32) _MD_getopenfileinfo(const PRFileDesc *fd, PRFileInfo *info);
+NSPR_API(PRInt32) _MD_getopenfileinfo64(const PRFileDesc *fd, PRFileInfo64 *info);
+NSPR_API(PRInt32) _MD_rename(const char *from, const char *to);
+NSPR_API(PRInt32) _MD_access(const char *name, PRIntn how);
+NSPR_API(PRInt32) _MD_stat(const char *name, struct stat *buf);
+NSPR_API(PRInt32) _MD_mkdir(const char *name, PRIntn mode);
+NSPR_API(PRInt32) _MD_rmdir(const char *name);
+NSPR_API(PRInt32) _MD_pr_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout);
 
 /* Network I/O */
-PR_EXTERN(PRInt32) _MD_close_socket(PRInt32 osfd);
-PR_EXTERN(PRInt32) _MD_connect(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_bind(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen);
-PR_EXTERN(PRInt32) _MD_listen(PRFileDesc *fd, PRIntn backlog);
-PR_EXTERN(PRInt32) _MD_shutdown(PRFileDesc *fd, PRIntn how);
-PR_EXTERN(PRInt32) _MD_recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_send(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_accept_read(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout);
-// PR_EXTERN(PRInt32) _MD_fast_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout, PRBool fast, _PR_AcceptTimeoutCallback callback, void *callbackArg);
-// PR_EXTERN(PRInt32) _MD_fast_accept_read(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout, PRBool fast, _PR_AcceptTimeoutCallback callback, void *callbackArg);
-// PR_EXTERN(void) _MD_update_accept_context(PRInt32 s, PRInt32 ls);
-PR_EXTERN(PRStatus) _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
-PR_EXTERN(PRStatus) _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
-PR_EXTERN(PRStatus) _MD_getsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, char* optval, PRInt32* optlen);
-PR_EXTERN(PRStatus) _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, const char* optval, PRInt32 optlen);
-PR_EXTERN(PRInt32) _MD_recvfrom(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_sendto(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout);
-PR_EXTERN(PRInt32) _MD_socketpair(int af, int type, int flags, PRInt32 *osfd);
-PR_EXTERN(PRInt32) _MD_socket(int af, int type, int flags);
-PR_EXTERN(PRInt32) _MD_socketavailable(PRFileDesc *fd);
+NSPR_API(PRInt32) _MD_close_socket(PRInt32 osfd);
+NSPR_API(PRInt32) _MD_connect(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_bind(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen);
+NSPR_API(PRInt32) _MD_listen(PRFileDesc *fd, PRIntn backlog);
+NSPR_API(PRInt32) _MD_shutdown(PRFileDesc *fd, PRIntn how);
+NSPR_API(PRInt32) _MD_recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_send(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_accept_read(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout);
+// NSPR_API(PRInt32) _MD_fast_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout, PRBool fast, _PR_AcceptTimeoutCallback callback, void *callbackArg);
+// NSPR_API(PRInt32) _MD_fast_accept_read(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout, PRBool fast, _PR_AcceptTimeoutCallback callback, void *callbackArg);
+// NSPR_API(void) _MD_update_accept_context(PRInt32 s, PRInt32 ls);
+NSPR_API(PRStatus) _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
+NSPR_API(PRStatus) _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
+NSPR_API(PRStatus) _MD_getsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, char* optval, PRInt32* optlen);
+NSPR_API(PRStatus) _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, const char* optval, PRInt32 optlen);
+NSPR_API(PRInt32) _MD_recvfrom(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_sendto(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout);
+NSPR_API(PRInt32) _MD_socketpair(int af, int type, int flags, PRInt32 *osfd);
+NSPR_API(PRInt32) _MD_socket(int af, int type, int flags);
+NSPR_API(PRInt32) _MD_socketavailable(PRFileDesc *fd);
 
-// PR_EXTERN(PRInt32) _MD_get_socket_error(void);
-PR_EXTERN(PRStatus) _MD_gethostname(char *name, PRUint32 namelen);
+// NSPR_API(PRInt32) _MD_get_socket_error(void);
+NSPR_API(PRStatus) _MD_gethostname(char *name, PRUint32 namelen);
 
 /* Process management */
 
-PR_EXTERN(PRProcess *) _MD_create_process(const char *path, char *const *argv, char *const *envp, const PRProcessAttr *attr);
-PR_EXTERN(PRStatus) _MD_detach_process(PRProcess *process);
-PR_EXTERN(PRStatus) _MD_wait_process(PRProcess *process, PRInt32 *exitCode);
-PR_EXTERN(PRStatus) _MD_kill_process(PRProcess *process);
+NSPR_API(PRProcess *) _MD_create_process(const char *path, char *const *argv, char *const *envp, const PRProcessAttr *attr);
+NSPR_API(PRStatus) _MD_detach_process(PRProcess *process);
+NSPR_API(PRStatus) _MD_wait_process(PRProcess *process, PRInt32 *exitCode);
+NSPR_API(PRStatus) _MD_kill_process(PRProcess *process);
 
 /* Atomic data operations */
 
-// PR_EXTERN(void) _MD_init_atomic(void);
-// PR_EXTERN(PRInt32) _MD_atomic_increment(PRInt32 *);
-// PR_EXTERN(PRInt32) _MD_atomic_decrement(PRInt32 *);
-// PR_EXTERN(PRInt32) _MD_atomic_set(PRInt32 *, PRInt32);
+// NSPR_API(void) _MD_init_atomic(void);
+// NSPR_API(PRInt32) _MD_atomic_increment(PRInt32 *);
+// NSPR_API(PRInt32) _MD_atomic_decrement(PRInt32 *);
+// NSPR_API(PRInt32) _MD_atomic_set(PRInt32 *, PRInt32);
 
 /* Memory management */
 
-PR_EXTERN(void) _MD_init_segs(void);
-PR_EXTERN(PRStatus) _MD_alloc_segment(PRSegment *seg, PRUint32 size, void *vaddr);
-PR_EXTERN(void) _MD_free_segment(PRSegment *seg);
+NSPR_API(void) _MD_init_segs(void);
+NSPR_API(PRStatus) _MD_alloc_segment(PRSegment *seg, PRUint32 size, void *vaddr);
+NSPR_API(void) _MD_free_segment(PRSegment *seg);
 
 /* Memory mapped file I/O */
 
-PR_EXTERN(PRStatus) _MD_create_file_map(PRFileMap *fmap, PRInt64 size);
-PR_EXTERN(void *) _MD_mem_map(PRFileMap *fmap, PRInt64 offset, PRUint32 len);
-PR_EXTERN(PRStatus) _MD_mem_unmap(void *addr, PRUint32 size);
-PR_EXTERN(PRStatus) _MD_close_file_map(PRFileMap *fmap);
+NSPR_API(PRStatus) _MD_create_file_map(PRFileMap *fmap, PRInt64 size);
+NSPR_API(void *) _MD_mem_map(PRFileMap *fmap, PRInt64 offset, PRUint32 len);
+NSPR_API(PRStatus) _MD_mem_unmap(void *addr, PRUint32 size);
+NSPR_API(PRStatus) _MD_close_file_map(PRFileMap *fmap);
 
 /* Time related */
 
-PR_EXTERN(PRTime) _MD_now(void);
-PR_EXTERN(void) _MD_interval_init(void);
-PR_EXTERN(PRIntervalTime) _MD_get_interval(void);
-PR_EXTERN(PRIntervalTime) _MD_interval_per_sec(void);
+NSPR_API(PRTime) _MD_now(void);
+NSPR_API(void) _MD_interval_init(void);
+NSPR_API(PRIntervalTime) _MD_get_interval(void);
+NSPR_API(PRIntervalTime) _MD_interval_per_sec(void);
 
 /* File locking */
 
-PR_EXTERN(PRStatus) _MD_lockfile(PRInt32 osfd);
-PR_EXTERN(PRStatus) _MD_tlockfile(PRInt32 osfd);
-PR_EXTERN(PRStatus) _MD_unlockfile(PRInt32 osfd);
+NSPR_API(PRStatus) _MD_lockfile(PRInt32 osfd);
+NSPR_API(PRStatus) _MD_tlockfile(PRInt32 osfd);
+NSPR_API(PRStatus) _MD_unlockfile(PRInt32 osfd);
 
 #endif /* _nspr_beos_defs_h___*/

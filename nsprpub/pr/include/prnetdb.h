@@ -30,10 +30,10 @@ PR_BEGIN_EXTERN_C
  *  Translate an Internet address to/from a character string
  *********************************************************************
  */
-PR_EXTERN(PRStatus) PR_StringToNetAddr(
+NSPR_API(PRStatus) PR_StringToNetAddr(
     const char *string, PRNetAddr *addr);
 
-PR_EXTERN(PRStatus) PR_NetAddrToString(
+NSPR_API(PRStatus) PR_NetAddrToString(
     const PRNetAddr *addr, char *string, PRUint32 size);
 
 /*
@@ -87,7 +87,7 @@ typedef struct PRHostEnt {
 **                      the result will be PR_FAILURE and the reason
 **                      for the failure can be retrieved by PR_GetError().
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_GetHostByName(
+NSPR_API(PRStatus) PR_GetHostByName(
     const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry);
 
 /***********************************************************************
@@ -125,7 +125,7 @@ PR_EXTERN(PRStatus) PR_GetHostByName(
  */
 #define PR_AI_DEFAULT 0x30
 
-PR_EXTERN(PRStatus) PR_GetIPNodeByName(
+NSPR_API(PRStatus) PR_GetIPNodeByName(
     const char *hostname,
     PRUint16 af,
     PRIntn flags,
@@ -154,7 +154,7 @@ PR_EXTERN(PRStatus) PR_GetIPNodeByName(
 **                      the result will be PR_FAILURE and the reason
 **                      for the failure can be retrieved by PR_GetError().
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_GetHostByAddr(
+NSPR_API(PRStatus) PR_GetHostByAddr(
     const PRNetAddr *hostaddr, char *buf, PRIntn bufsize, PRHostEnt *hostentry);
 
 /***********************************************************************
@@ -188,7 +188,7 @@ PR_EXTERN(PRStatus) PR_GetHostByAddr(
 **                      has failed. The reason for the failure can be
 **                      retrieved by calling PR_GetError().
 ***********************************************************************/
-PR_EXTERN(PRIntn) PR_EnumerateHostEnt(
+NSPR_API(PRIntn) PR_EnumerateHostEnt(
     PRIntn enumIndex, const PRHostEnt *hostEnt, PRUint16 port, PRNetAddr *address);
 
 /***********************************************************************
@@ -220,7 +220,7 @@ typedef enum PRNetAddrValue
     PR_IpAddrLoopback   /* assign logical INADDR_LOOPBACK */
 } PRNetAddrValue;
 
-PR_EXTERN(PRStatus) PR_InitializeNetAddr(
+NSPR_API(PRStatus) PR_InitializeNetAddr(
     PRNetAddrValue val, PRUint16 port, PRNetAddr *addr);
 
 /***********************************************************************
@@ -248,7 +248,7 @@ PR_EXTERN(PRStatus) PR_InitializeNetAddr(
 **                      reason for the failure can be retrieved by calling
 **                      PR_GetError();
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_SetNetAddr(
+NSPR_API(PRStatus) PR_SetNetAddr(
     PRNetAddrValue val, PRUint16 af, PRUint16 port, PRNetAddr *addr);
 
 /***********************************************************************
@@ -264,7 +264,7 @@ PR_EXTERN(PRStatus) PR_SetNetAddr(
 **  PRBool                  PR_TRUE if the network address is of the
 **                          specified type, else PR_FALSE.
 ***********************************************************************/
-PR_EXTERN(PRBool) PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val);
+NSPR_API(PRBool) PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val);
 
 /***********************************************************************
 ** MACRO:	
@@ -329,7 +329,7 @@ typedef struct PRProtoEnt {
 #endif
 } PRProtoEnt;
 
-PR_EXTERN(PRStatus) PR_GetProtoByName(
+NSPR_API(PRStatus) PR_GetProtoByName(
     const char* protocolname, char* buffer, PRInt32 bufsize, PRProtoEnt* result);
 
 /***********************************************************************
@@ -354,7 +354,7 @@ PR_EXTERN(PRStatus) PR_GetProtoByName(
 **                      the result will be PR_FAILURE and the reason
 **                      for the failure can be retrieved by PR_GetError().
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_GetProtoByNumber(
+NSPR_API(PRStatus) PR_GetProtoByNumber(
     PRInt32 protocolnumber, char* buffer, PRInt32 bufsize, PRProtoEnt* result);
 
 /***********************************************************************
@@ -377,7 +377,7 @@ PR_EXTERN(PRStatus) PR_GetProtoByNumber(
 **                      protocol is not supported
 **                      (PR_PROTOCOL_NOT_SUPPORTED_ERROR) 
 ***********************************************************************/
-PR_EXTERN(PRStatus) PR_SetIPv6Enable(PRBool itIs);
+NSPR_API(PRStatus) PR_SetIPv6Enable(PRBool itIs);
 
 /***********************************************************************
 ** FUNCTIONS: PR_ntohs, PR_ntohl, PR_ntohll, PR_htons, PR_htonl, PR_htonll
@@ -392,12 +392,12 @@ PR_EXTERN(PRStatus) PR_SetIPv6Enable(PRBool itIs);
 **      PR_ntonll       64 bit conversion from host to network
 **
 ***********************************************************************/
-PR_EXTERN(PRUint16) PR_ntohs(PRUint16);
-PR_EXTERN(PRUint32) PR_ntohl(PRUint32);
-PR_EXTERN(PRUint64) PR_ntohll(PRUint64);
-PR_EXTERN(PRUint16) PR_htons(PRUint16);
-PR_EXTERN(PRUint32) PR_htonl(PRUint32);
-PR_EXTERN(PRUint64) PR_htonll(PRUint64);
+NSPR_API(PRUint16) PR_ntohs(PRUint16);
+NSPR_API(PRUint32) PR_ntohl(PRUint32);
+NSPR_API(PRUint64) PR_ntohll(PRUint64);
+NSPR_API(PRUint16) PR_htons(PRUint16);
+NSPR_API(PRUint32) PR_htonl(PRUint32);
+NSPR_API(PRUint64) PR_htonll(PRUint64);
 
 /***********************************************************************
 ** FUNCTION: PR_FamilyInet
@@ -405,7 +405,7 @@ PR_EXTERN(PRUint64) PR_htonll(PRUint64);
 ** DESCRIPTION: Routine to get value of address family for Internet Protocol
 **
 ***********************************************************************/
-PR_EXTERN(PRUint16) PR_FamilyInet(void);
+NSPR_API(PRUint16) PR_FamilyInet(void);
 
 PR_END_EXTERN_C
 

@@ -47,19 +47,19 @@ PR_BEGIN_EXTERN_C
 ** of the buffer. Returns the length of the written output, NOT including
 ** the NUL, or (PRUint32)-1 if an error occurs.
 */
-PR_EXTERN(PRUint32) PR_snprintf(char *out, PRUint32 outlen, const char *fmt, ...);
+NSPR_API(PRUint32) PR_snprintf(char *out, PRUint32 outlen, const char *fmt, ...);
 
 /*
 ** sprintf into a PR_MALLOC'd buffer. Return a pointer to the malloc'd
 ** buffer on success, NULL on failure. Call "PR_smprintf_free" to release
 ** the memory returned.
 */
-PR_EXTERN(char*) PR_smprintf(const char *fmt, ...);
+NSPR_API(char*) PR_smprintf(const char *fmt, ...);
 
 /*
 ** Free the memory allocated, for the caller, by PR_smprintf
 */
-PR_EXTERN(void) PR_smprintf_free(char *mem);
+NSPR_API(void) PR_smprintf_free(char *mem);
 
 /*
 ** "append" sprintf into a PR_MALLOC'd buffer. "last" is the last value of
@@ -68,7 +68,7 @@ PR_EXTERN(void) PR_smprintf_free(char *mem);
 ** will allocate the initial string. The return value is the new value of
 ** last for subsequent calls, or NULL if there is a malloc failure.
 */
-PR_EXTERN(char*) PR_sprintf_append(char *last, const char *fmt, ...);
+NSPR_API(char*) PR_sprintf_append(char *last, const char *fmt, ...);
 
 /*
 ** sprintf into a function. The function "f" is called with a string to
@@ -79,21 +79,21 @@ PR_EXTERN(char*) PR_sprintf_append(char *last, const char *fmt, ...);
 */
 typedef PRIntn (*PRStuffFunc)(void *arg, const char *s, PRUint32 slen);
 
-PR_EXTERN(PRUint32) PR_sxprintf(PRStuffFunc f, void *arg, const char *fmt, ...);
+NSPR_API(PRUint32) PR_sxprintf(PRStuffFunc f, void *arg, const char *fmt, ...);
 
 /*
 ** fprintf to a PRFileDesc
 */
-PR_EXTERN(PRUint32) PR_fprintf(struct PRFileDesc* fd, const char *fmt, ...);
+NSPR_API(PRUint32) PR_fprintf(struct PRFileDesc* fd, const char *fmt, ...);
 
 /*
 ** va_list forms of the above.
 */
-PR_EXTERN(PRUint32) PR_vsnprintf(char *out, PRUint32 outlen, const char *fmt, va_list ap);
-PR_EXTERN(char*) PR_vsmprintf(const char *fmt, va_list ap);
-PR_EXTERN(char*) PR_vsprintf_append(char *last, const char *fmt, va_list ap);
-PR_EXTERN(PRUint32) PR_vsxprintf(PRStuffFunc f, void *arg, const char *fmt, va_list ap);
-PR_EXTERN(PRUint32) PR_vfprintf(struct PRFileDesc* fd, const char *fmt, va_list ap);
+NSPR_API(PRUint32) PR_vsnprintf(char *out, PRUint32 outlen, const char *fmt, va_list ap);
+NSPR_API(char*) PR_vsmprintf(const char *fmt, va_list ap);
+NSPR_API(char*) PR_vsprintf_append(char *last, const char *fmt, va_list ap);
+NSPR_API(PRUint32) PR_vsxprintf(PRStuffFunc f, void *arg, const char *fmt, va_list ap);
+NSPR_API(PRUint32) PR_vfprintf(struct PRFileDesc* fd, const char *fmt, va_list ap);
 
 /*
 ***************************************************************************
@@ -128,7 +128,7 @@ PR_EXTERN(PRUint32) PR_vfprintf(struct PRFileDesc* fd, const char *fmt, va_list 
 ***************************************************************************
 */
 
-PR_EXTERN(PRInt32) PR_sscanf(const char *buf, const char *fmt, ...);
+NSPR_API(PRInt32) PR_sscanf(const char *buf, const char *fmt, ...);
 
 PR_END_EXTERN_C
 

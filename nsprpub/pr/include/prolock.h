@@ -85,7 +85,7 @@ typedef void * PROrderedLock;
 #define PR_CREATE_ORDERED_LOCK(order,name)\
     PR_CreateOrderedLock((order),(name))
 
-PR_EXTERN(PROrderedLock *) 
+NSPR_API(PROrderedLock *) 
     PR_CreateOrderedLock( 
         PRInt32 order,
         const char *name
@@ -108,7 +108,7 @@ PR_EXTERN(PROrderedLock *)
 */
 #define PR_DESTROY_ORDERED_LOCK(lock) PR_DestroyOrderedLock((lock))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
     PR_DestroyOrderedLock( 
         PROrderedLock *lock 
 );
@@ -132,7 +132,7 @@ PR_EXTERN(void)
 */
 #define PR_LOCK_ORDERED_LOCK(lock) PR_LockOrderedLock((lock))
 
-PR_EXTERN(void) 
+NSPR_API(void) 
     PR_LockOrderedLock( 
         PROrderedLock *lock 
 );
@@ -156,7 +156,7 @@ PR_EXTERN(void)
 */
 #define PR_UNLOCK_ORDERED_LOCK(lock) PR_UnlockOrderedLock((lock))
 
-PR_EXTERN(PRStatus) 
+NSPR_API(PRStatus) 
     PR_UnlockOrderedLock( 
         PROrderedLock *lock 
 );

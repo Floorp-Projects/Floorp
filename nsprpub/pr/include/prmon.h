@@ -33,7 +33,7 @@ typedef struct PRMonitor PRMonitor;
 ** This may fail if memory is tight or if some operating system resource
 ** is low.
 */
-PR_EXTERN(PRMonitor*) PR_NewMonitor(void);
+NSPR_API(PRMonitor*) PR_NewMonitor(void);
 
 /*
 ** Destroy a monitor. The caller is responsible for guaranteeing that the
@@ -41,21 +41,21 @@ PR_EXTERN(PRMonitor*) PR_NewMonitor(void);
 ** condition variable and that the lock is not held.
 **
 */
-PR_EXTERN(void) PR_DestroyMonitor(PRMonitor *mon);
+NSPR_API(void) PR_DestroyMonitor(PRMonitor *mon);
 
 /*
 ** Enter the lock associated with the monitor. If the calling thread currently
 ** is in the monitor, the call to enter will silently succeed. In either case,
 ** it will increment the entry count by one.
 */
-PR_EXTERN(void) PR_EnterMonitor(PRMonitor *mon);
+NSPR_API(void) PR_EnterMonitor(PRMonitor *mon);
 
 /*
 ** Decrement the entry count associated with the monitor. If the decremented
 ** entry count is zero, the monitor is exited. Returns PR_FAILURE if the
 ** calling thread has not entered the monitor.
 */
-PR_EXTERN(PRStatus) PR_ExitMonitor(PRMonitor *mon);
+NSPR_API(PRStatus) PR_ExitMonitor(PRMonitor *mon);
 
 /*
 ** Wait for a notify on the monitor's condition variable. Sleep for "ticks"
@@ -73,21 +73,21 @@ PR_EXTERN(PRStatus) PR_ExitMonitor(PRMonitor *mon);
 **
 ** Returns PR_FAILURE if the caller has not entered the monitor.
 */
-PR_EXTERN(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime ticks);
+NSPR_API(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime ticks);
 
 /*
 ** Notify a thread waiting on the monitor's condition variable. If a thread
 ** is waiting on the condition variable (using PR_Wait) then it is awakened
 ** and attempts to reenter the monitor.
 */
-PR_EXTERN(PRStatus) PR_Notify(PRMonitor *mon);
+NSPR_API(PRStatus) PR_Notify(PRMonitor *mon);
 
 /*
 ** Notify all of the threads waiting on the monitor's condition variable.
 ** All of threads waiting on the condition are scheduled to reenter the
 ** monitor.
 */
-PR_EXTERN(PRStatus) PR_NotifyAll(PRMonitor *mon);
+NSPR_API(PRStatus) PR_NotifyAll(PRMonitor *mon);
 
 PR_END_EXTERN_C
 

@@ -80,7 +80,7 @@ the model dependent portions are to be implemented.
 In header file pr/include/primpl.h, each publicly declared 
 platform dependent function is declared as:
 
-PR_EXTERN void _PR_MD_FUNCTION( long arg1, long arg2 );
+NSPR_API void _PR_MD_FUNCTION( long arg1, long arg2 );
 #define _PR_MD_FUNCTION _MD_FUNCTION
 
 In header file pr/include/md/<platform>/_<platform>.h, 
@@ -197,8 +197,8 @@ typedef struct PTDebug
     PRUintn cvars_notified, delayed_cv_deletes;
 } PTDebug;
 
-PR_EXTERN(void) PT_GetStats(PTDebug* here);
-PR_EXTERN(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
+NSPR_API(void) PT_GetStats(PTDebug* here);
+NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
 
 #else
 
@@ -297,10 +297,10 @@ typedef struct _PRInterruptTable {
 
 #ifdef _PR_LOCAL_THREADS_ONLY 
 
-PR_EXTERN(struct _PRCPU *)              _pr_currentCPU;
-PR_EXTERN(PRThread *)                   _pr_currentThread;
-PR_EXTERN(PRThread *)                   _pr_lastThread;
-PR_EXTERN(PRInt32)                      _pr_intsOff;
+NSPR_API(struct _PRCPU *)              _pr_currentCPU;
+NSPR_API(PRThread *)                   _pr_currentThread;
+NSPR_API(PRThread *)                   _pr_lastThread;
+NSPR_API(PRInt32)                      _pr_intsOff;
 
 #define _MD_CURRENT_CPU()               (_pr_currentCPU)
 #define _MD_SET_CURRENT_CPU(_cpu)       (_pr_currentCPU = (_cpu))
@@ -536,8 +536,8 @@ extern _PRInterruptTable _pr_interruptTable[];
 
 extern void _PR_IntsOn(_PRCPU *cpu);
 
-PR_EXTERN(void) _PR_WakeupCPU(void);
-PR_EXTERN(void) _PR_PauseCPU(void);
+NSPR_API(void) _PR_WakeupCPU(void);
+NSPR_API(void) _PR_PauseCPU(void);
 
 /************************************************************************/
 
@@ -562,7 +562,7 @@ extern PRStatus _PR_WaitCondVar(
     PRThread *thread, PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout);
 extern PRUint32 _PR_CondVarToString(PRCondVar *cvar, char *buf, PRUint32 buflen);
 
-PR_EXTERN(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
+NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 
 /* PRThread.flags */
 #define _PR_SYSTEM          0x01
@@ -711,22 +711,22 @@ extern void _PR_ClockInterrupt(void);
 extern void _PR_Schedule(void);
 extern void _PR_SetThreadPriority(
     PRThread* thread, PRThreadPriority priority);
-PR_EXTERN(void) _PR_Unlock(PRLock *lock);
+NSPR_API(void) _PR_Unlock(PRLock *lock);
 
-PR_EXTERN(void) _PR_SuspendThread(PRThread *t);
-PR_EXTERN(void) _PR_ResumeThread(PRThread *t);
+NSPR_API(void) _PR_SuspendThread(PRThread *t);
+NSPR_API(void) _PR_ResumeThread(PRThread *t);
 
 extern PRThreadStack * _PR_NewStack(PRUint32 stackSize);
 extern void _PR_FreeStack(PRThreadStack *stack);
 extern PRBool _PR_NotifyThread (PRThread *thread, PRThread *me);
 extern void _PR_NotifyLockedThread (PRThread *thread);
 
-PR_EXTERN(void) _PR_AddSleepQ(PRThread *thread, PRIntervalTime timeout);
-PR_EXTERN(void) _PR_DelSleepQ(PRThread *thread, PRBool propogate_time);
+NSPR_API(void) _PR_AddSleepQ(PRThread *thread, PRIntervalTime timeout);
+NSPR_API(void) _PR_DelSleepQ(PRThread *thread, PRBool propogate_time);
 
 extern void _PR_AddThreadToRunQ(PRThread *me, PRThread *thread);
 
-PR_EXTERN(PRThread*) _PR_CreateThread(PRThreadType type,
+NSPR_API(PRThread*) _PR_CreateThread(PRThreadType type,
                                      void (*start)(void *arg),
                                      void *arg,
                                      PRThreadPriority priority,
@@ -747,30 +747,30 @@ extern void _PRI_DetachThread(void);
 
 #define _PR_IO_PENDING(_thread) ((_thread)->io_pending)
 
-PR_EXTERN(void) _PR_MD_INIT_CPUS();
+NSPR_API(void) _PR_MD_INIT_CPUS();
 #define    _PR_MD_INIT_CPUS _MD_INIT_CPUS
 
-PR_EXTERN(void) _PR_MD_WAKEUP_CPUS();
+NSPR_API(void) _PR_MD_WAKEUP_CPUS();
 #define    _PR_MD_WAKEUP_CPUS _MD_WAKEUP_CPUS
 
 /* Interrupts related */
 
-PR_EXTERN(void) _PR_MD_START_INTERRUPTS(void);
+NSPR_API(void) _PR_MD_START_INTERRUPTS(void);
 #define    _PR_MD_START_INTERRUPTS _MD_START_INTERRUPTS
 
-PR_EXTERN(void) _PR_MD_STOP_INTERRUPTS(void);
+NSPR_API(void) _PR_MD_STOP_INTERRUPTS(void);
 #define    _PR_MD_STOP_INTERRUPTS _MD_STOP_INTERRUPTS
 
-PR_EXTERN(void) _PR_MD_ENABLE_CLOCK_INTERRUPTS(void);
+NSPR_API(void) _PR_MD_ENABLE_CLOCK_INTERRUPTS(void);
 #define    _PR_MD_ENABLE_CLOCK_INTERRUPTS _MD_ENABLE_CLOCK_INTERRUPTS
 
-PR_EXTERN(void) _PR_MD_DISABLE_CLOCK_INTERRUPTS(void);
+NSPR_API(void) _PR_MD_DISABLE_CLOCK_INTERRUPTS(void);
 #define    _PR_MD_DISABLE_CLOCK_INTERRUPTS _MD_DISABLE_CLOCK_INTERRUPTS
 
-PR_EXTERN(void) _PR_MD_BLOCK_CLOCK_INTERRUPTS(void);
+NSPR_API(void) _PR_MD_BLOCK_CLOCK_INTERRUPTS(void);
 #define    _PR_MD_BLOCK_CLOCK_INTERRUPTS _MD_BLOCK_CLOCK_INTERRUPTS
 
-PR_EXTERN(void) _PR_MD_UNBLOCK_CLOCK_INTERRUPTS(void);
+NSPR_API(void) _PR_MD_UNBLOCK_CLOCK_INTERRUPTS(void);
 #define    _PR_MD_UNBLOCK_CLOCK_INTERRUPTS _MD_UNBLOCK_CLOCK_INTERRUPTS
 
 /* The _PR_MD_WAIT_LOCK and _PR_MD_WAKEUP_WAITER functions put to sleep and
@@ -783,31 +783,31 @@ extern PRStatus _PR_MD_WAKEUP_WAITER(PRThread *);
 #define    _PR_MD_WAKEUP_WAITER _MD_WAKEUP_WAITER
 
 #ifndef _PR_LOCAL_THREADS_ONLY /* not if only local threads supported */
-PR_EXTERN(void) _PR_MD_CLOCK_INTERRUPT(void);
+NSPR_API(void) _PR_MD_CLOCK_INTERRUPT(void);
 #define    _PR_MD_CLOCK_INTERRUPT _MD_CLOCK_INTERRUPT
 #endif
 
 /* Stack debugging */
-PR_EXTERN(void) _PR_MD_INIT_STACK(PRThreadStack *ts, PRIntn redzone);
+NSPR_API(void) _PR_MD_INIT_STACK(PRThreadStack *ts, PRIntn redzone);
 #define    _PR_MD_INIT_STACK _MD_INIT_STACK
 
-PR_EXTERN(void) _PR_MD_CLEAR_STACK(PRThreadStack* ts);
+NSPR_API(void) _PR_MD_CLEAR_STACK(PRThreadStack* ts);
 #define    _PR_MD_CLEAR_STACK _MD_CLEAR_STACK
 
 /* CPU related */
-PR_EXTERN(PRInt32) _PR_MD_GET_INTSOFF(void);
+NSPR_API(PRInt32) _PR_MD_GET_INTSOFF(void);
 #define    _PR_MD_GET_INTSOFF _MD_GET_INTSOFF
 
-PR_EXTERN(void) _PR_MD_SET_INTSOFF(PRInt32 _val);
+NSPR_API(void) _PR_MD_SET_INTSOFF(PRInt32 _val);
 #define    _PR_MD_SET_INTSOFF _MD_SET_INTSOFF
 
-PR_EXTERN(_PRCPU*) _PR_MD_CURRENT_CPU(void);
+NSPR_API(_PRCPU*) _PR_MD_CURRENT_CPU(void);
 #define    _PR_MD_CURRENT_CPU _MD_CURRENT_CPU
 
-PR_EXTERN(void) _PR_MD_SET_CURRENT_CPU(_PRCPU *cpu);
+NSPR_API(void) _PR_MD_SET_CURRENT_CPU(_PRCPU *cpu);
 #define    _PR_MD_SET_CURRENT_CPU _MD_SET_CURRENT_CPU
 
-PR_EXTERN(void) _PR_MD_INIT_RUNNING_CPU(_PRCPU *cpu);
+NSPR_API(void) _PR_MD_INIT_RUNNING_CPU(_PRCPU *cpu);
 #define    _PR_MD_INIT_RUNNING_CPU _MD_INIT_RUNNING_CPU
 
 /*
@@ -824,47 +824,47 @@ extern void _PR_MD_EXIT(PRIntn status);
 
 /* Locks related */
 
-PR_EXTERN(void) _PR_MD_INIT_LOCKS(void);
+NSPR_API(void) _PR_MD_INIT_LOCKS(void);
 #define    _PR_MD_INIT_LOCKS _MD_INIT_LOCKS
 
-PR_EXTERN(PRStatus) _PR_MD_NEW_LOCK(_MDLock *md);
+NSPR_API(PRStatus) _PR_MD_NEW_LOCK(_MDLock *md);
 #define    _PR_MD_NEW_LOCK _MD_NEW_LOCK
 
-PR_EXTERN(void) _PR_MD_FREE_LOCK(_MDLock *md);
+NSPR_API(void) _PR_MD_FREE_LOCK(_MDLock *md);
 #define    _PR_MD_FREE_LOCK _MD_FREE_LOCK
 
-PR_EXTERN(void) _PR_MD_LOCK(_MDLock *md);
+NSPR_API(void) _PR_MD_LOCK(_MDLock *md);
 #define    _PR_MD_LOCK _MD_LOCK
 
-PR_EXTERN(PRBool) _PR_MD_TEST_AND_LOCK(_MDLock *md);
+NSPR_API(PRBool) _PR_MD_TEST_AND_LOCK(_MDLock *md);
 #define    _PR_MD_TEST_AND_LOCK _MD_TEST_AND_LOCK
 
-PR_EXTERN(void) _PR_MD_UNLOCK(_MDLock *md);
+NSPR_API(void) _PR_MD_UNLOCK(_MDLock *md);
 #define    _PR_MD_UNLOCK _MD_UNLOCK
 
-PR_EXTERN(void) _PR_MD_IOQ_LOCK(void);
+NSPR_API(void) _PR_MD_IOQ_LOCK(void);
 #define    _PR_MD_IOQ_LOCK _MD_IOQ_LOCK
 
-PR_EXTERN(void) _PR_MD_IOQ_UNLOCK(void);
+NSPR_API(void) _PR_MD_IOQ_UNLOCK(void);
 #define    _PR_MD_IOQ_UNLOCK _MD_IOQ_UNLOCK
 
 #ifndef _PR_LOCAL_THREADS_ONLY /* not if only local threads supported */
 /* Semaphore related -- only for native threads */
 #ifdef HAVE_CVAR_BUILT_ON_SEM
-PR_EXTERN(void) _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value);
+NSPR_API(void) _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value);
 #define _PR_MD_NEW_SEM _MD_NEW_SEM
 
-PR_EXTERN(void) _PR_MD_DESTROY_SEM(_MDSemaphore *md);
+NSPR_API(void) _PR_MD_DESTROY_SEM(_MDSemaphore *md);
 #define _PR_MD_DESTROY_SEM _MD_DESTROY_SEM
 
-PR_EXTERN(PRStatus) _PR_MD_TIMED_WAIT_SEM(
+NSPR_API(PRStatus) _PR_MD_TIMED_WAIT_SEM(
     _MDSemaphore *md, PRIntervalTime timeout);
 #define _PR_MD_TIMED_WAIT_SEM _MD_TIMED_WAIT_SEM
 
-PR_EXTERN(PRStatus) _PR_MD_WAIT_SEM(_MDSemaphore *md);
+NSPR_API(PRStatus) _PR_MD_WAIT_SEM(_MDSemaphore *md);
 #define _PR_MD_WAIT_SEM _MD_WAIT_SEM
 
-PR_EXTERN(void) _PR_MD_POST_SEM(_MDSemaphore *md);
+NSPR_API(void) _PR_MD_POST_SEM(_MDSemaphore *md);
 #define _PR_MD_POST_SEM _MD_POST_SEM
 #endif /* HAVE_CVAR_BUILT_ON_SEM */
 
@@ -873,37 +873,37 @@ PR_EXTERN(void) _PR_MD_POST_SEM(_MDSemaphore *md);
 /* Condition Variables related -- only for native threads */
 
 #ifndef _PR_LOCAL_THREADS_ONLY /* not if only local threads supported */
-PR_EXTERN(PRInt32) _PR_MD_NEW_CV(_MDCVar *md);
+NSPR_API(PRInt32) _PR_MD_NEW_CV(_MDCVar *md);
 #define    _PR_MD_NEW_CV _MD_NEW_CV
 
-PR_EXTERN(void) _PR_MD_FREE_CV(_MDCVar *md);
+NSPR_API(void) _PR_MD_FREE_CV(_MDCVar *md);
 #define    _PR_MD_FREE_CV _MD_FREE_CV
 
-PR_EXTERN(void) _PR_MD_WAIT_CV(
+NSPR_API(void) _PR_MD_WAIT_CV(
     _MDCVar *mdCVar,_MDLock *mdLock,PRIntervalTime timeout);
 #define    _PR_MD_WAIT_CV _MD_WAIT_CV
 
-PR_EXTERN(void) _PR_MD_NOTIFY_CV(_MDCVar *md, _MDLock *lock);
+NSPR_API(void) _PR_MD_NOTIFY_CV(_MDCVar *md, _MDLock *lock);
 #define    _PR_MD_NOTIFY_CV _MD_NOTIFY_CV
 
-PR_EXTERN(void) _PR_MD_NOTIFYALL_CV(_MDCVar *md, _MDLock *lock);
+NSPR_API(void) _PR_MD_NOTIFYALL_CV(_MDCVar *md, _MDLock *lock);
 #define    _PR_MD_NOTIFYALL_CV _MD_NOTIFYALL_CV
 #endif /* _PR_LOCAL_THREADS_ONLY */
 
 /* Threads related */
-PR_EXTERN(PRThread*) _PR_MD_CURRENT_THREAD(void);
+NSPR_API(PRThread*) _PR_MD_CURRENT_THREAD(void);
 #define    _PR_MD_CURRENT_THREAD _MD_CURRENT_THREAD
 
-PR_EXTERN(PRThread*) _PR_MD_GET_ATTACHED_THREAD(void);
+NSPR_API(PRThread*) _PR_MD_GET_ATTACHED_THREAD(void);
 #define    _PR_MD_GET_ATTACHED_THREAD _MD_GET_ATTACHED_THREAD
 
-PR_EXTERN(PRThread*) _PR_MD_LAST_THREAD(void);
+NSPR_API(PRThread*) _PR_MD_LAST_THREAD(void);
 #define    _PR_MD_LAST_THREAD _MD_LAST_THREAD
 
-PR_EXTERN(void) _PR_MD_SET_CURRENT_THREAD(PRThread *thread);
+NSPR_API(void) _PR_MD_SET_CURRENT_THREAD(PRThread *thread);
 #define    _PR_MD_SET_CURRENT_THREAD _MD_SET_CURRENT_THREAD
 
-PR_EXTERN(void) _PR_MD_SET_LAST_THREAD(PRThread *thread);
+NSPR_API(void) _PR_MD_SET_LAST_THREAD(PRThread *thread);
 #define    _PR_MD_SET_LAST_THREAD _MD_SET_LAST_THREAD
 
 extern PRStatus _PR_MD_INIT_THREAD(PRThread *thread);
@@ -914,7 +914,7 @@ extern void _PR_MD_EXIT_THREAD(PRThread *thread);
 
 #ifndef _PR_LOCAL_THREADS_ONLY /* not if only local threads supported */
 
-PR_EXTERN(PRStatus) _PR_MD_INIT_ATTACHED_THREAD(PRThread *thread);
+NSPR_API(PRStatus) _PR_MD_INIT_ATTACHED_THREAD(PRThread *thread);
 #define    _PR_MD_INIT_ATTACHED_THREAD _MD_INIT_ATTACHED_THREAD
 
 extern void _PR_MD_SUSPEND_THREAD(PRThread *thread);
@@ -942,7 +942,7 @@ extern void _PR_MD_END_RESUME_ALL(void);
 #define    _PR_MD_END_RESUME_ALL _MD_END_RESUME_ALL
 
 #if defined(IRIX) 
-PR_EXTERN(void) _PR_IRIX_CHILD_PROCESS(void);
+NSPR_API(void) _PR_IRIX_CHILD_PROCESS(void);
 #endif        /* IRIX */
 
 #endif        /* !_PR_LOCAL_THREADS_ONLY */
@@ -976,10 +976,10 @@ extern void _PR_MD_YIELD(void);
 extern void _PR_MD_SET_PRIORITY(_MDThread *md, PRThreadPriority newPri);
 #define    _PR_MD_SET_PRIORITY _MD_SET_PRIORITY
 
-PR_EXTERN(void) _PR_MD_SUSPENDALL(void);
+NSPR_API(void) _PR_MD_SUSPENDALL(void);
 #define    _PR_MD_SUSPENDALL _MD_SUSPENDALL
 
-PR_EXTERN(void) _PR_MD_RESUMEALL(void);
+NSPR_API(void) _PR_MD_RESUMEALL(void);
 #define    _PR_MD_RESUMEALL _MD_RESUMEALL
 
 extern void _PR_MD_INIT_CONTEXT(
@@ -1339,7 +1339,7 @@ struct PRSemaphore {
 #endif /* defined(_PR_BTHREADS) */
 };
 
-PR_EXTERN(void) _PR_InitSem(void);
+NSPR_API(void) _PR_InitSem(void);
 
 /*************************************************************************/
 
@@ -1700,10 +1700,10 @@ extern void _PR_MD_EARLY_INIT(void);
 extern void _PR_MD_INTERVAL_INIT(void);
 #define    _PR_MD_INTERVAL_INIT _MD_INTERVAL_INIT
 
-PR_EXTERN(void) _PR_MD_INIT_SEGS(void);
+NSPR_API(void) _PR_MD_INIT_SEGS(void);
 #define    _PR_MD_INIT_SEGS _MD_INIT_SEGS
 
-PR_EXTERN(void) _PR_MD_FINAL_INIT(void);
+NSPR_API(void) _PR_MD_FINAL_INIT(void);
 #define    _PR_MD_FINAL_INIT _MD_FINAL_INIT
 
 /* Process control */
@@ -1725,7 +1725,7 @@ extern PRStatus _PR_MD_KILL_PROCESS(PRProcess *process);
 #define    _PR_MD_KILL_PROCESS _MD_KILL_PROCESS        
 
 /* Current Time */
-PR_EXTERN(PRTime) _PR_MD_NOW(void);
+NSPR_API(PRTime) _PR_MD_NOW(void);
 #define    _PR_MD_NOW _MD_NOW
 
 /* Environment related */
@@ -1753,10 +1753,10 @@ extern PRInt32 _PR_MD_ATOMIC_SET(PRInt32 *, PRInt32);
 #define    _PR_MD_ATOMIC_SET _MD_ATOMIC_SET
 
 /* Segment related */
-PR_EXTERN(PRStatus) _PR_MD_ALLOC_SEGMENT(PRSegment *seg, PRUint32 size, void *vaddr);
+NSPR_API(PRStatus) _PR_MD_ALLOC_SEGMENT(PRSegment *seg, PRUint32 size, void *vaddr);
 #define    _PR_MD_ALLOC_SEGMENT _MD_ALLOC_SEGMENT
 
-PR_EXTERN(void) _PR_MD_FREE_SEGMENT(PRSegment *seg);
+NSPR_API(void) _PR_MD_FREE_SEGMENT(PRSegment *seg);
 #define    _PR_MD_FREE_SEGMENT _MD_FREE_SEGMENT
 
 /* Garbage collection */
@@ -1911,7 +1911,7 @@ extern PRStatus _PR_MakeNativeIPCName(
 
 /* Socket call error code */
 
-PR_EXTERN(PRInt32) _PR_MD_GET_SOCKET_ERROR(void);
+NSPR_API(PRInt32) _PR_MD_GET_SOCKET_ERROR(void);
 #define    _PR_MD_GET_SOCKET_ERROR _MD_GET_SOCKET_ERROR
 
 /* Get name of current host */

@@ -75,9 +75,9 @@
 #define _PR_HAVE_GETIPNODEBYNAME
 
 #include "prinrval.h"
-PR_EXTERN(PRIntervalTime) _MD_Solaris_GetInterval(void);
+NSPR_API(PRIntervalTime) _MD_Solaris_GetInterval(void);
 #define _MD_GET_INTERVAL                  _MD_Solaris_GetInterval
-PR_EXTERN(PRIntervalTime) _MD_Solaris_TicksPerSecond(void);
+NSPR_API(PRIntervalTime) _MD_Solaris_TicksPerSecond(void);
 #define _MD_INTERVAL_PER_SEC              _MD_Solaris_TicksPerSecond
 
 #if defined(_PR_HAVE_ATOMIC_OPS)
@@ -86,22 +86,22 @@ PR_EXTERN(PRIntervalTime) _MD_Solaris_TicksPerSecond(void);
 */
 #define _MD_INIT_ATOMIC()
 
-PR_EXTERN(PRInt32) _MD_AtomicIncrement(PRInt32 *val);
+NSPR_API(PRInt32) _MD_AtomicIncrement(PRInt32 *val);
 #define _MD_ATOMIC_INCREMENT _MD_AtomicIncrement
 
-PR_EXTERN(PRInt32) _MD_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+NSPR_API(PRInt32) _MD_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD _MD_AtomicAdd
 
-PR_EXTERN(PRInt32) _MD_AtomicDecrement(PRInt32 *val);
+NSPR_API(PRInt32) _MD_AtomicDecrement(PRInt32 *val);
 #define _MD_ATOMIC_DECREMENT _MD_AtomicDecrement
 
-PR_EXTERN(PRInt32) _MD_AtomicSet(PRInt32 *val, PRInt32 newval);
+NSPR_API(PRInt32) _MD_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET _MD_AtomicSet
 #endif /* _PR_HAVE_ATOMIC_OPS */
 
 #if defined(_PR_PTHREADS)
 
-PR_EXTERN(void)		_MD_EarlyInit(void);
+NSPR_API(void)		_MD_EarlyInit(void);
 
 #define _MD_EARLY_INIT		_MD_EarlyInit
 #define _MD_FINAL_INIT		_PR_UnixInit
@@ -116,7 +116,7 @@ PR_EXTERN(void)		_MD_EarlyInit(void);
 ** Iinitialization Related definitions
 */
 
-PR_EXTERN(void)		_MD_EarlyInit(void);
+NSPR_API(void)		_MD_EarlyInit(void);
 
 #define _MD_EARLY_INIT		_MD_EarlyInit
 #define _MD_FINAL_INIT		_PR_UnixInit
@@ -129,7 +129,7 @@ PR_EXTERN(void)		_MD_EarlyInit(void);
 #define	_MD_INIT_THREAD				_MD_InitializeThread
 #define	_MD_INIT_ATTACHED_THREAD	_MD_InitializeThread
 
-PR_EXTERN(PRStatus) _MD_CreateThread(PRThread *thread, 
+NSPR_API(PRStatus) _MD_CreateThread(PRThread *thread, 
 					void (*start)(void *), 
 					PRThreadPriority priority,
 					PRThreadScope scope, 
@@ -205,7 +205,7 @@ extern void _MD_End_ResumeAll(void);
 #define _MD_UNLOCK(md_lockp) mutex_unlock(&((md_lockp)->lock))
 #define _MD_TEST_AND_LOCK(md_lockp) mutex_trylock(&((md_lockp)->lock))
 struct _MDLock;
-PR_EXTERN(void) _MD_lock(struct _MDLock *md_lock);
+NSPR_API(void) _MD_lock(struct _MDLock *md_lock);
 #undef PROFILE_LOCKS
 #ifndef PROFILE_LOCKS
 #define _MD_LOCK(md_lockp) _MD_lock(md_lockp)
@@ -273,7 +273,7 @@ extern PRStatus _MD_wait(struct PRThread *, PRIntervalTime timeout);
 extern PRStatus _MD_WakeupWaiter(struct PRThread *);
 #define _MD_WAKEUP_WAITER _MD_WakeupWaiter
 
-PR_EXTERN(void) _MD_InitIO(void);
+NSPR_API(void) _MD_InitIO(void);
 #define _MD_INIT_IO _MD_InitIO
 
 #define _MD_INIT_CONTEXT(_thread, _sp, _main, status)
@@ -389,8 +389,8 @@ PR_END_EXTERN_C
 ** Iinitialization Related definitions
 */
 
-PR_EXTERN(void)				_MD_EarlyInit(void);
-PR_EXTERN(void)				_MD_SolarisInit();
+NSPR_API(void)				_MD_EarlyInit(void);
+NSPR_API(void)				_MD_SolarisInit();
 #define _MD_EARLY_INIT		_MD_EarlyInit
 #define _MD_FINAL_INIT		_MD_SolarisInit
 #define	_MD_INIT_THREAD		_MD_InitializeThread
@@ -698,9 +698,9 @@ extern PRStatus _MD_CREATE_THREAD(PRThread *thread, void (*start) (void *),
 	PRThreadPriority priority, PRThreadScope scope, PRThreadState state,
         PRUint32 stackSize);
 
-PR_EXTERN(PRIntervalTime)				_MD_Solaris_GetInterval(void);
+NSPR_API(PRIntervalTime)				_MD_Solaris_GetInterval(void);
 #define _MD_GET_INTERVAL				_MD_Solaris_GetInterval
-PR_EXTERN(PRIntervalTime)				_MD_Solaris_TicksPerSecond(void);
+NSPR_API(PRIntervalTime)				_MD_Solaris_TicksPerSecond(void);
 #define _MD_INTERVAL_PER_SEC			_MD_Solaris_TicksPerSecond
 
 /* The following defines the unwrapped versions of select() and poll(). */

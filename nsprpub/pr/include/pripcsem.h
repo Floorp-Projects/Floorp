@@ -69,7 +69,7 @@ typedef struct PRSem PRSem;
 #define PR_SEM_CREATE 0x1  /* create if not exist */
 #define PR_SEM_EXCL   0x2  /* fail if already exists */
 
-PR_EXTERN(PRSem *) PR_OpenSemaphore(
+NSPR_API(PRSem *) PR_OpenSemaphore(
     const char *name, PRIntn flags, PRIntn mode, PRUintn value);
 
 /*
@@ -82,7 +82,7 @@ PR_EXTERN(PRSem *) PR_OpenSemaphore(
  * The "test and decrement" operation is performed atomically.
  */
 
-PR_EXTERN(PRStatus) PR_WaitSemaphore(PRSem *sem);
+NSPR_API(PRStatus) PR_WaitSemaphore(PRSem *sem);
 
 /*
  * PR_PostSemaphore --
@@ -90,7 +90,7 @@ PR_EXTERN(PRStatus) PR_WaitSemaphore(PRSem *sem);
  * Increment the value of the named semaphore by 1.
  */
 
-PR_EXTERN(PRStatus) PR_PostSemaphore(PRSem *sem);
+NSPR_API(PRStatus) PR_PostSemaphore(PRSem *sem);
 
 /*
  * PR_CloseSemaphore --
@@ -98,7 +98,7 @@ PR_EXTERN(PRStatus) PR_PostSemaphore(PRSem *sem);
  * Close a named semaphore handle.
  */
 
-PR_EXTERN(PRStatus) PR_CloseSemaphore(PRSem *sem);
+NSPR_API(PRStatus) PR_CloseSemaphore(PRSem *sem);
 
 /*
  * PR_DeleteSemaphore --
@@ -106,7 +106,7 @@ PR_EXTERN(PRStatus) PR_CloseSemaphore(PRSem *sem);
  * Remove a named semaphore from the system.
  */
 
-PR_EXTERN(PRStatus) PR_DeleteSemaphore(const char *name);
+NSPR_API(PRStatus) PR_DeleteSemaphore(const char *name);
 
 PR_END_EXTERN_C
 

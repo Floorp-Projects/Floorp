@@ -174,7 +174,7 @@ typedef struct PRMWaitEnumerator PRMWaitEnumerator;
 **      PR_INVALID_STATE_ERROR
 **                  The group is being destroyed.
 */
-PR_EXTERN(PRStatus) PR_AddWaitFileDesc(PRWaitGroup *group, PRRecvWait *desc);
+NSPR_API(PRStatus) PR_AddWaitFileDesc(PRWaitGroup *group, PRRecvWait *desc);
 
 /*
 ** FUNCTION:    PR_WaitRecvReady
@@ -208,7 +208,7 @@ PR_EXTERN(PRStatus) PR_AddWaitFileDesc(PRWaitGroup *group, PRRecvWait *desc);
 **      PR_INVALID_STATE_ERROR
 **                  The group is being destroyed.
 */
-PR_EXTERN(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group);
+NSPR_API(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group);
 
 /*
 ** FUNCTION:    PR_CancelWaitFileDesc
@@ -243,7 +243,7 @@ PR_EXTERN(PRRecvWait*) PR_WaitRecvReady(PRWaitGroup *group);
 **      PR_INVALID_STATE_ERROR
 **                  The group is being destroyed.
 */
-PR_EXTERN(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *desc);
+NSPR_API(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *desc);
 
 /*
 ** FUNCTION:    PR_CancelWaitGroup
@@ -270,7 +270,7 @@ PR_EXTERN(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *desc);
 **      PR_INVALID_ARGUMENT_ERROR
 **      PR_GROUP_EMPTY_ERROR
 */
-PR_EXTERN(PRRecvWait*) PR_CancelWaitGroup(PRWaitGroup *group);
+NSPR_API(PRRecvWait*) PR_CancelWaitGroup(PRWaitGroup *group);
 
 /*
 ** FUNCTION:    PR_CreateWaitGroup
@@ -297,7 +297,7 @@ PR_EXTERN(PRRecvWait*) PR_CancelWaitGroup(PRWaitGroup *group);
 **  ERRORS
 **      PR_OUT_OF_MEMORY_ERROR
 */
-PR_EXTERN(PRWaitGroup*) PR_CreateWaitGroup(PRInt32 size);
+NSPR_API(PRWaitGroup*) PR_CreateWaitGroup(PRInt32 size);
 
 /*
 ** FUNCTION:    PR_DestroyWaitGroup
@@ -320,7 +320,7 @@ PR_EXTERN(PRWaitGroup*) PR_CreateWaitGroup(PRInt32 size);
 **      PR_INVALID_STATE_ERROR
 **                  The group still contains receive wait objects.
 */
-PR_EXTERN(PRStatus) PR_DestroyWaitGroup(PRWaitGroup *group);
+NSPR_API(PRStatus) PR_DestroyWaitGroup(PRWaitGroup *group);
 
 /*
 ** FUNCTION:    PR_CreateMWaitEnumerator
@@ -342,7 +342,7 @@ PR_EXTERN(PRStatus) PR_DestroyWaitGroup(PRWaitGroup *group);
 **                  The 'group' argument does not reference a known object.
 **      PR_OUT_OF_MEMORY_ERROR
 */
-PR_EXTERN(PRMWaitEnumerator*) PR_CreateMWaitEnumerator(PRWaitGroup *group);
+NSPR_API(PRMWaitEnumerator*) PR_CreateMWaitEnumerator(PRWaitGroup *group);
 
 /*
 ** FUNCTION:    PR_DestroyMWaitEnumerator
@@ -360,7 +360,7 @@ PR_EXTERN(PRMWaitEnumerator*) PR_CreateMWaitEnumerator(PRWaitGroup *group);
 **      PR_INVALID_ARGUMENT_ERROR
 **                  The enumerator is invalid.
 */
-PR_EXTERN(PRStatus) PR_DestroyMWaitEnumerator(PRMWaitEnumerator* enumerator);
+NSPR_API(PRStatus) PR_DestroyMWaitEnumerator(PRMWaitEnumerator* enumerator);
 
 /*
 ** FUNCTION:    PR_EnumerateWaitGroup
@@ -383,7 +383,7 @@ PR_EXTERN(PRStatus) PR_DestroyMWaitEnumerator(PRMWaitEnumerator* enumerator);
 **      An enumeration may be abandoned at any time. The runtime is not
 **      keeping any state, so there are no issues in that regard.
 */
-PR_EXTERN(PRRecvWait*) PR_EnumerateWaitGroup(
+NSPR_API(PRRecvWait*) PR_EnumerateWaitGroup(
     PRMWaitEnumerator *enumerator, const PRRecvWait *previous);
    
 PR_END_EXTERN_C
