@@ -128,6 +128,10 @@ WeekView.prototype.refreshEvents = function()
         document.getElementById("week-view-row-"+i ).setAttribute("collapsed", "true");
     }
 
+    // clean up anything that was here before
+    this.removeElementsByAttribute("eventbox", "weekview");
+
+
 
     // Figure out the start and end days for the week we're currently viewing
     var startDate = new Date(gHeaderDateItemArray[1].getAttribute("date"));
@@ -142,12 +146,7 @@ WeekView.prototype.refreshEvents = function()
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
-                //items[aItems[i].id] = aItems[i];
-                var item = aItems[i];
-                dump(item + "\n");
-                var eventBox = savedThis.createEventBox(item);
-                dump(eventBox + "\n");
-                dump("adding box\n");
+                var eventBox = savedThis.createEventBox(aItems[i]);
                 document.getElementById("week-view-content-board").appendChild(eventBox);
             }
         }
@@ -168,9 +167,7 @@ WeekView.prototype.refreshEvents = function()
   var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
 
    this.kungFooDeathGripOnEventBoxes = new Array();
-   
-   this.removeElementsByAttribute("eventbox","weekview");
-   
+
    for( var dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       var headerDateItem = document.getElementById( "week-header-date-" + dayIndex );
       headerDateItem.numEvents = 0;
@@ -327,13 +324,7 @@ WeekView.prototype.createEventBox = function ( calItem )
     var startHour = calEvent.startDate.jsDate.getHours();
     var startMinutes = calEvent.startDate.minute;
     var eventDuration = (calEvent.endDate.jsDate - calEvent.startDate.jsDate) / (60 * 60 * 1000);
-    //var eventDuration = ((calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate) / (60 * 60 * 1000));
-    
-    /*
-    var displayDateObject = new Date( calendarEventDisplay.displayDate );
-    var startHour = displayDateObject.getHours();
-    var startMinutes = displayDateObject.getMinutes();
-    */
+
 
 
     var eventBox = document.createElement( "vbox" );
