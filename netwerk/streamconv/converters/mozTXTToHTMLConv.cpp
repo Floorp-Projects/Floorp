@@ -542,8 +542,7 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
           nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
         ) ||
-        !(before == LT_IGNORE ? !Compare(nsDependentString(aInString), nsDependentString(rep, aRepLen), nsCaseInsensitiveStringComparator()) :
-          !Compare(nsDependentString(aInString+1), nsDependentString(rep, aRepLen), nsCaseInsensitiveStringComparator()))
+        !(before == !Compare(nsDependentString(aInString + (LT_IGNORE ? 0 : 1) ), nsDependentString(rep, aRepLen), nsCaseInsensitiveStringComparator()))
     )
     return PR_FALSE;
 
