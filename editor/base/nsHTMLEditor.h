@@ -42,6 +42,7 @@
  
 class nsIDOMKeyEvent;
 class nsITransferable;
+class nsIDOMEventReceiver;
 
 /**
  * The HTML editor implementation.<br>
@@ -545,7 +546,8 @@ protected:
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
-  
+  nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
+
 // Data members
 protected:
 
