@@ -1022,7 +1022,8 @@ public class IRFactory {
             throw NativeGlobal.constructError(
                         Context.getContext(), "SyntaxError",
                         ScriptRuntime.getMessage0(msgResource),
-                        scope);
+                        scope, ts.getSourceName(), ts.getLineno(),
+                        ts.getOffset(), ts.getLine());
         else {
             String message = Context.getMessage0(msgResource);
             Context.reportError(message, ts.getSourceName(), ts.getLineno(),
