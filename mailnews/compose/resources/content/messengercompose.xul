@@ -397,10 +397,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<box align="vertical" flex="75%">
 				<spring style="height:0.5em"/>
 				<box align="horizontal">
-					<html:div>&fromAddr.label;</html:div>
+                    <text value="&fromAddr.label;" />
 					<spring style="width:0.5em"/>
-					<html:select id="msgIdentity" onchange="contentChanged=true;"/>
-				</box>
+					<menulist id="msgIdentity" value="..." onchange="contentChanged=true;">
+                        <menupopup id="msgIdentityPopup" />
+                    </menulist>
+				</box> 
 				<spring style="height:0.5em"/>
 
 				<!-- addressing widget -->

@@ -159,14 +159,15 @@ function ComposeStartup()
 {
 	dump("Compose: ComposeStartup\n");
 
-	// Get arguments
+	//dump("Get arguments\n");
 	var args = GetArgs();
 
-    // fill in Identity combobox
-    var identitySelect = document.getElementById("msgIdentity");
+    //dump("fill in Identity menulist\n");
+    var identityList = document.getElementById("msgIdentity");
+    var identityListPopup = document.getElementById("msgIdentityPopup");
 
-    if (identitySelect) {
-        fillIdentitySelect(identitySelect);
+    if (identityListPopup) {
+        fillIdentityListPopup(identityListPopup);
     }
 
     var identity;
@@ -179,7 +180,15 @@ function ComposeStartup()
         
     	identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
     }
-    identitySelect.value = identity.key;
+   
+    for (i=0;i<identityListPopup.childNodes.length;i++) {
+        var item = identityListPopup.childNodes[i];
+        var id = item.getAttribute('id');
+        if (id == identity.key) {
+            identityList.selectedItem = item;
+            break;
+        }
+    }
 
 	if (msgComposeService)
 	{
@@ -705,28 +714,32 @@ function GetIdentities()
     return identities;
 }
 
-function fillIdentitySelect(selectElement)
+function fillIdentityListPopup(popup)
 {
     var identities = GetIdentities();
 	
-    // dump("identities = " + identities + "\n");
-
     for (var i=0; i<identities.length; i++)
     {
 		var identity = identities[i];
-		var opt = new Option(identity.identityName, identity.key);
-		// dump(i + " = " + identity.identityName + "," +identity.key + "\n");
 
-		selectElement.add(opt, null);
+		//dump(i + " = " + identity.identityName + "," +identity.key + "\n");
+
+        var item=document.createElement('menuitem');
+        item.setAttribute('value', identity.identityName);
+        item.setAttribute('id', identity.key);
+        popup.appendChild(item);
     }
 }
 
 function getCurrentIdentity()
 {
     // fill in Identity combobox
-    var identitySelect = document.getElementById("msgIdentity");
-    var identityKey = identitySelect.value;
-    // dump("Looking for identity " + identityKey + "\n");
+    var identityList = document.getElementById("msgIdentity");
+
+    var item = identityList.selectedItem;
+    var identityKey = item.getAttribute('id');
+
+    //dump("Looking for identity " + identityKey + "\n");
     var identity = accountManager.getIdentity(identityKey);
     
     return identity;
