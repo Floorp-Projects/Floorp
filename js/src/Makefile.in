@@ -143,8 +143,12 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)
 
-# NSPR_LIBS abstracts nspr version, etc. nicely.
-LDFLAGS 	= $(NSPR_LIBS) -lm
+ifneq ($(findstring -L,$(NSPR_LIBS)),)
+NSPR_STATIC_PATH	= $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
+else
+NSPR_STATIC_PATH	= $(DIST)/lib
+endif
+LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS)) -lm
 
 ifdef JS_SAFE_ARENA
 DEFINES		+= -DJS_USE_SAFE_ARENA
