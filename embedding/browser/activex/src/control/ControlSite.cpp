@@ -55,6 +55,7 @@ CControlSite::CControlSite()
 	m_bAmbientUserMode = true;
 	m_bAmbientShowHatching = true;
 	m_bAmbientShowGrabHandles = true;
+    m_bAmbientAppearance = true; // 3d
 
 	// Add the control to the list
 	m_cControlList.push_back(this);
@@ -430,6 +431,10 @@ HRESULT STDMETHODCALLTYPE CControlSite::Invoke(/* [in] */ DISPID dispIdMember, /
 
 		switch (dispIdMember)
 		{
+        case DISPID_AMBIENT_APPEARANCE:
+            vResult = CComVariant(m_bAmbientAppearance);
+            break;
+
 		case DISPID_AMBIENT_FORECOLOR:
 			vResult = CComVariant((long) m_clrAmbientForeColor);
 			break;

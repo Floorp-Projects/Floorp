@@ -139,11 +139,13 @@ protected:
 	// Background colour
 	COLORREF m_clrAmbientBackColor;
 	// Flag indicating if control should hatch itself
-	bool m_bAmbientShowHatching;
+	bool m_bAmbientShowHatching:1;
 	// Flag indicating if control should have grab handles
-	bool m_bAmbientShowGrabHandles;
+	bool m_bAmbientShowGrabHandles:1;
 	// Flag indicating if control is in edit/user mode
-	bool m_bAmbientUserMode;
+	bool m_bAmbientUserMode:1;
+    // Flag indicating if control has a 3d border or not
+    bool m_bAmbientAppearance:1;
 
 protected:
 	// Notifies the attached control of a change to an ambient property
