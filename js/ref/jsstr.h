@@ -233,6 +233,12 @@ extern jschar *
 js_strncpy(jschar *t, const jschar *s, size_t n);
 
 /*
+ * Return s advanced past any Unicode white space characters.
+ */
+extern const jschar *
+js_SkipWhiteSpace(const jschar *s);
+
+/*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
  * and return null on error, otherwise return the jschar or byte vector that
  * was JS_malloc'ed.

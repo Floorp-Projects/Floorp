@@ -2238,6 +2238,15 @@ js_strchr(const jschar *s, jschar c)
     return NULL;
 }
 
+const jschar *
+js_SkipWhiteSpace(const jschar *s)
+{
+    /* JS_ISSPACE is false on a null. */
+    while (JS_ISSPACE(*s))
+        s++;
+    return s;
+}
+
 jschar *
 js_strncpy(jschar *t, const jschar *s, size_t n)
 {
