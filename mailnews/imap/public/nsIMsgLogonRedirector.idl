@@ -19,6 +19,7 @@ interface nsMsgLogonRedirectionServiceIDs
 {
 	const long Imap = 0;
 	const long Smtp = 1;
+	const long AbSync = 2;
 };
 
 [scriptable, uuid(3c882b66-df4f-11d3-b9f9-00108335942a)]

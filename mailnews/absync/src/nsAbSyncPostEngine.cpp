@@ -100,8 +100,11 @@ nsAbSyncPostEngine::nsAbSyncPostEngine()
   mMessageSize = 0;
   mAuthenticationRunning = PR_TRUE;
   mCookie = nsnull;
+  mUser = nsnull;
   mSyncSpec = nsnull;
   mSyncProtocolRequest = nsnull;
+  mSyncProtocolRequestPrefix = nsnull;
+  mChannel = nsnull;
 }
 
 nsAbSyncPostEngine::~nsAbSyncPostEngine()
@@ -111,9 +114,176 @@ nsAbSyncPostEngine::~nsAbSyncPostEngine()
   PR_FREEIF(mCharset);
 
   PR_FREEIF(mSyncProtocolRequest);
+  PR_FREEIF(mSyncProtocolRequestPrefix);
   PR_FREEIF(mCookie);
+  PR_FREEIF(mUser);
   PR_FREEIF(mSyncSpec);
   DeleteListeners();
+}
+
+PRInt32 Base64Decode_int(const char *in_str, unsigned char *out_str,
+                                PRUint32& decoded_len);
+/* ==================================================================
+ * Base64Encode
+ *
+ * Returns number of bytes that were encoded.
+ *
+ *   >0   -> OK
+ *   -1   -> BAD (output buffer not big enough).
+ *
+ * ==================================================================
+ */
+PRInt32 Base64Encode(const unsigned char *in_str, PRInt32 in_len, char *out_str,
+                               PRInt32 out_len)
+{
+    static unsigned char base64[] =
+    {  
+        /*   0    1    2    3    4    5    6    7   */
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', /* 0 */
+        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', /* 1 */
+        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', /* 2 */
+        'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', /* 3 */
+        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', /* 4 */
+        'o', 'p', 'q', 'r', 's', 't', 'u', 'v', /* 5 */
+        'w', 'x', 'y', 'z', '0', '1', '2', '3', /* 6 */
+        '4', '5', '6', '7', '8', '9', '+', '/'  /* 7 */
+    };
+    PRInt32 curr_out_len = 0;
+
+    PRInt32 i = 0;
+    unsigned char a, b, c;
+
+    out_str[0] = '\0';
+
+    if (in_len > 0)
+    {
+
+        while (i < in_len)
+        {
+            a = in_str[i];
+            b = (i + 1 >= in_len) ? 0 : in_str[i + 1];
+            c = (i + 2 >= in_len) ? 0 : in_str[i + 2];
+
+            if (i + 2 < in_len)
+            {
+                out_str[curr_out_len++] = (base64[(a >> 2) & 0x3F]);
+                out_str[curr_out_len++] = (base64[((a << 4) & 0x30)
+                                                 + ((b >> 4) & 0xf)]);
+                out_str[curr_out_len++] = (base64[((b << 2) & 0x3c)
+                                                 + ((c >> 6) & 0x3)]);
+                out_str[curr_out_len++] = (base64[c & 0x3F]);
+            }
+            else if (i + 1 < in_len)
+            {
+                out_str[curr_out_len++] = (base64[(a >> 2) & 0x3F]);
+                out_str[curr_out_len++] = (base64[((a << 4) & 0x30)
+                                                 + ((b >> 4) & 0xf)]);
+                out_str[curr_out_len++] = (base64[((b << 2) & 0x3c)
+                                                 + ((c >> 6) & 0x3)]);
+                out_str[curr_out_len++] = '=';
+            }
+            else
+            {
+                out_str[curr_out_len++] = (base64[(a >> 2) & 0x3F]);
+                out_str[curr_out_len++] = (base64[((a << 4) & 0x30)
+                                                 + ((b >> 4) & 0xf)]);
+                out_str[curr_out_len++] = '=';
+                out_str[curr_out_len++] = '=';
+            }
+
+            i += 3;
+
+            if((curr_out_len + 4) > out_len)
+            {
+                return(-1);
+            }
+				
+        }
+        out_str[curr_out_len] = '\0';
+    }
+
+    return curr_out_len;
+}
+
+/*
+ * This routine decodes base64 string to a buffer.
+ * Populates 'out_str' with b64 decoded data.  
+ *
+ * Returns number of bytes that were decoded.
+ *   >0   -> OK
+ *   -1   -> BAD (output buffer not big enough).
+ */
+PRInt32 Base64Decode(const char *in_str, unsigned char *out_str,
+                                PRUint32* decoded_len)
+{
+  return Base64Decode_int(in_str, out_str, *decoded_len);
+}
+
+PRInt32 Base64Decode_int(const char *in_str, unsigned char *out_str,
+                                PRUint32& decoded_len)
+{
+    PRInt32 in_len = strlen (/*(char *)*/ in_str);
+    PRInt32 ii = 0;
+    PRInt32 a = 0;
+    char ch;
+    PRInt32 b1 = 0;
+    long b4 = 0;
+    PRInt32 nn = 0;
+
+    /* Decode remainder of base 64 string */
+
+    while (ii < in_len)
+    {
+        ch = in_str[ii++];
+        if (ch >= 'A' && ch <= 'Z') b1 = (ch - 'A');
+        else if (ch >= 'a' && ch <= 'z') b1 = 26 + (ch - 'a');
+        else if (ch >= '0' && ch <= '9') b1 = 52 + (ch - '0');
+        else if (ch == '+') b1 = 62;
+        else if (ch == '/') b1 = 63;
+        else if (ch == '\r' || ch == '\n') continue;
+        else
+        {
+            if (ch == '=')
+            {
+                if (nn == 3)
+                {
+                    if ((a + 2) > (PRInt32) decoded_len) 
+                        return (-1); /* Bail.  Buffer overflow */
+                    b4 = (b4 << 6);
+                    out_str[a++] = (char) (0xff & (b4 >> 16));
+                    out_str[a++] = (char) (0xff & (b4 >> 8));
+                }
+                else if (nn == 2)
+                {
+                    if ((a + 1) > (PRInt32) decoded_len)
+                    {
+                        return (-1); /* Bail.  Buffer overflow */
+                    }
+                    b4 = (b4 << 12);
+                    out_str[a++] = (char) (0xff & (b4 >> 16));
+                }
+            }
+            break;
+        }
+        b4 = (b4 << 6) | (long) b1;
+        nn++;
+        if (nn == 4)
+        {
+            if ((a + 3) > (PRInt32) decoded_len)
+            {
+                return (-1); /* Bail.  Buffer overflow */
+            }
+            out_str[a++] = (char) (0xff & (b4 >> 16));
+            out_str[a++] = (char) (0xff & (b4 >> 8));
+            out_str[a++] = (char) (0xff & (b4));
+            nn = 0;
+        }
+    }
+
+    out_str[a] = '\0';
+    decoded_len = a;
+
+    return (a);
 }
 
 NS_IMETHODIMP nsAbSyncPostEngine::GetInterface(const nsIID & aIID, void * *aInstancePtr)
@@ -296,12 +466,47 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
 
   if (mAuthenticationRunning)
   {
+    nsresult  rv;
     if (mSyncMojo)
-      mSyncMojo->GetAbSyncMojoResults(&mCookie);
+      rv = mSyncMojo->GetAbSyncMojoResults(&mUser, &mCookie);
+
+    if (NS_SUCCEEDED(rv))
+    {
+      // Base64 encode then url encode it...
+      //
+      char    tUser[256] = "";
+
+      if (Base64Encode((unsigned char *)mUser, nsCRT::strlen(mUser), tUser, sizeof(tUser)) < 0)
+      {
+        rv = NS_ERROR_FAILURE;
+        NotifyListenersOnStopAuthOperation(rv, aMsg, tProtResponse);
+        NotifyListenersOnStopSending(mTransactionID, rv, nsnull, nsnull);
+      }
+      else 
+      {
+        char *tUser2 = nsEscape(tUser, url_Path);
+        if (!tUser2)
+        {
+          rv = NS_ERROR_FAILURE;
+          NotifyListenersOnStopAuthOperation(rv, aMsg, tProtResponse);
+          NotifyListenersOnStopSending(mTransactionID, rv, nsnull, nsnull);
+        }
+        else
+        {
+          mSyncProtocolRequestPrefix = PR_smprintf("cn=%s&cc=%s&", tUser2, mCookie);
+          PR_FREEIF(tUser2);
+          NotifyListenersOnStopAuthOperation(aStatus, aMsg, tProtResponse);
+          KickTheSyncOperation();
+        }
+      }
+    }
+    else
+    {
+      NotifyListenersOnStopAuthOperation(rv, aMsg, tProtResponse);
+      NotifyListenersOnStopSending(mTransactionID, rv, nsnull, nsnull);
+    }
 
     mSyncMojo = nsnull;
-    NotifyListenersOnStopAuthOperation(aStatus, aMsg, tProtResponse);
-    KickTheSyncOperation();
   }
   else
   {
@@ -469,14 +674,13 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, const char *postData)
   if (!postData)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIChannel> channel;
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(mChannel), aURL, nsnull), NS_ERROR_FAILURE);
 
   // Tag the post stream onto the channel...but never seemed to work...so putting it
   // directly on the URL spec
   //
   nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(mChannel);
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
@@ -501,18 +705,42 @@ NS_IMETHODIMP nsAbSyncPostEngine::GetCurrentState(PRInt32 *_retval)
 // This is the implementation of the actual post driver. 
 //
 ////////////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
+NS_IMETHODIMP nsAbSyncPostEngine::BuildMojoString(char **aID)
 {
   nsresult        rv;
+
+  if (!aID)
+    return NS_ERROR_FAILURE;
+
+  // Now, get the COMPtr to the Mojo!
+  if (!mSyncMojo)
+  {
+    rv = nsComponentManager::CreateInstance(kCAbSyncMojoCID, NULL, NS_GET_IID(nsIAbSyncMojo), getter_AddRefs(mSyncMojo));
+    if ( NS_FAILED(rv) || (!mSyncMojo) )
+      return NS_ERROR_FAILURE;
+  }
+
+  rv = mSyncMojo->BuildMojoString(aID);
+  return rv;
+}
+
+NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
+{
+  nsresult      rv;
+  char          *mojoUser = nsnull;
+  char          *mojoSnack = nsnull;
 
   // Only try if we are not currently busy!
   if (mPostEngineState != nsIAbSyncPostEngineState::nsIAbSyncPostIdle)
     return NS_ERROR_FAILURE;
 
   // Now, get the COMPtr to the Mojo!
-  rv = nsComponentManager::CreateInstance(kCAbSyncMojoCID, NULL, NS_GET_IID(nsIAbSyncMojo), getter_AddRefs(mSyncMojo));
-  if ( NS_FAILED(rv) || (!mSyncMojo) )
-    return NS_ERROR_FAILURE;
+  if (!mSyncMojo)
+  {
+    rv = nsComponentManager::CreateInstance(kCAbSyncMojoCID, NULL, NS_GET_IID(nsIAbSyncMojo), getter_AddRefs(mSyncMojo));
+    if ( NS_FAILED(rv) || (!mSyncMojo) )
+      return NS_ERROR_FAILURE;
+  }
 
   if (NS_FAILED(mSyncMojo->StartAbSyncMojo(this)))
     return NS_ERROR_FAILURE;  
@@ -528,7 +756,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
   mSyncProtocolRequest = nsCRT::strdup(aProtocolRequest);
   mProtocolResponse = NS_ConvertASCIItoUCS2("");
   mTotalWritten = 0;
-  
+
   // The first thing we need to do is authentication so do it!
   mAuthenticationRunning = PR_TRUE;
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncAuthenticationRunning;
@@ -540,6 +768,7 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
 {
   nsresult  rv;
   nsIURI    *workURI = nsnull;
+  char      *protString = nsnull;
 
   // The first thing we need to do is authentication so do it!
   mAuthenticationRunning = PR_FALSE;
@@ -547,12 +776,14 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
 
   char    *postHeader = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\nCookie: %s\r\n\r\n%s";
-  if (mSyncProtocolRequest)
-    mMessageSize = nsCRT::strlen(mSyncProtocolRequest);
+  protString = PR_smprintf("%s%s", mSyncProtocolRequestPrefix, mSyncProtocolRequest);
+  if (protString)
+    mMessageSize = nsCRT::strlen(protString);
   else
     mMessageSize = 0;
 
-  char *tCommand = PR_smprintf(postHeader, mMessageSize, mCookie, mSyncProtocolRequest);
+  char *tCommand = PR_smprintf(postHeader, mMessageSize, mCookie, protString);
+  PR_FREEIF(protString);
 
 #ifdef DEBUG_rhp
   printf("COMMAND = %s\n", tCommand);
@@ -586,3 +817,29 @@ GetOuttaHere:
   return rv;
 }
 
+NS_IMETHODIMP 
+nsAbSyncPostEngine::CancelAbSync()
+{
+  nsresult      rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(mChannel);
+  if (httpChannel)
+    rv = httpChannel->Cancel(NS_BINDING_ABORTED);
+
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsAbSyncPostEngine::GetMojoUserAndSnack(char **aMojoUser, char **aMojoSnack)
+{
+  if ( (!mUser) || (!mCookie) )
+    return NS_ERROR_FAILURE;
+
+  *aMojoUser = nsCRT::strdup(mUser);
+  *aMojoSnack = nsCRT::strdup(mCookie);
+
+  if ( (!*aMojoUser) || (!*aMojoSnack) )
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}

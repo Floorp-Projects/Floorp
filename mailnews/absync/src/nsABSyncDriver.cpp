@@ -235,3 +235,22 @@ nsAbSyncDriver::GetString(const PRUnichar *aStringName)
     return nsCRT::strdup(aStringName);
 }
 
+// 
+// What if we want to stop the operation? Call this!
+//
+NS_IMETHODIMP nsAbSyncDriver::CancelIt()
+{
+  nsresult rv = NS_OK;
+  PRInt32  stateVar;
+
+  NS_WITH_SERVICE(nsIAbSync, sync, kAbSync, &rv); 
+	if (NS_FAILED(rv) || !sync) 
+		return rv;
+
+  sync->GetCurrentState(&stateVar);
+  if (stateVar == nsIAbSyncState::nsIAbSyncIdle)
+    return NS_ERROR_FAILURE;
+
+  // Cancel this mess...
+  return sync->CancelAbSync();
+}

@@ -32,6 +32,7 @@
 #include "nsIURIContentListener.h"
 #include "nsIURI.h"
 #include "nsIAbSyncMojo.h"
+#include "nsIChannel.h"
 
 //
 // Callback declarations for URL completion
@@ -96,6 +97,7 @@ private:
 
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we post the url
   char                            *mCookie;
+  char                            *mUser;
   char                            *mAuthSpec;
 
   PRInt32                         mMessageSize;   // Size of POST request...
@@ -108,8 +110,10 @@ private:
   nsCOMPtr<nsIAbSyncMojo>         mSyncMojo;
   char                            *mSyncSpec;
   PRInt32                         mSyncPort;
+  nsCOMPtr<nsIChannel>            mChannel;
 
   char                            *mSyncProtocolRequest;
+  char                            *mSyncProtocolRequestPrefix;
 }; 
 
 #endif /* nsAbSyncPostEngine_h_ */

@@ -502,12 +502,22 @@ NS_IMETHODIMP nsAbSync::GetCurrentState(PRInt32 *_retval)
 }
 
 /* void PerformAbSync (out PRInt32 aTransactionID); */
+NS_IMETHODIMP nsAbSync::CancelAbSync()
+{
+  if (!mPostEngine)
+    return NS_ERROR_FAILURE;
+
+  return mPostEngine->CancelAbSync();
+}
+
+/* void PerformAbSync (out PRInt32 aTransactionID); */
 NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 {
   nsresult      rv;
   char          *postSpec = nsnull;
   char          *protocolRequest = nsnull;
   char          *prefixStr = nsnull;
+  char          *clientIDStr = nsnull;
 
   // If we are already running...don't let anything new start...
   if (mCurrentState != nsIAbSyncState::nsIAbSyncIdle)
@@ -594,13 +604,19 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     mPostEngine->AddPostListener((nsIAbSyncPostListener *)this);
   }
 
-  // Ok, add the header to this protocol string information...
+  rv = mPostEngine->BuildMojoString(&clientIDStr);
+  if (NS_FAILED(rv) || (!clientIDStr))
+    goto EarlyExit;
+
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=%s&ver=%s", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, 
+                            clientIDStr, ABSYNC_VERSION);
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=%s&", 
-                            mLastChangeNum, ABSYNC_PROTOCOL, ABSYNC_VERSION);
+    prefixStr = PR_smprintf("last=%u&protocol=%d&client=%s&ver=%s&", 
+                            mLastChangeNum, ABSYNC_PROTOCOL, 
+                            clientIDStr, ABSYNC_VERSION);
+
   if (!prefixStr)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -630,6 +646,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
 EarlyExit:
   PR_FREEIF(protocolRequest);
   PR_FREEIF(postSpec);
+  PR_FREEIF(clientIDStr);
 
   if (NS_FAILED(rv))
     InternalCleanup();

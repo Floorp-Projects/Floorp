@@ -28,5 +28,6 @@
 interface nsIAbSyncDriver : nsIAbSyncListener
 {
     void KickIt(in nsIMsgStatusFeedback aStatus);
+    void CancelIt();
 };
 

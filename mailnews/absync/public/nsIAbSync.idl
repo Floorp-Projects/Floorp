@@ -47,4 +47,5 @@ interface nsIAbSync : nsISupports {
    * will be sent along with all sync listener operations
    */
   void    PerformAbSync(out PRInt32 aTransactionID);
+  void    CancelAbSync();
 };
