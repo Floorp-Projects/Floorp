@@ -1372,19 +1372,34 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     nsCOMPtr<nsIEnumerator> aEnumerator;
     nsCOMPtr<nsIRDFResource> res;
     nsCString uri;
-    PRBool isTrashFolder = PR_FALSE;
+    PRBool deleteImmediatelyNoTrash = PR_FALSE;
     nsCString messageIds;
     nsMsgKeyArray srcKeyArray;
+
+    nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
+
+  nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+
+  rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &deleteImmediatelyNoTrash);
+
+  if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+  {
+    imapServer = do_QueryInterface(server);
+    if (imapServer)
+      imapServer->GetDeleteModel(&deleteModel);
+    if (deleteModel != nsMsgImapDeleteModels::MoveToTrash)
+      deleteImmediatelyNoTrash = PR_TRUE;
+  }
 
     rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
     if (NS_FAILED(rv)) return rv;
 
-    rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &isTrashFolder);
 
     nsCOMPtr<nsIMsgFolder> rootFolder;
     nsCOMPtr<nsIMsgFolder> trashFolder;
 
-	if (!isTrashFolder)
+	if (!deleteImmediatelyNoTrash)
 	{
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_SUCCEEDED(rv) && rootFolder)
@@ -1395,10 +1410,10 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                 getter_AddRefs(trashFolder));
 			// if we can't find the trash, we'll just have to do an imap delete and pretend this is the trash
 			if (NS_FAILED(rv) || !trashFolder)
-				isTrashFolder = PR_TRUE;
+				deleteImmediatelyNoTrash = PR_TRUE;
 		}
 	}
-    if (NS_SUCCEEDED(rv) && isTrashFolder)
+    if (NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash)
     {
         rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     if (NS_SUCCEEDED(rv))
@@ -2897,7 +2912,6 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
 PRBool nsImapMailFolder::ShowDeletedMessages()
 {
   nsresult err;
-//  return (m_host->GetIMAPDeleteModel() == MSG_IMAPDeleteIsIMAPDelete);
     NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
                     kCImapHostSessionList, &err);
   PRBool rv = PR_FALSE;
@@ -2915,7 +2929,6 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
 
 PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 {
-//  return (m_host->GetIMAPDeleteModel() == MSG_IMAPDeleteIsIMAPDelete);
   nsresult err;
     NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
                     kCImapHostSessionList, &err);
@@ -3078,6 +3091,13 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     ClearCopyState(aExitCode);
                 }
                 break;
+            case nsIImapUrl::nsImapAddMsgFlags:
+              // this isn't really right - we'd like to know we were 
+              // deleting a message to start with, but it probably
+              // won't do any harm.
+                NotifyDeleteOrMoveMessagesCompleted(this);
+
+              break;
             case nsIImapUrl::nsImapAppendMsgFromFile:
             case nsIImapUrl::nsImapAppendDraftFromFile:
                 if (m_copyState)

@@ -30,6 +30,16 @@ interface nsIImapProtocol;
 interface nsISupportsArray;
 interface nsIMsgFolder;
 
+typedef long nsMsgImapDeleteModel;
+
+[scriptable, uuid(bbfc33de-fe89-11d3-a564-0060b0fc04b7)]
+interface nsMsgImapDeleteModels
+{
+	const long IMAPDelete = 0;	/* delete with a big red x */
+	const long MoveToTrash = 1; /* delete moves message to the trash */
+	const long DeleteNoTrash = 2; /* delete is shift delete - don't create or use trash */
+};
+
 [scriptable, uuid(3d2e7e38-f9d8-11d2-af8f-001083002da8)]
 interface nsIImapIncomingServer : nsISupports {
 
@@ -39,7 +49,7 @@ interface nsIImapIncomingServer : nsISupports {
   attribute string serverDirectory;
   attribute long capabilityPref;
   attribute boolean cleanupInboxOnExit;
-  attribute long deleteModel;
+  attribute nsMsgImapDeleteModel deleteModel;
   attribute boolean dualUseFolders;
   attribute boolean emptyTrashOnExit;
   attribute long emptyTrashThreshhold;
