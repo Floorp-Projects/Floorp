@@ -25,6 +25,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
+
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
@@ -58,20 +59,13 @@
 
 
   <!-- context menu, tooltips, etc -->
-  <popupset id="popupset"/>
+  <popupset id="bookmarksPopupset"/>
   
   <!-- bookmarks string bundle -->
   <stringbundleset id="stringbundleset"/>
   
   <!-- bookmarks & edit commands -->
-  <commands id="commands">
-    <commandset id="CommandUpdate_Bookmarks"
-                commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
-    </commandset>                
-    <commandset id="bookmarksItems"/>
-  </commands>
+  <commandset id="bookmarksItems"/>
   
   <box id="panel-bar" class="toolbar">
     <button class="button-toolbar" label="&command.addBookmark.label;"
@@ -80,7 +74,7 @@
             oncommand="gBookmarksShell.manageBookmarks();"/>
   </box>
   
-  <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot"
+  <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot" class="sidebarTree"
         datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"
         flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
@@ -106,14 +100,14 @@
         <treechildren>
           <treeitem uri="rdf:*" persist="open" class="bookmark-item"
                     web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
               <treecell class="treecell-indent treecell-editable"
                         editable="true" label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
             </treerow>
           </treeitem>
