@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..
-MODULE=Accountservices
+MODULE=AcctIdl
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=$(MODULE)
@@ -45,5 +45,14 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-        $(MAKE_INSTALL) Account.html $(DIST)\bin\res\profile
-
+        $(MAKE_INSTALL) Account.html $(DIST)\bin\res\acct
+        $(MAKE_INSTALL) am.xul $(DIST)\bin\res\acct
+        $(MAKE_INSTALL) am2.xul $(DIST)\bin\res\acct
+        $(MAKE_INSTALL) am2a.xul $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) att.nci $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) amertech.nci $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) Batlant.nci $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) Bsouth.nci $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) Earthlnk.nci $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) Concent.nci $(DIST)\bin\res\acct
+		$(MAKE_INSTALL) Gateway.nci $(DIST)\bin\res\acct
