@@ -443,6 +443,7 @@ nsScrollFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Scroll", aResult);
 }
 
+// XXX This needs to be removed once Peter fixes bug #2553
 NS_IMETHODIMP 
 nsScrollFrame::ReResolveStyleContext(nsIPresContext* aPresContext, 
                                      nsIStyleContext* aParentContext) 
@@ -453,10 +454,11 @@ nsScrollFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 
   nsIView * view; 
   GetView(view); 
-  if (view) { 
-    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?
-nsViewVisibility_kHide:nsViewVisibility_kShow); 
+  if (nsnull != view) { 
+    view->SetVisibility((NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible) ?
+                         nsViewVisibility_kHide : nsViewVisibility_kShow); 
   } 
+  
   return rv; 
 } 
 //----------------------------------------------------------------------
