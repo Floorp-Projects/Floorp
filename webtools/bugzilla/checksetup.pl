@@ -140,35 +140,93 @@ unless (eval "require 5.004") {
     die "Sorry, you need at least Perl 5.004\n";
 }
 
-unless (eval "require DBI") {
+# vers_cmp is adapted from Sort::Versions 1.3 1996/07/11 13:37:00 kjahds,
+# which is not included with Perl by default, hence the need to copy it here.
+# Seems silly to require it when this is the only place we need it...
+sub vers_cmp {
+  if (@_ < 2) { die "not enough parameters for vers_cmp" }
+  if (@_ > 2) { die "too many parameters for vers_cmp" }
+  my ($a, $b) = @_;
+  my (@A) = ($a =~ /(\.|\d+|[^\.\d]+)/g);
+  my (@B) = ($b =~ /(\.|\d+|[^\.\d]+)/g);
+  my ($A,$B);
+  while (@A and @B) {
+    $A = shift @A;
+    $B = shift @B;
+    if ($A eq "." and $B eq ".") {
+      next;
+    } elsif ( $A eq "." ) {
+      return -1;
+    } elsif ( $B eq "." ) {
+      return 1;
+    } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
+      return $A <=> $B if $A <=> $B;
+    } else {
+      $A = uc $A;
+      $B = uc $B;
+      return $A cmp $B if $A cmp $B;
+    }
+  }
+  @A <=> @B;
+}
+
+# This was originally clipped from the libnet Makefile.PL, adapted here to
+# use the above vers_cmp routine for accurate version checking.
+sub have_vers {
+  my ($pkg, $wanted) = @_;
+  my ($msg, $vnum, $vstr);
+  no strict 'refs';
+  printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)");
+
+  eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
+
+  $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
+  $vnum = -1 if $@;
+
+  if ($vnum < 0) {
+    $vstr = "not found";
+  }
+  elsif ($vnum > 0) {
+    $vstr = "found v$vnum";
+  }
+  else {
+    $vstr = "found unknown version";
+  }
+
+  my $vok = (vers_cmp($vnum,$wanted) > -1);
+  print ((($vok) ? "ok: " : " "), "$vstr\n");
+  return $vok;
+}
+
+unless (have_vers("DBI","1.13")) {
     die "Please install the DBI module. You can do this by running (as root)\n\n",
         "       perl -MCPAN -eshell\n",
         "       install DBI\n";
 }
 
-unless (eval "require Data::Dumper") {
+unless (have_vers("Data::Dumper",0)) { # 0 = any version
     die "Please install the Data::Dumper module. You can do this by running (as root)\n\n",
         "       perl -MCPAN -eshell\n",
         "       install Data::Dumper\n";
 }
 
-unless (eval "require Mysql") {
+unless (have_vers("Mysql",0)) { # 0 = any version
     die "Please install the Mysql database driver. You can do this by running (as root)\n\n",
         "       perl -MCPAN -eshell\n",
         "       install Msql-Mysql\n\n",
         "Be sure to enable the Mysql emulation!\n";
 }
 
-unless (eval "require Date::Parse") {
+unless (have_vers("Date::Parse",0)) { # 0 = any version
     die "Please install the Date::Parse module. You can do this by running (as root)\n\n",
         "       perl -MCPAN -eshell\n",
         "       install Date::Parse\n";
 }
 
-# The following two modules are optional:
+print "The following two modules are optional:\n";
 my $charts = 0;
-$charts++ if eval "require GD";
-$charts++ if eval "require Chart::Base";
+$charts++ if have_vers("GD","1.19");
+$charts++ if have_vers("Chart::Base","0.99b");
 if ($charts != 2) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
     "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
@@ -512,12 +570,31 @@ my $drh = DBI->install_driver($db_base)
 
 if ($::db_check) {
     # Do we have the database itself?
+
+    my $sql_want = "3.22.5";  # minimum version of MySQL
+
 # original DSN line was:
 #    my $dsn = "DBI:$db_base:$::db_name;$::db_host;$::db_port";
 # removed the $db_name because we don't know it exists yet, and this will
 # fail if we request it here and it doesn't. - dave@intrec.com 2000/09/16
     my $dsn = "DBI:$db_base:;$::db_host;$::db_port";
     my $dbh = DBI->connect($dsn, $::db_user, $::db_pass);
+    printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)");
+    my $qh = $dbh->prepare("SELECT VERSION()");
+    $qh->execute;
+    my ($sql_vers) = $qh->fetchrow_array;
+    $qh->finish;
+
+    my $sql_vok = ((vers_cmp($sql_vers,$sql_want) > -1)
+      && ($sql_vers ne "3.23.29")); # encrypt() is broken in 3.23.29
+    print (($sql_vok ? "ok: " : " "), "found v$sql_vers\n");
+    unless ($sql_vok) {
+      die "Your MySQL server is either too old or a known broken version.\n",
+          "   Bugzilla requires version $sql_want or later of MySQL.\n",
+          ($sql_vers eq "3.23.29") ? "Version 3.23.29 has a broken encrypt() command.  3.23.30 fixes this.\n" : "",
+          "   Please visit http://www.mysql.org and download a newer version.\n";
+    }
+
     my @databases = $dbh->func('_ListDBs');
     unless (grep /^$::db_name$/, @databases) {
        print "Creating database $::db_name ...\n";
@@ -1895,5 +1972,4 @@ if ($::regenerateshadow) {
 }
 
 unlink "data/versioncache";
-print "Reminder: Bugzilla now requires version 3.22.5 or later of MySQL.\n";
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
