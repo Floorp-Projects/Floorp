@@ -212,10 +212,10 @@ int main (int argc, char* argv[])
                                           &rv );
 
       if (NS_SUCCEEDED( rv )) {
-        rv = pXMLHttpRequest->OpenRequest( "GET",
-                                           argv[2],
-                                           PR_FALSE,
-                                           nsnull, nsnull );
+        const nsAString& emptyStr = EmptyString();
+        rv = pXMLHttpRequest->OpenRequest( NS_LITERAL_CSTRING("GET"),
+                                           nsDependentCString(argv[2]),
+                                           PR_FALSE, emptyStr, emptyStr );
 
         if (NS_SUCCEEDED( rv )) {
           rv = pXMLHttpRequest->Send( nsnull );

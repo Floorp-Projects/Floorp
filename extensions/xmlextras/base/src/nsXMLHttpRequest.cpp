@@ -607,7 +607,7 @@ nsXMLHttpRequest::GetBaseURI()
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (!doc) {
-    nsnull;
+    return nsnull;
   }
 
   return doc->GetBaseURI();
@@ -843,16 +843,18 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
         JSString* userStr = ::JS_ValueToString(cx, argv[3]);
 
         if (userStr) {
-          user.Assign((PRUnichar *)::JS_GetStringChars(userStr),
+          user.Assign(NS_REINTERPRET_CAST(PRUnichar *,
+                                          ::JS_GetStringChars(userStr)),
                       ::JS_GetStringLength(userStr));
         }
 
         if (argc > 4) {
-          JSString* passwordStr = JS_ValueToString(cx, argv[4]);
+          JSString* passwdStr = JS_ValueToString(cx, argv[4]);
 
-          if (passwordStr) {
-            password.Assign((PRUnichar *)::JS_GetStringChars(passwordStr),
-                            ::JS_GetStringLength(passwordStr));
+          if (passwdStr) {
+            password.Assign(NS_REINTERPRET_CAST(PRUnichar *,
+                                                ::JS_GetStringChars(passwdStr)),
+                            ::JS_GetStringLength(passwdStr));
           }
         }
       }

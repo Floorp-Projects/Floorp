@@ -110,7 +110,7 @@ protected:
                                PRInt32 aLength,
                                nsIInputStream** aStream);
   nsresult DetectCharset(nsACString& aCharset);
-  nsresult ConvertBodyToText(PRUnichar **aOutBuffer);
+  nsresult ConvertBodyToText(nsAString& aOutBuffer);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
                 void* closure,
                 const char* fromRawSegment,
@@ -122,16 +122,16 @@ protected:
   nsresult ChangeState(PRUint32 aState, PRBool aBroadcast = PR_TRUE);
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
-  nsresult GetBaseURI(nsIURI **aBaseURI);
+  nsIURI *GetBaseURI();
   nsresult CreateEvent(PRUint32 msg, nsIDOMEvent** domevent);
-  void NotifyEventListeners(nsIDOMEventListener* aHandler, nsISupportsArray* aListeners, nsIDOMEvent* aEvent);
+  void NotifyEventListeners(nsIDOMEventListener* aHandler,
+                            nsISupportsArray* aListeners, nsIDOMEvent* aEvent);
   void ClearEventListeners();
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
-  nsCOMPtr<nsIURI> mBaseURI;
 
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;
