@@ -62,6 +62,7 @@ CPPSRCS		= \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
 		nsPrintOptionsGTK.cpp \
+                nsX11AlphaBlend.cpp \
 		$(NULL)
 
 # If not primary toolkit, install in secondary path
