@@ -40,6 +40,7 @@
 
 #include "nsDOMWindowUtils.h"
 #include "nsGlobalWindow.h"
+#include "nsIDocument.h"
 
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
@@ -91,4 +92,21 @@ nsDOMWindowUtils::SetImageAnimationMode(PRUint16 aMode) {
     }
   }
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
+                                      nsAString& aValue)
+{
+  if (mWindow) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->mDocument));
+    if (doc) {
+      nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+      doc->GetHeaderData(name, aValue);
+      return NS_OK;
+    }
+  }
+  
+  aValue.Truncate();
+  return NS_OK;
 }
