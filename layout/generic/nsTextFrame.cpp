@@ -428,6 +428,7 @@ public:
 #ifdef DEBUG
   NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const ;
 #endif
 
   NS_IMETHOD GetPosition(nsPresContext* aCX,
@@ -5874,6 +5875,14 @@ NS_IMETHODIMP
 nsTextFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Text"), aResult);
+}
+
+NS_IMETHODIMP_(nsFrameState)
+nsTextFrame::GetDebugStateBits() const
+{
+  // mask out our emptystate flags; those are just caches
+  return nsFrame::GetDebugStateBits() &
+    ~(TEXT_WHITESPACE_FLAGS | TEXT_REFLOW_FLAGS);
 }
 
 NS_IMETHODIMP
