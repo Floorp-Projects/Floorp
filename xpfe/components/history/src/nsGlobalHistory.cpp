@@ -724,6 +724,15 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
 NS_IMETHODIMP
 nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 {
+  NS_PRECONDITION(aURL != nsnull, "null ptr");
+  if (! aURL)
+    return NS_ERROR_NULL_POINTER;
+
+  // Be defensive if somebody sends us a null title.
+  static PRUnichar kEmptyString[] = { 0 };
+  if (! aTitle)
+    aTitle = kEmptyString;
+
   mdb_err err;
 
   PRInt32 len = PL_strlen(aURL);
