@@ -55,6 +55,10 @@ public:
   virtual ~inDOMUtils();
 
 protected:
+  nsresult GetStyleContextForContent(nsIContent* aContent,
+                                     nsIPresShell* aPresShell,
+                                     nsIStyleContext** aStyleContext);
+  
   nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 
 };
