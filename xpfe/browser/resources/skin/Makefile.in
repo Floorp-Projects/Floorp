@@ -43,11 +43,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/reload.gif \
 	$(srcdir)/search.gif \
 	$(srcdir)/stop.gif \
-	$(srcdir)/navbar-bg-begincap.gif \
-	$(srcdir)/navbar-bg.gif \
-	$(srcdir)/navbar-endcap.gif \
 	$(srcdir)/n-box-persbar.gif \
-	$(srcdir)/n-box-navbar.gif \
 	$(NULL)
 
 install:: 
