@@ -591,19 +591,24 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
           //
           else if (aStatus != NS_BINDING_REDIRECTED &&
                    aStatus != NS_BINDING_RETARGETED) {
-            nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
-
-            if (httpChannel) {
-              PRUint32 responseCode;
-
-              rv = httpChannel->GetResponseStatus(&responseCode);
-              if (NS_SUCCEEDED(rv)) {
-                //
-                // A valid server status indicates that a connection was
-                // established to the server... So, fire the notification
-                // even though a failure occurred later...
-                //
-                bFireTransferring = PR_TRUE;
+            //
+            // Only if the load has been targeted (see bug 268483)...
+            //
+            PRUint32 lf;
+            channel->GetLoadFlags(&lf);
+            if (lf & nsIChannel::LOAD_TARGETED) {
+              nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+              if (httpChannel) {
+                PRUint32 responseCode;
+                rv = httpChannel->GetResponseStatus(&responseCode);
+                if (NS_SUCCEEDED(rv)) {
+                  //
+                  // A valid server status indicates that a connection was
+                  // established to the server... So, fire the notification
+                  // even though a failure occurred later...
+                  //
+                  bFireTransferring = PR_TRUE;
+                }
               }
             }
           }
