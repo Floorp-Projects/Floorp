@@ -27,7 +27,14 @@
 void *malloc(size_t blockSize)
 //--------------------------------------------------------------------
 {
+#ifdef GC_DEBUG
 	return GC_MALLOC(blockSize);
+#else
+	if (blockSize <= 10000)
+		return GC_MALLOC(blockSize);
+	else
+		return GC_malloc_ignore_off_page(blockSize);
+#endif
 }
 
 
@@ -71,9 +78,7 @@ void* realloc(void* block, size_t newSize)
 void *calloc(size_t nele, size_t elesize)
 //--------------------------------------------------------------------
 {
-	size_t	space = nele * elesize;
-	void	*newBlock = malloc(space);
-	if (newBlock)
-		memset(newBlock, 0, space);
-	return newBlock;
+	// GC_MALLOC returns cleared blocks for us.
+	size_t space = nele * elesize;
+	return GC_MALLOC(space);
 }
