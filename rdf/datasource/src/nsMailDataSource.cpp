@@ -110,7 +110,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
 static const char kURINC_MailRoot[]  = "NC:MailRoot";
 
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, subject);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, from);

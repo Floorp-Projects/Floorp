@@ -53,6 +53,17 @@ PR_EXTERN(PRBool)
 rdf_IsContainer(nsIRDFDataSource* db,
                 nsIRDFResource* resource);
 
+PR_EXTERN(PRBool)
+rdf_IsBag(nsIRDFDataSource* aDataSource,
+          nsIRDFResource* aResource);
+
+PR_EXTERN(PRBool)
+rdf_IsSeq(nsIRDFDataSource* aDataSource,
+          nsIRDFResource* aResource);
+
+PR_EXTERN(PRBool)
+rdf_IsAlt(nsIRDFDataSource* aDataSource,
+          nsIRDFResource* aResource);
 
 /**
  * Various utilities routines for making assertions in a data source
@@ -105,8 +116,20 @@ rdf_Assert(nsIRDFDataSource* ds,
  * resource URI.
  */
 PR_EXTERN(nsresult)
-rdf_CreateAnonymousResource(nsIRDFResource** result);
+rdf_CreateAnonymousResource(const nsString& aContextURI, nsIRDFResource** result);
 
+/**
+ * Determine if a resource is an "anonymous" resource that we've constructed
+ * ourselves.
+ */
+PR_EXTERN(PRBool)
+rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource);
+
+/**
+ * Try to convert the absolute URL into a relative URL.
+ */
+PR_EXTERN(nsresult)
+rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI);
 
 /**
  * Create a bag resource.

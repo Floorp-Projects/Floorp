@@ -42,8 +42,6 @@
      does namespaces: should we storing tag/namespace pairs instead of
      the entire URI in the elements?
 
-  3) Write a test harness.
-
 */
 
 #include "nsIContentSink.h"
@@ -71,7 +69,6 @@ static const char kNameSpaceDef[] = "xmlns";
 // RDF core vocabulary
 
 #include "rdf.h"
-#define RDF_NAMESPACE_URI  "http://www.w3.org/TR/WD-rdf-syntax#"
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Alt);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Bag);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Description);
@@ -121,7 +118,7 @@ rdf_EntityToUnicode(const char* buf)
         (buf[2] == 'p' || buf[2] == 'P'))
         return PRUnichar('&');
 
-    PR_ASSERT(0); // XXX this is a named entity that I can't handle...
+    NS_NOTYETIMPLEMENTED("this is a named entity that I can't handle...");
     return PRUnichar('?');
 }
 
@@ -245,6 +242,7 @@ rdf_StripAndConvert(nsString& aResult)
             else if (e == '{') {
                 // Convert a script entity
                 // XXX write me!
+                NS_NOTYETIMPLEMENTED("convert a script entity");
             }
         }
     }
@@ -306,13 +304,6 @@ rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-class nsIURL;
-class nsVoidArray;
-class nsIRDFResource;
-class nsIRDFDataSource;
-class nsIRDFService;
-class nsINameSpaceManager;
 
 typedef enum {
     eRDFContentSinkState_InProlog,
@@ -386,8 +377,8 @@ protected:
                             nsString& rProperty);
 
     // RDF-specific parsing
-    nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsString& rResource);
-    nsresult GetResourceAttribute(const nsIParserNode& aNode, nsString& rResource);
+    nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
+    nsresult GetResourceAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
     nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject);
 
     virtual nsresult OpenRDF(const nsIParserNode& aNode);
@@ -931,8 +922,8 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
 void
 RDFContentSinkImpl::SplitQualifiedName(const nsString& aQualifiedName,
-                                     PRInt32& rNameSpaceID,
-                                     nsString& rProperty)
+                                       PRInt32& rNameSpaceID,
+                                       nsString& rProperty)
 {
     rProperty = aQualifiedName;
     nsIAtom* prefix = CutNameSpacePrefix(rProperty);
@@ -943,13 +934,14 @@ RDFContentSinkImpl::SplitQualifiedName(const nsString& aQualifiedName,
 
 nsresult
 RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
-                                      nsString& rResource)
+                                        nsIRDFResource** aResource)
 {
     // This corresponds to the dirty work of production [6.5]
     nsAutoString k;
     nsAutoString attr;
     PRInt32 nameSpaceID;
     PRInt32 ac = aNode.GetAttributeCount();
+    nsresult rv;
 
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
@@ -963,44 +955,47 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
         // first thing that was specified and ignore the other.
 
         if (attr.Equals(kTagRDF_about)) {
-            rResource = aNode.GetValueAt(i);
-            rdf_StripAndConvert(rResource);
+            nsAutoString uri = aNode.GetValueAt(i);
+            rdf_StripAndConvert(uri);
 
-            return NS_OK;
+            return mRDFService->GetUnicodeResource(uri, aResource);
         }
 
         if (attr.Equals(kTagRDF_ID)) {
-            PRUnichar* str;
-            mDocumentURL->ToString(&str);
-            rResource = str;
-            delete str;
+            const char* docURI;
+            mDocumentURL->GetSpec(&docURI);
+
+            if (NS_FAILED(rv = mRDFService->GetResource(docURI, aResource)))
+                return rv;
+
+            nsAutoString uri(docURI);
             nsAutoString tag = aNode.GetValueAt(i);
             rdf_StripAndConvert(tag);
 
-            if (rResource.Last() != '#' && tag.First() != '#')
-                rResource.Append('#');
+            if (uri.Last() != '#' && tag.First() != '#')
+                uri.Append('#');
 
-            rResource.Append(tag);
-            return NS_OK;
+            uri.Append(tag);
+
+            return mRDFService->GetUnicodeResource(uri, aResource);
         }
 
-        // XXX we don't deal with aboutEach...
+        if (attr.Equals(kTagRDF_aboutEach)) {
+            // XXX we don't deal with aboutEach...
+            NS_NOTYETIMPLEMENTED("RDF:aboutEach is not understood at this time");
+        }
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-    PRUnichar* str;
-    mDocumentURL->ToString(&str);
-    rResource = str;
-    delete str;
-    rResource.Append("#anonymous$");
-    rResource.Append(mGenSym++, 10);
-    return NS_OK;
+    const char* url;
+    mDocumentURL->GetSpec(&url);
+    return rdf_CreateAnonymousResource(url, aResource);
 }
 
 
 nsresult
 RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
-                                       nsString& rResource)
+                                         nsIRDFResource** aResource)
 {
     nsAutoString k;
     nsAutoString attr;
@@ -1019,15 +1014,15 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
         // first thing that was specified and ignore the other.
 
         if (attr.Equals(kTagRDF_resource)) {
-            rResource = aNode.GetValueAt(i);
-            rdf_StripAndConvert(rResource);
+            nsAutoString uri = aNode.GetValueAt(i);
+            rdf_StripAndConvert(uri);
 
             // XXX Take the URI and make it fully qualified by
             // sticking it into the document's URL. This may not be
             // appropriate...
-            rdf_FullyQualifyURI(mDocumentURL, rResource);
+            rdf_FullyQualifyURI(mDocumentURL, uri);
 
-            return NS_OK;
+            return mRDFService->GetUnicodeResource(uri, aResource);
         }
     }
     return NS_ERROR_FAILURE;
@@ -1035,7 +1030,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
 
 nsresult
 RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
-                                nsIRDFResource* aSubject)
+                                  nsIRDFResource* aSubject)
 {
     // Add tag attributes to the content attributes
     nsAutoString k, v;
@@ -1113,12 +1108,8 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
 
     // Figure out the URI of this object, and create an RDF node for it.
     nsresult rv;
-    nsAutoString uri;
-    if (NS_FAILED(rv = GetIdAboutAttribute(aNode, uri)))
-        return rv;
-
     nsIRDFResource* rdfResource;
-    if (NS_FAILED(rv = mRDFService->GetUnicodeResource(uri, &rdfResource)))
+    if (NS_FAILED(rv = GetIdAboutAttribute(aNode, &rdfResource)))
         return rv;
 
     // If we're in a member or property element, then this is the cue
@@ -1223,29 +1214,27 @@ RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
     if (NS_FAILED(rv = mRDFService->GetUnicodeResource(ns, &rdfProperty)))
         return rv;
 
-    nsAutoString resourceURI;
-    if (NS_SUCCEEDED(GetResourceAttribute(aNode, resourceURI))) {
+    nsIRDFResource* rdfResource;
+    if (NS_SUCCEEDED(GetResourceAttribute(aNode, &rdfResource))) {
         // They specified an inline resource for the value of this
         // property. Create an RDF resource for the inline resource
         // URI, add the properties to it, and attach the inline
         // resource to its parent.
-        nsIRDFResource* rdfResource;
-        if (NS_SUCCEEDED(rv = mRDFService->GetUnicodeResource(resourceURI, &rdfResource))) {
-            if (NS_SUCCEEDED(rv = AddProperties(aNode, rdfResource))) {
-                rv = rdf_Assert(mDataSource,
-                                GetContextElement(0),
-                                rdfProperty,
-                                rdfResource);
-            }
+        if (NS_SUCCEEDED(rv = AddProperties(aNode, rdfResource))) {
+            rv = rdf_Assert(mDataSource,
+                            GetContextElement(0),
+                            rdfProperty,
+                            rdfResource);
         }
 
         // XXX ignore any failure from above...
-        PR_ASSERT(rv == NS_OK);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "problem adding properties");
 
         // XXX Technically, we should _not_ fall through here and push
         // the element onto the stack: this is supposed to be a closed
         // node. But right now I'm lazy and the code will just Do The
         // Right Thing so long as the RDF is well-formed.
+        NS_RELEASE(rdfResource);
     }
 
     // Push the element onto the context stack and change state.
@@ -1280,20 +1269,17 @@ RDFContentSinkImpl::OpenMember(const nsIParserNode& aNode)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    nsAutoString resourceURI;
-    if (NS_SUCCEEDED(rv = GetResourceAttribute(aNode, resourceURI))) {
+    nsIRDFResource* resource;
+    if (NS_SUCCEEDED(rv = GetResourceAttribute(aNode, &resource))) {
         // Okay, this node has an RDF:resource="..." attribute. That
         // means that it's a "referenced item," as covered in [6.29].
-
-        nsIRDFResource* resource;
-        if (NS_SUCCEEDED(rv = mRDFService->GetUnicodeResource(resourceURI, &resource))) {
-            rv = rdf_ContainerAddElement(mDataSource, container, resource);
-        }
+        rv = rdf_ContainerAddElement(mDataSource, container, resource);
 
         // XXX Technically, we should _not_ fall through here and push
         // the element onto the stack: this is supposed to be a closed
         // node. But right now I'm lazy and the code will just Do The
         // Right Thing so long as the RDF is well-formed.
+        NS_RELEASE(resource);
     }
 
     // Change state. Pushing a null context element is a bit weird,

@@ -62,7 +62,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID)
 
 static const char kURIHistoryRoot[]  = "HistoryRoot";
 
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
@@ -70,7 +69,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
 
-#define WEB_NAMESPACE_URI "http://home.netscape.com/WEB-rdf#"
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastVisitDate);
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastModifiedDate);
 

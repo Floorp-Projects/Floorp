@@ -45,7 +45,6 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);

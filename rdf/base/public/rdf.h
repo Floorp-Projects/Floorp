@@ -47,6 +47,13 @@
 static const char* kURI##prefix##_##name = ##namespace #name ;\
 static const char* kTag##prefix##_##name = kURI##prefix##_##name## + sizeof(##namespace) - 1
 
+/**
+ * Core RDF vocabularies that we use to infer semantic actions
+ */
+#define RDF_NAMESPACE_URI  "http://www.w3.org/TR/WD-rdf-syntax#"
+#define WEB_NAMESPACE_URI  "http://home.netscape.com/WEB-rdf#"
+#define NC_NAMESPACE_URI   "http://home.netscape.com/NC-rdf#"
+
 
 /**
  * @name Standard RDF error codes

@@ -31,10 +31,7 @@
      open an arbitrary nsIOutputStream on *any* URL, and Netlib could
      just do the magic.
 
-  2) This does not currently output RDF container constructs
-     properly. To do this, we just need to implement SerializeContainer().
-
-  3) Implement a more terse output for "typed" nodes; that is, instead
+  2) Implement a more terse output for "typed" nodes; that is, instead
      of "RDF:Description RDF:type='ns:foo'", just output "ns:foo".
 
  */
@@ -87,6 +84,13 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
+
+////////////////////////////////////////////////////////////////////////
+// Vocabulary stuff
+#include "rdf.h"
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal);
+
 
 ////////////////////////////////////////////////////////////////////////
 // FileOutputStreamImpl
@@ -414,7 +418,11 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     // Initialize the name space stuff to know about any "standard"
     // namespaces that we want to look the same in all the RDF/XML we
     // generate.
-    AddNameSpace(NS_NewAtom("RDF"), "http://www.w3.org/TR/WD-rdf-syntax#");
+    //
+    // XXX this is a bit of a hack, because technically, the document
+    // should've defined the RDF namespace to be _something_, and we
+    // should just look at _that_ and use it. Oh well.
+    AddNameSpace(NS_NewAtom("RDF"), RDF_NAMESPACE_URI);
 }
 
 
@@ -1058,8 +1066,6 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         rdf_BlockingWrite(aStream, "\"", 1);
     }
 
-    rdf_BlockingWrite(aStream, ">", 1);
-
     nsIRDFResource* resource;
     nsIRDFLiteral* literal;
 
@@ -1070,7 +1076,14 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         nsAutoString escaped(uri);
         rdf_EscapeAmpersands(escaped);
 
+        const char* docURI;
+        mInner->GetURI(&docURI);
+        rdf_PossiblyMakeRelative(docURI, escaped);
+
+        rdf_BlockingWrite(aStream, " RDF:resource=\"");
         rdf_BlockingWrite(aStream, escaped);
+        rdf_BlockingWrite(aStream, "\"/>\n", 4);
+
         NS_RELEASE(resource);
     }
     else if (NS_SUCCEEDED(aValue->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
@@ -1081,7 +1094,11 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         rdf_EscapeAmpersands(s); // do these first!
         rdf_EscapeAngleBrackets(s);
 
+        rdf_BlockingWrite(aStream, ">", 1);
         rdf_BlockingWrite(aStream, s);
+        rdf_BlockingWrite(aStream, "</", 2);
+        rdf_BlockingWrite(aStream, tag);
+        rdf_BlockingWrite(aStream, ">\n", 2);
 
         NS_RELEASE(literal);
     }
@@ -1089,10 +1106,6 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         // XXX it doesn't support nsIRDFResource _or_ nsIRDFLiteral???
         NS_ASSERTION(PR_FALSE, "huh?");
     }
-
-    rdf_BlockingWrite(aStream, "</", 2);
-    rdf_BlockingWrite(aStream, tag);
-    rdf_BlockingWrite(aStream, ">\n", 2);
 
     return NS_OK;
 }
@@ -1222,7 +1235,7 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
             if (NS_SUCCEEDED(rv = literal->GetValue(&value))) {
                 rdf_BlockingWrite(aStream, "    <RDF:li>");
                 rdf_BlockingWrite(aStream, value);
-                rdf_BlockingWrite(aStream, "    </RDF:li>\n");
+                rdf_BlockingWrite(aStream, "</RDF:li>\n");
             }
             NS_RELEASE(literal);
         }
@@ -1247,24 +1260,57 @@ nsresult
 RDFXMLDataSourceImpl::SerializeContainer(nsIOutputStream* aStream,
                                          nsIRDFResource* aContainer)
 {
-static const char kRDFOpenSeq[] = "  <RDF:Seq RDF:ID=\"";
-static const char kRDFOpenBag[] = "  <RDF:Bag RDF:ID=\"";
-static const char kRDFOpenAlt[] = "  <RDF:Alt RDF:ID=\"";
-
-static const char kRDFCloseSeq[] = "  </RDF:Seq>\n";
-static const char kRDFCloseBag[] = "  </RDF:Bag>\n";
-static const char kRDFCloseAlt[] = "  </RDF:Alt>\n";
+static const char kRDFBag[] = "RDF:Bag";
+static const char kRDFSeq[] = "RDF:Seq";
+static const char kRDFAlt[] = "RDF:Alt";
 
     nsresult rv;
+    const char* tag;
 
-    // XXX decide if it's a sequence, bag, or alternation. Print
-    // the appropriate tag-open sequence HERE.
+    // Decide if it's a sequence, bag, or alternation, and print the
+    // appropriate tag-open sequence
 
-    // XXX decide if it's an anonymous bag, or a named one. If it's
-    // named, then print out its identity HERE.
+    if (rdf_IsBag(mInner, aContainer)) {
+        tag = kRDFBag;
+    }
+    else if (rdf_IsSeq(mInner, aContainer)) {
+        tag = kRDFSeq;
+    }
+    else if (rdf_IsAlt(mInner, aContainer)) {
+        tag = kRDFAlt;
+    }
+    else {
+        NS_ASSERTION(PR_FALSE, "huh? this is _not_ a container.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    rdf_BlockingWrite(aStream, "  <", 3);
+    rdf_BlockingWrite(aStream, tag);
+
+
+    // Unfortunately, we always need to print out the identity of the
+    // resource, even if was constructed "anonymously". We need to do
+    // this because we never really know who else might be referring
+    // to it...
+
+    const char* docURI;
+    mInner->GetURI(&docURI);
+
+    const char* s;
+    if (NS_SUCCEEDED(aContainer->GetValue(&s))) {
+        nsAutoString uri(s);
+        rdf_PossiblyMakeRelative(docURI, uri);
+        rdf_BlockingWrite(aStream, " RDF:ID=\"", 9);
+        rdf_BlockingWrite(aStream, uri);
+        rdf_BlockingWrite(aStream, "\"", 1);
+    }
+
+    rdf_BlockingWrite(aStream, ">\n", 2);
+
 
     // We iterate through all of the arcs, in case someone has applied
     // properties to the bag itself.
+
     nsIRDFArcsOutCursor* arcs;
     if (NS_FAILED(rv = mInner->ArcLabelsOut(aContainer, &arcs)))
         return rv;
@@ -1281,9 +1327,26 @@ static const char kRDFCloseAlt[] = "  </RDF:Alt>\n";
             rv = SerializeMember(aStream, aContainer, property);
         }
         else {
-            rv = SerializeProperty(aStream, aContainer, property);
-        }
+            do {
+                PRBool eq;
 
+                // don't serialize RDF:instanceOf -- it's implicit in the tag
+                if (NS_FAILED(rv = property->EqualsString(kURIRDF_instanceOf, &eq)))
+                    break;
+
+                if (eq)
+                    break;
+
+                // don't serialize RDF:nextVal -- it's internal state
+                if (NS_FAILED(rv = property->EqualsString(kURIRDF_nextVal, &eq)))
+                    break;
+
+                if (eq)
+                    break;
+
+                rv = SerializeProperty(aStream, aContainer, property);
+            } while (0);
+        }
 
         NS_RELEASE(property);
         if (NS_FAILED(rv))
@@ -1294,6 +1357,13 @@ static const char kRDFCloseAlt[] = "  </RDF:Alt>\n";
         rv = NS_OK;
 
     NS_RELEASE(arcs);
+
+
+    // close the container tag
+    rdf_BlockingWrite(aStream, "  </", 4);
+    rdf_BlockingWrite(aStream, tag);
+    rdf_BlockingWrite(aStream, ">\n", 2);
+
     return rv;
 }
 

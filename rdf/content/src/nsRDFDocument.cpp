@@ -1658,8 +1658,8 @@ RDFDocumentImpl::IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) cons
     const char* p;
     aProperty->GetValue(&p);
     nsAutoString s(p);
-    if (s.Equals("http://home.netscape.com/NC-rdf#child") ||
-        s.Equals("http://home.netscape.com/NC-rdf#Folder")) {
+    if (s.Equals(NC_NAMESPACE_URI "child") ||
+        s.Equals(NC_NAMESPACE_URI "Folder")) {
         *aResult = PR_TRUE;
         return NS_OK;
     }

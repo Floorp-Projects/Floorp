@@ -32,13 +32,13 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "plstr.h"
 #include "rdfutil.h"
 
 ////////////////////////////////////////////////////////////////////////
 // RDF core vocabulary
 
 #include "rdf.h"
-#define RDF_NAMESPACE_URI  "http://www.w3.org/TR/WD-rdf-syntax#"
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Alt);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Bag);
@@ -65,7 +65,14 @@ static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
+// XXX This'll permanently leak
 static nsIRDFService* gRDFService = nsnull;
+
+static nsIRDFResource* kRDF_instanceOf = nsnull;
+static nsIRDFResource* kRDF_Bag        = nsnull;
+static nsIRDFResource* kRDF_Seq        = nsnull;
+static nsIRDFResource* kRDF_Alt        = nsnull;
+static nsIRDFResource* kRDF_nextVal    = nsnull;
 
 static nsresult
 rdf_EnsureRDFService(void)
@@ -73,9 +80,41 @@ rdf_EnsureRDFService(void)
     if (gRDFService)
         return NS_OK;
 
-    return nsServiceManager::GetService(kRDFServiceCID,
-                                        kIRDFServiceIID,
-                                        (nsISupports**) &gRDFService);
+    nsresult rv;
+
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
+                                                    (nsISupports**) &gRDFService)))
+        goto done;
+
+    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf)))
+        goto done;
+
+    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Bag, &kRDF_Bag)))
+        goto done;
+
+    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Seq, &kRDF_Seq)))
+        goto done;
+
+    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Alt, &kRDF_Alt)))
+        goto done;
+
+    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_nextVal, &kRDF_nextVal)))
+        goto done;
+
+done:
+    if (NS_FAILED(rv)) {
+        NS_IF_RELEASE(kRDF_nextVal);
+        NS_IF_RELEASE(kRDF_Alt);
+        NS_IF_RELEASE(kRDF_Seq);
+        NS_IF_RELEASE(kRDF_Bag);
+
+        if (gRDFService) {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+            gRDFService = nsnull;
+        }
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -107,71 +146,69 @@ rdf_IsOrdinalProperty(const nsIRDFResource* property)
 }
 
 
-// XXX This'll permanently leak RDF_Alt, RDF_Seq, RDF_Bag, and
-// RDF_instanceOf. Since we do it a lot, it seems like it's worth it.
-
 PRBool
 rdf_IsContainer(nsIRDFDataSource* ds,
                 nsIRDFResource* resource)
 {
-    PRBool result = PR_FALSE;
+    if (rdf_IsBag(ds, resource) ||
+        rdf_IsSeq(ds, resource) ||
+        rdf_IsAlt(ds, resource)) {
+        return PR_TRUE;
+    }
+    else {
+        return PR_FALSE;
+    }
+}
 
-static nsIRDFResource* RDF_instanceOf = nsnull;
-static nsIRDFResource* RDF_Bag        = nsnull;
-static nsIRDFResource* RDF_Seq        = nsnull;
-static nsIRDFResource* RDF_Alt        = nsnull;
+PRBool
+rdf_IsBag(nsIRDFDataSource* aDataSource,
+          nsIRDFResource* aResource)
+{
+    PRBool result = PR_FALSE;
 
     nsresult rv;
     if (NS_FAILED(rv = rdf_EnsureRDFService()))
         goto done;
 
-    if (! RDF_instanceOf) {
-        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_instanceOf, &RDF_instanceOf)))
-            goto done;
-    }
-    
-    // bag?
-    if (! RDF_Bag) {
-        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Bag, &RDF_Bag)))
-            goto done;
-    }
-
-    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Bag, PR_TRUE, &result)))
-        goto done;
-
-    if (result)
-        goto done;
-
-    // sequence?
-    if (! RDF_Seq) {
-        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Seq, &RDF_Seq)))
-            goto done;
-    }
-
-    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Seq, PR_TRUE, &result)))
-        goto done;
-
-    if (result)
-        goto done;
-
-    // alternation?
-    if (! RDF_Alt) {
-        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Alt, &RDF_Alt)))
-            goto done;
-    }
-
-    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Alt, PR_TRUE, &result)))
-        goto done;
+    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, kRDF_Bag, PR_TRUE, &result);
 
 done:
-    // XXX permanent leak
-    //NS_IF_RELEASE(RDF_Alt);
-    //NS_IF_RELEASE(RDF_Seq);
-    //NS_IF_RELEASE(RDF_Bag);
-    //NS_IF_RELEASE(RDF_instanceOf);
     return result;
 }
 
+
+PRBool
+rdf_IsSeq(nsIRDFDataSource* aDataSource,
+          nsIRDFResource* aResource)
+{
+    PRBool result = PR_FALSE;
+
+    nsresult rv;
+    if (NS_FAILED(rv = rdf_EnsureRDFService()))
+        goto done;
+
+    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, kRDF_Seq, PR_TRUE, &result);
+
+done:
+    return result;
+}
+
+
+PRBool
+rdf_IsAlt(nsIRDFDataSource* aDataSource,
+          nsIRDFResource* aResource)
+{
+    PRBool result = PR_FALSE;
+
+    nsresult rv;
+    if (NS_FAILED(rv = rdf_EnsureRDFService()))
+        goto done;
+
+    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, kRDF_Alt, PR_TRUE, &result);
+
+done:
+    return result;
+}
 
 // A complete hack that looks at the string value of a node and
 // guesses if it's a resource
@@ -377,19 +414,82 @@ rdf_Assert(nsIRDFDataSource* ds,
 
 
 nsresult
-rdf_CreateAnonymousResource(nsIRDFResource** result)
+rdf_CreateAnonymousResource(const nsString& aContextURI, nsIRDFResource** result)
 {
-    static PRUint32 gCounter = 0;
-
-    nsAutoString s = "$";
-    s.Append(++gCounter, 10);
+static PRUint32 gCounter = 0;
 
     nsresult rv;
     if (NS_FAILED(rv = rdf_EnsureRDFService()))
         return rv;
 
-    return gRDFService->GetUnicodeResource(s, result);
+    do {
+        nsAutoString s(aContextURI);
+        s.Append('$');
+        s.Append(++gCounter, 10);
+
+        nsIRDFResource* resource;
+        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(s, &resource)))
+            return rv;
+
+        // XXX an ugly but effective way to make sure that this
+        // resource is really unique in the world.
+        nsrefcnt refcnt = resource->AddRef();
+        resource->Release();
+
+        if (refcnt == 2) {
+            *result = resource;
+            break;
+        }
+    } while (1);
+
+    return NS_OK;
 }
+
+PRBool
+rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource)
+{
+    nsresult rv;
+    const char* s;
+    if (NS_FAILED(rv = aResource->GetValue(&s))) {
+        NS_ASSERTION(PR_FALSE, "unable to get resource URI");
+        return PR_FALSE;
+    }
+
+    nsAutoString uri(s);
+
+    // Make sure that they have the same context (prefix)
+    if (uri.Find(aContextURI) != 0)
+        return PR_FALSE;
+
+    uri.Cut(0, aContextURI.Length());
+
+    // Anonymous resources look like the regexp "\$[0-9]+"
+    if (uri[0] != '$')
+        return PR_FALSE;
+
+    for (PRInt32 i = uri.Length() - 1; i >= 1; --i) {
+        if (uri[i] < '0' || uri[i] > '9')
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
+
+PR_EXTERN(nsresult)
+rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI)
+{
+    // This implementation is extremely simple: no ".." or anything
+    // fancy like that. If the context URI is not a prefix of the URI
+    // in question, we'll just bail.
+    if (aURI.Find(aContextURI) != 0)
+        return NS_OK;
+
+    // Otherwise, pare down the target URI, removing the context URI.
+    aURI.Cut(0, aContextURI.Length());
+    return NS_OK;
+}
+
 
 nsresult
 rdf_MakeBag(nsIRDFDataSource* ds,
@@ -466,7 +566,6 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
     if (NS_FAILED(rv = rdf_EnsureRDFService()))
         return rv;
 
-    nsIRDFResource* RDF_nextVal   = nsnull;
     nsIRDFNode* nextValNode       = nsnull;
     nsIRDFLiteral* nextValLiteral = nsnull;
     const PRUnichar* s;
@@ -476,10 +575,7 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
 
     // Get the next value, which hangs off of the bag via the
     // RDF:nextVal property.
-    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_nextVal, &RDF_nextVal)))
-        goto done;
-
-    if (NS_FAILED(rv = ds->GetTarget(container, RDF_nextVal, PR_TRUE, &nextValNode)))
+    if (NS_FAILED(rv = ds->GetTarget(container, kRDF_nextVal, PR_TRUE, &nextValNode)))
         goto done;
 
     if (NS_FAILED(rv = nextValNode->QueryInterface(kIRDFLiteralIID, (void**) &nextValLiteral)))
@@ -502,7 +598,7 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
         goto done;
 
     // Now increment the RDF:nextVal property.
-    if (NS_FAILED(rv = ds->Unassert(container, RDF_nextVal, nextValLiteral)))
+    if (NS_FAILED(rv = ds->Unassert(container, kRDF_nextVal, nextValLiteral)))
         goto done;
 
     NS_RELEASE(nextValLiteral);
@@ -514,13 +610,12 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
     if (NS_FAILED(rv = gRDFService->GetLiteral(nextValStr, &nextValLiteral)))
         goto done;
 
-    if (NS_FAILED(rv = rdf_Assert(ds, container, RDF_nextVal, nextValLiteral)))
+    if (NS_FAILED(rv = rdf_Assert(ds, container, kRDF_nextVal, nextValLiteral)))
         goto done;
 
 done:
     NS_IF_RELEASE(nextValLiteral);
     NS_IF_RELEASE(nextValNode);
-    NS_IF_RELEASE(RDF_nextVal);
     return rv;
 }
 
