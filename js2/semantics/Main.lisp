@@ -40,6 +40,13 @@
 #+allegro (shadow 'type)
 #+lispworks (shadow 'define-action)
 #+lispworks (shadow 'type)
+#+clisp (progn
+          (setf (ext:package-lock "SYSTEM") nil)
+          (setf (ext:package-lock "COMMON-LISP") nil)
+          (setf (ext:package-lock "CLOS") nil))
+
+(setq *read-default-float-format* 'double-float)
+
 
 (defparameter *semantic-engine-filenames*
   '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup"))
