@@ -23,13 +23,17 @@
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
-  mDriverName = nsnull;
-  mDeviceName = nsnull;
+  NS_INIT_REFCNT();
+  mPC = nsnull;
+  
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::~nsDeviceContextSpecPh Destructor Called\n"));
+  if (mPC)
+    PpPrintReleasePC(mPC);
+	
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
@@ -38,24 +42,18 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecPh, kDeviceContextSpecIID)
 NS_IMPL_ADDREF(nsDeviceContextSpecPh)
 NS_IMPL_RELEASE(nsDeviceContextSpecPh)
 
-NS_IMETHODIMP nsDeviceContextSpecPh :: Init(char *aDriverName, char *aDeviceName )
+NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet, PpPrintContext_t *aPrintContext)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::Init - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::Init aQuiet=<%d> - Not Implemented\n", aQuiet));
+
+	/* Create a Printer Context */
+	mPC = aPrintContext;		/* Assume ownership of the Printer Context */
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecPh :: GetDriverName(char *&aDriverName) const
+NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const
 {
- PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::GetDriverName - Not Implemented\n"));
-
+  aPrintContext = mPC;
   return NS_OK;
 }
-
-NS_IMETHODIMP nsDeviceContextSpecPh :: GetDeviceName(char *&aDeviceName) const
-{
- PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::GetDeviceName - Not Implemented\n"));
-
-  return NS_OK;
-}
-
