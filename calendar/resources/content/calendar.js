@@ -442,7 +442,7 @@ function weekViewHourClick( event )
    {
       var dayIndex = event.target.getAttribute( "day" );
 
-      newDate = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+      var newDate = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
 
       newDate.setHours( event.target.getAttribute( "hour" ) );
 
