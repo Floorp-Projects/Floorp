@@ -45,15 +45,14 @@ struct MimeInlineTextPlainFlowed {
   MimeInlineText text;
 };
 
-/** Made to contain information to be kept during the while message.
- * Will be placed in the obj->obuff. Is it safe there or could
- * someone or something tamper with that buffer between visits to
- * MimeInlineTextPlainFlowed functions???? XXX
+/*
+ * Made to contain information to be kept during the whole message parsing.
  */
 struct MimeInlineTextPlainFlowedExData {
   struct MimeObject *ownerobj; /* The owner of this struct */
-  uint32 inflow; /* If we currently are in flow */
-  uint32 quotelevel; /* How deep is your love, uhr, quotelevel I meen. */
+  PRBool inflow; /* If we currently are in flow */
+  PRBool fixedwidthfont; /* If we output text for fixed width font */
+  PRUint32 quotelevel; /* How deep is your love, uhr, quotelevel I meen. */
   struct MimeInlineTextPlainFlowedExData *next;
 };
 

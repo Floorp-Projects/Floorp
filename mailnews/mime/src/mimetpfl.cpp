@@ -28,6 +28,11 @@
 #include "nsMimeURLUtils.h"
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlainFlowed, MimeInlineTextPlainFlowedClass,
@@ -63,51 +68,45 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   status =  MimeObject_write(obj, s, 0, PR_TRUE); /* force out any separators... */
   if(status<0) return status;
 
+  // Setup the data structure that is connected to the actual document
+  // Saved in a linked list in case this is called with several documents
+  // at the same time.
   /* This memory is freed when parse_eof is called. So it better be! */
   struct MimeInlineTextPlainFlowedExData *exdata =
     (MimeInlineTextPlainFlowedExData *)PR_MALLOC(sizeof(struct MimeInlineTextPlainFlowedExData));
   if(!exdata) return MIME_OUT_OF_MEMORY;
   exdata->ownerobj = obj;
-  exdata->inflow=0;
+  exdata->inflow=PR_FALSE;
+  exdata->fixedwidthfont=PR_FALSE;
   exdata->quotelevel=0;
+
+  // Check the pref for fixed width font
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+  {
+    rv=prefs->GetBoolPref("mail.fixed_width_messages", &(exdata->fixedwidthfont));
+    if(NS_SUCCEEDED(rv))
+      printf("hittade ett pref\n");
+    else 
+      printf("problem med att hitta pref\n");
+  }
+
+  // Link it up.
   exdata->next = MimeInlineTextPlainFlowedExDataList;
   MimeInlineTextPlainFlowedExDataList = exdata;
   
+  // If we should use a fixed width font, emit
+  // a <div style="font-family:monospace">   DIDN'T WORK
+  // a <tt>
+  if(exdata->fixedwidthfont)
+    {
+    // *Don't work*   status = MimeObject_write(obj, "<div style=\"font-family=monospace\">", 35, PR_FALSE);
+    status = MimeObject_write(obj, "<tt>", 4, PR_FALSE);
+    if(status<0) return status;
+  }
+  
   return 0;
-
-  /* FROM text/plain  
-  int status = 0;
-
-  status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
-  if (status < 0) return status;
-
-  if (!obj->output_p) return 0;
-
-  if (obj->options &&
-	  obj->options->write_html_p &&
-	  obj->options->output_fn)
-	{
-	  char* strs[4];
-	  char* s;
-	  strs[0] = "<PRE>";
-	  strs[1] = "<PRE VARIABLE>";
-	  strs[2] = "< RE WRAP>";
-	  strs[3] = "<PRE VARIABLE WRAP>";
-	  s = nsCRT::strdup(strs[(obj->options->variable_width_plaintext_p ? 1 : 0) +
-						(obj->options->wrap_long_lines_p ? 2 : 0)]);
-	  if (!s) return MIME_OUT_OF_MEMORY;
-	  status = MimeObject_write(obj, s, nsCRT::strlen(s), PR_FALSE);
-	  PR_Free(s);
-	  if (status < 0) return status;
-  */
-	  /* text/plain objects always have separators before and after them.
-		 Note that this is not the case for text/enriched objects. */
-  /*	  status = MimeObject_write_separator(obj);
-	  if (status < 0) return status;
-	}
-
-  return 0;
-  */
 }
 
 static int
@@ -140,13 +139,17 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     prevexdata->next = exdata->next;
   }
 
-  uint32 quotelevel = exdata->quotelevel;
-  
+  PRUint32 quotelevel = exdata->quotelevel;
+  PRBool fixedwidthfont = exdata->fixedwidthfont;
   PR_Free(exdata);
 
   while(quotelevel>0) {
     // Write </blockquote>
-    status = MimeObject_write(obj, "</blockquote>", 13, PR_FALSE);
+    if(exdata->fixedwidthfont) {
+      status = MimeObject_write(obj, "</tt></blockquote><tt>", 22, PR_FALSE);
+    } else {
+      status = MimeObject_write(obj, "</blockquote>", 13, PR_FALSE);
+    }
     if(status<0) {
       return status;
     }
@@ -154,23 +157,16 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     quotelevel--;
   }
 
-  
-  /*  if (obj->options &&
-	  obj->options->write_html_p &&
-	  obj->options->output_fn &&
-	  !abort_p)
-	{
-	  char s[] = "</PRE>";
-	  status = MimeObject_write(obj, s, nsCRT::strlen(s), PR_FALSE);
-	  if (status < 0) return status;
-  */
-	  /* text/plain objects always have separators before and after them.
-		 Note that this is not the case for text/enriched objects.
-	   */
-  /*	  status = MimeObject_write_separator(obj);
-	  if (status < 0) return status;
-	}
-  */
+  if(fixedwidthfont)
+  {
+    // *don't work*    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
+    status = MimeObject_write(obj, "</tt>", 5, PR_FALSE);
+    if(status<0) return status;
+    printf("fixbredd\n");
+  } else {
+    printf("propbredd");
+  }
+
   return 0;
 }
 
@@ -312,6 +308,13 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   while(quoteleveldiff>0) {
     quoteleveldiff--;
     /* Output <blockquote> */
+    if(exdata->fixedwidthfont) {
+      *outlinep='<'; outlinep++;
+      *outlinep='/'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='>'; outlinep++;
+    }      
     *outlinep='<'; outlinep++;
     *outlinep='b'; outlinep++;
     *outlinep='l'; outlinep++;
@@ -334,10 +337,23 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     *outlinep='t'; outlinep++;
     *outlinep='e'; outlinep++;
     *outlinep='>'; outlinep++;
+    if(exdata->fixedwidthfont) {
+      *outlinep='<'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='>'; outlinep++;
+    }      
   }
   while(quoteleveldiff<0) {
     quoteleveldiff++;
     /* Output </blockquote> */
+    if(exdata->fixedwidthfont) {
+      *outlinep='<'; outlinep++;
+      *outlinep='/'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='>'; outlinep++;
+    }      
     *outlinep='<'; outlinep++;
     *outlinep='/'; outlinep++;
     *outlinep='b'; outlinep++;
@@ -351,6 +367,12 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     *outlinep='t'; outlinep++;
     *outlinep='e'; outlinep++;
     *outlinep='>'; outlinep++;
+    if(exdata->fixedwidthfont) {
+      *outlinep='<'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='t'; outlinep++;
+      *outlinep='>'; outlinep++;
+    }      
   }
   exdata->quotelevel = linequotelevel;
   
@@ -401,7 +423,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       *outlinep='>'; outlinep++;
     } 
 
-    exdata->inflow=1;
+    exdata->inflow=PR_TRUE;
   } else {
     // Fixed
     uint32 intag = 0; 
@@ -459,7 +481,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     *outlinep='r'; outlinep++;
     *outlinep='>'; outlinep++;
 
-    exdata->inflow = 0;
+    exdata->inflow = PR_FALSE;
   } // End Fixed line
 
   *outlinep='\r'; outlinep++;
