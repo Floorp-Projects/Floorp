@@ -5,6 +5,7 @@ nslayout.h
 nsICaret.h
 nsIContent.h
 nsIContentIterator.h
+nsIDiskDocument.h
 nsIDocument.h
 nsIDocumentContainer.h
 nsIDocumentObserver.h
