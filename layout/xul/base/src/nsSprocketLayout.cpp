@@ -326,8 +326,13 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       PRBool layout = PR_TRUE;
 
       child->GetMargin(margin);
-      if (childRect.width >= margin.left + margin.right && childRect.height >= margin.top + margin.bottom) 
-         childRect.Deflate(margin);
+      //if (childRect.width >= margin.left + margin.right && childRect.height >= margin.top + margin.bottom) 
+      childRect.Deflate(margin);
+
+      if (childRect.width < 0)
+         childRect.width = 0;
+      if (childRect.height < 0)
+         childRect.height = 0;
 
       if (passes > 0) {
         layout = PR_FALSE;
