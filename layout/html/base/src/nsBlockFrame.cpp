@@ -1871,8 +1871,25 @@ void
 nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
                                nsHTMLReflowMetrics& aMetrics)
 {
+  // XXX handle floater problems this way...
+  PRBool isFixedWidth =
+    eHTMLFrameConstraint_FixedContent == aState.widthConstraint;
+  PRBool isFixedHeight =
+    eHTMLFrameConstraint_FixedContent == aState.heightConstraint;
+#if 0
+  if (NS_STYLE_FLOAT_NONE != aState.mStyleDisplay->mFloats) {
+    isFixedWidth = PR_FALSE;
+    isFixedHeight = PR_FALSE;
+  }
+#else
+  if (NS_BODY_SHRINK_WRAP & mFlags) {
+    isFixedWidth = PR_FALSE;
+    isFixedHeight = PR_FALSE;
+  }
+#endif
+
   // Compute final width
-  if (eHTMLFrameConstraint_FixedContent == aState.widthConstraint) {
+  if (isFixedWidth) {
     // Use style defined width
     aMetrics.width = aState.mBorderPadding.left +
       aState.minWidth + aState.mBorderPadding.right;
@@ -1908,7 +1925,7 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
   }
 
   // Compute final height
-  if (eHTMLFrameConstraint_FixedContent == aState.heightConstraint) {
+  if (isFixedHeight) {
     // Use style defined height
     aMetrics.height = aState.mBorderPadding.top +
       aState.minHeight + aState.mBorderPadding.bottom;
@@ -4278,6 +4295,11 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
                              nsIFrame*       aNewFrame,
                              nsIFrame*       aPrevSibling)
 {
+  if (nsnull == mLines) {
+    NS_ASSERTION(nsnull == aPrevSibling, "prev-sibling and empty line list!");
+    return AppendNewFrames(aPresContext, aNewFrame);
+  }
+
   const nsStyleDisplay* display;
   aNewFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
   const nsStylePosition* position;
