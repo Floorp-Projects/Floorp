@@ -28,8 +28,9 @@ PR_BEGIN_EXTERN_C
 
 /* XXX: First cut at Error messages. The following could change. */
 char * SU_GetErrorMsg1(int id, char* arg1);
-char * SU_GetErrorMsg2(int id, nsString* arg1);
+char * SU_GetErrorMsg2(int id, nsString* arg1, int reason);
 char * SU_GetErrorMsg3(char *str, int err);
+char * SU_GetErrorMsg4(int id, int reason);
 char * SU_GetString(int id);
 char * SU_GetString1(int id, char* arg1);
 char * SU_GetString2(int id, nsString* arg1);

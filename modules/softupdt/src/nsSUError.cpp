@@ -32,17 +32,17 @@ char * SU_GetErrorMsg1(int id, char* arg1)
   char* errorMsg=NULL;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  errorMsg = PR_sprintf_append(errorMsg, tag, arg1);
+  errorMsg = PR_sprintf_append(errorMsg, "%s %s", tag, arg1);
   return errorMsg;
 }
 
-char * SU_GetErrorMsg2(int id, nsString* arg1) 
+char * SU_GetErrorMsg2(int id, nsString* arg1, int reason) 
 {
   char* errorMsg=NULL;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
   char* argMsg = arg1->ToNewCString();
-  errorMsg = PR_sprintf_append(errorMsg, tag, argMsg);
+  errorMsg = PR_sprintf_append(errorMsg, "%s %s %d", tag, argMsg, reason);
   delete argMsg;
   return errorMsg;
 }
@@ -54,6 +54,17 @@ char * SU_GetErrorMsg3(char *str, int err)
   errorMsg = PR_sprintf_append(errorMsg, "%s %d", str, err);
   return errorMsg;
 }
+
+char * SU_GetErrorMsg4(int id, int reason) 
+{
+  char* msg=NULL;
+  char* tag = XP_GetString(id);
+  PR_ASSERT(tag != NULL);
+  msg = PR_sprintf_append(msg, "%s %d", tag, reason);
+  return msg;
+}
+
+
 
 char * SU_GetString(int id) 
 {
@@ -67,7 +78,7 @@ char * SU_GetString1(int id, char* arg1)
   char* msg=NULL;
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
-  msg = PR_sprintf_append(msg, tag, arg1);
+  msg = PR_sprintf_append(msg, "%s %s", tag, arg1);
   return msg;
 }
 
@@ -77,7 +88,7 @@ char * SU_GetString2(int id, nsString* arg1)
   char* tag = XP_GetString(id);
   PR_ASSERT(tag != NULL);
   char* argMsg = arg1->ToNewCString();
-  msg = PR_sprintf_append(msg, tag, argMsg);
+  msg = PR_sprintf_append(msg, "%s %s", tag, argMsg);
   delete argMsg;
   return msg;
 }

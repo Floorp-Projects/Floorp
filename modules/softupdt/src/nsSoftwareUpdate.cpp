@@ -37,6 +37,11 @@
 #include "nsTarget.h"
 #include "nsPrincipal.h"
 
+extern int SU_ERROR_BAD_PACKAGE_NAME;
+extern int SU_ERROR_WIN_PROFILE_MUST_CALL_START;
+extern int SU_ERROR_BAD_PACKAGE_NAME_AS;
+extern int SU_ERROR_EXTRACT_FAILED;
+
 PR_BEGIN_EXTERN_C
 
 /* Public Methods */
@@ -214,9 +219,7 @@ void* nsSoftwareUpdate::GetWinProfile(nsFolderSpec* folder, char* file, char* *e
   *errorMsg = NULL;
 
   if ( packageName == NULL ) {
-#ifdef XXX /* FIX IT */
-    *errorMsg = SU_GetErrorMsg3(nsSUStrings::error_WinProfileMustCallStart(), nsSoftUpdateError_INSTALL_NOT_STARTED );
-#endif
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, nsSoftUpdateError_INSTALL_NOT_STARTED );
     return NULL;
   }
   profile = new nsWinProfile(this, folder, file, errorMsg);
@@ -237,9 +240,7 @@ void* nsSoftwareUpdate::GetWinRegistry(char* *errorMsg)
   nsWinReg* registry = NULL;
 
   if ( packageName == NULL ) {
-#ifdef XXX /* FIX IT */
-    *errorMsg = SU_GetErrorMsg3(nsSUStrings::error_WinProfileMustCallStart(), nsSoftUpdateError_INSTALL_NOT_STARTED );
-#endif
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, nsSoftUpdateError_INSTALL_NOT_STARTED );
     return NULL;
   }
   registry = new nsWinReg(this, errorMsg);
@@ -350,9 +351,7 @@ PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName, nsVersionInfo* inVIn
   
 
   if ( (vrPackageName	== NULL) ) {
-#ifdef XXX /* FIX IT */
-    *errorMsg = SU_GetErrorMsg3(nsSUStrings::error_BadPackageName(), nsSoftUpdateError_INVALID_ARGUMENTS );
-#endif
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_BAD_PACKAGE_NAME, nsSoftUpdateError_INVALID_ARGUMENTS );
     return nsSoftUpdateError_INVALID_ARGUMENTS;
   }
       
@@ -431,9 +430,7 @@ PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
       
   if (packageName == NULL) {
     //	probably didn't	call StartInstall()          
-#ifdef XXX /* FIX IT */
-    *errorMsg = SU_GetErrorMsg3(nsSUStrings::error_WinProfileMustCallStart(), nsSoftUpdateError_INSTALL_NOT_STARTED);
-#endif
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, nsSoftUpdateError_INSTALL_NOT_STARTED);
     return nsSoftUpdateError_UNEXPECTED_ERROR;
   }
       
@@ -595,9 +592,7 @@ PRInt32 nsSoftwareUpdate::AddSubcomponent(char* name,
       
   if (packageName == NULL) {
     // probably didn't call StartInstall()
-#ifdef XXX /* FIX IT */
-    *errorMsg = SU_GetErrorMsg3(nsSUStrings::error_BadPackageNameAS(), nsSoftUpdateError_BAD_PACKAGE_NAME );
-#endif
+    *errorMsg = SU_GetErrorMsg4(SU_ERROR_BAD_PACKAGE_NAME_AS, nsSoftUpdateError_BAD_PACKAGE_NAME );
     return nsSoftUpdateError_BAD_PACKAGE_NAME;
   }
       
@@ -704,9 +699,7 @@ PRInt32 nsSoftwareUpdate::Gestalt(char* selectorStr, int* os_err, char* *errorMs
 #endif
 
 fail:
-#ifdef XXX /* FIX IT */
-  *errorMsg = SU_GetErrorMsg3(nsSUStrings::error_ExtractFailed(), *os_err );
-#endif
+  *errorMsg = SU_GetErrorMsg4(SU_ERROR_EXTRACT_FAILED, *os_err );
   return 0;
 }
 

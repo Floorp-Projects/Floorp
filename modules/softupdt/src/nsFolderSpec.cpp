@@ -108,8 +108,7 @@ char* nsFolderSpec::GetDirectoryPath(char* *errorMsg)
       // Built-in folder
       int err = NativeGetDirectoryPath();
       if (err != 0)
-        // XXX: Get the String after converting the error to an id
-        *errorMsg = SU_GetErrorMsg1(err, folderID);
+        *errorMsg = SU_GetErrorMsg3(folderID, err);
     }
   }
   return urlPath;
@@ -159,7 +158,7 @@ char* nsFolderSpec::PickDefaultDirectory(char* *errorMsg)
   urlPath = NativePickDefaultDirectory(errorMsg);
 
   if (urlPath == NULL)
-    *errorMsg = SU_GetErrorMsg1(nsSoftUpdateError_INVALID_PATH_ERR, folderID);
+    *errorMsg = SU_GetErrorMsg3(folderID, nsSoftUpdateError_INVALID_PATH_ERR);
 
   return urlPath;
 }

@@ -25,6 +25,11 @@
 #include "nsPrivilegeManager.h"
 #include "nsTarget.h"
 
+extern int SU_ERROR_INSTALL_FILE_UNEXPECTED;
+extern int SU_DETAILS_REPLACE_FILE_MSG_ID;
+extern int SU_DETAILS_INSTALL_FILE_MSG_ID;
+
+
 PR_BEGIN_EXTERN_C
 
 /* Public Methods */
@@ -272,7 +277,7 @@ char* nsInstallFile::Complete()
   }
   
   if ( err != 0 ) {
-    return SU_GetErrorMsg2(err, finalFile);
+    return SU_GetErrorMsg2(SU_ERROR_INSTALL_FILE_UNEXPECTED, finalFile, err);
   }
   return NULL;
 }
@@ -284,15 +289,11 @@ void nsInstallFile::Abort()
 
 char* nsInstallFile::toString()
 {
-#ifdef XXX
   if (replace) {
-    return SU_GetString2(details_ReplaceFile_MSG_ID, finalFile);
+    return SU_GetString2(SU_DETAILS_REPLACE_FILE_MSG_ID, finalFile);
   } else {
-    return SU_GetString2(details_InstallFile_MSG_ID, finalFile);
+    return SU_GetString2(SU_DETAILS_INSTALL_FILE_MSG_ID, finalFile);
   }
-#else
-  return NULL;
-#endif
 }
 
 
