@@ -35,6 +35,7 @@
 
 class nsString;
 class nsStringArray;
+class nsSupportsArray;
 
 class nsIAtom;
 class nsIDOMNode;
@@ -184,6 +185,15 @@ public:
   /** Set the documents title.
    */
   NS_IMETHOD SetDocumentTitle(const PRUnichar *aTitle)=0;
+
+  /**
+   * Find all the nodes in the document which contain references
+   * to outside URIs (e.g. a href, img src, script src, etc.)
+   * The objects in the array will be type nsIURIRefObject.
+   *
+   * @return aNodeList    the linked nodes found
+   */
+  NS_IMETHOD GetLinkedObjects(nsISupportsArray** aNodeList)=0;
 
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */

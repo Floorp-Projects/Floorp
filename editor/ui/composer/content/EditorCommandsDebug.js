@@ -25,12 +25,6 @@
 // --------------------------- Output ---------------------------
 
 
-function EditorSerialize()
-{
-  var s = new XMLSerializer();
-  dump(s.serializeToString(editorShell.editorDocument) + "\n");
-}
-
 function EditorGetText()
 {
   if (editorShell) {
@@ -74,7 +68,9 @@ function EditorTestSelection()
 
   dump("Selection contains:\n");
   // 3rd param = column to wrap
-  dump(selection.toString("text/plain", gOutputFormatted & gOutputSelectionOnly, 0) + "\n");
+  dump(selection.toStringWithFormat("text/plain",
+                                    gOutputFormatted & gOutputSelectionOnly,
+                                    0) + "\n");
 
   var output;
 
@@ -343,45 +339,6 @@ function EditorRunLog()
   var fs;
   fs = EditorGetScriptFileSpec();
   EditorExecuteScript(fs);
-  window._content.focus();
-}
-
-function EditorTableize()
-{
-  // 1 = OutputSelectionOnly, 1024 = OutputLFLineBreak
-  // 256 = OutputEncodeEntities
-  var str = editorShell.GetContentsAs("text/html", 1+1024);
-  var newstr;
-
-  //dump("String to tableize is '" + str + "'\n");
-
-  // Replace nbsp with spaces:
-  newstr = str.replace(/\u00a0/g, " ");
-
-  // Trim trailing <p> or <br>
-  str = newstr.replace(/\s*<br>\s*$/, "");
-  newstr = str.replace(/\s*<p>\s*$/, "");
-
-  // Trim leading and trailing spaces
-  str = newstr.replace(/^\s+/, "");
-  newstr = str.replace(/\s+$/, "");
-  // Trim whitespace adjacent to <p> and <br> tags
-  str = newstr.replace(/\s+<p>\s+/g, "<br>");
-  newstr = str.replace(/\s+<br>\s+/g, "<br>");
-
-  // Put <td> wherever we see whitespace
-  str = newstr.replace(/ +/g, " <td>");
-
-  // End table row and start another for each br or p
-  newstr = str.replace(/\s*<br>\s*/g, "</tr>\n<tr><td>");
-
-  // Add the table tags and the opening and closing tr/td tags
-  str = "<table border=\"1\">\n<tr><td>" + newstr + "</tr>\n</table>\n";
-
-  //dump("Trying to insert '" + str + "'\n");
-
-  window.editorShell.InsertSource(str);
-
   window._content.focus();
 }
 

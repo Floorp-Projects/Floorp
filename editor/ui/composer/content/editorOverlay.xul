@@ -156,6 +156,8 @@
     <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"   label="&findAgainCmd.label;"/>
     <command id="cmd_spelling"      oncommand="goDoCommand('cmd_spelling')"/>
+    <command id="cmd_validate"      oncommand="goDoCommand('cmd_validate')"/>
+    <command id="cmd_checkLinks"    oncommand="goDoCommand('cmd_checkLinks')"/>
     <command id="cmd_pasteQuote"    oncommand="goDoCommand('cmd_pasteQuote')" label="&pasteAsQuotationCmd.label;"/>
 
   </commandset>
@@ -338,6 +340,8 @@
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator id="sep_checkspelling" class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
+      <menuitem id="menu_validate" observes="cmd_validate"
+        label="&validateCmd.label;"/>
       <menuseparator/>
       <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
     </menupopup>
@@ -812,8 +816,6 @@
            oncommand="EditorGetText()"/>
     <menuitem label="&outputHTMLCmd.label;"
            oncommand="EditorGetHTML()"/>
-    <menuitem label="Dom Serializer"
-           oncommand="EditorSerialize()"/>
     <menuseparator />
     <menuitem label="&pasteAsQuotationCmd.label;"
            accesskey="&editpastequotation.accesskey;"
@@ -824,8 +826,8 @@
            oncommand="editorShell.StripCites()"/>
     <menuitem label="&insertTextCmd.label;"
            oncommand="EditorInsertText('All good things come to those who wait. ')"/>
-    <menuitem label="Tableize"
-           oncommand="EditorTableize()"/>
+    <menuitem id="menu_checkLinks" observes="cmd_checkLinks"
+     label="&checkLinksCmd.label;"/>
     <menuseparator />
     <menuitem label="&testSelectionCmd.label;"
            oncommand="EditorTestSelection()"/>

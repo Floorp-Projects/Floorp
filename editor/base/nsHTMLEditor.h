@@ -156,6 +156,8 @@ public:
 
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
+  NS_IMETHOD GetLinkedObjects(nsISupportsArray** aNodeList);
+
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
   NS_IMETHOD SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
@@ -185,7 +187,6 @@ public:
                                     const nsAReadableString & aCharset,
                                     nsIDOMNode **aNodeInserted);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
-
 
   /* ------------ nsITableEditor methods -------------- */
 

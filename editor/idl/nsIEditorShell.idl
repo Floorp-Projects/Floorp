@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 
 interface nsIFile;
-interface nsISupportsArray;
 interface nsIDocumentStateListener;
 interface nsISelectionController;
 interface nsITransactionManager;
@@ -33,6 +32,7 @@ interface nsISelection;
 interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIEditor;
+interface nsISupportsArray;
 
 [scriptable, uuid(9afff72b-ca9a-11d2-96c9-0060b0fb9956)]
 interface nsIEditorShell : nsISupports
@@ -500,6 +500,9 @@ interface nsIEditorShell : nsISupports
 
   /* Get list of embedded objects, e.g. for mail compose */
   nsISupportsArray GetEmbeddedObjects();
+
+  /* Get list of objects which refer to external URIs */
+  nsISupportsArray GetLinkedObjects();
 
   /* Formatting */
   void SetAttribute(in nsIDOMElement element, in wstring attr, in wstring value);

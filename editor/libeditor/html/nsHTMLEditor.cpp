@@ -31,6 +31,8 @@
 #include "nsEditorEventListeners.h"
 #include "TypeInState.h"
 
+#include "nsHTMLURIRefObject.h"
+
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -44,7 +46,6 @@
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
 
 #include "TransactionFactory.h"
@@ -3048,6 +3049,68 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAReadableString& aAttribute
   return res;
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
+{
+  if (!aNodeList)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult res;
+
+  res = NS_NewISupportsArray(aNodeList);
+  if (NS_FAILED(res)) return res;
+  if (!*aNodeList) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                           NS_GET_IID(nsIContentIterator), 
+                                           getter_AddRefs(iter));
+  if (!iter) return NS_ERROR_NULL_POINTER;
+  if ((NS_SUCCEEDED(res)))
+  {
+    // get the root content
+    nsCOMPtr<nsIContent> rootContent;
+
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    nsEditor::GetDocument(getter_AddRefs(domdoc));
+    if (!domdoc)
+      return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+    if (!doc)
+      return NS_ERROR_UNEXPECTED;
+
+    doc->GetRootContent(getter_AddRefs(rootContent));
+
+    iter->Init(rootContent);
+
+    // loop through the content iterator for each content node
+    while (NS_ENUMERATOR_FALSE == iter->IsDone())
+    {
+      nsCOMPtr<nsIContent> content;
+      res = iter->CurrentNode(getter_AddRefs(content));
+      if (NS_FAILED(res))
+        break;
+      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
+      if (node)
+      {
+        // Let nsURIRefObject make the hard decisions:
+        nsCOMPtr<nsIURIRefObject> refObject;
+        res = NS_NewHTMLURIRefObject(getter_AddRefs(refObject), node);
+        if (NS_SUCCEEDED(res))
+        {
+          nsCOMPtr<nsISupports> isupp (do_QueryInterface(refObject));
+          if (isupp)
+            (*aNodeList)->AppendElement(isupp);
+        }
+      }
+      iter->Next();
+    }
+  }
+
+  return NS_OK;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  nsIEditorStyleSheets methods 
@@ -3278,7 +3341,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
           (*aNodeList)->AppendElement(node);
         else if (tagName.EqualsWithConversion("a"))
         {
-          // XXX Only include links if they're links to file: URLs
+          // Only include links if they're links to file: URLs
           nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(content));
           if (anchor)
           {
