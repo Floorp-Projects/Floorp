@@ -1525,7 +1525,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 	  	ATSUStyle			theStyle;
 		OSErr					err = 0;
 	    err = ATSUCreateStyle(&theStyle);
-	    NS_ASSERTION((noErr != err), "ATSUCreateStyle failed");
+	    NS_ASSERTION((noErr == err), "ATSUCreateStyle failed");
 
 		  if (mGS->mFontMetrics)
 		  {
@@ -1540,7 +1540,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 				y += ascent;
 
 			    err = setATSUIFont( *font, mGS->mColor, mContext, theStyle);
-		  		NS_ASSERTION((noErr != err), "setATSUIFont failed");
+		  		NS_ASSERTION((noErr == err), "setATSUIFont failed");
 				
 			}
 
@@ -1551,16 +1551,16 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 	  err = ATSUCreateTextLayoutWithTextPtr(	(ConstUniCharArrayPtr)aString, 0, aLength, aLength,
 												1, &runLengths, &theStyle,
 												&txLayout);
-	   NS_ASSERTION((noErr != err), "ATSUCreateTextLayoutWithTextPtr failed");
+	   NS_ASSERTION((noErr == err), "ATSUCreateTextLayoutWithTextPtr failed");
 	  err = ATSUSetTransientFontMatching(txLayout, true);
-	   NS_ASSERTION((noErr != err), "ATSUSetTransientFontMatching failed");
+	   NS_ASSERTION((noErr == err), "ATSUSetTransientFontMatching failed");
 	  
 	  err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );	
-	   NS_ASSERTION((noErr != err), "ATSUDrawText failed");
+	   NS_ASSERTION((noErr == err), "ATSUDrawText failed");
 	  err =   ATSUDisposeTextLayout(txLayout);
-	   NS_ASSERTION((noErr != err), "ATSUDisposeTextLayout failed");
+	   NS_ASSERTION((noErr == err), "ATSUDisposeTextLayout failed");
 	  err =   ATSUDisposeStyle(theStyle);
-	   NS_ASSERTION((noErr != err), "ATSUDisposeStyle failed");
+	   NS_ASSERTION((noErr == err), "ATSUDisposeStyle failed");
 
 	  if (mGS->mFontMetrics)
 		{
