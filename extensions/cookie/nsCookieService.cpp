@@ -306,6 +306,17 @@ NSGetFactory(nsISupports* servMgr,
         return NS_OK;
     }
 
+    if (aClass.Equals(kCookieHTTPNotifyCID)) {
+        nsCookieHTTPNotifyFactory *factory = new nsCookieHTTPNotifyFactory();
+
+        if (factory == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(factory);
+        *aFactory = factory;
+        return NS_OK;
+    }
+
     return NS_NOINTERFACE;
 }
 
@@ -318,12 +329,19 @@ NSCanUnload(nsISupports* serviceMgr)
 extern "C" PR_IMPLEMENT(nsresult)
 NSRegisterSelf(nsISupports* serviceMgr, const char* aPath)
 {
-    return nsComponentManager::RegisterComponent(kCookieServiceCID,
+    nsresult rv;
+    rv = nsComponentManager::RegisterComponent(kCookieServiceCID,
                                          "CookieService", 
                                          NS_COOKIESERVICE_PROGID,
                                          aPath,PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+
+    rv = nsComponentManager::RegisterComponent(kCookieHTTPNotifyCID,
+                                                "CookieHTTPNotifyService",
+                                                "component://netscape/cookie-http-notify",
+                                                aPath, PR_TRUE, PR_TRUE);
+    return rv;
 }
 
 extern "C" PR_IMPLEMENT(nsresult)
@@ -332,6 +350,9 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* aPath)
     nsresult rv;
 
     rv = nsComponentManager::UnregisterComponent(kCookieServiceCID,  aPath);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = nsComponentManager::UnregisterComponent(kCookieHTTPNotifyCID, aPath);
 
     return rv;
 }
