@@ -166,9 +166,10 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
 
 // Globals in xpcom
 
-nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsICaseConversion *gCaseConv = NULL;
+extern nsIServiceManager* gServiceManager;
+extern PRBool gShuttingDown;
 
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsFileSpec *registryFile, nsFileSpec *componentDir)
@@ -181,11 +182,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
-    if (nsServiceManager::mGlobalServiceManager == NULL)
+    if (gServiceManager == NULL)
     {
         rv = NS_NewServiceManager(&servMgr);
         if (NS_FAILED(rv)) return rv;
-        nsServiceManager::mGlobalServiceManager = servMgr;
+        gServiceManager = servMgr;
         if (result)
 		{
 	        NS_ADDREF(servMgr);
@@ -505,6 +506,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     nsrefcnt cnt;
+    gShuttingDown = PR_TRUE;
 
     // Notify observers of xpcom shutting down
     nsresult rv = NS_OK;
