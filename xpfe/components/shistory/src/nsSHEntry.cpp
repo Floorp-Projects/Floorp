@@ -81,7 +81,7 @@ NS_IMETHODIMP
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
 			         nsIInputStream * aInputStream, nsISupports * aHistoryLayoutState)
 {
-    SetUri(aURI);
+   SetURI(aURI);
 	SetTitle(aTitle);
 	SetDocument(aDOMDocument);
 	SetPostData(aInputStream);
@@ -124,7 +124,7 @@ nsSHEntry::DestroyChildren() {
 NS_IMPL_ISUPPORTS2(nsSHEntry, nsISHEntry, nsISHContainer)
 
 NS_IMETHODIMP
-nsSHEntry::GetUri(nsIURI **aUri)
+nsSHEntry::GetURI(nsIURI **aUri)
 {
   NS_ENSURE_ARG_POINTER(aUri);
 
@@ -134,7 +134,7 @@ nsSHEntry::GetUri(nsIURI **aUri)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetUri(nsIURI * aUri)
+nsSHEntry::SetURI(nsIURI * aUri)
 {
 
   NS_IF_RELEASE(mURI);
