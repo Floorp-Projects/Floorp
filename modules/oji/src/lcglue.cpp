@@ -109,11 +109,7 @@ JVMContext* GetJVMContext()
 	if (context == NULL) {
 		context = new JVMContext;
 		context->proxyEnv = NULL;
-		context->securityStack = NULL;
 		context->jsj_env = NULL;
-		context->js_context = NULL;
-		context->js_startframe = NULL;
-		context->java_applet_obj = NULL;
 		localContext.set(context);
 	}
 	return context;
@@ -130,22 +126,6 @@ JS_BEGIN_EXTERN_C
 JS_STATIC_DLL_CALLBACK(JSContext*)
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_obj, JNIEnv *env, char **errp)
 {
-#if 0
-	JVMContext* context = GetJVMContext();
-	JSContext *cx = context->js_context;
-
-    /*
-    ** This callback is called for spontaneous calls only. Either create a new JSContext
-    ** or return the crippled context.
-    ** TODO: Get to some kind of script manager via service manager and then get to script context 
-    **       and then to get to the native context.
-    */
-    //JSContext *cx    = LM_GetCrippledContext();
-    //JSContext *cx    = NULL;
-
-    *errp = NULL;
-    return cx;
-#else
 	// Guess what? This design is totally invalid under Gecko, because there isn't a 1 to 1 mapping
 	// between NSPR threads and JSContexts. We have to ask the plugin instance peer what JSContext
 	// it lives in to make any sense of all this.
@@ -163,7 +143,6 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 		}
 	}
 	return context;
-#endif
 }
 
 /*
@@ -177,21 +156,20 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 {
 	*errp = NULL;
 
+    // FIXME:  how do we ever break the association between the jsj_env and the
+    // JVMContext? This needs to be figured out. Otherwise, we'll end up with the
+    // same dangling JSContext problem we are trying to weed out.
+
 	JVMContext* context = GetJVMContext();
 	JSJavaThreadState* jsj_env = context->jsj_env;
 	if (jsj_env != NULL)
 		return jsj_env;
- /*/TODO: Figure out if moja intiailzation went ok.   
-	if (ET_InitMoja(0) != LM_MOJA_OK) {
-		*errp = strdup("LiveConnect initialization failed.");
-		return NULL;
-	}
-*/
+
 	JSJavaVM* js_jvm = NULL;
 	nsresult rv;
 	nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
 	if (NS_FAILED(rv)) return NULL;
-	nsJVMManager* pJVMMgr = (nsJVMManager *)managerService.get();  
+	nsJVMManager* pJVMMgr = (nsJVMManager*) managerService.get();  
 	if (pJVMMgr != NULL) {
 		js_jvm = pJVMMgr->GetJSJavaVM();
 		if (js_jvm == NULL) {
@@ -202,7 +180,6 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 
 	jsj_env = JSJ_AttachCurrentThreadToJava(js_jvm, NULL, NULL);
 	context->jsj_env = jsj_env;
-	context->js_context = cx;
 
 	return jsj_env;
 }
@@ -268,70 +245,6 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 	// window = getDOMWindow().getScriptOwner().getJSObject().
 	return window;
 }
-
-
-#if 0 
-// This needs to be modified at least temporarily.  Caps is undergoing some rearchitecture
-// nsPrincipal doesn't exist anymore, we're trying to move towards using nsIPrincipal and a PrincipalTools.h
-// which includes the definitions for arrays.
-// TODO: Need raman's help. This needs to convert between C++ [] array data type to a nsVector object.
-void* 
-ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
-{
-    nsIPrincipal  **ppNSIPrincipalArray = NS_REINTERPRET_CAST(nsIPrincipal**, ppNSIPrincipalArrayIN);
-    PRInt32        length = numPrincipals;
-    nsresult       err    = NS_OK;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
-    if (NS_FAILED(err)) return NULL;
-    nsJVMManager* pJVMMgr = (nsJVMManager *)managerService.get();  
-    void          *pNSPrincipalArray = NULL;
-    if (pJVMMgr != NULL) {
-         if (ppNSIPrincipalArray != NULL) {
-             nsIPluginManager *pNSIPluginManager = NULL;
-             NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-             err = pJVMMgr->QueryInterface(kIPluginManagerIID,
-                                  (void**)&pNSIPluginManager);
-
-             if(   (err == NS_OK) 
-                && (pNSIPluginManager != NULL )
-               )
-             {
-               nsCCapsManager *pNSCCapsManager = NULL;
-               NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
-               err = pNSIPluginManager->QueryInterface(kICapsManagerIID, (void**)&pNSCCapsManager);
-               if(   (err == NS_OK) 
-                  && (pNSCCapsManager != NULL)
-                 )
-               {
-                 PRInt32 i=0;
-                 nsPrincipal *pNSPrincipal = NULL;
-                 pNSPrincipalArray = nsCapsNewPrincipalArray(length);
-                 if (pNSPrincipalArray != NULL) 
-                 {
-                   while( i<length )
-                   {
-                      err = pNSCCapsManager->GetNSPrincipal(ppNSIPrincipalArray[i], &pNSPrincipal);
-                      nsCapsSetPrincipalArrayElement(pNSPrincipalArray, i, pNSPrincipal);
-                      i++;
-                   }
-                 }
-                 pNSCCapsManager->Release();
-               }
-               pNSIPluginManager->Release();
-             }
-         }
-    }
-    if (  (pNSPrincipalArray != NULL)
-        &&(length != 0)
-       )
-    {
-        return pNSPrincipalArray;
-    }
-
-    return NULL;
-}
-#endif //0
-
 
 JS_STATIC_DLL_CALLBACK(JSPrincipals*)
 get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
@@ -491,31 +404,6 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 JS_STATIC_DLL_CALLBACK(void)
 exit_js_impl(JNIEnv *jEnv, JSContext *cx)
 {
-    //TODO:  
-    //LM_UnlockJS();
-
-    // Pop the security context stack
-    JVMContext* context = GetJVMContext();
-    JVMSecurityStack *pSecInfoBottom = context->securityStack;
-    if (pSecInfoBottom != NULL)
-    {
-      if(pSecInfoBottom->next == pSecInfoBottom)
-      {
-        context->securityStack = NULL;
-        pSecInfoBottom->next   = NULL;            
-        pSecInfoBottom->prev   = NULL;            
-        delete pSecInfoBottom;
-      }
-      else
-      {
-        JVMSecurityStack *top = pSecInfoBottom->prev;
-        top->next        = NULL;            
-        pSecInfoBottom->prev = top->prev;        
-        top->prev->next  = pSecInfoBottom;
-        top->prev        = NULL;
-        delete top;
-      }
-    }
     // The main idea is to execute terminate function if have any;
     if (cx)
     {

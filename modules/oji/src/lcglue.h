@@ -46,33 +46,16 @@
 #include "nsIThreadManager.h"
 #include "nsISecurityContext.h"
 
-struct JVMSecurityStack {
-  void        **pNSIPrincipaArray;
-  int           numPrincipals;
-  void         *pNSISecurityContext;
-  JSStackFrame *pJavaToJSFrame;
-  JSStackFrame *pJSToJavaFrame;
-  JVMSecurityStack *next;
-  JVMSecurityStack *prev;
-};
-typedef struct JVMSecurityStack JVMSecurityStack;
-
 /**
  * JVMContext is maintained as thread local storage. The current thread's
  * context is accessed by calling GetJVMContext().
  */
 struct JVMContext {
 	JNIEnv					*proxyEnv;					/* thread local proxy JNI */
-	JVMSecurityStack		*securityStack;				/* thread local security stack. */
 	JSJavaThreadState		*jsj_env;					/* thread local JavaScript execution env. */
-	JSContext				*js_context;				/* thread local JavaScript context. */
-	JSStackFrame			*js_startframe;				/* thread local JavaScript stack frame. */
-    void                    *java_applet_obj;
 };
 
 JVMContext* GetJVMContext();
 void JVM_InitLCGlue(void);      // in lcglue.cpp
-extern "C" void* 
-ConvertNSIPrincipalToNSPrincipalArray(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext);
 
 #endif /* lcglue_h___ */
