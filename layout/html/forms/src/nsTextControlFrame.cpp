@@ -316,3 +316,23 @@ nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTextControlFrame::GetWrapProperty(nsString &aOutValue)
+{
+  aOutValue = "";
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) 
+  {
+    nsHTMLValue value;
+    result = content->GetHTMLAttribute(nsHTMLAtoms::wrap, value);
+    if (eHTMLUnit_String == value.GetUnit()) 
+    { 
+      value.GetStringValue(aOutValue);
+    }
+    NS_RELEASE(content);
+  }
+  return result;
+}
