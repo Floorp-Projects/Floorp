@@ -47,35 +47,37 @@
   <broadcaster id="args" value=""/>
 
   <grid>
-    <columns><column/><column style="width: 15em" flex="1"/><column style="min-width: 8em"/></columns>
+    <columns><column/><column style="min-width 15em; width: 15em"/></columns>
     <rows>
-      <row>
+      <row valign="middle" autostretch="never">
         <text class="label" id="MisspelledWordLabel" value="&misspelledWord.label;"/>
-        <text class="label bold" id="MisspelledWord"/>
+        <text class="label bold" id="MisspelledWord" crop="right"/>
         <spring/>
       </row>
-      <row>
+      <row valign="middle" autostretch="never">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <textfield id="ReplaceWord" oninput="ChangeReplaceWord()"/>
-        <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+        <box valign="middle" autostretch="never">
+          <textfield id="ReplaceWord" oninput="ChangeReplaceWord()" style="width: 14em"/>
+          <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+        </box>
       </row>
     </rows>
   </grid>
   <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
   <grid>
-    <columns><column style="width: 15em" flex="1"/><column style="width: 15em" flex="1"/></columns>
+    <columns><column style="width: 15em;"/><column style="width: 15em; max-width: 15em"/></columns>
     <rows>
       <row>
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()">
+        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <grid flex="1">
-          <columns><column style="min-width: 8em" flex="1"/><column style="min-width: 8em" flex="1"/></columns>
+          <columns><column style="min-width: 8em"/><column style="min-width: 8em"/></columns>
           <rows>
             <row>
               <button class="dialog" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
-              <button class="dialog" flex="1" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreAllButton.label;"/>
+              <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreAllButton.label;"/>
             </row>
             <row>
               <button class="dialog" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
@@ -95,11 +97,11 @@
         <spring/>
       </row>
       <row>
-        <menulist id="LanguageMenulist" oncommand="SelectLanguage()" flex="1"/>
+        <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>
           <!-- contents are appended by JS -->
         <box flex="1">
           <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="dialog" id="Close" flex="1"   value="&closeButton.label;"   oncommand="onClose()"/>
+          <button class="dialog" id="Close"   flex="1" value="&closeButton.label;"   oncommand="onClose()"/>
         </box>
       </row>
     </rows>
