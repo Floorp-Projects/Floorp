@@ -85,11 +85,19 @@ sub getUserByContactDetails {
 sub getUserByID {
     my $self = shift;
     my($app, $userID) = @_;
-    my(@data) = $app->getService('dataSource.user')->getUserByID($app, $userID);
-    if (@data) {
-        return $self->objectCreate($app, @data);
+    # do we already have that user?
+    my $user = $app->getObject("user.$userID");
+    if (defined($user)) {
+        # got a user created already, return that
+        return $user;
     } else {
-        return undef;
+        # that user isn't in our system yet, look it up
+        my(@data) = $app->getService('dataSource.user')->getUserByID($app, $userID);
+        if (@data) {
+            return $self->objectCreate($app, @data);
+        } else {
+            return undef;
+        }
     }
 }
 
@@ -100,10 +108,29 @@ sub getNewUser {
 }
 
 sub objectProvides {
-    my $class = shift;
+    my $self = shift;
     my($service) = @_;
-    return ($service eq 'user' or $class->SUPER::objectProvides($service));
+    return ($service eq 'user' or
+            $service eq 'user.'.($self->userID) or
+            $self->SUPER::objectProvides($service));
 }
+
+# We don't need this yet, so it's commented out as an optimisation.
+# # Override the default constructor to check to see if the user already
+# # has an object associated with them in the system, and if they do,
+# # use that instead of creating a new one.
+# sub objectCreate {
+#     my $class = shift;
+#     my($app, $userID, @data) @_;
+#     return $app->getObject("user.$userID") || $class->SUPER::objectCreate($app, $userID, @data);
+#     # more strictly:
+#     #
+#     # my $user = $app->getObject("user.$userID");
+#     # if (not defined($user)) {
+#     #     $user = $class->SUPER::objectCreate($app, $userID, @data);
+#     # }
+#     # return $user;
+# }
 
 sub objectInit {
     my $self = shift;
