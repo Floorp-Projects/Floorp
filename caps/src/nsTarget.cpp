@@ -25,209 +25,374 @@
 #include "xpgetstr.h"
 #include "plhash.h"
 
-extern int CAPS_TARGET_RISK_COLOR_HIGH;
-extern int CAPS_TARGET_RISK_COLOR_LOW;
-extern int CAPS_TARGET_RISK_COLOR_MEDIUM;
-extern int CAPS_TARGET_DESC_THREAD_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_THREAD_ACCESS;
-extern int CAPS_TARGET_URL_THREAD_ACCESS;
-extern int CAPS_TARGET_DESC_THREAD_GROUP_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_THREAD_GROUP_ACCESS;
-extern int CAPS_TARGET_URL_THREAD_GROUP_ACCESS;
-extern int CAPS_TARGET_DESC_EXEC_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_EXEC_ACCESS;
-extern int CAPS_TARGET_URL_EXEC_ACCESS;
-extern int CAPS_TARGET_DESC_EXIT_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_EXIT_ACCESS;
-extern int CAPS_TARGET_URL_EXIT_ACCESS;
-extern int CAPS_TARGET_DESC_LINK_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_LINK_ACCESS;
-extern int CAPS_TARGET_URL_LINK_ACCESS;
-extern int CAPS_TARGET_DESC_PROPERTY_WRITE;
-extern int CAPS_TARGET_DETAIL_DESC_PROPERTY_WRITE;
-extern int CAPS_TARGET_URL_PROPERTY_WRITE;
-extern int CAPS_TARGET_DESC_PROPERTY_READ;
-extern int CAPS_TARGET_DETAIL_DESC_PROPERTY_READ;
-extern int CAPS_TARGET_URL_PROPERTY_READ;
-extern int CAPS_TARGET_DESC_FILE_READ;
-extern int CAPS_TARGET_DETAIL_DESC_FILE_READ;
-extern int CAPS_TARGET_URL_FILE_READ;
-extern int CAPS_TARGET_DESC_FILE_WRITE;
-extern int CAPS_TARGET_DETAIL_DESC_FILE_WRITE;
-extern int CAPS_TARGET_URL_FILE_WRITE;
-extern int CAPS_TARGET_DESC_FILE_DELETE;
-extern int CAPS_TARGET_DETAIL_DESC_FILE_DELETE;
-extern int CAPS_TARGET_URL_FILE_DELETE;
-extern int CAPS_TARGET_DESC_FD_READ;
-extern int CAPS_TARGET_DETAIL_DESC_FD_READ;
-extern int CAPS_TARGET_URL_FD_READ;
-extern int CAPS_TARGET_DESC_FD_WRITE;
-extern int CAPS_TARGET_DETAIL_DESC_FD_WRITE;
-extern int CAPS_TARGET_URL_FD_WRITE;
-extern int CAPS_TARGET_DESC_LISTEN;
-extern int CAPS_TARGET_DETAIL_DESC_LISTEN;
-extern int CAPS_TARGET_URL_LISTEN;
-extern int CAPS_TARGET_DESC_ACCEPT;
-extern int CAPS_TARGET_DETAIL_DESC_ACCEPT;
-extern int CAPS_TARGET_URL_ACCEPT;
-extern int CAPS_TARGET_DESC_MULTICAST;
-extern int CAPS_TARGET_DETAIL_DESC_MULTICAST;
-extern int CAPS_TARGET_URL_MULTICAST;
-extern int CAPS_TARGET_DESC_TOP_LEVEL_WINDOW;
-extern int CAPS_TARGET_DETAIL_DESC_TOP_LEVEL_WINDOW;
-extern int CAPS_TARGET_URL_TOP_LEVEL_WINDOW;
-extern int CAPS_TARGET_DESC_DIALOG_MODALITY;
-extern int CAPS_TARGET_DETAIL_DESC_DIALOG_MODALITY;
-extern int CAPS_TARGET_URL_DIALOG_MODALITY;
-extern int CAPS_TARGET_DESC_PACKAGE_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_PACKAGE_ACCESS;
-extern int CAPS_TARGET_URL_PACKAGE_ACCESS;
-extern int CAPS_TARGET_DESC_PACKAGE_DEFINITION;
-extern int CAPS_TARGET_DETAIL_DESC_PACKAGE_DEFINITION;
-extern int CAPS_TARGET_URL_PACKAGE_DEFINITION;
-extern int CAPS_TARGET_DESC_SET_FACTORY;
-extern int CAPS_TARGET_DETAIL_DESC_SET_FACTORY;
-extern int CAPS_TARGET_URL_SET_FACTORY;
-extern int CAPS_TARGET_DESC_MEMBER_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_MEMBER_ACCESS;
-extern int CAPS_TARGET_URL_MEMBER_ACCESS;
-extern int CAPS_TARGET_DESC_PRINT_JOB_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_PRINT_JOB_ACCESS;
-extern int CAPS_TARGET_URL_PRINT_JOB_ACCESS;
-extern int CAPS_TARGET_DESC_SYSTEM_CLIPBOARD_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_SYSTEM_CLIPBOARD_ACCESS;
-extern int CAPS_TARGET_URL_SYSTEM_CLIPBOARD_ACCESS;
-extern int CAPS_TARGET_DESC_AWT_EVENT_QUEUE_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_AWT_EVENT_QUEUE_ACCESS;
-extern int CAPS_TARGET_URL_AWT_EVENT_QUEUE_ACCESS;
-extern int CAPS_TARGET_DESC_SECURITY_PROVIDER;
-extern int CAPS_TARGET_DETAIL_DESC_SECURITY_PROVIDER;
-extern int CAPS_TARGET_URL_SECURITY_PROVIDER;
-extern int CAPS_TARGET_DESC_CREATE_SECURITY_MANAGER;
-extern int CAPS_TARGET_DETAIL_DESC_CREATE_SECURITY_MANAGER;
-extern int CAPS_TARGET_URL_CREATE_SECURITY_MANAGER;
-extern int CAPS_TARGET_DESC_IMPERSONATOR;
-extern int CAPS_TARGET_DETAIL_DESC_IMPERSONATOR;
-extern int CAPS_TARGET_URL_IMPERSONATOR;
-extern int CAPS_TARGET_DESC_BROWSER_READ;
-extern int CAPS_TARGET_DETAIL_DESC_BROWSER_READ;
-extern int CAPS_TARGET_URL_BROWSER_READ;
-extern int CAPS_TARGET_DESC_BROWSER_WRITE;
-extern int CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE;
-extern int CAPS_TARGET_URL_BROWSER_WRITE;
-extern int CAPS_TARGET_DESC_PREFS_READ;
-extern int CAPS_TARGET_DETAIL_DESC_PREFS_READ;
-extern int CAPS_TARGET_URL_PREFS_READ;
-extern int CAPS_TARGET_DESC_PREFS_WRITE;
-extern int CAPS_TARGET_DETAIL_DESC_PREFS_WRITE;
-extern int CAPS_TARGET_URL_PREFS_WRITE;
-extern int CAPS_TARGET_DESC_SEND_MAIL;
-extern int CAPS_TARGET_DETAIL_DESC_SEND_MAIL;
-extern int CAPS_TARGET_URL_SEND_MAIL;
-extern int CAPS_TARGET_DESC_REG_PRIVATE;
-extern int CAPS_TARGET_DETAIL_DESC_REG_PRIVATE;
-extern int CAPS_TARGET_URL_REG_PRIVATE;
-extern int CAPS_TARGET_DESC_REG_STANDARD;
-extern int CAPS_TARGET_DETAIL_DESC_REG_STANDARD;
-extern int CAPS_TARGET_URL_REG_STANDARD;
-extern int CAPS_TARGET_DESC_REG_ADMIN;
-extern int CAPS_TARGET_DETAIL_DESC_REG_ADMIN;
-extern int CAPS_TARGET_URL_REG_ADMIN;
-extern int CAPS_TARGET_DESC_UNINSTALL;
-extern int CAPS_TARGET_DETAIL_DESC_UNINSTALL;
-extern int CAPS_TARGET_URL_UNINSTALL;
-extern int CAPS_TARGET_DESC_SOFTWAREINSTALL;
-extern int CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL;
-extern int CAPS_TARGET_URL_SOFTWAREINSTALL;
-extern int CAPS_TARGET_DESC_SILENTINSTALL;
-extern int CAPS_TARGET_DETAIL_DESC_SILENTINSTALL;
-extern int CAPS_TARGET_URL_SILENTINSTALL;
-extern int CAPS_TARGET_DESC_CONNECT;
-extern int CAPS_TARGET_DETAIL_DESC_CONNECT;
-extern int CAPS_TARGET_URL_CONNECT;
-extern int CAPS_TARGET_DESC_CLIENT_AUTH;
-extern int CAPS_TARGET_DETAIL_DESC_CLIENT_AUTH;
-extern int CAPS_TARGET_URL_CLIENT_AUTH;
-extern int CAPS_TARGET_DESC_REDIRECT;
-extern int CAPS_TARGET_DETAIL_DESC_REDIRECT;
-extern int CAPS_TARGET_URL_REDIRECT;
-extern int CAPS_TARGET_DESC_CONNECT_WITH_REDIRECT;
-extern int CAPS_TARGET_DETAIL_DESC_CONNECT_WITH_REDIRECT;
-extern int CAPS_TARGET_URL_CONNECT_WITH_REDIRECT;
-extern int CAPS_TARGET_DESC_CODEBASE_ENV;
-extern int CAPS_TARGET_DETAIL_DESC_CODEBASE_ENV;
-extern int CAPS_TARGET_URL_CODEBASE_ENV;
-extern int CAPS_TARGET_DESC_SUPER_USER;
-extern int CAPS_TARGET_DETAIL_DESC_SUPER_USER;
-extern int CAPS_TARGET_URL_SUPER_USER;
-extern int CAPS_TARGET_DESC_SAR;
-extern int CAPS_TARGET_DETAIL_DESC_SAR;
-extern int CAPS_TARGET_URL_SAR;
-extern int CAPS_TARGET_DESC_30_CAPABILITIES;
-extern int CAPS_TARGET_DETAIL_DESC_30_CAPABILITIES;
-extern int CAPS_TARGET_URL_30_CAPABILITIES;
-extern int CAPS_TARGET_DESC_MARIMBA;
-extern int CAPS_TARGET_DETAIL_DESC_MARIMBA;
-extern int CAPS_TARGET_URL_MARIMBA;
-extern int CAPS_TARGET_DESC_MARIMBA;
-extern int CAPS_TARGET_DETAIL_DESC_MARIMBA;
-extern int CAPS_TARGET_URL_MARIMBA;
-extern int CAPS_TARGET_DESC_IIOP;
-extern int CAPS_TARGET_DETAIL_DESC_IIOP;
-extern int CAPS_TARGET_URL_IIOP;
-extern int CAPS_TARGET_DESC_DEBUGGER;
-extern int CAPS_TARGET_DETAIL_DESC_DEBUGGER;
-extern int CAPS_TARGET_URL_DEBUGGER;
-extern int CAPS_TARGET_DESC_CANVAS_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS;
-extern int CAPS_TARGET_URL_CANVAS_ACCESS;
-extern int CAPS_TARGET_DESC_FILE_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_FILE_ACCESS;
-extern int CAPS_TARGET_URL_FILE_ACCESS;
-extern int CAPS_TARGET_DESC_BROWSER_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS;
-extern int CAPS_TARGET_URL_BROWSER_ACCESS;
-extern int CAPS_TARGET_DESC_LIMITED_FILE_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_LIMITED_FILE_ACCESS;
-extern int CAPS_TARGET_URL_LIMITED_FILE_ACCESS;
-extern int CAPS_TARGET_DESC_GAMES_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_GAMES_ACCESS;
-extern int CAPS_TARGET_URL_GAMES_ACCESS;
-extern int CAPS_TARGET_DESC_WORD_PROCESSOR_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_WORD_PROCESSOR_ACCESS;
-extern int CAPS_TARGET_URL_WORD_PROCESSOR_ACCESS;
-extern int CAPS_TARGET_DESC_SPREADSHEET_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_SPREADSHEET_ACCESS;
-extern int CAPS_TARGET_URL_SPREADSHEET_ACCESS;
-extern int CAPS_TARGET_DESC_PRESENTATION_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_PRESENTATION_ACCESS;
-extern int CAPS_TARGET_URL_PRESENTATION_ACCESS;
-extern int CAPS_TARGET_DESC_DATABASE_ACCESS;
-extern int CAPS_TARGET_DETAIL_DESC_DATABASE_ACCESS;
-extern int CAPS_TARGET_URL_DATABASE_ACCESS;
-extern int CAPS_TARGET_DESC_TERMINAL_EMULATOR;
-extern int CAPS_TARGET_DETAIL_DESC_TERMINAL_EMULATOR;
-extern int CAPS_TARGET_URL_TERMINAL_EMULATOR;
-extern int CAPS_TARGET_DESC_JAR_PACKAGER;
-extern int CAPS_TARGET_DETAIL_DESC_JAR_PACKAGER;
-extern int CAPS_TARGET_URL_JAR_PACKAGER;
-extern int CAPS_TARGET_DESC_ACCOUNT_SETUP;
-extern int CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP;
-extern int CAPS_TARGET_URL_ACCOUNT_SETUP;
-extern int CAPS_TARGET_DESC_CONSTELLATION;
-extern int CAPS_TARGET_DETAIL_DESC_CONSTELLATION;
-extern int CAPS_TARGET_URL_CONSTELLATION;
+/* XXXXXXXX Begin oF HACK */
 
-extern int CAPS_TARGET_DESC_ALL_JAVA_PERMISSION;
-extern int CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION;
-extern int CAPS_TARGET_URL_ALL_JAVA_PERMISSION;
+/* XXX: This array must be kept in sync with the allxpstr.h. 
+ * The following is hack until we have a design on removal of allxpstr.h
+ */
+char *capsTargetStrings[] = {
+  "low",
 
-extern int CAPS_TARGET_DESC_ALL_JS_PERMISSION;
-extern int CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION;
-extern int CAPS_TARGET_URL_ALL_JS_PERMISSION;
+  "medium",
 
-extern int CAPS_TARGET_RISK_COLOR_HIGH;
-extern int CAPS_TARGET_RISK_COLOR_HIGH;
+  "high",
+
+  "#aaffaa",
+
+  "#ffffaa",
+
+  "#ffaaaa",
+
+  "http://home.netscape.com/eng/mozilla/4.0/handbook/",
+
+  "Reading files stored in your computer",
+
+  "Reading any files stored on hard disks or other storage media connected to your computer.",
+
+  "#FileRead",
+
+  "Modifying files stored in your computer",
+
+  "Modifying any files stored on hard disks or other storage media connected to you computer.",
+
+  "#FileWrite",
+
+  "Deleting files stored in your computer",
+
+  "Deletion of any files stored on hard disks or other storage media connected to your computer.",
+
+  "#FileDelete"
+
+  "Access to impersonate as another application",
+
+  "Access to impersonate as another application",
+
+  "#Impersonator",
+
+  "Access to browser data",
+
+  "Access to browser data that may be considered private, such as a list of web sites visited or the contents of web page forms you may have filled in.",
+
+  "#BrowserRead",
+
+  "Modifying the browser",
+
+  "Modifying the browser in a potentially dangerous way, such as creating windows that may look like they belong to another program or positioning windows anywhere on the screen.",
+
+  "#BrowserWrite",
+
+  "Reading or modifying browser data",
+
+  "Reading or modifying browser data that may be considered private, such as a list of web sites visited or the contents of web forms you may have filled in. Modifications may also include creating windows that look like they belong to another program or positioning windowsanywhere on the screen.",
+
+  "#BrowserAccess",
+
+  "Reading preferences settings",
+
+  "Access to read the current settings of your preferences.",
+
+  "#PrefsRead",
+
+  "Modifying preferences settings",
+
+  "Modifying the current settings of your preferences.",
+
+  "#PrefsWrite",
+
+  "Sending email messages on your behalf",
+
+  "Sending email messages on your behalf",
+
+  "#SendMail",
+
+  "Access to the vendor's portion of your computer's registry of installed software",
+
+  "Most computers store information about installed software, such as version numbers, in a registry file. When you install new software, the installation program sometimes needs to read or change entries in the portion of the"
+  "registry that describes the software vendor's products. You should grant "
+"this form of access only if you are installing new software from a reliable "
+"vendor. The entity that signs the software can access only that entity's "
+"portion of the registry.",
+
+  "#RegPrivate",
+
+  "Access to shared information in the computer's registry of installed software",
+
+"Most computers store information about installed software, such as version "
+"numbers, in a registry file. This file also includes information shared by "
+"all programs installed on your computer, including information about the user "
+"or the system. Programs that have access to shared registry information can "
+"obtain information about other programs that have the same access. This allows "
+"programs that work closely together to get information about each other. "
+"You should grant this form of access only if you know that the program "
+"requesting it is designed to work with other programs on your hard disk.",
+
+
+  "#RegStandard",
+
+  "Access to any part of your computer's registry of installed software",
+
+  "Most computers store information about installed software, such as version "
+"numbers, in a registry file. System administrators sometimes need to change "
+"entries in the registry for software from a variety of vendors. You should "
+"grant this form of access only if you are running software provided by your "
+"system administrator.",
+
+
+  "#RegAdmin",
+
+  "Access required to setup and configure your browser",
+
+  "Access to, and modification of, browser data, preferences, files, networking "
+"and modem configuration. This access is commonly granted to the main setup "
+"program for your browser.",
+
+  "#AccountSetup",
+
+  "Access to the site archive file",
+
+  "Access required to add, modify, or delete site archive files and make "
+"arbitrary network connections in the process. This form of access is required "
+"only by netcasting applications such as Netscape Netcaster, which request it "
+"in combination with several other kinds of access. Applications should not "
+"normally request this access by itself, and you should not normally grant it.",
+
+
+  "#SiteArchive",
+
+  "Displaying text or graphics anywhere on the screen",
+
+  "Displaying HTML text or graphics on any part of the screen, without window "
+"borders, toolbars, or menus. Typically granted to invoke canvas mode, screen "
+"savers, and so on.",
+
+  "#CanvasAccess",
+
+  "Reading, modification, or deletion of any of your files",
+
+  "This form of access is typically required by a program such as a word "
+"processor or a debugger that needs to create, read, modify, or delete files "
+"on hard disks or other storage media connected to your computer.",
+
+  "#FileAccess",
+
+  "Uninstall software",
+
+  "Access required for automatic removal of previously installed software.",
+
+  "#Uninstall",
+
+  "Installing and running software on your computer",
+
+  "Installing software on your computer's hard disk. An installation "
+"program can also execute or delete any software on your computer. "
+"You should not grant this form of access unless you are installing or "
+"updating software from a reliable source.",
+
+  "#SoftwareInstall",
+
+  "Installing and running software without warning you",
+
+  "Installing software on your computer's main hard disk without giving you any "
+"warning, potentially deleting other files on the hard disk. Any software on the "
+"hard disk may be executed in the process. This is an extremely dangerous form "
+"of access. It should be granted by system administrators only.",
+
+  "#SilentInstall",
+
+  "Complete access to your computer for java programs",
+
+  "Complete access required by java programs to your computer, such as Java "
+"Virtual machine reading, writing, deleting information from your disk, "
+"and to send receive and send information to any computer on the Internet.",
+
+  "#AllJavaPermission",
+
+  "Access to all Privileged JavaScript operations",
+
+  "Access to all Privileged JavaScript operations.",
+
+  "#AllJavaScriptPermission",
+
+};
+
+typedef enum CAPS_TARGET {
+  CAPS_TARGET_RISK_STR_LOW,
+  CAPS_TARGET_RISK_STR_MEDIUM,
+  CAPS_TARGET_RISK_STR_HIGH,
+  CAPS_TARGET_RISK_COLOR_LOW,
+  CAPS_TARGET_RISK_COLOR_MEDIUM,
+  CAPS_TARGET_RISK_COLOR_HIGH,
+  CAPS_TARGET_HELP_URL,
+  CAPS_TARGET_DESC_FILE_READ,
+  CAPS_TARGET_DETAIL_DESC_FILE_READ,
+  CAPS_TARGET_URL_FILE_READ,
+  CAPS_TARGET_DESC_FILE_WRITE,
+  CAPS_TARGET_DETAIL_DESC_FILE_WRITE,
+  CAPS_TARGET_URL_FILE_WRITE,
+  CAPS_TARGET_DESC_FILE_DELETE,
+  CAPS_TARGET_DETAIL_DESC_FILE_DELETE,
+  CAPS_TARGET_URL_FILE_DELETE,
+  CAPS_TARGET_DESC_IMPERSONATOR,
+  CAPS_TARGET_DETAIL_DESC_IMPERSONATOR,
+  CAPS_TARGET_URL_IMPERSONATOR,
+  CAPS_TARGET_DESC_BROWSER_READ,
+  CAPS_TARGET_DETAIL_DESC_BROWSER_READ,
+  CAPS_TARGET_URL_BROWSER_READ,
+  CAPS_TARGET_DESC_BROWSER_WRITE,
+  CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE,
+  CAPS_TARGET_URL_BROWSER_WRITE,
+  CAPS_TARGET_DESC_BROWSER_ACCESS,
+  CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS,
+  CAPS_TARGET_URL_BROWSER_ACCESS,
+  CAPS_TARGET_DESC_PREFS_READ,
+  CAPS_TARGET_DETAIL_DESC_PREFS_READ,
+  CAPS_TARGET_URL_PREFS_READ,
+  CAPS_TARGET_DESC_PREFS_WRITE,
+  CAPS_TARGET_DETAIL_DESC_PREFS_WRITE,
+  CAPS_TARGET_URL_PREFS_WRITE,
+  CAPS_TARGET_DESC_SEND_MAIL,
+  CAPS_TARGET_DETAIL_DESC_SEND_MAIL,
+  CAPS_TARGET_URL_SEND_MAIL,
+  CAPS_TARGET_DESC_REG_PRIVATE,
+  CAPS_TARGET_DETAIL_DESC_REG_PRIVATE,
+  CAPS_TARGET_DETAIL_DESC_REG_PRIVATE_1,
+  CAPS_TARGET_URL_REG_PRIVATE,
+  CAPS_TARGET_DESC_REG_STANDARD,
+  CAPS_TARGET_DETAIL_DESC_REG_STANDARD,
+  CAPS_TARGET_DETAIL_DESC_REG_STANDARD_1,
+  CAPS_TARGET_DETAIL_DESC_REG_STANDARD_2,
+  CAPS_TARGET_URL_REG_STANDARD,
+  CAPS_TARGET_DESC_REG_ADMIN,
+  CAPS_TARGET_DETAIL_DESC_REG_ADMIN,
+  CAPS_TARGET_DETAIL_DESC_REG_ADMIN_1,
+  CAPS_TARGET_URL_REG_ADMIN,
+  CAPS_TARGET_DESC_ACCOUNT_SETUP,
+  CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP,
+  CAPS_TARGET_URL_ACCOUNT_SETUP,
+  CAPS_TARGET_DESC_SAR,
+  CAPS_TARGET_DETAIL_DESC_SAR,
+  CAPS_TARGET_DETAIL_DESC_SAR_1,
+  CAPS_TARGET_URL_SAR,
+  CAPS_TARGET_DESC_CANVAS_ACCESS,
+  CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS,
+  CAPS_TARGET_URL_CANVAS_ACCESS,
+  CAPS_TARGET_DESC_FILE_ACCESS,
+  CAPS_TARGET_DETAIL_DESC_FILE_ACCESS,
+  CAPS_TARGET_URL_FILE_ACCESS,
+  CAPS_TARGET_DESC_UNINSTALL,
+  CAPS_TARGET_DETAIL_DESC_UNINSTALL,
+  CAPS_TARGET_URL_UNINSTALL,
+  CAPS_TARGET_DESC_SOFTWAREINSTALL,
+  CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL,
+  CAPS_TARGET_URL_SOFTWAREINSTALL,
+  CAPS_TARGET_DESC_SILENTINSTALL,
+  CAPS_TARGET_DETAIL_DESC_SILENTINSTALL,
+  CAPS_TARGET_URL_SILENTINSTALL,
+  CAPS_TARGET_DESC_ALL_JAVA_PERMISSION,
+  CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION,
+  CAPS_TARGET_URL_ALL_JAVA_PERMISSION,
+  CAPS_TARGET_DESC_ALL_JS_PERMISSION,
+  CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION,
+  CAPS_TARGET_URL_ALL_JS_PERMISSION,
+  CAPS_TARGET_MAXIMUM
+}  CAPS_TARGET;
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+char* capsGetString(int id) 
+{
+  PR_ASSERT(id <= CAPS_TARGET_MAXIMUM);
+  return capsTargetStrings[id];
+}
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
+
+#ifdef XXX
+extern int  CAPS_TARGET_RISK_STR_LOW;
+extern int  CAPS_TARGET_RISK_STR_MEDIUM;
+extern int  CAPS_TARGET_RISK_STR_HIGH;
+extern int  CAPS_TARGET_RISK_COLOR_LOW;
+extern int  CAPS_TARGET_RISK_COLOR_MEDIUM;
+extern int  CAPS_TARGET_RISK_COLOR_HIGH;
+extern int  CAPS_TARGET_HELP_URL;
+extern int  CAPS_TARGET_DESC_FILE_READ;
+extern int  CAPS_TARGET_DETAIL_DESC_FILE_READ;
+extern int  CAPS_TARGET_URL_FILE_READ;
+extern int  CAPS_TARGET_DESC_FILE_WRITE;
+extern int  CAPS_TARGET_DETAIL_DESC_FILE_WRITE;
+extern int  CAPS_TARGET_URL_FILE_WRITE;
+extern int  CAPS_TARGET_DESC_FILE_DELETE;
+extern int  CAPS_TARGET_DETAIL_DESC_FILE_DELETE;
+extern int  CAPS_TARGET_URL_FILE_DELETE;
+extern int  CAPS_TARGET_DESC_IMPERSONATOR;
+extern int  CAPS_TARGET_DETAIL_DESC_IMPERSONATOR;
+extern int  CAPS_TARGET_URL_IMPERSONATOR;
+extern int  CAPS_TARGET_DESC_BROWSER_READ;
+extern int  CAPS_TARGET_DETAIL_DESC_BROWSER_READ;
+extern int  CAPS_TARGET_URL_BROWSER_READ;
+extern int  CAPS_TARGET_DESC_BROWSER_WRITE;
+extern int  CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE;
+extern int  CAPS_TARGET_URL_BROWSER_WRITE;
+extern int  CAPS_TARGET_DESC_BROWSER_ACCESS;
+extern int  CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS;
+extern int  CAPS_TARGET_URL_BROWSER_ACCESS;
+extern int  CAPS_TARGET_DESC_PREFS_READ;
+extern int  CAPS_TARGET_DETAIL_DESC_PREFS_READ;
+extern int  CAPS_TARGET_URL_PREFS_READ;
+extern int  CAPS_TARGET_DESC_PREFS_WRITE;
+extern int  CAPS_TARGET_DETAIL_DESC_PREFS_WRITE;
+extern int  CAPS_TARGET_URL_PREFS_WRITE;
+extern int  CAPS_TARGET_DESC_SEND_MAIL;
+extern int  CAPS_TARGET_DETAIL_DESC_SEND_MAIL;
+extern int  CAPS_TARGET_URL_SEND_MAIL;
+extern int  CAPS_TARGET_DESC_REG_PRIVATE;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_PRIVATE;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_PRIVATE_1;
+extern int  CAPS_TARGET_URL_REG_PRIVATE;
+extern int  CAPS_TARGET_DESC_REG_STANDARD;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_STANDARD;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_STANDARD_1;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_STANDARD_2;
+extern int  CAPS_TARGET_URL_REG_STANDARD;
+extern int  CAPS_TARGET_DESC_REG_ADMIN;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_ADMIN;
+extern int  CAPS_TARGET_DETAIL_DESC_REG_ADMIN_1;
+extern int  CAPS_TARGET_URL_REG_ADMIN;
+extern int  CAPS_TARGET_DESC_ACCOUNT_SETUP;
+extern int  CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP;
+extern int  CAPS_TARGET_URL_ACCOUNT_SETUP;
+extern int  CAPS_TARGET_DESC_SAR;
+extern int  CAPS_TARGET_DETAIL_DESC_SAR;
+extern int  CAPS_TARGET_DETAIL_DESC_SAR_1;
+extern int  CAPS_TARGET_URL_SAR;
+extern int  CAPS_TARGET_DESC_CANVAS_ACCESS;
+extern int  CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS;
+extern int  CAPS_TARGET_URL_CANVAS_ACCESS;
+extern int  CAPS_TARGET_DESC_FILE_ACCESS;
+extern int  CAPS_TARGET_DETAIL_DESC_FILE_ACCESS;
+extern int  CAPS_TARGET_URL_FILE_ACCESS;
+extern int  CAPS_TARGET_DESC_UNINSTALL;
+extern int  CAPS_TARGET_DETAIL_DESC_UNINSTALL;
+extern int  CAPS_TARGET_URL_UNINSTALL;
+extern int  CAPS_TARGET_DESC_SOFTWAREINSTALL;
+extern int  CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL;
+extern int  CAPS_TARGET_URL_SOFTWAREINSTALL;
+extern int  CAPS_TARGET_DESC_SILENTINSTALL;
+extern int  CAPS_TARGET_DETAIL_DESC_SILENTINSTALL;
+extern int  CAPS_TARGET_URL_SILENTINSTALL;
+extern int  CAPS_TARGET_DESC_ALL_JAVA_PERMISSION;
+extern int  CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION;
+extern int  CAPS_TARGET_URL_ALL_JAVA_PERMISSION;
+extern int  CAPS_TARGET_DESC_ALL_JS_PERMISSION;
+extern int  CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION;
+extern int  CAPS_TARGET_URL_ALL_JS_PERMISSION;
+#endif /* XXX */
+
+/* XXXXXXXX END oF HACK */
 
 #define TARGET_STR " Target: "
 #define PRIN_STR " Principal: "
@@ -296,33 +461,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   nsUserTarget *userTarg;
   nsTarget *target;
   PRUint32 i=0;
-  nsUserTarget *ThreadAccessTarg;
-  nsUserTarget *ThreadGroupAccessTarg;
-  nsUserTarget *ExecAccessTarg;
-  nsUserTarget *ExitAccessTarg;
-  nsUserTarget *LinkAccessTarg;
-  nsUserTarget *PropertyWriteTarg;
-  nsUserTarget *PropertyReadTarg;
   nsUserTarget *FileReadTarg;
   nsUserTarget *FileWriteTarg;
   nsUserTarget *FileDeleteTarg;
-  nsUserTarget *ListenTarg;
-  nsUserTarget *AcceptTarg;
-  nsUserTarget *ConnectTarg;
-  nsTarget *RedirectTarg;
-  nsUserTarget *ConnectWithRedirectTarg;
-  nsUserTarget *MulticastTarg;
-  nsUserTarget *TopLevelWindowTarg;
-  nsUserTarget *DialogModalityTarg;
-  nsTarget *PackageAccessTarg;
-  nsTarget *PackageDefinitionTarg;
-  nsUserTarget *SetFactoryTarg;
-  nsTarget *MemberAccessTarg;
-  nsUserTarget *PrintJobAccessTarg;
-  nsUserTarget *SystemClipboardAccessTarg;
-  nsUserTarget *AwtEventQueueAccessTarg;
-  nsTarget *SecurityProviderTarg;
-  nsTarget *CreateSecurityManagerTarg;
   nsUserTarget *BrowserReadTarg;
   nsUserTarget *BrowserWriteTarg;
   nsUserTarget *UniversalPreferencesReadTarg;
@@ -335,17 +476,11 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   nsUserTarget *SoftwareInstallTarg;
   nsUserTarget *UninstallTarg;
   
-  nsUserTarget *LimitedFileAccessTarg;        
   nsUserTarget *UniversalFileAccessTarg;
   nsUserTarget *UniversalBrowserAccessTarg;
   
   nsTarget *ImpersonatorTarg;
-  nsUserTarget *FdReadTarg;
-  nsUserTarget *FdWriteTarg;
-  nsTarget *CodebaseEnvTarg;
   
-  nsUserTarget *ClientAuthTarg;
-
   int targetRiskHigh = JavaSecUI_targetRiskHigh();
   int targetRiskLow = JavaSecUI_targetRiskLow(); 
   int targetRiskMedium = JavaSecUI_targetRiskMedium();
@@ -357,63 +492,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   // targets used by the real browser
   //
   nsTargetArray *targetPtrArray;
-  
-  ThreadAccessTarg = new nsUserTarget("UniversalThreadAccess", sysPrin,
-                                      targetRiskHigh,
-                                      targetRiskColorHigh,
-                                      CAPS_TARGET_DESC_THREAD_ACCESS,
-                                      CAPS_TARGET_DETAIL_DESC_THREAD_ACCESS,
-                                      CAPS_TARGET_URL_THREAD_ACCESS);
-  ThreadAccessTarg->registerTarget();
-  
-  ThreadGroupAccessTarg = new nsUserTarget("UniversalThreadGroupAccess", 
-                                           sysPrin,
-                                           targetRiskHigh,
-                                           targetRiskColorHigh,
-                                           CAPS_TARGET_DESC_THREAD_GROUP_ACCESS,
-                                           CAPS_TARGET_DETAIL_DESC_THREAD_GROUP_ACCESS,
-                                           CAPS_TARGET_URL_THREAD_GROUP_ACCESS);
-  ThreadGroupAccessTarg->registerTarget();
-  
-  ExecAccessTarg = new nsUserTarget("UniversalExecAccess", sysPrin,
-                                    targetRiskHigh,
-                                    targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_EXEC_ACCESS,
-                                    CAPS_TARGET_DETAIL_DESC_EXEC_ACCESS,
-                                    CAPS_TARGET_URL_EXEC_ACCESS);
-  ExecAccessTarg->registerTarget();
-  
-  ExitAccessTarg = new nsUserTarget("UniversalExitAccess", sysPrin,
-                                    targetRiskHigh,
-                                    targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_EXIT_ACCESS,
-                                    CAPS_TARGET_DETAIL_DESC_EXIT_ACCESS,
-                                    CAPS_TARGET_URL_EXIT_ACCESS);
-  ExitAccessTarg->registerTarget();
-  
-  LinkAccessTarg = new nsUserTarget("UniversalLinkAccess", sysPrin,
-                                    targetRiskHigh,
-                                    targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_LINK_ACCESS,
-                                    CAPS_TARGET_DETAIL_DESC_LINK_ACCESS,
-                                    CAPS_TARGET_URL_LINK_ACCESS);
-  LinkAccessTarg->registerTarget();
-  
-  PropertyWriteTarg = new nsUserTarget("UniversalPropertyWrite", sysPrin,
-                                       targetRiskHigh,
-                                       targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_PROPERTY_WRITE,
-                                       CAPS_TARGET_DETAIL_DESC_PROPERTY_WRITE,
-                                       CAPS_TARGET_URL_PROPERTY_WRITE);
-  PropertyWriteTarg->registerTarget();
-  
-  PropertyReadTarg = new nsUserTarget("UniversalPropertyRead", sysPrin,
-                                      targetRiskLow,
-                                      targetRiskColorLow,
-                                      CAPS_TARGET_DESC_PROPERTY_READ,
-                                      CAPS_TARGET_DETAIL_DESC_PROPERTY_READ,
-                                      CAPS_TARGET_URL_PROPERTY_READ);
-  PropertyReadTarg->registerTarget();
   
   FileReadTarg = new nsUserTarget("UniversalFileRead", sysPrin,
                                   targetRiskHigh,
@@ -438,142 +516,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                     CAPS_TARGET_DETAIL_DESC_FILE_DELETE,
                                     CAPS_TARGET_URL_FILE_DELETE);
   FileDeleteTarg->registerTarget();
-  
-  FdReadTarg = new nsUserTarget("UniversalFdRead", sysPrin,
-                                targetRiskHigh,
-                                targetRiskColorHigh,
-                                CAPS_TARGET_DESC_FD_READ,
-                                CAPS_TARGET_DETAIL_DESC_FD_READ,
-                                CAPS_TARGET_URL_FD_READ);
-  FdReadTarg->registerTarget();
-  
-  FdWriteTarg = new nsUserTarget("UniversalFdWrite", sysPrin,
-                                 targetRiskHigh,
-                                 targetRiskColorHigh,
-                                 CAPS_TARGET_DESC_FD_WRITE,
-                                 CAPS_TARGET_DETAIL_DESC_FD_WRITE,
-                                 CAPS_TARGET_URL_FD_WRITE);
-  FdWriteTarg->registerTarget();
-  
-  ListenTarg = new nsUserTarget("UniversalListen", sysPrin,
-                                targetRiskHigh,
-                                targetRiskColorHigh,
-                                CAPS_TARGET_DESC_LISTEN,
-                                CAPS_TARGET_DETAIL_DESC_LISTEN,
-                                CAPS_TARGET_URL_LISTEN);
-  ListenTarg->registerTarget();
-  
-  AcceptTarg = new nsUserTarget("UniversalAccept", sysPrin,
-                                targetRiskHigh,
-                                targetRiskColorHigh,
-                                CAPS_TARGET_DESC_ACCEPT,
-                                CAPS_TARGET_DETAIL_DESC_ACCEPT,
-                                CAPS_TARGET_URL_ACCEPT);
-  AcceptTarg->registerTarget();
-  
-  MulticastTarg = new nsUserTarget("UniversalMulticast", sysPrin,
-                                   targetRiskHigh,
-                                   targetRiskColorHigh,
-                                   CAPS_TARGET_DESC_MULTICAST,
-                                   CAPS_TARGET_DETAIL_DESC_MULTICAST,
-                                   CAPS_TARGET_URL_MULTICAST);
-  MulticastTarg->registerTarget();
-  
-  TopLevelWindowTarg = new nsUserTarget("UniversalTopLevelWindow", sysPrin,
-                                        targetRiskHigh,
-                                        targetRiskColorHigh,
-                                        CAPS_TARGET_DESC_TOP_LEVEL_WINDOW,
-                                        CAPS_TARGET_DETAIL_DESC_TOP_LEVEL_WINDOW,
-                                        CAPS_TARGET_URL_TOP_LEVEL_WINDOW);
-  TopLevelWindowTarg->registerTarget();
-  
-  DialogModalityTarg = new nsUserTarget("UniversalDialogModality", sysPrin,
-                                        targetRiskMedium,
-                                        targetRiskColorMedium,
-                                        CAPS_TARGET_DESC_DIALOG_MODALITY,
-                                        CAPS_TARGET_DETAIL_DESC_DIALOG_MODALITY,
-                                        CAPS_TARGET_URL_DIALOG_MODALITY);
-  DialogModalityTarg->registerTarget();
-  
-  PackageAccessTarg = new nsTarget("UniversalPackageAccess", sysPrin,
-                                   targetRiskHigh,
-                                   targetRiskColorHigh,
-                                   CAPS_TARGET_DESC_PACKAGE_ACCESS,
-                                   CAPS_TARGET_DETAIL_DESC_PACKAGE_ACCESS,
-                                   CAPS_TARGET_URL_PACKAGE_ACCESS);
-  PackageAccessTarg->registerTarget();
-  
-  PackageDefinitionTarg = new nsTarget("UniversalPackageDefinition", 
-                                       sysPrin,
-                                       targetRiskHigh,
-                                       targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_PACKAGE_DEFINITION,
-                                       CAPS_TARGET_DETAIL_DESC_PACKAGE_DEFINITION,
-                                       CAPS_TARGET_URL_PACKAGE_DEFINITION);
-  PackageDefinitionTarg->registerTarget();
-  
-  SetFactoryTarg = new nsUserTarget("UniversalSetFactory", 
-                                    sysPrin,
-                                    targetRiskHigh,
-                                    targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_SET_FACTORY,
-                                    CAPS_TARGET_DETAIL_DESC_SET_FACTORY,
-                                    CAPS_TARGET_URL_SET_FACTORY);
-  SetFactoryTarg->registerTarget();
-  
-  MemberAccessTarg = new nsTarget("UniversalMemberAccess", 
-                                  sysPrin,
-                                  targetRiskHigh,
-                                  targetRiskColorHigh,
-                                  CAPS_TARGET_DESC_MEMBER_ACCESS,
-                                  CAPS_TARGET_DETAIL_DESC_MEMBER_ACCESS,
-                                  CAPS_TARGET_URL_MEMBER_ACCESS);
-  MemberAccessTarg->registerTarget();
-  
-  PrintJobAccessTarg = new nsUserTarget("UniversalPrintJobAccess",
-                                        sysPrin,
-                                        targetRiskLow,
-                                        targetRiskColorLow,
-                                        CAPS_TARGET_DESC_PRINT_JOB_ACCESS,
-                                        CAPS_TARGET_DETAIL_DESC_PRINT_JOB_ACCESS,
-                                        CAPS_TARGET_URL_PRINT_JOB_ACCESS);
-  PrintJobAccessTarg->registerTarget();
-  
-  SystemClipboardAccessTarg = new nsUserTarget("UniversalSystemClipboardAccess", 
-                                               sysPrin,
-                                               targetRiskHigh,
-                                               targetRiskColorHigh,
-                                               CAPS_TARGET_DESC_SYSTEM_CLIPBOARD_ACCESS,
-                                               CAPS_TARGET_DETAIL_DESC_SYSTEM_CLIPBOARD_ACCESS,
-                                               CAPS_TARGET_URL_SYSTEM_CLIPBOARD_ACCESS);
-  SystemClipboardAccessTarg->registerTarget();
-  
-  AwtEventQueueAccessTarg = new nsUserTarget("UniversalAwtEventQueueAccess", 
-                                             sysPrin,
-                                             targetRiskHigh,
-                                             targetRiskColorHigh,
-                                             CAPS_TARGET_DESC_AWT_EVENT_QUEUE_ACCESS,
-                                             CAPS_TARGET_DETAIL_DESC_AWT_EVENT_QUEUE_ACCESS,
-                                             CAPS_TARGET_URL_AWT_EVENT_QUEUE_ACCESS);
-  AwtEventQueueAccessTarg->registerTarget();
-  
-  SecurityProviderTarg = new nsTarget("UniversalSecurityProvider",
-                                      sysPrin,
-                                      targetRiskHigh,
-                                      targetRiskColorHigh,
-                                      CAPS_TARGET_DESC_SECURITY_PROVIDER,
-                                      CAPS_TARGET_DETAIL_DESC_SECURITY_PROVIDER,
-                                      CAPS_TARGET_URL_SECURITY_PROVIDER);
-  SecurityProviderTarg->registerTarget();
-  
-  CreateSecurityManagerTarg = new nsTarget("CreateSecurityManager",
-                                           sysPrin,
-                                           targetRiskHigh,
-                                           targetRiskColorHigh,
-                                           CAPS_TARGET_DESC_CREATE_SECURITY_MANAGER,
-                                           CAPS_TARGET_DETAIL_DESC_CREATE_SECURITY_MANAGER,
-                                           CAPS_TARGET_URL_CREATE_SECURITY_MANAGER);
-  CreateSecurityManagerTarg->registerTarget();
   
   ImpersonatorTarg = new nsTarget("Impersonator", sysPrin,
                                   targetRiskHigh,
@@ -700,108 +642,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                         targetPtrArray);
   SilentInstallTarg->registerTarget();
 
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(2, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)FdReadTarg);
-  targetPtrArray->Set(i++, (void *)FdWriteTarg);
-  ConnectTarg = new nsUserTarget("UniversalConnect", sysPrin,
-                                 targetRiskHigh,
-                                 targetRiskColorHigh,
-                                 CAPS_TARGET_DESC_CONNECT,
-                                 CAPS_TARGET_DETAIL_DESC_CONNECT,
-                                 CAPS_TARGET_URL_CONNECT,
-                                 targetPtrArray);
-  ConnectTarg->registerTarget();
-  
-  ClientAuthTarg = new nsUserTarget("ClientAuth", sysPrin,
-                                    targetRiskMedium,
-                                    targetRiskColorMedium,
-                                    CAPS_TARGET_DESC_CLIENT_AUTH,
-                                    CAPS_TARGET_DETAIL_DESC_CLIENT_AUTH,
-                                    CAPS_TARGET_URL_CLIENT_AUTH);
-  ClientAuthTarg->registerTarget();
-  
-  RedirectTarg = new nsTarget("UniversalRedirect", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_REDIRECT,
-                              CAPS_TARGET_DETAIL_DESC_REDIRECT,
-                              CAPS_TARGET_URL_REDIRECT);
-  RedirectTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(2, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)RedirectTarg);
-  ConnectWithRedirectTarg = new nsUserTarget("UniversalConnectWithRedirect", 
-                                             sysPrin,
-                                             targetRiskHigh,
-                                             targetRiskColorHigh,
-                                             CAPS_TARGET_DESC_CONNECT_WITH_REDIRECT,
-                                             CAPS_TARGET_DETAIL_DESC_CONNECT_WITH_REDIRECT,
-                                             CAPS_TARGET_URL_CONNECT_WITH_REDIRECT,
-                                             targetPtrArray);
-  ConnectWithRedirectTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(2, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)FdReadTarg);
-  targetPtrArray->Set(i++, (void *)FdWriteTarg);
-  CodebaseEnvTarg = new nsTarget("CodebaseEnvironment", sysPrin,
-                                 targetRiskLow,
-                                 targetRiskColorLow,
-                                 CAPS_TARGET_DESC_CODEBASE_ENV,
-                                 CAPS_TARGET_DETAIL_DESC_CODEBASE_ENV,
-                                 CAPS_TARGET_URL_CODEBASE_ENV,
-                                 targetPtrArray);
-  CodebaseEnvTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(31, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)ThreadAccessTarg);
-  targetPtrArray->Set(i++, (void *)ThreadGroupAccessTarg);
-  targetPtrArray->Set(i++, (void *)ExecAccessTarg);
-  targetPtrArray->Set(i++, (void *)ExitAccessTarg);
-  targetPtrArray->Set(i++, (void *)LinkAccessTarg);
-  targetPtrArray->Set(i++, (void *)PropertyWriteTarg);
-  targetPtrArray->Set(i++, (void *)PropertyReadTarg);
-  targetPtrArray->Set(i++, (void *)FileReadTarg);
-  targetPtrArray->Set(i++, (void *)FileWriteTarg);
-  targetPtrArray->Set(i++, (void *)FileDeleteTarg);
-  targetPtrArray->Set(i++, (void *)FdReadTarg);
-  targetPtrArray->Set(i++, (void *)FdWriteTarg);
-  targetPtrArray->Set(i++, (void *)ListenTarg);
-  targetPtrArray->Set(i++, (void *)AcceptTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)MulticastTarg);
-  targetPtrArray->Set(i++, (void *)TopLevelWindowTarg);
-  targetPtrArray->Set(i++, (void *)PackageAccessTarg);
-  targetPtrArray->Set(i++, (void *)PackageDefinitionTarg);
-  targetPtrArray->Set(i++, (void *)SetFactoryTarg);
-  targetPtrArray->Set(i++, (void *)MemberAccessTarg);
-  targetPtrArray->Set(i++, (void *)PrintJobAccessTarg);
-  targetPtrArray->Set(i++, (void *)SystemClipboardAccessTarg);
-  targetPtrArray->Set(i++, (void *)AwtEventQueueAccessTarg);
-  targetPtrArray->Set(i++, (void *)SecurityProviderTarg);
-  targetPtrArray->Set(i++, (void *)CreateSecurityManagerTarg);
-  targetPtrArray->Set(i++, (void *)ImpersonatorTarg);
-  targetPtrArray->Set(i++, (void *)BrowserReadTarg);
-  targetPtrArray->Set(i++, (void *)BrowserWriteTarg);
-  targetPtrArray->Set(i++, (void *)SendMailTarg);
-  targetPtrArray->Set(i++, (void *)CodebaseEnvTarg);
-  target = new nsTarget("SuperUser", sysPrin, 
-                        targetRiskHigh,
-                        targetRiskColorHigh,
-                        CAPS_TARGET_DESC_SUPER_USER,
-                        CAPS_TARGET_DETAIL_DESC_SUPER_USER,
-                        CAPS_TARGET_URL_SUPER_USER, 
-                        targetPtrArray);
-  target->registerTarget();
-  
   //
   // targets used by Constellation group
   //
@@ -815,112 +655,7 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                                  CAPS_TARGET_URL_SAR);
   SiteArchiveTarget->registerTarget();
   
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(11, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)ThreadAccessTarg);
-  targetPtrArray->Set(i++, (void *)ThreadGroupAccessTarg);
-  targetPtrArray->Set(i++, (void *)LinkAccessTarg);
-  targetPtrArray->Set(i++, (void *)PropertyWriteTarg);
-  targetPtrArray->Set(i++, (void *)PropertyReadTarg);
-  targetPtrArray->Set(i++, (void *)ListenTarg);
-  targetPtrArray->Set(i++, (void *)AcceptTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)TopLevelWindowTarg);
-  targetPtrArray->Set(i++, (void *)PackageAccessTarg);
-  targetPtrArray->Set(i++, (void *)PackageDefinitionTarg);
-  target = new nsUserTarget("30Capabilities", sysPrin, 
-                            targetRiskHigh,
-                            targetRiskColorHigh,
-                            CAPS_TARGET_DESC_30_CAPABILITIES,
-                            CAPS_TARGET_DETAIL_DESC_30_CAPABILITIES,
-                            CAPS_TARGET_URL_30_CAPABILITIES, 
-                            targetPtrArray);
-  target->registerTarget();
-  //
-  // targets used by Marimba
-  //
-  
-  // access to this target only enables file operations below the
-  // root of the castanet channel cache.
-  nsTarget *mappTarget = new nsTarget("MarimbaAppContextTarget", sysPrin, 
-                                      targetRiskMedium,
-                                      targetRiskColorMedium,
-                                      CAPS_TARGET_DESC_MARIMBA,
-                                      CAPS_TARGET_DETAIL_DESC_MARIMBA,
-                                      CAPS_TARGET_URL_MARIMBA);
-  mappTarget->registerTarget();
-  
-  //
-  // Internal target used by Marimba code 
-  //
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(10, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)FileReadTarg);
-  targetPtrArray->Set(i++, (void *)FileWriteTarg);
-  targetPtrArray->Set(i++, (void *)FileDeleteTarg);
-  targetPtrArray->Set(i++, (void *)PropertyReadTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)TopLevelWindowTarg);
-  targetPtrArray->Set(i++, (void *)PackageAccessTarg);
-  targetPtrArray->Set(i++, (void *)ThreadAccessTarg);
-  targetPtrArray->Set(i++, (void *)ThreadGroupAccessTarg);
-  targetPtrArray->Set(i++, (void *)mappTarget);
-  target = new nsUserTarget("MarimbaInternalTarget", sysPrin, 
-                            targetRiskHigh,
-                            targetRiskColorHigh,
-                            CAPS_TARGET_DESC_MARIMBA,
-                            CAPS_TARGET_DETAIL_DESC_MARIMBA,
-                            CAPS_TARGET_URL_MARIMBA, 
-                            targetPtrArray);
-  target->registerTarget();
-  
-  //
-  // internal target used by the netscape IIOP runtime
-  //
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(4, 1);
-  i = 0;
-  targetPtrArray->Set(i++, (void *)ListenTarg);
-  targetPtrArray->Set(i++, (void *)AcceptTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)CodebaseEnvTarg);
-  nsTarget *iiopTarget = new nsUserTarget("IIOPRuntime", sysPrin,
-                                       targetRiskHigh,
-                                       targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_IIOP,
-                                       CAPS_TARGET_DETAIL_DESC_IIOP,
-                                       CAPS_TARGET_URL_IIOP,
-                                       targetPtrArray);
-  iiopTarget->registerTarget();
-  
-  
-  //
-  // targets used for internal testing/debugging
-  //
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(10, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)ExecAccessTarg);
-  targetPtrArray->Set(i++, (void *)PropertyWriteTarg);
-  targetPtrArray->Set(i++, (void *)PropertyReadTarg);
-  targetPtrArray->Set(i++, (void *)FileReadTarg);
-  targetPtrArray->Set(i++, (void *)ListenTarg);
-  targetPtrArray->Set(i++, (void *)AcceptTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)ThreadAccessTarg);
-  targetPtrArray->Set(i++, (void *)ThreadGroupAccessTarg);
-  targetPtrArray->Set(i++, (void *)SetFactoryTarg);
-  userTarg = new nsUserTarget("Debugger", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_DEBUGGER,
-                              CAPS_TARGET_DETAIL_DESC_DEBUGGER,
-                              CAPS_TARGET_URL_DEBUGGER, 
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
+
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(1, 1);
   i=0;
@@ -935,10 +670,8 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg->registerTarget();
   
   targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(5, 1);
+  targetPtrArray->SetSize(3, 1);
   i=0;
-  targetPtrArray->Set(i++, (void *)LinkAccessTarg);
-  targetPtrArray->Set(i++, (void *)PropertyReadTarg);
   targetPtrArray->Set(i++, (void *)FileReadTarg);
   targetPtrArray->Set(i++, (void *)FileWriteTarg);
   targetPtrArray->Set(i++, (void *)FileDeleteTarg);
@@ -968,128 +701,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                      targetPtrArray);
   UniversalBrowserAccessTarg->registerTarget();
   
-  LimitedFileAccessTarg = 
-    new nsUserTarget("LimitedFileAccess", sysPrin,
-                     targetRiskLow,
-                     targetRiskColorLow,
-                     CAPS_TARGET_DESC_LIMITED_FILE_ACCESS,
-                     CAPS_TARGET_DETAIL_DESC_LIMITED_FILE_ACCESS,
-                     CAPS_TARGET_URL_LIMITED_FILE_ACCESS);
-  LimitedFileAccessTarg->registerTarget();
-			
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(1, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)RegistryPrivateTarg);
-  userTarg = new nsUserTarget("GamesAccess", sysPrin,
-                              targetRiskLow,
-                              targetRiskColorLow,
-                              CAPS_TARGET_DESC_GAMES_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_GAMES_ACCESS,
-                              CAPS_TARGET_URL_GAMES_ACCESS, 
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(4, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
-  targetPtrArray->Set(i++, (void *)RegistryStandardTarg);
-  targetPtrArray->Set(i++, (void *)PrintJobAccessTarg);
-  targetPtrArray->Set(i++, (void *)SystemClipboardAccessTarg);
-  userTarg = new nsUserTarget("WordProcessorAccess", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_WORD_PROCESSOR_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_WORD_PROCESSOR_ACCESS,
-                              CAPS_TARGET_URL_WORD_PROCESSOR_ACCESS, 
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(4, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
-  targetPtrArray->Set(i++, (void *)RegistryStandardTarg);
-  targetPtrArray->Set(i++, (void *)PrintJobAccessTarg);
-  targetPtrArray->Set(i++, (void *)SystemClipboardAccessTarg);
-  userTarg = new nsUserTarget("SpreadsheetAccess", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_SPREADSHEET_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_SPREADSHEET_ACCESS,
-                              CAPS_TARGET_URL_SPREADSHEET_ACCESS, 
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(4, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
-  targetPtrArray->Set(i++, (void *)RegistryStandardTarg);
-  targetPtrArray->Set(i++, (void *)PrintJobAccessTarg);
-  targetPtrArray->Set(i++, (void *)SystemClipboardAccessTarg);
-  userTarg = new nsUserTarget("PresentationAccess", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_PRESENTATION_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_PRESENTATION_ACCESS,
-                              CAPS_TARGET_URL_PRESENTATION_ACCESS, 
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(4, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
-  targetPtrArray->Set(i++, (void *)RegistryStandardTarg);
-  targetPtrArray->Set(i++, (void *)PrintJobAccessTarg);
-  targetPtrArray->Set(i++, (void *)SystemClipboardAccessTarg);
-  userTarg = new nsUserTarget("DatabaseAccess", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_DATABASE_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_DATABASE_ACCESS,
-                              CAPS_TARGET_URL_DATABASE_ACCESS, 
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(7, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)LinkAccessTarg);
-  targetPtrArray->Set(i++, (void *)PropertyReadTarg);
-  targetPtrArray->Set(i++, (void *)ListenTarg);
-  targetPtrArray->Set(i++, (void *)AcceptTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
-  targetPtrArray->Set(i++, (void *)PrintJobAccessTarg);
-  targetPtrArray->Set(i++, (void *)SystemClipboardAccessTarg);
-  userTarg = new nsUserTarget("TerminalEmulator", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_TERMINAL_EMULATOR,
-                              CAPS_TARGET_DETAIL_DESC_TERMINAL_EMULATOR,
-                              CAPS_TARGET_URL_TERMINAL_EMULATOR,
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
-  
-  // JAR packager Target
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(3, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
-  targetPtrArray->Set(i++, (void *)RegistryStandardTarg);
-  targetPtrArray->Set(i++, (void *)TopLevelWindowTarg);
-  userTarg = new nsUserTarget("JARPackager", sysPrin,
-                              targetRiskHigh,
-                              targetRiskColorHigh,
-                              CAPS_TARGET_DESC_JAR_PACKAGER,
-                              CAPS_TARGET_DETAIL_DESC_JAR_PACKAGER,
-                              CAPS_TARGET_URL_JAR_PACKAGER,
-                              targetPtrArray);
-  userTarg->registerTarget();
-  
   // a macro Target for PE
   targetPtrArray = new nsTargetArray();
   targetPtrArray->SetSize(7, 1);
@@ -1098,8 +709,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   targetPtrArray->Set(i++, (void *)BrowserWriteTarg);
   targetPtrArray->Set(i++, (void *)UniversalPreferencesReadTarg);
   targetPtrArray->Set(i++, (void *)UniversalPreferencesWriteTarg);
-  targetPtrArray->Set(i++, (void *)TopLevelWindowTarg);
-  targetPtrArray->Set(i++, (void *)ConnectTarg);
   targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
   userTarg = new nsUserTarget("AccountSetup", sysPrin,
                               targetRiskHigh,
@@ -1110,32 +719,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                               targetPtrArray);
   userTarg->registerTarget();
   
-  
-  // Netcaster Target
-  targetPtrArray = new nsTargetArray();
-  targetPtrArray->SetSize(12, 1);
-  i=0;
-  targetPtrArray->Set(i++, (void *)BrowserReadTarg);
-  targetPtrArray->Set(i++, (void *)BrowserWriteTarg);
-  targetPtrArray->Set(i++, (void *)FileReadTarg);
-  targetPtrArray->Set(i++, (void *)FileWriteTarg);
-  targetPtrArray->Set(i++, (void *)SiteArchiveTarget);
-  targetPtrArray->Set(i++, (void *)UniversalFileAccessTarg);
-  targetPtrArray->Set(i++, (void *)UniversalPreferencesReadTarg);
-  targetPtrArray->Set(i++, (void *)UniversalPreferencesWriteTarg);
-  targetPtrArray->Set(i++, (void *)ConnectWithRedirectTarg);
-  targetPtrArray->Set(i++, (void *)ThreadAccessTarg);
-  targetPtrArray->Set(i++, (void *)ThreadGroupAccessTarg);
-  targetPtrArray->Set(i++, (void *)LinkAccessTarg);
-  target = new nsUserTarget("Netcaster", sysPrin, 
-                            targetRiskHigh,
-                            targetRiskColorHigh,
-                            CAPS_TARGET_DESC_CONSTELLATION,
-                            CAPS_TARGET_DETAIL_DESC_CONSTELLATION,
-                            CAPS_TARGET_URL_CONSTELLATION, 
-                            targetPtrArray);
-  target->registerTarget();
-
 
   /* Permission to All privileges in Java */
   target = new nsUserTarget("AllJavaPermission", sysPrin, 

@@ -24,11 +24,14 @@ extern "C" {
 #include "xp.h"
 #include "xpgetstr.h"
 #include "prprf.h"
+#include "nsTarget.h"
 
+#ifdef XXX
 extern int CAPS_TARGET_RISK_STR_LOW;
 extern int CAPS_TARGET_RISK_STR_MEDIUM;
 extern int CAPS_TARGET_RISK_STR_HIGH;
 extern int CAPS_TARGET_HELP_URL;
+#endif
 
 //
 // resources for user targets
@@ -36,6 +39,7 @@ extern int CAPS_TARGET_HELP_URL;
 char * JavaSecUI_targetRiskStr(int risk) 
 {
   char * str;
+#ifdef XXX
   if (risk <= nsRiskType_LowRisk) {
     str = XP_GetString(CAPS_TARGET_RISK_STR_LOW);
   } else if (risk <= nsRiskType_MediumRisk) {
@@ -44,6 +48,9 @@ char * JavaSecUI_targetRiskStr(int risk)
     str =  XP_GetString(CAPS_TARGET_RISK_STR_HIGH);
   }
   return str;
+#else
+  return "High";
+#endif
 }
 
 int JavaSecUI_targetRiskLow(void) 
@@ -63,8 +70,12 @@ int JavaSecUI_targetRiskHigh(void)
 
 char * JavaSecUI_getHelpURL(int id) 
 {
-  char * tag = XP_GetString(id);
-  char * java_sec_help_url = XP_GetString(CAPS_TARGET_HELP_URL);
+  char * java_sec_help_url = "";
+  char * tag = JavaSecUI_getString(id);
+#ifdef XXX 
+  java_sec_help_url = XP_GetString(CAPS_TARGET_HELP_URL);
+#endif
+
   PR_ASSERT(tag != NULL);
   PR_ASSERT(java_sec_help_url != NULL);
 
@@ -76,7 +87,10 @@ char * JavaSecUI_getHelpURL(int id)
 
 char * JavaSecUI_getString(int id) 
 {
+#ifdef XXX
   char *str = XP_GetString(id);
+#endif
+  char *str = capsGetString(id);
   PR_ASSERT(str != NULL);
   return str;
 }

@@ -20,6 +20,7 @@
 #include "nsZip.h"
 #include "nsLoadZig.h"
 #include "prmem.h"
+#include "plstr.h"
 
 #define MANIFEST_SUFFIX_STR ".mf"
 #define META_INF_STR "META-INF"
@@ -32,6 +33,8 @@ PR_BEGIN_EXTERN_C
 #ifdef XP_UNIX
 #include <sys/param.h> /* for MAXPATHLEN */
 #endif
+
+#ifdef MOZ_SECURITY
 
 static PRInt32 
 load_files(ns_zip_t* zip, ZIG* zig, char *fn_suffix,
@@ -94,14 +97,14 @@ load_files(ns_zip_t* zip, ZIG* zig, char *fn_suffix,
         HUGE_STRNCPY(fn, dataPtr, MAXPATHLEN);
         fn[MAXPATHLEN] ='\0';
 #endif
-        if (XP_STRNCASECMP (fn, META_INF_STR, META_INF_STR_LEN)) {
+        if (PL_strncasecmp (fn, META_INF_STR, META_INF_STR_LEN)) {
             continue;
         }
         if ((fn[META_INF_STR_LEN] != '/') && (fn[META_INF_STR_LEN] != '\\')) {
             continue;
         }
-        if ((!XP_STRCASECMP(fn_suffix, MANIFEST_SUFFIX_STR)) && 
-            (XP_STRNCASECMP(&fn[META_INF_STR_LEN+1], MANIFEST_MF_STR, MANIFEST_STR_LEN))) {
+        if ((!PL_strcasecmp(fn_suffix, MANIFEST_SUFFIX_STR)) && 
+            (PL_strncasecmp(&fn[META_INF_STR_LEN+1], MANIFEST_MF_STR, MANIFEST_STR_LEN))) {
             continue;
         }
         if (!ns_zip_stat(zip, fn, &st)) {
@@ -155,6 +158,7 @@ loadSignatures(ns_zip_t* zip, ZIG *zig,
     return noOfSigs;
 }
 
+#endif /* MOZ_SECURITY */
 
 PR_PUBLIC_API(void *)
 nsInitializeZig(ns_zip_t *zip,
@@ -162,7 +166,8 @@ nsInitializeZig(ns_zip_t *zip,
                                        const char *metafile, 
                                        char *pathname, char *errortext))
 {
-    ZIG *zig;
+    ZIG *zig = NULL;
+#ifdef MOZ_SECURITY
 
     zig = SOB_new();
     if (zig == NULL) {
@@ -184,6 +189,7 @@ nsInitializeZig(ns_zip_t *zip,
         SOB_destroy(zig);
         return NULL;
     }
+#endif /* MOZ_SECURITY */
     return (void *)zig;
 }
 

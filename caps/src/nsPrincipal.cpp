@@ -58,6 +58,7 @@ PR_PUBLIC_API(int)
 nsPrintZigError(int status, ZIG *zig, const char *metafile, char *pathname, 
 				 char *errortext)
 {
+#ifdef MOZ_SECURITY
     char* data;
 	char* error_fmt = "# Error: %s (%d)\n#\tjar file: %s\n#\tpath:     %s\n";
     char* zig_name = NULL;
@@ -89,6 +90,7 @@ nsPrintZigError(int status, ZIG *zig, const char *metafile, char *pathname,
     MWContext* someRandomContext = XP_FindSomeContext();
     FE_Alert(someRandomContext, data);
 	PR_DELETE(data);
+#endif /* MOZ_SECURITY */
 
 	return 0;
 }
@@ -96,6 +98,9 @@ nsPrintZigError(int status, ZIG *zig, const char *metafile, char *pathname,
 nsPrincipal *
 CreateSystemPrincipal(char* zip_file_name, char *pathname)
 {
+  nsPrincipal *sysPrin = NULL;
+
+#ifdef MOZ_SECURITY
   ZIG* zig;
   ZIG_Context * context;
   SOBITEM *item;
@@ -103,7 +108,6 @@ CreateSystemPrincipal(char* zip_file_name, char *pathname)
   int size=0;
   int slot=0;
   ns_zip_t *zip;
-  nsPrincipal *sysPrin = NULL;
   
   if (!pathname)
     return NULL;
@@ -144,6 +148,7 @@ CreateSystemPrincipal(char* zip_file_name, char *pathname)
   
 done:   
   ns_zip_close(zip);
+#endif /* MOZ_SECURITY */
   return sysPrin;
 }
 
@@ -155,6 +160,7 @@ PR_END_EXTERN_C
 
 static void destroyCertificates(nsVector* certArray) 
 {
+#ifdef MOZ_SECURITY
   if (certArray == NULL)
     return;
 
@@ -166,6 +172,7 @@ static void destroyCertificates(nsVector* certArray)
     }
   }
   delete certArray;
+#endif /* MOZ_SECURITY */
 }
 
 
@@ -598,6 +605,9 @@ char * nsPrincipal::savePrincipalPermanently(void)
 /* The following used to be LJ_GetCertificates */
 nsPrincipalArray* nsPrincipal::getSigners(void* zigPtr, char* pathname)
 {
+  nsPrincipalArray *result = NULL;
+
+#ifdef MOZ_SECURITY
   SOBITEM *item;
   ZIG *zig = (ZIG *)zigPtr;
   struct nsPrincipal *principal;
@@ -622,7 +632,7 @@ nsPrincipalArray* nsPrincipal::getSigners(void* zigPtr, char* pathname)
   SOB_find_end(context);
 
   /* Now allocate the array */
-  nsPrincipalArray *result = new nsPrincipalArray();
+  result = new nsPrincipalArray();
   result->SetSize(size, 1);
   if (result == NULL) {
     return NULL;
@@ -644,6 +654,7 @@ nsPrincipalArray* nsPrincipal::getSigners(void* zigPtr, char* pathname)
 
   }
   SOB_find_end(context);
+#endif /* MOZ_SECURITY */
    
   return result;
 }
@@ -726,10 +737,13 @@ char * nsPrincipal::saveCert(void)
     return NULL;
   }
 
+#ifdef MOZ_SECURITY
   result = SOB_stash_cert((ZIG *)itsZig, itsKeyLen, itsKey);
   if (result < 0) {
     return SOB_get_error(result);
   }
+#endif /* MOZ_SECURITY */
+
   return NULL;
 }
 
@@ -739,7 +753,7 @@ nsPrincipal::getCertAttribute(int attrib)
 {
     void *result;
     unsigned long length;
-    char *attrStr;
+    char *attrStr = "Untrusted certificate (unknown attributes)";
     ZIG *zig = NULL;
 
     if (itsZig != NULL) {
@@ -780,12 +794,11 @@ nsPrincipal::getCertAttribute(int attrib)
           attrStr = new char[strlen(attributeStr)+1];
           XP_STRCPY(attrStr, attributeStr);
          PR_FREEIF(attributeStr);
-         return attrStr;
-      } else {
-         return "Untrusted certificate (unknown attributes)";
       }
+      return attrStr;
     }
     
+#ifdef MOZ_SECURITY
     if (SOB_cert_attribute(attrib, zig, 
                            itsKeyLen, itsKey, 
                            &result, &length) < 0) {
@@ -797,6 +810,7 @@ nsPrincipal::getCertAttribute(int attrib)
     attrStr[length] = '\0';
     /* Should be SOB_FREE(result); */
     XP_FREE(result);
+#endif /* MOZ_SECURITY */
     return attrStr;
 }
 
