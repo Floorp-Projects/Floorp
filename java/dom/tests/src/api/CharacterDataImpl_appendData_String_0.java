@@ -87,10 +87,22 @@ public class CharacterDataImpl_appendData_String_0 extends BWBaseTest implements
                 return BWBaseTest.FAILED;
              } else {
                 String newstr=null;
+                String prevstr = tn.getData();
                 tn.appendData(newstr);
                 String getstr = tn.getData();
-		if (getstr == null) {
+		if (getstr == null){
                   TestLoader.logErrPrint("charcterData cannot be set to null....");
+                  return BWBaseTest.FAILED;
+                }
+		if (prevstr != null) 
+                {
+                  if (prevstr.compareTo(getstr) != 0)
+                  {
+                    TestLoader.logErrPrint("characterData has changed from original value");
+                    return BWBaseTest.FAILED;
+                  }
+                } else {
+                  TestLoader.logErrPrint("charcterData has changed to other than null...");
                   return BWBaseTest.FAILED;
                 }
              }

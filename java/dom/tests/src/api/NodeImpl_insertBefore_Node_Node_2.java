@@ -105,9 +105,9 @@ public class NodeImpl_insertBefore_Node_Node_2 extends BWBaseTest implements Exe
 	    if (n.getNodeName().compareTo(nodename) == 0)
 	    {
                 Node iNode = n.insertBefore(newChild, null);
-		if (iNode != null)
+		if (iNode == null)
                 {
-                   TestLoader.logErrPrint("A Node cannot be inserted to any NULL node...");
+                   TestLoader.logErrPrint("Node should be inserted at end of all chidren...");
                    return BWBaseTest.FAILED;
                 }
             }

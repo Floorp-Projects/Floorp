@@ -87,12 +87,18 @@ public class CharacterDataImpl_setData_String_0 extends BWBaseTest implements Ex
                 return BWBaseTest.FAILED;
              } else {
                 String newstr=null;
+                String prevstr = tn.getData();
                 tn.setData(newstr);
                 String getstr = tn.getData();
 		if (getstr == null) {
                   TestLoader.logErrPrint("charcterData cannot be set to null....");
                   return BWBaseTest.FAILED;
                 }
+		if (prevstr.compareTo(getstr) != 0) {
+                  TestLoader.logErrPrint("charcterData cannot be set to null....");
+                  return BWBaseTest.FAILED;
+                }
+                
              }
         } catch (DOMException e) {
              TestLoader.logErrPrint("Caught DOMException " );

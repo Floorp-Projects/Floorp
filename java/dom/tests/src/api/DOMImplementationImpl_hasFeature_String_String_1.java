@@ -83,7 +83,7 @@ public class DOMImplementationImpl_hasFeature_String_String_1 extends BWBaseTest
                 TestLoader.logErrPrint("Document DomImplementation is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-               if (di.hasFeature("HTML", null))
+               if (!di.hasFeature("HTML", null))
                {
                   System.out.println("DomImplementation 'hasFeature(HTML, null)'  Failed..");
                   return BWBaseTest.FAILED;

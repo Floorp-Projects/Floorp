@@ -86,8 +86,8 @@ public class AttrImpl_setValue_String_0 extends BWBaseTest implements Execution
              } else {
                 a.setValue(null);
 		String str = a.getValue();
-		if (str != null) {
-                  TestLoader.logErrPrint("Attr 'getValue()' is not NULL ...");
+		if (str == null) {
+                  TestLoader.logErrPrint("Attr 'setValue()' is NULL ...");
                   return BWBaseTest.FAILED;
                 }
              }
