@@ -68,18 +68,14 @@ rdf_CreateAnonymousResource(const nsString& aContextURI, nsIRDFResource** result
 PR_EXTERN(PRBool)
 rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource);
 
-/**
- * Try to convert the absolute URL into a relative URL.
- */
 PR_EXTERN(nsresult)
-rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI);
+rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI);
 
-
-/**
- * Try to convert the possibly-relative URL into an absolute URL.
- */
 PR_EXTERN(nsresult)
-rdf_PossiblyMakeAbsolute(const nsString& aContextURI, nsString& aURI);
+rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI);
+
+PR_EXTERN(nsresult)
+rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
 
 
 PR_EXTERN(void) SHTtest ();

@@ -22,10 +22,11 @@
   An implementation for an NGLayout-style content sink that knows how
   to build an RDF content model from XML-serialized RDF.
 
-  For more information on RDF, see http://www.w3.org/TR/WDf-rdf-syntax.
+  For more information on the RDF/XML syntax,
+  see http://www.w3.org/TR/REC-rdf-syntax/
 
-  This code is based on the working draft "last call", which was
-  published on Oct 8, 1998.
+  This code is based on the final W3C Recommendation,
+  http://www.w3.org/TR/1999/REC-rdf-syntax-19990222.
 
   Open Issues ------------------
 
@@ -34,13 +35,20 @@
      increase as we support more and more HTML elements. How can code
      from XML/HTML be factored?
 
-  TO DO ------------------------
+  2) We don't support the `parseType' attribute on the Description
+     tag; therefore, it is impossible to "inline" raw XML in this
+     implemenation.
 
-  1) Make sure all shortcut syntax works right.
+  3) We don't build the reifications at parse time due to the
+     footprint overhead it would incur for large RDF documents. (It
+     may be possible to attach a "reification" wrapper datasource that
+     would present this information at query-time.) Because of this,
+     the `bagID' attribute is not processed correctly.
 
-  2) Implement default namespaces. Take a look at how nsIXMLDocument
-     does namespaces: should we storing tag/namespace pairs instead of
-     the entire URI in the elements?
+  4) No attempt is made to `resolve URIs' to a canonical form (the
+     specification hints that an implementation should do this). This
+     is omitted for the obvious reason that we can ill afford to
+     resolve each URI reference.
 
 */
 
@@ -923,6 +931,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     PRInt32 ac = aNode.GetAttributeCount();
     nsresult rv;
 
+    const char* docURI;
+    mDocumentURL->GetSpec(&docURI);
+
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
@@ -943,34 +954,50 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
 
+            rdf_MakeAbsoluteURI(docURI, uri);
+
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
+        else if (attr.get() == kIdAtom) {
+            nsAutoString name = aNode.GetValueAt(i);
+            nsRDFParserUtils::StripAndConvert(name);
 
-        if (attr.get() == kIdAtom) {
-            const char* docURI;
-            mDocumentURL->GetSpec(&docURI);
+            // Enforce that this is a valid "XML Name" (see
+            // http://www.w3.org/TR/REC-xml#NT-Nmtoken), as per 6.21.
+            //
+            // XXX I'm assuming that nsString::IsAlpha() is defined to
+            // mean http://www.w3.org/TR/REC-xml#NT-Letter, which it
+            // probably isn't.
+            PRUnichar first = name.First();
+            if (! nsString::IsAlpha(first) &&
+                first != PRUnichar(':') &&
+                first != PRUnichar('_')) {
+                PR_LOG(gLog, PR_LOG_ALWAYS,
+                       ("rdfxml: expected XML Name at line %d",
+                        aNode.GetSourceLineNumber()));
 
-            if (NS_FAILED(rv = gRDFService->GetResource(docURI, aResource)))
-                return rv;
+                return NS_ERROR_FAILURE;
+            }
 
-            nsAutoString tag = aNode.GetValueAt(i);
-            nsRDFParserUtils::StripAndConvert(tag);
+            // Construct an in-line resource whose URI is the
+            // document's URI plus the XML name specified in the ID
+            // attribute.
+            name.Insert('#', 0);
+            
+            rdf_MakeAbsoluteURI(docURI, name);
 
-            rdf_PossiblyMakeAbsolute(docURI, tag);
-
-            return gRDFService->GetUnicodeResource(tag.GetUnicode(), aResource);
+            return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
-
-        if (attr.get() == kAboutEachAtom) {
+        else if (attr.get() == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
-            NS_NOTYETIMPLEMENTED("aboutEach is not understood at this time");
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("rdfxml: ignoring aboutEach at line %d",
+                    aNode.GetSourceLineNumber()));
         }
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-    const char* url;
-    mDocumentURL->GetSpec(&url);
-    return rdf_CreateAnonymousResource(url, aResource);
+    return rdf_CreateAnonymousResource(docURI, aResource);
 }
 
 
@@ -1007,7 +1034,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             // appropriate...
             const char* documentURL;
             mDocumentURL->GetSpec(&documentURL);
-            rdf_PossiblyMakeAbsolute(documentURL, uri);
+            rdf_MakeAbsoluteURI(documentURL, uri);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }

@@ -21,6 +21,13 @@
   A data source that can read itself from and write itself to an
   RDF/XML stream.
 
+  For more information on the RDF/XML syntax,
+  see http://www.w3.org/TR/REC-rdf-syntax/.
+
+  This code is based on the final W3C Recommendation,
+  http://www.w3.org/TR/1999/REC-rdf-syntax-19990222.
+
+
   TO DO
   -----
 
@@ -34,10 +41,11 @@
   2) Implement a more terse output for "typed" nodes; that is, instead
      of "RDF:Description type='ns:foo'", just output "ns:foo".
 
-  3) There is a lot of code that calls rdf_PossiblyMakeRelative() and
-     then calls rdf_EscapeAmpersands(). Is this really just one operation?
-
-  4) Maybe keep the docURI around for writing.
+  3) When re-serializing, we "cheat" for Descriptions that talk about
+     inline resources (i.e.., using the `ID' attribute specified in
+     [6.21]). Instead of writing an `ID="foo"' for the first instance,
+     and then `about="#foo"' for each subsequent instance, we just
+     _always_ write `about="#foo"'.
 
  */
 
@@ -172,16 +180,21 @@ protected:
 
     // pseudo-constants
     static PRInt32 gRefCnt;
+    static nsIRDFContainerUtils* gRDFC;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
     static nsIRDFResource* kRDF_Bag;
     static nsIRDFResource* kRDF_Seq;
     static nsIRDFResource* kRDF_Alt;
 
-public:
+    nsresult Init();
     RDFXMLDataSourceImpl(void);
     virtual ~RDFXMLDataSourceImpl(void);
 
+    friend nsresult
+    NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** aResult);
+
+public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
@@ -314,6 +327,9 @@ public:
                       nsIRDFResource* aResource,
                       nsIRDFResource* aProperty);
 
+    PRBool
+    IsContainerProperty(nsIRDFResource* aProperty);
+
     nsresult
     SerializeDescription(nsIOutputStream* aStream,
                          nsIRDFResource* aResource);
@@ -321,7 +337,7 @@ public:
     nsresult
     SerializeMember(nsIOutputStream* aStream,
                     nsIRDFResource* aContainer,
-                    nsIRDFResource* aProperty);
+                    nsIRDFNode* aMember);
 
     nsresult
     SerializeContainer(nsIOutputStream* aStream,
@@ -335,6 +351,7 @@ public:
 };
 
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
+nsIRDFContainerUtils* RDFXMLDataSourceImpl::gRDFC;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_nextVal;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_Bag;
@@ -344,14 +361,26 @@ nsIRDFResource* RDFXMLDataSourceImpl::kRDF_Alt;
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result)
+NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** aResult)
 {
-    RDFXMLDataSourceImpl* ds = new RDFXMLDataSourceImpl();
-    if (! ds)
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    *result = ds;
-    NS_ADDREF(*result);
+    RDFXMLDataSourceImpl* datasource = new RDFXMLDataSourceImpl();
+    if (! datasource)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = datasource->Init();
+
+    if (NS_FAILED(rv)) {
+        delete datasource;
+        return rv;
+    }
+
+    NS_ADDREF(datasource);
+    *aResult = datasource;
     return NS_OK;
 }
 
@@ -364,13 +393,18 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mNameSpaces(nsnull)
 {
     NS_INIT_REFCNT();
+}
 
+
+nsresult
+RDFXMLDataSourceImpl::Init()
+{
     nsresult rv;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFDataSourceIID,
-                                                    (void**) &mInner)))
-        PR_ASSERT(0);
+    rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+                                            nsnull,
+                                            kIRDFDataSourceIID,
+                                            (void**) &mInner);
+    if (NS_FAILED(rv)) return rv;
 
     // Initialize the name space stuff to know about any "standard"
     // namespaces that we want to look the same in all the RDF/XML we
@@ -384,14 +418,23 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     if (gRefCnt++ == 0) {
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_FAILED(rv)) return;
+        if (NS_FAILED(rv)) return rv;
 
         rv = rdf->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
         rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
         rv = rdf->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
         rv = rdf->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
         rv = rdf->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
+
+        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
+                                          nsIRDFContainerUtils::GetIID(),
+                                          (nsISupports**) &gRDFC);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get container utils");
+        if (NS_FAILED(rv)) return rv;
     }
+
+    return NS_OK;
 }
 
 
@@ -416,6 +459,12 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
     NS_RELEASE(mInner);
 
     if (--gRefCnt == 0) {
+        if (gRDFC)
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
+
+        NS_IF_RELEASE(kRDF_Bag);
+        NS_IF_RELEASE(kRDF_Seq);
+        NS_IF_RELEASE(kRDF_Alt);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
     }
@@ -917,6 +966,27 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
     return PR_FALSE;
 }
 
+
+PRBool
+RDFXMLDataSourceImpl::IsContainerProperty(nsIRDFResource* aProperty)
+{
+    // Return `true' if the property is an internal property related
+    // to being a container.
+    if (aProperty == kRDF_instanceOf)
+        return PR_TRUE;
+
+    if (aProperty == kRDF_nextVal)
+        return PR_TRUE;
+
+    PRBool isOrdinal = PR_FALSE;
+    gRDFC->IsOrdinalProperty(aProperty, &isOrdinal);
+    if (isOrdinal)
+        return PR_TRUE;
+
+    return PR_FALSE;
+} 
+
+
 // convert '<' and '>' into '&lt;' and '&gt', respectively.
 static void
 rdf_EscapeAngleBrackets(nsString& s)
@@ -984,7 +1054,7 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         mInner->GetURI(getter_Copies(docURI));
 
         nsAutoString uri(s);
-        rdf_PossiblyMakeRelative((const char*) docURI, uri);
+        rdf_MakeRelativeRef((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
 
 static const char kRDFResource1[] = " resource=\"";
@@ -1077,7 +1147,7 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString uri(s);
-    rdf_PossiblyMakeRelative((const char*) docURI, uri);
+    rdf_MakeRelativeRef((const char*) docURI, uri);
     rdf_EscapeAmpersands(uri);
 
     rdf_BlockingWrite(aStream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
@@ -1100,7 +1170,13 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
         rv = arcs->GetNext((nsISupports**) &property);
         if (NS_FAILED(rv)) return rv;
 
-        rv = SerializeProperty(aStream, aResource, property);
+        if (! IsContainerProperty(property)) {
+            // Ignore properties that pertain to containers; we may be
+            // called from SerializeContainer() if the container
+            // resource has been assigned non-container properties.
+            rv = SerializeProperty(aStream, aResource, property);
+        }
+
         NS_RELEASE(property);
 
         if (NS_FAILED(rv))
@@ -1114,77 +1190,52 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
 nsresult
 RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
                                       nsIRDFResource* aContainer,
-                                      nsIRDFResource* aProperty)
+                                      nsIRDFNode* aMember)
 {
     nsresult rv;
-
-    // We open a cursor rather than just doing GetTarget() because
-    // there may for some random reason be two or more elements with
-    // the same ordinal value. Okay, I'm paranoid.
-
-    nsCOMPtr<nsISimpleEnumerator> cursor;
-    rv = mInner->GetTargets(aContainer, aProperty, PR_TRUE, getter_AddRefs(cursor));
-    if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString docURI;
     mInner->GetURI(getter_Copies(docURI));
 
-    while (1) {
-        PRBool hasMore;
-        rv = cursor->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
+    // If it's a resource, then output a "<RDF:li resource=... />"
+    // tag, because we'll be dumping the resource separately. (We
+    // iterate thru all the resources in the datasource,
+    // remember?) Otherwise, output the literal value.
 
-        if (! hasMore)
-            break;
+    nsIRDFResource* resource = nsnull;
+    nsIRDFLiteral* literal = nsnull;
 
-        nsIRDFNode* node;
-        rv = cursor->GetNext((nsISupports**) &node);
-        if (NS_FAILED(rv)) return rv;
-
-        // If it's a resource, then output a "<RDF:li resource=... />"
-        // tag, because we'll be dumping the resource separately. (We
-        // iterate thru all the resources in the datasource,
-        // remember?) Otherwise, output the literal value.
-
-        nsIRDFResource* resource = nsnull;
-        nsIRDFLiteral* literal = nsnull;
-
-        if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-            nsXPIDLCString s;
-            if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(s) ))) {
+    if (NS_SUCCEEDED(rv = aMember->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+        nsXPIDLCString s;
+        if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(s) ))) {
 static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
-                nsAutoString uri(s);
-                rdf_PossiblyMakeRelative((const char*) docURI, uri);
-                rdf_EscapeAmpersands(uri);
+            nsAutoString uri(s);
+            rdf_MakeRelativeRef((const char*) docURI, uri);
+            rdf_EscapeAmpersands(uri);
 
-                rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
-                rdf_BlockingWrite(aStream, uri);
-                rdf_BlockingWrite(aStream, kRDFLIResource2, sizeof(kRDFLIResource2) - 1);
-            }
-            NS_RELEASE(resource);
+            rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
+            rdf_BlockingWrite(aStream, uri);
+            rdf_BlockingWrite(aStream, kRDFLIResource2, sizeof(kRDFLIResource2) - 1);
         }
-        else if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-            nsXPIDLString value;
-            if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(value) ))) {
+        NS_RELEASE(resource);
+    }
+    else if (NS_SUCCEEDED(rv = aMember->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
+        nsXPIDLString value;
+        if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(value) ))) {
 static const char kRDFLILiteral1[] = "    <RDF:li>";
 static const char kRDFLILiteral2[] = "</RDF:li>\n";
-                rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
-                rdf_BlockingWrite(aStream, (const PRUnichar*) value);
-                rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
-            }
-            NS_RELEASE(literal);
-        }
-        else {
-            NS_ASSERTION(PR_FALSE, "uhh -- it's not a literal or a resource?");
-        }
 
-        NS_RELEASE(node);
-        if (NS_FAILED(rv))
-            break;
+            rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
+            rdf_BlockingWrite(aStream, (const PRUnichar*) value);
+            rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
+        }
+        NS_RELEASE(literal);
     }
-
+    else {
+        NS_ASSERTION(PR_FALSE, "uhh -- it's not a literal or a resource?");
+    }
     return NS_OK;
 }
 
@@ -1234,7 +1285,7 @@ static const char kRDFAlt[] = "RDF:Alt";
         static const char kIDEquals[] = " ID=\"";
 
         nsAutoString uri(s);
-        rdf_PossiblyMakeRelative((const char*) docURI, uri);
+        rdf_MakeRelativeName((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
         rdf_BlockingWrite(aStream, kIDEquals, sizeof(kIDEquals) - 1);
         rdf_BlockingWrite(aStream, uri);
@@ -1243,18 +1294,49 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     rdf_BlockingWrite(aStream, ">\n", 2);
 
+    // First iterate through each of the ordinal elements (the RDF/XML
+    // syntax doesn't allow us to place properties on RDF container
+    // elements).
+    nsCOMPtr<nsISimpleEnumerator> elements;
+    rv = NS_NewContainerEnumerator(mInner, aContainer, getter_AddRefs(elements));
+    if (NS_FAILED(rv)) return rv;
 
-    // We iterate through all of the arcs, in case someone has applied
-    // properties to the bag itself.
+    while (1) {
+        PRBool hasMore;
+        rv = elements->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
+        if (! hasMore)
+            break;
+
+        nsCOMPtr<nsISupports> isupports;
+        rv = elements->GetNext(getter_AddRefs(isupports));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFNode> element = do_QueryInterface(isupports);
+        NS_ASSERTION(element != nsnull, "not an nsIRDFNode");
+        if (! element)
+            continue;
+
+        rv = SerializeMember(aStream, aContainer, element);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // close the container tag
+    rdf_BlockingWrite(aStream, "  </", 4);
+    rdf_BlockingWrite(aStream, tag);
+    rdf_BlockingWrite(aStream, ">\n", 2);
+
+
+    // Now, we iterate through _all_ of the arcs, in case someone has
+    // applied properties to the bag itself. These'll be placed in a
+    // separate RDF:Description element.
     nsCOMPtr<nsISimpleEnumerator> arcs;
     rv = mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    while (1) {
+    PRBool wroteDescription = PR_FALSE;
+    while (! wroteDescription) {
         PRBool hasMore;
         rv = arcs->HasMoreElements(&hasMore);
         if (NS_FAILED(rv)) return rv;
@@ -1268,29 +1350,15 @@ static const char kRDFAlt[] = "RDF:Alt";
 
         // If it's a membership property, then output a "LI"
         // tag. Otherwise, output a property.
-        PRBool isOrdinal;
-        if (NS_SUCCEEDED(rdfc->IsOrdinalProperty(property, &isOrdinal)) && isOrdinal) {
-            rv = SerializeMember(aStream, aContainer, property);
-        }
-        else if (property == kRDF_instanceOf) {
-            // don't serialize instanceOf -- it's implicit in the tag
-        }
-        else if (property == kRDF_nextVal) {
-            // don't serialize nextVal -- it's internal state
-        }
-        else {
-            rv = SerializeProperty(aStream, aContainer, property);
+        if (! IsContainerProperty(property)) {
+            rv = SerializeDescription(aStream, aContainer);
+            wroteDescription = PR_TRUE;
         }
 
         NS_RELEASE(property);
         if (NS_FAILED(rv))
             break;
     }
-
-    // close the container tag
-    rdf_BlockingWrite(aStream, "  </", 4);
-    rdf_BlockingWrite(aStream, tag);
-    rdf_BlockingWrite(aStream, ">\n", 2);
 
     return NS_OK;
 }
