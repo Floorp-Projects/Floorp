@@ -3904,7 +3904,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (attr == nsXULAtoms::removeelement &&
             value.EqualsLiteral("true")) {
 
-            rv = RemoveElement(aTargetNode->GetParent(), aTargetNode, aNotify);
+            rv = RemoveElement(aTargetNode->GetParent(), aTargetNode);
             if (NS_FAILED(rv)) return rv;
 
             return NS_OK;
@@ -4324,11 +4324,11 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
 }
 
 nsresult
-nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild, PRBool aNotify)
+nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
 {
     PRInt32 nodeOffset = aParent->IndexOf(aChild);
 
-    return aParent->RemoveChildAt(nodeOffset, aNotify);
+    return aParent->RemoveChildAt(nodeOffset, PR_TRUE);
 }
 
 //----------------------------------------------------------------------
