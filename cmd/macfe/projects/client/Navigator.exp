@@ -1105,6 +1105,7 @@ NET_CreateURLStruct
 # NET_DNSExpirationPrefChanged
 # NET_DebugNetRead
 # NET_DebugNetWrite
+NET_DeleteCookie
 # NET_DelExternalURLType
 NET_DeregisterContentTypeConverter
 # NET_DestroyCacheDirectory
