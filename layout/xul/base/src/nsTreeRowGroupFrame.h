@@ -87,6 +87,8 @@ protected:
 
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
 
+  void SetContentChain(nsISupportsArray* aContentChain);
+
   void ConstructContentChain(nsIContent* aRowContent);
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);

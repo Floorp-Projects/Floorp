@@ -221,11 +221,13 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
     parentContent->ChildCount(index);
   }
 
+  /* Let me see inside the damn nsCOMptrs
   nsIAtom* aAtom;
   parentContent->GetTag(aAtom);
   nsString result;
   aAtom->ToString(result);
-  
+  */
+
   for (PRInt32 i = index-1; i >= 0; i--) {
     nsCOMPtr<nsIContent> childContent;
     parentContent->ChildAt(i, *getter_AddRefs(childContent));
@@ -538,8 +540,9 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
   // We may just be a normal row group.
   if (!mIsLazy)
     return mFrames.FirstChild();
-
-  if (mTopFrame)
+   
+  // If we have a frame and no content chain (e.g., unresolved/uncreated content)
+  if (mTopFrame && !mContentChain)
     return mTopFrame;
 
   // See if we have any frame whatsoever.
@@ -547,21 +550,55 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
   
   mBottomFrame = mTopFrame;
 
-  if (mTopFrame)
-    return mTopFrame;
+  nsCOMPtr<nsIContent> startContent;
+  if (mTopFrame) {
+    if (!mContentChain)
+      return mTopFrame;
+   
+    // We have a content chain. If the top frame is the same as our content
+    // chain, we can go ahead and destroy our content chain and return the
+    // top frame.
+    nsCOMPtr<nsIContent> topContent;
+    mTopFrame->GetContent(getter_AddRefs(topContent));
+    nsCOMPtr<nsISupports> supports;
+    mContentChain->GetElementAt(0, getter_AddRefs(supports));
+    nsCOMPtr<nsIContent> chainContent = do_QueryInterface(supports);
+    if (chainContent.get() == topContent.get()) {
+      // The two content nodes are the same.  Our content chain has
+      // been synched up, and we can now remove our element and
+      // pass the content chain inwards.
+      mContentChain->RemoveElementAt(0);
+      PRUint32 chainSize;
+      mContentChain->Count(&chainSize);
+      if (chainSize > 0) {
+        ((nsTreeRowGroupFrame*)mTopFrame)->SetContentChain(mContentChain);
+      }
+      
+      // The chain is dead. Long live the chain.
+      NS_RELEASE(mContentChain);
+      mContentChain = nsnull;
+    }
+    startContent = chainContent;
+  }
 
   // We don't have a top frame instantiated. Let's
   // try to make one.
 
   // If we have a content chain, use that content node to make our frame,
   // and prepare a sub-content chain for the new child frame that we make.
-  
-  PRInt32 childCount;
-  mContent->ChildCount(childCount);
-  nsCOMPtr<nsIContent> childContent;
-  if (childCount > 0) {
-    mContent->ChildAt(0, *getter_AddRefs(childContent));
-    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, childContent,
+  // Otherwise just grab the first child.
+  if (!startContent) {
+    PRInt32 childCount;
+    mContent->ChildCount(childCount);
+    nsCOMPtr<nsIContent> childContent;
+    if (childCount > 0) {
+      mContent->ChildAt(0, *getter_AddRefs(childContent));
+      startContent = childContent;
+    }
+  }
+
+  if (startContent) {
+    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, startContent,
                                                &mTopFrame);
     printf("Created a frame\n");
     mBottomFrame = mTopFrame;
@@ -660,4 +697,11 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext& aPresContext)
       presShell->AppendReflowCommand(reflowCmd);
     }
   }
+}
+
+void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)
+{
+  NS_IF_RELEASE(mContentChain);
+  mContentChain = aContentChain;
+  NS_IF_ADDREF(mContentChain);
 }
