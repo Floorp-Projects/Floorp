@@ -80,6 +80,12 @@ NS_IMPL_RELEASE(nsJSEventListener)
 
 //static nsString onPrefix = "on";
 
+nsresult nsJSEventListener::SetEventName(nsIAtom* aName)
+{
+  mEventName = aName;
+  return NS_OK;
+}
+
 nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval;
@@ -94,12 +100,18 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   JSObject* obj;
   nsresult result = NS_OK;
 
-  if (NS_OK != aEvent->GetType(eventString)) {
-    //JS can't handle this event yet or can't handle it at all
-    return NS_OK;
+  if (!mEventName) {
+    if (NS_OK != aEvent->GetType(eventString)) {
+      //JS can't handle this event yet or can't handle it at all
+      return NS_OK;
+    }
+
+    eventString.InsertWithConversion("on", 0, 2);
+  }
+  else {
+    mEventName->ToString(eventString);
   }
 
-  eventString.InsertWithConversion("on", 0, 2);
   eventChars = eventString.ToNewCString();
   
   result = mOwner->GetScriptObject(mContext, (void**)&obj);

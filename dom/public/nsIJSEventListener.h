@@ -29,6 +29,7 @@
 class nsIScriptContext;
 class nsIScriptObjectOwner;
 class nsIDOMEventListener;
+class nsString;
 
 #define NS_IJSEVENTLISTENER_IID     \
 { 0xa6cf9118, 0x15b3, 0x11d2,       \
@@ -41,6 +42,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
   NS_IMETHOD GetEventTarget(nsIScriptContext** aContext, nsIScriptObjectOwner** aOwner) = 0;
+  NS_IMETHOD SetEventName(nsIAtom* aName) = 0;
 };
 
 extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, nsIScriptObjectOwner* aOwner);
