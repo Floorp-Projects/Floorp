@@ -160,11 +160,7 @@
     <checkbox
       label     = "&useCSS.label;"
       id        = "useCSS"
-      accesskey = ""
-      pref      = "true"
-      preftype  = "bool"
       prefstring= "editor.use_css"
-      prefattribute="checked"
     />
   </groupbox>
 </page>

@@ -60,17 +60,17 @@
             <columns><column/><column/><column/><column/><column/></columns>
               <rows>
                 <row align="center">
-                  <text class="label" value="&tableRows.label;"/>
+                  <label value="&tableRows.label;"/>
                   <textbox class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
                   <spring class="bigspacer"/>
-                  <text class="label" value="&tableHeight.label;" id="TableHeightLabel"/>
+                  <label value="&tableHeight.label;" id="TableHeightLabel"/>
                   <textbox class="narrow" id="TableHeightInput" oninput="forceInteger(this.id);"/>
                   <menulist id="TableHeightUnits"/>
                 </row>
               <row align="center">
-                  <text class="label" value="&tableColumns.label;"/>
-                  <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
-                  <spring class="bigspacer"/>
+                <label value="&tableColumns.label;"/>
+                <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
+                <spring class="bigspacer"/>
                 <label value="&tableWidth.label;"/>
                 <textbox class="narrow" id="TableWidthInput" oninput="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>
