@@ -19,6 +19,7 @@
 #ifndef	_RDF_ATALK_H_
 #define	_RDF_ATALK_H_
 
+#ifdef	XP_MAC
 
 #include <Appletalk.h>
 #include "rdf.h"
@@ -53,5 +54,7 @@ RDF_Error	AtalkDestroy (RDFT r);
 RDFT		MakeAtalkStore (char* url);
 
 XP_END_PROTOS
+
+#endif
 
 #endif
