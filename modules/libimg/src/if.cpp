@@ -675,7 +675,7 @@ il_size(il_container *ic)
     if (ic->dest_height == 0) ic->dest_height = 1;
 
     /* Determine if the image will be displayed at its natural size. */
-    if (ic->dest_width == (int)src_width && ic->dest_height == (int)src_height)
+    if (ic->dest_width == src_width && ic->dest_height == src_height)
         ic->natural_size = PR_TRUE;
 
     /* Check that the target image dimensions are reasonable. */
@@ -980,7 +980,6 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 int
 IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 {
-  int ret =0;
   nsresult rv = NS_OK;
 
 	PR_ASSERT(ic);
@@ -1378,7 +1377,6 @@ void
 il_image_complete(il_container *ic)
 {
     NI_PixmapHeader *src_header = ic->src_header;
-    IL_GroupContext *img_cx = ic->img_cx;
     IL_DisplayType display_type = ic->display_type;
 	ilINetReader *reader;
 
@@ -1454,20 +1452,20 @@ il_image_complete(il_container *ic)
                     /* Only loop if the image stream is available locally.
                        Also, if the user hit the "stop" button, don't
                        allow the animation to loop. */
-    #ifdef NU_CACHE
+#ifdef NU_CACHE
                     if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
                          ic->net_cx->IsURLInCache(netRequest))          &&
                         (!il_image_stopped(ic))                &&
                         ic->net_cx &&
                         (display_type == IL_Console))
-    #else
+#else
                     if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
                          ic->net_cx->IsURLInMemCache(netRequest)       ||
                          ic->net_cx->IsURLInDiskCache(netRequest))          &&
                         (!il_image_stopped(ic))                &&
                         ic->net_cx &&
                         (display_type == IL_Console))
-    #endif
+#endif
                     {
                         if (!ic->is_looping) {
                             /* If this is the end of the first pass of the
@@ -1796,7 +1794,7 @@ il_setup_icon_table(void)
 	il_icon_table[inum++] = il_hash("internal-attachment-icon");
     il_icon_table[inum++] = IL_MSG_ATTACH;
 
-    PR_ASSERT(inum <= (sizeof(il_icon_table) / sizeof(il_icon_table[0])));
+    PR_ASSERT(inum <= (int)(sizeof(il_icon_table) / sizeof(il_icon_table[0])));
 }
 
 
@@ -1808,7 +1806,7 @@ il_internal_image(const char *image_url)
 	if (il_icon_table[0]==0)
 		il_setup_icon_table();
 
-	for (i=0; i< (sizeof(il_icon_table) / sizeof(il_icon_table[0])); i++)
+	for (i=0; i < (int)(sizeof(il_icon_table) / sizeof(il_icon_table[0])); i++)
 	{
 		if (il_icon_table[i<<1] == hash)
 		{
@@ -1840,7 +1838,6 @@ IL_GetImage(const char* image_url,
     int req_depth = img_cx->color_space->pixmap_depth;
 	  int err;
     int is_view_image;
-    int is_internal_external_reconnect = FALSE;
 
     /* Create a new instance for this image request. */
     image_req = PR_NEWZAP(IL_ImageReq);
@@ -1961,7 +1958,7 @@ IL_GetImage(const char* image_url,
             //PR_FREEIF(image_req);
             /* This takes the image_req out of the ic client list,
                 frees image_req->new_cx, frees image_req.*/
-            int ret = il_delete_client(ic, image_req);
+            il_delete_client(ic, image_req);
             return NULL;
         }
 
@@ -1998,7 +1995,7 @@ IL_GetImage(const char* image_url,
         /* This takes the image_req out of the ic client list,
            frees image_req->new_cx, frees image_req.
         */
-        int ret = il_delete_client(ic, image_req);
+        il_delete_client(ic, image_req);
 
         return NULL;
     }        
@@ -2021,7 +2018,7 @@ IL_GetImage(const char* image_url,
         /* This takes the image_req out of the ic client list,
            frees image_req->new_cx, frees image_req.
         */
-        int ret = il_delete_client(ic, image_req);
+        il_delete_client(ic, image_req);
         return NULL;
 	}
     err = ic->net_cx->GetURL(url, cache_reload_policy, reader);

@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.9 1999/08/19 22:18:44 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.10 1999/09/25 19:59:42 kipp%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -224,7 +224,7 @@ struct il_container_struct {
     int forced;
     uint32 content_length;
 
-    int dest_width, dest_height; /* Target dimensions of the image */
+    uint32 dest_width, dest_height; /* Target dimensions of the image */
     PRPackedBool natural_size;  /* True if the image is decoded to its natural
                                    size. */
     PRPackedBool aspect_distorted; /* True if the image undergoes aspect ratio
