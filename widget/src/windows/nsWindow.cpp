@@ -527,22 +527,6 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
 
-  nsPluginEvent pluginEvent;
-
-  switch (aMsg)//~~~
-  {
-    case NS_GOTFOCUS:
-      pluginEvent.event = WM_SETFOCUS;
-      break;
-    case NS_LOSTFOCUS:
-      pluginEvent.event = WM_KILLFOCUS;
-      break;
-    default:
-      break;
-  }
-
-  event.nativeMsg = (void *)&pluginEvent;
-
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
   return result;
@@ -3345,18 +3329,37 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
-    // call the event callback 
-    if (mEventCallback) {
-      //XXX Commenting this out because it's blocking all focus events and 
-      //    I don't think it still works.  If I'm wrong we might start getting
-      //    crashes due to focus events during window destruction again.
-      //YYY You get all my window crash bugs from now on, joki.
-      //if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
-        return(DispatchStandardEvent(aEventType));
-      //}
+  // call the event callback 
+  if (mEventCallback) {
+    nsGUIEvent event;
+    event.eventStructType = NS_GUI_EVENT;
+    InitEvent(event, aEventType);
+
+    //focus and blur event should go to their base widget loc, not current mouse pos
+    event.point.x = 0;
+    event.point.y = 0;
+
+    nsPluginEvent pluginEvent;
+
+    switch (aEventType)//~~~
+    {
+      case NS_GOTFOCUS:
+        pluginEvent.event = WM_SETFOCUS;
+        break;
+      case NS_LOSTFOCUS:
+        pluginEvent.event = WM_KILLFOCUS;
+        break;
+      default:
+        break;
     }
 
-    return PR_FALSE;
+    event.nativeMsg = (void *)&pluginEvent;
+
+    PRBool result = DispatchWindowEvent(&event);
+    NS_RELEASE(event.widget);
+    return result;
+  }
+  return PR_FALSE;
 }
 
 
