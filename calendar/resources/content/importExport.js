@@ -21,6 +21,7 @@
  * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
  *                 Steve Hampton <mvgrad78@yahoo.com>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Jussi Kukkonen <jussi.kukkonen@welho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -421,7 +422,6 @@ function promptToKeepEntry(title, startTime, endTime)
 
 }
 
-
 /**** parseOutlookCSVData
  *
  * Takes a text block of Outlook-exported Comma Separated Values and tries to 
@@ -429,20 +429,20 @@ function promptToKeepEntry(title, startTime, endTime)
  * Returns: an array of new calendarEvents and
  *          an array of events that are duplicates with existing ones.
  */ 
-function parseOutlookCSVData( outlookCsvStr )
-{
-  var lines = outlookCsvStr.split("\n");
-  var totalLines = lines.length-1;
-  
-  var oneLineEventRegExp =        /^"(.*)","(.*)","(.*)","(.*)","(.*)","(True|False)","(True|False)","([^"]*)","([^"]*)",("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("(.*)"|),("(.*)"|),("(.*)"|),"(Normal|Low|High)","(True|False)",("(.*)"|),"(\d)"/;
-  var multiLineEventStartRegExp = /^"(.*)","(.*)","(.*)","(.*)","(.*)","(True|False)","(True|False)","([^"]*)","([^"]*)",("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("([^"]*)"|),("(.*))/;
-  var multiLineEventEndRegExp =   /^([^"]*)",("(.*)"|),("(.*)"|),"(Normal|Low|High)","(True|False)",("(.*)"|),"(\d)"/;
-  
-  //arrays for storing values from regexps
-  var eventFields;
-  var tmpEventFields;
+function parseOutlookCSVData( outlookCsvStr ) {
 
-  var formater = new DateFormater(); 
+  // boolRegExp: regexp for finding a boolean value from event (6. field)
+  // headerRegExp: regexp for reading CSV header line
+  // eventRegExp: regexp for reading events (this one'll be constructed on fly)
+  var boolRegExp = /^".*?",".*?",".*?",".*?",".*?","(.*?)","/;
+  var headerRegExp = /^"(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)","(.*?)"/g;
+  var eventRegExp;
+  headerRegExp.lastIndex=0;
+  
+  //array for storing events values (from eventRegExp)
+  var eventFields;
+  
+  var formater = new DateFormater();
   var sDate;
   var eDate;
   var alarmDate;
@@ -450,72 +450,155 @@ function parseOutlookCSVData( outlookCsvStr )
   var calendarEvent;
   var eventArray = new Array();
   var dupArray = new Array();
-
-  for (var lineIndex = 1; lineIndex < totalLines; lineIndex++) { 
-    eventFields = oneLineEventRegExp(lines[lineIndex]);
-
-    if (eventFields == null) {    
-      // this is not singleline event
-      eventFields = multiLineEventStartRegExp(lines[lineIndex]);
-
-      if (eventFields != null) {
-        // this is a multiline event
-        tmpEventFields = null;
-        var i = lineIndex+1;
-
-        // read lines until end-of-event is found:
-        while ((i < totalLines) && (tmpEventFields == null)) {
-          tmpEventFields = multiLineEventEndRegExp(lines[i]);
-          if (tmpEventFields == null)
-            eventFields[23] = eventFields[23] + "\n" + lines[i]; //add line to Description-field
-          i++;
-        }
-
-        if (tmpEventFields != null) {
-          //found the end of this multiline event
-          eventFields[23] = eventFields[23] + "\n" + tmpEventFields[1];
-          eventFields = eventFields.concat(tmpEventFields.slice(2));          
-        } else  {
-          //end-of-data before end-of-event (event is invalid)
-          eventFields = null; 
-        }
-      } 
-    }
-
-    // At this point eventFields is either null or contains following fields
-    //  1:subject, 2:start date, 3:start time, 4:end date, 5:end time, 
-    //  6: all day?, 7:alarm?, 8:alarm date, 9:alarm time, 11:organizer, 
-    //  13: req. attendees, 15:optional attendees, 17:Resources, 
-    //  19:Billing info, 21:Categories, 23:Notes, 25:location, 27:Mileage, 
-    //  28:Priority, 29:Private? 31:Privacy, 32:Show time as
   
-    if(eventFields != null) {
-      //parseShortDate magically decides the format (locale) of dates/times
-      sDate = formater.parseShortDate(eventFields[2] + " " + eventFields[3]);
-      eDate = formater.parseShortDate(eventFields[4] + " " + eventFields[5]);
+  var args;
+  var knownIndxs = 0;
+  var boolTestFields;
+  
+  var header = headerRegExp( outlookCsvStr );
+  
+  if( header != null ) {
+    //strip header from string
+    outlookCsvStr = outlookCsvStr.slice(headerRegExp.lastIndex + 2);
 
-      if ((sDate != null) && (eDate != null)) {
-        alarmDate = formater.parseShortDate(eventFields[8] + " " + eventFields[9]);
+    // get a sample boolean value from the first event.
+    // Note: this asssumes that field number 6 is a boolean value
+    boolTestFields = boolRegExp(outlookCsvStr);
+    
+    if( ( boolTestFields != null ) && ( boolTestFields[1].length>0 ) ) {
+      
+      args = new Object();
+      //args.cancelled is about window cancel, not about event
+      args.cancelled = false;
+      //args.fieldList contains the field names from the first row of CSV
+      args.fieldList = header.slice(1);
+      args.boolStr = boolTestFields[1];
+      
+      // set default indexes for a Outlook2000 CSV file
+      args.titleIndex = 1;
+      args.startDateIndex = 2;
+      args.startTimeIndex = 3;
+      args.endDateIndex = 4;
+      args.endTimeIndex = 5;
+      args.allDayIndex = 6;
+      args.alarmIndex = 7;
+      args.alarmDateIndex = 8;
+      args.alarmTimeIndex = 9;
+      args.categoriesIndex = 15;
+      args.descriptionIndex = 16;
+      args.locationIndex = 17;
+      args.privateIndex = 20;
+      
+      // set indexes if Outlook language happened to be english
+      for( var i = 1; i < header.length; i++)
+        switch( header[i] ) {
+          case "Subject":         args.titleIndex = i;       knownIndxs++; break;
+          case "Start Date":      args.startDateIndex = i;   knownIndxs++; break;
+          case "Start Time":      args.startTimeIndex = i;   knownIndxs++; break;
+          case "End Date":        args.endDateIndex = i;     knownIndxs++; break;
+          case "End Time":        args.endTimeIndex = i;     knownIndxs++; break;
+          case "All day event":   args.allDayIndex = i;      knownIndxs++; break;
+          case "Reminder on/off": args.alarmIndex = i;       knownIndxs++; break;
+          case "Reminder Date":   args.alarmDateIndex = i;   knownIndxs++; break;
+          case "Reminder Time":   args.alarmTimeIndex = i;   knownIndxs++; break;
+          case "Categories":      args.categoriesIndex = i;  knownIndxs++; break;
+          case "Description":     args.descriptionIndex = i; knownIndxs++; break;
+          case "Location":        args.locationIndex = i;    knownIndxs++; break;
+          case "Private":         args.privateIndex = i;     knownIndxs++; break;
+        }  
 
-        calendarEvent = createEvent();
-        calendarEvent.id = createUniqueID();
-        calendarEvent.title = eventFields[1];
-        calendarEvent.description = eventFields[23];
-        calendarEvent.location = eventFields[25];
-        calendarEvent.start.setTime(sDate);
-        calendarEvent.end.setTime(eDate);
-        calendarEvent.allDay = (eventFields[6] == "True");
-        calendarEvent.privateEvent = (eventFields[29] == "True");
-        calendarEvent.categories = eventFields[21];
-        calendarEvent.alarm = (eventFields[7] == "True");
-        calendarEvent.alarmLength = Math.round((sDate - alarmDate)/kDate_MillisecondsInMinute);
-        calendarEvent.alarmUnits = "minutes";
-        calendarEvent.setParameter("ICAL_RELATED_PARAMETER", "ICAL_RELATED_START");
+      // again, if language is english...
+      if( args.boolStr == "True" )       args.boolIsTrue = true;
+      else if( args.boolStr == "False" ) args.boolIsTrue = false;
+      
+      // show field select -dialog if language wasn't english
+      // (or if MS decided to change column names)
+      if( ( args.boolIsTrue == null ) || ( knownIndxs != 13 ) ) {
 
-        if (entryExists(sDate, calendarEvent.title))
-          dupArray[ dupArray.length ] = calendarEvent;
-        else
-          eventArray[ eventArray.length ] = calendarEvent;
+        // just any value...
+        args.boolIsTrue = false;
+        
+        // Dialog will update values in args.* according to user choices.
+        window.setCursor( "wait" );
+        openDialog( "chrome://calendar/content/outlookImportDialog.xul", "caOutlookImport", "chrome,modal,resizable=yes", args );
+      }
+      
+      if( !args.cancelled ) {
+
+        // Construct event regexp according to field indexes. The regexp can
+        // be made stricter, if it seems this matches too loosely.
+        var regExpStr = "^";
+        for( var i = 1; i < header.length; i++ ) {
+         if( i != 1 )
+           regExpStr += ",";
+         if( i == args.descriptionIndex )
+           regExpStr += "(.*?(?:[\\s\\S]*?).*?)";
+         else
+           regExpStr += "(.*?)";
+        }
+        regExpStr += "\\r\\n";
+        
+        eventRegExp = new RegExp( regExpStr, "gm" );
+        eventFields = eventRegExp( outlookCsvStr );
+        if( eventFields != null ) {
+          do {
+            //strip quotation marks
+            for( var i=1; i < eventFields.length; i++ )
+              if( eventFields[i].length > 0 )
+                eventFields[i] = eventFields[i].slice( 1, -1 );
+   
+            // At this point eventFields contains following fields. Position
+            // of fields is in args.[fieldname]Index.
+            //    subject, start date, start time, end date, end time,
+            //    all day?, alarm?, alarm date, alarm time,
+            //    Description, Categories, Location, Private?
+            // Unused fields (could maybe be copied to Description):
+            //    Meeting Organizer, Required Attendees, Optional Attendees,
+            //    Meeting Resources, Billing Information, Mileage, Priority,
+            //    Sensitivity, Show time as
+   
+            //parseShortDate magically decides the format (locale) of dates/times
+            sDate = formater.parseShortDate( eventFields[args.startDateIndex] + " " +
+                                             eventFields[args.startTimeIndex] );
+            eDate = formater.parseShortDate( eventFields[args.endDateIndex] + " " +
+                                             eventFields[args.endTimeIndex] );
+            alarmDate = formater.parseShortDate( eventFields[args.alarmDateIndex] + " " +
+                                                 eventFields[args.alarmTimeIndex] );
+            if( ( sDate != null ) && ( eDate != null ) ) {
+              
+              calendarEvent = createEvent();
+              
+              calendarEvent.id = createUniqueID();
+              calendarEvent.title = eventFields[args.titleIndex];
+              calendarEvent.start.setTime( sDate );
+              calendarEvent.end.setTime( eDate );
+              calendarEvent.alarmLength = Math.round( ( sDate - alarmDate ) / kDate_MillisecondsInMinute );
+              calendarEvent.alarmUnits = "minutes";
+              calendarEvent.setParameter( "ICAL_RELATED_PARAMETER", "ICAL_RELATED_START" );
+              calendarEvent.description = eventFields[args.descriptionIndex];
+              calendarEvent.categories = eventFields[args.categoriesIndex];
+              calendarEvent.location = eventFields[args.locationIndex];
+
+              if( args.boolIsTrue ) {
+                calendarEvent.allDay = ( eventFields[args.allDayIndex] == args.boolStr );
+                calendarEvent.alarm = ( eventFields[args.alarmIndex] == args.boolStr );
+                calendarEvent.privateEvent = ( eventFields[args.privateIndex] == args.boolStr );
+              } else {
+                calendarEvent.allDay = ( eventFields[args.allDayIndex] != args.boolStr );
+                calendarEvent.alarm = ( eventFields[args.alarmIndex] != args.boolStr );
+                calendarEvent.privateEvent = ( eventFields[args.privateIndex] != args.boolStr );
+              }
+              
+              //save the event into either return array
+              if( entryExists( sDate, calendarEvent.title ) )
+                dupArray[dupArray.length] = calendarEvent;
+              else
+                eventArray[eventArray.length] = calendarEvent;
+            }
+            //get next events fields
+            eventFields = eventRegExp( outlookCsvStr );
+          } while( eventRegExp.lastIndex !=0 )
+        }
       }
     }
   }

@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Calendar code.
+   -
+   - The Initial Developer of the Original Code is
+   - Jussi Kukkonen (jussi.kukkonen@welho.com).
+   - Portions created by the Initial Developer are Copyright (C) 2004
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        id="calendar-import-outlook-fieldswindow"
+        title="Map Outlook CSV fields"
+        onload="loadOutlookImportDialog()"
+        buttons="accept,cancel"
+        ondialogaccept="return onOKCommand();"
+        ondialogcancel="return onCancelCommand();">
+
+  <script type="application/x-javascript" src="chrome://calendar/content/outlookImportDialog.js"/>
+
+  <vbox>
+    <label value="Please map the following concepts to their Outlook CSV counterparts:"/>
+    <spacer height="15"/>
+    <hbox>
+      <spacer flex="1"/>
+      <grid>
+        <rows>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Subject"/>
+            </hbox>
+            <menulist id="title-list">
+              <menupopup id="title-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Start date"/>
+            </hbox>
+            <menulist id="startdate-list">
+              <menupopup id="startdate-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Start time"/>
+            </hbox>
+            <menulist id="starttime-list">
+              <menupopup id="starttime-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="End date"/>
+            </hbox>
+            <menulist id="enddate-list">
+              <menupopup id="enddate-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="End time"/>
+            </hbox>
+            <menulist id="endtime-list">
+              <menupopup id="endtime-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Location"/>
+            </hbox>
+            <menulist id="location-list">
+              <menupopup id="location-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Description"/>
+            </hbox>
+            <menulist id="description-list">
+              <menupopup id="description-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="All-day event"/>
+            </hbox>
+            <menulist id="allday-list">
+              <menupopup id="allday-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Private"/>
+            </hbox>
+            <menulist id="private-list">
+              <menupopup id="private-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Alarm on/off"/>
+            </hbox>
+            <menulist id="alarm-list">
+              <menupopup id="alarm-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Alarm date"/>
+            </hbox>
+            <menulist id="alarmdate-list">
+              <menupopup id="alarmdate-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Alarm time"/>
+            </hbox>
+            <menulist id="alarmtime-list">
+              <menupopup id="alarmtime-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox pack="end">
+              <label value="Categories"/>
+            </hbox>
+            <menulist id="categories-list">
+              <menupopup id="categories-menupopup">
+                <menuitem label="" value="0"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <spacer height="15"/>
+        </rows>
+      </grid>
+      <spacer flex="1"/>
+    </hbox>
+  </vbox>
+  <label value="Please select the meaning of the following word:"/>
+  <hbox>
+    <spacer flex="1"/>
+    <grid>
+      <rows>
+        <row align="center">
+          <hbox pack="end">
+            <label id="bool-label"/>
+          </hbox>
+          <menulist id="bool-list">
+            <menupopup>
+              <menuitem label="False" value="0"/>
+              <menuitem label="True" value="1"/>
+            </menupopup>
+          </menulist>
+        </row>
+      </rows>
+    </grid>
+    <spacer flex="1"/>
+  </hbox>
+</dialog>
