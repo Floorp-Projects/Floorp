@@ -42,6 +42,8 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  uriloader \
 		  xpconnect \
+		  pipnss \
+		  windowwatcher \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -82,10 +84,6 @@ BUILD_SMIME=1
 !endif
 
 !if defined(BUILD_SMIME)
-REQUIRES = $(REQUIRES) \
-		  pipnss \
-		  windowwatcher \
-		  $(NULL)
 DEFINES = -DENABLE_SMIME $(DEFINES)
 !endif
 
