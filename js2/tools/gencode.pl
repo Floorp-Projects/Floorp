@@ -201,12 +201,6 @@ $ops{"BRANCH"} =
    rem    => "target label",
    params => [ ("Label*") ]
   };
-$ops{"BRANCH_LT"} = $cbranch_op;
-$ops{"BRANCH_LE"} = $cbranch_op;
-$ops{"BRANCH_EQ"} = $cbranch_op;
-$ops{"BRANCH_NE"} = $cbranch_op;
-$ops{"BRANCH_GE"} = $cbranch_op;
-$ops{"BRANCH_GT"} = $cbranch_op;
 $ops{"BRANCH_TRUE"} = $cbranch_op;
 $ops{"BRANCH_FALSE"} = $cbranch_op;
 $ops{"RETURN"} =
@@ -447,7 +441,7 @@ sub get_print_body {
         if ($type eq "Register") {
             push (@oplist, "\"R\" << mOp$op");
         } elsif ($type eq "Label*") {
-            push (@oplist, "\"Offset \" << mOp$op->mOffset");
+            push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
         } elsif ($type =~ /String/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } else {
