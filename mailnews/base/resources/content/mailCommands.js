@@ -41,17 +41,24 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 {
 	var commandResource = RDF.GetResource(command);
 	if(commandResource) {
-      try {
-		dataSource.DoCommand(srcArray, commandResource, argumentArray);
-      }
-      catch(e) { 
-        if (command == "http://home.netscape.com/NC-rdf#NewFolder") {
-          throw(e); // so that the dialog does not automatically close.
-        }
-        dump("Exception : In mail commands" + e + "\n");
-      }
+    try {
+      if (!argumentArray)
+        argumentArray = Components.classes["@mozilla.org/supports-array;1"]
+                        .createInstance(Components.interfaces.nsISupportsArray);
+
+      if (argumentArray)
+        argumentArray.AppendElement(msgWindow);
+		  dataSource.DoCommand(srcArray, commandResource, argumentArray);
     }
+    catch(e) { 
+      if (command == "http://home.netscape.com/NC-rdf#NewFolder") {
+        throw(e); // so that the dialog does not automatically close.
+      }
+      dump("Exception : In mail commands" + e + "\n");
+    }
+  }
 }
+
 
 function GetNewMessages(selectedFolders, server, compositeDataSource)
 {
