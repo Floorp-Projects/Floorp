@@ -845,6 +845,8 @@ nsBrowserWindow::DoFind()
     rect.SetRect(0, 0, 380, 110);  
 
     nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
+    if (nsnull == mDialog)
+      return;		// why no error value?
     nsIWidget* widget = nsnull;
     NS_CreateDialog(mWindow,mDialog,rect,HandleEvent,&font);
     if (NS_OK == mDialog->QueryInterface(kIWidgetIID,(void**)&widget))
