@@ -763,6 +763,8 @@ PRInt16 numPaletteColors;
   } else if (24 == aDepth) {
     numPaletteColors = 0;
     *aNumBytesPix = 3;
+  } else if (16 == aDepth) {
+    *aNumBytesPix = 2;  
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected image depth");
     return NS_ERROR_UNEXPECTED;
