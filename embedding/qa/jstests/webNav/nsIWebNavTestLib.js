@@ -245,7 +245,7 @@ function testReferingURI(webNav)
     return false;
   } 
     // Get the refering URI
-  getRefURI = webNav.referingURI;
+  getRefURI = webNav.referringURI;
  // alert("The refering uri = " + getRefURI.spec);
 
   return getRefURI;     

@@ -455,7 +455,7 @@ void CNsIWebNav::GetReferingURITest(PRInt16 displayMode)
 		 QAOutput("We GOT the URI.", 1);
 	  else
 		 QAOutput("We DIDN'T GET the URI.", 1);
-	  rv = qaWebNav->GetReferingURI(getter_AddRefs(theURI));
+	  rv = qaWebNav->GetReferringURI(getter_AddRefs(theURI));
 	  RvTestResult(rv, "GetReferingURI() test", displayMode);
 //	  rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
 //								myDialog.m_flagvalue, theURI, nsnull, nsnull);
