@@ -218,7 +218,8 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
       if (ilErr != 0) {
         mStatus = MK_IMAGE_LOSSAGE;
         mInterrupted = PR_TRUE;
-        break;
+	    NS_RELEASE(reader);
+        return NS_ERROR_ABORT;
       }
     }
         
