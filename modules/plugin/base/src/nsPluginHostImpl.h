@@ -61,15 +61,37 @@ public:
   char          *mFileName;
 };
 
-#define MAX_ACTIVE_PLUGINS 10
-
-typedef struct nsActivePlugin
+struct nsActivePlugin
 {
+  nsActivePlugin*        mNext;
   char*                  mURL;
   nsIPluginInstancePeer* mPeer;
   nsIPluginInstance*     mInstance;
   PRBool                 mStopped;
-} nsActivePlugin;
+
+  nsActivePlugin(nsIPluginInstance* aInstance, char * url);
+  ~nsActivePlugin();
+};
+
+#define MAX_NUMBER_OF_STOPPED_PLUGINS 16
+
+class nsActivePluginList
+{
+public:
+  nsActivePlugin * first;
+  nsActivePlugin * last;
+  PRInt32 count;
+
+  nsActivePluginList();
+  ~nsActivePluginList();
+
+  void shut();
+  PRBool add(nsActivePlugin * plugin);
+  PRBool remove(nsActivePlugin * plugin);
+  nsActivePlugin * find(nsIPluginInstance* instance);
+  nsActivePlugin * findStopped(char * url);
+  PRUint32 getStoppedCount();
+};
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
@@ -262,9 +284,7 @@ private:
   PRBool      mPluginsLoaded;
   nsIServiceManager *mServiceMgr;
 
-  PRUint32 mNumActivePlugins;
-  PRUint32 mOldestActivePlugin;
-  nsActivePlugin mActivePluginList[MAX_ACTIVE_PLUGINS];
+  nsActivePluginList mActivePluginList;
 };
 
 #endif
