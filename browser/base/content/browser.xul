@@ -29,6 +29,10 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
+#ifdef XP_MACOSX
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#endif
+
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
 #include content/browser-doctype.inc
@@ -45,6 +49,7 @@
         screenX="4" screenY="4"
         persist="screenX screenY width height sizemode"> 
 
+#ifndef XP_MACOSX
 # All JS files that browser.xul wishes to include *must* go into the browser-scripts.inc file
 # so that they can be shared by hiddenWindow.xul.
 #include content/browser-scripts.inc
@@ -52,6 +57,7 @@
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include content/browser-sets.inc
+#endif
 
   <popupset id="mainPopupSet">
     <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
@@ -269,8 +275,10 @@
     </popup>
   </popupset>
 
+#ifndef XP_MACOSX
 # The hacky hidden tree used by the Go menu to build items.
 #include content/browser-gotreehack.inc
+#endif
 
   <!-- bookmarks context menu -->
   <popupset>
@@ -368,9 +376,11 @@
                mode="icons" iconsize="small" context="toolbar-context-menu">
         <toolbaritem id="menubar-items" align="center">
 
+#ifndef XP_MACOSX
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.
 #include content/browser-menubar.inc
+#endif
 
         </toolbaritem>
     </toolbar>
