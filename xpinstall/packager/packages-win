@@ -33,7 +33,6 @@ bin\jsdom.dll
 bin\jsj3250.dll
 bin\mozilla.exe
 bin\oji.dll
-bin\prstrms4.dll
 bin\mozctl.dll
 bin\regxpcom.exe
 bin\components\AcctIdl.dll
@@ -49,7 +48,7 @@ bin\components\caps.xpt
 bin\components\chardet.dll
 bin\components\chardetc.dll
 bin\components\chrome.dll
-bin\components\cnvts.dll
+bin\components\chrome.xpt
 bin\components\cookie.dll
 bin\components\cookieviewer.xpt
 bin\components\directory.xpt
@@ -62,16 +61,18 @@ bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\gfx.xpt
 bin\components\gkhtml.dll
-bin\components\raptor.xpt
 bin\components\gkparser.dll
 bin\components\gkview.dll
 bin\components\history.dll
 bin\components\history.xpt
 bin\components\intl.xpt
+bin\components\jar.xpt
 bin\components\jsconsole-clhandler.js
 bin\components\jsloader.dll
 bin\components\jsurl.dll
 bin\components\jsurl.xpt
+bin\components\layout_base.xpt
+bin\components\layout_xul.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.dll
 bin\components\mozbrwsr.dll
@@ -146,6 +147,7 @@ bin\components\urildr.dll
 bin\components\uriloader.xpt
 bin\components\urlbarhistory.dll
 bin\components\urlbarhistory.xpt
+bin\components\util.xpt
 bin\components\wallet.dll
 bin\components\wallet.xpt
 bin\components\walleteditor.xpt
@@ -196,7 +198,6 @@ bin\defaults\pref\winpref.js
 bin\defaults\pref\xpinstall.js
 bin\defaults\pref\editor.js
 bin\defaults\profile\*
-bin\plugins\*
 bin\searchplugins\*
 bin\res\html.css
 bin\res\ua.css
@@ -208,7 +209,6 @@ bin\res\DistinguishedSchema.tbl
 bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\charsetData.properties
-bin\res\charsetTitles.properties
 bin\res\langGroups.properties
 bin\res\acceptlanguage.properties
 bin\res\language.properties
@@ -219,7 +219,6 @@ bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
 bin\res\throbber\*
-bin\res\toolbar\*
 ;debug menus reference samples dir - remove for actual releases:
 bin\res\samples\*
 
@@ -258,7 +257,6 @@ bin\components\absyncsv.dll
 bin\components\absync.xpt
 bin\chrome\packages\messenger\*
 bin\defaults\pref\mailnews.js
-bin\help\mailhelp\*
 
 [chatzilla]
 bin\components\chatzilla-service.js

@@ -80,6 +80,8 @@ viewer:Components:jsurl.shlb
 viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
 viewer:Components:layout.xpt
+viewer:Components:layout_base.xpt
+viewer:Components:layout_xul.xpt
 viewer:Components:libjar.xpt 
 viewer:Components:libpref.shlb 
 viewer:Components:libpref.xpt 
