@@ -234,6 +234,11 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
     aEntry->instance = PR_LoadLibrary(aEntry->library);
   }
   if (aEntry->instance != NULL) {
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+    // Inform refcnt tracer of new library so that calls through the
+    // new library can be traced.
+    nsTraceRefcnt::LoadLibrarySymbols(aEntry->library, aEntry->instance);
+#endif
     nsFactoryProc proc = (nsFactoryProc) PR_FindSymbol(aEntry->instance,
                                                        "NSGetFactory");
     if (proc != NULL) {
