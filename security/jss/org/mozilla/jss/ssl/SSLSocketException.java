@@ -47,6 +47,10 @@ public class SSLSocketException extends java.net.SocketException {
 
     private int errcode = -1;
 
+    public SSLSocketException() {
+        super();
+    }
+
     public SSLSocketException(String msg) {
         super(msg);
     }
