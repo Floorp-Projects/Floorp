@@ -68,6 +68,7 @@ interface nsIFileSpec : nsISupports
 	readonly attribute nsIFileSpec parent;
 	readonly attribute nsIInputStream inputStream;
 	readonly attribute nsIOutputStream outputStream;
+    boolean isChildOf(in nsIFileSpec possibleParent);
 	[noscript] readonly attribute nsFileSpec fileSpec;
 	[noscript] void setFromFileSpec([const] in nsFileSpecRef spec);
 	

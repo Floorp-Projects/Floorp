@@ -81,6 +81,15 @@ NS_IMETHODIMP nsFileSpecImpl::FromFileSpec(const nsIFileSpec *original)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::IsChildOf(nsIFileSpec *possibleParent,
+                                        PRBool *_retval)
+{
+  *_retval = mFileSpec.IsChildOf(FILESPEC(possibleParent));
+  return mFileSpec.Error();
+}
+//----------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::GetURLString(char * *aURLString)
 //----------------------------------------------------------------------------------------
 {
