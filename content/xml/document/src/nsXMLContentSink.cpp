@@ -1107,6 +1107,9 @@ nsXMLContentSink::LoadXSLStyleSheet(const nsIURL* aUrl)
       NS_NewWellFormed_DTD(&theDTD);
       parser->RegisterDTD(theDTD);
       parser->SetContentSink(sink);
+ 
+      nsAutoString utf8("UTF-8");
+      parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
       parser->Parse(aUrl);
       
       // XXX Don't we have to NS_RELEASE() theDTD?
