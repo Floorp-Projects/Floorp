@@ -230,6 +230,7 @@ function update_sort_menuitems(column, direction)
     enable_sort_menuitems();
 }
 
+// XXX this could be a bit more elegant.
 function enable_sort_menuitems() {
     var columns = document.getElementById('theColumns');
     var column_node = columns.firstChild;
@@ -237,8 +238,8 @@ function enable_sort_menuitems() {
     var tree_column = head.firstChild;
     var skip_column = document.getElementById('popupCell');
     var menuitem = document.getElementById('fill_after_this_node');
-    menuitem = menuitem.nextSibling
-    while (column_node && menuitem) {
+    menuitem = menuitem.nextSibling;
+    while (column_node && menuitem && menuitem.id != 'fill_before_this_node') {
         if (skip_column != tree_column) {
             if ("true" == column_node.getAttribute("hidden")) {
                 menuitem.setAttribute("disabled", "true");
