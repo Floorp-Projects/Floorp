@@ -179,9 +179,11 @@ NS_IMETHODIMP nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
   if (fFlags[msgIndex] & kImapMsgDeletedFlag)	// see if we already had counted this one as deleted
     fNumberDeleted--;
   for (counter = msgIndex; counter < (PRUint32) fNumberOfMessagesAdded; counter++)
+  {
+    fUids.SetAt(counter, fUids[counter + 1]);                               
      fFlags[counter] = fFlags[counter + 1];                                  
+  }
 
-  fUids.RemoveAt(msgIndex, 1);
   PR_CExitMonitor(this);
   return NS_OK;
 }
