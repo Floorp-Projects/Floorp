@@ -1489,7 +1489,7 @@ void StyleUserInterfaceImpl::ResetFrom(const nsStyleUserInterface* aParent, nsIP
     mUserFocus = NS_STYLE_USER_FOCUS_NONE;
   }
 
-  mUserSelect = NS_STYLE_USER_SELECT_TEXT;
+  mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   mKeyEquivalent = PRUnichar(0); // XXX what type should this be?
   mResizer = NS_STYLE_RESIZER_AUTO;
 }
