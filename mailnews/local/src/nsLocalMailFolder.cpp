@@ -557,7 +557,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWithReparse(nsIUrlListener *aRepa
       
         // if it's out of date then reopen with upgrade.
         if (NS_FAILED(rv = msgDBService->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase)))
-          && rv != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+          && rv != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING && rv != NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
           return rv;
         else if (transferInfo && mDatabase)
            SetDBTransferInfo(transferInfo);
@@ -1308,11 +1308,18 @@ nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgD
       }
 
       openErr = msgDBService->OpenFolderDB(this, folderEmpty, PR_FALSE, getter_AddRefs(mDatabase));
-      if (folderEmpty && openErr == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+      if (folderEmpty)
       {
-        if (mDatabase)
-          mDatabase->SetSummaryValid(PR_TRUE);
-        openErr = NS_OK;
+        if (openErr == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+        {
+          if (mDatabase)
+            mDatabase->SetSummaryValid(PR_TRUE);
+          openErr = NS_OK;
+        }
+        else if (NS_FAILED(openErr))
+        {
+          mDatabase = nsnull;
+        }
       }
     }
   }
