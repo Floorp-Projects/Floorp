@@ -16,22 +16,29 @@
  * Reserved.
  */
 
+package netscape.javascript;
+
 /**
- * The JSProxy interface allows applets and plugins to
- * share javascript contexts.
+ * JSWrappedException is an Java exception in a Javascript wrapper
  */
 
-package netscape.javascript;
-import java.applet.Applet;
+public
+class JSWrappedException extends Exception {
+private int jsval;
 
-public interface JSProxy {
-    Object  getMember(JSObject jso, String name);
-    Object  getSlot(JSObject jso, int index);
-    void    setMember(JSObject jso, String name, Object value);
-    void    setSlot(JSObject jso, int index, Object value);
-    void    removeMember(JSObject jso, String name);
-    Object  call(JSObject jso, String methodName, Object args[]);
-    Object  eval(JSObject jso, String s);
-    String      toString(JSObject jso);
-    JSObject    getWindow(Applet applet);
+    /**
+     * Constructs a JSWrappedException without a detail message.
+     * A detail message is a String that describes this particular exception.
+     */
+    public JSWrappedException(int jsval) {
+	super();
+	this.jsval = jsval;
+    }
+
+    /**
+     * getWrappedException
+     */
+    public void getWrappedException() {
+    }
 }
+
