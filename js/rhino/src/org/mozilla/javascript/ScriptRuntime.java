@@ -2225,6 +2225,30 @@ public class ScriptRuntime {
         return Context.reportRuntimeError1(msg, val.getClass().getName());
     }
 
+    /**
+     * Split string into array of strings using semicolon as string terminator
+     * (; after the last string is required).
+     */
+    static String[] splitSC(String s)
+    {
+        int count = 0;
+        for (int cursor = 0; ;) {
+            cursor = s.indexOf(';', cursor) + 1;
+            if (cursor <= 0) { break; }
+            ++count;
+        }
+        String[] array = new String[count];
+        count = 0;
+        for (int cursor = 0; ;) {
+            int next = s.indexOf(';', cursor);
+            if (next < 0) { break; }
+            array[count] = s.substring(cursor, next);
+            ++count;
+            cursor = next + 1;
+        }
+        return array;
+    }
+
     public static final Object[] emptyArgs = new Object[0];
     public static final String[] emptyStrings = new String[0];
 
