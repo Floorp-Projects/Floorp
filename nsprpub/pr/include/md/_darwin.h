@@ -74,8 +74,11 @@
  * if you pass an IPv4-mapped IPv6 address to it.
  */
 #define _PR_GHBA_DISALLOW_V4MAPPED
-/* socket(AF_INET6) fails with EPROTONOSUPPORT on Mac OS X 10.1. */
-#if MACOS_DEPLOYMENT_TARGET < 100200
+/*
+ * socket(AF_INET6) fails with EPROTONOSUPPORT on Mac OS X 10.1.
+ * IPv6 under OS X 10.2 and below is not complete (see bug 222031).
+ */
+#if MACOS_DEPLOYMENT_TARGET < 100300
 #define _PR_INET6_PROBE
 #endif
 /* Mac OS X 10.2 has inet_ntop and inet_pton. */

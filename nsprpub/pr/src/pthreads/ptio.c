@@ -57,6 +57,9 @@
 #include <sys/uio.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
+#if defined(DARWIN)
+#include <sys/utsname.h> /* for uname */
+#endif
 #if defined(SOLARIS) || defined(UNIXWARE)
 #include <sys/filio.h>  /* to pick up FIONREAD */
 #endif
@@ -3401,6 +3404,18 @@ PR_EXTERN(PRBool) _pr_ipv6_is_present;
 PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
 {
 PRInt32 osfd;
+
+#if defined(DARWIN)
+    /*
+     * Disable IPv6 if Darwin version is less than 7.0.0 (OS X 10.3).  IPv6 on
+     * lesser versions is not ready for general use (see bug 222031).
+     */
+    {
+        struct utsname u;
+        if (uname(&u) != 0 || atoi(u.release) < 7)
+            return PR_FALSE;
+    }
+#endif
 
     /*
      * HP-UX only: HP-UX IPv6 Porting Guide (dated February 2001)
