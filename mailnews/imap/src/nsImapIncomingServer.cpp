@@ -2568,13 +2568,18 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
   // pull the url out of the queue so we can get the msg window, and try to rerun it.
   m_urlQueue->Count(&urlQueueCnt);
   
+  nsCOMPtr<nsISupports> aSupport;
+  nsCOMPtr<nsIImapUrl> aImapUrl;
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl;
   if (urlQueueCnt > 0)
   {
-    nsCOMPtr<nsISupports> supportCtxt(getter_AddRefs(m_urlQueue->ElementAt(0)));
-    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl(do_QueryInterface(supportCtxt, &rv));
-    if (mailnewsUrl)
-      mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+    aSupport = getter_AddRefs(m_urlQueue->ElementAt(0));
+    aImapUrl = do_QueryInterface(aSupport, &rv);
+    mailnewsUrl = do_QueryInterface(aSupport, &rv);
   }
+
+  if (mailnewsUrl)
+    mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
   
   // don't put up alert if no msg window - it means we're biffing.
   if (msgWindow)
@@ -2585,17 +2590,13 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
   if (badPassword)
     SetPassword(nsnull);
   
-  
+  PRBool resetUrlState = PR_FALSE;
   if (badPassword && ++m_redirectedLogonRetries <= 3)
   {
     // this will force a reprompt for the password.
     // ### DMB TODO display error message?
     if (urlQueueCnt > 0)
     {
-      nsCOMPtr<nsISupports>
-        aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
-      nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
-      
       nsCOMPtr <nsIImapProtocol> imapProtocol;
       nsCOMPtr <nsIEventQueue> aEventQueue;
       // Get current thread envent queue
@@ -2609,16 +2610,28 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
       {       
         nsCOMPtr <nsIImapProtocol>  protocolInstance ;
         m_waitingForConnectionInfo = PR_FALSE;
-        rv = CreateImapConnection(aEventQueue, aImapUrl,
-          getter_AddRefs(protocolInstance));
+        rv = CreateImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
+        // If users cancel the login then we need to reset url state.
+        if (rv == NS_BINDING_ABORTED)
+          resetUrlState = PR_TRUE;
       }
     }
   }
   else
+    resetUrlState = PR_TRUE;
+
+  // Either user cancel (2nd, 3rd or 4th) login or all tries fail we'll
+  // have to reset url state so that next login will work correctly.
+  if  (resetUrlState)
   {
     m_redirectedLogonRetries = 0; // reset so next attempt will start at 0.
+    m_waitingForConnectionInfo = PR_FALSE;
     if (urlQueueCnt > 0)
     {
+      // Reset url state. 
+      if (mailnewsUrl)
+        mailnewsUrl->SetUrlState(PR_FALSE, NS_MSG_ERROR_URL_ABORTED);
+
       m_urlQueue->RemoveElementAt(0);
       m_urlConsumers.RemoveElementAt(0);
     }
