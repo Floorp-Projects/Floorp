@@ -25,6 +25,7 @@
    Mohan Bhamidipati (mohanb@netscape.com)
    Diego Biurrun     (diego@biurrun.de)
    David Bienvenu    (bienvenu@nventure.com)
+   Ian Neal          (bugzilla@arlen.demon.co.uk)
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -54,20 +55,17 @@
 
   function Startup()
   {
-    var aCheckbox = document.getElementById("offlineCompactFolder");
-    enableField(aCheckbox, "offlineCompactFolderMin", false);
+    enableField(document.getElementById("offlineCompactFolder"), false);
   }
 
-  function enableField(aCheckbox, aNodeID, setFocus)
+  function enableField(aCheckbox, setFocus)
   {
-    var aField = document.getElementById(aNodeID);
-    if (aCheckbox.checked)
-      aField.removeAttribute("disabled");
-    else
-      aField.setAttribute("disabled", "true");
+    var folderMin = document.getElementById("offlineCompactFolderMin");
+    folderMin.disabled = (!aCheckbox.checked ||
+                          parent.hPrefWindow.getPrefIsLocked(folderMin.getAttribute("prefstring")));
 
-    if (!aField.disabled && setFocus)
-      aField.focus();
+    if (!folderMin.disabled && setFocus)
+      folderMin.focus();
   }
   ]]>
   </script>
@@ -119,7 +117,7 @@
   <hbox align="center">
     <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
       prefstring="mail.prompt_purge_threshhold"
-      oncommand="enableField(this,'offlineCompactFolderMin',true);"/> 
+      oncommand="enableField(this, true);"/> 
     <textbox id="offlineCompactFolderMin" size="5" value="100"
       preftype="int" prefstring="mail.purge_threshhold"/>
     <label value="&kb.label;"/>

@@ -18,6 +18,9 @@
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
+ * Contributor(s):
+ *   Ian Neal <bugzilla@arlen.demon.co.uk>
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -55,21 +58,17 @@ function Startup() {
 }
 
 function EnableDisableAllowedReceipts() {
-  if (receiptSend && (receiptSend.getAttribute("value") == "false")) {
-    notInToCcPref.setAttribute("disabled", "true");
-    notInToCcLabel.setAttribute("disabled", "true");
-    outsideDomainPref.setAttribute("disabled", "true");
-    outsideDomainLabel.setAttribute("disabled", "true");
-    otherCasesPref.setAttribute("disabled", "true");
-    otherCasesLabel.setAttribute("disabled", "true");
-  }
-  else {
-    notInToCcPref.removeAttribute("disabled");
-    notInToCcLabel.removeAttribute("disabled");
-    outsideDomainPref.removeAttribute("disabled");
-    outsideDomainLabel.removeAttribute("disabled");
-    otherCasesPref.removeAttribute("disabled");
-    otherCasesLabel.removeAttribute("disabled");
-  }
+  var prefWindow = parent.hPrefWindow;
+  var notInToCcLocked = prefWindow.getPrefIsLocked("mail.mdn.report.not_in_to_cc");
+  var outsideDomainLocked = prefWindow.getPrefIsLocked("mail.mdn.report.outside_domain");
+  var otherCasesLocked = prefWindow.getPrefIsLocked("mail.mdn.report.other");
+
+  var disableAll = receiptSend && (receiptSend.getAttribute("value") == "false");
+  notInToCcPref.disabled = disableAll || notInToCcLocked;
+  notInToCcLabel.disabled = disableAll;
+  outsideDomainPref.disabled = disableAll || outsideDomainLocked;
+  outsideDomainLabel.disabled = disableAll;
+  otherCasesPref.disabled = disableAll || otherCasesLocked;
+  otherCasesLabel.disabled = disableAll;
   return true;
 }

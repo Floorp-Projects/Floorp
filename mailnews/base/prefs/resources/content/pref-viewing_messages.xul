@@ -14,26 +14,6 @@
     var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "other");
-
-    function Startup()
-    {
-      getColorFromPickerAndSetWell('citationmenu', 'mailCitationColor');
-    }
-
-    function getColorFromPickerAndSetWell(menuID, colorfield)
-    {
-      var picker = document.getElementById( menuID );
-      var colorValue = document.getElementById( colorfield );
-      if (picker) {
-        picker.color = colorValue.getAttribute("value");
-      }
-    }
-    
-    function setColorWell(aPicker) 
-    {
-      var colorRef = aPicker.nextSibling; 
-      colorRef.setAttribute("value", aPicker.color );
-    }
   ]]>
   </script>
 
@@ -73,9 +53,8 @@
         </menupopup>
       </menulist>
       
-      <label value="&color.label;" accesskey="&color.accesskey;" control="citationmenu"/>
-      <colorpicker type="button" id="citationmenu" palettename="standard" onchange="setColorWell(this);"/>
-      <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
+      <label value="&color.label;" accesskey="&color.accesskey;" control="mailCitationColor"/>
+      <colorpicker type="button" id="mailCitationColor" palettename="standard" prefstring="mail.citation_color"/>
     </hbox>    
 
   <description>&viewingPlainText.label;</description>

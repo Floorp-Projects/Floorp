@@ -22,6 +22,7 @@
    -
    - Contributor(s):
    -   Sean Su <ssu@netscape.com>
+   -   Ian Neal <bugzilla@arlen.demon.co.uk>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,16 +76,9 @@
     <colorpicker
         class="small-margin"
         type="button"
-        id="labelColorPicker1"
         palettename="standard"
-        onchange="setColorWell(this);"/>
-    <data
         id="label1Color"
-        pref="true"
-        preftype="color"
-        prefstring="mailnews.labels.color.1"
-        prefattribute="value"
-        wsm_attributes="value"/>
+        prefstring="mailnews.labels.color.1"/>
   </hbox>    
 
   <!-- label color: 2 (default orange) -->
@@ -98,16 +92,9 @@
     <colorpicker
         class="small-margin"
         type="button"
-        id="labelColorPicker2"
         palettename="standard"
-        onchange="setColorWell(this);"/>
-    <data
         id="label2Color"
-        pref="true"
-        preftype="color"
-        prefstring="mailnews.labels.color.2"
-        prefattribute="value"
-        wsm_attributes="value"/>
+        prefstring="mailnews.labels.color.2"/>
   </hbox>    
 
   <!-- label color: 3 (default green) -->
@@ -121,16 +108,9 @@
     <colorpicker
         class="small-margin"
         type="button"
-        id="labelColorPicker3"
         palettename="standard"
-        onchange="setColorWell(this);"/>
-    <data
         id="label3Color"
-        pref="true"
-        preftype="color"
-        prefstring="mailnews.labels.color.3"
-        prefattribute="value"
-        wsm_attributes="value"/>
+        prefstring="mailnews.labels.color.3"/>
   </hbox>    
 
   <!-- label color: 4 (default blue) -->
@@ -144,16 +124,9 @@
     <colorpicker
         class="small-margin"
         type="button"
-        id="labelColorPicker4"
         palettename="standard"
-        onchange="setColorWell(this);"/>
-    <data
         id="label4Color"
-        pref="true"
-        preftype="color"
-        prefstring="mailnews.labels.color.4"
-        prefattribute="value"
-        wsm_attributes="value"/>
+        prefstring="mailnews.labels.color.4"/>
   </hbox>    
 
   <!-- label color: 5 (default purple) -->
@@ -167,16 +140,9 @@
     <colorpicker
         class="small-margin"
         type="button"
-        id="labelColorPicker5"
         palettename="standard"
-        onchange="setColorWell(this);"/>
-    <data
         id="label5Color"
-        pref="true"
-        preftype="color"
-        prefstring="mailnews.labels.color.5"
-        prefattribute="value"
-        wsm_attributes="value"/>
+        prefstring="mailnews.labels.color.5"/>
   </hbox>    
 
   <hbox pack="end">
@@ -187,4 +153,3 @@
   </groupbox>
 
 </page>
-
