@@ -357,7 +357,7 @@ menu.push[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
 }
 
-.enabledcol[value="true"] {
+.enabledcol[Enabled="true"] {
   list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
 }
 

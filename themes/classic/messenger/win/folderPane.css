@@ -42,12 +42,12 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
   
 /* XXX this is so evil, but it looks nice on en-US. Should really be a
        special type that we can style... */  
-.tree-cell-folderpane-icon[value="Drafts"]
+.tree-cell-folderpane-icon[SpecialFolder="Drafts"]
   {
     list-style-image      : url("chrome://messenger/skin/folder-draft.gif");
   }
   
-.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[value="Drafts"]
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[SpecialFolder="Drafts"]
   {
     list-style-image      : url("chrome://messenger/skin/folder-draft.gif");
   }  

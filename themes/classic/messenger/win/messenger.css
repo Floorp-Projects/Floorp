@@ -384,7 +384,7 @@ menu.push[disabled="true"]:hover:active {
     list-style-image      : url("chrome://messenger/skin/readmail.gif");
   }
 
-.enabledcol[value="true"] 
+.enabledcol[Enabled="true"] 
   {
     list-style-image      : url("chrome://messenger/skin/unreadmail.gif");
   }
@@ -503,3 +503,4 @@ searchterm
 {
   border-left          : 1px solid ThreeDShadow;
 }
+
