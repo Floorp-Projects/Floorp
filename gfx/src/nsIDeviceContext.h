@@ -39,6 +39,13 @@ typedef void * nsNativeDeviceContext;
 { 0x5931c580, 0xb917, 0x11d1,    \
 { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
 
+/**
+ * Constants identifying pre-defined icons.
+ * @see #LoadIcon()
+ */
+#define NS_ICON_LOADING_IMAGE 0
+#define NS_ICON_BROKEN_IMAGE  1
+
 class nsIDeviceContext : public nsISupports
 {
 public:
@@ -93,6 +100,10 @@ public:
   virtual PRUint8 * GetGammaTable(void) = 0;
 
   virtual nsNativeWidget GetNativeWidget(void) = 0;
+
+  //load the specified icon. this is a blocking call that does not return
+  //until the icon is loaded
+  // NS_IMETHOD  LoadIcon(PRInt32 aId, nsIImage*&) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */
