@@ -102,6 +102,10 @@ SOURCE=..\js2.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\jstypes.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\numerics.cpp
 # End Source File
 # Begin Source File
