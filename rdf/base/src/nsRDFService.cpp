@@ -775,6 +775,10 @@ ServiceImpl::UnregisterResource(nsIRDFResource* aResource)
 #endif
     if (NS_FAILED(rv)) return rv;
 
+    NS_ASSERTION(uri != nsnull, "resource has no URI");
+    if (! uri)
+        return NS_ERROR_UNEXPECTED;
+
     PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
     NS_ASSERTION(*hep != nsnull, "resource wasn't registered");
     if (! *hep)
