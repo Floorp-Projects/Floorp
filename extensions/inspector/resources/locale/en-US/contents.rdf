@@ -17,5 +17,5 @@
   </RDF:Description>
 
   <RDF:Description about="urn:mozilla:locale:en-US:inspector"
-	                 chrome:localeVersion="1.2"/>
+	                 chrome:localeVersion="1.3b"/>
 </RDF:RDF>

@@ -12,6 +12,6 @@
         chrome:displayName="UNIX Bindings"
         chrome:author="mozilla.org"
         chrome:name="navigator-platform"
-	chrome:localeVersion="1.2">
+	chrome:localeVersion="1.3b">
   </RDF:Description>
 </RDF:RDF>
