@@ -29,7 +29,10 @@ mysql << OK_ALL_DONE
 use bugs;
 create table cc (
         bug_id mediumint not null,
-        who mediumint not null
+        who mediumint not null,
+
+	index(bug_id),
+	index(who)
 );
 
 

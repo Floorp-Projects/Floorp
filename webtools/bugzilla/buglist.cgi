@@ -195,6 +195,7 @@ bugs.product,
 bugs.bug_status";
 }
 
+
 $query .= "
 from   bugs,
        profiles assign,
@@ -205,6 +206,15 @@ and    bugs.reporter = report.userid
 and    bugs.product = projector.program
 and    bugs.version = projector.value
 ";
+
+if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
+    (defined $::FORM{'emailcc2'} && $::FORM{'emailcc2'})) {
+
+    # We need to poke into the CC table.  Do weird SQL left join stuff so that
+    # we can look in the CC table, but won't reject any bugs that don't have
+    # any CC fields.
+    $query =~ s/bugs,/bugs left join cc using (bug_id) left join profiles ccname on cc.who = ccname.userid,/;
+}
 
 if (defined $::FORM{'sql'}) {
   $query .= "and (\n$::FORM('sql')\n)"
@@ -243,6 +253,61 @@ if (defined $::FORM{'sql'}) {
       }
   }
 }
+
+
+foreach my $id ("1", "2") {
+    my $email = trim($::FORM{"email$id"});
+    if ($email eq "") {
+        next;
+    }
+    my $qemail = SqlQuote($email); 
+    my $type = $::FORM{"emailtype$id"};
+    my $emailid;
+    if ($type eq "exact") {
+        $emailid = DBNameToIdAndCheck($email);
+    }
+
+    my $foundone = 0;
+    my $lead= "and (\n";
+    foreach my $field ("assigned_to", "reporter", "cc") {
+        my $doit = $::FORM{"email$field$id"};
+        if (!$doit) {
+            next;
+        }
+        $foundone = 1;
+        my $table;
+        if ($field eq "assigned_to") {
+            $table = "assign";
+        } elsif ($field eq "reporter") {
+            $table = "report";
+        } else {
+            $table = "ccname";
+        }
+        if ($type eq "exact") {
+            if ($field eq "cc") {
+                $query .= "\t$lead cc.who = $emailid\n";
+            } else {
+                $query .= "\t$lead $field = $emailid\n";
+            }
+        } elsif ($type eq "regexp") {
+            $query .= "\t$lead $table.login_name regexp $qemail\n";
+        } else {
+            $query .= "\t$lead instr($table.login_name, $qemail)\n";
+        }
+        $lead = " or ";
+    }
+    if (!$foundone) {
+        print "You must specify one or more fields in which to search for <tt>$email</tt>.\n";
+        exit;
+    }
+    if ($lead eq " or ") {
+        $query .= ")\n";
+    }
+}
+                
+
+
+
 
 if (defined $::FORM{'changedin'}) {
     my $c = trim($::FORM{'changedin'});

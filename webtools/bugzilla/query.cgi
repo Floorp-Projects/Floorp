@@ -58,7 +58,11 @@ my %type;
 
 foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "priority", "bug_severity", "product", "reporter", "op_sys",
-                  "component", "version") {
+                  "component", "version",
+                  "email1", "emailtype1", "emailreporter1",
+                  "emailassigned_to1", "emailcc1",
+                  "email2", "emailtype2", "emailreporter2",
+                  "emailassigned_to2", "emailcc2") {
     $default{$name} = "";
     $type{$name} = 0;
 }
@@ -100,8 +104,67 @@ print "Set-Cookie: BUGLIST=
 Content-type: text/html\n\n";
 
 GetVersionTable();
-my $who = GeneratePeopleInput("assigned_to", $default{"assigned_to"});
-my $reporter = GeneratePeopleInput("reporter", $default{"reporter"});
+
+sub GenerateEmailInput {
+    my ($id) = (@_);
+    my $defstr = value_quote($default{"email$id"});
+    my $deftype = $default{"emailtype$id"};
+    if ($deftype eq "") {
+        $deftype = "substring";
+    }
+    my $assignedto = ($default{"emailassigned_to$id"} eq "1") ? "checked" : "";
+    my $reporter = ($default{"emailreporter$id"} eq "1") ? "checked" : "";
+    my $cc = ($default{"emailcc$id"} eq "1") ? "checked" : "";
+
+    if ($assignedto eq "" && $reporter eq "" && $cc eq "") {
+        if ($id eq "1") {
+            $assignedto = "checked";
+        } else {
+            $reporter = "checked";
+        }
+    }
+
+    return qq|
+<table border=1 cellspacing=0 cellpadding=0>
+<tr><td>
+<table cellspacing=0 cellpadding=0>
+<tr>
+<td rowspan=2 valign=top><a href="helpemailquery.html">Email:</a>
+<input name="email$id" size="30" value="">&nbsp;matching as
+<SELECT NAME=emailtype$id>
+<OPTION VALUE="regexp">regexp
+<OPTION SELECTED VALUE="substring">substring
+<OPTION VALUE="exact">exact
+</SELECT>
+</td>
+<td>
+<input type="checkbox" name="emailassigned_to$id" value=1 $assignedto>Assigned To
+</td>
+</tr>
+<tr>
+<td>
+<input type="checkbox" name="emailreporter$id" value=1 $reporter>Reporter
+</td>
+</tr>
+<tr>
+<td align=right>(Will match any of the selected fields)</td>
+<td>
+<input type="checkbox" name="emailcc$id" value=1 $cc>CC &nbsp;&nbsp;
+</td>
+</tr>
+</table>
+</table>
+|;
+}
+
+
+            
+
+
+my $emailinput1 = GenerateEmailInput(1);
+my $emailinput2 = GenerateEmailInput(2);
+
+
 
 
 # Muck the "legal product" list so that the default one is always first (and
@@ -164,12 +227,12 @@ print "
 </table>
 
 <p>
-<TABLE>
-<TR><TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:</a></B><TD>$who
+$emailinput1<p>
+$emailinput2<p>
 
-<p>
-<TR><TD ALIGN=RIGHT><B>Reporter:</B><TD>$reporter
-</TABLE>
+
+
+
 <NOBR>Changed in the last <INPUT NAME=changedin SIZE=2> days.</NOBR>
 
 

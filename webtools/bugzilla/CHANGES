@@ -11,6 +11,12 @@ will tell you what has been changed in the last week.
 
 
 
+1/18/99 You can now query by CC.  To make this perform reasonably, the CC table
+needs some indices.  The following MySQL does the necessary stuff:
+
+	alter table cc add index (bug_id), add index (who);
+
+
 1/15/99 The op_sys field can now be queried by (and more easily tweaked).
 To make this perform reasonably, it needs an index.  The following MySQL 
 command will create the necessary index:
@@ -61,6 +67,17 @@ Finally, once that's all clear, alter the table to make enforce the new legal
 entries:
 
 	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.1.6", "Mac System 8.0", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "OSF/1", "Solaris", "SunOS", "other") not null, change column rep_platform rep_platform enum("All", "DEC", "HP", "Macintosh", "PC", "SGI", "Sun", "Other");
+
+
+
+
+
+11/20/98 Added searching of CC field.  To better support this, added
+some indexes to the CC table.  You probably want to execute the following
+mysql commands:
+
+	alter table cc add index (bug_id);
+	alter table cc add index (who);
 
 
 10/27/98 security check for legal products in place. bug charts are not
