@@ -830,6 +830,18 @@
 			name = Graphics;
 			refType = 4;
 		};
+		F50DCB4302C2856001A967F3 = {
+			isa = PBXFileReference;
+			name = libjsj.dylib;
+			path = ../js/src/liveconnect/libjsj.dylib;
+			refType = 2;
+		};
+		F50DCB4402C2856101A967F3 = {
+			fileRef = F50DCB4302C2856001A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F50E1BA70207EB8201F281DF = {
 			children = (
 				F5948A48029EB9C801000102,
@@ -6512,6 +6524,7 @@
 				F51D9B1402094BB501A80166,
 				F57F0F470209DF5301A967DF,
 				F6BD637F01B30EA301A962F7,
+				F50DCB4302C2856001A967F3,
 				F6BD638001B30EA301A962F7,
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
@@ -6540,6 +6553,7 @@
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
 				F5F14E9802A5A43A01A967F3,
+				F50DCB4402C2856101A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
