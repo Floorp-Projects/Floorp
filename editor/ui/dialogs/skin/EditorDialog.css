@@ -41,57 +41,6 @@ tr {
   vertical-align: middle;
 }
 
-/* This strategy for hidding allows widget to keep layout space
-   while using "hidden" attribute sets to display: none, removing space
-*/
-input[visibility=hidden]
-{
-  visibility: hidden;
-}
-
-input.MinWidth200,select.MinWidth200,div.MinWidth200,titledbutton.MinWidth200,text.MinWidth200,spring.MinWidth100 {
-  min-width: 200px;
-}
-
-input.MinWidth100,select.MinWidth100,div.MinWidth100,titledbutton.MinWidth100,text.MinWidth100,spring.MinWidth100 {
-  min-width: 100px;
-}
-
-input.MinWidth70,select.MinWidth70,label.MinWidth70,div.MinWidth70,titledbutton.MinWidth70,text.MinWidth70,spring.MinWidth70 {
-  min-width: 70px;
-}
-
-input.MinWidth50,select.MinWidth50,label.MinWidth50,div.MinWidth50,titledbutton.MinWidth50,text.MinWidth50,spring.MinWidth50 {
-  min-width: 50px;
-}
-
-input#CellAlignCharInput {
-  padding-left:  3px;
-  padding-right: 3px;
-}
-
-select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
-    width: 200px;
-}
-
-select.dialog {
-	font-size: smaller;
-}
-
-div.spacer [align~=horizontal] {
-    border:  1px inset white;
-    height:  2px;
-}
-
-div#message {
-  width:       20em; 
-  margin-left: 10px;
-}
-
-div.middle-align {
-  vertical-align: middle;
-}
-
 .margin-left-right {
   margin-left:  10px;
   margin-right:  5px;
@@ -113,7 +62,12 @@ image.popup-trigger {
   list-style-image: url(chrome://global/skin/scroll-down.gif);
 }
 
-td#ColorPreview {
+/* XUL ELEMENTS */
+*.MinWidth20em {
+  min-width: 20em;
+}
+
+box#ColorPreview {
   border:           1px inset #CCCCCC;
   padding-left:     5px;
   padding-right:    5px;
@@ -121,17 +75,9 @@ td#ColorPreview {
   min-height:       50px;
 }
 
-/* A line of text inside the preview cell */
-td#ColorPreview div {
-  margin-top:    5px;
-  margin-bottom: 5px;
-}
-
-/* XUL ELEMENTS */
 
 /* These reduce extra space to 
    minimize total height in Table Dialog
-*/
 titledbox.NoBottomPad {
   padding-bottom: 0px;
 }
@@ -147,8 +93,13 @@ titledbox.NoTopPadding {
 tabpanel.Padding5 {
   padding: 5px;
 }
+*/
 
 /* SHOULD GO IN GLOBAL.CSS */
+*.align-right {
+  text-align: right;
+}
+
 text {
   text-align: left;
 }
@@ -159,11 +110,6 @@ text[hidden="true"], input[hidden="true"] {
 
 select#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
-}
-
-/* For right-aligned buttons */
-titledbutton#AdvancedEditButton,titledbutton#AdvancedEditExtraButton,titledbutton#SaveDefault {
-  min-width: 8em;
 }
 
 titledbutton#MoreFewerButton[more="0"] {
@@ -180,11 +126,7 @@ titledbutton#MoreFewerButton[more="1"] {
 }
 
 /* We use a borderless button to show misspelled word in dialog */
-titledbutton#MisspelledWord {
-  font-weight: bold;
-}
-
-text#linkTextCaption {
+text#MisspelledWord {
   font-weight: bold;
 }
 

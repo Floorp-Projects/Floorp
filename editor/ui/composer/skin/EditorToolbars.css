@@ -126,7 +126,7 @@ select.toolbar {
 
 box#EditModeToolbar titledbutton.DisplayModeButton {
   -moz-border-radius: 0px 0px 8px 8px;
-  border-top: 1px solid #CCCCCC; /* Should be same as background */
+  border-top: 1px solid #CCCCCC; /* Must be same as background */
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
   border-right: 1px solid #666666;
@@ -146,7 +146,7 @@ box#EditModeToolbar titledbutton.DisplayModeButton:active {
 
 box#EditModeToolbar titledbutton.DisplayModeButton[selected="1"] {
   padding: 0px 4px 0px 4px;
-  margin: -2px 0px 0px 0px;
+  margin: -1px 0px 0px 0px;
   font-weight: bold;
 }
 
@@ -330,7 +330,7 @@ div#ColorButtons {
   border: 1px solid white;
 }
 
-titledbutton#BackColorPopupButton {
+#BackColorPopupButton {
 	list-style-image:url("chrome://editor/skin/images/color.gif");
   border: 1px solid #CCCCCC;
   padding: 0px;
@@ -342,7 +342,8 @@ titledbutton#BackColorPopupButton {
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: yellow;
 }
-titledbutton#BackColorPopupButton:hover {
+
+#BackColorPopupButton:hover {
   border: 1px solid white;
 }
 

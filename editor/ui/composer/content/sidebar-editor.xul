@@ -35,7 +35,7 @@
   onload="Init('chrome://editor/content/sidebar-editor.rdf',
                'NC:EditorSidebarRoot');" align="vertical">
 
-<html:script src="chrome://sidebar/content/sidebar.js" />
+<script src="chrome://sidebar/content/sidebar.js" />
 <box id="sidebox" align="vertical" flex="100%">
  <box class="sidebartitle">
   <spring flex="100%"/>

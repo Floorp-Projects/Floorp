@@ -39,9 +39,9 @@ function InitEditorShell()
 {
     // get the editor shell from the parent window
 
-  editorShell           = window.opener.editorShell;
+  editorShell = window.opener.editorShell;
   if (editorShell) {
-    editorShell         = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+    editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
   }
   if (!editorShell) {
     dump("EditorShell not found!!!\n");
@@ -51,7 +51,7 @@ function InitEditorShell()
 
   // Save as a property of the window so it can be used by child dialogs
 
-  window.editorShell         = editorShell;
+  window.editorShell = editorShell;
   
   return true;
 }
@@ -94,6 +94,7 @@ function ReplaceStringInList(list, index, string)
   }
 }
 
+// THESE WILL BE REMOVE ONCE ALL DIALOGS ARE CONVERTED TO NEW WIDGETS
 function AppendStringToListByID(list, stringID)
 {
   AppendStringToList(list, editorShell.GetString(stringID));
@@ -141,7 +142,7 @@ function ValidateNumberString(value, minValue, maxValue)
 
 function ShowInputErrorMessage(message)
 {
-  window.openDialog("chrome://editor/content/EdMessage.xul", "_blank", "chrome,close,titlebar,modal", "", message, "Input Error");
+  editorShell.Alert(GetString("InputError"), message);
 }
 
 function GetString(name)
@@ -261,106 +262,164 @@ function SetClassEnabledByID( elementID, doEnable )
 }
 
 // Get the text appropriate to parent container
-//  that may be a cell or window
+//  to determine what a "%" value is refering to.
+// elementForAtt is element we are actually setting attributes on
+//  (a temporary copy of element in the doc to allow canceling),
+//  but elementInDoc is needed to find parent context in document
 function GetAppropriatePercentString(elementForAtt, elementInDoc)
 {
   if (elementForAtt.nodeName == "TD" || elementForAtt.nodeName == "TH")
     return GetString("PercentOfTable");
 
-//TEMP: UNTIL InitPixelOrPercentCombobox() has elementInDoc param:
-  if(elementForAtt.nodeName == "TABLE")
-    return GetString("PercentOfWindow");
-
-  // Check if element is within a cell
+  // Check if element is within a table cell
   if(editorShell.GetElementOrParentByTagName("td",elementInDoc))
     return GetString("PercentOfCell");
   else
     return GetString("PercentOfWindow");
 }
 
-// TODO: MODIFY THIS TO PASS IN 2 ELEMENTS: ADD elementInDoc
-//  1st is a temporary element containing current attributes,
-//  2nd is element in document needed to check parent context for "percent of..." string
-// Returns the value for the "size" input element ("%" is stripped)
-// Appends option elements with the correct strings to the select widget
-function InitPixelOrPercentCombobox(elementForAtt, attribute, selectID)
+function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menulistID)
 {
-  size   = elementForAtt.getAttribute(attribute);
-  select = document.getElementById(selectID);
+  var size  = elementForAtt.getAttribute(attribute);
+  var menulist = document.getElementById(menulistID);
+  var pixelItem;
+  var percentItem;
 
-  if (select) {
-    ClearList(select);
-    AppendStringToList(select,GetString("Pixels"));
-    // TEMPORARY: THIS WILL ALLOW US TO NOT HAVE TO CHANGE CALLS 
-    //  FROM IMAGE AN HLINE DIAOLGS -- USE SELECTION ANCHOR NODE
-    AppendStringToList(select,GetAppropriatePercentString(elementForAtt,window.editorShell.editorSelection.anchorNode));
-  }
-
-  // Search for a "%" character
-  percentIndex = size.search(/%/);
-  if (percentIndex > 0) {
-    // Strip out the %
-    size = size.substr(0, percentIndex);
-    if (select)
-      select.selectedIndex = 1;
-  } else {
-    if (select)
-      select.selectedIndex = 0;
-  }
-  return size;
-}
-
-// Next two methods assume caller has a "percentChar" variable 
-//  to hold an empty string (pixels are used) or "%" (percent is used)
-
-function InitPixelOrPercentPopupButton(element, attribute, buttonID)
-{
-  size = element.getAttribute(attribute);
-  btn  = document.getElementById(buttonID);
-
-  // Search for a "%" character
-
-  percentIndex = size.search(/%/);
-  if (percentIndex > 0) {
-    percentChar = "%";
-    // Strip out the %
-    size = size.substr(0, percentIndex);
-
-    if (btn)
-      btn.setAttribute("value",GetAppropriatePercentString(element));
-  } else {
-    if (btn)
-      btn.setAttribute("value",GetString("Pixels"));
-  }
-  return size;
-}
-
-// Input string is "" for pixel, or "%" for percent
-
-function SetPixelOrPercentByID(elementID, percentString)
-{
-  percentChar = percentString;
-
-  btn = document.getElementById( elementID );
-  if ( btn )
+  if (!menulist) 
   {
-    if ( percentChar == "%" )
+    dump("NO MENULIST found for ID="+menulistID+"\n");
+    return size;
+  }
+
+  ClearMenulist(menulist);
+  pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
+  percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
+
+  // Search for a "%" character
+  percentIndex = size.search(/%/);
+  if (percentIndex > 0)
+  {
+    // Strip out the %
+    size = size.substr(0, percentIndex);
+    if (pixelItem)
+      menulist.selectedItem = pixelItem;
+  } 
+  else if(percentItem)
+    menulist.selectedItem = percentItem;
+
+  return size;
+}
+
+function AppendStringToMenulistByID(menulist, stringID)
+{
+  return AppendStringToMenulist(menulist, editorShell.GetString(stringID));
+}
+
+function AppendStringToMenulist(menulist, string)
+{
+  if (menulist)
+  {
+    var menupopup = menulist.firstChild;
+    // May not have any popup yet -- so create one
+    if (!menupopup)
     {
-      var containing = getContainer();
-      if (containing != null)
+      menupopup = document.createElement("menupopup");
+      if (menupopup)
+        menulist.appendChild(menupopup);
+      else
       {
-        if (containing.nodeName == "TD")
-          btn.setAttribute("value", GetString("PercentOfCell"));
-        else
-          btn.setAttribute("value", GetString("PercentOfWindow"));
+dump("Failed to create menupoup\n");
+        return null;
       }
-    // need error handling
     }
-    else
+    menuItem = document.createElement("menuitem");
+    if (menuItem)
     {
-      btn.setAttribute("value", GetString("Pixels"));
+      menuItem.setAttribute("value", string);
+      menupopup.appendChild(menuItem);
+dump("AppendStringToMenulist, menuItem="+menuItem+", value="+string+"\n");
+      return menuItem;
     }
   }
+  return null;
+}
+
+function ClearMenulist(menulist)
+{
+  // There is usually not more than 1 menupopup under a menulist,
+  //  but look for > 1 children anyway.
+  // Note -- this doesn't remove menuitems from the menupopop -- SHOULD WE?
+  if (menulist) {
+dump(menulist+"=menulist in ClearMenulist\n");
+    menulist.selectedItem = null;
+    while (menulist.firstChild)
+      menulist.removeChild(menulist.firstChild);
+  }
+}
+
+/* These help using a <tree> for simple lists
+  Assumes this simple structure:
+  <tree>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell value="the text the user sees"/>
+*/
+
+function AppendStringToTreelistByID(tree, stringID)
+{
+  return AppendStringToTreelist(tree, editorShell.GetString(stringID));
+}
+
+function AppendStringToTreelist(tree, string)
+{
+  if (tree)
+  {
+    var treechildren = tree.firstChild;
+    if (!treechildren)
+    {
+      treechildren = document.createElement("treechildren");
+      if (treechildren)
+        tree.appendChild(treechildren);
+      else
+      {
+dump("Failed to create <treechildren>\n");
+        return null;
+      }
+    }
+    var treeitem = document.createElement("treeitem");
+    var treerow = document.createElement("treerow");
+    var treecell = document.createElement("treecell");
+    if (treeitem && treerow && treecell)
+    {
+      treerow.appendChild(treecell);
+      treeeitem.appendChild(treerow);
+      treechildren.appendChild(treeitem)
+      treecell.setAttribute("value", string);
+      return menuItem;
+    }
+  }
+  return null;
+}
+
+function ClearTreelist(tree)
+{
+  if (tree)
+    while (tree.firstChild)
+      tree.removeChild(tree.firstChild);
+}
+
+function GetSelectedTreelistValue(tree)
+{
+  var treeCell = tree.selectedCell;
+  if (treeCell)
+    return treeCell.getAttribute("value");
+  
+  return ""; 
+}
+
+function SetSelectedTreelistItem()
+{
 }
 
 // USE onkeyup!

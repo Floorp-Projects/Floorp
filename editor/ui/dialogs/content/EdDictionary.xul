@@ -31,8 +31,8 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdDictionary.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdDictionary.js"/>
 
   <broadcaster id="args" value=""/>
 

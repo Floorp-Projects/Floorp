@@ -37,14 +37,14 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdNamedAnchorProps.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdNamedAnchorProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <keyset id="keyset"/>
 
   <text align="left" for="nameInput" value="&anchorNameEditField.label;"/>
-  <html:input type="text" class="MinWidth200" id="nameInput"/>
+  <textfield class="MinWidth20em" id="nameInput"/>
   <text align="left" value="&noSpacesMsg.label;"/>
   <spring class="spacer"/>
   <!-- from EdDialogOverlay -->

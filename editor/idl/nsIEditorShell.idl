@@ -57,8 +57,9 @@ interface nsIEditorShell : nsISupports
   };
 
   enum {
-    eDisplayModeEdit,
-    eDisplayModeBrowserPreview
+    eDisplayModeWYSIWYG,
+    eDisplayModeNormal,
+    eDisplayModeAllTags
   };
 %}
   readonly attribute boolean              documentModified;
@@ -429,12 +430,15 @@ interface nsIEditorShell : nsISupports
 
   /** Set the display mode for editing
     * displayMode
-    *       0 (eDisplayModeEdit) Use extra CSS style 
-    *           (from override styles in EditorContent.css) 
-    *           to show named anchors, table borders, etc for editing
-    *       1 (eDisplayModeBrowserPreview) "WYSIWIG" or Preview mode
+    *       0 (eDisplayModeWYSIWIG) Preview mode
     *           that looks exactly like the browser display except
     *           for certain behaviors like cursor style over links, etc.
+    *       1 (eDisplayModeNormal) Use minimal extra CSS style 
+    *           (from override styles in EditorContent.css) 
+    *           to show named anchors, table borders, etc for editing
+    *       2 (eDisplayModeAllTags) Use maximum extra CSS style 
+    *           (from override styles in EditorAllTags.css) 
+    *           to show icon for every HTML tag
     */
   void  SetDisplayMode(in PRInt32 displayMode);
     

@@ -43,8 +43,8 @@
         persist="screenX screenY width height"
         >
 
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 
   <commands id="commands">
     <commandset id="globalEditMenuItems"/>

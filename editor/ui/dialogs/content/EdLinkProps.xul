@@ -37,9 +37,9 @@
    onload = "Startup()"
    align="vertical" >
 
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdLinkProps.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdLinkProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
@@ -47,14 +47,14 @@
   <box align="vertical" style="min-width: 20em">
   	<text id="linkTextCaption" value="&LinkTitle.label;" align="left" valign="bottom"/>
     <text id="linkTextMessage" style="min-width: 200px;" align="left"/> 
-	  <html:input type="text" id="linkTextInput"/>
+	  <textfield id="linkTextInput"/>
     <spring class="spacer"/>
 
     <titledbox orient="vertical"><title><text value="&LinkURLBox.label;"/></title>
       <text align="left" value="&LinkURLEditField.label;"/>
       <spring class="spacer"/>
       <box autostretch="never"  valign="middle">
-        <html:input type="text" style="min-width: 200px; margin-left:2px; margin-right:2px" id="hrefInput"></html:input>
+        <textfield id="hrefInput"/>
         <spring class="spacer"/>
         <!-- from EdDialogOverlay.xul -->
         <!-- The style: width setting is need to cover a bug in button width resizing when text changes -->

@@ -42,16 +42,16 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <!-- global dialog functions -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdAdvancedEdit.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdAdvancedEdit.js"/>
   <!-- element page functions -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdAECSSAttributes.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdAEJSEAttributes.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdAECSSAttributes.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdAEJSEAttributes.js"/>
 
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+	<script language="javascript" src="chrome://global/content/strres.js" />
 
   <popupset>
     <popup id="attlistPopup">

@@ -1312,6 +1312,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   while (tmp && !nsHTMLEditUtils::IsBody(tmp))
   {
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
+         (aProperty == nsIEditProperty::href && IsLinkNode(tmp)) || // node is href - test if really <a href=...
          (!aProperty && NodeIsProperty(tmp)) )         // or node is any prop, and we asked to split them all
     {
       // found a style node we need to split
@@ -1344,7 +1345,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   if (!aNode) return NS_ERROR_NULL_POINTER;
   if (IsTextNode(aNode)) return NS_OK;
   nsresult res = NS_OK;
-  
+
   // first process the children
   nsCOMPtr<nsIDOMNode> child, tmp;
   aNode->GetFirstChild(getter_AddRefs(child));
@@ -1356,10 +1357,11 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     if (NS_FAILED(res)) return res;
     child = tmp;
   }
-  
+
   // then process the node itself
   if ( !aChildrenOnly && 
-       (aProperty && NodeIsType(aNode, aProperty)) || // node is prop we wasked for
+       ((aProperty && NodeIsType(aNode, aProperty)) || // node is prop we asked for
+        (aProperty == nsIEditProperty::href && IsLinkNode(aNode))) || // but check for link (<a href=...)
        (!aProperty && NodeIsProperty(aNode)) )        // or node is any prop and we asked for that
   {
     // if we weren't passed an attribute, then we want to 
@@ -1819,6 +1821,11 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
   if (isCollapsed)
   {
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
+
+    // For links, aProperty uses "href", use "a" instead
+    if (aProperty == nsIEditProperty::href)
+      aProperty = nsIEditProperty::a;
+
     if (aProperty) return mTypeInState->ClearProp(aProperty, *aAttribute);
 //    else return mTypeInState->ClearAllProps();
   }
@@ -1853,7 +1860,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
       res = PromoteInlineRange(range);
       if (NS_FAILED(res)) return res;
       
-      // remove this style from ancestors of our range empoints, 
+      // remove this style from ancestors of our range endpoints, 
       // splitting them as appropriate
       res = SplitStyleAboveRange(range, aProperty, aAttribute);
       if (NS_FAILED(res)) return res;

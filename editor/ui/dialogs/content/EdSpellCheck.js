@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-var misspelledWord;
+var MisspelledWord;
 var spellChecker;
 var allowSelectWord = true;
 
@@ -47,75 +47,113 @@ function Startup()
     dump("Failed to create dialog object!!!\n");
     window.close();
   }
+  dialog.MisspelledWordLabel = document.getElementById("MisspelledWordLabel");
+  dialog.MisspelledWord = document.getElementById("MisspelledWord");
+  dialog.ReplaceWordInput = document.getElementById("ReplaceWord");
+  dialog.SuggestedList = document.getElementById("SuggestedList");
+  dialog.LanguageList = document.getElementById("LanguageList");
 
-  dialog.misspelledWord = document.getElementById("MisspelledWord");
-  dialog.replaceWordInput = document.getElementById("ReplaceWord");
-  dialog.suggestedList = document.getElementById("SuggestedList");
-  dialog.languageList = document.getElementById("LanguageList");
-
-  if (!dialog.misspelledWord ||
-      !dialog.replaceWordInput ||
-      !dialog.suggestedList  ||
-      !dialog.languageList )
+  if (!dialog.MisspelledWord ||
+      !dialog.ReplaceWordInput ||
+      !dialog.SuggestedList  ||
+      !dialog.LanguageList )
   {
     dump("Not all dialog controls were found!!!\n");
   }
   // NOTE: We shouldn't have been created if there was no misspelled word
   
   // The first misspelled word is passed as the 2nd extra parameter in window.openDialog()
-  misspelledWord = window.arguments[1];
+  MisspelledWord = window.arguments[1];
   
-  if (misspelledWord != "") {
-    dump("First misspelled word = "+misspelledWord+"\n");
+  if (MisspelledWord.length > 0) {
+    dump("First misspelled word = "+MisspelledWord+"\n");
     // Put word in the borderless button used to show the misspelled word
-    dialog.misspelledWord.setAttribute("value", misspelledWord);
+    dialog.MisspelledWord.setAttribute("value", MisspelledWord);
     // Get the list of suggested replacements
     FillSuggestedList();
-  } else {
-    dump("No misspelled word found\n");
-    // No more words - we're done!
-    Close();
   }
   // Initial replace word is the misspelled word;
-  dialog.replaceWordInput.value = misspelledWord;
+  dialog.ReplaceWordInput.value = MisspelledWord;
 
   //Use English for now TODO: Kin needs to finish this work so we can fill in list
-  dialog.languageList.selectedIndex = 0;
-  dump("Language Listed Index = "+dialog.languageList.selectedIndex+"\n");
+  dialog.LanguageList.selectedIndex = 0;
+  dump("Language Listed Index = "+dialog.LanguageList.selectedIndex+"\n");
 
-  dialog.suggestedList.focus();  
+  DoEnabling();
+
+  dialog.SuggestedList.focus();  
+}
+
+function DoEnabling()
+{
+  if (MisspelledWord.length == 0)
+  {
+    dialog.MisspelledWordLabel.setAttribute("value",GetString("CheckSpellingDone"));
+    
+    SetElementEnabledByID("MisspelledWord", false);
+    SetElementEnabledByID("ReplaceWordLabel", false);
+    SetElementEnabledByID("ReplaceWord", false);
+    SetElementEnabledByID("CheckWord", false);
+    SetElementEnabledByID("SuggestedListLabel", false);
+    SetElementEnabledByID("SuggestedList", false);
+    SetElementEnabledByID("Ignore", false);
+    SetElementEnabledByID("IgnoreAll", false);
+    SetElementEnabledByID("Replace", false);
+    SetElementEnabledByID("ReplaceAll", false);
+    SetElementEnabledByID("AddToDictionary", false);
+  } else {
+    dialog.MisspelledWordLabel.setAttribute("value",GetString("MisspelledWordLabel"));
+
+    SetElementEnabledByID("MisspelledWord", true);
+    SetElementEnabledByID("ReplaceWordLabel", true);
+    SetElementEnabledByID("ReplaceWord", true);
+    SetElementEnabledByID("CheckWord", true);
+    SetElementEnabledByID("SuggestedListLabel", true);
+    SetElementEnabledByID("SuggestedList", true);
+    SetElementEnabledByID("Ignore", true);
+    SetElementEnabledByID("IgnoreAll", true);
+    SetElementEnabledByID("Replace", true);
+    SetElementEnabledByID("ReplaceAll", true);
+    SetElementEnabledByID("AddToDictionary", true);
+  }
 }
 
 function NextWord()
 {
-  misspelledWord = spellChecker.GetNextMisspelledWord();
-  dialog.misspelledWord.setAttribute("value",misspelledWord);
+  MisspelledWord = spellChecker.GetNextMisspelledWord();
+  SetWidgetsForMisspelledWord();
+}
 
-  if (misspelledWord == "") {
-    dump("FINISHED SPELL CHECKING\n");
-    // Simply close dialog when finished.
-    Close();
-  } else {
-    FillSuggestedList();
-  }
+function SetWidgetsForMisspelledWord()
+{
+  dialog.MisspelledWord.setAttribute("value",MisspelledWord);
+
+  FillSuggestedList();
+
   // Initial replace word is misspelled word 
-  dialog.replaceWordInput.value = misspelledWord;
+  dialog.ReplaceWordInput.value = MisspelledWord;
+  
+  DoEnabling();
+  
+  // EXPERIMENTAL: Automatically shift focus to replace word editfield
+  if (MisspelledWord)
+    dialog.ReplaceWordInput.focus();
 }
 
 function CheckWord()
 {
   //dump("SpellCheck: CheckWord\n");
-  word = dialog.replaceWordInput.value;
+  word = dialog.ReplaceWordInput.value;
   if (word != "") {
     //dump("CheckWord: Word in edit field="+word+"\n");
     isMisspelled = spellChecker.CheckCurrentWord(word);
     if (isMisspelled) {
       dump("CheckWord says word was misspelled\n");
-      misspelledWord = word;
+      MisspelledWord = word;
       FillSuggestedList();
     } else {
-      ClearList(dialog.suggestedList);
-      AppendStringToList(dialog.suggestedList, GetString("CorrectSpelling"));
+      ClearList(dialog.SuggestedList);
+      AppendStringToList(dialog.SuggestedList, GetString("CorrectSpelling"));
       // Suppress being able to select the message text
       allowSelectWord = false;
     }
@@ -126,13 +164,13 @@ function SelectSuggestedWord()
 {
   dump("SpellCheck: SelectSuggestedWord\n");
   if (allowSelectWord)
-    dialog.replaceWordInput.value = dialog.suggestedList.options[dialog.suggestedList.selectedIndex].value;
+    dialog.ReplaceWordInput.value = dialog.SuggestedList.options[dialog.SuggestedList.selectedIndex].value;
 }
 
 function ChangeReplaceWord()
 {
   // Unselect the word in the suggested list when user edits the replacement word
-  dialog.suggestedList.selectedIndex = -1;
+  dialog.SuggestedList.selectedIndex = -1;
 }
 
 function Ignore()
@@ -144,8 +182,8 @@ function Ignore()
 function IgnoreAll()
 {
   dump("SpellCheck: IgnoreAll\n");
-  if (misspelledWord != "") {
-    spellChecker.IgnoreWordAllOccurrences(misspelledWord);
+  if (MisspelledWord != "") {
+    spellChecker.IgnoreWordAllOccurrences(MisspelledWord);
   }
   NextWord();
 }
@@ -153,10 +191,10 @@ function IgnoreAll()
 function Replace()
 {
   dump("SpellCheck: Replace\n");
-  newWord = dialog.replaceWordInput.value;
-  //dump("New = "+newWord+" Misspelled = "+misspelledWord+"\n");
-  if (misspelledWord != "" && misspelledWord != newWord) {
-    isMisspelled = spellChecker.ReplaceWord(misspelledWord, newWord, false);
+  newWord = dialog.ReplaceWordInput.value;
+  //dump("New = "+newWord+" Misspelled = "+MisspelledWord+"\n");
+  if (MisspelledWord != "" && MisspelledWord != newWord) {
+    isMisspelled = spellChecker.ReplaceWord(MisspelledWord, newWord, false);
   }
   NextWord();
 }
@@ -164,9 +202,9 @@ function Replace()
 function ReplaceAll()
 {
   dump("SpellCheck: ReplaceAll\n");
-  newWord = dialog.replaceWordInput.value;
-  if (misspelledWord != "" && misspelledWord != newWord) {
-    isMisspelled = spellChecker.ReplaceWord(misspelledWord, newWord, true);
+  newWord = dialog.ReplaceWordInput.value;
+  if (MisspelledWord != "" && MisspelledWord != newWord) {
+    isMisspelled = spellChecker.ReplaceWord(MisspelledWord, newWord, true);
   }
   NextWord();
 }
@@ -174,20 +212,28 @@ function ReplaceAll()
 function AddToDictionary()
 {
   dump("SpellCheck: AddToDictionary\n");
-  if (misspelledWord != "") {
-    spellChecker.AddWordToDictionary(misspelledWord);
+  if (MisspelledWord != "") {
+    spellChecker.AddWordToDictionary(MisspelledWord);
   }
 }
 
 function EditDictionary()
 {
-  window.openDialog("chrome://editor/content/EdDictionary.xul", "_blank", "chrome,close,titlebar,modal", "", misspelledWord);
+  window.openDialog("chrome://editor/content/EdDictionary.xul", "_blank", "chrome,close,titlebar,modal", "", MisspelledWord);
 }
 
 function SelectLanguage()
 {
   // A bug in combobox prevents this from working
   dump("SpellCheck: SelectLanguage.\n");
+}
+
+function Recheck()
+{
+  //TODO: Should we bother to add a "Recheck" method to interface?
+  spellChecker.CloseSpellChecking();
+  MisspelledWord = spellChecker.StartSpellChecking();
+  SetWidgetsForMisspelledWord();
 }
 
 function Close()
@@ -197,33 +243,30 @@ function Close()
   window.close();
 }
 
-function FillSuggestedList(firstWord)
+function FillSuggestedList()
 {
-  list = dialog.suggestedList;
+  list = dialog.SuggestedList;
 
   // Clear the current contents of the list
   ClearList(list);
 
-  // We may have the initial word
-  if (firstWord && firstWord != "") {
-    dump("First Word = "+firstWord+"\n");
-    AppendStringToList(list, firstWord);
-  }
-
-  // Get suggested words until an empty string is returned
-  do {
-    word = spellChecker.GetSuggestedWord();
-    dump("Suggested Word = "+word+"\n");
-    if (word != "") {
-      AppendStringToList(list, word);
+  if (MisspelledWord.length > 0)
+  {
+    // Get suggested words until an empty string is returned
+    do {
+      word = spellChecker.GetSuggestedWord();
+      dump("Suggested Word = "+word+"\n");
+      if (word != "") {
+        AppendStringToList(list, word);
+      }
+    } while (word != "");
+    if (list.length == 0) {
+      // No suggestions - show a message but don't let user select it
+      AppendStringToList(list, GetString("NoSuggestedWords"));
+      allowSelectWord = false;
+    } else {
+      allowSelectWord = true;
     }
-  } while (word != "");
-  if (list.length == 0) {
-    // No suggestions - show a message but don't let user select it
-    AppendStringToList(list, GetString("NoSuggestedWords"));
-    allowSelectWord = false;
-  } else {
-    allowSelectWord = true;
   }
 }
 

@@ -45,7 +45,7 @@ function Startup()
     window.close();
     return;
   }
-
+dump("1\n");
   // Create dialog object to store controls for easy access
   dialog = new Object;
   dialog.heightInput = document.getElementById("height");
@@ -54,19 +54,23 @@ function Startup()
   dialog.centerAlign = document.getElementById("centerAlign");
   dialog.rightAlign = document.getElementById("rightAlign");
   dialog.shading = document.getElementById("3dShading");
-  dialog.pixelOrPercentSelect = document.getElementById("pixelOrPercentSelect");
+  dialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
 
+dump("2\n");
   // Make a copy to use for AdvancedEdit and onSaveDefault
   globalElement = hLineElement.cloneNode(false);
 
+dump("3 Init called...\n");
   // Initialize control values based on existing attributes
   InitDialog()
+dump("1\n");
 
   // SET FOCUS TO FIRST CONTROL
   dialog.heightInput.focus();
 
   // Resize window
   window.sizeToContent();
+dump("after sizeToContent\n");
 }
 
 // Set dialog widgets with attribute data
@@ -83,11 +87,12 @@ function InitDialog()
 
   // We will use "height" here and in UI
   dialog.heightInput.value = height;
-
+dump("Calling InitPixelOrPercentMenulist\n");
   // Get the width attribute of the element, stripping out "%"
-  // This sets contents of combobox (adds pixel and percent option elements)
-  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement,"width","pixelOrPercentSelect");
+  // This sets contents of combobox (adds pixel and percent menuitems elements)
+  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
 
+dump("AFTER Calling InitPixelOrPercentMenulist\n");
   align = globalElement.getAttribute("align");
   if (align == "center") {
     dialog.centerAlign.checked = true;
@@ -104,6 +109,7 @@ function InitDialog()
     dialog.shading.checked = false;
   else
     dialog.shading.checked = true;
+dump("Done with INIT\n");
 }
 
 function onSaveDefault()
@@ -164,7 +170,7 @@ function ValidateData()
   dump("Setting height="+height+"\n");
   globalElement.setAttribute("size", height);
 
-  var isPercent = (dialog.pixelOrPercentSelect.selectedIndex == 1);
+  var isPercent = (dialog.pixelOrPercentMenulist.selectedIndex == 1);
   var maxLimit;
   if (isPercent) {
     maxLimit = 100;

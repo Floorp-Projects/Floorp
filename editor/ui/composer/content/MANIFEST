@@ -30,6 +30,7 @@ EditorInitPage.html
 EditorInitPagePlain.html
 EditorStyles1.css
 EditorContent.css
+EditorAllTags.css
 EditorOverride.css
 EditorParagraphMarks.css
 editorOverlay.js

@@ -37,7 +37,7 @@
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical"
+    orient="vertical"
     id="imagedialog"
     persist="screenX screenY"
     >
@@ -56,17 +56,16 @@
     <text value="&locationBox.label;"/>
   </title>
 
-  <box align="horizontal">
-
+  <box>
     <!--/////// Src URL and ALT Text //////-->
-    <box align="vertical">
-      <box align="horizontal">
+    <box orient="vertical">
+      <box>
         <text class = "label" 
           for   = "srcInput"
           value = "&locationEditField.label;"
           align = "right" />
       </box>
-      <box align="horizontal">
+      <box>
         <text class = "label"
           id    = "altTextLabel" 
           for   = "altTextInput"
@@ -76,48 +75,46 @@
     
     <spring flex="100%"/>
     
-    <box align="vertical">
-      <box align="horizontal">
+    <box orient="vertical">
+      <box>
         <textfield 
           id         = "srcInput" 
-          style      = "min-width:150px; max-width:200px"
+          class      = "MinWidth20em"
           onkeyup    = "doOverallEnabling()"
           onmouseup  = "doOverallEnabling()"
           onchange   = "doOverallEnabling()" />
         <spring flex="100%"/>
-        <!-- from EdDialogOverlay.xul - TEMP Style hack - use boxes -->
-        <titledbutton id="ChooseFile" style="margin-left:5px"
-               class = "push dialog"
-               onclick = "chooseImageFile()" />
+        <!-- from EdDialogOverlay.xul -->
+        <button id="ChooseFile"/>
       </box>
 
       <spring flex="100%"/>
 
-      <box align="horizontal">  
+      <box>  
         <textfield
           id       ="altTextInput"
-          style    = "min-width:100px; max-width:200px"
+          class      = "MinWidth20em"
           onchange = "doOverallEnabling()"/>
       </box>  
     </box> 
   </box>
 </titledbox>
 
-<box align="horizontal">
-  <titledbutton 
-    class   = "push dialog" 
+<box>
+  <button 
+    class   = "dialog" 
     id      = "MoreFewerButton" 
     align   = "left" 
-    onclick = "onMoreFewerImage()" 
+    oncommand = "onMoreFewerImage()" 
     persist = "more"/>
   <spring flex="100%"/>
   <!-- From EdDialogOverlay.xul -->
-  <titledbutton id="AdvancedEditButton2"/>
+  <button id="AdvancedEditButton2"/>
 </box>
 <!-- Area that shows and hides via MoreFewerButton --> 
-<box id="MoreSection" align="vertical" flex="100%">
-  <box align="horizontal" flex="100%">
-    <box align="vertical">
+<box id="MoreSection" orient="vertical" flex="100%">
+  <box flex="100%">
+    <box orient="vertical">
     <!-- //////// Image Dimensions //////// -->
     <titledbox orient="vertical" flex="100%">
       <title
@@ -126,23 +123,23 @@
         <text value="&dimensionsBox.label;"/>
       </title>
       
-      <!-- THESE NEED TO BE onchange RATHER THAN onclick -->
+      <!-- THESE NEED TO BE onchange RATHER THAN oncommand -->
       <radiogroup orient="vertical">
         <radio
           id      = "originalsizeRadio" 
           value   = "&originalSizeRadio.label;"
-         onclick = "doDimensionEnabling( false );"/>
+         oncommand = "doDimensionEnabling( false );"/>
         <radio
           id      = "customsizeRadio" 
           value   = "&customSizeRadio.label;"
-          onclick = "doDimensionEnabling( true );" />
+          oncommand = "doDimensionEnabling( true );" />
       </radiogroup>
 
 	  <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
       <spring flex="100%"/>
       
         <!--//////  IMAGE WIDTH  //////-->
-      <box align="horizontal">
+      <box>
         <text class = "label" 
           id    = "widthLabel"
           for   = "widthInput"
@@ -150,23 +147,17 @@
         <spring flex="100%"/>
         <textfield
           id       = "widthInput" 
-          style    = "min-width:30px; max-width:30px" 
-          length   = "4"
-          maxlength = "4" 
+          class    = "MinWidth20em"
           onfocus  = "oldSourceInt = this.value;"
           onkeyup  = "constrainProportions(this.id, 'heightInput')" 
           onchange = "doOverallEnabling()" />
         <spring flex="100%"/>
-        <html:select 
-          id      = "widthUnitsSelect" 
-          size    = "1"
-          style   = "width: 100px; min-width: 100px; max-width: 100px;"
-          onclick = "doOverallEnabling()"/>
-        <!-- option elements are appended by JS -->
+        <menulist id = "widthUnitsMenulist" oncommand = "doOverallEnabling()"/>
+        <!-- contents are appended by JS -->
       </box>
 
         <!--////// IMAGE HEIGHT //////-->
-      <box align="horizontal">
+      <box>
         <text class = "label" 
           id    = "heightLabel"
           for   = "heightInput"
@@ -174,51 +165,44 @@
         <spring flex="100%"/>
         <textfield 
           id       = "heightInput" 
-          style    = "min-width:30px; max-width:30px" 
-          length   = "4" 
-          maxlength = "4" 
           onfocus  = "oldSourceInt = this.value;"
           onkeyup  = "constrainProportions(this.id, 'widthInput')"
           onchange = "doOverallEnabling()" />
         <spring flex="100%"/>
-        <html:select 
-          id      = "heightUnitsSelect" 
-          size    = "1" 
-          style   = "width: 100px; min-width: 100px; max-width: 100px;"
-          onclick = "doOverallEnabling()"/>
-          <!-- option elements are appended by JS -->
+        <menulist id = "heightUnitsMenulist" oncommand = "doOverallEnabling()"/>
+          <!-- contents are appended by JS -->
       </box>
 
       <!--////// CONSTRAIN DIMENSIONS //////-->
-	  <box align="horizontal">
+	  <box>
       <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"/>
 	  </box>
     </titledbox>
 
-    <titledbox orient="horizontal" flex="100%">
+    <titledbox flex="100%">
       <title
         class="dialog"
         id="imagemapLabel">
         <text value="&imagemapBox.label;"/>
       </title>
-      <titledbutton
-        class   = "push dialog"
+      <button
+        class   = "dialog"
         id      = "editImageMap"
-        onclick = "editImageMap()"
+        oncommand = "editImageMap()"
         value   = "&editImageMapButton.label;"/>
-      <titledbutton
-        class   = "push dialog"
+      <button
+        class   = "dialog"
         id      = "removeImageMap"
-        onclick = "removeImageMap()"
+        oncommand = "removeImageMap()"
         value   = "&removeImageMapButton.label;"/>
     </titledbox>
 
     </box>
 
-    <box align="vertical" flex="100%">
+    <box orient="vertical" flex="100%">
       <!-- Bottom Right Region -->
       <!--//////// Alignment ////////-->
-      <titledbox flex="100%" orient="vertical">
+      <titledbox flex="1" orient="vertical">
         <title
           class = "dialog" 
           id    = "alignLabel"
@@ -248,60 +232,45 @@
       </titledbox>
 
       <!--//////// Borders and Spacing ////////-->
-      <titledbox orient="horizontal" flex="100%">
+      <titledbox flex="100%">
         <title
           class = "dialog"
           id    = "spacingLabel"> 
           <text value="&spacingBox.label;"/>
         </title>
 
-        <box align="vertical">
-          <text class = "label" 
+        <box orient="vertical">
+          <text class = "align-right" 
             id    = "leftrightLabel"
-            for   = "imageleftrightInput"
-            value = "&leftRightEditField.label;"
-            style = "align:right" />
+            value = "&leftRightEditField.label;"/>
           <spring flex="100%"/>
-          <text class = "label" 
+          <text class = "align-right" 
             id    = "topbottomLabel"
-            for   = "imagetopbottomInput"
-            value = "&topBottomEditField.label;"
-            style = "align:right" />
+            value = "&topBottomEditField.label;"/>
           <spring flex="100%"/>
-          <text class = "label" 
+          <text class = "align-right" 
             id    = "borderLabel"
-            for   = "border"
-            value = "&borderEditField.label;"
-            style = "align:right" />
+            value = "&borderEditField.label;"/>
         </box>
         
-        <box align="vertical">
+        <box orient="vertical">
           <textfield 
             id        = "imageleftrightInput" 
-            style     = "min-width:30px; max-width:30px" 
-            length    = "4" 
-            maxlength = "4" 
             onkeyup   = "forceInteger(this.id)" 
             onchange  = "doOverallEnabling()"/>
           <spring flex="100%"/>
           <textfield 
             id        = "imagetopbottomInput" 
-            style     = "min-width:30px; max-width:30px" 
-            length    = "4" 
-            maxlength = "4" 
             onkeyup   = "forceInteger(this.id)"
             onchange  = "doOverallEnabling()"/>
           <spring flex="100%"/>
           <textfield
             id        = "border" 
-            style     = "min-width:30px; max-width:30px" 
-            length    = "4" 
-            maxlength = "4"
             onkeyup   = "forceInteger(this.id)"
             onchange  = "doOverallEnabling()" />
         </box>
         
-        <box align="vertical">
+        <box orient="vertical">
           <text class = "label" 
             id    = "leftrighttypeLabel"
             for   = "imageleftrightInput"
@@ -323,10 +292,10 @@
   </box> <!-- The horizontal box -->
   
   <!-- buttons along bottom -->
-  <box align="horizontal">
+  <box>
     <spring flex="100%"/>
     <!-- From EdDialogOverlay -->
-    <titledbutton id="AdvancedEditButton3"/>
+    <button id="AdvancedEditButton3"/>
   </box>
 </box> <!-- END OF MORE/FEWER SECTION -->
 

@@ -82,6 +82,7 @@ function Startup()
 
 function InitDialog()
 {
+  //nameInput.setAttribute("value",globalElement.getAttribute("name"));
   nameInput.value = globalElement.getAttribute("name");
 }
 
@@ -101,7 +102,7 @@ function AnchorNameExists(name)
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  var name = TrimString(nameInput.value);
+  var name = TrimString(nameInput.getAttribute("value"));
   if (name.length == 0) {
       ShowInputErrorMessage(GetString("MissingAnchorNameError"));
       nameInput.focus();

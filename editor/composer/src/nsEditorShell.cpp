@@ -464,7 +464,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
 
   // Load the edit mode override style sheet
   // This will be remove for "Browser" mode
-  SetDisplayMode(eDisplayModeEdit);
+  SetDisplayMode(eDisplayModeNormal);
 
 #ifdef DEBUG
   // Activate the debug menu only in debug builds
@@ -959,9 +959,30 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets) return NS_NOINTERFACE;
 
-  if (aDisplayMode == eDisplayModeEdit)
+  if (aDisplayMode == eDisplayModeWYSIWYG)
   {
-    // We are already in EditMode
+    // Remove all extra "edit mode" style sheets 
+    if (mEditModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+      mEditModeStyleSheet = nsnull;
+    }
+    if (mAllTagsModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
+      mAllTagsModeStyleSheet = nsnull;
+    }
+  }
+  else if (aDisplayMode == eDisplayModeNormal)
+  {
+    // Remove the AllTags sheet
+    if (mAllTagsModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
+      mAllTagsModeStyleSheet = nsnull;
+    }
+
+    // We are already in the requested mode
     if (mEditModeStyleSheet) return NS_OK;
     
     //Load the editmode style sheet
@@ -974,15 +995,36 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
       mEditModeStyleSheet = styleSheet;
     return res;
   }
-  else if (aDisplayMode == eDisplayModeBrowserPreview)
+  else if (aDisplayMode == eDisplayModeAllTags)
   {
-    // Remove all extra "edit mode" style sheets 
-    if (mEditModeStyleSheet)
+    // We are already in the requested mode
+    if (mAllTagsModeStyleSheet) return NS_OK;
+    
+    //Load the normal mode style sheet
+    if (!mEditModeStyleSheet)
     {
-      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-      mEditModeStyleSheet = nsnull;
+      // Note: using "@import url(chrome://editor/content/EditorContent.css);"
+      //   in EditorAllTags.css doesn't seem to work!?
+      nsCOMPtr<nsICSSStyleSheet> styleSheet;
+      res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorContent.css",
+                                                  getter_AddRefs(styleSheet));
+    
+      // Save the returned style sheet so we can remove it later
+      if (NS_SUCCEEDED(res))
+        mEditModeStyleSheet = styleSheet;
     }
+
+    //Load the editmode style sheet
+    nsCOMPtr<nsICSSStyleSheet> styleSheet;
+    res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorAllTags.css",
+                                                getter_AddRefs(styleSheet));
+    
+    // Save the returned style sheet so we can remove it later
+    if (NS_SUCCEEDED(res))
+      mAllTagsModeStyleSheet = styleSheet;
+    return res;
   }
+
   return NS_OK;
 }
 
@@ -1157,14 +1199,9 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
 
   // get an nsFileSpec from the URL
   // This assumes inFileURL is "file://" format
-  //nsFileURL    fileURL(inFileURL);
-  //nsFileSpec   fileSpec(inFilePath);
+  nsFileURL    fileURL(inFileURL);
+  nsFileSpec   fileSpec(fileURL);
 
-  // Instead, assume inFileURL is native path and use the
-  //  nsFilePath to convert to something nsFileSpec can handle
-  nsFilePath filePath(inFileURL);
-  nsFileSpec fileSpec(filePath);
-  
   nsCOMPtr<nsIDOMWindow> contentWindow;
   inCheckWindow->GetContent(getter_AddRefs(contentWindow));
   if (contentWindow)

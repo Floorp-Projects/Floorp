@@ -37,53 +37,46 @@
    align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
   <!--- Element-specific methods -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <keyset id="keyset"/>
   <titledbox><title><text align="left" value="&dimensionsBox.label;"/></title>
-    <html:table>
-      <html:tr>
-        <html:td align="right">
-          <html:label for="height">&heightEditField.label;</html:label>
-        </html:td>
-        <html:td colspan="2">
-          <html:input type="text" id="height" size="4" maxlength="4"
-              onkeyup="forceInteger('height')" />
-          <html:label for="height"> &pixelsPopup.value; </html:label>
-        </html:td>
-      </html:tr>
-      <html:tr>              
-        <html:td>
-          <html:label for="width">&widthEditField.label;</html:label>
-        </html:td>
-        <html:td>
-          <html:input type="text" id="width" size="4" maxlength="4"
-              onkeyup="forceInteger('width')" />
-        </html:td>
-        <html:td>
-          <html:select id="pixelOrPercentSelect" size="1"/>
-           <!-- option elements are appended by JS -->
-        </html:td>
-      </html:tr>
-    </html:table>
+    <grid>
+      <columns><column/><column/><column /></columns>
+      <rows>
+        <row vertical-align="baseline" autostretch="never">
+          <text value="&heightEditField.label;"/>
+          <textfield id="height" onkeyup="forceInteger('height')"/>
+          <text value="&pixelsPopup.value;"/>
+        </row>
+        <row vertical-align="baseline" autostretch="never">
+          <text value="&widthEditField.label;"/>
+          <textfield id="width" flex="1" onkeyup="forceInteger('width')"/>
+          <menulist id="pixelOrPercentMenulist"><menupopup/></menulist>
+          <!-- menupopup and menuitems added by JS -->
+        </row>
+      </rows>
+    </grid>        
   </titledbox>
   <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
-    <box align="horizontal">
-      <html:label><html:input type="radio" name="Align" id="leftAlign"/>&leftPopup.value;</html:label>
-      <html:label><html:input type="radio" name="Align" id="centerAlign"/>&centerPopup.value;</html:label>
-      <html:label><html:input type="radio" name="Align" id="rightAlign"/>&rightPopup.value;</html:label>
-    </box>
+    <radiogroup orient="horizontal">
+      <radio id="leftAlign" value="&leftPopup.value;"/>
+      <radio id="centerAlign" value="&centerPopup.value;"/>
+      <radio id="rightAlign" value="&rightPopup.value;"/>
+    </radiogroup>
   </titledbox>
   <box align="horizontal">
-    <html:label><html:input type="checkbox" id="3dShading"/>&threeDShading.label;</html:label>
-    <spring flex="100%"/>
-    <titledbutton class="push" id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
+    <checkbox id="3dShading" value="&threeDShading.label;"/>
+    <spring flex="1"/>
+    <button class="dialog" id="SaveDefault" value="&saveSettings.label;" oncommand="onSaveDefault()"/>
   </box>
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
+
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
+	<box id="okCancelButtons"/>
+
 </window>
