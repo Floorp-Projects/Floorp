@@ -140,7 +140,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     if (NS_FAILED(rv)) return rv;
 
     *result = handler;
-	NS_ADDREF(handler);
+    NS_ADDREF(handler);
     return NS_OK;
 }
 
@@ -182,12 +182,21 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
                     nsIURI* *result)
 {
     nsresult rv;
+    nsIURI* base;
     char* scheme;
     rv = GetScheme(aSpec, &scheme);
-    if (NS_FAILED(rv)) {
-        if (aBaseURI)
-            rv = aBaseURI->GetScheme(&scheme);
+    if (NS_SUCCEEDED(rv)) {
+        // then aSpec is absolute
+        // ignore aBaseURI in this case
+        base = nsnull;
+    }
+    else {
+        // then aSpec is relative
+        if (aBaseURI == nsnull)
+            return NS_ERROR_MALFORMED_URI;
+        rv = aBaseURI->GetScheme(&scheme);
         if (NS_FAILED(rv)) return rv;
+        base = aBaseURI;
     }
     
     nsCOMPtr<nsIProtocolHandler> handler;
@@ -195,7 +204,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
     nsCRT::free(scheme);
     if (NS_FAILED(rv)) return rv;
 
-    return handler->NewURI(aSpec, aBaseURI, result);
+    return handler->NewURI(aSpec, base, result);
 }
 
 NS_IMETHODIMP
