@@ -39,7 +39,7 @@
 #define nsMsgIdentity_h___
 
 #include "nsIMsgIdentity.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "msgCore.h"
 #include "nsISmtpServer.h"
 #include "nsWeakPtr.h"
@@ -58,7 +58,7 @@ private:
   nsIMsgSignature* m_signature;
   nsIMsgVCard* m_vCard;
   char *m_identityKey;
-  nsIPref *m_prefs;
+  nsIPrefBranch *m_prefBranch;
   nsWeakPtr m_smtpServer;
 
 protected:
@@ -86,8 +86,6 @@ protected:
   nsresult setFolderPref(const char *pref, const char *);
 
 private:
-  static void clearPrefEnum(const char *aPref, void *aClosure);
-
   nsresult loadSmtpServer(nsISmtpServer**);
   
 };

@@ -49,6 +49,7 @@
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsISupportsObsolete.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgDBCID.h"
@@ -59,7 +60,7 @@
 #include "nsIMsgFilterService.h"
 #include "nsIMsgProtocolInfo.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
@@ -80,7 +81,6 @@
 #include "nsMsgFolderFlags.h"
 #include "nsMsgUtils.h"
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 #define PORT_NOT_SET -1
@@ -89,7 +89,7 @@ MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_rootFolder(0),
-    m_prefs(0),
+    m_prefBranch(0),
     m_biffState(nsIMsgFolder::nsMsgBiffState_NoMail),
     m_serverBusy(PR_FALSE),
     m_canHaveFilters(PR_FALSE),
@@ -101,9 +101,7 @@ nsMsgIncomingServer::nsMsgIncomingServer():
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
-    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
-                                                  m_prefs,
-                                                  nsnull);
+    NS_IF_RELEASE(m_prefBranch);
 }
 
 
@@ -121,15 +119,13 @@ NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey.get())
 NS_IMETHODIMP
 nsMsgIncomingServer::SetKey(const char * serverKey)
 {
-    nsresult rv = NS_OK;
-    // in order to actually make use of the key, we need the prefs
-    if (!m_prefs)
-        rv = nsServiceManager::GetService(kPrefServiceCID,
-                                          NS_GET_IID(nsIPref),
-                                          (nsISupports**)&m_prefs);
-
     m_serverKey.Assign(serverKey);
-    return rv;
+
+    // in order to actually make use of the key, we need the prefs
+    if (m_prefBranch)
+        return NS_OK;
+
+    return CallGetService(NS_PREFSERVICE_CONTRACTID, &m_prefBranch);
 }
     
 NS_IMETHODIMP
@@ -411,7 +407,7 @@ nsMsgIncomingServer::GetBoolValue(const char *prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
-  nsresult rv = m_prefs->GetBoolPref(fullPrefName.get(), val);
+  nsresult rv = m_prefBranch->GetBoolPref(fullPrefName.get(), val);
   
   if (NS_FAILED(rv))
     rv = getDefaultBoolPref(prefname, val);
@@ -425,7 +421,7 @@ nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
   
   nsCAutoString fullPrefName;
   getDefaultPrefName(prefname, fullPrefName);
-  nsresult rv = m_prefs->GetBoolPref(fullPrefName.get(), val);
+  nsresult rv = m_prefBranch->GetBoolPref(fullPrefName.get(), val);
 
   if (NS_FAILED(rv)) {
     *val = PR_FALSE;
@@ -445,11 +441,10 @@ nsMsgIncomingServer::SetBoolValue(const char *prefname,
   PRBool defaultValue;
   rv = getDefaultBoolPref(prefname, &defaultValue);
 
-  if (NS_SUCCEEDED(rv) &&
-      val == defaultValue)
-    m_prefs->ClearUserPref(fullPrefName.get());
+  if (NS_SUCCEEDED(rv) && val == defaultValue)
+    m_prefBranch->ClearUserPref(fullPrefName.get());
   else
-    rv = m_prefs->SetBoolPref(fullPrefName.get(), val);
+    rv = m_prefBranch->SetBoolPref(fullPrefName.get(), val);
   
   return rv;
 }
@@ -460,7 +455,7 @@ nsMsgIncomingServer::GetIntValue(const char *prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
-  nsresult rv = m_prefs->GetIntPref(fullPrefName.get(), val);
+  nsresult rv = m_prefBranch->GetIntPref(fullPrefName.get(), val);
 
   if (NS_FAILED(rv))
     rv = getDefaultIntPref(prefname, val);
@@ -476,11 +471,13 @@ nsMsgIncomingServer::GetFileValue(const char* prefname,
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
   
   nsCOMPtr<nsILocalFile> prefLocal;
-  nsCOMPtr<nsIFileSpec> outSpec;
   
-  nsresult rv = m_prefs->GetFileXPref(fullPrefName.get(), getter_AddRefs(prefLocal));
+  nsresult rv = m_prefBranch->GetComplexValue(fullPrefName.get(),
+                                              NS_GET_IID(nsILocalFile),
+                                              getter_AddRefs(prefLocal));
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIFileSpec> outSpec;
   rv = NS_NewFileSpecFromIFile(prefLocal, getter_AddRefs(outSpec));
   if (NS_FAILED(rv)) return rv;
   
@@ -499,13 +496,15 @@ nsMsgIncomingServer::SetFileValue(const char* prefname,
   
   nsresult rv;
   nsFileSpec tempSpec;
-  nsCOMPtr<nsILocalFile> prefLocal;
-  
   rv = spec->GetFileSpec(&tempSpec);
   if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILocalFile> prefLocal;
   rv = NS_FileSpecToIFile(&tempSpec, getter_AddRefs(prefLocal));
   if (NS_FAILED(rv)) return rv;
-  rv = m_prefs->SetFileXPref(fullPrefName.get(), prefLocal);
+
+  rv = m_prefBranch->SetComplexValue(fullPrefName.get(), NS_GET_IID(nsIFileSpec),
+                                     prefLocal);
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
@@ -517,7 +516,7 @@ nsMsgIncomingServer::getDefaultIntPref(const char *prefname,
   
   nsCAutoString fullPrefName;
   getDefaultPrefName(prefname, fullPrefName);
-  nsresult rv = m_prefs->GetIntPref(fullPrefName.get(), val);
+  nsresult rv = m_prefBranch->GetIntPref(fullPrefName.get(), val);
 
   if (NS_FAILED(rv)) {
     *val = 0;
@@ -539,9 +538,9 @@ nsMsgIncomingServer::SetIntValue(const char *prefname,
   rv = getDefaultIntPref(prefname, &defaultVal);
   
   if (NS_SUCCEEDED(rv) && defaultVal == val)
-    m_prefs->ClearUserPref(fullPrefName.get());
+    m_prefBranch->ClearUserPref(fullPrefName.get());
   else
-    rv = m_prefs->SetIntPref(fullPrefName.get(), val);
+    rv = m_prefBranch->SetIntPref(fullPrefName.get(), val);
   
   return rv;
 }
@@ -552,7 +551,7 @@ nsMsgIncomingServer::GetCharValue(const char *prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
-  nsresult rv = m_prefs->CopyCharPref(fullPrefName.get(), val);
+  nsresult rv = m_prefBranch->GetCharPref(fullPrefName.get(), val);
   
   if (NS_FAILED(rv))
     rv = getDefaultCharPref(prefname, val);
@@ -566,21 +565,27 @@ nsMsgIncomingServer::GetUnicharValue(const char *prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
-  nsresult rv = m_prefs->CopyUnicharPref(fullPrefName.get(), val);
+  nsCOMPtr<nsISupportsString> supportsString;
+  nsresult rv = m_prefBranch->GetComplexValue(fullPrefName.get(),
+                                              NS_GET_IID(nsISupportsString),
+                                              getter_AddRefs(supportsString));
   
   if (NS_FAILED(rv))
-    rv = getDefaultUnicharPref(prefname, val);
-  
+    return getDefaultUnicharPref(prefname, val);
+
+  if (supportsString)
+    rv = supportsString->ToString(val);
+
   return rv;
 }
 
 nsresult
 nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
-                                        char **val) {
-  
+                                        char **val)
+{
   nsCAutoString fullPrefName;
   getDefaultPrefName(prefname, fullPrefName);
-  nsresult rv = m_prefs->CopyCharPref(fullPrefName.get(), val);
+  nsresult rv = m_prefBranch->GetCharPref(fullPrefName.get(), val);
 
   if (NS_FAILED(rv)) {
     *val = nsnull;              // null is ok to return here
@@ -595,13 +600,16 @@ nsMsgIncomingServer::getDefaultUnicharPref(const char *prefname,
   
   nsCAutoString fullPrefName;
   getDefaultPrefName(prefname, fullPrefName);
-  nsresult rv = m_prefs->CopyUnicharPref(fullPrefName.get(), val);
-
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsISupportsString> supportsString;
+  nsresult rv = m_prefBranch->GetComplexValue(fullPrefName.get(),
+                                              NS_GET_IID(nsISupportsString),
+                                              getter_AddRefs(supportsString));
+  if (NS_FAILED(rv) || !supportsString) {
     *val = nsnull;              // null is ok to return here
-    rv = NS_OK;
+    return NS_OK;
   }
-  return rv;
+
+  return supportsString->ToString(val);
 }
 
 nsresult
@@ -613,18 +621,17 @@ nsMsgIncomingServer::SetCharValue(const char *prefname,
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
 
   if (!val) {
-    m_prefs->ClearUserPref(fullPrefName.get());
+    m_prefBranch->ClearUserPref(fullPrefName.get());
     return NS_OK;
   }
   
   char *defaultVal=nsnull;
   rv = getDefaultCharPref(prefname, &defaultVal);
   
-  if (NS_SUCCEEDED(rv) &&
-      PL_strcmp(defaultVal, val) == 0)
-    m_prefs->ClearUserPref(fullPrefName.get());
+  if (NS_SUCCEEDED(rv) && strcmp(defaultVal, val) == 0)
+    m_prefBranch->ClearUserPref(fullPrefName.get());
   else
-    rv = m_prefs->SetCharPref(fullPrefName.get(), val);
+    rv = m_prefBranch->SetCharPref(fullPrefName.get(), val);
   
   PR_FREEIF(defaultVal);
   
@@ -640,7 +647,7 @@ nsMsgIncomingServer::SetUnicharValue(const char *prefname,
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
 
   if (!val) {
-    m_prefs->ClearUserPref(fullPrefName.get());
+    m_prefBranch->ClearUserPref(fullPrefName.get());
     return NS_OK;
   }
 
@@ -648,10 +655,18 @@ nsMsgIncomingServer::SetUnicharValue(const char *prefname,
   rv = getDefaultUnicharPref(prefname, &defaultVal);
   if (defaultVal && NS_SUCCEEDED(rv) &&
       nsCRT::strcmp(defaultVal, val) == 0)
-    m_prefs->ClearUserPref(fullPrefName.get());
-  else
-    rv = m_prefs->SetUnicharPref(fullPrefName.get(), val);
-  
+    m_prefBranch->ClearUserPref(fullPrefName.get());
+  else {
+    nsCOMPtr<nsISupportsString> supportsString =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    if (supportsString) {
+      supportsString->SetData(nsDependentString(val));
+      rv = m_prefBranch->SetComplexValue(fullPrefName.get(),
+                                         NS_GET_IID(nsISupportsString),
+                                         supportsString);
+    }
+  }
+
   PR_FREEIF(defaultVal);
   
   return rv;
@@ -1012,13 +1027,21 @@ nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
 NS_IMETHODIMP
 nsMsgIncomingServer::ClearAllValues()
 {
-    nsresult rv;
     nsCAutoString rootPref("mail.server.");
     rootPref += m_serverKey;
 
-    rv = m_prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)m_prefs);
+    PRUint32 childCount;
+    char**   childArray;
+    nsresult rv = m_prefBranch->GetChildList(rootPref.get(), &childCount, &childArray);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return rv;
+    for (PRUint32 i = 0; i < childCount; ++i) {
+        m_prefBranch->ClearUserPref(childArray[i]);
+    }
+
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1056,14 +1079,6 @@ nsMsgIncomingServer::RemoveFiles()
 	if (exists) return NS_ERROR_FAILURE;
 #endif /* 0 */
 	return NS_OK;
-}
-
-
-void
-nsMsgIncomingServer::clearPrefEnum(const char *aPref, void *aClosure)
-{
-    nsIPref *prefs = (nsIPref *)aClosure;
-    prefs->ClearUserPref(aPref);
 }
 
 NS_IMETHODIMP
@@ -1290,7 +1305,7 @@ nsMsgIncomingServer::GetDoBiff(PRBool *aDoBiff)
    
     nsCAutoString fullPrefName;
     getPrefName(m_serverKey.get(), BIFF_PREF_NAME, fullPrefName);
-    rv = m_prefs->GetBoolPref(fullPrefName.get(), aDoBiff);
+    rv = m_prefBranch->GetBoolPref(fullPrefName.get(), aDoBiff);
     if (NS_SUCCEEDED(rv)) return rv;
 
     // if the pref isn't set, use the default
@@ -1317,7 +1332,7 @@ nsMsgIncomingServer::SetDoBiff(PRBool aDoBiff)
     nsCAutoString fullPrefName;
     getPrefName(m_serverKey.get(), BIFF_PREF_NAME, fullPrefName);
 
-    rv = m_prefs->SetBoolPref(fullPrefName.get(), aDoBiff);
+    rv = m_prefBranch->SetBoolPref(fullPrefName.get(), aDoBiff);
     NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
 }
@@ -1738,12 +1753,7 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
     rv = GetIntValue("incorporate_return_receipt", &incorp);
   else
   {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = prefBranch->GetIntPref("mail.incorporate.return_receipt", &incorp);
+    rv = m_prefBranch->GetIntPref("mail.incorporate.return_receipt", &incorp);
   }
 
   PRBool enable = (incorp == nsIMsgMdnGenerator::eIncorporateSent);
@@ -1930,9 +1940,10 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
 
   // flush these pref changes to disk
-  rv = m_prefs->SavePrefFile(nsnull);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
+  nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(m_prefBranch);
+  NS_ENSURE_TRUE(prefService, NS_ERROR_FAILURE);
+
+  return prefService->SavePrefFile(nsnull);
 }
 
 NS_IMETHODIMP

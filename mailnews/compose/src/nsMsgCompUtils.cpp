@@ -485,7 +485,7 @@ RRT_HEADER:
   }
 
   /* for Netscape Server, Accept-Language data sent in Mail header */
-  char *acceptlang = nsMsgI18NGetAcceptLanguage();
+  const char *acceptlang = nsMsgI18NGetAcceptLanguage();
   if( (acceptlang != NULL) && ( *acceptlang != '\0') ){
     PUSH_STRING( "X-Accept-Language: " );
     PUSH_STRING( acceptlang );

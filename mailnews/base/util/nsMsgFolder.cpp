@@ -61,7 +61,8 @@
 #include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
 #include "nsMsgI18N.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
@@ -2776,10 +2777,10 @@ nsMsgFolder::GetWarnFilterChanged(PRBool *aVal)
 {
   NS_ENSURE_ARG(aVal);
   nsresult rv;
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefService)
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
   {
-    rv = prefService->GetBoolPref(PREF_MAIL_WARN_FILTER_CHANGED, aVal);
+    rv = prefBranch->GetBoolPref(PREF_MAIL_WARN_FILTER_CHANGED, aVal);
     if (NS_FAILED(rv))
     {
       *aVal = PR_FALSE;
@@ -2793,9 +2794,9 @@ nsresult
 nsMsgFolder::SetWarnFilterChanged(PRBool aVal)
 {
   nsresult rv=NS_OK;
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefService)
-    rv = prefService->SetBoolPref(PREF_MAIL_WARN_FILTER_CHANGED, aVal);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
+    rv = prefBranch->SetBoolPref(PREF_MAIL_WARN_FILTER_CHANGED, aVal);
   return rv;
 }
 

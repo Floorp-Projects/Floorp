@@ -40,7 +40,7 @@
 #define nsMsgIncomingServer_h__
 
 #include "nsIMsgIncomingServer.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIMsgFilterList.h"
 #include "msgCore.h"
 #include "nsIFolder.h"
@@ -97,11 +97,9 @@ protected:
   nsresult getProtocolInfo(nsIMsgProtocolInfo **aResult);
   nsCOMPtr <nsIFileSpec> mFilterFile;
   nsCOMPtr <nsIMsgFilterList> mFilterList;
-  // pref callback to clear the user prefs
-  static void clearPrefEnum(const char  *aPref, void *aClosure);
 
 private:
-  nsIPref *m_prefs;
+  nsIPrefBranch *m_prefBranch;
   nsCString m_password;
   PRUint32 m_biffState;
   PRPackedBool m_serverBusy;

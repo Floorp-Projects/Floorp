@@ -40,7 +40,8 @@
 #include "nsReadableUtils.h"
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIFileChannel.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
@@ -71,7 +72,6 @@
 #define oneHour 3600000000
 #include "nsMsgUtils.h"
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for purge_threshhold
 
 
@@ -1507,10 +1507,10 @@ nsMsgDBFolder::GetPromptPurgeThreshold(PRBool *aPrompt)
 {
   NS_ENSURE_ARG(aPrompt);
   nsresult rv;
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefService)
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
   {
-    rv = prefService->GetBoolPref(PREF_MAIL_PROMPT_PURGE_THRESHOLD, aPrompt);
+    rv = prefBranch->GetBoolPref(PREF_MAIL_PROMPT_PURGE_THRESHOLD, aPrompt);
     if (NS_FAILED(rv)) 
     {
       *aPrompt = PR_FALSE;
@@ -1525,10 +1525,10 @@ nsMsgDBFolder::GetPurgeThreshold(PRInt32 *aThreshold)
 {
   NS_ENSURE_ARG(aThreshold);
   nsresult rv;
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefService)
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
   {
-    rv = prefService->GetIntPref(PREF_MAIL_PURGE_THRESHOLD, aThreshold);
+    rv = prefBranch->GetIntPref(PREF_MAIL_PURGE_THRESHOLD, aThreshold);
     if (NS_FAILED(rv)) 
     {
       *aThreshold = 0;

@@ -44,7 +44,9 @@
 #include "nsICharsetConverterManager2.h"
 
 #include "nsISupports.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIMimeConverter.h"
 #include "msgCore.h"
 #include "nsMsgI18N.h"
@@ -62,7 +64,6 @@
 #include "nsFileSpec.h"
 #include "nsUnicharUtils.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
@@ -638,11 +639,11 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   if (!nsCRT::strcmp(charsetName, NS_LITERAL_STRING("ISO-2022-JP").get())) {
     static PRInt32 sSendHankakuKana = -1;
     if (sSendHankakuKana < 0) {
-      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
       NS_ENSURE_SUCCESS(res, res);
       PRBool sendHankaku;
       // Get a hidden 4.x pref with no UI, get it only once.
-      if (NS_FAILED(prefs->GetBoolPref("mailnews.send_hankaku_kana", &sendHankaku)))
+      if (NS_FAILED(prefBranch->GetBoolPref("mailnews.send_hankaku_kana", &sendHankaku)))
         sSendHankakuKana = 0;  // no pref means need the mapping
       else
         sSendHankakuKana = sendHankaku ? 1 : 0;
@@ -665,13 +666,13 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   // If the converer cannot encode to the charset,
   // then fallback to pref sepcified charsets.
   if (NS_ERROR_UENC_NOMAPPING == res && !bTEXT_HTML && fallbackCharset) {
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &res));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
     NS_ENSURE_SUCCESS(res, res);
 
     nsCAutoString prefString("intl.fallbackCharsetList.");
     prefString.Append(charset);
     nsXPIDLCString fallbackList;
-    res = pref->GetCharPref(prefString.get(), getter_Copies(fallbackList));
+    res = prefBranch->GetCharPref(prefString.get(), getter_Copies(fallbackList));
     // do the fallback only if there is a pref for the charset
     if (NS_FAILED(res) || fallbackList.IsEmpty())
       return NS_ERROR_UENC_NOMAPPING;
@@ -710,31 +711,32 @@ nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset,
   return NS_OK;
 }
 
-char *
+const char *
 nsMsgI18NGetAcceptLanguage(void)
 {
-  static char   lang[32];
-  nsresult      res;
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-  if (nsnull != prefs && NS_SUCCEEDED(res))
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID)); 
+  if (prefBranch)
   {
-    nsXPIDLString prefValue;
+    nsCOMPtr<nsIPrefLocalizedString> prefString;
 
-    memset(lang, 0, sizeof(lang));
-    res = prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(prefValue));
-	  if (NS_SUCCEEDED(res) && prefValue) 
+    prefBranch->GetComplexValue("intl.accept_languages",
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(prefString));
+    if (prefString)
     {
-      PL_strncpy(lang, NS_ConvertUCS2toUTF8(prefValue).get(), sizeof(lang));
-      lang[sizeof(lang)-1] = '\0';
+      nsXPIDLString ucsval;
+      prefString->ToString(getter_Copies(ucsval));
+      if (!ucsval.IsEmpty())
+      {
+        static nsCAutoString acceptLang;
+        acceptLang.Assign(NS_LossyConvertUCS2toASCII(ucsval));
+        return acceptLang.get();
+      }
     }
-	  else 
-		  PL_strcpy(lang, "en");
   }
-  else
-    PL_strcpy(lang, "en");
 
-  return (char *)lang;
+  // Default Accept-Language
+  return "en";
 }
 
 

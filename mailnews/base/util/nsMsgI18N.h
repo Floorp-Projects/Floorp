@@ -92,10 +92,11 @@ NS_MSG_BASE PRBool    nsMsgI18Ncheck_data_in_charset_range(const char *charset, 
 
 /**
  * Return accept language.
+ * Note, the return value is not valid after this method gets called again.
  *
  * @return            Accept language.
  */
-NS_MSG_BASE char      *nsMsgI18NGetAcceptLanguage(void); 
+NS_MSG_BASE const char *nsMsgI18NGetAcceptLanguage(void); 
 
 /**
  * Return charset name internally used in messsage compose.
