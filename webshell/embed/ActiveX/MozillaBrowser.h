@@ -179,7 +179,7 @@ protected:
 	PropertyList			m_PropertyList;
 	
 	// Ready status of control
-	READYSTATE				m_nReadyState;
+	READYSTATE				m_nBrowserReadyState;
 
 	virtual HRESULT CreateWebShell();
 	virtual BOOL IsValid();
