@@ -77,6 +77,7 @@ nsPopupFrameList::nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* 
  mPopupContent(aPopupContent),
  mElementContent(nsnull), 
  mCreateHandlerSucceeded(PR_FALSE),
+ mIsOpen(PR_FALSE),
  mLastPref(-1,-1)
 {
 }
@@ -377,6 +378,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
 
   // Generate the popup.
   entry->mCreateHandlerSucceeded = PR_TRUE;
+  entry->mIsOpen = PR_TRUE;
   MarkAsGenerated(aPopupContent);
 
   // determine if this menu is a context menu and flag it
@@ -568,6 +570,10 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
           viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
           nsRect r(0, 0, 0, 0);
           viewManager->ResizeView(view, r);
+          if (aEntry->mIsOpen) {
+            aEntry->mIsOpen = PR_FALSE;
+            FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), aEntry->mPopupContent);
+          }
         }
       }
     }

@@ -72,7 +72,8 @@ struct nsPopupFrameList {
   nsAutoString mPopupAlign;         // This child's align.
 
   nsAutoString mPopupType;
-  PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
+  PRPackedBool mCreateHandlerSucceeded;  // Did the create handler succeed?
+  PRPackedBool mIsOpen;
   nsSize mLastPref;
 
 public:
