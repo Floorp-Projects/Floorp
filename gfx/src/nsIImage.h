@@ -47,7 +47,7 @@ typedef enum{
   nsLowMedQual,
   nsMedQual,
   nsHighMedQual,
-  nsHighQual,
+  nsHighQual
 }nsBlendQuality;
 
 
