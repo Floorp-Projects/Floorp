@@ -251,6 +251,7 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
   XtVaSetValues(mRadioBtn, XmNlabelString, str, nsnull);
   NS_FREE_STR_BUF(label);
   XmStringFree(str);
+  return NS_OK;
 }
 
 
@@ -270,6 +271,7 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
     XtFree(text);
   }
   XmStringFree(str);
+  return NS_OK;
 
 }
 
