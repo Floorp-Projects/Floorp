@@ -1342,7 +1342,7 @@ public:
 
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketDelete, pos); }
     virtual int hasStackEffect()                                            { return 2; }
-    virtual ~BracketReference()     { }
+//    virtual ~BracketReference()     { }
 };
 
 
