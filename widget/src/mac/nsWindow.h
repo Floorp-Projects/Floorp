@@ -37,6 +37,32 @@
 
 struct nsPluginPort;
 
+
+// utility port setting class
+
+class StPortSetter
+{
+public:
+				StPortSetter(WindowPtr destWindowPort)
+				{
+					::GetPort(&mOldPort);
+#if TARGET_CARBON
+					::SetPortWindowPort(destWindowPort);
+#else
+					::SetPort(destWindowPort);
+#endif
+				}
+				
+				~StPortSetter()
+				{
+					::SetPort(mOldPort);
+				}
+				
+protected:
+	GrafPtr		mOldPort;
+};
+
+
 //-------------------------------------------------------------------------
 //
 // nsWindow
