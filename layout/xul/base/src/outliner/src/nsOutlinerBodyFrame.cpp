@@ -426,6 +426,37 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
                                              const nsRect&        aDirtyRect,
                                              nsFramePaintLayer    aWhichLayer)
 {
+  // Now obtain the properties for our row.
+  // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
+  mScratchArray->Clear();
+  mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
+
+  // Resolve style for the row.  It contains all the info we need to lay ourselves
+  // out and to paint.
+  nsCOMPtr<nsIStyleContext> cellContext;
+  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
+
+  // Obtain the margins for the row and then deflate our rect by that 
+  // amount.  The row is assumed to be contained within the deflated rect.
+  nsRect cellRect(aCellRect);
+  const nsStyleMargin* cellMarginData = (const nsStyleMargin*)cellContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin cellMargin;
+  cellMarginData->GetMargin(cellMargin);
+  cellRect.Deflate(cellMargin);
+
+  // If the layer is the background layer, we must paint our borders and background for our
+  // row rect.
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+    PaintBackgroundLayer(cellContext, aPresContext, aRenderingContext, cellRect, aDirtyRect);
+
+  // Now we paint the contents of the cells.
+
+  // If we're the primary column, we need to indent and paint the twisty.
+
+  // Now paint the various images.
+
+  // Now paint our text.
+
   return NS_OK;
 }
 

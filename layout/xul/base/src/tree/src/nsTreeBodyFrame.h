@@ -139,6 +139,7 @@ public:
   nsOutlinerColumn* GetNext() { return mNext; };
 
   nscoord GetWidth();
+  const PRUnichar* GetID() { return mID.GetUnicode(); };
 };
 
 // The actual frame that paints the cells and rows.
