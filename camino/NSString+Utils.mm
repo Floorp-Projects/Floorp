@@ -50,7 +50,7 @@
   if (!sEllipsisString)
   {
     unichar ellipsisChar = 0x2026;
-    sEllipsisString = [[[NSString alloc] initWithCharacters:&ellipsisChar length:1] retain];
+    sEllipsisString = [[NSString alloc] initWithCharacters:&ellipsisChar length:1];
   }
   
   return sEllipsisString;
@@ -131,34 +131,24 @@
 
 - (NSString*)stringByTruncatingTo:(int)maxCharacters at:(ETruncationType)truncationType
 {
-  NSString*	ellipsisString = [NSString ellipsisString];
-  
   if ([self length] > maxCharacters)
   {
-      NSMutableString *croppedString = [NSMutableString stringWithCapacity:maxCharacters + [ellipsisString length]];
-      
+      NSMutableString *croppedString = [self mutableCopy];
+      NSRange replaceRange;
+      replaceRange.length = [self length] - maxCharacters;
+
       switch (truncationType)
       {
         case kTruncateAtStart:
-          [croppedString appendString:ellipsisString];
-          [croppedString appendString:[self substringWithRange:NSMakeRange([self length] - maxCharacters, maxCharacters)]];
+          replaceRange.location = 0;
           break;
 
         case kTruncateAtMiddle:
-          {
-            int len1 = maxCharacters / 2;
-            int len2 = maxCharacters - len1;
-            NSString *part1 = [self substringWithRange:NSMakeRange(0, len1)];
-            NSString *part2 = [self substringWithRange:NSMakeRange([self length] - len2, len2)];
-            [croppedString appendString:part1];
-            [croppedString appendString:ellipsisString];
-            [croppedString appendString:part2];
-          }
+          replaceRange.location = maxCharacters / 2;
           break;
 
         case kTruncateAtEnd:
-          [croppedString appendString:[self substringWithRange:NSMakeRange(0, maxCharacters)]];
-          [croppedString appendString:ellipsisString];
+          replaceRange.location = maxCharacters;
           break;
 
         default:
@@ -168,6 +158,7 @@
           break;
       }
       
+      [croppedString replaceCharactersInRange:replaceRange withString:[NSString ellipsisString]];
       return croppedString;
   }
   else
