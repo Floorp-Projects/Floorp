@@ -970,6 +970,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_COMPOSITION_START:
     case NS_COMPOSITION_END:
     case NS_COMPOSITION_QUERY:
+    case NS_RECONVERSION_QUERY:
 #if DEBUG_TAGUE
       printf("DOM: got composition event\n");
 #endif
@@ -988,12 +989,15 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 if (aEvent->message==NS_COMPOSITION_START) {
                   ret = mCompositionListener->HandleStartComposition(*aDOMEvent);
                 }
-                if (aEvent->message==NS_COMPOSITION_END) {
+                else if (aEvent->message==NS_COMPOSITION_END) {
                   ret = mCompositionListener->HandleEndComposition(*aDOMEvent);
                 }
-                if (aEvent->message==NS_COMPOSITION_QUERY) {
+                else if (aEvent->message==NS_COMPOSITION_QUERY) {
                   ret = mCompositionListener->HandleQueryComposition(*aDOMEvent);
                 }
+                else if (aEvent->message==NS_RECONVERSION_QUERY) {
+                  ret = mCompositionListener->HandleQueryReconversion(*aDOMEvent);
+				}
               }
               NS_RELEASE(mCompositionListener);
             }

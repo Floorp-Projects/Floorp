@@ -115,6 +115,9 @@ OleRegisterMgr::~OleRegisterMgr()
 ////////////////////////////////////////////////////
 BOOL nsWindow::sIsRegistered       = FALSE;
 UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
+UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert messge for MSIME
+UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
+UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
 nsWindow* nsWindow::gCurrentWindow = nsnull;
 ////////////////////////////////////////////////////
 
@@ -253,6 +256,41 @@ extern HINSTANCE g_hinst;
 
 #endif /* MOZ_AIMM */
 
+//
+// for reconversion define
+//
+
+// VC++5.0 header doesn't have reconvertion structure and message.
+#ifndef WM_IME_REQUEST
+typedef struct tagRECONVERTSTRING {
+    DWORD dwSize;
+    DWORD dwVersion;
+    DWORD dwStrLen;
+    DWORD dwStrOffset;
+    DWORD dwCompStrLen;
+    DWORD dwCompStrOffset;
+    DWORD dwTargetStrLen;
+    DWORD dwTargetStrOffset;
+} RECONVERTSTRING, FAR * LPRECONVERTSTRING;
+
+#define IMR_RECONVERTSTRING             0x0004
+#define WM_IME_REQUEST                  0x0288
+#endif
+
+// from http://msdn.microsoft.com/library/specs/msime.h
+#define RWM_RECONVERT       TEXT("MSIMEReconvert")
+#define RWM_MOUSE           TEXT("MSIMEMouseOperation")
+
+#define IMEMOUSE_NONE       0x00    // no mouse button was pushed
+#define IMEMOUSE_LDOWN      0x01
+#define IMEMOUSE_RDOWN      0x02
+#define IMEMOUSE_MDOWN      0x04
+#define IMEMOUSE_WUP        0x10    // wheel up
+#define IMEMOUSE_WDOWN      0x20    // wheel down
+  
+// from http://www.justsystem.co.jp/tech/atok/api12_04.html#4_11
+#define MSGNAME_ATOK_RECONVERT TEXT("Atok Message for ReconvertString")
+
 
 static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
 {
@@ -343,15 +381,27 @@ nsWindow::nsWindow() : nsBaseWidget()
 	  mIMECompClauseString = NULL;
 	  mIMECompClauseStringSize = 0;
 	  mIMECompClauseStringLength = 0;
+	  mIMEReconvertUnicode = NULL;
 
+  static BOOL gbInitGlobalValue = FALSE;
+  if(! gbInitGlobalValue) {
+    gbInitGlobalValue = TRUE;
+    gKeyboardLayout = GetKeyboardLayout(0);
+    LangIDToCP((WORD)(0x0FFFFL & (DWORD)gKeyboardLayout), gCurrentKeyboardCP);
 
-   static BOOL gbInitHKL = FALSE;
-   if(! gbInitHKL)
-   {
-     gbInitHKL = TRUE;
-     gKeyboardLayout = GetKeyboardLayout(0);
-     LangIDToCP((WORD)(0x0FFFFL & (DWORD)gKeyboardLayout), gCurrentKeyboardCP);
-   }
+    //
+    // Reconvert message for Windows 95 / NT 4.0
+    //
+
+    // MS-IME98/2000
+    nsWindow::uWM_MSIME_RECONVERT = ::RegisterWindowMessage(RWM_RECONVERT);
+
+    // ATOK12/13
+    nsWindow::uWM_ATOK_RECONVERT  = ::RegisterWindowMessage(MSGNAME_ATOK_RECONVERT);
+
+    // mouse message of MSIME98/2000
+    nsWindow::uWM_MSIME_MOUSE     = ::RegisterWindowMessage(RWM_MOUSE);
+  }
 
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
@@ -401,6 +451,8 @@ nsWindow::~nsWindow()
 	delete [] mIMEAttributeString;
   if (mIMECompClauseString!=NULL) 
 	delete [] mIMECompClauseString;
+  if (mIMEReconvertUnicode)
+    nsMemory::Free(mIMEReconvertUnicode);
 
   NS_IF_RELEASE(mNativeDragTarget);
 }
@@ -2821,6 +2873,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //SetFocus(); // this is bad
             //RelayMouseEvent(msg,wParam, lParam); 
             {
+#if IME_MOUSE_EVENT_SUPPORT
+            // check whether IME window do mouse operation
+            if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
+              if (HandleMouseActionOfIME(IMEMOUSE_LDOWN))
+                break;
+            }
+#endif
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             } break;
 
@@ -2835,6 +2894,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_MBUTTONDOWN:
             { 
+#if IME_MOUSE_EVENT_SUPPORT
+            // check whether IME window do mouse operation
+            if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
+              if (HandleMouseActionOfIME(IMEMOUSE_MDOWN))
+                break;
+            }
+#endif
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
             } break;
 
@@ -2848,6 +2914,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_RBUTTONDOWN:
             {
+#if IME_MOUSE_EVENT_SUPPORT
+            // check whether IME window do mouse operation
+            if (mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
+              if (HandleMouseActionOfIME(IMEMOUSE_RDOWN))
+                break;
+            }
+#endif
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
             } break;
 
@@ -3064,12 +3137,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 					result = OnIMENotify(wParam, lParam, aRetValue);
 					break;
 
-#if 0
 				// This is a Window 98/2000 only message
 				case WM_IME_REQUEST: 
 					result = OnIMERequest(wParam, lParam, aRetValue);
 					break;
-#endif
 
 				case WM_IME_SELECT: 
 					result = OnIMESelect(wParam, (WORD)(lParam & 0x0FFFF));
@@ -3206,6 +3277,18 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
             NS_RELEASE(scrollEvent.widget);
         } // WM_MOUSEWHEEL || uMSH_MOUSEWHEEL
+
+        //
+        // reconvertion meesage for Windows 95 / NT 4.0
+        //
+        // See the following URL
+        //  http://msdn.microsoft.com/library/specs/msimeif_perimeinterfaces.htm#WM_MSIME_RECONVERT
+        //  http://www.justsystem.co.jp/tech/atok/api12_04.html#4_11
+
+        else if ((msg == nsWindow::uWM_ATOK_RECONVERT) || (msg == nsWindow::uWM_MSIME_RECONVERT)) {
+          result = OnIMERequest(wParam, lParam, aRetValue, PR_TRUE);
+        }
+
       } break;
     }
 
@@ -4599,15 +4682,118 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
 	return PR_FALSE;
 }
 //==========================================================================
-BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult)
+BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode)
 {
-#ifdef DEBUG_IME2
+#ifdef DEBUG_IME
 	printf("OnIMERequest\n");
 #endif
 
-	// not implement yet
-	return PR_FALSE;
+  PRBool result = PR_FALSE;
+  
+  switch(aIMR) {
+    case IMR_RECONVERTSTRING:
+      result = OnIMEReconvert(aData, oResult, aUseUnicode);
+      break;
+  }
+
+  return result;
 }
+
+//==========================================================================
+PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode)
+{
+#ifdef DEBUG_IME
+  printf("OnIMEReconvert\n");
+#endif
+
+  PRBool           result  = PR_FALSE;
+  RECONVERTSTRING* pReconv = (RECONVERTSTRING*) aData;
+  int              len = 0;
+
+  if(!pReconv) {
+
+    //
+    // When reconvert, it must return need size to reconvert.
+    //
+    if(mIMEReconvertUnicode) {
+      nsMemory::Free(mIMEReconvertUnicode);
+      mIMEReconvertUnicode = NULL;
+    }
+
+    // Get reconversion string
+    nsReconversionEvent event;
+    nsPoint point;
+
+    point.x = 0;
+    point.y = 0;
+    InitEvent(event, NS_RECONVERSION_QUERY, &point);
+    event.theReply.mReconversionString = NULL;
+    DispatchWindowEvent(&event);
+
+    mIMEReconvertUnicode = event.theReply.mReconversionString;
+    NS_RELEASE(event.widget);
+
+    // Return need size
+
+    if(mIMEReconvertUnicode) {
+      if (aUseUnicode) {
+        len = nsCRT::strlen(mIMEReconvertUnicode);
+        *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+      } else {
+        len = ::WideCharToMultiByte(gCurrentKeyboardCP, 0,
+                                    mIMEReconvertUnicode,
+                                    nsCRT::strlen(mIMEReconvertUnicode),
+                                    NULL, 0, NULL, NULL);
+        *oResult = sizeof(RECONVERTSTRING) + len;
+      }
+
+      result = PR_TRUE;
+    }
+  } else {
+
+    //
+    // Fill reconvert struct
+    //
+
+    if (aUseUnicode) {
+      len = nsCRT::strlen(mIMEReconvertUnicode);
+      *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+    } else {
+      len = ::WideCharToMultiByte(gCurrentKeyboardCP, 0,
+                                  mIMEReconvertUnicode,
+                                  nsCRT::strlen(mIMEReconvertUnicode),
+                                  NULL, 0, NULL, NULL);
+      *oResult = sizeof(RECONVERTSTRING) + len;
+    }
+
+    ::ZeroMemory(pReconv, sizeof(RECONVERTSTRING));
+    pReconv->dwSize            = sizeof(RECONVERTSTRING);
+    pReconv->dwVersion         = 0;
+    pReconv->dwStrLen          = len;
+    pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
+    pReconv->dwCompStrLen      = len;
+    pReconv->dwCompStrOffset   = 0;
+    pReconv->dwTargetStrLen    = len;
+    pReconv->dwTargetStrOffset = 0;
+
+    if (aUseUnicode) {
+      ::CopyMemory((LPVOID) (aData + sizeof(RECONVERTSTRING)),
+                   mIMEReconvertUnicode, len * sizeof(WCHAR));
+    } else {
+      ::WideCharToMultiByte(gCurrentKeyboardCP, 0,
+                            mIMEReconvertUnicode,
+                            nsCRT::strlen(mIMEReconvertUnicode),
+                            (LPSTR) (aData + sizeof(RECONVERTSTRING)),
+                            len,
+                            NULL, NULL);
+    }
+
+    result = PR_TRUE;
+  }
+
+  return result;
+}
+
 //==========================================================================
 BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)			
 {
@@ -4679,6 +4865,41 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 	//}
 	return NS_OK;
 }
+
+
+#if IME_MOUSE_EVENT_SUPPORT
+// Mouse operation of IME
+PRBool
+nsWindow::HandleMouseActionOfIME(int aAction)
+{
+  PRBool IsHandle = PR_FALSE;
+
+  HWND hIMEWnd = ::ImmGetDefaultIMEWnd(mWnd);
+  if (hIMEWnd) {
+    HIMC hIMC = ::ImmGetContext(mWnd);
+    if (hIMC) {
+      int positioning = 0;
+      int offset = 0;
+
+      // get location of each compositon charactors
+
+      // calcurate positioning and offset
+
+      // send MS_MSIME_MOUSE message to default IME window.
+      if (::SendMessge(hIMEWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1) {
+        IsHandle = PR_TRUE;
+      } else {
+        break;
+      }
+    }
+    ::ImmReleaseContext(mWnd, hIMC);
+  }
+
+  return IsHandle;
+}
+#endif
+
+
 NS_IMETHODIMP nsWindow::PasswordFieldInit()
 {
 #ifdef DEBUG_KBSTATE

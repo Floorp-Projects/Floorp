@@ -214,10 +214,11 @@ protected:
     BOOL                    OnIMECompositionFull();			
     BOOL                    OnIMEEndComposition();			
     BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult);			
-    BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult);			
+    BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode = PR_FALSE);
     BOOL                    OnIMESelect(BOOL  aSelected, WORD aLangID);			
     BOOL                    OnIMESetContext(BOOL aActive, LPARAM& aISC);			
     BOOL                    OnIMEStartComposition();			
+    BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
 
     ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
     virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode);
@@ -295,6 +296,8 @@ protected:
 	PRInt32		mIMECompClauseStringSize;
 	long		mIMECursorPosition;
 
+    PRUnichar*  mIMEReconvertUnicode; // reconvert string
+
 	static UINT		gCurrentKeyboardCP;
 	static HKL		gKeyboardLayout;
 
@@ -320,6 +323,11 @@ protected:
 
     HDWP mDeferredPositioner;
     static UINT uMSH_MOUSEWHEEL;
+
+    // IME special message
+    static UINT uWM_MSIME_RECONVERT; // reconvert messge for MSIME
+    static UINT uWM_MSIME_MOUSE;     // mouse messge for MSIME
+    static UINT uWM_ATOK_RECONVERT;  // reconvert messge for ATOK
 };
 
 //

@@ -5750,6 +5750,41 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   return result;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::GetReconversionString(nsReconversionEventReply* aReply)
+{
+  nsresult res;
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+    return (res == NS_OK) ? NS_ERROR_FAILURE : res;
+
+  // get the first range in the selection.  Since it is
+  // unclear what to do if reconversion happens with a 
+  // multirange selection, we will ignore any additional ranges.
+  
+  nsCOMPtr<nsIDOMRange> range;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(res) || !range)
+    return (res == NS_OK) ? NS_ERROR_FAILURE : res;
+  
+  nsAutoString textValue;
+  res = range->ToString(textValue);
+  if (NS_FAILED(res))
+    return res;
+  
+  aReply->mReconversionString = (PRUnichar*) nsMemory::Clone(textValue.GetUnicode(),
+                                                                (textValue.Length() + 1) * sizeof(PRUnichar));
+  if (!aReply->mReconversionString)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // delete the selection
+  res = DeleteSelection(eNone);
+  
+  return res;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  StyleSheet utils 

@@ -159,6 +159,7 @@ public:
 
   // nsIPrivateCompositionEvent interface
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
+  NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
 
 protected:
 

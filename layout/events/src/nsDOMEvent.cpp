@@ -399,6 +399,14 @@ NS_METHOD nsDOMEvent::GetCompositionReply(nsTextEventReply** aReply)
 
 }
 
+NS_METHOD
+nsDOMEvent::GetReconversionReply(nsReconversionEventReply** aReply)
+{
+  *aReply = &(((nsReconversionEvent*)mEvent)->theReply);
+  return NS_OK;
+}
+
+
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
   if (!mEvent || 

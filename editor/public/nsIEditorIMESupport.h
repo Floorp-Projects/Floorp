@@ -32,6 +32,7 @@
 
 class nsIPrivateTextRangeList;
 struct nsTextEventReply;
+struct nsReconversionEventReply;
 
 class nsIEditorIMESupport : public nsISupports
 {
@@ -67,6 +68,11 @@ public:
    * ForceCompositionEnd() force the composition end
    */
   NS_IMETHOD ForceCompositionEnd() = 0;
+  
+  /**
+   * GetReconvertionString()  Get the reconvertion string
+   */
+  NS_IMETHOD GetReconversionString(nsReconversionEventReply *aReply) = 0;
 };
 
 
