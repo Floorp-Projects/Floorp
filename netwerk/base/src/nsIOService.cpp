@@ -318,11 +318,16 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
 }
 
 NS_IMETHODIMP
-nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result)
+nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, PRUint32 start=0, PRUint32 end=0)
 {
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
-        if (!nsCRT::strcasecmp(scheme, gScheme[i]))
+        // handle unterminated strings
+        // start is inclusive, end is exclusive, len = end - start - 1
+        if (end != 0 ? !nsCRT::strncasecmp(&scheme[start], gScheme[i],
+                                           (end-start)-1) :
+                       !nsCRT::strcasecmp(scheme, gScheme[i]))
+        {
             if (mWeakHandler[i])
             {
                 nsCOMPtr<nsIProtocolHandler> temp = do_QueryReferent(mWeakHandler[i]);
@@ -333,6 +338,7 @@ nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **r
                     return NS_OK;
                 }
             }
+        }
     }
     return NS_ERROR_FAILURE;
 }
@@ -620,25 +626,41 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI, nsIURI* *result)
     nsresult rv;
     nsIURI* base;
     NS_ENSURE_ARG_POINTER(aSpec);
-    char* scheme;
-    rv = ExtractScheme(aSpec, nsnull, nsnull, &scheme);
-    if (NS_SUCCEEDED(rv)) {
+    nsXPIDLCString scheme;
+    nsCOMPtr<nsIProtocolHandler> handler;
+    PRUint32 start,end;
+
+    rv = ExtractScheme(aSpec, &start, &end, nsnull);
+    if (NS_SUCCEEDED(rv))
+    {
         // then aSpec is absolute
         // ignore aBaseURI in this case
         base = nsnull;
+        rv = GetCachedProtocolHandler(aSpec, getter_AddRefs(handler),
+                                      start,end);
+        if (NS_FAILED(rv))
+        {
+            // not cached; we'll do an allocation
+            rv = ExtractScheme(aSpec, nsnull, nsnull, getter_Copies(scheme));
+        }
+        // else scheme == nsnull, and we succeeded
     }
-    else {
+    else
+    {
         // then aSpec is relative
-        if (aBaseURI == nsnull)
+        if (!aBaseURI)
             return NS_ERROR_MALFORMED_URI;
-        rv = aBaseURI->GetScheme(&scheme);
-        if (NS_FAILED(rv)) return rv;
+        rv = aBaseURI->GetScheme(getter_Copies(scheme));
         base = aBaseURI;
     }
-    
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
-    nsCRT::free(scheme);
+    // scheme is non-null if we allocated it.
+    // base is null if absolute, set if relative
+    // rv is success if all is ok, failure if we need to cleanup and exit
+    if (NS_SUCCEEDED(rv) && scheme.get())
+    {
+        // we allocated scheme; get the handler for it
+        rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
+    }
     if (NS_FAILED(rv)) return rv;
 
     return handler->NewURI(aSpec, base, result);
