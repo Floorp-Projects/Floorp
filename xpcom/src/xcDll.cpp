@@ -106,7 +106,6 @@ PRBool nsDll::Load(void)
 {
 #ifdef	XP_MAC
 	char		*macFileName = NULL;
-	OSErr		err;
 	int		loop;
 #endif
 
