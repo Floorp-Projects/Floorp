@@ -22,5 +22,6 @@ bin\components\jar50.dll
 bin\components\xpinstal.dll
 bin\xpcom_compat.dll
 bin\components\xpcom_compat_c.dll
+bin\components\xpcom_obsolete.xpt
 ;install\ren8dot3.exe,bin\ren8dot3.exe
 
