@@ -258,6 +258,7 @@ static NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotifica
   [items addObject:NSToolbarSeparatorItemIdentifier];
   return items;
 }
+
 @end
 
 @implementation MVPreferencesController (MVPreferencesControllerPrivate)
@@ -338,5 +339,19 @@ static NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotifica
   }
   return label;
 }
+@end
+
+// When using the Font Panel without an obvious target (like an editable text field), 
+// changeFont action messages propagate all the way up the responder chain to here.
+// There isn't an easy way for individual prefs panes to get themselves into
+// the responder chain, so we just bounce this message back to the currently
+// loaded pane.
+@implementation MVPreferencesController (FontChangeNotifications)
+
+- (void)changeFont:(id)sender
+{
+  [[loadedPanes objectForKey:currentPaneIdentifier] changeFont:sender];
+}
+
 @end
 
