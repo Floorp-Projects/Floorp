@@ -328,18 +328,22 @@ Contributor(s): ______________________________________. -->
                  onclick="return contentAreaClick(event);"
                  ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
       </hbox>
-      
+    </vbox>  
+   </hbox>
+     
       <statusbar id="status-bar" class="chromeclass-status">
+        <box id="component-bar" class="component-bar-box"/>
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-        <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
         <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
+        <statusbarpanel id="statusbar-empty-spacer" flex="2" />
+        
+        <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
+        
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
-      </statusbar>  
-    
-    </vbox>
+      </statusbar> 
+       
+      <resizer class="window-diagonal" />
+      
 
-  </hbox>
-
-  <hbox id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
 
 </window>
