@@ -64,5 +64,6 @@ interface nsIMsgAccountManager : nsISupports {
   nsISupportsArray GetServersForIdentity(in nsIMsgIdentity identity);
   
   void LoadAccounts();
+  void UnloadAccounts();
 };
 
