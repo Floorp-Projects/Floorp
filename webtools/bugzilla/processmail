@@ -587,7 +587,7 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
 
     my $sendmailparam = "-ODeliveryMode=deferred";
     if (Param("sendmailnow")) {
-       my $sendmailparam = "";
+       $sendmailparam = "";
     }
     open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t") ||
       die "Can't open sendmail";
@@ -654,7 +654,7 @@ sub ProcessOneBug {
                 # harmless.
                 my $sendmailparam = "-ODeliveryMode=deferred";
                 if (Param("sendmailnow")) {
-                    my $sendmailparam = "";
+                    $sendmailparam = "";
                 }
                 open(SENDMAIL, 
                      "|/usr/lib/sendmail $sendmailparam -t") ||
