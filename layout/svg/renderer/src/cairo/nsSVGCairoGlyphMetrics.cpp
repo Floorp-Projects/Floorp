@@ -322,7 +322,6 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
     char *f = ToNewCString(family);
     cairo_select_font(mCT, f, slant, weight);
     free(f);
-    mFont = cairo_current_font(mCT);
 
     nsCOMPtr<nsPresContext> presContext;
     mSource->GetPresContext(getter_AddRefs(presContext));
@@ -330,6 +329,8 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
     pxPerTwips = presContext->TwipsToPixels();
     cairo_scale_font(mCT, font.size*pxPerTwips);
  
+    mFont = cairo_current_font(mCT);
+
     nsAutoString text;
     mSource->GetCharacterData(text);
     cairo_text_extents(mCT, 
