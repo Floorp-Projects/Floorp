@@ -7,7 +7,7 @@
 #include "nsRepository.h"
 #include "nsLayoutCID.h"
 #include "nsIContent.h"
-#include "nsIDomNode.h"
+#include "nsIDOMNode.h"
 
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
