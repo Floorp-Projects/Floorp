@@ -43,7 +43,10 @@ typedef enum { NP_FullPage = 1, NP_Embedded } NPPageType;
 typedef void* NPReference;
 #define NPRefFromStart ((NPReference)NULL)
 
-#ifdef JAVA_OR_OJI
+/* This ifdef should probably be replaced by something more generic like
+ * #if defined(JAVA_OR_OJI) || defined(XP_MAC) -cls
+ */
+#ifndef USE_AUTOCONF
 #define ANTHRAX
 #endif
 
