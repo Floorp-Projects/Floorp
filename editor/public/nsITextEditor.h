@@ -48,7 +48,7 @@ public:
   typedef enum {ePlainText=0, eRichText=1} TextType;
   typedef enum {eSingleLine=0, eMultipleLines=1, ePassword=2} EditorType;
 
-  static const nsIID& IID() { static nsIID iid = NS_ITEXTEDITOR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ITEXTEDITOR_IID; return iid; }
 
   /** Initialize the text editor 
     *

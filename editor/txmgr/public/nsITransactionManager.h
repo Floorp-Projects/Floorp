@@ -42,7 +42,7 @@ Transaction Manager interface to outside world
 class nsITransactionManager  : public nsISupports{
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_ITRANSACTIONMANAGER_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ITRANSACTIONMANAGER_IID; return iid; }
 
   /**
    * Calls a transaction's Do() method, then pushes it on the undo stack.

@@ -293,9 +293,9 @@ nsRadioGroup::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
 
-  if (aIID.Equals(nsIBidirectionalEnumerator::IID()) || 
-      aIID.Equals(nsIEnumerator::IID()) || 
-      aIID.Equals(nsISupports::IID())) {
+  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
+      aIID.Equals(nsIEnumerator::GetIID()) || 
+      aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*) this; 
     NS_ADDREF_THIS(); 
     return NS_OK; 

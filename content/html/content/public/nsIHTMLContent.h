@@ -41,7 +41,7 @@ typedef void (*nsMapAttributesFunc)(nsIHTMLAttributes* aAttributes,
 // Abstract interface for all html content
 class nsIHTMLContent : public nsIStyledContent {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IHTMLCONTENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IHTMLCONTENT_IID; return iid; }
 
   /**
    * If this html content is a container, then compact asks it to minimize

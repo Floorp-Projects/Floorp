@@ -313,7 +313,7 @@ class nsCOMPtr : private nsCOMPtr_base
       nsCOMPtr( const nsQueryInterface& aSmartPtr )
           // : nsCOMPtr_base(0)
         {
-          assign_with_QueryInterface(aSmartPtr.mRawPtr, T::IID(), aSmartPtr.mErrorPtr);
+          assign_with_QueryInterface(aSmartPtr.mRawPtr, T::GetIID(), aSmartPtr.mErrorPtr);
         }
 
       nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
@@ -339,7 +339,7 @@ class nsCOMPtr : private nsCOMPtr_base
       nsCOMPtr<T>&
       operator=( const nsQueryInterface& rhs )
         {
-          assign_with_QueryInterface(rhs.mRawPtr, T::IID(), rhs.mErrorPtr);
+          assign_with_QueryInterface(rhs.mRawPtr, T::GetIID(), rhs.mErrorPtr);
           return *this;
         }
 

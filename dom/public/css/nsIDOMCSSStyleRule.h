@@ -33,7 +33,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class nsIDOMCSSStyleRule : public nsIDOMCSSRule {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSSTYLERULE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLERULE_IID; return iid; }
 
   NS_IMETHOD    GetSelectorText(nsString& aSelectorText)=0;
   NS_IMETHOD    SetSelectorText(const nsString& aSelectorText)=0;

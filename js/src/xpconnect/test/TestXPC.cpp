@@ -118,14 +118,14 @@ NS_IMETHODIMP nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsITestXPCFoo::IID()) || 
-      aIID.Equals(nsITestXPCFoo2::IID()) ||
-      aIID.Equals(nsISupports::IID())) {
+  if (aIID.Equals(nsITestXPCFoo::GetIID()) || 
+      aIID.Equals(nsITestXPCFoo2::GetIID()) ||
+      aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIXPCScriptable::IID())) {
+  if (aIID.Equals(nsIXPCScriptable::GetIID())) {
     *aInstancePtr = (void*) new MyScriptable();
     return NS_OK;
   }
@@ -481,19 +481,19 @@ int main()
     nsIXPConnectWrappedNative* fool_wrapper = NULL;
 
 /*
-    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo::IID(), &wrapper)))
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo::GetIID(), &wrapper)))
 */
     // new code where global object is a wrapped xpcom object
     if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(
-                                    jscontext, foo, nsITestXPCFoo::IID(), &wrapper)))
+                                    jscontext, foo, nsITestXPCFoo::GetIID(), &wrapper)))
     {
         wrapper->GetJSObject(&glob);
         JS_DefineFunctions(jscontext, glob, glob_functions);
 
         nsTestXPCFoo* fool = new nsTestXPCFoo();
-        xpc->WrapNative(jscontext, fool, nsITestXPCFoo2::IID(), &fool_wrapper);
+        xpc->WrapNative(jscontext, fool, nsITestXPCFoo2::GetIID(), &fool_wrapper);
 
-        if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::IID(), &wrapper2)))
+        if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::GetIID(), &wrapper2)))
         {
             JSObject* js_obj;
             nsISupports* com_obj;
@@ -511,7 +511,7 @@ int main()
             JSObject* echo_jsobj;
             jsval echo_jsval;
             MyEcho* myEcho = new MyEcho();
-            xpc->WrapNative(jscontext, myEcho, nsIEcho::IID(), &echo_wrapper);
+            xpc->WrapNative(jscontext, myEcho, nsIEcho::GetIID(), &echo_wrapper);
             echo_wrapper->GetJSObject(&echo_jsobj);
             echo_jsval = OBJECT_TO_JSVAL(echo_jsobj);
             JS_SetProperty(jscontext, glob, "echo", &echo_jsval);
@@ -530,7 +530,7 @@ int main()
                 nsIXPConnectWrappedJS* wrapper3;
                 if(NS_SUCCEEDED(xpc->WrapJS(jscontext,
                                        JSVAL_TO_OBJECT(v),
-                                       nsITestXPCFoo::IID(), &wrapper3)))
+                                       nsITestXPCFoo::GetIID(), &wrapper3)))
                 {
                     nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper3;
                     int result;
@@ -540,7 +540,7 @@ int main()
     
                     nsIXPConnectWrappedJSMethods* methods;
 
-                    wrapper3->QueryInterface(nsIXPConnectWrappedJSMethods::IID(), 
+                    wrapper3->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(), 
                                             (void**) &methods);
                     methods->GetJSObject(&test_js_obj);
 

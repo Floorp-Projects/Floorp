@@ -38,7 +38,7 @@ class nsIMenuListener;
 class nsIMenuItem : public nsISupports {
 
   public:
-    static const nsIID& IID() { static nsIID iid = NS_IMENUITEM_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IMENUITEM_IID; return iid; }
 
    /**
     * Creates the MenuItem

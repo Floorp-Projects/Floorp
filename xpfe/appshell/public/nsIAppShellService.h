@@ -41,7 +41,7 @@ class nsIXULWindowCallbacks;
 class nsIAppShellService : public nsISupports
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IAPPSHELL_SERVICE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IAPPSHELL_SERVICE_IID; return iid; }
 
   NS_IMETHOD Initialize(void) = 0;
   NS_IMETHOD Run(void) = 0;

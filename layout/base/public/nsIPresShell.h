@@ -64,7 +64,7 @@ class nsISelectionMgr;
  */
 class nsIPresShell : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IPRESSHELL_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IPRESSHELL_IID; return iid; }
 
   NS_IMETHOD Init(nsIDocument* aDocument,
                   nsIPresContext* aPresContext,

@@ -43,7 +43,7 @@ class nsIRDFNode;
 class nsIRDFObserver : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFOBSERVER_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFOBSERVER_IID; return iid; }
 
     /**
      * Called whenever a new assertion is made in the data source.

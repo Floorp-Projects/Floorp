@@ -45,7 +45,7 @@ typedef nsID nsCID;
 
 class nsIFactory: public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IFACTORY_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IFACTORY_IID; return iid; }
 
   NS_IMETHOD CreateInstance(nsISupports *aOuter,
                             REFNSIID aIID,
@@ -68,7 +68,7 @@ public:
 
 class nsIFactory2: public nsIFactory {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IFACTORY2_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IFACTORY2_IID; return iid; }
 
   NS_IMETHOD CreateInstance2(nsISupports *aOuter,
                              REFNSIID aIID,

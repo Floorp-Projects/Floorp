@@ -37,7 +37,7 @@
 class IFoo : public nsISupports
   {
 		public:
-			static const nsIID& IID() { static nsIID iid = NS_IFOO_IID; return iid; }
+			static const nsIID& GetIID() { static nsIID iid = NS_IFOO_IID; return iid; }
 
 		public:
       IFoo();
@@ -153,7 +153,7 @@ IFoo::QueryInterface( const nsIID& aIID, void** aResult )
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
-		if ( aIID.Equals(IID()) )
+		if ( aIID.Equals(GetIID()) )
 			rawPtr = this;
 		else
 			{
@@ -215,7 +215,7 @@ return_a_IFoo()
 class IBar : public IFoo
   {
   	public:
-  		static const nsIID& IID() { static nsIID iid = NS_IBAR_IID; return iid; }
+  		static const nsIID& GetIID() { static nsIID iid = NS_IBAR_IID; return iid; }
 
     public:
       IBar();
@@ -241,9 +241,9 @@ IBar::QueryInterface( const nsID& aIID, void** aResult )
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
-		if ( aIID.Equals(IID()) )
+		if ( aIID.Equals(GetIID()) )
 			rawPtr = this;
-		else if ( aIID.Equals(IFoo::IID()) )
+		else if ( aIID.Equals(IFoo::GetIID()) )
 			rawPtr = STATIC_CAST(IFoo*, this);
 		else
 			{
@@ -311,7 +311,7 @@ TestBloat_Raw()
 				try
 					{
 						IFoo* fooP = 0;
-						if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::IID(), REINTERPRET_CAST(void**, &fooP)) ) )
+						if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::GetIID(), REINTERPRET_CAST(void**, &fooP)) ) )
 							{
 								try
 									{
@@ -349,7 +349,7 @@ TestBloat_Raw_Unsafe()
 		if ( barP )
 			{
 				IFoo* fooP = 0;
-				if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::IID(), REINTERPRET_CAST(void**, &fooP)) ) )
+				if ( NS_SUCCEEDED( result = barP->QueryInterface(IFoo::GetIID(), REINTERPRET_CAST(void**, &fooP)) ) )
 					{
 						fooP->print_totals();
 						NS_RELEASE(fooP);

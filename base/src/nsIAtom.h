@@ -35,7 +35,7 @@ class nsISizeOfHandler;
  */
 class nsIAtom : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IATOM_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IATOM_IID; return iid; }
 
   /**
    * Translate the unicode string into the stringbuf.

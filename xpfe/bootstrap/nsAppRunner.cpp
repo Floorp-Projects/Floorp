@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
     const char *messengerProgID = "component://netscape/messenger";
     nsresult result = nsRepository::CreateInstance(messengerProgID,
                                                    nsnull,
-                                                   nsIAppShellService::IID(),
+                                                   nsIAppShellService::GetIID(),
                                                    (void **)&messenger);
     if (NS_SUCCEEDED(result)) {
       result = messenger->Initialize();

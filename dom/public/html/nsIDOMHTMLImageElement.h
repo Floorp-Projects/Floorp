@@ -32,7 +32,7 @@
 
 class nsIDOMHTMLImageElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLIMAGEELEMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLIMAGEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetLowSrc(nsString& aLowSrc)=0;
   NS_IMETHOD    SetLowSrc(const nsString& aLowSrc)=0;

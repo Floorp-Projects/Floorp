@@ -328,13 +328,13 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
                           "", NS_RDF_RESOURCE_FACTORY_PROGID, &fact);
         if (rv == NS_OK) {
-            rv = fact->CreateInstance(nsnull, nsIRDFResource::IID(),
+            rv = fact->CreateInstance(nsnull, nsIRDFResource::GetIID(),
                                       (void**)&result);
             NS_RELEASE(fact);
         }
 #else
         rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
-                                          nsnull, nsIRDFResource::IID(),
+                                          nsnull, nsIRDFResource::GetIID(),
                                           (void**)&result);
 #endif
         if (NS_FAILED(rv)) {
@@ -367,13 +367,13 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
                           "", progID, &fact);
         if (rv == NS_OK) {
-            rv = fact->CreateInstance(nsnull, nsIRDFResource::IID(),
+            rv = fact->CreateInstance(nsnull, nsIRDFResource::GetIID(),
                                       (void**)&result);
             NS_RELEASE(fact);
         }
 #else
         rv = nsRepository::CreateInstance(progID, nsnull,
-                                          nsIRDFResource::IID(),
+                                          nsIRDFResource::GetIID(),
                                           (void**)&result);
 #endif
         if (progID != buf)
@@ -388,13 +388,13 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
             rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
                               "", NS_RDF_RESOURCE_FACTORY_PROGID, &fact);
             if (rv == NS_OK) {
-                rv = fact->CreateInstance(nsnull, nsIRDFResource::IID(),
+                rv = fact->CreateInstance(nsnull, nsIRDFResource::GetIID(),
                                           (void**)&result);
                 NS_RELEASE(fact);
             }
 #else
             rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
-                                              nsnull, nsIRDFResource::IID(),
+                                              nsnull, nsIRDFResource::GetIID(),
                                               (void**)&result);
 #endif
             if (NS_FAILED(rv)) {
@@ -623,13 +623,13 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     rv = NSGetFactory(servMgr, cid,
                       "", progID, &fact);
     if (rv == NS_OK) {
-        rv = fact->CreateInstance(nsnull, nsIRDFDataSource::IID(),
+        rv = fact->CreateInstance(nsnull, nsIRDFDataSource::GetIID(),
                                   (void**)aDataSource);
         NS_RELEASE(fact);
     }
 #else
     rv = nsRepository::CreateInstance(progID, nsnull,
-                                      nsIRDFDataSource::IID(),
+                                      nsIRDFDataSource::GetIID(),
                                       (void**)aDataSource);
 #endif
 

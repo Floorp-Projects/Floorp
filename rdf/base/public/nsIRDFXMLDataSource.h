@@ -45,7 +45,7 @@ class nsIRDFXMLDataSource;
 class nsIRDFXMLDataSourceObserver : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFXMLDOCUMENTOBSERVER_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFXMLDOCUMENTOBSERVER_IID; return iid; }
 
     /**
      * Called when the RDF/XML document begins to load.
@@ -94,7 +94,7 @@ public:
 class nsIRDFXMLDataSource : public nsIRDFDataSource
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFXMLDATASOURCE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFXMLDATASOURCE_IID; return iid; }
 
     /**
      * Sets the RDF/XML stream to load either synchronously or

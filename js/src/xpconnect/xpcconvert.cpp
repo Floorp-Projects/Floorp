@@ -220,7 +220,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 {
                     nsIXPConnectWrappedJSMethods* methods;
                     if(NS_SUCCEEDED(iface->QueryInterface(
-                                nsIXPConnectWrappedJSMethods::IID(),
+                                nsIXPConnectWrappedJSMethods::GetIID(),
                                 (void**)&methods)) &&
                        NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
                     {

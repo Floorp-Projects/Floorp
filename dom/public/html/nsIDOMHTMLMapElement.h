@@ -33,7 +33,7 @@ class nsIDOMHTMLCollection;
 
 class nsIDOMHTMLMapElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLMAPELEMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLMAPELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas)=0;
 

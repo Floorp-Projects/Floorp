@@ -48,7 +48,7 @@ class nsIRDFResource;
 class nsIRDFResourceFactory : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFRESOURCEFACTORY_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFRESOURCEFACTORY_IID; return iid; }
 
     /**
      * This method is called by the RDF service to create a new

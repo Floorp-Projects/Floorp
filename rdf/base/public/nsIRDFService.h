@@ -49,7 +49,7 @@ class nsIRDFResource;
 
 class nsIRDFService : public nsISupports {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFSERVICE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFSERVICE_IID; return iid; }
 
     // Resource management routines
 

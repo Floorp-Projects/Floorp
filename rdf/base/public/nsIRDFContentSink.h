@@ -43,7 +43,7 @@ class nsIURL;
 
 class nsIRDFContentSink : public nsIXMLContentSink {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFCONTENTSINK_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFCONTENTSINK_IID; return iid; }
 
     /**
      * Initialize the content sink.

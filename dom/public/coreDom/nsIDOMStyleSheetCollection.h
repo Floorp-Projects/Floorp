@@ -32,7 +32,7 @@ class nsIDOMStyleSheet;
 
 class nsIDOMStyleSheetCollection : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMSTYLESHEETCOLLECTION_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSTYLESHEETCOLLECTION_IID; return iid; }
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 

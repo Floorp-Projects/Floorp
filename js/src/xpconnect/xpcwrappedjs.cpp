@@ -31,7 +31,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if(aIID.Equals(nsIXPConnectWrappedJSMethods::IID()))
+    if(aIID.Equals(nsIXPConnectWrappedJSMethods::GetIID()))
     {
         if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
         {
@@ -140,7 +140,7 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
             // just a root wrapper
             nsXPCWrappedJSClass* rootClazz;
             rootClazz = nsXPCWrappedJSClass::GetNewOrUsedClass(
-                                                    xpcc, nsISupports::IID());
+                                                    xpcc, nsISupports::GetIID());
             if(!rootClazz)
                 goto return_wrapper;
 
@@ -217,7 +217,7 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 nsXPCWrappedJS*
 nsXPCWrappedJS::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(nsISupports::IID()))
+    if(aIID.Equals(nsISupports::GetIID()))
         return mRoot;
 
     nsXPCWrappedJS* cur = mRoot;

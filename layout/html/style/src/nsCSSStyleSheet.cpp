@@ -1027,7 +1027,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
         ((nsnull != aSelector->mID) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
       result = PR_FALSE;
       nsIStyledContent* styledContent;
-      if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
+      if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
         nsIAtom* contentID;
         styledContent->GetID(contentID);
         if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
@@ -1322,7 +1322,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     nsVoidArray classArray; // XXX need to recycle this guy (or make nsAutoVoidArray?)
 
     nsIStyledContent* styledContent;
-    if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
+    if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
       styledContent->GetID(idAtom);
       styledContent->GetClasses(classArray);
       NS_RELEASE(styledContent);

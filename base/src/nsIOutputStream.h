@@ -29,7 +29,7 @@
 class nsIOutputStream : public nsIBaseStream {
 public:
 
-    static const nsIID& IID() { static nsIID iid = NS_IOUTPUTSTREAM_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IOUTPUTSTREAM_IID; return iid; }
 
     /** Write data into the stream.
      *  @param aBuf the buffer into which the data is read

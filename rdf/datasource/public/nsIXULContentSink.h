@@ -35,7 +35,7 @@ class nsIWebShell;
 class nsIXULContentSink : public nsIXMLContentSink
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
 
     NS_IMETHOD Init(nsIDocument* aDocument,
                     nsIWebShell* aWebShell,

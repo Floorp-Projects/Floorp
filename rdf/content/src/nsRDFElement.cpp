@@ -401,7 +401,7 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIContent*, this);
     }
-    else if (iid.Equals(nsIDOMXULElement::IID()) ||
+    else if (iid.Equals(nsIDOMXULElement::GetIID()) ||
              iid.Equals(kIDOMElementIID) ||
              iid.Equals(kIDOMNodeIID)) {
         *result = NS_STATIC_CAST(nsIDOMElement*, this);
@@ -626,7 +626,7 @@ NS_IMETHODIMP
 RDFElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
     if (mDocument) {
-        return mDocument->QueryInterface(nsIDOMDocument::IID(), (void**) aOwnerDocument);
+        return mDocument->QueryInterface(nsIDOMDocument::GetIID(), (void**) aOwnerDocument);
     }
     else {
         *aOwnerDocument = nsnull;
@@ -643,7 +643,7 @@ RDFElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDO
         return NS_ERROR_NULL_POINTER;
 
     nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
         obs->OnInsertBefore(this, aNewChild, aRefChild);
         NS_RELEASE(obs);
     }
@@ -661,7 +661,7 @@ RDFElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
         return NS_ERROR_NULL_POINTER;
 
     nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
         obs->OnReplaceChild(this, aNewChild, aOldChild);
         NS_RELEASE(obs);
     }
@@ -679,7 +679,7 @@ RDFElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
         return NS_ERROR_NULL_POINTER;
 
     nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
         obs->OnRemoveChild(this, aOldChild);
         NS_RELEASE(obs);
     }
@@ -697,7 +697,7 @@ RDFElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
         return NS_ERROR_NULL_POINTER;
 
     nsIDOMNodeObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
         obs->OnAppendChild(this, aNewChild);
         NS_RELEASE(obs);
     }
@@ -762,7 +762,7 @@ NS_IMETHODIMP
 RDFElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 {
     nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
         obs->OnSetAttribute(this, aName, aValue);
         NS_RELEASE(obs);
     }
@@ -774,7 +774,7 @@ NS_IMETHODIMP
 RDFElementImpl::RemoveAttribute(const nsString& aName)
 {
     nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
         obs->OnRemoveAttribute(this, aName);
         NS_RELEASE(obs);
     }
@@ -798,7 +798,7 @@ RDFElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
         return NS_ERROR_NULL_POINTER;
 
     nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
         obs->OnSetAttributeNode(this, aNewAttr);
         NS_RELEASE(obs);
     }
@@ -816,7 +816,7 @@ RDFElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
         return NS_ERROR_NULL_POINTER;
 
     nsIDOMElementObserver* obs;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+    if (NS_SUCCEEDED(mDocument->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
         obs->OnRemoveAttributeNode(this, aOldAttr);
         NS_RELEASE(obs);
     }
@@ -837,7 +837,7 @@ RDFElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aRe
     }
 
     nsIDOMNode* domElement;
-    if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::IID(), (void**) &domElement))) {
+    if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::GetIID(), (void**) &domElement))) {
         rv = GetElementsByTagName(domElement, aName, elements);
         NS_RELEASE(domElement);
     }
@@ -859,7 +859,7 @@ RDFElementImpl::GetElementsByAttribute(const nsString& aAttribute,
     }
 
     nsIDOMNode* domElement;
-    if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::IID(), (void**) &domElement))) {
+    if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::GetIID(), (void**) &domElement))) {
         rv = GetElementsByAttribute(domElement, aAttribute, aValue, elements);
         NS_RELEASE(domElement);
     }

@@ -572,7 +572,7 @@ XULContentSinkImpl::LoadStyleSheet(nsIURL* aURL,
     nsCOMPtr<nsICSSParser> parser;
     if (NS_FAILED(rv = nsRepository::CreateInstance(kCSSParserCID,
                                                     nsnull,
-                                                    nsICSSParser::IID(),
+                                                    nsICSSParser::GetIID(),
                                                     (void**) getter_AddRefs(parser)))) {
         NS_ERROR("unable to create CSS parser");
         return rv;
@@ -594,7 +594,7 @@ XULContentSinkImpl::LoadStyleSheet(nsIURL* aURL,
 
     if (nsnull != aOwner) {
         nsIDOMNode* domNode;
-        if (NS_SUCCEEDED(aOwner->QueryInterface(nsIDOMNode::IID(), (void**)&domNode))) {
+        if (NS_SUCCEEDED(aOwner->QueryInterface(nsIDOMNode::GetIID(), (void**)&domNode))) {
             sheet->SetOwningNode(domNode);
             NS_RELEASE(domNode);
         }
@@ -1122,7 +1122,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         mHaveSetRootResource = PR_TRUE;
 
         nsCOMPtr<nsIRDFDocument> rdfDoc;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::IID(),
+        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::GetIID(),
                                                    (void**) getter_AddRefs(rdfDoc)))) {
             if (NS_FAILED(rv = rdfDoc->SetRootResource(rdfResource))) {
                 NS_ERROR("couldn't set root resource");

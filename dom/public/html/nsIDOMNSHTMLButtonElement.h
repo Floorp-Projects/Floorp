@@ -31,7 +31,7 @@
 
 class nsIDOMNSHTMLButtonElement : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMNSHTMLBUTTONELEMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLBUTTONELEMENT_IID; return iid; }
 
   NS_IMETHOD    Blur()=0;
 

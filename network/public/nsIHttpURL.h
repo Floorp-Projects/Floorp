@@ -31,7 +31,7 @@
 
 struct nsIHttpURL : public nsISupports
 {
-	static const nsIID& IID() { static nsIID iid = NS_IHTTPURL_IID; return iid; }
+	static const nsIID& GetIID() { static nsIID iid = NS_IHTTPURL_IID; return iid; }
 
     /**
       * Parse the mime header into the url struct.

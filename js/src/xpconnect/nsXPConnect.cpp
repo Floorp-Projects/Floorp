@@ -371,34 +371,34 @@ XPC_Dump(nsISupports* p, int depth)
     nsIXPConnectWrappedNative* wn;
     nsIXPConnectWrappedJSMethods* wjsm;
 
-    if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::IID(),(void**)&xpc)))
+    if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnect::GetIID(),(void**)&xpc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
         xpc->DebugDump(depth);
         NS_RELEASE(xpc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedNativeClass::IID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedNativeClass::GetIID(),
                         (void**)&wnc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedNativeClass..."));
         wnc->DebugDump(depth);
         NS_RELEASE(wnc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedJSClass::IID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPCWrappedJSClass::GetIID(),
                         (void**)&wjsc)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
         wjsc->DebugDump(depth);
         NS_RELEASE(wjsc);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedNative::IID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedNative::GetIID(),
                         (void**)&wn)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
         wn->DebugDump(depth);
         NS_RELEASE(wn);
     }
-    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedJSMethods::IID(),
+    else if(NS_SUCCEEDED(p->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(),
                         (void**)&wjsm)))
     {
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJSMethods..."));

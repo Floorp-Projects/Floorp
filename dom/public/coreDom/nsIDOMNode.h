@@ -35,7 +35,7 @@ class nsIDOMNodeList;
 
 class nsIDOMNode : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMNODE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNODE_IID; return iid; }
   enum {
     ELEMENT_NODE = 1,
     ATTRIBUTE_NODE = 2,

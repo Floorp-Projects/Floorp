@@ -32,7 +32,7 @@
 
 class nsIDOMHTMLHeadElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLHEADELEMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLHEADELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetProfile(nsString& aProfile)=0;
   NS_IMETHOD    SetProfile(const nsString& aProfile)=0;

@@ -263,7 +263,7 @@ inline nsBorderEdges::nsBorderEdges()
 
 class nsIStyleContext : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_ISTYLECONTEXT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ISTYLECONTEXT_IID; return iid; }
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const = 0;
   virtual PRUint32  HashValue(void) const = 0;

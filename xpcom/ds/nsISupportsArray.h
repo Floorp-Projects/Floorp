@@ -34,7 +34,7 @@ typedef PRBool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
 
 class nsISupportsArray : public nsICollection {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_ISUPPORTSARRAY_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ISUPPORTSARRAY_IID; return iid; }
 
   NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& other) = 0;
   NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& other) const = 0;

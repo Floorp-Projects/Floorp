@@ -34,7 +34,7 @@ class nsIWidget;
 class nsIWebShellWindow : public nsISupports
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IWEBSHELL_WINDOW_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IWEBSHELL_WINDOW_IID; return iid; }
 
   NS_IMETHOD Show(PRBool aShow) = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;

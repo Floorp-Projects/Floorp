@@ -34,7 +34,7 @@ nsSupportsArray::~nsSupportsArray()
   DeleteArray();
 }
 
-NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray::IID());
+NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray::GetIID());
 
 void nsSupportsArray::DeleteArray(void)
 {

@@ -56,7 +56,7 @@ typedef nsID nsIID;
 
 #define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
   public: \
-  static const nsIID& IID() {static nsIID iid = the_iid; return iid;}
+  static const nsIID& GetIID() {static nsIID iid = the_iid; return iid;}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ typedef PRUint32 nsrefcnt;
  */
 class nsISupports XPCOM_OBJECT {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_ISUPPORTS_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ISUPPORTS_IID; return iid; }
   /**
    * @name Methods
    */
@@ -295,7 +295,7 @@ nsrefcnt Class::Release(void)                                                 \
 nsresult Class::QueryInterface(REFNSIID aIID, void** aInstancePtr)            \
 {                                                                             \
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;                            \
-  if (aIID.Equals(AdditionalInterface::IID())) {                              \
+  if (aIID.Equals(AdditionalInterface::GetIID())) {                           \
     *aInstancePtr = NS_STATIC_CAST(AdditionalInterface*, this);               \
     NS_ADDREF_THIS();                                                         \
     return NS_OK;                                                             \

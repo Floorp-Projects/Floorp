@@ -35,7 +35,7 @@ class nsIAtom;
 class nsIEditProperty : public nsISupports
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IEDITPROPERTY_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IEDITPROPERTY_IID; return iid; }
 
   NS_IMETHOD Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll)=0;
   NS_IMETHOD GetProperty(nsIAtom **aProperty) const =0;  

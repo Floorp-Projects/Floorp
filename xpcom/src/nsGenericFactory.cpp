@@ -35,9 +35,9 @@ NS_METHOD nsGenericFactory::QueryInterface(const nsIID& aIID, void** aInstancePt
     if (NULL == aInstancePtr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
-    if (aIID.Equals(nsIFactory::IID()) ||
-    	aIID.Equals(nsIGenericFactory::IID()) ||
-        aIID.Equals(nsISupports::IID())) {
+    if (aIID.Equals(nsIFactory::GetIID()) ||
+    	aIID.Equals(nsIGenericFactory::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
         *aInstancePtr = (void*) this;
         AddRef();
         return NS_OK; 

@@ -33,7 +33,7 @@ class nsIDOMText;
 
 class nsIDOMText : public nsIDOMCharacterData {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMTEXT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMTEXT_IID; return iid; }
 
   NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn)=0;
 };

@@ -31,7 +31,7 @@
 
 class nsIDOMStyleSheet : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMSTYLESHEET_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSTYLESHEET_IID; return iid; }
 
   NS_IMETHOD    GetType(nsString& aType)=0;
 

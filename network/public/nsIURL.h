@@ -34,7 +34,7 @@ class nsIURLGroup;
 
 class nsIURL : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IURL_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IURL_IID; return iid; }
 
   /** Equality operator */
   NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const = 0;

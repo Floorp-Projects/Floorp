@@ -48,13 +48,13 @@ nsresult nsSelectionMgr::QueryInterface(const nsIID& aIID,
   {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsISupports::IID())) 
+  if (aIID.Equals(nsISupports::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsISelectionMgr::IID())) 
+  if (aIID.Equals(nsISelectionMgr::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsISelectionMgr*)this;
     NS_ADDREF_THIS();
@@ -170,7 +170,7 @@ nsresult nsSelectionMgr::CopyToClipboard()
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
 {
   nsSelectionMgr* sm = new nsSelectionMgr();
-  return sm->QueryInterface(nsISelectionMgr::IID(),
+  return sm->QueryInterface(nsISelectionMgr::GetIID(),
                             (void**) aInstancePtrResult);
 }
 

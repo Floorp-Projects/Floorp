@@ -412,7 +412,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   PRInt32 matchCount = 0;
 
   nsIStyledContent* styledContent;
-  if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
+  if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
     PRInt32 nameSpace;
     styledContent->GetNameSpaceID(nameSpace);
     if (kNameSpaceID_HTML == nameSpace) {

@@ -36,7 +36,7 @@
 
 class nsIAllocator : public nsISupports {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IALLOCATOR_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IALLOCATOR_IID; return iid; }
     
     /**
      * Allocates a block of memory of a particular size. 

@@ -41,7 +41,7 @@ class nsIOutputStream;
  */
 class nsIHTMLEditor  : public nsISupports{
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IHTMLEDITOR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IHTMLEDITOR_IID; return iid; }
 
   /** Initialize the text editor 
     *

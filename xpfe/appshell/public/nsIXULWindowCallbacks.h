@@ -30,7 +30,7 @@
 class nsIXULWindowCallbacks : public nsISupports
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IXULWINDOWCALLBACKS_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IXULWINDOWCALLBACKS_IID; return iid; }
 
   // this method will be called by the window creation code after
   // the UI has been loaded, before the window is visible, and before

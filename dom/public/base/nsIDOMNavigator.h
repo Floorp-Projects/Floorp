@@ -31,7 +31,7 @@
 
 class nsIDOMNavigator : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMNAVIGATOR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNAVIGATOR_IID; return iid; }
 
   NS_IMETHOD    GetUserAgent(nsString& aUserAgent)=0;
 

@@ -41,7 +41,7 @@ class nsIMenuItem;
 class nsIXULCommand : public nsIMenuListener {
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_IXULCOMMAND_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IXULCOMMAND_IID; return iid; }
 
   /**
    * Sets the menu

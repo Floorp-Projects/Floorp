@@ -138,7 +138,7 @@ interface(TreeState *state)
     fputs(" {\n"
           " public: \n", state->file);
     if (iid) {
-        fputs("  static const nsIID& IID() {\n"
+        fputs("  static const nsIID& GetIID() {\n"
               "    static nsIID iid = ",
               state->file);
         if (!write_classname_iid_define(state->file, className))

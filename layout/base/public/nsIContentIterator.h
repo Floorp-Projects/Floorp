@@ -31,7 +31,7 @@ class nsIDOMRange;
 class nsIContentIterator : public nsISupports {
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_ICONTENTITERTOR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ICONTENTITERTOR_IID; return iid; }
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */

@@ -162,7 +162,7 @@ class FileImpl
 }; // class FileImpl
 
 #define SAY_I_IMPLEMENT(classname)        \
-  if (aIID.Equals(classname::IID()))                  \
+  if (aIID.Equals(classname::GetIID()))        \
   {                                            \
       *aInstancePtr = (void*)((classname*)this); \
       NS_ADDREF_THIS();                        \
@@ -190,13 +190,13 @@ NS_IMETHODIMP FileImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // of nsISupports), one through
   // nsIOutputStream, the other through nsIInputStream.  Resolve this
   // by giving them a specific one
-  if (aIID.Equals(((nsIBaseStream*)(nsIOutputStream*)this)->IID()))
+  if (aIID.Equals(((nsIBaseStream*)(nsIOutputStream*)this)->GetIID()))
   {
       *aInstancePtr = (void*)((nsIBaseStream*)(nsIOutputStream*)this);
       NS_ADDREF_THIS();
       return NS_OK;
   }
-  if (aIID.Equals(((nsISupports*)(nsIOutputStream*)this)->IID()))
+  if (aIID.Equals(((nsISupports*)(nsIOutputStream*)this)->GetIID()))
   {
       *aInstancePtr = (void*)((nsISupports*)(nsIOutputStream*)this);
       NS_ADDREF_THIS();

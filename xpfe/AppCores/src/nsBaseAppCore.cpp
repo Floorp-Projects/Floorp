@@ -31,8 +31,8 @@
 // Globals
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,     NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMBaseAppCoreIID,        nsIDOMBaseAppCore::IID());
-static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::IID());
+static NS_DEFINE_IID(kIDOMBaseAppCoreIID,        nsIDOMBaseAppCore::GetIID());
+static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 
 
 /////////////////////////////////////////////////////////////////////////

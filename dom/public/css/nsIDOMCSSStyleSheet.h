@@ -35,7 +35,7 @@ class nsIDOMCSSStyleRuleCollection;
 
 class nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSSTYLESHEET_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLESHEET_IID; return iid; }
 
   NS_IMETHOD    GetOwningNode(nsIDOMNode** aOwningNode)=0;
 
