@@ -1785,7 +1785,8 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                             &readCount);
         if (NS_FAILED(rv)) return rv;
 
-        m_copyState->m_dataBuffer[readCount+m_copyState->m_leftOver] = '\0';
+        m_copyState->m_leftOver += readCount;
+        m_copyState->m_dataBuffer[m_copyState->m_leftOver] = '\0';
 
         start = m_copyState->m_dataBuffer;
         end = PL_strstr(start, "\r");
@@ -1797,8 +1798,12 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
         if (linebreak_len == 0) // not initialize yet
             linebreak_len = 1;
 
-        if (!end)
-            m_copyState->m_leftOver = PL_strlen(start);
+        aLength -= readCount;
+        maxReadCount = FOUR_K - m_copyState->m_leftOver;
+
+        if (!end && aLength > (PRInt32) maxReadCount)
+            // must be a very very long line; sorry cannot handle it
+            return NS_ERROR_FAILURE;
 
         while (start && end)
         {
@@ -1813,7 +1818,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
             }
             start = end+linebreak_len;
             if (start >=
-                m_copyState->m_dataBuffer+readCount+m_copyState->m_leftOver)
+                m_copyState->m_dataBuffer+m_copyState->m_leftOver)
             {
                 m_copyState->m_leftOver = 0;
                 break;
@@ -1823,14 +1828,13 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                 end = PL_strstr(start, "\n");
             if (start && !end)
             {
-                m_copyState->m_leftOver = PL_strlen(start);
+                m_copyState->m_leftOver -= (start - m_copyState->m_dataBuffer);
                 nsCRT::memcpy(m_copyState->m_dataBuffer, start,
                               m_copyState->m_leftOver+1); // including null
                 maxReadCount = FOUR_K - m_copyState->m_leftOver;
             }
         }
         if (NS_FAILED(rv)) return rv;
-        aLength -= readCount;
     }
 	return rv;
 }

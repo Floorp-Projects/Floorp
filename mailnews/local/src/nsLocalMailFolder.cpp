@@ -1032,7 +1032,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-
 nsresult
 nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 {
@@ -1542,7 +1541,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     
     rv = aIStream->Read(mCopyState->m_dataBuffer + mCopyState->m_leftOver,
                         maxReadCount, &readCount);
-    mCopyState->m_dataBuffer[readCount+mCopyState->m_leftOver] ='\0';
+    if (NS_FAILED(rv)) return rv;
+    mCopyState->m_leftOver += readCount;
+    mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
     start = mCopyState->m_dataBuffer;
 
     end = PL_strstr(start, "\r");
@@ -1554,8 +1555,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     if (linebreak_len == 0) // not set yet
         linebreak_len = 1;
 
-    if (!end)
-      mCopyState->m_leftOver = PL_strlen(start);
+    aLength -= readCount;
+    maxReadCount = FOUR_K - mCopyState->m_leftOver;
+
+    if (!end && aLength > (PRInt32) maxReadCount)
+    // this must be a gigantic line with no linefeed; sorry pal cannot handle
+        return NS_ERROR_FAILURE;
     
     while (start && end)
     {
@@ -1567,7 +1572,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         *(mCopyState->m_fileStream) << MSG_LINEBREAK;
         start = end+linebreak_len;
         if (start >=
-            &mCopyState->m_dataBuffer[readCount+mCopyState->m_leftOver])
+            &mCopyState->m_dataBuffer[mCopyState->m_leftOver])
         {
             mCopyState->m_leftOver = 0;
             break;
@@ -1577,13 +1582,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
             end = PL_strstr(start, "\n");
         if (start && !end)
         {
-            mCopyState->m_leftOver = PL_strlen(start);
+            mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
             nsCRT::memcpy (mCopyState->m_dataBuffer, start,
                            mCopyState->m_leftOver+1);
             maxReadCount = FOUR_K - mCopyState->m_leftOver;
         }
     }
-    aLength -= readCount;
   }
   
 	return rv;
