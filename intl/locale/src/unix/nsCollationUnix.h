@@ -36,7 +36,7 @@ protected:
   nsString      mLocale;
   nsString      mSavedLocale;
   nsString      mCharset;
-  PRBool        mKeyAsCodePoint;
+  PRBool        mUseCodePointOrder;
 
   void DoSetLocale();
   void DoRestoreLocale();
