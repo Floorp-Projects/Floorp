@@ -167,6 +167,10 @@ struct nsHTMLReflowState : nsReflowState {
   // 'positioned' elements
   nsMargin         computedOffsets;
 
+  // Computed values for 'min-width/max-width' and 'min-height/max-height'
+  nscoord          mComputedMinWidth, mComputedMaxWidth;
+  nscoord          mComputedMinHeight, mComputedMaxHeight;
+
   // Run-in frame made available for reflow
   nsBlockFrame*    mRunInFrame;
 
@@ -334,6 +338,14 @@ protected:
   // Computes padding values from the specified padding style information, and
   // fills in the mComputedPadding member
   void ComputePadding(nscoord aContainingBlockWidth);
+
+  // Calculates the computed values for the 'min-Width', 'max-Width',
+  // 'min-Height', and 'max-Height' properties, and stores them in the assorted
+  // data members
+  void ComputeMinMaxValues(nscoord                  aContainingBlockWidth,
+                           nscoord                  aContainingBlockHeight,
+                           const nsHTMLReflowState* aContainingBlockRS);
+
 };
 
 //----------------------------------------------------------------------
