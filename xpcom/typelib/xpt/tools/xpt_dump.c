@@ -635,11 +635,11 @@ XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
     int tag = XPT_TDP_TAG(td->prefix);
     
     if (tag == TD_INTERFACE_TYPE) {
-        int index = td->type.interface;
-        if (!index || index > header->num_interfaces)
+        int idx = td->type.interface;
+        if (!idx || idx > header->num_interfaces)
             *type_string = "UNKNOWN_INTERFACE";
         else
-            *type_string = header->interface_directory[index-1].name;
+            *type_string = header->interface_directory[idx-1].name;
     } else if (XPT_TDP_IS_POINTER(td->prefix.flags)) {
         if (XPT_TDP_IS_REFERENCE(td->prefix.flags))
             *type_string = rtype_array[tag];

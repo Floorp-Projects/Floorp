@@ -71,8 +71,8 @@ struct fixElement {
 };
 
 /* Global variables. */
-int trueNumberOfInterfaces = 0;
-int totalNumberOfInterfaces = 0;
+PRUint16 trueNumberOfInterfaces = 0;
+PRUint16 totalNumberOfInterfaces = 0;
 
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 

@@ -183,7 +183,7 @@ XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
     XPTMode mode = cursor->state->mode;                                       \
     if (!(mode == XPT_ENCODE || XPT_Do32(cursor, &new_curs.offset)) ||        \
         !CheckForRepeat(cursor, (void **)addrp, pool,                     \
-                        mode == XPT_ENCODE ? size : 0, &new_curs,         \
+                        mode == XPT_ENCODE ? size : 0u, &new_curs,         \
                         &already) ||                                      \
         !(mode == XPT_DECODE || XPT_Do32(cursor, &new_curs.offset)))          \
         return PR_FALSE;                                                      \
