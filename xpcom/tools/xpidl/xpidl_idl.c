@@ -216,8 +216,21 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 
     switch(reason) {
       case IDL_INPUT_REASON_INIT:
-        new_data = new_input_callback_data(cb_data->init.filename,
-                                           stack->include_path);
+        if (data == NULL || data->next == NULL) {
+            /*
+             * This is the first file being processed.  As it's the target
+             * file, we only look for it in the first entry in the include
+             * path, which we assume to be the current directory.
+             */
+            IncludePathEntry first_entry = { stack->include_path->directory,
+                                             NULL };
+            new_data = new_input_callback_data(cb_data->init.filename,
+                                               &first_entry);
+        } else {
+            new_data = new_input_callback_data(cb_data->init.filename,
+                                               stack->include_path);
+        }
+
         if (!new_data)
             return -1;
 
@@ -464,6 +477,9 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     gboolean ok;
     char *fopen_mode;
 
+    /* Initialize so that stack->top, etc. doesn't come up as garbage. */
+    memset(&stack, 0, sizeof(struct input_callback_stack));
+
     stack.includes = g_hash_table_new(g_str_hash, g_str_equal);
     if (!stack.includes) {
         fprintf(stderr, "failed to create hashtable (EOM?)\n");
@@ -488,9 +504,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     rv = IDL_parse_filename_with_input(filename, input_callback, &stack,
                                        msg_callback, &top,
                                        &state.ns,
-#if LIBIDL_VERSION_CODE >= LIBIDL_VERSION (0,6,2)
                                        IDLF_IGNORE_FORWARDS |
-#endif
                                        IDLF_XPIDL,
                                        enable_warnings ? IDL_WARNING1 :
                                        IDL_ERROR);
