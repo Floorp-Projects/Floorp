@@ -524,9 +524,9 @@
            // marker
            var el = this._clientFrameDoc.createElementNS("http://www.w3.org/1999/xhtml", "img");
            
-           var scrollImages  = new Array("chrome://global/skin/arrow/autoscroll_all.png",
-                                         "chrome://global/skin/arrow/autoscroll_v.png",
-                                         "chrome://global/skin/arrow/autoscroll_h.png");
+           var scrollImages  = new Array("chrome://global/content/widgets/autoscroll_all.png",
+                                         "chrome://global/content/widgets/autoscroll_v.png",
+                                         "chrome://global/content/widgets/autoscroll_h.png");
            
            el.src = scrollImages[scrollType];         
            el.style.position = "fixed";
