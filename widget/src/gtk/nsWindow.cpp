@@ -213,8 +213,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                          GDK_FOCUS_CHANGE_MASK |
                          GDK_KEY_PRESS_MASK |
                          GDK_KEY_RELEASE_MASK |
-                         GDK_LEAVE_NOTIFY_MASK |
-                         GDK_POINTER_MOTION_MASK);
+                         GDK_LEAVE_NOTIFY_MASK);
 
   if (!parentWidget) {
 
@@ -287,23 +286,8 @@ void nsWindow::InitCallbacks(char * aName)
                      "button_release_event",
                      GTK_SIGNAL_FUNC(handle_button_release_event),
                      this);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "motion_notify_event",
-                     GTK_SIGNAL_FUNC(handle_motion_notify_event),
-                     this);
-//   gtk_signal_connect(GTK_OBJECT(mWidget),
-//                      "enter_notify_event",
-//                      GTK_SIGNAL_FUNC(handle_enter_notify_event),
-//                      this);
-//   gtk_signal_connect(GTK_OBJECT(mWidget),
-//                      "leave_notify_event",
-//                      GTK_SIGNAL_FUNC(handle_leave_notify_event),
-//                      this);
 
-/*   gtk_signal_connect(GTK_OBJECT(mWidget), */
-/*                      "draw", */
-/*                      GTK_SIGNAL_FUNC(handle_draw_event), */
-/*                      this); */
+  InstallMotionNotifySignal(mWidget,PR_TRUE,PR_TRUE);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",

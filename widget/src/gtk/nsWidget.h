@@ -118,7 +118,9 @@ class nsWidget : public nsBaseWidget
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
   // are we a "top level" widget?
     PRBool     mIsToplevel;
+
  protected:
+
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();
 
@@ -136,6 +138,34 @@ class nsWidget : public nsBaseWidget
 
     PRBool DispatchWindowEvent(nsGUIEvent* event);
 
+  //////////////////////////////////////////////////////////////////
+  //
+  // GTK signal installers
+  //
+  //////////////////////////////////////////////////////////////////
+  void InstallMotionNotifySignal(GtkWidget * aWidget,
+                                 PRBool aInstallSignal,
+                                 PRBool aSetEvents);
+
+  //////////////////////////////////////////////////////////////////
+  //
+  // OnSomething handlers
+  //
+  //////////////////////////////////////////////////////////////////
+  virtual void OnMotionNotify(GdkEventMotion * aGdkMotionEvent);
+
+private:
+
+  //////////////////////////////////////////////////////////////////
+  //
+  // GTK widget signals
+  //
+  //////////////////////////////////////////////////////////////////
+  static gint MotionNotifySignal(GtkWidget * aWidget,
+                                 GdkEventMotion * aGdkMotionEvent,
+                                 gpointer aData);
+
+protected:
     GtkWidget *mWidget;
     nsIWidget *mParent;
 
