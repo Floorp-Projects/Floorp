@@ -32,6 +32,7 @@ CPPSRCS =				\
 	nsHTMLLayer.cpp			\
 	nsHTMLGenericContent.cpp	\
 	nsHTMLAnchor.cpp		\
+	nsHTMLBR.cpp			\
 	nsHTMLHR.cpp			\
 	$(NULL)
 
