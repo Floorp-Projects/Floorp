@@ -31,8 +31,8 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "plevent.h"
-#include "nsplugin.h"
 #include "nsIPluginHost.h"
+#include "nsplugin.h"
 #include "nsPluginsCID.h"
 #include "nsIPref.h"
 
