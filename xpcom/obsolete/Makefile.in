@@ -102,9 +102,9 @@ EXTRA_DSO_LDOPTS += -lbe
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += shell32.lib ole32.lib
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, shell32 ole32)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-EXTRA_DSO_LDOPTS += imagehlp.lib
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, imagehlp)
 endif
 endif # WINNT
 
