@@ -153,7 +153,7 @@ namespace MetaData {
 
         ASSERT(argc == 0);
 
-        meta->env.lexicalRead(meta, lRef->variableMultiname, RunPhase);
+        *rval = meta->env.lexicalRead(meta, lRef->variableMultiname, RunPhase);
         return JS_TRUE;
     }
 

@@ -140,8 +140,11 @@ static int readEvalPrint(FILE *in)
                 metadata->setCurrentParser(&p);  // for error reporting
 
                 metadata->ValidateStmtList(parsedStatements);
-                metadata->EvalStmtList(MetaData::RunPhase, parsedStatements);
-
+                jsval rval = metadata->EvalStmtList(MetaData::RunPhase, parsedStatements);
+                if (!JSVAL_IS_VOID(rval)) {
+                    JSString *str = JS_ValueToString(metadata->monkeyContext, rval);
+                    stdOut << String(JS_GetStringChars(str), JS_GetStringLength(str)) << '\n';
+                }
             }
             clear(buffer);
         } catch (Exception &e) {
