@@ -118,7 +118,7 @@ nsVCardFactory::CreateInstance(nsISupports *aOuter,
 
 	*aResult = NULL;  
   
-	nsISupports *inst = nsnull;
+	nsCOMPtr <nsIMimeContentTypeHandler> inst;
 
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
@@ -126,7 +126,7 @@ nsVCardFactory::CreateInstance(nsISupports *aOuter,
 	// do they want a mime emitter interface ?
 	if (mClassID.Equals(kMimeContentTypeHandlerCID)) 
 	{
-		res = NS_NewMimeContentTypeHandler((nsIMimeContentTypeHandler **) &inst);
+		res = NS_NewMimeContentTypeHandler(getter_AddRefs(inst));
 		if (NS_FAILED(res))  // was there a problem creating the object ?
 		  return res;   
 	}
@@ -137,8 +137,6 @@ nsVCardFactory::CreateInstance(nsISupports *aOuter,
 		// so we now have the class that supports the desired interface...we need to turn around and
 		// query for our desired interface.....
 		res = inst->QueryInterface(aIID, aResult);
-		if (res != NS_OK)  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
-			delete inst; 
 	}
 	else
 		res = NS_ERROR_OUT_OF_MEMORY;
