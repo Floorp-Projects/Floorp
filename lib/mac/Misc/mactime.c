@@ -38,6 +38,7 @@ _END_C_LIB_DECL
 #include <ToolUtils.h>
 #endif
 
+#include "xp_mcom.h" /* prototypes for GetTimeMac, Mactime, Macmktime, Macctime, Maclocaltime, Macgmtime */
 // Because serial port and SLIP conflict with ReadXPram calls,
 // we cache the call here
 // The symptoms are the 
@@ -57,6 +58,7 @@ void MyReadLocation(MachineLocation * loc)
 	*loc = storedLoc;
 }
 
+#if 0
 Boolean DaylightSavings()
 {
 	MachineLocation loc;
@@ -65,6 +67,7 @@ Boolean DaylightSavings()
 	dlsDelta = 	loc.u.dlsDelta;
 	return (dlsDelta != 0);
 }
+#endif
 
 // This routine is copied straight out of stdio sources.
 // The only difference is that we use MyReadLocation instead of ReadLocation.
