@@ -408,7 +408,7 @@ HTMLInlineTSMProxy::AEHandlerTSM( const AppleEvent *inAppleEvent, AppleEvent *ou
 					StAEDescriptor	parm;
 					AESubDesc nthSubDesc;
 					err = AEGetNthSubDesc( &replySD, i, &key, &nthSubDesc );
-					err = AESubDescToDesc( &nthSubDesc, key, &parm.mDesc );
+					err = AESubDescToDesc( &nthSubDesc, typeWildCard, &parm.mDesc );
 //					replySD.NthItem(i, &key).ToDesc(&parm.mDesc);
 					err = ::AEPutParamDesc(outReply, key, &parm.mDesc);
 					ThrowIfOSErr_(err);
