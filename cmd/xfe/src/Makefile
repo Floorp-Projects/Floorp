@@ -133,7 +133,6 @@ CPPSRCS		= \
 		  RDFToolbar.cpp \
 		  RDFToolbox.cpp \
 		  RadioGroup.cpp \
-		  Splash.cpp \
 		  Toolbar.cpp \
 		  ToolbarDrop.cpp \
 		  Toolbox.cpp \
@@ -146,6 +145,12 @@ CPPSRCS		= \
 		  pref.cpp \
 		  $(NULL)
 
+
+ifdef NSPR_SPLASH
+CPPSRCS		+= \
+			Splash.cpp \
+			$(NULL)
+endif
 
 ifdef USE_MOTIF_DND
 CPPSRCS		+= \
