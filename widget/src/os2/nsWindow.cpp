@@ -17,6 +17,19 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Added InvalidateRegion method; keyboard (OnKey) handling; and
+ *                                         fixed uninitialized event.isMeta.
+ *
  */
 
 #include "nsWindow.h"
@@ -38,6 +51,7 @@
 #include "nsMenu.h"
 #include "nsDragService.h"
 #include "nsContextMenu.h"
+#include "nsIRegion.h"
 
 #include "tabapi.h"   // !! TAB-FIX
 
@@ -736,6 +750,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 msg, int clickcount,
    nsMouseEvent event;
    event.eventStructType = NS_MOUSE_EVENT;
    event.clickCount = clickcount;
+   event.isMeta = PR_FALSE;
 
    // Mouse leave & enter messages don't seem to have position built in.
    if( msg && msg != NS_MOUSE_ENTER && msg != NS_MOUSE_EXIT)
@@ -842,11 +857,13 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    // Now dispatch a keyup/keydown event.  This one is *not* meant to
    // have the unicode charcode in.
 
-   InitEvent( event, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN);
+   nsPoint point(0,0);
+   InitEvent( event, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN, &point);
    event.keyCode   = WMChar2KeyCode( mp1, mp2);
    event.isShift   = (fsFlags & KC_SHIFT) ? PR_TRUE : PR_FALSE;
    event.isControl = (fsFlags & KC_CTRL) ? PR_TRUE : PR_FALSE;
    event.isAlt     = (fsFlags & KC_ALT) ? PR_TRUE : PR_FALSE;
+   event.isMeta    = PR_FALSE;
    event.eventStructType = NS_KEY_EVENT;
    event.charCode = 0;
 
@@ -867,11 +884,6 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    }
 
    // Now we need to dispatch a keypress event which has the unicode char.
-   //
-   // Only send keypress events for characters which create textual input.
-   //
-   if( !(fsFlags & (KC_CHAR | KC_COMPOSITE)))
-      return rc;
 
    event.message = NS_KEY_PRESS;
 
@@ -897,6 +909,15 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    {
       printf( "UniTranslate[Dead]Key returned %d\n", unirc);
       event.charCode = CHAR2FROMMP(mp2);
+   }
+
+   if( !event.isControl && !event.isAlt && event.charCode != 0)
+   {
+      if (!(fsFlags & KC_VIRTUALKEY))
+      {
+         event.isShift = PR_FALSE;
+         event.keyCode = 0;
+      }
    }
 
    return DispatchEventInternal( &event);
@@ -1668,6 +1689,27 @@ nsresult nsWindow::Invalidate( const nsRect &aRect, PRBool aIsSynchronous)
 #endif
    }
    return NS_OK;
+}
+
+nsresult nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+{
+   nsresult rv = NS_OK;
+   if( mWnd) {
+      HRGN nativeRegion;
+      rv = aRegion->GetNativeRegion((void *&)nativeRegion);
+      if( nativeRegion) {
+         if( NS_SUCCEEDED(rv)) {
+            WinInvalidateRegion(mWnd, nativeRegion, TRUE);
+#if 0
+            if( PR_TRUE == aIsSynchronous)
+               Update();
+#endif
+         }
+      } else {
+         rv = NS_ERROR_FAILURE;
+      }
+   }
+   return rv;  
 }
 
 // force invalid areas to be updated

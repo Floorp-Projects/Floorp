@@ -18,6 +18,17 @@
  *
  * Contributor(s): John Fairhurst <john_fairhurst@iname.com>
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Fixed error in displaying dialog box.
+ *
  */
 
 // To do
@@ -256,7 +267,7 @@ MRESULT EXPENTRY fndpDirPicker( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
          CenterWindow( hwnd, WinQueryWindow( hwnd, QW_OWNER));
 
          // XXX make dynamic, save fontnamesize
-         WinSetPresParam( hwnd, PP_FONTNAMESIZE, 11, "9.WarpSans");
+         WinSetPresParam( hwnd, PP_FONTNAMESIZE, 11, (PVOID)"9.WarpSans");
          // XXX colour for container bg?
          // XXX Do help later
          WinEnableControl( hwnd, IDD_HELPBUTTON, FALSE);
@@ -481,7 +492,7 @@ HWND APIENTRY FS_PickDirectory( HWND       hwndParent,
          ULONG rc = WinDlgBox( hwndParent, hwndOwner,
                                fndpDirPicker, hModResources,
                                DID_DIRPICKER, pDirPicker);
-         hwndRet = (rc == DID_ERROR);
+         hwndRet = (rc != DID_ERROR);
       }
       else
       {
