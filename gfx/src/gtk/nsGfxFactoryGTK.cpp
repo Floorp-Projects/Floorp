@@ -34,6 +34,7 @@
 #include "nsDeviceContextSpecG.h"
 #include "nsDeviceContextSpecFactoryG.h" 
 #include "nsIDeviceContextSpecPS.h"
+#include "nsIImageManager.h"
 #include <gtk/gtk.h>
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
@@ -51,6 +52,8 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID); 
+static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
+
 
 
 class nsGfxFactoryGTK : public nsIFactory
@@ -109,6 +112,7 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
+  nsresult res;
   if (aResult == NULL) {  
     return NS_ERROR_NULL_POINTER;  
   }  
@@ -116,6 +120,7 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
   *aResult = NULL;  
   
   nsISupports *inst = nsnull;
+  PRBool already_addreffed = PR_FALSE;
 
   if (mClassID.Equals(kCFontMetrics)) {
     inst = (nsISupports *)new nsFontMetricsGTK();
@@ -154,6 +159,15 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
     nsDeviceContextSpecFactoryGTK* dcs;
     NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryGTK);
     inst = (nsISupports *)dcs;
+  } 
+  else if (mClassID.Equals(kImageManagerImpl)) {
+    nsCOMPtr<nsIImageManager> iManager;
+    res = NS_NewImageManager(getter_AddRefs(iManager));
+    already_addreffed = PR_TRUE;
+    if (NS_SUCCEEDED(res))
+    {
+      res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
+    }
   }          
   else if (mClassID.Equals(kCFontEnumerator)) {
     nsFontEnumeratorGTK* fe;
@@ -165,8 +179,10 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
-  NS_ADDREF(inst);
-  nsresult res = inst->QueryInterface(aIID, aResult);
+  if (already_addreffed == PR_FALSE)
+   NS_ADDREF(inst);
+
+  res = inst->QueryInterface(aIID, aResult);
   NS_RELEASE(inst);
 
   return res;  
