@@ -36,10 +36,12 @@ static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;
 static DWORD   gdwIndexLastSelected;
 
-void AskCancelDlg(HWND hDlg)
+BOOL AskCancelDlg(HWND hDlg)
 {
   char szDlgQuitTitle[MAX_BUF];
   char szDlgQuitMsg[MAX_BUF];
+  char szMsg[MAX_BUF];
+  BOOL bRv = FALSE;
 
   if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
   {
@@ -51,8 +53,19 @@ void AskCancelDlg(HWND hDlg)
     {
       DestroyWindow(hDlg);
       PostQuitMessage(0);
+      bRv = TRUE;
     }
   }
+  else
+  {
+    GetPrivateProfileString("Strings", "Message Cancel Setup AUTO mode", "", szMsg, sizeof(szMsg), szFileIniConfig);
+    ShowMessage(szMsg, TRUE);
+    Delay(5);
+    ShowMessage(szMsg, FALSE);
+    bRv = TRUE;
+  }
+
+  return(bRv);
 } 
 
 void DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose)
@@ -486,7 +499,7 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
     while(FileExists(szSearchPathBuf) == FALSE)
     {
       RemoveBackSlash(szSearchPathBuf);
-      ParsePath(szSearchPathBuf, szBuf, sizeof(szBuf), PP_PATH_ONLY);
+      ParsePath(szSearchPathBuf, szBuf, sizeof(szBuf), FALSE, PP_PATH_ONLY);
       lstrcpy(szSearchPathBuf, szBuf);
     }
   }
@@ -708,12 +721,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-/*
-        BROWSEINFO    biBrowseInfo;
-        LPITEMIDLIST  lppidlPath;
-        int           iImageId = 0;
-        char          szDisplayName[MAX_BUF];
-*/
         case IDC_BUTTON_BROWSE:
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
             dwTempSetupType = ST_RADIO0;
@@ -723,21 +730,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             dwTempSetupType = ST_RADIO2;
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
             dwTempSetupType = ST_RADIO3;
-
-/*
-          biBrowseInfo.hwndOwner        = hDlg;
-          biBrowseInfo.pidlRoot         = NULL;
-          biBrowseInfo.pszDisplayName   = szDisplayName;
-          biBrowseInfo.lpszTitle        = "Title of BrowseForFolder()";
-          biBrowseInfo.ulFlags          = BIF_EDITBOX |
-                                          BIF_STATUSTEXT |
-                                          BIF_DONTGOBELOWDOMAIN;
-          biBrowseInfo.lpfn             = NULL;
-          biBrowseInfo.lParam           = 0;
-          biBrowseInfo.iImage           = iImageId;
-
-          lppidlPath = SHBrowseForFolder(&biBrowseInfo);
-*/
 
           BrowseForDirectory(hDlg, szTempSetupPath);
 
@@ -756,12 +748,14 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
         case IDWIZNEXT:
           lstrcpy(sgProduct.szPath, szTempSetupPath);
 
+#ifdef NUKE_FROM_ORBIT
           /* check for legacy file.  We're trying not to install over an old incompatible version */
           if(CheckLegacy(hDlg) == TRUE)
           {
             SetForegroundWindow(hDlg);
             break;
           }
+#endif /* NUKE_FROM_ORBIT */
 
           /* append a backslash to the path because CreateDirectoriesAll()
              uses a backslash to determine directories */
@@ -825,32 +819,28 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           /* retrieve and save the state of the selected radio button */
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
           {
-            if(dwSetupType != ST_RADIO0)
-              SiCNodeSetItemsSelected(ST_RADIO0);
+            SiCNodeSetItemsSelected(ST_RADIO0);
 
             dwSetupType     = ST_RADIO0;
             dwTempSetupType = dwSetupType;
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
           {
-            if(dwSetupType != ST_RADIO1)
-              SiCNodeSetItemsSelected(ST_RADIO1);
+            SiCNodeSetItemsSelected(ST_RADIO1);
 
             dwSetupType     = ST_RADIO1;
             dwTempSetupType = dwSetupType;
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
           {
-            if(dwSetupType != ST_RADIO2)
-              SiCNodeSetItemsSelected(ST_RADIO2);
+            SiCNodeSetItemsSelected(ST_RADIO2);
 
             dwSetupType     = ST_RADIO2;
             dwTempSetupType = dwSetupType;
           }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
           {
-            if(dwSetupType != ST_RADIO3)
-              SiCNodeSetItemsSelected(ST_RADIO3);
+            SiCNodeSetItemsSelected(ST_RADIO3);
 
             dwSetupType     = ST_RADIO3;
             dwTempSetupType = dwSetupType;
@@ -894,12 +884,17 @@ void DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
   siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
   if(siCTemp != NULL)
   {
-    if(siCTemp->dwAttributes & SIC_DISABLED)
-      hbmpCheckBox = hbmpBoxCheckedDisabled;
-    else if(siCTemp->dwAttributes & SIC_SELECTED)
-      hbmpCheckBox = hbmpBoxChecked;
-    else
+    if(!(siCTemp->dwAttributes & SIC_SELECTED))
+      /* Component is not selected.  Use the unchecked bitmap regardless if the 
+       * component is disabled or not.  The unchecked bitmap looks the same if
+       * it's disabled or enabled. */
       hbmpCheckBox = hbmpBoxUnChecked;
+    else if(siCTemp->dwAttributes & SIC_DISABLED)
+      /* Component is checked and disabled */
+      hbmpCheckBox = hbmpBoxCheckedDisabled;
+    else
+      /* Component is checked and enabled */
+      hbmpCheckBox = hbmpBoxChecked;
 
     SendMessage(lpdis->hwndItem, LB_SETITEMDATA, lpdis->itemID, (LPARAM)hbmpCheckBox);
     if((hdcMem = CreateCompatibleDC(lpdis->hDC)) != NULL)
@@ -1014,32 +1009,9 @@ LRESULT CALLBACK NewListBoxWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
   DWORD               dwPosX;
   DWORD               dwPosY;
   DWORD               dwIndex;
-#ifdef XXX_SSU_DISABLED_FOR_NOW
-  LPDRAWITEMSTRUCT    lpdis;
-  PAINTSTRUCT         ps;
-  HDC                 hdc;
-#endif
 
   switch(uMsg)
   {
-#ifdef XXX_SSU_DISABLED_FOR_NOW
-    case WM_DRAWITEM:
-      lpdis = (LPDRAWITEMSTRUCT)lParam;
-
-      break;
-
-    case WM_PAINT:
-      hdc = BeginPaint(hWnd, &ps);
-      // Add any drawing code here...
-
-//      PaintGradientShade(hWnd, hdc);
-//      OutputSetupTitle(hdc);
-
-      EndPaint(hWnd, &ps);
-//      bReturn = FALSE;
-      break;
-#endif
-
     case WM_CHAR:
       /* check for the space key */
       if((TCHAR)wParam == 32)
@@ -1088,13 +1060,6 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
 
-#ifdef XXX_SSU_COMPONENT_SIZE
-  RECT                rTemp;
-  HDC                 hdcComponentSize;
-  RECT                rLBComponentSize;
-  RECT                rListBox;
-#endif
-
   hwndLBComponents  = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
 
   switch(msg)
@@ -1130,11 +1095,11 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
          returns value in kbytes */
       ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
       _ui64toa(ullDSBuf, tchBuffer, 10);
-      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
+      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
       RemoveBackSlash(szBuf);
       lstrcat(szBuf, " - ");
       lstrcat(szBuf, tchBuffer);
-      lstrcat(szBuf, " K");
+      lstrcat(szBuf, " KB");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
 
       gdwACFlag = AC_COMPONENTS;
@@ -1149,22 +1114,15 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         break;
 
       SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-#ifdef XXX_SSU_COMPONENT_SIZE
-      GetClientRect(lpdis->hwndItem, &rTemp);
-      hdcComponentSize = GetDC(lpdis->hwndItem);
-      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
-#endif
-
       if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
       {
         // remove the focus rect on the previous selected item
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
+      siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_COMPONENTS);
       if(lpdis->itemAction & ODA_FOCUS)
       {
-        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_COMPONENTS);
-
         if((lpdis->itemState & ODS_SELECTED) &&
           !(lpdis->itemState & ODS_FOCUS))
         {
@@ -1174,11 +1132,6 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
           {
             SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
             SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-
-#ifdef XXX_SSU_COMPONENT_SIZE
-            SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
-            SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
-#endif
           }
         }
         else
@@ -1189,13 +1142,15 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
           {
             SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
             SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-
-#ifdef XXX_SSU_COMPONENT_SIZE
-            SetTextColor(hdcComponentSize,  GetSysColor(COLOR_HIGHLIGHTTEXT));
-            SetBkColor(hdcComponentSize,    GetSysColor(COLOR_HIGHLIGHT));
-#endif
           }
         }
+      }
+      else if(lpdis->itemAction & ODA_DRAWENTIRE)
+      {
+        if(siCTemp->dwAttributes & SIC_DISABLED)
+          SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
+        else
+          SetTextColor(lpdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
       }
 
       if(lpdis->itemAction & (ODA_DRAWENTIRE | ODA_FOCUS))
@@ -1213,37 +1168,6 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
                    strlen(tchBuffer),
                    NULL);
 
-#ifdef XXX_SSU_COMPONENT_SIZE
-        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_COMPONENTS);
-        _ui64toa(siCTemp->ullInstallSizeArchive, tchBuffer, 10);
-        lstrcat(tchBuffer, " K");
-
-        /* calculate clipping region.  The region being the entire listbox window */
-        GetClientRect(hwndLBComponents, &rListBox);
-        if(lpdis->rcItem.bottom > rListBox.bottom)
-          rLBComponentSize.bottom = rListBox.bottom - 1;
-        else
-          rLBComponentSize.bottom = lpdis->rcItem.bottom - 1;
-
-        rLBComponentSize.left  = lpdis->rcItem.right - 50;
-        rLBComponentSize.right = lpdis->rcItem.right;
-        if(lpdis->rcItem.top < rListBox.top)
-          rLBComponentSize.top = rListBox.top + 1;
-        else
-          rLBComponentSize.top = lpdis->rcItem.top + 1;
-
-        /* set text alignment */
-        SetTextAlign(hdcComponentSize, TA_RIGHT);
-        /* output string */
-        ExtTextOut(hdcComponentSize,
-                   lpdis->rcItem.right - 3,
-                   y,
-                   ETO_OPAQUE | ETO_CLIPPED,
-                   &(rLBComponentSize),
-                   tchBuffer,
-                   strlen(tchBuffer),
-                   NULL);
-#endif
       }
       
       DrawCheck(lpdis, AC_COMPONENTS);
@@ -1255,21 +1179,14 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
-#ifdef XXX_SSU_COMPONENT_SIZE
-      ReleaseDC(lpdis->hwndItem, hdcComponentSize);
-#endif
-
       bReturn = TRUE;
 
       /* update the disk space required info in the dialog.  It is already
          in Kilobytes */
       ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
       _ui64toa(ullDSBuf, tchBuffer, 10);
-//      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
-//      RemoveBackSlash(szBuf);
-//      lstrcat(szBuf, " - ");
       lstrcpy(szBuf, tchBuffer);
-      lstrcat(szBuf, " K");
+      lstrcat(szBuf, " KB");
       
       SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
       break;
@@ -1356,11 +1273,11 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
          returns value in kbytes */
       ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
       _ui64toa(ullDSBuf, tchBuffer, 10);
-      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
+      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
       RemoveBackSlash(szBuf);
       lstrcat(szBuf, " - ");
       lstrcat(szBuf, tchBuffer);
-      lstrcat(szBuf, " K");
+      lstrcat(szBuf, " KB");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
 
       gdwACFlag = AC_ADDITIONAL_COMPONENTS;
@@ -1381,10 +1298,9 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
+      siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_ADDITIONAL_COMPONENTS);
       if(lpdis->itemAction & ODA_FOCUS)
       {
-        siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, AC_ADDITIONAL_COMPONENTS);
-
         if((lpdis->itemState & ODS_SELECTED) &&
           !(lpdis->itemState & ODS_FOCUS))
         {
@@ -1406,6 +1322,13 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
             SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
           }
         }
+      }
+      else if(lpdis->itemAction & ODA_DRAWENTIRE)
+      {
+        if(siCTemp->dwAttributes & SIC_DISABLED)
+          SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
+        else
+          SetTextColor(lpdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
       }
 
       if(lpdis->itemAction & (ODA_DRAWENTIRE | ODA_FOCUS))
@@ -1440,7 +1363,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
       ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
       _ui64toa(ullDSBuf, tchBuffer, 10);
       lstrcpy(szBuf, tchBuffer);
-      lstrcat(szBuf, " K");
+      lstrcat(szBuf, " KB");
       
       SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
       break;
@@ -1698,6 +1621,8 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       SetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort);
+      SetDlgItemText(hDlg, IDC_EDIT_PROXY_USER,   diAdvancedSettings.szProxyUser);
+      SetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -1713,6 +1638,8 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
           /* get the proxy server and port information */
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_USER,   diAdvancedSettings.szProxyUser,   MAX_BUF);
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd, MAX_BUF);
 
           DestroyWindow(hDlg);
           DlgSequenceNext();
@@ -1860,10 +1787,13 @@ void AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR
 LPSTR GetStartInstallMessage()
 {
   char  szBuf[MAX_BUF];
+  char  szSTRRequired[MAX_BUF_TINY];
   siC   *siCObject   = NULL;
   LPSTR szMessageBuf = NULL;
   DWORD dwBufSize;
   DWORD dwIndex0;
+
+  GetPrivateProfileString("Strings", "STR Force Upgrade Required", "", szSTRRequired, sizeof(szSTRRequired), szFileIniConfig);
 
   /* calculate the amount of memory to allocate for the buffer */
   dwBufSize = 0;
@@ -1904,8 +1834,21 @@ LPSTR GetStartInstallMessage()
     if(siCObject->dwAttributes & SIC_SELECTED)
     {
       dwBufSize += 4; // take into account 4 indentation spaces
-      dwBufSize += lstrlen(siCObject->szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+      dwBufSize += lstrlen(siCObject->szDescriptionShort);
     }
+
+    if(siCObject->bForceUpgrade)
+    {
+      /* add the "(Required)" string (or something equivalent) after the component description */
+      if(*szSTRRequired != '\0')
+      {
+        dwBufSize += 1; // space after the short description
+        dwBufSize += lstrlen(szSTRRequired);
+      }
+    }
+
+    if(siCObject->dwAttributes & SIC_SELECTED)
+      dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
@@ -2007,8 +1950,20 @@ LPSTR GetStartInstallMessage()
       {
         lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
         lstrcat(szMessageBuf, siCObject->szDescriptionShort);
-        lstrcat(szMessageBuf, "\r\n");
       }
+
+      if(siCObject->bForceUpgrade)
+      {
+        /* add the "(Required)" string (or something equivalent) after the component description */
+        if(*szSTRRequired != '\0')
+        {
+          lstrcat(szMessageBuf, " "); // add 1 space
+          lstrcat(szMessageBuf, szSTRRequired);
+        }
+      }
+
+      if(siCObject->dwAttributes & SIC_SELECTED)
+        lstrcat(szMessageBuf, "\r\n");
 
       ++dwIndex0;
       siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
@@ -2219,8 +2174,6 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, TRUE);
-
       if(NS_LoadString(hSetupRscInst, IDS_STR_MESSAGEBOX_TITLE, szBuf2, sizeof(szBuf2)) == WIZ_OK)
       {
         if((sgProduct.szProductName != NULL) && (*sgProduct.szProductName != '\0'))
@@ -2232,6 +2185,9 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         lstrcpy(szBuf, sgProduct.szProductName);
 
       SetWindowText(hDlg, szBuf);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
       break;
 
     case WM_COMMAND:
@@ -2497,23 +2453,23 @@ void DlgSequenceNext()
         gbProcessingXpnstallFiles = TRUE;
 
         /* PRE_DOWNLOAD process file manipulation functions */
-        ProcessFileOps(T_PRE_DOWNLOAD);
+        ProcessFileOps(T_PRE_DOWNLOAD, NULL);
 
         if(RetrieveArchives() == WIZ_OK)
         {
           char szInstallLogFile[MAX_BUF];
 
           /* POST_DOWNLOAD process file manipulation functions */
-          ProcessFileOps(T_POST_DOWNLOAD);
+          ProcessFileOps(T_POST_DOWNLOAD, NULL);
           /* PRE_XPCOM process file manipulation functions */
-          ProcessFileOps(T_PRE_XPCOM);
+          ProcessFileOps(T_PRE_XPCOM, NULL);
 
           ProcessXpcomFile();
 
           /* POST_XPCOM process file manipulation functions */
-          ProcessFileOps(T_POST_XPCOM);
+          ProcessFileOps(T_POST_XPCOM, NULL);
           /* PRE_SMARTUPDATE process file manipulation functions */
-          ProcessFileOps(T_PRE_SMARTUPDATE);
+          ProcessFileOps(T_PRE_SMARTUPDATE, NULL);
 
           if(CheckInstances())
           {
@@ -2537,6 +2493,7 @@ void DlgSequenceNext()
           }
           AppendBackSlash(szBuf, sizeof(szBuf));
 
+#ifdef NUKE_FROM_ORBIT
           if(gdwUpgradeValue == UG_DELETE)
           {
             char szMessage[MAX_BUF];
@@ -2547,6 +2504,7 @@ void DlgSequenceNext()
             CreateDirectoriesAll(szBuf, TRUE);
             ShowMessage(szMessage, FALSE);
           }
+#endif /* NUKE_FROM_ORBIT */
 
           /* copy the install_wizard.log file from the temp\ns_temp dir to
            * the destination dir and use the new destination file to continue
@@ -2572,18 +2530,19 @@ void DlgSequenceNext()
             UpdateJSProxyInfo();
 
             /* POST_SMARTUPDATE process file manipulation functions */
-            ProcessFileOps(T_POST_SMARTUPDATE);
+            ProcessFileOps(T_POST_SMARTUPDATE, NULL);
             /* PRE_LAUNCHAPP process file manipulation functions */
-            ProcessFileOps(T_PRE_LAUNCHAPP);
+            ProcessFileOps(T_PRE_LAUNCHAPP, NULL);
 
             LaunchApps();
 
             /* POST_LAUNCHAPP process file manipulation functions */
-            ProcessFileOps(T_POST_LAUNCHAPP);
+            ProcessFileOps(T_POST_LAUNCHAPP, NULL);
             /* DEPEND_REBOOT process file manipulation functions */
-            ProcessFileOps(T_DEPEND_REBOOT);
+            ProcessFileOps(T_DEPEND_REBOOT, NULL);
             ProcessProgramFolderShowCmd();
 
+            CleanupPreviousVersionRegKeys();
             if(NeedReboot())
             {
               CleanupXpcomFile();
@@ -2725,3 +2684,4 @@ void DlgSequencePrev()
     }
   } while(!bDone);
 }
+

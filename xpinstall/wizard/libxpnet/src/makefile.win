@@ -27,6 +27,7 @@ LIBNAME=$(MODULE)
 DEPTH=..\..\..\..
 
 MAKE_OBJ_TYPE=DLL
+USE_NON_MT_LIBS=1
 
 LIBRARY=$(OBJDIR)\$(LIBNAME)_s.lib
 
@@ -37,6 +38,11 @@ OBJS=															\
 		$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
+
+docopy:
+    $(MAKE_INSTALL) *.h $(DIST)\include
+
+export:: docopy
 
 install::
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib

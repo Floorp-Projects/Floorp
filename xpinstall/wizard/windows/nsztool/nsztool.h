@@ -43,7 +43,7 @@ void            ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWO
 long            FileExists(LPSTR szFile);
 int             GetArgC(LPSTR lpszCommandLine);
 LPSTR           GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize);
-void            AddFile(LPSTR lpszSeaExe, LPSTR lpszFile);
+void            AddFile(HANDLE hExe, LPSTR lpszFile);
 BOOL APIENTRY   ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam);
 
 #endif

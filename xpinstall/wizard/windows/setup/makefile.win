@@ -36,12 +36,14 @@ OBJS =                          \
     .\$(OBJDIR)\setup.obj       \
     .\$(OBJDIR)\shortcut.obj    \
     .\$(OBJDIR)\xpi.obj         \
+    .\$(OBJDIR)\xpnetHook.obj   \
     $(NULL)
 
 LLIBS=                          \
     $(DIST)\lib\nsreg_s.lib     \
     $(DIST)\lib\jar_s.lib       \
     $(DIST)\lib\zlib_s.lib      \
+    $(DIST)\lib\xpnet_s.lib     \
     $(NULL)
 
 WIN_LIBS=                       \
@@ -50,6 +52,8 @@ WIN_LIBS=                       \
     shell32.lib                 \
     version.lib                 \
     $(NULL)
+
+#LLFLAGS= /NODEFAULTLIB libc.lib libcd.lib
 
 include <$(DEPTH)\config\rules.mak>
 

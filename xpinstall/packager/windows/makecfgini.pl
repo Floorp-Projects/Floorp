@@ -85,12 +85,12 @@ $inUrl            = $ARGV[5];
 
 # get environment vars
 $userAgent        = $ENV{WIZ_userAgent};
+$userAgentShort   = $ENV{WIZ_userAgentShort};
+$xpinstallVersion = $ENV{WIZ_xpinstallVersion};
 $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
-
-$userAgentShort   = ParseUserAgentShort($userAgent);
 
 $inDomain;
 $inRedirDomain;
@@ -189,6 +189,7 @@ while($line = <fpInIt>)
     $line =~ s/\$RedirectUrl\$/$inRedirUrl/gi;
     $line =~ s/\$UserAgent\$/$userAgent/gi;
     $line =~ s/\$UserAgentShort\$/$userAgentShort/gi;
+    $line =~ s/\$XPInstallVersion\$/$xpinstallVersion/gi;
     $line =~ s/\$CompanyName\$/$nameCompany/gi;
     $line =~ s/\$ProductName\$/$nameProduct/gi;
     $line =~ s/\$MainExeFile\$/$fileMainExe/gi;

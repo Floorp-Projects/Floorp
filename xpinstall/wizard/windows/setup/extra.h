@@ -108,17 +108,13 @@ void              DeInitDlgSiteSelector(diAS *diDialog);
 void              DetermineOSVersion(void);
 void              DeInitSiComponents(siC **siComponents);
 void              DeInitSetupGeneral(void);
-HRESULT           InitializeSmartDownload(void);
-HRESULT           DeInitializeSmartDownload(void);
 HRESULT           ParseSetupIni(void);
 HRESULT           GetConfigIni(void);
 void              CleanTempFiles(void);
 void              OutputSetupTitle(HDC hDC);
-HRESULT           SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir);
 long              RetrieveArchives(void);
 long              RetrieveRedirectFile(void);
-/* HRESULT           SmartUpdateJars(void); */
-void              ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwLength, DWORD dwType);
+void              ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, BOOL bUseSlash, DWORD dwType);
 void              RemoveBackSlash(LPSTR szInput);
 void              AppendBackSlash(LPSTR szInput, DWORD dwInputSize);
 void              RemoveSlash(LPSTR szInput);
@@ -127,13 +123,13 @@ BOOL              DeleteIdiGetConfigIni(void);
 BOOL              DeleteIdiGetArchives(void);
 BOOL              DeleteIdiGetRedirect(void);
 BOOL              DeleteIdiFileIniConfig(void);
-void              DeleteArchives(void);
+void              DeleteArchives(DWORD dwDeleteCheck);
 BOOL              DeleteIniRedirect(void);
 HRESULT           LaunchApps(void);
 HRESULT           FileExists(LPSTR szFile);
 int               ExtractDirEntries(char* directory,void* vZip);
-BOOL              LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize, BOOL bIncludeTempDir);
-HRESULT           AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, char *szFileIdiGetArchives);
+int               LocateJar(siC *siCObject, LPSTR szPath, int dwPathSize, BOOL bIncludeTempDir);
+HRESULT           AddArchiveToIdiFile(siC *siCObject, char *szSFile, char *szFileIdiGetArchives);
 int               SiCNodeGetIndexDS(char *szInDescriptionShort);
 int               SiCNodeGetIndexRN(char *szInReferenceName);
 void              ViewSiComponentsDependency(char *szBuffer, char *szIndentation, siC *siCNode);
@@ -188,8 +184,11 @@ BOOL              IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSel
 int               LocateExistingPath(char *szPath, char *szExistingPath, DWORD dwExistingPathSize);
 BOOL              ContainsReparseTag(char *szPath, char *szReparsePath, DWORD dwReparsePathSize);
 BOOL              DeleteInstallLogFile();
+int               CRCCheckDownloadedArchives(char *szFileIdiGetArchives);
+int               CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchiveListSize, BOOL bIncludeTempPath);
+BOOL              ResolveForceUpgrade(siC *siCObject);
 
 BOOL              bSDInit;
 
-#endif
+#endif /* _EXTRA_H_ */
 

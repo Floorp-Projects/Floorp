@@ -45,13 +45,16 @@
 #define IDC_STATUS                      1001
 #define IDC_STATUS1                     1001
 #define ID_DELETE                       1001
+#define IDC_STATUS_URL                  1001
 #define IDC_GAUGE                       1002
 #define IDC_GAUGE_FILE                  1002
 #define ID_IGNORE                       1002
 #define IDC_STATUS2                     1003
+#define IDC_STATUS_URL2                 1003
 #define IDC_STATUS0                     1004
 #define IDC_STATUS3                     1005
 #define ID_YES_TO_ALL                   1005
+#define IDC_STATUS_URL3                 1005
 #define IDC_GAUGE_ARCHIVE               1006
 #define IDC_EDIT_DESTINATION            1009
 #define IDC_BUTTON_BROWSE               1010
@@ -99,11 +102,15 @@
 #define IDC_EDIT_PROXY_SERVER           1062
 #define IDC_EDIT_PROXY_PORT             1063
 #define IDC_TAB1                        1064
+#define IDC_EDIT_PROXY_USER             1064
 #define IDC_DELETE_PATH                 1065
+#define IDC_EDIT_PROXY_PASSWD           1065
 #define IDC_LOCAL_INSTALLER_PATH        1066
 #define IDC_EDIT_LOCAL_INSTALLER_PATH   1066
 #define IDC_BUTTON_ADDITIONAL_SETTINGS  1067
 #define IDC_BUTTON_PROXY_SETTINGS       1067
+#define IDC_STATUS_FILE                 1070
+#define IDC_STATUS_STATUS               1071
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -120,6 +127,7 @@
 #define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
 #define DLG_UPGRADE                     10209
 #define DLG_DOWNLOAD_OPTIONS            10210
+#define DLG_DOWNLOADING                 10211
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
 #define IDB_BOX_CHECKED_DISABLED        10307
@@ -159,7 +167,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        113
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1070
+#define _APS_NEXT_CONTROL_VALUE         1072
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -28,6 +28,7 @@
 #include "xpistub.h"
 #include "xpi.h"
 #include "xperr.h"
+#include "ifuncns.h"
 
 #define BDIR_RIGHT 1
 #define BDIR_LEFT  2
@@ -189,6 +190,10 @@ HRESULT SmartUpdateJars()
     siCObject         = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     while(siCObject)
     {
+      if(siCObject->dwAttributes & SIC_SELECTED)
+        /* Since the archive is selected, we need to process the file ops here */
+         ProcessFileOps(T_PRE_ARCHIVE, siCObject->szReferenceName);
+
       /* launch smartupdate engine for earch jar to be installed */
       if((siCObject->dwAttributes & SIC_SELECTED)   &&
         !(siCObject->dwAttributes & SIC_LAUNCHAPP) &&
@@ -271,7 +276,7 @@ HRESULT SmartUpdateJars()
             PrintError(szBuf, ERROR_CODE_HIDE);
           }
 
-          /* break out of the while loop */
+          /* break out of the siCObject while loop */
           break;
         }
 
@@ -280,9 +285,13 @@ HRESULT SmartUpdateJars()
         ProcessWindowsMessages();
       }
 
+      if(siCObject->dwAttributes & SIC_SELECTED)
+        /* Since the archive is selected, we need to do the file ops here */
+         ProcessFileOps(T_POST_ARCHIVE, siCObject->szReferenceName);
+
       ++dwIndex0;
       siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
-    }
+    } /* while(siCObject) */
 
     pfnXpiExit();
     DeInitProgressDlg();
@@ -309,7 +318,7 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
 
   if(sgProduct.dwMode != SILENT)
   {
-    ParsePath((char *)msg, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
+    ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
 
     if(max == 0)
     {

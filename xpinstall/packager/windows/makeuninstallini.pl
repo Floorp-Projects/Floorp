@@ -57,12 +57,12 @@ $inVersion        = $ARGV[1];
 
 # get environment vars
 $userAgent        = $ENV{WIZ_userAgent};
+$userAgentShort   = $ENV{WIZ_userAgentShort};
+$xpinstallVersion = $ENV{WIZ_xpinstallVersion};
 $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
-
-$userAgentShort   = ParseUserAgentShort($userAgent);
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -84,6 +84,7 @@ while($line = <fpInIt>)
   $line =~ s/\$Version\$/$inVersion/i;
   $line =~ s/\$UserAgent\$/$userAgent/i;
   $line =~ s/\$UserAgentShort\$/$userAgentShort/i;
+  $line =~ s/\$XPInstallVersion\$/$xpinstallVersion/i;
   $line =~ s/\$CompanyName\$/$nameCompany/i;
   $line =~ s/\$ProductName\$/$nameProduct/i;
   $line =~ s/\$MainExeFile\$/$fileMainExe/i;

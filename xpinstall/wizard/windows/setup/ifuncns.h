@@ -29,18 +29,18 @@ HRESULT     TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile);
 HRESULT     FileUncompress(LPSTR szFrom, LPSTR szTo);
 HRESULT     ProcessXpcomFile(void);
 HRESULT     CleanupXpcomFile(void);
-HRESULT     ProcessUncompressFile(DWORD dwTiming);
+HRESULT     ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     FileMove(LPSTR szFrom, LPSTR szTo);
-HRESULT     ProcessMoveFile(DWORD dwTiming);
+HRESULT     ProcessMoveFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists);
-HRESULT     ProcessCopyFile(DWORD dwTiming);
-HRESULT     ProcessCreateDirectory(DWORD dwTiming);
+HRESULT     ProcessCopyFile(DWORD dwTiming, char *szSectionPrefix);
+HRESULT     ProcessCreateDirectory(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     FileDelete(LPSTR szDestination);
-HRESULT     ProcessDeleteFile(DWORD dwTiming);
+HRESULT     ProcessDeleteFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs);
-HRESULT     ProcessRemoveDirectory(DWORD dwTiming);
-HRESULT     ProcessRunApp(DWORD dwTiming);
-HRESULT     ProcessWinReg(DWORD dwTiming);
+HRESULT     ProcessRemoveDirectory(DWORD dwTiming, char *szSectionPrefix);
+HRESULT     ProcessRunApp(DWORD dwTiming, char *szSectionPrefix);
+HRESULT     ProcessWinReg(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     CreateALink(LPSTR lpszPathObj,
                         LPSTR lpszPathLink,
                         LPSTR lpszDesc,
@@ -48,10 +48,12 @@ HRESULT     CreateALink(LPSTR lpszPathObj,
                         LPSTR lpszArgs,
                         LPSTR lpszIconFullPath,
                         int iIcon);
-HRESULT     ProcessProgramFolder(DWORD dwTiming);
+HRESULT     ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     ProcessProgramFolderShowCmd(void);
 HRESULT     CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall);
-void        ProcessFileOps(DWORD dwTiming);
+void        ProcessFileOps(DWORD dwTiming, char *szSectionPrefix);
+void        DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
+void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete);
 void        GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
 void        SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPBYTE lpbData, DWORD dwSize);
 HKEY        ParseRootKey(LPSTR szRootKey);
@@ -59,11 +61,17 @@ BOOL        ParseRegType(LPSTR szType, DWORD *dwType);
 BOOL        WinRegKeyExists(HKEY hkRootKey, LPSTR szKey);
 BOOL        WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 HRESULT     FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilename);
-HRESULT     ProcessCopyFileSequential(DWORD dwTiming);
+HRESULT     ProcessCopyFileSequential(DWORD dwTiming, char *szSectionPrefix);
 void        UpdateInstallLog(LPSTR szKey, LPSTR szDir);
 int         RegisterDll32(char *File);
 HRESULT     FileSelfRegister(LPSTR szFilename, LPSTR szDestination);
-HRESULT     ProcessSelfRegisterFile(DWORD dwTiming);
+HRESULT     ProcessSelfRegisterFile(DWORD dwTiming, char *szSectionPrefix);
 void        UpdateJSProxyInfo(void);
+int         VerifyArchive(LPSTR szArchive);
+HRESULT     ProcessSetVersionRegistry(DWORD dwTiming, char *szSectionPrefix);
+char        *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, DWORD dwOutBufSize);
+void        GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize);
+void        CleanupPreviousVersionRegKeys(void);
 
-#endif
+#endif /* _IFUNCNS_H_ */
+

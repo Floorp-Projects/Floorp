@@ -24,6 +24,51 @@
 
 #include "ifuncns.h"
 #include "extra.h"
+#include <shlwapi.h>
+
+BOOL SearchForUninstallKeys(char *szStringToMatch)
+{
+  char      szBuf[MAX_BUF];
+  char      szBufKey[MAX_BUF];
+  char      szSubKey[MAX_BUF];
+  HKEY      hkHandle;
+  BOOL      bFound;
+  DWORD     dwIndex;
+  DWORD     dwSubKeySize;
+  DWORD     dwTotalSubKeys;
+  DWORD     dwTotalValues;
+  FILETIME  ftLastWriteFileTime;
+  char      szWRMSUninstallKeyPath[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+  char      szWRMSUninstallName[] =  "UninstallString";
+
+
+  bFound = FALSE;
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szWRMSUninstallKeyPath, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
+    return(bFound);
+
+  dwTotalSubKeys = 0;
+  dwTotalValues  = 0;
+  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
+  for(dwIndex = 0; dwIndex < dwTotalSubKeys; dwIndex++)
+  {
+    dwSubKeySize = sizeof(szSubKey);
+    if(RegEnumKeyEx(hkHandle, dwIndex, szSubKey, &dwSubKeySize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
+    {
+      wsprintf(szBufKey, "%s\\%s", szWRMSUninstallKeyPath, szSubKey);
+      GetWinReg(HKEY_LOCAL_MACHINE, szBufKey, szWRMSUninstallName, szBuf, sizeof(szBuf));
+      if(StrStrI(szBuf, szStringToMatch) != NULL)
+      {
+        bFound = TRUE;
+
+        /* found one subkey. break out of the for() loop */
+        break;
+      }
+    }
+  }
+
+  RegCloseKey(hkHandle);
+  return(bFound);
+}
 
 HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
 {

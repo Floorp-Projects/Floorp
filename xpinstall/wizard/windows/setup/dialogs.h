@@ -43,7 +43,7 @@ LRESULT CALLBACK  NewListBoxWndProc( HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK  DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 
 void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
-void              AskCancelDlg(HWND hDlg);
+BOOL              AskCancelDlg(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
 void              DlgSequenceNext(void);
@@ -64,4 +64,5 @@ WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
 
-#endif
+#endif /* _DIALOGS_H_ */
+

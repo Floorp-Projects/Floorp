@@ -28,10 +28,10 @@
 #ifdef __cplusplus
 #define PR_BEGIN_EXTERN_C       extern "C" {
 #define PR_END_EXTERN_C         }
-#else
+#else /* __cplusplus */
 #define PR_BEGIN_EXTERN_C
 #define PR_END_EXTERN_C
-#endif
+#endif /* __cplusplus */
 
 #define PR_EXTERN(type) type
 
@@ -50,11 +50,6 @@ typedef int PRInt32;
 #include "resource.h"
 #include "zipfile.h"
 
-/* required only by commercial seamonkey build */
-#ifndef MOZILLA_CLIENT
-#include "sdinst.h"
-#endif
-
 #define CLASS_NAME_SETUP                "Setup"
 #define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
 #define FILE_INI_SETUP                  "setup.ini"
@@ -66,6 +61,14 @@ typedef int PRInt32;
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install_wizard.log"
 #define FILE_ALL_JS                     "all-proxy.js"
+#define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
+
+#define MAX_CRC_FAILED_DOWNLOAD_RETRIES 3
+#define MAX_FILE_DOWNLOAD_RETRIES       3
+
+#define BAR_MARGIN    1
+#define BAR_SPACING   2
+#define BAR_WIDTH     6
 
 /* UG: Upgrade */
 #define UG_NONE                         0
@@ -73,10 +76,22 @@ typedef int PRInt32;
 #define UG_IGNORE                       2
 #define UG_GOBACK                       3
 
+/* AP: Archive Path */
+#define AP_NOT_FOUND                    0
+#define AP_TEMP_PATH                    1
+#define AP_SETUP_PATH                   2
+#define AP_ALTERNATE_PATH               3
+
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1
 #define PP_PATH_ONLY                    2
 #define PP_ROOT_ONLY                    3
+#define PP_EXTENSION_ONLY               4
+
+/* DA: Delete Archive */
+#define DA_ONLY_IF_IN_ARCHIVES_LST      1
+#define DA_ONLY_IF_NOT_IN_ARCHIVES_LST  2
+#define DA_IGNORE_ARCHIVES_LST          3
 
 /* T: Timing */
 #define T_PRE_DOWNLOAD                  1
@@ -88,8 +103,18 @@ typedef int PRInt32;
 #define T_PRE_LAUNCHAPP                 7
 #define T_POST_LAUNCHAPP                8
 #define T_DEPEND_REBOOT                 9
+#define T_PRE_ARCHIVE                   10
+#define T_POST_ARCHIVE                  11
 
-#define MAX_BUF                         4096
+#define MAX_BUF                         2048
+#define MAX_BUF_TINY                    256
+#define MAX_BUF_SMALL                   512
+#define MAX_BUF_MEDIUM                  1024
+#define MAX_BUF_LARGE                   MAX_BUF
+#define MAX_BUF_XLARGE                  4096
+#define MAX_ITOA                        46
+#define MAX_INI_SK                      128
+
 #define ERROR_CODE_HIDE                 0
 #define ERROR_CODE_SHOW                 1
 #define DLG_NONE                        0
@@ -98,7 +123,13 @@ typedef int PRInt32;
 
 /* WIZ: WIZARD defines */
 #define WIZ_OK                          0
-#define WIZ_MEMORY_ALLOC_FAILED         1
+#define WIZ_ERROR_UNDEFINED             1024
+#define WIZ_MEMORY_ALLOC_FAILED         1025
+#define WIZ_OUT_OF_MEMORY               WIZ_MEMORY_ALLOC_FAILED
+#define WIZ_ARCHIVES_MISSING            1026
+#define WIZ_CRC_PASS                    WIZ_OK
+#define WIZ_CRC_FAIL                    1028
+#define WIZ_SETUP_ALREADY_RUNNING       1029
 
 /* FO: File Operation */
 #define FO_OK                           0
@@ -130,6 +161,7 @@ typedef int PRInt32;
 #define SIC_DOWNLOAD_ONLY               16
 #define SIC_ADDITIONAL                  32
 #define SIC_DISABLED                    64
+#define SIC_FORCE_UPGRADE               128
 
 /* AC: Additional Components */
 #define AC_NONE                         0
@@ -152,8 +184,6 @@ typedef int PRInt32;
 #define DSR_SYSTEM                      1
 #define DSR_TEMP                        2
 #define DSR_DOWNLOAD_SIZE               3
-
-typedef HRESULT (_cdecl *SDI_NETINSTALL) (LPSDISTRUCT);
 
 typedef struct dlgSetup
 {
@@ -253,6 +283,8 @@ typedef struct dlgAdvancedSettings
   LPSTR szMessage0;
   LPSTR szProxyServer;
   LPSTR szProxyPort;
+  LPSTR szProxyUser;
+  LPSTR szProxyPasswd;
 } diAS;
 
 typedef struct dlgStartInstall
@@ -262,6 +294,14 @@ typedef struct dlgStartInstall
   LPSTR szMessageInstall;
   LPSTR szMessageDownload;
 } diSI;
+
+typedef struct dlgDownload
+{
+  BOOL  bShowDialog;
+  LPSTR szTitle;
+  LPSTR szMessageDownload0;
+  LPSTR szMessageRetry0;
+} diD;
 
 typedef struct dlgReboot
 {
@@ -279,6 +319,7 @@ typedef struct setupStruct
   LPSTR     szProgramName;
   LPSTR     szCompanyName;
   LPSTR     szProductName;
+  LPSTR     szUserAgent;
   LPSTR     szProgramFolderName;
   LPSTR     szProgramFolderPath;
   LPSTR     szAlternateArchiveSearchPath;
@@ -345,6 +386,7 @@ struct sinfoComponent
   LPSTR           szDescriptionLong;
   LPSTR           szParameter;
   LPSTR           szReferenceName;
+  BOOL            bForceUpgrade;
   siCD            *siCDDependencies;
   siCD            *siCDDependees;
   siC             *Next;
@@ -361,4 +403,5 @@ struct ssInfo
   ssi   *Prev;
 };
 
-#endif
+#endif /* _SETUP_H */
+

@@ -26,6 +26,7 @@ MODULE=xpnet
 DEPTH=..\..\..\..
 
 MAKE_OBJ_TYPE=EXE
+USE_NON_MT_LIBS=1
 
 EXENAME=TestLibxpnet
 PDBFILE=TestLibxpnet
