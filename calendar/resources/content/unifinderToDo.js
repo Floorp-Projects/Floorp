@@ -172,6 +172,8 @@ function modifyToDoCommand( event )
    
    if( ThisToDo )
       editToDo( ThisToDo );
+   else
+     newToDoCommand();
 }
 
 /**
@@ -323,7 +325,7 @@ var toDoTreeView =
       props.AppendElement(aserv.getAtom(ToDoProgressAtom(calendarToDo)));
    },
    getColumnProperties : function(){return false;},
-   // By getCellProperties, the properties defined with 
+   // By getRowProperties, the properties defined with 
    // treechildren:-moz-tree-row in CSS are used.
    // It is used here to color the background of a selected
    // ToDo task with a color
@@ -611,10 +613,20 @@ function changeToolTipTextForToDo( event )
    
       if (toDoItem.description)
       {
-         var DescriptionHtml = document.createElement( "description" );
-         var DescriptionText = document.createTextNode( "Description: "+toDoItem.description );
-         DescriptionHtml.appendChild( DescriptionText );
-         HolderBox.appendChild( DescriptionHtml );
+	var text = "Description: "+toDoItem.description ;
+	var lines = text.split("\n");
+	var nbmaxlines = 5 ;
+	var nblines = lines.length ;
+	if( nblines > nbmaxlines ) {
+	  var nblines = nbmaxlines ;
+	  lines[ nblines - 1 ] = "..." ;
+	}
+	for (var i = 0; i < nblines; i++) {
+	  var DescriptionHtml = document.createElement("description");
+	  var DescriptionText = document.createTextNode(lines[i]);
+	  DescriptionHtml.appendChild(DescriptionText);
+	  HolderBox.appendChild(DescriptionHtml);
+	}
       }
       
       Html.appendChild( HolderBox );

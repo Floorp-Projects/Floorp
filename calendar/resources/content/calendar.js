@@ -954,14 +954,21 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 
    if (calendarEventDisplay.event.description)
    {
-      var DescriptionHtml = document.createElement( "description" );
-      var Description = calendarEventDisplay.event.description;
-      if( Description.length > 53 )
-         Description = Description.substr( 0, 50 )+"...";
-
-      var DescriptionText = document.createTextNode( "Description: "+Description );
-      DescriptionHtml.appendChild( DescriptionText );
-      HolderBox.appendChild( DescriptionHtml );
+     var Description =  "Description: "+calendarEventDisplay.event.description;
+     var lines = Description.split("\n");
+     var nbmaxlines = 5 ;
+     var nblines = lines.length ;
+     if( nblines > nbmaxlines ) {
+       var nblines = nbmaxlines ;
+       lines[ nblines - 1 ] = "..." ;
+     }
+  
+     for (var i = 0; i < nblines; i++) {
+       var DescriptionHtml = document.createElement("description");
+       var DescriptionText = document.createTextNode(lines[i]);
+       DescriptionHtml.appendChild(DescriptionText);
+       HolderBox.appendChild(DescriptionHtml);
+     }
    }
 
    return ( HolderBox );
