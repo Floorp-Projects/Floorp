@@ -165,12 +165,6 @@ protected:
 
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
-  nsresult PrepareFrameAppendedReflow(nsBlockReflowState& aState);
-
-  nsresult PrepareFrameInsertedReflow(nsBlockReflowState& aState);
-
-  nsresult PrepareFrameRemovedReflow(nsBlockReflowState& aState);
-
   nsresult PrepareStyleChangedReflow(nsBlockReflowState& aState);
 
   nsresult PrepareChildIncrementalReflow(nsBlockReflowState& aState);
@@ -286,7 +280,7 @@ protected:
 
   void TakeRunInFrames(nsBlockFrame* aRunInFrame);
 
-  nsresult ComputeTextRuns(nsBlockReflowState& aState);
+  nsresult ComputeTextRuns(nsIPresContext& aPresContext);
 
   void BuildFloaterList();
 
