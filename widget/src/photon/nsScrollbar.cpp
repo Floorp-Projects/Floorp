@@ -36,6 +36,8 @@ NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::nsScrollbar this=<%p> IsVertical=<%d>\n", this, aIsVertical));
+
   NS_INIT_REFCNT ();
 
   mOrientation = (aIsVertical) ? Pt_VERTICAL : Pt_HORIZONTAL;
@@ -48,7 +50,7 @@ nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 //-------------------------------------------------------------------------
 nsScrollbar::~nsScrollbar ()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::~nsScrollbar\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::~nsScrollbar this=<%p>\n", this));
 }
 
 //-------------------------------------------------------------------------
@@ -58,6 +60,8 @@ nsScrollbar::~nsScrollbar ()
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::CreateNative (PtWidget_t * parentWindow)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::CreateNative this=<%p>\n", this));
+
   nsresult  res = NS_ERROR_FAILURE;
   PhPoint_t pos;
   PhDim_t   dim;
@@ -144,7 +148,7 @@ NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::SetPosition\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::SetPosition to <%d>\n", aPos));
 
   nsresult res = NS_ERROR_FAILURE;
 
@@ -172,8 +176,6 @@ NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
 {
   nsresult res = NS_ERROR_FAILURE;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::GetPosition\n"));
-
   if( mWidget )
   {
     PtArg_t  arg;
@@ -187,6 +189,8 @@ NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
     }
   }
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::GetPosition position=<%d>\n", aPos));
+
   return res;
 }
 
@@ -198,7 +202,7 @@ NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetThumbSize (PRUint32 aSize)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::SetThumbSize\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::SetThumbSize aSize=<%d>\n", aSize));
   nsresult res = NS_ERROR_FAILURE;
 
   if( mWidget )
@@ -306,7 +310,8 @@ NS_METHOD nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
 NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
 	       PRUint32 aPosition, PRUint32 aLineIncrement)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::SetParameters\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::SetParameters this=<%p> MaxRange=<%d> ThumbSize=<%d> Position=<%d> LineIncrement=<%d>\n",
+    this, aMaxRange, aThumbSize, aPosition, aLineIncrement));
 
   nsresult res = NS_ERROR_FAILURE;
 
@@ -342,7 +347,7 @@ PRBool nsScrollbar::OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos)
 
   if (mEventCallback)
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::OnScroll Inside mEventCallback porotion\n", cPos));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsScrollbar::OnScroll Inside mEventCallback portion\n", cPos));
 
     aEvent.position = cPos;
     result = ConvertStatus((*mEventCallback)(&aEvent));
