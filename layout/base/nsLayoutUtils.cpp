@@ -393,7 +393,8 @@ nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
 nsIScrollableView*
 nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
 {
-  // Find the first view that has a scrollable frame whose
+  // If aDirection is eEither, find first view with a scrolllable frame.
+  // Otherwise, find the first view that has a scrollable frame whose
   // ScrollbarStyles is not NS_STYLE_OVERFLOW_HIDDEN in aDirection
   // and where there is something currently not visible
   // that can be scrolled to in aDirection.
@@ -419,13 +420,15 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
       // Get size of currently visible area
       nsSize visibleSize = GetFrameFor(aView)->GetSize();
       // aDirection can be eHorizontal, eVertical, or eEither
+      // If scrolling in a specific direction, require visible scrollbars or
+      // something to scroll to in that direction.
       if (aDirection != eHorizontal &&
           ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
-          (totalHeight > visibleSize.height || margin.right))
+          (aDirection == eEither || totalHeight > visibleSize.height || margin.right))
         break;
       if (aDirection != eVertical &&
           ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
-          (totalWidth > visibleSize.width || margin.bottom))
+          (aDirection == eEither || totalWidth > visibleSize.width || margin.bottom))
         break;
     }
   }
