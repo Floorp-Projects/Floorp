@@ -79,7 +79,7 @@ public:
   static PRBool  gExitMainLoop;
 
 private:
-  nsIEventQueue* mEventQueue;
+	nsCOMPtr<nsIEventQueue> mEventQueue;
   int	mFD;
 	static PRBool mPtInited;
 

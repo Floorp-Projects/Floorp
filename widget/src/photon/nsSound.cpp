@@ -90,7 +90,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
                                         PRUint32 stringLen,
-                                        const char *stringData)
+                                        const PRUint8 *stringData)
 {
   nsresult rv = NS_ERROR_FAILURE;
 

@@ -121,9 +121,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
     return PR_FALSE;
   }
 
-  char *title = ConvertToFileSystemCharset(mTitle.get());
-  if (nsnull == title)
-    title = ToNewCString(mTitle);
+  char *title = ToNewUTF8String( mTitle );
 
   nsCAutoString initialDir;
   mDisplayDirectory->GetNativePath(initialDir);
@@ -140,7 +138,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
 
 	char extensionBuffer[MAX_EXTENSION_LENGTH+1] = "*";
 	if( !mFilterList.IsEmpty() ) {
-		char *text = ConvertToFileSystemCharset( mFilterList.get( ) );
+		char *text = ToNewUTF8String( mFilterList );
 		if( text ) {
 			extensionBuffer[0] = 0;
 
@@ -160,7 +158,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
 		}
 	else if (!mDefaultExtension.IsEmpty()) {
 		// Someone was cool and told us what to do
-		char *convertedExt = ConvertToFileSystemCharset(mDefaultExtension.get());
+		char *convertedExt = ToNewUTF8String( mDefaultExtension );
 		if (!convertedExt) {
 			mDefaultExtension.ToCString(extensionBuffer, MAX_EXTENSION_LENGTH);
 			}
@@ -352,107 +350,6 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
   return NS_OK;
 }
 
-
-//-------------------------------------------------------------------------
-void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
-{
-  static nsCAutoString aCharset;
-  nsresult rv;
-
-  if (aCharset.Length() < 1) {
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-      rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
-    if (NS_FAILED(rv))
-      aCharset.Assign(NS_LITERAL_CSTRING("windows-1252"));
-  }
-  fileSystemCharset = aCharset;
-}
-
-
-//-------------------------------------------------------------------------
-char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
-{
-  char *outString = nsnull;
-  nsresult rv = NS_OK;
-
-  // get file system charset and create a unicode encoder
-  if (nsnull == mUnicodeEncoder) {
-    nsCAutoString fileSystemCharset;
-    GetFileSystemCharset(fileSystemCharset);
-
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &rv); 
-    if (NS_SUCCEEDED(rv)) {
-      rv = ccm->GetUnicodeEncoderRaw(fileSystemCharset.get(), &mUnicodeEncoder);
-    }
-  }
-
-  // converts from unicode to the file system charset
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = inString.Length();
-
-    const nsAFlatString& flatInString = PromiseFlatString(inString);
-
-    PRInt32 outLength;
-    rv = mUnicodeEncoder->GetMaxLength(flatInString.get(), inLength,
-                                       &outLength);
-    if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( char*, nsMemory::Alloc( outLength+1 ) );
-      if (nsnull == outString) {
-        return nsnull;
-      }
-      rv = mUnicodeEncoder->Convert(flatInString.get(), &inLength, outString,
-                                    &outLength);
-      if (NS_SUCCEEDED(rv)) {
-        outString[outLength] = '\0';
-      }
-    }
-  }
-  
-  return NS_SUCCEEDED(rv) ? outString : nsnull;
-}
-
-//-------------------------------------------------------------------------
-PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
-{
-  PRUnichar *outString = nsnull;
-  nsresult rv = NS_OK;
-
-  // get file system charset and create a unicode encoder
-  if (nsnull == mUnicodeDecoder) {
-    nsCAutoString fileSystemCharset;
-    GetFileSystemCharset(fileSystemCharset);
-
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &rv); 
-    if (NS_SUCCEEDED(rv)) {
-      rv = ccm->GetUnicodeDecoderRaw(fileSystemCharset.get(), &mUnicodeDecoder);
-    }
-  }
-
-  // converts from the file system charset to unicode
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = strlen(inString);
-    PRInt32 outLength;
-    rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
-    if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ) );
-      if (nsnull == outString) {
-        return nsnull;
-      }
-      rv = mUnicodeDecoder->Convert(inString, &inLength, outString, &outLength);
-      if (NS_SUCCEEDED(rv)) {
-        outString[outLength] = 0;
-      }
-    }
-  }
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
-  return NS_SUCCEEDED(rv) ? outString : nsnull;
-}
 
 //-------------------------------------------------------------------------
 //
