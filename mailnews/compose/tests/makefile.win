@@ -18,5 +18,6 @@
 DEPTH=..\..\..
 
 DIRS=compose smtp sendpage
+#DIRS+=compose2 geturl sendlater sendpage
 
 include <$(DEPTH)\config\rules.mak>
