@@ -293,84 +293,17 @@ int initOptions(int aArgCount, char** aArgArray)
 {
     int retval = 0;
     int traverse = 0;
-    const char* stdinDash = "-";
-    const char* outputDir = ".";
-    const PRUint32 httpdPort = 1969;
-    const PRUint32 listItemMax = 500;
-    PRStatus prStatus = PR_SUCCESS;
 
     /*
-    ** As a default, stdin is the input.
+    **  Set the initial global default options.
     */
-    PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", stdinDash);
-
-    /*
-    ** As a default, this directory is the output.
-    */
-    PR_snprintf(globals.mOptions.mOutputDir, sizeof(globals.mOptions.mOutputDir), "%s", outputDir);
-
-    /*
-    ** As a default, this is the port to listen for http requests.
-    */
-    globals.mOptions.mHttpdPort = httpdPort;
-
-    /*
-    ** As a default, the number of list items to limit display to.
-    */
-    globals.mOptions.mListItemMax = listItemMax;
-
-    /*
-    ** As a default, there is no maximum timeval on the dataset.
-    */
-    globals.mOptions.mTimevalMax = ST_TIMEVAL_MAX;
-
-    /*
-    ** As a default, there is no maximum allocation size on the dataset.
-    */
-    globals.mOptions.mSizeMax = (PRUint32)-1;
-
-    /*
-    ** As a default, want to look at allocations which live at least...
-    */
-    globals.mOptions.mLifetimeMin = ST_DEFAULT_LIFETIME_MIN * ST_TIMEVAL_RESOLUTION;
-
-    /*
-    ** As a default, there is no maximum allocation lifetime timeval.
-    */
-    globals.mOptions.mLifetimeMax = ST_TIMEVAL_MAX;
-
-    /*
-    ** As a default, there is no maximum weight allowed.
-    */
-    globals.mOptions.mWeightMax64 = LL_INIT(0xFFFFFFFF, 0xFFFFFFFF);
-
-    /*
-    ** As a default, there is no maximum allocation timeval.
-    */
-    globals.mOptions.mAllocationTimevalMax = ST_TIMEVAL_MAX;
-
-#if ST_WANT_GRAPHS
-    /*
-    ** As a default, there is no maximum graph timeval.
-    */
-    globals.mOptions.mGraphTimevalMax = ST_TIMEVAL_MAX;
-#endif
-
-    /*
-    ** As a default, we align byte sizes to a particular size.
-    */
-    globals.mOptions.mAlignBy = ST_DEFAULT_ALIGNMENT_SIZE;
-    globals.mOptions.mOverhead = ST_DEFAULT_OVERHEAD_SIZE;
-
-    /*
-    ** category file
-    */
-    PR_snprintf(globals.mOptions.mCategoryFile, sizeof(globals.mOptions.mCategoryFile), "%s", "rules.txt");
-
-    /*
-    ** Default category name - name of root category
-    */
-    PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", ST_ROOT_CATEGORY_NAME);
+#define ST_CMD_OPTION_BOOL(option_name, option_help) globals.mOptions.m##option_name = PR_FALSE;
+#define ST_CMD_OPTION_STRING(option_name, default_value, option_help) PR_snprintf(globals.mOptions.m##option_name, sizeof(globals.mOptions.m##option_name), "%s", default_value);
+#define ST_CMD_OPTION_STRING_ARRAY(option_name, array_size, option_help) { int loop; for(loop = 0; loop < array_size; loop++) { globals.mOptions.m##option_name[loop][0] = '\0'; } }
+#define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_help) globals.mOptions.m##option_name = NULL; globals.mOptions.m##option_name##Count = 0;
+#define ST_CMD_OPTION_UINT32(option_name, default_value, multiplier, option_help) globals.mOptions.m##option_name = default_value * multiplier;
+#define ST_CMD_OPTION_UINT64(option_name, default_value, multiplier, option_help) { PRUint64 def64 = default_value; PRUint64 mul64 = multiplier; LL_MUL(globals.mOptions.m##option_name##64, def64, mul64); }
+#include "stoptions.h"
 
     /*
     ** Go through all arguments.
@@ -396,7 +329,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     ** If the entire option is a dash,
                     ** then input is stdin.
                     */
-                    PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", stdinDash);
+                    PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", "-");
                 }
                 break;
 
@@ -5917,7 +5850,7 @@ void handleClient(void* inArg)
                 **  mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.28 2002/05/07 23:39:33 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.29 2002/05/08 00:16:19 blythe%netscape.com Exp $", crlf);
                 if(NULL != getData)
                 {
                     if(NULL == cookieData || (NULL != cookieData && 0 != strcmp(getData, cookieData)))
