@@ -141,11 +141,10 @@ nsCString::~nsCString() {
   nsStr::Destroy(*this,mAgent);
 }
 
-void nsCString::SizeOf(nsISizeOfHandler* aHandler) const {
-#ifndef RICKG_TESTBED
-  aHandler->Add(sizeof(*this));
-  aHandler->Add(mCapacity << mCharSize);
-#endif
+void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
+  if (aResult) {
+    *aResult = sizeof(*this) + mCapacity * mCharSize;
+  }
 }
 
 /**
@@ -1848,11 +1847,10 @@ nsCAutoString::nsCAutoString( nsSubsumeCStr& aSubsumeStr) :nsCString() {
 nsCAutoString::~nsCAutoString(){
 }
 
-void nsCAutoString::SizeOf(nsISizeOfHandler* aHandler) const {
-#ifndef RICKG_TESTBED
-  aHandler->Add(sizeof(*this));
-  aHandler->Add(mCapacity << mCharSize);
-#endif
+void nsCAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
+  if (aResult) {
+    *aResult = sizeof(*this) + mCapacity * mCharSize;
+  }
 }
 
 nsSubsumeCStr::nsSubsumeCStr(nsStr& aString) : nsCString() {

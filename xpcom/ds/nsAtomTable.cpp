@@ -78,9 +78,11 @@ AtomImpl::GetUnicode( PRUnichar** _retval ) /*FIX: const */
 }
 
 NS_IMETHODIMP
-AtomImpl::SizeOf(nsISizeOfHandler* aHandler) /*FIX: const */
+AtomImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* _retval) /*FIX: const */
 {
-  aHandler->Add(sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar));
+  NS_ENSURE_ARG_POINTER(_retval);
+  PRUint32 sum = sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar);
+  *_retval = sum;
   return NS_OK;
 }
 

@@ -100,7 +100,7 @@ inline PRInt32 Length() const { return (PRInt32)mLength; }
  * Retrieve the size of this string
  * @return string length
  */
-virtual void SizeOf(nsISizeOfHandler* aHandler) const;
+virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
 
 /**
@@ -715,7 +715,7 @@ public:
      * Retrieve the size of this string
      * @return string length
      */
-    virtual void SizeOf(nsISizeOfHandler* aHandler) const;
+    virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
     
     char mBuffer[kDefaultStringSize];
 };

@@ -25,41 +25,73 @@
 #define NS_ISIZEOF_HANDLER_IID \
 { 0xc028d1f0, 0xfc9e, 0x11d1, {0x89, 0xe4, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81}}
 
+class nsIAtom;
+class nsISizeOfHandler;
+
+/**
+ * Function used by the Report method to report data gathered during
+ * a collection of data.
+ */
+typedef void (*nsISizeofReportFunc)(nsISizeOfHandler* aHandler,
+                                    nsIAtom* aKey,
+                                    PRUint32 aCount,
+                                    PRUint32 aTotalSize,
+                                    PRUint32 aMinSize,
+                                    PRUint32 aMaxSize,
+                                    void* aArg);
+
 /**
  * An API to managing a sizeof computation of an arbitrary graph.
  * The handler is responsible for remembering which objects have been
- * seen before. Note that the handler doesn't hold references to
- * nsISupport's objects; the assumption is that the objects being
- * sized are stationary and will not be modified during the sizing
- * computation and therefore do not need an extra reference count.
+ * seen before (using RecordObject). Note that the handler doesn't
+ * hold references to nsISupport's objects; the assumption is that the
+ * objects being sized are stationary and will not be modified during
+ * the sizing computation and therefore do not need an extra reference
+ * count.
+ *
+ * Users of this API are responsible for the actual graph/tree walking.
  */
 class nsISizeOfHandler : public nsISupports {
 public:
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISIZEOF_HANDLER_IID)
 
   /**
-   * Add in a simple size value to the running total.
-   * Always returns NS_OK.
+   * Initialize the handler for a new collection of data. This empties
+   * out the object prescence table and the keyed size table.
    */
-  NS_IMETHOD Add(size_t aSize) = 0;
+  NS_IMETHOD Init() = 0;
 
   /**
-   * Update aResult with PR_TRUE if the object has been traversed
-   * by the sizeof computation before. Otherwise aResult is set to
-   * PR_FALSE and the object is added to the internal database
-   * of objects that have been traversed. It's ok to pass a null
-   * pointer in; aResult will be set to PR_TRUE so you won't accidently
-   * try to traverse through null pointer.
-   *
-   * Note: This violates the COM API standard on purpose; so there!
+   * Record the sizing status of a given object. The first time
+   * aObject is recorded, aResult will be PR_FALSE. Subsequent times,
+   * aResult will be PR_TRUE.
    */
-  virtual PRBool HaveSeen(void* anObject) = 0;
+  NS_IMETHOD RecordObject(void* aObject, PRBool* aResult) = 0;
 
   /**
-   * Return the currently computed size.
-   * Always returns NS_OK.
+   * Add size information to the running size data. The atom is used
+   * as a key to keep type specific running totals of size
+   * information.  This increments the total count and the total size
+   * as well as updates the minimum, maximum and total size for aKey's
+   * type.
    */
-  NS_IMETHOD GetSize(PRUint32& aResult) = 0;
+  NS_IMETHOD AddSize(nsIAtom* aKey, PRUint32 aSize) = 0;
+
+  /**
+   * Enumerate data collected for each type and invoke the
+   * reporting function with the data gathered.
+   */
+  NS_IMETHOD Report(nsISizeofReportFunc aFunc, void* aArg) = 0;
+
+  /**
+   * Get the current totals - the number of total objects sized (not
+   * necessarily anything to do with RecordObject's tracking of
+   * objects) and the total number of bytes that those object use. The
+   * counters are not reset by this call (use Init to reset
+   * everything).
+   */
+  NS_IMETHOD GetTotals(PRUint32* aTotalCountResult,
+                       PRUint32* aTotalSizeResult) = 0;
 };
 
 extern NS_COM nsresult

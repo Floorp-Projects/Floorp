@@ -46,9 +46,9 @@ interface nsIAtom : nsISupports
   wstring GetUnicode();
 
   /**
-   * Add the size, in bytes, of the atom to the handler.
+   * Get the size, in bytes, of the atom.
    */
-  void SizeOf(in nsISizeOfHandler aHandler);
+  PRUint32 SizeOf(in nsISizeOfHandler aHandler);
 };
 
 
