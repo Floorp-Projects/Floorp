@@ -77,7 +77,6 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
 // CreateDefaultProfileDirectorySpec() above.
 //----------------------------------------------------------------------------------------
 {
-    //static nsFileSpec* gProfileDir = nsnull;
         // pointer so that we can detect whether it has been initialized
     if (!gProfileDir)
     {
@@ -407,7 +406,11 @@ void nsSpecialFileSpec::operator = (Type aType)
             }
             #endif
         case App_BookmarksFile50:
-            NS_NOTYETIMPLEMENTED("Write me!");
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "bookmarks.html";
+                break;
+            }
             break;    
         
         case App_Registry40:
@@ -430,6 +433,48 @@ void nsSpecialFileSpec::operator = (Type aType)
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
 
+	case App_LocalStore50:
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "localstore.rdf";
+                break;
+            }
+            break;    
+	case App_History50:
+	    {
+		*this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "history.dat";
+                break;
+            }
+	    break;
+        case App_MailDirectory50:
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "Mail";
+                break;
+            }
+            break;
+        case App_ImapMailDirectory50:
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "ImapMail";
+                break;
+            }
+            break;
+        case App_NewsDirectory50:
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "News";
+                break;
+            }
+            break;
+	case App_MessengerFolderCache50:
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "panacea.dat";
+                break;
+            }
+            break;
         case App_DirectoryBase:
         case App_FileBase:
         default:
@@ -510,9 +555,10 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
 NS_IMETHODIMP nsFileLocator::ForgetProfileDir()
 //----------------------------------------------------------------------------------------
 {
-
-	delete gProfileDir;
-	gProfileDir = nsnull;
+	if (gProfileDir) {
+		delete gProfileDir;
+		gProfileDir = nsnull;
+	}
 
 	return NS_OK;
 }

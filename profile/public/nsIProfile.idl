@@ -36,8 +36,6 @@ interface nsIFileSpec;
 #define NS_PROFILE_PROGID	\
 	"component://netscape/profile/manager"
 
-#define NS_USING_PROFILES 1
-
 #define PREG_PREF	"netcenter.register"
 %}
 
@@ -47,7 +45,6 @@ interface nsIFileSpec;
 interface nsIProfile : nsISupports {
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
     void startup(in string filename);
-    void shutdown();
 
     [noscript] void getProfileDir(in string profileName,
                                   in nsFileSpec profileDir);

@@ -38,6 +38,8 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 
 #include "nsProxiedService.h"
 
@@ -51,8 +53,6 @@
 #include "nsPrefMigrationFactory.h"
 //#include "nsPMProgressDlg.h"
 
-#define NEW_DIR_PERMISSIONS 00700
-
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
 #if defined(XP_UNIX)
@@ -61,18 +61,21 @@
 #define SUMMARY_SUFFIX_IN_4x ".summary"
 #define COOKIES_FILE_NAME_IN_4x "cookies"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
+#define HISTORY_FILE_NAME_IN_4x "history.dat"
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "MagicCookie"
 #define BOOKMARKS_FILE_NAME_IN_4x "Bookmarks.html"
+#define HISTORY_FILE_NAME_IN_4x "Netscape History"
 #else /* XP_PC */
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.htm"
+#define HISTORY_FILE_NAME_IN_4x "history.dat"
 #endif /* XP_UNIX */
 
 #define SUMMARY_SUFFIX_IN_5x ".msf"
@@ -80,6 +83,8 @@
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
 #define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.html"
+#define HISTORY_FILE_NAME_IN_5x "history.dat"
+#define RENAMED_OLD_HISTORY_FILE_NAME "old "HISTORY_FILE_NAME_IN_4x
 
 #define PREMIGRATION_PREFIX "premigration"
 #define PREF_MAIL_DIRECTORY "mail.directory"
@@ -149,7 +154,8 @@ typedef struct
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
-
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kIPrefMigrationIID, NS_IPREFMIGRATION_IID);
 static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
 
@@ -159,8 +165,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
-
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
 static PRInt32 gInstanceCnt = 0;
 static PRInt32 gLockCnt     = 0;
@@ -1253,6 +1258,17 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
 	if (NS_FAILED(rv)) return rv;
   }
 #endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
+
+  // TODO remove any 4.x files that should not be left around
+  //
+  // examples: prefs, history
+  rv = profilePath->AppendRelativeUnixPath(HISTORY_FILE_NAME_IN_5x);
+  PRBool fileExists;
+  rv = profilePath->Exists(&fileExists);
+  if (NS_FAILED(rv)) return rv;
+  if (fileExists) {
+	profilePath->Rename(RENAMED_OLD_HISTORY_FILE_NAME);
+  }
 
   return rv;
 }

@@ -34,13 +34,13 @@
 #include "nsIMessage.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPref.h"
-#include "nsIProfile.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "nsNntpService.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
-
 #include "nsCOMPtr.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -54,6 +54,8 @@ static NS_DEFINE_CID(kCNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kCNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);   
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
                      
 nsNntpService::nsNntpService()
 {
@@ -958,17 +960,10 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = prefs->GetFilePref(PREF_MAIL_ROOT_NNTP, aResult);
     if (NS_SUCCEEDED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec dir;
-    rv = profile->GetCurrentProfileDir(&dir);
-    if (NS_FAILED(rv)) return rv;
-    
-    // we want <profile>/News, not <profile>
-    dir += "News";
-
-    rv = NS_NewFileSpecWithSpec(dir, aResult);
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_NewsDirectory50, aResult);
     if (NS_FAILED(rv)) return rv; 
 
     rv = SetDefaultLocalPath(*aResult);

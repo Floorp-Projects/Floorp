@@ -35,10 +35,13 @@
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "rdf.h"
+#include "nsCOMPtr.h"
 
-#include "nsIProfile.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 
-static NS_DEFINE_CID(kProfileCID,               NS_PROFILE_CID);
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID); 
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -311,25 +314,23 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
 
     nsresult rv;
-
-	// Look for localstore.rdf in the current profile
-	// directory. Bomb if we can't find it.
-    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     nsFileSpec spec;
-    rv = profile->GetCurrentProfileDir(&spec);
+    nsCOMPtr <nsIFileSpec> localStoreSpec;
+
+    // Look for localstore.rdf in the current profile
+    // directory. Bomb if we can't find it.
+
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // Make sure the profile directory _really exists_ before we try
-    // to create file in it.
-    if (! spec.Exists())
-        return NS_ERROR_UNEXPECTED;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_LocalStore50, getter_AddRefs(localStoreSpec));
+    if (NS_FAILED(rv)) return rv;  
+ 
+    rv = localStoreSpec->GetFileSpec(&spec);
+    if (NS_FAILED(rv)) return rv;
 
-    spec += "localstore.rdf";
-
-	if (! spec.Exists())
-	{
+    // XXX TODO:  rewrite this to use the nsIFileSpec we already have.
+    if (! spec.Exists()) {
         {
             nsOutputFileStream os(spec);
 
@@ -345,7 +346,7 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
         // back a read-only directory. Whatever.
         if (! spec.Exists())
             return NS_ERROR_UNEXPECTED;
-	}
+    }
 
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,

@@ -23,7 +23,6 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsIMsgMailSession.h"
 
-#include "nsIProfile.h"
 #include "nsIPref.h"
 
 #include "nsPop3URL.h"
@@ -34,15 +33,19 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+
 #define POP3_PORT 110 // The IANA port for Pop3
 
 #define PREF_MAIL_ROOT_POP3 "mail.root.pop3"
 #define PREF_MAIL_ROOT_NONE "mail.root.none"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
 nsPop3Service::nsPop3Service()
 {
@@ -305,20 +308,13 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = prefs->GetFilePref(PREF_MAIL_ROOT_POP3, aResult);
     if (NS_SUCCEEDED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec dir;
-    rv = profile->GetCurrentProfileDir(&dir);
-    if (NS_FAILED(rv)) return rv;
-    
-    // we want <profile>/Mail, not <profile>
-    dir += "Mail";
-
-    rv = SetDefaultLocalPath(*aResult);
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, aResult);
     if (NS_FAILED(rv)) return rv;    
 
-    rv = NS_NewFileSpecWithSpec(dir, aResult);
+    rv = SetDefaultLocalPath(*aResult);
     return rv;
 }
     

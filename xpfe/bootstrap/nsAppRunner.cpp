@@ -74,8 +74,6 @@ static NS_DEFINE_CID( kToolkitCoreCID, NS_TOOLKITCORE_CID );
 
 // header file for profile manager
 #include "nsIProfile.h"
-// Uncomment this line to skip the profile code compilation
-//#include "profileSwitch.h"
 
 #if defined(XP_MAC)
 
@@ -115,10 +113,7 @@ static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
 #endif // NECKO
 
-// defined for profileManager
-#if defined(NS_USING_PROFILES)
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
-#endif // NS_USING_PROFILES
 
 /*********************************************
  AppCores
@@ -537,15 +532,19 @@ static nsresult main1(int argc, char* argv[])
   }
 
   rv = appShell->Initialize( cmdLineArgs );
-  if ( NS_FAILED(rv) ) 
-  	return rv; 
+  if ( NS_FAILED(rv) ) return rv; 
+
 #ifdef DEBUG
   printf("initialized appshell\n");
 #endif
 
   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    profileMgr->StartupWithArgs(cmdLineArgs);
+  if ( NS_FAILED(rv) ) return rv; 
+
+  rv = profileMgr->StartupWithArgs(cmdLineArgs);
+  if (NS_FAILED(rv)) {
+	return rv;
+  }
 
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
@@ -701,19 +700,6 @@ int main(int argc, char* argv[])
 
   nsresult result = main1( argc, argv );
 	
-  {
-    // Scoping this in a block to force the profile service to be
-    // released.
-
-    // this is supposed to happen automatically when XPCOM shuts down, but
-    // that doesn't always occur!
-    NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
-    if (NS_SUCCEEDED(rv))
-      profileMgr->Shutdown();
-    // calling this explicitly will cut down on a large number of leaks we're
-    // seeing:
-  }
-
 #ifdef DETECT_WEBSHELL_LEAKS
   if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
     printf("XXX WARNING: Number of webshells being leaked: %d \n", count);

@@ -25,14 +25,17 @@
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
 #include "nsMsgFolderCache.h"
-#include "nsIProfile.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 #include "nsIMsgStatusFeedback.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+ 
 //static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 //static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
 //static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -144,26 +147,14 @@ nsresult nsMsgMailSession::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
     if (NS_FAILED(rv))
 		return rv;
 
-	nsFileSpec profileDir;
     nsCOMPtr <nsIFileSpec> cacheFile;
-  
-	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-	if (NS_FAILED(rv)) 
-		return 0;
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-	rv = profile->GetCurrentProfileDir(&profileDir);
-	if (NS_FAILED(rv)) 
-		return 0;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MessengerFolderCache50, getter_AddRefs(cacheFile));
+    if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec folderCache(profileDir);
-
-    folderCache += "panacea.dat";
-
-    rv = NS_NewFileSpecWithSpec(folderCache, getter_AddRefs(cacheFile));
-    if (NS_FAILED(rv)) 
-		return rv;
-
-	m_msgFolderCache->Init(cacheFile);
+    m_msgFolderCache->Init(cacheFile);
 
   }
 

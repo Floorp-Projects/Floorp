@@ -72,7 +72,10 @@
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+
 
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
@@ -95,7 +98,9 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kFileLocatorCID,             NS_FILELOCATOR_CID); 
+static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //static NS_DEFINE_CID(kNSCOMMONDIALOGSCID,       NS_CommonDialog_CID);
 //static NS_DEFINE_IID(kNSCOMMONDIALOGSIID,       NS_ICOMMONDIALOGS_IID);
@@ -107,7 +112,8 @@ static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFIntIID,                 NS_IRDFINT_IID);
 static NS_DEFINE_IID(kIRDFDateIID,                NS_IRDFDATE_IID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFileLocatorIID,       	  NS_IFILELOCATOR_IID);
 
 static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
@@ -3097,31 +3103,16 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 	// still deal reasonably (in the short term) when no
 	// bookmarks.html is installed in the profile directory.
 	do {
-		NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+		nsCOMPtr <nsIFileSpec> bookmarksFile;
+
+		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 		if (NS_FAILED(rv)) break;
 
-		rv = profile->GetCurrentProfileDir(aResult);
+		rv = locator->GetFileLocation(nsSpecialFileSpec::App_BookmarksFile50, getter_AddRefs(bookmarksFile));
 		if (NS_FAILED(rv)) break;
 
-		*aResult += "bookmarks.html";
-
-		// Note: first try "bookmarks.html" and, if that doesn't exist,
-		//       fallback to trying "bookmark.htm". Do this due to older
-		//       versions of the browser where the name is different per
-		//       platform.
-		if (! aResult->Exists())
-		{
-			// XXX should we   NS_RELEASE(*aResult)   ???
-		
-			rv = profile->GetCurrentProfileDir(aResult);
-			if (NS_FAILED(rv)) break;
-			*aResult += "bookmark.htm";
-
-			if (! aResult->Exists())
-			{
-				rv = NS_ERROR_FAILURE;
-			}
-		}
+		rv = bookmarksFile->GetFileSpec(aResult);
+		if (NS_FAILED(rv)) break;
 	} while (0);
 
 #ifdef DEBUG

@@ -39,15 +39,18 @@
 
 #include "nsIMsgStatusFeedback.h"
 #include "nsIPref.h"
-#include "nsIProfile.h"
+
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
@@ -2116,17 +2119,10 @@ nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = prefs->GetFilePref(PREF_MAIL_ROOT_IMAP, aResult);
     if (NS_SUCCEEDED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec dir;
-    rv = profile->GetCurrentProfileDir(&dir);
-    if (NS_FAILED(rv)) return rv;
-
-    // we want <profile>/ImapMail not <profile>
-    dir += "ImapMail";
-
-    rv = NS_NewFileSpecWithSpec(dir, aResult);
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ImapMailDirectory50, aResult);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetDefaultLocalPath(*aResult);
