@@ -1281,7 +1281,7 @@ nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) {
 
       theFormType.AssignWithConversion("select"); 
   
-       //result=theFormProcessor->ProvideContent(theFormType,theContent,theAttribute); 
+      result=theFormProcessor->ProvideContent(theFormType,theContent,theAttribute); 
 
       if(NS_SUCCEEDED(result)) {
         nsString* theTextValue=nsnull; 
