@@ -78,6 +78,14 @@
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
   
+#define NS_REGISTER_TAG_COMMAND(_cmdClass, _cmdName, _tagName)          \
+  {                                                                     \
+    _cmdClass* theCmd = new _cmdClass(_tagName);                        \
+    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
+    rv = inCommandManager->RegisterCommand(_cmdName,                    \
+                       NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
+  }
+  
 
 // static
 nsresult
@@ -128,7 +136,7 @@ nsComposerController::RegisterHTMLEditorCommands(
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", "code");
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", "samp");
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
-  
+
   // lists
   NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", "ol");
   NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", "ul");
@@ -139,6 +147,7 @@ nsComposerController::RegisterHTMLEditorCommands(
   // format stuff
   NS_REGISTER_ONE_COMMAND(nsParagraphStateCommand,       "cmd_paragraphState");
   NS_REGISTER_ONE_COMMAND(nsFontFaceStateCommand,        "cmd_fontFace");
+  NS_REGISTER_ONE_COMMAND(nsFontSizeStateCommand,        "cmd_fontSize");
   NS_REGISTER_ONE_COMMAND(nsFontColorStateCommand,       "cmd_fontColor");
   NS_REGISTER_ONE_COMMAND(nsBackgroundColorStateCommand, "cmd_backgroundColor");
   NS_REGISTER_ONE_COMMAND(nsHighlightColorStateCommand,  "cmd_highlight");
@@ -151,6 +160,8 @@ nsComposerController::RegisterHTMLEditorCommands(
 
   // Insert content
   NS_REGISTER_ONE_COMMAND(nsInsertHTMLCommand, "cmd_insertHTML");
+  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertLinkNoUI", "a");
+  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertImageNoUI", "img");
 
   return NS_OK;
 }
