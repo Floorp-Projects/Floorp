@@ -241,6 +241,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       // need to set charWidth and aDesiredSize.height
       charWidth = GetTextSize(*aPresContext, aFrame, 1, aDesiredSize, aRendContext);
       col = (col <= 0) ? 15 : col; // XXX why a default of 15 pixels, why hide it
+                                   // XXX this conflicts with a default of 20 found in nsTextControlFrame.
       aDesiredSize.width = NSIntPixelsToTwips(col, p2t);
     } else {
       col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
