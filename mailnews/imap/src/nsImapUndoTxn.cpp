@@ -25,7 +25,7 @@ static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
     m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte),
-    m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE)
+    m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
 {
 }
 
@@ -34,10 +34,24 @@ nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn(
 	const char* srcMsgIdString, nsIMsgFolder* dstFolder,
 	PRBool idsAreUids, PRBool isMove,
 	nsIEventQueue* eventQueue, nsIUrlListener* urlListener) :
-	m_srcMsgIdString(srcMsgIdString, eOneByte), 
-	m_dstMsgIdString("", eOneByte), m_idsAreUids(idsAreUids), m_isMove(isMove)
+	m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte),
+    m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
+{
+    Init(srcFolder, srcKeyArray, srcMsgIdString, dstFolder, idsAreUids,
+         isMove, eventQueue, urlListener);
+}
+
+nsresult
+nsImapMoveCopyMsgTxn::Init(
+	nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray, 
+	const char* srcMsgIdString, nsIMsgFolder* dstFolder,
+	PRBool idsAreUids, PRBool isMove,
+	nsIEventQueue* eventQueue, nsIUrlListener* urlListener)
 {
 	nsresult rv;
+    m_srcMsgIdString = srcMsgIdString;
+    m_idsAreUids = idsAreUids;
+    m_isMove = isMove;
 	m_srcFolder = do_QueryInterface(srcFolder, &rv);
 	m_dstFolder = do_QueryInterface(dstFolder, &rv);
 	m_eventQueue = do_QueryInterface(eventQueue, &rv);
@@ -70,13 +84,68 @@ nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn(
 			m_redoString = "Redo Copy Message";
 		}
 	}
+    char *uri = nsnull;
+    rv = m_srcFolder->GetURI(&uri);
+    nsString2 protocolType(uri, eOneByte);
+    PR_FREEIF(uri);
+    protocolType.SetLength(protocolType.FindChar(':'));
+    // ** jt -- only do this for mailbox protocol
+    if (protocolType.EqualsIgnoreCase("mailbox"))
+    {
+        m_srcIsPop3 = PR_TRUE;
+        PRUint32 i, count = m_srcKeyArray.GetSize();
+        nsCOMPtr<nsIMsgDatabase> srcDB;
+        rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgDBHdr> srcHdr;
+        
+        for (i=0; i<count; i++)
+        {
+            rv = srcDB->GetMsgHdrForKey(m_srcKeyArray.GetAt(i),
+                                        getter_AddRefs(srcHdr));
+            if (NS_SUCCEEDED(rv))
+            {
+                PRUint32 msgSize;
+                rv = srcHdr->GetMessageSize(&msgSize);
+                if (NS_SUCCEEDED(rv))
+                    m_srcSizeArray.Add(msgSize);
+            }
+        }
+    }
+    return rv;
 }
 
 nsImapMoveCopyMsgTxn::~nsImapMoveCopyMsgTxn()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsImapMoveCopyMsgTxn, nsMsgTxn,	nsImapMoveCopyMsgTxn)
+NS_IMPL_ADDREF_INHERITED(nsImapMoveCopyMsgTxn, nsMsgTxn)
+NS_IMPL_RELEASE_INHERITED(nsImapMoveCopyMsgTxn, nsMsgTxn)
+
+NS_IMETHODIMP
+nsImapMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+
+    *aInstancePtr = nsnull;
+
+    if (aIID.Equals(nsImapMoveCopyMsgTxn::GetIID())) 
+    {
+        *aInstancePtr = NS_STATIC_CAST(nsImapMoveCopyMsgTxn*, this);
+    }
+    else if (aIID.Equals(nsIUrlListener::GetIID()))
+    {
+        *aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
+    }
+
+    if (*aInstancePtr)
+    {
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+
+    return nsMsgTxn::QueryInterface(aIID, aInstancePtr);
+}
 
 NS_IMETHODIMP
 nsImapMoveCopyMsgTxn::Undo(void)
@@ -86,8 +155,11 @@ nsImapMoveCopyMsgTxn::Undo(void)
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
     {
-        rv = UndoMailboxDelete();
-        if (NS_FAILED(rv))
+        if (m_srcIsPop3)
+        {
+            rv = UndoMailboxDelete();
+        }
+        else
         {
             nsCOMPtr<nsIUrlListener> srcListener =
                 do_QueryInterface(m_srcFolder, &rv);
@@ -102,8 +174,9 @@ nsImapMoveCopyMsgTxn::Undo(void)
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
-        nsCOMPtr<nsIUrlListener> dstListener = do_QueryInterface(m_dstFolder,
-                                                                 &rv);
+        nsCOMPtr<nsIUrlListener> dstListener;
+
+        dstListener = do_QueryInterface(m_dstFolder, &rv);
         rv = imapService->AddMessageFlags(m_eventQueue, m_dstFolder,
                                           dstListener, nsnull,
                                           m_dstMsgIdString.GetBuffer(),
@@ -124,8 +197,11 @@ nsImapMoveCopyMsgTxn::Redo(void)
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
     {
-        rv = RedoMailboxDelete();
-        if (NS_FAILED(rv))
+        if (m_srcIsPop3)
+        {
+            rv = RedoMailboxDelete();
+        }
+        else
         {
             nsCOMPtr<nsIUrlListener> srcListener =
                 do_QueryInterface(m_srcFolder, &rv); 
@@ -141,8 +217,10 @@ nsImapMoveCopyMsgTxn::Redo(void)
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
-        nsCOMPtr<nsIUrlListener> dstListener = do_QueryInterface(m_dstFolder,
-                                                                 &rv); 
+        nsCOMPtr<nsIUrlListener> dstListener;
+
+        dstListener = do_QueryInterface(m_dstFolder, &rv); 
+
         rv = imapService->SubtractMessageFlags(m_eventQueue, m_dstFolder,
                                                dstListener, nsnull,
                                                m_dstMsgIdString.GetBuffer(),
@@ -223,6 +301,9 @@ nsresult
 nsImapMoveCopyMsgTxn::AddDstKey(nsMsgKey aKey)
 {
     m_dstKeyArray.Add(aKey);
+    if (m_dstMsgIdString.Length() > 0)
+        m_dstMsgIdString.Append(",");
+    m_dstMsgIdString.Append((PRInt32) aKey);
     return NS_OK;
 }
 
@@ -230,13 +311,8 @@ nsresult
 nsImapMoveCopyMsgTxn::UndoMailboxDelete()
 {
     nsresult rv = NS_ERROR_FAILURE;
-    char *uri = nsnull;
-    rv = m_srcFolder->GetURI(&uri);
-    nsString2 protocolType(uri, eOneByte);
-    PR_FREEIF(uri);
-    protocolType.SetLength(protocolType.FindChar(':'));
     // ** jt -- only do this for mailbox protocol
-    if (protocolType.EqualsIgnoreCase("mailbox"))
+    if (m_srcIsPop3)
     {
         nsCOMPtr<nsIMsgDatabase> srcDB;
         nsCOMPtr<nsIMsgDatabase> dstDB;
@@ -253,13 +329,18 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
         {
             rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i),
                                         getter_AddRefs(oldHdr));
-            if (NS_SUCCEEDED(rv))
+            NS_ASSERTION(oldHdr, "fatal ... cannot get old msg header\n");
+
+            if (NS_SUCCEEDED(rv) && oldHdr)
             {
-                srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
-                                              oldHdr,
-                                              getter_AddRefs(newHdr));
-                if (NS_SUCCEEDED(rv))
+                rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
+                                                   oldHdr,
+                                                   getter_AddRefs(newHdr));
+                NS_ASSERTION(newHdr, "fatal ... cannot create new header\n");
+                if (NS_SUCCEEDED(rv) && newHdr)
                 {
+                    if (i < m_srcSizeArray.GetSize())
+                        newHdr->SetMessageSize(m_srcSizeArray.GetAt(i));
                     srcDB->UndoDelete(newHdr);
                 }
             }
@@ -279,13 +360,7 @@ nsresult
 nsImapMoveCopyMsgTxn::RedoMailboxDelete()
 {
     nsresult rv = NS_ERROR_FAILURE;
-    char *uri = nsnull;
-    rv = m_srcFolder->GetURI(&uri);
-    nsString2 protocolType(uri, eOneByte);
-    PR_FREEIF(uri);
-    protocolType.SetLength(protocolType.FindChar(':'));
-    // ** jt -- only do this for mailbox protocol
-    if (protocolType.EqualsIgnoreCase("mailbox"))
+    if (m_srcIsPop3)
     {
         nsCOMPtr<nsIMsgDatabase> srcDB;
         rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
@@ -303,4 +378,16 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
     return rv;
 }
 
+
+NS_IMETHODIMP
+nsImapMoveCopyMsgTxn::OnStartRunningUrl(nsIURI* aUrl)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMoveCopyMsgTxn::OnStopRunningUrl(nsIURI* aUrl, nsresult exitCode)
+{
+    return NS_OK;
+}
 

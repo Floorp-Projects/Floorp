@@ -139,6 +139,9 @@ public:
 
 	NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **folder);
 
+    // overriding nsMsgDBFolder::GetMsgDatabase() method
+  NS_IMETHOD GetMsgDatabase(nsIMsgDatabase **aMsgDatabase);
+
 protected:
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);

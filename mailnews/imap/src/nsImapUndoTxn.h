@@ -33,7 +33,7 @@
 	0x51c925b0, 0x208e, 0x11d3, \
     { 0xab, 0xea, 0x00, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
 
-class nsImapMoveCopyMsgTxn : public nsMsgTxn
+class nsImapMoveCopyMsgTxn : public nsMsgTxn, public nsIUrlListener
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMOVECOPYMSGTXN_IID)
@@ -52,6 +52,10 @@ public:
     NS_IMETHOD Redo(void);
     NS_IMETHOD GetUndoString(nsString *aString);
     NS_IMETHOD GetRedoString(nsString *aString);
+
+    // nsIUrlListener methods
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
     
     // helper
     nsresult SetUndoString(nsString *aString);
@@ -63,6 +67,11 @@ public:
     nsresult AddDstKey(nsMsgKey aKey);
     nsresult UndoMailboxDelete();
     nsresult RedoMailboxDelete();
+    nsresult Init(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
+                  const char* srcMsgIdString, nsIMsgFolder* dstFolder,
+                  PRBool idsAreUids, PRBool isMove, 
+                  nsIEventQueue *eventQueue, 
+                  nsIUrlListener *urlListener);
 
 private:
 
@@ -78,6 +87,8 @@ private:
     nsString m_redoString;
     PRBool m_idsAreUids;
     PRBool m_isMove;
+    PRBool m_srcIsPop3;
+    nsUInt32Array m_srcSizeArray;
 };
 
 #endif

@@ -306,6 +306,9 @@ public:
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
 
+    // overriding nsMsgDBFolder::GetMsgDatabase()
+    NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
+
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
 									   char *destFolder,

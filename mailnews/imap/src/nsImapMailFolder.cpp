@@ -399,6 +399,12 @@ NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
+{
+    GetDatabase();
+    return nsMsgDBFolder::GetMsgDatabase(aMsgDatabase);
+}
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
@@ -1083,7 +1089,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                 PR_TRUE, PR_TRUE, m_eventQueue, this);
 
             if (undoMsgTxn)
-                m_copyState->m_undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
+                rv = undoMsgTxn->QueryInterface(
+                    nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
+                    getter_AddRefs(m_copyState->m_undoMsgTxn) );
             if (undoMsgTxn)
             {
                 nsString undoString = count > 1 ? "Undo Delete Messages" :
@@ -3020,7 +3028,10 @@ nsImapMailFolder::CopyMessages2(nsIMsgFolder* srcFolder,
     nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
         srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
         PR_TRUE, isMove, m_eventQueue, urlListener);
-    m_copyState->m_undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
+
+    rv = undoMsgTxn->QueryInterface(
+        nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
+        getter_AddRefs(m_copyState->m_undoMsgTxn) );
     
     nsCOMPtr<nsISupports> msgSupport;
     msgSupport = getter_AddRefs(messages->ElementAt(0));
@@ -3110,7 +3121,9 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
         nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
             srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
             PR_TRUE, isMove, m_eventQueue, urlListener);
-        m_copyState->m_undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
+        rv = undoMsgTxn->QueryInterface(
+            nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
+            getter_AddRefs(m_copyState->m_undoMsgTxn) );
     }
 
 done:

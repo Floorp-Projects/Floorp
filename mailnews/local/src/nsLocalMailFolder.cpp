@@ -378,6 +378,13 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
+{
+  GetDatabase();
+  return nsMsgDBFolder::GetMsgDatabase(aMsgDatabase);
+}
+
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgLocalMailFolder::GetDatabase()
@@ -393,12 +400,6 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 		rv = pathSpec->GetFileSpec(&path);
 		if (NS_FAILED(rv)) return rv;
 
-#if 0
-		//Make sure our path isn't the empty path.
-		nsFileSpec emptyPath("");
-		if(path == emptyPath)
-			return NS_ERROR_FAILURE;
-#endif
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
@@ -1314,7 +1315,9 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
 
   if (msgTxn)
-    mCopyState->m_undoMsgTxn = do_QueryInterface(msgTxn, &rv);
+    rv =
+      msgTxn->QueryInterface(nsCOMTypeInfo<nsLocalMoveCopyMsgTxn>::GetIID(),
+                             getter_AddRefs(mCopyState->m_undoMsgTxn));
   else
     rv = NS_ERROR_OUT_OF_MEMORY;
   
@@ -1605,7 +1608,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
   nsresult rv = copySucceeded ? NS_OK : NS_ERROR_FAILURE;
+  nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
 
+  if (mCopyState->m_undoMsgTxn)
+      localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
+
+  
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->m_message)
 	{ //  CopyMessages() goes here; CopyFileMessage() never gets in here because
@@ -1632,10 +1640,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       }
     }
 
-    if (NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
+    if (NS_SUCCEEDED(rv) && localUndoTxn && msgDBHdr)
     {
-      nsCOMPtr<nsLocalMoveCopyMsgTxn>
-        localUndoTxn(do_QueryInterface(mCopyState->m_undoMsgTxn));
       nsMsgKey aKey;
       msgDBHdr->GetMessageKey(&aKey);
       localUndoTxn->AddSrcKey(aKey);
@@ -1668,6 +1674,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       if (NS_SUCCEEDED(result) && msgDb)
       {
         msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+        if (localUndoTxn)
+        { // ** jt - recording the message size for possible undo use; the
+          // message size is different for pop3 and imap4 messages
+            PRUint32 msgSize;
+            newHdr->GetMessageSize(&msgSize);
+            localUndoTxn->AddDstMsgSize(msgSize);
+        }
         msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
       }
     }

@@ -27,14 +27,16 @@ static NS_DEFINE_CID(kMailboxServiceCID, NS_IMAILBOXSERVICE_IID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn()
+nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn() :
+    m_isMove(PR_FALSE), m_srcIsImap4(PR_FALSE)
 {
 	Init(nsnull, nsnull, PR_FALSE);
 }
 
 nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn(nsIMsgFolder* srcFolder,
-											nsIMsgFolder* dstFolder,
-											PRBool isMove)
+                                             nsIMsgFolder* dstFolder,
+                                             PRBool isMove) :
+    m_isMove(PR_FALSE), m_srcIsImap4(PR_FALSE)
 {
 	Init(srcFolder, dstFolder, isMove);
 }
@@ -43,7 +45,33 @@ nsLocalMoveCopyMsgTxn::~nsLocalMoveCopyMsgTxn()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsLocalMoveCopyMsgTxn, nsMsgTxn, nsLocalMoveCopyMsgTxn)
+NS_IMPL_ADDREF_INHERITED(nsLocalMoveCopyMsgTxn, nsMsgTxn)
+NS_IMPL_RELEASE_INHERITED(nsLocalMoveCopyMsgTxn, nsMsgTxn)
+
+NS_IMETHODIMP
+nsLocalMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+
+    *aInstancePtr = nsnull;
+
+    if (aIID.Equals(nsLocalMoveCopyMsgTxn::GetIID())) 
+    {
+        *aInstancePtr = NS_STATIC_CAST(nsLocalMoveCopyMsgTxn*, this);
+    }
+    else if (aIID.Equals(nsIUrlListener::GetIID()))
+    {
+        *aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
+    }
+
+    if (*aInstancePtr)
+    {
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+
+    return nsMsgTxn::QueryInterface(aIID, aInstancePtr);
+}
 
 nsresult
 nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
@@ -53,6 +81,17 @@ nsLocalMoveCopyMsgTxn::Init(nsIMsgFolder* srcFolder, nsIMsgFolder* dstFolder,
 	rv = SetSrcFolder(srcFolder);
 	rv = SetDstFolder(dstFolder);
 	m_isMove = isMove;
+
+    char *uri = nsnull;
+    if (!srcFolder) return rv;
+    rv = srcFolder->GetURI(&uri);
+    nsString2 protocolType(uri, eOneByte);
+    PR_FREEIF(uri);
+    protocolType.SetLength(protocolType.FindChar(':'));
+    if (protocolType.EqualsIgnoreCase("imap"))
+    {
+        m_srcIsImap4 = PR_TRUE;
+    }
 	return NS_OK;
 }
 
@@ -86,6 +125,13 @@ nsLocalMoveCopyMsgTxn::AddDstKey(nsMsgKey aKey)
 {
 	m_dstKeyArray.Add(aKey);
 	return NS_OK;
+}
+
+nsresult
+nsLocalMoveCopyMsgTxn::AddDstMsgSize(PRUint32 msgSize)
+{
+    m_dstSizeArray.Add(msgSize);
+    return NS_OK;
 }
 
 nsresult
@@ -126,13 +172,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                                           PRBool addFlag)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    char *uri = nsnull;
-    if (!folder) return rv;
-    rv = folder->GetURI(&uri);
-    nsString2 protocolType(uri, eOneByte);
-    PR_FREEIF(uri);
-    protocolType.SetLength(protocolType.FindChar(':'));
-    if (protocolType.EqualsIgnoreCase("imap"))
+    if (m_srcIsImap4)
     {
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
@@ -140,7 +180,11 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
             nsCOMPtr<nsIUrlListener> urlListener;
             nsString2 msgIds("", eOneByte);
             PRUint32 i, count = keyArray.GetSize();
-            urlListener = do_QueryInterface(folder, &rv);
+
+            rv  = QueryInterface(nsIUrlListener::GetIID(),
+                                 getter_AddRefs(urlListener));
+            if (NS_FAILED(rv)) return rv;
+
             for (i=0; i < count; i++)
             {
                 if (msgIds.Length() > 0)
@@ -169,15 +213,21 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                                                          msgIds.GetBuffer(),
                                                          kImapMsgDeletedFlag,
                                                          PR_TRUE);
-                    // if (NS_SUCCEEDED(rv))
-                    //    imapService->SelectFolder(eventQueue, folder,
-                    //                              urlListener, nsnull);
+                    if (NS_SUCCEEDED(rv))
+                        imapService->SelectFolder(eventQueue, folder,
+                                                  this, nsnull);
                 }
             }
         }
+        rv = NS_OK; // always return NS_OK to indicate that the src is imap
+    }
+    else
+    {
+        rv = NS_ERROR_FAILURE;
     }
     return rv;
 }
+
 
 NS_IMETHODIMP
 nsLocalMoveCopyMsgTxn::Undo()
@@ -195,32 +245,37 @@ nsLocalMoveCopyMsgTxn::Undo()
     PRUint32 i;
     nsCOMPtr<nsIMsgDBHdr> oldHdr;
     nsCOMPtr<nsIMsgDBHdr> newHdr;
-    
-    for (i=0; i<count; i++)
-    {
-        rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i), 
-                                    getter_AddRefs(oldHdr));
-        if (m_isMove && NS_SUCCEEDED(rv))
-        {
-            rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
-                                               oldHdr,
-                                               getter_AddRefs(newHdr));
-            if (NS_SUCCEEDED(rv))
-            {
-                srcDB->UndoDelete(newHdr);
-            }
-        }
-        if (oldHdr)
-        {
-            rv = dstDB->DeleteHeader(oldHdr, nsnull, PR_TRUE, PR_TRUE);
-        }
-    }
-
-    srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
-    dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
 
     if (m_isMove)
-        UndoImapDeleteFlag(m_srcFolder, m_srcKeyArray, PR_FALSE);
+    {
+        if (m_srcIsImap4)
+        {
+            rv = UndoImapDeleteFlag(m_srcFolder, m_srcKeyArray, PR_FALSE);
+        }
+        else
+        {
+            for (i=0; i<count; i++)
+            {
+                rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i), 
+                                            getter_AddRefs(oldHdr));
+                NS_ASSERTION(oldHdr, "fatal ... cannot get old msg header\n");
+                if (NS_SUCCEEDED(rv) && oldHdr)
+                {
+                    rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
+                                                       oldHdr,
+                                                       getter_AddRefs(newHdr));
+                    NS_ASSERTION(newHdr, 
+                                 "fatal ... cannot create new msg header\n");
+                    if (NS_SUCCEEDED(rv) && newHdr)
+                        srcDB->UndoDelete(newHdr);
+                }
+            }
+        }
+        srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
+    }
+
+    dstDB->DeleteMessages(&m_dstKeyArray, nsnull);
+    dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
 
     return rv;
 }
@@ -242,31 +297,54 @@ nsLocalMoveCopyMsgTxn::Redo()
     nsCOMPtr<nsIMsgDBHdr> oldHdr;
     nsCOMPtr<nsIMsgDBHdr> newHdr;
     
+    
     for (i=0; i<count; i++)
     {
         rv = srcDB->GetMsgHdrForKey(m_srcKeyArray.GetAt(i), 
                                     getter_AddRefs(oldHdr));
-        if (NS_SUCCEEDED(rv))
+        NS_ASSERTION(oldHdr, "fatal ... cannot get old msg header\n");
+
+        if (NS_SUCCEEDED(rv) && oldHdr)
         {
             rv = dstDB->CopyHdrFromExistingHdr(m_dstKeyArray.GetAt(i),
                                                oldHdr,
                                                getter_AddRefs(newHdr));
-            if (NS_SUCCEEDED(rv))
+            NS_ASSERTION(newHdr, "fatal ... cannot get new msg header\n");
+            if (NS_SUCCEEDED(rv) && newHdr)
             {
+                if (m_dstSizeArray.GetSize() > i)
+                    rv = newHdr->SetMessageSize(m_dstSizeArray.GetAt(i));
                 dstDB->UndoDelete(newHdr);
             }
-            }
-        if (m_isMove && oldHdr)
+        }
+    }
+    dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
+
+    if (m_isMove)
+    {
+        if (m_srcIsImap4)
         {
-            rv = srcDB->DeleteHeader(oldHdr, nsnull, PR_TRUE, PR_TRUE);
+            rv = UndoImapDeleteFlag(m_srcFolder, m_srcKeyArray, PR_TRUE);
+        }
+        else
+        {
+            rv = srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
+            srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
         }
     }
 
-    dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
-    srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
-
-    if (m_isMove)
-        UndoImapDeleteFlag(m_srcFolder, m_srcKeyArray, PR_TRUE);
-    
     return rv;
 }
+
+NS_IMETHODIMP
+nsLocalMoveCopyMsgTxn::OnStartRunningUrl(nsIURI* aUrl)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalMoveCopyMsgTxn::OnStopRunningUrl(nsIURI* aUrl, nsresult exitCode)
+{
+    return NS_OK;
+}
+

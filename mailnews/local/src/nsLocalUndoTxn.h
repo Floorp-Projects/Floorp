@@ -25,13 +25,14 @@
 #include "nsMsgTxn.h"
 #include "nsMsgKeyArray.h"
 #include "nsCOMPtr.h"
+#include "nsIUrlListener.h"
 
 #define NS_LOCALMOVECOPYMSGTXN_IID \
 { /* 874363b4-242e-11d3-afad-001083002da8 */ \
 	0x874363b4, 0x242e, 0x11d3, \
 	{ 0xaf, 0xad, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
 
-class nsLocalMoveCopyMsgTxn : public nsMsgTxn
+class nsLocalMoveCopyMsgTxn : public nsMsgTxn, public nsIUrlListener
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_LOCALMOVECOPYMSGTXN_IID)
@@ -44,6 +45,10 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
 
+    // nsIUrlListener methods
+	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
+
     // overloading nsITransaction methods
 	NS_IMETHOD Undo(void);
     NS_IMETHOD Redo(void);
@@ -55,6 +60,7 @@ public:
     nsresult SetRedoString(nsString *aString);
     nsresult AddSrcKey(nsMsgKey aKey);
     nsresult AddDstKey(nsMsgKey aKey);
+    nsresult AddDstMsgSize(PRUint32 msgSize);
     nsresult SetSrcFolder(nsIMsgFolder* srcFolder);
     nsresult SetDstFolder(nsIMsgFolder* dstFolder);
     nsresult Init(nsIMsgFolder* srcFolder,
@@ -72,6 +78,8 @@ private:
     nsString m_undoString;
     nsString m_redoString;
     PRBool m_isMove;
+    PRBool m_srcIsImap4;
+    nsUInt32Array m_dstSizeArray;
 };
 
 #endif
