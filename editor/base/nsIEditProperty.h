@@ -48,6 +48,7 @@ public:
   static nsIAtom *big;
   static nsIAtom *font;
   static nsIAtom *i;
+  static nsIAtom *img;
   static nsIAtom *span;
   static nsIAtom *small;
   static nsIAtom *strike;

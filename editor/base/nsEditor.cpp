@@ -2546,6 +2546,7 @@ nsEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline)
           tagAtom==nsIEditProperty::big    ||
           tagAtom==nsIEditProperty::font   ||
           tagAtom==nsIEditProperty::i      ||
+          tagAtom==nsIEditProperty::img    ||
           tagAtom==nsIEditProperty::span   ||
           tagAtom==nsIEditProperty::small  ||
           tagAtom==nsIEditProperty::strike ||
