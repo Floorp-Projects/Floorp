@@ -46,6 +46,8 @@ nsIRDFResource* nsMsgNotificationManager::kNC_Child = nsnull;
 
 nsIRDFResource* nsMsgNotificationManager::kNC_NewMessages = nsnull;
 
+nsIAtom * nsMsgNotificationManager::kBiffStateAtom  = nsnull;
+nsIAtom * nsMsgNotificationManager::kNumNewBiffMessagesAtom = nsnull;
 
 #define NC_RDF_FLASHROOT		"NC:FlashRoot"
 #define NC_RDF_TYPE				"http://home.netscape.com/NC-rdf#type"
@@ -75,6 +77,9 @@ nsMsgNotificationManager::~nsMsgNotificationManager()
 	NS_IF_RELEASE(kNC_URL);
 	NS_IF_RELEASE(kNC_Child);
 	NS_IF_RELEASE(kNC_NewMessages);
+
+    NS_IF_RELEASE(kNumNewBiffMessagesAtom);
+    NS_IF_RELEASE(kBiffStateAtom);
 
 }
 
@@ -143,6 +148,9 @@ nsresult nsMsgNotificationManager::Init()
 	   rdfService->GetResource(NC_RDF_URL,   &kNC_URL);
 	   rdfService->GetResource(NC_RDF_CHILD,   &kNC_Child);
 	   rdfService->GetResource(NC_RDF_NEWMESSAGES,   &kNC_NewMessages);
+
+       kNumNewBiffMessagesAtom = NS_NewAtom("NumNewBiffMessages");
+       kBiffStateAtom          = NS_NewAtom("BiffState");
 	}
 	return rv;
 
@@ -158,14 +166,18 @@ NS_IMETHODIMP nsMsgNotificationManager::OnItemRemoved(nsISupports *parentItem, n
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyChanged(nsISupports *item, const char *property, const char *oldValue, const char *newValue)
+NS_IMETHODIMP
+nsMsgNotificationManager::OnItemPropertyChanged(nsISupports *item,
+                                                nsIAtom *property,
+                                                const char *oldValue,
+                                                const char *newValue)
 
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
 	if(folder)
 	{
-		if(PL_strcmp("NumNewBiffMessages", property) == 0)
+		if(kNumNewBiffMessagesAtom ==  property)
 		{
 			PRUint32 biffState;
 			rv = folder->GetBiffState(&biffState);
@@ -178,28 +190,49 @@ NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyChanged(nsISupports *item,
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgNotificationManager::OnItemIntPropertyChanged(nsISupports *item, const char *property,
-														   PRInt32 oldValue, PRInt32 newValue)
+NS_IMETHODIMP
+nsMsgNotificationManager::OnItemUnicharPropertyChanged(nsISupports *item,
+                                                       nsIAtom *property,
+                                                       const PRUnichar* oldValue,
+                                                       const PRUnichar* newValue)
 {
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNotificationManager::OnItemBoolPropertyChanged(nsISupports *item, const char *property,
-														   PRBool oldValue, PRBool newValue)
+
+NS_IMETHODIMP
+nsMsgNotificationManager::OnItemIntPropertyChanged(nsISupports *item,
+                                                   nsIAtom *property,
+                                                   PRInt32 oldValue,
+                                                   PRInt32 newValue)
 {
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldFlag, PRUint32 newFlag)
+NS_IMETHODIMP
+nsMsgNotificationManager::OnItemBoolPropertyChanged(nsISupports *item,
+                                                    nsIAtom *property,
+                                                    PRBool oldValue,
+                                                    PRBool newValue)
+{
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *item,
+                                                    nsIAtom *property,
+                                                    PRUint32 oldFlag,
+                                                    PRUint32 newFlag)
 
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
 	if(folder)
 	{
-		if(PL_strcmp("BiffState", property) == 0)
+		if(kBiffStateAtom ==  property)
 		{
 			if(newFlag == nsMsgBiffState_NewMail)
 			{

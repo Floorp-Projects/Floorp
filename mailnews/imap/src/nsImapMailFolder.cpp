@@ -860,12 +860,12 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
 	//Need to notify listeners that total count changed.
 	if(oldTotalMessages != newTotalMessages)
 	{
-		NotifyIntPropertyChanged("TotalMessages", oldTotalMessages, newTotalMessages);
+		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, newTotalMessages);
 	}
 
 	if(oldUnreadMessages != newUnreadMessages)
 	{
-		NotifyIntPropertyChanged("TotalUnreadMessages", oldUnreadMessages, newUnreadMessages);
+		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, newUnreadMessages);
 	}
 
     return rv;
@@ -2448,7 +2448,7 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
         if (action == nsIImapUrl::nsImapOnlineToOfflineMove)
 		{
             nsCString messageIds;
-            nsresult rv = imapUrl->CreateListOfMessageIdsString(&messageIds);
+            rv = imapUrl->CreateListOfMessageIdsString(&messageIds);
 
             if (NS_FAILED(rv)) return rv;
             nsCOMPtr<nsIEventQueue> queue;	

@@ -170,6 +170,8 @@ protected:
 
 	nsresult OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
 	nsresult OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
+  nsresult NotifyFolderTreeNameChanged(nsIMsgFolder *folder, PRInt32 aUnreadMessages);
+
 	nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
 
 	nsresult CreateLiterals(nsIRDFService *rdf);
@@ -212,6 +214,11 @@ protected:
   nsCOMPtr<nsIRDFNode> kTrueLiteral;
   nsCOMPtr<nsIRDFNode> kFalseLiteral;
 
+  // property atoms
+  static nsIAtom* kTotalMessagesAtom;
+  static nsIAtom* kTotalUnreadMessagesAtom;
+  static nsIAtom* kBiffStateAtom;
+  
   static nsrefcnt gFolderResourceRefCnt;
 
 	nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;

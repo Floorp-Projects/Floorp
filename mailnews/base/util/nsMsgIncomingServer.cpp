@@ -494,8 +494,17 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::SetPrettyName(const PRUnichar *value) {
-  return SetUnicharValue("name", value);
+nsMsgIncomingServer::SetPrettyName(const PRUnichar *value)
+{
+    SetUnicharValue("name", value);
+    
+    nsCOMPtr<nsIFolder> rootFolder;
+    GetRootFolder(getter_AddRefs(rootFolder));
+
+    if (rootFolder)
+        rootFolder->SetPrettyName(value);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -721,12 +721,12 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 	//Need to notify listeners that total count changed.
 	if(oldTotalMessages != mNumTotalMessages)
 	{
-		NotifyIntPropertyChanged("TotalMessages", oldTotalMessages, mNumTotalMessages);
+		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, mNumTotalMessages);
 	}
 
 	if(oldUnreadMessages != mNumUnreadMessages)
 	{
-		NotifyIntPropertyChanged("TotalUnreadMessages", oldUnreadMessages, mNumUnreadMessages);
+		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
 	}
 
 	return NS_OK;

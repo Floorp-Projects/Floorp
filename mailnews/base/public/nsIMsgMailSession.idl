@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -35,6 +35,7 @@
 #include "nsIFolderListener.idl"
 #include "nsIMsgWindow.idl"
 #include "nsISupportsArray.idl"
+#include "nsIAtom.idl"
 
 interface nsIMsgWindow;
 
@@ -47,21 +48,25 @@ interface nsIMsgMailSession : nsISupports {
   void AddFolderListener(in nsIFolderListener listener);
   void RemoveFolderListener(in nsIFolderListener listener);
   void NotifyFolderItemPropertyChanged(in nsISupports item,
-                                       in string property,
+                                       in nsIAtom property,
                                        in string oldValue,
                                        in string newValue);
   void NotifyFolderItemIntPropertyChanged(in nsISupports item,
-                                       in string property,
+                                       in nsIAtom property,
                                        in long oldValue,
                                        in long newValue);
   void NotifyFolderItemBoolPropertyChanged(in nsISupports item,
-                                       in string property,
+                                       in nsIAtom property,
                                        in boolean oldValue,
                                        in boolean newValue);
   void NotifyFolderItemPropertyFlagChanged(in nsISupports item,
-                                           in string property,
+                                           in nsIAtom property,
                                            in unsigned long oldValue,
                                            in unsigned long newValue);
+    void NotifyFolderItemUnicharPropertyChanged(in nsISupports item,
+                                                in nsIAtom property,
+                                                in wstring oldValue,
+                                                in wstring newValue);
 
   void NotifyFolderItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
   void NotifyFolderItemDeleted(in nsISupports parentItem, in nsISupports item, in string viewString);

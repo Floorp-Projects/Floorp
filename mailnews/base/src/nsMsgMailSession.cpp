@@ -98,7 +98,7 @@ NS_IMETHODIMP nsMsgMailSession::RemoveFolderListener(nsIFolderListener * listene
 
 NS_IMETHODIMP
 nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
-                                                  const char *property,
+                                                  nsIAtom *property,
                                                   const char* oldValue,
                                                   const char* newValue)
 {
@@ -119,10 +119,32 @@ nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
 }
 
 NS_IMETHODIMP
+nsMsgMailSession::NotifyFolderItemUnicharPropertyChanged(nsISupports *item,
+                                                         nsIAtom *property,
+                                                         const PRUnichar* oldValue,
+                                                         const PRUnichar* newValue)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+		listener->OnItemUnicharPropertyChanged(item, property, oldValue, newValue);
+	}
+
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP
 nsMsgMailSession::NotifyFolderItemIntPropertyChanged(nsISupports *item,
-                                                  const char *property,
-                                                  PRInt32 oldValue,
-                                                  PRInt32 newValue)
+                                                     nsIAtom *property,
+                                                     PRInt32 oldValue,
+                                                     PRInt32 newValue)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -142,9 +164,9 @@ nsMsgMailSession::NotifyFolderItemIntPropertyChanged(nsISupports *item,
 
 NS_IMETHODIMP
 nsMsgMailSession::NotifyFolderItemBoolPropertyChanged(nsISupports *item,
-                                                  const char *property,
-                                                  PRBool oldValue,
-                                                  PRBool newValue)
+                                                      nsIAtom *property,
+                                                      PRBool oldValue,
+                                                      PRBool newValue)
 {
 	nsresult rv;
 	PRUint32 count;
@@ -163,7 +185,7 @@ nsMsgMailSession::NotifyFolderItemBoolPropertyChanged(nsISupports *item,
 }
 NS_IMETHODIMP
 nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
-                                                      const char *property,
+                                                      nsIAtom *property,
                                                       PRUint32 oldValue,
                                                       PRUint32 newValue)
 {

@@ -21,6 +21,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIAtom.idl"
 
 interface nsIFolder;
 
@@ -29,10 +30,12 @@ interface nsIFolderListener : nsISupports {
 
 	void OnItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
 	void OnItemRemoved(in nsISupports parentItem, in nsISupports item, in string viewString);
-	void OnItemPropertyChanged(in nsISupports item, in string property, in string oldValue, in string newValue);
-	void OnItemIntPropertyChanged(in nsISupports item, in string property, in long oldValue, in long newValue);
-	void OnItemBoolPropertyChanged(in nsISupports item, in string property, in boolean oldValue, in boolean newValue);
-	void OnItemPropertyFlagChanged(in nsISupports item, in string property, in unsigned long oldFlag,
+  
+	void OnItemPropertyChanged(in nsISupports item, in nsIAtom property, in string oldValue, in string newValue);
+	void OnItemIntPropertyChanged(in nsISupports item, in nsIAtom property, in long oldValue, in long newValue);
+	void OnItemBoolPropertyChanged(in nsISupports item, in nsIAtom property, in boolean oldValue, in boolean newValue);
+  void OnItemUnicharPropertyChanged(in nsISupports item, in nsIAtom property, in wstring oldValue, in wstring newValue);
+	void OnItemPropertyFlagChanged(in nsISupports item, in nsIAtom property, in unsigned long oldFlag,
 									in unsigned long newFlag);
 	void OnFolderLoaded(in nsIFolder aFolder);
 };

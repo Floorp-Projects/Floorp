@@ -155,9 +155,6 @@ public:
   // nsRDFResource overrides
   NS_IMETHOD Init(const char* aURI);
   
-#if 0
-  static nsresult GetRoot(nsIMsgFolder* *result);
-#endif
   // Gets the URL that represents the given message.  Returns a newly
   // created string that must be free'd using XP_FREE().
   // If the db is NULL, then returns a URL that represents the entire
@@ -217,10 +214,13 @@ public:
 
 
 protected:
-	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
-	nsresult NotifyIntPropertyChanged(char *property, PRInt32 oldValue, PRInt32 newValue);
-	nsresult NotifyBoolPropertyChanged(char *property, PRBool oldValue, PRBool newValue);
-	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
+	nsresult NotifyPropertyChanged(nsIAtom *property, char* oldValue, char* newValue);
+	nsresult NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldValue, PRInt32 newValue);
+	nsresult NotifyBoolPropertyChanged(nsIAtom *property, PRBool oldValue, PRBool newValue);
+  nsresult NotifyUnicharPropertyChanged(nsIAtom *property, const PRUnichar* oldValue, const PRUnichar* newValue);
+
+  
+	nsresult NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldValue,
 												PRUint32 newValue);
 	nsresult NotifyItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString);
 	nsresult NotifyItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString);
@@ -274,6 +274,18 @@ protected:
   PRBool mIsServer;
   nsString mName;
   nsCOMPtr<nsIFileSpec> mPath;
+
+  // static stuff for cross-instance objects like atoms
+  static PRInt32 gInstanceCount;
+
+  static nsIAtom* kBiffStateAtom;
+  static nsIAtom* kNumNewBiffMessagesAtom;
+  static nsIAtom* kPrettyNameAtom;
+  static nsIAtom* kTotalUnreadMessagesAtom;
+  static nsIAtom* kTotalMessagesAtom;
+  static nsIAtom* kStatusAtom;
+  static nsIAtom* kFlaggedAtom;
+  
 };
 
 #endif

@@ -86,6 +86,9 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
 
 nsrefcnt nsMsgFolderDataSource::gFolderResourceRefCnt = 0;
 
+nsIAtom * nsMsgFolderDataSource::kBiffStateAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
 
 nsMsgFolderDataSource::nsMsgFolderDataSource():
   mInitialized(PR_FALSE)
@@ -135,6 +138,10 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_Compact, refcnt);
 		NS_RELEASE2(kNC_Rename, refcnt);
 		NS_RELEASE2(kNC_EmptyTrash, refcnt);
+
+    NS_RELEASE(kTotalMessagesAtom);
+    NS_RELEASE(kTotalUnreadMessagesAtom);
+    NS_RELEASE(kBiffStateAtom);
 	}
 }
 
@@ -185,6 +192,10 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_COMPACT, &kNC_Compact);
     rdf->GetResource(NC_RDF_RENAME, &kNC_Rename);
     rdf->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
+
+    kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
+    kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
+    kBiffStateAtom               = NS_NewAtom("BiffState");
   }
 	CreateLiterals(rdf);
 	rv = CreateArcsOutEnumerator();
@@ -749,26 +760,32 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
-														   const char *oldValue, const char *newValue)
+NS_IMETHODIMP
+nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item,
+                                             nsIAtom *property,
+                                             const char *oldValue,
+                                             const char *newValue)
 
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item, const char *property,
-														   PRInt32 oldValue, PRInt32 newValue)
+NS_IMETHODIMP
+nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item,
+                                                nsIAtom *property,
+                                                PRInt32 oldValue,
+                                                PRInt32 newValue)
 {
 	//We only care about folder changes
 	nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
 	if(folder)
 	{
 
-		if(PL_strcmp("TotalMessages", property) == 0)
+		if (kTotalMessagesAtom == property)
 		{
 			OnTotalMessagePropertyChanged(folder, oldValue, newValue);
 		}
-		else if(PL_strcmp("TotalUnreadMessages", property) == 0)
+		else if (kTotalUnreadMessagesAtom == property)
 		{
 			OnUnreadMessagePropertyChanged(folder, oldValue, newValue);
 		}
@@ -777,15 +794,31 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item, const char *property,
-														   PRBool oldValue, PRBool newValue)
+NS_IMETHODIMP
+nsMsgFolderDataSource::OnItemUnicharPropertyChanged(nsISupports *item,
+                                                    nsIAtom *property,
+                                                    const PRUnichar *oldValue,
+                                                    const PRUnichar *newValue)
+{
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
+                                                 nsIAtom *property,
+                                                 PRBool oldValue,
+                                                 PRBool newValue)
 {
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item, const char *property,
-									   PRUint32 oldFlag, PRUint32 newFlag)
+NS_IMETHODIMP
+nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
+                                                 nsIAtom *property,
+                                                 PRUint32 oldFlag,
+                                                 PRUint32 newFlag)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
@@ -794,7 +827,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item
 		nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item));
 		if(resource)
 		{
-			if(PL_strcmp("BiffState", property) == 0)
+			if (kBiffStateAtom == property)
 			{
 				nsCAutoString newBiffStateStr;
 
@@ -1226,23 +1259,31 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 		}
 		//We will have to change the folderTreeName also
 
+    NotifyFolderTreeNameChanged(folder, newValue);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
+                                                   PRInt32 aUnreadMessages)
+{
 		nsXPIDLString name;
-		nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+		nsresult rv = aFolder->GetAbbreviatedName(getter_Copies(name));
 		if (NS_SUCCEEDED(rv)) 
 		{
 			nsAutoString newNameString(name);
 			
-			CreateUnreadMessagesNameString(newValue, newNameString);	
+			CreateUnreadMessagesNameString(aUnreadMessages, newNameString);	
 			
 			nsCOMPtr<nsIRDFNode> newNameNode;
 			createNode(newNameString, getter_AddRefs(newNameNode), getRDFService());
-
+      nsCOMPtr<nsIRDFResource> folderResource =
+        do_QueryInterface(aFolder);
 			NotifyPropertyChanged(folderResource, kNC_FolderTreeName, newNameNode);
-			
 		}
 
-	}
-	return NS_OK;
+    return NS_OK;
 }
 
 

@@ -324,11 +324,11 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 	if((changedFlags & MSG_FLAG_READ) || (changedFlags & MSG_FLAG_REPLIED)
 		|| (changedFlags & MSG_FLAG_FORWARDED)|| (changedFlags & MSG_FLAG_NEW))
 	{
-		rv = NotifyPropertyFlagChanged(item, "Status", oldFlags, newFlags);
+		rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
 	}
 	else if((changedFlags & MSG_FLAG_MARKED))
 	{
-		rv = NotifyPropertyFlagChanged(item, "Flagged", oldFlags, newFlags);
+		rv = NotifyPropertyFlagChanged(item, kFlaggedAtom, oldFlags, newFlags);
 	}
 		return rv;
 }

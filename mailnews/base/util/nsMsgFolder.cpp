@@ -47,6 +47,15 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
+PRInt32 nsMsgFolder::gInstanceCount	= 0;
+
+nsIAtom * nsMsgFolder::kTotalMessagesAtom	= nsnull;
+nsIAtom * nsMsgFolder::kPrettyNameAtom	= nsnull;
+nsIAtom * nsMsgFolder::kNumNewBiffMessagesAtom	= nsnull;
+nsIAtom * nsMsgFolder::kBiffStateAtom	= nsnull;
+nsIAtom * nsMsgFolder::kTotalUnreadMessagesAtom	= nsnull;
+nsIAtom * nsMsgFolder::kFlaggedAtom	= nsnull;
+nsIAtom * nsMsgFolder::kStatusAtom	= nsnull;
 
 
 nsMsgFolder::nsMsgFolder(void)
@@ -78,6 +87,19 @@ nsMsgFolder::nsMsgFolder(void)
 	
 	mPath = null_nsCOMPtr();
 	m_server = nsnull;
+
+  if (gInstanceCount == 0) {
+    kBiffStateAtom           = NS_NewAtom("BiffState");
+    kNumNewBiffMessagesAtom  = NS_NewAtom("NumNewBiffMessages");
+    kPrettyNameAtom          = NS_NewAtom("PrettyName");
+    kTotalUnreadMessagesAtom = NS_NewAtom("TotalUnreadMessages");
+    kTotalMessagesAtom       = NS_NewAtom("TotalMessages");
+    kStatusAtom              = NS_NewAtom("Status");
+    kFlaggedAtom             = NS_NewAtom("Flagged");
+
+  }
+  
+  gInstanceCount++;
 }
 
 nsMsgFolder::~nsMsgFolder(void)
@@ -94,6 +116,12 @@ nsMsgFolder::~nsMsgFolder(void)
 
     delete mListeners;
 
+    gInstanceCount--;
+    if (gInstanceCount <= 0) {
+      NS_IF_RELEASE(kBiffStateAtom);
+      NS_IF_RELEASE(kNumNewBiffMessagesAtom);
+      NS_IF_RELEASE(kPrettyNameAtom);
+    }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgFolder, nsRDFResource)
@@ -666,6 +694,8 @@ NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 
 NS_IMETHODIMP nsMsgFolder::SetPrettyName(const PRUnichar *name)
 {
+
+  NotifyUnicharPropertyChanged(kPrettyNameAtom, mName.GetUnicode(), name);
   mName = name;
   return NS_OK;
 }
@@ -1201,7 +1231,7 @@ void nsMsgFolder::ChangeNumPendingUnread(PRInt32 delta)
 		mNumPendingUnreadMessages += delta;
 		PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
 
-		NotifyIntPropertyChanged("TotalUnreadMessages", oldUnreadMessages, newUnreadMessages);
+		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, newUnreadMessages);
 	}
 }
 
@@ -1213,7 +1243,7 @@ void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
 		mNumPendingTotalMessages += delta;
 		PRInt32 newTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
 
-		NotifyIntPropertyChanged("TotalMessages", oldTotalMessages, newTotalMessages);
+		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, newTotalMessages);
 	}
 
 }
@@ -1668,7 +1698,7 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
 		mBiffState = aBiffState;
 		nsCOMPtr<nsISupports> supports;
 		if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
-			NotifyPropertyFlagChanged(supports, "BiffState", oldBiffState, mBiffState);
+			NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, mBiffState);
 	}
 	return NS_OK;
 }
@@ -1689,11 +1719,11 @@ NS_IMETHODIMP nsMsgFolder::SetNumNewMessages(PRInt32 aNumNewMessages)
 		PRInt32 oldNumMessages = mNumNewBiffMessages;
 		mNumNewBiffMessages = aNumNewMessages;
 
-		char *oldNumMessagesStr = PR_smprintf("%d", oldNumMessages);
-		char *newNumMessagesStr = PR_smprintf("%d",aNumNewMessages);
-		NotifyPropertyChanged("NumNewBiffMessages", oldNumMessagesStr, newNumMessagesStr);
-		PR_smprintf_free(oldNumMessagesStr);
-		PR_smprintf_free(newNumMessagesStr);
+    nsCAutoString oldNumMessagesStr;
+    oldNumMessagesStr.Append(oldNumMessages);
+		nsCAutoString newNumMessagesStr;
+    newNumMessagesStr.Append(aNumNewMessages);
+		NotifyPropertyChanged(kNumNewBiffMessagesAtom, oldNumMessagesStr, newNumMessagesStr);
 	}
 
 	return NS_OK;
@@ -1866,7 +1896,9 @@ NS_IMETHODIMP nsMsgFolder::MatchName(nsString *name, PRBool *matches)
 	return NS_OK;
 }
 
-nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
+nsresult
+nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
+                                   char *oldValue, char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
@@ -1891,7 +1923,35 @@ nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char
 
 }
 
-nsresult nsMsgFolder::NotifyIntPropertyChanged(char *property, PRInt32 oldValue, PRInt32 newValue)
+nsresult
+nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
+                                          const PRUnichar* oldValue,
+                                          const PRUnichar *newValue)
+{
+  nsresult rv;
+  nsCOMPtr<nsISupports> supports;
+  rv = QueryInterface(NS_GET_IID(nsISupports),
+                      (void **)getter_AddRefs(supports));
+  if (NS_FAILED(rv)) return rv;
+  
+  PRInt32 i;
+  for (i=0; i<mListeners->Count(); i++) {
+    // folderlisteners arent refcounted in the array
+    nsIFolderListener* listener=(nsIFolderListener*)mListeners->ElementAt(i);
+    listener->OnItemUnicharPropertyChanged(supports, property, oldValue, newValue);
+  }
+
+  // Notify listeners who listen to every folder
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = mailSession->NotifyFolderItemUnicharPropertyChanged(supports,
+                                                             property,
+                                                             oldValue,
+                                                             newValue);
+  return NS_OK;
+}
+
+nsresult nsMsgFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
@@ -1916,7 +1976,9 @@ nsresult nsMsgFolder::NotifyIntPropertyChanged(char *property, PRInt32 oldValue,
 
 }
 
-nsresult nsMsgFolder::NotifyBoolPropertyChanged(char *property, PRBool oldValue, PRBool newValue)
+nsresult
+nsMsgFolder::NotifyBoolPropertyChanged(nsIAtom* property,
+                                       PRBool oldValue, PRBool newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
@@ -1941,8 +2003,9 @@ nsresult nsMsgFolder::NotifyBoolPropertyChanged(char *property, PRBool oldValue,
 
 }
 
-nsresult nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
-												PRUint32 newValue)
+nsresult
+nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property,
+                                       PRUint32 oldValue, PRUint32 newValue)
 {
 	PRInt32 i;
 	for(i = 0; i < mListeners->Count(); i++)
@@ -2027,14 +2090,7 @@ nsresult nsMsgFolder::NotifyFolderLoaded()
 nsresult
 nsGetMailFolderSeparator(nsString& result)
 {
-  static char* gMailFolderSep = nsnull;         // never freed
-
-  if (gMailFolderSep == nsnull) {
-    gMailFolderSep = PR_smprintf(".sbd");
-    if (gMailFolderSep == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  result = gMailFolderSep;
+  result = ".sbd";
   return NS_OK;
 }
 

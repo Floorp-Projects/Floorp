@@ -215,6 +215,10 @@ protected:
 	nsCOMPtr<nsIRDFNode> kTrueLiteral;
 	nsCOMPtr<nsIRDFNode> kFalseLiteral;
 
+  // message properties
+  static nsIAtom *kStatusAtom;
+  static nsIAtom *kFlaggedAtom;
+  
 	nsCOMPtr<nsISupportsArray> kThreadsArcsOutArray;
 	nsCOMPtr<nsISupportsArray> kNoThreadsArcsOutArray;
 

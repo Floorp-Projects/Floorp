@@ -73,6 +73,10 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnflagged= nsnull;
 
 nsrefcnt nsMsgMessageDataSource::gMessageResourceRefCnt = 0;
 
+nsIAtom * nsMsgMessageDataSource::kFlaggedAtom  = nsnull;
+nsIAtom * nsMsgMessageDataSource::kStatusAtom   = nsnull;
+
+
 
 nsMsgMessageDataSource::nsMsgMessageDataSource():
   mInitialized(PR_FALSE),
@@ -115,6 +119,9 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_ToggleRead, refcnt);
 		NS_RELEASE2(kNC_MarkFlagged, refcnt);
 		NS_RELEASE2(kNC_MarkUnflagged, refcnt);
+
+    NS_RELEASE(kStatusAtom);
+    NS_RELEASE(kFlaggedAtom);
 	}
 
 	NS_IF_RELEASE(mHeaderParser);
@@ -164,7 +171,9 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
 		rdf->GetResource(NC_RDF_MARKFLAGGED, &kNC_MarkFlagged);
 		rdf->GetResource(NC_RDF_MARKUNFLAGGED, &kNC_MarkUnflagged);
-    
+
+    kStatusAtom = NS_NewAtom("Status");
+    kFlaggedAtom = NS_NewAtom("Flagged");
 	}
 
 	CreateLiterals(rdf);
@@ -635,41 +644,62 @@ nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, n
 
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
-														   const char *oldValue, const char *newValue)
+NS_IMETHODIMP
+nsMsgMessageDataSource::OnItemPropertyChanged(nsISupports *item,
+                                              nsIAtom *property,
+                                              const char *oldValue,
+                                              const char *newValue)
 
 {
 
 	return NS_OK;
 }
-
-NS_IMETHODIMP nsMsgMessageDataSource::OnItemIntPropertyChanged(nsISupports *item, const char *property,
-														   PRInt32 oldValue, PRInt32 newValue)
+NS_IMETHODIMP
+nsMsgMessageDataSource::OnItemUnicharPropertyChanged(nsISupports *item,
+                                                     nsIAtom *property,
+                                                     const PRUnichar *oldValue,
+                                                     const PRUnichar *newValue)
 {
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::OnItemBoolPropertyChanged(nsISupports *item, const char *property,
-														   PRBool oldValue, PRBool newValue)
+NS_IMETHODIMP
+nsMsgMessageDataSource::OnItemIntPropertyChanged(nsISupports *item,
+                                                 nsIAtom *property,
+                                                 PRInt32 oldValue,
+                                                 PRInt32 newValue)
 {
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *item, const char *property,
-									   PRUint32 oldFlag, PRUint32 newFlag)
+NS_IMETHODIMP
+nsMsgMessageDataSource::OnItemBoolPropertyChanged(nsISupports *item,
+                                                  nsIAtom *property,
+                                                  PRBool oldValue,
+                                                  PRBool newValue)
+{
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *item,
+                                                  nsIAtom *property,
+                                                  PRUint32 oldFlag,
+                                                  PRUint32 newFlag)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item, &rv));
 
 	if(NS_SUCCEEDED(rv))
 	{
-		if(PL_strcmp("Status", property) == 0)
+		if (kStatusAtom == property)
 		{
 			OnChangeStatus(resource, oldFlag, newFlag);
 		}
-		else if(PL_strcmp("Flagged", property) == 0)
+		else if(kFlaggedAtom == property)
 		{
 			nsCAutoString newFlaggedStr;
 			rv = createFlaggedStringFromFlag(newFlag, newFlaggedStr);
