@@ -39,7 +39,7 @@ public:
 	NS_DECL_NSIEXTERNALPROTOCOLHANDLER
 
 	nsExternalProtocolHandler();
-	virtual ~nsExternalProtocolHandler();
+	~nsExternalProtocolHandler();
 
 protected:
   // helper function
