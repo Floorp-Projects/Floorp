@@ -172,10 +172,11 @@ public:
     PRBool IsHidden()      const {return (PRBool) (XPT_MD_IS_HIDDEN(flags) );}
     const char* GetName()  const {return name;}
     uint8 GetParamCount()  const {return num_args;}
-    const nsXPTParamInfo GetParam(uint8 index) const
+    /* idx was index before I got _sick_ of the warnings on Unix, sorry jband */
+    const nsXPTParamInfo GetParam(uint8 idx) const
         {
-            NS_PRECONDITION(index < GetParamCount(),"bad arg");
-            return params[index];
+            NS_PRECONDITION(idx < GetParamCount(),"bad arg");
+            return params[idx];
         }
     const nsXPTParamInfo GetResult() const
         {return *result;}

@@ -698,7 +698,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
 }
 
 nsresult
-nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
+nsComponentManagerImpl::PlatformCLSIDToProgID(const nsCID *aClass,
                                               char* *aClassName, char* *aProgID)
 {
     	
@@ -1144,19 +1144,19 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
  * XXX Would be nice to hook in a cache here too.
  */
 nsresult
-nsComponentManagerImpl::CLSIDToProgID(nsCID *aClass,
+nsComponentManagerImpl::CLSIDToProgID(const nsCID &aClass,
                                       char* *aClassName,
                                       char* *aProgID)
 {
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef USE_REGISTRY
-    res = PlatformCLSIDToProgID(aClass, aClassName, aProgID);
+    res = PlatformCLSIDToProgID(&aClass, aClassName, aProgID);
 #endif /* USE_REGISTRY */
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
-        char *buf = aClass->ToString();
+        char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: CLSIDToProgID(%s)->%s", buf,
                 NS_SUCCEEDED(res) ? *aProgID : "[FAILED]"));
@@ -1179,14 +1179,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                                        const nsIID &aIID,
                                        void **aResult)
 {
-#ifdef DEBUG_shaver
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
-    {
-        char *buf = aClass.ToString();
-        fprintf(stderr, "nsComponentManager: CreateInstance(%s)\n", buf);
-        delete [] buf;
-    }
-#endif
 
     if (aResult == NULL)
     {
@@ -1223,10 +1215,10 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
  * XXX This is a function overload. We need to remove it.
  */
 nsresult
-nsComponentManagerImpl::CreateInstance(const char *aProgID,
-                                       nsISupports *aDelegate,
-                                       const nsIID &aIID,
-                                       void **aResult)
+nsComponentManagerImpl::CreateInstanceByProgID(const char *aProgID,
+                                               nsISupports *aDelegate,
+                                               const nsIID &aIID,
+                                               void **aResult)
 {
     nsCID clsid;
     nsresult rv = ProgIDToCLSID(aProgID, &clsid);
@@ -1518,7 +1510,7 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
     fprintf(stderr, "nCMI: constructing loader for type %s = %s\n", aType, progID);
 #endif
 
-    rv = CreateInstance(progID, nsnull, NS_GET_IID(nsIComponentLoader),	(void **)&loader);
+    rv = CreateInstanceByProgID(progID, nsnull, NS_GET_IID(nsIComponentLoader),	(void **)&loader);
     PR_FREEIF(progID);
     if (NS_FAILED(rv))
         return rv;
@@ -1665,8 +1657,9 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 
     // Convert the persistent descriptor into a nsIFileSpec
     nsCOMPtr<nsIFileSpec>libSpec;
-    NS_DEFINE_IID(kFileSpecIID, NS_IFILESPEC_IID);
-    rv = CreateInstance(NS_FILESPEC_PROGID, NULL, kFileSpecIID, getter_AddRefs(libSpec));
+    rv = CreateInstanceByProgID(NS_FILESPEC_PROGID, NULL,
+                                NS_GET_IID(nsIFileSpec),
+                                getter_AddRefs(libSpec));
     if (NS_FAILED(rv)) return rv;
     rv = libSpec->SetPersistentDescriptorString((char *)aLibrary);
     if (NS_FAILED(rv)) return rv;
@@ -1802,7 +1795,7 @@ AutoRegister_enumerate(nsHashKey *key, void *aData, void *aClosure)
 }
 
 nsresult
-nsComponentManagerImpl::AutoRegister(RegistrationTime when, nsIFileSpec *inDirSpec)
+nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFileSpec *inDirSpec)
 {
     nsCOMPtr<nsIFileSpec> dir;
     nsresult rv;
@@ -1898,7 +1891,7 @@ AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
 }
 
 nsresult
-nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when,
+nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
                                               nsIFileSpec *component)
 {
     struct AutoReg_closure closure;
@@ -1940,9 +1933,11 @@ ConvertFactoryEntryToCID(nsHashKey *key, void *data, void *convert_data,
 
     nsISupportsID* cidHolder;
 
-    if(NS_SUCCEEDED(rv = compMgr->CreateInstance(NS_SUPPORTS_ID_PROGID, nsnull, 
-                                                 NS_GET_IID(nsISupportsID),
-                                                 (void **)&cidHolder)))
+    if(NS_SUCCEEDED(rv = 
+                    compMgr->CreateInstanceByProgID(NS_SUPPORTS_ID_PROGID,
+                                                    nsnull, 
+                                                    NS_GET_IID(nsISupportsID),
+                                                    (void **)&cidHolder)))
     {
         nsFactoryEntry *fe = (nsFactoryEntry *) data;
         cidHolder->SetData(&fe->cid);
@@ -1963,9 +1958,11 @@ ConvertProgIDKeyToString(nsHashKey *key, void *data, void *convert_data,
 
     nsISupportsString* strHolder;
 
-    if(NS_SUCCEEDED(rv = compMgr->CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                                 NS_GET_IID(nsISupportsString),
-                                                 (void **)&strHolder)))
+
+    rv = compMgr->CreateInstanceByProgID(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                         NS_GET_IID(nsISupportsString),
+                                         (void **)&strHolder);
+    if(NS_SUCCEEDED(rv))
     {
         nsStringKey *strKey = (nsStringKey *) key;
         const nsString& str = strKey->GetString();

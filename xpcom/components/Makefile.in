@@ -36,13 +36,14 @@ CPPSRCS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIFactory.idl	\
 		nsIComponentLoader.idl	\
+		nsIComponentManager.idl \
+		nsIFactory.idl	\
 		nsIModule.idl	\
 		$(NULL)
 
 EXPORTS		= \
-		nsIComponentManager.h \
+		nsComponentManagerUtils.h \
 		nsIGenericFactory.h \
 		nsIRegistry.h \
 		nsIServiceManager.h \

@@ -411,9 +411,10 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 		rv = NS_GetGlobalComponentManager(&comMgr);
 
 		if (!mStreamConverter)
-			rv = comMgr->CreateInstance(NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul", 
-													NULL, NS_GET_IID(nsIStreamConverter), 
-													(void **) getter_AddRefs(mStreamConverter)); 
+			rv = comMgr->CreateInstanceByProgID(NS_ISTREAMCONVERTER_KEY 
+                                                "?from=message/rfc822?to=text/xul", 
+                                                NULL, NS_GET_IID(nsIStreamConverter), 
+                                                (void **) getter_AddRefs(mStreamConverter)); 
 		if (NS_FAILED(rv)) return rv;
 
 		// (1) and (2)

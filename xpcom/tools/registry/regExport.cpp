@@ -70,8 +70,9 @@ int main( int argc, char *argv[] ) {
 
     // Create the registry
     nsIRegistry *reg;
-    static NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
-    rv = compMgr->CreateInstance(NS_REGISTRY_PROGID, NULL, kRegistryIID, (void **) &reg);
+    rv = compMgr->CreateInstanceByProgID(NS_REGISTRY_PROGID, NULL,
+                                         NS_GET_IID(nsIRegistry),
+                                         (void **) &reg);
 
     // Check result.
     if ( NS_FAILED(rv) )
