@@ -782,7 +782,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       if (nodeList)
       {
-        PRUint32 len, j;
+        PRUint32 len;
         nodeList->GetLength(&len);
         
         if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
@@ -840,7 +840,7 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       if (nodeList)
       {
-        PRUint32 len, j;
+        PRUint32 len;
         nodeList->GetLength(&len);
         
         if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
