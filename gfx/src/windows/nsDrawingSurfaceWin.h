@@ -55,6 +55,7 @@ public:
   NS_IMETHOD Init(HDC aDC, PRUint32 aWidth, PRUint32 aHeight,
                   PRUint32 aFlags);
   NS_IMETHOD GetDC(HDC *aDC);
+  NS_IMETHOD GetTECHNOLOGY(PRInt32  *aTechnology); 
   NS_IMETHOD ReleaseDC(void);
   NS_IMETHOD IsReleaseDCDestructive(PRBool *aDestructive);
 
@@ -89,6 +90,8 @@ private:
   PRInt32       mLockOffset;
   PRInt32       mLockHeight;
   PRUint32      mLockFlags;
+  PRInt32       mTechnology;
+
 
 #ifdef NGLAYOUT_DDRAW
   IDirectDrawSurface  *mSurface;
