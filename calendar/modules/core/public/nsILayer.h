@@ -21,7 +21,7 @@
 #include "nsISupports.h"
 #include "jdefines.h"
 #include "julnstr.h"
-#include "VEvent.h"
+#include "vevent.h"
 
 //5482d0d0-4cca-11d2-924a-00805f8a7ab6
 #define NS_ILAYER_IID   \
