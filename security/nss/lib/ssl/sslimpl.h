@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.9 2001/02/07 00:34:55 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.10 2001/02/07 17:50:43 wtc%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -56,6 +56,7 @@
 #include "unistd.h"
 #endif
 #include "nssrwlk.h"
+#include "prthread.h"
 
 
 #if defined(DEBUG) || defined(TRACE)
