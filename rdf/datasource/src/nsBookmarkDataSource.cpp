@@ -254,14 +254,30 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 {
 	// tokenize the input stream.
 	// XXX this needs to handle quotes, etc. it'd be nice to use the real parser for this...
+    nsRandomAccessInputStream in(*mStream);
+
     nsresult rv = NS_OK;
     nsAutoString line;
-	while (NS_SUCCEEDED(rv) && !mStream->eof() && !mStream->failed()) {
-        char c = mStream->get();
-        line.Append(c);
+	while (NS_SUCCEEDED(rv) && !in.eof() && !in.failed()) {
+        line.Truncate();
 
-        if (line.Last() != '\n' && line.Last() != '\r' && !mStream->eof())
-            continue; // keep building the string
+        while (1) {
+            char buf[256];
+            PRBool untruncated = in.readline(buf, sizeof(buf));
+
+            // in.readline() return PR_FALSE if there was buffer overflow,
+            // or there was a catastrophe. Check to see if we're here
+            // because of the latter...
+            NS_ASSERTION (! in.failed(), "error reading file");
+            if (in.failed()) return NS_ERROR_FAILURE;
+
+            // XXX Bug 5871. What charset conversion should we be
+            // applying here?
+            line.Append(buf);
+
+            if (untruncated)
+                break;
+        }
 
         PRInt32 offset;
 
@@ -291,7 +307,6 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
             // XXX Discard the line. We should be treating this as the
             // description.
         }
-        line.Truncate();
     }
     return rv;
 }
