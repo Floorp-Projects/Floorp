@@ -483,7 +483,7 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  -moz-image-region: rect(32px, 16px, 48px, 0px); !important;
+  -moz-image-region: rect(32px, 16px, 48px, 0px) !important;
 }
 
 

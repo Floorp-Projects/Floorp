@@ -33,15 +33,6 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY  preface               "Info for: "> 
-
-<!ENTITY  title                 "Page Info"> 
-<!ENTITY  description           "Information about the current page"> 
-<!ENTITY  helpButton            "Help">
-<!ENTITY  pageInfoWindow.width  "425">
-<!ENTITY  pageInfoWindow.height "470">
-
-<!ENTITY  unknown               "Unknown">
 <!ENTITY  closeWindow           "w">
 
 <!ENTITY  generalTab            "General">
