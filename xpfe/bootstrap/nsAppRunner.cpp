@@ -329,6 +329,9 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
+#ifdef MOZ_PHOENIX
+#include SPLASH_XPM
+#endif
 #endif //MOZ_WIDGET_GTK
 
 /* Define Class IDs */
