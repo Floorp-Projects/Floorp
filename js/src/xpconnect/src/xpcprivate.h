@@ -604,15 +604,43 @@ public:
     XPCJSRuntime* GetRuntime() const {return mRuntime;}
     JSContext* GetJSContext() const {return mJSContext;}
 
-    enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE};
-
+    // LangType is used in Mark, if you add more languages here, be sure to
+    // adjust MARK_FLAG to the bit past the last one used for languages
+    enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE, MARK_FLAG = 1 << 2};
+    
+    // Mark functions used by SyncXPCContextList
+    void Mark() { mCallingLangType = (LangType)(mCallingLangType | MARK_FLAG); }
+    void Unmark() { mCallingLangType = (LangType)(mCallingLangType & ~MARK_FLAG); }
+    JSBool IsMarked() const { return mCallingLangType & MARK_FLAG; }
+    // The mark flag is used very briefly thus we should never need to
+    // Address it here
     LangType GetCallingLangType() const
-        {return mCallingLangType;}
+        {
+            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
+            return mCallingLangType;
+        }
     LangType SetCallingLangType(LangType lt)
-        {LangType tmp = mCallingLangType; mCallingLangType = lt; return tmp;}
-    JSBool CallerTypeIsJavaScript() const {return LANG_JS == mCallingLangType;}
-    JSBool CallerTypeIsNative() const {return LANG_NATIVE == mCallingLangType;}
-    JSBool CallerTypeIsKnown() const {return LANG_UNKNOWN != mCallingLangType;}
+        {
+            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
+            LangType tmp = mCallingLangType; 
+            mCallingLangType = lt; 
+            return tmp;
+        }
+    JSBool CallerTypeIsJavaScript() const 
+        {
+            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
+            return LANG_JS == mCallingLangType;
+        }
+    JSBool CallerTypeIsNative() const 
+        {
+            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType"); 
+            return LANG_NATIVE == mCallingLangType;
+        }
+    JSBool CallerTypeIsKnown() const 
+        {
+            NS_ASSERTION(!IsMarked(),"Invalid state for mCallingLangType");
+            return LANG_UNKNOWN != mCallingLangType;
+        }
 
     nsresult GetException(nsIException** e)
         {
