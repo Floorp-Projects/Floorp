@@ -60,8 +60,6 @@ public:
   NS_IMETHOD  		GetLineIncrement(PRUint32& aSize);
   NS_IMETHOD     	SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                   PRUint32 aPosition, PRUint32 aLineIncrement);
-  NS_IMETHOD     Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-  NS_IMETHOD     Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
 
     virtual PRBool    OnPaint(nsPaintEvent & aEvent);
     virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
