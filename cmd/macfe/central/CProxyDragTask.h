@@ -26,7 +26,7 @@
 // Includes
 
 #include "CBrowserDragTask.h"
-
+#include <string>
 #include "CProxyPane.h"
 
 // Forward declarations
@@ -53,7 +53,8 @@ public:
 											CProxyPane&				inProxyPane,
 											LCaption&				inPageProxyCaption,
 											const EventRecord&		inEventRecord,
-											CExtraFlavorAdder*		inFlavorAdder = nil);
+											CExtraFlavorAdder*		inFlavorAdder = nil,
+											const char*				inBookmarkFlavorData = nil );
 	virtual	 				~CProxyDragTask();
 
 	virtual OSErr			DoDrag();
@@ -71,6 +72,7 @@ protected:
 	CProxyPane&				mProxyPane;
 	LCaption&				mPageProxyCaption;
 	CExtraFlavorAdder*		mExtraFlavorAdder;
+	const string			mBookmarkFlavorData;		// data sent along with drag. Ok to be NULL
 };
 
 

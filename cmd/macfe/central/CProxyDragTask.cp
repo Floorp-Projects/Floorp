@@ -42,12 +42,14 @@ CProxyDragTask::CProxyDragTask(
 	CProxyPane&				inProxyPane,
 	LCaption&				inPageProxyCaption,
 	const EventRecord&		inEventRecord,
-	CExtraFlavorAdder*		inExtraFlavorAdder)
+	CExtraFlavorAdder*		inExtraFlavorAdder,
+	const char*				inBookmarkFlavorData)
 	
 	:	mProxyView(inProxyView),
 		mProxyPane(inProxyPane),
 		mPageProxyCaption(inPageProxyCaption),
 		mExtraFlavorAdder(inExtraFlavorAdder),
+		mBookmarkFlavorData(inBookmarkFlavorData),
 
 		Inherited(inEventRecord)
 {
@@ -167,7 +169,18 @@ CProxyDragTask::DoTranslucentDrag()
 void
 CProxyDragTask::AddFlavors(DragReference inDragRef)
 {
-	Inherited::AddFlavors(inDragRef);
+	// pass along any data with the bookmark flavor now so that it can be
+	// retreived before the drop is complete. If we pass null, no one can
+	// get to the data until the "drag send data" proc is called, which means
+	// that dropsites that need to see the data before accepting the drop
+	// will fail.
+	if ( mBookmarkFlavorData.length() )
+		AddFlavorBookmark(static_cast<ItemReference>(this), mBookmarkFlavorData.c_str());
+	else
+		AddFlavorBookmark(static_cast<ItemReference>(this), NULL);
+	AddFlavorBookmarkFile(static_cast<ItemReference>(this));
+	AddFlavorURL(static_cast<ItemReference>(this));
+
 	if (mExtraFlavorAdder)
 		mExtraFlavorAdder->AddExtraFlavorData(inDragRef, static_cast<ItemReference>(this));
 }
