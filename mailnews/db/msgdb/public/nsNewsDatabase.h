@@ -79,7 +79,7 @@ public:
   // void               OnFolderFilterListChanged(MSG_FolderInfo *folder);
   // caller needs to free
   static char			*GetGroupNameFromURL(const char *url);
-  virtual nsresult      PrePopulate();
+
 protected:
   virtual PRBool	    ThreadBySubjectWithoutRe() ;
 

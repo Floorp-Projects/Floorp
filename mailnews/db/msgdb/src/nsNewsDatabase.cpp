@@ -18,8 +18,9 @@
 
 #include "msgCore.h"
 #include "nsNewsDatabase.h"
-#include "nsRDFCID.h"
+#include "nsNewsSummarySpec.h"
 
+#include "nsRDFCID.h"
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsNewsDatabase::nsNewsDatabase()
@@ -37,88 +38,48 @@ nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
   return NS_OK;
 }
 
-nsresult nsNewsDatabase::PrePopulate()
-{
-  nsIMessage       *msg;
-  nsMsgHdr	       *newHdr = NULL;
-  PRTime           resultTime, intermediateResult, microSecondsPerSecond;
-  time_t           resDate;
-
-  resultTime = PR_Now();
-
-  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-  LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
-  LL_L2I(resDate, intermediateResult);
-  
-  nsresult rv = CreateNewHdr(1, &msg);
-  if (NS_FAILED(rv)) return rv;
-  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-  newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
-  newHdr->SetSubject("Why the Lakers suck");
-  newHdr->SetDate(resDate);
-  newHdr->SetRecipients("riley@heat.com (Pat Riley)", PR_FALSE);
-  AddNewHdrToDB (newHdr, PR_TRUE);
-  printf("added header\n");
-  newHdr->Release();
-  
-  rv = CreateNewHdr(2, &msg);
-  if (NS_FAILED(rv)) return rv;
-  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-  newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
-  newHdr->SetSubject("Anyone here know how to shoot free throws?");
-  newHdr->SetDate(resDate);
-  AddNewHdrToDB (newHdr, PR_TRUE);
-  printf("added header\n");
-  newHdr->Release();
-  
-  rv = CreateNewHdr(3, &msg);
-  if (NS_FAILED(rv)) return rv;
-  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-  newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
-  newHdr->SetSubject("Has anyone seen my jump shot?");
-  newHdr->SetDate(resDate);
-  AddNewHdrToDB (newHdr, PR_TRUE);
-  printf("added header\n");
-  newHdr->Release();
-  
-  rv = CreateNewHdr(4, &msg);
-  if (NS_FAILED(rv)) return rv;
-  newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
-  newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
-  newHdr->SetSubject("Tips for fighting 7' 4\" guys");
-  newHdr->SetDate(resDate);
-  AddNewHdrToDB (newHdr, PR_TRUE);
-  printf("added header\n");
-  newHdr->Release();
-  return NS_OK;
-}
-
 /* static */ 
 nsresult nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
-  printf("in nsNewsDatabase::Open()\n");
-  nsNewsDatabase	*newsDB;
-  nsresult          err = NS_OK;
+  nsNewsDatabase	        *newsDB;
+  nsNewsSummarySpec	        summarySpec(newsgroupName);
+  nsresult                  err = NS_OK;
+
+#ifdef DEBUG
+    printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
+           (const char*)newsgroupName, create ? "TRUE":"FALSE",
+           pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)newsgroupName);
+#endif
+
+  *pMessageDB = nsnull;
 
   newsDB = new nsNewsDatabase();
   
   if (!newsDB) {
+#ifdef DEBUG
     printf("NS_ERROR_OUT_OF_MEMORY\n");
+#endif
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   newsDB->m_newsgroupSpec = new nsFileSpec(newsgroupName);
   newsDB->AddRef();
 
-  /* sspitzer:  temporary work, don't panic */
-  err = newsDB->OpenMDB("/tmp/mozillanews/bar", create);
+  err = newsDB->OpenMDB((const char *) summarySpec, create);
   if (NS_SUCCEEDED(err)) {
+#ifdef DEBUG
     printf("newsDB->OpenMDB succeeded!\n");
-    newsDB->PrePopulate();
+#endif
+    *pMessageDB = newsDB;
   }
+#ifdef DEBUG
   else {
     printf("newsDB->OpenMDB failed!\n");
+    *pMessageDB = nsnull;
+    delete newsDB;
+    newsDB = nsnull;
   }
+#endif
 
   return err;
 }
@@ -291,7 +252,9 @@ nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, 
 {
   nsresult rv;
 
+#ifdef DEBUG
   printf("nsNewsDatabase::CreateMsgHdr()\n");
+#endif
 
   nsIRDFService *rdf;
   rv = nsServiceManager::GetService(kRDFServiceCID, 
@@ -302,12 +265,12 @@ nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, 
   
   char* msgURI;
   
-  //Need to remove ".msf".
+  //Need to remove ".nsf".
   nsFileSpec folderPath = path;
   char* leafName = folderPath.GetLeafName();
   nsString folderName(leafName);
   PL_strfree(leafName);
-  if(folderName.Find(".msf") != -1)
+  if(folderName.Find(".nsf") != -1)
 	{
       nsString realFolderName;
       folderName.Left(realFolderName, folderName.Length() - 4);

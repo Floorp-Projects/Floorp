@@ -28,7 +28,6 @@
 { 0xa86c86ae, 0xe97f, 0xa506,                  \
     { 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
-
 // 36414aa0-e980-11d2-a506-0060b0fc04b7
 #define NS_NEWSDB_CID                      \
 { 0x36414aa0, 0xe980, 0x11d2,                  \
@@ -39,14 +38,20 @@
 { 0x9e4b07ee, 0xe980, 0x11d2,                  \
     { 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
 
-#define NS_MAILNEWSMESSAGERESOURCE_CID               \
-{ /* b0908e06-dc06-11d2-8a46-0060b0fc04d2 */         \
-	0xb0908e06,										 \
-	0xdc06,											 \
-	0x11d2,											 \
+// b0908e06-dc06-11d2-8a46-0060b0fc04d2
+#define NS_MAILBOXMESSAGERESOURCE_CID               \
+{ 0xb0908e06,0xdc06, 0x11d2,											 \
 	{0x8a, 0x46, 0x00, 0x60, 0xb0, 0xfc, 0x4, 0xd2}	 \
 }
 
+// sspitzer:  need to use uuidgen to create this. 
+// this is a tempory cut-and-paste-and-alter job
+
+// b0908e06-dc06-11d2-8a46-00600bcf04d2
+#define NS_NEWSMESSAGERESOURCE_CID               \
+{ 0xb0908e06, 0xdc06, 0x11d2,											 \
+	{0x8a, 0x46, 0x00, 0x60, 0x0b, 0xcf, 0x4, 0xd2}	 \
+}
 
 
 #endif
