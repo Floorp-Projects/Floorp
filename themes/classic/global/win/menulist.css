@@ -4,85 +4,75 @@
 /* outer frame */
   menulist 
     {
-      padding             : 0px;
-      border              : 1px solid #000000;
-      background-color    : #CCCCCC;
-      -moz-border-radius  : 3px 2px 2px 3px;
+      behavior            : url("chrome://global/skin/menulistBindings.xml#menulist");
+      border-left         : 1px solid threedshadow;
+      border-top          : 1px solid threedshadow;
+      border-right        : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedhighlight;
+      background-color    : window;
+      font                : pull-down-menu;
       margin              : 1px 5px 2px 5px;
     }
 
-  menulist[menuactive="true"],
-  menulist:hover 
-    {
-      border              : 1px solid #000000;
-    }
-
-  menulist[open="true"] 
-    {
-      border              : 1px solid #000000;
-    }
-  
   menulist[disabled="true"]
     {
-      border              : 1px solid #999999;
-      color               : #999999;
+      background-color    : threedface;
     }
     
 /* icon display frame */
-  menulist > .menu-icon 
+  menulist > .menulist-internal-box
     {
-      border-left         : 1px outset #CCCCCC;
-      border-top          : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
+      border-left         : 1px solid threeddarkshadow;
+      border-top          : 1px solid threeddarkshadow;
+      border-right        : 1px solid threedface;
+      border-bottom       : 1px solid threedface;
       padding             : 2px 0px 2px 0px;
     }  
 
-  menulist[open="true"] > .menu-icon 
-    {
-      border-left         : 1px inset #CCCCCC;
-      border-top          : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      padding             : 3px 0px 1px 0px;
-    }
-  
 /* text display frame */
-  menulist > .menu-text 
+  menulist > .menulist-internal-box > .menu-text 
     {
       padding             : 2px 4px 2px 4px;
-      border-top          : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
       margin-right        : 0px;
     }
     
-  menulist[open="true"] > .menu-text 
+/* drop marker display frame */
+  .menu-dropmarker-box-1
     {
-      border-top          : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      padding             : 3px 4px 1px 4px;
+      border-top          : 1px solid threedface;
+      border-left         : 1px solid threedface;
+      border-bottom       : 1px solid threeddarkshadow;
+      border-right        : 1px solid threeddarkshadow;
+      background-color    : threedface;
+    }
+  
+  .menu-dropmarker-box-1
+    {
+      border-top          : 1px solid threedhighlight;
+      border-left         : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedshadow;
+      border-right        : 1px solid threedshadow;
     }
 
-/* drop marker display frame */
-  menulist > .menu-dropmarker 
+  .menu-dropmarker
     {
-      border-top          : 1px outset #CCCCCC;
-      border-right        : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      border-left         : none;
       list-style-image    : url("chrome://global/skin/scroll-down.gif");
       padding             : 2px;
     }
   
-  menulist[disabled="true"] > .menu-dropmarker
+  .menu-dropmarker[disabled="true"]
     {
       list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
+      padding             : 2px;
     }
 
-  menulist[open="true"] > .menu-dropmarker 
+  .menu-dropmarker-box-1[open="true"]
+    { 
+      border              : 1px solid threedshadow;
+    }
+    
+  .menu-dropmarker-box-1[open="true"]
     {
-      border-top          : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      border-left         : 1px solid #CCCCCC;
       padding             : 3px 2px 1px 2px;
     }
 
@@ -131,22 +121,13 @@
 /* rules for popups and separators associated with menulists */
   menulist > menupopup 
     {
-      border-left         : 1px solid #000000;
-      border-right        : 1px solid #000000;
-      border-bottom       : 1px solid #000000;
+      background-color    : window;
+      border              : 1px solid threeddarkshadow;
       border-top          : 0px;
       min-width           : 0px;
       padding             : 0px;
     }
-    
-  menulist > menupopup > .internal-box
-    {
-      border-left         : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-      border-top          : 0px;
-    }
-    
+   
   menulist > menupopup > menuseparator 
     {
       border-bottom       : 2px groove #CCCCCC;

@@ -52,3 +52,4 @@ install::
 	$(MAKE_INSTALL) wizardOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) buttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) classicBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) menulistBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
