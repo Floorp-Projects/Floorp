@@ -67,7 +67,7 @@ protected:
   static PRBool IsInternetShortcut ( const char* inFileName ) ;
   static PRBool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
   static PRBool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
-  static void ResolveShortcut ( const char* inFileName, char* outURL ) ;
+  static void ResolveShortcut ( const char* inFileName, char** outURL ) ;
 
   nsIWidget         * mWindow;
   IDataObject       * mDataObj;
