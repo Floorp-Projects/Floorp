@@ -24,6 +24,7 @@
 #define nsPrintOptionsMac_h__
 
 #include "nsPrintOptionsImpl.h"  
+#include <Printing.h>
 
 
 //*****************************************************************************
@@ -35,8 +36,12 @@ public:
   nsPrintOptionsMac();
   virtual ~nsPrintOptionsMac();
 
+	THPrint	GetPrintRecord(void) {return mPrintRecord;}
+
   NS_IMETHOD ShowNativeDialog(void);
 
+	// members
+	THPrint	mPrintRecord;
 
 };
 
