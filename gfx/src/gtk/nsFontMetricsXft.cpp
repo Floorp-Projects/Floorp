@@ -138,7 +138,7 @@ static void GdkRegionSetXftClip(GdkRegion *aGdkRegion, XftDraw *aDraw);
 #define UCS2_NOMAPPING 0xFFFD
 #define UCS2_SPACE 0x0020
 
-static XftCharFontSpec  gFontSpecBuffer[FONT_SPEC_BUFFER_SIZE];
+static XftGlyphFontSpec gFontSpecBuffer[FONT_SPEC_BUFFER_SIZE];
 
 PRLogModuleInfo *gXftFontLoad = nsnull;
 
@@ -547,16 +547,19 @@ nsFontMetricsXft::DrawString(const char *aString, PRUint32 aLength,
 
     // set up our spec buffer
     PRBool useLocalSpecBuffer = PR_FALSE;
-    XftCharFontSpec *specBuffer = gFontSpecBuffer;
+    XftGlyphFontSpec *specBuffer = gFontSpecBuffer;
 
     // see if we have to allocate our own spec buffer
     if (aLength > FONT_SPEC_BUFFER_SIZE) {
         useLocalSpecBuffer = PR_TRUE;
-        specBuffer = new XftCharFontSpec[aLength];
+        specBuffer = new XftGlyphFontSpec[aLength];
 
         if (!specBuffer)
             return NS_ERROR_FAILURE;
     }
+
+    // If we find a glyph that is non-empty, this will be set.
+    PRBool foundGlyph = PR_FALSE;
 
     // our X offset when drawing
     nscoord xOffset = 0;
@@ -571,17 +574,29 @@ nsFontMetricsXft::DrawString(const char *aString, PRUint32 aLength,
         // convert this into device coordinates
         aContext->GetTranMatrix()->TransformCoord(&x, &y);
 
-        specBuffer[i].font = mWesternFont->GetXftFont();
-        specBuffer[i].ucs4 = c;
         specBuffer[i].x = x;
         specBuffer[i].y = y;
+        specBuffer[i].font = mWesternFont->GetXftFont();
+        specBuffer[i].glyph = XftCharIndex(GDK_DISPLAY(),
+                                           mWesternFont->GetXftFont(), c);
+
+        // check to see if this glyph is non-empty
+        if (!foundGlyph) {
+            XGlyphInfo info;
+            XftGlyphExtents(GDK_DISPLAY(), specBuffer[i].font,
+                            &specBuffer[i].glyph, 1, &info);
+
+            if (info.width && info.height)
+                foundGlyph = PR_TRUE;
+        }
 
         // bump up our spacing
         xOffset += *aSpacing++;
     }
 
     // go forth and blit!
-    XftDrawCharFontSpec(draw, &color, specBuffer, aLength);
+    if (foundGlyph)
+        XftDrawGlyphFontSpec(draw, &color, specBuffer, aLength);
 
     // only free memory if we didn't use the static buffer
     if (useLocalSpecBuffer)
@@ -611,7 +626,7 @@ nsFontMetricsXft::DrawString(const PRUnichar* aString, PRUint32 aLength,
     // If we've been asked to draw more than the buffer size, allocate
     // a temporary buffer.  This avoids allocations for every draw.
     PRBool useLocalSpecBuffer = PR_FALSE;
-    XftCharFontSpec *specBuffer = gFontSpecBuffer;
+    XftGlyphFontSpec *specBuffer = gFontSpecBuffer;
 
     // The spec buffer length might change if there's a character that
     // we can't render in the middle of the string.  Because of this,
@@ -620,7 +635,7 @@ nsFontMetricsXft::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
     if (aLength > FONT_SPEC_BUFFER_SIZE) {
         useLocalSpecBuffer = PR_TRUE;
-        specBuffer = new XftCharFontSpec[aLength];
+        specBuffer = new XftGlyphFontSpec[aLength];
 
         if (!specBuffer)
             return NS_ERROR_FAILURE;
@@ -628,6 +643,9 @@ nsFontMetricsXft::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
     float P2T;
     mDeviceContext->GetDevUnitsToAppUnits(P2T);
+
+    // If we find a glyph that is non-empty, this will be set.
+    PRBool foundGlyph = PR_FALSE;
 
     // Set up the mini font, if it hasn't already been done before.
     // If it fails, we'll just substitute the space character below.
@@ -690,20 +708,36 @@ nsFontMetricsXft::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
     FoundFont:
         // use current found font to render this character
-        specBuffer[specBufferLen].font = currFont->GetXftFont();
-        specBuffer[specBufferLen].ucs4 = c;
         specBuffer[specBufferLen].x = x;
         specBuffer[specBufferLen].y = y;
+        specBuffer[specBufferLen].font = currFont->GetXftFont();
+        specBuffer[specBufferLen].glyph = XftCharIndex(GDK_DISPLAY(),
+                                                       currFont->GetXftFont(),
+                                                       c);
+
+        // check to see if this glyph is non-empty
+        if (!foundGlyph) {
+            XGlyphInfo info;
+            XftGlyphExtents(GDK_DISPLAY(), specBuffer[specBufferLen].font,
+                            &specBuffer[specBufferLen].glyph,
+                            1, &info);
+
+            if (info.width && info.height)
+                foundGlyph = PR_TRUE;
+        }
+
         ++specBufferLen;
 
         if (aSpacing)
             xOffset += *aSpacing++;
         else
             xOffset += NSToCoordRound(currFont->GetWidth16(&c, 1) * P2T);
+
     }
 
     // Go forth and blit!
-    XftDrawCharFontSpec(draw, &color, specBuffer, specBufferLen);
+    if (foundGlyph)
+        XftDrawGlyphFontSpec(draw, &color, specBuffer, specBufferLen);
 
     // only free memory if we didn't use the static buffer
     if (useLocalSpecBuffer)
