@@ -46,6 +46,7 @@ EXPORTS =               \
 	nsILookAndFeel.h \
 	nsIDialog.h \
 	nsILabel.h \
+	nsWidgetSupport.h \
         $(NULL)
 
 MODULE = raptor
