@@ -1248,13 +1248,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
     }
   }
 
-  // Fix for bug 1646.  Change the notion of current url and referrer only after
-  // the document load succeeds (but only if we're not targeting another window).
-  if (NS_SUCCEEDED(rv) && !aWindowTarget) {
-    SetCurrentURI(aUri);
-    SetReferrer(aReferrer);
-  }
-
   return rv;
 }
 
@@ -1421,7 +1414,7 @@ nsWebShell::DoContent(const char * aContentType,
     SetFocus(); // force focus to get set on the retargeted window...
   }
 
-  OnLoadingSite(aUri);
+  OnLoadingSite(aOpenedChannel);
 
    return CreateContentViewer(aContentType, aCommand, aOpenedChannel, 
       aContentHandler); 
