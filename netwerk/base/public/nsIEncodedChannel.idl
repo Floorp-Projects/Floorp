@@ -44,7 +44,7 @@ interface nsIEncodedChannel : nsISupports
      * Modifying the Content-Encoding header on the channel will cause
      * this enumerator to have undefined behavior.  Don't do it.
      *
-     * Also not that contentEncodings only exist during or after OnStartRequest.
+     * Also note that contentEncodings only exist during or after OnStartRequest.
      * Calling contentEncodings before OnStartRequest is an error.
      */
     readonly attribute nsISimpleEnumerator contentEncodings;
