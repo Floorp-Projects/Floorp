@@ -22,10 +22,14 @@
  *   IBM Corp.
  */
 
-// For server mode systray icon.
-#include "nsIStringBundle.h"
+#define INCL_PM
+#define INCL_GPI
+#define INCL_DOS
+#define INCL_DOSERRORS
+#include <os2.h>
 
 #include "nsNativeAppSupportBase.h"
+#include "nsNativeAppSupportOS2.h"
 #include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
@@ -57,38 +61,19 @@
 #include "nsIJSContextStack.h"
 #include "nsIWindowMediator.h"
 
-#define INCL_PM
-#define INCL_GPI
-#define INCL_DOS
-#define INCL_DOSERRORS
-#include <os2.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <io.h>
-#include <fcntl.h>
 
-#include "nsNativeAppSupportOS2.h"
+#include <sys/stat.h>
 
-#define TURBO_QUIT 1
+#include "prprf.h"
 
 
 // getting from nsAppRunner.  Use to help track down arguments.
 extern char ** __argv;
 extern int    __argc;
 
-
-typedef ULONG DWORD;
-typedef PBYTE LPBYTE;
-typedef HDATA HDDEDATA;
-#define CP_WINANSI    0  //  When 0 is specified for codepage on these
-                         //  dde functions, it will use the codepage
-                         //  that is associated with the current thread.
-                         //  CP_WINANSI in win32 means that the non
-                         //  unicode version of DdeCreateStringHandle
-                         //  was used.
-
 // Adding to support DDE
 #define ID_MESSAGEWINDOW        0xDEAF
+
 /* trying to keep this like Window's COPYDATASTRUCT, but a compiler error is
  * forcing me to add chBuff so that we can append the data to the end of the
  * structure
@@ -103,7 +88,6 @@ typedef struct _COPYDATASTRUCT
 #define WM_COPYDATA             (WM_USER + 60)
 
 char szCommandLine[2*CCHMAXPATH];
-
 
 static HWND hwndForDOMWindow( nsISupports * );
 
@@ -221,9 +205,13 @@ struct Mutex {
         : mName( name ),
           mHandle( 0 ),
           mState( -1 ) {
-        DosCreateMutexSem( mName.get(), &mHandle, 0, FALSE );
+        /* OS/2 named semaphores must begin with "\\SEM32\\" to be valid */
+        mName.Insert("\\SEM32\\", 0);
+        APIRET rc = DosCreateMutexSem( mName.get(), &mHandle, 0, FALSE );
 #if MOZ_DEBUG_DDE
-        printf( "CreateMutex error = 0x%08X\n", (int)GetLastError() );
+        if ( rc != NO_ERROR ) {
+            printf( "CreateMutex error = 0x%08X\n", rc );
+        }
 #endif
     }
     ~Mutex() {
@@ -234,7 +222,7 @@ struct Mutex {
             APIRET rc = DosCloseMutexSem( mHandle );
 #if MOZ_DEBUG_DDE
             if ( rc != NO_ERROR ) {
-                printf( "CloseHandle error = 0x%08X\n", (int)GetLastError() );
+                printf( "CloseHandle error = 0x%08X\n", rc );
             }
 #endif
         }
@@ -360,29 +348,31 @@ public:
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
     NS_IMETHOD EnsureProfile(nsICmdLineService* args);
 
-
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
 
     // Utility function to handle a Win32-specific command line
     // option: "-console", which dynamically creates a Windows
     // console.
-    void CheckConsole();
+    // On OS/2, we use the return from CheckConsole to determine
+    // whether or not to use the OS/2 specific turbo mode
+    nsresult CheckConsole();
 
 private:
     static HDDEDATA APIENTRY HandleDDENotification( ULONG    idInst,
-                                                 USHORT   uType,
-                                                 USHORT   uFmt,
-                                                 HCONV    hconv,
-                                                 HSZ      hsz1,
-                                                 HSZ      hsz2,
-                                                 HDDEDATA hdata,
-                                                 ULONG    dwData1,
-                                                 ULONG    dwData2 );
+                                                    USHORT   uType,
+                                                    USHORT   uFmt,
+                                                    HCONV    hconv,
+                                                    HSZ      hsz1,
+                                                    HSZ      hsz2,
+                                                    HDDEDATA hdata,
+                                                    ULONG    dwData1,
+                                                    ULONG    dwData2 );
     static void HandleRequest( LPBYTE request, PRBool newWindow = PR_TRUE );
     static nsCString ParseDDEArg( HSZ args, int index );
     static void ActivateLastWindow();
-    static HDDEDATA    CreateDDEData( DWORD value );
+    static HDDEDATA CreateDDEData( DWORD value );
+    static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
@@ -390,8 +380,6 @@ private:
     static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
     static nsresult ReParent( nsISupports *window, HWND newParent );
     static nsresult GetStartupURL(nsICmdLineService *args, nsCString& taskURL);
-    static void     SetupSysTrayIcon();
-    static void     RemoveSysTrayIcon();
 
 
     static int   mConversations;
@@ -402,18 +390,17 @@ private:
         topicVersion,
         topicRegisterViewer,
         topicUnRegisterViewer,
+        topicGetWindowInfo,
         // Note: Insert new values above this line!!!!!
         topicCount // Count of the number of real topics
     };
-#ifdef DOWENEED
-    static NOTIFYICONDATA mIconData;
-    static HMENU          mTrayIconMenu;
-#endif /* DOWENEED */
 
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
+    static PRBool mForceProfileStartup;
+    static char mMutexName[];
     static PRBool mUseDDE;
     friend struct MessageWindow;
 }; // nsNativeAppSupportOS2
@@ -441,24 +428,6 @@ nsSplashScreenOS2::Show() {
 NS_IMETHODIMP
 nsSplashScreenOS2::Hide() {
     if ( mDlg ) {
-#ifdef DOWENEED
-        // Fix for bugs:
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=26581
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=65974
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=29172
-        //  http://bugzilla.mozilla.org/show_bug.cgi?id=45805
-        // As the splash-screen is in a seperate thread, Windows considers
-        // this the "foreground" thread.  When our main windows on the main
-        // thread are activated, they are treated like windows from a different
-        // application, so Windows 2000 and 98 both leave the window in the background.
-        // Therefore, we post a message to the splash-screen thread that includes
-        // the hwnd of the window we want moved to the foreground.  This thread
-        // can then successfully bring the top-level window to the foreground.
-        nsCOMPtr<nsIDOMWindowInternal> topLevel;
-        GetMostRecentWindow(nsnull, getter_AddRefs( topLevel ) );
-        HWND hWndTopLevel = topLevel ? hwndForDOMWindow(topLevel) : 0;
-#endif /* DOWENEED */
-
         // Dismiss the dialog.
         WinPostMsg(mDlg, WM_CLOSE, 0, 0);
         mDlg = 0;
@@ -629,25 +598,8 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
         WinEndPaint( hps );
         return (MRESULT)TRUE;
     }
-#ifdef DOWENEED
-    else if (msg == WM_CLOSE) {
-        // Before killing ourself, set the top-level current.
-        // See comments in nsSplashScreenWin::Hide() above.
-        HWND topLevel = (HWND)mp2;
-        if (topLevel)
-            ::SetForegroundWindow(topLevel);
-        // Destroy the dialog
-        ::EndDialog(dlg, 0);
-        // Release custom bitmap (if there is one).
-        HBITMAP bitmap = (HBITMAP)wp;
-        if ( bitmap ) {
-            ::DeleteObject( bitmap );
-        }
-    }
-#endif /* DOWENEED */
     return WinDefDlgProc (dlg, msg, mp1, mp2);
 }
-
 
 void nsSplashScreenOS2::SetDialog( HWND dlg ) {
     // Save dialog handle.
@@ -671,60 +623,19 @@ void _Optlink ThreadProc(void *splashScreen) {
 //    _endthread();
 }
 
-void
+#define TURBOD "mozturbo.exe"
+
+PRBool gAbortServer = PR_FALSE;
+
+nsresult
 nsNativeAppSupportOS2::CheckConsole() {
+    nsresult rv = NS_OK;
+
     for ( int i = 1; i < __argc; i++ ) {
         if ( strcmp( "-console", __argv[i] ) == 0
              ||
              strcmp( "/console", __argv[i] ) == 0 ) {
-#ifdef DOWENEED
-            // Users wants to make sure we have a console.
-            // Try to allocate one.
-            BOOL rc = ::AllocConsole();
-            if ( rc ) {
-                // Console allocated.  Fix it up so that output works in
-                // all cases.  See http://support.microsoft.com/support/kb/articles/q105/3/05.asp.
-
-                // stdout
-                int hCrt = ::_open_osfhandle( (long)GetStdHandle( STD_OUTPUT_HANDLE ),
-                                            _O_TEXT );
-                if ( hCrt != -1 ) {
-                    FILE *hf = ::_fdopen( hCrt, "w" );
-                    if ( hf ) {
-                        *stdout = *hf;
-                        ::fprintf( stdout, "stdout directed to dynamic console\n" );
-                    }
-                }
-
-                // stderr
-                hCrt = ::_open_osfhandle( (long)::GetStdHandle( STD_ERROR_HANDLE ),
-                                          _O_TEXT );
-                if ( hCrt != -1 ) {
-                    FILE *hf = ::_fdopen( hCrt, "w" );
-                    if ( hf ) {
-                        *stderr = *hf;
-                        ::fprintf( stderr, "stderr directed to dynamic console\n" );
-                    }
-                }
-
-                // stdin?
-                /* Don't bother for now.
-                hCrt = ::_open_osfhandle( (long)::GetStdHandle( STD_INPUT_HANDLE ),
-                                          _O_TEXT );
-                if ( hCrt != -1 ) {
-                    FILE *hf = ::_fdopen( hCrt, "r" );
-                    if ( hf ) {
-                        *stdin = *hf;
-                    }
-                }
-                */
-            } else {
-                // Failed.  Probably because there already is one.
-                // There's little we can do, in any case.
-            }
-            // Don't bother doing this more than once.
-            break;
-#endif /* DOWENEED */
+            /* Figure out some magic way to create a console on OS/2 */
         } else if ( strcmp( "-turbo", __argv[i] ) == 0
                     ||
                     strcmp( "/turbo", __argv[i] ) == 0
@@ -732,14 +643,62 @@ nsNativeAppSupportOS2::CheckConsole() {
                     strcmp( "-server", __argv[i] ) == 0                                              
                     ||
                     strcmp( "/server", __argv[i] ) == 0 ) {         
-            // Start in server mode (and suppress splash screen).   
-            SetIsServerMode( PR_TRUE );                             
-            __argv[i] = "-nosplash"; // Bit of a hack, but it works!
-            // Ignore other args.                                   
-            break;                                                  
+            struct stat st;
+            int statrv = stat(TURBOD, &st);
+
+            /* If we can't find the turbo EXE, use the Mozilla turbo */
+            if (statrv == 0) {
+              RESULTCODES rcodes;
+              APIRET rc;
+              CHAR pszArgString[CCHMAXPATH];
+              strcpy(pszArgString, TURBOD);
+              strcat(pszArgString, " -l -p ");
+              strcat(pszArgString, __argv[0]);
+              pszArgString[strlen(TURBOD)] = '\0';
+       
+              rc = DosExecPgm(NULL,0,EXEC_BACKGROUND,
+                              pszArgString,
+                              0, &rcodes,
+                              TURBOD);
+              rv = NS_ERROR_FAILURE;
+            } else {
+              // Start in server mode (and suppress splash screen).   
+              mServerMode = PR_TRUE;
+              mShouldShowUI = PR_FALSE;
+              __argv[i] = "-nosplash"; // Bit of a hack, but it works!
+              // Ignore other args.
+            }
         }
     }
-    return;
+
+    for ( int j = 1; j < __argc; j++ ) {
+        if (strcmp("-killAll", __argv[j]) == 0 || strcmp("/killAll", __argv[j]) == 0 ||
+            strcmp("-kill", __argv[j]) == 0 || strcmp("/kill", __argv[j]) == 0) {
+            struct stat st;
+            int statrv = stat(TURBOD, &st);
+
+            /* If we can't find the turbo EXE, use the Mozilla turbo */
+            if (statrv == 0) {
+              RESULTCODES rcodes;
+              APIRET rc;
+              CHAR pszArgString[CCHMAXPATH];
+              strcpy(pszArgString, TURBOD);
+              strcat(pszArgString, " -u");
+              pszArgString[strlen(TURBOD)] = '\0';
+             
+              rc = DosExecPgm(NULL,0,EXEC_BACKGROUND,
+                              pszArgString,
+                              0, &rcodes,
+                              TURBOD);
+              rv = NS_ERROR_FAILURE;
+            } else {
+              gAbortServer = PR_TRUE;
+            }
+            break;
+        }
+    }
+
+    return rv;
 }
 
 
@@ -749,10 +708,13 @@ NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
     if ( aResult ) {
         nsNativeAppSupportOS2 *pNative = new nsNativeAppSupportOS2;
         if ( pNative ) {                                           
+            // Check for dynamic console creation request.         
+            if NS_FAILED(pNative->CheckConsole()) {
+               delete pNative;
+               return NS_ERROR_FAILURE;
+            }
             *aResult = pNative;                                    
             NS_ADDREF( *aResult );                                 
-            // Check for dynamic console creation request.         
-            pNative->CheckConsole();                               
         } else {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -798,10 +760,6 @@ NS_CreateSplashScreen( nsISplashScreen **aResult ) {
 
 // Constants
 #define MOZ_DDE_APPLICATION    "Mozilla"
-#ifdef XP_OS2
-/* os/2 named semaphores must begin with "\\SEM32\\" to be valid */
-#define MOZ_MUTEX_PREPEND      "\\SEM32\\"
-#endif /* XP_OS2 */
 #define MOZ_STARTUP_MUTEX_NAME "StartupMutex"
 #define MOZ_DDE_START_TIMEOUT 30000
 #define MOZ_DDE_STOP_TIMEOUT  15000
@@ -813,7 +771,8 @@ const char * const topicNames[] = { "WWW_OpenURL",
                                     "WWW_CancelProgress",
                                     "WWW_Version",
                                     "WWW_RegisterViewer",
-                                    "WWW_UnRegisterViewer" };
+                                    "WWW_UnRegisterViewer",
+                                    "WWW_GetWindowInfo" };
 
 // Static member definitions.
 int   nsNativeAppSupportOS2::mConversations = 0;
@@ -821,6 +780,7 @@ HSZ   nsNativeAppSupportOS2::mApplication   = 0;
 HSZ   nsNativeAppSupportOS2::mTopics[nsNativeAppSupportOS2::topicCount] = { 0 };
 DWORD nsNativeAppSupportOS2::mInstance      = 0;
 nsIDOMWindow* nsNativeAppSupportOS2::mInitialWindow = nsnull;
+PRBool nsNativeAppSupportOS2::mForceProfileStartup = PR_FALSE;
 
 
 // Added this as pmddeml has no api like this
@@ -959,16 +919,7 @@ BOOL SetupOS2ddeml()
     return( bRC );
 }
 
-#ifdef DOWENEED
-NOTIFYICONDATA nsNativeAppSupportOS2::mIconData = { sizeof(NOTIFYICONDATA),
-                                                    0,
-                                                    1, 
-                                                    NIF_ICON | NIF_MESSAGE | NIF_TIP,
-                                                    WM_USER,
-                                                    0,
-                                                    0 };
-HMENU nsNativeAppSupportOS2::mTrayIconMenu = 0;
-#endif /* DOWENEED */
+char nsNativeAppSupportOS2::mMutexName[ 128 ] = { 0 };
 
 
 // Message window encapsulation.
@@ -1014,16 +965,16 @@ struct MessageWindow {
          */
         const char * pszClassName = className();
         mHandle = WinCreateWindow( HWND_OBJECT,
-                                                   pszClassName,
-                                                   NULL,        // name
-                                                   WS_DISABLED, // style
-                                                   0,0,     // x, y
-                                                   0,0,       // cx,cy
-                                                   HWND_DESKTOP,// owner
-                                                   HWND_BOTTOM,  // hwndbehind
-                                                   ID_MESSAGEWINDOW, // id
-                                                   NULL,        // pCtlData
-                                                   NULL );      // pres params
+                                   pszClassName,
+                                   NULL,        // name
+                                   WS_DISABLED, // style
+                                   0,0,     // x, y
+                                   0,0,       // cx,cy
+                                   HWND_DESKTOP,// owner
+                                   HWND_BOTTOM,  // hwndbehind
+                                   ID_MESSAGEWINDOW, // id
+                                   NULL,        // pCtlData
+                                   NULL );      // pres params
 
 #if MOZ_DEBUG_DDE
         printf( "Message window = 0x%08X\n", (int)mHandle );
@@ -1032,9 +983,27 @@ struct MessageWindow {
         return NS_OK;
     }
 
+    // Destory:  Get rid of window and reset mHandle.
+    NS_IMETHOD Destroy() {
+        nsresult retval = NS_OK;
+
+        if ( mHandle ) {
+            // DestroyWindow can only destroy windows created from
+            //  the same thread.
+            BOOL desRes = WinDestroyWindow( mHandle );
+            if ( FALSE != desRes ) {
+                mHandle = NULL;
+            }
+            else {
+                retval = NS_ERROR_FAILURE;
+            }
+        }
+
+        return retval;
+    }
+
     // SendRequest: Pass string via WM_COPYDATA to message window.
     NS_IMETHOD SendRequest( const char *cmd ) {
-#ifdef XP_OS2
         /* Nothing like WM_COPYDATA in OS/2, where the OS allows pointers to be
          * passed to a different process and automatically accessible by that
          * process.  So we have to create shared mem on our side and then the
@@ -1071,10 +1040,6 @@ struct MessageWindow {
         }
         WinSendMsg( mHandle, WM_COPYDATA, 0, (MPARAM)pcds );
         DosFreeMem( pvData );
-#else
-        COPYDATASTRUCT cds = { 0, strlen( cmd ) + 1, (void*)cmd };
-        ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
-#endif /* XP_OS2 */
 
         return NS_OK;
     }
@@ -1088,62 +1053,19 @@ struct MessageWindow {
         if ( msg == WM_COPYDATA ) {
             // This is an incoming request.
             COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lp;
-#ifdef XP_OS2
             DosGetSharedMem( (PVOID)cds, PAG_READ|PAG_WRITE );
-#endif /* XP_OS2 */
 #if MOZ_DEBUG_DDE
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
 #endif
             (void)nsNativeAppSupportOS2::HandleRequest( (LPBYTE)cds->lpData );
  }
-#ifdef DOWENEED
- else if ( msg == WM_USER ) {
-     if ( lp == WM_RBUTTONUP ) {
-         // Show menu with Exit disabled/enabled appropriately.
-         nsCOMPtr<nsIDOMWindowInternal> win;
-         GetMostRecentWindow( 0, getter_AddRefs( win ) );
-         ::EnableMenuItem( nsNativeAppSupportWin::mTrayIconMenu, 1, win ? MF_GRAYED : MF_ENABLED );
-         POINT pt;
-         GetCursorPos( &pt );
 
-         SetForegroundWindow(msgWindow);
-         int selectedItem = ::TrackPopupMenu( nsNativeAppSupportWin::mTrayIconMenu,
-                                              TPM_NONOTIFY | TPM_RETURNCMD |
-                                              TPM_RIGHTBUTTON,
-                                              pt.x,
-                                              pt.y,
-                                              0,
-                                              msgWindow,
-                                              0 );
-
-         switch (selectedItem) {
-         case TURBO_QUIT:
-             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -kill" );
-             break;
-         }
-         PostMessage(msgWindow, WM_NULL, 0, 0);
-     } else if ( lp == WM_LBUTTONDBLCLK ) {
-         // Activate window or open a new one.
-         nsCOMPtr<nsIDOMWindowInternal> win;
-         GetMostRecentWindow( 0, getter_AddRefs( win ) );
-         if ( win ) {
-             activateWindow( win );
-         } else {
-            // This will do the default thing and open a new window.
-            (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
-         }
-     }
-  }
-#endif /* DOWENEED */
-
-#ifdef XP_OS2
     /* We have to return a FALSE from WM_CREATE or this window will never
      * get off of the ground
      */
     else if ( msg == WM_CREATE ) {
         rc = (MRESULT)FALSE;
     }
-#endif /* XP_OS2 */
 
     return rc;
 }
@@ -1173,6 +1095,12 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
+    if (getenv("MOZ_NO_REMOTE"))
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
@@ -1186,7 +1114,6 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     // Grab mutex first.
     int retval;
     UINT id = ID_DDE_APPLICATION_NAME;
-    char nameBuf[ 128 ];
     retval = WinLoadString( NULLHANDLE, NULLHANDLE, id, sizeof(nameBuffer), nameBuffer );
     if ( retval == 0 ) {
         // No app name; just keep running.
@@ -1195,29 +1122,25 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
     }
 
     // Build mutex name from app name.
-    char mutexName[128];
-    sprintf( mutexName, "%s%s%s", MOZ_MUTEX_PREPEND, nameBuffer, MOZ_STARTUP_MUTEX_NAME );
-    Mutex startupLock = Mutex( mutexName );
+    PR_snprintf( mMutexName, sizeof mMutexName, "%s%s", nameBuffer, MOZ_STARTUP_MUTEX_NAME );
+    Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
 
-#ifdef XP_OS2
     /* We need to have a message queue to do the MessageWindow stuff (for both
      * Create() and SendRequest()).  If we don't have one, make it now.
      * If we are going to end up going away right after ::Start() returns,
      * then make sure to clean up the message queue.
      */
     MQINFO mqinfo;
-    HAB    hab;
-    HMQ  hmqCurrent = WinQueryQueueInfo( HMQ_CURRENT, &mqinfo, 
-                                         sizeof( MQINFO ) );
+    HAB hab;
+    HMQ hmqCurrent = WinQueryQueueInfo( HMQ_CURRENT, &mqinfo, 
+                                        sizeof( MQINFO ) );
     if( !hmqCurrent )
     {
         hab = WinInitialize( 0 );
         hmqCurrent = WinCreateMsgQueue( hab, 0 );
     }
-
-#endif /* XP_OS */
 
     // Search for existing message window.
     MessageWindow msgWindow;
@@ -1227,35 +1150,31 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
         rv = msgWindow.SendRequest( cmd );
     } else {
         // We will be server.
-        rv = msgWindow.Create();
-        if ( NS_SUCCEEDED( rv ) ) {
-            if (mUseDDE) {
-                // Start up DDE server.
-                this->StartDDE();
+        if (!gAbortServer) {
+            rv = msgWindow.Create();
+            if ( NS_SUCCEEDED( rv ) ) {
+                if (mUseDDE) {
+                    // Start up DDE server.
+                    this->StartDDE();
+                }
+                // Tell caller to spin message loop.
+                *aResult = PR_TRUE;
             }
-            // Tell caller to spin message loop.
-            *aResult = PR_TRUE;
         }
     }
 
     startupLock.Unlock();
 
-#ifdef XP_OS2
     if( *aResult == PR_FALSE )
     {
         /* This process isn't going to continue much longer.  Make sure that we
          * clean up the message queue
          */
-        if( hmqCurrent )
-        {
-           WinDestroyMsgQueue( hmqCurrent );
-        }
-        if( hab )
-        {
-           WinTerminate( hab );
-        }
+        if (hmqCurrent)
+           WinDestroyMsgQueue(hmqCurrent);
+        if (hab)
+           WinTerminate(hab);
     }
-#endif /* XP_OS2 */
 
     return rv;
 }
@@ -1294,21 +1213,23 @@ NS_IMETHODIMP
 nsNativeAppSupportOS2::StartDDE() {
     NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
 
-    BOOL bDdemlReady = SetupOS2ddeml();
-    UINT rc = DDEERR_NOT_INITIALIZED;
-    if( bDdemlReady == TRUE )
-    {
-       rc = (UINT) WinDdeInitialize( 
-                                  &mInstance,
-                                  nsNativeAppSupportOS2::HandleDDENotification,
-                                  APPCLASS_STANDARD, 
-                                  0 );
+    /* Get entrypoints for PMDDEML */
+    BOOL bDDEML = SetupOS2ddeml();
+
+    /* If we couldn't initialize DDEML, set mUSEDDE to PR_FALSE */
+    /* so we don't do anything else DDE related */
+    if (!bDDEML) {
+       mUseDDE = PR_FALSE;
+       return NS_OK;
     }
 
     // Initialize DDE.
-    NS_ENSURE_TRUE( DDEERR_NO_ERROR == rc, NS_ERROR_FAILURE );
-                         
-    
+    NS_ENSURE_TRUE( DDEERR_NO_ERROR == WinDdeInitialize( &mInstance,
+                                                         nsNativeAppSupportOS2::HandleDDENotification,
+                                                         APPCLASS_STANDARD,
+                                                         0 ),
+                    NS_ERROR_FAILURE );
+
     // Allocate DDE strings.
     NS_ENSURE_TRUE( ( mApplication = WinDdeCreateStringHandle( mAppName, CP_WINANSI ) ) && InitTopicStrings(),
                     NS_ERROR_FAILURE );
@@ -1336,7 +1257,7 @@ nsNativeAppSupportOS2::Stop( PRBool *aResult ) {
        return rv;
     }
 
-    Mutex ddeLock( MOZ_STARTUP_MUTEX_NAME );
+    Mutex ddeLock( mMutexName );
 
     if ( ddeLock.Lock( MOZ_DDE_STOP_TIMEOUT ) ) {
         if ( mConversations == 0 ) {
@@ -1353,13 +1274,26 @@ nsNativeAppSupportOS2::Stop( PRBool *aResult ) {
         *aResult = PR_TRUE;
     }
 
-
     return rv;
 }
 
 // Terminate DDE regardless.
 NS_IMETHODIMP
 nsNativeAppSupportOS2::Quit() {
+    // If another process wants to look for the message window, they need
+    // to wait to hold the lock, in which case they will not find the
+    // window as we will destroy ours under our lock.
+    // When the mutex goes off the stack, it is unlocked via destructor.
+    Mutex mutexLock(mMutexName);
+    NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
+
+    // If we've got a message window to receive IPC or new window requests,
+    // get rid of it as we are shutting down.
+    // Note:  Destroy calls DestroyWindow, which will only work on a window
+    //  created by the same thread.
+    MessageWindow mw;
+    mw.Destroy();
+
     if ( mInstance ) {
         // Unregister application name.
         WinDdeNameService( mInstance, mApplication, 0, DNS_UNREGISTER );
@@ -1383,7 +1317,7 @@ nsNativeAppSupportOS2::Quit() {
 
 PRBool NS_CanRun()
 {
-      return PR_TRUE;
+      return PR_FALSE; /*  We do this so that we can bail if we are using custom turbo mode */
 }
 
 #if MOZ_DEBUG_DDE
@@ -1439,6 +1373,25 @@ static nsCString hszValue( DWORD, HSZ ) {
 #endif
 
 
+// Utility function to escape double-quotes within a string.
+static void escapeQuotes( nsAString &aString ) {
+    PRInt32 offset = -1;
+    while( 1 ) {
+       // Find next '"'.
+       offset = aString.FindChar( '"', ++offset );
+       if ( offset == kNotFound ) {
+           // No more quotes, exit.
+           break;
+       } else {
+           // Insert back-slash ahead of the '"'.
+           aString.Insert( PRUnichar('\\'), offset );
+           // Increment offset because we just inserted a slash
+           offset++;
+       }
+    }
+    return;
+}
+
 HDDEDATA APIENTRY
 nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instance
                                               USHORT uType,     // transaction type
@@ -1481,21 +1434,132 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
             switch ( FindTopic( hsz1 ) ) {
                 case topicOpenURL: {
                     // Open a given URL...
-                    nsCString url = ParseDDEArg( hsz2, 0 );
+
+                    // Default is to open in current window.
+                    PRBool new_window = PR_FALSE;
+
+                    // Get the URL from the first argument in the command.
+                    nsCAutoString url( ParseDDEArg( hsz2, 0 ) );
+
+                    // Read the 3rd argument in the command to determine if a
+                    // new window is to be used.
+                    nsCAutoString windowID( ParseDDEArg( hsz2, 2 ) );
+
+                    // "0" means to open the URL in a new window.
+                    if ( windowID.Equals( "0" ) ) {
+                        new_window = PR_TRUE;
+                    }
+
                     // Make it look like command line args.
                     url.Insert( "mozilla -url ", 0 );
 #if MOZ_DEBUG_DDE
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
                     // Now handle it.
-                    HandleRequest( LPBYTE( url.get() ), PR_FALSE );
+                    HandleRequest( LPBYTE( url.get() ), new_window );
                     // Return pseudo window ID.
                     result = CreateDDEData( 1 );
+                    break;
+                }
+                case topicGetWindowInfo: {
+                    // This topic has to get the current URL, get the current
+                    // page title and then format the output into the DDE
+                    // return string.  The return value is "URL","Page Title",
+                    // "Window ID" however the window ID is not used for this
+                    // command, therefore it is returned as a null string
+
+                    // This isn't really a loop.  We just use "break"
+                    // statements to bypass the remaining steps when
+                    // something goes wrong.
+                    do {
+                        // Get most recently used Nav window.
+                        nsCOMPtr<nsIDOMWindowInternal> navWin;
+                        GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(),
+                                             getter_AddRefs( navWin ) );
+                        if ( !navWin ) {
+                            // There is not a window open
+                            break;
+                        }
+                        // Get content window.
+                        nsCOMPtr<nsIDOMWindow> content;
+                        navWin->GetContent( getter_AddRefs( content ) );
+                        if ( !content ) {
+                            break;
+                        }
+                        // Convert that to internal interface.
+                        nsCOMPtr<nsIDOMWindowInternal> internalContent( do_QueryInterface( content ) );
+                        if ( !internalContent ) {
+                            break;
+                        }
+                        // Get location.
+                        nsCOMPtr<nsIDOMLocation> location;
+                        internalContent->GetLocation( getter_AddRefs( location ) );
+                        if ( !location ) {
+                            break;
+                        }
+                        // Get href for URL.
+                        nsAutoString url;
+                        if ( NS_FAILED( location->GetHref( url ) ) ) {
+                            break;
+                        }
+                        // Escape any double-quotes.
+                        escapeQuotes( url );
+
+                        // Now for the title; first, get the "window" JS object.
+                        nsCOMPtr<nsIScriptGlobalObject> scrGlobalObj( do_QueryInterface( internalContent ) );
+                        if ( !scrGlobalObj ) {
+                            break;
+                        }
+                        // Then the doc shell...
+                        nsCOMPtr<nsIDocShell> docShell;
+                        scrGlobalObj->GetDocShell( getter_AddRefs( docShell ) );
+                        if ( !docShell ) {
+                            break;
+                        }
+                        // And from that the base window...
+                        nsCOMPtr<nsIBaseWindow> baseWindow( do_QueryInterface( docShell ) );
+                        if ( !baseWindow ) {
+                            break;
+                        }
+                        // And from the base window we can get the title.
+                        nsXPIDLString title;
+                        if(!baseWindow) {
+                            break;
+                        }
+                        baseWindow->GetTitle(getter_Copies(title));
+                        // Escape any double-quotes in the title.
+                        escapeQuotes( title );
+
+                        // Use a string buffer for the output data, first
+                        // save a quote.
+                        nsCAutoString   outpt( NS_LITERAL_CSTRING("\"") );
+                        // Now copy the URL converting the Unicode string
+                        // to a single-byte ASCII string
+                        outpt.Append( NS_LossyConvertUCS2toASCII( url ) );
+                        // Add the "," used to separate the URL and the page
+                        // title
+                        outpt.Append( NS_LITERAL_CSTRING("\",\"") );
+                        // Now copy the current page title to the return string
+                        outpt.Append( NS_LossyConvertUCS2toASCII( title.get() ));
+                        // Fill out the return string with the remainin ",""
+                        outpt.Append( NS_LITERAL_CSTRING( "\",\"\"" ));
+
+                        // Create a DDE handle to a char string for the data
+                        // being returned, this copies and creates a "shared"
+                        // copy of the DDE response until the calling APP
+                        // reads it and says it can be freed.
+                        result = CreateDDEData( (LPBYTE)(const char*)outpt.get(),
+                                                outpt.Length() + 1 );
+#if MOZ_DEBUG_DDE
+                        printf( "WWW_GetWindowInfo->%s\n", outpt.get() );
+#endif
+                    } while ( PR_FALSE );
                     break;
                 }
                 case topicActivate: {
                     // Activate a Nav window...
                     nsCString windowID = ParseDDEArg( hsz2, 0 );
+
                     // 4294967295 is decimal for 0xFFFFFFFF which is also a
                     //   correct value to do that Activate last window stuff
                     if ( windowID.Equals( "-1" ) ||
@@ -1545,7 +1609,33 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
 #if MOZ_DEBUG_DDE
             printf( "Handling dde request: [%s]...\n", (char*)request );
 #endif
-            HandleRequest( request );
+            // Default is to open in current window.
+            PRBool new_window = PR_FALSE;
+
+            // Get the URL from the first argument in the command.
+            HSZ args = WinDdeCreateStringHandle( (PSZ)request, CP_WINANSI );
+            nsCAutoString url( ParseDDEArg( args, 0 ) );
+
+            // Read the 3rd argument in the command to determine if a
+            // new window is to be used.
+            nsCAutoString windowID( ParseDDEArg( args, 2 ) );
+
+            // "0" means to open the URL in a new window.
+            if ( windowID.Equals( "0" ) ) {
+                new_window = PR_TRUE;
+            }
+
+            // Make it look like command line args.
+            url.Insert( "mozilla -url ", 0 );
+#if MOZ_DEBUG_DDE
+            printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
+#endif
+            // Now handle it.
+            HandleRequest( LPBYTE( url.get() ), new_window );
+            // Release the args string.
+            WinDdeFreeStringHandle( args );
+            // Release the data.
+//            DdeUnaccessData( hdata );
             result = (HDDEDATA)DDE_FACK;
         } else {
             result = (HDDEDATA)DDE_NOTPROCESSED;
@@ -1558,6 +1648,27 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
     return result;
 }
 
+// Utility function to advance to end of quoted string.
+// p+offset must point to the comma preceding the arg on entry.
+// On return, p+result points to the closing '"' (or end of the string
+// if the closing '"' is missing) if the arg is quoted.  If the arg
+// is not quoted, then p+result will point to the first character
+// of the arg.
+static PRInt32 advanceToEndOfQuotedArg( const char *p, PRInt32 offset, PRInt32 len ) {
+    // Check whether the current arg is quoted.
+    if ( p[++offset] == '"' ) {
+        // Advance past the closing quote.
+        while ( offset < len && p[++offset] != '"' ) {
+            // If the current character is a backslash, then the
+            // next character can't be a *real* '"', so skip it.
+            if ( p[offset] == '\\' ) {
+                offset++;
+            }
+        }
+    }
+    return offset;
+}
+
 // Utility to parse out argument from a DDE item string.
 nsCString nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index ) {
     nsCString result;
@@ -1568,22 +1679,39 @@ nsCString nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index ) {
         temp.SetLength( argLen + 1 );
         // Now get the string contents.
         WinDdeQueryString( args, (char*)temp.get(), temp.Length(), CP_WINANSI );
-        // Parse out the given arg.  We assume there's no commas within quoted strings
-        // (which may not be accurate, but makes life so much easier).
+        // Parse out the given arg.
         const char *p = temp.get();
-        // Skip index commas.
-        PRInt32 offset = index ? temp.FindChar( ',', 0, index ) : 0;
-        if ( offset != -1 ) {
-            // Desired argument starts there and ends at next comma.
-            PRInt32 end = temp.FindChar( ',', offset+1 );
-            if ( end == -1 ) {
-                // Rest of string.
-                end = temp.Length();
+        // offset points to the comma preceding the desired arg.
+        PRInt32 offset = -1;
+        // Skip commas till we get to the arg we want.
+        while( index-- ) {
+            // If this arg is quoted, then go to closing quote.
+            offset = advanceToEndOfQuotedArg( p, offset, argLen );
+            // Find next comma.
+            offset = temp.FindChar( ',', offset );
+            if ( offset == kNotFound ) {
+                // No more commas, give up.
+                return result;
             }
-            // Extract result.
-            result.Assign( temp.get() + offset, end - offset ); 
         }
 
+        // The desired argument starts just past the preceding comma,
+        // which offset points to, and extends until the following
+        // comma (or the end of the string).
+        //
+        // Since the argument might be enclosed in quotes, we need to
+        // deal with that before searching for the terminating comma.
+        // We advance offset so it ends up pointing to the start of
+        // the argument we want.
+        PRInt32 end = advanceToEndOfQuotedArg( p, offset++, argLen );
+        // Find next comma (or end of string).
+        end = temp.FindChar( ',', end );
+        if ( end == kNotFound ) {
+            // Arg is the rest of the string.
+            end = argLen;
+        }
+        // Extract result.
+        result.Assign( p + offset, end - offset );
     }
     return result;
 }
@@ -1601,12 +1729,16 @@ void nsNativeAppSupportOS2::ActivateLastWindow() {
 }
 
 HDDEDATA nsNativeAppSupportOS2::CreateDDEData( DWORD value ) {
-    HDDEDATA result = WinDdeCreateDataHandle( (LPBYTE)&value,
-                                           sizeof value,
-                                           0,
-                                           mApplication,
-                                           CF_TEXT,
-                                           0 );
+    return CreateDDEData( (LPBYTE)&value, sizeof value );
+}
+
+HDDEDATA nsNativeAppSupportOS2::CreateDDEData( LPBYTE value, DWORD len ) {
+    HDDEDATA result = WinDdeCreateDataHandle( value,
+                                              len,
+                                              0,
+                                              mApplication,
+                                              CF_TEXT,
+                                              0 );
     return result;
 }
 
@@ -1617,6 +1749,14 @@ HDDEDATA nsNativeAppSupportOS2::CreateDDEData( DWORD value ) {
 // unfortunately (if you can fix that, please do).
 void
 nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
+
+    // if initial hidden window is still being displayed, we need to ignore requests
+    // because such requests might not function properly.  See bug 147223 for details
+
+    if (mInitialWindow) {
+      return;
+    }
+
     // Parse command line.
 
     nsCOMPtr<nsICmdLineService> args;
@@ -1658,12 +1798,16 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
       return;
     }
 
-    // try using the command line service to get the url
-    nsCString taskURL;
-    rv = GetStartupURL(args, taskURL);
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->EnsureProfile(args))) {
-      (void)OpenWindow(taskURL.get(), "");
-      return;
+    // try for the "-profilemanager" argument, in which case we want the
+    // profile manager to appear, but only if there are no windows open
+
+    rv = args->GetCmdLineValue( "-profilemanager", getter_Copies(arg));
+    if ( NS_SUCCEEDED(rv) && (const char*)arg ) { // -profilemanager on command line
+      nsCOMPtr<nsIDOMWindowInternal> window;
+      GetMostRecentWindow(0, getter_AddRefs(window));
+      if (!window) { // there are no open windows
+        mForceProfileStartup = PR_TRUE;
+      }
     }
 
     // try for the "-kill" argument, to shut down the server
@@ -1693,7 +1837,49 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
       return;
     }
 
-    // ok, no idea what the param is. 
+    // Try standard startup's command-line handling logic from nsAppRunner.cpp...
+
+    // Need profile before opening windows.
+    rv = nativeApp->EnsureProfile(args);
+    if (NS_FAILED(rv)) return;
+
+    // This will tell us whether the command line processing opened a window.
+    PRBool windowOpened = PR_FALSE;
+
+    // If there are no command line arguments, then we want to open windows
+    // based on startup prefs (which say to open navigator and/or mailnews
+    // and/or composer), or, open just a Navigator window.  We do the former
+    // if there are no open windows (i.e., we're in turbo mode), the latter
+    // if there are open windows.  Note that we call DoCommandLines in the
+    // case where there are no command line args but there are windows open
+    // (i.e., with heedStartupPrefs==PR_FALSE) despite the fact that it may
+    // not actually do anything in that case.  That way we're covered if the
+    // logic in DoCommandLines changes.  Note that we cover this case below
+    // by opening a navigator window if DoCommandLines doesn't open one.  We
+    // have to cover that case anyway, because DoCommandLines won't open a
+    // window when given "mozilla -foobar" or the like.
+    PRBool heedStartupPrefs = PR_FALSE;
+    PRInt32 argc = 0;
+    args->GetArgc( &argc );
+    if ( argc <= 1 ) {
+        // Use startup prefs iff there are no windows currently open.
+        nsCOMPtr<nsIDOMWindowInternal> win;
+        GetMostRecentWindow( 0, getter_AddRefs( win ) );
+        if ( !win ) {
+            heedStartupPrefs = PR_TRUE;
+        }
+    }
+
+    // Process command line options.
+    rv = DoCommandLines( args, heedStartupPrefs, &windowOpened );
+
+    // If a window was opened, then we're done.
+    // Note that we keep on trying in the unlikely event of an error.
+    if (rv == NS_ERROR_NOT_AVAILABLE || rv == NS_ERROR_ABORT || windowOpened) {
+      return;
+    }
+
+    // ok, no idea what the param is.
 #if MOZ_DEBUG_DDE
     printf( "Unknown request [%s]\n", (char*) request );
 #endif
@@ -1702,14 +1888,11 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
       "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
     nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
     if (NS_FAILED(rv)) return;
-    
-    rv = nativeApp->EnsureProfile(args);
-    if (NS_FAILED(rv)) return;
-      
+
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
     if (NS_FAILED(rv) || !defaultArgs) return;
-      
+
     if (defaultArgs) {
       nsCAutoString url;
       url.AssignWithConversion( defaultArgs );
@@ -1879,7 +2062,6 @@ nsNativeAppSupportOS2::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 // at this point if we were launched invisibly in -turbo mode, and
 // the profile mgr needed to show UI (to pick from multiple profiles).
 // At this point, we can show UI, so call DoProfileStartUp().
-
 nsresult
 nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
 {
@@ -1891,16 +2073,30 @@ nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
   if (NS_FAILED(rv)) return rv;
 
   // If we have a profile, everything is fine.
+  // unless mForceProfileStartup is TRUE. This flag is set when the
+  // last window is closed in -turbo mode. When TRUE, it forces the
+  // profile UI to come up at the beginning of the next -turbo session
+  // even if we currently have a profile.
   PRBool haveProfile;
   rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
-  if (NS_SUCCEEDED(rv) && haveProfile)
+  if (!mForceProfileStartup && NS_SUCCEEDED(rv) && haveProfile)
       return NS_OK;
  
   // If the profile selection is happening, fail.
   PRBool doingProfileStartup;
   rv = profileMgr->GetIsStartingUp(&doingProfileStartup);
   if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
-  rv = appShell->DoProfileStartup(args, PR_TRUE);
+
+  // See if profile manager is being suppressed via -silent flag.
+  PRBool canInteract = PR_TRUE;
+  nsXPIDLCString arg;
+  if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg))) && (const char*)arg) {
+    canInteract = PR_FALSE;
+  }
+  rv = appShell->DoProfileStartup(args, canInteract);
+
+  mForceProfileStartup = PR_FALSE;
+
   return rv;
 }
 
@@ -1926,27 +2122,6 @@ nsNativeAppSupportOS2::OpenWindow( const char*urlstr, const char *args ) {
   return rv;
 }
 
-static char procPropertyName[] = "MozillaProcProperty";
-
-#ifdef DOWENEED
-// Subclass procedure used to filter out WM_SETFOCUS messages while reparenting.
-static LRESULT CALLBACK focusFilterProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
-    if ( uMsg == WM_SETFOCUS ) {
-        // Don't let Mozilla's window procedure see this.
-        return 0;
-    } else {
-        // Pass on all other messages to Mozilla's window proc.
-        HANDLE oldProc = ::GetProp( hwnd, procPropertyName );
-        if ( oldProc ) {
-            return ::CallWindowProc( (WNDPROC)oldProc, hwnd, uMsg, wParam, lParam );
-        } else {
-            // Last resort is the default window proc.
-            return ::DefWindowProc( hwnd, uMsg, wParam, lParam );
-        }
-    }
-}
-#endif /* DOWENEED */
-
 HWND hwndForDOMWindow( nsISupports *window ) {
     nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
     if ( !ppScriptGlobalObj ) {
@@ -1970,40 +2145,14 @@ HWND hwndForDOMWindow( nsISupports *window ) {
 
 nsresult
 nsNativeAppSupportOS2::ReParent( nsISupports *window, HWND newParent ) {
-    HWND hMainFrame = hwndForDOMWindow( window );
-    if ( !hMainFrame ) {
+    HWND hMainClient = hwndForDOMWindow( window );
+    if ( !hMainClient ) {
         return NS_ERROR_FAILURE;
     }
-
-#ifdef DOWENEED
-    // Filter out WM_SETFOCUS messages while reparenting to 
-    // other than the desktop.
-    //
-    // For some reason, Windows generates one and it causes
-    // our focus/activation code to assert.
-    LONG oldProc = 0;
-    if ( newParent ) {
-        // Subclass the window.
-        oldProc = ::SetWindowLong( hMainFrame,
-                                   GWL_WNDPROC,
-                                   (LONG)(WNDPROC)focusFilterProc );
-
-        // Store old procedure in window so it is available within
-        // focusFilterProc.
-        ::SetProp( hMainFrame, procPropertyName, (HANDLE)oldProc );
-    }
-#endif /* DOWENEED */
+    HWND hMainFrame = WinQueryWindow(hMainClient, QW_PARENT);
 
     // Reset the parent.
     WinSetParent( hMainFrame, newParent, FALSE );
-
-#ifdef DOWENEED
-    // Restore old procedure.
-    if ( newParent ) {
-        ::SetWindowLong( hMainFrame, GWL_WNDPROC, oldProc );
-        ::RemoveProp( hMainFrame, procPropertyName );
-    }
-#endif /* DOWENEED */
 
     return NS_OK;
 }
@@ -2111,69 +2260,6 @@ nsNativeAppSupportOS2::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     return OpenWindow( "chrome://navigator/content", args );
 }
 
-#ifdef DOWENEED
-// Utility function that sets up system tray icon.
-void
-nsNativeAppSupportWin::SetupSysTrayIcon() {
-    // Messages go to the hidden window.
-    mIconData.hWnd  = (HWND)MessageWindow();
-
-    // Icon is our default application icon.
-    mIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( NULL ), IDI_APPLICATION ),
-
-    // Tooltip is the brand short name.
-    mIconData.szTip[0] = 0;
-    nsCOMPtr<nsIStringBundleService> svc( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
-    if ( svc ) {
-        nsCOMPtr<nsIStringBundle> bundle1;
-        svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( bundle1 ) );
-        if ( bundle1 ) {
-            nsXPIDLString tooltip;
-            bundle1->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
-                                        getter_Copies( tooltip ) );
-            // (damned strings...)
-            ::strncpy( mIconData.szTip,
-                       NS_LossyConvertUCS2toASCII(tooltip).get(),
-                       sizeof mIconData.szTip - 1 );
-        }
-        // Build menu.
-        nsCOMPtr<nsIStringBundle> bundle2;
-        svc->CreateBundle( "chrome://communicator/locale/profile/profileManager.properties",
-                           getter_AddRefs( bundle2 ) );
-        nsAutoString exitText;
-        if ( bundle2 ) {
-            nsXPIDLString text;
-            bundle2->GetStringFromName( NS_LITERAL_STRING( "exitButton" ).get(),
-                                        getter_Copies( text ) );
-            exitText = (const PRUnichar*)text;
-        }
-        if ( exitText.IsEmpty() ) {
-            // Fall back to this.
-            exitText = NS_LITERAL_STRING( "Exit" );
-        }
-
-        // Create menu and add item.
-        mTrayIconMenu = ::CreatePopupMenu();
-        ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_QUIT, exitText.get() );
-
-    }
-    
-    // Add the tray icon.
-    ::Shell_NotifyIcon( NIM_ADD, &mIconData );
-}
-
-// Utility function to remove the system tray icon.
-void
-nsNativeAppSupportWin::RemoveSysTrayIcon() {
-    // Remove the tray icon.
-    ::Shell_NotifyIcon( NIM_DELETE, &mIconData );
-    // Delete the menu.
-    ::DestroyMenu( mTrayIconMenu );
-}
-#endif /* DOWENEED */
-
-
-
 //   This opens a special browser window for purposes of priming the pump for
 //   server mode (getting stuff into the caching, loading .dlls, etc.).  The
 //   window will have these attributes:
@@ -2182,10 +2268,15 @@ nsNativeAppSupportWin::RemoveSysTrayIcon() {
 //     - Pass magic arg to cause window to close in onload handler.
 NS_IMETHODIMP
 nsNativeAppSupportOS2::StartServerMode() {
-#ifdef DOWENEED
-    // Turn on system tray icon.
-    SetupSysTrayIcon();
-#endif /* DOWENEED */
+
+    if (mShouldShowUI) {
+        // We dont have to anything anymore. The native UI
+        // will create the window
+        return NS_OK;
+    }
+
+    // Since native UI wont create any window, we create a hidden window
+    // so thing work alright.
 
     // Create some of the objects we'll need.
     nsCOMPtr<nsIWindowWatcher>   ww(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -2209,22 +2300,23 @@ nsNativeAppSupportOS2::StartServerMode() {
 
     // Put args into array.
     if ( NS_FAILED( argArray->AppendElement( arg1 ) ) ||
-         NS_FAILED( argArray->AppendElement( arg2 ) ) ) {
+        NS_FAILED( argArray->AppendElement( arg2 ) ) ) {
         return NS_OK;
     }
 
     // Now open the window.
     nsCOMPtr<nsIDOMWindow> newWindow;
     ww->OpenWindow( 0,
-                    "chrome://navigator/content",
-                    "_blank",
-                    "chrome,dialog=no,toolbar=no",
-                    argArray,
-                    getter_AddRefs( newWindow ) );
+        "chrome://navigator/content",
+        "_blank",
+        "chrome,dialog=no,toolbar=no",
+        argArray,
+        getter_AddRefs( newWindow ) );
 
     if ( !newWindow ) {
         return NS_OK;
     }
+    mInitialWindow = newWindow;
 
     // Hide this window by re-parenting it (to ensure it doesn't appear).
     ReParent( newWindow, (HWND)MessageWindow() );
@@ -2234,62 +2326,107 @@ nsNativeAppSupportOS2::StartServerMode() {
 
 NS_IMETHODIMP
 nsNativeAppSupportOS2::SetIsServerMode( PRBool isServerMode ) {
-    // If it is being turned off, remove systray icon.
-    if ( mServerMode && !isServerMode ) {
-#ifdef DOWENEED
-        RemoveSysTrayIcon();
-#endif /* DOWENEED */
-    }
     return nsNativeAppSupportBase::SetIsServerMode( isServerMode );
 }
 
 NS_IMETHODIMP
 nsNativeAppSupportOS2::OnLastWindowClosing( nsIXULWindow *aWindow ) {
  
-    nsresult rv;
-
-    if (!mServerMode)
+    if ( !mServerMode )
         return NS_OK;
 
     // If the last window closed is our special "turbo" window made
     // in StartServerMode(), don't do anything.
     nsCOMPtr<nsIDocShell> docShell;
-    (void)aWindow->GetDocShell(getter_AddRefs(docShell));
-    nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
-    if (domWindow == mInitialWindow) {
+    ( void )aWindow->GetDocShell( getter_AddRefs( docShell ) );
+    nsCOMPtr<nsIDOMWindow> domWindow( do_GetInterface( docShell ) );
+    if ( domWindow == mInitialWindow ) {
         mInitialWindow = nsnull;
         return NS_OK;
     }
 
-    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
+    // If the last window closed is our confirmation dialog,
+    // don't do anything.
+    if ( mLastWindowIsConfirmation ) {
+        mLastWindowIsConfirmation = PR_FALSE;
+        return NS_OK;
+    }
 
 
-// go through the command line arguments, and try to load a handler
-// for one, and when we do, get the chrome URL for its task
-nsresult
-nsNativeAppSupportOS2::GetStartupURL(nsICmdLineService *args, nsCString& taskURL)
-{
     nsresult rv;
-    
-    nsCOMPtr<nsICmdLineHandler> handler;
 
-    // see if there is a handler
-    rv = args->GetHandlerForParam(nsnull, getter_AddRefs(handler));
-    if (NS_FAILED(rv)) return rv;
-    
-    // ok, from here on out, failures really are fatal
-    nsXPIDLCString url;
-    rv = handler->GetChromeUrlForTask(getter_Copies(url));
-    if (NS_FAILED(rv)) return rv;
+    // If activated by the browser.turbo.singleProfileOnly pref,
+    // check for multi-profile situation and turn off turbo mode
+    // if there are multiple profiles.
+    PRBool singleProfileOnly = PR_FALSE;
+    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID, &rv ) );
+    if ( NS_SUCCEEDED( rv ) ) {
+        prefService->GetBoolPref( "browser.turbo.singleProfileOnly", &singleProfileOnly );
+    }
+    if ( singleProfileOnly ) {
+        nsCOMPtr<nsIProfile> profileMgr( do_GetService( NS_PROFILE_CONTRACTID, &rv ) );
+        if ( NS_SUCCEEDED( rv ) ) {
+            PRInt32 profileCount = 0;
+            if ( NS_SUCCEEDED( profileMgr->GetProfileCount( &profileCount ) ) &&
+                 profileCount > 1 ) {
+                // Turn off turbo mode and quit the application.
+                SetIsServerMode( PR_FALSE );
+                nsCOMPtr<nsIAppShellService> appShell =
+                    do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+                if ( NS_SUCCEEDED( rv ) ) {
+                    appShell->Quit();
+                }
+                return NS_OK;
+            }
+        }
+    }
 
-    taskURL.Assign(url.get());
+    nsCOMPtr<nsIAppShellService> appShell =
+        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Instead of staying alive, launch a new instance of the application and then
+        // terminate for real.  We take steps to ensure that the new instance will run
+        // as a "server process" and not try to pawn off its request back on this
+        // instance.
+
+        // Grab mutex.  Process termination will release it.
+        Mutex mutexLock = Mutex(mMutexName);
+        NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
+
+        // Turn off MessageWindow so the other process can't see us.
+        MessageWindow mw;
+        mw.Destroy();
+    
+        // Launch another instance.
+        char buffer[ CCHMAXPATH ];
+        // Same application as this one.
+        PPIB ppib;
+        PTIB ptib;
+        DosGetInfoBlocks( &ptib, &ppib );
+        DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer );
+    
+        // Now do the OS/2 stuff...
+        STARTDATA startData = {0};
+        ULONG idSession;
+        PID pid;
+        char pszObjectBuffer[CCHMAXPATH];
+
+        startData.PgmName = buffer;
+        startData.Length = sizeof(startData);
+        startData.Related = SSF_RELATED_INDEPENDENT;
+        startData.ObjectBuffer = pszObjectBuffer;
+        startData.ObjectBuffLen = CCHMAXPATH;
+        startData.InheritOpt = SSF_INHERTOPT_PARENT;
+        // The new process must run in turbo mode (no splash screen, no window, etc.).
+        startData.PgmInputs = " -turbo";
+
+        DosStartSession(&startData, &idSession, &pid);
+    
+        // Turn off turbo mode and quit the application.
+        SetIsServerMode( PR_FALSE );
+        appShell->Quit();
+
+        // Done.  This app will now commence shutdown.
+    }
     return NS_OK;
 }
-
