@@ -124,22 +124,10 @@ interface nsIWindowsHooksSettings : nsISupports {
     // Internet shortcuts (based on "protocol").
     attribute boolean isHandlingHTTP;
     attribute boolean isHandlingHTTPS;
-    attribute boolean isHandlingFTP;
-    attribute boolean isHandlingCHROME;
-    attribute boolean isHandlingGOPHER;
 
     // File handling (based on extension).
     attribute boolean isHandlingHTML;
-    attribute boolean isHandlingJPEG;
-    attribute boolean isHandlingGIF;
-    attribute boolean isHandlingPNG;
-    attribute boolean isHandlingMNG;
-    attribute boolean isHandlingXBM;
-    attribute boolean isHandlingBMP;
-    attribute boolean isHandlingICO;
-    attribute boolean isHandlingXML;
     attribute boolean isHandlingXHTML;
-    attribute boolean isHandlingXUL;
 
     // Nag dialog flag.  Set this so that dialog
     // appears on startup if there is a mismatch

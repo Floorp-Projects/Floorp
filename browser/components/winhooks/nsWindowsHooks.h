@@ -83,21 +83,9 @@ private:
     // Internet shortcut protocols.
         PRBool mHandleHTTP;
         PRBool mHandleHTTPS;
-        PRBool mHandleFTP;
-        PRBool mHandleCHROME;
-        PRBool mHandleGOPHER;
     // File types.
         PRBool mHandleHTML;
-        PRBool mHandleJPEG;
-        PRBool mHandleGIF;
-        PRBool mHandlePNG;
-        PRBool mHandleMNG;
-        PRBool mHandleXBM;
-        PRBool mHandleBMP;
-        PRBool mHandleICO;
-        PRBool mHandleXML;
         PRBool mHandleXHTML;
-        PRBool mHandleXUL;
     // Dialog
         PRBool mShowDialog;
 

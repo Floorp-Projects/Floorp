@@ -83,31 +83,11 @@ static ProtocolRegistryEntry
     ftp( "ftp" ),
     chrome( "chrome" ),
     gopher( "gopher" );
-const char *jpgExts[]  = { ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
-const char *gifExts[]  = { ".gif", 0 };
-const char *pngExts[]  = { ".png", 0 };
-const char *mngExts[]  = { ".mng", 0 };
-const char *xbmExts[]  = { ".xbm", 0 };
-const char *bmpExts[]  = { ".bmp", 0 };
-const char *icoExts[]  = { ".ico", 0 };
-const char *xmlExts[]  = { ".xml", 0 };
 const char *xhtmExts[] = { ".xht", ".xhtml", 0 };
-const char *xulExts[]  = { ".xul", 0 };
 const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
 
 static FileTypeRegistryEntry
-    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "image-file.ico"),
-    gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "image-file.ico"),
-    png(   pngExts,  "MozillaPNG",   "PNG Image",            "pngfile",  "image-file.ico"),
-    mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
-    xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
-    bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
-    ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "%1"),
-    xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "doc-file.ico"),
     xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "doc-file.ico"),
-    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "doc-file.ico");
-
-static EditableFileTypeRegistryEntry
     mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile",  "doc-file.ico");
 
 // Implementation of the nsIWindowsHooksSettings interface.
@@ -150,21 +130,9 @@ nsWindowsHooksSettings::Set##attr ( PRBool value ) { \
 
 // Define all the getter/setter methods:
 DEFINE_GETTER_AND_SETTER( IsHandlingHTML,   mHandleHTML   )
-DEFINE_GETTER_AND_SETTER( IsHandlingJPEG,   mHandleJPEG   )
-DEFINE_GETTER_AND_SETTER( IsHandlingGIF,    mHandleGIF    )
-DEFINE_GETTER_AND_SETTER( IsHandlingPNG,    mHandlePNG    )
-DEFINE_GETTER_AND_SETTER( IsHandlingMNG,    mHandleMNG    )
-DEFINE_GETTER_AND_SETTER( IsHandlingXBM,    mHandleXBM    )
-DEFINE_GETTER_AND_SETTER( IsHandlingBMP,    mHandleBMP    )
-DEFINE_GETTER_AND_SETTER( IsHandlingICO,    mHandleICO    )
-DEFINE_GETTER_AND_SETTER( IsHandlingXML,    mHandleXML    )
 DEFINE_GETTER_AND_SETTER( IsHandlingXHTML,  mHandleXHTML  )
-DEFINE_GETTER_AND_SETTER( IsHandlingXUL,    mHandleXUL    )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTP,   mHandleHTTP   )
 DEFINE_GETTER_AND_SETTER( IsHandlingHTTPS,  mHandleHTTPS  )
-DEFINE_GETTER_AND_SETTER( IsHandlingFTP,    mHandleFTP    )
-DEFINE_GETTER_AND_SETTER( IsHandlingCHROME, mHandleCHROME )
-DEFINE_GETTER_AND_SETTER( IsHandlingGOPHER, mHandleGOPHER )
 DEFINE_GETTER_AND_SETTER( ShowDialog,       mShowDialog   )
 DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 
@@ -197,20 +165,8 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     // Get each registry value and copy to prefs structure.
     prefs->mHandleHTTP   = BoolRegistryEntry( "isHandlingHTTP"   );
     prefs->mHandleHTTPS  = BoolRegistryEntry( "isHandlingHTTPS"  );
-    prefs->mHandleFTP    = BoolRegistryEntry( "isHandlingFTP"    );
-    prefs->mHandleCHROME = BoolRegistryEntry( "isHandlingCHROME" );
-    prefs->mHandleGOPHER = BoolRegistryEntry( "isHandlingGOPHER" );
     prefs->mHandleHTML   = BoolRegistryEntry( "isHandlingHTML"   );
-    prefs->mHandleJPEG   = BoolRegistryEntry( "isHandlingJPEG"   );
-    prefs->mHandleGIF    = BoolRegistryEntry( "isHandlingGIF"    );
-    prefs->mHandlePNG    = BoolRegistryEntry( "isHandlingPNG"    );
-    prefs->mHandleMNG    = BoolRegistryEntry( "isHandlingMNG"    );
-    prefs->mHandleXBM    = BoolRegistryEntry( "isHandlingXBM"    );
-    prefs->mHandleBMP    = BoolRegistryEntry( "isHandlingBMP"    );
-    prefs->mHandleICO    = BoolRegistryEntry( "isHandlingICO"    );
-    prefs->mHandleXML    = BoolRegistryEntry( "isHandlingXML"    );
     prefs->mHandleXHTML  = BoolRegistryEntry( "isHandlingXHTML"  );
-    prefs->mHandleXUL    = BoolRegistryEntry( "isHandlingXUL"    );
     prefs->mShowDialog   = BoolRegistryEntry( "showDialog"       );
     prefs->mHaveBeenSet  = BoolRegistryEntry( "haveBeenSet"      );
 
@@ -301,33 +257,9 @@ nsWindowsHooksSettings::GetRegistryMatches( PRBool *_retval ) {
          ||
          misMatch( mHandleHTTPS,  https )
          ||
-         misMatch( mHandleFTP,    ftp )
-         ||
-         misMatch( mHandleCHROME, chrome )
-         ||
-         misMatch( mHandleGOPHER, gopher )
-         ||
          misMatch( mHandleHTML,   mozillaMarkup )
          ||
-         misMatch( mHandleJPEG,   jpg )
-         ||
-         misMatch( mHandleGIF,    gif )
-         ||
-         misMatch( mHandlePNG,    png )
-         ||
-         misMatch( mHandleMNG,    mng )
-         ||
-         misMatch( mHandleXBM,    xbm )
-         ||
-         misMatch( mHandleBMP,    bmp )
-         ||
-         misMatch( mHandleICO,    ico )
-         ||
-         misMatch( mHandleXML,    xml )
-         ||
-         misMatch( mHandleXHTML,  xhtml )
-         ||
-         misMatch( mHandleXUL,    xul ) ) {
+         misMatch( mHandleXHTML,  xhtml ) ) {
         // Registry is out of synch.
         *_retval = PR_FALSE;
     }
@@ -364,20 +296,8 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
         if ( !settings->mHaveBeenSet ) {
             settings->mHandleHTTP   = PR_TRUE;
             settings->mHandleHTTPS  = PR_TRUE;
-            settings->mHandleFTP    = PR_TRUE;
-            settings->mHandleCHROME = PR_TRUE;
-            settings->mHandleGOPHER = PR_TRUE;
             settings->mHandleHTML   = PR_TRUE;
-            settings->mHandleJPEG   = PR_TRUE;
-            settings->mHandleGIF    = PR_TRUE;
-            settings->mHandlePNG    = PR_TRUE;
-            settings->mHandleMNG    = PR_TRUE;
-            settings->mHandleXBM    = PR_TRUE;
-            settings->mHandleBMP    = PR_FALSE;
-            settings->mHandleICO    = PR_FALSE;
-            settings->mHandleXML    = PR_TRUE;
             settings->mHandleXHTML  = PR_TRUE;
-            settings->mHandleXUL    = PR_TRUE;
 
             settings->mShowDialog       = PR_TRUE;
         }
@@ -552,20 +472,8 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
 
     putPRBoolIntoRegistry( "isHandlingHTTP",   prefs, &nsIWindowsHooksSettings::GetIsHandlingHTTP );
     putPRBoolIntoRegistry( "isHandlingHTTPS",  prefs, &nsIWindowsHooksSettings::GetIsHandlingHTTPS );
-    putPRBoolIntoRegistry( "isHandlingFTP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingFTP );
-    putPRBoolIntoRegistry( "isHandlingCHROME", prefs, &nsIWindowsHooksSettings::GetIsHandlingCHROME );
-    putPRBoolIntoRegistry( "isHandlingGOPHER", prefs, &nsIWindowsHooksSettings::GetIsHandlingGOPHER );
     putPRBoolIntoRegistry( "isHandlingHTML",   prefs, &nsIWindowsHooksSettings::GetIsHandlingHTML );
-    putPRBoolIntoRegistry( "isHandlingJPEG",   prefs, &nsIWindowsHooksSettings::GetIsHandlingJPEG );
-    putPRBoolIntoRegistry( "isHandlingGIF",    prefs, &nsIWindowsHooksSettings::GetIsHandlingGIF );
-    putPRBoolIntoRegistry( "isHandlingPNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingPNG );
-    putPRBoolIntoRegistry( "isHandlingMNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingMNG );
-    putPRBoolIntoRegistry( "isHandlingXBM",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXBM );
-    putPRBoolIntoRegistry( "isHandlingBMP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingBMP );
-    putPRBoolIntoRegistry( "isHandlingICO",    prefs, &nsIWindowsHooksSettings::GetIsHandlingICO );
-    putPRBoolIntoRegistry( "isHandlingXML",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXML );
     putPRBoolIntoRegistry( "isHandlingXHTML",  prefs, &nsIWindowsHooksSettings::GetIsHandlingXHTML );
-    putPRBoolIntoRegistry( "isHandlingXUL",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXUL );
     putPRBoolIntoRegistry( "showDialog",       prefs, &nsIWindowsHooksSettings::GetShowDialog );
 
     // Indicate that these settings have indeed been set.
@@ -592,55 +500,10 @@ nsWindowsHooks::SetRegistry() {
     } else {
         (void) mozillaMarkup.reset();
     }
-    if ( prefs->mHandleJPEG ) {
-        (void) jpg.set();
-    } else {
-        (void) jpg.reset();
-    }
-    if ( prefs->mHandleGIF ) {
-        (void) gif.set();
-    } else {
-        (void) gif.reset();
-    }
-    if ( prefs->mHandlePNG ) {
-        (void) png.set();
-    } else {
-        (void) png.reset();
-    }
-    if ( prefs->mHandleMNG ) {
-        (void) mng.set();
-    } else {
-        (void) mng.reset();
-    }
-    if ( prefs->mHandleXBM ) {
-        (void) xbm.set();
-    } else {
-        (void) xbm.reset();
-    }
-    if ( prefs->mHandleBMP ) {
-        (void) bmp.set();
-    } else {
-        (void) bmp.reset();
-    }
-    if ( prefs->mHandleICO ) {
-        (void) ico.set();
-    } else {
-        (void) ico.reset();
-    }
-    if ( prefs->mHandleXML ) {
-        (void) xml.set();
-    } else {
-        (void) xml.reset();
-    }
     if ( prefs->mHandleXHTML ) {
         (void) xhtml.set();
     } else {
         (void) xhtml.reset();
-    }
-    if ( prefs->mHandleXUL ) {
-        (void) xul.set();
-    } else {
-        (void) xul.reset();
     }
     if ( prefs->mHandleHTTP ) {
         (void) http.set();
@@ -652,22 +515,6 @@ nsWindowsHooks::SetRegistry() {
     } else {
         (void) https.reset();
     }
-    if ( prefs->mHandleFTP ) {
-        (void) ftp.set();
-    } else {
-        (void) ftp.reset();
-    }
-    if ( prefs->mHandleCHROME ) {
-        (void) chrome.set();
-    } else {
-        (void) chrome.reset();
-    }
-    if ( prefs->mHandleGOPHER ) {
-        (void) gopher.set();
-    } else {
-        (void) gopher.reset();
-    }
-
     // Call SHChangeNotify() to notify the windows shell that file
     // associations changed, and that an update of the icons need to occur.
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
