@@ -319,6 +319,14 @@ nsBrowserAppCore::Back()
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserAppCore::Reload(enum nsURLReloadType)
+{
+	printf("fix me!\n");
+	NS_ASSERTION(0,"fix me!");
+	return NS_OK;
+}   
+
 NS_IMETHODIMP    
 nsBrowserAppCore::Forward()
 {

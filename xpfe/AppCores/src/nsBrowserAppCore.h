@@ -67,6 +67,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
+    NS_IMETHOD    Reload(enum nsURLReloadType);
     NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
