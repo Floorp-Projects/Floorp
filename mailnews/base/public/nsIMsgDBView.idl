@@ -21,6 +21,7 @@
  */
 
 #include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
 
 interface nsIMsgDatabase;
 
@@ -67,8 +68,8 @@ interface nsMsgDBViewType
      */
 	const nsMsgDBViewTypeValue allThreads = 1;			
 
-	const nsMsgDBViewTypeValue onlyThreadsWithNew = 2;
-	const nsMsgDBViewTypeValue onlyNewHeaders = 3;		
+	const nsMsgDBViewTypeValue onlyThreadsWithUnread = 2;
+	const nsMsgDBViewTypeValue onlyUnreadHeaders = 3;		
 	const nsMsgDBViewTypeValue watchedThreadsWithNew = 4;
 
     /** 
@@ -81,11 +82,11 @@ interface nsMsgDBViewType
 [scriptable, uuid(704c7d28-fd1a-11d4-a5be-0060b0fc04b7)]
 interface nsIMsgDBView : nsISupports
 {
-    void open(in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType);
+    void open(in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType, out long count);
     void close();
 
     void init(out long pCount);
-    void addKeys(out long pKeys, out long pFlags, in string pLevels, in nsMsgViewSortType sortType, in long numKeysToAdd);
+    void addKeys(out nsMsgKey pKeys, out long pFlags, in string pLevels, in nsMsgViewSortType sortType, in long numKeysToAdd);
 
     void sort(in nsMsgViewSortType sortType, in nsMsgViewSortOrder sortOrder);
 };
