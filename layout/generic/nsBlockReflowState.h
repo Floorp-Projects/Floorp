@@ -4404,6 +4404,7 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
   if (NS_STYLE_OVERFLOW_VISIBLE != disp->mOverflow) {
     renderEverything = PR_FALSE;
   }
+  renderEverything = PR_FALSE;
 
   if ((nsnull == mPrevInFlow) && (nsnull != mBullet)) {
     const nsStyleList* list;
@@ -4594,9 +4595,10 @@ nsIFrame * nsBlockFrame::FindHitFrame(nsBlockFrame * aBlockFrame,
   return aBlockFrame;
 }
 
-NS_METHOD nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
-                                       nsGUIEvent* aEvent,
-                                       nsEventStatus& aEventStatus)
+NS_IMETHODIMP
+nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent* aEvent,
+                          nsEventStatus& aEventStatus)
 {
   if (0) {
     nsHTMLContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
