@@ -32,27 +32,27 @@ TODO List for XPCOM</h1></center>
 (xpcom/src/nsRegistry.cpp)
 <ul>
 <li>
-Mainly you want to change all the Platform*()&nbsp;functions in nsComponentManager.cpp</li>
+Mainly you want to change all the Platform*() functions in nsComponentManager.cpp</li>
 
 <li>
-Now we open/close the registry all the time. I&nbsp;want to keep the registry
+Now we open/close the registry all the time. I want to keep the registry
 open all the time. That would get performance up.</li>
 
 <li>
-Platform*()&nbsp;functions use the NR_*Raw() functions in some places.
-I wonder if the nsRegistry has a equivalent. If not we need to create them.</li>
+Platform*() functions use the NR_*Raw() functions in some places. I wonder
+if the nsRegistry has a equivalent. If not we need to create them.</li>
 </ul>
 Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</td>
 
 <td>P1</td>
 
-<td>Nick Ambrose &lt;<a href="mailto:nicka@interdyn.com">nicka@interdyn.com</a>></td>
+<td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
 
 <td>3/22/1999 started</td>
 </tr>
 
 <tr>
-<td>Startup components:&nbsp;Some components need to be created at startup.
+<td>Startup components: Some components need to be created at startup.
 Have a framework for them.</td>
 
 <td>P0</td>
@@ -73,7 +73,7 @@ Have a framework for them.</td>
 </tr>
 
 <tr>
-<td>API changes: Remove all pathlist. XPCOM&nbsp;should support only paths.</td>
+<td>API changes: Remove all pathlist. XPCOM should support only paths.</td>
 
 <td>P0</td>
 
@@ -93,9 +93,9 @@ Have a framework for them.</td>
 </tr>
 
 <tr>
-<td>Path handling:&nbsp;Use nsFileSpec instead of file path names. Char
-* pathnames are not intl, and cannot be stored in the registry. Plus that
-wont support mac aliases.</td>
+<td>Path handling: Use nsFileSpec instead of file path names. Char * pathnames
+are not intl, and cannot be stored in the registry. Plus that wont support
+mac aliases.</td>
 
 <td>P1</td>
 
