@@ -99,6 +99,10 @@ nsProfileAccess::~nsProfileAccess()
 
     PRBool openalready = PR_FALSE;
 
+    m_registry->IsOpen( &openalready);
+    if (openalready)
+		m_registry->Close();   
+
 	// Release all resources.
 	CRTFREEIF(mCurrentProfile);
 	CRTFREEIF(mVersion);
@@ -131,7 +135,7 @@ nsProfileAccess::CloseRegistry()
 {
 	nsresult rv = NS_OK;
 	
-//	rv = m_registry->Close();
+	rv = m_registry->Close();
 
 	return rv;
 }
@@ -159,7 +163,7 @@ nsProfileAccess::OpenRegistry()
     if (NS_FAILED(rv)) return rv;
 
     if (!openalready)
-        rv = m_registry->OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);   
+        rv = m_registry->OpenDefault();   
 
     return rv;
 }
@@ -907,6 +911,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
     }
+    oldReg->Close();
 
 #elif defined (XP_BEOS)
 #else
