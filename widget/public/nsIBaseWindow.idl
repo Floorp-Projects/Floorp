@@ -174,10 +174,16 @@ interface nsIBaseWindow : nsISupports
 	*/
 	attribute boolean visibility;
 
+    /*
+    a disabled window should accept no user interaction; it's a dead window,
+    like the parent of a modal window.
+    */
+    attribute boolean enabled;
+
 	/*
 	Allows you to find out what the widget is of a given object.  Depending
 	on the object, this may return the parent widget in which this object
-	lives if it has not had to create it's own widget.
+	lives if it has not had to create its own widget.
 	*/
 	[noscript] readonly attribute nsIWidget mainWidget;
 	
