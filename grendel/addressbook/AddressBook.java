@@ -21,8 +21,11 @@ package grendel.addressbook;
 
 import grendel.addressbook.addresscard.*;
 import grendel.ui.UIAction;
+import grendel.ui.GeneralFrame;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
+import calypso.util.QSort;
+import calypso.util.Comparer;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -45,23 +48,24 @@ import netscape.ldap.*;
  *
  * @author  Lester Schueler
  */
-public class AddressBook extends JFrame {
-    private Hashtable       mCommands;
-    private Hashtable       mMenuItems;
+public class AddressBook extends GeneralFrame {
+   private Hashtable         mCommands;
+   private Hashtable         mMenuItems;
+//   private ACS_Personal      myLocalAddressBook;
 
-    private JMenuBar        mMenubar;
-    private GrendelToolBar       mTtoolbar;
+   private JMenuBar          mMenubar;
+   private GrendelToolBar    mTtoolbar;
 //    private Component       mStatusbar;
-    private JTable          mTable;
-    private JButton         mSearchButton;
-    protected  DataSourceList  mDataSourceList;
-    protected JComboBox       mSearchSource;
-    protected  JTextField      mSearchField;
+   private JTable            mTable;
+   private JButton           mSearchButton;
+   protected DataSourceList  mDataSourceList;
+   protected JComboBox       mSearchSource;
+   protected JTextField      mSearchField;
 
-    public static void main(String[] args) {
-        AddressBook AddressBookFrame = new AddressBook();
-        AddressBookFrame.addWindowListener(new AppCloser());
-        AddressBookFrame.show();
+   public static void main(String[] args) {
+      AddressBook AddressBookFrame = new AddressBook();
+      AddressBookFrame.addWindowListener(new AppCloser());
+      AddressBookFrame.show();
     }
 
     protected static final class AppCloser extends WindowAdapter {
@@ -118,21 +122,21 @@ public class AddressBook extends JFrame {
      *
      */
     public AddressBook() {
-        super("Address Book");
+        super("Address Book","0");
 
         setBackground(Color.lightGray);
-        //setBorderStyle(JPanel.ETCHED);
         getContentPane().setLayout(new BorderLayout());
 
-//        addWindowListener(new FrameHider());
 
         //create menubar (top)
         //merge both the editors commands with this applications commands.
-        //        mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
+        //mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
         // FIXME - need to build the menu bar
         // (Jeff)
 
-        mMenubar = new JMenuBar();
+        mMenubar = buildMenu("menus.xml",defaultActions);
+
+    		setJMenuBar(mMenubar);
 
             //collapsble panels holds toolbar.
             CollapsiblePanel collapsePanel = new CollapsiblePanel(true);
@@ -156,15 +160,20 @@ public class AddressBook extends JFrame {
         mDataSourceList.addEntry (new DataSource ("Four11 Directory", "ldap.four11.com"));
         mDataSourceList.addEntry (new DataSource ("InfoSpace Directory", "ldap.infospace.com"));
         mDataSourceList.addEntry (new DataSource ("WhoWhere Directory", "ldap.whowhere.com"));
+        mDataSourceList.addEntry (new DataSource ("InfoSeek Directory", "ldap.infoseek.com"));
 
         //Create address panel
         AddressPanel addressPanel = new AddressPanel (mDataSourceList);
         panel1.add(addressPanel, BorderLayout.CENTER);
 
-        getContentPane().add(mMenubar, BorderLayout.NORTH);
+        // getContentPane().add(mMenubar, BorderLayout.NORTH);
         getContentPane().add(panel1, BorderLayout.CENTER);
 
         setSize (600, 400);
+    	
+    		//Create Local Address Book
+    	  //myLocalAddressBook = new ACS_Personal ("MyAddressBook.nab", true);
+
     }
 
     /**
@@ -229,7 +238,7 @@ public class AddressBook extends JFrame {
     public static final String byTypeTag                ="byType";
     public static final String byNameTag                ="byName";
     public static final String byEmailAddressTag        ="byEmailAddress";
-    public static final String byComapanyTag            ="byComapany";
+    public static final String byCompanyTag             ="byCompany";
     public static final String byCityTag                ="byCity";
     public static final String byNicknameTag            ="byNickname";
     public static final String sortAscendingTag         ="sortAscending";
@@ -244,7 +253,7 @@ public class AddressBook extends JFrame {
 //        new Import(),
         new SaveAs(),
 //        new Call(),
-        new CloseWindow()
+        new CloseWindow(),
 
         // "file->new" actions
 //        new NavigatorWindow(),
@@ -257,7 +266,7 @@ public class AddressBook extends JFrame {
 //        new Undo(),
 //        new Redo(),
 //        new Delete(),
-//        new SearchDirectory(),
+        new SearchDirectory(),
 //        new HTMLDomains(),
 //        new CardProperties(),
 //        new Preferences(),
@@ -265,11 +274,11 @@ public class AddressBook extends JFrame {
         //"View" actions
 //        new HideMessageToolbar(),
 //        new ByType(),
-//        new ByName(),
-//        new ByEmailAddress(),
-//        new ByCompany(),
-//        new ByCity(),
-//        new ByNickname(),
+        new ByName(),
+        new ByEmailAddress(),
+        new ByCompany(),
+        new ByCity(),
+        new ByNickname(),
 //        new SortAscending(),
 //        new SortDescending(),
 //        new MyAddressBookCard(),
@@ -295,6 +304,22 @@ public class AddressBook extends JFrame {
             aDialog.dispose();
         }
     }
+
+    class SearchDirectory extends UIAction {
+      SearchDirectory() {
+        super(searchDirectoryTag);
+        setEnabled(true);
+      }
+
+      public void actionPerformed(ActionEvent e) {
+        SearchDirectoryDialog aDialog = new SearchDirectoryDialog(getParentFrame());
+
+        //display the new card dialog
+        aDialog.show ();
+        aDialog.dispose();
+      }
+    }
+
 
     class SaveAs extends UIAction {
         SaveAs() {
@@ -380,7 +405,85 @@ public class AddressBook extends JFrame {
         }
     }
 
-    /**
+    class ResultSorter extends UIAction {
+        protected String ColumnName;
+
+        ResultSorter(String Tag){
+          super(Tag);
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            DataModel dm = (DataModel) mTable.getModel ();
+            int colnumber = dm.findColumn(ColumnName);
+            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
+
+            dm.sortData(colnumber);
+
+            dm.fireTableDataChanged();
+            mTable.repaint();
+        }
+    }
+    //-----------------------
+    //ByName action
+    //-----------------------
+
+    class ByName extends ResultSorter {
+        ByName() {
+            super(byNameTag);
+            ColumnName = new String("Name");
+            this.setEnabled(true);
+        }
+
+    }
+
+    //-----------------------
+    //ByEmailAddress action
+    //-----------------------
+
+    class ByEmailAddress extends ResultSorter {
+        ByEmailAddress() {
+            super(byEmailAddressTag);
+            ColumnName = new String("Email Address");
+            this.setEnabled(true);
+        }
+    }
+
+    //-----------------------
+    //ByCompany action
+    //-----------------------
+
+    class ByCompany extends ResultSorter {
+        ByCompany() {
+            super(byCompanyTag);
+            ColumnName = new String("Organization");
+            this.setEnabled(true);
+        }
+    }
+
+    //-----------------------
+    //ByCity action
+    //-----------------------
+    class ByCity extends ResultSorter {
+        ByCity() {
+            super(byCityTag);
+            ColumnName = new String("City");
+            this.setEnabled(true);
+        }
+    }
+
+    //-----------------------
+    //ByNickname action
+    //-----------------------
+
+    class ByNickname extends ResultSorter {
+        ByNickname() {
+            super(byNicknameTag);
+            ColumnName = new String("Nickname");
+            this.setEnabled(true);
+        }
+    }
+
+     /**
      * Create a Toolbar
      * @see addToolbarButton
      */
@@ -452,8 +555,9 @@ public class AddressBook extends JFrame {
 
 //              try {
             //open a connection to the LDAP server
-System.out.println ("Opening server");
+System.out.println ("Opening server " + aServerName);
             ICardSource Four11AddressBook = new LDAP_Server (aServerName);
+
 
             //create the query
             ITerm query = new TermEqual (new AC_Attribute ("sn", aSearchString));
@@ -461,12 +565,12 @@ System.out.println ("Opening server");
             String[] attributes = {"sn", "cn", "o", "mail", "city"};
 
             //query the LDAP server.
-System.out.println ("Send query");
+System.out.println ("Send query" + query);
             ICardSet cardSet = Four11AddressBook.getCardSet (query, attributes);
 
             //Sort the list.
-//            String[] sortOrder = {"givenname", "surname"};
-//            cardSet.sort (sortOrder);
+            String[] sortOrder = {"sn", "cn"};
+            cardSet.sort (sortOrder);
 
             //hack. I've put the for loop in a try block to catch the exception
             //thrown when cardEnum.hasMoreElements() incorrectly returns true.
@@ -551,17 +655,67 @@ System.out.println ("Done.");
         public Class    getColumnClass(int col)             { return String.class; }
         public boolean  isCellEditable(int row, int col)    { return false;}
 
-        public void     setValueAt(Object aValue, int row, int column) {
+        public void setValueAt(Object aValue, int row, int column) {
             ((Vector)mVecVec.elementAt(row)).setElementAt(aValue, column);
         }
 
-        public void     reloadData (String aServerName, int aPort, String aSearchString) {
+        public void reloadData (String aServerName, int aPort, String aSearchString) {
             //reload the data from LDAP.
             mVecVec = queryLDAP (aServerName, aPort, aSearchString);
         }
 
         public Object getValueAt(int row, int column) {
             return (((Vector)mVecVec.elementAt(row)).elementAt(column));
+        }
+
+        public void sortData(int column) {
+            Object[][] ColumnValues = new String [mVecVec.size()][2];
+            int row;
+            int col;
+
+            for(row = 0 ; row < mVecVec.size() ; ++row) {
+                ColumnValues[row][0] = (((Vector)mVecVec.elementAt(row)).elementAt(column));
+                ColumnValues[row][1] = new Integer(row).toString();
+            }
+
+            System.out.println("Values before sorting");
+            for(row = 0; row < ColumnValues.length ; ++row) {
+                System.out.println(ColumnValues[row][0] + " row: " + ColumnValues[row][1]);
+            }
+
+            QSort sorter = new QSort(new Comparer() {
+                                       public int compare(Object a, Object b) {
+                                          int returnValue;
+                                          try {
+                                            returnValue = (((String[])a)[0]).compareTo(((String[])b)[0]);
+                                          }
+                                          catch (NullPointerException e) {
+                                            returnValue = 1;
+                                          }
+                                          return returnValue;
+                                       }
+                                     });
+            sorter.sort(ColumnValues);
+
+            System.out.println("Values after sorting");
+            for(row = 0; row < ColumnValues.length ; ++row) {
+                System.out.println(ColumnValues[row][0] + " row: " + ColumnValues[row][1]);
+            }
+
+            Vector SortedVector = new Vector();
+
+            for(row = 0; row < ColumnValues.length ; ++row) {
+                Vector thisRow = new Vector(6);
+                Integer OriginalPosition = new Integer((String)ColumnValues[row][1]);
+                for(col = 0; col < ((Vector)mVecVec.elementAt(row)).size(); ++col) {
+                    thisRow.addElement(((Vector)mVecVec.elementAt(OriginalPosition.intValue())).elementAt(col));
+                }
+                SortedVector.addElement(thisRow);
+            }
+
+            mVecVec = SortedVector;
+            
+            System.out.println("Hello");
         }
     }
 
