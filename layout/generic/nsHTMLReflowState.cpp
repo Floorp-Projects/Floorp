@@ -467,14 +467,30 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   }
 
   // Calculate the computed width
-  if (eStyleUnit_Auto == widthUnit) {
-    // Any remaining 'auto' values for 'left', 'right', 'margin-left', or
-    // 'margin-right' are replaced with 0 (their default value)
-    computedWidth = containingBlockWidth - computedOffsets.left -
-      computedMargin.left - mComputedBorderPadding.left -
-      mComputedBorderPadding.right -
-      computedMargin.right - computedOffsets.right;
+  PRBool  marginLeftIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit());
+  PRBool  marginRightIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit());
 
+  if (eStyleUnit_Auto == widthUnit) {
+    // The element has a 'width' value of 'auto'
+    if (NS_FRAME_IS_REPLACED(frameType)) {
+      // Substitute the element's intrinsic width
+      computedWidth = NS_INTRINSICSIZE;
+
+    } else {
+      // Any remaining 'auto' values for 'left', 'right', 'margin-left', or
+      // 'margin-right' are replaced with 0 (their default value)
+      leftIsAuto = PR_FALSE;
+      rightIsAuto = PR_FALSE;
+      marginLeftIsAuto = PR_FALSE;
+      marginRightIsAuto = PR_FALSE;
+
+      computedWidth = containingBlockWidth - computedOffsets.left -
+        computedMargin.left - mComputedBorderPadding.left -
+        mComputedBorderPadding.right -
+        computedMargin.right - computedOffsets.right;
+    }
+
+    // Factor in any minimum and maximum size information
     if (computedWidth > mComputedMaxWidth) {
       computedWidth = mComputedMaxWidth;
     } else if (computedWidth < mComputedMinWidth) {
@@ -489,53 +505,63 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       ComputeHorizontalValue(containingBlockWidth, widthUnit,
                              mStylePosition->mWidth, computedWidth);
     }
+    
+    // Factor in any minimum and maximum size information
     if (computedWidth > mComputedMaxWidth) {
       computedWidth = mComputedMaxWidth;
     } else if (computedWidth < mComputedMinWidth) {
       computedWidth = mComputedMinWidth;
     }
+  }
 
-    if (leftIsAuto) {
-      // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
-      // (their default value)
-      computedOffsets.left = containingBlockWidth - computedMargin.left -
-        mComputedBorderPadding.left - computedWidth -
-        mComputedBorderPadding.right -
-        computedMargin.right - computedOffsets.right;
+  // Calculate any remaining 'auto' values for the offsets and margins
+  if (leftIsAuto) {
+    // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
+    // (their default value)
+    computedOffsets.left = containingBlockWidth - computedMargin.left -
+      mComputedBorderPadding.left - computedWidth -
+      mComputedBorderPadding.right -
+      computedMargin.right - computedOffsets.right;
 
-    } else if (rightIsAuto) {
-      // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
-      // (their default value)
-      computedOffsets.right = containingBlockWidth - computedOffsets.left -
-        computedMargin.left - mComputedBorderPadding.left - computedWidth -
-        mComputedBorderPadding.right - computedMargin.right;
+  } else if (rightIsAuto) {
+    // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
+    // (their default value)
+    computedOffsets.right = containingBlockWidth - computedOffsets.left -
+      computedMargin.left - mComputedBorderPadding.left - computedWidth -
+      mComputedBorderPadding.right - computedMargin.right;
 
+  } else if (marginLeftIsAuto || marginRightIsAuto) {
+    // All that's left to solve for are 'auto' values for 'margin-left' and
+    // 'margin-right'
+    if (NS_FRAME_IS_REPLACED(frameType)) {
+      // We can't solve for 'auto' values for 'margin-left' and 'margin-right'
+      // until after we reflow the frame and it tells us its intrinsic width
+      if (marginLeftIsAuto) {
+        computedMargin.left = NS_AUTOMARGIN;
+      }
+      if (marginRightIsAuto) {
+        computedMargin.right = NS_AUTOMARGIN;
+      }
     } else {
-      // All that's left to solve for are 'auto' values for 'margin-left' and
-      // 'margin-right'
-      if ((eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit()) ||
-          (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit())) {
-
-        // Calculate the amount of space for margins
-        nscoord availMarginSpace = containingBlockWidth -
-          computedOffsets.left - mComputedBorderPadding.left -
-          computedWidth - mComputedBorderPadding.right -
-          computedOffsets.right;
-
-        if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit()) {
-          if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit()) {
-            // Both 'margin-left' and 'margin-right' are 'auto', so they get
-            // equal values
-            computedMargin.left = availMarginSpace / 2;
-            computedMargin.right = availMarginSpace - computedMargin.left;
-          } else {
-            // Just 'margin-left' is 'auto'
-            computedMargin.left = availMarginSpace - computedMargin.right;
-          }
-        } else {
-          // Just 'margin-right' is 'auto'
+      // Calculate the amount of space for margins
+      nscoord availMarginSpace = containingBlockWidth -
+        computedOffsets.left - mComputedBorderPadding.left -
+        computedWidth - mComputedBorderPadding.right -
+        computedOffsets.right;
+  
+      if (marginLeftIsAuto) {
+        if (marginRightIsAuto) {
+          // Both 'margin-left' and 'margin-right' are 'auto', so they get
+          // equal values
+          computedMargin.left = availMarginSpace / 2;
           computedMargin.right = availMarginSpace - computedMargin.left;
+        } else {
+          // Just 'margin-left' is 'auto'
+          computedMargin.left = availMarginSpace - computedMargin.right;
         }
+      } else {
+        // Just 'margin-right' is 'auto'
+        computedMargin.right = availMarginSpace - computedMargin.left;
       }
     }
   }
@@ -584,15 +610,25 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   }
 
   // Calculate the computed height
+  PRBool  marginTopIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetTopUnit());
+  PRBool  marginBottomIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetBottomUnit());
+  
   if (eStyleUnit_Auto == heightUnit) {
-    // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
-    // (their default value)
     if (NS_FRAME_IS_REPLACED(frameType)) {
       computedHeight = NS_INTRINSICSIZE;
     } else {
-      // If the containing block's height was not explicitly specified (i.e.,
-      // it depends on its content height), then so does our height
+      // Replace any 'auto' on 'margin-top' or 'margin-bottom' with 0 (their
+      // default values)
+      marginTopIsAuto = PR_FALSE;
+      marginBottomIsAuto = PR_FALSE;
+
+      // If 'bottom' is 'auto', then replace it with '0' (its default value), too
+      bottomIsAuto = PR_FALSE;
+
+      // Solve for the value of 'height'
       if (NS_AUTOHEIGHT == containingBlockHeight) {
+        // If the containing block's height was not explicitly specified (i.e.,
+        // it depends on its content height), then so does our height
         computedHeight = NS_AUTOHEIGHT;
 
       } else {
@@ -601,6 +637,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
           mComputedBorderPadding.bottom -
           computedMargin.bottom - computedOffsets.bottom;
         
+        // Factor in any minimum and maximum size information
         if (computedHeight > mComputedMaxHeight) {
           computedHeight = mComputedMaxHeight;
         } else if (computedHeight < mComputedMinHeight) {
@@ -617,45 +654,54 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
                            mStylePosition->mHeight, computedHeight);
     }
 
+    // Factor in any minimum and maximum size information
     if (computedHeight > mComputedMaxHeight) {
       computedHeight = mComputedMaxHeight;
     }
     if (computedHeight < mComputedMinHeight) {
       computedHeight = mComputedMinHeight;
     }
+  }
 
-    if (NS_AUTOHEIGHT != containingBlockHeight) {
-      if (bottomIsAuto) {
-        // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
-        computedOffsets.bottom = containingBlockHeight - computedOffsets.top -
-          computedMargin.top - mComputedBorderPadding.top - computedHeight -
-          mComputedBorderPadding.bottom - computedMargin.bottom;
-  
+  // Calculate any remaining 'auto' values for the offsets and margins
+  if (NS_AUTOHEIGHT != containingBlockHeight) {
+    if (bottomIsAuto) {
+      // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
+      computedOffsets.bottom = containingBlockHeight - computedOffsets.top -
+        computedMargin.top - mComputedBorderPadding.top - computedHeight -
+        mComputedBorderPadding.bottom - computedMargin.bottom;
+
+    } else if (marginTopIsAuto || marginBottomIsAuto) {
+      // All that's left to solve for are 'auto' values for 'margin-top' and
+      // 'margin-bottom'
+      if (NS_FRAME_IS_REPLACED(frameType)) {
+        // We can't solve for 'auto' values for 'margin-top' and 'margin-bottom'
+        // until after we reflow the frame and it tells us its intrinsic height
+        if (marginTopIsAuto) {
+          computedMargin.top = NS_AUTOMARGIN;
+        }
+        if (marginBottomIsAuto) {
+          computedMargin.bottom = NS_AUTOMARGIN;
+        }
       } else {
-        // All that's left to solve for are 'auto' values for 'margin-top' and
-        // 'margin-bottom'
-        if ((eStyleUnit_Auto == mStyleSpacing->mMargin.GetTopUnit()) ||
-            (eStyleUnit_Auto == mStyleSpacing->mMargin.GetBottomUnit())) {
-  
-          // Calculate the amount of space for margins
-          nscoord availMarginSpace = containingBlockHeight - computedOffsets.top -
-            mComputedBorderPadding.top - computedHeight - mComputedBorderPadding.bottom -
-            computedOffsets.bottom;
-  
-          if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetTopUnit()) {
-            if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetBottomUnit()) {
-              // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
-              // equal values
-              computedMargin.top = availMarginSpace / 2;
-              computedMargin.bottom = availMarginSpace - computedMargin.top;
-            } else {
-              // Just 'margin-top' is 'auto'
-              computedMargin.top = availMarginSpace - computedMargin.bottom;
-            }
-          } else {
-            // Just 'margin-bottom' is 'auto'
+        // Calculate the amount of space for margins
+        nscoord availMarginSpace = containingBlockHeight - computedOffsets.top -
+          mComputedBorderPadding.top - computedHeight - mComputedBorderPadding.bottom -
+          computedOffsets.bottom;
+
+        if (marginTopIsAuto) {
+          if (marginBottomIsAuto) {
+            // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+            // equal values
+            computedMargin.top = availMarginSpace / 2;
             computedMargin.bottom = availMarginSpace - computedMargin.top;
+          } else {
+            // Just 'margin-top' is 'auto'
+            computedMargin.top = availMarginSpace - computedMargin.bottom;
           }
+        } else {
+          // Just 'margin-bottom' is 'auto'
+          computedMargin.bottom = availMarginSpace - computedMargin.top;
         }
       }
     }
