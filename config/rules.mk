@@ -337,7 +337,7 @@ endif # HP-UX
 
 ################################################################################
 
-all:: export libs install
+all:: export install
 
 # Do depend as well
 alldep:: export depend libs install
@@ -657,7 +657,11 @@ ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
+ifeq ($(TARGET_MD_ARCH), win32)
+	$(MKSHLIB) $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
+else
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
+endif # TARGET_MD_ARCH
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
 endif
