@@ -980,19 +980,18 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     dropFolder = [mRootBookmarks objectAtIndex:row];
     dropLocation = [dropFolder count];
   }
-  return [self doDrop:info intoFolder:dropFolder index:dropLocation];
-}
-
-- (BOOL)tableView:(NSTableView *)aTableView shouldSelectRow:(int)rowIndex
-{
-  if (aTableView == mContainerPane) 
-    [self selectContainer:rowIndex];
-  return YES;
+  BOOL result = [self doDrop:info intoFolder:dropFolder index:dropLocation];
+  [self selectContainer:[mContainerPane selectedRow]];
+  return result;
 }
 
 -(void)tableViewSelectionDidChange:(NSNotification *)note
 {
-  if ([note object] == mSearchPane) {
+  NSTableView *aView = [note object];
+  if (aView == mContainerPane) {
+    [self selectContainer:[aView selectedRow]];
+  }
+  else if (aView == mSearchPane) {
     BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
     int index = [mSearchPane selectedRow];
     if (index != -1)
