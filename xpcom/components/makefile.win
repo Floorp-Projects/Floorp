@@ -36,6 +36,7 @@ EXPORTS =                     \
 
 XPIDLSRCS =               \
         .\nsIComponentLoader.idl \
+	.\nsIFactory.idl	\
         .\nsIModule.idl	  \
         $(NULL)
 
