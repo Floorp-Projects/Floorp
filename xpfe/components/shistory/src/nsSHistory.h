@@ -30,6 +30,7 @@
 #include "nsISHistory.h"
 #include "nsISHTransaction.h"
 #include "nsIWebNavigation.h"
+#include "nsIWeakReference.h"
 
 class nsIDocShell;
 
@@ -54,12 +55,14 @@ protected:
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
    PRBool CompareSHEntry(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell,
 	                     nsIDocShell ** aResultDocShell, nsISHEntry ** aResultSHEntry);
-   NS_IMETHOD LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType);
+   NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType);
 	
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
   PRInt32 mIndex;
   PRInt32 mLength;
+  // Session History listener
+  nsWeakPtr mListener;
   // Weak reference. Do not refcount this.
   nsIDocShell *  mRootDocShell;
 };

@@ -25,8 +25,8 @@
 #include "nsISHEntry.idl"
 #include "nsISHTransaction.idl"
 #include "nsIDocShell.idl"
+#include "nsISHistoryListener.idl"
 
-//interface nsIDocShell;
 
 %{C++
 #define NS_SHISTORY_CID \
@@ -40,10 +40,10 @@ interface nsISHistory: nsISupports
 {
   /**
    * Add a new Entry to the History List
-	* @param aEntry - The entry to add
-	* @param aPersist - If true this specifies that the entry should persist
-	* in the list.  If false, this means that when new entries are added
-	* this element will not appear in the session history list.
+	 * @param aEntry - The entry to add
+	 * @param aPersist - If true this specifies that the entry should persist
+	 * in the list.  If false, this means that when new entries are added
+	 * this element will not appear in the session history list.
    */
    void  addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
@@ -91,5 +91,15 @@ interface nsISHistory: nsISupports
    * Purge the oldest numEntries from history list
    */
    void PurgeHistory(in long numEntries);
+
+  /**
+   * Register a Session History Listener to be notified on SHistory events
+   */
+   void addSHistoryListener(in nsISHistoryListener aListener);
+
+  /**
+   * Remove a previously registered Session History Listener 
+   */
+   void removeSHistoryListener(in nsISHistoryListener aListener);
 
 };
