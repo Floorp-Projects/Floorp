@@ -464,7 +464,7 @@ nsAccessible::~nsAccessible()
 }
 
 
-NS_IMETHODIMP nsAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) 
@@ -575,7 +575,7 @@ NS_IMETHODIMP nsAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
   return NS_OK;  
 }
 
-nsresult nsAccessible::GetTranslatedString(const nsAReadableString& aKey, nsAWritableString& aStringOut)
+nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
 {
   static nsCOMPtr<nsIStringBundle> stringBundle;
   static PRBool firstTime = PR_TRUE;
@@ -1140,7 +1140,7 @@ NS_IMETHODIMP nsAccessible::AccTakeFocus()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent)
+NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent)
 {
   // Insert spaces to insure that words from controls aren't jammed together
   if (!textEquivalent.IsEmpty()) {
@@ -1160,7 +1160,7 @@ NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAWritableString *aFlatStrin
  * that node's decendants.
  */
 
-NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString)
+NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
 {
   nsAutoString textEquivalent;
   nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aContent));
@@ -1241,7 +1241,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
 }
 
 
-NS_IMETHODIMP nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString)
+NS_IMETHODIMP nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
 {
   // Depth first search for all text nodes that are decendants of content node.
   // Append all the text into one flat string
@@ -1268,7 +1268,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, ns
   * Checks the label's value first then makes a call to get the 
   *  text from the children if the value is not set.
   */
-NS_IMETHODIMP nsAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval)
+NS_IMETHODIMP nsAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval)
 {
   NS_ASSERTION(aLabelNode, "Label Node passed in is null");
   nsCOMPtr<nsIDOMXULLabelElement> labelNode(do_QueryInterface(aLabelNode));
@@ -1288,7 +1288,7 @@ NS_IMETHODIMP nsAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableS
 /**
   * Called for HTML work only
   */
-NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel)
+NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel)
 {
   PRInt32 numChildren = 0;
 
@@ -1322,7 +1322,7 @@ NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, nsAReadableStr
   *   the DOM tree to the form, concatonating label elements as it goes. Then checks for
   *   labels with the for="controlID" property.
   */
-NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIDOMHTMLLabelElement> labelElement;
@@ -1377,7 +1377,7 @@ NS_IMETHODIMP nsAccessible::GetHTMLAccName(nsAWritableString& _retval)
   *  the child label for its Name.
   */
 /* wstring getAccName (); */
-NS_IMETHODIMP nsAccessible::GetXULAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsAccessible::GetXULAccName(nsAString& _retval)
 {
   nsresult rv;
   nsAutoString label;

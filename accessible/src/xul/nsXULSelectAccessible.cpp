@@ -191,7 +191,7 @@ NS_IMETHODIMP nsXULListboxAccessible::GetAccState(PRUint32 *_retval)
   * Our value is the value of our ( first ) selected child. nsIDOMXULSelectElement
   *     returns this by default with GetValue().
   */
-NS_IMETHODIMP nsXULListboxAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULListboxAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mDOMNode));
   if (select) {
@@ -272,7 +272,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsXULMenuitemAccessible)
   * If there is a Listcell as a child ( not anonymous ) use it, otherwise
   *   default to getting the name from GetXULAccName
   */
-NS_IMETHODIMP nsXULListitemAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULListitemAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMNode> child;
   if (NS_SUCCEEDED(mDOMNode->GetFirstChild(getter_AddRefs(child)))) {
@@ -346,7 +346,7 @@ nsComboboxAccessible(aDOMNode, aShell)
   * Our value is the value of our ( first ) selected child. nsIDOMXULSelectElement
   *     returns this by default with GetValue().
   */
-NS_IMETHODIMP nsXULComboboxAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULComboboxAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mDOMNode));
   if (select) {

@@ -113,7 +113,7 @@ nsLeafAccessible(aDOMNode, aShell)
 }
 
 /** click us! */
-NS_IMETHODIMP nsSelectOptionAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsSelectOptionAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 
@@ -140,7 +140,7 @@ NS_IMETHODIMP nsSelectOptionAccessible::GetAccParent(nsIAccessible **_retval)
 /**
   * Get our Name from our Content's subtree
   */
-NS_IMETHODIMP nsSelectOptionAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsSelectOptionAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIContent> content (do_QueryInterface(mDOMNode));
   if (!content) {
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsSelectOptionAccessible::GetAccName(nsAWritableString& _retval)
   nsAutoString option;
   nsresult rv = AppendFlatStringFromSubtree(content, &option);
   if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAWritableString
+    // Temp var needed until CompressWhitespace built for nsAString
     option.CompressWhitespace();
     _retval.Assign(option);
   }
@@ -362,7 +362,7 @@ nsLeafAccessible(aDOMNode, aShell)
   *     and then return that text.
   *     Walks the Frame tree and checks for proper frames.
   */
-NS_IMETHODIMP nsComboboxTextFieldAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsComboboxTextFieldAccessible::GetAccValue(nsAString& _retval)
 {
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
   nsCOMPtr<nsIPresContext> context;
@@ -524,7 +524,7 @@ NS_IMETHODIMP nsComboboxButtonAccessible::GetAccParent(nsIAccessible **_retval)
 /** 
   * Gets the name from GetAccActionName()
   */
-NS_IMETHODIMP nsComboboxButtonAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsComboboxButtonAccessible::GetAccName(nsAString& _retval)
 {
   return GetAccActionName(eAction_Click, _retval);
 }
@@ -535,7 +535,7 @@ NS_IMETHODIMP nsComboboxButtonAccessible::GetAccName(nsAWritableString& _retval)
   *     if we are open -> closed is our name.
   * Uses the frame to get the state, updated on every click
   */
-NS_IMETHODIMP nsComboboxButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsComboboxButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();

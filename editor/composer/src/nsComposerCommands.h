@@ -64,16 +64,16 @@ public:
   NS_DECL_ISUPPORTS
     
   // nsIControllerCommand. Declared longhand so we can make them pure virtual
-  NS_IMETHOD IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
-  NS_IMETHOD DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon) = 0;
+  NS_IMETHOD IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
+  NS_IMETHOD DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon) = 0;
 
 protected:
 
   // utility methods to get/set the "state" attribute on the command node in the XUL
-  nsresult    GetInterfaceNode(const nsAReadableString & nodeID, nsIEditorShell* editorShell, nsIDOMElement **outNode);
+  nsresult    GetInterfaceNode(const nsAString & nodeID, nsIEditorShell* editorShell, nsIDOMElement **outNode);
   
-  nsresult    GetCommandNodeState(const nsAReadableString & aCommandName, nsIEditorShell* editorShell, nsString& outNodeState);
-  nsresult    SetCommandNodeState(const nsAReadableString & aCommandName, nsIEditorShell* editorShell, const nsString& inNodeState);
+  nsresult    GetCommandNodeState(const nsAString & aCommandName, nsIEditorShell* editorShell, nsString& outNodeState);
+  nsresult    SetCommandNodeState(const nsAString & aCommandName, nsIEditorShell* editorShell, const nsString& inNodeState);
 
   // are we in HTML edit mode (not source view or plain text editing)
   PRBool      EditingHTML(nsIEditorShell* inEditorShell);
@@ -256,7 +256,7 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
-  NS_IMETHOD IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
+  NS_IMETHOD IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 

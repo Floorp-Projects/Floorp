@@ -91,8 +91,8 @@ class nsRootAccessible : public nsAccessible,
     virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
-    NS_IMETHOD GetAccName(nsAWritableString& aAccName);
-    NS_IMETHOD GetAccValue(nsAWritableString& aAccValue);
+    NS_IMETHOD GetAccName(nsAString& aAccName);
+    NS_IMETHOD GetAccValue(nsAString& aAccValue);
     NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
     NS_IMETHOD GetAccState(PRUint32 *aAccState);

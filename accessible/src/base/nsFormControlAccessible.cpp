@@ -102,7 +102,7 @@ NS_IMETHODIMP nsFormControlAccessible::GetAccState(PRUint32 *_retval)
   *  merely checks who is calling and then calls the appropriate
   *  protected method for the XUL or HTML element.
   */
-NS_IMETHODIMP nsFormControlAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsFormControlAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMXULElement> xulFormElement(do_QueryInterface(mDOMNode));
   if (xulFormElement)
@@ -159,7 +159,7 @@ NS_IMETHODIMP nsRadioButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 /**
   *
   */
-NS_IMETHODIMP nsRadioButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsRadioButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("select"), _retval); 

@@ -2412,7 +2412,7 @@ nsEditorShell::GetString(const PRUnichar *stringName, PRUnichar **_retval)
 
 
 // Use this version within the shell:
-void nsEditorShell::GetBundleString(const nsAReadableString &stringName, nsAWritableString &outString)
+void nsEditorShell::GetBundleString(const nsAString &stringName, nsAString &outString)
 {
   outString.Truncate();
   
@@ -4818,7 +4818,7 @@ nsEditorShell::CheckPrefAndNormalizeTable()
 
 
 nsresult
-nsEditorShell::DoControllerCommand(const nsAReadableString& aCommand)
+nsEditorShell::DoControllerCommand(const nsAString& aCommand)
 {
   // Get the list of controllers...
   nsCOMPtr<nsIControllers> controllers;      

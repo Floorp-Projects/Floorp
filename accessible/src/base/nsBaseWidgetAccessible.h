@@ -71,11 +71,11 @@ class nsContainerAccessible : public nsAccessible
 public:
   nsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval); 
 };
 
 /** 
@@ -100,10 +100,10 @@ class nsLinkableAccessible : public nsAccessible
 public:
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
+  NS_IMETHOD GetAccValue(nsAString& _retval);
 
 protected:
   PRBool IsALink();

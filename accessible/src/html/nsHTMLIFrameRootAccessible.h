@@ -60,8 +60,8 @@ class nsHTMLIFrameAccessible : public nsBlockAccessible,
     NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
     NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
     NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-    NS_IMETHOD GetAccName(nsAWritableString& aAccName);
-    NS_IMETHOD GetAccValue(nsAWritableString& AccValue);
+    NS_IMETHOD GetAccName(nsAString& aAccName);
+    NS_IMETHOD GetAccValue(nsAString& AccValue);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
     NS_IMETHOD GetAccState(PRUint32 *aAccState);
 

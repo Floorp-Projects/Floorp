@@ -127,7 +127,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
+  NS_IMETHOD GetAccValue(nsAString& _retval);
 
 };
 
@@ -148,7 +148,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
+  NS_IMETHOD GetAccValue(nsAString& _retval);
 
 };
 

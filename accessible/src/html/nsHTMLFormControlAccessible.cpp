@@ -76,7 +76,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {    // 0 is the magic value for default action
     // check or uncheck
@@ -168,7 +168,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccNumActions(PRUint8 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
@@ -209,7 +209,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMHTMLInputElement> button(do_QueryInterface(mDOMNode));
 
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccNumActions(PRUint8 *_retval)
   return NS_OK;;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
@@ -283,7 +283,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAString& _retval)
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -293,7 +293,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAWritableString& _retval)
     rv = AppendFlatStringFromSubtree(content, &name);
 
   if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAWritableString
+    // Temp var needed until CompressWhitespace built for nsAString
     name.CompressWhitespace();
     _retval.Assign(name);
   }
@@ -315,7 +315,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccValue(nsAString& _retval)
 {
   PRUint32 state;
   GetAccState(&state);
@@ -425,7 +425,7 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {

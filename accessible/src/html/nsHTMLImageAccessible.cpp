@@ -110,7 +110,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
 
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLImageAccessible::GetAccName(nsAString& _retval)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -119,7 +119,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccName(nsAWritableString& _retval)
     nsAutoString name;
     rv = AppendFlatStringFromContentNode(imageContent, &name);
     if (NS_SUCCEEDED(rv)) {
-      // Temp var needed until CompressWhitespace built for nsAWritableString
+      // Temp var needed until CompressWhitespace built for nsAString
       name.CompressWhitespace();
       _retval.Assign(name);
     }

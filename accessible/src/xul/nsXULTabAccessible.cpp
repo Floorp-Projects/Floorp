@@ -55,7 +55,7 @@ nsLeafAccessible(aNode, aShell)
 /**
   * Might need to use the GetXULAccName method from nsFormControlAcc.cpp
   */
-NS_IMETHODIMP nsXULTabAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULTabAccessible::GetAccName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
   if (tab)
@@ -71,7 +71,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccNumActions(PRUint8 *_retval)
 }
 
 /** Return the name of our only action  */
-NS_IMETHODIMP nsXULTabAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsXULTabAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("switch"), _retval); 
@@ -188,7 +188,7 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
   *  the panel. XXX not sure if the "panels" object should have the
   *  same name.
   */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccName(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

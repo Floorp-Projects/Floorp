@@ -80,7 +80,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetAccState(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetAccName(nsAWritableString& aResult)
+NS_IMETHODIMP nsHTMLTableAccessible::GetAccName(nsAString& aResult)
 {
   aResult.Assign(NS_LITERAL_STRING(""));  // Default name is blank
 

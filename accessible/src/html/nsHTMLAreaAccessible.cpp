@@ -56,7 +56,7 @@ nsLinkableAccessible(aDomNode, aShell), mAccParent(aAccParent)
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(nsAWritableString & _retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(nsAString & _retval)
 {
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
@@ -74,7 +74,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccRole(PRUint32 *_retval)
 }
 
 /* wstring getAccValue (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetAccValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) 
@@ -83,7 +83,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccValue(nsAWritableString& _retval)
 }
 
 /* wstring getAccDescription (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccDescription(nsAWritableString& _retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetAccDescription(nsAString& _retval)
 {
   // Still to do - follow IE's standard here
   nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mDOMNode));

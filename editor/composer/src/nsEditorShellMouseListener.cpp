@@ -165,7 +165,7 @@ PRBool GetParentCell(nsIDOMEvent* aMouseEvent, nsIDOMElement **aCellElement)
 }
 
 static 
-PRBool ElementIsType(nsIDOMElement *aElement, const nsAReadableString& aTag)
+PRBool ElementIsType(nsIDOMElement *aElement, const nsAString& aTag)
 {
   if (aElement)
   {

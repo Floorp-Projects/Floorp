@@ -94,25 +94,25 @@ NS_IMETHODIMP nsGenericAccessible::GetAccChildCount(PRInt32 *_retval)
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsGenericAccessible::GetAccName(nsAWritableString& _retval)
+NS_IMETHODIMP nsGenericAccessible::GetAccName(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* wstring getAccValue (); */
-NS_IMETHODIMP nsGenericAccessible::GetAccValue(nsAWritableString& _retval)
+NS_IMETHODIMP nsGenericAccessible::GetAccValue(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void setAccName (in wstring name); */
-NS_IMETHODIMP nsGenericAccessible::SetAccName(const nsAReadableString& name)
+NS_IMETHODIMP nsGenericAccessible::SetAccName(const nsAString& name)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* wstring getAccDescription (); */
-NS_IMETHODIMP nsGenericAccessible::GetAccDescription(nsAWritableString& _retval)
+NS_IMETHODIMP nsGenericAccessible::GetAccDescription(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -136,7 +136,7 @@ NS_IMETHODIMP nsGenericAccessible::GetAccNumActions(PRUint8 *_retval)
 }
 
 /* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsGenericAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
+NS_IMETHODIMP nsGenericAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -154,7 +154,7 @@ NS_IMETHODIMP nsGenericAccessible::GetAccFocused(nsIAccessible **_retval)
 }
 
 /* wstring getAccHelp (); */
-NS_IMETHODIMP nsGenericAccessible::GetAccHelp(nsAWritableString& _retval)
+NS_IMETHODIMP nsGenericAccessible::GetAccHelp(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

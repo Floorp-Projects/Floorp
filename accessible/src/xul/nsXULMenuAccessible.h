@@ -49,7 +49,7 @@ class nsXULMenuitemAccessible : public nsAccessible
 {
 public:
   nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccFirstChild(nsIAccessible **aAccFirstChild);
@@ -61,7 +61,7 @@ class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
 {
 public:
   nsXULMenuSeparatorAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };
@@ -70,7 +70,7 @@ class nsXULMenupopupAccessible : public nsAccessible
 {
 public:
   nsXULMenupopupAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };
@@ -79,7 +79,7 @@ class nsXULMenubarAccessible : public nsAccessible
 {
 public:
   nsXULMenubarAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };

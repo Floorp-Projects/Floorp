@@ -151,7 +151,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsresult        RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     nsresult        DoFind(PRBool aFindNext);
     // To allow executing JavaScript commands from C++ via nsIEditorController interface
-    nsresult        DoControllerCommand(const nsAReadableString& aCommand);
+    nsresult        DoControllerCommand(const nsAString& aCommand);
 
     void            Alert(const nsString& aTitle, const nsString& aMsg);
     // Bring up a Yes/No dialog WE REALLY NEED A Yes/No/Cancel dialog and would like to set our own caption as well!
@@ -164,7 +164,7 @@ class nsEditorShell :   public nsIEditorShell,
 
     // Get a string from the string bundle file. If the string is not found
     // this returns an empty string.
-    void            GetBundleString(const nsAReadableString &stringName, nsAWritableString &outString);
+    void            GetBundleString(const nsAString &stringName, nsAString &outString);
     
     // Get the text of the <title> tag
     nsresult        GetDocumentTitleString(nsString& title);

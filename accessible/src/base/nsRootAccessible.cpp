@@ -136,7 +136,7 @@ nsRootAccessible::~nsRootAccessible()
 }
 
   /* attribute wstring accName; */
-NS_IMETHODIMP nsRootAccessible::GetAccName(nsAWritableString& aAccName) 
+NS_IMETHODIMP nsRootAccessible::GetAccName(nsAString& aAccName) 
 { 
   return GetTitle(aAccName);
 }
@@ -226,7 +226,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccState(PRUint32 *aAccState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAWritableString& aAccValue)
+NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAString& aAccValue)
 {
   return GetURL(aAccValue);
 }
@@ -502,27 +502,27 @@ NS_IMETHODIMP nsRootAccessible::CommandUpdate(nsIDOMEvent* aEvent) { return NS_O
 
 // ------- nsIAccessibleDocument Methods (5) ---------------
 
-NS_IMETHODIMP nsRootAccessible::GetURL(nsAWritableString& aURL)
+NS_IMETHODIMP nsRootAccessible::GetURL(nsAString& aURL)
 {
   return nsDocAccessibleMixin::GetURL(aURL);
 }
 
-NS_IMETHODIMP nsRootAccessible::GetTitle(nsAWritableString& aTitle)
+NS_IMETHODIMP nsRootAccessible::GetTitle(nsAString& aTitle)
 {
   return nsDocAccessibleMixin::GetTitle(aTitle);
 }
 
-NS_IMETHODIMP nsRootAccessible::GetMimeType(nsAWritableString& aMimeType)
+NS_IMETHODIMP nsRootAccessible::GetMimeType(nsAString& aMimeType)
 {
   return nsDocAccessibleMixin::GetMimeType(aMimeType);
 }
 
-NS_IMETHODIMP nsRootAccessible::GetDocType(nsAWritableString& aDocType)
+NS_IMETHODIMP nsRootAccessible::GetDocType(nsAString& aDocType)
 {
   return nsDocAccessibleMixin::GetDocType(aDocType);
 }
 
-NS_IMETHODIMP nsRootAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAWritableString& aNameSpaceURI)
+NS_IMETHODIMP nsRootAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAString& aNameSpaceURI)
 {
   return nsDocAccessibleMixin::GetNameSpaceURIForID(aNameSpaceID, aNameSpaceURI);
 }
@@ -589,7 +589,7 @@ nsDocAccessibleMixin::~nsDocAccessibleMixin()
 {
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAWritableString& aURL)
+NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAString& aURL)
 { 
   nsCOMPtr<nsIPresShell> presShell;
   mDocument->GetShellAt(0, getter_AddRefs(presShell));
@@ -612,14 +612,14 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAWritableString& aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAWritableString& aTitle)
+NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAString& aTitle)
 {
   // This doesn't leak - we don't own the const pointer that's returned
   aTitle = *(mDocument->GetDocumentTitle());
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAWritableString& aMimeType)
+NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAString& aMimeType)
 {
   nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(mDocument));
   if (domnsDocument) {
@@ -628,7 +628,7 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAWritableString& aMimeType)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAWritableString& aDocType)
+NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAString& aDocType)
 {
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
@@ -645,7 +645,7 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAWritableString& aDocType)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocAccessibleMixin::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAWritableString& aNameSpaceURI)
+NS_IMETHODIMP nsDocAccessibleMixin::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAString& aNameSpaceURI)
 {
   if (mDocument) {
     nsCOMPtr<nsINameSpaceManager> nameSpaceManager;
