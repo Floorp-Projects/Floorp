@@ -293,6 +293,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 
 NS_IMETHODIMP
 nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
+                                      nsILoadGroup *aGroup,
                                       nsIEventSinkGetter* eventSinkGetter,
                                       nsIChannel* *result)
 {
@@ -316,7 +317,8 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         return NS_ERROR_OUT_OF_MEMORY;
     
     nsIChannel* channel;
-    rv = serv->NewChannel(verb, filePath, uri, eventSinkGetter, &channel);
+    rv = serv->NewChannel(verb, filePath, uri, aGroup, eventSinkGetter, 
+                          &channel);
     nsCRT::free(filePath);
     if (NS_FAILED(rv)) return rv;
 

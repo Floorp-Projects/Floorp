@@ -153,7 +153,16 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         }
     }
 
-    if (NS_SUCCEEDED(rv) && mConsumer) {
+    //
+    // Abort the connection if the consumer has been released.  This will 
+    // happen if a redirect has been processed...
+    //
+    if (!mConsumer) {
+        // XXX: What should the return code be?
+        rv = NS_BINDING_ABORTED;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
         if (i_Length) {
             PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
                    ("\tOnDataAvailable [this=%x]. Calling consumer "
@@ -223,7 +232,7 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     // Notify the HTTPChannel that the response has completed...
     NS_ASSERTION(mConnection, "HTTPChannel is null.");
     if (mConnection) {
-        mConnection->ResponseCompleted(channel);
+        mConnection->ResponseCompleted(channel, i_Status);
     }
 
     // The Consumer is no longer needed...
@@ -467,6 +476,10 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
         return NS_OK;
       }
 
+      // This line is either LF or CRLF so the header is complete...
+      if (mHeaderBuffer.Length() <= 2) {
+        break;
+      }
       // Not LWS - The header is complete...
       if ((*buf != ' ') && (*buf != '\t')) {
         break;
@@ -563,6 +576,10 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
   PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
          ("nsHTTPResponseListener::FinishedResponseHeaders [this=%x].\n",
           this));
+
+  // Notify the consumer that headers are available...
+  FireOnHeadersAvailable();
+
   //
   // Check the status code to see if any special processing is necessary.
   //
@@ -577,9 +594,6 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
   if (NS_SUCCEEDED(rv) && mConsumer) {
     rv = mConsumer->OnStartRequest(mConnection, mResponseContext);
     if (NS_FAILED(rv)) return rv;
-
-    // Notify the consumer that headers are available...
-    FireOnHeadersAvailable();
   } 
 
   return rv;
@@ -730,21 +744,19 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
       // Expanded inline to avoid linking with neckoutils....  (temporary)
         rv = NS_OpenURI(mConsumer, mResponseContext, newURL);
 #else
-        nsIChannel* channel;
-        rv = serv->NewChannelFromURI("load", newURL, nsnull, &channel);
+        nsCOMPtr<nsIChannel> channel;
+        nsCOMPtr<nsILoadGroup> group;
+
+        (void) mConnection->GetLoadGroup(getter_AddRefs(group));
+        rv = serv->NewChannelFromURI("load", newURL, group, nsnull, 
+                                     getter_AddRefs(channel));
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsILoadGroup> group;
-            rv = mConnection->GetLoadGroup(getter_AddRefs(group));
-            if (group) {
-                // Add the new channel first. That way we don't run the risk
-                // of emptying the group and firing off the OnEndDocumentLoad
-                // notification.
-                (void)group->AddChannel(channel, mResponseContext);
-                (void)group->RemoveChannel(mConnection, mResponseContext,
-                                           aStatusCode, nsnull);        // XXX error message
-            }
+            PRUint32 loadAttributes;
+
+            // Copy the load attributes into the new channel...
+            mConnection->GetLoadAttributes(&loadAttributes);
+            channel->SetLoadAttributes(loadAttributes);
             rv = channel->AsyncRead(0, -1, mResponseContext, mConsumer);
-            NS_RELEASE(channel);
         }
 #endif
         if (NS_SUCCEEDED(rv)) {

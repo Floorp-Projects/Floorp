@@ -44,6 +44,8 @@ public:
 
   virtual time_t GetExpires()=0;
 
+  virtual PRBool GetBackgroundLoad()=0;
+
   virtual void SetBackgroundLoad(PRBool aBgload)=0;
 
   virtual int GetOwnerId()=0;

@@ -78,7 +78,7 @@ nsFileChannel::nsFileChannel()
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
       mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
       mLoadAttributes(LOAD_NORMAL),
-	  mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull)
+	  mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull), mRealListener(nsnull)
 {
     NS_INIT_REFCNT();
 #if defined(PR_LOGGING)
@@ -94,7 +94,8 @@ nsFileChannel::nsFileChannel()
 
 nsresult
 nsFileChannel::Init(nsFileProtocolHandler* handler,
-                    const char* verb, nsIURI* uri, nsIEventSinkGetter* getter)
+                    const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
+                    nsIEventSinkGetter* getter)
 {
     nsresult rv;
 
@@ -115,6 +116,12 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 
     mURI = uri;
     NS_ADDREF(mURI);
+
+    mLoadGroup = aGroup;
+    NS_IF_ADDREF(mLoadGroup);
+    if (mLoadGroup) {
+      mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
+    }
 
     // if we support the nsIURL interface then use it to get just
 	// the file path with no other garbage!
@@ -376,6 +383,10 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 #ifdef STREAM_CONVERTER_HACK
 	nsXPIDLCString aContentType;
+
+
+    mRealListener = listener;
+
 	rv = GetContentType(getter_Copies(aContentType));
 	if (NS_SUCCEEDED(rv) && PL_strcasecmp("message/rfc822", aContentType) == 0)
 	{
@@ -401,7 +412,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 		// (1) and (2)
 		nsCOMPtr<nsIStreamListener> proxiedConsumerListener;
-		rv = serv->NewAsyncStreamListener(listener, mEventQueue, getter_AddRefs(proxiedConsumerListener));
+		rv = serv->NewAsyncStreamListener(this, mEventQueue, getter_AddRefs(proxiedConsumerListener));
 		if (NS_FAILED(rv)) return rv;
 
 		// (3) set the stream converter as the listener on the channel
@@ -413,9 +424,9 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 		mStreamConverter->GetContentType(getter_Copies(mStreamConverterOutType));
 	}
 	else
-		rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
+		rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
 #else   
-	rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
+	rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
 #endif
     if (NS_FAILED(rv)) return rv;
 
@@ -443,6 +454,25 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 	}
 	else
 		mAmount = 0; // don't worry we'll ignore this parameter from here on out because mReadFixedAmount is false
+
+    if (mLoadGroup) {
+        nsCOMPtr<nsILoadGroupListenerFactory> factory;
+        //
+        // Create a load group "proxy" listener...
+        //
+        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+        if (factory) {
+          nsIStreamListener *newListener;
+          rv = factory->CreateLoadGroupListener(mRealListener, &newListener);
+          if (NS_SUCCEEDED(rv)) {
+            mRealListener = newListener;
+            NS_RELEASE(newListener);
+          }
+        }
+
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
            ("nsFileTransport: AsyncRead [this=%x %s]", 
@@ -527,14 +557,6 @@ nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFileChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-    NS_IF_RELEASE(mLoadGroup);
-    mLoadGroup = aLoadGroup;
-    NS_IF_ADDREF(mLoadGroup);
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable methods:
@@ -750,6 +772,45 @@ NS_IMETHODIMP
 nsFileChannel::OnEmpty(nsIBuffer* buffer)
 {
     return Resume();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
+                               nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
+                               PRUint32 aLength)
+{
+    return mRealListener->OnDataAvailable(channel, context, aIStream, 
+                                          aSourceOffset, aLength);
+}
+
+NS_IMETHODIMP
+nsFileChannel::OnStartRequest(nsIChannel* channel, nsISupports* context)
+{
+    NS_ASSERTION(mRealListener, "No listener...");
+    return mRealListener->OnStartRequest(channel, context);
+}
+
+NS_IMETHODIMP
+nsFileChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                             nsresult aStatus,
+                             const PRUnichar* aMsg)
+{
+    nsresult rv;
+
+    rv = mRealListener->OnStopRequest(channel, context, aStatus, aMsg);
+ 
+    if (mLoadGroup) {
+        mLoadGroup->RemoveChannel(channel, context, aStatus, aMsg);
+    }
+
+    // Release the reference to the consumer stream listener...
+    mRealListener = null_nsCOMPtr();
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1048,6 +1109,7 @@ nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **
     rv = serv->NewChannel("load",    // XXX what should this be?
                           urlStr, 
                           nsnull,
+                          mLoadGroup,
                           mGetter, 
                           &channel);
 

@@ -67,12 +67,14 @@ public:
     NS_DECL_NSIHTTPCHANNEL
 
     // nsHTTPChannel methods:
-    nsresult            Init();
+    nsresult            Init(nsILoadGroup *aGroup);
     nsresult            Open();
-    nsresult            ResponseCompleted(nsIChannel* aTransport);
+    nsresult            ResponseCompleted(nsIChannel* aTransport, 
+                                          nsresult aStatus);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
     nsresult            SetContentType(const char* aContentType);
+
 
 protected:
     nsCOMPtr<nsIURI>            mURI;
@@ -86,7 +88,7 @@ protected:
     PRUint32                    mLoadAttributes;
 
     nsCOMPtr<nsISupports>       mResponseContext;
-    nsILoadGroup*               mLoadGroup;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
 
     nsCString                   mContentType;
     nsIInputStream*             mPostStream;

@@ -140,8 +140,8 @@ main(int argc, char* argv[])
   if (NS_FAILED(ret)) return ret;
 
   nsIChannel *channel = nsnull;
-  // XXX NECKO verb? getter?
-  ret = service->NewChannel("load", TEST_URL, nsnull, nsnull, &channel);
+  // XXX NECKO verb? loadgroup? getter?
+  ret = service->NewChannel("load", TEST_URL, nsnull, nsnull, nsnull, &channel);
   if (NS_FAILED(ret)) return ret;
 
   nsIEventQueue *eventQ = nsnull;

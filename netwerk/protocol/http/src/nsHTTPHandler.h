@@ -82,6 +82,7 @@ public:
                                           char **_retval);
 
     NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
+                                        nsILoadGroup *aGroup,
                                         nsIEventSinkGetter *eventSinkGetter,
                                         nsIChannel **_retval);
     

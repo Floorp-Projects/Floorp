@@ -21,6 +21,7 @@
 interface nsIURI;
 interface nsIEventSinkGetter;
 interface nsIChannel;
+interface nsILoadGroup;
 
 [scriptable, uuid(8984a6f0-1893-11d3-9337-00104ba0fd40)]
 interface nsIProtocolHandler : nsISupports
@@ -41,6 +42,7 @@ interface nsIProtocolHandler : nsISupports
 
     nsIChannel NewChannel(in string verb,
                           in nsIURI aURI,
+						  in nsILoadGroup aLoadGroup,
                           in nsIEventSinkGetter eventSinkGetter);
 };
 

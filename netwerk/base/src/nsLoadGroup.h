@@ -22,6 +22,7 @@
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsAgg.h"
+#include "nsCOMPtr.h"
 
 class nsISupportsArray;
 class nsLoadGroupEntry;
@@ -38,7 +39,6 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsILoadGroup methods:
     NS_DECL_NSILOADGROUP
-
     ////////////////////////////////////////////////////////////////////////////
     // nsLoadGroup methods:
 
@@ -54,6 +54,8 @@ protected:
     typedef nsresult (*PropagateDownFun)(nsIRequest* request);
     nsresult PropagateDown(PropagateDownFun fun);
 
+    nsresult SubGroupIsEmpty(nsresult aStatus);
+
 protected:
     PRUint32                    mDefaultLoadAttributes;
     nsISupportsArray*           mChannels;
@@ -61,6 +63,11 @@ protected:
     nsIStreamObserver*          mObserver;
     nsLoadGroup*                mParent;        // weak ref
     PRUint32                    mForegroundCount;
+    PRBool                      mIsActive;
+
+    nsCOMPtr<nsIChannel>        mDefaultLoadChannel;
+
+    nsCOMPtr<nsILoadGroupListenerFactory> mGroupListenerFactory;
 };
 
 #endif // nsLoadGroup_h__

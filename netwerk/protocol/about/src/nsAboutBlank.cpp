@@ -30,6 +30,7 @@ static const char kBlankPage[] = "<html><body></body></html>";
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(const char *verb,
                          nsIURI *aURI,
+                         nsILoadGroup *aGroup,
                          nsIEventSinkGetter *eventSinkGetter,
                          nsIChannel **result)
 {

@@ -20,6 +20,7 @@
 
 interface nsIChannel;
 interface nsIURI;
+interface nsILoadGroup;
 interface nsIEventSinkGetter;
 interface nsIEventQueue;
 
@@ -28,6 +29,7 @@ interface nsIAboutModule : nsISupports
 {
     nsIChannel NewChannel(in string verb,
                           in nsIURI aURI,
+						  in nsILoadGroup aGroup,
                           in nsIEventSinkGetter eventSinkGetter);
 };
 

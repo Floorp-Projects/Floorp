@@ -19,9 +19,7 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_DOM
-
-MODULE=raptor 
-REQUIRES=xpcom raptor dom caps oji
+INCLUDES=-I..\base
 
 CPPSRCS = nsDOMFactory.cpp      	\
 	  nsHTMLTagsEnums.cpp		\
@@ -33,22 +31,13 @@ CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
 	   .\$(OBJDIR)\nsScriptNameSetRegistry.obj 	\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base 
-
-!ifdef NECKO
-LINCS = $(LINCS) -I..\jsurl 
-!else
-LINCS = $(LINCS) -I$(PUBLIC)\jsurl 
-!endif
-
 MAKE_OBJ_TYPE = DLL
 DLLNAME = jsdom
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-LCFLAGS = \
-        $(LCFLAGS) \
+DLL_CFLAGS = \
         $(DEFINES) \
+        $(INCLUDES) \
         $(NULL)
 
 # These are the libraries we need to link with to create the dll
@@ -59,7 +48,6 @@ LLIBS=							\
 	$(DIST)\lib\jsdomrange_s.lib			\
 	$(DIST)\lib\jsdomhtml_s.lib			\
 	$(DIST)\lib\jsdomcss_s.lib			\
-	$(DIST)\lib\jsurl.lib				\
 	$(DIST)\lib\raptorgfxwin.lib			\
 !ifdef NECKO
 	$(DIST)\lib\neckoutil_s.lib			\
@@ -68,8 +56,8 @@ LLIBS=							\
 !endif
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\
-	$(DIST)\lib\plds3.lib			\
-	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\plds3.lib				\
+	$(DIST)\lib\plc3.lib				\
 	$(DIST)\lib\caps.lib				\
 	$(DIST)\lib\oji.lib				\
 	$(DIST)\lib\timer_s.lib				\

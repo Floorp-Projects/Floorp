@@ -849,7 +849,8 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 	if (NS_FAILED(rv)) return rv;
 
 #ifdef NECKO
-	rv = NS_OpenURI(listener, nsnull, url);
+    // XXX: Should there be a LoadGroup?
+	rv = NS_OpenURI(listener, nsnull, url, nsnull);
 #else
 	rv = NS_OpenURL(url, listener);
 #endif

@@ -44,5 +44,4 @@ void XXXDomNeverCalled()
   NS_NewScriptHTMLFormElement(0, 0, 0, 0);
   NS_NewScriptHTMLInputElement(0, 0, 0, 0);
   NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
-  NET_InitJavaScriptProtocol();
 }

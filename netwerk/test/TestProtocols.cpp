@@ -449,7 +449,7 @@ nsresult StartLoadingURL(const char* aUrlString)
         }
 
         // Async reading thru the calls of the event sink interface
-        rv = pService->NewChannelFromURI("load", pURL, pMySink, 
+        rv = pService->NewChannelFromURI("load", pURL, nsnull, pMySink, 
                                          getter_AddRefs(pChannel));
         if (NS_FAILED(rv)) {
             printf("ERROR: NewChannelFromURI failed for %s\n", aUrlString);

@@ -600,13 +600,14 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     else {
 #ifdef NECKO
       nsCOMPtr<nsIChannel> channel;
-      nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl);
+      nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl, mLoadGroup);
+
       if (NS_SUCCEEDED(rv)) {
-        if (mLoadGroup)
-          rv = mLoadGroup->AddChannel(channel, nsnull);
-        if (NS_SUCCEEDED(rv)) {
-          rv = channel->AsyncRead(0, -1, nsnull, ic);
+        PRBool bIsBackground = aURL->GetBackgroundLoad();
+        if (bIsBackground) {
+          channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
         }
+        rv = channel->AsyncRead(0, -1, nsnull, ic);
       }
 #else
       nsresult rv = NS_OpenURL(nsurl, ic);
@@ -640,9 +641,9 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
     }
   }
 #ifdef NECKO
-  if (mLoadGroup)
-    return mLoadGroup->RemoveChannel(channel, ctxt, status, aMsg);
-  else
+///  if (mLoadGroup)
+///    return mLoadGroup->RemoveChannel(channel, ctxt, status, aMsg);
+///  else
     return NS_OK;
 #endif
 }

@@ -196,13 +196,4 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsInputStreamChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-    NS_IF_RELEASE(mLoadGroup);
-    mLoadGroup = aLoadGroup;
-    NS_IF_ADDREF(mLoadGroup);
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////

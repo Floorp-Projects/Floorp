@@ -99,7 +99,8 @@ nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
 }
 
 nsresult
-nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter)
+nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
+                   nsIEventSinkGetter* getter)
 {
     nsresult rv;
 
@@ -108,6 +109,9 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter)
 
     mUrl = uri;
     NS_ADDREF(mUrl);
+
+    mLoadGroup = aGroup;
+    NS_IF_ADDREF(mLoadGroup);
 
     if (getter) {
         nsIProgressEventSink* eventSink;
@@ -375,15 +379,6 @@ nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
     NS_IF_ADDREF(*aLoadGroup);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-    NS_IF_RELEASE(mLoadGroup);
-    mLoadGroup = aLoadGroup;
-    NS_IF_ADDREF(mLoadGroup);
     return NS_OK;
 }
 
