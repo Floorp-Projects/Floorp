@@ -22,7 +22,7 @@
 
 static NS_DEFINE_CID(kSampleCID,           NS_SAMPLE_CID);
 
-// Module implementation for the sample library
+// Module implementation
 class nsSampleModule : public nsIModule
 {
 public:
@@ -149,7 +149,7 @@ nsSampleModule::GetClassObject(nsIComponentManager *aCompMgr,
         fact = mFactory;
     }
     else {
-		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef DEBUG
         char* cs = aClass.ToString();
         printf("+++ nsSampleModule: unable to create factory for %s\n", cs);
@@ -181,9 +181,9 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsSampleModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec* aPath,
-                          const char* registryLocation,
-                          const char* componentType)
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
 {
     nsresult rv = NS_OK;
 
@@ -212,8 +212,8 @@ nsSampleModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsSampleModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFileSpec* aPath,
-                            const char* registryLocation)
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
 {
 #ifdef DEBUG
     printf("*** Unregistering sample components\n");
@@ -257,14 +257,14 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     NS_ASSERTION(return_cobj, "Null argument");
     NS_ASSERTION(gModule == NULL, "nsSampleModule: Module already created.");
 
-    // Create an initialize the layout module instance
+    // Create and initialize the module instance
     nsSampleModule *m = new nsSampleModule();
     if (!m) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
     // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
     if (NS_FAILED(rv)) {
         delete m;
         m = nsnull;

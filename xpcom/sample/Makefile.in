@@ -28,9 +28,9 @@ IS_COMPONENT	= 1
 
 REQUIRES	= sample raptor xpcom
 
-CPPSRCS		= \
-		nsSample.cpp \
-		nsSampleFactory.cpp \
+CPPSRCS		=		   \
+		nsSample.cpp	   \
+		nsSampleModule.cpp \
 		$(NULL)
 
 XPIDLSRCS	= nsISample.idl
