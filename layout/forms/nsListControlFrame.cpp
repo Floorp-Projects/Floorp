@@ -345,6 +345,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsListControlFrame", aReflowState.reason);
   REFLOW_COUNTER_REQUEST();
 
   aStatus = NS_FRAME_COMPLETE;
@@ -406,6 +407,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (!mOverrideReflowOpt && bailOnWidth && bailOnHeight) {
     REFLOW_DEBUG_MSG3("*** Done nsLCF - Bailing on DW: %d  DH: %d ", PX(aDesiredSize.width), PX(aDesiredSize.height));
     REFLOW_DEBUG_MSG3("bailOnWidth %d  bailOnHeight %d\n", PX(bailOnWidth), PX(bailOnHeight));
+    NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+    NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
     return NS_OK;
   } else if (mOverrideReflowOpt) {
     mOverrideReflowOpt = PR_FALSE;
@@ -540,6 +543,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
                                            aReflowState, 
                                            aStatus);
       if (NS_FAILED(res)) {
+        NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+        NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
         return res;
       }
       nsIReflowCommand::ReflowType type;
@@ -554,6 +559,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
                                        firstPassState, 
                                        aStatus);
   if (NS_FAILED(res)) {
+    NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+    NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
     return res;
   }
 
@@ -842,6 +849,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+  NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+  NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
   return NS_OK;
 }
 
@@ -3240,7 +3249,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               } else {
                 SingleSelection();
                 if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                  mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
                 } else {
                   UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
                 }
@@ -3277,7 +3286,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               } else {
                 SingleSelection();
                 if (nsnull != mComboboxFrame) {
-                  mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
                 } else {
                   UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
                 }
@@ -3334,13 +3343,12 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
                 if (NS_OK == optionElement->GetText(text)) {
                   text.ToUpperCase();
                   PRUnichar firstChar = text.CharAt(0);
-                  printf("[%d][%d]\n", firstChar, (PRUnichar)code);
                   if (firstChar == (PRUnichar)code) {
                     mOldSelectedIndex = mSelectedIndex;
                     mSelectedIndex    = selectedIndex;
                     SingleSelection();
                     if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                      mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // don't dispatch event
+                      mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
                     } else {
                       UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
                     }
