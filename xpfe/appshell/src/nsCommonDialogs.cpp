@@ -252,7 +252,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
 	block->SetString( 0, inDialogTitle );
 	block->SetString(1, inMsg );
 	block->SetInt( eSelection, inCount );
-	for ( PRInt32 i = 2; i<= inCount+1; i++ )
+	for ( PRUint32 i = 2; i<= inCount+1; i++ )
 	{
 		nsAutoString temp(inList[i-2]  );
 		const PRUnichar* text = temp.GetUnicode();

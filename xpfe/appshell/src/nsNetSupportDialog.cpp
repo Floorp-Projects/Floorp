@@ -560,7 +560,6 @@ nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnic
       appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
      nsCOMPtr<nsIPrompt> prompter(do_QueryInterface( webshellwindow ));
      PRInt32 selectedIndex;
-     PRBool rtnValue;
      rv = prompter->Select( inDialogTitle, inMsg, inCount, inList, outSelection,_retval );
      *outSelection = selectedIndex;
      return rv;
