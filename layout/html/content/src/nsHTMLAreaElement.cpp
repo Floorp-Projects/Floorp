@@ -511,6 +511,9 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
       mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec)) {
+    // Clean up any leading or trailing whitespace
+    relURLSpec.Trim(" \t\n\r");
+
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
     mInner.GetBaseURL(*getter_AddRefs(baseURL));

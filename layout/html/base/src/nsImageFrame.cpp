@@ -175,7 +175,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
-if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && lowSrc.Length() > 0) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && lowSrc.Length() > 0) {
     mLowSrcImageLoader = new nsHTMLImageLoader;
     if (mLowSrcImageLoader != nsnull) {
       mLowSrcImageLoader->Init(this, UpdateImageFrame, (void*)mLowSrcImageLoader, baseURL, lowSrc);
@@ -356,6 +356,13 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  aContinueTextRun = PR_TRUE;
   return NS_OK;
 }
 
