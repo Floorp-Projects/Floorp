@@ -156,8 +156,13 @@ NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer
 }
 
 NS_IMETHODIMP nsCookieService::Image_Block(nsAutoString imageURL) {
-  printf("entered nsCookieService.cpp\n");
   ::Image_Block(imageURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::Permission_Add
+    (nsString imageURL, PRBool permission, PRInt32 type) {
+  ::Permission_Add(imageURL, permission, type);
   return NS_OK;
 }
 
