@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = msgmork
-LIBRARY_NAME=mork
+LIBRARY_NAME=msgmork_s
 
 EXPORTS = \
 	$(NULL)
@@ -86,6 +86,8 @@ EXTRA_DSO_LDOPTS =\
 	$(NSPR_LIBS)	\
 	$(NULL)
 
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/config.mk
 
