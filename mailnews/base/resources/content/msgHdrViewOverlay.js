@@ -222,10 +222,8 @@ var messageHeaderSink = {
     {
       // WARNING: This is the ONLY routine inside of the message Header Sink that should 
       // trigger a reflow!
+      CheckNotify();
       
-      if (this.NotifyClearAddresses != undefined)
-        NotifyClearAddresses();
-
       ClearHeaderView(gCollapsedHeaderView);
       ClearHeaderView(gExpandedHeaderView);
 
@@ -311,6 +309,13 @@ function EnsureSubjectValue()
     currentHeaderData[foo.headerName] = foo;
   } 
 }
+
+function CheckNotify()
+{
+  if (this.NotifyClearAddresses != undefined)
+    NotifyClearAddresses();
+}
+
 
 // flush out any local state being held by a header entry for a given
 // table
