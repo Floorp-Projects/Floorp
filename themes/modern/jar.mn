@@ -412,7 +412,6 @@ modern.jar:
   skin/modern/messenger/smime/icons/hdrCryptoOk.gif                (messenger/smime/icons/hdrCryptoOk.gif)
   skin/modern/messenger/smime/icons/hdrCryptoNotOk.gif             (messenger/smime/icons/hdrCryptoNotOk.gif)
   skin/modern/navigator/contents.rdf                               (navigator/contents.rdf)
-  skin/modern/navigator/navigatorBindings.xml                      (navigator/navigatorBindings.xml)
   skin/modern/navigator/linkToolbar.css                            (navigator/linkToolbar.css)
   skin/modern/navigator/navigator.css                              (navigator/navigator.css)
   skin/modern/navigator/pageInfo.css                               (navigator/pageInfo.css)
