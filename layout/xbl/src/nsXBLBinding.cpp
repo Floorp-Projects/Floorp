@@ -614,14 +614,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
       else
         GetEventHandlerIID(eventAtom, &iid, &found);
 
-      if (found || special) {
-        // Add an event listener for mouse and key events only.
-        PRBool mouse  = IsMouseHandler(type);
-        PRBool key    = IsKeyHandler(type);
-        PRBool focus  = IsFocusHandler(type);
-        PRBool xul    = IsXULHandler(type);
-        PRBool scroll = IsScrollHandler(type);
-        
+      if (found || special) { 
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
         nsAutoString attachType;
         child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
@@ -646,7 +639,29 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           receiver = do_QueryInterface(otherElement);
         }
 
-        if (mouse || key || focus || xul || scroll || special) {
+        // Add an event listener for mouse and key events only.
+        PRBool mouse, key, focus, xul, scroll, form;
+        mouse = key = focus = xul = scroll = form = PR_FALSE;
+
+        if (!special) {
+          mouse = IsMouseHandler(type);
+          if (!mouse) {
+            key = IsKeyHandler(type);
+            if (!key) {
+              focus = IsFocusHandler(type);
+              if (!focus) {
+                xul = IsXULHandler(type);
+                if (!xul) {
+                  scroll = IsScrollHandler(type);
+                  if (!scroll) 
+                    form = IsFormHandler(type);
+                }
+              }
+            }
+          }
+        }
+
+        if (mouse || key || focus || xul || scroll || form || special) {
           // Create a new nsXBLEventHandler.
           nsXBLEventHandler* handler;
           NS_NewXBLEventHandler(receiver, curr, type, &handler);
@@ -678,6 +693,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
             receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
           else if (scroll)
             receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
+          else if (form)
+            receiver->AddEventListener(type, (nsIDOMFormListener*)handler, useCapture);
 
           if (!special) // Let the listener manager hold on to the handler.
             NS_RELEASE(handler);
@@ -1651,6 +1668,16 @@ nsXBLBinding::IsScrollHandler(const nsString& aName)
   return (aName == NS_LITERAL_STRING("overflow") ||
           aName == NS_LITERAL_STRING("underflow") ||
           aName == NS_LITERAL_STRING("overflowchanged"));
+}
+
+PRBool
+nsXBLBinding::IsFormHandler(const nsString& aName)
+{
+  return (aName == NS_LITERAL_STRING("submit") ||
+          aName == NS_LITERAL_STRING("reset") ||
+          aName == NS_LITERAL_STRING("change") ||
+          aName == NS_LITERAL_STRING("input") ||
+          aName == NS_LITERAL_STRING("select"));
 }
 
 NS_IMETHODIMP
