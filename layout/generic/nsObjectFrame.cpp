@@ -1166,11 +1166,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         if (mimeType || !src.IsEmpty()) {
           if (!mimeType) {
             // we don't have a mime type, try to figure it out from extension
-            nsXPIDLCString extension;
             PRInt32 offset = src.RFindChar(PRUnichar('.'));
             if (offset != kNotFound)
-              *getter_Copies(extension) = ToNewCString(Substring(src, offset+1, src.Length()));
-            pluginHost->IsPluginEnabledForExtension(extension, mimeType);
+              pluginHost->IsPluginEnabledForExtension(NS_ConvertUTF16toUTF8(Substring(src, offset + 1, src.Length())).get(), mimeType);
           }
           // if we fail to get a mime type from extension we can still try to 
           // instantiate plugin as it can be possible to determine it later
