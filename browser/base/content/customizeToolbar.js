@@ -65,6 +65,7 @@ function buildDialog()
     var paletteItem = node.cloneNode(true);
     paletteItem.removeAttribute("observes");
     paletteItem.removeAttribute("disabled");
+    paletteItem.removeAttribute("type");
 
     if (paletteItem.localName == "toolbaritem" && 
         paletteItem.firstChild) {
