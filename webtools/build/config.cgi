@@ -48,7 +48,9 @@ $default{MOZ_CO_DATE} = strftime("%d %b %Y %H:%M %Z",
                                  $sec,$min,$hour,$mday,$mon,$year);
 
 %fillin = %default;
-$fillin{MOZ_OBJDIR} = '@TOPSRCDIR@/obj-@CONFIG_GUESS@';
+$default_objdir_fillin='@TOPSRCDIR@/obj-@CONFIG_GUESS@';
+$fillin{MOZ_OBJDIR} = $default_objdir_fillin;
+
 
 if ($query->param()) {
   &parse_params;
@@ -123,7 +125,12 @@ sub print_script_preview {
 );
     foreach $param ($query->param()) {
       if ($param =~ /^(MOZ_|--)/) {
-        next if $query->param($param) eq '';
+        my $value = $query->param($param);
+        $value =~ s/\s+$//;
+        $value =~ s/^\s+//;
+        next if $param =~ /^--/   and $value eq '';
+        next if $param =~ /^MOZ_/ and $value eq $default{$param};
+
         print "<input type='hidden' name=$param value='"
           .$query->param($param)."'>\n";
       }
@@ -309,11 +316,11 @@ sub print_configure_form {
     Object Directory:</b></font><br>
     </td></tr><tr><td><table><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="$default{MOZ_OBJDIR}");
-  print 'checked' if $fillin{MOZ_OBJDIR} eq $default{MOZ_OBJDIR};
+  print 'checked' if $fillin{MOZ_OBJDIR} eq $default_objdir_fillin;
   print qq(>&nbsp;
     <code>mozilla</code></td><td> Build in the source tree. (default)<br></td></tr><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="fillin");
-  print 'checked' if $fillin{MOZ_OBJDIR} ne $default{MOZ_OBJDIR};
+  print 'checked' if $fillin{MOZ_OBJDIR} ne $default_objdir_fillin;
   print qq(>&nbsp;
     <input type="text" name="objdir_fillin" value="$fillin{MOZ_OBJDIR}" size='30'>
     </td><td>);
