@@ -80,6 +80,7 @@ public:
   // This gets called when the 'curpos' attribute on one of the scrollbars changes
   void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
+  void SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool aReflow=PR_TRUE);
   PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
   PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
 

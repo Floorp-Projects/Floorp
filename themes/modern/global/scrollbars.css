@@ -100,6 +100,7 @@ scrollbarbutton {
   height: 15px;
 }
 
+scrollbarbutton[disabled="true"],
 scrollbarbutton:hover:active {
   border-left-width: 2px;
   border-right-width: 2px;
@@ -194,6 +195,7 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
     height: 15px;
   }
 
+  html|div scrollbarbutton[disabled="true"],
   html|div scrollbarbutton:hover:active {
     border-left-width: 2px;
     border-right-width: 2px;

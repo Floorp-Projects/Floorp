@@ -111,6 +111,7 @@ scrollbar[orient="horizontal"] > scrollbarbutton {
   height: 11px;
 }
 
+scrollbarbutton[disabled="true"],
 scrollbarbutton:hover:active {
   border-left-width: 2px;
   border-right-width: 2px;
