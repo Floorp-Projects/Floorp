@@ -1210,17 +1210,19 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* a
     nsCOMPtr<nsIOutlinerSelection> selection;
     mView->GetSelection(getter_AddRefs(selection));
   
-    // selected
-    PRBool isSelected;
-    selection->IsSelected(aRowIndex, &isSelected);
-    if (isSelected)
-      mScratchArray->AppendElement(nsHTMLAtoms::selected);
+    if (selection) {
+      // selected
+      PRBool isSelected;
+      selection->IsSelected(aRowIndex, &isSelected);
+      if (isSelected)
+        mScratchArray->AppendElement(nsHTMLAtoms::selected);
 
-    // current
-    PRInt32 currentIndex;
-    selection->GetCurrentIndex(&currentIndex);
-    if (aRowIndex == currentIndex)
-      mScratchArray->AppendElement(nsXULAtoms::current);
+      // current
+      PRInt32 currentIndex;
+      selection->GetCurrentIndex(&currentIndex);
+      if (aRowIndex == currentIndex)
+        mScratchArray->AppendElement(nsXULAtoms::current);
+    }
 
     // container or leaf
     PRBool isContainer = PR_FALSE;
