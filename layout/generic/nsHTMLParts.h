@@ -244,11 +244,16 @@ NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 
 extern nsresult
 NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aNewFrame, PRBool aIsTopLevel);
+                nsIFrame*& aNewFrame, PRUint32 aFlags);
 
 extern nsresult
 NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aNewFrame, PRBool aShrinkWrap);
+                 nsIFrame*& aNewFrame, PRUint32 aFlags);
+
+// Flags for body and block frames
+#define NS_BODY_SHRINK_WRAP     0x1
+#define NS_BODY_NO_AUTO_MARGINS 0x2
+#define NS_BODY_THE_BODY        0x4
 
 extern nsresult
 NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,
