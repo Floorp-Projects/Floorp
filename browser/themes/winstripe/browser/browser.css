@@ -826,7 +826,7 @@ statusbarpanel#statusbar-display {
 
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 toolbar[iconsize="small"] #navigator-throbber,
@@ -836,7 +836,7 @@ toolbar[mode="text"] #navigator-throbber {
 toolbar[iconsize="small"] #navigator-throbber[busy="true"],
 toolbar[mode="text"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
@@ -901,7 +901,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
-  -moz-opacity: 0.5;
+  opacity: 0.5;
   -moz-margin-end: 4px;
 }
 
