@@ -27,6 +27,7 @@
 #include "nsIParser.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFContentSink.h"
+#include "nsIRDFCursor.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsParserCIID.h"
@@ -70,7 +71,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFCursor** sources) {
+                          nsIRDFAssertionCursor** sources) {
         return mInner->GetSources(property, target, tv, sources);
     }
 
@@ -84,7 +85,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFCursor** targets) {
+                          nsIRDFAssertionCursor** targets) {
         return mInner->GetTargets(source, property, tv, targets);
     }
 
@@ -118,12 +119,12 @@ public:
     }
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFCursor** labels) {
+                           nsIRDFArcsInCursor** labels) {
         return mInner->ArcLabelsIn(node, labels);
     }
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFCursor** labels) {
+                            nsIRDFArcsOutCursor** labels) {
         return mInner->ArcLabelsOut(source, labels);
     }
 

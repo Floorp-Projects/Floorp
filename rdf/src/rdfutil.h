@@ -150,7 +150,7 @@ rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
 nsresult
 NS_NewContainerCursor(nsIRDFDataSource* ds,
                       nsIRDFResource* container,
-                      nsIRDFCursor** cursor);
+                      nsIRDFAssertionCursor** cursor);
 
 
 /**
@@ -158,7 +158,13 @@ NS_NewContainerCursor(nsIRDFDataSource* ds,
  * return the same object.
  */
 nsresult
-NS_NewEmptyRDFCursor(nsIRDFCursor** result);
+NS_NewEmptyRDFAssertionCursor(nsIRDFAssertionCursor** result);
+
+nsresult
+NS_NewEmptyRDFArcsInCursor(nsIRDFArcsInCursor** result);
+
+nsresult
+NS_NewEmptyRDFArcsOutCursor(nsIRDFArcsOutCursor** result);
 
 
 // XXX need to move nsEmptyCursor stuff here.

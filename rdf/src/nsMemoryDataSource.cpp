@@ -103,7 +103,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFCursor** sources);
+                          nsIRDFAssertionCursor** sources);
 
     NS_IMETHOD GetTarget(nsIRDFResource* source,
                          nsIRDFResource* property,
@@ -113,7 +113,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFCursor** targets);
+                          nsIRDFAssertionCursor** targets);
 
     NS_IMETHOD Assert(nsIRDFResource* source, 
                       nsIRDFResource* property, 
@@ -135,10 +135,10 @@ public:
     NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFCursor** labels);
+                           nsIRDFArcsInCursor** labels);
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFCursor** labels);
+                            nsIRDFArcsOutCursor** labels);
 
     NS_IMETHOD Flush();
 };
@@ -214,12 +214,6 @@ class NodeImpl {
 protected:
     nsIRDFNode* mNode;
 
-    /** Maps an nsIRDFNode* property to a property list. Lazily instantiated */
-    PLHashTable* mProperties;
-
-    inline PropertyListElement*
-    FindPropertyValue(nsIRDFResource* property, nsIRDFNode* value, PRBool tv);
-
     // hash table routines
     static void * PR_CALLBACK
     AllocTable(void *pool, PRSize size);
@@ -237,6 +231,12 @@ protected:
 
     static const PRInt32 kPropertyTableSize;
 
+    /** Maps an nsIRDFNode* property to a property list. Lazily instantiated */
+    PLHashTable* mProperties;
+
+    inline PropertyListElement*
+    FindPropertyValue(nsIRDFResource* property, nsIRDFNode* value, PRBool tv);
+
 public:
     NodeImpl(nsIRDFNode* node);
 
@@ -250,8 +250,8 @@ public:
     void AddProperty(nsIRDFResource* property, nsIRDFNode* value, PRBool tv);
     void RemoveProperty(nsIRDFResource* property, nsIRDFNode* value);
     nsIRDFNode* GetProperty(nsIRDFResource* property, PRBool tv);
-    nsIRDFCursor* GetProperties(nsIRDFResource* property, PRBool tv);
-    nsIRDFCursor* GetArcLabelsOut(void);
+    nsIRDFAssertionCursor* GetProperties(nsIRDFDataSource* ds, nsIRDFResource* property, PRBool tv);
+    nsIRDFArcsOutCursor* GetArcsOut(nsIRDFDataSource* ds);
 
     void Dump(const char* resource);
 };
@@ -267,122 +267,192 @@ const PRInt32 NodeImpl::kPropertyTableSize = 7;
 ////////////////////////////////////////////////////////////////////////
 // PropertyCursorImpl
 
-class PropertyCursorImpl : public nsIRDFCursor {
+
+// XXX This could really get screwed up if the graph mutates under the
+// cursor. Problem is, the NodeImpl isn't refcounted.
+
+class PropertyCursorImpl : public nsIRDFAssertionCursor {
 private:
     PropertyListElement* mFirst;
     PropertyListElement* mNext;
-    PRBool               mTruthValueToMatch;
+    nsIRDFDataSource*    mDataSource;
+    nsIRDFResource*      mSubject;
+    nsIRDFResource*      mPredicate;
+    PRBool               mTruthValue;
 
 public:
-    PropertyCursorImpl(PropertyListElement* first, PRBool truthValue);
+    PropertyCursorImpl(PropertyListElement* first,
+                       nsIRDFDataSource* ds,
+                       nsIRDFResource* subject,
+                       nsIRDFResource* predicate,
+                       PRBool tv);
+
     virtual ~PropertyCursorImpl(void);
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HasMoreElements(PRBool* result);
-    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
+    NS_IMETHOD Advance(void);
+
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetSubject(nsIRDFResource** aResource);
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
 
-PropertyCursorImpl::PropertyCursorImpl(PropertyListElement* first, PRBool truthValueToMatch)
+PropertyCursorImpl::PropertyCursorImpl(PropertyListElement* first,
+                                       nsIRDFDataSource* ds,
+                                       nsIRDFResource* subject,
+                                       nsIRDFResource* predicate,
+                                       PRBool tv)
     : mFirst(first),
       mNext(first),
-      mTruthValueToMatch(truthValueToMatch)
+      mDataSource(ds),
+      mSubject(subject),
+      mPredicate(predicate),
+      mTruthValue(tv)
 {
     NS_INIT_REFCNT();
-    while (1) {
-        if (mNext->GetTruthValue() == mTruthValueToMatch)
-            break;
-
-        if (mNext == mFirst) {
-            mNext = nsnull; // wrapped all the way back to the start
-            break;
-        }
-
-        mNext = mNext->GetNext();
-    }
+    NS_ADDREF(mDataSource);
+    NS_ADDREF(mSubject);
+    NS_ADDREF(mPredicate);
 }
 
 
 PropertyCursorImpl::~PropertyCursorImpl(void)
 {
+    NS_RELEASE(mPredicate);
+    NS_RELEASE(mSubject);
+    NS_RELEASE(mDataSource);
 }
 
 NS_IMPL_ISUPPORTS(PropertyCursorImpl, kIRDFCursorIID);
 
 NS_IMETHODIMP
-PropertyCursorImpl::HasMoreElements(PRBool* result)
+PropertyCursorImpl::Advance(void)
 {
-    *result = (mNext != nsnull);
+    if (! mNext) {
+        mNext = mFirst;
+    }
+    else {
+        mNext = mNext->GetNext();
+    }
+
+    while (1) {
+        if (mNext == mFirst)
+            return NS_ERROR_UNEXPECTED;
+
+        if (mNext->GetTruthValue() == mTruthValue)
+            return NS_OK;
+
+        mNext = mNext->GetNext();
+    }
+}
+
+
+NS_IMETHODIMP
+PropertyCursorImpl::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+    NS_ADDREF(mDataSource);
+    *aDataSource = mDataSource;
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-PropertyCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
+PropertyCursorImpl::GetSubject(nsIRDFResource** aSubject)
 {
-    if (! next || ! tv)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mNext)
-        return NS_ERROR_UNEXPECTED;
-
-    *next = mNext->GetValue();
-    if (tv) *tv = mNext->GetTruthValue();
-
-    mNext = mNext->GetNext(); // advance past the current node
-    while (1) {
-        if (mNext == mFirst) {
-            mNext = nsnull; // wrapped all the way back to the start
-            break;
-        }
-
-        if (mNext->GetTruthValue() == mTruthValueToMatch)
-            break;
-
-        mNext = mNext->GetNext();
-    }
-
+    NS_ADDREF(mSubject);
+    *aSubject = mSubject;
     return NS_OK;
 }
 
 
+NS_IMETHODIMP
+PropertyCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
+{
+    NS_ADDREF(mPredicate);
+    *aPredicate = mPredicate;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+PropertyCursorImpl::GetObject(nsIRDFNode** aObject)
+{
+    nsIRDFNode* result = mNext->GetValue();
+    NS_ADDREF(result);
+    *aObject = result;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+PropertyCursorImpl::GetTruthValue(PRBool* aTruthValue)
+{
+    *aTruthValue = mTruthValue;
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
-// ArcCursorImpl
+// ArcsOutCursorImpl
 
-class ArcCursorImpl : public nsIRDFCursor {
+class ArcsOutCursorImpl : public nsIRDFArcsOutCursor {
 private:
+    nsIRDFDataSource* mDataSource;
+    nsIRDFResource*   mSubject;
     nsISupportsArray* mProperties;
+    nsIRDFResource*   mCurrent;
+
     static PRIntn Enumerator(PLHashEntry* he, PRIntn index, void* closure);
 
 public:
-    ArcCursorImpl(PLHashTable* properties);
-    virtual ~ArcCursorImpl(void);
+    ArcsOutCursorImpl(nsIRDFDataSource* ds,
+                      nsIRDFResource* subject,
+                      PLHashTable* properties);
+
+    virtual ~ArcsOutCursorImpl(void);
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HasMoreElements(PRBool* result);
-    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
+    NS_IMETHOD Advance(void);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetSubject(nsIRDFResource** aSubject);
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
 
-ArcCursorImpl::ArcCursorImpl(PLHashTable* properties)
+ArcsOutCursorImpl::ArcsOutCursorImpl(nsIRDFDataSource* ds,
+                                     nsIRDFResource* subject,
+                                     PLHashTable* properties)
+    : mDataSource(ds),
+      mSubject(subject),
+      mCurrent(nsnull)
 {
     NS_INIT_REFCNT();
+    NS_ADDREF(mDataSource);
+    NS_ADDREF(mSubject);
+
+    // XXX this is pretty wasteful
     if (NS_SUCCEEDED(NS_NewISupportsArray(&mProperties)))
         PL_HashTableEnumerateEntries(properties, Enumerator, mProperties);
 }
 
-ArcCursorImpl::~ArcCursorImpl(void)
+ArcsOutCursorImpl::~ArcsOutCursorImpl(void)
 {
+    NS_IF_RELEASE(mCurrent);
     NS_IF_RELEASE(mProperties);
+    NS_RELEASE(mSubject);
+    NS_RELEASE(mDataSource);
 }
 
-NS_IMPL_ISUPPORTS(ArcCursorImpl, kIRDFCursorIID);
+NS_IMPL_ISUPPORTS(ArcsOutCursorImpl, kIRDFCursorIID);
 
 PRBool
-ArcCursorImpl::Enumerator(PLHashEntry* he, PRIntn index, void* closure)
+ArcsOutCursorImpl::Enumerator(PLHashEntry* he, PRIntn index, void* closure)
 {
     nsISupportsArray* properties = NS_STATIC_CAST(nsISupportsArray*, closure);
     nsIRDFResource* property = NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
@@ -391,39 +461,53 @@ ArcCursorImpl::Enumerator(PLHashEntry* he, PRIntn index, void* closure)
 }
 
 NS_IMETHODIMP
-ArcCursorImpl::HasMoreElements(PRBool* result)
+ArcsOutCursorImpl::Advance(void)
 {
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
+    if (! mProperties || ! mProperties->Count())
+        return NS_ERROR_UNEXPECTED;
 
-    *result = (mProperties && mProperties->Count() > 0);
+    PRInt32 index = mProperties->Count() - 1;
+    if (index < 0)
+        return NS_ERROR_UNEXPECTED;
+
+    NS_IF_RELEASE(mCurrent);
+
+    // this'll AddRef()...
+    mCurrent = NS_STATIC_CAST(nsIRDFResource*, mProperties->ElementAt(index));
+
+    mProperties->RemoveElementAt(index);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-ArcCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
+ArcsOutCursorImpl::GetDataSource(nsIRDFDataSource** aDataSource)
 {
-    if (! next)
-        return NS_ERROR_NULL_POINTER;
+    NS_ADDREF(mDataSource);
+    *aDataSource = mDataSource;
+    return NS_OK;
+}
 
-    if (! mProperties || ! mProperties->Count())
-        return NS_ERROR_UNEXPECTED;
+NS_IMETHODIMP
+ArcsOutCursorImpl::GetSubject(nsIRDFResource** aSubject)
+{
+    NS_ADDREF(mSubject);
+    *aSubject = mSubject;
+    return NS_OK;
+}
 
-    PRInt32 index = mProperties->Count() - 1;
-    nsISupports* obj = mProperties->ElementAt(index);
+NS_IMETHODIMP
+ArcsOutCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
+{
+    NS_ADDREF(mCurrent);
+    *aPredicate = mCurrent;
+    return NS_OK;
+}
 
-    PR_ASSERT(obj);
-    if (obj) {
-        nsIRDFNode* result;
-        obj->QueryInterface(kIRDFNodeIID, (void**) &result); // this'll AddRef()
-        obj->Release();
-
-        *next = result;
-        if (tv) *tv = PR_TRUE;
-    }
-
-    mProperties->RemoveElementAt(index);
+NS_IMETHODIMP
+ArcsOutCursorImpl::GetTruthValue(PRBool* aTruthValue)
+{
+    *aTruthValue = PR_TRUE; // XXX
     return NS_OK;
 }
 
@@ -576,8 +660,8 @@ NodeImpl::RemoveProperty(nsIRDFResource* property, nsIRDFNode* value)
 }
 
 
-nsIRDFCursor*
-NodeImpl::GetProperties(nsIRDFResource* property, PRBool tv)
+nsIRDFAssertionCursor*
+NodeImpl::GetProperties(nsIRDFDataSource* ds, nsIRDFResource* property, PRBool tv)
 {
     if (! mProperties)
         return nsnull;
@@ -585,20 +669,37 @@ NodeImpl::GetProperties(nsIRDFResource* property, PRBool tv)
     PropertyListElement* head
         = NS_STATIC_CAST(PropertyListElement*, PL_HashTableLookup(mProperties, property));
 
-    nsIRDFCursor* result;
+    nsIRDFAssertionCursor* result = nsnull;
     if (head) {
-        result = new PropertyCursorImpl(head, tv);
-    } else {
-        NS_NewEmptyRDFCursor(&result);
+        nsIRDFResource* resource;
+        if (NS_SUCCEEDED(mNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+            result = new PropertyCursorImpl(head, ds, resource, property, tv);
+            NS_RELEASE(resource);
+        }
     }
+
+    if (! result)
+        NS_NewEmptyRDFAssertionCursor(&result);
+
     return result;
 }
 
 
-nsIRDFCursor*
-NodeImpl::GetArcLabelsOut(void)
+nsIRDFArcsOutCursor*
+NodeImpl::GetArcsOut(nsIRDFDataSource* ds)
 {
-    return new ArcCursorImpl(mProperties);
+    nsIRDFArcsOutCursor* result;
+
+    nsIRDFResource* resource;
+    if (NS_SUCCEEDED(mNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+        result = new ArcsOutCursorImpl(ds, resource, mProperties);
+        NS_RELEASE(resource);
+    }
+
+    if (! result)
+        NS_NewEmptyRDFArcsOutCursor(&result);
+
+    return result;
 }
 
 
@@ -745,7 +846,7 @@ NS_IMETHODIMP
 MemoryDataSourceImpl::GetSources(nsIRDFResource* property,
                                  nsIRDFNode* target,
                                  PRBool tv,
-                                 nsIRDFCursor** sources)
+                                 nsIRDFAssertionCursor** sources)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED; // XXX
@@ -779,19 +880,17 @@ NS_IMETHODIMP
 MemoryDataSourceImpl::GetTargets(nsIRDFResource* source,
                                  nsIRDFResource* property,
                                  PRBool tv,
-                                 nsIRDFCursor** targets)
+                                 nsIRDFAssertionCursor** targets)
 {
     NS_PRECONDITION(source && property && targets, "null ptr");
     if (!source || !property || !targets)
         return NS_ERROR_NULL_POINTER;
 
-    NS_NewEmptyRDFCursor(targets); // reasonable default
-
     NodeImpl *u;
     if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
         return NS_OK;
 
-    if (! (*targets = u->GetProperties(property, tv)))
+    if (! (*targets = u->GetProperties(this, property, tv)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*targets);
@@ -892,7 +991,7 @@ MemoryDataSourceImpl::RemoveObserver(nsIRDFObserver* n)
 
 NS_IMETHODIMP
 MemoryDataSourceImpl::ArcLabelsIn(nsIRDFNode* node,
-                                  nsIRDFCursor** labels)
+                                  nsIRDFArcsInCursor** labels)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -900,19 +999,17 @@ MemoryDataSourceImpl::ArcLabelsIn(nsIRDFNode* node,
 
 NS_IMETHODIMP
 MemoryDataSourceImpl::ArcLabelsOut(nsIRDFResource* source,
-                                   nsIRDFCursor** labels)
+                                   nsIRDFArcsOutCursor** labels)
 {
     NS_PRECONDITION(source && labels, "null ptr");
     if (!source || !labels)
         return NS_ERROR_NULL_POINTER;
 
-    NS_NewEmptyRDFCursor(labels); // reasonable default
-
     NodeImpl *u;
     if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
         return NS_OK;
 
-    if (! (*labels = u->GetArcLabelsOut()))
+    if (! (*labels = u->GetArcsOut(this)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*labels);

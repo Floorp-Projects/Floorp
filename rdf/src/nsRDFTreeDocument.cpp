@@ -352,8 +352,7 @@ RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
 
     nsIRDFResource* NC_Column = nsnull;
     nsIRDFResource* NC_Title  = nsnull;
-    nsIRDFCursor* cursor  = nsnull;
-    PRBool moreElements;
+    nsIRDFAssertionCursor* cursor  = nsnull;
 
     if (NS_FAILED(rv = mResourceMgr->GetResource(kURINC_Column, &NC_Column)))
         goto done;
@@ -364,9 +363,9 @@ RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
     if (NS_FAILED(rv = NS_NewContainerCursor(mDB, columns, &cursor)))
         goto done;
 
-    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(&moreElements)) && moreElements) {
+    while (NS_SUCCEEDED(rv = cursor->Advance())) {
         nsIRDFNode* columnNode;
-        if (NS_SUCCEEDED(rv = cursor->GetNext(&columnNode, nsnull))) {
+        if (NS_SUCCEEDED(rv = cursor->GetObject(&columnNode))) {
             nsIRDFResource* column;
             if (NS_SUCCEEDED(rv = columnNode->QueryInterface(kIRDFResourceIID, (void**) &column))) {
                 // XXX okay, error recovery leaves a bit to be desired here...
@@ -450,32 +449,24 @@ RDFTreeDocumentImpl::AddColumnsFromMultiAttributes(nsIContent* parent,
     if (NS_FAILED(rv = EnsureChildElement(parent, kColumnsTag, columnsElement)))
         return rv;
 
-    PRBool moreElements;
-    nsIRDFCursor* cursor = nsnull;
+    nsIRDFArcsOutCursor* cursor = nsnull;
     if (NS_FAILED(rv = mDB->ArcLabelsOut(columns, &cursor)))
         goto done;
 
-    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(&moreElements)) && moreElements) {
-        nsIRDFNode* propertyNode;
-
-        if (NS_SUCCEEDED(rv = cursor->GetNext(&propertyNode, nsnull))) {
-            nsIRDFResource* property;
-
-            if (NS_SUCCEEDED(rv = propertyNode->QueryInterface(kIRDFResourceIID,
-                                                               (void**) &property))) {
-                nsIRDFNode* titleNode;
-                if (NS_SUCCEEDED(rv = mDB->GetTarget(columns, property, PR_TRUE, &titleNode))) {
-                    nsIRDFLiteral* title;
-                    if (NS_SUCCEEDED(rv = titleNode->QueryInterface(kIRDFLiteralIID,
-                                                                    (void**) &title))) {
-                        rv = AddColumn(columnsElement, property, title);
-                        NS_RELEASE(title);
-                    }
-                    NS_RELEASE(titleNode);
+    while (NS_SUCCEEDED(rv = cursor->Advance())) {
+        nsIRDFResource* property;
+        if (NS_SUCCEEDED(rv = cursor->GetPredicate(&property))) {
+            nsIRDFNode* titleNode;
+            if (NS_SUCCEEDED(rv = mDB->GetTarget(columns, property, PR_TRUE, &titleNode))) {
+                nsIRDFLiteral* title;
+                if (NS_SUCCEEDED(rv = titleNode->QueryInterface(kIRDFLiteralIID,
+                                                                (void**) &title))) {
+                    rv = AddColumn(columnsElement, property, title);
+                    NS_RELEASE(title);
                 }
-                NS_RELEASE(property);
+                NS_RELEASE(titleNode);
             }
-            NS_RELEASE(propertyNode);
+            NS_RELEASE(property);
         }
 
         if (NS_FAILED(rv))

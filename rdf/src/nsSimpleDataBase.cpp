@@ -49,43 +49,52 @@
 
 */
 
-static NS_DEFINE_IID(kIRDFCursorIID,     NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kIRDFDataBaseIID,   NS_IRDFDATABASE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIRDFArcsInCursorIID,    NS_IRDFARCSINCURSOR_IID);
+static NS_DEFINE_IID(kIRDFArcsOutCursorIID,   NS_IRDFARCSOUTCURSOR_IID);
+static NS_DEFINE_IID(kIRDFAssertionCursorIID, NS_IRDFASSERTIONCURSOR_IID);
+static NS_DEFINE_IID(kIRDFCursorIID,          NS_IRDFCURSOR_IID);
+static NS_DEFINE_IID(kIRDFDataBaseIID,        NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // MultiCursor
+//
+//   This class encapsulates all of the behavior that is necessary to
+//   stripe a cursor across several different data sources, including
+//   checks to determine whether an negation in an "earlier" data
+//   source masks an assertion in a "later" data source.
+//
 
-class MultiCursor : public nsIRDFCursor {
+class MultiCursor {
 private:
-    nsIRDFDataSource* mDataSource0;
+    nsIRDFDataSource*  mDataSource0;
     nsIRDFDataSource** mDataSources;
-    nsIRDFCursor* mCurrentCursor;
-    nsIRDFNode* mNextResult;
-    PRBool mNextTruthValue;
-    PRInt32 mNextDataSource;
-    PRInt32 mCount;
+    nsIRDFCursor*      mCurrentCursor;
+    nsIRDFNode*        mNextResult;
+    PRBool             mNextTruthValue;
+    PRInt32            mNextDataSource;
+    PRInt32            mCount;
 
 public:
     MultiCursor(nsVoidArray& dataSources);
     virtual ~MultiCursor(void);
 
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD HasMoreElements(PRBool* result);
-    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
+    NS_IMETHOD AdvanceImpl(void);
 
     virtual nsresult
     GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result) = 0;
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* ds0,
-                nsIRDFNode* nodeToTest,
-                PRBool tv,
-                PRBool* result) = 0;
+    IsCurrentNegatedBy(nsIRDFDataSource* ds0,
+                       PRBool* result) = 0;
+
+    nsIRDFCursor*
+    GetCurrentCursor(void) {
+        return mCurrentCursor;
+    }
 };
 
 
@@ -97,8 +106,6 @@ MultiCursor::MultiCursor(nsVoidArray& dataSources)
       mCount(0),
       mNextDataSource(0)
 {
-    NS_INIT_REFCNT();
-
     mCount = dataSources.Count();
     mDataSources = new nsIRDFDataSource*[mCount];
 
@@ -126,25 +133,10 @@ MultiCursor::~MultiCursor(void)
     NS_IF_RELEASE(mDataSource0);
 }
 
-NS_IMPL_ISUPPORTS(MultiCursor, kIRDFCursorIID);
-
 NS_IMETHODIMP
-MultiCursor::HasMoreElements(PRBool* result)
+MultiCursor::AdvanceImpl(void)
 {
     nsresult rv;
-    if (! mDataSources)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // If we've already queued up a next target, then yep, there are
-    // more elements.
-    if (mNextResult) {
-        *result = PR_TRUE;
-        return NS_OK;
-    }
-
-    // Otherwise, we'll need to find a next target, switching cursors
-    // if necessary.
-    *result = PR_FALSE;
 
     while (mNextDataSource < mCount) {
         if (! mCurrentCursor) {
@@ -157,29 +149,22 @@ MultiCursor::HasMoreElements(PRBool* result)
         }
 
         do {
-            if (NS_FAILED(rv = mCurrentCursor->HasMoreElements(result)))
-                return rv;
-
-            // Is the current cursor depleted?
-            if (!*result)
+            // If we can't advance the current cursor, then it's
+            // depleted. Break out of this loop and advance to the
+            // next cursor.
+            if (NS_FAILED(rv = mCurrentCursor->Advance()))
                 break;
 
             // Even if the current cursor has more elements, we still
             // need to check that the current element isn't masked by
             // the "main" data source.
             
-            // "Peek" ahead and pull out the next target.
-            if (NS_FAILED(mCurrentCursor->GetNext(&mNextResult, &mNextTruthValue)))
-                return rv;
-
             // See if data source zero has the negation
             // XXX rvg --- this needs to be fixed so that we look at all the prior 
             // data sources for negations
             PRBool hasNegation;
-            if (NS_FAILED(rv = HasNegation(mDataSource0,
-                                           mNextResult,
-                                           mNextTruthValue,
-                                           &hasNegation)))
+            if (NS_FAILED(rv = IsCurrentNegatedBy(mDataSource0,
+                                                  &hasNegation)))
                 return rv;
 
             // if not, we're done
@@ -188,7 +173,6 @@ MultiCursor::HasMoreElements(PRBool* result)
 
             // Otherwise, we found the negation in data source
             // zero. Gotta keep lookin'...
-            NS_RELEASE(mNextResult);
         } while (1);
 
         NS_RELEASE(mCurrentCursor);
@@ -197,57 +181,53 @@ MultiCursor::HasMoreElements(PRBool* result)
     }
 
     // if we get here, there aren't any elements left.
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-MultiCursor::GetNext(nsIRDFNode** next, PRBool* tv)
-{
-    nsresult rv;
-    PRBool hasMore;
-    if (NS_FAILED(rv = HasMoreElements(&hasMore)))
-        return rv;
-
-    if (! hasMore)
-        return NS_ERROR_UNEXPECTED;
-
-    *next = mNextResult; // no need to AddRef() again...
-    if (tv) *tv = mNextTruthValue;
-    
-    mNextResult = nsnull; // ...because we'll just "transfer ownership".
-    return NS_OK;
+    return NS_ERROR_UNEXPECTED;
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-// dbNodeCursorImpl
-
-class dbNodeCursorImpl : public MultiCursor {
+// SimpleDBAssertionCursorImpl
+//
+//   An assertion cursor implementation for the simple db.
+//
+class SimpleDBAssertionCursorImpl : public MultiCursor,
+                                    public nsIRDFAssertionCursor
+{
 private:
     nsIRDFResource* mSource;
     nsIRDFResource* mProperty;
     PRBool mTruthValue;
 
 public:
-    dbNodeCursorImpl(nsVoidArray& dataSources,
+    SimpleDBAssertionCursorImpl(nsVoidArray& dataSources,
                      nsIRDFResource* source,
                      nsIRDFResource* property,
                      PRBool tv);
 
-    virtual ~dbNodeCursorImpl();
+    virtual ~SimpleDBAssertionCursorImpl();
 
+    // MultiCursor protocol methods
     virtual nsresult
     GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result);
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* ds0,
-                nsIRDFNode* nodeToTest,
-                PRBool tv,
-                PRBool* result);
+    IsCurrentNegatedBy(nsIRDFDataSource* ds0,
+                       PRBool* result);
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFAssertionCursor interface
+    NS_IMETHOD Advance(void);
+
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetSubject(nsIRDFResource** aResource);
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetObject(nsIRDFNode** aObject);
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
-dbNodeCursorImpl::dbNodeCursorImpl(nsVoidArray& dataSources,
+SimpleDBAssertionCursorImpl::SimpleDBAssertionCursorImpl(nsVoidArray& dataSources,
                                    nsIRDFResource* source,
                                    nsIRDFResource* property,
                                    PRBool tv)
@@ -261,50 +241,165 @@ dbNodeCursorImpl::dbNodeCursorImpl(nsVoidArray& dataSources,
 }
 
 
-dbNodeCursorImpl::~dbNodeCursorImpl(void)
+SimpleDBAssertionCursorImpl::~SimpleDBAssertionCursorImpl(void)
 {
     NS_IF_RELEASE(mProperty);
     NS_IF_RELEASE(mSource);
 }
 
+NS_IMPL_ADDREF(SimpleDBAssertionCursorImpl);
+NS_IMPL_RELEASE(SimpleDBAssertionCursorImpl);
+
+NS_IMETHODIMP_(nsresult)
+SimpleDBAssertionCursorImpl::QueryInterface(REFNSIID iid, void** result) {
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    if (iid.Equals(kIRDFAssertionCursorIID) ||
+        iid.Equals(kIRDFCursorIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
+        /* AddRef(); // not necessary */
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+
 nsresult
-dbNodeCursorImpl::GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result)
+SimpleDBAssertionCursorImpl::GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result)
 {
-    return ds->GetTargets(mSource, mProperty, mTruthValue, result);
+    return ds->GetTargets(mSource, mProperty, mTruthValue,
+                          (nsIRDFAssertionCursor**) result);
 }
 
 nsresult
-dbNodeCursorImpl::HasNegation(nsIRDFDataSource* ds0,
-                              nsIRDFNode* target,
-                              PRBool tv,
-                              PRBool* result)
+SimpleDBAssertionCursorImpl::IsCurrentNegatedBy(nsIRDFDataSource* ds0,
+                                                PRBool* result)
 {
-    return ds0->HasAssertion(mSource, mProperty, target, !tv, result);
+    nsresult rv;
+
+    // No need to QueryInterface() b/c this is a closed system.
+    nsIRDFAssertionCursor* c =
+        (nsIRDFAssertionCursor*) GetCurrentCursor();
+
+    PRBool tv;
+    if (NS_FAILED(rv = c->GetTruthValue(&tv)))
+        return rv;
+
+    nsIRDFNode* object;
+    if (NS_FAILED(rv = c->GetObject(&object)))
+        return rv;
+
+    rv = ds0->HasAssertion(mSource, mProperty, object, !tv, result);
+    NS_RELEASE(object);
+
+    return rv;
 }
+
+
+NS_IMETHODIMP
+SimpleDBAssertionCursorImpl::Advance(void)
+{
+    return AdvanceImpl();
+}
+
+NS_IMETHODIMP
+SimpleDBAssertionCursorImpl::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+    nsIRDFAssertionCursor* cursor =
+        (nsIRDFAssertionCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetDataSource(aDataSource);
+}
+
+NS_IMETHODIMP
+SimpleDBAssertionCursorImpl::GetSubject(nsIRDFResource** aResource)
+{
+    nsIRDFAssertionCursor* cursor =
+        (nsIRDFAssertionCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetSubject(aResource);
+}
+
+NS_IMETHODIMP
+SimpleDBAssertionCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
+{
+    nsIRDFAssertionCursor* cursor =
+        (nsIRDFAssertionCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetPredicate(aPredicate);
+}
+
+NS_IMETHODIMP
+SimpleDBAssertionCursorImpl::GetObject(nsIRDFNode** aObject)
+{
+    nsIRDFAssertionCursor* cursor =
+        (nsIRDFAssertionCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetObject(aObject);
+}
+
+NS_IMETHODIMP
+SimpleDBAssertionCursorImpl::GetTruthValue(PRBool* aTruthValue)
+{
+    nsIRDFAssertionCursor* cursor =
+        (nsIRDFAssertionCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetTruthValue(aTruthValue);
+}
+
 
 ////////////////////////////////////////////////////////////////////////
-// dbArcCursorImpl
+// SimpleDBArcsOutCursorImpl
 
-class dbArcCursorImpl : public MultiCursor {
+class SimpleDBArcsOutCursorImpl : public MultiCursor,
+                                  public nsIRDFArcsOutCursor
+{
 private:
     nsIRDFResource* mSource;
 
 public:
-    dbArcCursorImpl(nsVoidArray& dataSources, nsIRDFResource* source);
+    SimpleDBArcsOutCursorImpl(nsVoidArray& dataSources, nsIRDFResource* source);
 
-    virtual ~dbArcCursorImpl();
+    virtual ~SimpleDBArcsOutCursorImpl();
 
+    // MultiCursor protocol methods
     virtual nsresult
     GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result);
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* ds0,
-                nsIRDFNode* nodeToTest,
-                PRBool tv,
-                PRBool* result);
+    IsCurrentNegatedBy(nsIRDFDataSource* ds0,
+                       PRBool* result);
+
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFArcsOutCursor interface
+    NS_IMETHOD Advance(void);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetSubject(nsIRDFResource** aSubject);
+    NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+    NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
-dbArcCursorImpl::dbArcCursorImpl(nsVoidArray& dataSources,
+SimpleDBArcsOutCursorImpl::SimpleDBArcsOutCursorImpl(nsVoidArray& dataSources,
                                  nsIRDFResource* source)
     : MultiCursor(dataSources),
       mSource(source)
@@ -313,25 +408,99 @@ dbArcCursorImpl::dbArcCursorImpl(nsVoidArray& dataSources,
 }
 
 
-dbArcCursorImpl::~dbArcCursorImpl(void)
+SimpleDBArcsOutCursorImpl::~SimpleDBArcsOutCursorImpl(void)
 {
     NS_IF_RELEASE(mSource);
 }
 
+
 nsresult
-dbArcCursorImpl::GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result)
+SimpleDBArcsOutCursorImpl::GetCursor(nsIRDFDataSource* ds, nsIRDFCursor** result)
 {
-    return ds->ArcLabelsOut(mSource, result);
+    return ds->ArcLabelsOut(mSource, (nsIRDFArcsOutCursor**) result);
 }
 
 nsresult
-dbArcCursorImpl::HasNegation(nsIRDFDataSource* ds0,
-                             nsIRDFNode* target,
-                             PRBool tv,
-                             PRBool* result)
+SimpleDBArcsOutCursorImpl::IsCurrentNegatedBy(nsIRDFDataSource* ds0,
+                                              PRBool* result)
 {
-    *result = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMPL_ADDREF(SimpleDBArcsOutCursorImpl);
+NS_IMPL_RELEASE(SimpleDBArcsOutCursorImpl);
+
+NS_IMETHODIMP_(nsresult)
+SimpleDBArcsOutCursorImpl::QueryInterface(REFNSIID iid, void** result) {
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    if (iid.Equals(kIRDFAssertionCursorIID) ||
+        iid.Equals(kIRDFCursorIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFArcsOutCursor*, this);
+        /* AddRef(); // not necessary */
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+SimpleDBArcsOutCursorImpl::Advance(void)
+{
+    return AdvanceImpl();
+}
+
+
+NS_IMETHODIMP
+SimpleDBArcsOutCursorImpl::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+    nsIRDFArcsOutCursor* cursor =
+        (nsIRDFArcsOutCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetDataSource(aDataSource);
+}
+
+
+NS_IMETHODIMP
+SimpleDBArcsOutCursorImpl::GetSubject(nsIRDFResource** aSubject)
+{
+    nsIRDFArcsOutCursor* cursor =
+        (nsIRDFArcsOutCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetSubject(aSubject);
+}
+
+
+NS_IMETHODIMP
+SimpleDBArcsOutCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
+{
+    nsIRDFArcsOutCursor* cursor =
+        (nsIRDFArcsOutCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetPredicate(aPredicate);
+}
+
+
+NS_IMETHODIMP
+SimpleDBArcsOutCursorImpl::GetTruthValue(PRBool* aTruthValue)
+{
+    nsIRDFArcsOutCursor* cursor =
+        (nsIRDFArcsOutCursor*) GetCurrentCursor();
+
+    if (! cursor)
+        return NS_ERROR_UNEXPECTED;
+
+    return cursor->GetTruthValue(aTruthValue);
 }
 
 
@@ -363,7 +532,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFCursor** sources);
+                          nsIRDFAssertionCursor** sources);
 
     NS_IMETHOD GetTarget(nsIRDFResource* source,
                          nsIRDFResource* property,
@@ -373,7 +542,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFCursor** targets);
+                          nsIRDFAssertionCursor** targets);
 
     NS_IMETHOD Assert(nsIRDFResource* source, 
                       nsIRDFResource* property, 
@@ -395,10 +564,10 @@ public:
     NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFCursor** labels);
+                           nsIRDFArcsInCursor** labels);
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFCursor** labels);
+                            nsIRDFArcsOutCursor** labels);
 
     NS_IMETHOD Flush();
 
@@ -413,19 +582,6 @@ public:
 SimpleDataBaseImpl::SimpleDataBaseImpl(void)
 {
     NS_INIT_REFCNT();
-
-#if 0
-    // Add standard data sources here.
-    // XXX this is so wrong.
-    nsIRDFDataSource* ds;
-    if (NS_SUCCEEDED(nsRepository::CreateInstance(kRDFBookmarkDataSourceCID,
-                                                  nsnull,
-                                                  kIRDFDataSourceIID,
-                                                  (void**) &ds))) {
-        AddDataSource(ds);
-        NS_RELEASE(ds);
-    }
-#endif
 }
 
 
@@ -504,7 +660,7 @@ NS_IMETHODIMP
 SimpleDataBaseImpl::GetSources(nsIRDFResource* property,
                              nsIRDFNode* target,
                              PRBool tv,
-                             nsIRDFCursor** sources)
+                             nsIRDFAssertionCursor** sources)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -542,13 +698,13 @@ NS_IMETHODIMP
 SimpleDataBaseImpl::GetTargets(nsIRDFResource* source,
                                nsIRDFResource* property,
                                PRBool tv,
-                               nsIRDFCursor** targets)
+                               nsIRDFAssertionCursor** targets)
 {
     if (! targets)
         return NS_ERROR_NULL_POINTER;
 
-    nsIRDFCursor* result;
-    result = new dbNodeCursorImpl(mDataSources, source, property, tv);
+    nsIRDFAssertionCursor* result;
+    result = new SimpleDBAssertionCursorImpl(mDataSources, source, property, tv);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -674,7 +830,7 @@ SimpleDataBaseImpl::RemoveObserver(nsIRDFObserver* n)
 
 NS_IMETHODIMP
 SimpleDataBaseImpl::ArcLabelsIn(nsIRDFNode* node,
-                                nsIRDFCursor** labels)
+                                nsIRDFArcsInCursor** labels)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -682,12 +838,12 @@ SimpleDataBaseImpl::ArcLabelsIn(nsIRDFNode* node,
 
 NS_IMETHODIMP
 SimpleDataBaseImpl::ArcLabelsOut(nsIRDFResource* source,
-                                 nsIRDFCursor** labels)
+                                 nsIRDFArcsOutCursor** labels)
 {
     if (! labels)
         return NS_ERROR_NULL_POINTER;
 
-    nsIRDFCursor* result = new dbArcCursorImpl(mDataSources, source);
+    nsIRDFArcsOutCursor* result = new SimpleDBArcsOutCursorImpl(mDataSources, source);
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
