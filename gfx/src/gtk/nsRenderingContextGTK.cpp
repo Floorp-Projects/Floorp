@@ -913,6 +913,12 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
 NS_IMETHODIMP
 nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
 {
+    // Check for the very common case of trying to get the width of a single
+    // space.
+  if ((aC == ' ') && (nsnull != mFontMetrics)) {
+    nsFontMetricsGTK* fontMetricsGTK = (nsFontMetricsGTK*)mFontMetrics;
+    return fontMetricsGTK->GetSpaceWidth(aWidth);
+  }
   return GetWidth(&aC, 1, aWidth);
 }
 

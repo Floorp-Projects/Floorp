@@ -99,6 +99,8 @@ public:
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+  
+  virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
 
 #ifdef FONT_SWITCHING
 
@@ -149,6 +151,7 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+  nscoord             mSpaceWidth;
 
 #ifdef FONT_SWITCHING
 
