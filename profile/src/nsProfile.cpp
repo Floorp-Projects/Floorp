@@ -27,7 +27,7 @@
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include "plstr.h"
-#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsString.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
@@ -932,14 +932,16 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 			return NS_ERROR_FAILURE;
 
 		// Get current profile, make the new one a sibling...
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
+	    nsIFileSpec* horribleCOMDirSpecThing;
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &horribleCOMDirSpecThing);
         
 		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 		
-		if (NS_FAILED(rv))
+		if (NS_FAILED(rv) || !horribleCOMDirSpecThing)
 			return NS_ERROR_FAILURE;
 
 		//Append profile name to form a directory name
+	    horribleCOMDirSpecThing->GetFileSpec(&dirSpec);
 		dirSpec.SetLeafName(profileName);
 	}
 
