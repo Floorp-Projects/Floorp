@@ -170,6 +170,270 @@ st_type(const char* type)
     }
 }
 
+
+//----------------------------------------------------------------------                      
+
+
+int DIGIT_MAP[256] = {
+0, 0, 0, 0, 0, 0, 0, 0,     // 0x00 - 0x07
+1, 1, 1, 1, 1, 1, 1, 1,
+2, 2, 2, 2, 2, 2, 2, 2,
+3, 3, 3, 3, 3, 3, 3, 3,
+4, 4, 4, 4, 4, 4, 4, 4,
+5, 5, 5, 5, 5, 5, 5, 5,
+6, 6, 6, 6, 6, 6, 6, 6,
+7, 7, 7, 7, 7, 7, 7, 7,     // 0x38 - 0x3f
+
+0, 0, 0, 0, 0, 0, 0, 0,     // 0x40 - 0x47
+1, 1, 1, 1, 1, 1, 1, 1,
+2, 2, 2, 2, 2, 2, 2, 2,
+3, 3, 3, 3, 3, 3, 3, 3,
+4, 4, 4, 4, 4, 4, 4, 4,
+5, 5, 5, 5, 5, 5, 5, 5,
+6, 6, 6, 6, 6, 6, 6, 6,
+7, 7, 7, 7, 7, 7, 7, 7,     // 0x78 - 0x7f
+
+0, 0, 0, 0, 0, 0, 0, 0,     // 0x80 - 0x87
+1, 1, 1, 1, 1, 1, 1, 1,
+2, 2, 2, 2, 2, 2, 2, 2,
+3, 3, 3, 3, 3, 3, 3, 3,
+4, 4, 4, 4, 4, 4, 4, 4,
+5, 5, 5, 5, 5, 5, 5, 5,
+6, 6, 6, 6, 6, 6, 6, 6,
+7, 7, 7, 7, 7, 7, 7, 7,     // 0xb8 - 0xbf
+
+0, 0, 0, 0, 0, 0, 0, 0,     // 0xc0 - 0xc7
+1, 1, 1, 1, 1, 1, 1, 1,
+2, 2, 2, 2, 2, 2, 2, 2,
+3, 3, 3, 3, 3, 3, 3, 3,
+4, 4, 4, 4, 4, 4, 4, 4,
+5, 5, 5, 5, 5, 5, 5, 5,
+6, 6, 6, 6, 6, 6, 6, 6,
+7, 7, 7, 7, 7, 7, 7, 7};     // 0xf8 - 0xff
+
+
+/*
+* Dceclation of the Instruction types
+*/
+
+struct CInstruction {
+    int             isize;  // size of the instruction in bytes
+    unsigned char   idata[8];
+    virtual void    output( void );
+    void            hexdump( void );
+};
+
+
+void CInstruction::output( void )
+{
+    cout << "Dummy Instruction\n";
+}
+
+
+struct CPush:CInstruction {
+                    CPush( unsigned char *theCode );
+    virtual void    output( void ); 
+};
+
+
+struct CCmp:CInstruction {
+                    CCmp( unsigned char *theCode );
+    virtual void    output( void ); 
+};
+
+
+struct CSub:CInstruction {
+                    CSub( unsigned char *theCode );
+    virtual void    output( void ); 
+};
+
+
+struct CBadOpCode:CInstruction {
+                    CBadOpCode( unsigned char *theCode );
+    virtual void    output( void ); 
+};
+
+
+void CInstruction::hexdump( void )
+{
+    int instrSize = isize;
+    while (instrSize)
+    {
+        cout.form("%02x ", idata[isize - instrSize]);
+        instrSize--;
+    }
+    cout << "\n";
+}
+
+
+/* CPush */
+CPush::CPush( unsigned char *theCode )
+{
+    switch( *theCode )
+    {
+        case 0x06:
+            isize = 1;
+            break;
+        case 0x0e:
+            isize = 1;
+            break;
+        case 0x0f:
+            isize = 2;
+            break;
+        case 0x16:
+            isize = 1;
+            break;
+        case 0x1e:
+            isize = 1;
+            break;
+        case 0x68:
+            isize = 5;
+            break;
+        case 0x6a:
+            isize = 2;
+            break;
+        case 0x50:
+        case 0x51:
+        case 0x52:
+        case 0x53:
+        case 0x54:
+        case 0x55:
+        case 0x56:
+        case 0x57:
+            isize = 1;
+            break;
+        case 0xFF:
+            isize = 2;  // at least 2!
+            break;
+    }
+    memcpy( idata, theCode, isize );
+}
+
+
+void CPush::output( void )
+{
+    cout << "push r\n";
+}
+
+
+/* CCmp */
+CCmp::CCmp( unsigned char *theCode )
+{
+    isize = 4;
+    memcpy( idata, theCode, isize );
+}
+
+
+void CCmp::output( void )
+{
+    cout << "cmp imm8,off(r)\n";
+}
+
+
+/* CSub */
+CSub::CSub( unsigned char *theCode )
+{
+    isize = 3;
+    memcpy( idata, theCode, isize );
+}
+
+
+void CSub::output( void )
+{
+    cout << "sub r,imm8\n";
+}
+
+
+/* CBadOpCode */
+CBadOpCode::CBadOpCode( unsigned char *theCode )
+{
+    isize = 2;
+    memcpy( idata, theCode, isize );
+}
+
+
+void CBadOpCode::output( void )
+{
+    cout << "*** Bad OpCode ";
+    cout.form( "%02X %02X ***\n", *idata, *(idata+1) );
+}
+
+
+
+
+CInstruction* get_next_instruction( unsigned char *theCode )
+{
+    CInstruction    *retInstr;
+
+    switch (*theCode)
+    {
+        case 0x55:
+            retInstr = new CPush( theCode );
+            break;
+        case 0x83:
+            switch (DIGIT_MAP[*(theCode+1)])
+            {
+                case 5:
+                    retInstr = new CSub( theCode );
+                    break;
+                case 7:
+                    retInstr = new CCmp( theCode );
+                    break;
+                default:
+                    retInstr = new CBadOpCode( theCode );
+                    break;
+            }
+            break;
+        case 0x88:
+        case 0x89:
+        case 0x8a:
+        case 0x8b:
+        case 0x8c:
+        case 0x8e:
+        case 0xc7:
+          //  retInstr = new CMov( theCode );
+            break;
+        case 0x7e:
+        case 0xeb:
+          //  retInstr = new CJmp( theCode );
+            break;
+
+        default:
+            retInstr = new CBadOpCode( theCode );
+            break;
+    }
+
+    return retInstr;
+}
+
+
+/*
+* Takes the compile intel code and tries to optimize it.
+*
+*   returns the number of bytes smaller the new code is.
+*/
+
+long process_function( unsigned char *theCode, long codeSize )
+{
+    long            saved=0;
+
+    while (codeSize > 0)
+    {
+        CInstruction    *instr = get_next_instruction( theCode );
+        int instrSize = instr->isize;
+
+        theCode += instrSize;
+        codeSize -= instrSize;
+
+        instr->hexdump();
+        instr->output();
+        delete instr;
+    }
+
+    return 0;
+}
+
+
 //----------------------------------------------------------------------
 
 typedef vector<elf_symbol> elf_symbol_table;
@@ -200,6 +464,7 @@ process_mapping(char* mapping, size_t size)
         }
         else if (name == ".text") {
             textsh = shdrs + i;
+            textndx = i;
         }
         else if (name == ".strtab") {
             strtabsh = shdrs + i;
@@ -216,55 +481,24 @@ process_mapping(char* mapping, size_t size)
     // find the symbol table
     int nentries = symtabsh->sh_size / sizeof(Elf32_Sym);
     Elf32_Sym* symtab = reinterpret_cast<Elf32_Sym*>(mapping + symtabsh->sh_offset);
-    // look for symbols in the .text section
+
+    // look for code in the .text section
     elf_text_map textmap;
-#if 1
+    long bytesSaved = 0;
     for (int i = 0; i < nentries; ++i) {
         const Elf32_Sym* sym = symtab + i;
-cout << sym->st_name << "\n";
-        if (sym->st_shndx == textndx &&
-    //        ELF32_ST_TYPE(sym->st_info) == st_type(opt_type) &&
-            sym->st_size) {
+        if ( sym->st_shndx == textndx && sym->st_size)
+        {
+            basic_string<char> funcname(sym->st_name + strtab, sym->st_size);
             basic_string<char> functext(text + sym->st_value - textaddr, sym->st_size);
 
-cout << functext << "\n";
-            elf_symbol_table& syms = textmap[functext];
-            if (syms.end() == find(syms.begin(), syms.end(), elf_symbol(*sym)))
-                syms.insert(syms.end(), *sym);
+            if (gDebug) cout << funcname << "\n\n";
+            if (gDebug) hexdump(cout,functext.data(),sym->st_size);
+            bytesSaved += process_function( (unsigned char *)functext.data(), sym->st_size );
         }
     }
-#endif
-    int uniquebytes = 0, totalbytes = 0;
-    int uniquecount = 0, totalcount = 0;
 
-    for (elf_text_map::const_iterator entry = textmap.begin();
-         entry != textmap.end();
-         ++entry) {
-        const elf_symbol_table& syms = entry->second;
-cout << "H2\n";
-        if (syms.size() <= 1)
-            continue;
-
-        int sz = syms.begin()->st_size;
-        uniquebytes += sz;
-        totalbytes += sz * syms.size();
-        uniquecount += 1;
-        totalcount += syms.size();
-
-        for (elf_symbol_table::const_iterator sym = syms.begin(); sym != syms.end(); ++sym)
-            cout << strtab + sym->st_name << endl;
-
-        dec(cout);
-        cout << syms.size() << " copies of " << sz << " bytes";
-        cout << " (" << ((syms.size() - 1) * sz) << " redundant bytes)" << endl;
-
-        hexdump(cout, entry->first.data(), entry->first.size());
-        cout << endl;
-    }
-
-    dec(cout);
-    cout << "bytes unique=" << uniquebytes << ", total=" << totalbytes << endl;
-    cout << "entries unique=" << uniquecount << ", total=" << totalcount << endl;
+    cout << "Code size reduction of " << bytesSaved << "\n";
 }
 
 void
