@@ -74,7 +74,7 @@ Rights Reserved.
   </treehead>
   
 
-  <treechildren id="" name="threadTreeBody">
+  <treechildren id="" name="threadTreeBody" open="true">
   </treechildren>
 </tree>
 </window>
