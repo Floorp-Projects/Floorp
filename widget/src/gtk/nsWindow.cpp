@@ -258,7 +258,6 @@ nsWindow::DestroyNativeChildren(void)
         childWindow->Destroy();
         // only one of these should be on at a time...
         //        printf("destroying child ref=%i\n", childWindow->Release());
-        NS_RELEASE(childWindow);
       }
     } while(NS_SUCCEEDED(children->Next()));
   }
