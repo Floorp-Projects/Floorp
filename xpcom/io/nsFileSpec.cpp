@@ -156,7 +156,7 @@ char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
 
 
 #if defined(XP_PC)
-#include "nsFileSpecWin.cpp" // Windows-specific implementations
+#include "windows/nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
 #include "nsFileSpecMac.cpp" // Macintosh-specific implementations
 #elif defined(XP_UNIX)

@@ -22,6 +22,8 @@ DEFINES = -D_IMPL_NS_BASE
 
 EXPORTS =		\
     nsISizeOfHandler.h	\
+	nsFileSpec.h \
+	nsFileStream.h \
     $(NULL)
 
 MODULE = raptor 
