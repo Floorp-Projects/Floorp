@@ -446,7 +446,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   };
   char buf[2];
   for (i=0; i<2; ++i) {
-    rv = parser.GetString("App", boolean_fields[i].key, buf, sizeof(buf));
+    rv = parser.GetString("XRE", boolean_fields[i].key, buf, sizeof(buf));
     if (NS_SUCCEEDED(rv))
       *(boolean_fields[i].value) =
           buf[0] == '1' || buf[0] == 't' || buf[0] == 'T';
