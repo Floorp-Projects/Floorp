@@ -83,6 +83,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsCOMPtr.obj      \
 	.\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
+        .\$(OBJDIR)\nsIInterfaceRequestor.obj \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
 !ifdef GC_LEAK_DETECTOR

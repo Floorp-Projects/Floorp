@@ -35,6 +35,7 @@ REQUIRES	= xpcom
 CPPSRCS		= \
 		nsAllocator.cpp \
 		nsDebug.cpp \
+		nsIInterfaceRequestor.cpp \
 		nsTraceRefcnt.cpp \
 		nsCOMPtr.cpp \
 		nsID.cpp \
