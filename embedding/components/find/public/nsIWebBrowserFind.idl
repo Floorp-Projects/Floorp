@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Conrad Carlen <ccarlen@netscape.com>
+ *   Simon Fraser <sfraser@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -41,8 +42,11 @@
 
 #include "domstubs.idl"
 
-/*
- * nsIWebBrowserFind interface
+/* THIS IS A PUBLIC EMBEDDING API */
+
+
+/**
+ * nsIWebBrowserFind
  *
  * Searches for text in a web browser.
  *
@@ -53,31 +57,32 @@
  * does not by default search subframes or iframes. To change this
  * behaviour, and to explicitly set the frame to search, 
  * QueryInterface to nsIWebBrowserFindInFrames.
+ *
+ * @status FROZEN
  */
 
 [scriptable, uuid(2f977d44-5485-11d4-87e2-0010a4e75ef2)]
 interface nsIWebBrowserFind : nsISupports
 {
-    /*
+    /**
      * findNext
      *
-     * Find the next occurrence of the search string, using the current
-     * search settings. By default, only searches the current frame (the
-     * focussed or content area frame). Fails if the search string is
-     * empty.
+     * Finds, highlights, and scrolls into view the next occurrence of the
+     * search string, using the current search settings. Fails if the
+     * search string is empty.
      *
+     * @return  Whether an occurrence was found
      */
 	boolean		findNext();
 
-    /*
+    /**
      * searchString
      *
      * The string to search for. This must be non-empty to search.
-     *
      */
     attribute wstring searchString;
     
-    /*
+    /**
      * findBackwards
      *
      * Whether to find backwards (towards the beginning of the document).
@@ -85,34 +90,31 @@ interface nsIWebBrowserFind : nsISupports
      */
     attribute boolean findBackwards;
 
-    /*
+    /**
      * wrapFind
      *
      * Whether the search wraps around to the start (or end) of the document
      * if no match was found between the current position and the end (or
      * beginning). Works correctly when searching backwards. Default is
      * false.
-     * 
      */
     attribute boolean wrapFind;
 
-    /*
+    /**
      * entireWord
      *
      * Wether to match entire words only. Default is false.
-     * 
      */
     attribute boolean entireWord;
 
-    /*
+    /**
      * matchCase
      *
      * Whether to match case (case sensitive) when searching. Default is false.
-     * 
      */
     attribute boolean matchCase;
 
-    /*
+    /**
      * searchFrames
      *
      * Whether to search through all frames in the content area. Default is true.
@@ -127,48 +129,46 @@ interface nsIWebBrowserFind : nsISupports
 
 
 
-/*
- * nsIWebBrowserFindInFrames interface
+/**
+ * nsIWebBrowserFindInFrames
  *
- * Control how find behaves when multiple frames or iframes are present.
+ * Controls how find behaves when multiple frames or iframes are present.
  *
  * Get by doing a QueryInterface from nsIWebBrowserFind.
  *
+ * @status FROZEN
  */
  
 [scriptable, uuid(e0f5d182-34bc-11d5-be5b-b760676c6ebc)]
 interface nsIWebBrowserFindInFrames : nsISupports
 {
-    /*
+    /**
      * currentSearchFrame
      *
      * Frame at which to start the search. Once the search is done, this will
      * be set to be the last frame searched, whether or not a result was found.
      * Has to be equal to or contained within the rootSearchFrame.
-     *
      */
     attribute nsIDOMWindow  currentSearchFrame;
 
-    /*
+    /**
      * rootSearchFrame
      *
      * Frame within which to confine the search (normally the content area frame).
      * Set this to only search a subtree of the frame hierarchy.
-     *
      */
     attribute nsIDOMWindow  rootSearchFrame;
         
-    /*
+    /**
      * searchSubframes
      *
      * Whether to recurse down into subframes while searching. Default is true.
      *
      * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
-     *
      */
     attribute boolean searchSubframes;
     
-    /*
+    /**
      * searchParentFrames
      *
      * Whether to allow the search to propagate out of the currentSearchFrame into its
@@ -176,7 +176,6 @@ interface nsIWebBrowserFindInFrames : nsISupports
      * is true.
      *
      * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
-     *
      */
     attribute boolean searchParentFrames;
 
