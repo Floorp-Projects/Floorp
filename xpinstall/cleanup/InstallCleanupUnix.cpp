@@ -22,9 +22,11 @@
  *   Don Bragg <dbragg@netscape.com>
  */
 
+
 #include "InstallCleanup.h"
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 
 //----------------------------------------------------------------------------
 // Native Unix file deletion function
@@ -68,12 +70,11 @@ int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
     {
       // doomedFile is gone move new file into place
       if (!rename(replacementFile, doomedFile))
-       	  return TRY_LATER; // this shouldn't happen
+          return TRY_LATER; // this shouldn't happen
     }
 
     return DONE;
 }
-
 
 int main()
 {
