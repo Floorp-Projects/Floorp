@@ -1233,6 +1233,18 @@ restart:
                 GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
                 if (fp->sharpArray)
                     GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
+
+                if (fp->objAtomMap) {
+                    JSAtom **vector, *atom;
+
+                    nslots = fp->objAtomMap->length;
+                    vector = fp->objAtomMap->vector;
+                    for (i = 0; i < nslots; i++) {
+                        atom = vector[i];
+                        if (atom)
+                            GC_MARK_ATOM(cx, atom, NULL);
+                    }
+                }
             } while ((fp = fp->down) != NULL);
         }
 

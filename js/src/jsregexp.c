@@ -2976,4 +2976,23 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     return obj;
 }
 
+JSObject *
+js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
+{
+    JSObject *clone;
+    JSRegExp *re;
+
+    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+    clone = js_NewObject(cx, &js_RegExpClass, NULL, parent);
+    if (!clone)
+        return NULL;
+    re = JS_GetPrivate(cx, obj);
+    if (!JS_SetPrivate(cx, clone, re)) {
+        cx->newborn[GCX_OBJECT] = NULL;                                       \
+        return NULL;
+    }
+    HOLD_REGEXP(cx, re);
+    return clone;
+}
+
 #endif /* JS_HAS_REGEXPS */

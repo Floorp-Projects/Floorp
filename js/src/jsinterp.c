@@ -737,6 +737,7 @@ have_fun:
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.dormantNext = NULL;
+    frame.objAtomMap = NULL;
 
     /* Compute the 'this' parameter and store it in frame as frame.thisp. */
     ok = ComputeThis(cx, thisp, &frame);
@@ -991,6 +992,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.sharpDepth = 0;
     frame.flags = special;
     frame.dormantNext = NULL;
+    frame.objAtomMap = NULL;
 
     /*
      * Here we wrap the call to js_Interpret with code to (conditionally)
@@ -2918,12 +2920,113 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_OBJECT:
-            atom = GET_ATOM(cx, script, pc);
+          {
+            jsatomid atomIndex;
+            JSAtomMap *atomMap;
+
+            /*
+             * Get a suitable object from an atom mapped by the bytecode at pc.
+             *
+             * We must handle the case where a regexp object literal is used in
+             * a different global at execution time from the global with which
+             * it was scanned at compile time, in order to rewrap the JSRegExp
+             * struct with a new object having the right prototype and parent.
+             *
+             * Unlike JSOP_DEFFUN and other prolog bytecodes, we don't want to
+             * pay a script prolog execution price for all regexp literals in a
+             * script (many may not be used by a particular execution of that
+             * script, depending on control flow), so we do all fp->objAtomMap
+             * initialization lazily, here under JSOP_OBJECT.
+             *
+             * XXX This code is specific to regular expression objects.  If we
+             * need JSOP_OBJECT for other kinds of object literals, we should
+             * push cloning down under JSObjectOps.  Also, fp->objAtomMap is
+             * used only for object atoms, so it's sparse (wasting some stack
+             * space) and as its name implies, you can't get non-object atoms
+             * from it.
+             */
+            atomIndex = GET_ATOM_INDEX(pc);
+            atomMap = fp->objAtomMap;
+            atom = atomMap ? atomMap->vector[atomIndex] : NULL;
+            if (!atom) {
+                /* Let atom and obj denote the regexp (object) mapped by pc. */
+                atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+                JS_ASSERT(ATOM_IS_OBJECT(atom));
+                obj = ATOM_TO_OBJECT(atom);
+                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+
+                /* Compute the current global object in obj2. */
+                obj2 = fp->scopeChain;
+                while ((parent = OBJ_GET_PARENT(cx, obj2)) != NULL)
+                    obj2 = parent;
+
+                /*
+                 * If obj's parent is not obj2, we must clone obj so that it
+                 * has the right parent, and therefore, the right prototype.
+                 *
+                 * Yes, this means we assume that the correct RegExp.prototype
+                 * to which regexp instances (including literals) delegate can
+                 * be distinguished solely by the instance's parent, which was
+                 * set to the parent of the RegExp constructor function object
+                 * when the instance was created.  In other words,
+                 *
+                 *   (/x/.__parent__ == RegExp.__parent__) implies
+                 *   (/x/.__proto__ == RegExp.prototype)
+                 *
+                 * (unless you assign a different object to RegExp.prototype
+                 * at runtime, in which case, ECMA doesn't specify operation,
+                 * and you get what you deserve).
+                 *
+                 * This same coupling between instance parent and constructor
+                 * parent turns up elsewhere (see jsobj.c's FindConstructor,
+                 * js_ConstructObject, and js_NewObject).  It's fundamental.
+                 */
+                if (OBJ_GET_PARENT(cx, obj) != obj2) {
+                    obj = js_CloneRegExpObject(cx, obj, obj2);
+                    if (!obj) {
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+
+                    atom = js_AtomizeObject(cx, obj, 0);
+                    if (!atom) {
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+                }
+
+                /*
+                 * If fp->objAtomMap is null, initialize it now so we can map
+                 * atom (whether atom is newly created for a cloned object, or
+                 * the original atom mapped by script) for faster performance
+                 * next time through JSOP_OBJECT.
+                 */
+                if (!atomMap) {
+                    jsatomid mapLength = script->atomMap.length;
+                    size_t vectorBytes = mapLength * sizeof(JSAtom *);
+
+                    /* Allocate an override atom map from cx->stackPool. */
+                    JS_ARENA_ALLOCATE_CAST(atomMap, JSAtomMap *,
+                                           &cx->stackPool,
+                                           sizeof(JSAtomMap) + vectorBytes);
+                    if (!atomMap) {
+                        JS_ReportOutOfMemory(cx);
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+
+                    atomMap->length = mapLength;
+                    atomMap->vector = (JSAtom **)(atomMap + 1);
+                    memset(atomMap->vector, 0, vectorBytes);
+                    fp->objAtomMap = atomMap;
+                }
+                atomMap->vector[atomIndex] = atom;
+            }
             rval = ATOM_KEY(atom);
-            JS_ASSERT(JSVAL_IS_OBJECT(rval));
             PUSH_OPND(rval);
             obj = NULL;
             break;
+          }
 
           case JSOP_ZERO:
             PUSH_OPND(JSVAL_ZERO);
