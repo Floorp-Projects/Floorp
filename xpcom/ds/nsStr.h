@@ -200,6 +200,16 @@ public:
 
 struct NS_COM nsStr {  
 
+//----------------------------------------------------------------------------------------
+
+  nsStr() {
+    MOZ_COUNT_CTOR(nsStr);
+  }
+
+  ~nsStr() {
+    MOZ_COUNT_DTOR(nsStr);
+  }
+
  /**
   * This method initializes an nsStr for use
   *
