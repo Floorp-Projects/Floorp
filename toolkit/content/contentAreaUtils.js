@@ -278,7 +278,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     // If we're asking the user where to save the file, root the Save As...
     // dialog on they place they last picked. 
     try {
-      dir = prefs.getComplexValue("dir", nsILocalFile);
+      dir = prefs.getComplexValue("lastDir", nsILocalFile);
     }
     catch (e) {
       // No default download location. Default to desktop. 
@@ -332,10 +332,9 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     catch(ex) {
     }
     
-    if (!useDownloadDir) {
-      var directory = fp.file.parent.QueryInterface(nsILocalFile);
-      prefs.setComplexValue("dir", nsILocalFile, directory);
-    }
+    var directory = fp.file.parent.QueryInterface(nsILocalFile);
+    prefs.setComplexValue("lastDir", nsILocalFile, directory);
+
     fp.file.leafName = validateFileName(fp.file.leafName);
     filterIndex = fp.filterIndex;
     file = fp.file;
