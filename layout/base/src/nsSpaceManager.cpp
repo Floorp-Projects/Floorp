@@ -43,8 +43,10 @@ NS_RemoveFrameInfoEntries(PLHashEntry* he, PRIntn i, void* arg)
 /////////////////////////////////////////////////////////////////////////////
 // BandList
 
+#define NSCOORD_MIN (-2147483647 - 1) /* minimum signed value */
+
 nsSpaceManager::BandList::BandList()
-  : nsSpaceManager::BandRect(-1, -1, -1, -1, (nsIFrame*)nsnull)
+  : nsSpaceManager::BandRect(NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, (nsIFrame*)nsnull)
 {
   PR_INIT_CLIST(this);
   numFrames = 0;
@@ -122,15 +124,20 @@ nsSpaceManager::GetTranslation(nscoord& aX, nscoord& aY) const
 NS_IMETHODIMP
 nsSpaceManager::YMost(nscoord& aYMost) const
 {
+  nsresult  result;
+
   if (mBandList.IsEmpty()) {
     aYMost = 0;
+    result = NS_COMFALSE;
+
   } else {
     BandRect* lastRect = mBandList.Tail();
 
     aYMost = lastRect->bottom;
+    result = NS_OK;
   }
 
-  return NS_OK;
+  return result;
 }
 
 /**
@@ -266,8 +273,8 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
   // If there are no unavailable rects or the offset is below the bottommost
   // band, then all the space is available
   nscoord yMost;
-  YMost(yMost);
-  if (y >= yMost) {
+  
+  if ((NS_COMFALSE == YMost(yMost)) || (y >= yMost)) {
     // All the requested space is available
     aBandData.count = 1;
     aBandData.trapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
@@ -618,8 +625,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
   // If there are no existing bands or this rect is below the bottommost
   // band, then add a new band
   nscoord yMost;
-  YMost(yMost);
-  if (aBandRect->top >= yMost) {
+  if ((NS_COMFALSE == YMost(yMost)) || (aBandRect->top >= yMost)) {
     mBandList.Append(aBandRect);
     return;
   }
@@ -725,12 +731,6 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
 
-  // Verify that the offset is within the defined coordinate space
-  if ((rect.x < 0) || (rect.y < 0)) {
-    NS_WARNING("invalid offset for rect region");
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // Create a frame info structure
   frameInfo = CreateFrameInfo(aFrame, rect);
   if (nsnull == frameInfo) {
@@ -775,12 +775,6 @@ nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
     rect.x += aDeltaWidth;
   }
 
-  // Verify that the offset is within the defined coordinate space
-  if ((rect.x < 0) || (rect.y < 0)) {
-    NS_WARNING("invalid offset when resizing rect region");
-    return NS_ERROR_FAILURE;
-  }
-
   // For the time being just remove it and add it back in. Because
   // AddRectRegion() operates relative to the local coordinate space,
   // translate from world coordinates to the local coordinate space
@@ -803,12 +797,6 @@ nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
   // Compute new rect
   nsRect  rect(frameInfo->rect);
   rect.MoveBy(aDx, aDy);
-
-  // Verify that the offset is within the defined coordinate space
-  if ((rect.x < 0) || (rect.y < 0)) {
-    NS_WARNING("invalid offset when offseting rect region");
-    return NS_ERROR_FAILURE;
-  }
 
   // For the time being just remove it and add it back in. Because
   // AddRectRegion() operates relative to the local coordinate space,
