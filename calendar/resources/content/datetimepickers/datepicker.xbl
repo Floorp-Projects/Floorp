@@ -188,7 +188,7 @@
             ]]></body>
         </method>
 
-        <method name="openPopup">
+        <method name="clickDate">
             <parameter name="aMiniMonthGrid" />
             <body><![CDATA[
                 this.update(new Date(aMiniMonthGrid.value), true)
