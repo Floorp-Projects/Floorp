@@ -61,17 +61,14 @@ void nsTagStack::Empty(void) {
  */
 void nsTagStack::Push(eHTMLTags aTag) {
   if(mCount==mCapacity){ 
-    nsTagEntry* temp=new nsTagEntry[mCapacity+50]; 
-    if(mCapacity){
-      PRUint32 index=0; 
-      for(index=0;index<mCount;index++) {
-        temp[index]=mEntries[index];
-      }
-      delete [] mEntries;
+    nsTagEntry* temp=new nsTagEntry[mCapacity+=50]; 
+    PRUint32 index=0; 
+    for(index=0;index<mCount;index++) {
+      temp[index]=mEntries[index];
     }
+    delete [] mEntries;
     mEntries=temp;
   }
-  mCapacity+=50;
   mEntries[mCount].mTag=aTag;
   mEntries[mCount].mBankIndex=-1;
   mEntries[mCount++].mStyleIndex=-1;
