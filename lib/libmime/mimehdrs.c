@@ -971,9 +971,9 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
 		 already been done.
 	   */
 	  status = NET_ScanForURLs (
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
 								NULL,
-#endif /* !MOZILLA_30 */
+/*#endif / * !MOZILLA_30 */
 								contents, contents_length, out,
 								hdrs->obuffer_size - (out - hdrs->obuffer) -10,
 								TRUE);
@@ -1969,9 +1969,9 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   /* Quotify the subject... */
   if (subj)
 	status = NET_ScanForURLs (
-# ifndef MOZILLA_30
+/*# ifndef MOZILLA_30*/
 							  NULL,
-# endif /* !MOZILLA_30 */
+/*# endif / * !MOZILLA_30 */
 							  subj, XP_STRLEN(subj), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							  TRUE);
@@ -1984,9 +1984,9 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   /* Quotify the sender... */
   if (from)
 	status = NET_ScanForURLs (
-# ifndef MOZILLA_30
+/*# ifndef MOZILLA_30*/
 							  NULL,
-# endif /* !MOZILLA_30 */
+/*# endif / * !MOZILLA_30 */
 							  from, XP_STRLEN(from), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							  TRUE);
@@ -1999,9 +1999,9 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
   /* Quotify the date (just in case...) */
   if (date)
 	status = NET_ScanForURLs (
-# ifndef MOZILLA_30
+/*# ifndef MOZILLA_30*/
 							  NULL,
-# endif /* !MOZILLA_30 */
+/*# endif / * !MOZILLA_30 */
 							  date, XP_STRLEN(date), out,
 							  hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
 							  TRUE);
@@ -2373,15 +2373,17 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
    Useful for IMAP MIME parts on demand, because it shows a different
    color for undownloaded parts. */
 static XP_Bool
-MimeHeaders_getShowAttachmentColors()
+MimeHeaders_getShowAttachmentColors(void)
 {
-	static XP_Bool gotPref = FALSE;
 	static XP_Bool showColors = FALSE;
+#ifndef MOZILLA_30
+	static XP_Bool gotPref = FALSE;
 	if (!gotPref)
 	{
 		PREF_GetBoolPref("mailnews.color_tag_attachments", &showColors);
 		gotPref = TRUE;
 	}
+#endif /* MOZILLA_30 */
 	return showColors;
 }
 

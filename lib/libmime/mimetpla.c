@@ -127,12 +127,21 @@ MimeInlineTextPlain_parse_line (char *line, int32 length, MimeObject *obj)
    */
   *obj->obuffer = 0;
   status = NET_ScanForURLs (
+#if 0
 #ifndef MOZILLA_30
 							(obj->options ? obj->options->pane : 0),
 #endif /* !MOZILLA_30 */
+#else
+                            NULL,
+#endif
 							line, length, obj->obuffer, obj->obuffer_size - 10,
+#ifdef MOZILLA_30
+                            FALSE
+#else  /* !MOZILLA_30 */
 							(obj->options ?
-							 obj->options->dont_touch_citations_p : FALSE));
+							 obj->options->dont_touch_citations_p : FALSE)
+#endif /* !MOZILLA_30 */
+                            );
   if (status < 0) return status;
   XP_ASSERT(*line == 0 || *obj->obuffer);
   return MimeObject_write(obj, obj->obuffer, XP_STRLEN(obj->obuffer), TRUE);

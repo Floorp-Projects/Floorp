@@ -19,6 +19,8 @@
 /* mimedrft.c --- save and restore drafts of unfinished messages
  */
 
+#ifdef MIME_DRAFTS /* whole file */
+
 #include "xp.h"
 #include "xpgetstr.h"
 #include "libi18n.h"
@@ -931,3 +933,5 @@ MIME_ToDraftConverter ( int format_out,
 
   return stream;
 }
+
+#endif /* MIME_DRAFTS */

@@ -69,6 +69,30 @@ char *XP_GetStringForHTML (int i, int16 wincsid, char* english)
   return english; 
 }
 
+char *INTL_DecodeMimePartIIStr(const char *header, int16 wincsid,
+                               XP_Bool dontConvert)
+{
+  return strdup(header);
+}
+
+int16 INTL_DefaultDocCharSetID(MWContext * context)
+{
+  return 0;
+}
+
+int PREF_GetCharPref(const char *pref, char * return_buf, int * buf_length)
+{
+  return 0;
+}
+/*
+INTL_DefaultDocCharSetID -- (mimetext.o).
+PREF_GetCharPref --  ../../dist/lib/libxp.a(xp_file.o).
+
+MSG_ExtractRFC822AddressMailboxes -- (mimehdrs.o).
+MSG_ExtractRFC822AddressNames -- (mimehdrs.o).
+*/
+
+
 
 /* from nspr somewhere...
  */
@@ -150,9 +174,9 @@ static const char *MSG_CitationColor = 0;
 /* from libnet/mkutils.c */
 PUBLIC int
 NET_ScanForURLs(
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
 				MSG_Pane* pane,
-#endif /* !MOZILLA_30 */
+/*#endif / * !MOZILLA_30 */
 				const char *input, int32 input_size,
 				char *output, int output_size, XP_Bool urls_only)
 {

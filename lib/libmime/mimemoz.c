@@ -32,9 +32,9 @@
 #ifdef MOZ_SECURITY
 #include "mimecryp.h"
 #endif
-#ifndef MOZILLA_30
 #include "mimemrel.h"
 #include "mimemalt.h"
+#ifndef MOZILLA_30
 # include "xpgetstr.h"
 # include "mimevcrd.h"  /* for MIME_VCardConverter */
 #ifdef MOZ_CALENDAR
@@ -1105,12 +1105,14 @@ MIME_MessageConverter (int format_out, void *closure,
 
       XP_Bool all_headers_p = FALSE;
       XP_Bool micro_headers_p = FALSE;
+#if 0 /* #### */
       MSG_GetContextPrefs(context,
                           &all_headers_p,
                           &micro_headers_p,
                           &msd->options->no_inline_p,
                           &msd->options->rot13_p,
                           &msd->options->wrap_long_lines_p);
+#endif /* 0 #### */
       if (all_headers_p)
         msd->options->headers = MimeHeadersAll;
       else if (micro_headers_p)
@@ -2038,7 +2040,7 @@ mime_richtext_stream_fn (char *buf, int32 size, void *closure)
   return mrd->stream->put_block (mrd->stream, buf, size);
 }
 
-static long
+static int32
 mime_richtext_write_line (char* line, uint32 size, void *closure)
 {
   struct mime_richtext_data *mrd = (struct mime_richtext_data *) closure;

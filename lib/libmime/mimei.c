@@ -351,9 +351,12 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 	  (content_type ? strcasecomp(content_type, MULTIPART_APPLEDOUBLE) : TRUE) &&
 	  (!content_type ||
 	   !strcasecomp(content_type, APPLICATION_OCTET_STREAM) ||
-	   !strcasecomp(content_type, UNKNOWN_CONTENT_TYPE) ||
-	   (reverse_lookup &&
-	    !NET_cinfo_find_info_by_type((char*)content_type))))
+	   !strcasecomp(content_type, UNKNOWN_CONTENT_TYPE)
+#if 0 /* #### */
+       || (reverse_lookup &&
+	    !NET_cinfo_find_info_by_type((char*)content_type))
+#endif /* #### */
+       ))
 	{
 	  char *name = MimeHeaders_get_name(hdrs);
 	  if (name)

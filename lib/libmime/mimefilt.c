@@ -51,13 +51,17 @@
 
 #include "rosetta.h"
 #include "mimemsg.h"
+#if 0
 #include "prglobal.h"
+#endif
 
+#ifndef NO_SECURITY
 #include "key.h"
 #include "cert.h"
 #include "secrng.h"
 #include "secmod.h"
 #include "pk11func.h"
+#endif /* NO_SECURITY */
 
 
 #ifndef XP_UNIX
@@ -74,35 +78,35 @@ test_file_type (const char *filename, void *stream_closure)
 	return 0;
   suf++;
 
-  if (!strcasecomp(suf, "txt") ||
-	  !strcasecomp(suf, "text"))
+  if (!XP_STRCASECMP(suf, "txt") ||
+	  !XP_STRCASECMP(suf, "text"))
 	return XP_STRDUP("text/plain");
-  else if (!strcasecomp(suf, "htm") ||
-		   !strcasecomp(suf, "html"))
+  else if (!XP_STRCASECMP(suf, "htm") ||
+		   !XP_STRCASECMP(suf, "html"))
 	return XP_STRDUP("text/html");
-  else if (!strcasecomp(suf, "gif"))
+  else if (!XP_STRCASECMP(suf, "gif"))
 	return XP_STRDUP("image/gif");
-  else if (!strcasecomp(suf, "jpg") ||
-		   !strcasecomp(suf, "jpeg"))
+  else if (!XP_STRCASECMP(suf, "jpg") ||
+		   !XP_STRCASECMP(suf, "jpeg"))
 	return XP_STRDUP("image/jpeg");
-  else if (!strcasecomp(suf, "pjpg") ||
-		   !strcasecomp(suf, "pjpeg"))
+  else if (!XP_STRCASECMP(suf, "pjpg") ||
+		   !XP_STRCASECMP(suf, "pjpeg"))
 	return XP_STRDUP("image/pjpeg");
-  else if (!strcasecomp(suf, "xbm"))
+  else if (!XP_STRCASECMP(suf, "xbm"))
 	return XP_STRDUP("image/x-xbitmap");
-  else if (!strcasecomp(suf, "xpm"))
+  else if (!XP_STRCASECMP(suf, "xpm"))
 	return XP_STRDUP("image/x-xpixmap");
-  else if (!strcasecomp(suf, "xwd"))
+  else if (!XP_STRCASECMP(suf, "xwd"))
 	return XP_STRDUP("image/x-xwindowdump");
-  else if (!strcasecomp(suf, "bmp"))
+  else if (!XP_STRCASECMP(suf, "bmp"))
 	return XP_STRDUP("image/x-MS-bmp");
-  else if (!strcasecomp(suf, "au"))
+  else if (!XP_STRCASECMP(suf, "au"))
 	return XP_STRDUP("audio/basic");
-  else if (!strcasecomp(suf, "aif") ||
-		   !strcasecomp(suf, "aiff") ||
-		   !strcasecomp(suf, "aifc"))
+  else if (!XP_STRCASECMP(suf, "aif") ||
+		   !XP_STRCASECMP(suf, "aiff") ||
+		   !XP_STRCASECMP(suf, "aifc"))
 	return XP_STRDUP("audio/x-aiff");
-  else if (!strcasecomp(suf, "ps"))
+  else if (!XP_STRCASECMP(suf, "ps"))
 	return XP_STRDUP("application/postscript");
 
   HG43290
@@ -114,15 +118,15 @@ test_file_type (const char *filename, void *stream_closure)
 static char *
 test_type_icon(const char *type, void *stream_closure)
 {
-  if (!strncasecomp(type, "text/", 5))
+  if (!XP_STRNCASECMP(type, "text/", 5))
 	return XP_STRDUP("internal-gopher-text");
-  else if (!strncasecomp(type, "image/", 6))
+  else if (!XP_STRNCASECMP(type, "image/", 6))
 	return XP_STRDUP("internal-gopher-image");
-  else if (!strncasecomp(type, "audio/", 6))
+  else if (!XP_STRNCASECMP(type, "audio/", 6))
 	return XP_STRDUP("internal-gopher-sound");
-  else if (!strncasecomp(type, "video/", 6))
+  else if (!XP_STRNCASECMP(type, "video/", 6))
 	return XP_STRDUP("internal-gopher-movie");
-  else if (!strncasecomp(type, "application/", 12))
+  else if (!XP_STRNCASECMP(type, "application/", 12))
 	return XP_STRDUP("internal-gopher-binary");
   else
 	return XP_STRDUP("internal-gopher-unknown");
@@ -222,6 +226,7 @@ static int test_image_write_buffer(char *buf, int32 size, void *image_closure)
   return 0;
 }
 
+#ifndef NO_SECURITY
 static char *
 test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
 {
@@ -234,6 +239,7 @@ test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
 	s[strlen(s)-1] = '\0';
   return s;
 }
+#endif /* NO_SECURITY */
 
 
 int
@@ -376,7 +382,9 @@ main (int argc, char **argv)
   XP_Bool decrypt_p = FALSE;
   char filename[1000];
 
+#ifndef NO_SECURITY
   HG09846
+#endif /* NO_SECURITY */
 
   if (i < argc)
 	{

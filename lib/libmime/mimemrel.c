@@ -191,7 +191,9 @@ MimeMultipartRelated_finalize (MimeObject *obj)
 	((MimeObjectClass*)&MIME_SUPERCLASS)->finalize(obj);
 }
 
+#if 0 /* #### */
 char * escape_unescaped_percents(const char *incomingURL);
+#endif /* #### */
 
 /* This routine is only necessary because the mailbox URL fed to us 
    by the winfe can contain spaces and '>'s in it. It's a hack. */
@@ -231,12 +233,14 @@ escape_for_mrel_subst(char *inURL)
 		}
 		*outC = '\0';
 	
+#if 0 /* #### */
 		temp = escape_unescaped_percents(output);
 		if (temp)
 		{
 			FREEIF(output);
 			output = temp;
 		}
+#endif /* #### */
 	}
 	return output;
 }
