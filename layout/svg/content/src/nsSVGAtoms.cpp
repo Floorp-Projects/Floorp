@@ -46,9 +46,7 @@ void nsSVGAtoms::AddRefAtoms() {
        place to do this, if you don't want a permanent, "well-known" ID.
     */
     if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager))) {
-//    gNameSpaceManager->CreateRootNameSpace(namespace);
-      nsAutoString nameSpace(kSVGNameSpace);
-      gNameSpaceManager->RegisterNameSpace(nameSpace, nameSpaceID);
+      gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kSVGNameSpace), nameSpaceID);
     } else {
       NS_ASSERTION(0, "failed to create SVG atoms namespace manager");
     }
