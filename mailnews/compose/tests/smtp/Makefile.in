@@ -47,8 +47,6 @@ LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lmsgcompose \
-	-lrdf \
-	-lmailnewsbase \
 	-lreg	\
 	-lxpcom	\
 	-lpwcac \
@@ -62,7 +60,6 @@ LIBS = \
 	-lraptorgfx	\
 	-ljsdom	\
 	-ljsurl	\
-	-lgfxgtk	\
 	-limg	\
 	-lpng	\
 	-ljpeg	\
