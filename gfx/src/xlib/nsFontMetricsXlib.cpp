@@ -33,15 +33,9 @@
 
 extern Display         *gDisplay;
 
-//#undef NOISY_FONTS
-//#undef REALLY_NOISY_FONTS
-
-#ifdef DEBUG_blizzard
-#define NOISY_FONTS
-#define REALLY_NOISY_FONTS
-#endif
-
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
+
+static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 
 nsFontMetricsXlib::nsFontMetricsXlib()
 {
@@ -195,9 +189,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
   else
     dpi = 100;
 
-#ifdef NOISY_FONTS
-  printf("looking for font %s (%d)", wildstring, aFont.size / 20);
-#endif
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("looking for font %s (%d)", wildstring, aFont.size / 20));
 
   //font properties we care about:
   //name
@@ -231,9 +223,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                 aFont.size / 2);
     fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
                                   200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-    printf("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
   }
 
   if (numnames <= 0)
@@ -247,9 +237,9 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                 ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
     fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
                                   200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-    printf("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
+
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
+
 
     if (aFont.style == NS_FONT_STYLE_ITALIC)
       altitalicization = 'o';
@@ -266,9 +256,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
 
       fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
                                     200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-      printf("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
     }
 
 
@@ -287,9 +275,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                   dpi, dpi);
       fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
                                     200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-      printf("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
 
       if ((numnames <= 0) && altitalicization)
       {
@@ -300,9 +286,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
                     altitalicization, dpi, dpi);
         fnames = ::XListFontsWithInfo(gDisplay, &wildstring[namelen + 1],
                                       200, &numnames, &fonts);
-#ifdef NOISY_FONTS
-        printf("  trying %s[%d]", &wildstring[namelen+1], numnames);
-#endif
+        PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  trying %s[%d]", &wildstring[namelen+1], numnames));
       }
 
       delete [] newname;
@@ -316,9 +300,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
     mFontStruct = XLoadQueryFont(gDisplay, nametouse);
     mFontHandle = mFontStruct->fid;
 
-#ifdef NOISY_FONTS
-    printf(" is: %s\n", nametouse);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, (" is: %s\n", nametouse));
 
     ::XFreeFontInfo(fnames, fonts, numnames);
   }
@@ -326,9 +308,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIDeviceContext* aCo
   {
     //ack. we're in real trouble, go for fixed...
 
-#ifdef NOISY_FONTS
-    printf(" is: %s\n", "fixed (final fallback)");
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, (" is: %s\n", "fixed (final fallback)"));
 
     mFontStruct = XLoadQueryFont(gDisplay, "fixed");
     mFontHandle = mFontStruct->fid;
@@ -388,10 +368,8 @@ nsFontMetricsXlib::PickAppropriateSize(char **names, XFontStruct *fonts,
 
   // If the closest smaller font is closer than the closest larger
   // font, use it.
-#ifdef NOISY_FONTS
-  printf(" *** desiredPix=%d(%d) min=%d max=%d *** ",
-         desiredPix, desired, closestMin, closestMax);
-#endif
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, (" *** desiredPix=%d(%d) min=%d max=%d *** ",
+                                           desiredPix, desired, closestMin, closestMax));
   if (desiredPix - closestMin <= closestMax - desiredPix) {
     return names[minIndex];
   }
@@ -429,18 +407,14 @@ void nsFontMetricsXlib::RealizeFont()
   if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr))
   {
     mXHeight = nscoord(pr * f);
-#ifdef REALLY_NOISY_FONTS
-    printf("xHeight=%d\n", mXHeight);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("xHeight=%d\n", mXHeight));
   }
 
   if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_POSITION, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineOffset = NSToIntRound(pr * f);
-#ifdef REALLY_NOISY_FONTS
-    printf("underlineOffset=%d\n", mUnderlineOffset);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("underlineOffset=%d\n", mUnderlineOffset));
   }
   else
   {
@@ -455,9 +429,7 @@ void nsFontMetricsXlib::RealizeFont()
   {
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
-#ifdef REALLY_NOISY_FONTS
-    printf("underlineSize=%d\n", mUnderlineSize);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("underlineSize=%d\n", mUnderlineSize));
   }
   else
   {
@@ -470,9 +442,7 @@ void nsFontMetricsXlib::RealizeFont()
   if (::XGetFontProperty(mFontHandle, XA_SUPERSCRIPT_Y, &pr))
   {
     mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
-#ifdef REALLY_NOISY_FONTS
-    printf("superscriptOffset=%d\n", mSuperscriptOffset);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("superscriptOffset=%d\n", mSuperscriptOffset));
   }
   else
   {
@@ -482,9 +452,7 @@ void nsFontMetricsXlib::RealizeFont()
   if (::XGetFontProperty(mFontHandle, XA_SUBSCRIPT_Y, &pr))
   {
     mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
-#ifdef REALLY_NOISY_FONTS
-    printf("subscriptOffset=%d\n", mSubscriptOffset);
-#endif
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("subscriptOffset=%d\n", mSubscriptOffset));
   }
   else
   {
@@ -1052,11 +1020,11 @@ static char* gDumpStyles[3] = { "normal", "italic", "oblique" };
 static PRIntn
 DumpCharSet(PLHashEntry* he, PRIntn i, void* arg)
 {
-  printf("        %s\n", (char*) he->key);
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("        %s\n", (char*) he->key));
   nsFontCharSet* charSet = (nsFontCharSet*) he->value;
   for (int sizeIndex = 0; sizeIndex < charSet->mSizesCount; sizeIndex++) {
     nsFontXlib* size = &charSet->mSizes[sizeIndex];
-    printf("          %d %s\n", size->mSize, size->mName);
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("          %d %s\n", size->mSize, size->mName));
   }
   return HT_ENUMERATE_NEXT;
 }
@@ -1067,15 +1035,15 @@ DumpFamily(nsFontFamily* aFamily)
   for (int styleIndex = 0; styleIndex < 3; styleIndex++) {
     nsFontStyle* style = aFamily->mStyles[styleIndex];
     if (style) {
-      printf("  style: %s\n", gDumpStyles[styleIndex]);
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("  style: %s\n", gDumpStyles[styleIndex]));
       for (int weightIndex = 0; weightIndex < 8; weightIndex++) {
         nsFontWeight* weight = style->mWeights[weightIndex];
         if (weight) {
-          printf("    weight: %d\n", (weightIndex + 1) * 100);
+          PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("    weight: %d\n", (weightIndex + 1) * 100));
           for (int stretchIndex = 0; stretchIndex < 9; stretchIndex++) {
             nsFontStretch* stretch = weight->mStretches[stretchIndex];
             if (stretch) {
-              printf("      stretch: %d\n", stretchIndex + 1);
+              PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("      stretch: %d\n", stretchIndex + 1));
               PL_HashTableEnumerateEntries(stretch->mCharSets, DumpCharSet,
                 nsnull);
             }
@@ -1091,7 +1059,7 @@ DumpFamilyEnum(PLHashEntry* he, PRIntn i, void* arg)
 {
   char buf[256];
   ((nsString*) he->key)->ToCString(buf, sizeof(buf));
-  printf("family: %s\n", buf);
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("family: %s\n", buf));
   nsFontFamily* family = (nsFontFamily*) he->value;
   DumpFamily(family);
 
@@ -1342,9 +1310,9 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
 #if 0
   nsFontXlib* result = s;
   for (s = begin; s < end; s++) {
-    printf("%d/%d ", s->mSize, s->mActualSize);
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("%d/%d ", s->mSize, s->mActualSize));
   }
-  printf("desired %d chose %d\n", desiredSize, result->mActualSize);
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("desired %d chose %d\n", desiredSize, result->mActualSize));
 #endif /* 0 */
 }
 
@@ -1674,7 +1642,7 @@ GetFontNames(char* aPattern)
   nsFontFamily* family = nsnull;
 
   int count;
-  //printf("XListFonts %s\n", aPattern);
+  //PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("XListFonts %s\n", aPattern));
   char** list = ::XListFonts(gDisplay, aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
     return nsnull;
@@ -1739,13 +1707,11 @@ GetFontNames(char* aPattern)
     nsFontCharSetInfo* charSetInfo =
       (nsFontCharSetInfo*) PL_HashTableLookup(gCharSets, charSetName);
     if (!charSetInfo) {
-#ifdef NOISY_FONTS
-      printf("cannot find charset %s\n", charSetName);
-#endif
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("cannot find charset %s\n", charSetName));
       continue;
     }
     if (charSetInfo == &Ignore) {
-      // XXX printf("ignoring %s\n", charSetName);
+      // XXX PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("ignoring %s\n", charSetName));
       continue;
     }
 
@@ -1813,9 +1779,7 @@ GetFontNames(char* aPattern)
 
     int weightNumber = (int) PL_HashTableLookup(gWeights, weightName);
     if (!weightNumber) {
-#ifdef NOISY_FONTS
-      printf("cannot find weight %s\n", weightName);
-#endif
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("cannot find weight %s\n", weightName));
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
     int weightIndex = WEIGHT_INDEX(weightNumber);
@@ -1830,9 +1794,7 @@ GetFontNames(char* aPattern)
   
     int stretchIndex = (int) PL_HashTableLookup(gStretches, setWidth);
     if (!stretchIndex) {
-#ifdef NOISY_FONTS
-      printf("cannot find stretch %s\n", setWidth);
-#endif
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("cannot find stretch %s\n", setWidth));
       stretchIndex = 5;
     }
     stretchIndex--;
