@@ -74,6 +74,7 @@ EXPORTS = \
 	nsIDragService.h \
 	nsIClipboardOwner.h \
 	nsIFormatConverter.h \
+	nsISelectionMgr.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
