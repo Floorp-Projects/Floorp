@@ -52,6 +52,7 @@ class nsConsoleService : public nsIConsoleService
 {
 public:
     nsConsoleService();
+    nsresult Init();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLESERVICE

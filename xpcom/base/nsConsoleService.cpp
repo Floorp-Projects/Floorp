@@ -56,24 +56,12 @@ NS_IMPL_QUERY_INTERFACE1_CI(nsConsoleService, nsIConsoleService)
 NS_IMPL_CI_INTERFACE_GETTER1(nsConsoleService, nsIConsoleService)
 
 nsConsoleService::nsConsoleService()
-    : mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock(nsnull)
+    : mMessages(nsnull), mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock(nsnull)
 {
     // XXX grab this from a pref!
     // hm, but worry about circularity, bc we want to be able to report
     // prefs errs...
     mBufferSize = 250;
-
-    // XXX deal with these two allocations by detecting null mLock in factory?
-    mMessages = (nsIConsoleMessage **)
-        nsMemory::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
-
-    mLock = PR_NewLock();
-
-    // Array elements should be 0 initially for circular buffer algorithm.
-    for (PRUint32 i = 0; i < mBufferSize; i++) {
-        mMessages[i] = nsnull;
-    }
-
 }
 
 nsConsoleService::~nsConsoleService()
@@ -94,9 +82,28 @@ nsConsoleService::~nsConsoleService()
     
 #endif
 
-    nsMemory::Free(mMessages);
+    if (mMessages)
+        nsMemory::Free(mMessages);
     if (mLock)
         PR_DestroyLock(mLock);
+}
+
+nsresult
+nsConsoleService::Init()
+{
+    mMessages = (nsIConsoleMessage **)
+        nsMemory::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
+    if (!mMessages)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Array elements should be 0 initially for circular buffer algorithm.
+    memset(mMessages, 0, mBufferSize * sizeof(nsIConsoleMessage *));
+
+    mLock = PR_NewLock();
+    if (!mLock)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
 }
 
 static PRBool PR_CALLBACK snapshot_enum_func(nsHashKey *key, void *data, void* closure)
