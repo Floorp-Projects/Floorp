@@ -419,7 +419,16 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
         }
       }
     } else if (buf.EqualsIgnoreCase("P")) {
-      // mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
+      nsString align("align");
+      nsString value;
+      if (eContentAttr_NotThere != aContent->GetAttribute(align, value)) {
+        if (0 == value.Compare("center", PR_TRUE)) {
+          mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
+        }
+        if (0 == value.Compare("right", PR_TRUE)) {
+          mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_RIGHT;
+        }
+      }
       mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(2);
       mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(2);
     } else if (buf.EqualsIgnoreCase("BODY")) {
