@@ -101,6 +101,8 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 			m_urlListeners->OnStopRunningUrl(this, aExitCode);
 		}
 	}
+  else
+    printf("no listeners in set url state\n");
 
 	return NS_OK;
 }
@@ -290,6 +292,22 @@ NS_IMETHODIMP nsMsgMailNewsUrl::IsUrlType(PRUint32 type, PRBool *isType)
 	return NS_OK;
 
 }
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetSearchSession(nsIMsgSearchSession *aSearchSession)
+{
+	if (aSearchSession)
+		m_searchSession = do_QueryInterface(aSearchSession);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetSearchSession(nsIMsgSearchSession **aSearchSession)
+{
+  NS_ENSURE_ARG(aSearchSession);
+	*aSearchSession = m_searchSession;
+	NS_IF_ADDREF(*aSearchSession);
+	return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMsgMailNewsUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

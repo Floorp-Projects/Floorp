@@ -29,6 +29,7 @@ interface nsIMsgStatusFeedback;
 interface nsIMsgIncomingServer;
 interface nsIMsgWindow;
 interface nsILoadGroup;
+interface nsIMsgSearchSession;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -62,6 +63,9 @@ interface nsIMsgMailNewsUrl : nsIURL {
 
 	// the load group is computed from the msgWindow
 	readonly attribute nsILoadGroup loadGroup;
+
+	// search session, if we're running a search.
+	attribute nsIMsgSearchSession searchSession;
 	attribute boolean updatingFolder;
 	attribute boolean addToMemoryCache; 
 

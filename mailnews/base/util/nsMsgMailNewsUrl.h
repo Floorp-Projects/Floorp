@@ -33,7 +33,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
-
+#include "nsIMsgSearchSession.h"
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
 // several common interfaces (in addition to those provided through nsIURI). 
@@ -62,7 +62,7 @@ protected:
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 	nsCOMPtr<nsIMsgWindow> m_msgWindow;
 	nsCOMPtr<nsILoadGroup> m_loadGroup;
-
+  nsCOMPtr<nsIMsgSearchSession> m_searchSession;
 	char		*m_errorMessage;
 	PRBool	m_runningUrl;
 	PRBool	m_updatingFolder;
