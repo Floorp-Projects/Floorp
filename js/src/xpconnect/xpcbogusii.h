@@ -77,23 +77,23 @@ public:
         T_INTERFACE_IS  = 17    /* SPECIAL_BIT | 1 */
     };
 
-    uint8 WordCount() const 
+    uint8 WordCount() const
     {
-        static uint8 word_table[] = 
+        static uint8 word_table[] =
         {
-            1, // T_I8    
-            1, // T_I16   
-            1, // T_I32   
-            2, // T_I64   
-            1, // T_U8    
-            1, // T_U16   
-            1, // T_U32   
-            2, // T_U64   
-            1, // T_FLOAT 
+            1, // T_I8
+            1, // T_I16
+            1, // T_I32
+            2, // T_I64
+            1, // T_U8
+            1, // T_U16
+            1, // T_U32
+            2, // T_U64
+            1, // T_FLOAT
             2, // T_DOUBLE
-            1, // T_BOOL  
-            1, // T_CHAR  
-            1  // T_WCHAR 
+            1, // T_BOOL
+            1, // T_CHAR
+            1  // T_WCHAR
         };
         if(t & IS_POINTER)
             return 1;
@@ -202,7 +202,17 @@ private:
 
 class nsXPCConstant
 {
-    // XXX flesh out
+public:
+    // simple ctor
+    nsXPCConstant(){}
+    nsXPCConstant(char* aName, const nsXPCVarient& aVal)
+        : mName(aName), mVal(aVal) {};
+
+    const char*         GetName()  const {return mName;}
+    const nsXPCVarient& GetValue() const {return mVal;}
+private:
+    char* mName;
+    nsXPCVarient mVal;
 };
 
 class nsInterfaceInfo : public nsIInterfaceInfo
@@ -233,11 +243,11 @@ private:
 
     unsigned mMethodBaseIndex;
     unsigned mMethodCount;
-    nsXPCMethodInfo** mMethods;
+    nsXPCMethodInfo* mMethods;
 
     unsigned mConstantBaseIndex;
     unsigned mConstantCount;
-    nsXPCConstant** mConstants;
+    nsXPCConstant* mConstants;
 };
 
 #endif  /* xpcbogusii_h___ */

@@ -170,9 +170,19 @@ int main()
             v = OBJECT_TO_JSVAL(jsobj);
             JS_SetProperty(cx, glob, "foo", &v);
 
-            char txt[] = "print(foo)";
+            char* p;
+            char txt1[] = "print('foo.five = '+ foo.five)";
+            char txt2[] = "print('foo.six = '+ foo.six)";
+            char txt3[] = "print('foo.bogus = '+ foo.bogus)";
 
-            JS_EvaluateScript(cx, glob, txt, sizeof(txt)-1, "builtin", 1, &rval);
+            p = txt1;
+            JS_EvaluateScript(cx, glob, p, strlen(p), "builtin", 1, &rval);
+
+            p = txt2;
+            JS_EvaluateScript(cx, glob, p, strlen(p), "builtin", 1, &rval);
+
+            p = txt3;
+            JS_EvaluateScript(cx, glob, p, strlen(p), "builtin", 1, &rval);
 
             NS_RELEASE(obj);
             NS_RELEASE(com_obj);

@@ -133,7 +133,7 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
             desc = &mMembers[mMemberCount-1];
             NS_ASSERTION(desc->id == id,"bad setter");
             NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::ATTRIB_RO,"bad setter");
-            desc->category == XPCNativeMemberDescriptor::ATTRIB_RW;
+            desc->category = XPCNativeMemberDescriptor::ATTRIB_RW;
             desc->index2 = i;
         }
         else
@@ -142,14 +142,36 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
             desc = &mMembers[mMemberCount++];
             desc->id = id;
             if(info->IsGetter())
-                desc->category == XPCNativeMemberDescriptor::ATTRIB_RO;
+                desc->category = XPCNativeMemberDescriptor::ATTRIB_RO;
             else
-                desc->category == XPCNativeMemberDescriptor::METHOD;
+                desc->category = XPCNativeMemberDescriptor::METHOD;
             desc->index = i;
         }
     }
 
-    // XXX do constants
+    for(i = 0; i < constCount; i++)
+    {
+        jsval idval;
+        jsid id;
+        XPCNativeMemberDescriptor* desc;
+        const nsXPCConstant* constant;
+        if(NS_FAILED(mInfo->GetConstant(i, &constant)))
+            return JS_FALSE;
+
+        idval = STRING_TO_JSVAL(JS_InternString(cx, constant->GetName()));
+        JS_ValueToId(cx, idval, &id);
+        if(!id)
+        {
+            NS_ASSERTION(0,"bad constant name");
+            return JS_FALSE;
+        }
+
+        NS_ASSERTION(!LookupMemberByID(id),"duplicate method/constant name");
+        desc = &mMembers[mMemberCount++];
+        desc->id = id;
+        desc->category = XPCNativeMemberDescriptor::CONSTANT;
+        desc->index = i;
+    }
 
     return JS_TRUE;
 }
@@ -289,14 +311,48 @@ nsXPCWrappedNativeClass::SetDescriptorCounts(XPCNativeMemberDescriptor* desc)
     }
 }
 
+// Win32 can't handle u64 to double conversion
+#define JAM_DOUBLE_U64(v,d) (d = (jsdouble)(int64)v, DOUBLE_TO_JSVAL(&d))
+#define JAM_DOUBLE(v,d) (d = (jsdouble)v, DOUBLE_TO_JSVAL(&d))
+#define FIT_32(i,d) (INT_FITS_IN_JSVAL(i) ? INT_TO_JSVAL(i) : JAM_DOUBLE(i,d))
+
 JSBool
 nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
                                             const XPCNativeMemberDescriptor* desc,
                                             jsval* vp)
 {
-    // XXX implement
-    return JS_FALSE;
+    const nsXPCConstant* constant;
 
+    NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::CONSTANT,"bad type");
+    if(NS_FAILED(mInfo->GetConstant(desc->index, &constant)))
+    {
+        // XX fail silently?
+        *vp = JSVAL_NULL;
+        return JS_TRUE;
+    }
+    jsdouble d;
+    const nsXPCVarient& var = constant->GetValue();
+
+    switch(var.type)
+    {
+    case nsXPCType::T_I8     : *vp = INT_TO_JSVAL((int32)var.val.i8);   break;
+    case nsXPCType::T_I16    : *vp = INT_TO_JSVAL((int32)var.val.i16);  break;
+    case nsXPCType::T_I32    : *vp = FIT_32(var.val.i32,d);             break;
+    case nsXPCType::T_I64    : *vp = JAM_DOUBLE(var.val.i64,d);         break;
+    case nsXPCType::T_U8     : *vp = INT_TO_JSVAL((int32)var.val.u8);   break;
+    case nsXPCType::T_U16    : *vp = INT_TO_JSVAL((int32)var.val.u16);  break;
+    case nsXPCType::T_U32    : *vp = FIT_32(var.val.u32,d);             break;
+    case nsXPCType::T_U64    : *vp = JAM_DOUBLE_U64(var.val.u64,d);     break;
+    case nsXPCType::T_FLOAT  : *vp = JAM_DOUBLE(var.val.f,d);           break;
+    case nsXPCType::T_DOUBLE : *vp = DOUBLE_TO_JSVAL(&var.val.d);       break;
+    case nsXPCType::T_BOOL   : *vp = var.val.b?JSVAL_TRUE:JSVAL_FALSE;  break;
+    case nsXPCType::T_CHAR   : *vp = INT_TO_JSVAL((int32)var.val.c);    break;
+    case nsXPCType::T_WCHAR  : *vp = INT_TO_JSVAL((int32)var.val.wc);   break;
+    default:
+        NS_ASSERTION(0, "bad type");
+        ReportError(desc, "invalid constant type");
+    }
+    return JS_TRUE;
 }
 
 void
@@ -542,7 +598,11 @@ WrappedNative_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(!desc)
-        return JS_FALSE;
+    {
+        // XXX silently fail when property not found?
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
+    }
 
     switch(desc->category)
     {
