@@ -4,6 +4,10 @@ calendar.jar:
         skin/classic/calendar/toolbar-small.png
         skin/classic/calendar/pageupdown.png
         skin/classic/calendar/prevnextarrow.png
+        skin/classic/calendar/Throbber.png
+        skin/classic/calendar/Throbber.gif
+        skin/classic/calendar/Throbber-small.png
+        skin/classic/calendar/Throbber-small.gif
         skin/classic/calendar/pref/Options.png                      (pref/Options.png)
         skin/classic/calendar/pref/pref.css                         (pref/pref.css)
         skin/classic/calendar/datetimepickers/calendar_disabled.png (datetimepickers/calendar_disabled.png)
