@@ -34,6 +34,8 @@
  */
 
 var dbg;
+var ts;
+var cx;
 
 const JSD_CTRID = "@mozilla.org/js/jsd/debugger-service;1";
 const jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
@@ -51,15 +53,20 @@ interruptHooker.onExecute =
 function ih_exehook (cx, state, type, rv)
 {
     dd ("onInterruptHook (" + cx + ", " + state + ", " + type + ")");
-    return jsdIExecutionHook.HOOK_RETURN_CONTINUE;
+    return jsdIExecutionHook.RETURN_CONTINUE;
 }
 
 var debuggerHooker = new Object();
 debuggerHooker.onExecute =
-function dh_exehook (cx, state, type, rv)
+function dh_exehook (aCx, state, type, rv)
 {
-    dd ("onDebuggerHook (" + cx + ", " + state + ", " + type + ")");
-    return jsdIExecutionHook.HOOK_RETURN_CONTINUE;
+    dd ("onDebuggerHook (" + aCx + ", " + state + ", " + type + ")");
+    cx = aCx;
+    ts = state;
+    display ("Stopped for debugger keyword.");
+    dbg.enterNestedEventLoop();
+    display ("Continuing from debugger keyword.");    
+    return jsdIExecutionHook.RETURN_CONTINUE;
 }
 
 function initDebugger()

@@ -12,6 +12,7 @@ venkman.jar:
   content/venkman/venkman-output-window.html   (content/venkman-output-window.html)
   content/venkman/html-consts.js   (content/html-consts.js)
   content/venkman/command-manager.js   (content/command-manager.js)
+  content/venkman/tests/testpage.html   (content/tests/testpage.html)
   content/venkman/venkman-overlay.xul   (content/venkman-overlay.xul)
   content/venkman/venkman-overlay.js   (content/venkman-overlay.js)
   skin/modern/venkman/venkman.css   (skin/venkman.css)
