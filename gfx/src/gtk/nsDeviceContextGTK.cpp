@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -73,13 +74,56 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define GDK_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
 extern GdkFont *default_font;
 
+/**
+ * A singleton instance of nsSystemFontsGTK is created by the first
+ * device context and destroyed by the module destructor.
+ */
+class nsSystemFontsGTK {
+
+  public:
+    nsSystemFontsGTK(float aPixelsToTwips);
+
+    const nsFont& GetDefaultFont() { return mDefaultFont; }
+    const nsFont& GetMenuFont() { return mMenuFont; }
+    const nsFont& GetFieldFont() { return mFieldFont; }
+    const nsFont& GetButtonFont() { return mButtonFont; }
+
+  private:
+    nsresult GetSystemFontInfo(GdkFont* iFont, nsFont* aFont,
+                               float aPixelsToTwips) const;
+
+    /*
+     * The following system font constants exist:
+     *
+     * css2: http://www.w3.org/TR/REC-CSS2/fonts.html#x27
+     * eSystemAttr_Font_Caption, eSystemAttr_Font_Icon, eSystemAttr_Font_Menu,
+     * eSystemAttr_Font_MessageBox, eSystemAttr_Font_SmallCaption,
+     * eSystemAttr_Font_StatusBar,
+     * // css3
+     * eSystemAttr_Font_Window, eSystemAttr_Font_Document,
+     * eSystemAttr_Font_Workspace, eSystemAttr_Font_Desktop,
+     * eSystemAttr_Font_Info, eSystemAttr_Font_Dialog,
+     * eSystemAttr_Font_Button, eSystemAttr_Font_PullDownMenu,
+     * eSystemAttr_Font_List, eSystemAttr_Font_Field,
+     * // moz
+     * eSystemAttr_Font_Tooltips, eSystemAttr_Font_Widget
+     */
+    nsFont mDefaultFont;
+    nsFont mButtonFont;
+    nsFont mFieldFont;
+    nsFont mMenuFont;
+};
+
+
 nscoord nsDeviceContextGTK::mDpi = 96;
+static nsSystemFontsGTK *gSystemFonts = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextGTK, nsIDeviceContext)
 
 nsDeviceContextGTK::nsDeviceContextGTK()
 {
   NS_INIT_REFCNT();
+
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
   mDepth = 0 ;
@@ -102,6 +146,13 @@ nsDeviceContextGTK::~nsDeviceContextGTK()
   }
 }
 
+/* static */ void nsDeviceContextGTK::Shutdown()
+{
+  if (gSystemFonts) {
+    delete gSystemFonts;
+    gSystemFonts = nsnull;
+  }
+}
 
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
@@ -286,6 +337,10 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
   nsresult status = NS_OK;
   GtkStyle *style = gtk_style_new();  // get the default styles
 
+  if (!gSystemFonts) {
+    gSystemFonts = new nsSystemFontsGTK(mPixelsToTwips);
+  }
+
   switch (anID) {
     //---------
     // Colors
@@ -350,27 +405,36 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     //---------
     // Fonts
     //---------
+    case eSystemAttr_Font_Menu:         // css2
+    case eSystemAttr_Font_PullDownMenu: // css3
+        *aInfo->mFont = gSystemFonts->GetMenuFont();
+        break;
+
+    case eSystemAttr_Font_Field:        // css3
+    case eSystemAttr_Font_List:         // css3
+        *aInfo->mFont = gSystemFonts->GetFieldFont();
+        break;
+
+    case eSystemAttr_Font_Button:       // css3
+        *aInfo->mFont = gSystemFonts->GetButtonFont();
+        break;
+
     case eSystemAttr_Font_Caption:      // css2
-    case eSystemAttr_Font_Icon: 
-    case eSystemAttr_Font_Menu: 
-    case eSystemAttr_Font_MessageBox: 
-    case eSystemAttr_Font_SmallCaption: 
-    case eSystemAttr_Font_StatusBar: 
+    case eSystemAttr_Font_Icon:         // css2
+    case eSystemAttr_Font_MessageBox:   // css2
+    case eSystemAttr_Font_SmallCaption: // css2
+    case eSystemAttr_Font_StatusBar:    // css2
     case eSystemAttr_Font_Window:       // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
+    case eSystemAttr_Font_Document:     // css3
+    case eSystemAttr_Font_Workspace:    // css3
+    case eSystemAttr_Font_Desktop:      // css3
+    case eSystemAttr_Font_Info:         // css3
+    case eSystemAttr_Font_Dialog:       // css3
     case eSystemAttr_Font_Tooltips:     // moz
-    case eSystemAttr_Font_Widget:
-        status = GetSystemFontInfo(style->font, anID, aInfo->mFont);
-      break;
-  } // switch
+    case eSystemAttr_Font_Widget:       // moz
+        *aInfo->mFont = gSystemFonts->GetDefaultFont();
+        break;
+  }
 
   gtk_style_unref(style);
 
@@ -583,13 +647,110 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
     rv = prefs->GetIntPref(aPref, &dpi);
     if (NS_SUCCEEDED(rv))
       context->SetDPI(dpi);
+
+    // If this pref changes, we have to clear our cache of stored system
+    // fonts.
+    if (gSystemFonts) {
+      delete gSystemFonts;
+      gSystemFonts = nsnull;
+    }
   }
   
   return 0;
 }
 
+nsSystemFontsGTK::nsSystemFontsGTK(float aPixelsToTwips)
+  : mDefaultFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+                 NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240),
+    mButtonFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+                NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240),
+    mFieldFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+               NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240),
+    mMenuFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+               NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 240)
+{
+  /*
+   * Much of the widget creation code here is similar to the code in
+   * nsLookAndFeel::InitColors().
+   */
+
+  // mDefaultFont
+  GtkWidget *label = gtk_label_new("M");
+  GtkWidget *parent = gtk_fixed_new();
+  GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+
+  gtk_container_add(GTK_CONTAINER(parent), label);
+  gtk_container_add(GTK_CONTAINER(window), parent);
+
+  gtk_widget_set_rc_style(parent);
+  gtk_widget_set_rc_style(label);
+  gtk_widget_realize(parent);
+  gtk_widget_realize(label);
+
+  GtkStyle *style = gtk_widget_get_style(label);
+  GetSystemFontInfo(style->font, &mDefaultFont, aPixelsToTwips);
+
+  gtk_widget_destroy(window);  // no unref, windows are different
+
+  // mFieldFont
+  GtkWidget *entry = gtk_entry_new();
+  parent = gtk_fixed_new();
+  window = gtk_window_new(GTK_WINDOW_POPUP);
+
+  gtk_container_add(GTK_CONTAINER(parent), entry);
+  gtk_container_add(GTK_CONTAINER(window), parent);
+
+  gtk_widget_set_rc_style(entry);
+  gtk_widget_realize(entry);
+
+  style = gtk_widget_get_style(entry);
+  GetSystemFontInfo(style->font, &mFieldFont, aPixelsToTwips);
+
+  gtk_widget_destroy(window);  // no unref, windows are different
+
+  // mMenuFont
+  GtkWidget *accel_label = gtk_accel_label_new("M");
+  GtkWidget *menuitem = gtk_menu_item_new();
+  GtkWidget *menu = gtk_menu_new();
+
+  gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
+  gtk_menu_append(GTK_MENU(menu), menuitem);
+
+  gtk_widget_set_rc_style(accel_label);
+  gtk_widget_set_rc_style(menu);
+  gtk_widget_realize(menu);
+  gtk_widget_realize(accel_label);
+
+  style = gtk_widget_get_style(accel_label);
+  GetSystemFontInfo(style->font, &mMenuFont, aPixelsToTwips);
+
+  gtk_widget_unref(menu);
+
+  // mButtonFont
+  parent = gtk_fixed_new();
+  GtkWidget *button = gtk_button_new();
+  label = gtk_label_new("M");
+  window = gtk_window_new(GTK_WINDOW_POPUP);
+          
+  gtk_container_add(GTK_CONTAINER(button), label);
+  gtk_container_add(GTK_CONTAINER(parent), button);
+  gtk_container_add(GTK_CONTAINER(window), parent);
+
+  gtk_widget_set_rc_style(button);
+  gtk_widget_set_rc_style(label);
+
+  gtk_widget_realize(button);
+  gtk_widget_realize(label);
+
+  style = gtk_widget_get_style(label);
+  GetSystemFontInfo(style->font, &mButtonFont, aPixelsToTwips);
+
+  gtk_widget_destroy(window);  // no unref, windows are different
+
+}
+
 nsresult
-nsDeviceContextGTK::GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont) const
+nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixelsToTwips) const
 {
   nsresult status = NS_OK;
   GdkFont *theFont = iFont;
@@ -601,51 +762,74 @@ nsDeviceContextGTK::GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFo
   // do we have the default_font defined by GTK/GDK then
   // we use it, if not then we load helvetica, if not then
   // we load fixed font else we error out.
-  if( !theFont )
+  if (!theFont)
     theFont = default_font; // GTK default font
   
-  if( !theFont )
+  if (!theFont)
     theFont = ::gdk_font_load( GDK_DEFAULT_FONT1 );
   
-  if( !theFont )
+  if (!theFont)
     theFont = ::gdk_font_load( GDK_DEFAULT_FONT2 );
   
-  if( !theFont )
-  {
+  if (!theFont) {
     status = NS_ERROR_FAILURE;
-  }
-  else
-  {
-    char *fontName = (char *)NULL;
-    GdkFontPrivate *fontPrivate;
-    XFontStruct *fontInfo;
+  } else {
+    XFontStruct *fontInfo = (XFontStruct *)GDK_FONT_XFONT( theFont );
     unsigned long pr = 0;
 
-    // XXX I am not sure if I can use this as it is supposed to
-    // be private.
-    fontPrivate = (GdkFontPrivate*) theFont;
-    fontInfo = (XFontStruct *)GDK_FONT_XFONT( theFont );
+#if 0 // debugging code to list the font properties
+    printf("\n\n");
+    for (int i = 0, n = fontInfo->n_properties; i < n; ++i) {
+      XFontProp *prop = fontInfo->properties + i;
+      char *atomName = XGetAtomName(GDK_FONT_XDISPLAY(theFont), prop->name);
+      // 500 is just a guess
+      char *cardName = (prop->card32 > 0 && prop->card32 < 500)
+                       ? XGetAtomName(GDK_FONT_XDISPLAY(theFont), prop->card32)
+                       : 0;
+      printf("%s : %ld (%s)\n", atomName, prop->card32, cardName?cardName:"");
+      XFree(atomName);
+      if (cardName)
+        XFree(cardName);
+    }
+    printf("\n\n");
+#endif
 
-    ::XGetFontProperty( fontInfo, XA_FULL_NAME, &pr );
-    if( pr )
-    {
-      fontName = XGetAtomName( fontPrivate->xdisplay, pr );
+    ::XGetFontProperty( fontInfo, XA_FAMILY_NAME, &pr );
+    if (!pr)
+      ::XGetFontProperty( fontInfo, XA_FULL_NAME, &pr );
+    if (pr) {
+      char *fontName = XGetAtomName( GDK_FONT_XDISPLAY(theFont), pr );
       aFont->name.AssignWithConversion( fontName );
       ::XFree( fontName );
     }
   
+    // WEIGHT_NAME seems more reliable than WEIGHT, where 10 can mean
+    // anything.  Check both, and make it bold if either says so.
+    pr = 0;
+    Atom weightName = XInternAtom( GDK_FONT_XDISPLAY(theFont),
+                                   "WEIGHT_NAME", True );
+    if (weightName != None) {
+      ::XGetFontProperty( fontInfo, weightName, &pr );
+      if (pr) {
+        char *weight = XGetAtomName( GDK_FONT_XDISPLAY(theFont), pr );
+        if (nsCRT::strcasecmp(weight, "bold") == 0)
+          aFont->weight = NS_FONT_WEIGHT_BOLD;
+        ::XFree( weight );
+      }
+    }
+
     pr = 0;
     ::XGetFontProperty( fontInfo, XA_WEIGHT, &pr );
     if ( pr > 10 )
       aFont->weight = NS_FONT_WEIGHT_BOLD;
     
     pr = 0;
-    Atom pixelSizeAtom = ::XInternAtom(gdk_display, "PIXEL_SIZE", 0);
+    Atom pixelSizeAtom = ::XInternAtom(GDK_DISPLAY(), "PIXEL_SIZE", 0);
     ::XGetFontProperty( fontInfo, pixelSizeAtom, &pr );
-    if( pr )
-      aFont->size = NSIntPixelsToTwips(pr, mPixelsToTwips);
+    if (pr)
+      aFont->size = NSIntPixelsToTwips(pr, aPixelsToTwips);
 
     status = NS_OK;
   }
-  return (status);
+  return status;
 }
