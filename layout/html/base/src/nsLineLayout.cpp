@@ -2833,11 +2833,6 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
     }
 #ifdef IBMBIDI
   }
-  // If we need to move the frames but we're shrink wrapping, then
-  // we need to wait until the final width is known
-  if (aShrinkWrapWidth) {
-    return PR_FALSE;
-  }
   PRBool isRTL = ( (NS_STYLE_DIRECTION_RTL == psd->mDirection)
                 && (!psd->mChangedFrameDirection) );
   if (dx || isRTL) {
@@ -2853,15 +2848,16 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
       isVisualRTL = mPresContext->IsVisualMode();
     }
-    if (dx || isVisualRTL) {
+    if (dx || isVisualRTL)
 #else
-    if (0 != dx) {
+    if (0 != dx)
+#endif
+    {
       // If we need to move the frames but we're shrink wrapping, then
       // we need to wait until the final width is known
       if (aShrinkWrapWidth) {
         return PR_FALSE;
       }
-#endif
       for (PerFrameData* pfd = psd->mFirstFrame; pfd
 #ifdef IBMBIDI
            && bulletPfd != pfd
