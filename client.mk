@@ -551,6 +551,7 @@ real_fast-update:
 	fast_update $(CVSCO_LDAPCSDK) && \
 	fast_update $(CVSCO_ACCESSIBLE) && \
 	fast_update $(CVSCO_IMGLIB2) && \
+	fast_update $(CVSCO_IPC) && \
 	fast_update $(CVSCO_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \
 	$(FASTUPDATE_MOZTOOLKIT) && \
