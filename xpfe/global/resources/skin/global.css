@@ -247,7 +247,7 @@ titledbutton.button32 {
 	color: #CCFFFF;
 	min-width: 36px;
 	min-height: 36px;
-	border: none;
+        border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -258,7 +258,7 @@ titledbutton.button32 {
 }
 
 titledbutton.button32:hover {
-	border: none;
+        border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -268,7 +268,7 @@ titledbutton.button32:hover {
 }
 
 titledbutton.button32:active {
-	border: none;
+        border: 1px solid transparent;
 	padding: 0px;
 	margin-top: 7px;
 	margin-left: 2px;
@@ -278,7 +278,7 @@ titledbutton.button32:active {
 }
 
 titledbutton.button32[disabled="true"] {
-	border: none;
+        border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -288,7 +288,7 @@ titledbutton.button32[disabled="true"] {
 }
 
 titledbutton.button32[disabled="true"]:hover {
-	border: none;
+        border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -298,7 +298,7 @@ titledbutton.button32[disabled="true"]:hover {
 }
 
 titledbutton.button32[disabled="true"]:active {
-	border: none;
+        border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
