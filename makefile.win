@@ -109,12 +109,26 @@ include <$(DEPTH)\config\rules.mak>
 
 
 #//------------------------------------------------------------------------
-#// 
-#// Rebase rule
+#//
+#// MOZILLA_OFFICIAL junk: rebase and splitsym for binary release
 #//
 #//------------------------------------------------------------------------
+#// should make sure we have rebase, and die if not
+
+!if defined(MOZILLA_OFFICIAL)
+
+!if [for %i in (. %PATH%) do $(QUIET)if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
+!endif
+
+!if !exist(rebase.yes)  
+REBASE=
+!if [del rebase.yes]                                                           
+!endif
+!endif
+!endif
 
 rebase:
+!if defined(MOZILLA_OFFICIAL)
 !if defined(FIND)
 !if "$(REBASE)" != ""
 	echo rebasing $(DIST)
@@ -127,13 +141,7 @@ rebase:
 !else
         echo No find defined.
 !endif
-
-#//------------------------------------------------------------------------
-#//
-#// MOZILLA_FULLCIRCLE junk: splitsym for binary release
-#//
-#//------------------------------------------------------------------------
-#// should make sure we have rebase, and die if not
+!endif
 
 splitsymbols:
 !if defined(MOZ_FULLCIRCLE)
