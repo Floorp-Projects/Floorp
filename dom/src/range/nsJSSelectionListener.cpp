@@ -177,14 +177,14 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIDocumentIID,
-                                           "Document",
+                                           NS_ConvertASCIItoUCS2("Document"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kISelectionIID,
-                                           "Selection",
+                                           NS_ConvertASCIItoUCS2("Selection"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

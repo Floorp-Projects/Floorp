@@ -124,15 +124,15 @@ NS_ScriptErrorReporter(JSContext *cx,
   // Print it to stderr as well, for the benefit of those invoking
   // mozilla with -console.
   nsAutoString error;
-  error.Assign("JavaScript ");
-  error.Append(JSREPORT_IS_WARNING(report->flags) ? "warning: " : "error: ");
-  error += "\n";
-  error.Append(report->filename);
-  error.Append(" line ");
-  error.Append(report->lineno, 10);
-  error.Append(": ");
+  error.AssignWithConversion("JavaScript ");
+  error.AppendWithConversion(JSREPORT_IS_WARNING(report->flags) ? "warning: " : "error: ");
+  error.AppendWithConversion("\n");
+  error.AppendWithConversion(report->filename);
+  error.AppendWithConversion(" line ");
+  error.AppendInt(report->lineno, 10);
+  error.AppendWithConversion(": ");
   error.Append(report->ucmessage);
-  error += "\n";
+  error.AppendWithConversion("\n");
   
   char *errorStr = error.ToNewCString();
   if (errorStr) {

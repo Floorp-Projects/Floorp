@@ -3719,7 +3719,7 @@ NS_IMETHODIMP NavigatorImpl::GetAppVersion(nsString& aAppVersion)
       aAppVersion += str;                                                         
       Recycle(str);                                                               
                       
-      aAppVersion += ')';    
+      aAppVersion.AppendWithConversion(')');    
       }
 
    return res;
