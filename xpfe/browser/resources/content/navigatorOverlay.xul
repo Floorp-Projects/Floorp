@@ -230,8 +230,9 @@
         <menu id="menu_textZoom"/>
 
         <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false">
-          <menupopup onpopupshowing="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
-            <menuitem label="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
+          <menupopup onpopupshowing="stylesheetFillPopup(this);"
+                     oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
+            <menuitem label="&useStyleSheetNone.label;" type="radio"/>
           </menupopup>
         </menu>
         <menuseparator />
