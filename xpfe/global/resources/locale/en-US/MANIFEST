@@ -2,6 +2,7 @@ globalOverlay.dtd
 dialogOverlay.dtd
 tasksOverlay.dtd
 taskbarOverlay.dtd
+taskbar.rdf
 commonDialog.dtd
 charsetOverlay.dtd
 charsetDetectorsOverlay.dtd
