@@ -29,6 +29,8 @@
 
 #include "nsTitledButtonFrame.h"
 #include "nsCOMPtr.h"
+#include "nsIContent.h"
+
 
 class nsGrippyFrame : public nsTitledButtonFrame
 {
