@@ -56,21 +56,14 @@
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
-
+#include "nsIXULWindow.h"
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
-
-// Interfaces Needed
-#include "nsIXULWindow.h"
-
-
-#ifndef XP_MAC
-#include "nsTimeBomb.h"
-#endif
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_CMD_LINE
 #endif
+
 
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
@@ -78,10 +71,6 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kBrowserContentHandlerCID, NS_BROWSERCONTENTHANDLER_CID);
 
-
-#ifndef XP_MAC
-static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
-#endif
 
 #define HELP_SPACER_1   "\t"
 #define HELP_SPACER_2   "\t\t"
@@ -715,24 +704,6 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   //      if the profile manager ever switches to using nsIDOMWindow stuff, this might have to change
   appShell->CreateHiddenWindow();
 
-#ifndef XP_MAC
-  PRBool expired;
-  NS_WITH_SERVICE(nsITimeBomb, timeBomb, kTimeBombCID, &rv);
-  if ( NS_FAILED(rv) ) return rv; 
-    
-  rv = timeBomb->Init();
-  if ( NS_FAILED(rv) ) return rv; 
-
-  rv = timeBomb->CheckWithUI(&expired);
-  if ( NS_FAILED(rv) ) return rv; 
-    
-  if ( expired ) 
-  {
-      rv = timeBomb->LoadUpdateURL();
-      if ( NS_FAILED(rv) ) return rv; 
-  }
-#endif
-
 #ifdef NS_BUILD_REFCNT_LOGGING  
   nsTraceRefcnt::SetPrefServiceAvailability(PR_TRUE);
 #endif
@@ -753,7 +724,7 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process command line");
 	if ( NS_FAILED(rv) )
     return rv;
-     
+
   // Make sure there exists at least 1 window. 
   rv = Ensure1Window( cmdLineArgs );
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");

@@ -139,6 +139,8 @@ static PRLogModuleInfo* gTimerLog = nsnull;
 #define ENABLE_PAGE_CYCLER
 #endif
 
+#include "nsTimeBomb.h"
+static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
@@ -2491,6 +2493,8 @@ CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser"
 
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
 { 
+    static PRBool timebombChecked = PR_FALSE;
+
     if (!aDefaultArgs) return NS_ERROR_FAILURE; 
 
     nsString args;
@@ -2501,6 +2505,34 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 #else
     nsresult rv;
     nsXPIDLCString url;
+
+    if (timebombChecked == PR_FALSE)
+    {
+        // timebomb check
+        timebombChecked = PR_TRUE;
+        
+        PRBool expired;
+        NS_WITH_SERVICE(nsITimeBomb, timeBomb, kTimeBombCID, &rv);
+        if ( NS_FAILED(rv) ) return rv; 
+
+        rv = timeBomb->Init();
+        if ( NS_FAILED(rv) ) return rv; 
+
+        rv = timeBomb->CheckWithUI(&expired);
+        if ( NS_FAILED(rv) ) return rv; 
+
+        if ( expired ) 
+        {
+            char* urlString;
+            rv = timeBomb->GetTimebombURL(&urlString);
+            if ( NS_FAILED(rv) ) return rv;
+
+            nsString url ( urlString );
+            *aDefaultArgs =  url.ToNewUnicode();
+            nsAllocator::Free(urlString);
+            return rv;
+        }
+    }
 
     /* the default, in case we fail somewhere */
     args = "about:blank";
