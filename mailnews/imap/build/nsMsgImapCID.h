@@ -54,6 +54,9 @@
 #define NS_IMAPINCOMINGSERVER_CONTRACTID  \
   NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX "imap"
 
+#define NS_IMAPSERVICE_CONTRACTID \
+  "@mozilla.org/messenger/imapservice;1"
+
 #define NS_IMAPSERVICE_CID						  \
 { /* C5852B22-EBE2-11d2-95AD-000064657374 */      \
  0xc5852b22, 0xebe2, 0x11d2,                      \

@@ -88,6 +88,10 @@ static const nsModuleComponentInfo gComponents[] = {
       "@mozilla.org/messenger/messageservice;1?type=imap",
       nsImapServiceConstructor },
 
+    { "IMAP Service", NS_IMAPSERVICE_CID,
+      NS_IMAPSERVICE_CONTRACTID,
+      nsImapServiceConstructor },
+
     { "IMAP Protocol Handler", NS_IMAPSERVICE_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "imap", nsImapServiceConstructor},
 
