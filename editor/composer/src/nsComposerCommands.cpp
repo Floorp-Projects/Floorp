@@ -1177,7 +1177,6 @@ nsDecreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
   nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(refCon);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
-  PRBool isEnabled;
   htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
   if (!(*outCmdEnabled))
     return NS_OK;
@@ -1240,7 +1239,6 @@ nsIncreaseZIndexCommand::IsCommandEnabled(const char * aCommandName,
   nsCOMPtr<nsIHTMLAbsPosEditor> htmlEditor = do_QueryInterface(refCon);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
-  PRBool isEnabled;
   htmlEditor->GetAbsolutePositioningEnabled(outCmdEnabled);
   if (!(*outCmdEnabled))
     return NS_OK;
