@@ -7,7 +7,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="welcome" nc:name="Help and Support Center" nc:link="welcome_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.xhtml#for_internet_explorer_users"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.xhtml#browsing_the_web"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
@@ -26,11 +26,10 @@
   <rdf:Description about="#help-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="help-help-window" nc:name="Finding the Topic You Want" nc:link="help_help.html#tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="help-help-retrace" nc:name="Retracing Your Steps and Printing" nc:link="help_help.html#retrace"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="help-help-shortcuts" nc:name="Using Help Shortcuts" nc:link="help_help.html#shortcuts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="help-help-buttons" nc:name="Using Help Buttons" nc:link="help_help.html#buttons"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="help-help-tips" nc:name="Search Tips" nc:link="help_help.html#search_tips"/></rdf:li>
+        <rdf:li> <rdf:Description ID="help-help-window" nc:name="Finding the Topic You Want" nc:link="help_help.xhtml#finding_the_topic_you_want"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="help-help-retrace" nc:name="Retracing Your Steps and Printing" nc:link="help_help.xhtml#retracing_your_steps"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="help-help-buttons" nc:name="Using Help Buttons" nc:link="help_help.xhtml#retracing_your_steps"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="help-help-tips" nc:name="Search Tips" nc:link="help_help.xhtml#search_tips"/></rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

@@ -19,7 +19,7 @@ en-US.jar:
         locale/en-US/help/help-toc.rdf                  (locale/en-US/help-toc.rdf)
         locale/en-US/help/help-index1.rdf               (locale/en-US/help-index1.rdf)
         locale/en-US/help/help-indexAZ.rdf              (locale/en-US/help-indexAZ.rdf)
-        locale/en-US/help/help_help.html                (locale/en-US/help_help.html)
+        locale/en-US/help/help_help.xhtml               (locale/en-US/help_help.xhtml)
         locale/en-US/help/nav_help.xhtml                (locale/en-US/nav_help.xhtml)
         locale/en-US/help/mail_help.xhtml               (locale/en-US/mail_help.xhtml)
         locale/en-US/help/mail_sec_help.xhtml           (locale/en-US/mail_sec_help.xhtml)

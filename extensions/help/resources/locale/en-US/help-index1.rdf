@@ -1275,7 +1275,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="navigation"
          nc:name="navigation"
-	 nc:link="help_help.html#navigationIDX"/>
+	 nc:link="help_help.xhtml#finding_the_topic_you_want"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator"
@@ -1856,11 +1856,6 @@
        <rdf:Description ID="search"
          nc:name="search"
 	 nc:link="nav_help.xhtml#searching_the_web"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="shortcuts"
-         nc:name="shortcuts"
-	 nc:link="help_help.html#shortcuts:help_systemIDX"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar"
