@@ -1,4 +1,3 @@
-; -*- Mode: Text -*- 
 ; -*- Mode: Text -*-
 ;
 ; The contents of this file are subject to the Mozilla Public
@@ -441,6 +440,7 @@ pkcs12_bad_db_password="Could not log in to the security device. Check your pers
 ;
 cert_already_exists_in_db_string="This certificate is already in your database"
 cert_cannot_import_in_db="Certificate cannot be imported"
+issuer_not_in_db="The issuer for the certificate was not found in your {glossary certificate store,certificate store}."
 
 ;
 ; Importing CA certificate old-style
@@ -658,6 +658,8 @@ message_encrypted_before_saved="If you have chosen to save copies of your outgoi
 message_cannot_be_signed="Message Cannot Be Signed"
 cannot_sign_because="You cannot {glossary digitally sign,digital signature} this message because:"
 do_not_have_a_cert="You do not have a security certificate."
+no_valid_cert_for="You do not have valid security certificates for the following recipients:"
+add_certs_for="Add certificates for these recipients"
 text_obtain_new="Obtain New..."
 obtain_cert="Obtain a certificate."
 own_expired_cert="You have a security certificate but it has expired."
@@ -666,7 +668,7 @@ your_cert_has_been_revoked="You have a security certificate but it has been revo
 your_cert_cannot_be_used_for_signing="You have a security certificate but it is not certified for signing messages."
 unknow_problems="There are unknown problems."
 message_cannot_be_encrypted="Message Cannot Be Encrypted"
-cannot_encrypt because="This message cannot be {glossary encrypted,encryption} because:"
+cannot_encrypt_because="This message cannot be {glossary encrypted,encryption} because:"
 unknown_probs_with_message="There are unknown problems with this message."
 no_certs_found="No Certificates Found"
 
@@ -807,6 +809,9 @@ configure_ocsp_as_follows=Set Personal Security Manager to use OCSP as follows:
 pkcs11_class_undefined=Cannot perform operation because the JavaScript class pkcs11 is not defined
 
 select_token_title=Select A Token
+issuer_not_found_title=Issuer Not Found
+show_more_cert_info=View More Info
+view_cert_detail=View Certificate Details
 
 ;
 ; cert renewal UI text strings

@@ -2597,7 +2597,7 @@ parent.sa_compose_encrypt_status = 1;
 <table CELLSPACING=0 CELLPADDING=0 WIDTH="100%" HEIGHT="45%">
 <tr VALIGN=TOP>
 
-<td><H1>{message_can_be_decrypted}=Message Can Be Encrypted
+<td><H1>{message_can_be_decrypted}
 </H1>
 <p>
 {chosen_to_encrypt}
@@ -2787,10 +2787,9 @@ parent.sa_compose_encrypt_status = 2;
 <table CELLSPACING=0 CELLPADDING=0 WIDTH="100%%" HEIGHT="45%%">
 <tr VALIGN=TOP>
 
-<td><H1>{message_cannot_be_encryped}</H1>
+<td><H1>{message_cannot_be_encrypted}</H1>
 <P>
-This message cannot be {glossary encrypted,encryption}
- because:
+{cannot_encrypt_because}
 </P>
 
 <DIV CLASS=Explanationbox>
@@ -2815,14 +2814,13 @@ parent.sa_compose_encrypt_status = 2;
 
 <td><H1>{message_cannot_be_encrypted}</H1>
 <P>
-This message cannot be {glossary encrypted,encryption}
- because:
+{cannot_encrypt_because}
 </P>
 
 <DIV CLASS=Explanationbox>
 
 <UL><LI>
-You do not have a security certificate.
+{do_not_have_a_cert}
 </LI></UL>
 </DIV>
 </td></tr></table>
@@ -2851,14 +2849,14 @@ This message cannot be {glossary encrypted,encryption}
 <DIV CLASS=Explanationbox>
 
 <UL><LI>
-You do not have valid security certificates for the following recipients:
+{no_valid_cert_for}
 </LI></UL>
 
 <table> 
 <tr valign="Top">
 <td width="20%%"></td>
 <td>
-<SELECT oldSIZE="%2$d" size=5>
+<SELECT MULTIPLE name=emailAddresses oldSIZE="%2$d" size=5>
 %3$s
 </SELECT>
 </td>
@@ -2868,7 +2866,7 @@ You do not have valid security certificates for the following recipients:
 <tr valign="Top">
 <td width="10%%"></td>
 <td><div><input type="submit" value="Add..." width="72" name="ldap"></div></td>
-<td><p>Add certificates for these recipients</p></td>
+<td><p>{add_certs_for}</p></td>
 </tr>
 </table>
 </div>
@@ -3969,7 +3967,7 @@ ldap_request_height=350
 ldap_request_type="text/html"
 ldap_request_hdrs=""
 ldap_request_content:
-{frame_set ldap_request_dialog,formsubmit}
+{frame_set_pass_var ldap_request_dialog,formsubmit,emailAddresses}
 :ldap_request_content
 
 ldap_request_dialog_top_type="text/html"
@@ -4016,7 +4014,7 @@ function doNotSubmit()
 <td align=right>
 <p>{cert_owners_email}</p>
 </td>
-<td><input type="text" name="emailaddress" size="30"></td>
+<td><input type="text" name="emailaddress" size="30" value="{_emailAddresses}"></td>
 </tr>
 
 <tr>
@@ -4075,11 +4073,11 @@ function beforeSubmit()
      return false;
    }
 
-   if (!input.match(/^(\\w+)@((\\w+)\\.)+(\\w+)$/)) {
-     PopUpAlert('"' + input + '" is not a valid email address!');
-     window.parent.DialogContent.document.forms[0].emailaddress.value="";
-     return false;
-   }
+//   if (!input.match(/^(\\w+)@((\\w+)\\.)+(\\w+)$/)) {
+//     PopUpAlert('"' + input + '" is not a valid email address!');
+//     window.parent.DialogContent.document.forms[0].emailaddress.value="";
+//     return false;
+//   }
    
    return true;
 }
@@ -4387,7 +4385,7 @@ cert_view_height=350
 cert_view_type="text/html"
 cert_view_hdrs=""
 cert_view_content:
-{frame_set cert_view_detail,windowclose}
+{frame_set_pass_var cert_view_detail,windowclose,windowOffset}
 :cert_view_content
 
 cert_view_detail_top_type="text/html"
@@ -4395,6 +4393,26 @@ cert_view_detail_top_hdrs=""
 cert_view_detail_top_content:
 {top_frame_no_image view_cert_title}
 :cert_view_detail_top_content
+
+showIssuerAndContents:
+<script language=javascript>
+<!---
+var uniqueName = '{_certIssuerWindowName}';
+
+function openIssuerWindow()
+{
+  var offset = {_windowOffset};
+  var issuer = window.open('showIssuer?target=%1$d&windowOffset='+offset, uniqueName,'width=520,height=350,status=no,toolbar=no,menubar=no,screenX=100,screenY=100');
+  issuer.moveBy(offset,offset);
+}
+
+function showCertContents()
+{
+   window.open('get?baseRef=certPrettyPrint&target=%1$d', 'dump'+uniqueName,'width=760,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no');
+}
+//-->
+</script>
+:showIssuerAndContents
 
 cert_view_detail_main_type="text/html"
 cert_view_detail_main_hdrs=""
@@ -4404,19 +4422,23 @@ cert_view_detail_main_content:
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
+{showIssuerAndContents}
 </head>
 <body class=CONTENT onLoad="parent.SetHelpURL('help.htm#1049021')">
 <p>
-<table>
-<td width="10"></td>
-<tr></tr>
+<table WIDTH="100%%">
+<tr>
+<td align=right><div><a href="javascript:showCertContents();">
+{show_more_cert_info}
+</a></div></td>
+</tr>
 <tr>
 <td><div>
 {verify_cert cert_usage_wrapper}
 </div></td>
 </tr>
 </table>
-<table CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<table CELLSPACING=0 CELLPADDING=0 WIDTH="100%%" >
 <tr>
 <td WIDTH="10"></td>
 <td>
@@ -4487,10 +4509,11 @@ delete_cert_perm_main_content:
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
+{showIssuerAndContents}
 </head>
 <body bgcolor="#FFFFFF" link="#6666CC" vlink="#6666CC" alink="#333399" 
 	onLoad="parent.SetHelpURL('help.htm#{delete_cert_help}')">
-<table CELLSPACING=0 CELLPADDING=0 WIDTH="100%" >
+<table CELLSPACING=0 CELLPADDING=0 WIDTH="100%%" >
 <tr>
 <td WIDTH="10"></td>
 <td>
@@ -7180,7 +7203,7 @@ document.write(cert_name);</script></div></font>
 
 view_cert_wrapper:
 {view_cert_wrapper_no_comment}
-<table BORDER=0 CELLSPACING=0 WIDTH="100%%" >
+<table BORDER=0 CELLSPACING=0 WIDTH="100%%%%" >
 <tr  valign=top>
 <td>
 <div align=right>
@@ -7246,6 +7269,28 @@ frame_set:
 </html>
 :frame_set
 
+;
+; This frame set is intended to pass down variables using variables passed
+; down to the macro instead of having the executable fill it in from code
+; through a printf
+;
+
+frame_set_pass_var:
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<title></title>
+{help_monitor_js}
+{{$2}_monitor_js}
+{disable_right_click_js}
+<frameset rows="50,*,40" border="0" frameborder="NO">
+<frame src="get?baseRef={$1}_top&target=%1$d" name="DialogTop" scrolling="NO" marginwidth="0" marginheight="0">
+<frame src="get?baseRef={$1}_main&target=%1$d{pass_var {$3}}" name="DialogContent" scrolling="Auto" marginwidth="0" marginheight="0">
+<frame src="get?baseRef={$1}_buttons&target=%1$d" name="DialogFoot" scrolling="NO" marginwidth="0" marginheight="0">
+</frameset>
+</head>
+</html>
+:frame_set_pass_var
 
 ;
 ; This macro does the same thing as frame_set, except it allows to pass
@@ -7756,6 +7801,95 @@ glossary:
 <A HREF="glossary.htm#{$2}" onClick="top.window.open('','psm_glossary','width={help_width},height={help_height},status=no,menubar=no,scrollbars,screenX=50,screenY=100')" TARGET="psm_glossary">{$1}</A> {glossary_icon}
 :glossary
 
+certPrettyPrint_type="text/html"
+certPrettyPrint_hdrs=""
+certPrettyPrint_width=520
+certPrettyPrint_height=350
+certPrettyPrint_content:
+{frame_set certDump,windowclose}
+:certPrettyPrint_content
+
+certDump_top_type="text/html"
+certDump_top_hdrs=""
+certDump_top_content:
+{top_frame view_cert_detail,alert1gif,35,35}
+:certDump_top_content
+
+certDump_buttons_type="text/html"
+certDump_buttons_hdrs=""
+certDump_buttons_content:
+{windowclose_buttons_frame OKButton,help.htm}
+:certDump_buttons_content
+
+certPrettyPrefix:
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+{disable_right_click_js}
+</head>
+<body class=content alink="#FF0000">
+<br>
+<pre>
+:certPrettyPrefix
+
+certPrettySuffix:
+</pre>
+</body>
+</html>
+:certPrettySuffix
+
+certDump_main_type="text/html"
+certDump_main_hdrs=""
+certDump_main_content:
+<html>
+<head>
+</head>
+<body>
+<script language=javascript>
+window.location = "certPrettyPrint?target=%1$d";
+</script>
+</body>
+</html>
+:certDump_main_content
+
+issuer_not_found_type="text/html"
+issuer_not_found_hdrs=""
+issuer_not_found_width=520
+issuer_not_found_height=350
+issuer_not_found_content:
+{frame_set no_issuer,windowclose}
+:issuer_not_found_content
+
+no_issuer_top_type="text/html"
+no_issuer_top_hdrs=""
+no_issuer_top_content:
+{top_frame issuer_not_found_title,alert1gif,35,35}
+:no_issuer_top_content
+
+no_issuer_buttons_type="text/html"
+no_issuer_buttons_hdrs=""
+no_issuer_buttons_content:
+{windowclose_buttons_frame OKButton,help.htm}
+:no_issuer_buttons_content
+
+no_issuer_main_type="text/html"
+no_issuer_main_hdrs=""
+no_issuer_main_content:
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+{disable_right_click_js}
+</head>
+<body class=content alink="#FF0000">
+<br>
+<p>
+{issuer_not_in_db}
+</p>
+</body>
+</html>
+:no_issuer_main_content
 
 cert_renewal_type="text/html"
 cert_renewal_hdrs=""
