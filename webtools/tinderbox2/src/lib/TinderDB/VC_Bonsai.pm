@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.45 $ 
-# $Date: 2002/05/06 22:57:10 $ 
+# $Revision: 1.46 $ 
+# $Date: 2002/05/06 23:00:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.45 $ )[1];
+$VERSION = ( qw $Revision: 1.46 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -447,7 +447,8 @@ sub status_table_row {
 
   }
 
-  $next_time = $DB_TIMES[$next_index];
+  $next_time = $DB_TIMES[$NEXT_DB];
+
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
