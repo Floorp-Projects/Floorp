@@ -2165,10 +2165,14 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, 
    PRBool* aShouldAdd)
 {
-   *aShouldAdd = PR_TRUE;
+   if(typeContent == mItemType)
+      {
+      *aShouldAdd = PR_TRUE;
+      return NS_OK;
+      }
 
-   //XXX Should add code here for things we don't want added to global
-   // history
+   *aShouldAdd = PR_FALSE;
+
    return NS_OK;
 }
 
