@@ -57,9 +57,11 @@ sub collect_stats {
     my $product = shift;
     my $when = localtime (time);
 
-
-    $product =~ s/\//-/gs;
-    my $file = join '/', $dir, $product;
+    # NB: Need to mangle the product for the filename, but use the real
+    # product name in the query
+    my $file_product = $product;
+    $file_product =~ s/\//-/gs;
+    my $file = join '/', $dir, $file_product;
     my $exists = -f $file;
 
     if (open DATA, ">>$file") {
