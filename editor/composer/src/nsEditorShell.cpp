@@ -2835,9 +2835,9 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
   if ( NS_SUCCEEDED(rv) )
   { 
     // Stuff in Parameters 
-    block->SetString( nsIPromptService::eMsg, aQuestion.GetUnicode()); 
+    block->SetString( nsPIPromptService::eMsg, aQuestion.GetUnicode()); 
     nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif" ); 
-    block->SetString( nsIPromptService::eIconURL, url.GetUnicode()); 
+    block->SetString( nsPIPromptService::eIconURL, url.GetUnicode()); 
 
     nsAutoString yesStr, noStr;
     // Default is Yes, No, Cancel
@@ -2851,22 +2851,22 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     if (aNoString && aNoString->Length() > 0)
     {
       noStr.Assign(*aNoString);
-      block->SetString( nsIPromptService::eButton2Text, noStr.GetUnicode() ); 
+      block->SetString( nsPIPromptService::eButton2Text, noStr.GetUnicode() ); 
     }
     else
     {
       // No string for "No" means we only want Yes, Cancel
       numberOfButtons = 2;
     }    
-    block->SetInt( nsIPromptService::eNumberButtons, numberOfButtons ); 
+    block->SetInt( nsPIPromptService::eNumberButtons, numberOfButtons ); 
 
     nsAutoString cancelStr;
     GetBundleString(NS_LITERAL_STRING("Cancel"), cancelStr);
 
-    block->SetString( nsIPromptService::eDialogTitle, aTitle.GetUnicode() );
+    block->SetString( nsPIPromptService::eDialogTitle, aTitle.GetUnicode() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
-    block->SetString( nsIPromptService::eButton0Text, yesStr.GetUnicode() ); 
-    block->SetString( nsIPromptService::eButton1Text, cancelStr.GetUnicode() ); 
+    block->SetString( nsPIPromptService::eButton0Text, yesStr.GetUnicode() ); 
+    block->SetString( nsPIPromptService::eButton1Text, cancelStr.GetUnicode() ); 
 
     nsCOMPtr<nsPIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
     if (dialog)
@@ -2877,7 +2877,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
       nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
       if (!cwP) return result;
       rv = dialog->DoDialog( cwP, block, "chrome://global/content/commonDialog.xul" ); 
-      block->GetInt( nsIPromptService::eButtonPressed, &buttonPressed ); 
+      block->GetInt( nsPIPromptService::eButtonPressed, &buttonPressed ); 
       // NOTE: If order of buttons changes in nsIPromptService,
       //       then we must change the EConfirmResult enums in nsEditorShell.h
       result = nsEditorShell::EConfirmResult(buttonPressed);
