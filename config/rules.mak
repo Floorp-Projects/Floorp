@@ -649,16 +649,9 @@ XPIDL_INCLUDES=$(XPIDL_INCLUDES) -I$(XPDIST)\idl
 XPIDL_HEADERS=$(XPIDLSRCS:.idl=.h)
 XPIDL_HEADERS=$(XPIDL_HEADERS:.\=.\_xpidlgen\)
 
+!ifndef NO_GEN_XPT
 XPIDL_TYPELIBS=$(XPIDLSRCS:.idl=.xpt)
 XPIDL_TYPELIBS=$(XPIDL_TYPELIBS:.\=.\_xpidlgen\)
-
-$(XPIDL_GEN_DIR):
-	@echo +++ make: Creating directory: $(XPIDL_GEN_DIR)
-	echo.
-	-mkdir $(XPIDL_GEN_DIR)
-
-.idl{$(XPIDL_GEN_DIR)}.h:
-        $(XPIDL_PROG) -m header $(XPIDL_INCLUDES) -o $* $<
 
 .idl{$(XPIDL_GEN_DIR)}.xpt:
         $(XPIDL_PROG) -m typelib $(XPIDL_INCLUDES) -o $* $<
@@ -669,6 +662,16 @@ $(TYPELIB): $(XPIDL_TYPELIBS)
         @echo +++ make: Creating typelib: $(TYPELIB)
 	@echo.
         $(XPTLINK_PROG) $(TYPELIB) $(XPIDL_TYPELIBS)
+!endif
+
+$(XPIDL_GEN_DIR):
+	@echo +++ make: Creating directory: $(XPIDL_GEN_DIR)
+	echo.
+	-mkdir $(XPIDL_GEN_DIR)
+
+.idl{$(XPIDL_GEN_DIR)}.h:
+        $(XPIDL_PROG) -m header $(XPIDL_INCLUDES) -o $* $<
+
 
 $(DIST)\include:
 	@echo +++ make: Creating directory: $(DIST)\include
@@ -690,10 +693,12 @@ export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(XPDIST)\public\$(MODULE)
         @echo.
         -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\public\$(MODULE)
 
+!ifndef NO_GEN_XPT
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)
         @echo +++ make: installing typelib '$(TYPELIB)' to components directory
         @echo.
         $(MAKE_INSTALL) $(TYPELIB) $(DIST)\bin\components
+!endif
 
 GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(MODULE).xpt
 
