@@ -330,19 +330,20 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   else if (url)
   {
     // Get default app/description.
-    nsCOMPtr<nsIFile> defaultApp;
-    nsXPIDLString     defaultDescription;
-    mimeInfo->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
+    PRBool        hasDefaultApp = PR_FALSE;
+    nsXPIDLString defaultDescription;
+    mimeInfo->GetHasDefaultHandler(&hasDefaultApp);
     mimeInfo->GetDefaultDescription(getter_Copies(defaultDescription));
     // If neither description nor app are specified, then we try to get
     // these from the per-platform OS settings based on the file extension.
-    if (defaultDescription.IsEmpty() && !defaultApp)
+    if (defaultDescription.IsEmpty() && !hasDefaultApp)
     {
       nsCOMPtr<nsIMIMEInfo> osInfo;
       url->GetFileExtension(fileExtension);
       if (NS_SUCCEEDED(GetMIMEInfoForExtensionFromOS(fileExtension.get(), getter_AddRefs(osInfo))))
       {
         // Extract default application and default description.
+        nsCOMPtr<nsIFile> defaultApp;
         osInfo->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
         osInfo->GetDefaultDescription(getter_Copies(defaultDescription));
         // Copy to result mime info object.
