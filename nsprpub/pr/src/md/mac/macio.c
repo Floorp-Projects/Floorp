@@ -231,9 +231,9 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 {
 	PRInt32 refNum = fd->secret->md.osfd;
 	OSErr				err;
- 	ExtendedParamBlock 	pbAsync;
+	ExtendedParamBlock 	pbAsync;
 	PRThread			*me = _PR_MD_CURRENT_THREAD();
-    _PRCPU *cpu = _PR_MD_CURRENT_CPU();
+	_PRCPU *cpu = _PR_MD_CURRENT_CPU();
 
 	/* quick hack to allow PR_fprintf, etc to work with stderr, stdin, stdout */
 	/* note, if a user chooses "seek" or the like as an operation in another function */
@@ -254,11 +254,12 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		}
 		
 		return (bytes);
-
 	}
 	else
 	{
 		static IOCompletionUPP	sCompletionUPP = NULL;
+		
+		PRBool  doingAsync = PR_FALSE;
 		
 		/* allocate the callback Universal Procedure Pointer (UPP). This actually allocates
 		   a 32 byte Ptr in the heap, so only do this once
@@ -280,9 +281,11 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		/* 
 		** Issue the async read call and wait for the io semaphore associated
 		** with this thread.
-		** Don't compute error code from async call. Bug in OS returns a garbage value.
+		** Async file system calls *never* return error values, so ignore their
+		** results (see <http://developer.apple.com/technotes/fl/fl_515.html>);
+		** the completion routine is always called.
 		*/
-	    me->io_fd = refNum;
+		me->io_fd = refNum;
 		me->md.osErrCode = noErr;
 		if (op == READ_ASYNC)
 		{
@@ -292,39 +295,33 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 			*/
 			if ( bytes > 20480L )
 			{
-				err = PBReadAsync(&pbAsync.pb);
-				if (err != noErr && err != eofErr)
-					goto ErrorExit;
+				doingAsync = PR_TRUE;
+				me->io_pending = PR_TRUE;
 				
-	   			me->io_pending = PR_TRUE; /* Only mark thread io pending if async call worked */
+				(void)PBReadAsync(&pbAsync.pb);
 			}
 			else
 			{
-				(void) PBReadSync(&pbAsync.pb);
-				/*
-				** This is probbaly redundant but want to make sure we indicate the read
-				** is complete so we don't wander off into the Sargasso Sea of Mac
-				** threading
-				*/
-				pbAsync.pb.ioParam.ioResult = 0;
+				pbAsync.pb.ioParam.ioCompletion = NULL;
+				me->io_pending = PR_FALSE;
+				
+				err = PBReadSync(&pbAsync.pb);
+				if (err != noErr && err != eofErr)
+					goto ErrorExit;
 			}
 		}
 		else
 		{
+			doingAsync = PR_TRUE;
+			me->io_pending = PR_TRUE;
+
 			/* writes are currently always async */
-			err = PBWriteAsync(&pbAsync.pb);
-				if (err != noErr)
-					goto ErrorExit;
-			
-			/* Didn't get an error on the asyn call so mark thread io pending */
-	   		me->io_pending = PR_TRUE;
+			(void)PBWriteAsync(&pbAsync.pb);
 		}
 		
-		/* See if the i/o call is still pending before we actually yield */
-		if (pbAsync.pb.ioParam.ioResult == 1)
+		if (doingAsync) {
 			WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
-		else
-			me->io_pending = PR_FALSE; /* io completed so don't mark thread io pending */
+		}
 	}
 	
 	err = me->md.osErrCode;
@@ -334,13 +331,13 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 	err = pbAsync.pb.ioParam.ioResult;
 	if (err != noErr && err != eofErr)
 		goto ErrorExit;
-	else
-		return pbAsync.pb.ioParam.ioActCount;
+	
+	return pbAsync.pb.ioParam.ioActCount;
 
 ErrorExit:
 	me->md.osErrCode = err;
 	_MD_SetError(err);
-    return -1;
+	return -1;
 }
 
 /*
