@@ -1,6 +1,8 @@
 
+#include "nsISupports.idl"
+
 [object, uuid(E628ED10-9452-11d2-B7EA-00805F05FFA5)]
-interface nsINetNewsgroup {
+interface nsINetNewsgroup : nsISupports {
   
   attribute string prettyName;
   

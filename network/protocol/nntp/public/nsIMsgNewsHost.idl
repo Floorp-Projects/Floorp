@@ -1,5 +1,7 @@
+#include "nsISupports.idl"
+
 [object, uuid(2F5041B0-939E-11d2-B7EA-00805F05FFA5)]
-interface nsIMsgHostNews {
+interface nsIMsgHostNews : nsISupports {
 
   attribute boolean supportsExtensions;
   void AddExtension(in string extension);
