@@ -22,6 +22,8 @@ public:
 	CListBox	m_lbPicker;
 	CString	m_szTestURL;
 	CString	m_szTestCGI;
+	BOOL	m_bDebugging;
+	CString	m_sDebugFlags;
 	//}}AFX_DATA
 
 	CLSID m_clsid;
