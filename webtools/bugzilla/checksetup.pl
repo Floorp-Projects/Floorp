@@ -115,6 +115,16 @@
 #
 
 use strict;
+
+BEGIN {
+    if ($^O =~ /MSWin32/i) {
+        require 5.008001; # for CGI 2.93 or higher
+    }
+    require 5.006;
+    use File::Basename;
+    chdir dirname($0);
+}
+
 use lib ".";
 
 use vars qw( $db_name %answer );
@@ -178,15 +188,6 @@ if ($ARGV[0] && ($ARGV[0] !~ /^--/)) {
 #
 
 print "\nChecking perl modules ...\n" unless $silent;
-if ($^O =~ /MSWin32/i) {
-    unless ($] >= 5.008001) {
-        die "Sorry, you need at least ActiveState Perl build 5.8.1\n";
-        # for CGI 2.93 or higher
-    }
-}
-unless ($] >= 5.006) {
-    die "Sorry, you need at least Perl 5.6\n";
-}
 
 # vers_cmp is adapted from Sort::Versions 1.3 1996/07/11 13:37:00 kjahds,
 # which is not included with Perl by default, hence the need to copy it here.
