@@ -297,14 +297,14 @@ PRIVATE char *Cleanse (char *s)
 
     news = s;
     /* strip leading white space */
-    while (*s && XP_IS_SPACE(*s)) ++s;
+    while (*s && NET_IS_SPACE(*s)) ++s;
     /* put in lower case */
     for (tmpnews=news, tmp=s; *tmp; tmpnews++, ++tmp) {
       *tmpnews = tolower ((unsigned char)*tmp);
     }
 	*tmpnews = '\0';
     /* strip trailing white space */
-    while (*--tmpnews && XP_IS_SPACE(*tmpnews)) *tmpnews = 0;
+    while (*--tmpnews && NET_IS_SPACE(*tmpnews)) *tmpnews = 0;
     return(news);
 }
 
@@ -524,7 +524,7 @@ PRIVATE int ProcessMailcapEntry (FILE *fp, struct MailcapEntry *mc,
 		  }
       }
 	
-    for (s=unprocessed_entry; *s && XP_IS_SPACE(*s); ++s)
+    for (s=unprocessed_entry; *s && NET_IS_SPACE(*s); ++s)
 		; /* NULL BODY */
     if (!*s)
       {

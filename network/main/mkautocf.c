@@ -510,15 +510,15 @@ pacf_get_proxy_addr(MWContext *context, char *list, char **ret_proxy_addr,
 		if (p) {
 		    do {
 				*p++ = '\0';
-		} while (*p && XP_IS_SPACE(*p));
+		} while (*p && NET_IS_SPACE(*p));
 		}
 
-		for (addr=cur; *addr && !XP_IS_SPACE(*addr); addr++)
+		for (addr=cur; *addr && !NET_IS_SPACE(*addr); addr++)
 			;
 		if (*addr) {
 		    do {
 			*addr++ = '\0';
-		    } while (*addr &&  XP_IS_SPACE(*addr));
+		    } while (*addr &&  NET_IS_SPACE(*addr));
 		}
 
 		type = ((!PL_strcasecmp(cur, "DIRECT")) ? PACF_TYPE_DIRECT  :
@@ -1423,7 +1423,7 @@ PRIVATE char *proxy_dns_resolve(const char *host) {
 	XP_Bool is_numeric_ip = TRUE;
 
 	for(p=host; *p; p++) {
-	    if (!XP_IS_DIGIT(*p) && *p != '.') {
+	    if (!NET_IS_DIGIT(*p) && *p != '.') {
 		is_numeric_ip = FALSE;
 		break;
 	    }

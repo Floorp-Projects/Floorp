@@ -220,7 +220,7 @@ int NET_SetSocksHost(char * host)
 
 		is_numeric_ip = TRUE; /* init positive */
 		for(host_cp = host; *host_cp; host_cp++)
-		    if(!XP_IS_DIGIT(*host_cp) && *host_cp != '.')
+		    if(!NET_IS_DIGIT(*host_cp) && *host_cp != '.')
 			  {
 				is_numeric_ip = FALSE;
 				break;
@@ -632,7 +632,7 @@ net_FindAddress (const char *host_ptr,
 	port = PL_strchr(host_port, ':');  
     if (port) {
         *port++ = 0;       
-        if (XP_IS_DIGIT(*port)) {
+        if (NET_IS_DIGIT(*port)) {
 			unsigned short port_num = (unsigned short) atol(port);
 			int i;
 
@@ -683,7 +683,7 @@ net_FindAddress (const char *host_ptr,
 	/* Determine whether or not we're dealing with an ip address as the host */
 	is_numeric_ip = TRUE; /* init positive */
 	for(host_cp = host_port; *host_cp; host_cp++)
-		if(!XP_IS_DIGIT(*host_cp) && *host_cp != '.') {
+		if(!NET_IS_DIGIT(*host_cp) && *host_cp != '.') {
 			is_numeric_ip = FALSE;
 			break;
 		  }

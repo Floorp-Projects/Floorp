@@ -412,7 +412,7 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 #if defined(XP_WIN) || defined(XP_OS2)
             /* this will allow drive letters to work right on windows 
              */
-            if(XP_IS_ALPHA(*cat_point) && *(cat_point+1) == ':')
+            if(NET_IS_ALPHA(*cat_point) && *(cat_point+1) == ':')
                 cat_point += 2;
 #endif /* XP_WIN */
 
@@ -593,7 +593,7 @@ NET_ParseDate(char *date_string)
     if(!(ip = PL_strchr(date_string,' ')))
         return 0;
     else
-        while(XP_IS_SPACE(*ip))
+        while(NET_IS_SPACE(*ip))
             ++ip;
 
 	/* make sure that the date is less than 256 
@@ -1535,7 +1535,7 @@ net_get_next_http_index_token(char * line)
 	if(start == NULL)
 		return(NULL);
 
-	while(XP_IS_SPACE(*start)) start++;
+	while(NET_IS_SPACE(*start)) start++;
 
 	if(*start == '"')
 	  {

@@ -73,8 +73,16 @@ NET_WritePostData(MWContext  *context,
 
 extern int NET_UUEncode(unsigned char *src, unsigned char *dst, int srclen);
 
+/*
+ * Various character macros
+ */
+
 #define NET_TO_UPPER(x) ((((unsigned int) (x)) > 0x7f) ? x : toupper(x))
 #define NET_TO_LOWER(x) ((((unsigned int) (x)) > 0x7f) ? x : tolower(x))
+
+#define NET_IS_ALPHA(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isalpha(x))
+#define NET_IS_DIGIT(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isdigit(x))
+#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
 PR_END_EXTERN_C
 
