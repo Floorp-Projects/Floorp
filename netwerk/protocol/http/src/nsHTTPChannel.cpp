@@ -127,7 +127,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI *aURL, nsHTTPHandler *aHandler)
 #endif
 
     PRBool isHTTPS = PR_FALSE;
-    if (NS_SUCCEEDED(mURI->SchemeIs(nsIURI::HTTPS, &isHTTPS)) && isHTTPS)
+    if (NS_SUCCEEDED(mURI->SchemeIs("https", &isHTTPS)) && isHTTPS)
         mLoadAttributes |= nsIChannel::INHIBIT_PERSISTENT_CACHING; 
 }
 

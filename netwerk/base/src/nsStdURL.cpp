@@ -118,8 +118,7 @@ nsStdURL::nsStdURL(nsISupports* outer)
       mParam(nsnull),
       mQuery(nsnull),
       mRef(nsnull),
-      mDefaultPort(-1),
-      mSchemeType(nsIURI::UNKNOWN)
+      mDefaultPort(-1)
 {
     NS_INIT_AGGREGATED(outer);
     InitGlobalObjects();
@@ -176,7 +175,6 @@ nsStdURL::nsStdURL(const nsStdURL& otherURL)
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
     mURLParser = otherURL.mURLParser;
-    mSchemeType = otherURL.mSchemeType;
 
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
 }
@@ -195,7 +193,6 @@ nsStdURL::operator=(const nsStdURL& otherURL)
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
     mURLParser = otherURL.mURLParser;
-    mSchemeType = otherURL.mSchemeType;
 
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
     return *this;
@@ -306,12 +303,18 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
 }
 
 NS_IMETHODIMP
-nsStdURL::SchemeIs(PRUint32 i_Scheme, PRBool *o_Equals)
+nsStdURL::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
     NS_ENSURE_ARG_POINTER(o_Equals);
-    if (i_Scheme == nsIURI::UNKNOWN)
-        return NS_ERROR_INVALID_ARG;
-    *o_Equals = (mSchemeType == i_Scheme);
+    if (!i_Scheme) return NS_ERROR_NULL_POINTER;
+
+    // mScheme is guaranteed to be lower case.
+    if (*i_Scheme == *mScheme || *i_Scheme == (*mScheme - ('a' - 'A')) ) {
+        *o_Equals = PL_strcasecmp(mScheme, i_Scheme) ? PR_FALSE : PR_TRUE;
+    } else {
+        *o_Equals = PR_FALSE;
+    }
+
     return NS_OK;
 }
 
@@ -344,8 +347,6 @@ nsStdURL::Parse(const char* i_Spec)
     nsresult rv = mURLParser->ParseAtScheme(i_Spec, &mScheme, &mUsername, 
                                             &mPassword, &mHost, &mPort, 
                                             &ePath);
-    mSchemeType = SchemeTypeFor(mScheme);
-
     if (NS_SUCCEEDED(rv)) {
         // Now parse the path
         rv = mURLParser->ParseAtDirectory(ePath, &mDirectory, &mFileBaseName, 

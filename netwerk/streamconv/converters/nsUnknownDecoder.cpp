@@ -281,7 +281,7 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
 
       nsCOMPtr<nsIURI> pURL;
       if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(pURL))))
-          pURL->SchemeIs(nsIURI::FILE, &isLocalFile);
+          pURL->SchemeIs("file", &isLocalFile);
     }
 
     if (!mRequireHTMLsuffix || !isLocalFile) {

@@ -32,40 +32,27 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 nsHTTPSHandler::nsHTTPSHandler()
 : nsHTTPHandler()
 {
-    nsresult rv;
-    nsISupports *psm = nsnull;
-    //
-    // Initialize the PSM component.
-    // This is to ensure that PSM is initialized on the main UI thread.
-    // 
-    rv = nsServiceManager::GetService( PSM_COMPONENT_CONTRACTID,
-                                       NS_GET_IID(nsISecurityManagerComponent), 
-                                       (nsISupports**)&psm);  
-
-    NS_IF_RELEASE(psm);
-    mScheme = nsIURI::HTTPS;
 }
 
 nsHTTPSHandler::~nsHTTPSHandler()
 {
 }
 
-NS_METHOD
-nsHTTPSHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-    if (aOuter) return NS_ERROR_NO_AGGREGATION;
+nsresult
+nsHTTPSHandler::Init() {
+    nsresult rv = NS_OK;
 
-    nsHTTPSHandler* handler = new nsHTTPSHandler();
-    if (!handler) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(handler);
-    rv = handler->Init();
-    if (NS_FAILED(rv)) {
-        delete handler;
-        return rv;
-    }
-    rv = handler->QueryInterface(aIID, aResult);
-    NS_RELEASE(handler);
+    // init nsHTTPHandler *first*
+    rv = nsHTTPHandler::Init();
+    if (NS_FAILED(rv)) return rv;
+
+    // done to "init" psm.
+    nsCOMPtr<nsISupports> psm(do_GetService(PSM_COMPONENT_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    if (mScheme) nsCRT::free(mScheme);
+    mScheme = nsCRT::strdup("https");
+    if (!mScheme) return NS_ERROR_OUT_OF_MEMORY;
     return rv;
 }
 

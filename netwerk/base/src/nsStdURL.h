@@ -100,7 +100,6 @@ protected:
     nsCOMPtr<nsIURLParser> mURLParser;
     PRInt32     mDefaultPort;   // port for protocol (used for canonicalizing,
                                 // and printing)
-    PRUint32    mSchemeType; 
 
 
     // Global objects. Dont use comptr as its destructor will cause

@@ -111,7 +111,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
 #include "nsBasicAuth.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPHandler, Init);
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSHandler);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPSHandler, Init);
 
 #define NS_HTTPS_HANDLER_FACTORY_CID { 0xd2771480, 0xcac4, 0x11d3, { 0x8c, 0xaf, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
@@ -764,7 +764,7 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { "HTTPS Handler",
       NS_HTTPS_HANDLER_FACTORY_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "https",
-      nsHTTPSHandler::Create },
+      nsHTTPSHandlerConstructor },
     { "Basic Auth Encoder",
       NS_BASICAUTH_CID,
       NS_BASICAUTH_CONTRACTID,
