@@ -60,7 +60,15 @@ interface nsIBinaryInputStream : nsIInputStream {
     /**
      * Read an opaque byte array from a binary stream.
      */
-    void readBytes([size_is(aLength)] out string aString, in PRUint32 aLength);
+    void readBytes(in PRUint32 aLength,
+                   [size_is(aLength), retval] out string aString);
+
+    /**
+     * Read an opaque byte array from a binary stream, storing the results
+     * as an array of PRUint8s.
+     */
+    void readByteArray(in PRUint32 aLength,
+                       [array, size_is(aLength), retval] out PRUint8 aBytes);
 };
 
 %{C++

@@ -48,6 +48,7 @@
 #include "nsIProperties.h"
 #include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
+#include "nsBinaryStream.h"
 
 #include "nsMemoryImpl.h"
 #include "nsErrorService.h"
@@ -173,6 +174,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinaryOutputStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinaryInputStream)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 
@@ -290,6 +293,8 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(ARENA, ArenaImpl::Create),
     COMPONENT(BYTEBUFFER, ByteBufferImpl::Create),
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create),
+    COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor),
+    COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor),
 
 #define NS_PROPERTIES_CLASSNAME  "Properties"
     COMPONENT(PROPERTIES, nsProperties::Create),

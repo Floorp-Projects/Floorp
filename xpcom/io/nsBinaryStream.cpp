@@ -39,12 +39,7 @@
 #include "nsIStreamBufferAccess.h"
 #include "nsMemory.h"
 #include "prlong.h"
-
-nsBinaryOutputStream::nsBinaryOutputStream(nsIOutputStream* aStream)
-  : mOutputStream(aStream),
-    mBufferAccess(do_QueryInterface(aStream))
-{
-}
+#include "nsGenericFactory.h"
 
 NS_IMPL_ISUPPORTS1(nsBinaryOutputStream, nsIBinaryOutputStream)
 
@@ -98,6 +93,7 @@ nsBinaryOutputStream::SetOutputStream(nsIOutputStream *aOutputStream)
 {
     NS_ENSURE_ARG_POINTER(aOutputStream);
     mOutputStream = aOutputStream;
+    mBufferAccess = do_QueryInterface(aOutputStream);
     return NS_OK;
 }
 
@@ -225,6 +221,12 @@ nsBinaryOutputStream::WriteBytes(const char *aString, PRUint32 aLength)
 }
 
 NS_IMETHODIMP
+nsBinaryOutputStream::WriteByteArray(PRUint8 *aBytes, PRUint32 aLength)
+{
+    return WriteBytes(NS_REINTERPRET_CAST(char *, aBytes), aLength);
+}
+
+NS_IMETHODIMP
 nsBinaryOutputStream::WriteObject(nsISupports* aObject, PRBool aIsStrongRef)
 {
     NS_NOTREACHED("WriteObject");
@@ -267,12 +269,6 @@ nsBinaryOutputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
 {
     if (mBufferAccess)
         mBufferAccess->PutBuffer(aBuffer, aLength);
-}
-
-nsBinaryInputStream::nsBinaryInputStream(nsIInputStream* aStream)
-  : mInputStream(aStream),
-    mBufferAccess(do_QueryInterface(aStream))
-{
 }
 
 NS_IMPL_ISUPPORTS1(nsBinaryInputStream, nsIBinaryInputStream)
@@ -342,6 +338,7 @@ nsBinaryInputStream::SetInputStream(nsIInputStream *aInputStream)
 {
     NS_ENSURE_ARG_POINTER(aInputStream);
     mInputStream = aInputStream;
+    mBufferAccess = do_QueryInterface(aInputStream);
     return NS_OK;
 }
 
@@ -580,7 +577,7 @@ nsBinaryInputStream::ReadString(nsAString& aString)
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::ReadBytes(char* *aString, PRUint32 aLength)
+nsBinaryInputStream::ReadBytes(PRUint32 aLength, char* *_rval)
 {
     nsresult rv;
     PRUint32 bytesRead;
@@ -591,14 +588,23 @@ nsBinaryInputStream::ReadBytes(char* *aString, PRUint32 aLength)
         return NS_ERROR_OUT_OF_MEMORY;
 
     rv = Read(s, aLength, &bytesRead);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        nsMemory::Free(s);
+        return rv;
+    }
     if (bytesRead != aLength) {
         nsMemory::Free(s);
         return NS_ERROR_FAILURE;
     }
 
-    *aString = s;
+    *_rval = s;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBinaryInputStream::ReadByteArray(PRUint32 aLength, PRUint8* *_rval)
+{
+    return ReadBytes(aLength, NS_REINTERPRET_CAST(char **, _rval));
 }
 
 NS_IMETHODIMP
