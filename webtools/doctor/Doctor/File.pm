@@ -231,11 +231,22 @@ sub checkout {
 
     # Extract the content and version.
     if ($rv == 0) {
-        open(FILE, "<", $self->spec) || die "Can't open $self->spec: $!";
-        $/ = undef;
-        $self->{_content} = <FILE>;
+        # Extract the version from the CVS/Entries file.
+        open(FILE, "<", $self->path . "CVS/Entries")
+          or die "Can't open " . $self->spec . "/CVS/Entries: $!";
+        my $entry = <FILE>; # just the first line, which should be all there is
         close(FILE);
-        if ($errors =~ /VERS:\s([0-9.]+)\s/) { $self->{_version} = $1 }
+        $entry =~ m:^/[^/]*/([^/]*)/:;
+        $self->{_version} = $1;
+
+        # Extract the content from the file.  In a block to localize $/
+        {
+            local $/ = undef;
+            open(FILE, "<", $self->spec)
+              or die "Can't open " . $self->spec . ": $!";
+            $self->{_content} = <FILE>;
+            close(FILE);
+        }
     }
     elsif ($errors =~ /cannot find/) {
         $self->{_version} = "new";

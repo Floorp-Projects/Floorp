@@ -1,15 +1,18 @@
 To use Doctor, first configure it by copying sample.conf to doctor.conf
 and editing doctor.conf according to the instructions in it.
 
-Then download and install the IO::Capture module from the net:
+Then make sure you have the Template, AppConfig, File::Temp, Text::Diff,
+Email::Valid, and MIME::Entity modules (and their dependencies), which you
+can get via CPAN:
 
-http://groups.google.com/groups?selm=yr0e8.12924%24ZC3.1033373%40newsread2.prod.itd.earthlink.net
-
-You can install it anywhere in the Perl path; I installed it in the doctor
-root directory at IO/Capture.pm.
+perl -MCPAN -e"install Template, AppConfig, File::Temp, Text::Diff, Email::Valid, and MIME::Entity"
 
 Finally, put the doctor directory into your web server's cgi-bin directory
 (or another location where you can run CGI scripts) and browse to doctor.cgi.
 
 You may also want to edit the templates in the templates/ sub-directory
 to refer to your own site instead of mozilla.org's.
+
+Note that doctor.conf may contain a CVS write password you don't want anyone
+to know.  The .htaccess file restricts access to that file for Apache
+if this feature is enabled in .htaccess files.  Check and make sure!

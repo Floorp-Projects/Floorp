@@ -226,9 +226,11 @@ sub queue {
                       Disposition => "inline",
                       Filename    => $filename);
         # Set the record separator because otherwise MIME::Entity seems
-        # to get stuck in an infinite loop.
-        $/ = "\n";
-        $mail->send();
+        # to get stuck in an infinite loop.  In a block to localize $/.
+        {
+            local $/ = "\n";
+            $mail->send();
+        }
     };
     if ($@) {
         ThrowCodeError($@, "Mail Failure");
@@ -266,9 +268,9 @@ sub commit {
                        $errors);
     }
   
-    $vars->{file} = $file;
-    $vars->{output} = $output;
-    $vars->{errors} = $errors;
+    $vars->{'file'} = $file;
+    $vars->{'output'} = $output;
+    $vars->{'errors'} = $errors;
 
     print $request->header;
     $template->process("committed.tmpl", $vars)
@@ -388,7 +390,7 @@ sub GetContent {
     my $fh = $request->upload('content_file');
     my $content;
     if ($fh) {
-        local $/; # enable 'slurp' mode
+        local $/ = undef;
         $content = <$fh>;
     }
     if (!$content) {
