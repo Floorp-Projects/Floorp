@@ -194,7 +194,8 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mTempObserver(0), mDocObserver(0), 
   mIsProcessing(PR_FALSE),
   mDummyFrame(0), mNeedsStyleInit(PR_TRUE),
-  mDummyInitialized(PR_FALSE) // DUMMY
+  mDummyInitialized(PR_FALSE), // DUMMY
+  mCachedState(nsnull)
 {
 }
 
@@ -257,6 +258,11 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     }
     mDocObserver->SetFrame(nsnull);
     NS_RELEASE(mDocObserver);
+  }
+
+  if (mCachedState) {
+    delete mCachedState;
+    mCachedState = nsnull;
   }
 
   // this will be a leak -- NS_IF_RELEASE(mDummyFrame);
@@ -691,7 +697,13 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
       htmlEditor->InsertText(aValue);
 			mEditor->SetFlags(savedFlags);
     }
-  }    
+  }
+  else {
+    if (mCachedState) delete mCachedState;
+    mCachedState = new nsString(aValue);
+    // XXX if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
+    NS_ASSERTION(mCachedState, "Error: new nsString failed!");
+  }
 }
 
 NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
@@ -1367,7 +1379,13 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 
     // now that the style context is initialized, initialize the content
     nsAutoString value;
-    GetText(&value, PR_TRUE);
+    if (mCachedState) {
+      value = *mCachedState;
+      delete mCachedState;
+      mCachedState = nsnull;
+    } else {
+      GetText(&value, PR_TRUE);
+    }
     mEditor->EnableUndo(PR_FALSE);
 
     PRInt32 maxLength;
