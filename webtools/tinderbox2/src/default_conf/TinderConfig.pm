@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.43 $ 
-# $Date: 2002/05/07 22:48:40 $ 
+# $Revision: 1.44 $ 
+# $Date: 2002/05/10 21:23:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -100,7 +100,8 @@ $TINDERBOX_DATA_DIR = "/export2/tbox2-data";
 
 # Where to store the compressed HTML converted log files. Typically
 # this is either the DATA_DIR or the HTML dir, though it can be
-# elsewhere.
+# elsewhere.  This is a directory tinderbox will write to and will use
+# lots of space.
 
 #$TINDERBOX_GZLOG_DIR = $TINDERBOX_DATA_DIR;
 $TINDERBOX_GZLOG_DIR = $TINDERBOX_HTML_DIR;
@@ -148,7 +149,8 @@ $REFRESH_TIME = (60 * 15);
  
 $PopUpImpl = (
 	      # 'HTMLPopUp::MozillaLayers',
-	       'HTMLPopUp::MajorCoolWindow',
+               'HTMLPopUp::MajorCoolPermanent',
+	      # 'HTMLPopUp::MajorCoolWindow',
 	      # 'HTMLPopUp::None',
 	      # 'HTMLPopUp::PortableLayers',
 	     );
@@ -167,14 +169,18 @@ $PopUpImpl = (
 # bonsai or are using CVS raw.
 
 @DBImpl = (
-#	   'TinderDB::BT_Req',
 	   'TinderDB::Time',
-	   'TinderDB::Notice',
+
+           # the notice board is a special column, you may not wish to
+           # include it.
+
+#	   'TinderDB::Notice',
 #	   'TinderDB::VC_CVS',
 	   'TinderDB::VC_Bonsai',
 #          'TinderDB::VC_Perforce',
 	   'TinderDB::Build',
-	   'TinderDB::BT_Generic',
+#	   'TinderDB::BT_Generic',
+#	   'TinderDB::BT_Req',
 	  );
 
 # What border should the status legends use?  new browsers allow us to
@@ -360,11 +366,11 @@ $DEFAULT_HTML_PAGE = 'status.html';
 
 # The indicator that a notice is available for a given notice cell is
 # configurable.  Traditionally it is a star gif however if you wish to
-# run entirely without images I suggest you set it to "X".
+# run entirely without images I suggest you set it to "X" or "*".
 # This is used in TinderDB::Notice.pm
 
 #$NOTICE_AVAILABLE = "X";
-$NOTICE_AVAILABLE = "<img src='$GIF_URL/star.gif' border=0>";
+$NOTICE_AVAILABLE = "<img src='$GIF_URL/star1.gif' border=0>";
 
 
 # The amount of time rmlogs keeps logs on file
