@@ -165,5 +165,30 @@ public class Main {
         org.mozilla.javascript.tools.shell.Main.exec(args);
     }
 
+    // same as plain main(), stdin/out/err redirection removed
+    public static void mainEmbedded(String title)
+    {
+        if (title == null) {
+            title = "Rhino JavaScript Debugger (embedded usage)";
+        }
+        Main main = new Main(title);
+        main.dim.breakFlag = true;
+        main.setExitAction(new Runnable() {
+                public void run() {
+                    System.exit(0);
+                }
+            });
+
+        main.dim.enableForAllNewContexts();
+        main.setScopeProvider(new ScopeProvider() {
+                public Scriptable getScope() {
+                    return org.mozilla.javascript.tools.shell.Main.getScope();
+                }
+            });
+
+        main.debugGui.pack();
+        main.debugGui.setSize(600, 460);
+        main.debugGui.setVisible(true);
+    }
 }
 
