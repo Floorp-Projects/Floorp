@@ -33,7 +33,7 @@
 		<menuseparator/>
 
 		<menu value="&walletMenu.label;">
-      <menupopup> 
+      <menupopup oncreate="CheckForWallet()"> 
         <menu value="&walletPasswordManager.label;">
           <menupopup>
             <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
@@ -41,11 +41,12 @@
           </menupopup>
         </menu>
         <menuitem value="&walletDisplayCookiesCmd.label;" oncommand="WalletDialog('cookie');"/> 
-        <menu value="&autoFill.label;" disabled="true">
+        <menu value="&autoFill.label;" id="wallet">
           <menupopup>
             <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
             <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
             <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
+            <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
           </menupopup>
         </menu>
         <menuitem value="&walletSamplesCmd.label;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
