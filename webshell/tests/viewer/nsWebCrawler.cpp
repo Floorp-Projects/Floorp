@@ -191,6 +191,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   LL_I2L(mStartLoad, 0);
   mRegressing = PR_FALSE;
   mPrinterTestType = 0;
+  mIncludeStyleInfo = PR_TRUE;
 }
 
 static void FreeStrings(nsVoidArray& aArray)
@@ -351,7 +352,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
             if (fp) {
               nsIFrameDebug* fdbg;
               if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-                fdbg->DumpRegressionData(presContext, fp, 0);
+                fdbg->DumpRegressionData(presContext, fp, 0, mIncludeStyleInfo);
               }
               fclose(fp);
               if (mRegressing) {
@@ -372,7 +373,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
           else {
             nsIFrameDebug* fdbg;
             if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-              fdbg->DumpRegressionData(presContext, stdout, 0);
+              fdbg->DumpRegressionData(presContext, stdout, 0, mIncludeStyleInfo);
             }
           }
         }

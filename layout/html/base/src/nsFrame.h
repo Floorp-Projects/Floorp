@@ -256,7 +256,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
-  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
 #endif
@@ -404,7 +404,7 @@ public:
    * some custom behavior that requires changing how the outer "frame"
    * XML container is dumped.
    */
-  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   
   nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
 #endif

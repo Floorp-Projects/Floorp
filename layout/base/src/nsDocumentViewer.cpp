@@ -1041,7 +1041,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
       ps->GetRootFrame(&root);
 
       if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-        fdbg->DumpRegressionData(cx, mFilePointer, 0);
+        fdbg->DumpRegressionData(cx, mFilePointer, 0, PR_TRUE);
       }
       fclose(mFilePointer);      
     } else {

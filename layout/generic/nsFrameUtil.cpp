@@ -68,6 +68,7 @@ public:
     char* type;
     PRUint32 state;
     nsRect bbox;
+    nsCString styleData;
     NodeList* lists;
   };
 
@@ -246,6 +247,22 @@ nsFrameUtil::Node::Read(FILE* aFile, Tag* tag)
         tailp = &child->next;
       }
     }
+    else if((PL_strcmp(tag->name, "font") == 0) ||
+            (PL_strcmp(tag->name, "color") == 0) ||
+            (PL_strcmp(tag->name, "spacing") == 0) ||
+            (PL_strcmp(tag->name, "list") == 0) ||
+            (PL_strcmp(tag->name, "position") == 0) ||
+            (PL_strcmp(tag->name, "text") == 0) ||
+            (PL_strcmp(tag->name, "display") == 0) ||
+            (PL_strcmp(tag->name, "table") == 0) ||
+            (PL_strcmp(tag->name, "content") == 0) ||
+            (PL_strcmp(tag->name, "UI") == 0) ||
+            (PL_strcmp(tag->name, "print") == 0)) {
+      char* attr = tag->GetAttr("data");
+      node->styleData.Append('|');
+      node->styleData.Append((const char *)(attr ? attr : "null attr"));
+    }
+
     delete tag;
   }
   return node;
@@ -493,9 +510,10 @@ void
 nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
 {
   nsFrame::IndentBy(aOutputFile, aIndent);
-  fprintf(aOutputFile, "%s 0x%x %d,%d,%d,%d\n", aNode->type, aNode->state,
+  fprintf(aOutputFile, "%s 0x%x %d,%d,%d,%d, %s\n", aNode->type, aNode->state,
           aNode->bbox.x, aNode->bbox.y,
-          aNode->bbox.width, aNode->bbox.height);
+          aNode->bbox.width, aNode->bbox.height,
+          aNode->styleData.GetBuffer());
 }
 
 void
@@ -553,6 +571,11 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
              tree1->bbox.width, tree1->bbox.height,
              tree2->bbox.x, tree2->bbox.y,
              tree2->bbox.width, tree2->bbox.height);
+    }
+    if (tree1->styleData != tree2->styleData) {
+      printf("frame style data mismatch: %s vs. %s\n",
+        tree1->styleData.GetBuffer(),
+        tree2->styleData.GetBuffer());
     }
 
     // Check child lists too

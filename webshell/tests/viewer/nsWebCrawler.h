@@ -124,6 +124,10 @@ public:
     return mHaveURLList;
   }
 
+  void IncludeStyleData(PRBool aIncludeStyle) {
+    mIncludeStyleInfo = aIncludeStyle;
+  }
+
 protected:
   virtual ~nsWebCrawler();
 
@@ -169,6 +173,7 @@ protected:
   PRBool mRegressing;
   PRInt32 mPrinterTestType;
   nsString mRegressionDir;
+  PRBool mIncludeStyleInfo;
 
   nsVoidArray mPendingURLs;
   nsVoidArray mSafeDomains;
