@@ -39,6 +39,7 @@ nsXIContext::nsXIContext()
     window = NULL;
     back = NULL;
     next = NULL;
+    cancel = NULL;
     nextLabel = NULL;
     backLabel = NULL;
     acceptLabel = NULL;

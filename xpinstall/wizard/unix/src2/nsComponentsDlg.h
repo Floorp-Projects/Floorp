@@ -61,6 +61,8 @@ public:
     nsComponentList *GetCompList();
 
 private:
+    int             ParseDependees(char *aCurrSec, nsComponent *aCurrComp, 
+                                   nsINIParser *aParser);
     char            *mMsg0;
     nsComponentList *mCompList;
 };

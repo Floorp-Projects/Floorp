@@ -203,17 +203,16 @@ int
 nsXInstaller::DrawCancelButton(GtkWidget *aLogoVBox)
 {
     int err = OK;
-    GtkWidget *cancelButton;
     GtkWidget *hbox;
 
-    cancelButton = gtk_button_new_with_label(CANCEL);
+    gCtx->cancel = gtk_button_new_with_label(CANCEL);
     hbox = gtk_hbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), cancelButton, TRUE, TRUE, 15);
+    gtk_box_pack_start(GTK_BOX(hbox), gCtx->cancel, TRUE, TRUE, 15);
     gtk_box_pack_end(GTK_BOX(aLogoVBox), hbox, FALSE, TRUE, 10);
-    gtk_signal_connect(GTK_OBJECT(cancelButton), "clicked",
+    gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
                        GTK_SIGNAL_FUNC(Kill), NULL);
     gtk_widget_show(hbox);
-    gtk_widget_show(cancelButton);
+    gtk_widget_show(gCtx->cancel);
 
     return err;
 }
