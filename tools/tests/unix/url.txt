@@ -32,3 +32,4 @@
  http://people.netscape.com/erik/sev-nsi-java.html 
  http://www.unicode.org/unicode/iuc10/x-utf8.html
  http://www.unicode.org/unicode/iuc10/x-ncr.html
+ http://www.browserwatch.com
