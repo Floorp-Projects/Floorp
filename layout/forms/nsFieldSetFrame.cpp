@@ -100,6 +100,11 @@ public:
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
+  NS_IMETHOD  GetFrameForPoint(nsIPresContext*   aPresContext,
+                               const nsPoint&    aPoint, 
+                               nsFramePaintLayer aWhichLayer,
+                               nsIFrame**        aFrame);
+  
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("FieldSet"), aResult);
@@ -278,10 +283,15 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
- 
+
   // Initialize OUT parameter
    aStatus = NS_FRAME_COMPLETE;
 
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
+  }
+  
    //------------ Handle Incremental Reflow -----------------
    nsIFrame* incrementalChild = nsnull;
    PRBool reflowContent = PR_TRUE;
@@ -350,7 +360,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
     // availSize could have unconstrained values, don't perform any addition on them
     nsSize availSize(aReflowState.mComputedWidth, aReflowState.availableHeight);
-  
+
     // get our border and padding
     const nsMargin &borderPadding = aReflowState.mComputedBorderPadding;
     const nsMargin &padding       = aReflowState.mComputedPadding;
@@ -395,7 +405,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
           mLegendSpace = 0;
           if (mLegendRect.height > border.top) {
               // center the border on the legend
-              mLegendSpace = mLegendRect.height - borderPadding.top;
+              mLegendSpace = mLegendRect.height - border.top;
           } else {
               mLegendRect.y = (border.top - mLegendRect.height)/2;
           }
@@ -446,8 +456,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
             kidReflowState.reason = reason;
 
-            nsHTMLReflowMetrics kidDesiredSize(0,0);
-
+            nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize, aDesiredSize.mFlags);
             // Reflow the frame
             ReflowChild(mContentFrame, aPresContext, kidDesiredSize, kidReflowState,
                         kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
@@ -509,20 +518,26 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     if (mLegendFrame) {
+      // use the computed width if the inner content does not fill it
+      if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && aReflowState.mComputedWidth > contentRect.width ) 
+        contentRect.width = aReflowState.mComputedWidth;
+      // if the content rect is larger then the  legend we can align the legend
       if (contentRect.width > mLegendRect.width) {
         PRInt32 align = ((nsLegendFrame*)mLegendFrame)->GetAlign();
-  
+
         switch(align) {
           case NS_STYLE_TEXT_ALIGN_RIGHT:
             mLegendRect.x = contentRect.width - mLegendRect.width + borderPadding.left;
             break;
           case NS_STYLE_TEXT_ALIGN_CENTER:
-            mLegendRect.x = contentRect.width/2 - mLegendRect.width/2 + borderPadding.left;
+            float p2t;
+            aPresContext->GetPixelsToTwips(&p2t);
+            mLegendRect.x = NSIntPixelsToTwips((nscoord) NSToIntRound((float)(contentRect.width/2 - mLegendRect.width/2 + borderPadding.left) / p2t),p2t);
         }
   
       } else {
-        contentRect.width = mLegendRect.width + borderPadding.left + borderPadding.right;
-        aDesiredSize.width = contentRect.width;
+        //otherwise make place for the legend
+        contentRect.width = mLegendRect.width;
       }
       // place the legend
       nsRect actualLegendRect(mLegendRect);
@@ -554,18 +569,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
        if (aDesiredSize.height < min)
            aDesiredSize.height = min;
     }
-
-    if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
-        aDesiredSize.width = borderPadding.left + 
-                             contentRect.width +
-                             borderPadding.right;
-    } else {
-       nscoord min = borderPadding.left + borderPadding.right + mLegendRect.width;
-       aDesiredSize.width = aReflowState.mComputedWidth + borderPadding.left + borderPadding.right;
-       if (aDesiredSize.width < min)
-           aDesiredSize.width = min;
-    }
-
+    aDesiredSize.width = contentRect.width + borderPadding.left + borderPadding.right;
     aDesiredSize.ascent  = aDesiredSize.height;
     aDesiredSize.descent = 0;
     aDesiredSize.mMaximumWidth = aDesiredSize.width;
@@ -671,4 +675,12 @@ nsFieldSetFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                      aNewFrame);
 }
 
-
+NS_IMETHODIMP
+nsFieldSetFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+                     const nsPoint&    aPoint, 
+                     nsFramePaintLayer aWhichLayer,
+                     nsIFrame**        aFrame)
+{
+  // this should act like a block, so we need to override
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+}

@@ -137,6 +137,13 @@ nsLegendFrame::Paint(nsIPresContext*      aPresContext,
 PRInt32 nsLegendFrame::GetAlign()
 {
   PRInt32 intValue = NS_STYLE_TEXT_ALIGN_LEFT;
+#ifdef IBMBIDI
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+  if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+    intValue = NS_STYLE_TEXT_ALIGN_RIGHT;
+  }
+#endif // IBMBIDI
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
