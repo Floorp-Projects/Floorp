@@ -482,10 +482,8 @@ NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
               err = ::ICFindPrefHandle(inst, kICDownloadFolder, &attr, prefH);
               if (err == noErr)
               { // Use FSMakeFSSpec to verify the saved FSSpec is still valid
-                err = ::FSMakeFSSpec((*(ICFileSpecHandle)prefH)->fss.vRefNum,
-                                     (*(ICFileSpecHandle)prefH)->fss.parID,
-                                     (*(ICFileSpecHandle)prefH)->fss.name,
-                                     fsspec);
+                FSSpec tempSpec = (*(ICFileSpecHandle)prefH)->fss;
+                err = ::FSMakeFSSpec(tempSpec.vRefNum, tempSpec.parID, tempSpec.name, fsspec);
                 if (err == noErr)
                   rv = NS_OK;
               }
