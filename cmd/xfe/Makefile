@@ -308,7 +308,9 @@ BASIC_LIBS	+= \
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmozmsg.a \
+ifdef MOZ_SECURITY
 		  $(DIST)/lib/libmsg.a \
+endif
 		  $(DIST)/lib/libmime.a \
 		  $(DIST)/lib/libaddr.a \
 		  $(DIST)/lib/libneo.a \
