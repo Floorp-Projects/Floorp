@@ -20,6 +20,18 @@ DEPTH=../..
 DEFINES = -D_IMPL_NS_UI
 
 EXPORTS =               \
+	nsIMenuBar.h		\
+	nsIMenu.h		\
+	nsIMenuItem.h		\
+	nsIToolbar.h		\
+	nsIImageButton.h		\
+	nsIToolbarManager.h		\
+	nsIToolbarManagerListener.h		\
+	nsIToolbarItem.h		\
+	nsIToolbarItemHolder.h		\
+	nsIPopUpMenu.h		\
+	nsIMenuButton.h		\
+	nsIImageButtonListener.h		\
 	nsStringUtil.h		\
 	nsui.h		\
 	nsITabWidget.h  \

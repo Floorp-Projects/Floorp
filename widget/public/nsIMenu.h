@@ -21,10 +21,10 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIMenuItem.h"
 
 class nsIMenuBar;
 class nsIMenu;
+class nsIMenuItem;
 
 // {35A3DEC1-4992-11d2-8DBA-00609703C14E}
 #define NS_IMENU_IID      \
@@ -50,7 +50,13 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel) = 0;
-   
+
+   /**
+    * Get the Menu's Parent
+    *
+    */
+    NS_IMETHOD GetParent(nsISupports *&aParent) = 0;
+
    /**
     * Get the Menu label
     *

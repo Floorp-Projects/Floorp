@@ -529,6 +529,13 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
+    /**
+     * Dispatches and event to the widget
+     *
+     */
+    NS_IMETHOD DispatchEvent(nsGUIEvent* event) = 0;
+
+
    
     virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
 };

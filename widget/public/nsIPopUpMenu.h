@@ -122,6 +122,12 @@ class nsIPopUpMenu : public nsISupports {
     */
     NS_IMETHOD  GetNativeData(void*& aData) = 0;
 
+   /**
+    * Gets parent widget
+    *
+    */
+    NS_IMETHOD  GetParent(nsIWidget *& aParent) = 0;
+
 };
 
 #endif
