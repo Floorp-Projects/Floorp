@@ -825,9 +825,32 @@
     <menu name="Debug">
 
       <menu name="Verification"> // Build verification sites.
-        <menuitem name="Mozilla"  onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
-        <menuitem name="Yahoo"  onclick="window.frames[0].frames[1].location.href='http://www.yahoo.com'"/>
+        <menuitem name="Mozilla"   onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
+        <menuitem name="Yahoo"     onclick="window.frames[0].frames[1].location.href='http://www.yahoo.com'"/>
         <menuitem name="Netscape"  onclick="window.frames[0].frames[1].location.href='http://www.netscape.com'"/>
+        <menuitem name="Excite"    onclick="window.frames[0].frames[1].location.href='http://www.excite.com'"/>
+        <menuitem name="Microsoft" onclick="window.frames[0].frames[1].location.href='http://www.microsoft.com'"/>
+        <menuitem name="city.net"  onclick="window.frames[0].frames[1].location.href='http://www.city.net'"/>
+        <menuitem name="Mirabilis" onclick="window.frames[0].frames[1].location.href='http://www.mirabilis.com'"/>
+        <menuitem name="Pathfinder" onclick="window.frames[0].frames[1].location.href='http://www.pathfinder.com/welcome'"/>
+        <menuitem name="Warner Bros." onclick="window.frames[0].frames[1].location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+        <menuitem name="CNN"          onclick="window.frames[0].frames[1].location.href='http://www.cnn.com'"/>
+        <menuitem name="USA Today" onclick="window.frames[0].frames[1].location.href='http://www.usatoday.com'"/>
+        <menuitem name="Disney"    onclick="window.frames[0].frames[1].location.href='http://www.disney.go.com'"/>
+        <menuitem name="Hotwired"  onclick="window.frames[0].frames[1].location.href='http://www.hotwired.com'"/>
+        <menuitem name="Hotbot"    onclick="window.frames[0].frames[1].location.href='http://www.hotbot.com'"/>
+	    <separator />
+        <menuitem name="Frames"  onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_frame_index.html'"/>
+        <menuitem name="Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="Applets" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_applet.htm'"/>
+        <menuitem name="JavaScript Applets" onclick="window.frames[0].frames[1].location.href='http://www.abcnews.com'"/>
+        <menuitem name="GIF Images" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html'"/>
+        <menuitem name="JPEG Images" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="PNG Images" onclick="window.frames[0].frames[1].location.href='http://www.cdrom.com/pub/png/png-MagnoliaAlpha.html'"/>
+        <menuitem name="Transparency" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
+        <menuitem name="Animation" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="Larger page" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html'"/>
+        <menuitem name="Smaller page" onclick="window.frames[0].frames[1].location.href='http://slip/projects/marvin/bft/browser/bft_browser_link.html'"/>
       </menu>
 
 	  <menu name="Viewer Demos">  // Viewer tests.
