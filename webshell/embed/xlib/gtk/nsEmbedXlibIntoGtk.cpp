@@ -251,7 +251,8 @@ int main(int argc, char **argv)
 
   nsString URL(url);
   PRUnichar *u_url = URL.ToNewUnicode();
-  sgWebShell->LoadURL(u_url);
+  // XXX fix me - what's the new API?
+  //sgWebShell->LoadURL(u_url);
   
   gtk_main();
 
