@@ -247,6 +247,7 @@ protected:
 
 #ifdef NS_DEBUG
   void VerifyIncrementalReflow();
+  PRBool mInVerifyReflow;
 #endif
 
   nsIDocument* mDocument;
@@ -717,6 +718,11 @@ PresShell::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 void
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
+#ifdef NS_DEBUG
+  if (mInVerifyReflow) {
+    return;
+  }
+#endif
   mReflowCommands.AppendElement(aReflowCommand);
   NS_ADDREF(aReflowCommand);
 }
@@ -749,18 +755,25 @@ PresShell::ProcessReflowCommands()
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
          ("PresShell::ProcessReflowCommands: end reflow command"));
     }
+    NS_IF_RELEASE(rcx);
 
     // Place and size the root frame
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
       mRootFrame->VerifyTree();
     }
     if (GetVerifyReflowEnable()) {
+      mInVerifyReflow = PR_TRUE;
       VerifyIncrementalReflow();
+      mInVerifyReflow = PR_FALSE;
+
+      if (0 != mReflowCommands.Count()) {
+        printf("XXX yikes!\n");
+      }
     }
 #endif
-    NS_IF_RELEASE(rcx);
   }
 }
 
