@@ -28,10 +28,11 @@
 */ 
 
 #include "nsISupports.idl"
-#include "nsIProtocolHandler.idl"
-#include "nsIChannel.idl"
-#include "nsIStreamListener.idl"
-#include "nsIURI.idl"
+
+interface nsIProtocolHandler;
+interface nsIChannel;
+interface nsIStreamListener;
+interface nsIURI;
 
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
@@ -69,7 +70,10 @@ interface nsIURIContentListener : nsISupports
                   out nsIStreamListener aContentHandler,
 				  out boolean aAbortProcess);
 
-   /* returns true if we can handle the content and false if we can't */
+   /* returns true if we can handle the content and false if we can't.
+      aDesiredContentType --> yes, we can accept aContentType but we would
+	  like it converted to aDesiredContentType. This argument can be null if
+	  you want the content directly as aContentType */
    boolean canHandleContent(in string aContentType, in string aCommand, 
-						 in string aWindowTarget);
+							in string aWindowTarget, out string aDesiredContentType);
 };
