@@ -136,6 +136,8 @@ public:
 	
 	virtual ~nsNNTPProtocol();
 
+	PRInt32 LoadURL(nsIURL * aURL);
+
 	NS_DECL_ISUPPORTS
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -188,6 +190,7 @@ private:
 
 	// the nsINntpURL that is currently running
 	nsINntpURL				* m_runningURL;
+	nsIURL					* m_url; // eventually this will just be m_runningURL...
 	
 	PRUint32 m_flags; // used to store flag information
 
@@ -237,6 +240,8 @@ private:
 	// Per news article state information. (article number, author, subject, id, etc
 	char	 *m_messageID;
     PRInt32   m_articleNumber;   /* current article number */
+	char	 *m_commandSpecificData;
+	char	 *m_searchData;
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
@@ -294,6 +299,8 @@ private:
 	// Interprets the server response from the first command sent.
 	// returns negative if the server responds unexpectedly.
 	PRInt32 SendFirstNNTPCommandResponse();
+
+	PRInt32 SetupForTransfer();
 
 	PRInt32 SendGroupForArticle();
 	PRInt32 SendGroupForArticleResponse();
@@ -368,6 +375,8 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
+
+	PRInt32 ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 };
 
 #endif  // nsNNTPProtocol_h___

@@ -21,6 +21,7 @@
 
 #include "nsNNTPProtocol.h"
 #include "nsIOutputStream.h"
+#include "nsIInputStream.h"
 
 #include "nntpCore.h"
 
@@ -31,6 +32,7 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
+#include "nsEscape.h"
 
 #include HG09893
 
@@ -161,6 +163,7 @@ static char * last_username_hostname=0;
 
 static NS_DEFINE_IID(kINntpURLIID, NS_INNTPURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 
 nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer)
 {
@@ -191,6 +194,11 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	NS_PRECONDITION(aURL, "invalid URL passed into NNTP Protocol");
 
 	m_flags = 0;
+
+	// grab a reference to the transport interface
+	m_transport = transportLayer;
+	if (m_transport)
+		NS_ADDREF(m_transport);
 
 	// Right now, we haven't written an nsNNTPURL yet. When we do, we'll pull the event sink
 	// data out of it and set our event sink member variables from it. For now, just set them
@@ -227,11 +235,21 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
 
-	m_hostName = NULL;
-	m_dataBuf = NULL;
-	m_dataBufSize = 0;
+	// register self as the consumer for the socket...
+	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
 
-	m_nextState = NNTP_CONNECT;
+	const char * hostName = NULL;
+	aURL->GetHost(&hostName);
+	if (hostName)
+		m_hostName = PL_strdup(hostName);
+	else
+		m_hostName = NULL;
+
+	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
+	m_dataBufSize = OUTPUT_BUFFER_SIZE;
+
+	m_nextState = SEND_FIRST_NNTP_COMMAND;
 	m_nextStateAfterResponse = NNTP_CONNECT;
 	m_typeWanted = 0;
 	m_responseCode = 0;
@@ -253,6 +271,464 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_messageID = NULL;
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
+}
+
+PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
+{
+  PRInt32 status = 0;
+  PRBool bVal = FALSE;
+  PRBool default_host = FALSE;
+  char * hostAndPort = 0;
+  int32 port = 0;
+  char *group = 0;
+  char *messageID = 0;
+  char *commandSpecificData = 0;
+  PRBool cancel = FALSE;
+  char* colon;
+
+  nsresult rv;
+
+  m_articleNumber = -1;
+
+  // mscott: HACK ALERT until we have an implementation of nsNNTPUrl up and running....
+  m_url = aURL;
+
+  PR_ASSERT (aURL);
+  if (!aURL)
+  {
+	  status = -1;
+	  goto FAIL;
+  }
+
+  status = ParseURL(aURL, &hostAndPort, &bVal, &group, &messageID, &commandSpecificData);
+  if (status < 0)
+	goto FAIL;
+
+  colon = PL_strchr (hostAndPort, ':');
+  if (colon) 
+  {
+	*colon = '\0';
+	sscanf (colon+1, " %u ", &port);
+  }
+
+#ifdef UNREADY_CODE
+  rv = NS_NewMsgNewsHost(m_newsHost, hostAndPort, bVal, port);
+#endif
+  if (colon) *colon = ':';
+
+  PR_ASSERT(NS_SUCCEEDED(rv));
+  if (!NS_SUCCEEDED(rv)) 
+  {
+	status = -1;
+	goto FAIL;
+  }
+
+  if (messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
+	cancel = TRUE;
+
+  StrAllocCopy(m_path, messageID);
+  if (m_newsgroup)
+	m_newsgroup->SetName(group);
+
+  /* make sure the user has a news host configured */
+#if UNREADY_CODE
+  if (cancel /* && !ce->URL_s->internal_url */)
+  {
+	  /* Don't allow manual "news:ID?cancel" URLs, only internal ones. */
+	  status = -1;
+	  goto FAIL;
+  }
+  else if (ce->URL_s->method == URL_POST_METHOD)
+	{
+	  /* news://HOST done with a POST instead of a GET;
+		 this means a new message is being posted.
+		 Don't allow this unless it's an internal URL.
+	   */
+	  if (!ce->URL_s->internal_url)
+		{
+		  status = -1;
+		  goto FAIL;
+		}
+	  PR_ASSERT (!group && !message_id && !commandSpecificData);
+	  m_typeWanted = NEWS_POST;
+	  StrAllocCopy(cd->path, "");
+	}
+  else 
+#endif
+	if (messageID)
+	{
+	  /* news:MESSAGE_ID
+		 news:/GROUP/MESSAGE_ID (useless)
+		 news://HOST/MESSAGE_ID
+		 news://HOST/GROUP/MESSAGE_ID (useless)
+	   */
+	  if (cancel)
+		m_typeWanted = CANCEL_WANTED;
+	  else
+		m_typeWanted = ARTICLE_WANTED;
+	}
+  else if (commandSpecificData)
+	{
+	  if (PL_strstr (commandSpecificData, "?newgroups"))
+	    /* news://HOST/?newsgroups
+	        news:/GROUP/?newsgroups (useless)
+	        news:?newsgroups (default host)
+	     */
+	    m_typeWanted = NEW_GROUPS;
+      else
+	  {
+		if (PL_strstr(commandSpecificData, "?list-pretty"))
+		{
+			m_typeWanted = PRETTY_NAMES_WANTED;
+			m_commandSpecificData = PL_strdup(commandSpecificData);
+		}
+		else if (PL_strstr(commandSpecificData, "?profile"))
+		{
+			m_typeWanted = PROFILE_WANTED;
+			m_commandSpecificData = PL_strdup(commandSpecificData);
+		}
+		else if (PL_strstr(commandSpecificData, "?list-ids"))
+		{
+			m_typeWanted= IDS_WANTED;
+			m_commandSpecificData = PL_strdup(commandSpecificData);
+		}
+		else
+		{
+			m_typeWanted = SEARCH_WANTED;
+			m_commandSpecificData = PL_strdup(commandSpecificData);
+			m_searchData = m_commandSpecificData;
+		}
+	  }
+	}
+  else if (group)
+	{
+	  /* news:GROUP
+		 news:/GROUP
+		 news://HOST/GROUP
+	   */
+#ifdef UNREADY_CODE
+	  if (ce->window_id->type != MWContextNews && ce->window_id->type != MWContextNewsMsg 
+		  && ce->window_id->type != MWContextMailMsg
+		  && ce->window_id->type != MWContextMail && ce->window_id->type != MWContextMailNewsProgress)
+		{
+		  status = -1;
+		  goto FAIL;
+		}
+#endif
+	  if (PL_strchr (group, '*'))
+		m_typeWanted = LIST_WANTED;
+	  else
+		m_typeWanted = GROUP_WANTED;
+	}
+  else
+	{
+	  /* news:
+	     news://HOST
+	   */
+	  m_typeWanted = READ_NEWS_RC;
+	}
+
+#ifdef UNREADY_CODE
+  /* let's look for the user name and password in the url */
+  {
+		char * unamePwd = NET_ParseURL(url, GET_USERNAME_PART | GET_PASSWORD_PART);
+		char *userName,*colon,*password=NULL;
+
+		/* get the username & password out of the combo string */
+		if( (colon = PL_strchr(unamePwd, ':')) != NULL ) 
+		{
+			*colon = '\0';
+			userName = PL_strdup(unamePwd);
+			password = PL_strdup(colon+1);
+			*colon = ':';
+			PR_Free(unamePwd);
+		}
+		else 
+		{
+			userName = unamePwd;
+		}
+		if (userName)
+		{
+		    char *mungedUsername = HG64643(userName);
+            cd->newsgroup->SetUsername(mungedUsername);
+			PR_FREEIF(mungedUsername);
+			PR_Free(userName);
+		}
+		if (password)
+		{
+		    char *mungedPassword = HG64643(password);
+            cd->newsgroup->SetPassword(mungedPassword);
+
+			PR_FREEIF(mungedPassword);
+			PR_Free(password);
+		}
+
+    }
+#endif
+  /* At this point, we're all done parsing the URL, and know exactly
+	 what we want to do with it.
+   */
+#ifdef UNREADY_CODE
+#ifndef NO_ARTICLE_CACHEING
+  /* Turn off caching on all news entities, except articles. */
+  /* It's very important that this be turned off for CANCEL_WANTED;
+	 for the others, I don't know what cacheing would cause, but
+	 it could only do harm, not good. */
+  if(m_typeWanted != ARTICLE_WANTED)
+#endif
+  	ce->format_out = CLEAR_CACHE_BIT (ce->format_out);
+#endif
+
+#ifdef UNREADY_CODE
+  if (m_typeWanted == ARTICLE_WANTED)
+  {
+		uint32 number = 0;
+        nsresult rv;
+        PRBool articleIsOffline;
+        rv = m_newsgroup->IsOfflineArticle(number,&articleIsOffline);
+
+		if (NET_IsOffline() || (NS_SUCCEEDED(rv) && articleIsOffline))
+		{
+			ce->local_file = TRUE;
+			cd->articleIsOffline = articleIsOffline;
+			ce->socket = NULL;
+
+			if (!articleIsOffline)
+				ce->format_out = CLEAR_CACHE_BIT(ce->format_out);
+			NET_SetCallNetlibAllTheTime(ce->window_id,"mknews");
+            rv = NS_NewOfflineNewState(&cd->offline_state,
+                                       cd->newsgroup, number);
+
+		}
+  }
+  if (cd->offline_state)
+	  goto FAIL;	/* we don't need to do any of this connection stuff */
+#endif
+
+
+  m_nextState = SEND_FIRST_NNTP_COMMAND;
+
+
+
+ FAIL:
+
+  PR_FREEIF (hostAndPort);
+  PR_FREEIF (group);
+  PR_FREEIF (messageID);
+  PR_FREEIF (commandSpecificData);
+
+  if (status < 0)
+  {
+#ifdef UNREADY_CODE
+	  ce->URL_s->error_msg = NET_ExplainErrorDetails(status);
+#endif
+	  return status;
+  }
+  else 
+  {
+	  // now tell the transport layer to load the url...
+//	  m_transport->LoadURL(aURL);
+	  return status;
+  }
+
+}
+
+/* The main news load init routine, and URL parser.
+   The syntax of news URLs is:
+
+	 To list all hosts:
+	   news:
+
+	 To list all groups on a host, or to post a new message:
+	   news://HOST
+
+	 To list some articles in a group:
+	   news:GROUP
+	   news:/GROUP
+	   news://HOST/GROUP
+
+	 To list a particular range of articles in a group:
+	   news:GROUP/N1-N2
+	   news:/GROUP/N1-N2
+	   news://HOST/GROUP/N1-N2
+
+	 To retrieve an article:
+	   news:MESSAGE-ID                (message-id must contain "@")
+
+    To cancel an article:
+	   news:MESSAGE-ID?cancel
+
+	 (Note that message IDs may contain / before the @:)
+
+	   news:SOME/ID@HOST?headers=all
+	   news:/SOME/ID@HOST?headers=all
+	   news:/SOME?ID@HOST?headers=all
+        are the same as
+	   news://HOST/SOME/ID@HOST?headers=all
+	   news://HOST//SOME/ID@HOST?headers=all
+	   news://HOST//SOME?ID@HOST?headers=all
+        bug: if the ID is <//xxx@host> we will parse this correctly:
+          news://non-default-host///xxx@host
+        but will mis-parse it if it's on the default host:
+          news://xxx@host
+        whoever had the idea to leave the <> off the IDs should be flogged.
+		So, we'll make sure we quote / in message IDs as %2F.
+
+ */
+PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID,
+								  char ** aCommandSpecificData)
+{
+	char * hostAndPort = NULL;
+	PRInt32 status = 0;
+	PRInt32 port = 0;
+	char *group = 0;
+    char *message_id = 0;
+    char *command_specific_data = 0;
+    const char *path_part;
+	char * url = 0;
+	char * s = 0;
+	const char * host;
+	
+	aURL->GetHost(&host);
+	if (host)
+		hostAndPort = PL_strdup(host);
+
+	// mscott: I took out default code to generate host and port if the url didn't have any...add this later...
+	if (!hostAndPort)
+	{
+	   status = MK_NO_NEWS_SERVER;
+	   goto FAIL;
+	}
+
+
+	/* If a port was specified, but it was the default port, pretend
+	   it wasn't specified.
+	*/
+  	s = PL_strchr (hostAndPort, ':');
+	if (s && sscanf (s+1, " %u ", &port) == 1 && HG05998)
+		*s = 0;
+
+	// I think the path part is just the file part of the nsIURL interface...
+	aURL->GetFile(&path_part); 
+#if 0
+	path_part = PL_strchr (url, ':');
+    PR_ASSERT (path_part);
+    if (!path_part)
+	{
+	  status = -1;
+	  goto FAIL;
+	}
+
+	path_part++;
+	if (path_part[0] == '/' && path_part[1] == '/')
+	{
+	  /* Skip over host name. */
+	  path_part = PL_strchr (path_part + 2, '/');
+	  if (path_part)
+		path_part++;
+	}
+#endif
+  
+	if (!path_part)
+		path_part = "";
+
+	group = PL_strdup (path_part);
+	if (!group)
+	{
+	  status = MK_OUT_OF_MEMORY;
+	  goto FAIL;
+	}
+
+	nsUnescape (group);
+
+    /* "group" now holds the part after the host name:
+	 "message@id?search" or "/group/xxx?search" or "/message?id@xx?search"
+
+	 If there is an @, this is a message ID; else it is a group.
+	 Either way, there may be search data at the end.
+    */
+
+	s = PL_strchr (group, '@');
+    if (s)
+	{
+	  message_id = group;
+	  group = 0;
+	}
+    else if (!*group)
+	{
+	  PR_Free (group);
+	  group = 0;
+	}
+
+    /* At this point, the search data is attached to `message_id' (if there
+	 is one) or `group' (if there is one) or `host_and_port' (otherwise.)
+	 Seperate the search data from what it is clinging to, being careful
+	 to interpret the "?" only if it comes after the "@" in an ID, since
+	 the syntax of message IDs is tricky.  (There may be a ? in the
+	 random-characters part of the ID (before @), but not in the host part
+	 (after @).)
+   */
+   if (message_id || group || hostAndPort)
+   {
+	  char *start;
+	  if (message_id)
+	  {
+		  /* Move past the @. */
+		  PR_ASSERT (s && *s == '@');
+		  start = s;
+	  }
+	  else
+	  {
+		  start = group ? group : hostAndPort;
+	  }
+
+	  /* Take off the "?" or "#" search data */
+	  for (s = start; *s; s++)
+		if (*s == '?' || *s == '#')
+		  break;
+	  
+	  if (*s)
+	  {
+		  command_specific_data = PL_strdup (s);
+		  *s = 0;
+		  if (!command_specific_data)
+			{
+			  status = MK_OUT_OF_MEMORY;
+			  goto FAIL;
+			}
+		}
+
+	  /* Discard any now-empty strings. */
+	  if (message_id && !*message_id)
+		{
+		  PR_Free (message_id);
+		  message_id = 0;
+		}
+	  else if (group && !*group)
+		{
+		  PR_Free (group);
+		  group = 0;
+		}
+	}
+
+  FAIL:
+  PR_ASSERT (!message_id || message_id != group);
+  if (status >= 0)
+  {
+	  *aHostAndPort = hostAndPort;
+	  HG45873
+	  *aGroup = group;
+	  *aMessageID = message_id;
+	  *aCommandSpecificData = command_specific_data;
+  }
+  else
+  {
+	  PR_FREEIF (group);
+	  PR_FREEIF (message_id);
+	  PR_FREEIF (command_specific_data);
+  }
+  return status;
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,6 +789,11 @@ const char *XP_AppCodeName = "Mozilla";
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 typedef PRUint32 MessageKey;
 const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
+
+char * nsUnescape(char * str)
+{
+	return str;
+}
 
 /*
  * This function takes an error code and associated error data
@@ -393,7 +874,36 @@ PRInt32 nsNNTPProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 	// stream. If it finds it, that's our new line that we put into @param line. We'd
 	// need a buffer (m_dataBuf) to store extra info read in from the stream.....
 
-	return 0;
+	// read out everything we've gotten back and return it in line...this won't work for much but it does
+	// get us going...
+
+	// XXX: please don't hold this quick "algorithm" against me. I just want to read just one
+	// line for the stream. I promise this is ONLY temporary to test out NNTP. We need a generic
+	// way to read one line from a stream. For now I'm going to read out one character at a time.
+	// (I said it was only temporary =)) and test for newline...
+
+	PRUint32 numBytesToRead = 0;  // MAX # bytes to read from the stream
+	PRUint32 numBytesRead = 0;	  // total number bytes we have read from the stream during this call
+	inputStream->GetLength(&length); // refresh the length in case it has changed...
+
+	if (length > OUTPUT_BUFFER_SIZE)
+		numBytesToRead = OUTPUT_BUFFER_SIZE;
+	else
+		numBytesToRead = length;
+
+	m_dataBuf[0] = '\0';
+	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
+	do
+	{
+		inputStream->Read(m_dataBuf, numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
+		numBytesRead += numBytesLastRead;
+	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != LF);
+
+	m_dataBuf[numBytesRead] = '\0'; // null terminate the string.
+
+	if (line)
+		*line = m_dataBuf;
+	return numBytesRead;
 }
 
 /*
@@ -415,7 +925,14 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
 			// notify the consumer that data has arrived
-//			m_outputConsumer->OnDataAvailable(NULL /* when we have a URL handle, insert it here */, m_outputStream, writeCount);
+			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
+			nsIInputStream *inputStream = NULL;
+			m_outputStream->QueryInterface(kIInputStreamIID , (void **) &inputStream);
+			if (inputStream)
+			{
+				m_outputConsumer->OnDataAvailable(m_url, inputStream, writeCount);
+				NS_RELEASE(inputStream);
+			}
 			NNTP_LOG_WRITE(dataBuffer);  // write the data out to our log file...
 			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
 		}
@@ -3296,6 +3813,52 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 	return status;
 }
 
+/* Sets state for the transfer. This used to be known as net_setup_news_stream */
+PRInt32 nsNNTPProtocol::SetupForTransfer()
+{ 
+    if (m_typeWanted == NEWS_POST)
+	{
+        m_nextState = NNTP_SEND_POST_DATA;
+#ifdef UNREADY_CODE
+		NET_Progress(ce->window_id, XP_GetString(MK_MSG_DELIV_NEWS));
+#endif
+	}
+    else if(m_typeWanted == LIST_WANTED)
+	{
+		if (TestFlag(NNTP_USE_FANCY_NEWSGROUP))
+			m_nextState = NNTP_LIST_XACTIVE_RESPONSE;
+		else
+			m_nextState = NNTP_READ_LIST_BEGIN;
+	}
+    else if(m_typeWanted == GROUP_WANTED)
+        m_nextState = NNTP_XOVER_BEGIN;
+	else if(m_typeWanted == NEW_GROUPS)
+		m_nextState = NNTP_NEWGROUPS_BEGIN;
+    else if(m_typeWanted == ARTICLE_WANTED ||
+			m_typeWanted== CANCEL_WANTED)
+	    m_nextState = NNTP_BEGIN_ARTICLE;
+	else if (m_typeWanted== SEARCH_WANTED)
+		m_nextState = NNTP_XPAT_SEND;
+	else if (m_typeWanted == PRETTY_NAMES_WANTED)
+		m_nextState = NNTP_LIST_PRETTY_NAMES;
+#ifdef UNREADY_CODE
+	else if (m_typeWanted == PROFILE_WANTED)
+	{
+		if (PL_strstr(ce->URL_s->address, "PROFILE NEW"))
+			m_nextState = NNTP_PROFILE_ADD;
+		else
+			m_nextState = NNTP_PROFILE_DELETE;
+	}
+#endif
+	else
+	  {
+		PR_ASSERT(0);
+		return -1;
+	  }
+
+   return(0); /* good */
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The following method is used for processing the news state machine. 
 // It returns a negative number (mscott: we'll change this to be an enumerated type which we'll coordinate
@@ -3392,9 +3955,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
                 break;
 
             case SETUP_NEWS_STREAM:
-#ifdef UNREADY_CODE
-                status = net_setup_news_stream(ce);
-#endif
+                status = SetupForTransfer();
                 break;
 
 			case NNTP_BEGIN_AUTHORIZE:
