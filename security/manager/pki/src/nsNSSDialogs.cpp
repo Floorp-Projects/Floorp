@@ -90,8 +90,20 @@ nsNSSDialogHelper::openDialog(
            do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
+  nsIDOMWindowInternal *parent = window;
+
+  nsCOMPtr<nsIDOMWindowInternal> activeParent;
+  if (!parent) {
+    nsCOMPtr<nsIDOMWindow> active;
+    windowWatcher->GetActiveWindow(getter_AddRefs(active));
+    if (active) {
+      active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(activeParent));
+      parent = activeParent;
+    }
+  }
+
   nsCOMPtr<nsIDOMWindow> newWindow;
-  rv = windowWatcher->OpenWindow(window,
+  rv = windowWatcher->OpenWindow(parent,
                                  url,
                                  "_blank",
                                  nsNSSDialogHelper::kDefaultOpenWindowParam,
