@@ -21,10 +21,9 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://browser/content/navigatorOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
@@ -77,14 +76,11 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
 
-  <!-- hook for stringbundle overlays -->
-  <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_navigator" src="chrome://browser/locale/navigator.properties"/>
-    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-    <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
-    <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
-    <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  </stringbundleset>
+  <stringbundle id="bundle_navigator" src="chrome://browser/locale/navigator.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
+  <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
+  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
   <commandset id="commands">    
     <commandset id="globalEditMenuItems"/>
@@ -178,7 +174,6 @@ Contributor(s): ______________________________________. -->
                  disablehistory="false"
                  defaultSearchEngine="true" tabScrolling="true"
                  showCommentColumn="true"
-                 inputtooltiptext="&locationBar.tooltip;"
                  oninput="window.XULBrowserWindow.userTyped.value=true;"
                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
@@ -205,7 +200,7 @@ Contributor(s): ______________________________________. -->
         </textbox>
 
         <button id="go-button" class="button-toolbar chromeclass-location"
-                label="&goButton.label;" hidden="true" persist="hidden"
+                label="&goButton.label;" persist="hidden"
                 oncommand="addToUrlbarHistory(); BrowserLoadURL();"
                 ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
@@ -213,7 +208,7 @@ Contributor(s): ______________________________________. -->
                 tooltiptext="&goButton.tooltip;"/> 
 
         <button id="search-button" class="button-toolbar chromeclass-location"
-                label="&searchButton.label;" persist="hidden"
+                label="&searchButton.label;" hidden="true" persist="hidden"
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
@@ -386,7 +381,7 @@ Contributor(s): ______________________________________. -->
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
-    <statusbarpanel class="statusbarpanel-iconic" id="security-button"/>
+    <statusbarpanel class="statusbarpanel-iconic" id="security-button" onclick="displayPageInfo()"/>
   </statusbar> 
 
 </window>
