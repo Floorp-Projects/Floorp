@@ -54,16 +54,18 @@
       }
     }
 
-    function TestIconVisibility() {
-      var cookieservice = Components.classes["@mozilla.org/cookieService;1"].getService();
-      cookieservice = cookieservice.QueryInterface(Components.interfaces.nsICookieService);
-      if (cookieservice.cookieIconIsVisible) {
-        var cookieIcon = document.getElementById("privacy-button");
-        if (cookieIcon) {
-          cookieIcon.removeAttribute("hidden");
+    var listener = {
+      handleEvent: function(event) {
+        var cookieservice = Components.classes["@mozilla.org/cookieService;1"].getService();
+        cookieservice = cookieservice.QueryInterface(Components.interfaces.nsICookieService);
+        if (cookieservice.cookieIconIsVisible) {
+          var cookieIcon = document.getElementById("privacy-button");
+          if (cookieIcon) {
+            cookieIcon.removeAttribute("hidden");
+          }
         }
       }
-    }
+    };
 
     function viewP3PDialog() {
       if (!gObserverService) {
@@ -96,8 +98,8 @@
         observerService.addObserver(cookieIconObserver, "cookieIcon", false);
 
         // determine whether or not cookie icon in this new window should be displayed
-        // we need to delay before displaying icon because it hasn't been created yet
-        setTimeout(TestIconVisibility, 0);
+        // we need to wait until window is created before displaying icon
+        addEventListener("load", listener, false);
       }
     }
   ]]>
