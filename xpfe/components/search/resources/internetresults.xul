@@ -27,9 +27,17 @@
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance"
 				rdf:resource2="http://home.netscape.com/NC-rdf#Name"
-				sortActive="true" sortDirection="descending" />
-		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
-		<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"/>
+				style="width: 0; visibility: collapse;" />
+		<treecol id="PriceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Price"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Availability"
+				style="width: 0; visibility: collapse;" />
+		<treecol id="AvailabilityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Availability"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Price"
+				style="width: 0; visibility: collapse;" />
+		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
+		<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
 
 		<template>
 			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -53,6 +61,8 @@
 							<progressmeter value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="horizontal" mode="normal" />
 							<titledbutton crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none;" />
 						</treecell>
+						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
+						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
 						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
 						<treecell class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
 					</treerow>
@@ -63,10 +73,31 @@
 
 		<treehead>
 			<treerow>
-				<treecell value="&name.column.label;" observes="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" />
-				<treecell value="&relevance.column.label;" observes="RelevanceColumn" resource="http://home.netscape.com/NC-rdf#Relevance" onclick="return doSort('RelevanceColumn');" sortActive="true" sortDirection="descending" />
-				<treecell value="&site.column.label;" observes="SiteColumn" resource="http://home.netscape.com/NC-rdf#Site" onclick="return doSort('SiteColumn');" />
-				<treecell value="&engine.column.label;" observes="EngineColumn" resource="http://home.netscape.com/NC-rdf#Engine" onclick="return doSort('EngineColumn');" />
+				<treecell id="NameCell"
+					value="&name.column.label;" observes="NameColumn"
+					resource="http://home.netscape.com/NC-rdf#Name"
+					onclick="return doSort('NameColumn');" />
+				<treecell id="RelevanceCell"
+					value="&relevance.column.label;" observes="RelevanceColumn"
+					resource="http://home.netscape.com/NC-rdf#Relevance"
+					onclick="return doSort('RelevanceColumn');" />
+				<treecell id="PriceCell"
+					value="Price" observes="PriceColumn"
+					resource="http://home.netscape.com/NC-rdf#Price"
+					onclick="return doSort('PriceColumn');" />
+				<treecell id="AvailabilityCell"
+					value="Availability" observes="AvailabilityColumn"
+					resource="http://home.netscape.com/NC-rdf#Availability"
+					onclick="return doSort('AvailabilityColumn');" />
+				<treecell id="SiteCell"
+					value="&site.column.label;" observes="SiteColumn"
+					resource="http://home.netscape.com/NC-rdf#Site"
+					onclick="return doSort('SiteColumn');" />
+				<treecell id="EngineCell"
+					value="&engine.column.label;" observes="EngineColumn"
+					resource="http://home.netscape.com/NC-rdf#Engine"
+					onclick="return doSort('EngineColumn');" />
+
 			</treerow>
 		</treehead>
 	</tree>
