@@ -119,7 +119,7 @@
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/Date/">Date::Parse
         </ulink> 
-        (&min-date-parse-ver;)
+        (&min-date-format-ver;)
       </para>
     </listitem>
 
