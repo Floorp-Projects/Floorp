@@ -19,7 +19,6 @@
 /*
 ** file:        parent.c
 ** description: test the process machinery
-**              see also child.c
 */
 
 #include "prmem.h"
@@ -31,9 +30,13 @@
 typedef struct Child
 {
     const char *name;
+    char **argv;
     PRProcess *process;
     PRProcessAttr *attr;
 } Child;
+
+/* for the default test 'cvar -c 2000' */
+static char *default_argv[] = {"cvar", "-c", "2000", NULL};
 
 static void PrintUsage(void)
 {
@@ -51,30 +54,33 @@ PRIntn main (PRIntn argc, char **argv)
 
     if (1 == argc)
     {
-        PrintUsage();
-        return 2;
+        /* no command-line arguments: run the default test */
+        child->argv = default_argv;
     }
-
-    argv += 1;  /* don't care about our program name */
-    while (argv[0][0] == '-')
+    else
     {
-        if (argv[0][1] == 'd')
-            debug = PR_GetSpecialFD(PR_StandardError);
-        else
+        argv += 1;  /* don't care about our program name */
+        while (*argv != NULL && argv[0][0] == '-')
         {
-            PrintUsage();
-            return 2;  /* not sufficient */
+            if (argv[0][1] == 'd')
+                debug = PR_GetSpecialFD(PR_StandardError);
+            else
+            {
+                PrintUsage();
+                return 2;  /* not sufficient */
+            }
+            argv += 1;
         }
-        argv += 1;
+        child->argv = argv;
     }
 
-    if (NULL == *argv)
+    if (NULL == *child->argv)
     {
         PrintUsage();
         return 2;
     }
 
-    child->name = *argv;
+    child->name = *child->argv;
     if (NULL != debug) PR_fprintf(debug, "Forking %s\n", child->name);
 
     child->attr = PR_NewProcessAttr();
@@ -87,7 +93,7 @@ PRIntn main (PRIntn argc, char **argv)
 
     t_start = PR_IntervalNow();
     child->process = PR_CreateProcess(
-        child->name, argv, NULL, child->attr);
+        child->name, child->argv, NULL, child->attr);
     t_elapsed = (PRIntervalTime) (PR_IntervalNow() - t_start);
 
     test_status = (NULL == child->process) ? 1 : 0;
