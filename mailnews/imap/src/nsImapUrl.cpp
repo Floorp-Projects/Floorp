@@ -1470,6 +1470,11 @@ void nsImapUrl::ParseListOfMessageIds()
     m_listOfMessageIds = nsCRT::strdup(m_listOfMessageIds);
 		m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0 || PL_strstr(m_listOfMessageIds, "?part=") != 0;
 
+    // if we're asking for just the body, don't download the whole message. see
+    // nsMsgQuote::QuoteMessage() for the "header=" settings when replying to msgs.
+    if (!m_fetchPartsOnDemand)
+      m_fetchPartsOnDemand = (PL_strstr(m_listOfMessageIds, "?header=quotebody") != 0 || 
+                              PL_strstr(m_listOfMessageIds, "?header=only") != 0);
 	}
 }
 
