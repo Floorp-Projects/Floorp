@@ -303,6 +303,12 @@ public:
    */
   nscoord GetLowestRegionTop();
 
+  /**
+   * Return the coordinate of the lowest float matching aBreakType in this
+   * space manager. Returns aY if there are no matching floats.
+   */
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType);
+
 #ifdef DEBUG
   /**
    * Dump the state of the spacemanager out to a file

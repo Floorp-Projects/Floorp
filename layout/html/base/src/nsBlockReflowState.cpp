@@ -1169,8 +1169,9 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType)
          aY, aBreakType);
   mSpaceManager->List(stdout);
 #endif
+  
   const nsMargin& bp = BorderPadding();
-  nscoord newY = mBand.ClearFloats(aY - bp.top, aBreakType);
+  nscoord newY = mSpaceManager->ClearFloats(aY - bp.top, aBreakType);
   mY = newY + bp.top;
   GetAvailableSpace();
 
