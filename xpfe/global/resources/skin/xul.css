@@ -105,10 +105,17 @@ menu {
    display: block;
 }
 
+menu[hidden="true"] {
+	display:none;
+}
+
 menuitem {
    display: block;
 }
 
+menuitem[hidden="true"] {
+	display:none;
+}
 popupset {
   display: block;
 }
@@ -143,6 +150,10 @@ popup[menuactive="true"] {
 
 menuseparator {
   display: block;
+}
+
+menuseparator[hidden="true"] {
+  display: none;
 }
 
 /******** Titled buttons **********/
