@@ -939,3 +939,169 @@ JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
     rt->debugErrorHookData = closure;
     return JS_TRUE;
 }
+
+/************************************************************************/
+
+extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;
+
+static size_t
+GetSymbolTotalSize(JSContext *cx, JSSymbol *sym)
+{
+    JSScopeProperty *sprop;
+    size_t nbytes;
+
+    sprop = sym_property(sym);
+    nbytes = sizeof *sprop;
+
+    /* XXX don't count sprop->id, assume it's shared */
+
+    if (sprop->attrs & JSPROP_GETTER)
+        nbytes += JS_GetObjectTotalSize(cx, (JSObject *) sprop->getter);
+    if (sprop->attrs & JSPROP_SETTER)
+        nbytes += JS_GetObjectTotalSize(cx, (JSObject *) sprop->setter);
+
+    /* XXX don't count sym_id, assume it's shared */
+    /* XXX don't worry about aliases (extra symbols for an sprop) */
+    nbytes += sizeof *sym;
+    return nbytes;
+}
+
+typedef struct SymbolEnumArgs {
+    JSContext *cx;
+    size_t nbytes;
+} SymbolEnumArgs;
+
+static intN
+SymbolEnumerator(JSHashEntry *he, intN i, void *arg)
+{
+    JSSymbol *sym = (JSSymbol *) he;
+    SymbolEnumArgs *args = (SymbolEnumArgs *) arg;
+
+    args->nbytes += GetSymbolTotalSize(args->cx, sym);
+    return HT_ENUMERATE_NEXT;
+}
+
+JS_PUBLIC_API(size_t)
+JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
+{
+    size_t nbytes;
+    JSScope *scope;
+    JSSymbol *sym;
+    JSHashTable *table;
+    SymbolEnumArgs args;
+
+    nbytes = sizeof *obj + obj->map->nslots * sizeof obj->slots[0];
+    if (OBJ_IS_NATIVE(obj)) {
+        scope = OBJ_SCOPE(obj);
+        if (scope->object == obj) {
+            nbytes += sizeof *scope;
+            if (scope->ops == &js_list_scope_ops) {
+                for (sym = scope->data; sym; sym = (JSSymbol *) sym->entry.next)
+                    nbytes += GetSymbolTotalSize(cx, sym);
+            } else {
+                table = scope->data;
+                nbytes += sizeof *table;
+                nbytes += JS_BIT(JS_HASH_BITS - table->shift)
+                          * sizeof table->buckets[0];
+                args.cx = cx;
+                args.nbytes = 0;
+                JS_HashTableEnumerateEntries(table, SymbolEnumerator, &args);
+                nbytes += args.nbytes;
+            }
+        }
+    }
+    return nbytes;
+}
+
+static size_t
+GetAtomTotalSize(JSContext *cx, JSAtom *atom)
+{
+    size_t nbytes;
+
+    nbytes = sizeof *atom;
+    if (ATOM_IS_STRING(atom)) {
+        nbytes += sizeof(JSString);
+        nbytes += (ATOM_TO_STRING(atom)->length + 1) * sizeof(jschar);
+    } else if (ATOM_IS_DOUBLE(atom)) {
+        nbytes += sizeof(jsdouble);
+        nbytes += sizeof *ATOM_TO_DOUBLE(atom);
+    } else if (ATOM_IS_OBJECT(atom)) {
+        nbytes += JS_GetObjectTotalSize(cx, ATOM_TO_OBJECT(atom));
+    }
+    return nbytes;
+}
+
+JS_PUBLIC_API(size_t)
+JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
+{
+    size_t nbytes, obytes;
+    JSObject *obj;
+    JSAtom *atom;
+
+    nbytes = sizeof *fun;
+    JS_ASSERT(fun->nrefs);
+    obj = fun->object;
+    if (obj) {
+        obytes = JS_GetObjectTotalSize(cx, obj);
+        if (fun->nrefs > 1)
+            obytes = (obytes + fun->nrefs - 1) / fun->nrefs;
+        nbytes += obytes;
+    }
+    if (fun->script)
+        nbytes += JS_GetScriptTotalSize(cx, fun->script);
+    atom = fun->atom;
+    if (atom)
+        nbytes += GetAtomTotalSize(cx, atom);
+    return nbytes;
+}
+
+#include "jsemit.h"
+
+JS_PUBLIC_API(size_t)
+JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
+{
+    size_t nbytes, pbytes;
+    JSObject *obj;
+    jsatomid i;
+    jssrcnote *sn, *notes;
+    JSTryNote *tn, *tnotes;
+    JSPrincipals *principals;
+
+    nbytes = sizeof *script;
+    obj = script->object;
+    if (obj)
+        nbytes += JS_GetObjectTotalSize(cx, obj);
+
+    nbytes += script->length * sizeof script->code[0];
+    nbytes += script->atomMap.length * sizeof script->atomMap.vector[0];
+    for (i = 0; i < script->atomMap.length; i++)
+        nbytes += GetAtomTotalSize(cx, script->atomMap.vector[i]);
+
+    if (script->filename)
+        nbytes += strlen(script->filename) + 1;
+
+    notes = script->notes;
+    if (notes) {
+        for (sn = notes; !SN_IS_TERMINATOR(sn); sn += SN_LENGTH(sn))
+            continue;
+        nbytes += (sn - notes + 1) * sizeof *sn;
+    }
+
+    tnotes = script->trynotes;
+    if (tnotes) {
+        for (tn = tnotes; tn->catchStart; tn++)
+            continue;
+        nbytes += (tn - tnotes + 1) * sizeof *tn;
+    }
+
+    principals = script->principals;
+    if (principals) {
+        JS_ASSERT(principals->refcount);
+        pbytes = sizeof *principals;
+        if (principals->refcount > 1)
+            pbytes = (pbytes + principals->refcount - 1) / principals->refcount;
+        nbytes += pbytes;
+    }
+
+    return nbytes;
+}
