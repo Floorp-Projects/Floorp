@@ -310,14 +310,21 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	{
 		nsWindowType windowType;
 		if (aInitData)
+		{
 			windowType = aInitData->mWindowType;
-		else
+			// if a toplevel window was requested without a titlebar, use a dialog windowproc
+			if (aInitData->mWindowType == eWindowType_toplevel &&
+				(aInitData->mBorderStyle == eBorderStyle_none ||
+				 aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
+				windowType = eWindowType_dialog;
+		} else
 			windowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
 		short			wDefProcID;
 		Boolean		goAwayFlag;
 		short			hOffset;
 		short			vOffset;
+
 		switch (windowType)
 		{
 			case eWindowType_popup:
@@ -336,14 +343,29 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				break;
 
 			case eWindowType_dialog:
-				wDefProcID = kWindowMovableModalDialogProc;
-				goAwayFlag = true;
+				if (aInitData &&
+					aInitData->mBorderStyle != eBorderStyle_all &&
+					(aInitData->mBorderStyle == eBorderStyle_none ||
+					 !(aInitData->mBorderStyle & eBorderStyle_title)))
+				{
+					wDefProcID = kWindowModalDialogProc;
+					goAwayFlag = false;
+				} else {
+					wDefProcID = kWindowMovableModalDialogProc;
+					goAwayFlag = true; // revisit this below
+				}
 				hOffset = kDialogMarginWidth;
 				vOffset = kDialogTitleBarHeight;
 				break;
 
 			case eWindowType_toplevel:
-				wDefProcID = kWindowFullZoomGrowDocumentProc;
+				if (aInitData &&
+					aInitData->mBorderStyle != eBorderStyle_all &&
+					(aInitData->mBorderStyle == eBorderStyle_none ||
+					 !(aInitData->mBorderStyle & eBorderStyle_resizeh)))
+					wDefProcID = kWindowDocumentProc;
+				else
+					wDefProcID = kWindowFullZoomGrowDocumentProc;
 				goAwayFlag = true;
 				hOffset = kWindowMarginWidth;
 				vOffset = kWindowTitleBarHeight;
@@ -356,6 +378,14 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				vOffset = 0;
 				break;
         */
+		}
+
+		// now turn off some default features if requested by aInitData
+		if (aInitData && aInitData->mBorderStyle != eBorderStyle_all)
+		{
+			if (aInitData->mBorderStyle == eBorderStyle_none ||
+					!(aInitData->mBorderStyle & eBorderStyle_close))
+				goAwayFlag = false;
 		}
 
 		Rect wRect;
