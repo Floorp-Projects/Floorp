@@ -535,12 +535,14 @@ Rights Reserved.
                                  <menuitem value="&dcharThaiCmd.label;" oncommand="MessengerSetDefaultCharacterSet('TIS-620');"/>
                                          <menuseparator />
                                  <menuitem value="&dcharArmCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
+<!--
                                          <menuseparator />
                                  <menuitem value="&dcharIso6Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-6');"/>
                                  <menuitem value="&dcharCp1256Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1256');"/>
                                          <menuseparator />
                                  <menuitem value="&dcharIso8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-8');"/>
                                  <menuitem value="&dcharCp1255Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1255');"/>
+-->
                         </menupopup>
                  </menu>
                  <menu value="&dcharMenu4.label;">
