@@ -971,8 +971,11 @@ function loadStartFolder(initialUri)
       dump(ex);
       dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
     }
-
-    MsgGetMessagesForAllServers(defaultServer);
+    
+    // if gLoadStartFolder is true, then we must have just created a POP3 account
+    // and we aren't supposed to initially download mail. (Bug #270743)
+    if (gLoadStartFolder)
+      MsgGetMessagesForAllServers(defaultServer);
 
     if (this.CheckForUnsentMessages != undefined && CheckForUnsentMessages())
     {
