@@ -411,7 +411,8 @@ NS_IMETHODIMP nsSystemPrefService::AddObserver(const char *aDomain, nsIObserver 
             nsMemory::Free(pCallbackData);
             return NS_ERROR_INVALID_ARG;
         }
-        observerRef = do_GetWeakReference(weakRefFactory);
+        nsCOMPtr<nsIWeakReference> tmp = do_GetWeakReference(weakRefFactory);
+        observerRef = tmp;
     } else {
         observerRef = aObserver;
     }
@@ -460,8 +461,11 @@ NS_IMETHODIMP nsSystemPrefService::RemoveObserver(const char *aDomain, nsIObserv
             if (pCallbackData->bIsWeakRef) {
                 nsCOMPtr<nsISupportsWeakReference> weakRefFactory =
                     do_QueryInterface(aObserver);
-                if (weakRefFactory)
-                    observerRef = do_GetWeakReference(aObserver);
+                if (weakRefFactory) {
+                    nsCOMPtr<nsIWeakReference> tmp =
+                        do_GetWeakReference(aObserver);
+                    observerRef = tmp;
+                }
             }
             if (!observerRef)
                 observerRef = aObserver;

@@ -89,9 +89,7 @@ class NS_COM_GLUE nsWeakReference : public nsIWeakReference
   {
     public:
     // nsISupports...
-      NS_IMETHOD_(nsrefcnt) AddRef();
-      NS_IMETHOD_(nsrefcnt) Release();
-      NS_IMETHOD QueryInterface( const nsIID&, void** );
+      NS_DECL_ISUPPORTS
 
     // nsIWeakReference...
       NS_DECL_NSIWEAKREFERENCE
@@ -100,8 +98,7 @@ class NS_COM_GLUE nsWeakReference : public nsIWeakReference
       friend class nsSupportsWeakReference;
 
       nsWeakReference( nsSupportsWeakReference* referent )
-          : mRefCount(0),
-            mReferent(referent)
+          : mReferent(referent)
           // ...I can only be constructed by an |nsSupportsWeakReference|
         {
           // nothing else to do here
@@ -121,7 +118,6 @@ class NS_COM_GLUE nsWeakReference : public nsIWeakReference
           mReferent = 0;
         }
 
-      nsrefcnt                  mRefCount;
       nsSupportsWeakReference*  mReferent;
   };
 
