@@ -17,7 +17,7 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 #pragma once
@@ -40,6 +40,11 @@ public:
 
     virtual void            ProcessNextEvent();
 
+    virtual void            HandleAppleEvent(const AppleEvent&	inAppleEvent,
+                                             AppleEvent&			outAEReply,
+                                             AEDesc&				outResult,
+                                             long				    inAENumber);
+
 	// this overriding method handles application commands
 	virtual Boolean		    ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioParam);	
 
@@ -54,6 +59,12 @@ public:
 									
 protected:
 		
-	virtual void			StartUp();			// override startup functions
+	virtual void            StartUp();			// override startup functions
+	virtual void		    MakeMenuBar();
 
+	virtual nsresult        InitializePrefs();
+    static nsresult         InitCachePrefs();
+
+    virtual Boolean         SelectFileObject(PP_PowerPlant::CommandT	inCommand,
+                                             FSSpec& outSpec);
 };
