@@ -12447,7 +12447,7 @@ fi
 if test "${enable_codesighs+set}" = set; then
   enableval="$enable_codesighs"
   if test "$enableval" = "yes"; then
-     if test -d ./tools/codesighs; then 
+     if test -d $srcdir/tools/codesighs; then 
     MOZ_MAPINFO=1
 else
     { echo "configure: error: Codesighs directory ./tools/codesighs required." 1>&2; exit 1; }
