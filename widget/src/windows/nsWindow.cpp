@@ -1318,6 +1318,13 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
     return(DispatchEvent(&event));
 }
 
+//-------------------------------------------------------------------------
+void nsWindow::SetUpForPaint(HDC aHDC) 
+{
+  ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
+  ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
+  ::SetBkMode (aHDC, TRANSPARENT);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1488,20 +1495,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	          }
             break;
 
+        case WM_CTLCOLORLISTBOX:
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORBTN:
-        case WM_CTLCOLORLISTBOX:
         case WM_CTLCOLORSCROLLBAR:
         case WM_CTLCOLORSTATIC:
 	          if (lParam) {
               nsWindow* control = (nsWindow*)::GetWindowLong((HWND)lParam, GWL_USERDATA);
 		          if (control) {
-                HDC hDC = (HDC)wParam;
-                ::SetBkColor (hDC, NSRGB_2_COLOREF(mBackground));
-                ::SetTextColor(hDC, NSRGB_2_COLOREF(mForeground));
-                ::SetBkMode (hDC, TRANSPARENT);
+                control->SetUpForPaint((HDC)wParam);
 		            *aRetValue = (LPARAM)control->OnControlColor();
-		          }
+              }
 	          }
     
             result = PR_TRUE;
