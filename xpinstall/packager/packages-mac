@@ -8,14 +8,33 @@
 ; ; file comment 
 ; 
 
+[xpiengine]
+Components:libjar.shlb 
+Components:xpinstall.shlb 
+Essential Files:dom.shlb 
+Essential Files:JavaScript.shlb 
+Essential Files:libreg.shlb 
+Essential Files:LiveConnect.shlb 
+Essential Files:NetworkModular.shlb 
+Essential Files:NSPR20.shlb 
+Essential Files:NSRuntime.shlb 
+Essential Files:NSStdLib.shlb 
+Essential Files:oji.shlb 
+Essential Files:xpcom.shlb 
+Essential Files:xpistub.shlb 
+Essential Files:zlib.shlb 
+
 [core] 
 apprunner 
 default_prefs.js 
 Mozilla Addressbook 
 Mozilla Editor 
+Mozilla Installer
 Mozilla Message Compose 
 Mozilla Messenger 
 Mozilla Preferences 
+Mozilla Profile Manager
+Mozilla Profile Wizard
 Essential Files:AppCores.shlb 
 Essential Files:AppShell.shlb 
 Essential Files:dom.shlb 
@@ -48,7 +67,7 @@ Components:BrowsingProfile.shlb
 Components:Caps.shlb 
 Components:caps.xpt 
 Components:chardet.shlb 
-Components:ChromeRegistry.shlb 
+Components:ChomeRegistry.shlb 
 Components:Cookie.shlb 
 Components:data.shlb 
 Components:data.xpt 
