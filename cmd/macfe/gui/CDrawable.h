@@ -41,7 +41,7 @@ class CDrawable
 	public:
     // Constructor and destructor
 								CDrawable();
-								~CDrawable();
+		virtual					~CDrawable();
  
     // Lock the drawable for use, based on the state passed in.
     // Does nothing in the super class.
