@@ -122,18 +122,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-#
-# Currently on HP, we need this sl to be linked using aCC to call the
-# global constructs for the CTagList.  Unfortunately if we turn on CXX
-# linking for all .sl's there is a problem with gfx
-#
-ifeq ($(OS_ARCH),HP-UX)
-ifneq (,$(filter aCC,$(CXX)))
-DSO_LDOPTS	= -b -Wl,-E -Wl,+s -L$(DIST)/bin
-MKSHLIB		= $(CXX) $(DSO_LDOPTS)
-endif
-endif
-
 DEFINES		+= -D_IMPL_NS_HTMLPARS -DXML_DTD
 
 INCLUDES	+= -I.
