@@ -2954,6 +2954,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
                         nsCSSProps::kWhitespaceKTable);
   case eCSSProperty_z_index:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHI, nsnull);
+  default:
+    break;
   }
   return PR_FALSE;
 }
