@@ -112,7 +112,6 @@ function onAlarmCall( Event )
    if( AddToArray )
       gAllEvents[ gAllEvents.length ] = Event;
 
-   dump( "\n\nCALLING ONALARMCALL IN calendarEventAlertDialog.js" );
    buildEventBoxes();
 }
 
@@ -214,6 +213,7 @@ function onOkButton( )
    var calendarEventService = opener.gEventSource;
    
    gICalLib = calendarEventService.getICalLib();
+
    
    for( i = 0; i < gAllEvents.length; i++ )
    {

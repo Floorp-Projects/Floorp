@@ -69,7 +69,7 @@ function DayView( calendarWindow )
    
    this.superConstructor( calendarWindow );
    
-   var dayViewEventSelectionObserver = 
+   var dayViewEventSelectionObserver =
    {
       onSelectionChanged : function( EventSelectionArray )
       {
@@ -248,7 +248,6 @@ DayView.prototype.refreshEvents = function( )
          newImage.setAttribute( "onclick", "dayEventItemClick( this, event )" );
          newImage.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
          newImage.setAttribute( "tooltip", "savetip" );
-         
          //newImage.setAttribute( "AllDayText", "true" );
          
          AllDayBox.appendChild( SeperatorNode );
@@ -338,7 +337,6 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
    var eventTextElement = document.createTextNode( eventText );
    eventHTMLElement.setAttribute( "class", "day-view-event-text-class" );
-   
    eventHTMLElement.appendChild( eventTextElement );
    
    eventBox.appendChild( eventHTMLElement );
@@ -461,7 +459,6 @@ DayView.prototype.refreshDisplay = function( )
 DayView.prototype.clickEventBox = function( eventBox, event )
 {
    this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-
    // Do not let the click go through, suppress default selection
    
    if ( event )
@@ -533,7 +530,7 @@ DayView.prototype.goToPrevious = function( goDays )
 DayView.prototype.selectBoxForEvent = function( calendarEvent )
 {
    var EventBoxes = document.getElementsByAttribute( "name", "day-view-event-box-"+calendarEvent.id );
-            
+   
    for ( j = 0; j < EventBoxes.length; j++ ) 
    {
       EventBoxes[j].setAttribute( "eventselected", "true" );

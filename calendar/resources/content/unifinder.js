@@ -44,13 +44,13 @@
 *   improve this to make it usable in general.
 */
 
-function unifinderInit( CalendarWindow )
+function calendarUnifinderInit( )
 {
    var unifinderEventSelectionObserver = 
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         var SearchTree = document.getElementById( "unifinder-search-results-tree" );
+         var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
          
          SearchTree.setAttribute( "suppressonselect", "true" );
 
@@ -87,7 +87,10 @@ var unifinderEventDataSourceObserver =
 {
    onLoad   : function()
    {
-      unifinderRefesh();
+        if( !gICalLib.batchMode )
+        {
+            unifinderRefesh();
+        }
    },
    
    onStartBatch   : function()
@@ -96,25 +99,34 @@ var unifinderEventDataSourceObserver =
     
    onEndBatch   : function()
    {
-      unifinderRefesh();
+        unifinderRefesh();
    },
     
    onAddItem : function( calendarEvent )
    {
-      if( calendarEvent )
-      {
-         unifinderRefesh();
-      }
+        if( !gICalLib.batchMode )
+        {
+            if( calendarEvent )
+            {
+                unifinderRefesh();
+            }
+        }
    },
 
    onModifyItem : function( calendarEvent, originalEvent )
    {
-      unifinderRefesh();
+        if( !gICalLib.batchMode )
+        {
+            unifinderRefesh();
+        }
    },
 
    onDeleteItem : function( calendarEvent )
    {
-      unifinderRefesh();
+        if( !gICalLib.batchMode )
+        {
+            unifinderRefesh();
+        }
    },
 
    onAlarm : function( calendarEvent )
@@ -129,16 +141,14 @@ var unifinderEventDataSourceObserver =
 *   Called when the calendar is loaded
 */
 
-function prepareCalendarUnifinder( eventSource )
+function prepareCalendarUnifinder( )
 {
    // tell the unifinder to get ready
-   unifinderInit();
- 
+   calendarUnifinderInit( );
    // set up our calendar event observer
    
    gICalLib.addObserver( unifinderEventDataSourceObserver );
 }
-
 
 /**
 *   Helper function to display event dates in the unifinder
@@ -183,7 +193,7 @@ function refreshSearchTree( SearchEventTable )
 {
    gSearchEventTable = SearchEventTable;
    
-   refreshEventTree( gSearchEventTable, "unifinder-search-results-tree", false );
+   refreshEventTree( gSearchEventTable, "unifinder-search-results-listbox", false );
 }
 
 
@@ -247,7 +257,7 @@ function unifinderClickEvent( CallingListBox )
 
 function unifinderEditCommand()
 {
-   var SelectedItem = document.getElementById( "unifinder-search-results-tree" ).selectedItems[0];
+   var SelectedItem = document.getElementById( "unifinder-search-results-listbox" ).selectedItems[0];
 
    if( SelectedItem )
    {
@@ -377,8 +387,8 @@ function unifinderShowFutureEventsOnly( event )
 function refreshEventTree( eventArray, childrenName, Categories )
 {
    // get the old tree children item and remove it
-   
    var oldTreeChildren = document.getElementById( childrenName );
+   
    while( oldTreeChildren.hasChildNodes() )
       oldTreeChildren.removeChild( oldTreeChildren.lastChild );
 
@@ -388,6 +398,7 @@ function refreshEventTree( eventArray, childrenName, Categories )
       var calendarEvent = eventArray[ index ];
       
       // make the items
+      
       var treeItem = document.createElement( "listitem" );
       
       if( Categories != false )

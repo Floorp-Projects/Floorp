@@ -77,7 +77,8 @@
 *  G L O B A L     V A R I A B L E S
 */
 
-var gDateMade = "2002043018-cal"
+//the next line needs XX-DATE-XY but last X instead of Y
+var gDateMade = "Monday, May 6th, 2002";
 
 // turn on debuging
 
@@ -98,6 +99,8 @@ var gCalendarWindow;
 //an array of indexes to boxes for the week view
 
 var gHeaderDateItemArray = null;
+
+var gClockId;
 
 // Show event details on mouseover
 
@@ -135,7 +138,6 @@ var rootPrefNode = prefService.getBranch(null); // preferences root node
 function calendarInit() 
 {
 	// get the calendar event data source
-   // global calendar
    gEventSource = new CalendarEventDataSource(  );
    
    // get the Ical Library
@@ -147,7 +149,7 @@ function calendarInit()
    
    // set up the unifinder
    
-   prepareCalendarUnifinder( gEventSource );
+   prepareCalendarUnifinder( );
 
    // show the month view, with today selected
    
@@ -172,7 +174,7 @@ function update_date( Refresh )
    
    gCalendarWindow.currentView.hiliteTodaysDate();
 
-   var gClockId = setTimeout( "update_date( )", milliSecsTillTomorrow ); 
+   gClockId = setTimeout( "update_date( )", milliSecsTillTomorrow ); 
 }
 
 /** 
@@ -181,6 +183,10 @@ function update_date( Refresh )
 
 function calendarFinish()
 {
+   finishCalendarUnifinder( gEventSource );
+   
+   finishCalendarEmail( gEventSource );
+
    gCalendarWindow.close( );
 }
 
@@ -214,7 +220,7 @@ function prepareChooseDate()
 function dayEventItemClick( eventBox, event )
 {
    gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-      
+   
    if ( event ) 
    {
       event.stopPropagation();
@@ -282,7 +288,7 @@ function dayViewHourDoubleClick( event )
 function weekEventItemClick( eventBox, event )
 {
    gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-      
+
    if ( event ) 
    {
       event.stopPropagation();
@@ -456,7 +462,7 @@ function newEvent( startDate, endDate )
       args.calendarEvent.end.setTime( endDate.getTime() );
    }
    // open the dialog non modally
-   openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome", args );
+   openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
 }
 
 
@@ -489,7 +495,7 @@ function editEvent( calendarEvent )
 
    // open the dialog modally
    
-   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome", args );
+   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
    
 
@@ -528,11 +534,6 @@ function getPreviewText( calendarEventDisplay )
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
-   /*TimeHtml = document.createElement( "description" );
-   TimeText = document.createTextNode( calendarEvent.start.toString() );
-   TimeHtml.appendChild( TimeText );
-   HolderBox.appendChild( TimeHtml );
-   */
    if (calendarEventDisplay.event.description)
    {
       var DescriptionHtml = document.createElement( "description" );
@@ -549,6 +550,11 @@ function alertCalendarVersion()
    alert( "The build id for this calendar is "+gDateMade+". Please include this in your bug report." );
 }
 
+function reloadApplication()
+{
+	gCalendarWindow.currentView.refreshEvents( );
+}
+
 function playSound( ThisURL )
 {
    ThisURL = "chrome://calendar/content/sound.wav";
@@ -563,7 +569,6 @@ function playSound( ThisURL )
 
    sample.play( url );
 }
-
 
 /*
 **

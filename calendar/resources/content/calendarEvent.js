@@ -295,7 +295,9 @@ CalendarEventDataSource.prototype.getEventsForDay = function( date )
    var eventDisplays =  new Array();
 
    var displayDates =  new Object();
+   
    var eventList = this.gICalLib.getEventsForDay( date, displayDates );
+   
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
@@ -334,7 +336,9 @@ CalendarEventDataSource.prototype.getEventsForWeek = function( date )
    var eventDisplays =  new Array();
 
    var displayDates =  new Object();
+   
    var eventList = this.gICalLib.getEventsForWeek( date, displayDates );
+   
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
@@ -371,7 +375,9 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
    var eventDisplays =  new Array();
 
    var displayDates =  new Object();
+   
    var eventList = this.gICalLib.getEventsForMonth( date, displayDates );
+   
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
@@ -388,7 +394,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
    }
 
    eventDisplays.sort( this.orderEventsByDate );
-   
+
    return eventDisplays;
 }
 
@@ -402,15 +408,16 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
 * RETURN
 *      array    - of the next "EventsToGet" events
 */
-
 CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
 {
    var eventDisplays =  new Array();
-
    
    var today = new Date();
+   
    var displayDates =  new Object();
+   
    var eventList = this.gICalLib.getNextNEvents( today, EventsToGet, displayDates );
+   
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
@@ -425,7 +432,6 @@ CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
-
    eventDisplays.sort( this.orderRawEventsByDate );
 
    return eventDisplays;
@@ -456,6 +462,7 @@ CalendarEventDataSource.prototype.getCurrentEvents = function( )
 CalendarEventDataSource.prototype.getAllEvents = function( )
 {
    // clone the array in case the caller messes with it
+   
    var eventList = this.gICalLib.getAllEvents();
 
    var eventArray = new Array();
@@ -621,6 +628,14 @@ CalendarAlarmObserver.prototype.firePendingAlarms = function( observer )
     
 }
 
+CalendarAlarmObserver.prototype.onStartBatch = function()
+{
+}
+
+CalendarAlarmObserver.prototype.onEndBatch = function()
+{
+}
+
 CalendarAlarmObserver.prototype.onLoad = function( calendarEvent )
 {
 }
@@ -640,7 +655,7 @@ CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent )
 
 CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
 {
-   debug( "caEvent.alarmWentOff is "+ calendarEvent );
+    debug( "caEvent.alarmWentOff is "+ calendarEvent );
     
     if( this.addToPending )
     {

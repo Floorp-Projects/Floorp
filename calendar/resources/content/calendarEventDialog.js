@@ -192,6 +192,7 @@ function loadCalendarEventDialog()
        setFieldValue( "repeat-length-units", "weeks" );
 
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
+   
    setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
    // update enabling and disabling
@@ -212,8 +213,8 @@ function loadCalendarEventDialog()
    setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 ), "selected" );
    
    // set up OK, Cancel
-   
    doSetOKCancel( onOKCommand, 0 );
+   
    // start focus on title
    
    var firstFocus = document.getElementById( "title-field" );
@@ -268,11 +269,11 @@ function onOKCommand()
    gEvent.alarmLength = getFieldValue( "alarm-length-field" );
    gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
 
-   debug( "!!!-->in ca-event-dialog.js, alarmUnits is "+gEvent.alarmUnits );
+   debug( "!!!-->in calendarEventDialog.js, alarmUnits is "+gEvent.alarmUnits );
    if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
    {
       gEvent.alarmEmailAddress = getFieldValue( "alarm-email-field", "value" );
-      debug( "!!!-->in ca-event-dialog.js, alarmEmailAddress is "+gEvent.alarmEmailAddress );
+      debug( "!!!-->in calendarEventDialog.js, alarmEmailAddress is "+gEvent.alarmEmailAddress );
    }
    else
    {
@@ -319,7 +320,6 @@ function onOKCommand()
 
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
-
    // call caller's on OK function
    gOnOkFunction( gEvent );
       
@@ -337,7 +337,7 @@ function checkEndTime()
    
    if( endDate.getTime() < startDate.getTime() && !AllDayEvent )
    {
-      document.getElementById( "end-time-warning" ).setAttribute( "collapsed", "false" );
+      document.getElementById( "end-time-warning" ).removeAttribute( "collapsed" );
       
       return( false );
    }
@@ -361,7 +361,7 @@ function checkRecurTime()
    
    if( recurEndDate.getTime() < endDate.getTime() && recurForever == false )
    {
-      document.getElementById( "repeat-time-warning" ).setAttribute( "collapsed", "false" );
+      document.getElementById( "repeat-time-warning" ).removeAttribute( "collapsed" );
       
       return( false );
    }
@@ -789,7 +789,6 @@ function updateUntilItemEnabled()
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
   
-   //RADIO REQUIRES SELECTED NOT CHECKED
    if( repeatCheckBox.checked && repeatUntilRadio.selected  )
    {
       repeatEndText.removeAttribute( "disabled"  );
@@ -824,14 +823,14 @@ function updateRepeatUnitExtensions( )
            break;
            
            case "weeks":
-               weekExtensions.setAttribute( "collapsed", "false" );
+               weekExtensions.removeAttribute( "collapsed" );
                monthExtensions.setAttribute( "collapsed", "true" );
                updateAdvancedWeekRepeat();
            break;
            
            case "months":
                weekExtensions.setAttribute( "collapsed", "true" );
-               monthExtensions.setAttribute( "collapsed", "false" );
+               monthExtensions.removeAttribute( "collapsed" );
                updateAdvancedRepeatDayOfMonth();
            break;
            

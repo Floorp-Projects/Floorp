@@ -107,15 +107,16 @@
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarSelection.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarWindow.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
 
 <!-- Pop up menus -->
+<popup id="savetip"/>
 
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent;" oncommand="newEventCommand()"/>
@@ -128,10 +129,11 @@
    <menuitem label="&calendar.context.weekview;" oncommand="gCalendarWindow.switchToWeekView()"/>
    <menuitem label="&calendar.context.monthview;" oncommand="gCalendarWindow.switchToMonthView()"/>
    <menuseparator/>
-   <menuitem label="&event.mail.event;" observes="send_event_command" oncommand="sendEvent();"/>
+   <menuitem label="&calendar.context.emailevent;" observes="send_event_command" oncommand="sendEvent();"/>
    <menuseparator/>
    <menuitem label="&calendar.context.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
    <menuitem label="&calendar.context.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+   <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
@@ -170,12 +172,12 @@
 <!-- V I S I B L E  C O N T E N T  -->
 
    <vbox id="calendar-top-box" flex="1" context="context-menu">
-     
+
      <!-- Calendar Controls-->
     
    	<hbox id="calendar-content-box" flex="1">
 
-         <vbox flex="1">
+         <vbox id="left-hand-content" flex="1">
             <box align="center">
                <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
                <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
@@ -184,7 +186,7 @@
                <checkbox label="With Alarms" oncommand="unifinderShowEventsWithAlarmsOnly( event )"/>
                <checkbox label="Today And Future" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )"/>
             </box>
-            <listbox id="unifinder-search-results-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
+            <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
          </vbox>
        
    		<splitter collapse="before" persist="state hidden collapsed"
@@ -216,7 +218,6 @@
    			 <!-- End: Calendar Day View -->
    						 
    		</deck>  <!-- End: Day/Month/Week Deck -->
-            
       
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
   </vbox>
@@ -228,4 +229,3 @@
   </statusbar>  
 
 </window>
-

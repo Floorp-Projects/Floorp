@@ -59,7 +59,6 @@
 <window
    id="calendar-new-eventwindow"
    title="Calendar Event"
-   orient="vertical"
    onload="loadCalendarEventDialog()"
    persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -272,8 +271,8 @@
                               <spacer class="repeat-left-spacer" />
                               <vbox align="center">
                                  <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true"/>
-                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month"/>
+                                    <radio disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true"/>
+                                    <radio disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month"/>
                                  </radiogroup>
                               </vbox>
                           </hbox>
@@ -283,22 +282,18 @@
                           <hbox align="center">
                             <spacer class="repeat-left-spacer" />
                             <radiogroup id="repeat-until-group" disable-controller="repeat">
-                              <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
-                              
+                              <radio id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
                               <hbox id="repeat-end-box" align="center">
                                   <vbox>
                                      <hbox>
-                                        <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
+                                        <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
                                         <spacer id="until-spacer"/>
                                         <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                                         <image id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                                      </hbox>
                                      <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
                                   </vbox>
-                                  
                               </hbox>
-                              
-                              
                             </radiogroup>
                           </hbox>
                          

@@ -231,7 +231,6 @@ MonthView.prototype.refreshEvents = function( )
    // add each calendarEvent
    
    this.kungFooDeathGripOnEventBoxes = new Array();
-   dump( "\n in calendarMonthView.js, monthEventList.length is "+monthEventList.length );
 
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
@@ -570,7 +569,6 @@ MonthView.prototype.clearSelectedBoxes = function( )
    }
 }
 
-
 /** PRIVATE
 *
 *  Mark today as selected, also unmark the old today if there was one.
@@ -762,7 +760,6 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
    this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
 
    this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
-
    // Do not let the click go through, suppress default selection
    if ( event ) 
    {

@@ -58,7 +58,6 @@
 <window
    id="calendar-new-eventwindow"
    title="&brandShortName; - Calendar Alarm - &event.title.alarm;"
-   orient="vertical"
    onload="onLoad()"
    windowtype="calendarAlarmWindow"
    persist="screenX screenY"
