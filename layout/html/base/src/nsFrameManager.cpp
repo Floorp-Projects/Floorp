@@ -228,6 +228,7 @@ public:
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
                               nsIAtom*  aPropertyName,
+                              PRUint32  aOptions,
                               void**    aPropertyValue);
   NS_IMETHOD SetFrameProperty(nsIFrame*          aFrame,
                               nsIAtom*           aPropertyName,
@@ -1556,8 +1557,8 @@ FrameManager::DestroyPropertyList()
     while (mPropertyList) {
       PropertyList* tmp = mPropertyList;
 
-      delete tmp;
       mPropertyList = mPropertyList->mNext;
+      delete tmp;
     }
   }
 }
@@ -1587,13 +1588,19 @@ FrameManager::RemoveAllPropertiesFor(nsIFrame* aFrame)
 NS_IMETHODIMP
 FrameManager::GetFrameProperty(nsIFrame* aFrame,
                                nsIAtom*  aPropertyName,
+                               PRUint32  aOptions,
                                void**    aPropertyValue)
 {
   NS_PRECONDITION(aPropertyName, "null property name atom");
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
 
   if (propertyList) {
-    *aPropertyValue = propertyList->mFrameValueMap->Search(aFrame);
+    // See if we should also remove the property
+    if (aOptions & NS_IFRAME_MGR_REMOVE_PROPERTY) {
+      *aPropertyValue = propertyList->mFrameValueMap->Remove(aFrame);
+    } else {
+      *aPropertyValue = propertyList->mFrameValueMap->Search(aFrame);
+    }
   } else {
     *aPropertyValue = 0;
   }
@@ -1626,7 +1633,15 @@ FrameManager::SetFrameProperty(nsIFrame*          aFrame,
     mPropertyList = propertyList;
   }
 
-  propertyList->mFrameValueMap->Insert(aFrame, aPropertyValue);
+  // The current property value (if there is one) is replaced and the current
+  // value is destroyed
+  void* aOldValue;
+  
+  aOldValue = propertyList->mFrameValueMap->Insert(aFrame, aPropertyValue);
+  if (aOldValue && propertyList->mDtorFunc) {
+    propertyList->mDtorFunc(aFrame, aPropertyName, aOldValue);
+  }
+
   return NS_OK;
 }
 
