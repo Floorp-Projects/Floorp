@@ -10,7 +10,7 @@
 <!ENTITY editButton.accesskey  "E">
 <!ENTITY button.removeFeed.label "Remove Feed">
 <!ENTITY button.removeFeed.accesskey   "R">
-<!ENTITY button.importOPML.label "OPML Import">
-<!ENTITY button.importOPML.accesskey   "O">
+<!ENTITY button.importOPML.label "Import Feeds">
+<!ENTITY button.importOPML.accesskey   "I">
 
 <!ENTITY cmd.close.commandKey             "w">
