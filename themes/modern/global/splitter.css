@@ -71,7 +71,7 @@ splitter[orient="vertical"] {
   -moz-border-right-colors: #AAB4BF;
   -moz-border-bottom-colors: #3B414F #AAB4BF;
   -moz-border-left-colors: #DFE5EF;
-  min-width: none;
+  min-width: 0;
   min-height: 5px;
 }
 
