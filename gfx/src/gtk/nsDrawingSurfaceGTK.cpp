@@ -33,6 +33,13 @@
 
 NS_IMPL_ISUPPORTS2(nsDrawingSurfaceGTK, nsIDrawingSurface, nsIDrawingSurfaceGTK)
 
+//#define CHEAP_PERFORMANCE_MEASUREMENT
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+static PRTime mLockTime, mUnlockTime;
+#endif
+
+
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 {
   NS_INIT_REFCNT();
@@ -61,6 +68,11 @@ nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
   // FIXME
   mPixFormat.mAlphaMask = 0;
 
+  mPixFormat.mRedCount = ConvertMaskToCount(v->red_mask);
+  mPixFormat.mGreenCount = ConvertMaskToCount(v->green_mask);
+  mPixFormat.mBlueCount = ConvertMaskToCount(v->blue_mask);;
+
+
   mPixFormat.mRedShift = v->red_shift;
   mPixFormat.mGreenShift = v->green_shift;
   mPixFormat.mBlueShift = v->blue_shift;
@@ -79,34 +91,40 @@ nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
     ::gdk_image_destroy(mImage);
 }
 
-  /**
-   * Lock a rect of a drawing surface and return a
-   * pointer to the upper left hand corner of the
-   * bitmap.
-   * @param  aX x position of subrect of bitmap
-   * @param  aY y position of subrect of bitmap
-   * @param  aWidth width of subrect of bitmap
-   * @param  aHeight height of subrect of bitmap
-   * @param  aBits out parameter for upper left hand
-   *         corner of bitmap
-   * @param  aStride out parameter for number of bytes
-   *         to add to aBits to go from scanline to scanline
-   * @param  aWidthBytes out parameter for number of
-   *         bytes per line in aBits to process aWidth pixels
-   * @return error status
-   *
-   **/
+/**
+ * Lock a rect of a drawing surface and return a
+ * pointer to the upper left hand corner of the
+ * bitmap.
+ * @param  aX x position of subrect of bitmap
+ * @param  aY y position of subrect of bitmap
+ * @param  aWidth width of subrect of bitmap
+ * @param  aHeight height of subrect of bitmap
+ * @param  aBits out parameter for upper left hand
+ *         corner of bitmap
+ * @param  aStride out parameter for number of bytes
+ *         to add to aBits to go from scanline to scanline
+ * @param  aWidthBytes out parameter for number of
+ *         bytes per line in aBits to process aWidth pixels
+ * @return error status
+ *
+ **/
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  mLockTime = PR_Now();
+  //  MOZ_TIMER_RESET(mLockTime);
+  //  MOZ_TIMER_START(mLockTime);
+#endif
+
 #if 0
   g_print("nsDrawingSurfaceGTK::Lock() called\n" \
           "  aX = %i, aY = %i,\n" \
-	  "  aWidth = %i, aHeight = %i,\n" \
-	  "  aBits, aStride, aWidthBytes,\n" \
-	  "  aFlags = %i\n", aX, aY, aWidth, aHeight, aFlags);
+          "  aWidth = %i, aHeight = %i,\n" \
+          "  aBits, aStride, aWidthBytes,\n" \
+          "  aFlags = %i\n", aX, aY, aWidth, aHeight, aFlags);
 #endif
 
   if (mLocked)
@@ -126,18 +144,20 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 #ifdef USE_SHM
   if (gdk_get_use_xshm())
   {
-    mImage = gdk_image_new(GDK_IMAGE_FASTEST,
-                           gdk_rgb_get_visual(),
-                           mLockWidth,
-                           mLockHeight);
-    
+    if (!mImage) { // only grab a new image if we don't already have one
+      //    printf("using xshm\n");
+      //      printf("%p getting the shared image\n", this);
+      mImage = gdk_image_new(GDK_IMAGE_SHARED,
+                             gdk_rgb_get_visual(),
+                             mWidth,
+                             mHeight);
+    }
+
     XShmGetImage(GDK_DISPLAY(),
                  GDK_WINDOW_XWINDOW(mPixmap),
                  GDK_IMAGE_XIMAGE(mImage),
                  mLockX, mLockY,
                  0xFFFFFFFF);
-
-    gdk_flush();
   }
   else
   {
@@ -204,11 +224,24 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 
   *aWidthBytes = mImage->bpl;
 #endif
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  //  MOZ_TIMER_STOP(mLockTime);
+  //  MOZ_TIMER_LOG(("Time taken to lock: "));
+  //  MOZ_TIMER_PRINT(mLockTime);
+  printf("Time taken to lock:   %d\n", PR_Now() - mLockTime);
+#endif
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 {
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  mUnlockTime = PR_Now();
+#endif
+
   //  g_print("nsDrawingSurfaceGTK::UnLock() called\n");
   if (!mLocked)
   {
@@ -220,7 +253,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
   if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
   {
 #if 0
-    g_print("gdk_draw_image(pixmap=%p,lockx=%d,locky=%d,lockw=%d,lockh=%d)\n",
+    g_print("%p gdk_draw_image(pixmap=%p,lockx=%d,locky=%d,lockw=%d,lockh=%d)\n",
+            this,
             mPixmap,
             mLockX, mLockY,
             mLockWidth, mLockHeight);
@@ -232,15 +266,27 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
                    0, 0,
                    mLockX, mLockY,
                    mLockWidth, mLockHeight);
-
   }
 
-  // FIXME if we are using shared mem, we shouldn't destroy the image...
-  if (mImage)
-    ::gdk_image_destroy(mImage);
-  mImage = nsnull;
+  // don't destroy the image if we are shared... it will be destroyed by release if they really want it to go away, otherwise save it.
+#ifdef USE_SHM
+  if (!gdk_get_use_xshm()) {
+#endif
+
+    if (mImage)
+      ::gdk_image_destroy(mImage);
+    mImage = nsnull;
+
+#ifdef USE_SHM
+  }
+#endif
 
   mLocked = PR_FALSE;
+
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  printf("Time taken to unlock: %d\n", PR_Now() - mUnlockTime);
+#endif
 
   return NS_OK;
 }
@@ -281,6 +327,10 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 // widget or something.
   mIsOffscreen = PR_FALSE;
 
+  if (mImage)
+    gdk_image_destroy(mImage);
+  mImage = nsnull;
+
   return NS_OK;
 }
 
@@ -299,6 +349,10 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   mIsOffscreen = PR_TRUE;
 
   mPixmap = ::gdk_pixmap_new(nsnull, mWidth, mHeight, mDepth);
+
+  if (mImage)
+    gdk_image_destroy(mImage);
+  mImage = nsnull;
 
   return NS_OK;
 }
@@ -330,3 +384,18 @@ GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
   return mPixmap;
 }
 
+PRUint8 
+nsDrawingSurfaceGTK::ConvertMaskToCount(unsigned long val)
+{
+  PRUint8 retval = 0;
+  PRUint8 cur_bit = 0;
+  // walk through the number, incrementing the value if
+  // the bit in question is set.
+  while (cur_bit < (sizeof(unsigned long) * 8)) {
+    if ((val >> cur_bit) & 0x1) {
+      retval++;
+    }
+    cur_bit++;
+  }
+  return retval;
+}
