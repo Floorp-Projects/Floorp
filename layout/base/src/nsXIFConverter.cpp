@@ -377,7 +377,7 @@ void nsXIFConverter::BeginContainer(const nsString& aTag)
 
   BeginStartTag(container);
     AddAttribute(mIsa,aTag);
-  FinishStartTag(container,PR_FALSE);
+  FinishStartTag(container,PR_FALSE,PR_FALSE);
 }
 
 void nsXIFConverter::EndContainer(const nsString& aTag)
