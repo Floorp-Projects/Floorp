@@ -67,6 +67,7 @@
 #include <Resources.h>
 #include <Timer.h>
 #include <UTCUtils.h>
+#include <Power.h>
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -131,6 +132,16 @@ static void MacintoshInitializeTime(void)
     JSLL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
 }
 
+static SleepQRec theSleepQ = { NULL, sleepQType, NULL, 0 };
+
+static pascal long MySleepQProc(long message, SleepQRecPtr sleepQ)
+{
+    /* just woke up from sleeping, so must recompute dstLocalBaseMicroseconds. */
+    if (message == kSleepWakeUp)
+        MacintoshInitializeTime();
+    return 0;
+}
+
 /* Because serial port and SLIP conflict with ReadXPram calls,
  * we cache the call here
  */
@@ -143,6 +154,9 @@ static void MyReadLocation(MachineLocation * loc)
     {
         MacintoshInitializeTime();
         ReadLocation(&storedLoc);
+        /* install a sleep queue routine, so that when the machine wakes up, time can be recomputed. */
+        if ((theSleepQ.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL)
+            SleepQInstall(&theSleepQ);
         didReadLocation = JS_TRUE;
      }
      *loc = storedLoc;
