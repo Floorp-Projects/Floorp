@@ -1271,8 +1271,8 @@ nsRuleNode::ComputeFontData(nsStyleFont* aStartFont, const nsCSSFont& aFontData,
     }
 
     // NavQuirks uses sans-serif instead of whatever the native font is
-    if (eCompatibility_NavQuirks == mode) {
 #ifdef XP_MAC
+    if (eCompatibility_NavQuirks == mode) {
       switch (sysID) {
         case eSystemAttr_Font_Field:
         case eSystemAttr_Font_List:
@@ -1284,23 +1284,62 @@ nsRuleNode::ComputeFontData(nsStyleFont* aStartFont, const nsCSSFont& aFontData,
           font->mFont.size = defaultFont.size;
           break;
       }
+    }
 #endif
 
 #ifdef XP_PC
-      switch (sysID) {
-        case eSystemAttr_Font_Field:
+    //
+    // As far as I can tell the system default fonts and sizes for
+    // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are 
+    // all pre-determined and cannot be changed by either the control panel 
+    // or programmtically.
+    //
+    switch (sysID) {
+      // Fields (text fields)
+      //
+      // For NavQuirks:
+      //   We always use the monospace font and whatever
+      //   the "fixed" font size this that is set by the browser
+      //
+      // For Standard/Strict Mode:
+      //    We use whatever font is defined by the system. Which it appears
+      //    (and the assumption is) it is always a proportional font. Then we
+      //    always use 2 points smaller than what the browser has defined as
+      //    the default proportional font.
+      case eSystemAttr_Font_Field:
+        if (eCompatibility_NavQuirks == mode) {
           font->mFont.name.AssignWithConversion("monospace");
           font->mFont.size = defaultFixedFont.size;
-          break;
-        case eSystemAttr_Font_Button:
-        case eSystemAttr_Font_List:
-          font->mFont.name.AssignWithConversion("sans-serif");
+        } else {
+          // Assumption: system defined font is proportional
           font->mFont.size = PR_MAX(defaultFont.size - NSIntPointsToTwips(2), 0);
-          break;
-      }
+        }
+        break;
+      //
+      // Button and Selects (listboxes/comboboxes)
+      //
+      // For NavQuirks:
+      //   We always use the sans-serif font and 2 point point sizes smaller
+      //   that whatever the "proportional" font size this that is set by the browser
+      //
+      // For Standard/Strict Mode:
+      //    We use whatever font is defined by the system. Which it appears
+      //    (and the assumption is) it is always a proportional font. Then we
+      //    always use 2 points smaller than what the browser has defined as
+      //    the default proportional font.
+      case eSystemAttr_Font_Button:
+      case eSystemAttr_Font_List:
+        if (eCompatibility_NavQuirks == mode) {
+          font->mFont.name.AssignWithConversion("sans-serif");
+        }
+        // Assumption: system defined font is proportional
+        font->mFont.size = PR_MAX(defaultFont.size - NSIntPointsToTwips(2), 0);
+        break;
+    }
 #endif
 
 #ifdef XP_UNIX
+    if (eCompatibility_NavQuirks == mode) {
       switch (sysID) {
         case eSystemAttr_Font_Field:
           font->mFont.name.AssignWithConversion("monospace");
@@ -1312,8 +1351,8 @@ nsRuleNode::ComputeFontData(nsStyleFont* aStartFont, const nsCSSFont& aFontData,
           font->mFont.size = defaultFont.size;
           break;
       }
-#endif
     }
+#endif
   }
   else if (eCSSUnit_Inherit == aFontData.mFamily.GetUnit()) {
     if (parentContext && !inherited) {
