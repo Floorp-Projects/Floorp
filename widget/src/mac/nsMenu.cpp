@@ -817,16 +817,8 @@ nsEventStatus nsMenu::MenuConstruct(
   //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
   // Begin menuitem inner loop
   
-  // Open the node.
-  //nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  //if (domElement)
-  //  domElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
-  
   gCurrentMenuDepth++;
    
-  // Fire our oncreate handler. If we're told to stop, don't build the menu at all
-  //PRBool keepProcessing = OnCreate();
-  
   // Now get the kids. Retrieve our menupopup child.
   nsCOMPtr<nsIDOMNode> menuPopupNode;
   GetMenuPopupElement(getter_AddRefs(menuPopupNode));
@@ -837,34 +829,29 @@ nsEventStatus nsMenu::MenuConstruct(
   nsCOMPtr<nsIDOMNode> menuitemNode;
   menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
-  unsigned short menuIndex = 0;
-  if ( /* keepProcessing */ true )
-  {
-    while (menuitemNode)
-    {      
-      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-      if (menuitemElement)
-      {        
-        nsAutoString label;
-        menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
-        //printf("label = %s \n", label.ToNewCString());
-        
-        // depending on the type, create a menu item, separator, or submenu
-        nsAutoString menuitemNodeType;
-        nsAutoString menuitemName;
-        menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType == NS_LITERAL_STRING("menuitem"))
-          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-        else if (menuitemNodeType == NS_LITERAL_STRING("menuseparator"))
-          AddSeparator();
-        else if (menuitemNodeType == NS_LITERAL_STRING("menu"))
-          LoadSubMenu(this, menuitemElement, menuitemNode);
-      }
-      ++menuIndex;
-      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-    } // end menu item innner loop
-  }
+  while (menuitemNode)
+  {      
+    nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+    if (menuitemElement)
+    {        
+      nsAutoString label;
+      menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
+      //printf("label = %s \n", label.ToNewCString());
+      
+      // depending on the type, create a menu item, separator, or submenu
+      nsAutoString menuitemNodeType;
+      nsAutoString menuitemName;
+      menuitemElement->GetNodeName(menuitemNodeType);
+      if (menuitemNodeType == NS_LITERAL_STRING("menuitem"))
+        LoadMenuItem(this, menuitemElement, menuitemNode, (nsIWebShell*)aWebShell);
+      else if (menuitemNodeType == NS_LITERAL_STRING("menuseparator"))
+        AddSeparator();
+      else if (menuitemNodeType == NS_LITERAL_STRING("menu"))
+        LoadSubMenu(this, menuitemElement, menuitemNode);
+    }
+    nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+    oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+  } // end menu item innner loop
   
   gConstructingMenu = PR_FALSE;
   mNeedsRebuild = PR_FALSE;
@@ -892,16 +879,8 @@ nsEventStatus nsMenu::HelpMenuConstruct(
     mMenuItemsArray.AppendElement(dummyItem);
   }
      
-  // Open the node.
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  if (domElement)
-    domElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
-
   gCurrentMenuDepth++;
    
-   // Fire our oncreate handler. If we're told to stop, don't build the menu at all
-  PRBool keepProcessing = OnCreate();
-    
   // Now get the kids. Retrieve our menupopup child.
   nsCOMPtr<nsIDOMNode> menuPopupNode;
   GetMenuPopupElement ( getter_AddRefs(menuPopupNode) );
@@ -912,36 +891,32 @@ nsEventStatus nsMenu::HelpMenuConstruct(
   nsCOMPtr<nsIDOMNode> menuitemNode;
   menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
-	unsigned short menuIndex = 0;
-  if ( keepProcessing ) {
-    while (menuitemNode)
-    {      
-      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-      if (menuitemElement) {
-        nsAutoString menuitemNodeType;
-        nsAutoString menuitemName;
-        
-        nsAutoString label;
-        menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
-        //printf("label = %s \n", label.ToNewCString());
-        
-        menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType == NS_LITERAL_STRING("menuitem")) {
-          // LoadMenuItem
-          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType == NS_LITERAL_STRING("menuseparator")) {
-          AddSeparator();
-        } else if (menuitemNodeType == NS_LITERAL_STRING("menu")) {
-          // Load a submenu
-          LoadSubMenu(this, menuitemElement, menuitemNode);
-        }
-      }
+  while (menuitemNode)
+  {      
+    nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+    if (menuitemElement) {
+      nsAutoString menuitemNodeType;
+      nsAutoString menuitemName;
       
-  	  ++menuIndex;
-      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-    } // end menu item innner loop
-  }
+      nsAutoString label;
+      menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
+      //printf("label = %s \n", label.ToNewCString());
+      
+      menuitemElement->GetNodeName(menuitemNodeType);
+      if (menuitemNodeType == NS_LITERAL_STRING("menuitem")) {
+        // LoadMenuItem
+        LoadMenuItem(this, menuitemElement, menuitemNode, (nsIWebShell*)aWebShell);
+      } else if (menuitemNodeType == NS_LITERAL_STRING("menuseparator")) {
+        AddSeparator();
+      } else if (menuitemNodeType == NS_LITERAL_STRING("menu")) {
+        // Load a submenu
+        LoadSubMenu(this, menuitemElement, menuitemNode);
+      }
+    }
+    
+    nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+    oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+  } // end menu item innner loop
   
   //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
@@ -1108,7 +1083,6 @@ void nsMenu::LoadMenuItem(
   nsIMenu *       pParentMenu,
   nsIDOMElement * menuitemElement,
   nsIDOMNode *    menuitemNode,
-  unsigned short  menuitemIndex,
   nsIWebShell *   aWebShell)
 {
   nsAutoString disabled;
@@ -1116,6 +1090,12 @@ void nsMenu::LoadMenuItem(
   nsAutoString type;
   nsAutoString menuitemName;
   nsAutoString menuitemCmd;
+  nsAutoString hidden;
+
+  // if menu should be hidden, bail
+  menuitemElement->GetAttribute(NS_LITERAL_STRING("hidden"), hidden);
+  if ( hidden == NS_LITERAL_STRING("true") )
+    return;
 
   menuitemElement->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
   menuitemElement->GetAttribute(NS_LITERAL_STRING("checked"), checked);
@@ -1240,6 +1220,12 @@ void nsMenu::LoadMenuItem(
 void 
 nsMenu::LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOMNode * menuNode )
 {
+  // if menu should be hidden, bail
+  nsAutoString hidden; 
+  menuElement->GetAttribute(NS_LITERAL_STRING("hidden"), hidden);
+  if ( hidden == NS_LITERAL_STRING("true") )
+    return;
+  
   nsAutoString menuName; 
   menuElement->GetAttribute(NS_LITERAL_STRING("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
