@@ -55,7 +55,7 @@ done
 
 cd $RPM_INSTALL_PREFIX
 rm -f component.reg
-./menuhack
+##./menuhack
 
 %postun
 for FILE in xmlterm xcat xls
