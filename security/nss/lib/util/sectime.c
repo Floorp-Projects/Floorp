@@ -36,28 +36,31 @@
 #include "secder.h"
 #include "cert.h"
 #include "secitem.h"
+#include "secerr.h"
+
+const SEC_ASN1Template CERT_TimeChoiceTemplate[] = {
+  { SEC_ASN1_CHOICE, offsetof(SECItem, type), 0, sizeof(SECItem) },
+  { SEC_ASN1_UTC_TIME, 0, 0, siUTCTime },
+  { SEC_ASN1_GENERALIZED_TIME, 0, 0, siGeneralizedTime },
+  { 0 }
+};
+
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_TimeChoiceTemplate);
 
 const SEC_ASN1Template CERT_ValidityTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	  0, NULL, sizeof(CERTValidity) },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTValidity,notBefore) },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTValidity,notAfter) },
+    { SEC_ASN1_INLINE,
+	  offsetof(CERTValidity,notBefore), CERT_TimeChoiceTemplate, 0 },
+    { SEC_ASN1_INLINE,
+	  offsetof(CERTValidity,notAfter), CERT_TimeChoiceTemplate, 0 },
     { 0 }
 };
 
-DERTemplate CERTValidityTemplate[] = {
-    { DER_SEQUENCE,
-	  0, NULL, sizeof(CERTValidity) },
-    { DER_UTC_TIME,
-	  offsetof(CERTValidity,notBefore), },
-    { DER_UTC_TIME,
-	  offsetof(CERTValidity,notAfter), },
-    { 0, }
-};
+PRTime January1st2050 = LL_INIT(0x0008f81e,0x1b098000);
 
 static char *DecodeUTCTime2FormattedAscii (SECItem *utcTimeDER, char *format);
+static char *DecodeGeneralizedTime2FormattedAscii (SECItem *generalizedTimeDER, char *format);
 
 /* convert DER utc time to ascii time string */
 char *
@@ -72,6 +75,36 @@ DER_UTCDayToAscii(SECItem *utctime)
 {
     return (DecodeUTCTime2FormattedAscii (utctime, "%a %b %d, %Y"));
 }
+
+/* convert DER generalized time to ascii time string, only include day,
+   not time */
+char *
+DER_GeneralizedDayToAscii(SECItem *gentime)
+{
+    return (DecodeGeneralizedTime2FormattedAscii (gentime, "%a %b %d, %Y"));
+}
+
+/* convert DER generalized or UTC time to ascii time string, only include
+   day, not time */
+char *
+DER_TimeChoiceDayToAscii(SECItem *timechoice)
+{
+    switch (timechoice->type) {
+
+    case siUTCTime:
+        return DER_UTCDayToAscii(timechoice);
+
+    case siGeneralizedTime:
+        return DER_GeneralizedDayToAscii(timechoice);
+
+    default:
+        PORT_Assert(0);
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+}
+
+
 
 CERTValidity *
 CERT_CreateValidity(int64 notBefore, int64 notAfter)
@@ -89,9 +122,9 @@ CERT_CreateValidity(int64 notBefore, int64 notAfter)
     v = (CERTValidity*) PORT_ArenaZAlloc(arena, sizeof(CERTValidity));
     if (v) {
 	v->arena = arena;
-	rv = DER_TimeToUTCTime(&v->notBefore, notBefore);
+	rv = CERT_EncodeTimeChoice(arena, &v->notBefore, notBefore);
 	if (rv) goto loser;
-	rv = DER_TimeToUTCTime(&v->notAfter, notAfter);
+	rv = CERT_EncodeTimeChoice(arena, &v->notAfter, notAfter);
 	if (rv) goto loser;
     }
     return v;
@@ -174,4 +207,51 @@ DecodeUTCTime2FormattedAscii (SECItem *utcTimeDER,  char *format)
         return(NULL);
     }
     return (CERT_UTCTime2FormattedAscii (utcTime, format));
+}
+
+/* convert DER utc time to ascii time string, The format of the time string
+   depends on the input "format"
+ */
+static char *
+DecodeGeneralizedTime2FormattedAscii (SECItem *generalizedTimeDER,  char *format)
+{
+    PRTime generalizedTime;
+    int rv;
+   
+    rv = DER_GeneralizedTimeToTime(&generalizedTime, generalizedTimeDER);
+    if (rv) {
+        return(NULL);
+    }
+    return (CERT_GeneralizedTime2FormattedAscii (generalizedTime, format));
+}
+
+/* decode a SECItem containing either a SEC_ASN1_GENERALIZED_TIME 
+   or a SEC_ASN1_UTC_TIME */
+
+SECStatus CERT_DecodeTimeChoice(PRTime* output, SECItem* input)
+{
+    switch (input->type) {
+        case siGeneralizedTime:
+            return DER_GeneralizedTimeToTime(output, input);
+
+        case siUTCTime:
+            return DER_UTCTimeToTime(output, input);
+
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            PORT_Assert(0);
+            return SECFailure;
+    }
+}
+
+/* encode a PRTime to an ASN.1 DER SECItem containing either a
+   SEC_ASN1_GENERALIZED_TIME or a SEC_ASN1_UTC_TIME */
+
+SECStatus CERT_EncodeTimeChoice(PRArenaPool* arena, SECItem* output, PRTime input)
+{
+    if (LL_CMP(input, >, January1st2050)) {
+        return DER_TimeToGeneralizedTimeArena(arena, output, input);
+    } else {
+        return DER_TimeToUTCTimeArena(arena, output, input);
+    }
 }

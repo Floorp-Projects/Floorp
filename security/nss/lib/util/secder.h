@@ -38,7 +38,7 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.2 2002/04/04 00:11:48 nelsonb%netscape.com Exp $
+ * $Id: secder.h,v 1.3 2003/09/19 04:08:50 jpierre%netscape.com Exp $
  */
 
 #if defined(_WIN32_WCE)
@@ -51,6 +51,7 @@
 
 #include "seccomon.h"
 #include "secdert.h"
+#include "prtime.h"
 
 SEC_BEGIN_PROTOS
 
@@ -137,6 +138,9 @@ extern unsigned long DER_GetUInteger(SECItem *src);
 ** result->data points to upon a successfull operation.
 */
 extern SECStatus DER_TimeToUTCTime(SECItem *result, int64 time);
+extern SECStatus DER_TimeToUTCTimeArena(PRArenaPool* arenaOpt,
+                                        SECItem *dst, int64 gmttime);
+
 
 /*
 ** Convert an ascii encoded time value (according to DER rules) into
@@ -165,11 +169,17 @@ extern char *DER_UTCTimeToAscii(SECItem *utcTime);
 ** The caller is responsible for deallocating the returned buffer.
 */
 extern char *DER_UTCDayToAscii(SECItem *utctime);
+/* same thing for DER encoded GeneralizedTime */
+extern char *DER_GeneralizedDayToAscii(SECItem *gentime);
+/* same thing for either DER UTCTime or GeneralizedTime */
+extern char *DER_TimeChoiceDayToAscii(SECItem *timechoice);
 
 /*
 ** Convert a int64 time to a DER encoded Generalized time
 */
 extern SECStatus DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime);
+extern SECStatus DER_TimeToGeneralizedTimeArena(PRArenaPool* arenaOpt,
+                                                SECItem *dst, int64 gmttime);
 
 /*
 ** Convert a DER encoded Generalized time value into a UNIX time value.
@@ -183,13 +193,26 @@ extern SECStatus DER_GeneralizedTimeToTime(int64 *dst, SECItem *time);
 ** caller is responsible for deallocating the returned buffer.
 */
 extern char *CERT_UTCTime2FormattedAscii (int64 utcTime, char *format);
-
+#define CERT_GeneralizedTime2FormattedAscii CERT_UTCTime2FormattedAscii
 
 /*
 ** Convert from a int64 Generalized time value to a formatted ascii value. The
 ** caller is responsible for deallocating the returned buffer.
 */
 extern char *CERT_GenTime2FormattedAscii (int64 genTime, char *format);
+
+/*
+** decode a SECItem containing either a SEC_ASN1_GENERALIZED_TIME 
+** or a SEC_ASN1_UTC_TIME
+*/
+
+extern SECStatus CERT_DecodeTimeChoice(PRTime* output, SECItem* input);
+
+/* encode a PRTime to an ASN.1 DER SECItem containing either a
+   SEC_ASN1_GENERALIZED_TIME or a SEC_ASN1_UTC_TIME */
+
+extern SECStatus CERT_EncodeTimeChoice(PRArenaPool* arena, SECItem* output,
+                                       PRTime input);
 
 SEC_END_PROTOS
 

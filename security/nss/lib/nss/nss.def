@@ -758,6 +758,9 @@ SECKEY_PublicKeyStrengthInBits;
 ;+};
 ;+NSS_3.9 { 	# NSS 3.9 release
 ;+    global:
+CERT_DecodeTimeChoice;
+CERT_EncodeTimeChoice;
+NSS_Get_CERT_TimeChoiceTemplate;
 PK11_FindSlotsByAliases;
 SEC_DupCrl;
 ;+    local:

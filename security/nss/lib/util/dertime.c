@@ -73,14 +73,18 @@ static long monthToDayInYear[12] = {
 
 /* gmttime must contains UTC time in micro-seconds unit */
 SECStatus
-DER_TimeToUTCTime(SECItem *dst, int64 gmttime)
+DER_TimeToUTCTimeArena(PRArenaPool* arenaOpt, SECItem *dst, int64 gmttime)
 {
     PRExplodedTime printableTime;
     unsigned char *d;
 
     dst->len = 13;
-    dst->data = d = (unsigned char*) PORT_Alloc(13);
-    dst->type = siBuffer;
+    if (arenaOpt) {
+        dst->data = d = (unsigned char*) PORT_ArenaAlloc(arenaOpt, dst->len);
+    } else {
+        dst->data = d = (unsigned char*) PORT_Alloc(dst->len);
+    }
+    dst->type = siUTCTime;
     if (!d) {
 	return SECFailure;
     }
@@ -114,6 +118,13 @@ DER_TimeToUTCTime(SECItem *dst, int64 gmttime)
     d[12] = 'Z';
     return SECSuccess;
 }
+
+SECStatus
+DER_TimeToUTCTime(SECItem *dst, int64 gmttime)
+{
+    return DER_TimeToUTCTimeArena(NULL, dst, gmttime);
+}
+
 
 SECStatus
 DER_AsciiToTime(int64 *dst, char *string)
@@ -222,14 +233,18 @@ DER_UTCTimeToTime(int64 *dst, SECItem *time)
    certificate extension, which does not have this restriction. 
  */
 SECStatus
-DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime)
+DER_TimeToGeneralizedTimeArena(PRArenaPool* arenaOpt, SECItem *dst, int64 gmttime)
 {
     PRExplodedTime printableTime;
     unsigned char *d;
 
     dst->len = 15;
-    dst->data = d = (unsigned char*) PORT_Alloc(15);
-    dst->type = siBuffer;
+    if (arenaOpt) {
+        dst->data = d = (unsigned char*) PORT_ArenaAlloc(arenaOpt, dst->len);
+    } else {
+        dst->data = d = (unsigned char*) PORT_Alloc(dst->len);
+    }
+    dst->type = siGeneralizedTime;
     if (!d) {
 	return SECFailure;
     }
@@ -259,6 +274,13 @@ DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime)
     d[14] = 'Z';
     return SECSuccess;
 }
+
+SECStatus
+DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime)
+{
+    return DER_TimeToGeneralizedTimeArena(NULL, dst, gmttime);
+}
+
 
 /*
     The caller should make sure that the generalized time should only

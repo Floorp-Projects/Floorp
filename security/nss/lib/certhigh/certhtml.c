@@ -34,7 +34,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.3 2001/10/26 21:30:58 wtc%netscape.com Exp $
+ * $Id: certhtml.c,v 1.4 2003/09/19 04:08:49 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -422,8 +422,8 @@ CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
     subject = CERT_FormatName (&cert->subject);
     version = CERT_Hexify (&cert->version,1);
     serialNumber = CERT_Hexify (&cert->serialNumber,1);
-    notBefore = DER_UTCDayToAscii(&cert->validity.notBefore);
-    notAfter = DER_UTCDayToAscii(&cert->validity.notAfter);
+    notBefore = DER_TimeChoiceDayToAscii(&cert->validity.notBefore);
+    notAfter = DER_TimeChoiceDayToAscii(&cert->validity.notAfter);
     servername = CERT_FindNSStringExtension(cert,
 				   SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
 

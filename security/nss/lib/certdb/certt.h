@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.23 2002/10/03 03:48:52 wtc%netscape.com Exp $
+ * $Id: certt.h,v 1.24 2003/09/19 04:08:48 jpierre%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -818,6 +818,7 @@ extern const SEC_ASN1Template CERT_CertExtensionTemplate[];
 extern const SEC_ASN1Template CERT_SequenceOfCertExtensionTemplate[];
 extern const SEC_ASN1Template SECKEY_PublicKeyTemplate[];
 extern const SEC_ASN1Template CERT_SubjectPublicKeyInfoTemplate[];
+extern const SEC_ASN1Template CERT_TimeChoiceTemplate[];
 extern const SEC_ASN1Template CERT_ValidityTemplate[];
 extern const SEC_ASN1Template CERT_PublicKeyAndChallengeTemplate[];
 extern const SEC_ASN1Template SEC_CertSequenceTemplate[];
@@ -847,6 +848,7 @@ SEC_ASN1_CHOOSER_DECLARE(CERT_SetOfSignedCrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SignedDataTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SubjectPublicKeyInfoTemplate)
 SEC_ASN1_CHOOSER_DECLARE(SEC_SignedCertificateTemplate)
+SEC_ASN1_CHOOSER_DECLARE(CERT_TimeChoiceTemplate)
 
 SEC_END_PROTOS
 
