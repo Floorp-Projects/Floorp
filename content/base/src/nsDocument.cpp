@@ -826,7 +826,7 @@ nsIArena* nsDocument::GetArena()
 
 nsresult
 #ifdef NECKO
-nsDocument::Reset(nsIChannel* aChannel)
+nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 #else
 nsDocument::Reset(nsIURI *aURL)
 #endif
@@ -885,7 +885,9 @@ nsDocument::Reset(nsIURI *aURL)
 
 #ifdef NECKO
   (void)aChannel->GetURI(&mDocumentURL);
-  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
+//  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
+  mDocumentLoadGroup = aLoadGroup;
+  NS_ASSERTION(mDocumentLoadGroup, "Should have a load group now on construction.");
 #else
   mDocumentURL = aURL;
   if (nsnull != aURL) {
@@ -905,6 +907,7 @@ nsresult
 nsDocument::StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                               nsIChannel* aChannel,
+                              nsILoadGroup* aLoadGroup,
 #else
                               nsIURI *aURL, 
 #endif
@@ -912,7 +915,7 @@ nsDocument::StartDocumentLoad(const char* aCommand,
                               nsIStreamListener **aDocListener)
 {
 #ifdef NECKO
-  return Reset(aChannel);
+  return Reset(aChannel, aLoadGroup);
 #else
   return Reset(aURL);
 #endif

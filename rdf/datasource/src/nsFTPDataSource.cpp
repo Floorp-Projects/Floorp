@@ -835,8 +835,7 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
 			if (nsnull != callback)
 			{
-				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull,
-                                url, nsnull);    // XXX need the nsILoadGroup here!
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url);
 			}
 		}
 #endif // NECKO

@@ -856,8 +856,8 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
     nsIURI* url = nsnull;
-#ifdef NECKO    // we need to be passed the nsILoadGroup here
-    result = NS_NewURI(&url, aHref, mDocumentBaseURL/*, group*/);
+#ifdef NECKO
+    result = NS_NewURI(&url, aHref, mDocumentBaseURL);
 #else
     nsILoadGroup* LoadGroup = nsnull;
     mDocumentBaseURL->GetLoadGroup(&LoadGroup);
@@ -1614,8 +1614,8 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             // Use the SRC attribute value to load the URL
             nsIURI* url = nsnull;
             nsAutoString absURL;
-#ifdef NECKO    // we need to be passed the nsILoadGroup here
-            rv = NS_NewURI(&url, src, mDocumentBaseURL/*, group*/);
+#ifdef NECKO
+            rv = NS_NewURI(&url, src, mDocumentBaseURL);
 #else
             nsILoadGroup* LoadGroup;
 
@@ -1637,17 +1637,15 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             // onto it as opaque data.
             NS_ADDREF(this);
 
-            nsILoadGroup* loadGroup = mDocument->GetDocumentLoadGroup();
             nsIUnicharStreamLoader* loader;
             rv = NS_NewUnicharStreamLoader(&loader,
                                            url, 
 #ifdef NECKO
-                                           loadGroup,
+                                           nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
 #endif
                                            (nsStreamCompleteFunc)DoneLoadingScript, 
                                            (void *)this);
             NS_RELEASE(url);
-            NS_IF_RELEASE(loadGroup);
             if (NS_OK == rv) {
                 rv = NS_ERROR_HTMLPARSER_BLOCK;
             }

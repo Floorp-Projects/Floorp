@@ -1136,10 +1136,7 @@ nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURI* aURL)
 {
 	nsPluginCacheListener* cacheListener = new nsPluginCacheListener(this);
 #ifdef NECKO
-    nsILoadGroup* loadGroup = GetLoadGroup();
-	nsresult rv = NS_OpenURI(cacheListener, nsnull, aURL, loadGroup);
-    NS_IF_RELEASE(loadGroup);
-    return rv;
+	return NS_OpenURI(cacheListener, nsnull, aURL);
 #else
 	return NS_OpenURL(aURL, cacheListener);
 #endif
@@ -2276,9 +2273,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
     if (NS_OK == rv) {
 #ifdef NECKO
-      nsILoadGroup* loadGroup = listenerPeer->GetLoadGroup();
-      rv = NS_OpenURI(listenerPeer, nsnull, url, loadGroup);
-      NS_IF_RELEASE(loadGroup);
+      rv = NS_OpenURI(listenerPeer, nsnull, url);
 #else
       rv = NS_OpenURL(url, listenerPeer);
 #endif
@@ -2332,9 +2327,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
 
 	if (NS_OK == rv) {
 #ifdef NECKO
-      nsILoadGroup* loadGroup = listener->GetLoadGroup();
-      rv = NS_OpenURI(listener, nsnull, aURL, loadGroup);
-      NS_IF_RELEASE(loadGroup);
+      rv = NS_OpenURI(listener, nsnull, aURL);
 #else
 	  rv = NS_OpenURL(aURL, listener);
 #endif

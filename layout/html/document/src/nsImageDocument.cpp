@@ -60,6 +60,7 @@ public:
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                nsIChannel* aChannel,
+                               nsILoadGroup* aLoadGroup,
 #else
                                nsIURI *aUrl, 
 #endif
@@ -256,6 +257,7 @@ NS_IMETHODIMP
 nsImageDocument::StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                    nsIChannel* aChannel,
+                                   nsILoadGroup* aLoadGroup,
 #else
                                    nsIURI *aURL, 
 #endif
@@ -264,7 +266,7 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
 #ifdef NECKO
-                                              aChannel, 
+                                              aChannel, aLoadGroup,
 #else
                                               aURL, 
 #endif

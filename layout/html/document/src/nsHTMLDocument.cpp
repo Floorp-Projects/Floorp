@@ -261,13 +261,13 @@ nsrefcnt nsHTMLDocument::Release()
 
 nsresult 
 #ifdef NECKO
-nsHTMLDocument::Reset(nsIChannel* aChannel)
+nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 #else
 nsHTMLDocument::Reset(nsIURI *aURL)
 #endif
 {
 #ifdef NECKO
-  nsresult result = nsDocument::Reset(aChannel);
+  nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
   nsCOMPtr<nsIURI> aURL;
   result = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(result)) return result;
@@ -347,6 +347,7 @@ NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                   nsIChannel* aChannel,
+                                  nsILoadGroup* aLoadGroup,
 #else
                                   nsIURI *aURL, 
 #endif
@@ -355,7 +356,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
 #ifdef NECKO
-                                              aChannel, 
+                                              aChannel, aLoadGroup,
 #else
                                               aURL, 
 #endif
@@ -1441,7 +1442,11 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
 #ifdef NECKO
-    // XXX help!
+    nsCOMPtr<nsIChannel> channel;
+    result = NS_OpenURI(getter_AddRefs(channel), aSourceURL);
+    if (NS_FAILED(result)) return result;
+    result = Reset(channel, mDocumentLoadGroup);
+    if (NS_FAILED(result)) return result;
 #else
     result = Reset(aSourceURL);
 #endif

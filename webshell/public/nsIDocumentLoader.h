@@ -40,6 +40,7 @@ class nsIStreamObserver;
 class nsIDocumentLoaderObserver;
 class nsIDocument;
 class nsIChannel;
+class nsILoadGroup;
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADERFACTORY_IID   \
@@ -69,6 +70,7 @@ public:
     NS_IMETHOD CreateInstance(const char *aCommand,
 #ifdef NECKO
                               nsIChannel* aChannel,
+                              nsILoadGroup* aLoadGroup,
 #else
                               nsIURI* aURL,
 #endif

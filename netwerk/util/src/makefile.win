@@ -39,7 +39,7 @@ INCS = $(INCS)                  \
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -19,7 +19,7 @@
 #include "nsHTTPChannel.h"
 #include "netCore.h"
 #include "nsIHttpEventSink.h"
-#include "nsIHTTPHandler.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
 #include "nsIChannel.h"
@@ -45,7 +45,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              nsIHTTPEventSink* i_HTTPEventSink,
-                             nsIHTTPHandler* i_Handler): 
+                             nsHTTPHandler* i_Handler): 
     m_URI(dont_QueryInterface(i_URL)),
     m_bConnected(PR_FALSE),
     m_State(HS_IDLE),
@@ -168,8 +168,7 @@ nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 NS_IMETHODIMP
 nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *aContext,
-                         nsIStreamListener *listener,
-                         nsILoadGroup* group)
+                         nsIStreamListener *listener)
 {
     nsresult rv = NS_OK;
 
@@ -187,7 +186,6 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         NS_ADDREF(m_pResponseDataListener);
 
         mResponseContext = aContext;
-        mLoadGroup = group;
 
         rv = Open();
     }
@@ -200,8 +198,7 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition,
                           PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIStreamObserver *observer,
-                          nsILoadGroup* group)
+                          nsIStreamObserver *observer)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -273,14 +270,6 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     }
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
-{
-  *aLoadGroup = mLoadGroup;
-  NS_IF_ADDREF(*aLoadGroup);
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -539,7 +528,7 @@ nsHTTPChannel::Open(void)
 
             // Write the request to the server...
             rv = stream->GetLength(&count);
-            rv = channel->AsyncWrite(stream, 0, count, this , m_pRequest, nsnull);
+            rv = channel->AsyncWrite(stream, 0, count, this , m_pRequest);
             if (NS_FAILED(rv)) return rv;
 
             m_State = HS_WAITING_FOR_RESPONSE;

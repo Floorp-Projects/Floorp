@@ -125,6 +125,7 @@ public:
   NS_IMETHOD CreateInstance(const char* aCommand,
 #ifdef NECKO
                             nsIChannel* aChannel,
+                            nsILoadGroup* aLoadGroup,
 #else
                             nsIURI* aURL,
 #endif
@@ -152,6 +153,7 @@ public:
   nsresult CreateDocument(const char* aCommand,
 #ifdef NECKO
                           nsIChannel* aChannel,
+                          nsILoadGroup* aLoadGroup,
 #else
                           nsIURI* aURL, 
 #endif
@@ -163,6 +165,7 @@ public:
   nsresult CreateRDFDocument(const char* aCommand,
 #ifdef NECKO
                              nsIChannel* aChannel,
+                             nsILoadGroup* aLoadGroup,
 #else
                              nsIURI* aURL, 
 #endif
@@ -243,6 +246,7 @@ NS_IMETHODIMP
 nsLayoutDLF::CreateInstance(const char *aCommand,
 #ifdef NECKO
                             nsIChannel* aChannel,
+                            nsILoadGroup* aLoadGroup,
 #else
                             nsIURI* aURL, 
 #endif
@@ -269,7 +273,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     if (0== PL_strcmp(gHTMLTypes[typeIndex++], aContentType)) {
       return CreateDocument(aCommand, 
 #ifdef NECKO
-                            aChannel,
+                            aChannel, aLoadGroup,
 #else
                             aURL,
 #endif
@@ -284,7 +288,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     if (0== PL_strcmp(gXMLTypes[typeIndex++], aContentType)) {
       return CreateDocument(aCommand, 
 #ifdef NECKO
-                            aChannel,
+                            aChannel, aLoadGroup,
 #else
                             aURL,
 #endif
@@ -299,7 +303,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
       return CreateRDFDocument(aCommand, 
 #ifdef NECKO
-                               aChannel,
+                               aChannel, aLoadGroup,
 #else
                                aURL,
 #endif
@@ -314,7 +318,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     if (0== PL_strcmp(gImageTypes[typeIndex++], aContentType)) {
       return CreateDocument(aCommand, 
 #ifdef NECKO
-                            aChannel,
+                            aChannel, aLoadGroup,
 #else
                             aURL,
 #endif
@@ -369,6 +373,7 @@ nsresult
 nsLayoutDLF::CreateDocument(const char* aCommand,
 #ifdef NECKO
                             nsIChannel* aChannel,
+                            nsILoadGroup* aLoadGroup,
 #else
                             nsIURI* aURL, 
 #endif
@@ -419,7 +424,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     // nsIStreamListener connected to the parser is returned in
     // aDocListener.
 #ifdef NECKO
-    rv = doc->StartDocumentLoad(aCommand, aChannel, aContainer, aDocListener);
+    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
 #else
     rv = doc->StartDocumentLoad(aCommand, aURL, aContainer, aDocListener);
 #endif
@@ -530,6 +535,7 @@ nsresult
 nsLayoutDLF::CreateRDFDocument(const char* aCommand,
 #ifdef NECKO
                                nsIChannel* aChannel,
+                               nsILoadGroup* aLoadGroup,
 #else
                                nsIURI* aURL, 
 #endif
@@ -559,7 +565,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
    * aDocListener.
    */
 #ifdef NECKO
-  rv = doc->StartDocumentLoad(aCommand, aChannel, aContainer, aDocListener);
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
 #else
   rv = doc->StartDocumentLoad(aCommand, aURL, aContainer, aDocListener);
 #endif

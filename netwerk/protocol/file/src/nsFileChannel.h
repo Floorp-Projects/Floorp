@@ -71,11 +71,11 @@ public:
     /* nsIOutputStream OpenOutputStream (); */
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
 
-    /* void AsyncRead (in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIStreamListener listener, in nsILoadGroup group); */
-    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener, nsILoadGroup *group);
+    /* void AsyncRead (in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIStreamListener listener); */
+    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener);
 
-    /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIStreamObserver observer, in nsILoadGroup group); */
-    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer, nsILoadGroup *group);
+    /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIStreamObserver observer); */
+    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer);
 
     /* attribute boolean LoadQuiet; */
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
@@ -83,8 +83,6 @@ public:
 
     /* readonly attribute string ContentType; */
     NS_IMETHOD GetContentType(char * *aContentType);
-
-    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIFileChannel:
@@ -203,7 +201,6 @@ protected:
 
     PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
-    nsCOMPtr<nsILoadGroup>      mLoadGroup;
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)

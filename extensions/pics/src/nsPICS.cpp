@@ -1562,7 +1562,7 @@ nsPICS::GetRootURL(nsIURI* aURL)
             return rv;
         mParser->Parse(aURL);
 #ifdef NECKO
-        rv = NS_OpenURI(lsnr, nsnull, aURL, nsnull);    // XXX need the nsILoadGroup here!
+        rv = NS_OpenURI(lsnr, nsnull, aURL);
 #else
         rv = NS_OpenURL(aURL, lsnr);
 #endif

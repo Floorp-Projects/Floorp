@@ -264,10 +264,10 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
 
     err = pIStream->Read(mBuffer,
                          max_read, &nb);
-	if (err == NS_BASE_STREAM_WOULD_BLOCK) {
-		err = NS_OK;
-		break;
-	}
+    if (err == NS_BASE_STREAM_WOULD_BLOCK) {
+      err = NS_OK;
+      break;
+    }
     if (err != NS_OK) {
       break;
     }
@@ -577,7 +577,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
     else {
 #ifdef NECKO
-      nsresult rv = NS_OpenURI(ic, nsnull, nsurl, mLoadGroup);
+      nsresult rv = NS_OpenURI(ic, nsnull, nsurl);
 #else
       nsresult rv = NS_OpenURL(nsurl, ic);
 #endif

@@ -155,13 +155,13 @@ nsrefcnt nsXMLDocument::Release()
 
 nsresult
 #ifdef NECKO
-nsXMLDocument::Reset(nsIChannel* aChannel)
+nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 #else
 nsXMLDocument::Reset(nsIURI* aURL)
 #endif
 {
 #ifdef NECKO
-  nsresult result = nsDocument::Reset(aChannel);
+  nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
   nsCOMPtr<nsIURI> aURL;
   result = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(result)) return result;
@@ -206,6 +206,7 @@ NS_IMETHODIMP
 nsXMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef NECKO
                                nsIChannel* aChannel,
+                               nsILoadGroup* aLoadGroup,
 #else
                                nsIURI *aUrl, 
 #endif
@@ -214,7 +215,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
 #ifdef NECKO
-                                              aChannel,
+                                              aChannel, aLoadGroup,
 #else
                                               aUrl, 
 #endif

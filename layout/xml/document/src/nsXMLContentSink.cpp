@@ -1836,16 +1836,14 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       NS_ADDREF(this);
 
       nsIUnicharStreamLoader* loader;
-      nsILoadGroup* loadGroup = mDocument->GetDocumentLoadGroup();
       rv = NS_NewUnicharStreamLoader(&loader,
                                      url, 
 #ifdef NECKO
-                                     loadGroup,
+                                     nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
 #endif
                                      (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
       NS_RELEASE(url);
-      NS_IF_RELEASE(loadGroup);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
       }

@@ -958,13 +958,6 @@ nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPRequest [this=%x]. Starting to write request to server.\n",
             this));
-
-    if (m_pConnection->GetLoadGroup()) {
-        nsCOMPtr<nsISupports> context;
-        m_pConnection->GetResponseContext(getter_AddRefs(context));
-        m_pConnection->GetLoadGroup()->AddChannel(m_pConnection, context);
-    }
-
     return NS_OK;
 }
 
@@ -989,8 +982,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
             NS_ADDREF(pListener);
             rv = m_pTransport->AsyncRead(0, -1,
                                          i_pContext, 
-                                         pListener,
-                                         nsnull);
+                                         pListener);
             NS_RELEASE(pListener);
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;

@@ -25,6 +25,9 @@
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
 #include "nsIBufferInputStream.h"
+#include "nsCOMPtr.h"
+#include "nsILoadGroup.h"
+#include "nsIChannel.h"
 
 static NS_DEFINE_IID(kIStreamListenerIID,  NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIUnicharStreamLoaderIID,  NS_IUNICHARSTREAMLOADER_IID);
@@ -59,6 +62,7 @@ protected:
   nsStreamCompleteFunc mFunc;
   void* mRef;
   nsString* mData;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
 
@@ -70,16 +74,25 @@ nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURI* aURL, nsILoadGroup* aLoadGr
   mFunc = aFunc;
   mRef = aRef;
   mData = new nsString();
+  mLoadGroup = aLoadGroup;
 
-  // XXX This is vile vile vile!!!
+  // XXX This is vile vile vile!!! 
   if (aURL) {
-    *rv = NS_OpenURI(this, nsnull, aURL, aLoadGroup);
-    if ((NS_OK != *rv) && (nsnull != mFunc)) {
+    nsCOMPtr<nsIChannel> channel;
+    *rv = NS_OpenURI(getter_AddRefs(channel), aURL);
+    if (NS_FAILED(*rv) && (nsnull != mFunc)) {
       // Thou shalt not call out of scope whilst ones refcnt is zero
       mRefCnt = 999;
       (*mFunc)(this, *mData, mRef, *rv);
       mRefCnt = 0;
+      return;
     }
+
+    *rv = mLoadGroup->AddChannel(channel, nsnull);
+    if (NS_FAILED(*rv)) return;
+
+    *rv = channel->AsyncRead(0, -1, nsnull, this);
+    if (NS_FAILED(*rv)) return;
   }
 }
 
@@ -146,8 +159,7 @@ nsUnicharStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                                      nsresult status, const PRUnichar *errorMsg)
 {
   (*mFunc)(this, *mData, mRef, status);
-
-  return NS_OK;
+  return mLoadGroup->RemoveChannel(channel, ctxt, status, errorMsg);
 }
 
 #define BUF_SIZE 1024

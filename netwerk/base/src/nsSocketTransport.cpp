@@ -1212,8 +1212,7 @@ nsSocketTransport::GetURI(nsIURI * *aURL)
 NS_IMETHODIMP
 nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                              nsISupports* aContext,
-                             nsIStreamListener* aListener,
-                             nsILoadGroup* group)
+                             nsIStreamListener* aListener)
 {
   // XXX deal with startPosition and readCount parameters
   nsresult rv = NS_OK;
@@ -1268,8 +1267,6 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mOperation = eSocketOperation_ReadWrite;
     SetReadType(eSocketRead_Async);
 
-    mLoadGroup = group;   // might be null
-
     rv = mService->AddToWorkQ(this);
   }
 
@@ -1285,8 +1282,7 @@ NS_IMETHODIMP
 nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream, 
                               PRUint32 startPosition, PRInt32 writeCount,
                               nsISupports* aContext,
-                              nsIStreamObserver* aObserver,
-                              nsILoadGroup* group)
+                              nsIStreamObserver* aObserver)
 {
   // XXX deal with startPosition and writeCount parameters
   nsresult rv = NS_OK;
@@ -1330,8 +1326,6 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_ReadWrite;
     SetWriteType(eSocketWrite_Async);
-
-    mLoadGroup = group;   // might be null
 
     rv = mService->AddToWorkQ(this);
   }
@@ -1478,10 +1472,3 @@ nsSocketTransport::GetContentType(char * *aContentType)
   return NS_ERROR_FAILURE;    // XXX doesn't make sense for transports
 }
 
-NS_IMETHODIMP
-nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
-{
-  *aLoadGroup = mLoadGroup;
-  NS_ADDREF(*aLoadGroup);
-  return NS_OK;
-}

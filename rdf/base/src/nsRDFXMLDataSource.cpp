@@ -915,7 +915,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     }
     else {
 #ifdef NECKO
-        rv = NS_OpenURI(lsnr, nsnull, mURL, nsnull);    // XXX need the nsILoadGroup here!
+        rv = NS_OpenURI(lsnr, nsnull, mURL);
 #else
         rv = NS_OpenURL(mURL, lsnr);
 #endif
