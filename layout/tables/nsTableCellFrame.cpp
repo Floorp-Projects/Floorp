@@ -42,8 +42,6 @@
 NS_DEF_PTR(nsIStyleContext);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
-static PRBool gsDebugReflow = PR_FALSE;
-
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext&  aPresContext,
                        nsIContent*      aContent,
@@ -498,7 +496,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
 {
-  if (gsDebugReflow) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
+  if (DEBUG_REFLOW_CELL) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
 
   nsresult rv = NS_OK;
   // this should probably be cached somewhere
@@ -590,7 +588,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
 
+  if (DEBUG_REFLOW_AREA) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
+  if (DEBUG_REFLOW_AREA) nsTableFrame::DebugReflow("Area::Rfl ex", firstKid, nsnull, &kidSize);
+
 #ifdef NS_DEBUG
   DebugCheckChildSize(firstKid, kidSize, availSize, (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth));
 #endif
@@ -694,7 +695,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
    
-  if (gsDebugReflow) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
+  if (DEBUG_REFLOW_CELL) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
 
   return NS_OK;
 }

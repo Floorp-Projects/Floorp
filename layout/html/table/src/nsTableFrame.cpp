@@ -48,8 +48,6 @@
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 
-static PRBool gsDebugReflow = PR_FALSE;
-
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
@@ -2008,7 +2006,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
-  if (gsDebugReflow) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
+  if (DEBUG_REFLOW_TABLE) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -2120,7 +2118,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     Invalidate(damageRect);
   }
 
-  if (gsDebugReflow) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
+  if (DEBUG_REFLOW_TABLE) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
 
@@ -5279,9 +5277,11 @@ void nsTableFrame::DebugGetIndent(const nsIFrame* aFrame,
   while (parent) {
     nsIAtom* frameType = nsnull;
     parent->GetFrameType(&frameType);
-    if ((nsLayoutAtoms::tableFrame == frameType) ||
-        (nsLayoutAtoms::tableRowFrame == frameType) ||
-        (nsLayoutAtoms::tableCellFrame == frameType)) {
+    if ((DEBUG_REFLOW_TABLE  && (nsLayoutAtoms::tableFrame         == frameType)) ||
+        (DEBUG_REFLOW_ROWGRP && (nsLayoutAtoms::tableRowGroupFrame == frameType)) ||
+        (DEBUG_REFLOW_ROW    && (nsLayoutAtoms::tableRowFrame      == frameType)) ||
+        (DEBUG_REFLOW_CELL   && (nsLayoutAtoms::tableCellFrame     == frameType)) ||
+        (DEBUG_REFLOW_AREA   && (nsLayoutAtoms::areaFrame          == frameType))) {
       numLevels++;
     }
     NS_IF_RELEASE(frameType);

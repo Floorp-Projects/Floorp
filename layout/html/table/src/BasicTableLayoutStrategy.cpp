@@ -25,6 +25,9 @@
 #include "nsVoidArray.h"
 #include "nsHTMLIIDs.h"
 
+static PRBool gsDebugAssign  = PR_FALSE;
+static PRBool gsDebugBalance = PR_FALSE;
+
 /* ---------- BasicTableLayoutStrategy ---------- */
 
 /* return true if the style indicates that the width is fixed 
@@ -115,14 +118,13 @@ void BasicTableLayoutStrategy::ContinuingFrameCheck()
 #endif
 }
 
-static
 PRBool BCW_Wrapup(BasicTableLayoutStrategy* aStrategy, 
-                  nsTableFrame*            aTableFrame, 
-                  PRInt32*                 aAllocTypes)
+                  nsTableFrame*             aTableFrame, 
+                  PRInt32*                  aAllocTypes)
 {
-  delete [] aAllocTypes;
-  //aStrategy->Dump(0);
-  //aTableFrame->Dump(PR_TRUE, PR_FALSE);
+  if (aAllocTypes)
+    delete [] aAllocTypes;
+  if (gsDebugBalance) {printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(PR_TRUE, PR_FALSE);}
   return PR_TRUE;
 }
 
@@ -131,7 +133,8 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
                                               const nsHTMLReflowState& aReflowState,
                                               nscoord                  aMaxWidthIn)
 {
-  mTableFrame->Dump(PR_TRUE, PR_FALSE);
+  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d\n", aMaxWidthIn); mTableFrame->Dump(PR_TRUE, PR_FALSE);}
+
   ContinuingFrameCheck();
   if (!aTableStyle) {
     NS_ASSERTION(aTableStyle, "bad style arg");
@@ -173,7 +176,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
 
   // if the max width available is less than the min content width for fixed table, we're done
   if (!tableIsAutoWidth && (maxWidth < mMinTableContentWidth)) {
-    return PR_FALSE;
+    return BCW_Wrapup(this, mTableFrame, nsnull);
   }
 
   // set PCT and PCT_ADJ widths on col frames and for an auto table return 
@@ -184,7 +187,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   // if the max width available is less than the min content width for auto table
   // that had no % cells/cols, we're done
   if (tableIsAutoWidth && (maxWidth < mMinTableContentWidth) & (0 == perAdjTableWidth)) {
-    return PR_TRUE;
+    return BCW_Wrapup(this, mTableFrame, nsnull);
   }
 
   PRInt32 cellSpacingTotal;
@@ -373,6 +376,7 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
 // and calculate min/max table width
 PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth)
 {
+  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d\n"); mTableFrame->Dump(PR_TRUE, PR_FALSE);}
   PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
   nscoord spacingX = mTableFrame->GetCellSpacingX();
@@ -394,10 +398,10 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
     nscoord desWidth = 0;
     nscoord fixWidth = WIDTH_NOT_SET;
     
-    // Get column information
+    // Get column frame and reset it
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     NS_ASSERTION(nsnull != colFrame, "bad col frame");
-    colFrame->SetConstraint(eNoConstraint);
+    colFrame->ResetSizingInfo();
 
     if (mTableFrame->GetNumCellsOriginatingIn(colX) > 0) {
       mCellSpacingTotal += spacingX;
@@ -672,6 +676,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
   }
   SetMinAndMaxTableContentWidths();
 
+  if (gsDebugAssign) {printf("AssignPrelimColWidths ex max=%d\n"); mTableFrame->Dump(PR_TRUE, PR_FALSE);}
   return rv;
 }
 
@@ -1051,7 +1056,6 @@ struct nsColInfo {
   float            mWeight;
 };
 
-static
 void
 AC_Wrapup(nsTableFrame* aTableFrame,
           PRInt32       aNumItems, 
@@ -1071,7 +1075,6 @@ AC_Wrapup(nsTableFrame* aTableFrame,
   }
 }
 
-static
 void
 AC_Increase(PRInt32     aNumAutoCols,
              nsColInfo** aColInfo,
@@ -1095,7 +1098,6 @@ AC_Increase(PRInt32     aNumAutoCols,
   }
 }
 
-static
 void
 AC_Decrease(PRInt32     aNumAutoCols,
              nsColInfo** aColInfo,
@@ -1121,7 +1123,6 @@ AC_Decrease(PRInt32     aNumAutoCols,
 }
 
 
-static
 void 
 AC_Sort(nsColInfo** aColInfo, PRInt32 aNumCols)
 {

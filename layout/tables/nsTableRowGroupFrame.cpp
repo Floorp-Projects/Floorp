@@ -992,6 +992,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
+  if (DEBUG_REFLOW_ROWGRP) nsTableFrame::DebugReflow("TRG::Rfl", this, &aReflowState, nsnull);
   nsresult rv=NS_OK;
 
   // Initialize out parameter
@@ -1070,6 +1071,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
+  if (DEBUG_REFLOW_ROWGRP) nsTableFrame::DebugReflow("TRG::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
 

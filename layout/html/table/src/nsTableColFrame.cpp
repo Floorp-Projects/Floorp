@@ -29,13 +29,19 @@ nsTableColFrame::nsTableColFrame()
   : nsFrame(), mIsAnonymous(PR_FALSE), mProportion(WIDTH_NOT_SET)
 {
   // note that all fields are initialized to 0 by nsFrame::operator new
-  for (PRInt32 widthX = 0; widthX < NUM_WIDTHS; widthX++) {
-    mWidths[widthX] = WIDTH_NOT_SET;
-  }
+  ResetSizingInfo();
 }
 
 nsTableColFrame::~nsTableColFrame()
 {
+}
+
+void nsTableColFrame::ResetSizingInfo()
+{
+  nsCRT::memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
+  mProportion = 0;
+  mConstraint = eNoConstraint;
+  mConstrainingCell = nsnull;
 }
 
 NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,

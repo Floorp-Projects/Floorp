@@ -118,6 +118,8 @@ public:
   PRBool IsAnonymous();
   void SetIsAnonymous(PRBool aValue);
 
+  void ResetSizingInfo();
+
   void Dump(PRInt32 aIndent);
 
 protected:
