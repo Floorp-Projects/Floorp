@@ -179,7 +179,7 @@ function initializeSearchBar()
 
 function onEnterInSearchBar()
 {
-   if (gSearchInput.value == "") 
+   if (gSearchInput.value == "" || gSearchInput.showingSearchCriteria) 
    {
      if (gSearchInput.searchMode == kQuickSearchHighlight)
        removeHighlighting();
@@ -191,12 +191,9 @@ function onEnterInSearchBar()
 
        if (gDefaultSearchViewTerms)
        {
-         if (gQSViewIsDirty)
-         {
            initializeSearchBar();
            onSearch(gDefaultSearchViewTerms);
          }
-       }
        else
         restorePreSearchView();
      }
@@ -372,6 +369,8 @@ function createSearchTerms()
   // does this break if the user types "foo|bar" expecting to see subjects with that string?
   // I claim no, since "foo|bar" will be a hit for "foo" || "bar"
   // they just might get more false positives
+  if (!gSearchInput.showingSearchCriteria) // ignore the text box value if it's just showing the search criteria string
+  {
   var termList = gSearchInput.value.split("|");
   for (var i = 0; i < termList.length; i ++)
   {
@@ -423,6 +422,7 @@ function createSearchTerms()
     term.op = nsMsgSearchOp.Contains; 
     term.booleanAnd = false;
     searchTermsArray.AppendElement(term);
+  }
   }
   }
 
