@@ -104,6 +104,7 @@ nsIMAPHostSessionList::nsIMAPHostSessionList()
 
 nsIMAPHostSessionList::~nsIMAPHostSessionList()
 {
+	ResetAll();
 	PR_DestroyMonitor(gCachedHostInfoMonitor);
 }
 
