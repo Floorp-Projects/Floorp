@@ -31,9 +31,12 @@ function clicked(event, target) {
     } else {
       target.setAttribute('open','true');
     }
+    return(true);
   } else {
-    if (event.clickCount == 2) {
+    if (event.clickCount == 2 && event.button == 1) {
       top.OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
+      return(true);
     }
   }
+  return(false);
 }
