@@ -82,6 +82,12 @@ public:
   NS_IMETHOD GetTarget(nsString* aTarget);
   NS_IMETHOD GetAction(nsString* aAction);
 
+  // Detection of first form to notify observers
+  static PRBool gFirstFormSubmitted;
+  // Detection of first password field to notify any password manager
+  // style modules
+  static PRBool gInitPasswordManager;
+
   // static helper functions for nsIFormControls
   
   static PRBool GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent = 0);

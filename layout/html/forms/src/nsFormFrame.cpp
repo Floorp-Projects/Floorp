@@ -126,6 +126,11 @@ static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 //end
 
+// Marks if the first form is submitted or not. Once we submit the first
+// form, this will become PR_TRUE
+PRBool nsFormFrame::gFirstFormSubmitted = PR_FALSE;
+PRBool nsFormFrame::gInitPasswordManager = PR_FALSE;
+
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -444,6 +449,16 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
 
 void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame)
 {
+  PRInt32 type;
+  aFrame.GetType(&type);
+  if (!gInitPasswordManager && type == NS_FORM_INPUT_PASSWORD) {
+    // Initialize the password manager category
+    gInitPasswordManager = PR_TRUE;
+    NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
+                                  NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
+                                  NS_ConvertASCIItoUCS2(NS_PASSWORDMANAGER_CATEGORY).get());
+  }
+
   // Add this control to the list
   // Sort by content ID - this assures we submit in document order (bug 18728)
   PRInt32 i = mFormControls.Count();
@@ -480,8 +495,6 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
   // determine which radio buttons belong to which radio groups, unnamed radio buttons
   // don't go into any group since they can't be submitted.
 
-  PRInt32 type;
-  aFrame.GetType(&type);
   if (NS_FORM_INPUT_RADIO == type) { 
     nsGfxRadioControlFrame* radioFrame = (nsGfxRadioControlFrame*)&aFrame;
     // gets the name of the radio group and the group
@@ -846,6 +859,15 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsAutoString absURLSpec;
     result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
     if (NS_FAILED(result)) return result;
+
+    // If this is the first form, bring alive the first form submit
+    // category observers
+    if (!gFirstFormSubmitted) {
+      gFirstFormSubmitted = PR_TRUE;
+      NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY,
+                                    NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
+                                    NS_ConvertASCIItoUCS2(NS_FIRST_FORMSUBMIT_CATEGORY).get());
+    }
 
     // Notify observers that the form is being submitted.
     result = NS_OK;

@@ -42,6 +42,8 @@ class nsIURI;
 { 0xa6cf9106, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
+#define NS_FIRST_FORMSUBMIT_CATEGORY "firstformsubmit"
+#define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
 
 class nsIFormSubmitObserver : public nsISupports {
 public:
