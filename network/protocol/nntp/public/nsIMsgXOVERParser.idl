@@ -1,5 +1,8 @@
+#include "nsISupports.idl"
+
+
 [object, uuid(E628ED19-9452-11d2-B7EA-00805F05FFA5)]
-interface nsIMsgListNewsgroupState  {
+interface nsIMsgXOVERParser : nsISupports {
 
   /* The NNTP module of netlib calls these to feed XOVER data to the message
      library, in response to a news:group.name URL having been opened.
@@ -16,10 +19,10 @@ interface nsIMsgListNewsgroupState  {
             in long first_message, in long last_message,
             in long oldest_message, in long newest_message);
   
-  void Process(in string line);
+  void Process(in string line, out long status);
   void ProcessNonXOVER(in string line);
   void Reset();
-  void Finish(in long status);
+  void Finish(in long status, out long newstatus);
   void ClearState();
   
 };
