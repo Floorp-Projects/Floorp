@@ -2040,7 +2040,10 @@ void
 NET_InitMemCacProtocol(void)
 {
     static NET_ProtoImpl mem_cac_proto_impl;
-
+#ifdef NU_CACHE
+    PR_ASSERT(0);
+    return;
+#endif
     mem_cac_proto_impl.init = net_MemoryCacheLoad;
     mem_cac_proto_impl.process = net_ProcessMemoryCache;
     mem_cac_proto_impl.interrupt = net_InterruptMemoryCache;
