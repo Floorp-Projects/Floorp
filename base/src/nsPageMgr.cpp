@@ -39,7 +39,7 @@
 
 /******************************************************************************/
 
-#define NS_PAGEMGR_CLUSTERDESC_CLUMPSIZE    1
+#define NS_PAGEMGR_CLUSTERDESC_CLUMPSIZE    16
 
 void
 nsPageMgr::DeleteFreeClusterDesc(nsClusterDesc *desc)
@@ -346,10 +346,10 @@ nsPageMgr::FinalizePages()
 nsPageMgr::nsPageMgr()
     : mUnusedClusterDescs(nsnull),
       mFreeClusters(nsnull),
+      mInUseClusters(nsnull),
       mMonitor(nsnull),
       mMemoryBase(nsnull),
       mBoundary(nsnull),
-      mPageCount(0),
 #ifdef XP_PC
       mLastPageFreed(nsnull),
       mLastPageFreedSize(0),
@@ -367,7 +367,7 @@ nsPageMgr::nsPageMgr()
       mSegTable(nsnull),
       mSegTableCount(0),
 #endif
-      mAlreadyLocked(PR_FALSE)
+      mPageCount(0)
 {
     NS_INIT_REFCNT();
 }
@@ -380,7 +380,6 @@ nsPageMgr::Init(nsPageCount minPages, nsPageCount maxPages)
     mMonitor = PR_NewMonitor();
     if (mMonitor == NULL)
         return PR_FAILURE;
-    mAlreadyLocked = PR_FALSE;
 
     status = InitPages(minPages, maxPages);
     if (status != PR_SUCCESS)
@@ -391,6 +390,7 @@ nsPageMgr::Init(nsPageCount minPages, nsPageCount maxPages)
     PR_ASSERT(mBoundary);
 
     mFreeClusters = NULL;
+    mInUseClusters = NULL;
     
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -582,11 +582,10 @@ nsPageMgr::NS_PAGEMGR_DECOMMIT_CLUSTER(void* addr, PRUword size)
 nsPage*
 nsPageMgr::NewCluster(nsPageCount nPages)
 {
-    nsPage* addr;
+    nsAutoMonitor mon(mMonitor);
 
+    nsPage* addr;
     PR_ASSERT(nPages > 0);
-    if (!mAlreadyLocked)
-        PR_EnterMonitor(mMonitor);
     addr = AllocClusterFromFreeList(nPages);
     if (!addr && mBoundary + nPages <= mMemoryBase + mPageCount) {
         addr = mBoundary;
@@ -609,14 +608,14 @@ nsPageMgr::NewCluster(nsPageCount nPages)
         }
         DBG_MEMSET(addr, NS_PAGEMGR_PAGE_ALLOC_PATTERN, size);
     }
-    if (!mAlreadyLocked)
-        PR_ExitMonitor(mMonitor);
     return (nsPage*)addr;
 }
 
 void
 nsPageMgr::DestroyCluster(nsPage* basePage, nsPageCount nPages)
 {
+    nsAutoMonitor mon(mMonitor);
+
     int freeResult;
     PRUword size = nPages << NS_PAGEMGR_PAGE_BITS;
 
@@ -627,8 +626,6 @@ nsPageMgr::DestroyCluster(nsPage* basePage, nsPageCount nPages)
     DBG_MEMSET(basePage, NS_PAGEMGR_PAGE_FREE_PATTERN, size);
     freeResult = NS_PAGEMGR_DECOMMIT_CLUSTER((void*)basePage, size);
     PR_ASSERT(freeResult);
-    if (!mAlreadyLocked)
-        PR_EnterMonitor(mMonitor);
     if (basePage + nPages == mBoundary) {
         nsClusterDesc **p;
         nsClusterDesc *desc;
@@ -655,8 +652,6 @@ nsPageMgr::DestroyCluster(nsPage* basePage, nsPageCount nPages)
 #ifdef NS_PAGEMGR_VERIFYCLUSTERS
     VerifyClusters(-(PRWord)nPages);
 #endif
-    if (!mAlreadyLocked)
-        PR_ExitMonitor(mMonitor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -682,34 +677,75 @@ nsPageMgr::DeallocPages(PRUint32 pageCount, void* pages)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAllocator methods:
+//
+// Note: nsIAllocator needs to keep track of the size of the blocks it allocates
+// whereas, nsIPageManager doesn't. That means that there's a little extra 
+// overhead for users of this interface. It also means that things allocated
+// with the nsIPageManager interface can't be freed with the nsIAllocator 
+// interface and vice versa.
 
 NS_IMETHODIMP_(void*)
 nsPageMgr::Alloc(PRUint32 size)
 {
+    nsAutoMonitor mon(mMonitor);
+
     nsresult rv;
-    void* page;
-    rv = AllocPages(NS_PAGEMGR_PAGE_COUNT(size), &page);
-    if (NS_FAILED(rv)) return nsnull;
+    void* page = nsnull;
+    PRUint32 pageCount = NS_PAGEMGR_PAGE_COUNT(size);
+
+    rv = AllocPages(pageCount, &page);
+    if (NS_FAILED(rv)) 
+        return nsnull;
+
+    // Add this cluster to the mInUseClusters list:
+    nsClusterDesc* desc = NewFreeClusterDesc();
+    if (desc == nsnull) {
+        rv = DeallocPages(pageCount, page);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "DeallocPages failed");
+        return nsnull;
+    }
+    desc->mAddr = (nsPage*)page;
+    desc->mPageCount = pageCount;
+    desc->mNext = mInUseClusters;
+    mInUseClusters = desc;
+
     return page;
 }
 
 NS_IMETHODIMP_(void*)
-nsPageMgr::Realloc(void* ptr, PRUint32 size, PRInt32 oldSize)
+nsPageMgr::Realloc(void* ptr, PRUint32 size)
 {
+    // XXX This realloc implementation could be made smarter by trying to 
+    // append to the current block, but I don't think we really care right now.
     nsresult rv;
-    rv = Free(ptr, oldSize);
+    rv = Free(ptr);
     if (NS_FAILED(rv)) return nsnull;
     void* newPtr = Alloc(size);
     return newPtr;
 }
 
 NS_IMETHODIMP
-nsPageMgr::Free(void* ptr, PRInt32 size)
+nsPageMgr::Free(void* ptr)
 {
-    nsresult rv;
-    NS_ASSERTION(size != -1, "unspecified oldSize");
-    rv = DeallocPages(NS_PAGEMGR_PAGE_COUNT(size), ptr);
-    return rv;
+    nsAutoMonitor mon(mMonitor);
+
+    PR_ASSERT(NS_PAGEMGR_IS_ALIGNED(ptr, NS_PAGEMGR_PAGE_BITS));
+
+    // Remove the cluster from the mInUseClusters list:
+    nsClusterDesc** list = &mInUseClusters;
+    nsClusterDesc* desc;
+    while ((desc = *list) != nsnull) {
+        if (desc->mAddr == ptr) {
+            // found -- unlink the desc and free it
+            *list = desc->mNext;
+            nsresult rv = DeallocPages(desc->mPageCount, ptr);
+            DeleteFreeClusterDesc(desc);
+            return rv;
+        }
+		list = &desc->mNext;
+    }
+    NS_ASSERTION(0, "memory not allocated with nsPageMgr::Alloc");
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

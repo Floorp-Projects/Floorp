@@ -110,7 +110,7 @@ nsBuffer::PopReadSegment()
 
     mBufferSize -= mGrowBySize;
 
-    rv = mAllocator->Free(segment, mGrowBySize);
+    rv = mAllocator->Free(segment);
     if (NS_FAILED(rv)) return rv;
 
     // initialize the read segment

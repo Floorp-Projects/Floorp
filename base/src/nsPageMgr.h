@@ -23,7 +23,7 @@
 #include "nsIAllocator.h"
 
 #include "nscore.h"
-#include "prmon.h"
+#include "nsAutoLock.h"
 #include "prlog.h"
 #ifdef XP_MAC
 #include <Types.h>
@@ -108,9 +108,8 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
 
     // nsIAllocator methods:
     NS_IMETHOD_(void*) Alloc(PRUint32 size);
-    NS_IMETHOD_(void*) Realloc(void* ptr, PRUint32 size,
-                               PRInt32 oldSize = -1);
-    NS_IMETHOD Free(void* ptr, PRInt32 size = -1);
+    NS_IMETHOD_(void*) Realloc(void* ptr, PRUint32 size);
+    NS_IMETHOD Free(void* ptr);
     NS_IMETHOD HeapMinimize(void);
 
     // nsPageMgr methods:
@@ -149,6 +148,7 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
   protected:
     nsClusterDesc*      mUnusedClusterDescs;
     nsClusterDesc*      mFreeClusters;
+    nsClusterDesc*      mInUseClusters; // used by nsIAllocator methods
     PRMonitor*          mMonitor;
     nsPage*             mMemoryBase;
     nsPage*             mBoundary;
@@ -178,8 +178,6 @@ class nsPageMgr : public nsIPageManager, public nsIAllocator {
     nsSegmentDesc*      mSegTable;
     PRWord              mSegTableCount;
 #endif
-
-    PRBool              mAlreadyLocked;
 };
 
 /******************************************************************************/
