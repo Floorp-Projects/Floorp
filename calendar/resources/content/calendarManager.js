@@ -181,7 +181,8 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 
    this.addCalendarToListBox( CalendarObject );
 
-   this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
+   if( CalendarObject.remote === true )
+      this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
 }
 
 
