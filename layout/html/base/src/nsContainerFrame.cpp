@@ -157,17 +157,26 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   }
 
   if (NS_COMFALSE != result) {
-    // Update primary child list
-    nsIFrame* child;
+    // Update all children since our context changed
+    PRInt32 listIndex = 0;
+    nsIAtom* childList = nsnull;
     PRInt32 childChange;
-    result = FirstChild(nsnull, &child);
-    while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
-      result = child->ReResolveStyleContext(aPresContext, mStyleContext, 
-                                            ourChange, aChangeList, &childChange);
-      child->GetNextSibling(&child);
-    }
+    nsIFrame* child;
 
-    // Update overflow list too
+    do {
+      child = nsnull;
+      result = FirstChild(childList, &child);
+      while ((NS_SUCCEEDED(result)) && (child)) {
+        result = child->ReResolveStyleContext(aPresContext, mStyleContext, 
+                                              ourChange, aChangeList, &childChange);
+        child->GetNextSibling(&child);
+      }
+
+      NS_IF_RELEASE(childList);
+      GetAdditionalChildListName(listIndex++, &childList);
+    } while (childList);
+
+    // Update overflow list too (XXX this is not just another child list?)
     child = mOverflowFrames.FirstChild();
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext, 
@@ -178,6 +187,8 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     // And just to be complete, update our prev-in-flows overflow list
     // too (since in theory, those frames will become our frames)
     // XXX Eeek, this is potentially re-resolving these frames twice, can this be optimized?
+    //     Better yet, this should just go away, overflow push/pull code should re-resolve
+    //     as needed for parent changes
     if (nsnull != mPrevInFlow) {
       child = ((nsContainerFrame*)mPrevInFlow)->mOverflowFrames.FirstChild();
       while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
@@ -186,6 +197,7 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
         child->GetNextSibling(&child);
       }
     }
+
   }
   return result;
 }
