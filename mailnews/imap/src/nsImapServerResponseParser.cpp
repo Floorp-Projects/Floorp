@@ -394,7 +394,8 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 			char *imapPart = nsnull;
 
 			fServerConnection.GetCurrentUrl()->GetImapPartToFetch(&imapPart);
-			m_shell->Generate(imapPart);
+			if (imapPart)
+				m_shell->Generate(imapPart);
 			PR_FREEIF(imapPart);
 
 			if ((navCon && navCon->GetPseudoInterrupted())
