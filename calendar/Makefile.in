@@ -45,3 +45,19 @@ DIRS = libxpical resources
 
 include $(topsrcdir)/config/rules.mk
 
+winxpi::
+	rm -f calendar_windows.xpi
+	rm -rf windows/components
+	rm -rf windows/resources
+
+	echo "Building Windows xpi..."
+	cp -r resources ./windows
+	./createBuildId.pl ./windows/resources/content/about.html
+	cd windows
+	mkdir -p ./windows/components
+	cp libxpical/xpical.dll ./windows/components
+	cp libxpical/_xpidlgen/calendar.xpt ./windows/components
+	cp resources/content/calendarService.js ./windows/components
+	cd windows; find components/ resources/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_windows.xpi
+	mv ./windows/calendar_windows.xpi .
+	echo "Done."
