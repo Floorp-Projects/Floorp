@@ -161,12 +161,19 @@ PrintPreviewContext::SetPageDim(nsRect* aPageDim)
   return NS_OK;
 }
 
+/**
+ * Ignore any attempt to set an animation mode for images in print
+ * preview
+ */
 NS_IMETHODIMP
 PrintPreviewContext::SetImageAnimationMode(PRUint16 aMode)
 {
   return NS_OK;
 }
 
+/**
+ * Images in print preview are never animated: always return kDontAnimMode
+ */
 NS_IMETHODIMP
 PrintPreviewContext::GetImageAnimationMode(PRUint16* aModeResult)
 {

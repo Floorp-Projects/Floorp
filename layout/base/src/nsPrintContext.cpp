@@ -160,12 +160,18 @@ PrintContext::SetPageDim(nsRect* aPageDim)
   return NS_OK;
 }
 
+/**
+ * Ignore any attempt to set an animation mode for printed images
+ */
 NS_IMETHODIMP
 PrintContext::SetImageAnimationMode(PRUint16 aMode)
 {
   return NS_OK;
 }
 
+/**
+ * Printed images are never animated: always return kDontAnimMode
+ */
 NS_IMETHODIMP
 PrintContext::GetImageAnimationMode(PRUint16* aModeResult)
 {
