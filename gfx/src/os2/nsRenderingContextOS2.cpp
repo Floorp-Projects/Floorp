@@ -223,6 +223,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    mCurrDrawingColor = NS_RGB( 0, 0, 0);
    mAlreadySetDrawingColor = PR_FALSE;
    mCurrTextColor = NS_RGB( 0, 0, 0);
+   mAlreadySetTextColor = PR_FALSE;
    mLineStyle = nsLineStyle_kSolid;
    mCurrLineStyle = nsLineStyle_kSolid;
 
@@ -957,7 +958,7 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
          mSurface->SelectFont( mCurrFontMetrics);
    }
 
-   if( bForce || mColor != mCurrTextColor)
+   if( bForce || mColor != mCurrTextColor || !mAlreadySetTextColor)
    {
 
       CHARBUNDLE cBundle;
@@ -983,6 +984,7 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
            FALSE);
 
       mCurrTextColor = mColor;
+      mAlreadySetTextColor = PR_TRUE;
    }
 }
 
