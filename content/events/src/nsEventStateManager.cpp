@@ -206,9 +206,11 @@ nsEventStateManager::Shutdown()
     mPrefService = null_nsCOMPtr();
   }
 
-  NS_IF_RELEASE(gLastFocusedContent);
-  NS_IF_RELEASE(gLastFocusedDocument);
-  
+  if(mInstanceCount == 1) {
+    NS_IF_RELEASE(gLastFocusedContent);
+    NS_IF_RELEASE(gLastFocusedDocument);
+  }
+
   m_haveShutdown = PR_TRUE;
   return NS_OK;
 }
@@ -492,13 +494,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       if (gLastFocusedContent) {
         nsCOMPtr<nsIDocument> doc;
         gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
-		if(doc)
+		    if(doc)
           doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
         else {
-		  mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-		  NS_RELEASE(gLastFocusedContent);
-		}
-	  }
+		      mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+		      NS_RELEASE(gLastFocusedContent);
+        }
+      }
       else mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
       
       // Suppress the command dispatcher for the duration of the
