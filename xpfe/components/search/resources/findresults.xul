@@ -9,7 +9,7 @@
 
 <!ENTITY name.column.label           "Name">
 <!ENTITY url.column.label            "URL">
-<!ENTITY shortcuturl.column.label    "Shortcut URL">
+<!ENTITY shortcuturl.column.label    "Nickname">
 <!ENTITY description.column.label    "Description">
 ]>
 
