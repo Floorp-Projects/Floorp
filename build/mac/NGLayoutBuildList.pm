@@ -1331,7 +1331,6 @@ sub BuildClientDist()
     #PLUGIN
     _InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",                 "$distdirectory:plugin:");
     _InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",                 "$distdirectory:plugin:");
-    _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",                    "$distdirectory:plugin:");
     _InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",                       "$distdirectory:oji:");
     _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",                    "$distdirectory:oji:");
     
@@ -2163,7 +2162,7 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",              "htmlparser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     if ($main::options{transformiix})
     {
         BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o", 0, 0, 0);
