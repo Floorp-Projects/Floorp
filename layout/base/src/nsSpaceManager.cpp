@@ -407,7 +407,7 @@ void SpaceManager::AddRectToBand(nsRect*       aBand,
 // |  R  |
 // +-----+
 //
-void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace)
+void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame)
 {
   // Convert from local to world coordinates
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
