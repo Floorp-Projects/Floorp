@@ -121,7 +121,8 @@ public:
   nsReflowStatus PullUpChildren(nsInlineReflowState& aState,
                                 nsInlineReflow& aInlineReflow);
 
-  nsIFrame* PullOneChild(nsInlineFrame* aNextInFlow,
+  nsIFrame* PullOneChild(nsIPresContext& aPresContext,
+                         nsInlineFrame* aNextInFlow,
                          nsIFrame* aLastChild,
                          nsReflowStatus& aReflowStatus);
 
@@ -129,7 +130,7 @@ public:
                 nsInlineReflow& aInlineReflow,
                 nsIFrame* aPushedChild);
 
-  void DrainOverflowLists();
+  void DrainOverflowLists(nsIPresContext& aPresContext);
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
@@ -271,7 +272,7 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
 
   // Gather up children from the overflow lists
   nsresult rv = NS_OK;
-  DrainOverflowLists();
+  DrainOverflowLists(aLineLayout.mPresContext);
 
   // Ask each child frame for its text runs
   nsIFrame* frame = mFirstChild;
@@ -554,7 +555,7 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
   // Based on the type of reflow, switch out to the appropriate
   // routine.
   if (eReflowReason_Initial == state.reason) {
-    DrainOverflowLists();
+    DrainOverflowLists(aPresContext);
     aStatus = InitialReflow(state, inlineReflow);
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
@@ -563,7 +564,7 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
     // reflowed our prev-in-flow and our prev-in-flow pushed some
     // children forward to us (e.g. a speculative pullup from us that
     // failed)
-    DrainOverflowLists();
+    DrainOverflowLists(aPresContext);
 
     NS_ASSERTION(nsnull == mOverflowList, "unexpected overflow list");
     nsIFrame* target;
@@ -606,7 +607,7 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
   else if (eReflowReason_Resize == state.reason) {
-    DrainOverflowLists();
+    DrainOverflowLists(aPresContext);
     aStatus = ResizeReflow(state, inlineReflow);
   }
   ComputeFinalSize(state, inlineReflow, aMetrics);
@@ -927,7 +928,8 @@ nsInlineFrame::PullUpChildren(nsInlineReflowState& aState,
   nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
   while (nsnull != nextInFlow) {
     // Get child from our next-in-flow
-    nsIFrame* child = PullOneChild(nextInFlow, aState.mLastChild,
+    nsIFrame* child = PullOneChild(aState.mPresContext,
+                                   nextInFlow, aState.mLastChild,
                                    reflowStatus);
     if (nsnull == child) {
       if (NS_FRAME_NOT_COMPLETE == reflowStatus) {
@@ -1091,7 +1093,8 @@ nsInlineFrame::SafeToPull(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
+nsInlineFrame::PullOneChild(nsIPresContext& aPresContext,
+                            nsInlineFrame* aNextInFlow,
                             nsIFrame* aLastChild,
                             nsReflowStatus& aReflowStatus)
 {
@@ -1127,6 +1130,11 @@ nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
     // content offset.
     kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
   }
+
+  // Update the frames style context
+  nsIFrame* oldParent;
+  kidFrame->GetGeometricParent(oldParent);
+  UpdateStyleContexts(aPresContext, kidFrame, oldParent, this);
 
   // Now give the frame to this container
   kidFrame->SetGeometricParent(this);
@@ -1181,7 +1189,7 @@ nsInlineFrame::PushKids(nsInlineReflowState& aState,
 }
 
 void
-nsInlineFrame::DrainOverflowLists()
+nsInlineFrame::DrainOverflowLists(nsIPresContext& aPresContext)
 {
   // Our prev-in-flows overflow list goes before my children and must
   // be re-parented.
@@ -1191,6 +1199,11 @@ nsInlineFrame::DrainOverflowLists()
       nsIFrame* frame = prevInFlow->mOverflowList;
       nsIFrame* lastFrame = nsnull;
       while (nsnull != frame) {
+        // Update the frames style context
+        nsIFrame* oldParent;
+        frame->GetGeometricParent(oldParent);
+        UpdateStyleContexts(aPresContext, frame, oldParent, this);
+
         // Reparent the frame
         frame->SetGeometricParent(this);
         nsIFrame* contentParent;
