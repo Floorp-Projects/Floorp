@@ -18,12 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
- * described herein are Copyright (c) International Business Machines Corporation, 2000.
- * Modifications to Mozilla code or documentation identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
+ *   IBM Corp.
  */
 
 /**
@@ -56,7 +51,39 @@ class nsIDTDDebug;
 class nsIParserNode;
 class nsParser;
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+    /* The callback handlers that get called from the expat parser */
+    void DTD_HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
+    void DTD_HandleEndElement(void *userData, const XML_Char *name);
+    void DTD_HandleCharacterData(void *userData, const XML_Char *s, int len);
+    void DTD_HandleProcessingInstruction(void *userData, 
+      const XML_Char *target, 
+      const XML_Char *data);
+    void DTD_HandleDefault(void *userData, const XML_Char *s, int len);
+    void DTD_HandleUnparsedEntityDecl(void *userData, 
+      const XML_Char *entityName, 
+      const XML_Char *base, 
+      const XML_Char *systemId, 
+      const XML_Char *publicId,
+      const XML_Char *notationName);
+    void DTD_HandleNotationDecl(void *userData,
+      const XML_Char *notationName,
+      const XML_Char *base,
+      const XML_Char *systemId,
+      const XML_Char *publicId);
+    void DTD_HandleExternalEntityRef(XML_Parser parser,
+      const XML_Char *openEntityNames,
+      const XML_Char *base,
+      const XML_Char *systemId,
+      const XML_Char *publicId);
+    void DTD_HandleUnknownEncoding(void *encodingHandlerData,
+      const XML_Char *name,
+      XML_Encoding *info);
+#ifdef __cplusplus
+}
+#endif
 
 class nsExpatDTD : public nsIDTD {
             
@@ -256,30 +283,30 @@ protected:
     void SetupExpatCallbacks(void);
 
     /* The callback handlers that get called from the expat parser */
-    static void PR_CALLBACK HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
-    static void PR_CALLBACK HandleEndElement(void *userData, const XML_Char *name);
-    static void PR_CALLBACK HandleCharacterData(void *userData, const XML_Char *s, int len);
-    static void PR_CALLBACK HandleProcessingInstruction(void *userData, 
+    friend void DTD_HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
+    friend void DTD_HandleEndElement(void *userData, const XML_Char *name);
+    friend void DTD_HandleCharacterData(void *userData, const XML_Char *s, int len);
+    friend void DTD_HandleProcessingInstruction(void *userData, 
       const XML_Char *target, 
       const XML_Char *data);
-    static void PR_CALLBACK HandleDefault(void *userData, const XML_Char *s, int len);
-    static void PR_CALLBACK HandleUnparsedEntityDecl(void *userData, 
+    friend void DTD_HandleDefault(void *userData, const XML_Char *s, int len);
+    friend void DTD_HandleUnparsedEntityDecl(void *userData, 
       const XML_Char *entityName, 
       const XML_Char *base, 
       const XML_Char *systemId, 
       const XML_Char *publicId,
       const XML_Char *notationName);
-    static void PR_CALLBACK HandleNotationDecl(void *userData,
+    friend void DTD_HandleNotationDecl(void *userData,
       const XML_Char *notationName,
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-    static void PR_CALLBACK HandleExternalEntityRef(XML_Parser parser,
+    friend void DTD_HandleExternalEntityRef(XML_Parser parser,
       const XML_Char *openEntityNames,
       const XML_Char *base,
       const XML_Char *systemId,
       const XML_Char *publicId);
-    static void PR_CALLBACK HandleUnknownEncoding(void *encodingHandlerData,
+    friend void DTD_HandleUnknownEncoding(void *encodingHandlerData,
       const XML_Char *name,
       XML_Encoding *info);
   
