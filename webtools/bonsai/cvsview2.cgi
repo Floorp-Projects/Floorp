@@ -479,7 +479,7 @@ sub do_diff_links {
 
     print qq%
         <HEAD>
-        <SCRIPT type="application/x-javascript"><!--
+        <SCRIPT $::script_type><!--
         var anchor = -1;
         function nextAnchor() {
             if (anchor < parent.frames[0].document.anchors.length)

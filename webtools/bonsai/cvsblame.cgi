@@ -76,21 +76,6 @@ my $SubHead = '';
 
 my @src_roots = getRepositoryList();
 
-# Layers are supported only by Netscape 4.
-# The DOM standards are supported by Mozilla and IE 5 or above.  It should
-# also be supported by any browser claiming "Mozilla/5" or above.
-my ($use_layers, $use_dom) = 0;
-if (defined $ENV{HTTP_USER_AGENT}) {
-  my $user_agent = $ENV{HTTP_USER_AGENT};
-  if ($user_agent =~ m@^Mozilla/4.@ && $user_agent !~ /MSIE/) {
-    $use_layers = 1;
-  } elsif ($user_agent =~ m@MSIE (\d+)@) {
-    $use_dom = 1 if $1 >= 5;
-  } elsif ($user_agent =~ m@^Mozilla/(\d+)@) {
-    $use_dom = 1 if $1 >= 5;
-  }
-}
-
 # Init sanitiazation source checker
 #
 my $sanitization_dictionary = $::FORM{sanitize};
@@ -255,8 +240,8 @@ my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
 --endquote--
 
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
-print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
-print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $use_dom;
+print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
+print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $::use_dom;
 print ">";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
@@ -373,8 +358,8 @@ foreach $revision (@::revision_map)
 	  $output .= "<A HREF=\"cvsview2.cgi?root=$root&subdir=$rcs_path&command=DIRECTORY&files=$file_tail\"";
           $::prev_revision{$revision} = '';
 	}
-	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
-        $output .= " onmouseover=\"showMessage('$revision','$line')\" id=\"line_$line\"" if $use_dom;
+	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
+        $output .= " onmouseover=\"showMessage('$revision','$line')\" id=\"line_$line\"" if $::use_dom;
         $output .= ">";
 	my $author = $::revision_author{$revision};
 	$author =~ s/%.*$//;
@@ -403,10 +388,10 @@ foreach $revision (@::revision_map)
 }
 print "</TD></TR></TABLE>\n";
 
-if ($use_layers || $use_dom) {
+if ($::use_layers || $::use_dom) {
   # Write out cvs log messages as a JS variables
   # or hidden <div>'s
-  print qq|<SCRIPT type="application/x-javascript"><!--\n| if $use_layers;
+  print qq|<SCRIPT $::script_type><!--\n| if $::use_layers;
   while (my ($revision, $junk) = each %usedlog) {
     
     # Create a safe variable name for a revision log
@@ -417,19 +402,19 @@ if ($use_layers || $use_dom) {
     $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
     $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
-    $log =~ s/"/\\"/g if $use_layers;
+    $log =~ s/"/\\"/g if $::use_layers;
     
     # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
     my $author = $::revision_author{$revision};
     $author =~ tr/%/@/;
     my $author_email = EmailFromUsername($author);
-    print "<div id=\"rev_$revision\" class=\"log_msg\" style=\"display:none\">" if $use_dom;
-    print "log$revisionName = \"" if $use_layers;
+    print "<div id=\"rev_$revision\" class=\"log_msg\" style=\"display:none\">" if $::use_dom;
+    print "log$revisionName = \"" if $::use_layers;
     print "<b>$revision</b> &lt;<a href='mailto:$author_email'>$author</a>&gt;"
 	." <b>$::revision_ctime{$revision}</b><BR>"
 	  ."<SPACER TYPE=VERTICAL SIZE=5>$log";
-    print "\";\n" if $use_layers;
-    print "</div>\n" if $use_dom;
+    print "\";\n" if $::use_layers;
+    print "</div>\n" if $::use_dom;
   }
   print "//--></SCRIPT>";
 }
@@ -459,8 +444,8 @@ sub print_top {
 
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
-    print <<__TOP__ if $use_layers;
-<SCRIPT type="application/x-javascript"><!--
+    print <<__TOP__ if $::use_layers;
+<SCRIPT $::script_type><!--
 var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
 
@@ -531,8 +516,8 @@ initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 <LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 VISIBILITY='hide'></LAYER>
 __TOP__
-    print <<__TOP__ if $use_dom;
-<script type="application/x-javascript"><!--
+    print <<__TOP__ if $::use_dom;
+<script $::script_type><!--
 var r
 function showMessage(rev,line) {
     if (r) {
@@ -586,7 +571,7 @@ a:active {
 </style>
 <body onclick="hideMessage()">
 __TOP__
-  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not ($use_layers || $use_dom);
+  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not ($::use_layers || $::use_dom);
 } # print_top
 
 sub print_usage {

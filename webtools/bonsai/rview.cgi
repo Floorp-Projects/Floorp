@@ -217,7 +217,7 @@ PutsTrailer();
 sub setup_script {
 
 $script_str = qq%
-<script type="application/x-javascript"><!--
+<script $::script_type><!--
 
 var event = new Object;
 
