@@ -315,7 +315,7 @@ function SortColumn(node, sortKey)
 			}
 			catch(e)
 			{
-                dump("Sort failed: " + e + "\n");
+                		//dump("Sort failed: " + e + "\n");
 			}
 		}
 	}
