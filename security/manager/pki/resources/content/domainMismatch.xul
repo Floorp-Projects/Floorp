@@ -22,7 +22,7 @@
 
 <window id="domainMismatch" title="&domainMismatch.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  width="320"
+  style="width: 32em;"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

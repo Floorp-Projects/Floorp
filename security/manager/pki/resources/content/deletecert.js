@@ -100,15 +100,6 @@ function setWindowName()
   }
 
   setText("impact",impact);
-
-  var wdth = window.innerWidth; // THIS IS NEEDED,
-  window.sizeToContent();
-  windowReference.setAttribute("width",window.innerWidth + 30);
-  var hght = window.innerHeight; // THIS IS NEEDED,
-  window.sizeToContent();
-  windowReference.setAttribute("height",window.innerHeight + 40);
-
-  
 }
 
 function doOK()

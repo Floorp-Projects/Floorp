@@ -22,7 +22,7 @@
 
 <window id="escrowWarnDialog" title="&escrowWarn.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  width="400"
+  style="width: 40em;"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

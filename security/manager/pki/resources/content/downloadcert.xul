@@ -27,8 +27,7 @@
 
 <window id="download_cert" title="&downloadCert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  height="320"
-  width="460"
+  style="width: 46em;"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
