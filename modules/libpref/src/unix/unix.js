@@ -37,6 +37,7 @@ pref("browser.cache.memory_cache_size", 3000);
 pref("browser.cache.disk_cache_size", 5000);
 pref("browser.ncols", 0);
 pref("browser.installcmap", false);
+pref("browser.drag_out_of_frame_style", 1);
 pref("mail.signature_file", "~/.signature");
 pref("mail.default_fcc", "~/nsmail/Sent");
 pref("news.default_fcc", "~/nsmail/Sent");
