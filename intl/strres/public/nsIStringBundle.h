@@ -46,9 +46,14 @@ class nsIStringBundle : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTRINGBUNDLE_IID)
 
-  NS_IMETHOD GetStringFromID(PRInt32 aID, nsString& aResult) = 0;
-  NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult) = 0;
-  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator** elements) = 0;
+  /* void GetStringFromID (in long aID, out wstring aResult); */
+  NS_IMETHOD GetStringFromID(PRInt32 aID, PRUnichar **aResult) = 0;
+
+  /* void GetStringFromName ([const] in wstring aName, out wstring aResult); */
+  NS_IMETHOD GetStringFromName(const PRUnichar *aName, PRUnichar **aResult) = 0;
+
+  /* void GetEnumeration (out nsIBidirectionalEnumerator elements); */
+  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator **elements) = 0;
 };
 
 class nsIStringBundleService : public nsISupports
@@ -56,10 +61,11 @@ class nsIStringBundleService : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTRINGBUNDLESERVICE_IID)
 
-  NS_IMETHOD CreateBundle(nsIURI* aURL, nsILocale* aLocale,
-                          nsIStringBundle** aResult) = 0; /* deprecated */
-  NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
-                          nsIStringBundle** aResult) = 0;
+  /* void CreateBundle ([const] in string aURLSpec, in nsILocale aLocale, [retval] out nsIStringBundle aResult); */
+  NS_IMETHOD CreateBundle(const char *aURLSpec, nsILocale *aLocale, nsIStringBundle **aResult) = 0;
+
+  /* void CreateXPCBundle ([const] in string aURLSpec, [const] in wstring aLocaleName, [retval] out nsIStringBundle aResult); */
+  NS_IMETHOD CreateXPCBundle(const char *aURLSpec, const PRUnichar *aLocaleName, nsIStringBundle **aResult) = 0;
 };
 
 #endif /* nsIStringBundle_h___ */
