@@ -158,7 +158,9 @@ nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale,
                                       const time_t  timetTime, 
                                       nsString& stringOut) 
 {
-  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime(&timetTime), stringOut);
+  struct tm tmTime;
+  nsCRT::memcpy(&tmTime, localtime(&timetTime), sizeof(struct tm));
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, &tmTime, stringOut);
 }
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
