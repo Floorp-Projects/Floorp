@@ -43,6 +43,7 @@
 #include "nspr.h"
 #include "nsViewsCID.h"
 #include "nsIViewManager.h"
+#include "nsXPFCDialogDataHandlerCommand.h"
 #include "nsXPFCError.h"
 
 #define DEFAULT_WIDTH  100
@@ -115,6 +116,7 @@ nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :
 
   mView = nsnull;
   mModel = nsnull;
+  mDataCommand = nsnull;
 
 }
 
@@ -214,10 +216,6 @@ nsXPFCCanvas::Internal::Release(void)
     }                                                                       
     return agg->mRefCnt;                                                    
 }                                                                           
-
-
-
-
 
 nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID, 
                                                void** aInstancePtr)
@@ -609,7 +607,14 @@ nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
     
     SetCommand(aValue);
 
-  } 
+  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_ONACTION)) {
+    mDataCommand = new nsXPFCDialogDataHandlerCommand();
+    if (mDataCommand)
+    {
+        mDataCommand->Init(aValue);
+    }
+  }
+
 
   /*
   * Check for tab#
@@ -1026,7 +1031,13 @@ nsEventStatus nsXPFCCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, n
 
 nsEventStatus nsXPFCCanvas :: OnLeftButtonDown(nsGUIEvent *aEvent)
 {
-  return (DefaultProcessing(aEvent));
+  // eyork Good place for this?
+  if (mDataCommand)
+  {
+    ProcessCommand(mDataCommand);
+    return nsEventStatus_eConsumeNoDefault;
+  } else
+    return (DefaultProcessing(aEvent));
 }
 
 nsEventStatus nsXPFCCanvas :: OnLeftButtonUp(nsGUIEvent *aEvent)
@@ -2104,15 +2115,12 @@ nsEventStatus nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
      */
 
     nsRect bounds;
-
     GetView()->GetBounds(bounds);
 
     bounds.x = 0;
     bounds.y = 0;
 
     if (gXPFCToolkit) gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
-
-
   }
 
   return nsEventStatus_eIgnore;

@@ -16,6 +16,7 @@ EXPORTS = \
     nsIWebViewerContainer.h\
     nsIStreamManager.h \
     nsIStreamObject.h \
+    nsIXPFCDataCollectionManager.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

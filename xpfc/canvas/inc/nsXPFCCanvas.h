@@ -43,6 +43,7 @@
 #include "nsIView.h"
 #include "nsIModel.h"
 #include "nsIXPFCCommand.h"
+#include "nsXPFCDialogDataHandlerCommand.h"
 
 CLASS_EXPORT_XPFC nsXPFCCanvas : public nsIXPFCCanvas,
                                  public nsIXPFCObserver,
@@ -299,6 +300,7 @@ private:
   PRUint32        mTabGroup;
   nsIModel *      mModel;
   nsString        mCommand;
+  nsXPFCDialogDataHandlerCommand* mDataCommand;
 
 protected:
 

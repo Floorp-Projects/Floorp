@@ -156,6 +156,8 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsXPFCCommand();
   } else if (mClassID.Equals(kCXPFCCommandServerCID)) {
     inst = (nsISupports *)new nsCommandServer();
+  } else if (mClassID.Equals(kCXPFCDataCollectionManager)) {
+    inst = (nsISupports *)new nsXPFCDataCollectionManager();
   } else if (mClassID.Equals(kCSMTPServiceCID)) {
     inst = (nsISupports *)new nsSMTPService();
   } else if (mClassID.Equals(kCMIMEServiceCID)) {

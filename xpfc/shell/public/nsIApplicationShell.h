@@ -26,6 +26,7 @@
 #include "nsIWidget.h"
 
 class nsIWebViewerContainer;
+class nsICollectedData;
 
 #define NS_IAPPLICATIONSHELL_IID      \
  { 0xaf9a93e0, 0xdebc, 0x11d1, \
@@ -47,6 +48,11 @@ public:
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0 ;
 
   NS_IMETHOD GetWebViewerContainer(nsIWebViewerContainer ** aWebViewerContainer) = 0;
+
+  /*
+  ** Get call backs from the DataCollection Manager
+  */
+  NS_IMETHOD ReceiveCallback(nsICollectedData& aReply) = 0;
 
   NS_IMETHOD StartCommandServer() = 0;
 

@@ -50,6 +50,9 @@
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
+#include "nsIServiceManager.h"
+
+#include "nsIXPFCDataCollectionManager.h"
 
 #ifdef NS_WIN32
 #include "direct.h"
@@ -92,6 +95,8 @@ static NS_DEFINE_IID(kCXPFCToolbarManager, NS_XPFCTOOLBAR_MANAGER_CID);
 static NS_DEFINE_IID(kIXPFCToolbarManager, NS_IXPFCTOOLBAR_MANAGER_IID);
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+static NS_DEFINE_IID(kCXPFCDataCollectionManager, NS_XPFCDATACOLLECTION_MANAGER_CID);
+static NS_DEFINE_IID(kIXPFCDataCollectionManager, NS_IXPFCDATACOLLECTION_MANAGER_IID);
 
 nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent);
 nsShellInstance * gShellInstance = nsnull;
@@ -172,6 +177,23 @@ nsresult nsShellInstance::Init()
 
   mToolbarManager->Init();
 
+  // Create a DataCollection Manager
+#if 0
+  res = nsRepository::CreateInstance(kCXPFCDataCollectionManager,
+                                     NULL,
+                                     kIXPFCDataCollectionManager,
+                                     (void **) &mDataCollectionManager);
+  mDataCollectionManager = new nsXPFCDataCollectionManager();
+#else
+  nsServiceManager::GetService(kCXPFCDataCollectionManager, kIXPFCDataCollectionManager, (nsISupports**)&mDataCollectionManager);
+  res = NS_OK;
+
+#endif
+  if (NS_OK != res)
+    return res;
+
+  mDataCollectionManager->Init();
+
   return res;
 }
 
@@ -206,6 +228,11 @@ nsresult nsShellInstance::Run()
 #else
   return NS_OK;
 #endif
+}
+
+nsIXPFCDataCollectionManager * nsShellInstance::GetDataCollectionManager()
+{
+  return (mDataCollectionManager) ;
 }
 
 void * nsShellInstance::GetNativeInstance()
@@ -270,6 +297,7 @@ nsresult nsShellInstance::RegisterFactories()
   #define PARSER_DLL "raptorhtmlpars.dll"
   #define DOM_DLL    "jsdom.dll"
   #define LAYOUT_DLL "raptorhtml.dll"
+  #define XPFC_DLL   "xpfc10.dll"
   #define NETLIB_DLL "netlib.dll"
 #else
 #ifdef XP_MAC
@@ -286,6 +314,23 @@ nsresult nsShellInstance::RegisterFactories()
   #define LAYOUT_DLL "libraptorhtml.so"
   #define NETLIB_DLL "netlib.so"
 #endif
+
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+  nsRepository::RegisterFactory(kIWidgetIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  // register graphics classes
+  static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
+  static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
+  static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
+  static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+  static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
+  static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+  nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 #endif
 
 // Class ID's
@@ -387,6 +432,7 @@ nsRepository::RegisterFactory(kCMenuBarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
+nsRepository::RegisterFactory(kCXPFCDataCollectionManager, XPFC_DLL, PR_FALSE, PR_FALSE);
 static NS_DEFINE_IID(kCParserNodeCID, NS_PARSER_NODE_IID);
 nsRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
 

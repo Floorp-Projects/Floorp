@@ -15,6 +15,7 @@ EXPORTS = \
 	nsXPFCMethodInvokerCommand.h \
 	nsXPFCNotificationStateCommand.h \
 	nsXPFCModelUpdateCommand.h \
+    nsXPFCDialogDataHandlerCommand.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

@@ -26,6 +26,7 @@
 #include "nsIApplicationShell.h"
 #include "nsIWidget.h"
 #include "plgetopt.h"
+#include "nsIXPFCDataCollectionManager.h"
 
 class nsIApplicationShell;
 class nsIPref;
@@ -134,6 +135,12 @@ public:
    * @result An nsIXPFCToolbarManager pointer
    */
   NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager() = 0; 
+
+  /**
+   * Get DataCollection Manager
+   * @result An nsIXPFCDataCollectionManager pointer
+   */
+   NS_IMETHOD_(nsIXPFCDataCollectionManager *) GetDataCollectionManager() = 0;
 
  	PLOptState *opt;
   

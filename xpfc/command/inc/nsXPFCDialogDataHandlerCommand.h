@@ -16,34 +16,27 @@
  * Reserved.
  */
 
-#ifndef nsXPFCDialog_h___
-#define nsXPFCDialog_h___
+#ifndef nsXPFCDialogDataHandlerCommand_h___
+#define nsXPFCDialogDataHandlerCommand_h___
 
-#include "nsIXPFCDialog.h"
-#include "nsXPFCCanvas.h"
-#include "nsVoidArray.h"
+#include "nsXPFCCommand.h"
+#include "nsString.h"
 
-class nsXPFCDialog : public nsIXPFCDialog,
-                     public nsXPFCCanvas
-
+class nsXPFCDialogDataHandlerCommand : public nsXPFCCommand
 {
 public:
-  nsXPFCDialog(nsISupports* outer);
+  nsXPFCDialogDataHandlerCommand();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init();
+  NS_IMETHOD Init(nsString& aTarget);
 
-  NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
-  NS_IMETHOD GetClassPreferredSize(nsSize& aSize);
-  NS_IMETHOD_(nsEventStatus) ProcessCommand(nsIXPFCCommand * aCommand) ;
-  NS_IMETHOD CollectData();
-  NS_IMETHOD CollectDataInCanvas(nsIXPFCCanvas* host_canvas, nsVoidArray* DataMembers);
+public:
+  nsString mAction;
 
 protected:
-  ~nsXPFCDialog();
-
+  ~nsXPFCDialogDataHandlerCommand();
 
 };
 
-#endif /* nsXPFCDialog_h___ */
+#endif /* nsXPFCActionCommand_h___ */
