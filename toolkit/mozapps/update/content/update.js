@@ -45,6 +45,7 @@ const nsIExtensionManager               = Components.interfaces.nsIExtensionMana
 
 const PREF_APP_ID                           = "app.id";
 const PREF_UPDATE_EXTENSIONS_ENABLED        = "update.extensions.enabled";
+const PREF_UPDATE_APP_ENABLED               = "update.app.enabled";
 const PREF_UPDATE_APP_UPDATESAVAILABLE      = "update.app.updatesAvailable";
 const PREF_UPDATE_APP_UPDATEVERSION         = "update.app.updateVersion";
 const PREF_UPDATE_APP_UPDATEDESCRIPTION     = "update.app.updateDescription";
@@ -105,6 +106,13 @@ var gUpdateWizard = {
     }
     
     gMismatchPage.init();
+
+    // If the user has disabled Extension/Theme update checking, don't bother
+    // doing version compatibility updates first. 
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
+      document.documentElement.advance();
   },
   
   uninit: function ()
@@ -271,15 +279,6 @@ var gVersionPage = {
                                   "cancelButtonText", true);
     document.documentElement.getButton("next").focus();
     
-    // If the user has disabled Extension/Theme update checking, don't bother
-    // doing version compatibility updates first. 
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED)) {
-      document.documentElement.advance();
-      return;
-    }
-
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     for (var i = 0; i < this._messages.length; ++i)
@@ -423,9 +422,6 @@ var gUpdatePage = {
   
   onPageShow: function ()
   {
-    if (!gUpdateTypes)
-      gUpdateWizard.init();
-      
     gUpdateWizard.setButtonLabels(null, true, 
                                   "nextButtonText", true, 
                                   "cancelButtonText", true);
@@ -566,11 +562,6 @@ var gFoundPage = {
   
   buildAddons: function ()
   {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
-      return;
-
     var hasExtensions = false;
     var foundAddonsList = document.getElementById("found.addons.list");
     var uri = Components.classes["@mozilla.org/network/standard-url;1"]
@@ -765,71 +756,73 @@ var gFoundPage = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var updatePerformed = pref.getBoolPref(PREF_UPDATE_APP_PERFORMED);
+    if (pref.getBoolPref(PREF_UPDATE_APP_ENABLED)) {
+      var updatesvc = Components.classes["@mozilla.org/updates/update-service;1"]
+                                .getService(Components.interfaces.nsIUpdateService);
+      this._currentInfo = updatesvc.currentVersion;
+      if (this._currentInfo) {
+        var patches = this._currentInfo.getCollection("patches", { });
+        if (patches.length > 0 && !updatePerformed)
+          this.buildPatches(patches);
+          
+        var components = this._currentInfo.getCollection("optional", { });
+        if (components.length > 0)
+          this.buildOptional(components);
 
-    var updatesvc = Components.classes["@mozilla.org/updates/update-service;1"]
-                              .getService(Components.interfaces.nsIUpdateService);
-    this._currentInfo = updatesvc.currentVersion;
-    if (this._currentInfo) {
-      var patches = this._currentInfo.getCollection("patches", { });
-      if (patches.length > 0 && !updatePerformed)
-        this.buildPatches(patches);
-        
-      var components = this._currentInfo.getCollection("optional", { });
-      if (components.length > 0)
-        this.buildOptional(components);
-
-      var languages = this._currentInfo.getCollection("languages", { });
-      if (languages.length > 0)
-        this.buildLanguages(languages);
-    }
-    
-    this._newestInfo = updatesvc.newestVersion;
-    if (this._newestInfo) {
-      var languages = this._newestInfo.getCollection("languages", { });
-      var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIXULChromeRegistry);
-      var selectedLocale = cr.getSelectedLocale("global");
-      var haveLanguage = false;
-      for (var i = 0; i < languages.length; ++i) {
-        if (languages[i].internalName == selectedLocale)
-          haveLanguage = true;
-      }
-
-      var files = this._newestInfo.getCollection("files", { });
-      if (files.length > 0 && haveLanguage && !updatePerformed) 
-        this.buildApp(files);
-        
-      // When the user upgrades the application, any optional components that
-      // they have installed are automatically installed. If there are remaining
-      // optional components that are not currently installed, then these
-      // are offered as an option.
-      var components = this._newestInfo.getCollection("optional", { });
-      for (var i = 0; i < components.length; ++i) {
-        if (InstallTrigger.getVersion(components[i].internalName))
-          gUpdateWizard.appComps.upgraded.optional.push(components[i]);
-        else
-          gUpdateWizard.appComps.optional.optional.push(components[i]);
+        var languages = this._currentInfo.getCollection("languages", { });
+        if (languages.length > 0)
+          this.buildLanguages(languages);
       }
       
-      var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                         .getService(Components.interfaces.nsIXULChromeRegistry);
-      var selectedLocale = cr.getSelectedLocale("global");
-      gUpdateWizard.selectedLocaleAvailable = false;
-      var languages = this._newestInfo.getCollection("languages", { });
-      for (i = 0; i < languages.length; ++i) {
-        if (languages[i].internalName == selectedLocale) {
-          gUpdateWizard.selectedLocaleAvailable = true;
-          gUpdateWizard.appComps.upgraded.languages.push(languages[i]);
+      this._newestInfo = updatesvc.newestVersion;
+      if (this._newestInfo) {
+        var languages = this._newestInfo.getCollection("languages", { });
+        var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                          .getService(Components.interfaces.nsIXULChromeRegistry);
+        var selectedLocale = cr.getSelectedLocale("global");
+        var haveLanguage = false;
+        for (var i = 0; i < languages.length; ++i) {
+          if (languages[i].internalName == selectedLocale)
+            haveLanguage = true;
         }
-      }
-      
-      if (!gUpdateWizard.selectedLocaleAvailable)
-        gUpdateWizard.appComps.optional.languages = gUpdateWizard.appComps.optional.languages.concat(languages);
+
+        var files = this._newestInfo.getCollection("files", { });
+        if (files.length > 0 && haveLanguage && !updatePerformed) 
+          this.buildApp(files);
+          
+        // When the user upgrades the application, any optional components that
+        // they have installed are automatically installed. If there are remaining
+        // optional components that are not currently installed, then these
+        // are offered as an option.
+        var components = this._newestInfo.getCollection("optional", { });
+        for (var i = 0; i < components.length; ++i) {
+          if (InstallTrigger.getVersion(components[i].internalName))
+            gUpdateWizard.appComps.upgraded.optional.push(components[i]);
+          else
+            gUpdateWizard.appComps.optional.optional.push(components[i]);
+        }
         
-      gUpdateWizard.appComps.upgraded.core = gUpdateWizard.appComps.upgraded.core.concat(files);
+        var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                          .getService(Components.interfaces.nsIXULChromeRegistry);
+        var selectedLocale = cr.getSelectedLocale("global");
+        gUpdateWizard.selectedLocaleAvailable = false;
+        var languages = this._newestInfo.getCollection("languages", { });
+        for (i = 0; i < languages.length; ++i) {
+          if (languages[i].internalName == selectedLocale) {
+            gUpdateWizard.selectedLocaleAvailable = true;
+            gUpdateWizard.appComps.upgraded.languages.push(languages[i]);
+          }
+        }
+        
+        if (!gUpdateWizard.selectedLocaleAvailable)
+          gUpdateWizard.appComps.optional.languages = gUpdateWizard.appComps.optional.languages.concat(languages);
+          
+        gUpdateWizard.appComps.upgraded.core = gUpdateWizard.appComps.upgraded.core.concat(files);
+      }
     }
-    
-    this.buildAddons();
+
+    if (pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
+      this.buildAddons();
     
     var kids = updates._getRadioChildren();
     for (var i = 0; i < kids.length; ++i) {
