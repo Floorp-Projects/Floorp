@@ -57,6 +57,7 @@ js1_5/Regress/regress-68498-003.js
 #Rhino compiled mode is limited by Java classfile size limitations
 js1_5/Regress/regress-89443.js
 js1_5/Regress/regress-90445.js
+#These negative tests fail to compile in SpiderMonkey, but succeed in Rhino
 js1_5/Regress/regress-97646-001-n.js
 js1_5/Regress/regress-97646-002-n.js
 #Rhino doesn't implement the (non-ECMA) toSource() method
