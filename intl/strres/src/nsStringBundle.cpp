@@ -42,9 +42,15 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
+#include "nsStringBundleService.h"
+#include "nsStringBundle.h"
+#include "nsStringBundleTextOverride.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
+#include "nsArray.h"
+#include "nsArrayEnumerator.h"
 #include "nscore.h"
+#include "nsHashtable.h"
 #include "nsMemory.h"
 #include "plstr.h"
 #include "nsNetUtil.h"
@@ -56,7 +62,7 @@
 #include "pratom.h"
 #include "prmem.h"
 #include "nsIModule.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"
@@ -78,54 +84,14 @@
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
-// XXX investigate need for proper locking in this module
-//static PRInt32 gLockCount = 0;
-
-NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-class nsStringBundle : public nsIStringBundle
-#ifdef ASYNC_LOADING
-                     , public nsIStreamLoaderObserver
-#endif
-{
-public:
-  // init version
-  nsStringBundle(const char* aURLSpec);
-  nsresult LoadProperties();
-  virtual ~nsStringBundle();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTRINGBUNDLE
-#ifdef ASYNC_LOADING
-  NS_DECL_NSISTREAMLOADEROBSERVER
-#endif
-
-  nsCOMPtr<nsIPersistentProperties> mProps;
-
-protected:
-  //
-  // functional decomposition of the funitions repeatively called 
-  //
-  nsresult GetStringFromID(PRInt32 aID, nsAString& aResult);
-  nsresult GetStringFromName(const nsAString& aName, nsAString& aResult);
-
-private:
-  nsCString              mPropertiesURL;
-  PRPackedBool                 mAttemptedLoad;
-  PRPackedBool                 mLoaded;
-
-public:
-  static nsresult FormatString(const PRUnichar *formatStr,
-                               const PRUnichar **aParams, PRUint32 aLength,
-                               PRUnichar **aResult);
- };
-
 nsStringBundle::~nsStringBundle()
 {
 }
 
-nsStringBundle::nsStringBundle(const char* aURLSpec) :
+nsStringBundle::nsStringBundle(const char* aURLSpec,
+                               nsIStringBundleOverride* aOverrideStrings) :
   mPropertiesURL(aURLSpec),
+  mOverrideStrings(aOverrideStrings),
   mAttemptedLoad(PR_FALSE),
   mLoaded(PR_FALSE)
 {
@@ -150,142 +116,31 @@ nsStringBundle::LoadProperties()
 
   nsresult rv;
 
-  // to be turned on once we figure out how to ensure we're loading on
-  // the main thread
-#ifdef ASYNC_LOADING
-
-  // load the string bundle asynchronously on another thread,
-  // but make sure we block this thread so that LoadProperties() is
-  // synchronous
-  
-  // create an event queue for this thread.
-  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIEventQueue> currentThreadQ;
-  rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
+  // do it synchronously
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
   if (NS_FAILED(rv)) return rv;
 
-  //   create and loader, then wait
-  nsCOMPtr<nsIStreamLoader> loader;
-  rv = NS_NewStreamLoader(getter_AddRefs(loader), 
-                          uri, 
-                          this /*the load observer*/);
- NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: NS_NewStreamLoader failed...\n");
-
- // process events until we're finished.
- PLEvent *event;
- while (!mLoaded) {
-   rv = currentThreadQ->WaitForEvent(&event);
-   NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: currentThreadQ->WaitForEvent failed...\n");
-   if (NS_FAILED(rv)) break;
-
-   rv = currentThreadQ->HandleEvent(event);
-   NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: currentThreadQ->HandleEvent failed...\n");
-   if (NS_FAILED(rv)) break;
- }
-  
- rv = service->PopThreadEventQueue(currentThreadQ);
-
-#else
-
- // do it synchronously
- nsCOMPtr<nsIURI> uri;
- rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
- if (NS_FAILED(rv)) return rv;
-
- nsCOMPtr<nsIInputStream> in;
- rv = NS_OpenURI(getter_AddRefs(in), uri);
- if (NS_FAILED(rv)) return rv;
-    
- NS_TIMELINE_MARK_FUNCTION("loading properties");
-
- NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
- NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && in, NS_ERROR_FAILURE);
-    
- mProps = do_CreateInstance(kPersistentPropertiesCID, &rv);
- NS_ENSURE_SUCCESS(rv, rv);
-    
- mAttemptedLoad = mLoaded = PR_TRUE;
- rv = mProps->Load(in);
-
- mLoaded = NS_SUCCEEDED(rv);
-#endif
-  
-  return rv;
-}
-
-#ifdef ASYNC_LOADING
-NS_IMETHODIMP
-nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
-                                 nsISupports* context,
-                                 nsresult aStatus,
-                                 PRUint32 stringLen,
-                                 const char* string)
-{
-
-  nsXPIDLCString uriSpec;
-  if (NS_FAILED(aStatus)) {
-  // print a load error on bad status
-#if defined(DEBUG)
-    if (aLoader) {
-      nsCOMPtr<nsIRequest> request;
-      aLoader->GetRequest(getter_AddRefs(request));
-      nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
-
-      if (channel) {
-        nsCOMPtr<nsIURI> uri;
-        channel->GetURI(getter_AddRefs(uri));
-        if (uri) {
-            uri->GetSpec(getter_Copies(uriSpec));
-            printf("\n -->nsStringBundle::OnStreamComplete: Failed to load %s\n", 
-                   uriSpec ? (const char *) uriSpec : "");
-        }
-      }
-    }
-#endif
-    return aStatus;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsISupports> stringStreamSupports;
-  rv = NS_NewByteInputStream(getter_AddRefs(stringStreamSupports), 
-                             string, stringLen);
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_OpenURI(getter_AddRefs(in), uri);
   if (NS_FAILED(rv)) return rv;
-      
-  nsCOMPtr<nsIInputStream> in = do_QueryInterface(stringStreamSupports, &rv);
-  if (NS_FAILED(rv)) return rv;
+    
+  NS_TIMELINE_MARK_FUNCTION("loading properties");
 
+  NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && in, NS_ERROR_FAILURE);
+    
   mProps = do_CreateInstance(kPersistentPropertiesCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // load the stream
+  mAttemptedLoad = mLoaded = PR_TRUE;
   rv = mProps->Load(in);
+
+  mLoaded = NS_SUCCEEDED(rv);
   
-  // 
-  // notify
-  if (NS_SUCCEEDED(rv)) {
-    mLoaded = PR_TRUE;
-
-    // observer notification
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-    if (os)
-      (void) os->NotifyObservers((nsIStringBundle *) this, 
-                        NS_STRBUNDLE_LOADED_TOPIC, 
-                        nsnull);
-
-#if defined(DEBUG_tao)
-  printf("\n --> nsStringBundle::OnStreamComplete: end sending NOTIFICATIONS!!\n");
-#endif
-  }
   return rv;
 }
 
-#endif
 
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
@@ -293,7 +148,18 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
   nsAutoCMonitor(this);
   nsCAutoString name;
   name.AppendInt(aID, 10);
-  nsresult rv = mProps->GetStringProperty(name, aResult);
+
+  nsresult rv;
+  
+  // try override first
+  if (mOverrideStrings) {
+    rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
+                                             name,
+                                             aResult);
+    if (NS_SUCCEEDED(rv)) return rv;
+  }
+  
+  rv = mProps->GetStringProperty(name, aResult);
 
 #ifdef DEBUG_tao_
   char *s = ToNewCString(aResult);
@@ -311,6 +177,14 @@ nsStringBundle::GetStringFromName(const nsAString& aName,
 {
   nsresult rv;
 
+  // try override first
+  if (mOverrideStrings) {
+    rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
+                                             NS_ConvertUCS2toUTF8(aName),
+                                             aResult);
+    if (NS_SUCCEEDED(rv)) return rv;
+  }
+  
   rv = mProps->GetStringProperty(NS_ConvertUCS2toUTF8(aName), aResult);
 #ifdef DEBUG_tao_
   char *s = ToNewCString(aResult),
@@ -353,13 +227,8 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
 }
                                      
 
-#ifdef ASYNC_LOADING
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsStringBundle, 
-                              nsIStringBundle, nsIStreamLoaderObserver)
-#else
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsStringBundle,
                               nsIStringBundle)
-#endif
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -396,6 +265,67 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   return rv;
 }
 
+nsresult
+nsStringBundle::GetCombinedEnumeration(nsISimpleEnumerator* aOverrideEnumerator,
+                                       nsISimpleEnumerator** aResult)
+{
+  nsCOMPtr<nsISupports> supports;
+  nsCOMPtr<nsIPropertyElement> propElement;
+  
+  nsresult rv;
+
+  PRBool hasMore;
+
+  nsCOMPtr<nsIMutableArray> resultArray;
+  NS_NewArray(getter_AddRefs(resultArray));
+
+  // first, append the override elements only if
+  // they don't already exist in mProps
+  do {
+
+    rv = aOverrideEnumerator->GetNext(getter_AddRefs(supports));
+    if (NS_SUCCEEDED(rv) &&
+        (propElement = do_QueryInterface(supports, &rv))) {
+        
+      nsCAutoString key;
+      rv = propElement->GetKey(key);
+      if (NS_SUCCEEDED(rv)) {
+          
+          PRBool hasKey;
+          mProps->Has(key.get(), &hasKey);
+          if (!hasKey)
+            resultArray->AppendElement(propElement, PR_FALSE);
+      }
+    }
+
+    aOverrideEnumerator->HasMoreElements(&hasMore);
+  } while (hasMore);
+
+  // ok, now we have the "unique" elements in resultArray
+  nsCOMPtr<nsISimpleEnumerator> propEnumerator;
+  rv = mProps->Enumerate(getter_AddRefs(propEnumerator));
+  if (NS_FAILED(rv)) {
+    // no elements in mProps anyway, just return what we have
+    return NS_NewArrayEnumerator(aResult, resultArray);
+  }
+
+  // second, append all the elements that are in mProps
+  do {
+    rv = propEnumerator->GetNext(getter_AddRefs(supports));
+    if (NS_SUCCEEDED(rv) &&
+        (propElement = do_QueryInterface(supports, &rv)))
+
+      resultArray->AppendElement(propElement, PR_FALSE);
+
+    propEnumerator->HasMoreElements(&hasMore);
+  } while (hasMore);
+
+  NS_ADDREF(*aResult = propEnumerator);
+
+  return NS_OK;
+}
+                                
+
 NS_IMETHODIMP
 nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
 {
@@ -405,6 +335,14 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
   nsresult rv;
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
+  
+  if (mOverrideStrings) {
+    nsCOMPtr<nsISimpleEnumerator> overrideEnumerator;
+    rv = mOverrideStrings->EnumerateKeysInBundle(mPropertiesURL,
+                                                 getter_AddRefs(overrideEnumerator));
+    if (NS_SUCCEEDED(rv))
+      return GetCombinedEnumeration(overrideEnumerator, elements);
+  }
   
   return mProps->Enumerate(elements);
 }
@@ -438,39 +376,13 @@ nsStringBundle::FormatString(const PRUnichar *aFormatStr,
   return NS_OK;
 }
 
-/**
- * An extesible implementation of the StringBudle interface.
- *
- * @created         28/Dec/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsExtensibleStringBundle : public nsIStringBundle
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTRINGBUNDLE
-
-  nsresult Init(const char * aCategory, nsIStringBundleService *);
-private:
-  
-  nsISupportsArray * mBundle;
-  PRBool             mLoaded;
-
-public:
-
-  nsExtensibleStringBundle();
-  virtual ~nsExtensibleStringBundle();
-};
-
 NS_IMPL_ISUPPORTS1(nsExtensibleStringBundle, nsIStringBundle)
 
 nsExtensibleStringBundle::nsExtensibleStringBundle()
-                                                  :mBundle(NULL)
 {
   NS_INIT_ISUPPORTS();
 
   mLoaded = PR_FALSE;
-
-
 }
 
 nsresult
@@ -485,10 +397,6 @@ nsExtensibleStringBundle::Init(const char * aCategory,
 
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   rv = catman->EnumerateCategory(aCategory, getter_AddRefs(enumerator));
-  if (NS_FAILED(rv)) return rv;
-
-  // create the bundles array
-  rv = NS_NewISupportsArray(&mBundle);
   if (NS_FAILED(rv)) return rv;
 
   PRBool hasMore;
@@ -512,7 +420,7 @@ nsExtensibleStringBundle::Init(const char * aCategory,
     if (NS_FAILED(rv))
       continue;
 
-    mBundle->AppendElement(bundle);
+    mBundles.AppendObject(bundle);
   }
 
   return rv;
@@ -520,7 +428,6 @@ nsExtensibleStringBundle::Init(const char * aCategory,
 
 nsExtensibleStringBundle::~nsExtensibleStringBundle() 
 {
-  NS_IF_RELEASE(mBundle);
 }
 
 nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aResult)
@@ -529,13 +436,11 @@ nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aRe
   
   PRUint32 size, i;
 
-  rv = mBundle->Count(&size);
-  if (NS_FAILED(rv)) return rv;
+  size = mBundles.Count();
 
   for (i = 0; i < size; i++) {
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = mBundle->QueryElementAt(i, NS_GET_IID(nsIStringBundle), getter_AddRefs(bundle));
-    if (NS_SUCCEEDED(rv)) {
+    nsIStringBundle *bundle = mBundles[i];
+    if (bundle) {
         rv = bundle->GetStringFromID(aID, aResult);
         if (NS_SUCCEEDED(rv))
             return NS_OK;
@@ -551,13 +456,11 @@ nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
   nsresult res = NS_OK;
   PRUint32 size, i;
 
-  res = mBundle->Count(&size);
-  if (NS_FAILED(res)) return res;
+  size = mBundles.Count();
 
   for (i = 0; i < size; i++) {
-    nsCOMPtr<nsIStringBundle> bundle;
-    res = mBundle->QueryElementAt(i, NS_GET_IID(nsIStringBundle), getter_AddRefs(bundle));
-    if (NS_SUCCEEDED(res)) {
+    nsIStringBundle* bundle = mBundles[i];
+    if (bundle) {
         res = bundle->GetStringFromName(aName, aResult);
         if (NS_SUCCEEDED(res))
             return NS_OK;
@@ -647,6 +550,11 @@ nsStringBundleService::Init()
     os->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
+  // instantiate the override service, if there is any.
+  // at some point we probably want to make this a category, and
+  // support multiple overrides
+  mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
+  
   return NS_OK;
 }
 
@@ -706,7 +614,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   } else {
 
     // hasn't been cached, so insert it into the hash table
-    nsStringBundle* bundle = new nsStringBundle(aURLSpec);
+    nsStringBundle* bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
     if (!bundle) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(bundle);
     
@@ -798,12 +706,6 @@ nsStringBundleService::CreateBundle(const char* aURLSpec,
   return getStringBundle(aURLSpec,aResult);
 }
   
-NS_IMETHODIMP
-nsStringBundleService::CreateAsyncBundle(const char* aURLSpec, nsIStringBundle** aResult)
-{
-  return getStringBundle(aURLSpec, aResult);
-}
-
 NS_IMETHODIMP
 nsStringBundleService::CreateExtensibleBundle(const char* aCategory, 
                                               nsIStringBundle** aResult)

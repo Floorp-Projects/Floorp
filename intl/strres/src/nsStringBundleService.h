@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,13 +36,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsStrBundleConstructors_h__
-#define nsStrBundleConstructors_h__
+#ifndef nsStringBundleService_h__
+#define nsStringBundleService_h__
 
-#include "nsStringBundleService.h"
-#include "nsStringBundleTextOverride.h"
+#include "prclist.h"
+#include "plarena.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
+#include "nsCOMPtr.h"
+#include "nsHashtable.h"
+#include "nsIPersistentProperties2.h"
+#include "nsIStringBundle.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+#include "nsIErrorService.h"
+#include "nsIStringBundleOverride.h"
+
+struct bundleCacheEntry_t;
+
+class nsStringBundleService : public nsIStringBundleService,
+                              public nsIObserver,
+                              public nsSupportsWeakReference
+{
+public:
+  nsStringBundleService();
+  virtual ~nsStringBundleService();
+
+  nsresult Init();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTRINGBUNDLESERVICE
+  NS_DECL_NSIOBSERVER
+    
+private:
+  nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
+  nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
+                            PRUint32 argCount, PRUnichar** argArray,
+                            PRUnichar* *result);
+
+  void flushBundleCache();
+  
+  bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
+                                      nsCStringKey *aHashKey);
+
+  static void recycleEntry(bundleCacheEntry_t*);
+  
+  nsHashtable mBundleMap;
+  PRCList mBundleCache;
+  PLArenaPool mCacheEntryPool;
+
+  nsCOMPtr<nsIErrorService>     mErrorService;
+  nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
+};
 
 #endif

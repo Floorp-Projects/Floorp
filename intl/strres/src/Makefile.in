@@ -36,7 +36,10 @@ REQUIRES	= xpcom \
 		  necko \
 		  $(NULL)
 
-CPPSRCS		= nsStringBundle.cpp
+CPPSRCS		= \
+		nsStringBundle.cpp \
+		nsStringBundleTextOverride.cpp \
+		$(NULL)
 
 
 include $(topsrcdir)/config/rules.mk

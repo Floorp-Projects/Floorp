@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= intl
 
-XPIDLSRCS	= nsIStringBundle.idl
+XPIDLSRCS	= \
+			nsIStringBundle.idl \
+			nsIStringBundleOverride.idl \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
