@@ -80,7 +80,7 @@ public:
 
 protected:
     nsresult EnsureRegistryDataSource();
-    nsresult GetSkinOrContentResource(nsIRDFResource** aResult);
+    nsresult GetSkinOrContentResource(const nsString& aChromeType, nsIRDFResource** aResult);
 };
 
 PRUint32 nsChromeRegistry::gRefCnt = 0;
@@ -234,12 +234,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     nsAutoString restOfURL(file);
     restOfURL.ToLowerCase();
     if (restOfURL.Find("/skin") == 0)
-        windowType += "/skin/";
-    else windowType += "/content/";
+        windowType += "skin/";
+    else windowType += "content/";
 
     // We have the resource URI that we wish to retrieve. Fetch it.
     nsCOMPtr<nsIRDFResource> chromeResource;
-    if (NS_FAILED(rv = GetSkinOrContentResource(getter_AddRefs(chromeResource)))) {
+    if (NS_FAILED(rv = GetSkinOrContentResource(windowType, getter_AddRefs(chromeResource)))) {
         NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
         return rv;
     }
@@ -285,12 +285,31 @@ nsChromeRegistry::OnUnassert(nsIRDFResource* subject,
 nsresult
 nsChromeRegistry::EnsureRegistryDataSource()
 {
+    // XXX This must be synchronously loaded.  Ask Chris about
+    // how this is done.
     return gRDFService->GetDataSource("resource:/chrome/registry.rdf", &gRegistryDB);
 }
 
 nsresult
-nsChromeRegistry::GetSkinOrContentResource(nsIRDFResource** aResult)
+nsChromeRegistry::GetSkinOrContentResource(const nsString& aChromeType,
+                                           nsIRDFResource** aResult)
 {
+    nsresult rv = NS_OK;
+    char* url = aChromeType.ToNewCString();
+    if (NS_FAILED(rv = gRDFService->GetResource(url, aResult))) {
+        NS_ERROR("Unable to retrieve a resource for this chrome.");
+        *aResult = nsnull;
+        delete []url;
+        return rv;
+    }
+    delete []url;
+
+    // We have obtained a resource. We need to retrieve the value
+    // of the base property, ensure that it ends with a slash, and
+    // then append it to the main property.  (XXX Deal with JAR archives,
+    // which should be able to leverage resource URLS dealing with JAR
+    // archives.
+
     return NS_OK;
 }
 nsresult
