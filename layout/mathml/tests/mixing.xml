@@ -3,7 +3,7 @@
 <!DOCTYPE document SYSTEM "mathml.dtd">
 
 <document
-  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
   xmlns:math="http://www.w3.org/1998/Math/MathML"
 >
@@ -81,7 +81,7 @@ It seems that a table-cell only wants to be sole child or has only table-cell as
 Bug or feature ?
 -->
 
-<!--  
+<!-- --> 
 
 <math>
    <math:mfrac>
@@ -107,6 +107,6 @@ Bug or feature ?
 
 <p/>
 
--->
+<!-- -->
 
 </document>

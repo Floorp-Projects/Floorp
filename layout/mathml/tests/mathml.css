@@ -24,7 +24,7 @@
 /* namespace for MathML elements                       */
 /*******************************************************/
 
-@namespace mathns url(http://www.w3.org/1998/Math/MathML); 
+@namespace mathml url(http://www.w3.org/1998/Math/MathML); 
 
 
 /*******************************************************/
