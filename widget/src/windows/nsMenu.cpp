@@ -421,7 +421,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  printf("nsMenu::MenuSelected called\n");
+  //printf("nsMenu::MenuSelected called\n");
   
   if(mConstructed){
 	MenuDestruct(aMenuEvent);
@@ -447,7 +447,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  printf("nsMenu::MenuDeselected called\n");  
+  //printf("nsMenu::MenuDeselected called\n");  
   //MenuDestruct(aMenuEvent);
   //mConstructed = false;
 
@@ -465,7 +465,7 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
 	void              * aWebShell)
 {
-   printf("nsMenu::MenuConstruct called \n");
+   //printf("nsMenu::MenuConstruct called \n");
    // Begin menuitem inner loop
     nsCOMPtr<nsIDOMNode> menuitemNode;
     ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
@@ -499,7 +499,7 @@ nsEventStatus nsMenu::MenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  printf("nsMenu::MenuDestruct called \n");
+  //printf("nsMenu::MenuDestruct called \n");
   // We cannot call RemoveAll() yet because menu item selection may need it
   //RemoveAll();
   
