@@ -92,7 +92,7 @@ function setWindowName()
 
   var box=document.getElementById("certlist");
   var text;
-  for(var x=0;x<certs.length;x++)
+  for(x=0;x<certs.length;x++)
   {
     text = document.createElement("text");
     text.setAttribute("value",certs[x].commonName);
