@@ -398,7 +398,6 @@ nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   mMaxWidth           = 0;
   mMaxHeight          = 0;
   mPresContext        = nsnull;
-  mIsCapturingMouseEvents = PR_FALSE;
 
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
@@ -1659,18 +1658,24 @@ nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGra
     // It's not clear why we don't have the widget capture mouse events here.
     if (aGrabMouseEvents) {
       viewMan->GrabMouseEvents(view, result);
-      mIsCapturingMouseEvents = PR_TRUE;
     } else {
       nsIView* curGrabber;
       viewMan->GetMouseEventGrabber(curGrabber);
-      if (curGrabber == view) {
+      PRBool dropDownIsHidden = PR_FALSE;
+      if (IsInDropDownMode()) {
+        PRBool isDroppedDown;
+        mComboboxFrame->IsDroppedDown(&isDroppedDown);
+        dropDownIsHidden = !isDroppedDown;
+      }
+      if (curGrabber == view || dropDownIsHidden) {
         // only unset the grabber if *we* are the ones doing the grabbing
+        // (or if the dropdown is hidden, in which case NO-ONE should be
+        // grabbing anything
         // it could be a scrollbar inside this listbox which is actually grabbing
         // This shouldn't be necessary. We should simply ensure that events targeting
         // scrollbars are never visible to DOM consumers.
-        viewMan->GrabMouseEvents(nsnull,result);
+        viewMan->GrabMouseEvents(nsnull, result);
       }
-      mIsCapturingMouseEvents = PR_FALSE;
     }
   }
 

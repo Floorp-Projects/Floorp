@@ -629,7 +629,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
   presShell->FlushPendingNotifications(PR_FALSE);
 
   if (widget)
-    widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, PR_TRUE);
+    widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, aShowList);
 
 }
 

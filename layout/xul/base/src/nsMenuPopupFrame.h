@@ -214,7 +214,6 @@ protected:
 
 
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
-  PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
   // XXX Hack
   nsIPresContext* mPresContext;  // weak reference
 
