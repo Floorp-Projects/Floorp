@@ -106,7 +106,7 @@ nsIAtom* nsMsgDBFolder::kNameAtom=nsnull;
 nsIAtom* nsMsgDBFolder::kSynchronizeAtom=nsnull;
 nsIAtom* nsMsgDBFolder::kOpenAtom=nsnull;
 
-nsICollation * nsMsgDBFolder::kCollationKeyGenerator = nsnull;
+nsICollation * nsMsgDBFolder::gCollationKeyGenerator = nsnull;
 
 PRUnichar *nsMsgDBFolder::kLocalizedInboxName;
 PRUnichar *nsMsgDBFolder::kLocalizedTrashName;
@@ -182,7 +182,7 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
   CRTFREEIF(mBaseMessageURI);
 
   if (--mInstanceCount == 0) {
-    NS_IF_RELEASE(kCollationKeyGenerator);
+    NS_IF_RELEASE(gCollationKeyGenerator);
     CRTFREEIF(kLocalizedInboxName);
     CRTFREEIF(kLocalizedTrashName);
     CRTFREEIF(kLocalizedSentName);
@@ -2060,7 +2060,7 @@ nsMsgDBFolder::createCollationKeyGenerator()
   nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = factory->CreateCollation(locale, &kCollationKeyGenerator);
+  rv = factory->CreateCollation(locale, &gCollationKeyGenerator);
   return NS_OK;
 }
 
@@ -4463,11 +4463,11 @@ NS_IMETHODIMP nsMsgDBFolder::GetPersistElided(PRBool *aPersistElided)
 nsresult
 nsMsgDBFolder::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength)
 {
-  NS_ASSERTION(kCollationKeyGenerator, "kCollationKeyGenerator is null");
-  if (!kCollationKeyGenerator)
+  NS_ASSERTION(gCollationKeyGenerator, "gCollationKeyGenerator is null");
+  if (!gCollationKeyGenerator)
     return NS_ERROR_NULL_POINTER;
 
-  return kCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, aSource, aKey, aLength);
+  return gCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, aSource, aKey, aLength);
 }
 
 NS_IMETHODIMP nsMsgDBFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder)
@@ -4481,7 +4481,7 @@ NS_IMETHODIMP nsMsgDBFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sor
   aFolder->GetSortKey(&sortKey2, &sortKey2Length);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = kCollationKeyGenerator->CompareRawSortKey(sortKey1, sortKey1Length, sortKey2, sortKey2Length, sortOrder);
+  rv = gCollationKeyGenerator->CompareRawSortKey(sortKey1, sortKey1Length, sortKey2, sortKey2Length, sortOrder);
   PR_Free(sortKey1);
   PR_Free(sortKey2);
   return rv;
