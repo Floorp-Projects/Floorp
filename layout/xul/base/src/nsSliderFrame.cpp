@@ -189,16 +189,25 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
       PRInt32 max = GetMaxPosition(scrollbar);
       if (current < 0 || current > max)
       {
-          if (current < 0)
-              current = 0;
-          else if (current > max) 
-              current = max;
+        if (current < 0)
+            current = 0;
+        else if (current > max) 
+            current = max;
 
-          char ch[100];
-          sprintf(ch,"%d", current);
- 
-          // set the new position but don't notify anyone. We already know
-          scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
+        // set the new position but don't notify anyone. We already know
+        nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
+        if (scrollbarFrame) {
+          nsCOMPtr<nsIScrollbarMediator> mediator;
+          scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
+          if (mediator) {
+            mediator->PositionChanged(GetCurrentPosition(scrollbar), current);
+            return NS_OK;
+          }
+        }
+       
+        char ch[100];
+        sprintf(ch,"%d", current);
+        scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
       }
   }
   

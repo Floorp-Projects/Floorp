@@ -286,8 +286,6 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
     mTreeLayoutState = eTreeLayoutAbort;
     if (mCurrentIndex > 0)
       VerticalScroll(mCurrentIndex * mRowHeight);
-
-    PostReflowCallback();
   } 
 }
 
@@ -526,10 +524,10 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 
   mTopFrame = mBottomFrame = nsnull; // Make sure everything is cleared out.
 
+  VerticalScroll(mCurrentIndex*mRowHeight);
+  
   nsBoxLayoutState state(mPresContext);
   MarkDirtyChildren(state);
-
-  VerticalScroll(mCurrentIndex*mRowHeight);
 
   return NS_OK;
 }
@@ -905,6 +903,7 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)
     return;
 
+  // Check to be sure we're not scrolling off the bottom of the tree
   PRInt32 newIndex = aRowIndex;
   
   PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
@@ -924,6 +923,8 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 
   // This change has to happen immediately.
   // Flush any pending reflow commands.
+  PostReflowCallback();
+
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(*getter_AddRefs(doc));
   doc->FlushPendingNotifications();
