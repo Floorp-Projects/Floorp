@@ -45,7 +45,6 @@
 class nsIContentSink;
 class nsIStreamObserver;
 class nsString;
-class CToken;
 class nsIURL;
 class nsIDTDDebug;
 
@@ -87,16 +86,6 @@ class nsIParser : public nsISupports {
      *  @return  autodetect enum (valid, invalid, unknown)
      */
     virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
-
-    /**
-     *  Cause the tokenizer to consume the next token, and 
-     *  return an error result.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
-     */
-    virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
 
 
     /******************************************************************************************

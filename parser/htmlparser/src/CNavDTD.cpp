@@ -1505,7 +1505,12 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_comment:
       result=PR_TRUE; 
       break;
-        
+
+    case eHTMLTag_html:
+    case eHTMLTag_body:
+      result=HasOpenContainer(aChild); //don't bother if they're already open...
+      break;
+      
     case eHTMLTag_newline:    
     case eHTMLTag_whitespace:
 

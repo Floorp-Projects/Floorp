@@ -578,11 +578,11 @@ PRInt32 nsParser::BuildModel() {
       And guess what? It worked the first time!
       Uncomment the following code to enable the test:
 
-    int recurse=0;
-    if(recurse){
-      nsString theString("<table border=1><tr><td BGCOLOR=blue>cell</td></tr></table>");
-      Parse(theString,PR_TRUE);
-    }
+      int recurse=0;
+      if(recurse){
+        nsString theString("<table border=1><tr><td BGCOLOR=blue>cell</td></tr></table>");
+        Parse(theString,PR_TRUE);
+      }
       **************************************************************************/
 
     theMarkPos=*mParserContext->mCurrentPos;
@@ -769,19 +769,6 @@ nsresult nsParser::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& a
 /*******************************************************************
   Here comes the tokenization methods...
  *******************************************************************/
-
-/**
- *  Cause the tokenizer to consume the next token, and 
- *  return an error result.
- *  
- *  @update  gess 3/25/98
- *  @param   anError -- ref to error code
- *  @return  new token or null
- */
-PRInt32 nsParser::ConsumeToken(CToken*& aToken) {
-  PRInt32 result=mParserContext->mDTD->ConsumeToken(aToken);
-  return result;
-}
 
 
 /**

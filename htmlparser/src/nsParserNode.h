@@ -57,7 +57,7 @@ class nsCParserNode :  public nsIParserNode {
      * Destructor
      * @update	gess5/11/98
      */
-    ~nsCParserNode();
+    virtual ~nsCParserNode();
 
     /**
      * Retrieve the name of the node
