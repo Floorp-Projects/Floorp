@@ -409,8 +409,8 @@ protected:
                            AutocompleteExclude* aExclude) :
       mHistory(aHistory),
       mURLColumn(aURLColumn),
-      mCommentColumn(aCommentColumn),
       mHiddenColumn(aHiddenColumn),
+      mCommentColumn(aCommentColumn),
       mExclude(aExclude),
       mSelectValue(aSelectValue) {}
 
