@@ -1270,6 +1270,7 @@ NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileS
     
     do {
       rv = abUpgrader->ContinueExport(&done);
+	  // todo:  put this in the msg status
       printf("converting na2 to ldif...\n");
     } while (NS_SUCCEEDED(rv) && !done);
   }

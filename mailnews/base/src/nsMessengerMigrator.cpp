@@ -1686,7 +1686,7 @@ static PRBool charEndsWith(const char *str, const char *endStr)
 #define ADDRESSBOOK_PREF_VALUE_5x_SUFFIX ".mab"
 #define TEMP_LDIF_FILE_SUFFIX ".ldif"
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_AB_MIGRATION 1
 #endif
 

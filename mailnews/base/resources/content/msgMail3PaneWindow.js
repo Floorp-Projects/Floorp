@@ -25,8 +25,7 @@ var messengerProgID        = "component://netscape/messenger";
 var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
 var messageViewProgID      = "component://netscape/messenger/messageview";
 var mailSessionProgID      = "component://netscape/messenger/services/session";
-var accountManagerProgID   = "component://netscape/messenger/account-manager";
-var messengerMigratorProgID   = "component://netscape/messenger/migrator";
+
 var prefProgID             = "component://netscape/preferences";
 var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
 
@@ -358,43 +357,6 @@ function CreateGlobals()
 	Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
     BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
-}
-
-function verifyAccounts() {
-    var openWizard = false;
-    var prefillAccount;
-    
-    try {
-        var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
-
-        var accounts = am.accounts;
-
-        // as long as we have some accounts, we're fine.
-        var accountCount = accounts.Count();
-        if (accountCount > 0) {
-            prefillAccount = getFirstInvalidAccount(accounts);
-            dump("prefillAccount = " + prefillAccount + "\n");
-        } else {
-            try {
-                messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
-                dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
-                messengerMigrator.UpgradePrefs();
-            }
-            catch (ex) {
-                // upgrade prefs failed, so open account wizard
-                openWizard = true;
-            }
-        }
-
-        if (openWizard || prefillAccount) {
-            MsgAccountWizard(prefillAccount);
-        }
-
-    }
-    catch (ex) {
-        dump("error verifying accounts " + ex + "\n");
-        return;
-    }
 }
 
 

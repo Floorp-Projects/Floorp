@@ -42,6 +42,8 @@ Rights Reserved.
 		persist="width height screenX screenY"
 		onload="OnLoadAddressBook()">
 
+<html:script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->

@@ -294,29 +294,11 @@ function MsgAccountWizard()
     }
 }
 
-function MigratePrefsIfNecessary()
-{
-        var accounts = accountManager.accounts;
-
-        // as long as we have some accounts, we're fine.
-        if (accounts.Count() > 0) return;
-
-        try {
-			messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);
-            messengerMigrator.UpgradePrefs(); 
-	}
-	catch (ex) {
-		var alertText = Bundle.GetStringFromName("noIdentities");
-		window.alert(alertText);
-		MsgAccountWizard();
-	}
-}
-
 function ComposeLoad()
 {
 	dump("\nComposeLoad from XUL\n");
 
-	MigratePrefsIfNecessary();
+	verifyAccounts();	// this will do migration, if we need to.
 
 	var selectNode = document.getElementById('msgRecipientType#1');
 

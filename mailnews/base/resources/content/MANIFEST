@@ -29,6 +29,8 @@ msgHdrViewOverlay.xul
 widgetglue.js
 commandglue.js
 shareglue.js
+subscribe.js
+subscribe.xul
 subscribeDialog.xul
 sidebar-messenger.xul
 sidebar-messenger.rdf

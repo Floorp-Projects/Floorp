@@ -64,7 +64,6 @@ var FolderPaneController =
 				
 			case "cmd_delete":
 			case "button_delete":
-			// add this back when folder delete has warning
 				if ( command == "cmd_delete" )
 					goSetMenuValue(command, 'valueFolder');
 				var folderTree = GetFolderTree();
@@ -84,7 +83,6 @@ var FolderPaneController =
 		{
 			case "cmd_delete":
 			case "button_delete":
-				// add this back in when folder delete has warning
 				MsgDeleteFolder();
 				break;
 		}
@@ -706,10 +704,45 @@ function MsgNewFolder()
 	MsgNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle);
 }
 
+function SubscribeOKCallback(serverURI, changeTable)
+{
+	dump("in SubscribeOKCallback(" + serverURI +")\n");
+	dump("change table = " + changeTable + "\n");
+	
+	for (var name in changeTable) {
+		dump(name + " = " + changeTable[name] + "\n");
+		if (changeTable[name] == 1) {
+			NewFolder(name,serverURI);
+		}
+		else if (changeTable[name] == -1) {
+			dump("unsuscribe\n");
+		}
+	}
+}
+
 function MsgSubscribe()
 {
-        var windowTitle = Bundle.GetStringFromName("subscribeDialogTitle");
-	MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle);
+	var windowTitle = Bundle.GetStringFromName("subscribeDialogTitle");
+
+	var useRealSubscribeDialog = false;
+
+	try {
+		useRealSubscribeDialog = pref.GetBoolPref("mailnews.use-real-subscribe-dialog");
+	}
+	catch (ex) {
+		useRealSubscribeDialog = false;
+	}
+
+	if (useRealSubscribeDialog)  {
+			var preselectedURI = GetSelectedFolderURI();
+			window.openDialog("chrome://messenger/content/subscribe.xul",
+							  "subscribe", "chrome,modal",
+						{preselectedURI:preselectedURI, title:windowTitle,
+						okCallback:SubscribeOKCallback});
+	}
+	else {
+			MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle);
+	}
 }
 
 function GetSelectedFolderURI()
@@ -1296,3 +1329,44 @@ function MsgOpenNewWindowForFolder(folder)
 	}
 
 }
+
+var accountManagerProgID   = "component://netscape/messenger/account-manager";
+var messengerMigratorProgID   = "component://netscape/messenger/migrator";
+
+function verifyAccounts() {
+    var openWizard = false;
+    var prefillAccount;
+    
+    try {
+        var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
+
+        var accounts = am.accounts;
+
+        // as long as we have some accounts, we're fine.
+        var accountCount = accounts.Count();
+        if (accountCount > 0) {
+            prefillAccount = getFirstInvalidAccount(accounts);
+            dump("prefillAccount = " + prefillAccount + "\n");
+        } else {
+            try {
+                messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
+                dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
+                messengerMigrator.UpgradePrefs();
+            }
+            catch (ex) {
+                // upgrade prefs failed, so open account wizard
+                openWizard = true;
+            }
+        }
+
+        if (openWizard || prefillAccount) {
+            MsgAccountWizard(prefillAccount);
+        }
+
+    }
+    catch (ex) {
+        dump("error verifying accounts " + ex + "\n");
+        return;
+    }
+}
+

@@ -4,6 +4,8 @@ var gUpdateCardView = 0;
 
 function OnLoadAddressBook()
 {
+	verifyAccounts(); 	// this will do migration, if we need to.
+
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 	top.gUpdateCardView = UpdateCardView;

@@ -8,17 +8,15 @@ function newFolderNameOnLoad(pickerDOMID)
 	doSetOKCancel(newFolderNameOKButtonCallback, newFolderNameCancelButtonCallback);
 
 	// look in arguments[0] for parameters
-	if (window.arguments && window.arguments[0])
-	{
-		if ( window.arguments[0].title )
-		{
+	if (window.arguments && window.arguments[0]) {
+		if ( window.arguments[0].title ) {
 			// dump("title = " + window.arguments[0].title + "\n");
-			var title = window.arguments[0].title;
-			top.window.title = title;
+			top.window.title = window.arguments[0].title;
 		}
 		
-		if ( window.arguments[0].okCallback )
+		if ( window.arguments[0].okCallback ) {
 			top.okCallback = window.arguments[0].okCallback;
+		}
 	}
 	
 	// pre select the folderPicker, based on what they selected in the folder pane

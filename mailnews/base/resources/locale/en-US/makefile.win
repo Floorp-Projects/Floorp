@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) folderpane.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) newFolderNameDialog.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) subscribeDialog.dtd $(LOCALEDIR)
+	$(MAKE_INSTALL) subscribe.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) sidebar-messenger.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) sidebar-messenger-rdf.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) msgFolderPickerOverlay.dtd $(LOCALEDIR)
