@@ -309,6 +309,7 @@ function CookieSelected() {
   if (selections.length) {
     document.getElementById("removeCookie").removeAttribute("disabled");
   } else {
+    document.getElementById("removeCookie").setAttribute("disabled", "true");
     ClearCookieProperties();
     return true;
   }
@@ -503,7 +504,7 @@ function loadPermissions() {
 
   // disable "remove all" button if there are no cookies/images
   if (permissions.length == 0) {
-    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+    document.getElementById("removeAllPermissions").setAttribute("disabled", "true");
   } else {
     document.getElementById("removeAllPermissions").removeAttribute("disabled");
   }
@@ -512,9 +513,10 @@ function loadPermissions() {
 
 function PermissionSelected() {
   var selections = GetTreeSelections(permissionsTree);
-  if (selections.length) {
+  if (selections.length)
     document.getElementById("removePermission").removeAttribute("disabled");
-  }
+  else
+    document.getElementById("removePermission").setAttribute("disabled", "true");
 }
 
 function DeletePermission() {
