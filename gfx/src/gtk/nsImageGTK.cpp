@@ -1416,6 +1416,28 @@ nsImageGTK::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
 NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
                                       nscoord aDWidth, nscoord aDHeight)
 {
+  nsImageGTK *dest = NS_STATIC_CAST(nsImageGTK *, aDstImage);
+
+  if (!dest)
+    return NS_ERROR_FAILURE;
+  
+  if (!dest->mImagePixmap)
+    return NS_ERROR_FAILURE;
+
+  if (!mImagePixmap)
+    return NS_ERROR_FAILURE;
+
+  // XXX copy the mask too :-)
+
+  GdkGC *gc = gdk_gc_new(dest->mImagePixmap);
+
+  gdk_window_copy_area(dest->mImagePixmap, gc,
+                       aDX, aDY,
+                       mImagePixmap,
+                       0, 0, aDWidth, aDHeight);
+
+  gdk_gc_unref(gc);
+
   return NS_OK;
 }
 #endif
