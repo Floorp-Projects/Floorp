@@ -92,6 +92,8 @@
 
 <keyset>
   <key id="delete_key" keycode="VK_DELETE" observes="delete_command" oncommand="unifinderDeleteCommand( true )"/>
+  <key id="page_up_key" keycode="VK_PAGE_UP" oncommand="gCalendarWindow.currentView.goToPrevious( )"/>
+  <key id="page_down_key" keycode="VK_PAGE_DOWN" oncommand="gCalendarWindow.currentView.goToNext( )"/>
 </keyset>
 
 <!-- Javascript DTD To Variable -->
