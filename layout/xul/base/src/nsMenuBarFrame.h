@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 //
@@ -58,6 +59,9 @@ public:
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = IsActive(); return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_TRUE; return NS_OK; };
 
+  NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) { return NS_OK; };
+  NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) { aIsContextMenu = PR_FALSE; return NS_OK; }; 
+  
   NS_IMETHOD IsActive() { return mIsActive; };
 
   NS_IMETHOD IsOpen();

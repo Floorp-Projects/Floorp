@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 //
@@ -67,6 +68,8 @@ public:
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; }; // We don't care.
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_FALSE; return NS_OK; };
+  NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) { mIsContextMenu = aIsContextMenu; return NS_OK; };
+  NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) { aIsContextMenu = mIsContextMenu; return NS_OK; };
   
   NS_IMETHOD GetParentPopup(nsIMenuParent** aResult);
 
@@ -147,6 +150,8 @@ protected:
 
   nsIMenuFrame* mTimerMenu; // A menu awaiting closure.
   nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
+
+  PRBool mIsContextMenu;  // is this a context menu?
 
 }; // class nsMenuPopupFrame
 

@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 #include "nsXULAtoms.h"
@@ -380,6 +381,12 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
 
   // Generate the popup.
   MarkAsGenerated(aPopupContent);
+
+  // determine if this menu is a context menu and flag it
+  nsIFrame* activeChild = GetActiveChild();
+  nsCOMPtr<nsIMenuParent> childPopup ( do_QueryInterface(activeChild) );
+  if ( childPopup && aPopupType == "context" )
+    childPopup->SetIsContextMenu(PR_TRUE);
 
   // Now we'll have it in our child frame list.
   
