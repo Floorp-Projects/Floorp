@@ -4047,7 +4047,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   {
     nsCOMPtr<nsIMsgWindow> aWindow;
     nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
-        nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
     PRBool folderOpen = PR_FALSE;
     if (mailUrl)
       mailUrl->GetMsgWindow(getter_AddRefs(aWindow));
@@ -4239,8 +4239,17 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     // query it for a mailnews interface for now....
     if (mailUrl)
       rv = mailUrl->UnRegisterListener(this);
+
+    if (!aWindow) // if we don't have a window then we are proably running a biff url
+    {
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      GetServer(getter_AddRefs(server));
+      if (server)
+        server->SetPerformingBiff(PR_FALSE);
+    }
   }
   SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
+
   // Only send the OnStopCopy notification if we have no copy state (which means we're doing an online
   // move/copy, and have cleared the copy state above) or if we've finished the move/copy
   // of multiple imap messages, one msg at a time (i.e., moving to a local folder).

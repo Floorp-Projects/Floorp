@@ -903,11 +903,15 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 {
   nsresult rv;
-  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
-  rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
-  if(NS_SUCCEEDED(rv) && rootMsgFolder)
-    rv = rootMsgFolder->GetNewMessages(nsnull, nsnull);
-	return rv;
+
+	nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+	rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+	if(NS_SUCCEEDED(rv))
+	{
+    SetPerformingBiff(PR_TRUE);
+		rv = rootMsgFolder->GetNewMessages(nsnull, nsnull);
+  }
+  return rv;
 }
     
 
