@@ -1951,6 +1951,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
   
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
   PRBool thisIsImapFolder = (imapFolder != nsnull);
+
   if (command == nsMsgViewCommandType::deleteMsg)
     rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_FALSE);
   else if (command == nsMsgViewCommandType::deleteNoTrash)
@@ -1999,6 +2000,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
     if (thisIsImapFolder)
     {
       imapMessageFlagsType flags = kNoImapMsgFlag;
+      PRBool commandIsLabelSet = PR_FALSE;
       PRBool addFlags = PR_FALSE;
       PRBool isRead = PR_FALSE;
       
@@ -2031,11 +2033,21 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         flags |= kImapMsgFlaggedFlag;
         addFlags = PR_FALSE;
         break;
+      case nsMsgViewCommandType::label0:
+      case nsMsgViewCommandType::label1:
+      case nsMsgViewCommandType::label2:
+      case nsMsgViewCommandType::label3:
+      case nsMsgViewCommandType::label4:
+      case nsMsgViewCommandType::label5:
+        flags |= ((command - nsMsgViewCommandType::label0) << 9);
+        addFlags = (command != nsMsgViewCommandType::label0);
+        commandIsLabelSet = PR_TRUE;
+        break;
       default:
         break;
       }
       
-      if (flags != kNoImapMsgFlag)	// can't get here without thisIsImapThreadPane == TRUE
+      if (flags != kNoImapMsgFlag || commandIsLabelSet)	// can't get here without thisIsImapThreadPane == TRUE
         imapFolder->StoreImapFlags(flags, addFlags, imapUids.GetArray(), imapUids.GetSize());
       
     }

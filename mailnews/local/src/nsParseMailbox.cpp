@@ -1212,8 +1212,11 @@ int nsParseMailMessageState::FinalizeHeaders()
         m_newMsgHdr->SetPriority(priorityFlags);
   
       // convert the flag values (0xE000000) to label values (0-5)
-      labelFlags = ((flags & MSG_FLAG_LABELS) >> 25);
-      m_newMsgHdr->SetLabel(labelFlags);
+      if (mozstatus2) // only do this if we have a mozstatus2 header
+      {
+        labelFlags = ((flags & MSG_FLAG_LABELS) >> 25);
+        m_newMsgHdr->SetLabel(labelFlags);
+      }
       if (delta < 0xffff) 
       {		/* Only use if fits in 16 bits. */
         m_newMsgHdr->SetStatusOffset((PRUint16) delta);
