@@ -16,7 +16,11 @@
   display: block;
 }
 
-*[collapsed="true"] {
+/**
+ * Hide the content, but don't destroy the frames. 
+ * DO NOT USE "_collapsed" IN YOUR XUL! 
+ */
+*[collapsed="true"], *[moz-collapsed="true"] {
   visibility: collapse;
 }
 

@@ -84,7 +84,7 @@ Contributor(s):
       <xul:box orient="vertical" flex="1" class="toolbar-internal-box">
         <children/>
       </xul:box>
-      <xul:box tbattr="collapsed-tray-holder" class="collapsed-tray-holder" collapsed="true">
+      <xul:box tbattr="collapsed-tray-holder" class="collapsed-tray-holder" moz-collapsed="true">
         <xul:box tbattr="collapsed-tray" class="collapsed-tray"/>
         <xul:spring flex="1" class="collapsed-tray-spring"/>
       </xul:box>
@@ -97,8 +97,8 @@ Contributor(s):
           const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           try {
             this.createCollapsedGrippy(toolbar);
-            toolbar.setAttribute("collapsed", "true");
-            document.persist(toolbar.id, "collapsed");
+            toolbar.setAttribute("moz-collapsed", "true");
+            document.persist(toolbar.id, "moz-collapsed");
           }
           catch(e) {
           }
@@ -111,13 +111,13 @@ Contributor(s):
         <![CDATA[
           var idString = aGrippyID.substring("moz_tb_collapsed_".length, aGrippyID.length);
           var toolbar = document.getElementById(idString);
-          toolbar.setAttribute("collapsed", "false");
+          toolbar.setAttribute("moz-collapsed", "false");
           var collapsedTray = this.findNodeByAttribute("tbattr", "collapsed-tray");
           var collapsedToolbar = document.getElementById("moz_tb_collapsed_" + toolbar.id);
           collapsedTray.removeChild(collapsedToolbar);
           if (!collapsedTray.hasChildNodes()) 
-            this.findNodeByAttribute("tbattr", "collapsed-tray-holder").setAttribute("collapsed", "true");
-          document.persist(toolbar.id, "collapsed");
+            this.findNodeByAttribute("tbattr", "collapsed-tray-holder").setAttribute("moz-collapsed", "true");
+          document.persist(toolbar.id, "moz-collapsed");
         ]]>
         </body>
       </method>
@@ -160,8 +160,8 @@ Contributor(s):
               collapsedGrippy.collapsed = true;
               collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
               var collapsedTrayHolder = this.findNodeByAttribute("tbattr", "collapsed-tray-holder");
-              if (collapsedTrayHolder.getAttribute("collapsed") == "true")
-                collapsedTrayHolder.removeAttribute("collapsed");
+              if (collapsedTrayHolder.getAttribute("moz-collapsed") == "true")
+                collapsedTrayHolder.removeAttribute("moz-collapsed");
               this.findNodeByAttribute("tbattr", "collapsed-tray").appendChild(collapsedGrippy);
               collapsedGrippy = document.getElementById("moz_tb_collapsed_" + aToolbar.id);
             }
@@ -177,7 +177,7 @@ Contributor(s):
         <body>
         <![CDATA[
           for (var i = 0; i < this.childNodes.length; i++) {
-            if (this.childNodes[i].getAttribute("collapsed") == "true")
+            if (this.childNodes[i].getAttribute("moz-collapsed") == "true")
               this.createCollapsedGrippy(this.childNodes[i]);
           }
         ]]>
