@@ -14,7 +14,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved. 
- */    
+ */     
     
 #include "nsDebug.h" 
 #include "nsIDTDDebug.h"  
@@ -1241,6 +1241,8 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   if(mHasOpenForm) {
+    if(aParent==aChild)
+      return gHTMLElements[aParent].CanSelfContain();
     if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown))) {
       return PR_TRUE;
     }//if
