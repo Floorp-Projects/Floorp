@@ -4568,6 +4568,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
   AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
   AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
+  AddFrameTypeInfo(nsLayoutAtoms::hrFrame,               "hr",        "hr");
   AddFrameTypeInfo(nsLayoutAtoms::htmlFrameInnerFrame,   "frameI",    "htmlFrameInner");
   AddFrameTypeInfo(nsLayoutAtoms::htmlFrameOuterFrame,   "frameO",    "htmlFrameOuter");
   AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");
@@ -4608,7 +4609,20 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
     for (PRInt32 i = 0; i < aIndent; i++) {
       printf(" ");
     }
-    printf("%s %p ", frameTypeInfo->mNameAbbrev, aFrame);
+    if(!strcmp(frameTypeInfo->mNameAbbrev,"unknown")) {
+      nsAutoString  name;
+      nsIFrameDebug*  frameDebug;
+      if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+       frameDebug->GetFrameName(name);
+       printf("%s %p ", NS_LossyConvertUCS2toASCII(name).get(), aFrame);
+      }
+      else {
+        printf("%s %p ", frameTypeInfo->mNameAbbrev, aFrame);
+      }
+    }
+    else {
+      printf("%s %p ", frameTypeInfo->mNameAbbrev, aFrame);
+    }
   }
 }
 
@@ -4710,7 +4724,13 @@ void DR_State::PrettyUC(nscoord aSize,
     strcpy(aBuf, "UC");
   }
   else {
-    sprintf(aBuf, "%d", aSize);
+    if(0xdeadbeef == aSize)
+    {
+      strcpy(aBuf, "deadbeef");
+    }
+    else {
+      sprintf(aBuf, "%d", aSize);
+    }
   }
 }
 
@@ -4744,6 +4764,7 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
 {
   if (aTreeNode.mDisplay) {
     DR_state.DisplayFrameTypeInfo(aFrame, aTreeNode.mIndent);
+
 
     char width[16];
     char height[16];
