@@ -1711,6 +1711,40 @@ void nsBlockFrame::ComputeDesiredRect(nsBlockReflowState& aState,
 
 //----------------------------------------------------------------------
 
+void nsBlockFrame::ReflowFloater(nsIPresContext*     aPresContext,
+                                 nsBlockReflowState& aState,
+                                 nsIFrame*           aFloaterFrame)
+{
+  // Compute the available space for the floater. Use the default
+  // 'auto' width and height values
+  nsSize  kidAvailSize(0, NS_UNCONSTRAINEDSIZE);
+  nsSize  styleSize;
+  PRIntn  styleSizeFlags = nsCSSLayout::GetStyleSize(aPresContext, *aState.reflowState,
+                                                     styleSize);
+
+  // XXX The width and height are for the content area only. Add in space for
+  // border and padding
+  if (styleSizeFlags & NS_SIZE_HAS_WIDTH) {
+    kidAvailSize.width = styleSize.width;
+  }
+  if (styleSizeFlags & NS_SIZE_HAS_HEIGHT) {
+    kidAvailSize.height = styleSize.height;
+  }
+
+  // Resize reflow the anchored item into the available space
+  // XXX Check for complete?
+  nsReflowMetrics desiredSize(nsnull);
+  nsReflowState   reflowState(aFloaterFrame, *aState.reflowState, kidAvailSize,
+                              eReflowReason_Initial);
+  nsReflowStatus  status;
+
+  aFloaterFrame->WillReflow(*aPresContext);
+  aFloaterFrame->Reflow(aPresContext, desiredSize, reflowState, status);
+  aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
+
+  aFloaterFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+}
+
 PRBool
 nsBlockFrame::AddFloater(nsIPresContext*     aPresContext,
                          nsIFrame*           aFloater,
@@ -1732,6 +1766,9 @@ nsBlockFrame::AddFloater(nsIPresContext*     aPresContext,
       anchoredItems->AddAnchoredItem(aFloater,
                                      nsIAnchoredItems::anHTMLFloater,
                                      this);
+
+      // Reflow the floater
+      ReflowFloater(aPresContext, *state, aFloater);
 
       // Determine whether we place it at the top or we place it below the
       // current line
@@ -1897,6 +1934,7 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
   // Pass on updated available space to the current line
   if (nsnull != aState.mCurrentLine) {
     nsLineLayout& lineLayout = *aState.mCurrentLine;
+    GetAvailableSpace(aState, aY);
     lineLayout.SetReflowSpace(aState.mCurrentBand.availSpace);
   }
 }

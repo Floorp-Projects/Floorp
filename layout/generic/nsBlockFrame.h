@@ -293,6 +293,10 @@ protected:
 
   nsLineData* GetFirstLine();
 
+  void ReflowFloater(nsIPresContext* aPresContext,
+                     nsBlockReflowState& aState,
+                     nsIFrame* aFloaterFrame);
+
   void SetFirstChild(nsIFrame* aFirstChild) {
     if (nsnull == mFirstChild) {
       mFirstChild = aFirstChild;

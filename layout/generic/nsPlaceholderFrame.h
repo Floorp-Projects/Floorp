@@ -18,10 +18,10 @@
 #ifndef nsPlaceholderFrame_h___
 #define nsPlaceholderFrame_h___
 
-#include "nsContainerFrame.h"
+#include "nsFrame.h"
 
 // Implementation of a frame that's used as a placeholder for an anchored item
-class nsPlaceholderFrame : public nsContainerFrame {
+class nsPlaceholderFrame : public nsFrame {
 public:
   /**
    * Create a new placeholder frame
@@ -31,11 +31,9 @@ public:
                            nsIFrame*   aParent);
 
   // Returns the associated anchored item
-  nsIFrame*   GetAnchoredItem() const { return mFirstChild; }
+  nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
 
   // nsIFrame overrides
-  NS_IMETHOD  DeleteFrame();
-  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
@@ -43,8 +41,10 @@ public:
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
-  // Constructor. Takes as arguments the content object, the index in parent,
-  // and the Frame for the content parent
+  nsIFrame* mAnchoredItem;
+
+  // Constructor. Takes as arguments the content object and the Frame for
+  // the content parent
   nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
   virtual ~nsPlaceholderFrame();
 };
