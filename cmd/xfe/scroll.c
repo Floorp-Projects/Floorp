@@ -118,7 +118,9 @@ fe_MakeScrolledWindow (MWContext *context, Widget parent, const char *name)
   /* The embedded editor looks better with a frame around it */
   if (EDITOR_CONTEXT_DATA(context)->embedded)
     parent = XtVaCreateManagedWidget("embeddedFrame", xmFrameWidgetClass,
-                                     parent, 0);
+                                     parent,
+                                     XmNshadowType, XmSHADOW_ETCHED_IN,
+                                     0);
 #endif /* ENDER */
 
   ac = 0;

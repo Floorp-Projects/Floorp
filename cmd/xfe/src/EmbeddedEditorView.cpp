@@ -192,6 +192,7 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
 extern "C" void
 XFE_EmbeddedEditorViewFocus(MWContext* context)
 {
+  static Widget currentFrame = 0;
   XFE_Frame *frame = fe_getFrameFromContext(context);
   XFE_EmbeddedEditorView* eev = 0;
   XP_ASSERT(frame);
@@ -200,6 +201,13 @@ XFE_EmbeddedEditorViewFocus(MWContext* context)
   XP_ASSERT(eev);
   if (!eev)
     return;
+
+  if (currentFrame)
+    XtVaSetValues(currentFrame, XmNshadowType, XmSHADOW_ETCHED_IN, 0);
+  Widget embedFrame = XtParent(XtParent(CONTEXT_DATA(context)->drawing_area));
+  XtVaSetValues(embedFrame, XmNshadowType, XmSHADOW_IN, 0);
+  currentFrame = embedFrame;
+
   XFE_BrowserFrame* bf = (XFE_BrowserFrame*)frame;
   if (bf)
   {
