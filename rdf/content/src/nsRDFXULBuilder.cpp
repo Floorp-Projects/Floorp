@@ -65,6 +65,7 @@
 #include "nsIXULDocumentInfo.h"
 #include "nsIXULParentDocument.h"
 #include "nsLayoutCID.h"
+#include "nsIHTMLElementFactory.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
@@ -75,7 +76,6 @@
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
-#include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -101,6 +101,9 @@ static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
 static NS_DEFINE_CID(kRDFToolbarBuilderCID,       NS_RDFTOOLBARBUILDER_CID);
 static NS_DEFINE_CID(kXULDocumentCID,             NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,         NS_XULDOCUMENTINFO_CID);
+
+static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
+static NS_DEFINE_CID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
 // standard vocabulary items
@@ -134,6 +137,7 @@ private:
     nsIRDFCompositeDataSource* mDB;
     nsIRDFDocument*            mDocument;
     nsIContent*                mRoot;
+    nsIHTMLElementFactory*     mHTMLElementFactory;
 
     // pseudo-constants
     static PRInt32 gRefCnt;
@@ -300,7 +304,8 @@ NS_NewRDFXULBuilder(nsIRDFContentModelBuilder** result)
 RDFXULBuilderImpl::RDFXULBuilderImpl(void)
     : mDB(nsnull),
       mDocument(nsnull),
-      mRoot(nsnull)
+      mRoot(nsnull),
+      mHTMLElementFactory(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -365,6 +370,8 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_RELEASE(mDB);
     }
     // NS_IF_RELEASE(mDocument) not refcounted
+
+    NS_IF_RELEASE(mHTMLElementFactory);
 
     if (--gRefCnt == 0) {
         if (gRDFService) {
@@ -1650,11 +1657,23 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
 {
     nsresult rv;
 
+    if (!mHTMLElementFactory) {
+        rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
+                                                nsnull,
+                                                kIHTMLElementFactoryIID,
+                                                (void**) &mHTMLElementFactory);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+
     // XXX This is where we go out and create the HTML content. It's a
     // bit of a hack: a bridge until we get to a more DOM-based
     // solution.
     nsCOMPtr<nsIHTMLContent> element;
-    rv = NS_CreateHTMLElement(getter_AddRefs(element), aTag->GetUnicode());
+    nsAutoString tag(aTag->GetUnicode());
+    rv = mHTMLElementFactory->CreateInstanceByTag(tag,
+                                                  getter_AddRefs(element));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create HTML element");
     if (NS_FAILED(rv)) return rv;
 
