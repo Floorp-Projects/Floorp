@@ -45,6 +45,11 @@
 #include "privacy.h"
 
 #include "intl_csi.h"
+
+#ifdef DOM
+#include "lm_dom.h"
+#endif
+
 /* WEBFONTS are defined only in laytags.c and layout.c */
 #define WEBFONTS
 
@@ -7305,6 +7310,19 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
     /* the last argument is TRUE if we started in the head 
      */
 	lo_PostLayoutTag( context, state, tag, started_in_head);
+
+#ifdef DOM_NOTYET
+    if (tag->is_end && state->current_node) {
+        /* mark the end LO_Element for the _last_ node */
+        LO_Element *eptr = state->line_list;
+        XP_ASSERT(eptr);
+        while (eptr->lo_any.next != NULL) {
+            eptr = eptr->lo_any.next;
+        }
+        XP_ASSERT(ELEMENT_PRIV(state->last_node)->ele_start);
+        ELEMENT_PRIV(state->last_node)->ele_end = eptr;
+    }
+#endif
 
 	LO_UnlockLayout();
 }

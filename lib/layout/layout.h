@@ -35,10 +35,6 @@
 
 #include "libmocha.h"
 
-#ifdef DOM
-#include "dom.h"
-#endif
-
 #define MEMORY_ARENAS 1
 
 #define NEXT_ELEMENT	state->top_state->element_id++
@@ -662,8 +658,9 @@ typedef struct lo_DocState_struct {
 #ifdef DOM
 	Bool in_span;
 	PA_Block current_span;
-    DOM_Node *top_node;
-    DOM_Node *current_node;
+    void /*DOM_Node*/ *top_node;
+    void /*DOM_Node*/ *current_node;
+    void /*DOM_Node*/ *last_node;
 #endif
 } lo_DocState;
 

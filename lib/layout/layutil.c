@@ -36,6 +36,10 @@
 #endif /* NSPR20 */
 #include "intl_csi.h"
 
+#ifdef DOM
+#include "lm_dom.h"
+#endif
+
 #ifdef EDITOR
 #include "edt.h"
 #endif
@@ -2579,6 +2583,17 @@ lo_AppendToLineList(MWContext *context, lo_DocState *state,
         }
 		state->current_span = NULL;
 	}
+
+        /* Wire the element to the DOM Node data for DOM-driven feedback. */
+         
+        if (CURRENT_NODE(state) &&
+            CURRENT_NODE(state)->type != NODE_TYPE_DOCUMENT) {
+            XP_ASSERT(!ELEMENT_PRIV(CURRENT_NODE(state))->ele_end);
+            eptr = ELEMENT_PRIV(CURRENT_NODE(state))->ele_start;
+            if (!eptr)
+                /* this the first element for this node, so mark it */
+                ELEMENT_PRIV(CURRENT_NODE(state))->ele_start = element;
+        }
 #endif
 	
 	if (state->current_named_anchor != NULL) {
