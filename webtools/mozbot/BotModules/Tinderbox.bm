@@ -1,3 +1,4 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 ################################
 # Tinderbox Module             #
 ################################
@@ -255,11 +256,19 @@ sub CheckForUpdates {
         }
 
         # speak!
+        my @output = (@newTrees, @lostTrees, @newBuilds, @lostBuilds);
         foreach (@{$self->{'channels'}}) {
             unless ($mutedChannels{$_}) {
                 local $event->{'target'} = $_;
-                foreach (@newTrees, @lostTrees, @newBuilds, @lostBuilds, @changes) {
+                foreach (@changes) {
                     $self->say($event, $_);
+                }
+                if (@output < 3) {
+                    foreach (@output) {
+                        $self->say($event, $_);
+                    }
+                } else {
+                    $self->say($event, "Many tree changes just occured. Check tinderbox to see what they were.");
                 }
             }
         }
