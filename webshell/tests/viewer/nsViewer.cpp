@@ -496,23 +496,6 @@ DocObserver::Embed(nsIDocumentWidget* aDocViewer,
   return NS_OK;
 }
 
-
-void
-DocObserver::LoadURL(const char* aURL)
-{
-  nsresult rv;
-
-  if (nsnull != mViewer) {
-    mViewer->GoingTo(aURL);
-    rv = mDocLoader->LoadURL(aURL,            // URL string
-                             nsnull,          // Command
-                             this,            // Container
-                             nsnull,          // Post Data
-                             nsnull,          // Extra Info...
-                             this);           // Observer
-  }
-}
-
 NS_IMETHODIMP
 DocObserver::Init(nsIWebWidget* aWidget)
 {
@@ -542,17 +525,9 @@ DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
                                   const nsString& aTargetSpec,
                                   nsIPostData* aPostData)
 {
-  nsresult rv;
-
   if (nsnull != mDocLoader) {
     if (nsnull != mViewer) {
-      mViewer->GoingTo(aURLSpec);
-      rv = mDocLoader->LoadURL(aURLSpec,        // URL string
-                               nsnull,          // Command
-                               this,            // Container
-                               aPostData,       // Post Data
-                               nsnull,          // Extra Info...
-                               this);           // Observer
+      mViewer->GoTo(aURLSpec, nsnull, this, aPostData, nsnull, this);
     }
 ///  if (nsnull != mWebWidget) {
 ///    nsIWebWidget* targetWidget = mWebWidget->GetTarget(aTargetSpec);
@@ -914,7 +889,7 @@ void nsViewer::OpenHTMLFile(WindowData* wd)
     PR_snprintf(lpszFileURL, MAXPATHLEN, "%s%s", FILE_PROTOCOL, szFile);
 
     // Ask the Web widget to load the file URL
-    wd->observer->LoadURL(lpszFileURL);
+    GoTo(lpszFileURL);
     free(lpszFileURL);
   }
 }
@@ -1105,7 +1080,7 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
         PRIntn ix = aId - VIEWER_DEMO0;
         char* url = new char[500];
         PR_snprintf(url, 500, "%s/test%d.html", GetBaseURL(), ix);
-        wd->observer->LoadURL(url);
+        wd->mViewer->GoTo(url);
         delete url;
       }
       break;
@@ -1216,6 +1191,7 @@ void nsViewer::CleanupViewer(nsDocLoader* aDl)
 void
 nsViewer::ShowHistory()
 {
+#if 0
   PRInt32 i, n = mHistory.Count();
   for (i = 0; i < n; i++) {
     if (i == mHistoryIndex) {
@@ -1228,6 +1204,7 @@ nsViewer::ShowHistory()
     fputs(*u, stdout);
     printf("\n");
   }
+#endif
 }
 
 nsEventStatus PR_CALLBACK HandleBackEvent(nsGUIEvent *aEvent)
@@ -1243,11 +1220,16 @@ nsEventStatus PR_CALLBACK HandleBackEvent(nsGUIEvent *aEvent)
 void
 nsViewer::Back()
 {
-  printf("Back\n");
-  if (0 != mHistoryIndex) {
+  if (mHistoryIndex > 0) {
+    printf("Back\n");
     mHistoryIndex--;
+    if (nsnull != mWD && nsnull != mWD->observer) {
+      nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+      mWD->observer->mDocLoader->LoadURL(*s, nsnull, mWD->observer,
+                                         nsnull, nsnull, mWD->observer);
+    }
+    ShowHistory();
   }
-  ShowHistory();
 }
 
 nsEventStatus PR_CALLBACK HandleForwardEvent(nsGUIEvent *aEvent)
@@ -1263,11 +1245,16 @@ nsEventStatus PR_CALLBACK HandleForwardEvent(nsGUIEvent *aEvent)
 void
 nsViewer::Forward()
 {
-  printf("Forward\n");
-  if (mHistoryIndex < mHistory.Count()) {
+  if (mHistoryIndex < mHistory.Count() - 1) {
+    printf("Forward\n");
     mHistoryIndex++;
+    if (nsnull != mWD && nsnull != mWD->observer) {
+      nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+      mWD->observer->mDocLoader->LoadURL(*s, nsnull, mWD->observer,
+                                         nsnull, nsnull, mWD->observer);
+    }
+    ShowHistory();
   }
-  ShowHistory();
 }
 
 nsEventStatus PR_CALLBACK HandleLocationEvent(nsGUIEvent *aEvent)
@@ -1285,20 +1272,42 @@ nsEventStatus PR_CALLBACK HandleLocationEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
-void
-nsViewer::GoTo(const nsString& aURL)
+nsresult
+nsViewer::GoTo(const nsString& aURLSpec, 
+               const char* aCommand,
+               nsIViewerContainer* aContainer,
+               nsIPostData* aPostData,
+               nsISupports* aExtraInfo,
+               nsIStreamObserver* anObserver)
 {
+  nsresult rv = NS_OK;
+  if ((nsnull != mWD) && (nsnull != mWD->observer)) {
+    // Update history
+    GoingTo(aURLSpec);
+    printf("goto: ");
+    fputs(aURLSpec, stdout);
+    printf("\n");
+
+    rv = mWD->observer->mDocLoader->LoadURL(aURLSpec,       // URL string
+                                            aCommand,       // Command
+                                            aContainer,     // Container
+                                            aPostData,      // Post Data
+                                            aExtraInfo,     // Extra Info...
+                                            anObserver);    // Observer
+  }
+  return rv;
 }
 
 void
 nsViewer::GoingTo(const nsString& aURL)
 {
   // Discard part of history that is no longer reachable
-  PRInt32 n;
-  while (mHistoryIndex < (n = mHistory.Count())) {
-    nsString* u = (nsString*) mHistory.ElementAt(n - 1);
+  PRInt32 i, n = mHistory.Count();
+  i = mHistoryIndex + 1;
+  while (--n >= i) {
+    nsString* u = (nsString*) mHistory.ElementAt(n);
     delete u;
-    mHistory.RemoveElementAt(n - 1);
+    mHistory.RemoveElementAt(n);
   }
 
   // Tack on new url
@@ -1306,6 +1315,7 @@ nsViewer::GoingTo(const nsString& aURL)
   mHistory.AppendElement(url);
   mHistoryIndex++;
 
+  printf("GoingTo: new history=\n");
   ShowHistory();
 }
 
@@ -1397,7 +1407,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   mLocation->Create(wd->windowWidget, rect, HandleLocationEvent, NULL);
   mLocation->SetText("");
   mLocation->Show(PR_TRUE);
-  mLocation->SetForegroundColor(NS_RGB(0, 0, 0));
+  mLocation->SetForegroundColor(NS_RGB(255, 0, 0));
   mLocation->SetBackgroundColor(NS_RGB(255, 255, 255));
   wd->windowWidget->SetBackgroundColor(NS_RGB(255, 0, 0));
 #endif
@@ -1414,6 +1424,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
 ///  ww->Show();
   wd->observer = NewObserver(wd->windowWidget, ww);
   wd->observer->mViewer = this;
+  mWD = wd;
   NS_RELEASE(ww);
 
 
@@ -1437,7 +1448,10 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   }
   else {
       // Load the starting url if we have one
-    wd->observer->LoadURL(startURL ? startURL : GetDefaultStartURL());
+    char* start = startURL ? startURL : GetDefaultStartURL();
+    if (start) {
+      gTheViewer->GoTo(start);
+    }
     if (gDoQuantify) {
       // Synthesize 20 ResizeReflow commands (+/- 10 pixels) and then
       // exit.

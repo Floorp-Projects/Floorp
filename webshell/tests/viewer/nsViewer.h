@@ -107,7 +107,7 @@ public:
                    nsISupports* aExtraInfo);
 
   // DocObserver
-  void LoadURL(const char* aURL);
+//  void LoadURL(const char* aURL);
   void HandleLinkClickEvent(const nsString& aURLSpec,
                             const nsString& aTargetSpec,
                             nsIPostData* aPostDat = 0);
@@ -116,10 +116,11 @@ public:
   nsIWidget* mWindowWidget;
   nsViewer* mViewer;
 
+  nsIDocumentLoader* mDocLoader;
+
 protected:
   virtual ~DocObserver();
 
-  nsIDocumentLoader* mDocLoader;
   nsString mURL;
   nsString mOverURL;
   nsString mOverTarget;
@@ -144,7 +145,7 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   public:
     nsViewer() {
       mLocation = nsnull;
-      mHistoryIndex = 0;
+      mHistoryIndex = -1;
     }
 
     // nsISupports
@@ -191,15 +192,27 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
 
   void Layout(WindowData* aWindowData, int aWidth, int aHeight);
 
+  nsresult GoTo(const nsString& aURLSpec, 
+                const char* aCommand,
+                nsIViewerContainer* aContainer,
+                nsIPostData* aPostData = nsnull,
+                nsISupports* aExtraInfo = nsnull,
+                nsIStreamObserver* anObserver = nsnull);
+
+  nsresult GoTo(const nsString& aURLSpec) {
+    return GoTo(aURLSpec, nsnull, mWD->observer,
+                nsnull, nsnull, mWD->observer);
+  }
+
   void Back();
   void Forward();
-  void GoTo(const nsString& aURL);
   void GoingTo(const nsString& aURL);
   void ShowHistory();
 
   nsITextWidget* mLocation;
 
   // Cheesy history (just the urls are stored)
+  WindowData* mWD;
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
 };
