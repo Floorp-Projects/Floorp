@@ -148,6 +148,13 @@ ifeq ($(OS_ARCH),SunOS)
 MAPFILE = $(OBJDIR)/nssmap.sun
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -M $(MAPFILE)
+ifndef USE_64
+ifeq ($(CPU_ARCH),sparc)
+# The -R '$ORIGIN' linker option instructs libnss3.so to search for its
+# dependencies (libfreebl_*.so) in the same directory where it resides.
+MKSHLIB += -R '$$ORIGIN'
+endif
+endif
 endif
 
 ifeq ($(OS_ARCH),AIX)
