@@ -135,6 +135,9 @@ PR_EXTERN(void) _MD_unix_map_gethostname_error(int err);
 PR_EXTERN(void) _MD_unix_map_select_error(int err);
 #define	_PR_MD_MAP_SELECT_ERROR	_MD_unix_map_select_error
 
+PR_EXTERN(void) _MD_unix_map_poll_error(int err);
+#define _PR_MD_MAP_POLL_ERROR _MD_unix_map_poll_error
+
 PR_EXTERN(void) _MD_unix_map_flock_error(int err);
 #define	_PR_MD_MAP_FLOCK_ERROR	_MD_unix_map_flock_error
 

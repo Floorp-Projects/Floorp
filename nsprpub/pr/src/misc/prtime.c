@@ -1142,7 +1142,7 @@ PR_ParseTimeString(
                   {
                         const char *end;
                         int sign;
-                        if (zone_offset >= 0)
+                        if (zone_offset != -1)
                           {
                                 /* already got one... */
                                 rest++;
@@ -1196,16 +1196,12 @@ PR_ParseTimeString(
 
                         if (*end == ':')
                           {
-                                if (hour > 0 && min > 0) /* already got it */
+                                if (hour >= 0 && min >= 0) /* already got it */
                                   break;
 
                                 /* We have seen "[0-9]+:", so this is probably HH:MM[:SS] */
                                 if ((end - rest) > 2)
                                   /* it is [0-9][0-9][0-9]+: */
-                                  break;
-                                else if (rest[1] != ':' &&
-                                                 rest[2] != ':')
-                                  /* it is not [0-9]: or [0-9][0-9]: */
                                   break;
                                 else if ((end - rest) == 2)
                                   tmp_hour = ((rest[0]-'0')*10 +
@@ -1341,26 +1337,31 @@ PR_ParseTimeString(
                                    (DD/MM/YY or MM/DD/YY or YY/MM/DD.)
                                  */
 
-                                if (n1 > 70)        /* must be YY/MM/DD */
+                                if (n1 > 31 || n1 == 0)  /* must be YY/MM/DD */
                                   {
                                         if (n2 > 12) break;
                                         if (n3 > 31) break;
                                         year = n1;
-                                        if (year < 1900) year += 1900;
+                                        if (year < 70)
+                                            year += 2000;
+                                        else if (year < 100)
+                                            year += 1900;
                                         month = (TIME_TOKEN)(n2 + ((int)TT_JAN) - 1);
                                         date = n3;
                                         rest = s;
                                         break;
                                   }
 
-                                if (n3 < 70 ||                /* before epoch - can't represent it. */
-                                        (n1 > 12 && n2 > 12))        /* illegal */
+                                if (n1 > 12 && n2 > 12)  /* illegal */
                                   {
                                         rest = s;
                                         break;
                                   }
 
-                                if (n3 < 1900) n3 += 1900;
+                                if (n3 < 70)
+                                    n3 += 2000;
+                                else if (n3 < 100)
+                                    n3 += 1900;
 
                                 if (n1 > 12)  /* must be DD/MM/YY */
                                   {
@@ -1627,7 +1628,7 @@ PR_FormatTime(char *buf, int buflen, char *fmt, const PRExplodedTime *tm)
  * these two fields.
  */
 
-#if defined(SUNOS4) || defined(MACLINUX) || (__GLIBC__ >= 2)
+#if defined(SUNOS4) || defined(MKLINUX) || (__GLIBC__ >= 2)
     if (mktime(&a) == -1) {
         PR_snprintf(buf, buflen, "can't get timezone");
         return 0;

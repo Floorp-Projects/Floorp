@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 /*
  * os_BSD_386_2.s
  * We need to define our own setjmp/longjmp on BSDI 2.x because libc's

@@ -39,9 +39,9 @@ NSPR_BEGIN_EXTERN_C
 /************************************************************************/
 
 /* Return the method tables for files, tcp sockets and udp sockets */
-PR_EXTERN(PRIOMethods*)    PR_GetFileMethods(void);
-PR_EXTERN(PRIOMethods*)    PR_GetTCPMethods(void);
-PR_EXTERN(PRIOMethods*)    PR_GetUDPMethods(void);
+PR_EXTERN(const PRIOMethods*)    PR_GetFileMethods(void);
+PR_EXTERN(const PRIOMethods*)    PR_GetTCPMethods(void);
+PR_EXTERN(const PRIOMethods*)    PR_GetUDPMethods(void);
 
 /*
 ** Convert a NSPR Socket Handle to a Native Socket handle.
@@ -49,7 +49,8 @@ PR_EXTERN(PRIOMethods*)    PR_GetUDPMethods(void);
 */
 PR_EXTERN(PRInt32)      PR_FileDesc2NativeHandle(PRFileDesc *);
 PR_EXTERN(void)         PR_ChangeFileDescNativeHandle(PRFileDesc *, PRInt32);
-PR_EXTERN(PRFileDesc*)  PR_AllocFileDesc(PRInt32 osfd, PRIOMethods *methods);
+PR_EXTERN(PRFileDesc*)  PR_AllocFileDesc(PRInt32 osfd,
+                                         const PRIOMethods *methods);
 PR_EXTERN(void)         PR_FreeFileDesc(PRFileDesc *fd);
 /*
 ** Import an existing OS file to NSPR. 
@@ -57,6 +58,24 @@ PR_EXTERN(void)         PR_FreeFileDesc(PRFileDesc *fd);
 PR_EXTERN(PRFileDesc*)  PR_ImportFile(PRInt32 osfd);
 PR_EXTERN(PRFileDesc*)  PR_ImportTCPSocket(PRInt32 osfd);
 PR_EXTERN(PRFileDesc*)  PR_ImportUDPSocket(PRInt32 osfd);
+
+/*
+** Macros for PR_Socket
+**
+** Socket types: PR_SOCK_STREAM, PR_SOCK_DGRAM
+*/
+
+#ifdef WIN32
+
+#define PR_SOCK_STREAM 1
+#define PR_SOCK_DGRAM 2
+
+#else /* WIN32 */
+
+#define PR_SOCK_STREAM SOCK_STREAM
+#define PR_SOCK_DGRAM SOCK_DGRAM
+
+#endif /* WIN32 */
 
 /*
 ** Create a new Socket; this function is obsolete.

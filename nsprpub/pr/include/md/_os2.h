@@ -23,7 +23,9 @@
 #define INCL_DOSERRORS
 #define INCL_WIN
 #define INCL_WPS
+#define TID OS2TID   /* global rename in OS2 H's!               */
 #include <os2.h>
+#undef TID           /* and restore                             */
 #include <sys/select.h>
 
 #include "prio.h"
@@ -42,7 +44,11 @@
 #undef  HAVE_THREAD_AFFINITY
 #define HAVE_SOCKET_REUSEADDR
 #define HAVE_SOCKET_KEEPALIVE
-#define _PR_HAVE_ATOMIC_OPS
+
+/*********************************************                                                
+/* We don't have atomic ops on OS/2 natively */
+/* #define _PR_HAVE_ATOMIC_OPS               */
+/*********************************************/
 
 #define HANDLE unsigned long
 #define HINSTANCE HMODULE
@@ -59,12 +65,15 @@ typedef void (*FiberFunc)(void *);
 typedef PRInt32	                PR_CONTEXT_TYPE[PR_NUM_GCREGS];
 #define GC_VMBASE               0x40000000
 #define GC_VMLIMIT              0x00FFFFFF
+typedef int (*FARPROC)();
 
 #define _MD_MAGIC_THREAD	0x22222222
 #define _MD_MAGIC_THREADSTACK	0x33333333
 #define _MD_MAGIC_SEGMENT	0x44444444
 #define _MD_MAGIC_DIR		0x55555555
 #define _MD_MAGIC_CV        0x66666666
+
+#define CALLBACK
 
 typedef struct _MDSemaphore
 {
@@ -82,7 +91,7 @@ struct _MDThread {
     PRBool           inCVWaitQueue;     /* PR_TRUE if the thread is in the
                                          * wait queue of some cond var.
                                          * PR_FALSE otherwise.  */
-    TID              handle;            /* OS/2 thread handle */
+    OS2TID           handle;            /* OS/2 thread handle */
     void            *sp;                /* only valid when suspended */
     PRUint32         magic;             /* for debugging */
     PR_CONTEXT_TYPE  gcContext;         /* Thread context for GC */
@@ -133,7 +142,7 @@ struct _MDNotified {
 };
 
 struct _MDLock {
-    CRITICAL_SECTION mutex;          /* this is recursive on NT */
+    HMTX mutex;          /* this is recursive on NT */
 
     /*
      * When notifying cvars, there is no point in actually
@@ -189,6 +198,10 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 #define _MD_UNLOCKFILE                _PR_MD_UNLOCKFILE
 
 /* --- Socket IO stuff --- */
+
+/* The ones that don't map directly may need to be re-visited... */
+#define EPIPE                     EBADF
+#define EIO                       ECONNREFUSED
 #define _MD_EACCES                EACCES
 #define _MD_EADDRINUSE            EADDRINUSE
 #define _MD_EADDRNOTAVAIL         EADDRNOTAVAIL
@@ -230,14 +243,10 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_SELECT                    select
 #define _MD_FSYNC                     _PR_MD_FSYNC
 
-long _System InterlockedIncrement(PLONG);
-long _System InterlockedDecrement(PLONG);
-long _System InterlockedExchange(PLONG, LONG);
-
-#define _MD_INIT_ATOMIC()
-#define _MD_ATOMIC_INCREMENT(x)       InterlockedIncrement((PLONG)x)
-#define _MD_ATOMIC_DECREMENT(x)       InterlockedDecrement((PLONG)x)
-#define _MD_ATOMIC_SET(x,y)           InterlockedExchange((PLONG)x, (LONG)y)
+#define _MD_INIT_ATOMIC               _PR_MD_INIT_ATOMIC
+#define _MD_ATOMIC_INCREMENT(x)       _PR_MD_ATOMIC_INCREMENT(x)
+#define _MD_ATOMIC_DECREMENT(x)       _PR_MD_ATOMIC_DECREMENT(x)
+#define _MD_ATOMIC_SET(x,y)           _PR_MD_ATOMIC_SET(x, y)
 
 #define _MD_INIT_IO                   _PR_MD_INIT_IO
 #define _MD_TRANSMITFILE              _PR_MD_TRANSMITFILE
@@ -304,10 +313,10 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _PR_LOCK                      _MD_LOCK
 #define _PR_UNLOCK					  _MD_UNLOCK
 
-#define _MD_NEW_LOCK(lock)            (InitializeCriticalSection(&((lock)->mutex)),(lock)->notified.length=0,(lock)->notified.link=NULL,PR_SUCCESS)
-#define _MD_FREE_LOCK(lock)           DeleteCriticalSection(&((lock)->mutex))
-#define _MD_LOCK(lock)                EnterCriticalSection(&((lock)->mutex))
-#define _MD_TEST_AND_LOCK(lock)       (EnterCriticalSection(&((lock)->mutex)),PR_SUCCESS)
+#define _MD_NEW_LOCK(lock)            (DosCreateMutexSem(0, &((lock)->mutex), 0, 0),(lock)->notified.length=0,(lock)->notified.link=NULL,PR_SUCCESS)
+#define _MD_FREE_LOCK(lock)           DosCloseMutexSem(((lock)->mutex))
+#define _MD_LOCK(lock)                DosRequestMutexSem(((lock)->mutex), SEM_INDEFINITE_WAIT)
+#define _MD_TEST_AND_LOCK(lock)       (DosRequestMutexSem(((lock)->mutex), SEM_INDEFINITE_WAIT),PR_SUCCESS)
 #define _MD_UNLOCK                    _PR_MD_UNLOCK
 
 /* --- lock and cv waiting --- */
@@ -376,8 +385,8 @@ extern PRStatus _PR_KillOS2Process(struct PRProcess *process);
 
 typedef struct __NSPR_TLS
 {
-    PRThread  *_pr_thread_last_run;
-    PRThread  *_pr_currentThread;
+    struct PRThread  *_pr_thread_last_run;
+    struct PRThread  *_pr_currentThread;
     struct _PRCPU    *_pr_currentCPU;
 } _NSPR_TLS;
 
@@ -431,7 +440,10 @@ extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
 
 /* Some stuff for setting up thread contexts */
-typedef ULONG DWORD, *PDWORD;
+#undef DWORD
+#undef PDWORD
+typedef unsigned long DWORD;
+typedef unsigned long *PDWORD;
 
 /* The following definitions and two structures are new in OS/2 Warp 4.0.
  */
@@ -472,7 +484,7 @@ typedef struct _CONTEXTRECORD {
 #pragma pack()
 #endif
 
-extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
+extern APIRET (* APIENTRY QueryThreadContext)(OS2TID, ULONG, PCONTEXTRECORD);
 
 /*
 #define _pr_tid            (((PTIB2)_getTIBvalue(offsetof(TIB, tib_ptib2)))->tib2_ultid)
@@ -484,5 +496,6 @@ extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
  * not emulating anything.  Just mapping.
  */
 #define FreeLibrary(x) DosFreeModule(x)
+#define OutputDebugString(str) ;
                                
 #endif /* nspr_os2_defs_h___ */

@@ -74,9 +74,9 @@ clientThreadFunc(void *arg)
     PRStatus retVal;
     PRInt32 nBytes;
 
-    addr.inet.family = AF_INET;
+    addr.inet.family = PR_AF_INET;
     addr.inet.port = PR_htons((PRUint16)port);
-    addr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     PR_snprintf(buf, sizeof(buf), "%hu", addr.inet.ip);
 
     /* time 1 */
@@ -148,8 +148,8 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 	fprintf(stderr, "Can't create a new TCP socket\n");
 	exit(1);
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");

@@ -24,6 +24,8 @@
 #include "prtypes.h"
 #include "prclist.h"
 
+PR_BEGIN_EXTERN_C
+
 /********************************************************************************/
 /********************************************************************************/
 /********************************************************************************/
@@ -298,6 +300,8 @@ PR_EXTERN(PRWaitGroup*) PR_CreateWaitGroup(PRInt32 size);
 **                  The group still contains receive wait objects.
 */
 PR_EXTERN(PRStatus) PR_DestroyWaitGroup(PRWaitGroup *group);
+
+PR_END_EXTERN_C
 
 #endif /* defined(_PRMWAIT_H) */
 

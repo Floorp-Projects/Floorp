@@ -118,11 +118,17 @@ struct _MDDir {
 
 struct _MDCPU_Unix {
     PRCList ioQ;
+    PRUint32 ioq_timeout;
+    PRInt32 ioq_max_osfd;
+    PRInt32 ioq_osfd_cnt;
+#ifndef _PR_USE_POLL
     fd_set fd_read_set, fd_write_set, fd_exception_set;
     PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
 				fd_exception_cnt[_PR_MD_MAX_OSFD];
-    PRUint32 ioq_timeout;
-    PRInt32 ioq_max_osfd;
+#else
+	struct pollfd *ioq_pollfds;
+	int ioq_pollfds_size;
+#endif	/* _PR_USE_POLL */
 };
 struct _PRCPU;
 extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
@@ -137,6 +143,11 @@ extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
 #define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
 #define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
 #define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
 
 
 /*
@@ -452,5 +463,44 @@ extern PRStatus _MD_MemUnmap(void *addr, PRUint32 size);
 
 extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
+
+#if defined(LINUX) && defined(_PR_PTHREADS) && !(__GLIBC__ >= 2)
+#define _PR_NEED_FAKE_POLL
+#endif
+
+#if defined(_PR_NEED_FAKE_POLL)
+
+/*
+ * Some platforms don't have poll(), but our pthreads code calls poll().
+ * As a temporary measure, I implemented a fake poll() using select().
+ * Here are the struct and macro definitions copied from sys/poll.h
+ * on Solaris 2.5.
+ */
+
+struct pollfd {
+    int fd;
+    short events;
+    short revents;
+};
+
+/* poll events */
+
+#define	POLLIN		0x0001		/* fd is readable */
+#define	POLLPRI		0x0002		/* high priority info at fd */
+#define	POLLOUT		0x0004		/* fd is writeable (won't block) */
+#define	POLLRDNORM	0x0040		/* normal data is readable */
+#define	POLLWRNORM	POLLOUT
+#define	POLLRDBAND	0x0080		/* out-of-band data is readable */
+#define	POLLWRBAND	0x0100		/* out-of-band data is writeable */
+
+#define	POLLNORM	POLLRDNORM
+
+#define	POLLERR		0x0008		/* fd has error condition */
+#define	POLLHUP		0x0010		/* fd has been hung up on */
+#define	POLLNVAL	0x0020		/* invalid pollfd entry */
+
+extern int poll(struct pollfd *, unsigned long, int);
+
+#endif /* _PR_NEED_FAKE_POLL */
 
 #endif /* prunixos_h___ */

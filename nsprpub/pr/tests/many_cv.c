@@ -24,9 +24,17 @@
 #include "prlog.h"
 #include "prmem.h"
 
+#include "primpl.h"
+
 #include "plgetopt.h"
 
 #include <stdlib.h>
+
+static PRInt32 Random(void)
+{
+    PRInt32 ran = rand() >> 16;
+    return ran;
+}  /* Random */
 
 static void Help(void)
 {
@@ -43,15 +51,19 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     PRIntn index, nl;
     PRLock *ml = NULL;
     PRCondVar **cv = NULL;
-    PRIntn loops = 1, cvs = 10;
+    PRBool stats = PR_FALSE;
+    PRIntn nc, loops = 1, cvs = 10;
     PRFileDesc *err = PR_GetSpecialFD(PR_StandardError);
-    PLOptState *opt = PL_CreateOptState(argc, argv, "hc:l:");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "hsc:l:");
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
         if (PL_OPT_BAD == os) continue;
         switch (opt->option)
         {
+        case 's':  /* number of CVs to association with lock */
+            stats = PR_TRUE;
+            break;
         case 'c':  /* number of CVs to association with lock */
             cvs = atoi(opt->value);
             break;
@@ -86,7 +98,12 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     {
         PR_Lock(ml);
         for (nl = 0; nl < cvs; ++nl)
-            PR_NotifyCondVar(cv[nl]);
+        {
+            PRInt32 ran = Random() % 8;
+            if (0 == ran) PR_NotifyAllCondVar(cv[nl]);
+            else for (nc = 0; nc < ran; ++nc)
+                PR_NotifyCondVar(cv[nl]);
+        }
         PR_Unlock(ml);
     }
 
@@ -97,6 +114,9 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     
     printf("PASS\n");
 
+#if defined(DEBUG) && defined(_PR_PTHREADS)
+    PT_FPrintStats(err, "\nPThread Statistics\n");
+#endif /* defined(DEBUG) && defined(_PR_PTHREADS) */
     return 0;
 }
 

@@ -69,15 +69,7 @@ PR_EXTERN(void) PR_cnvtf(char *buf, PRIntn bufsz, PRIntn prcsn, PRFloat64 fval);
 **     0 ==> shortest string that yields d when read in
 **           and rounded to nearest.
 */
-PR_EXTERN(char *) PR_dtoa(PRFloat64 d, PRIntn mode, PRIntn ndigits,
-				     PRIntn *decpt, PRIntn *sign, char **rve);
-
-/*
-** PR_dtoa_r() is the reentrant version of PR_dtoa().
-*/
-
-PR_EXTERN(PRStatus)
-PR_dtoa_r(PRFloat64 d, PRIntn mode, PRIntn ndigits,
+PR_EXTERN(PRStatus) PR_dtoa(PRFloat64 d, PRIntn mode, PRIntn ndigits,
 	PRIntn *decpt, PRIntn *sign, char **rve, char *buf, PRSize bufsize);
 
 PR_END_EXTERN_C

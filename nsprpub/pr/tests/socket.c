@@ -267,9 +267,9 @@ TCP_Server(void *arg)
         goto exit;
     }
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = AF_INET;
+    netaddr.inet.family = PR_AF_INET;
     netaddr.inet.port = PR_htons(TCP_SERVER_PORT);
-    netaddr.inet.ip = PR_htonl(INADDR_ANY);
+    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     /*
      * try a few times to bind server's address, if addresses are in
      * use
@@ -386,9 +386,9 @@ UDP_Server(void *arg)
         return;
     }
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = AF_INET;
+    netaddr.inet.family = PR_AF_INET;
     netaddr.inet.port = PR_htons(UDP_SERVER_PORT);
-    netaddr.inet.ip = PR_htonl(INADDR_ANY);
+    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     /*
      * try a few times to bind server's address, if addresses are in
      * use
@@ -426,10 +426,10 @@ UDP_Server(void *arg)
     /*
      * We can't use the IP address returned by PR_GetSockName in
          * netaddr.inet.ip because netaddr.inet.ip is returned
-         * as 0 (= INADDR_ANY).
+         * as 0 (= PR_INADDR_ANY).
      */
 
-    udp_server_addr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    udp_server_addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
 
     /*
      * Wake up parent thread because server address is bound and made
@@ -624,8 +624,8 @@ UDP_Client(void *arg)
      * number
      */
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = AF_INET;
-    netaddr.inet.ip = PR_htonl(INADDR_ANY);
+    netaddr.inet.family = PR_AF_INET;
+    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     netaddr.inet.port = PR_htons(0);
     if (PR_Bind(sockfd, &netaddr) < 0) {
         fprintf(stderr,"prsocket_test: ERROR - PR_Bind failed\n");
@@ -796,7 +796,7 @@ TCP_Socket_Client_Server_Test(void)
         return -1;
     }
     cparamp->server_addr = tcp_server_addr;
-    cparamp->server_addr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    cparamp->server_addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     cparamp->exit_mon = mon2;
     cparamp->exit_counter = &thread_count;
     cparamp->datalen = datalen;
@@ -1152,9 +1152,9 @@ TransmitFile_Server(void *arg)
         goto exit;
     }
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = AF_INET;
+    netaddr.inet.family = PR_AF_INET;
     netaddr.inet.port = PR_htons(TCP_SERVER_PORT);
-    netaddr.inet.ip = PR_htonl(INADDR_ANY);
+    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     /*
      * try a few times to bind server's address, if addresses are in
      * use
@@ -1480,7 +1480,7 @@ Socket_Misc_Test(void)
         goto done;
     }
     cparamp->server_addr = tcp_server_addr;
-    cparamp->server_addr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    cparamp->server_addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     cparamp->exit_mon = mon2;
     cparamp->exit_counter = &thread_count;
     cparamp->datalen = datalen;

@@ -56,12 +56,8 @@
 #undef	USE_DLFCN
 #endif
 
-#if !defined(MACLINUX) && !defined(NEED_TIME_R)
+#if !defined(MKLINUX) && !defined(NEED_TIME_R)
 #define NEED_TIME_R
-#endif
-
-#if defined(_PR_PTHREADS) && !(defined(__GLIBC__) && __GLIBC__ >= 2)
-#define _PR_NEED_FAKE_POLL
 #endif
 
 #define USE_SETJMP
@@ -250,40 +246,12 @@ extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
  */
 #define _MD_SELECT __select
 
-#if defined(_PR_NEED_FAKE_POLL)
-
-/*
- * XXX: Linux doesn't have poll(), but our pthreads code calls poll().
- * As a temporary measure, I implemented a fake poll() using select().
- * Here are the struct and macro definitions copied from sys/poll.h
- * on Solaris 2.5.
- */
-
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-/* poll events */
-
-#define	POLLIN		0x0001		/* fd is readable */
-#define	POLLPRI		0x0002		/* high priority info at fd */
-#define	POLLOUT		0x0004		/* fd is writeable (won't block) */
-#define	POLLRDNORM	0x0040		/* normal data is readable */
-#define	POLLWRNORM	POLLOUT
-#define	POLLRDBAND	0x0080		/* out-of-band data is readable */
-#define	POLLWRBAND	0x0100		/* out-of-band data is writeable */
-
-#define	POLLNORM	POLLRDNORM
-
-#define	POLLERR		0x0008		/* fd has error condition */
-#define	POLLHUP		0x0010		/* fd has been hung up on */
-#define	POLLNVAL	0x0020		/* invalid pollfd entry */
-
-extern int poll(struct pollfd *, unsigned long, int);
-
-#endif /* _PR_NEED_FAKE_POLL */
+#ifdef _PR_POLL_AVAILABLE
+#include <poll.h>
+extern int __syscall_poll(struct pollfd *ufds, unsigned long int nfds,
+	int timeout);
+#define _MD_POLL __syscall_poll
+#endif
 
 /* For writev() */
 #include <sys/uio.h>

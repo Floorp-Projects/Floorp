@@ -75,9 +75,9 @@ thread_main(void *_info)
         goto dead;
     }
   
-    listenAddr.inet.family = AF_INET;
+    listenAddr.inet.family = PR_AF_INET;
     listenAddr.inet.port = PR_htons(BASE_PORT + info->id);
-    listenAddr.inet.ip = PR_htonl(INADDR_ANY);
+    listenAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     rv = PR_Bind(listenSock, &listenAddr);
     if (rv == PR_FAILURE) {
         printf("unable to bind\n");

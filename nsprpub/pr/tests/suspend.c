@@ -39,13 +39,13 @@ PRMonitor *mon;
 PRInt32 count;
 PRInt32 alive;
 
-#define SLEEP_TIME	4	/* secs */
+#define SLEEP_TIME    4    /* secs */
 
 void PR_CALLBACK
 Level_2_Thread(void *arg)
 {
-	PR_Sleep(PR_MillisecondsToInterval(4 * 1000));
-	printf("Level_2_Thread[0x%lx] exiting\n",PR_GetCurrentThread());
+    PR_Sleep(PR_MillisecondsToInterval(4 * 1000));
+    printf("Level_2_Thread[0x%lx] exiting\n",PR_GetCurrentThread());
     return;
 }
 
@@ -57,21 +57,21 @@ Level_1_Thread(void *arg)
     PRThread *thr;
 
     thr = PR_CreateThreadGCAble(PR_USER_THREAD,
-                          Level_2_Thread,
-                          NULL,
-                          PR_PRIORITY_HIGH,
-                          scope,
-                          PR_JOINABLE_THREAD,
-                          0);
+        Level_2_Thread,
+        NULL,
+        PR_PRIORITY_HIGH,
+        scope,
+        PR_JOINABLE_THREAD,
+        0);
 
     if (!thr) {
         printf("Could not create thread!\n");
     } else {
-	printf("Level_1_Thread[0x%lx] created %15s thread 0x%lx\n",
-				PR_GetCurrentThread(),
-				(scope == PR_GLOBAL_THREAD) ?
-				"PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD",
-				thr);
+        printf("Level_1_Thread[0x%lx] created %15s thread 0x%lx\n",
+            PR_GetCurrentThread(),
+            (scope == PR_GLOBAL_THREAD) ?
+            "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD",
+            thr);
         PR_JoinThread(thr);
     }
     PR_EnterMonitor(mon);
@@ -83,18 +83,18 @@ Level_1_Thread(void *arg)
 
 static PRStatus PR_CALLBACK print_thread(PRThread *thread, int i, void *arg)
 {
-PRInt32 words;
-PRWord *registers;
+    PRInt32 words;
+    PRWord *registers;
 
-	printf(
-	    "\nprint_thread[0x%lx]: %-20s - i = %ld\n",thread, 
-		(PR_GLOBAL_THREAD == PR_GetThreadScope(thread)) ?
-		"PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD", i);
-	registers = PR_GetGCRegisters(thread, 0, (int *)&words);
-	printf("Regsters R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
-						registers[0],registers[1],registers[2],registers[3]);
-	printf("Stack Pointer = 0x%lx\n", PR_GetSP(thread));
-	return PR_SUCCESS;
+    printf(
+        "\nprint_thread[0x%lx]: %-20s - i = %ld\n",thread, 
+        (PR_GLOBAL_THREAD == PR_GetThreadScope(thread)) ?
+        "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD", i);
+    registers = PR_GetGCRegisters(thread, 0, (int *)&words);
+    printf("Regsters R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
+        registers[0],registers[1],registers[2],registers[3]);
+    printf("Stack Pointer = 0x%lx\n", PR_GetSP(thread));
+    return PR_SUCCESS;
 }
 
 static void Level_0_Thread(PRThreadScope scope1, PRThreadScope scope2)
@@ -102,8 +102,8 @@ static void Level_0_Thread(PRThreadScope scope1, PRThreadScope scope2)
     PRThread *thr;
     PRThread *me = PR_GetCurrentThread();
     int n;
-	PRInt32 words;
-	PRWord *registers;
+    PRInt32 words;
+    PRWord *registers;
 
     alive = 0;
     mon = PR_NewMonitor();
@@ -111,30 +111,30 @@ static void Level_0_Thread(PRThreadScope scope1, PRThreadScope scope2)
     alive = count;
     for (n=0; n<count; n++) {
         thr = PR_CreateThreadGCAble(PR_USER_THREAD,
-                              Level_1_Thread, 
-                              (void *)scope2, 
-                              PR_PRIORITY_NORMAL,
-                              scope1,
-                              PR_UNJOINABLE_THREAD,
-                              0);
+            Level_1_Thread, 
+            (void *)scope2, 
+            PR_PRIORITY_NORMAL,
+            scope1,
+            PR_UNJOINABLE_THREAD,
+            0);
         if (!thr) {
             printf("Could not create thread!\n");
             alive--;
         }
-	printf("Level_0_Thread[0x%lx] created %15s thread 0x%lx\n",
-				PR_GetCurrentThread(),
-				(scope1 == PR_GLOBAL_THREAD) ?
-				"PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD",
-				thr);
-         
+        printf("Level_0_Thread[0x%lx] created %15s thread 0x%lx\n",
+            PR_GetCurrentThread(),
+            (scope1 == PR_GLOBAL_THREAD) ?
+            "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD",
+            thr);
+
         PR_Sleep(0);
     }
     PR_SuspendAll();
     PR_EnumerateThreads(print_thread, NULL);
-	registers = PR_GetGCRegisters(me, 1, (int *)&words);
-	printf("My Registers: R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
-						registers[0],registers[1],registers[2],registers[3]);
-	printf("My Stack Pointer = 0x%lx\n", PR_GetSP(me));
+    registers = PR_GetGCRegisters(me, 1, (int *)&words);
+    printf("My Registers: R0 = 0x%x R1 = 0x%x R2 = 0x%x R3 = 0x%x\n",
+        registers[0],registers[1],registers[2],registers[3]);
+    printf("My Stack Pointer = 0x%lx\n", PR_GetSP(me));
     PR_ResumeAll();
 
     /* Wait for all threads to exit */
@@ -171,27 +171,27 @@ static void CreateThreadsKK(void)
 void
 main(int argc, char **argv)
 {
-	PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
 #ifdef XP_MAC
-	SetupMacPrintfLog("suspend.log");
+    SetupMacPrintfLog("suspend.log");
 #endif
 
-	if (argc > 1) {
-		count = atoi(argv[1]);
-	} else {
-		count = 5;
-	}
+    if (argc > 1) {
+        count = atoi(argv[1]);
+    } else {
+        count = 5;
+    }
 
-	printf("\n\n%20s%30s\n\n"," ","Suspend_Resume Test");
+    printf("\n\n%20s%30s\n\n"," ","Suspend_Resume Test");
     CreateThreadsUU();
     CreateThreadsUK();
     CreateThreadsKU();
     CreateThreadsKK();
-	PR_SetConcurrency(2);
+    PR_SetConcurrency(2);
 
-	printf("\n%20s%30s\n\n"," ","Added 2nd CPU\n");
+    printf("\n%20s%30s\n\n"," ","Added 2nd CPU\n");
 
     CreateThreadsUK();
     CreateThreadsKK();

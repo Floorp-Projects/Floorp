@@ -105,7 +105,7 @@ static PRStatus MakeReceiver(Shared *shared)
 #if defined(_PR_INET6)
     if (IN6_IS_ADDR_LOOPBACK(&shared->serverAddress.ipv6.ip))
 #else
-    if (PR_htonl(INADDR_LOOPBACK) == shared->serverAddress.inet.ip)
+    if (PR_htonl(PR_INADDR_LOOPBACK) == shared->serverAddress.inet.ip)
 #endif
     {
         char *argv[3];

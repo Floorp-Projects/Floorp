@@ -21,6 +21,11 @@
 #include <stdarg.h>
 #include <time.h>
 
+#ifdef WIN32
+#include <windef.h>
+#include <winbase.h>
+#endif
+
 #include "prclist.h"
 #include "prbit.h"
 
@@ -2365,7 +2370,7 @@ PR_TraceRoot()
 
 /******************************************************************************/
 
-#if defined(DEBUG) && defined(_WIN32)
+#if defined(DEBUG) && defined(WIN32)
 static void DumpApplicationHeap(FILE *out, HANDLE heap)
 {
     PROCESS_HEAP_ENTRY entry;

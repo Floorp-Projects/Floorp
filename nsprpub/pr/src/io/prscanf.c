@@ -379,7 +379,7 @@ GetFloat(ScanfState *state)
             *va_arg(state->ap, long double *) = dval;
 #endif
         } else {
-            *va_arg(state->ap, float *) = dval;
+            *va_arg(state->ap, float *) = (float) dval;
         }
     }
     return PR_SUCCESS;

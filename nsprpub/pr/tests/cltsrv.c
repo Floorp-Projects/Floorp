@@ -867,31 +867,16 @@ static void PR_CALLBACK Server(void *arg)
 
 }  /* Server */
 
-#if 0 && defined(DEBUG) && defined(_PR_PTHREADS)
+#if defined(DEBUG) && defined(_PR_PTHREADS)
 static void PrintPthreadStats(void)
 {
-    char buffer[100];
-    PRExplodedTime tod;
-    PTDebug stats = PT_GetStats();
-    PRInt64 elapsed, aMil;
-    PR_ExplodeTime(stats.timeStarted, PR_LocalTimeParameters, &tod);
-    (void)PR_FormatTime(buffer, sizeof(buffer), "%T", &tod);
-
-    LL_SUB(elapsed, PR_Now(), stats.timeStarted);
-    LL_I2L(aMil, 1000000);
-    LL_DIV(elapsed, elapsed, aMil);
-    PR_fprintf(debug_out, "\npthread statistics\n\tstarted: %s[%lld]\n", buffer, elapsed);
-    PR_fprintf(debug_out, "\tmissed predictions: %u\n", stats.predictionsFoiled);
-    PR_fprintf(debug_out, "\tpollingList max: %u\n", stats.pollingListMax);
-    PR_fprintf(debug_out, "\tcontinuations served: %u\n", stats.continuationsServed);
-    PR_fprintf(debug_out, "\trecycles needed: %u\n", stats.recyclesNeeded);
-    PR_fprintf(debug_out, "\tquiescent IO: %u\n", stats.quiescentIO);
+    PT_FPrintStats(debug_out, "\nPThread Statistics\n");
 }  /* PrintPthreadStats */
 #endif /* defined(DEBUG) && defined(_PR_PTHREADS) */
 
 static void WaitForCompletion(PRIntn execution)
 {
-#if 0 && defined(DEBUG) && defined(_PR_PTHREADS)
+#if defined(DEBUG) && defined(_PR_PTHREADS)
     while (execution > 0)
     { 
         PRIntn dally = (execution > 30) ? 30 : execution;
@@ -930,7 +915,8 @@ static Verbosity IncrementVerbosity(void)
     PRIntn verboge = (PRIntn)verbosity + 1;
     return (Verbosity)verboge;
 }  /* IncrementVerbosity */
-PRIntn xmain(PRIntn argc, char** argv)
+
+PRIntn main(PRIntn argc, char** argv)
 {
     PRUintn index;
     PRBool boolean;
@@ -960,7 +946,7 @@ PRIntn xmain(PRIntn argc, char** argv)
      */
 
     PLOptStatus os;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "GX6b:a:c:l:w:W:e:s:vdhp");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "GX6b:a:c:w:W:e:s:vdhp");
 
     debug_out = PR_GetSpecialFD(PR_StandardError);
 
@@ -989,8 +975,6 @@ PRIntn xmain(PRIntn argc, char** argv)
             break;
         case 'c':  /* number of client threads */
             clients = atoi(opt->value);
-            break;
-        case 'l':  /* number of outer loops */
             break;
         case 'w':  /* minimum server worker threads */
             workersMin = atoi(opt->value);
@@ -1212,40 +1196,12 @@ PRIntn xmain(PRIntn argc, char** argv)
         cltsrv_log_file, TEST_LOG_ALWAYS, 
         ("main(0x%lx): test complete\n", PR_CurrentThread()));
 
-#if 0 && defined(DEBUG) && defined(_PR_PTHREADS)
+#if defined(DEBUG) && defined(_PR_PTHREADS)
     PrintPthreadStats();
 #endif  /* defined(DEBUG) && defined(_PR_PTHREADS) */
 
     TimeOfDayMessage("Test exiting at", PR_CurrentThread());
     return 0;
-}  /* xmain */
-
-PRIntn main(PRIntn argc, char **argv)
-{
-    PRIntn loops = 1;
-    PRIntn rv;
-    PLOptStatus os;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "GX6b:a:c:l:w:W:e:s:vdhp");
-    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
-    {
-        if (PL_OPT_BAD == os) continue;
-        switch (opt->option)
-        {
-        case 'l':  /* number of outer loops */
-            loops = atoi(opt->value);
-            break;
-        default:
-            break;
-        }
-    }
-    PL_DestroyOptState(opt);
-    while (loops-- > 0)
-    {
-        rv = xmain(argc, argv);
-        PR_fprintf(debug_out, "*****\n\n");
-        if (0 != rv) break;
-    }
-    return rv;
 }  /* main */
 
 /* cltsrv.c */

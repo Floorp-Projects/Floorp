@@ -63,6 +63,8 @@ PRLock *_pr_terminationCVLock;
 
 #endif /* !defined(_PR_PTHREADS) */
 
+PRLock *_pr_sleeplock;  /* used in PR_Sleep(), classic and pthreads */
+
 static void _PR_InitCallOnce(void);
 static void _PR_InitStuff(void);
 
@@ -113,6 +115,9 @@ static void _PR_InitStuff()
 	_PR_InitTPD();
     _PR_InitEnv();
     _PR_InitLayerCache();
+
+    _pr_sleeplock = PR_NewLock();
+    PR_ASSERT(NULL != _pr_sleeplock);
 
     _PR_InitThreads(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     

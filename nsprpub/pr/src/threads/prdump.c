@@ -104,7 +104,7 @@ void _PR_DumpThreads(PRFileDesc *fd)
     DumpThreadQueue(fd, &_PR_SUSPENDQ(t->cpu));
 }
 
-void PR_ShowStatus(void)
+PR_IMPLEMENT(void) PR_ShowStatus(void)
 {
     PRIntn is;
 

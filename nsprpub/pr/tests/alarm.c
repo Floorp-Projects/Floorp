@@ -239,7 +239,7 @@ static PRIntervalTime Alarms1(PRUint32 loops)
     PRAlarm *alarm;
     AlarmData ad;
     PRIntervalTime overhead, timein = PR_IntervalNow();
-    PRIntervalTime duration = PR_SecondsToInterval(30);
+    PRIntervalTime duration = PR_SecondsToInterval(3);
 
     PRLock *ml = PR_NewLock();
     PRCondVar *cv = PR_NewCondVar(ml);
@@ -469,7 +469,7 @@ static PRUint32 TimeThis(
 
 int prmain(int argc, char** argv)
 {
-    PRUint32 cpu, cpus = 2, loops = 100;
+    PRUint32 cpu, cpus = 0, loops = 0;
 
 	/* The command line argument: -d is used to determine if the test is being run
 	in debug mode. The regress tool requires only one line output:PASS or FAIL.
@@ -503,8 +503,8 @@ int prmain(int argc, char** argv)
 	PL_DestroyOptState(opt);
 
 
-    if (cpus == 0) cpus = 2;
-    if (loops == 0) loops = 100;
+    if (cpus == 0) cpus = 1;
+    if (loops == 0) loops = 4;
 
 	if (debug_mode)
 		printf("Alarm: Using %d loops\n", loops);

@@ -191,31 +191,33 @@ _PR_MD_YIELD(void)
 void     
 _PR_MD_SET_PRIORITY(_MDThread *thread, PRThreadPriority newPri)
 {
-#if 0
-    /* XXXMB - does this work? Should we really set the priorities of
-     * native threads? */
-    if( newPri < 4 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_IDLE;
-    } else if( newPri < 8 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_LOWEST;
-    } else if( newPri < 12 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_BELOW_NORMAL;
-    } else if( newPri < 16 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_NORMAL;
-    } else if( newPri < 24 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_ABOVE_NORMAL;
-    } else if( newPri < 28 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_HIGHEST;
-    } else if( newPri < 32 ) {
-        newPri = (PRUintn)THREAD_PRIORITY_TIME_CRITICAL;
-    }        
+    int nativePri;
+    BOOL rv;
 
-    if( ! SetThreadPriority( thread->handle, newPri ) ) {
-        PR_LOG(_pr_thread_lm, PR_LOG_MIN,
-               ("PR_SetThreadPriority: can't set thread priority\n"));
+    if (newPri < PR_PRIORITY_FIRST) {
+        newPri = PR_PRIORITY_FIRST;
+    } else if (newPri > PR_PRIORITY_LAST) {
+        newPri = PR_PRIORITY_LAST;
     }
-#endif
-
+    switch (newPri) {
+        case PR_PRIORITY_LOW:
+            nativePri = THREAD_PRIORITY_BELOW_NORMAL;
+            break;
+        case PR_PRIORITY_NORMAL:
+            nativePri = THREAD_PRIORITY_NORMAL;
+            break;
+        case PR_PRIORITY_HIGH:
+            nativePri = THREAD_PRIORITY_ABOVE_NORMAL;
+            break;
+        case PR_PRIORITY_URGENT:
+            nativePri = THREAD_PRIORITY_HIGHEST;
+    }
+    rv = SetThreadPriority(thread->handle, nativePri);
+    PR_ASSERT(rv);
+    if (!rv) {
+	PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+                ("PR_SetThreadPriority: can't set thread priority\n"));
+    }
     return;
 }
 

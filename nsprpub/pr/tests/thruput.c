@@ -46,7 +46,7 @@
 #define SAMPLING_INTERVAL 10
 #define BUFFER_SIZE (32 * 1024)
 
-static PRInt32 domain = AF_INET;
+static PRInt32 domain = PR_AF_INET;
 static PRInt32 protocol = 6;  /* TCP */
 static PRFileDesc *err = NULL;
 static PRIntn concurrency = 1;
@@ -95,7 +95,7 @@ static void PR_CALLBACK Clientel(void *arg)
 
     do
     {
-        xport = PR_Socket(domain, SOCK_STREAM, protocol);
+        xport = PR_Socket(domain, PR_SOCK_STREAM, protocol);
         if (NULL == xport)
         {
             PL_FPrintError(err, "PR_Socket");
@@ -244,7 +244,7 @@ static void Server(void)
 {
     PRStatus rv;
     PRNetAddr server_address, client_address;
-    PRFileDesc *xport = PR_Socket(domain, SOCK_STREAM, protocol);
+    PRFileDesc *xport = PR_Socket(domain, PR_SOCK_STREAM, protocol);
 
     if (NULL == xport)
     {
@@ -327,7 +327,7 @@ PRIntn main(PRIntn argc, char **argv)
             break;
 #ifdef _PR_INET6
         case '6':  /* Use IPv6 */
-            domain = AF_INET6;
+            domain = PR_AF_INET6;
             PR_SetIPv6Enable(PR_TRUE);
             break;
 #endif /* _PR_INET6 */

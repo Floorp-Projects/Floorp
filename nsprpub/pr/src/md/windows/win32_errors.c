@@ -18,6 +18,7 @@
 
 #include "prerror.h"
 #include <errno.h>
+#include <windows.h>
 
 void _MD_win32_map_opendir_error(PRInt32 err)
 {

@@ -22,13 +22,13 @@
  */
 #include "primpl.h"
 
-PR_IMPLEMENT(char *)
+char *
 _PR_MD_GET_ENV(const char *name)
 {
     return getenv(name);
 }
 
-PR_IMPLEMENT(PRIntn)
+PRIntn
 _PR_MD_PUT_ENV(const char *name)
 {
     return putenv(name);
@@ -452,7 +452,7 @@ PRStatus _PR_KillOS2Process(PRProcess *process)
     return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus) _MD_OS2GetHostName(char *name, PRUint32 namelen)
+PRStatus _MD_OS2GetHostName(char *name, PRUint32 namelen)
 {
     PRIntn rv;
     PRInt32 syserror;

@@ -47,30 +47,42 @@ void _PR_MD_INIT_ATOMIC()
     }
 }
 
-PR_IMPLEMENT(PRInt32)
+PRInt32
 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
 {
     PRInt32 rv;
+
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     PR_Lock(monitor);
     rv = ++(*val);
     PR_Unlock(monitor);
     return rv;
 }
 
-PR_IMPLEMENT(PRInt32)
+PRInt32
 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 {
     PRInt32 rv;
+
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     PR_Lock(monitor);
     rv = --(*val);
     PR_Unlock(monitor);
     return rv;
 }
 
-PR_IMPLEMENT(PRInt32)
+PRInt32
 _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
 {
     PRInt32 rv;
+
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     PR_Lock(monitor);
     rv = *val;
     *val = newval;

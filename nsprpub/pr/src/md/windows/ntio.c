@@ -2945,7 +2945,7 @@ PRInt32 IsFileLocal(HANDLE hFile)
 }
 #endif /* _NEED_351_FILE_LOCKING_HACK */
 
-void PR_NT_UseNonblock()
+PR_IMPLEMENT(void) PR_NT_UseNonblock()
 {
     _nt_use_async = 0;
 }

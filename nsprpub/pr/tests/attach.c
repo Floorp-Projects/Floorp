@@ -48,16 +48,9 @@
 #include <stdio.h>
 
 #ifdef WIN32
-#include "process.h"
+#include <windows.h>
+#include <process.h>
 #elif defined(_PR_PTHREADS)
-/*
- * XXX: On Linux 2.0.27 (installed on tioman.mcom.com), sched.h uses
- * this _P macro that seems to be undefined.  I suspect that it is
- * a typo (should be __P).
- */
-#if defined(LINUX)
-#define _P(x) __P(x)
-#endif
 #include <pthread.h>
 #include "md/_pth.h"
 #elif defined(IRIX)

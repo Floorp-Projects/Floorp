@@ -84,6 +84,36 @@ typedef enum PRTransmitFileFlags {
 
 /*
 **************************************************************************
+** Macros for PRNetAddr
+**
+** Address families: PR_AF_INET, PR_AF_INET6, PR_AF_LOCAL
+** IP addresses: PR_INADDR_ANY, PR_INADDR_LOOPBACK, PR_INADDR_BROADCAST
+**************************************************************************
+*/
+
+#ifdef WIN32
+
+#define PR_AF_INET 2
+#define PR_AF_LOCAL 1
+#define PR_INADDR_ANY (unsigned long)0x00000000
+#define PR_INADDR_LOOPBACK 0x7f000001
+#define PR_INADDR_BROADCAST (unsigned long)0xffffffff
+
+#else /* WIN32 */
+
+#define PR_AF_INET AF_INET
+#define PR_AF_LOCAL AF_UNIX
+#ifdef AF_INET6
+#define PR_AF_INET6 AF_INET6
+#endif
+#define PR_INADDR_ANY INADDR_ANY
+#define PR_INADDR_LOOPBACK INADDR_LOOPBACK
+#define PR_INADDR_BROADCAST INADDR_BROADCAST
+
+#endif /* WIN32 */
+
+/*
+**************************************************************************
 ** A network address
 **
 ** Only Internet Protocol (IPv4 and IPv6) addresses are supported.
@@ -98,12 +128,6 @@ typedef enum PRTransmitFileFlags {
 #endif
 
 typedef struct in6_addr PRIPv6Addr;
-
-#define PR_NETADDR_SIZE(_addr) PR_NetAddrSize(_addr)
-
-#else
-
-#define PR_NETADDR_SIZE(_addr) sizeof(PRNetAddr)
 
 #endif /* defined(_PR_INET6) */
 
@@ -120,13 +144,42 @@ union PRNetAddr {
     } inet;
 #if defined(_PR_INET6)
     struct {
-        PRUint16 family;                /* address family (AF_INET | AF_INET6) */
+        PRUint16 family;                /* address family (AF_INET6) */
         PRUint16 port;                  /* port number */
         PRUint32 flowinfo;              /* routing information */
         PRIPv6Addr ip;                  /* the actual 128 bits of address */
     } ipv6;
 #endif /* defined(_PR_INET6) */
+#if defined(XP_UNIX)
+    struct {                            /* Unix domain socket address */
+        PRUint16 family;                /* address family (AF_UNIX) */
+        char path[104];                 /* null-terminated pathname */
+    } local;
+#endif
 };
+
+/*
+** The PR_NETADDR_SIZE macro can only be called on a PRNetAddr union
+** whose 'family' field is set.  It returns the size of the union
+** member corresponding to the specified address family.
+*/
+
+#if defined(_PR_INET6)
+
+#define PR_NETADDR_SIZE(_addr) PR_NetAddrSize(_addr)
+
+#else
+
+#if defined(XP_UNIX)
+#define PR_NETADDR_SIZE(_addr) \
+        ((_addr)->raw.family == AF_UNIX \
+        ? sizeof((_addr)->local) \
+        : sizeof((_addr)->inet))
+#else
+#define PR_NETADDR_SIZE(_addr) sizeof((_addr)->inet)
+#endif /* defined(XP_UNIX) */
+
+#endif /* defined(_PR_INET6) */
 
 /*
 ***************************************************************************
@@ -275,7 +328,7 @@ typedef PRInt32 (PR_CALLBACK *PRSendtoFN)(
     PRFileDesc *fd, const void *buf, PRInt32 amount,
     PRIntn flags, const PRNetAddr *addr, PRIntervalTime timeout);
 typedef PRInt16 (PR_CALLBACK *PRPollFN)(
-    PRFileDesc *fd, PRInt16 how_flags);
+    PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags);
 typedef PRInt32 (PR_CALLBACK *PRAcceptreadFN)(
     PRFileDesc *sd, PRFileDesc **nd, PRNetAddr **raddr,
     void *buf, PRInt32 amount, PRIntervalTime t);
@@ -371,11 +424,13 @@ PR_EXTERN(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD id);
  * that one recongizes and therefore predict that it will implement
  * a desired protocol.
  *
- * There are two well-known identities:
+ * There are three well-known identities:
+ *      PR_INVALID_IO_LAYER => an invalid layer identity, for error return
  *      PR_TOP_IO_LAYER     => the identity of the top of the stack
  *      PR_NSPR_IO_LAYER    => the identity used by NSPR proper
- * The latter may be used as a shorthand for identifying the topmost layer
- * of an existing stack. Ie., the following two constructs are equivalent.
+ * PR_TOP_IO_LAYER may be used as a shorthand for identifying the topmost
+ * layer of an existing stack. Ie., the following two constructs are
+ * equivalent.
  *
  *      rv = PR_PushIOLayer(stack, PR_TOP_IO_LAYER, my_layer);
  *      rv = PR_PushIOLayer(stack, PR_GetLayersIdentity(stack), my_layer)
@@ -404,7 +459,7 @@ PR_EXTERN(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* stack, PRDescIdentity i
  * layer's methods table. You may NOT modify the table directly.
  **************************************************************************
  */
-PR_EXTERN(PRIOMethods const*) PR_GetDefaultIOMethods(void);
+PR_EXTERN(const PRIOMethods *) PR_GetDefaultIOMethods(void);
 
 /*
  **************************************************************************
@@ -416,7 +471,7 @@ PR_EXTERN(PRIOMethods const*) PR_GetDefaultIOMethods(void);
  **************************************************************************
  */
 PR_EXTERN(PRFileDesc*) PR_CreateIOLayerStub(
-    PRDescIdentity ident, PRIOMethods const *methods);
+    PRDescIdentity ident, const PRIOMethods *methods);
 
 /*
  **************************************************************************
@@ -1516,11 +1571,11 @@ struct PRPollDesc {
 ** Bit values for PRPollDesc.in_flags or PRPollDesc.out_flags. Binary-or
 ** these together to produce the desired poll request.
 **
-** On Unix platforms where we use poll() to block the idle threads,
+** On Unix platforms where the poll() system call is available,
 ** the various PR_POLL_XXX flags are mapped to the native poll flags.
 */
 
-#if defined(XP_UNIX) && defined(_PR_USE_POLL)
+#if defined(XP_UNIX) && defined(_PR_POLL_AVAILABLE)
 
 #include <poll.h>
 #define PR_POLL_READ    POLLIN
@@ -1529,7 +1584,7 @@ struct PRPollDesc {
 #define PR_POLL_ERR     POLLERR     /* only in out_flags */
 #define PR_POLL_NVAL    POLLNVAL    /* only in out_flags when fd is bad */
 
-#else  /* XP_UNIX, _PR_USE_POLL */
+#else  /* XP_UNIX, _PR_POLL_AVAILABLE */
 
 #define PR_POLL_READ    0x1
 #define PR_POLL_WRITE   0x2
@@ -1537,7 +1592,7 @@ struct PRPollDesc {
 #define PR_POLL_ERR     0x8         /* only in out_flags */
 #define PR_POLL_NVAL    0x10        /* only in out_flags when fd is bad */
 
-#endif  /* XP_UNIX, _PR_USE_POLL */
+#endif  /* XP_UNIX, _PR_POLL_AVAILABLE */
 
 /*
 *************************************************************************

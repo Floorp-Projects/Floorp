@@ -20,7 +20,9 @@
 #define nspr_os2_errors_h___
 
 #include "md/_os2.h"
-#include <assert.h>
+#ifndef assert
+  #include <assert.h>
+#endif  
 #include <nerrno.h>
 
 PR_EXTERN(void) _MD_os2_map_opendir_error(PRInt32 err);

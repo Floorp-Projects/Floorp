@@ -1412,6 +1412,26 @@ void _MD_unix_map_select_error(int err)
     }
 }
 
+void _MD_unix_map_poll_error(int err)
+{
+    PRErrorCode prerror;
+    switch (err) {
+        case EAGAIN:
+            prerror = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        case EINVAL:
+            prerror = PR_INVALID_ARGUMENT_ERROR;
+            break;
+        case EFAULT:
+            prerror = PR_ACCESS_FAULT_ERROR;
+            break;
+        default:
+            prerror = PR_UNKNOWN_ERROR;
+            break;
+    }
+    PR_SetError(prerror, err);
+}
+
 void _MD_unix_map_flock_error(int err)
 {
     switch (err) {

@@ -75,7 +75,7 @@ extern void SetupMacPrintfLog(char *logFile);
 #endif
 PRIntervalTime timeoutTime;
 
-static PRInt32 count = 10;
+static PRInt32 count = 1;
 static PRNetAddr serverAddr;
 static PRThreadScope thread_scope = PR_LOCAL_THREAD;
 
@@ -118,9 +118,9 @@ ClientThread(void *_action)
     PRInt32 iterations = count;
     PRFileDesc *sock = NULL;
 
-    serverAddr.inet.family = AF_INET;
+    serverAddr.inet.family = PR_AF_INET;
     serverAddr.inet.port = PR_htons(BASE_PORT);
-    serverAddr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    serverAddr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
 
     for (; iterations--;) {
         PRInt32 rv;
@@ -201,29 +201,26 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
     /* First bind to the socket */
     listenSock = PR_NewTCPSocket();
     if (!listenSock) {
-        if (!debug_mode)
-            failed_already=1;
-        else    
+        failed_already=1;
+        if (debug_mode)
             printf("unable to create listen socket\n");
         return;
     }
-    listenAddr.inet.family = AF_INET;
+    listenAddr.inet.family = PR_AF_INET;
     listenAddr.inet.port = PR_htons(BASE_PORT);
-    listenAddr.inet.ip = PR_htonl(INADDR_ANY);
+    listenAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     rv = PR_Bind(listenSock, &listenAddr);
     if (rv == PR_FAILURE) {
-        if (!debug_mode)
-            failed_already=1;
-        else    
+        failed_already=1;
+        if (debug_mode)
             printf("unable to bind\n");
         return;
     }
 
     rv = PR_Listen(listenSock, 100);
     if (rv == PR_FAILURE) {
-        if (!debug_mode)
-            failed_already=1;
-        else    
+        failed_already=1;
+        if (debug_mode)
             printf("unable to listen\n");
         return;
     }
@@ -233,9 +230,8 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
         (void *)&clientCommand, PR_PRIORITY_NORMAL, thread_scope,
         PR_JOINABLE_THREAD, 0);
     if (!clientThread) {
-        if (!debug_mode)
-            failed_already=1;
-        else    
+        failed_already=1;
+        if (debug_mode)
             printf("error creating client thread\n");
         return;
     }
@@ -470,7 +466,6 @@ int main(int argc, char **argv)
     }
     PL_DestroyOptState(opt);
 
-
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
@@ -495,9 +490,9 @@ int main(int argc, char **argv)
 #ifdef WINNT
     Measure(TimeoutReadReadCallbackTest, "PR_NTFast_AcceptRead_WithTimeoutCallback()");
 #endif
+    Measure(TimeoutReadUpdatedTest, "PR_Accept()");
     if (debug_mode)
         printf("\nRun accept() timeout in the read tests\n");
-    Measure(TimeoutReadUpdatedTest, "PR_Accept()");
     Measure(TimeoutReadReadTest, "PR_AcceptRead()");
 #ifdef WINNT
     Measure(TimeoutReadNotUpdatedTest, "PR_NTFast_Accept()");

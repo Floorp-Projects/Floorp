@@ -74,13 +74,7 @@
 
 #elif defined(WIN32)
 
-/*
- * On Win NT, windows.h includes either winsock.h or winsock2.h,
- * depending on the value of the _WIN32_WINNT macro.  One can't
- * include winsock2.h if winsock.h is already included.  So we
- * include windows.h to stay neutral.
- */
-#include <windows.h>
+/* Do not include any system header files. */
 
 #elif defined(WIN16)
 

@@ -31,8 +31,8 @@
 #define MAX_POLLING_INTERVAL 100
 #define _PR_DEFAULT_HASH_LENGTH 59
 
-#define _MW_REHASH(a, i, m) _MW_HASH((PRUint32)(a) + (i) + _PR_HASH_OFFSET, m)
-#define _MW_HASH(a, m) ((((PRUint32)(a) >> 4) ^ ((PRUint32)(a) >> 10)) % (m))
+#define _MW_REHASH(a, i, m) _MW_HASH((PRUword)(a) + (i) + _PR_HASH_OFFSET, m)
+#define _MW_HASH(a, m) ((((PRUword)(a) >> 4) ^ ((PRUword)(a) >> 10)) % (m))
 #define _MW_ABORTED(_rv) \
     ((PR_FAILURE == (_rv)) && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))
 

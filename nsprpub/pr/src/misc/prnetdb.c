@@ -78,7 +78,8 @@ static sigset_t timer_set;
 #define _PR_HAVE_GETPROTO_R_POINTER
 #endif
 
-#if defined(OSF1) || (defined(AIX) && defined(_THREAD_SAFE)) \
+#if defined(OSF1) \
+        || defined(AIX4_3) || (defined(AIX) && defined(_THREAD_SAFE)) \
 	|| (defined(HPUX10_10) && defined(_REENTRANT)) \
         || (defined(HPUX10_20) && defined(_REENTRANT))
 #define _PR_HAVE_GETPROTO_R
@@ -558,25 +559,17 @@ PR_IMPLEMENT(PRUintn) PR_NetAddrSize(const PRNetAddr* addr)
 {
     PRUintn addrsize;
 
+    if (AF_INET == addr->raw.family)
+        addrsize = sizeof(addr->inet);
 #if defined(_PR_INET6)
-
-    if ((AF_INET == (0x00ff & addr->raw.family))
-    || (AF_INET == (0x00ff & ntohs(addr->raw.family))))
-        addrsize = sizeof(struct sockaddr_in);
-    else if ((AF_INET6 == (0x00ff & addr->raw.family))
-    || (AF_INET6 == (0x00ff & ntohs(addr->raw.family))))
-        addrsize = sizeof(struct sockaddr_in6);
-    else addrsize = 0;
-
-#else /* defined(_PR_INET6) */
-    
-#if defined(XP_MAC)
-#pragma unused (addr)
+    else if (AF_INET6 == addr->raw.family)
+        addrsize = sizeof(addr->ipv6);
 #endif
-
-    addrsize = sizeof(struct sockaddr_in);
-
-#endif  /* defined(_PR_INET6) */
+#if defined(XP_UNIX)
+    else if (AF_UNIX == addr->raw.family)
+        addrsize = sizeof(addr->local);
+#endif
+    else addrsize = 0;
 
     return addrsize;
 }  /* PR_NetAddrSize */

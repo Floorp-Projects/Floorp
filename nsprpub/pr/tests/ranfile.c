@@ -284,7 +284,7 @@ int main (int argc,      char   *argv[])
 			debug_mode = 1;
             break;
         case 'l':  /* limiting number */
-			limit = limit = atoi(opt->value);
+			limit = atoi(opt->value);
             break;
         case 't':  /* number of threads */
 			threads = atoi(opt->value);

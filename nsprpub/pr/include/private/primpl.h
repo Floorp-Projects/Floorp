@@ -28,14 +28,6 @@
  */
 
 #if defined(_PR_PTHREADS)
-/*
- * XXX: On Linux 2.0.27 (installed on tioman.mcom.com), sched.h uses
- * this _P macro that seems to be undefined.  I suspect that it is
- * a typo (should be __P).
- */
-#if defined(LINUX)
-#define _P(x) __P(x)
-#endif
 #include <pthread.h>
 #endif
 
@@ -191,9 +183,14 @@ typedef struct PTDebug
     PRUintn continuationsServed;
     PRUintn recyclesNeeded;
     PRUintn quiescentIO;
+    PRUintn locks_created, locks_destroyed;
+    PRUintn locks_acquired, locks_released;
+    PRUintn cvars_created, cvars_destroyed;
+    PRUintn cvars_notified, delayed_cv_deletes;
 } PTDebug;
 
 PR_EXTERN(PTDebug) PT_GetStats(void);
+PR_EXTERN(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
 
 #endif /* defined(DEBUG) */
 
@@ -524,7 +521,7 @@ extern _PRInterruptTable _pr_interruptTable[];
 #define _PR_MISSED_IO        0x2
 #define _PR_MISSED_CHILD    0x4
 
-PR_EXTERN(void) _PR_IntsOn(_PRCPU *cpu);
+extern void _PR_IntsOn(_PRCPU *cpu);
 
 PR_EXTERN(void) _PR_WakeupCPU(void);
 PR_EXTERN(void) _PR_PauseCPU(void);
@@ -536,7 +533,7 @@ PR_EXTERN(void) _PR_PauseCPU(void);
 #define _PR_LOCK_UNLOCK(_lock) \
     _PR_MD_UNLOCK(&(_lock)->ilock);
     
-PR_EXTERN(PRThread *) _PR_AssignLock(PRLock *lock);
+extern PRThread * _PR_AssignLock(PRLock *lock);
 
 #define _PR_LOCK_PTR(_qp) \
     ((PRLock*) ((char*) (_qp) - offsetof(PRLock,links)))
@@ -548,9 +545,9 @@ PR_EXTERN(PRThread *) _PR_AssignLock(PRLock *lock);
 #define _PR_CVAR_UNLOCK(_cvar) \
     _PR_MD_UNLOCK(&(_cvar)->ilock);
 
-PR_EXTERN(PRStatus) _PR_WaitCondVar(
+extern PRStatus _PR_WaitCondVar(
     PRThread *thread, PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout);
-PR_EXTERN(PRUint32) _PR_CondVarToString(PRCondVar *cvar, char *buf, PRUint32 buflen);
+extern PRUint32 _PR_CondVarToString(PRCondVar *cvar, char *buf, PRUint32 buflen);
 
 PR_EXTERN(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 
@@ -689,20 +686,20 @@ extern PRLock *_pr_terminationCVLock;
 * code.                                                                  *
 *************************************************************************/
 
-PR_EXTERN(void) _PR_ClockInterrupt(void);
+extern void _PR_ClockInterrupt(void);
 
-PR_EXTERN(void) _PR_Schedule(void);
-PR_EXTERN(void) _PR_SetThreadPriority(
+extern void _PR_Schedule(void);
+extern void _PR_SetThreadPriority(
     PRThread* thread, PRThreadPriority priority);
 PR_EXTERN(void) _PR_Unlock(PRLock *lock);
 
 PR_EXTERN(void) _PR_SuspendThread(PRThread *t);
 PR_EXTERN(void) _PR_ResumeThread(PRThread *t);
 
-PR_EXTERN(PRThreadStack *)_PR_NewStack(PRUint32 stackSize);
-PR_EXTERN(void) _PR_FreeStack(PRThreadStack *stack);
-PR_EXTERN(PRBool) NotifyThread (PRThread *thread, PRThread *me);
-PR_EXTERN(void) _PR_NotifyLockedThread (PRThread *thread);
+extern PRThreadStack * _PR_NewStack(PRUint32 stackSize);
+extern void _PR_FreeStack(PRThreadStack *stack);
+extern PRBool _PR_NotifyThread (PRThread *thread, PRThread *me);
+extern void _PR_NotifyLockedThread (PRThread *thread);
 
 PR_EXTERN(void) _PR_AddSleepQ(PRThread *thread, PRIntervalTime timeout);
 PR_EXTERN(void) _PR_DelSleepQ(PRThread *thread, PRBool propogate_time);
@@ -718,8 +715,8 @@ PR_EXTERN(PRThread*) _PR_CreateThread(PRThreadType type,
                                      PRUint32 stackSize,
                      PRUint32 flags);
 
-PR_EXTERN(void) _PR_NativeDestroyThread(PRThread *thread);
-PR_EXTERN(void) _PR_UserDestroyThread(PRThread *thread);
+extern void _PR_NativeDestroyThread(PRThread *thread);
+extern void _PR_UserDestroyThread(PRThread *thread);
 
 PR_EXTERN(PRThread*) _PRI_AttachThread(
     PRThreadType type, PRThreadPriority priority,
@@ -750,10 +747,10 @@ PR_EXTERN(void) _PR_MD_UNBLOCK_CLOCK_INTERRUPTS(void);
 /* The _PR_MD_WAIT_LOCK and _PR_MD_WAKEUP_WAITER functions put to sleep and
  * awaken a thread which is waiting on a lock or cvar.
  */
-PR_EXTERN(PRStatus) _PR_MD_WAIT(PRThread *, PRIntervalTime timeout);
+extern PRStatus _PR_MD_WAIT(PRThread *, PRIntervalTime timeout);
 #define    _PR_MD_WAIT _MD_WAIT
 
-PR_EXTERN(PRStatus) _PR_MD_WAKEUP_WAITER(PRThread *);
+extern PRStatus _PR_MD_WAKEUP_WAITER(PRThread *);
 #define    _PR_MD_WAKEUP_WAITER _MD_WAKEUP_WAITER
 
 #ifndef _PR_LOCAL_THREADS_ONLY /* not if only local threads supported */
@@ -787,13 +784,13 @@ PR_EXTERN(void) _PR_MD_INIT_RUNNING_CPU(_PRCPU *cpu);
 /*
  * Returns the number of threads awoken or 0 if a timeout occurred;
  */
-PR_EXTERN(PRInt32) _PR_MD_PAUSE_CPU(PRIntervalTime timeout);
+extern PRInt32 _PR_MD_PAUSE_CPU(PRIntervalTime timeout);
 #define    _PR_MD_PAUSE_CPU _MD_PAUSE_CPU
 
 extern void _PR_MD_CLEANUP_BEFORE_EXIT(void);
 #define _PR_MD_CLEANUP_BEFORE_EXIT _MD_CLEANUP_BEFORE_EXIT
 
-PR_EXTERN(void) _PR_MD_EXIT(PRIntn status);
+extern void _PR_MD_EXIT(PRIntn status);
 #define    _PR_MD_EXIT _MD_EXIT
 
 /* Locks related */
@@ -877,10 +874,10 @@ PR_EXTERN(void) _PR_MD_SET_CURRENT_THREAD(PRThread *thread);
 PR_EXTERN(void) _PR_MD_SET_LAST_THREAD(PRThread *thread);
 #define    _PR_MD_SET_LAST_THREAD _MD_SET_LAST_THREAD
 
-PR_EXTERN(PRStatus) _PR_MD_INIT_THREAD(PRThread *thread);
+extern PRStatus _PR_MD_INIT_THREAD(PRThread *thread);
 #define    _PR_MD_INIT_THREAD _MD_INIT_THREAD
 
-PR_EXTERN(void) _PR_MD_EXIT_THREAD(PRThread *thread);
+extern void _PR_MD_EXIT_THREAD(PRThread *thread);
 #define    _PR_MD_EXIT_THREAD _MD_EXIT_THREAD
 
 #ifndef _PR_LOCAL_THREADS_ONLY /* not if only local threads supported */
@@ -888,16 +885,16 @@ PR_EXTERN(void) _PR_MD_EXIT_THREAD(PRThread *thread);
 PR_EXTERN(PRStatus) _PR_MD_INIT_ATTACHED_THREAD(PRThread *thread);
 #define    _PR_MD_INIT_ATTACHED_THREAD _MD_INIT_ATTACHED_THREAD
 
-PR_EXTERN(void) _PR_MD_SUSPEND_THREAD(PRThread *thread);
+extern void _PR_MD_SUSPEND_THREAD(PRThread *thread);
 #define    _PR_MD_SUSPEND_THREAD _MD_SUSPEND_THREAD
 
-PR_EXTERN(void) _PR_MD_RESUME_THREAD(PRThread *thread);
+extern void _PR_MD_RESUME_THREAD(PRThread *thread);
 #define    _PR_MD_RESUME_THREAD _MD_RESUME_THREAD
 
-PR_EXTERN(void) _PR_MD_SUSPEND_CPU(_PRCPU  *cpu);
+extern void _PR_MD_SUSPEND_CPU(_PRCPU  *cpu);
 #define    _PR_MD_SUSPEND_CPU _MD_SUSPEND_CPU
 
-PR_EXTERN(void) _PR_MD_RESUME_CPU(_PRCPU  *cpu);
+extern void _PR_MD_RESUME_CPU(_PRCPU  *cpu);
 #define    _PR_MD_RESUME_CPU _MD_RESUME_CPU
 
 extern void _PR_MD_BEGIN_SUSPEND_ALL(void);
@@ -918,24 +915,24 @@ PR_EXTERN(void) _PR_IRIX_CHILD_PROCESS(void);
 
 #endif        /* !_PR_LOCAL_THREADS_ONLY */
 
-PR_EXTERN(void) _PR_MD_CLEAN_THREAD(PRThread *thread);
+extern void _PR_MD_CLEAN_THREAD(PRThread *thread);
 #define    _PR_MD_CLEAN_THREAD _MD_CLEAN_THREAD
 
 #ifdef HAVE_CUSTOM_USER_THREADS
-PR_EXTERN(void) _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(PRThread *);
+extern void _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(PRThread *);
 #define    _PR_MD_CREATE_PRIMORDIAL_USER_THREAD _MD_CREATE_PRIMORDIAL_USER_THREAD
 
-PR_EXTERN(PRThread*) _PR_MD_CREATE_USER_THREAD(
+extern PRThread* _PR_MD_CREATE_USER_THREAD(
                         PRUint32 stacksize,
                         void (*start)(void *),
                         void *arg);
 #define    _PR_MD_CREATE_USER_THREAD _MD_CREATE_USER_THREAD
 #endif
 
-PR_EXTERN(void) _PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread);
+extern void _PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread);
 #define _PR_MD_INIT_PRIMORDIAL_THREAD _MD_INIT_PRIMORDIAL_THREAD
 
-PR_EXTERN(PRStatus) _PR_MD_CREATE_THREAD(
+extern PRStatus _PR_MD_CREATE_THREAD(
                         PRThread *thread, 
                         void (*start) (void *), 
                         PRThreadPriority priority,                      
@@ -944,10 +941,10 @@ PR_EXTERN(PRStatus) _PR_MD_CREATE_THREAD(
                         PRUint32 stackSize);
 #define    _PR_MD_CREATE_THREAD _MD_CREATE_THREAD
 
-PR_EXTERN(void) _PR_MD_YIELD(void);
+extern void _PR_MD_YIELD(void);
 #define    _PR_MD_YIELD _MD_YIELD
 
-PR_EXTERN(void) _PR_MD_SET_PRIORITY(_MDThread *md, PRThreadPriority newPri);
+extern void _PR_MD_SET_PRIORITY(_MDThread *md, PRThreadPriority newPri);
 #define    _PR_MD_SET_PRIORITY _MD_SET_PRIORITY
 
 PR_EXTERN(void) _PR_MD_SUSPENDALL(void);
@@ -956,14 +953,14 @@ PR_EXTERN(void) _PR_MD_SUSPENDALL(void);
 PR_EXTERN(void) _PR_MD_RESUMEALL(void);
 #define    _PR_MD_RESUMEALL _MD_RESUMEALL
 
-PR_EXTERN(void) _PR_MD_INIT_CONTEXT(
+extern void _PR_MD_INIT_CONTEXT(
     PRThread *thread, char *top, void (*start) (void), PRBool *status);
 #define    _PR_MD_INIT_CONTEXT _MD_INIT_CONTEXT
 
-PR_EXTERN(void) _PR_MD_SWITCH_CONTEXT(PRThread *thread);
+extern void _PR_MD_SWITCH_CONTEXT(PRThread *thread);
 #define    _PR_MD_SWITCH_CONTEXT _MD_SWITCH_CONTEXT
 
-PR_EXTERN(void) _PR_MD_RESTORE_CONTEXT(PRThread *thread);
+extern void _PR_MD_RESTORE_CONTEXT(PRThread *thread);
 #define    _PR_MD_RESTORE_CONTEXT _MD_RESTORE_CONTEXT
 
 /* Directory enumeration related */
@@ -1200,8 +1197,8 @@ PR_EXTERN(void) _PR_MD_INIT_LOCKS(void);
 
 struct PRLock {
 #if defined(_PR_PTHREADS)
-        pthread_mutex_t mutex;      /* the underlying lock */
-        _PT_Notified notified;      /* array of conditions notified */
+    pthread_mutex_t mutex;          /* the underlying lock */
+    _PT_Notified notified;          /* array of conditions notified */
     pthread_t owner;                /* current lock owner */
 #else  /* defined(_PR_PTHREADS) */
     PRCList links;                  /* linkage for PRThread.lockList */
@@ -1213,12 +1210,13 @@ struct PRLock {
 #endif /* defined(_PR_PTHREADS) */
 };
 
-PR_EXTERN(void) _PR_InitLocks(void);
+extern void _PR_InitLocks(void);
 
 struct PRCondVar {
     PRLock *lock;               /* associated lock that protects the condition */
 #if defined(_PR_PTHREADS)
-        pthread_cond_t cv;
+    pthread_cond_t cv;          /* underlying pthreads condition */
+    PRInt32 notify_pending;     /* CV has destroy pending notification */
 #else  /* defined(_PR_PTHREADS) */
     PRCList condQ;              /* Condition variable wait Q */
     _MDLock ilock;              /* Internal Lock to protect condQ */
@@ -1297,12 +1295,13 @@ struct PRThread {
     void *dumpArg;                  /* argument for the dump function */
 
 #if defined(_PR_PTHREADS)
-        pthread_t id;                   /* pthread identifier for the thread */
+    pthread_t id;                   /* pthread identifier for the thread */
     PRBool okToDelete;              /* ok to delete the PRThread struct? */
-        PRCondVar *waiting;             /* where the thread is waiting | NULL */
-        void *sp;                                                /* recorded sp for garbage collection */
-        PRThread *next, *prev;          /* simple linked list of all threads */
-        PRUint32 suspend;                        /* used to store suspend and resume flags */
+    PRCondVar *io_cv;               /* a condition used to run i/o */
+    PRCondVar *waiting;             /* where the thread is waiting | NULL */
+    void *sp;                       /* recorded sp for garbage collection */
+    PRThread *next, *prev;          /* simple linked list of all threads */
+    PRUint32 suspend;               /* used to store suspend and resume flags */
 #ifdef PT_NO_SIGTIMEDWAIT
     pthread_mutex_t suspendResumeMutex;
     pthread_cond_t suspendResumeCV;
@@ -1481,10 +1480,10 @@ extern PRBool _pr_ipv6_enabled;  /* defined in prnetdb.c */
 *************************************************************************/
 
 /* Initialization related */
-PR_EXTERN(void) _PR_MD_EARLY_INIT(void);
+extern void _PR_MD_EARLY_INIT(void);
 #define    _PR_MD_EARLY_INIT _MD_EARLY_INIT
 
-PR_EXTERN(void) _PR_MD_INTERVAL_INIT(void);
+extern void _PR_MD_INTERVAL_INIT(void);
 #define    _PR_MD_INTERVAL_INIT _MD_INTERVAL_INIT
 
 PR_EXTERN(void) _PR_MD_INIT_SEGS(void);
@@ -1516,24 +1515,24 @@ PR_EXTERN(PRTime) _PR_MD_NOW(void);
 #define    _PR_MD_NOW _MD_NOW
 
 /* Environment related */
-PR_EXTERN(char*) _PR_MD_GET_ENV(const char *name);
+extern char* _PR_MD_GET_ENV(const char *name);
 #define    _PR_MD_GET_ENV _MD_GET_ENV
 
-PR_EXTERN(PRIntn) _PR_MD_PUT_ENV(const char *name);
+extern PRIntn _PR_MD_PUT_ENV(const char *name);
 #define    _PR_MD_PUT_ENV _MD_PUT_ENV
 
 /* Atomic operations */
 
-void _PR_MD_INIT_ATOMIC(void);
+extern void _PR_MD_INIT_ATOMIC(void);
 #define    _PR_MD_INIT_ATOMIC _MD_INIT_ATOMIC
 
-PR_EXTERN(PRInt32) _PR_MD_ATOMIC_INCREMENT(PRInt32 *);
+extern PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *);
 #define    _PR_MD_ATOMIC_INCREMENT _MD_ATOMIC_INCREMENT
 
-PR_EXTERN(PRInt32) _PR_MD_ATOMIC_DECREMENT(PRInt32 *);
+extern PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *);
 #define    _PR_MD_ATOMIC_DECREMENT _MD_ATOMIC_DECREMENT
 
-PR_EXTERN(PRInt32) _PR_MD_ATOMIC_SET(PRInt32 *, PRInt32);
+extern PRInt32 _PR_MD_ATOMIC_SET(PRInt32 *, PRInt32);
 #define    _PR_MD_ATOMIC_SET _MD_ATOMIC_SET
 
 /* Segment related */
@@ -1560,29 +1559,29 @@ extern PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np);
 
 /* Time intervals */
 
-PR_EXTERN(PRIntervalTime) _PR_MD_GET_INTERVAL(void);
+extern PRIntervalTime _PR_MD_GET_INTERVAL(void);
 #define _PR_MD_GET_INTERVAL _MD_GET_INTERVAL
 
-PR_EXTERN(PRIntervalTime) _PR_MD_INTERVAL_PER_SEC(void);
+extern PRIntervalTime _PR_MD_INTERVAL_PER_SEC(void);
 #define _PR_MD_INTERVAL_PER_SEC _MD_INTERVAL_PER_SEC
 
 /* Affinity masks */
 
-PR_EXTERN(PRInt32) _PR_MD_SETTHREADAFFINITYMASK(PRThread *thread, PRUint32 mask );
+extern PRInt32 _PR_MD_SETTHREADAFFINITYMASK(PRThread *thread, PRUint32 mask );
 #define _PR_MD_SETTHREADAFFINITYMASK _MD_SETTHREADAFFINITYMASK
 
-PR_EXTERN(PRInt32) _PR_MD_GETTHREADAFFINITYMASK(PRThread *thread, PRUint32 *mask);
+extern PRInt32 _PR_MD_GETTHREADAFFINITYMASK(PRThread *thread, PRUint32 *mask);
 #define _PR_MD_GETTHREADAFFINITYMASK _MD_GETTHREADAFFINITYMASK
 
 /* File locking */
 
-PR_EXTERN(PRStatus) _PR_MD_LOCKFILE(PRInt32 osfd);
+extern PRStatus _PR_MD_LOCKFILE(PRInt32 osfd);
 #define    _PR_MD_LOCKFILE _MD_LOCKFILE
 
-PR_EXTERN(PRStatus) _PR_MD_TLOCKFILE(PRInt32 osfd);
+extern PRStatus _PR_MD_TLOCKFILE(PRInt32 osfd);
 #define    _PR_MD_TLOCKFILE _MD_TLOCKFILE
 
-PR_EXTERN(PRStatus) _PR_MD_UNLOCKFILE(PRInt32 osfd);
+extern PRStatus _PR_MD_UNLOCKFILE(PRInt32 osfd);
 #define    _PR_MD_UNLOCKFILE _MD_UNLOCKFILE
 
 /* Memory-mapped files */
@@ -1608,7 +1607,7 @@ PR_EXTERN(PRInt32) _PR_MD_GET_SOCKET_ERROR(void);
 #define    _PR_MD_GET_SOCKET_ERROR _MD_GET_SOCKET_ERROR
 
 /* Get name of current host */
-PR_EXTERN(PRStatus) _PR_MD_GETHOSTNAME(char *name, PRUint32 namelen);
+extern PRStatus _PR_MD_GETHOSTNAME(char *name, PRUint32 namelen);
 #define    _PR_MD_GETHOSTNAME _MD_GETHOSTNAME
 
 PR_END_EXTERN_C
