@@ -1,0 +1,25 @@
+# Created by Gord Lacey
+# Visit www.apple-donuts.com
+# mailto:bluefrog@shaw.wave.ca
+
+
+<search 
+name="GoTo.com"
+method=get
+action="http://www.goto.com/d/search/;$sessionid$RMUSKAQAARYTVQFIEEOQPUQ"
+update="http://www.apple-donuts.com/sherlock/Goto.com.src.hqx"
+updateCheckDays = 3 
+bannerLink = "http://www.apple-donuts.com/sherlocksearch/link/index.html"
+bannerImage = '<img src = "http://www.apple-donuts.com/sherlocksearch/link/banner.gif">'
+>
+	
+<INPUT NAME="Keywords" user>
+
+<interpret
+resultListStart="<gotostate searchRatings="
+resultListEnd="<table border=0 width=610 cellspacing=0 cellpadding=0>"
+resultItemStart="><b>"
+resultItemEnd="</table></a>"
+>
+</search>
+

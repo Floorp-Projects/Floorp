@@ -21,6 +21,7 @@ include <$(DEPTH)\config\rules.mak>
 
 FILES=\
 	Google.src				\
+	GoTo.com.src				\
 	Netscape_Open_Directory.src		\
         $(NULL)
 
