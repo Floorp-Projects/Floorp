@@ -113,7 +113,11 @@ public:
   NS_HIDDEN_(void) AddPendingInstance() { ++mPendingInstanceCount; }
   NS_HIDDEN_(void) RemovePendingInstance();
 
-  NS_HIDDEN_(nsIDOMDocument*) FindInstanceDocument(const nsAString &aID);
+  NS_HIDDEN_(nsXFormsInstanceElement*) FindInstanceElement(const nsAString &aID);
+  NS_HIDDEN_(nsIDOMDocument*)          FindInstanceDocument(const nsAString &aID);
+
+  NS_HIDDEN_(PRBool) IsSubmissionActive()            { return mSubmissionActive; }
+  NS_HIDDEN_(void)   SetSubmissionActive(PRBool val) { mSubmissionActive = val; }
 
   // Called after nsXFormsAtoms is registered
   static NS_HIDDEN_(void) Startup();
@@ -135,6 +139,7 @@ private:
 
   PRInt32 mSchemaCount;
   PRInt32 mPendingInstanceCount;
+  PRBool  mSubmissionActive;
   
   nsXFormsMDG mMDG;
 };

@@ -45,6 +45,8 @@
 
 #include <stdlib.h>
 
+#include "nsXFormsModelElement.h"
+#include "nsXFormsInstanceElement.h"
 #include "nsXFormsSubmissionElement.h"
 #include "nsXFormsAtoms.h"
 #include "nsIXFormsModelElement.h"
@@ -55,7 +57,9 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOM3Node.h"
+#include "nsIDOMXMLDocument.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
@@ -63,8 +67,9 @@
 #include "nsIDOMSerializer.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMParser.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIWebNavigation.h"
+#include "nsIDocShell.h"
 #include "nsIStringStream.h"
 #include "nsIInputStream.h"
 #include "nsIStorageStream.h"
@@ -74,6 +79,10 @@
 #include "nsIDocument.h"
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
+#include "nsIUploadChannel.h"
+#include "nsIHttpChannel.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIPipe.h"
 #include "nsLinebreakConverter.h"
 #include "nsEscape.h"
 #include "nsString.h"
@@ -232,9 +241,10 @@ public:
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS2(nsXFormsSubmissionElement,
+NS_IMPL_ISUPPORTS3(nsXFormsSubmissionElement,
                    nsIXTFElement,
-                   nsIXTFGenericElement)
+                   nsIXTFGenericElement,
+                   nsIRequestObserver)
 
 // nsIXTFElement
 
@@ -364,7 +374,9 @@ nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   nsAutoString type;
   aEvent->GetType(type);
   if (type.EqualsLiteral("xforms-submit")) {
-    Submit();
+    nsresult rv = Submit();
+    if (NS_FAILED(rv))
+      SubmitEnd(PR_FALSE);
     *aHandled = PR_TRUE;
   } else {
     *aHandled = PR_FALSE;
@@ -393,24 +405,164 @@ nsXFormsSubmissionElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsSubmissionElement::OnStartRequest(nsIRequest *request, nsISupports *ctx)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult status)
+{
+  LOG(("xforms submission complete [status=%x]\n", status));
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  NS_ASSERTION(channel, "request should be a channel");
+
+  PRBool succeeded = NS_SUCCEEDED(status);
+  if (succeeded)
+  {
+    PRUint32 avail = 0;
+    mPipeIn->Available(&avail);
+    if (avail > 0)
+    {
+      nsAutoString replace;
+      mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
+
+      nsresult rv;
+      if (replace.EqualsLiteral("instance"))
+        rv = LoadReplaceInstance(channel);
+      else if (replace.IsEmpty() || replace.EqualsLiteral("all"))
+        rv = LoadReplaceAll(channel);
+      else
+        rv = NS_OK;
+      succeeded = NS_SUCCEEDED(rv);
+    }
+  }
+
+  mPipeIn = 0;
+
+  SubmitEnd(succeeded);
+  return NS_OK;
+}
+
 // private methods
 
-void
+nsXFormsModelElement*
+nsXFormsSubmissionElement::GetModel()
+{
+  nsCOMPtr<nsIDOMNode> parentNode;
+  mElement->GetParentNode(getter_AddRefs(parentNode));
+
+  nsCOMPtr<nsIXFormsModelElement> modelElt = do_QueryInterface(parentNode);
+  if (!modelElt)
+    return nsnull;
+
+  nsCOMPtr<nsIXTFPrivate> xtfPriv = do_QueryInterface(modelElt);
+  NS_ENSURE_TRUE(xtfPriv, nsnull);
+
+  nsCOMPtr<nsISupports> modelInner;
+  xtfPriv->GetInner(getter_AddRefs(modelInner));
+  NS_ENSURE_TRUE(modelInner, nsnull);
+
+  nsISupports *isupp = NS_STATIC_CAST(nsISupports*, modelInner.get());
+  return NS_STATIC_CAST(nsXFormsModelElement*,
+                        NS_STATIC_CAST(nsIXFormsModelElement*, isupp));
+}
+
+nsresult
+nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
+{
+  // replace instance document
+
+  nsCString contentType, contentCharset;
+  channel->GetContentType(contentType);
+  channel->GetContentCharset(contentCharset);
+
+  // use DOM parser to construct nsIDOMDocument
+  nsCOMPtr<nsIDOMParser> parser = do_CreateInstance("@mozilla.org/xmlextras/domparser;1");
+  NS_ENSURE_STATE(parser);
+
+  PRUint32 contentLength;
+  mPipeIn->Available(&contentLength);
+
+  nsCOMPtr<nsIDOMDocument> newDoc;
+  parser->ParseFromStream(mPipeIn, contentCharset.get(), contentLength,
+                          contentType.get(), getter_AddRefs(newDoc));
+  NS_ENSURE_STATE(newDoc);
+  
+  // check for parsererror tag?  XXX is this needed?  or, is there a better way?
+  nsCOMPtr<nsIDOMElement> docElem;
+  newDoc->GetDocumentElement(getter_AddRefs(docElem));
+  if (docElem)
+  {
+    nsAutoString tagName, namespaceURI;
+    docElem->GetTagName(tagName);
+    docElem->GetNamespaceURI(namespaceURI);
+
+    // XXX this is somewhat of a hack.  we should instead be listening for an
+    // 'error' event from the DOM, but gecko doesn't implement that event yet.
+    if (tagName.EqualsLiteral("parsererror") &&
+        namespaceURI.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml"))
+    {
+      NS_WARNING("resulting instance document could not be parsed");
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  nsXFormsInstanceElement *instance =
+      GetModel()->FindInstanceElement(EmptyString());
+  instance->SetDocument(newDoc);
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsSubmissionElement::LoadReplaceAll(nsIChannel *channel)
+{
+  // use nsIDocShell::loadStream, which may not be perfect ;-)
+
+  // XXX do we need to transfer nsIChannel::securityInfo ???
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(doc);
+
+  // the container is the docshell, and we use it as our provider of
+  // notification callbacks.
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(container);
+
+  nsCOMPtr<nsIURI> uri;
+  nsCString contentType, contentCharset;
+
+  channel->GetURI(getter_AddRefs(uri));
+  channel->GetContentType(contentType);
+  channel->GetContentCharset(contentCharset);
+
+  return docshell->LoadStream(mPipeIn, uri, contentType, contentCharset, nsnull);
+}
+
+nsresult
 nsXFormsSubmissionElement::Submit()
 {
   LOG(("+++ nsXFormsSubmissionElement::Submit\n"));
 
+  nsresult rv;
+
   // 1. ensure that we are not currently processing a xforms-submit on our model
+  nsXFormsModelElement *model = GetModel();
+  NS_ENSURE_STATE(!model->IsSubmissionActive());
+  model->SetSubmissionActive(PR_TRUE);
 
 
   // 2. get selected node from the instance data (use xpath, gives us node
   //    iterator)
   nsCOMPtr<nsIDOMNode> data;
-  if (NS_FAILED(GetSelectedInstanceData(getter_AddRefs(data))) || !data)
-  {
-    NS_WARNING("could not get selected instance data");
-    return;
-  }
+  rv = GetSelectedInstanceData(getter_AddRefs(data));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && data, rv);
 
 
   // 3. revalidate selected instance data (only for namespaces considered for
@@ -422,34 +574,29 @@ nsXFormsSubmissionElement::Submit()
   // 4. serialize instance data
 
   PRUint32 format = GetSubmissionFormat(mElement);
-  if (format == 0)
-  {
-    NS_WARNING("unknown submission format");
-    return;
-  }
+  NS_ENSURE_STATE(format != 0);
 
   nsCOMPtr<nsIInputStream> stream;
   nsCAutoString uri, contentType;
-  if (NS_FAILED(SerializeData(data, format, uri, getter_AddRefs(stream),
-                              contentType)))
-  {
-    NS_WARNING("failed to serialize data");
-    return;
-  }
+  rv = SerializeData(data, format, uri, getter_AddRefs(stream), contentType);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 
   // 5. dispatch network request
   
-  if (NS_FAILED(SendData(format, uri, stream, contentType)))
-  {
-    NS_WARNING("failed to send data");
-    return;
-  }
+  rv = SendData(format, uri, stream, contentType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
 }
 
 nsresult
 nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
 {
+  LOG(("xforms submission complete [succeeded=%d]\n", succeeded));
+
+  GetModel()->SetSubmissionActive(PR_FALSE);
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
@@ -465,8 +612,14 @@ nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
   nsCOMPtr<nsIDOMEventTarget> target;
   if (succeeded)
     target = do_QueryInterface(mElement);
-  //else
-  //  target = GetModel();
+  else
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    mElement->GetParentNode(getter_AddRefs(parent));
+    NS_ENSURE_STATE(parent);
+
+    target = do_QueryInterface(parent);
+  }
 
   PRBool cancelled;
   return target->DispatchEvent(event, &cancelled);
@@ -1274,36 +1427,40 @@ nsXFormsSubmissionElement::CreateFileStream(const nsString &absURI,
 
 nsresult
 nsXFormsSubmissionElement::SendData(PRUint32 format,
-                                    const nsCString &uri,
+                                    const nsCString &uriSpec,
                                     nsIInputStream *stream,
                                     const nsCString &contentType)
 {
-  LOG(("+++ sending to uri=%s [stream=%p]\n", uri.get(), (void*) stream));
+  LOG(("+++ sending to uri=%s [stream=%p]\n", uriSpec.get(), (void*) stream));
 
-  // XXX need to properly support the various 'replace' modes and trigger
-  //     xforms-submit-done or xforms-submit-error when appropriate.
+  nsresult rv;
+
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  NS_ENSURE_STATE(ios);
+
+  // uriSpec is already ASCII-encoded and absolutely specified
+  nsCOMPtr<nsIURI> uri;
+  ios->NewURI(uriSpec, nsnull, nsnull, getter_AddRefs(uri));
+  NS_ENSURE_STATE(uri);
 
   nsAutoString replace;
   mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
-  if (!replace.IsEmpty() && !replace.EqualsLiteral("all"))
+  if (replace.IsEmpty() || replace.EqualsLiteral("all"))
   {
-    NS_WARNING("replace != 'all' not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+    // check to see if we're allowed to load this URI
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+    NS_ENSURE_STATE(secMan);
 
-  // XXX HACK HACK - wrap with mime stream if we are doing a POST
-  if (format & METHOD_POST)
-  {
-    nsCOMPtr<nsIMIMEInputStream> mimeStream =
-        do_CreateInstance("@mozilla.org/network/mime-input-stream;1");
-    NS_ENSURE_TRUE(mimeStream, NS_ERROR_UNEXPECTED);
-
-    mimeStream->AddHeader("Content-Type", contentType.get());
-    mimeStream->SetAddContentLength(PR_TRUE);
-    mimeStream->SetData(stream);
-
-    stream->Release();
-    NS_ADDREF(stream = mimeStream);
+    rv = secMan->CheckConnect(nsnull, uri, "XForms", "submission");
+    if (NS_FAILED(rv))
+    {
+      // We need to return success here so that JS will get a proper
+      // exception thrown later. Native calls should always result in
+      // CheckConnect() succeeding, but in case JS calls C++ which calls
+      // this code the exception might be lost.
+      return NS_OK;
+    } 
   }
 
   // wrap the entire upload stream in a buffered input stream, so that
@@ -1316,24 +1473,75 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
     NS_ENSURE_TRUE(bufferedStream, NS_ERROR_UNEXPECTED);
   }
 
+  nsCOMPtr<nsIChannel> channel;
+  ios->NewChannelFromURI(uri, getter_AddRefs(channel));
+  NS_ENSURE_STATE(channel);
+
+  if (bufferedStream)
+  {
+    nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(channel);
+    NS_ENSURE_STATE(uploadChannel);
+
+    // this in effect sets the request method of the channel to 'PUT'
+    rv = uploadChannel->SetUploadStream(bufferedStream, contentType, -1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (format & METHOD_POST)
+  {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    NS_ENSURE_STATE(httpChannel);
+
+    rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // set loadGroup and notificationCallbacks
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(doc);
 
+  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
+  channel->SetLoadGroup(loadGroup);
+
+  // the container is the docshell, and we use it as our provider of
+  // notification callbacks.
   nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(container);
+  nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(container);
 
-  // XXX this is wrong since we need to handle load errors ourselves.
+  // XXX this means that we allow redirects to any URI, and that is a
+  // security hole that will need to be plugged.  of course, we only
+  // need to worry about this problem for replace='instance'
 
-  // XXX we need an API for handing off our channel to the URI loader,
-  //     once we decide to load its content into the browser, so that
-  //     the URI loader can run its DispatchContent algorithm.
-  //     see bug 263084.
+  channel->SetNotificationCallbacks(callbacks);
 
-  NS_ConvertASCIItoUTF16 temp(uri); // XXX hack
-  return webNav->LoadURI(temp.get(), nsIWebNavigation::LOAD_FLAGS_NONE,
-                         doc->GetDocumentURI(), bufferedStream, nsnull);
+  // create a pipe in which to store the response (yeah, this kind of
+  // sucks since we'll use a lot of memory if the response is large).
+  //
+  // pipe uses non-blocking i/o since we are just using it for temporary
+  // storage.
+  //
+  // pipe's maximum size is unlimited (gasp!)
+
+  nsCOMPtr<nsIOutputStream> pipeOut;
+  rv = NS_NewPipe(getter_AddRefs(mPipeIn), getter_AddRefs(pipeOut),
+                  0, PR_UINT32_MAX, PR_TRUE, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // use a simple stream listener to tee our data into the pipe, and
+  // notify us when the channel starts and stops.
+
+  nsCOMPtr<nsIStreamListener> listener;
+  rv = NS_NewSimpleStreamListener(getter_AddRefs(listener), pipeOut, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = channel->AsyncOpen(listener, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
 }
 
 // factory constructor

@@ -60,6 +60,9 @@ REQUIRES	= \
 		xmlextras \
 		docshell \
 		mimetype \
+		caps \
+		xpconnect \
+		js \
 		$(NULL)
 
 XPIDLSRCS	= nsIXFormsModelElement.idl

@@ -110,7 +110,8 @@ static nsIAtom* sModelPropsList[eModel__count];
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
     mSchemaCount(0),
-    mPendingInstanceCount(0)
+    mPendingInstanceCount(0),
+    mSubmissionActive(PR_FALSE)
 {
 }
 
@@ -610,8 +611,8 @@ nsXFormsModelElement::Error(nsIDOMEvent* aEvent)
 
 // internal methods
 
-nsIDOMDocument*
-nsXFormsModelElement::FindInstanceDocument(const nsAString &aID)
+nsXFormsInstanceElement *
+nsXFormsModelElement::FindInstanceElement(const nsAString &aID)
 {
   nsCOMPtr<nsIDOMNodeList> children;
   mElement->GetChildNodes(getter_AddRefs(children));
@@ -657,12 +658,19 @@ nsXFormsModelElement::FindInstanceDocument(const nsAString &aID)
           NS_STATIC_CAST(nsXFormsInstanceElement*,
                          NS_STATIC_CAST(nsIXTFGenericElement*, isupp));
 
-        return instance->GetDocument();
+        return instance;
       }
     }
   }
 
   return nsnull;
+}
+
+nsIDOMDocument *
+nsXFormsModelElement::FindInstanceDocument(const nsAString &aID)
+{
+  nsXFormsInstanceElement *instance = FindInstanceElement(aID);
+  return instance ? instance->GetDocument() : nsnull;
 }
 
 nsresult

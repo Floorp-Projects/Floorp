@@ -76,6 +76,7 @@ public:
   NS_IMETHOD Error(nsIDOMEvent *aEvent);
 
   NS_HIDDEN_(nsIDOMDocument*) GetDocument() { return mDocument; }
+  NS_HIDDEN_(void) SetDocument(nsIDOMDocument *doc) { mDocument = doc; }
 
 private:
   NS_HIDDEN_(nsresult) CloneInlineInstance();

@@ -40,11 +40,15 @@
 #define nsXFormsSubmissionElement_h_
 
 #include "nsIXTFGenericElement.h"
+#include "nsIRequestObserver.h"
+#include "nsIInputStream.h"
 #include "nsXFormsElement.h"
+#include "nsCOMPtr.h"
 
+class nsXFormsModelElement;
 class nsIMultiplexInputStream;
-class nsIInputStream;
 class nsIDOMElement;
+class nsIChannel;
 class nsIFile;
 class nsCString;
 class nsString;
@@ -52,18 +56,24 @@ class nsString;
 class SubmissionAttachmentArray;
 
 class nsXFormsSubmissionElement : public nsXFormsElement,
-                                  public nsIXTFGenericElement
+                                  public nsIXTFGenericElement,
+                                  public nsIRequestObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFGENERICELEMENT
+  NS_DECL_NSIREQUESTOBSERVER
 
   nsXFormsSubmissionElement()
     : mElement(nsnull)
   {}
 
-  NS_HIDDEN_(void)     Submit();
+  NS_HIDDEN_(nsXFormsModelElement *) GetModel();
+
+  NS_HIDDEN_(nsresult) LoadReplaceInstance(nsIChannel *);
+  NS_HIDDEN_(nsresult) LoadReplaceAll(nsIChannel *);
+  NS_HIDDEN_(nsresult) Submit();
   NS_HIDDEN_(nsresult) SubmitEnd(PRBool succeeded);
   NS_HIDDEN_(PRBool)   GetBooleanAttr(const nsAString &attrName, PRBool defaultVal = PR_FALSE);
   NS_HIDDEN_(void)     GetDefaultInstanceData(nsIDOMNode **result);
@@ -84,6 +94,9 @@ public:
 
 private:
   nsIDOMElement *mElement;
+
+  // input end of pipe, which contains response data.
+  nsCOMPtr<nsIInputStream> mPipeIn;
 };
 
 NS_HIDDEN_(nsresult)
