@@ -224,6 +224,14 @@ public:
    */
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
 
+
+  /** Rebuild the entire document from source HTML
+   *  Needed to be able to edit HEAD and other outside-of-BODY content
+   *
+   *  @param aSourceString   HTML source string of the entire new document
+   */
+  NS_IMETHOD RebuildDocumentFromSource(const nsString& aSourceString)=0;
+
   /**
    * Insert some HTML source, interpreting
    * the string argument according to the given charset.

@@ -54,7 +54,11 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
   gComposerCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
 
-  gComposerCommandManager.registerCommand("cmd_editHTML",    nsEditHTMLCommand);
+  gComposerCommandManager.registerCommand("cmd_NormalMode",     nsNormalModeCommand);
+  gComposerCommandManager.registerCommand("cmd_AllTagsMode",    nsAllTagsModeCommand);
+  gComposerCommandManager.registerCommand("cmd_HTMLSourceMode", nsHTMLSourceModeCommand);
+  gComposerCommandManager.registerCommand("cmd_PreviewMode",    nsPreviewModeCommand);
+
   gComposerCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
   gComposerCommandManager.registerCommand("cmd_preferences", nsPreferencesCommand);
 
@@ -91,11 +95,19 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
   gComposerCommandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
   gComposerCommandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
-  gComposerCommandManager.registerCommand("cmd_tableJoinCells",     nsJoinTableCellsCommand);
-  gComposerCommandManager.registerCommand("cmd_tableSplitCell",     nsSplitTableCellCommand);
+  gComposerCommandManager.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
+  gComposerCommandManager.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
+  gComposerCommandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
   gComposerCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
   gComposerCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
   gComposerCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+}
+
+function SetupHTMLSourceController()
+{
+  // TODO: Need to write this and register commands
+  //       that we support while in HTML Source mode
+  return;
 }
 
 //-----------------------------------------------------------------------------------
@@ -175,8 +187,6 @@ var nsOpenCommand =
 
   doCommand: function(aCommand)
   {
-dump("*** nsOpenCommand: doCommand\n");
-
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     fp.init(window, window.editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
   
@@ -384,7 +394,8 @@ var nsPreviewCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-	  if (CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
+	  // Don't continue if user canceled during prompt for saving
+    if (!CheckAndSaveDocument(window.editorShell.GetString("BeforePreview")))
 	    return;
 
 	  var fileurl = "";
@@ -639,7 +650,9 @@ var nsInsertCharsCommand =
   },
   doCommand: function(aCommand)
   {
-    window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar", "");
+    // Problems using this non-modal. Use modal for now
+    //window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar", "");
+    window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar,modal", "");
   }
 };
 
@@ -704,22 +717,22 @@ var nsObjectPropertiesCommand =
     if (window.editorShell && window.editorShell.documentEditable)
     {
       // Launch Object properties for appropriate selected element 
-      var element = GetSelectedElementOrParentCell();
+      var element = GetSelectedElementOrParentCellOrLink();
       //dump("nsObjectProperties, isCommandEnabled: element="+element+",TagName="+element.nodeName+"\n");
       return (element && 
               (element.nodeName == "img"   ||
                element.nodeName == "hr"    ||
                element.nodeName == "table" ||
                element.nodeName == "td"    ||
-               element.nodeName == "a"     ||
-               window.editorShell.GetSelectedElement("href")));
+               element.nodeName == "a"))
+//               window.editorShell.GetSelectedElement("href")));
     }
     return false;
   },
   doCommand: function(aCommand)
   {
     // Launch Object properties for appropriate selected element 
-    var element = GetSelectedElementOrParentCell();
+    var element = GetSelectedElementOrParentCellOrLink();
     if (element)
     {
       var name = element.nodeName.toLowerCase();
@@ -789,7 +802,20 @@ var nsColorPropertiesCommand =
 
 
 //-----------------------------------------------------------------------------------
-var nsEditHTMLCommand =
+var nsNormalModeCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return true; //(window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    if (gEditorDisplayMode != DisplayModeNormal)
+      SetEditMode(DisplayModeNormal);
+  }
+};
+
+var nsAllTagsModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
@@ -797,14 +823,34 @@ var nsEditHTMLCommand =
   },
   doCommand: function(aCommand)
   {
-    if (gEditorDisplayMode === DisplayModeSource)
-    {
-      SetEditMode(DisplayModeNormal);
-    }
-    else
-    {
+    if (gEditorDisplayMode != DisplayModeAllTags)
+      SetEditMode(DisplayModeAllTags);
+  }
+};
+
+var nsHTMLSourceModeCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    if (gEditorDisplayMode != DisplayModeSource)
       SetEditMode(DisplayModeSource);
-    }
+  }
+};
+
+var nsPreviewModeCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    if (gEditorDisplayMode != DisplayModePreview)
+      SetEditMode(DisplayModePreview);
   }
 };
 
@@ -817,7 +863,6 @@ var nsInsertOrEditTableCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsInsertOrEditTableCommand\n");
     EditorInsertOrEditTable(true);
   }
 };
@@ -831,7 +876,6 @@ var nsEditTableCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsEditTableCommand\n");
     EditorInsertOrEditTable(false);
   }
 };
@@ -845,7 +889,7 @@ var nsSelectTableCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsSelectTableCommand\n");
+//dump("nsSelectTableCommand\n");
     window.editorShell.SelectTable();
     window._content.focus();
   }
@@ -859,7 +903,7 @@ var nsSelectTableRowCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsSelectTableRowCommand\n");
+//dump("nsSelectTableRowCommand\n");
     window.editorShell.SelectTableRow();
     window._content.focus();
   }
@@ -873,7 +917,7 @@ var nsSelectTableColumnCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsSelectTableColumnCommand\n");
+//dump("nsSelectTableColumnCommand\n");
     window.editorShell.SelectTableColumn();
     window._content.focus();
   }
@@ -887,7 +931,7 @@ var nsSelectTableCellCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsSelectTableCellCommand\n");
+//dump("nsSelectTableCellCommand\n");
     window.editorShell.SelectTableCell();
     window._content.focus();
   }
@@ -901,7 +945,6 @@ var nsSelectAllTableCellsCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsSelectAllTableCellsCommand\n");
     window.editorShell.SelectAllTableCells();
     window._content.focus();
   }
@@ -1019,7 +1062,7 @@ var nsDeleteTableRowCommand =
   },
   doCommand: function(aCommand)
   {
-dump("nsDeleteTableRowCommand: doCommand\n");
+//dump("nsDeleteTableRowCommand: doCommand\n");
     window.editorShell.DeleteTableRow(1);
     window._content.focus();
   }
@@ -1153,6 +1196,21 @@ var nsSplitTableCellCommand =
     window._content.focus();
   }
 };
+
+//-----------------------------------------------------------------------------------
+var nsTableOrCellColorCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return IsInTable();
+  },
+  doCommand: function(aCommand)
+  {
+    window.editorShell.SetBackgroundColor();   
+    window._content.focus();
+  }
+};
+
 
 //-----------------------------------------------------------------------------------
 var nsPreferencesCommand =

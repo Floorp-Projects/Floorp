@@ -121,6 +121,7 @@ public:
   NS_IMETHOD InsertHTML(const nsString &aInputString);
   NS_IMETHOD InsertHTMLWithCharset(const nsString& aInputString,
                                    const nsString& aCharset);
+  NS_IMETHOD RebuildDocumentFromSource(const nsString& aSourceString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
   NS_IMETHOD DeleteSelection(EDirection aAction);

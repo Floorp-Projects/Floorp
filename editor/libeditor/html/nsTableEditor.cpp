@@ -413,6 +413,12 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   //.. so suppress Rules System selection munging
   nsAutoTxnsConserveSelection dontChangeSelection(this);
 
+  // If we are inserting after all existing columns
+  // Make sure table is "well formed"
+  //  before appending new column
+  if (startColIndex >= colCount)
+    NormalizeTable(table);
+
   nsCOMPtr<nsIDOMElement> rowElement;
   for ( rowIndex = 0; rowIndex < rowCount; rowIndex++)
   {
@@ -445,11 +451,6 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
         }
       }
     } else {
-      // We are inserting after all existing columns
-      // Make sure table is "well formed"
-      //  before appending new column
-      NormalizeTable(table);
-      
       // Get current row and append new cells after last cell in row
       if(rowIndex == 0)
         res = GetFirstRow(table.get(), *getter_AddRefs(rowElement));
@@ -3226,7 +3227,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
     if (IndexNotTested(&indexArray, startRowIndex))
     {
       indexArray.AppendElement((void*)startColIndex);
-      allCellsInColAreSelected = AllCellsInColumnSelected(table, startColIndex, colCount);
+      allCellsInColAreSelected = AllCellsInColumnSelected(table, startColIndex, rowCount);
       // We're done as soon as we fail for any column
       if (!allCellsInRowAreSelected) break;
     }

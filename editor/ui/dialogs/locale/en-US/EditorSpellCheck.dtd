@@ -23,7 +23,8 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Check Spelling">
 
-<!ENTITY wordEditField.label "Replace with:">
+<!ENTITY misspelledWord.label "Misspelled word:">
+<!ENTITY wordEditField.label "Change to:">
 <!ENTITY checkwordButton.label "Check Word">
 <!ENTITY suggestions.label "Suggestions:">
 
@@ -34,7 +35,7 @@
 
 <!ENTITY userDictionary.label "User Dictionary:">
 <!ENTITY addToUserDictionaryButton.label "Add Word">
-<!ENTITY editUserDictionaryButton.label "Edit">
+<!ENTITY editUserDictionaryButton.label "Edit...">
 <!ENTITY recheckButton.label "Recheck">
 <!ENTITY closeButton.label "Close">
 <!ENTITY languagePopup.label "Language:">

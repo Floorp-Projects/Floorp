@@ -110,9 +110,12 @@
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
-      <menuseparator/>
-      <menuitem id="viewSourceMenuitem"/>
-      <menuseparator />
+      <menuseparator id="viewSep1"/>
+      <menuitem id="viewNormalMode" checked="true"/>
+      <menuitem id="viewAllTagsMode"/>
+      <menuitem id="viewSourceMode"/>
+      <menuitem id="viewPreviewMode"/>
+      <menuseparator  id="viewSep1"/>
       <menu id = "composerCharsetMenu" />
     </menupopup>
     </menu>
@@ -150,7 +153,6 @@
     <button id="saveButton"/>
     <button id="previewButton"/>
     <menubutton id="printButton" />
-    <button id="findButton"/>
     <button id="spellingButton"/>
     <spring class="separator_small"/>
     <button id="imageButton"/>
@@ -169,9 +171,6 @@
     <box autostretch="never">
       <!-- from editorOverlay -->
       <menulist id="ParagraphSelect"/>
-<!-- remove font dropdown list from toolbar (bug #47506)
-      <menulist id="FontFaceSelect"/>
--->
       <stack id="ColorButtons"/>
     </box>
 
@@ -214,16 +213,13 @@
                  flex="1" style="width:1em; height:1em;"/>
     </deck>
 
-    <!-- TODO: Set collapsed="true" so default is to not show the editmode toolbar -->
-    <toolbar id="EditModeToolbar" autostretch="never" valign="middle" collapsed="true" persist="collapsed">
+    <!-- TODO: Set hidden="true" so default is to not show the editmode toolbar -->
+    <toolbar id="EditModeToolbar" autostretch="never" valign="middle" persist="hidden collapsed">
       <text id="EditModeLabel" class="margin-left-right" value="&editMode.label;"/>
-      <!-- From editorOverlay.xul -->
-      <button id="NormalModeButton" persist="type"/>
+      <button id="NormalModeButton"/>
       <button id="TagModeButton"/>
       <button id="SourceModeButton"/>
       <button id="PreviewModeButton"/>
-      <spring flex="1"/>
-      <image id="ToggleEditModeType"/>
     </toolbar>
 
     <!-- Some of this is from globarOverlay.xul -->

@@ -23,12 +23,12 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Insert Table">
 
-<!ENTITY numRowsEditField.label "Number of rows:">
-<!ENTITY numColumnsEditField.label "Number of columns:">
+<!ENTITY size.label "Size">
+<!ENTITY numRowsEditField.label "Rows:">
+<!ENTITY numColumnsEditField.label "Columns:">
 <!ENTITY widthEditField.label "Table width:">
 <!ENTITY heightEditField.label "Table height:">
-<!ENTITY heightEditField.tooltip "Type a number, then choose pixels or a percentage of the window">
+<!ENTITY heightEditField.tooltip "Type a number, then choose pixels or a percentage of the window or parent cell">
 <!ENTITY borderEditField.label "Border:">
 <!ENTITY borderEditField.tooltip "Type a number for the table's border, or type zero (0) for no border">
 <!ENTITY pixels.label "pixels">
-<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">

@@ -198,6 +198,13 @@ interface nsIEditorShell : nsISupports
   /* Insert HTML source at current location (replace current selection) */
   void InsertSource(in wstring textToInsert);
   void InsertSourceWithCharset(in wstring textToInsert, in wstring charset);
+
+  /** Rebuild the entire document from source HTML
+   *  Needed to be able to edit HEAD and other outside-of-BODY content
+   *  param source: HTML source string of the entire new document
+   */
+  void RebuildDocumentFromSource(in wstring source);
+
   void InsertBreak();
   
   void MakeOrChangeList(in wstring listType);

@@ -36,7 +36,6 @@
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
 
 <!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
-<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">
 
 <!-- These controls are in the Dimensions box of the expanded area -->
 <!ENTITY dimensionsBox.label "Dimensions">
@@ -44,8 +43,8 @@
 <!ENTITY originalSizeRadio.tooltip "Revert to the image's original size">
 <!ENTITY customSizeRadio.label "Custom Size">
 <!ENTITY customSizeRadio.tooltip "Change the image's original size">
-<!ENTITY heightEditField.label "Height">
-<!ENTITY widthEditField.label "Width">
+<!ENTITY heightEditField.label "Height:">
+<!ENTITY widthEditField.label "Width:">
 <!ENTITY constrainCheckbox.label "Constrain">
 <!ENTITY constrainCheckbox.tooltip "Maintain the image's aspect ratio">
 
@@ -66,11 +65,9 @@
 <!-- These controls are in the Spacing Box of the expanded area -->
 <!ENTITY spacingBox.label "Spacing">
 <!ENTITY spacingBox.tooltip "Type a number for the amount of space around image">
-<!ENTITY leftRightEditField.label "Left and Right">
-<!ENTITY topBottomEditField.label "Top and Bottom">
-<!ENTITY borderEditField.label "Solid Border">
-
-<!ENTITY AdvancedEditButton2.tooltip "Add or modify HTML elements, style attributes, and JavaScript">
+<!ENTITY leftRightEditField.label "Left and Right:">
+<!ENTITY topBottomEditField.label "Top and Bottom:">
+<!ENTITY borderEditField.label "Solid Border:">
 
 <!-- These controls may be added some day; currently not used -->
 <!ENTITY leaveAtLocationCheckbox.label "Leave">

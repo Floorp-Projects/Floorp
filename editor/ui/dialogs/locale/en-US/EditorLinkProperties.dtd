@@ -20,22 +20,8 @@
    - Contributor(s): 
   -->
 
-<!-- These strings are generic to all or most of the editor's dialogs. -->
-
-<!-- This button is for the progressive disclosure of additional editing functionality -->
-<!ENTITY MoreButton.label "More">
-<!ENTITY FewerButton.label "Fewer">
-
-
-<!-- These strings are for use specifically in the editor's link dialog. -->
 <!ENTITY windowTitle.label "Link Properties">
-
-<!-- These are in the link source box. -->
-<!ENTITY LinkTitle.label "Link text:">
-<!ENTITY LinkImage.label "Link text:">
-
-<!-- These controls are in the Dimensions box of the advanced area -->
-<!ENTITY LinkURLBox.label "Link to:">
+<!ENTITY LinkURLBox.label "Link Location">
 <!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
 <!ENTITY RemoveLinkButton.label "Remove Link">
 <!ENTITY NamedAnchorMsg.label "or select a Named Anchor:">

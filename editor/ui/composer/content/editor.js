@@ -38,14 +38,13 @@ var DisplayModeAllTags = 2;
 var DisplayModeSource = 3;
 var PreviousNonSourceDisplayMode = 1;
 var gEditorDisplayMode = 1;  // Normal Editor mode
-var EditModeType = "";
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var gContentWindow = 0;
 var gSourceContentWindow = 0;
 var gContentWindowDeck;
 var gFormatToolbar;
-var gFormatToolbarHidden;
+var gFormatToolbarHidden = false;
 var gFormatToolbarCollapsed;
 var gEditModeBar;
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
@@ -159,10 +158,6 @@ function EditorStartup(editorType, editorElement)
     gSourceModeButton  = document.getElementById("SourceModeButton");
     gPreviewModeButton = document.getElementById("PreviewModeButton");
 
-    // The "type" attribute persists, so use that value
-    //  to setup edit mode buttons
-    ToggleEditModeType(gNormalModeButton.getAttribute("type"));
-
     // XUL elements we use when switching from normal editor to edit source
     gContentWindowDeck = document.getElementById("ContentWindowDeck");
     gFormatToolbar = document.getElementById("FormatToolbar");
@@ -182,7 +177,10 @@ function EditorStartup(editorType, editorElement)
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
 
   // Startup also used by other editor users, such as Message Composer 
-  EditorSharedStartup()
+  EditorSharedStartup();
+
+  // HTML Source editor is not shared with Mail, IM
+  SetupHTMLSourceController();
 
   // set up our global prefs object
   GetPrefsService();
@@ -222,6 +220,10 @@ function EditorSharedStartup()
   SafeSetAttribute("menu_SelectAllCells", "acceltext", dragStr);
   // And add "Del" or "Clear"
   SafeSetAttribute("menu_DeleteCellContents", "acceltext", delStr);
+
+  // Remove a Privacy menu that causes problems
+  // (method is in tasksOverlay.js)
+  HideImage();
 
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
@@ -745,11 +747,13 @@ function EditorRemoveLinks()
 */
 
 // For property dialogs, we want the selected element,
-//  but will accept a parent table cell if inside one
-function GetSelectedElementOrParentCell()
+//  but will accept a parent table cell or link if inside one
+function GetSelectedElementOrParentCellOrLink()
 {
 //dump("GetSelectedElementOrParentCell\n");
   var element = editorShell.GetSelectedElement("");
+  if (!element)
+    element = editorShell.GetElementOrParentByTagName("href",null);
   if (!element)
     element = editorShell.GetElementOrParentByTagName("td",null);
 
@@ -768,13 +772,6 @@ function SetEditMode(mode)
 {
   if (gIsHTMLEditor)
   {
-    // Be sure toolbar is visible
-    gEditModeBar.setAttribute("hidden", "");
-    gEditModeBar.setAttribute("collapsed", "");
-    // Remember the state
-    document.persist("EditModeToolbar","hidden");
-    document.persist("EditModeToolbar","collapsed");
-
     var bodyNode = editorShell.editorDocument.getElementsByTagName("body").item(0);
     if (!bodyNode)
     {
@@ -795,8 +792,9 @@ function SetEditMode(mode)
         var childCount = bodyNode.childNodes.length;
         if( childCount)
         {
-          gSourceContentWindow.setAttribute("value",editorShell.GetContentsAs("text/html", gOutputBodyOnly));
+          gSourceContentWindow.setAttribute("value",editorShell.GetContentsAs("text/html", 0)); //gOutputBodyOnly));
           gSourceContentWindow.focus();
+          // Note: We can't set the caret location in a multiline textfield
           return;
         }
       }
@@ -807,10 +805,15 @@ function SetEditMode(mode)
     {
       // We are comming from edit source mode,
       //   so transfer that back into the document
+      //TODO: THIS IS NOT WORKING YET!
+      editorShell.RebuildDocumentFromSource(gSourceContentWindow.value);
+/*
       editorShell.SelectAll();
       editorShell.InsertSource(gSourceContentWindow.value);
+*/
       // Clear out the source editor buffer
       gSourceContentWindow.value = "";
+
       // reset selection to top of doc (wish we could preserve it!)
       if (bodyNode)
         editorShell.editorSelection.collapse(bodyNode, 0);
@@ -892,19 +895,18 @@ function SetDisplayMode(mode)
 
       // Hide menus that are completely disabled
       // Note: ShowMenuItem is implemented in EditorContextMenu.js
-      ShowMenuItem("editMenu", false);
-      ShowMenuItem("viewMenu", false);
-      ShowMenuItem("insertMenu", false);
-      ShowMenuItem("formatMenu", false);
-      ShowMenuItem("tableMenu", false);
-
-/*
       CollapseItem("editMenu", true);
-      CollapseItem("viewMenu", true);
       CollapseItem("insertMenu", true);
       CollapseItem("formatMenu", true);
       CollapseItem("tableMenu", true);
-*/
+
+      // Collapse allitems in the view menu except mode switch items
+      SetViewMenuForHTMLSource(true);
+
+      DisableItem("viewToolbar", true);
+      DisableItem("viewSep1", true);
+      DisableItem("viewSep1", true);
+      DisableItem("composerCharsetMenu", true);
 
       DisableItem("findButton", true);
       DisableItem("spellingButton", true);
@@ -921,7 +923,6 @@ function SetDisplayMode(mode)
         gFormatToolbar.setAttribute("hidden", "true");
       }
 
-      // THIS DOESN'T WORK!
       gSourceContentWindow.focus();
     }
     else 
@@ -930,19 +931,13 @@ function SetDisplayMode(mode)
       gContentWindowDeck.setAttribute("index","0");
 
       // Restore menus and toolbars
-      ShowMenuItem("editMenu", true);
-      ShowMenuItem("viewMenu", true);
-      ShowMenuItem("insertMenu", true);
-      ShowMenuItem("formatMenu", true);
-      ShowMenuItem("tableMenu", true);
-
-/*
       CollapseItem("editMenu", false);
-      CollapseItem("viewMenu", false);
       CollapseItem("insertMenu", false);
       CollapseItem("formatMenu", false);
       CollapseItem("tableMenu", false);
-*/
+
+      SetViewMenuForHTMLSource(false);
+
       DisableItem("findButton", false);
       DisableItem("spellingButton", false);
       DisableItem("imageButton", false);
@@ -963,38 +958,45 @@ dump("Switching back to visible toolbar. gFormatToolbarHidden = "+gFormatToolbar
   }
 }
 
-function ToggleEditModeType()
+// We disable all items in View menu except Edit mode and sidebar items
+function SetViewMenuForHTMLSource(disable)
 {
-  if (gIsHTMLEditor)
+  var viewMenu = document.getElementById("viewMenu");
+  // menuitems are children of the menupopup child
+  var children = viewMenu.firstChild.childNodes;
+  for (var i = 0; i < children.length; i++)
   {
-    if (EditModeType == "text")
+    var item = children.item(i);
+    if (item.id != "viewNormalMode" &&
+        item.id != "viewAllTagsMode" &&
+        item.id != "viewSourceMode" &&
+        item.id != "viewPreviewMode" &&
+        item.id != "sidebar-menu")
     {
-      EditModeType = "image";
-      gNormalModeButton.setAttribute("value","");
-      gTagModeButton.setAttribute("value","");
-      gSourceModeButton.setAttribute("value","");
-      gPreviewModeButton.setAttribute("value","");
-      // Advanced users don't need to see the label (cleaner look)
-      gEditModeLabel.setAttribute("hidden","true");
+      DisableItem(item.id, disable);
     }
-    else
-    {
-      EditModeType = "text";
-      gNormalModeButton.setAttribute("value","Normal");
-      gTagModeButton.setAttribute("value","Show All Tags");
-      gSourceModeButton.setAttribute("value","HTML Source");
-      gPreviewModeButton.setAttribute("value","Edit Preview");
-      gEditModeLabel.setAttribute("hidden","");
-    }
-
-    gNormalModeButton.setAttribute("type",EditModeType);
-    gTagModeButton.setAttribute("type",EditModeType);
-    gSourceModeButton.setAttribute("type",EditModeType);
-    gPreviewModeButton.setAttribute("type",EditModeType);
-
-    // Remember the state
-    document.persist("NormalModeButton","type");
   }
+}
+
+function DisableMenuItem(id, disable)
+{
+dump("DisableMenuItem: item id="+id+": "+disable+"\n");
+  var item = document.getElementById(id);
+  if (item)
+  {
+	  if(disable != (item.getAttribute("disabled") == true))
+    {
+		  if (disable)
+        item.setAttribute("disabled", disable);
+      else
+      {
+dump("Remove disable\n");
+        item.removeAttribute("disabled");
+      }
+    }
+  }
+  else
+    dump("DisableMenuItem: item id="+id+" not found\n");
 }
 
 function EditorToggleParagraphMarks()
@@ -1208,16 +1210,13 @@ function  getUnicharPref(aPrefName, aDefVal)
 
 function EditorInitFormatMenu()
 {
-  // Set the string for the background color menu item
-  SetBackColorString("backgroundColorMenu"); 
-
   // Set strings and enable for the [Object] Properties item
   // Note that we directly do the enabling instead of
   //  using goSetCommandEnabled since we already have the menuitem
   var menuItem = document.getElementById("objectProperties");
   if (menuItem)
   {
-    var element = GetSelectedElementOrParentCell();
+    var element = GetSelectedElementOrParentCellOrLink();
     var menuStr = GetString("ObjectProperties");
     if (element && element.nodeName)
     {
@@ -1259,7 +1258,7 @@ function EditorInitFormatMenu()
   }
 }
 
-function SetBackColorString(xulElementID)
+function SetBackColorString(xulElementID, allowPageBackground)
 {
   var xulElement = document.getElementById(xulElementID);
   if (xulElement)
@@ -1273,16 +1272,17 @@ function SetBackColorString(xulElementID)
       textVal = GetString("TableBackColor");
     else if (tagNameObj.value == "td")
       textVal = GetString("CellBackColor");
-    else
+    else if (allowPageBackground)
       textVal = GetString("PageBackColor");
 
-    xulElement.setAttribute("value",textVal);
+    if (textVal)
+      xulElement.setAttribute("value",textVal);
   }
 }
 
-function InitBackColorPopup()
+function InitBackColorPopup(allowPageBackground)
 {
-  SetBackColorString("BackColorCaption"); 
+  SetBackColorString("BackColorCaption", allowPageBackground);
 }
 
 function InitParagraphMenu()
@@ -1423,7 +1423,7 @@ function EditorSetDefaultPrefs()
       node = nodelist.item(i);
       if ( node )
       {
-        var value = node.getAttribute("name");
+        var value = node.getAttribute("name").toLowerCase();
         if (value == "author")
         {
           authorFound = true;
@@ -1445,7 +1445,7 @@ function EditorSetDefaultPrefs()
         var element = domdoc.createElement("meta");
         if ( element )
         {
-          AddAttrToElem(domdoc, "name", "Author", element);
+          AddAttrToElem(domdoc, "name", "author", element);
           AddAttrToElem(domdoc, "content", prefAuthorString, element);
           headelement.appendChild( element );
         }
@@ -1742,6 +1742,9 @@ function IsFindInstalled()
 //-----------------------------------------------------------------------------------
 function RemoveInapplicableUIElements()
 {
+  // For items that are in their own menu block, remove associated separator
+  // (we can't use "hidden" since class="hide-in-IM" CSS rule interferes)
+
    // if no find, remove find ui
   if (!IsFindInstalled())
   {
@@ -1755,10 +1758,11 @@ function RemoveInapplicableUIElements()
     if (findMenuItem)
       findMenuItem.setAttribute("hidden", "true");
     
-	var findSepItem  = document.getElementById("sep_find");
-      if (findSepItem)
-        findSepItem.parentNode.removeChild(findSepItem);
- }
+    var findSepItem  = document.getElementById("sep_find");
+    if (findSepItem)
+      findSepItem.parentNode.removeChild(findSepItem);
+  }
+
    // if no spell checker, remove spell checker ui
   if (!IsSpellCheckerInstalled())
   {
@@ -1772,40 +1776,10 @@ function RemoveInapplicableUIElements()
     if (spellingMenuItem)
       spellingMenuItem.setAttribute("hidden", "true");
 
-    // Spelling item is in its own menu block, so remove it
-    // (we can't use "hidden" since class="hide-in-IM" CSS rule overrides!)
     var spellingSepItem  = document.getElementById("sep_checkspelling");
     if (spellingSepItem)
       spellingSepItem.parentNode.removeChild(spellingSepItem);
   }
-/*
-  // if no spell checker, remove spell checker ui
-  if (!IsSpellCheckerInstalled())
-  {
-    dump("Removing spell checker items\n");
-    
-    // Completely remove UI elements intended for spelling
-    // This allows HTMLSource to use "hidden" to turn items off/on
-    //   and also needed because of class="hide-in-IM" CSS rule used by AIM
-
-    // First, remove the command node used by both button and menuitem
-    var spellingCommand = document.getElementById("cmd_spelling");
-    if (spellingCommand)
-      spellingCommand.parentNode.removeChild(spellingCommand);
-    
-    var spellingButton = document.getElementById("spellingButton");
-    if (spellingButton)
-      spellingButton.parentNode.removeChild(spellingButton);
-    
-    var spellingMenuItem = document.getElementById("menu_checkspelling");
-    if (spellingMenuItem)
-      spellingMenuItem.parentNode.removeChild(spellingMenuItem);
-
-    var spellingSepItem  = document.getElementById("sep_checkspelling");
-    if (spellingSepItem)
-      spellingSepItem.parentNode.removeChild(spellingSepItem);
-  }
-*/
 }
 
 function onEditorFocus()
@@ -1852,7 +1826,12 @@ function EditorInitTableMenu()
   else
     menuText = GetString("JoinCellToRight");
 
-  document.getElementById("menu_tableJoinCells").setAttribute("value",menuText);
+  document.getElementById("menu_JoinTableCells").setAttribute("value",menuText);
+  document.getElementById("menu_JoinTableCells").setAttribute("accesskey","j");
+
+  // Change text on background item to "Table..." or "Cell..."
+  // "false" means don't allow "Page Background..." string
+  SetBackColorString("menu_TableOrCellColor", false);
 
   // Set enable states for all table commands
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
@@ -1885,15 +1864,16 @@ function goUpdateTableMenuItems(commandset)
     if (commandID)
     {
       if (commandID == "cmd_InsertTable" ||
-          commandID == "cmd_tableJoinCells" ||
-          commandID == "cmd_tableSplitCell")
+          commandID == "cmd_JoinTableCells" ||
+          commandID == "cmd_SplitTableCell")
       {
         // Call the update method in the command class
         goUpdateCommand(commandID);
       } 
       // Directly set with the values calculated here
       else if (commandID == "cmd_DeleteTable" ||
-               commandID == "cmd_NormalizeTable")
+               commandID == "cmd_NormalizeTable" ||
+               commandID == "cmd_TableOrCellColor")
       {
         goSetCommandEnabled(commandID, enabledIfTable);
       } else {

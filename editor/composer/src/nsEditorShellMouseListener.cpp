@@ -165,6 +165,25 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   nsresult res = mouseEvent->GetButton(&buttonNumber);
   if (NS_FAILED(res)) return res;
 
+  PRBool isContextClick;
+  // Test if special 'table selection' key is pressed when double-clicking
+  //  so we look for an enclosing cell or table
+  PRBool tableMode = PR_FALSE;
+
+#ifdef XP_MAC
+  // Cmd is Mac table-select key
+  res = mouseEvent->GetMetaKey(&tableMode);
+  if (NS_FAILED(res)) return res;
+
+  // Ctrl+Click for context menu
+  res = mouseEvent->GetCtrlKey(&isContextClick);
+#else
+  // Right mouse button for Windows, UNIX
+  isContextClick = buttonNumber == 3;
+  res = mouseEvent->GetCtrlKey(&tableMode);
+#endif
+  if (NS_FAILED(res)) return res;
+
   nsCOMPtr<nsIDOMEventTarget> target;
   res = aMouseEvent->GetTarget(getter_AddRefs(target));
   if (NS_FAILED(res)) return res;
@@ -175,52 +194,49 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   res = mouseEvent->GetDetail(&clickCount);
   if (NS_FAILED(res)) return res;
 
-  if (buttonNumber == 3 || (buttonNumber == 1 && clickCount == 2))
-  {
-    /**XXX Context menu design is flawed:
-      *    Mouse message arrives here first,
-      *    then to XULPopupListenerImpl::MouseDown,
-      *    and never bubbles to frame.
-      *    So we don't reposition the caret correctly
-      *    within a text node and don't detect if clicking 
-      *    on a selection. (Logic for both is in frame code.)
-      *    Kludge: Set selection to beginning of text node.
-      *    TODO: try to solve click within selection with a new 
-      *    nsSelection method.
-      *    We also want to do this for double-click to detect
-      *    a link enclosing the text node
-      */  
+  PRBool NodeIsInSelection = PR_FALSE;
 
-    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(target);
-    if (textNode)
+  if (isContextClick || (buttonNumber == 1 && clickCount == 2))
+  {
+    // Context menu or double click
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
+    if (node)
     {
-      //XXX We should do this only if not clicking inside an existing selection!
       nsCOMPtr<nsIDOMSelection> selection;
       mEditorShell->GetEditorSelection(getter_AddRefs(selection));
       if (selection)
-        selection->Collapse(textNode, 0);
+      {
+        res = selection->ContainsNode(node, PR_TRUE, &NodeIsInSelection);
+        // Kludge: We really want to reposition the caret exactly as done for
+        //  left mouse button, but we never reach the frame's HandlePress method.
+        //  Thus for text nodes, the best we can do is reposition to the start of the node,
+        //   but only if not already selected, of course
+        if (!NodeIsInSelection)
+          selection->Collapse(node, 0);
+      }
       
       // Get enclosing link
-      res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), textNode, getter_AddRefs(element));
+      nsCOMPtr<nsIDOMElement> linkElement;
+      res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
       if (NS_FAILED(res)) return res;
+      if (linkElement)
+        element = linkElement;
     }
   }
 
-  if (buttonNumber == 1)
+  if (isContextClick)
+  {
+    // Set selection to node clicked on if NOT within an existing selection
+    if (element && !NodeIsInSelection)
+      mEditorShell->SelectElement(element);
+      // Always fall through to do other actions, such as context menu
+  }
+  else if (buttonNumber == 1)
   {
 #ifdef DEBUG_cmanske
-printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
+    printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
 #endif
-    // Test if special 'table selection' key is pressed when double-clicking
-    //  so we look for an enclosing cell or table
-    PRBool tableMode = PR_FALSE;
 
-#ifdef XP_MAC
-    res = mouseEvent->GetMetaKey(&tableMode);
-#else
-    res = mouseEvent->GetCtrlKey(&tableMode);
-#endif
-    if (NS_FAILED(res)) return res;
     if (tableMode && clickCount == 2)
     {
 #ifdef DEBUG_cmanske
@@ -244,22 +260,14 @@ printf("nsEditorShellMouseListener::MouseDown-DoubleClick in cell\n");
       if (NS_FAILED(res)) return res;
 
       // Let editor decide what to do with this
-      PRBool handled;
+      PRBool handled = PR_FALSE;
       mEditorShell->HandleMouseClickOnElement(element, clickCount, x, y, &handled);
 
       if (handled)
         mouseEvent->PreventDefault();
     }
   }
-  // Should we do this only for "right" mouse button?
-  // What about Mac?
-  else if (buttonNumber == 3)
-  {
-    if (element)
-      // Set selection to node clicked on
-      mEditorShell->SelectElement(element);
-      // Always fall through to do other actions, such as context menu
-  }
+
   return NS_OK;
 }
 

@@ -36,4 +36,3 @@
 <!ENTITY backgroundImage.label "Background Image (Uncheck to edit page without image): ">
 <!ENTITY backgroundImage.tooltip "Use an image file as the background for your document">
 <!ENTITY saveImageMsg.label "Filename and location will be saved for future use.">
-<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">

@@ -47,8 +47,9 @@
     <command id="cmd_DeleteCell"          oncommand="goDoCommand('cmd_DeleteCell')"/>
     <command id="cmd_DeleteCellContents"  oncommand="goDoCommand('cmd_DeleteCellContents')"/>
     <command id="cmd_NormalizeTable"      oncommand="goDoCommand('cmd_NormalizeTable')"/>
-    <command id="cmd_tableJoinCells"      oncommand="goDoCommand('cmd_tableJoinCells')"/>
-    <command id="cmd_tableSplitCell"      oncommand="goDoCommand('cmd_tableSplitCell')"/>
+    <command id="cmd_JoinTableCells"      oncommand="goDoCommand('cmd_JoinTableCells')"/>
+    <command id="cmd_SplitTableCell"      oncommand="goDoCommand('cmd_SplitTableCell')"/>
+    <command id="cmd_TableOrCellColor"    oncommand="goDoCommand('cmd_TableOrCellColor')"/>
     <command id="cmd_editTable"           oncommand="goDoCommand('cmd_editTable')"/>
   </commandset>
 
@@ -100,11 +101,14 @@
         </menupopup>
       </menu>
       <menuseparator />
+<!--
       <menuitem id="menu_NormalizeTable"  value="&tableFix.label;"        accesskey="&tablefix.accesskey;"       observes="cmd_NormalizeTable"/>
       <!-- menu value is set in InitTableMenu -->
-      <menuitem id="menu_tableJoinCells"                                  accesskey="&tablejoincells.accesskey;" observes="cmd_tableJoinCells"/>
-      <menuitem id="menu_tableSlitCell"   value="&tableSplitCell.label;"  accesskey="&tablesplitcell.accesskey;" observes="cmd_tableSplitCell"/>
+-->
+      <menuitem id="menu_JoinTableCells"                                  accesskey="&tablejoincells.accesskey;" observes="cmd_JoinTableCells"/>
+      <menuitem id="menu_SlitTableCell"   value="&tableSplitCell.label;"  accesskey="&tablesplitcell.accesskey;" observes="cmd_SplitTableCell"/>
       <!-- this is shared with Format Menu -->
+      <menuitem id="menu_TableOrCellColor" value="&tableOrCellColor.label;" accesskey="&formatbkgdcolormenu.accesskey;" observes="cmd_TableOrCellColor"/>
       <menuitem id="menu_tableProperties" value="&tableProperties.label;" accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
     </menupopup>
   </menu>
