@@ -32,7 +32,7 @@
 typedef unsigned nsXPCVariant;
 
 extern "C" PRInt32
-invoke_count_bytes(nsISupports* that,
+invoke_count_bytes(nsISupports* that, const PRUint32 methodIndex,
   const PRUint32 paramCount, const nsXPTCVariant* s)
 {
   PRInt32 result = 4; /* variant records do not include self pointer */
