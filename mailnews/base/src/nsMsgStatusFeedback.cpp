@@ -265,17 +265,31 @@ nsMsgStatusFeedback::StartMeteors()
   if (mQueuedMeteorStarts>0) {
     mQueuedMeteorStarts--;
     NS_ASSERTION(mQueuedMeteorStarts == 0, "destroying unfired/uncanceled start timer");
+	if(mStartTimer)
+	  mStartTimer->Cancel();
   }
 
-  // if mStartTimer already exists, then this will cancel the old timer.
-  rv = NS_NewTimer(getter_AddRefs(mStartTimer));
-  if (NS_FAILED(rv)) return rv;
+    //If there is an outstanding stop timer still then we might as well cancel it since we are
+  //just going to start it.  This will prevent there being a start and stop timer outstanding in
+  //which case the start could go before the stop and cause the meteors to never start.
+  if(mQueuedMeteorStops > 0) {
+    mQueuedMeteorStops--;
+	if(mStopTimer)
+	  mStopTimer->Cancel();
+  }
 
-  rv = mStartTimer->Init(notifyStartMeteors, (void *)this,
-                         MSGFEEDBACK_TIMER_INTERVAL);
-  if (NS_FAILED(rv)) return rv;
+  //only run the start timer if the meteors aren't spinning.
+  if(!m_meteorsSpinning)
+  {
+	  rv = NS_NewTimer(getter_AddRefs(mStartTimer));
+	  if (NS_FAILED(rv)) return rv;
 
-  mQueuedMeteorStarts++;
+	  rv = mStartTimer->Init(notifyStartMeteors, (void *)this,
+							 MSGFEEDBACK_TIMER_INTERVAL);
+	  if (NS_FAILED(rv)) return rv;
+
+	  mQueuedMeteorStarts++;
+  }
   return NS_OK;
 }
 
@@ -289,17 +303,32 @@ nsMsgStatusFeedback::StopMeteors()
   if (mQueuedMeteorStops>0) {
     mQueuedMeteorStops--;
     NS_ASSERTION(mQueuedMeteorStops == 0, "destroying unfired/uncanceled stop");
+    if(mStopTimer)
+	  mStopTimer->Cancel();
   }
   
-  // if mStopTimer already exists, then this will cancel the old timer.
-  rv = NS_NewTimer(getter_AddRefs(mStopTimer));
-  if (NS_FAILED(rv)) return rv;
+  //If there is an outstanding start timer still then we might as well cancel it since we are
+  //just going to stop it.  This will prevent there being a start and stop timer outstanding in
+  //which case the stop could go before the start and cause the meteors to never stop.
+  if(mQueuedMeteorStarts > 0) {
+    mQueuedMeteorStarts--;
+	if(mStartTimer)
+	  mStartTimer->Cancel();
+  }
 
-  rv = mStopTimer->Init(notifyStopMeteors, (void *)this,
-                        MSGFEEDBACK_TIMER_INTERVAL);
-  if (NS_FAILED(rv)) return rv;
 
-  mQueuedMeteorStops++;
+  //only run the stop timer if the meteors are actually spinning.
+  if(m_meteorsSpinning)
+  {
+	  rv = NS_NewTimer(getter_AddRefs(mStopTimer));
+	  if (NS_FAILED(rv)) return rv;
+
+	  rv = mStopTimer->Init(notifyStopMeteors, (void *)this,
+							MSGFEEDBACK_TIMER_INTERVAL);
+	  if (NS_FAILED(rv)) return rv;
+
+	  mQueuedMeteorStops++;
+  }
   return NS_OK;
 }
 
