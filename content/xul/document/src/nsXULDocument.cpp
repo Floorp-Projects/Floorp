@@ -129,6 +129,7 @@ static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kLocalStoreCID,            NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,         NS_RDFXULBUILDER_CID);
@@ -901,20 +902,24 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     if (mFragmentRoot == nsnull) {
 
         nsIRDFCompositeDataSource* db;
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
-                                                        nsnull,
-                                                        kIRDFCompositeDataSourceIID,
-                                                        (void**) &db))) {
+        rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
+                                                nsnull,
+                                                kIRDFCompositeDataSourceIID,
+                                                (void**) &db);
+
+        if (NS_FAILED(rv)) {
             NS_ERROR("couldn't create composite datasource");
             return rv;
         }
 
         // Create a XUL content model builder
         NS_IF_RELEASE(mXULBuilder);
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
-                                                        nsnull,                     
-                                                        kIRDFContentModelBuilderIID,
-                                                        (void**) &mXULBuilder))) {
+        rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
+                                                nsnull,
+                                                kIRDFContentModelBuilderIID,
+                                                (void**) &mXULBuilder);
+
+        if (NS_FAILED(rv)) {
             NS_ERROR("couldn't create XUL builder");
             return rv;
         }
@@ -937,10 +942,9 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         // XXX This needs to be cloned across windows, and the final
         // instance needs to be flushed to disk. It may be that this is
         // really an RDFXML data source...
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                        nsnull,
-                                                        kIRDFDataSourceIID,
-                                                        (void**) &mLocalDataSource))) {
+        rv = mRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
+
+        if (NS_FAILED(rv)) {
             NS_ERROR("couldn't create local data source");
             return rv;
         }
