@@ -27,11 +27,14 @@
 */
 
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
-#include "nsIXULPrototypeDocument.h"
-#include "nsIURI.h"
 #include "nsString2.h"
 #include "nsVoidArray.h"
+#include "nsIPrincipal.h"
+#include "nsISupportsArray.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIXULPrototypeDocument.h"
 #include "nsXULElement.h"
 
 class nsXULPrototypeDocument : public nsIXULPrototypeDocument
@@ -59,11 +62,15 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsString& aData);
 
+    NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult);
+    NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
+
 protected:
     nsCOMPtr<nsIURI> mURI;
     nsXULPrototypeElement* mRoot;
     nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
     nsCOMPtr<nsISupportsArray> mOverlayReferences;
+    nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
     nsXULPrototypeDocument();
     virtual ~nsXULPrototypeDocument();
@@ -229,4 +236,28 @@ nsXULPrototypeDocument::SetHeaderData(nsIAtom* aField, const nsString& aData)
 
 
 
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
+{
+    if (!mDocumentPrincipal) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+        if (NS_FAILED(rv))
+            return NS_ERROR_FAILURE;
+        rv = securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+        if (NS_FAILED(rv))
+            return NS_ERROR_FAILURE;
+    }
+    *aResult = mDocumentPrincipal;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
 
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
+{
+    mDocumentPrincipal = aPrincipal;
+    return NS_OK;
+}

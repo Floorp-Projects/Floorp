@@ -32,6 +32,7 @@
 #include "nsISupports.h"
 
 class nsIAtom;
+class nsIPrincipal;
 class nsIURI;
 class nsIStyleSheet;
 class nsString;
@@ -68,6 +69,9 @@ public:
 
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsString& aData) const = 0;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsString& aData) = 0;
+
+    NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult) = 0;
+    NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
 };
 
 

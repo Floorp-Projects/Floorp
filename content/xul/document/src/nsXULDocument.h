@@ -70,7 +70,13 @@ class nsIUnicharStreamLoader;
 class nsIXMLElementFactory;
 class nsIXULContentUtils;
 class nsIXULPrototypeCache;
+#if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
+class nsIXULPrototypeScript;
+#else
+#include "nsXULElement.h"
+#endif
 
+struct JSObject;
 struct PRLogModuleInfo;
 
 /**
@@ -81,7 +87,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIStreamLoadableDocument,
                       public nsIDOMXULDocument,
                       public nsIDOMNSDocument,
-                      public nsIDOMEventCapturer, 
+                      public nsIDOMEventCapturer,
                       public nsIJSScriptObject,
                       public nsIScriptObjectOwner,
                       public nsIHTMLContentContainer,
@@ -254,8 +260,8 @@ public:
 
     virtual PRBool GetDisplaySelection() const;
 
-    NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
-                              nsEvent* aEvent, 
+    NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+                              nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus& aEventStatus);
@@ -280,7 +286,6 @@ public:
 
     NS_IMETHOD CreateFromPrototype(const char* aCommand,
                                    nsIXULPrototypeDocument* aPrototype,
-                                   nsIPrincipal* aPrincipal,
                                    nsISupports* aContainer);
 
     // nsIStreamLoadableDocument interface
@@ -299,9 +304,9 @@ public:
     NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
 
     // nsIDOMEventTarget interface
-    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener,
                                 PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener,
                                    PRBool aUseCapture);
 
     // nsIDOMDocument interface
@@ -328,7 +333,7 @@ public:
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT
-                   
+
     // nsIDOMNode interface
     NS_IMETHOD    GetNodeName(nsString& aNodeName);
     NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
@@ -411,7 +416,7 @@ protected:
     ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID);
 
     NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
-    
+
     void SetDocumentURLAndGroup(nsIURI* anURL);
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
@@ -428,6 +433,7 @@ protected:
     nsresult
     PrepareToLoadPrototype(nsIURI* aURI,
                            const char* aCommand,
+                           nsIPrincipal* aDocumentPrincipal,
                            nsIParser** aResult);
 
     nsresult ApplyPersistentAttributes();
@@ -481,8 +487,8 @@ protected:
     nsresult
     DestroyForwardReferences();
 
-    // IMPORTANT: The ownership implicit in the following member variables has been 
-    // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
+    // IMPORTANT: The ownership implicit in the following member variables has been
+    // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface
     // pointers for weak (ie, non owning) references. If you add any members to this
     // class, please make the ownership explicit (pinkerton, scc).
     // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE CHANGING
@@ -493,18 +499,19 @@ protected:
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsWeakPtr                  mDocumentLoadGroup;  // [WEAK] leads to loader
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
-    nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
+    nsCOMPtr<nsIContent>       mRootContent;        // [OWNER]
     nsIDocument*               mParentDocument;     // [WEAK]
     nsIScriptContextOwner*     mScriptContextOwner; // [WEAK] it owns me! (indirectly)
     void*                      mScriptObject;       // ????
+    nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
     nsString                   mCharSetID;
     nsVoidArray                mStyleSheets;
-    nsCOMPtr<nsIDOMSelection>  mSelection;          // [OWNER] 
+    nsCOMPtr<nsIDOMSelection>  mSelection;          // [OWNER]
     PRBool                     mDisplaySelection;
     nsVoidArray                mPresShells;
     nsCOMPtr<nsIEventListenerManager> mListenerManager;   // [OWNER]
-    nsCOMPtr<nsINameSpaceManager>     mNameSpaceManager;  // [OWNER] 
-    nsCOMPtr<nsIHTMLStyleSheet>       mAttrStyleSheet;    // [OWNER] 
+    nsCOMPtr<nsINameSpaceManager>     mNameSpaceManager;  // [OWNER]
+    nsCOMPtr<nsIHTMLStyleSheet>       mAttrStyleSheet;    // [OWNER]
     nsCOMPtr<nsIHTMLCSSStyleSheet>    mInlineStyleSheet;  // [OWNER]
     nsCOMPtr<nsICSSLoader>            mCSSLoader;         // [OWNER]
     nsElementMap               mElementMap;
@@ -514,7 +521,7 @@ protected:
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
     nsString                   mCommand;
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
-    PRBool                     mIsPopup; 
+    PRBool                     mIsPopup;
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
@@ -582,14 +589,13 @@ protected:
      * prototype construction must 'block' until the load has
      * completed, aBlock will be set to true.
      */
-    nsresult LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock);
+    nsresult LoadScript(nsXULPrototypeScript *aScriptProto, PRBool* aBlock);
 
     /**
-     * Evaluate the script text in aScript. aURL and aLineNo
-     * specify meta-information about the script in order to
-     * provide useful error messages.
+     * Execute the precompiled script object scoped by this XUL document's
+     * containing window object, and using its associated script context.
      */
-    nsresult EvaluateScript(nsIURI* aURL, const nsString& aScript, PRInt32 aLinenNo, const char* aVersion);
+    nsresult ExecuteScript(JSObject* aScriptObject);
 
     /**
      * Create a delegate content model element from a prototype.
@@ -608,13 +614,12 @@ protected:
     nsresult AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aElement);
 
     /**
-     * The URL of the current transcluded script that is being loaded.
-     * For document.write('<script src="nestedwrite.js"><\/script>') to work,
-     * these need to be in a stack element type, and we need to hold the top
-     * of stack here.
+     * The prototype-script of the current transcluded script that is being
+     * loaded.  For document.write('<script src="nestedwrite.js"><\/script>')
+     * to work, these need to be in a stack element type, and we need to hold
+     * the top of stack here.
      */
-    nsCOMPtr<nsIURI> mCurrentScriptURL;
-    const char* mCurrentScriptLanguageVersion;
+    nsXULPrototypeScript* mCurrentScriptProto;
 
     /**
      * Create a XUL template builder on the specified node if a 'datasources'
@@ -703,6 +708,12 @@ protected:
      * content model.
      */
     nsCOMPtr<nsIXULPrototypeDocument> mCurrentPrototype;
+
+    /**
+     * The master document (outermost, .xul) prototype, from which
+     * all subdocuments get their security principals.
+     */
+    nsCOMPtr<nsIXULPrototypeDocument> mMasterPrototype;
 
     /**
      * Owning references to all of the prototype documents that were

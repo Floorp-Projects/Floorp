@@ -108,7 +108,6 @@ public:
    */
   NS_IMETHOD CreateFromPrototype(const char* aCommand,
                                  nsIXULPrototypeDocument* aPrototype,
-                                 nsIPrincipal* aPrincipal,
                                  nsISupports* aContainer) = 0;
 };
 
