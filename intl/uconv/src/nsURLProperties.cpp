@@ -29,23 +29,23 @@
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 
-nsIIOService*   nsURLProperties::gIOService;
+nsIIOService*   nsURLProperties::gIOService = nsnull;
 nsrefcnt        nsURLProperties::gRefCnt = 0;
 
 nsURLProperties::nsURLProperties(nsString& aUrl)
 {
-  if (gRefCnt++ == 0) {
-    nsresult rv;
-    rv = nsServiceManager::GetService(kIOServiceCID,
-                                      NS_GET_IID(nsIIOService),
-                                      (nsISupports**)&gIOService);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "can't get nsIOService");
-  }
-
   mDelegate = nsnull; 
   nsresult res = NS_OK;
   nsIURI* url = nsnull;
   nsIInputStream* in = nsnull;
+
+  if (gRefCnt == 0) {
+    res = nsServiceManager::GetService(kIOServiceCID,
+                                      NS_GET_IID(nsIIOService),
+                                      (nsISupports**)&gIOService);
+    if (NS_FAILED(res)) return;
+    gRefCnt++;
+  }
 
   nsCAutoString aUrlCString(aUrl);
   res = gIOService->NewURI(aUrlCString.GetBuffer(), nsnull, &url);
