@@ -2987,6 +2987,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           }
           break;
 
+        case WM_MOUSEACTIVATE:
+        {
+          // This seems to be the only way we're
+          // notified when a child window that doesn't have this handler proc
+          // (read as: windows created by plugins like Adobe Acrobat)
+          // has been activated via clicking.
+          DispatchFocus(NS_PLUGIN_ACTIVATE);
+            break;
+        }
+
         case WM_WINDOWPOSCHANGING: {
           LPWINDOWPOS info = (LPWINDOWPOS) lParam;
           if (!(info->flags & SWP_NOZORDER))
@@ -3935,6 +3945,9 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
         pluginEvent.event = WM_SETFOCUS;
         break;
       case NS_LOSTFOCUS:
+        pluginEvent.event = WM_KILLFOCUS;
+        break;
+      case NS_PLUGIN_ACTIVATE:
         pluginEvent.event = WM_KILLFOCUS;
         break;
       default:
