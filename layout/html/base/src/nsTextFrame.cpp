@@ -827,6 +827,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       }
       if (selectionEnd > textLength)
         selectionEnd = textLength;
+      if (selectionOffset > textLength)
+        selectionOffset = textLength;
       if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
         PaintTextDecorations(aRenderingContext, aStyleContext,
@@ -1263,7 +1265,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 
   char* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection || !mSelected) {
+    if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
@@ -1288,6 +1290,10 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         selectionEnd = mSelectionOffset;
         selectionOffset = mSelectionEnd;
       }
+      if (selectionEnd > textLength)
+        selectionEnd = textLength;
+      if (selectionOffset > textLength)
+        selectionOffset = textLength;
 
       if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
