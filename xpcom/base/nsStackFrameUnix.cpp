@@ -52,13 +52,14 @@
 
 
 
-// This thing is exported by libstdc++
+// This thing is exported by libiberty.a (-liberty)
 // Yes, this is a gcc only hack
 #if defined(MOZ_DEMANGLE_SYMBOLS)
-#include <cxxabi.h>
+extern "C" char * cplus_demangle(const char *,int);
 #include <stdlib.h> // for free()
 #endif // MOZ_DEMANGLE_SYMBOLS
 
+#if (defined(__linux__) || defined(__sun)) && defined(__GNUC__)
 void DemangleSymbol(const char * aSymbol, 
                     char * aBuffer,
                     int aBufLen)
@@ -66,19 +67,27 @@ void DemangleSymbol(const char * aSymbol,
     aBuffer[0] = '\0';
 
 #if defined(MOZ_DEMANGLE_SYMBOLS)
-    char outBuffer[4096];
-    size_t outBufLen = sizeof(outBuffer);
-    int status;
     /* See demangle.h in the gcc source for the voodoo */
-    char * demangled = abi::__cxa_demangle(aSymbol,outBuffer,&outBufLen,&status);
+    char * demangled = cplus_demangle(aSymbol,3);
     
-    if (demangled && !status)
+    if (demangled)
     {
         strncpy(aBuffer,demangled,aBufLen);
         free(demangled);
     }
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
+
+#else
+void DemangleSymbol(const char * aSymbol, 
+                    char * aBuffer,
+                    int aBufLen)
+{
+  // lose
+  aBuffer[0] = '\0';
+}
+#endif
+
 
 
 #if defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
