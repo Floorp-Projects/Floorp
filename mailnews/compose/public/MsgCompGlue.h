@@ -251,15 +251,6 @@ public:
 
 #define NotifyCode					PRInt32
 
-#define PREF_GetBoolPref(a, b)		(*b) = PR_FALSE
-#define PREF_GetIntPref(a, b)		(*b) = 0
-#define PREF_CopyCharPref(a, b)		/*NYI*/
-#define PREF_SetBoolPref(a, b)		/*NYI*/
-#define PREF_SetCharPref(a, b)		/*NYI*/
-#define	PREF_SavePrefFile()			/*NYI*/
-#define PREF_GetCharPref(a, b, c)	/*NIY*/
-
-
 #define NET_parse_news_url(a, b, c, d, e, f)	-1
 
 #define FE_Alert(a, b)				printf("ALERT: %s", b)
