@@ -21,6 +21,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = raptorlayout_s
 
@@ -61,8 +62,6 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 REQUIRES = xpcom raptor dom netlib js pref
 
 TARGETS = $(LIBRARY)
-
-include $(topsrcdir)/config/config.mk
 
 MKSHLIB :=
 
