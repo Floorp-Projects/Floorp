@@ -1531,6 +1531,8 @@ blapi_selftest(char **modesToTest, int numModesToTest,
 	char *mode;
 	int i, j, nummodes;
 
+	RNG_RNGInit();
+	RNG_SystemInfoForRNG();
 	PORT_Memset(&info, 0, sizeof(info));
 	info.repetitions = 1;
 	info.useseed = PR_TRUE;
@@ -1628,6 +1630,7 @@ decrypt:
 			}
 		}
 	}
+	RNG_RNGShutdown();
 	return SECSuccess;
 }
 
@@ -1696,7 +1699,7 @@ int main(int argc, char **argv)
 	PORT_Memset(&info, 0, sizeof(info));
 	info.bufsize = 8;
 	info.keysize = DES_KEY_LENGTH;
-	info.rsapubexp = 17;
+	info.rsapubexp = 65537;
 	info.rounds = 10;
 	info.wordsize = 4;
 	infile=outfile=keyfile=pqgfile=ivfile=sigfile=seedfile=sigseedfile=NULL;
