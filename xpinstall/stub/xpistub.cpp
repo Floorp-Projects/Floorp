@@ -43,7 +43,10 @@
 #include "plstr.h"
 
 #ifdef XP_PC
-#if !defined(XP_OS2)
+#if defined(XP_OS2)
+#include <stdlib.h>
+#define MAX_PATH _MAX_PATH
+#else
 #include <windows.h>
 #include <direct.h>
 #endif
