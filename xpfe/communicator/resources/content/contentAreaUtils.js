@@ -427,9 +427,9 @@ function makeTempFile()
 
 function getMIMEInfoForType(aMIMEType)
 {
-  const mimeSvcCID = "{03af31da-3109-11d3-8cd0-0060b0fc14a3}";
+  const mimeSvcContractID = "@mozilla.org/mime;1";
   const mimeSvcIID = Components.interfaces.nsIMIMEService;
-  const mimeSvc = Components.classesByID[mimeSvcCID].getService(mimeSvcIID);
+  const mimeSvc = Components.classes[mimeSvcContractID].getService(mimeSvcIID);
 
   try {  
     return mimeSvc.GetFromMIMEType(aMIMEType);
