@@ -62,16 +62,18 @@ public:
   NS_DECL_ISUPPORTS
 
   nsURILoader();
-  virtual ~nsURILoader();
+  ~nsURILoader();
 
 protected:
-  // we shouldn't need to have an owning ref count on registered
-  // content listeners because they are supposed to unregister themselves
-  // when they go away. This array stores weak references
+  /**
+   * we shouldn't need to have an owning ref count on registered
+   * content listeners because they are supposed to unregister themselves
+   * when they go away. This array stores weak references
+   */
   nsCOMArray<nsIWeakReference> m_listeners;
 
-  // prepare the load cookie for the window context
-  nsresult SetupLoadCookie(nsISupports * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
+  /** prepare the load cookie for the window context */
+  nsresult SetupLoadCookie(nsIInterfaceRequestor * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
 
 #ifdef PR_LOGGING
   /**

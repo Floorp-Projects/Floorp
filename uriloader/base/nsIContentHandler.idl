@@ -37,15 +37,32 @@
 
 #include "nsISupports.idl"
 interface nsIRequest;
+interface nsIInterfaceRequestor;
 
-[scriptable, uuid(2F0F927A-8677-11d3-989D-001083010E9B)]
+[scriptable, uuid(49439df2-b3d2-441c-bf62-866bdaf56fd2)]
 interface nsIContentHandler : nsISupports
 {
-  /* HandleContent works as the name implies =).
-	 aRequest is a request whose content type is already known (aContentType) */
+  /**
+   * Tells the content handler to take over handling the content. If this
+   * function succeeds, the URI Loader will leave this request alone, ignoring
+   * progress notifications. Failure of this method will cause the request to be
+   * cancelled, unless the error code is NS_ERROR_WONT_HANDLE_CONTENT (see
+   * below).
+   *
+   * @param aWindowContext
+   *        Window context, used to get things like the current nsIDOMWindow
+   *        for this request. May be null.
+   * @param aContentType
+   *        The content type of aRequest
+   * @param aRequest
+   *        A request whose content type is already known.
+   *
+   * @throw NS_ERROR_WONT_HANDLE_CONTENT Indicates that this handler does not
+   *        want to handle this content. A different way for handling this
+   *        content should be tried.
+   */
   void handleContent(in string aContentType,
-                     in string aCommand,
-                     in nsISupports aWindowContext,
+                     in nsIInterfaceRequestor aWindowContext,
                      in nsIRequest aRequest);
 };
 

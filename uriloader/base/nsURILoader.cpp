@@ -99,7 +99,7 @@ public:
   nsDocumentOpenInfo();
 
   // Real constructor
-  nsDocumentOpenInfo(nsISupports* aWindowContext,
+  nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
                      PRBool aIsContentPreferred,
                      nsURILoader* aURILoader);
 
@@ -135,7 +135,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
 protected:
-  virtual ~nsDocumentOpenInfo();
+  ~nsDocumentOpenInfo();
 
 protected:
   /**
@@ -151,11 +151,10 @@ protected:
   nsCOMPtr<nsIStreamListener> m_targetStreamListener;
 
   /**
-   * A pointer to the entity that originated the load.  This should
-   * implement nsIInterfaceRequestor; we depend on getting things like
-   * nsIURIContentListeners, nsIDOMWindows, etc off of it.
+   * A pointer to the entity that originated the load. We depend on getting
+   * things like nsIURIContentListeners, nsIDOMWindows, etc off of it.
    */
-  nsCOMPtr<nsISupports> m_originalContext;
+  nsCOMPtr<nsIInterfaceRequestor> m_originalContext;
 
   /**
    * Boolean to pass to CanHandleContent (also determines whether we
@@ -189,7 +188,7 @@ nsDocumentOpenInfo::nsDocumentOpenInfo()
   NS_NOTREACHED("This should never be called\n");
 }
 
-nsDocumentOpenInfo::nsDocumentOpenInfo(nsISupports* aWindowContext,
+nsDocumentOpenInfo::nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
                                        PRBool aIsContentPreferred,
                                        nsURILoader* aURILoader)
   : m_originalContext(aWindowContext),
@@ -510,7 +509,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       do_CreateInstance(handlerContractID.get());
     if (contentHandler) {
       LOG(("  Content handler found"));
-      rv = contentHandler->HandleContent(mContentType.get(), "view",
+      rv = contentHandler->HandleContent(mContentType.get(),
                                          m_originalContext, request);
       // XXXbz returning an error code to represent handling the
       // content is just bizarre!
@@ -782,7 +781,7 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel, 
                                    PRBool aIsContentPreferred,
-                                   nsISupports * aWindowContext)
+                                   nsIInterfaceRequestor *aWindowContext)
 {
   NS_ENSURE_ARG_POINTER(channel);
 
@@ -842,27 +841,26 @@ NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
 }
 
 NS_IMETHODIMP
-nsURILoader::GetLoadGroupForContext(nsISupports * aWindowContext,
+nsURILoader::GetLoadGroupForContext(nsIInterfaceRequestor* aWindowContext,
                                     nsILoadGroup ** aLoadGroup)
 {
   nsresult rv;
   nsCOMPtr<nsIInterfaceRequestor> loadCookieForWindow;
 
   // Initialize the [out] parameter...
-  *aLoadGroup= nsnull;
+  *aLoadGroup = nsnull;
 
   NS_ENSURE_ARG(aWindowContext);
 
   rv = SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookieForWindow));
   if (NS_FAILED(rv)) return rv;
   
-  rv = loadCookieForWindow->GetInterface(NS_GET_IID(nsILoadGroup),
-                                         (void **) aLoadGroup);
+  rv = CallGetInterface(loadCookieForWindow.get(), aLoadGroup);
   return rv;
 }
 
 NS_IMETHODIMP
-nsURILoader::GetDocumentLoaderForContext(nsISupports * aWindowContext,
+nsURILoader::GetDocumentLoaderForContext(nsIInterfaceRequestor * aWindowContext,
                                          nsIDocumentLoader ** aDocLoader)
 {
   nsresult rv;
@@ -876,12 +874,11 @@ nsURILoader::GetDocumentLoaderForContext(nsISupports * aWindowContext,
   rv = SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookieForWindow));
   if (NS_FAILED(rv)) return rv;
   
-  rv = loadCookieForWindow->GetInterface(NS_GET_IID(nsIDocumentLoader), 
-                                         (void **) aDocLoader);
+  rv = CallGetInterface(loadCookieForWindow.get(), aDocLoader);
   return rv;
 }
 
-nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, 
+nsresult nsURILoader::SetupLoadCookie(nsIInterfaceRequestor * aWindowContext, 
                                       nsIInterfaceRequestor ** aLoadCookie)
 {
   // first, see if we have already set a load cookie on the cnt listener..
@@ -941,8 +938,7 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext,
   // loadCookie may be null - for example, <a target="popupWin"> if popupWin is
   // not a defined window.  The following prevents a crash (Bug 32898)
   if (loadCookie) {
-    rv = loadCookie->QueryInterface(NS_GET_IID(nsIInterfaceRequestor),
-                                  (void**)aLoadCookie);
+    rv = CallQueryInterface(loadCookie, aLoadCookie);
   } else {
     rv = NS_ERROR_UNEXPECTED;
   }

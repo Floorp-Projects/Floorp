@@ -121,12 +121,12 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     static NS_HIDDEN_(nsresult) LaunchWithIProcess(nsIFile* aApp, nsIFile* aFile);
 
     // member variables
-    nsCStringArray         mExtensions; // array of file extensions associated w/ this MIME obj
-    nsString               mDescription; // human readable description
-    PRUint32               mMacType, mMacCreator; // Mac file type and creator
+    nsCStringArray         mExtensions; ///< array of file extensions associated w/ this MIME obj
+    nsString               mDescription; ///< human readable description
+    PRUint32               mMacType, mMacCreator; ///< Mac file type and creator
     nsCString              mMIMEType;
-    nsCOMPtr<nsIFile>      mPreferredApplication; // preferred application associated with this type.
-    nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
+    nsCOMPtr<nsIFile>      mPreferredApplication; ///< preferred application associated with this type.
+    nsMIMEInfoHandleAction mPreferredAction; ///< preferred action to associate with this type
     nsString               mPreferredAppDescription;
     nsString               mDefaultAppDescription;
     PRBool                 mAlwaysAskBeforeHandling;
@@ -150,7 +150,11 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
     NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
 
     // additional methods
-    void SetDefaultApplication(nsIFile* aApp) { mDefaultApplication = aApp; }
+    /**
+     * Sets the default application. Supposed to be only called by the OS Helper
+     * App Services; the default application is immutable after it is first set.
+     */
+    void SetDefaultApplication(nsIFile* aApp) { if (!mDefaultApplication) mDefaultApplication = aApp; }
   protected:
     // nsMIMEInfoBase methods
     /**
@@ -160,7 +164,7 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
     virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile);
 
 
-    nsCOMPtr<nsIFile>      mDefaultApplication; // default application associated with this type.
+    nsCOMPtr<nsIFile>      mDefaultApplication; ///< default application associated with this type.
 };
 
 #endif //__nsmimeinfoimpl_h___

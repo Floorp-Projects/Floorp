@@ -111,7 +111,7 @@ public:
                                                   const nsCSubstring& aFileExtension,
                                                   const nsAString& aFileName,
                                                   PRBool aIsAttachment,
-                                                  nsISupports * aWindowContext);
+                                                  nsIInterfaceRequestor* aWindowContext);
  
   /**
    * Given a content type, look up the user override information to see if
@@ -297,7 +297,7 @@ public:
   ~nsExternalAppHandler();
 
   nsresult Init(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
-                nsISupports * aWindowContext,
+                nsIInterfaceRequestor * aWindowContext,
                 const nsAString& aFilename,
                 PRBool aIsAttachment);
 
@@ -307,7 +307,7 @@ protected:
   nsString mTempFileExtension;
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; /**< output stream to the temp file */
-  nsCOMPtr<nsISupports> mWindowContext; 
+  nsCOMPtr<nsIInterfaceRequestor> mWindowContext; 
   /**
    * The following field is set if we were processing an http channel that had
    * a content disposition header which specified the SUGGESTED file name we

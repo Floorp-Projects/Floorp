@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsISupports.idl"
+
+interface nsIRequest;
+interface nsIStreamListener;
+interface nsIURI;
+
 /**
  * nsIURIContentListener is an interface used by components which
  * want to know (and have a chance to handle) a particular content type.
@@ -44,13 +50,6 @@
  *
  * @status FROZEN
  */
-
-#include "nsISupports.idl"
-
-interface nsIRequest;
-interface nsIStreamListener;
-interface nsIURI;
-
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
 {

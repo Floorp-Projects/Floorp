@@ -793,8 +793,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 }
 
 NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
-                                                     const char * aCommand,
-                                                     nsISupports * aWindowContext,
+                                                     nsIInterfaceRequestor * aWindowContext,
                                                      nsIRequest * aRequest)
 {
   // create a new browser window to handle the content

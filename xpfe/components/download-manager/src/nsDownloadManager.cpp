@@ -244,7 +244,7 @@ nsresult
 nsDownloadManager::GetDataSource(nsIRDFDataSource** aDataSource)
 {
   *aDataSource = mDataSource;
-  NS_IF_ADDREF(*aDataSource);
+  NS_ADDREF(*aDataSource);
   return NS_OK;
 }
 

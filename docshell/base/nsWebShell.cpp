@@ -1211,7 +1211,7 @@ NS_IMETHODIMP nsWebShell::Create()
   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIWebShell*, this),
+  rv = uriLoader->GetDocumentLoaderForContext(this,
                                               getter_AddRefs(mDocLoader));
   NS_ENSURE_SUCCESS(rv, rv);
 

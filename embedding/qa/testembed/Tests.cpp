@@ -595,8 +595,7 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 		return;
 	}
 
-	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
-	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+	rv = myLoader->OpenURI(theChannel, PR_TRUE, qaBrowserImpl);
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test", 2);
 }
 
@@ -870,8 +869,7 @@ void CTests::OnVerifybugs169617()
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	RvTestResult(rv, "NS_NewChannel() test for file url", 1);
 
-	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
-	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+	rv = myLoader->OpenURI(theChannel, PR_TRUE, qaBrowserImpl);
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test for file url", 2);
 
 }
@@ -892,8 +890,7 @@ void CTests::OnVerifybugs170274()
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	RvTestResult(rv, "NS_NewChannel() test for data url", 1);
 
-	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
-	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+	rv = myLoader->OpenURI(theChannel, PR_TRUE, qaBrowserImpl);
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test for data url", 2);
 }
 

@@ -28,12 +28,13 @@ interface nsIStreamListener;
 interface nsIFile;
 interface nsIMIMEInfo;
 interface nsIWebProgressListener;
+interface nsIInterfaceRequestor;
 
 /**
  * The external helper app service is used for finding and launching
  * platform specific external applications for a given mime content type.
  */
-[scriptable, uuid(8a902933-d1a2-48a1-93a5-da64d6a2786f)]
+[scriptable, uuid(0ea90cf3-2dd9-470f-8f76-f141743c5678)]
 interface nsIExternalHelperAppService : nsISupports
 {
   /**
@@ -49,7 +50,7 @@ interface nsIExternalHelperAppService : nsISupports
    * @return A nsIStreamListener which the caller should pump the data into.
    */
   nsIStreamListener doContent (in ACString aMimeContentType, in nsIRequest aRequest,
-                               in nsISupports aWindowContext); 
+                               in nsIInterfaceRequestor aWindowContext); 
 
   /**
    * Returns true if data from a URL with this extension combination
