@@ -105,6 +105,15 @@ sub _getDistDirectory()
 sub BuildIDLProject($$)
 {
 	my ($project_path, $module_name) = @_;
+
+	if ($main::CLOBBER_IDL_PROJECTS)
+	{
+		my($datafolder_path) = $project_path;
+		$datafolder_path =~ s/\.mcp$/ Data:/;		# generate name of the project's data folder.
+		print STDERR "Deleting IDL data folder:  $datafolder_path\n";
+		EmptyTree($datafolder_path);
+	}
+
 	BuildOneProject($project_path, 	"headers", "", 0, 0, 0);
 	BuildOneProject($project_path,	$module_name.".xpt", "", 1, 0, 1);
 }
