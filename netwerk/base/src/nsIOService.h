@@ -20,6 +20,7 @@
 #define nsIOService_h__
 
 #include "nsIIOService.h"
+#include "nsString2.h"
 
 class nsIOService : public nsIIOService
 {
@@ -41,12 +42,12 @@ public:
                           nsIURI *aBaseURI,
                           nsIEventSinkGetter *eventSinkGetter,
                           nsIChannel **_retval);
-    NS_IMETHOD GetAppCodeName(nsIString * *aAppCodeName);
-    NS_IMETHOD GetAppVersion(nsIString * *aAppVersion);
-    NS_IMETHOD GetAppName(nsIString * *aAppName);
-    NS_IMETHOD GetLanguage(nsIString * *aLanguage);
-    NS_IMETHOD GetPlatform(nsIString * *aPlatform);
-    NS_IMETHOD GetUserAgent(nsIString * *aUserAgent);
+    NS_IMETHOD GetAppCodeName(PRUnichar* *aAppCodeName);
+    NS_IMETHOD GetAppVersion(PRUnichar* *aAppVersion);
+    NS_IMETHOD GetAppName(PRUnichar* *aAppName);
+    NS_IMETHOD GetLanguage(PRUnichar* *aLanguage);
+    NS_IMETHOD GetPlatform(PRUnichar* *aPlatform);
+    NS_IMETHOD GetUserAgent(PRUnichar* *aUserAgent);
 
     // nsIOService methods:
     nsIOService();
@@ -58,7 +59,11 @@ public:
     nsresult Init();
 
 protected:
-
+    nsString2   mAppName;
+    nsString2   mAppCodeName;
+    nsString2   mAppVersion;
+    nsString2   mAppLanguage;
+    nsString2   mAppPlatform;
 };
 
 #endif // nsIOService_h__
