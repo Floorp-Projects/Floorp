@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 #LIBRARY_NAME	= gfxunix
-MODULE		= layout
+MODULE		= gfx
 
 #CPPSRCS	= \
 #		nsDeviceContextUnix.cpp \

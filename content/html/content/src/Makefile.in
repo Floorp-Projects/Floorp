@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 LIBRARY_NAME	= gkconhtmlcon_s
-REQUIRES	= xpcom string layout widget dom js locale webshell htmlparser necko view pref docshell xpconnect xuldoc caps editor uconv gfx2 imglib2
+REQUIRES	= xpcom string gfx layout widget dom js locale webshell htmlparser necko view pref docshell xpconnect xuldoc caps editor uconv gfx2 imglib2
 
 CPPSRCS		= \
 		nsAttributeContent.cpp \

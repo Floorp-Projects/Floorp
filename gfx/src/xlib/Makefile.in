@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= gfx
 EXPORTS		= nsGCCache.h
 LIBRARY_NAME	= gfx_xlib
 EXPORT_LIBRARY = 1

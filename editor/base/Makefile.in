@@ -31,7 +31,7 @@ LIBRARY_NAME	= editor
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsEditorModule
-REQUIRES	= xpcom string dom locale layout content uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome appcomps xuldoc windowwatcher exthandler mimetype
+REQUIRES	= xpcom string dom locale gfx layout content uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome appcomps xuldoc windowwatcher exthandler mimetype
 
 CPPSRCS		=                           \
 		nsAOLCiter.cpp              \

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xultmpl
 LIBRARY_NAME	= gkconxultmpl_s
-REQUIRES	= xpcom string js xpconnect timer caps layout content widget dom rdf necko locale xul xuldoc
+REQUIRES	= xpcom string js xpconnect timer caps gfx layout content widget dom rdf necko locale xul xuldoc
 
 CPPSRCS		= \
 		nsClusterKey.cpp \

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= editor
 LIBRARY_NAME	= texteditor_s
-REQUIRES	= xpcom string dom js locale layout content uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
+REQUIRES	= xpcom string dom js locale gfx layout content uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
 
 CPPSRCS		=                           \
 		nsPlaintextDataTransfer.cpp \
