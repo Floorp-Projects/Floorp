@@ -141,8 +141,6 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
 {
   nsresult rv = NS_OK;
 
-  OpenFolder(aTempFile);
-
   if (aMIMEInfo)
   {
     nsCOMPtr<nsIFile> application;
