@@ -235,8 +235,7 @@ from   bugs,
        profiles assign,
        profiles report
        left join profiles qacont on bugs.qa_contact = qacont.userid,
-       versions projector,
-       keywords
+       versions projector
 
 where  bugs.assigned_to = assign.userid 
 and    bugs.reporter = report.userid
@@ -309,6 +308,7 @@ if ($::FORM{'keywords'}) {
         }
     }
     if (@list) {
+        $query =~ s/bugs,/bugs, keywords,/;
         $query .= "and keywords.bug_id = bugs.bug_id and (" .
             join(" $::FORM{'keywords_type'} ", @list) . ")\n";
     }
