@@ -252,7 +252,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>Netscape InstallerDebug</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
@@ -816,7 +816,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>true</VALUE></SETTING>
@@ -1787,7 +1787,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>Netscape Installer</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
@@ -2351,7 +2351,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>true</VALUE></SETTING>
@@ -3352,7 +3352,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>Mozilla InstallerDebug</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
@@ -3916,7 +3916,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
@@ -4907,7 +4907,7 @@
                 <!-- Settings for "Target Settings" panel -->
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE>Output Flags Post Linker</VALUE></SETTING>
                 <SETTING><NAME>Targetname</NAME><VALUE>Mozilla Installer</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
@@ -5471,7 +5471,7 @@
                 <SETTING><NAME>ResourcesMapIsReadOnly</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>PrinterDriverIsMultiFinderCompatible</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Invisible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasBundle</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
