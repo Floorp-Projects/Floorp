@@ -164,7 +164,8 @@ udpsrv
 vercheck
 version
 writev
-xnotify"
+xnotify
+zerolen"
 
 rval=0
 

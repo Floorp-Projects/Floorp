@@ -162,6 +162,7 @@ CSRCS =             \
 	xnotify.c       \
 	y2k.c           \
 	y2ktmo.c        \
+	zerolen.c       \
 	$(NULL)
 
 ifeq ($(OS_TARGET),OS2)
