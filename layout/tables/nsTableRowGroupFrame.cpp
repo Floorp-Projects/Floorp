@@ -220,20 +220,9 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
   }
 
-  PRUint8 overflow = GetStyleDisplay()->mOverflow;
-  PRBool clip = overflow == NS_STYLE_OVERFLOW_HIDDEN ||
-                overflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
-  if (clip) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
-  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
                 aWhichLayer, aFlags);
-  if (clip)
-    aRenderingContext.PopState();
   return NS_OK;
-  /*nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);*/
-
 }
 
 PRIntn
@@ -249,40 +238,6 @@ nsTableRowGroupFrame::GetSkipSides() const
   return skip;
 }
 
-// aDirtyRect is in our coordinate system
-// child rect's are also in our coordinate system
-// overloaded method from nsContainerFrame.  The difference is that 
-// we don't want to clip our children, so a cell can do a rowspan
-
-void nsTableRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
-                                         nsIRenderingContext& aRenderingContext,
-                                         const nsRect&        aDirtyRect,
-                                         nsFramePaintLayer    aWhichLayer,
-                                         PRUint32             aFlags)
-{
-  nsIFrame* kid = GetFirstFrame();
-  while (nsnull != kid) {
-    if (!kid->HasView()) {
-      nsRect kidRect = kid->GetRect();
-      nsRect damageArea(aDirtyRect);
-      // Translate damage area into kid's coordinate system
-      nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                           damageArea.width, damageArea.height);
-      aRenderingContext.PushState();
-      aRenderingContext.Translate(kidRect.x, kidRect.y);
-      kid->Paint(aPresContext, aRenderingContext, kidDamageArea, aWhichLayer, aFlags);
-#ifdef DEBUG
-      if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
-          GetShowFrameBorders()) {
-        aRenderingContext.SetColor(NS_RGB(255,0,0));
-        aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
-      }
-#endif
-      aRenderingContext.PopState();
-    }
-    GetNextFrame(kid, &kid);
-  }
-}
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,

@@ -147,15 +147,6 @@ public:
   // row groups don't paint their own background -- the cells do
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
-  /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
-    * @see nsIFrame::Paint 
-    */
-  virtual void PaintChildren(nsIPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
-
   /**
    * Find the correct descendant frame.
    * Return PR_TRUE if a frame containing the point is found.
