@@ -54,6 +54,10 @@ public:
   NS_IMETHOD  BreakFromPrevFlow();
   NS_IMETHOD  BreakFromNextFlow();
 
+  nsIFrame * GetPrevInFlow();
+  nsIFrame * GetNextInFlow();
+
+
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent

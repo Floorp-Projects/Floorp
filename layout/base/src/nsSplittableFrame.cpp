@@ -186,3 +186,12 @@ NS_METHOD nsSplittableFrame::BreakFromNextFlow()
   return NS_OK;
 }
 
+nsIFrame * nsSplittableFrame::GetPrevInFlow() 
+{
+  return mPrevInFlow;
+}
+
+nsIFrame * nsSplittableFrame::GetNextInFlow()
+{
+   return mNextInFlow;
+} 

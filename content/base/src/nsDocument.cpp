@@ -26,6 +26,8 @@
 #include "nsIDocumentObserver.h"
 
 #include "nsSelection.h"
+#include "nsIDOMText.h"
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
@@ -638,8 +640,103 @@ nsresult nsDocument::GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator
   * Returns the Selection Object
  */
 nsISelection * nsDocument::GetSelection() {
+  if (mSelection != nsnull) {
+    NS_ADDREF(mSelection);
+  }
   return mSelection;
-} 
+}
+ 
+/**
+  * Selects all the Content
+ */
+void nsDocument::SelectAll() {
+  nsIContent * start = mRootContent;
+  nsIContent * end   = mRootContent;
+
+  // Find Very first Piece of Content
+  while (start->ChildCount() > 0) {
+    start = start->ChildAt(0);
+  }
+
+  // Last piece of Content
+  PRInt32 count = end->ChildCount();
+  while (count > 0) {
+    end = end->ChildAt(count-1);
+    count = end->ChildCount();
+  }
+  nsSelectionRange * range    = mSelection->GetRange();
+  nsSelectionPoint * startPnt = range->GetStartPoint();
+  nsSelectionPoint * endPnt   = range->GetEndPoint();
+  startPnt->SetPoint(start, -1, PR_TRUE);
+  endPnt->SetPoint(end, -1, PR_FALSE);
+
+}
+
+void nsDocument::TraverseTree(nsString   & aText,  
+                              nsIContent * aContent, 
+                              nsIContent * aStart, 
+                              nsIContent * aEnd, 
+                              PRBool     & aInRange) {
+  
+  if (aContent == aStart) {
+    aInRange = PR_TRUE;
+  } 
+
+  PRBool addReturn = PR_FALSE;
+  if (aInRange) {
+    nsIDOMText * textContent;
+    nsresult status = aContent->QueryInterface(kIDOMTextIID, (void**) &textContent);
+    if (NS_OK == status) {
+      nsString text;
+      textContent->GetData(text);
+      aText.Append(text);
+      //NS_IF_RELEASE(textContent);
+    } else {
+      nsIAtom * atom = aContent->GetTag();
+      if (atom != nsnull) {
+        nsString str;
+        atom->ToString(str);
+        //char * s = str.ToNewCString();
+        if (str.Equals("P") || 
+            str.Equals("OL") || 
+            str.Equals("LI") || 
+            str.Equals("TD") || 
+            str.Equals("H1") || 
+            str.Equals("H2") || 
+            str.Equals("H3") || 
+            str.Equals("H4") || 
+            str.Equals("H5") || 
+            str.Equals("H6") || 
+            str.Equals("TABLE")) {
+          addReturn = PR_TRUE;
+        }
+        //printf("[%s]\n", s);
+        //delete s;
+      }
+    }
+  }
+
+  for (PRInt32 i=0;i<aContent->ChildCount();i++) {
+    TraverseTree(aText, aContent->ChildAt(i), aStart, aEnd, aInRange);
+  }
+  if (addReturn) {
+    aText.Append("\n");
+  }
+  if (aContent == aEnd) {
+    aInRange = PR_FALSE;
+  } 
+
+}
+
+void nsDocument::GetSelectionText(nsString & aText) {
+  nsSelectionRange * range    = mSelection->GetRange();
+  nsSelectionPoint * startPnt = range->GetStartPoint();
+  nsSelectionPoint * endPnt   = range->GetEndPoint();
+
+  PRBool inRange = PR_FALSE;
+  TraverseTree(aText, mRootContent, startPnt->GetContent(), endPnt->GetContent(), inRange);
+}
+
 
 NS_LAYOUT nsresult
 NS_NewSelection(nsISelection** aInstancePtrResult)
