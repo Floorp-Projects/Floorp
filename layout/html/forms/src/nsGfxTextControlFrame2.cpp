@@ -290,6 +290,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
       || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
   {
+    mFrame->CallOnChange();
     mFrame->SubmitAttempt();
   }
   return NS_OK;
@@ -1127,6 +1128,8 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
     delete mCachedState;
     mCachedState = nsnull;
   }
+
+//unregister self from content
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
@@ -1565,7 +1568,7 @@ nsGfxTextControlFrame2::SetInitialValue()
   if (mUseEditor)
     return NS_OK;
 
-  // Get the default value for the textfield.
+// Get the default value for the textfield.
 
   nsAutoString defaultValue;
   nsresult rv = NS_OK;
