@@ -62,7 +62,7 @@ xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-	boolProperty = true;
+	boolProperty = PR_TRUE;
 	shortProperty = 32767;
 	longProperty =  2147483647;
 	charProperty = 'X';
@@ -163,7 +163,7 @@ xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     NS_ADDREF_THIS();
 
 
-	boolProperty = true;
+	boolProperty = PR_TRUE;
 	shortProperty = 32767;
 	longProperty =  2147483647;
 	charProperty = 'X';
