@@ -109,6 +109,284 @@
 			settings = {
 			};
 		};
+		035A4971079DC83D0084B05F = {
+			buildActionMask = 2147483647;
+			files = (
+				035A498B079DCA100084B05F,
+				035A498D079DCA100084B05F,
+				035A4990079DCA100084B05F,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		035A4972079DC83D0084B05F = {
+			buildActionMask = 2147483647;
+			files = (
+				035A4999079DCACD0084B05F,
+				035A498F079DCA100084B05F,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		035A4973079DC83D0084B05F = {
+			buildActionMask = 2147483647;
+			files = (
+				035A4AA0079DCB0B0084B05F,
+				035A4AA1079DCB0B0084B05F,
+				035A4AA2079DCB0B0084B05F,
+				035A4AA3079DCB0B0084B05F,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		035A4974079DC83D0084B05F = {
+			buildPhases = (
+				035A4991079DCA720084B05F,
+				035A4971079DC83D0084B05F,
+				035A4972079DC83D0084B05F,
+				035A4973079DC83D0084B05F,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
+				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
+				INFOPLIST_FILE = "Info-HistoryPrefPane.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = History;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = prefPane;
+			};
+			dependencies = (
+			);
+			isa = PBXNativeTarget;
+			name = HistoryPrefPane;
+			productName = HistoryPrefPane;
+			productReference = 035A4975079DC83D0084B05F;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>HistoryPrefPane</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.yourcompany.HistoryPrefPane</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+</dict>
+</plist>
+";
+			productType = "com.apple.product-type.bundle";
+		};
+		035A4975079DC83D0084B05F = {
+			explicitFileType = wrapper.cfbundle;
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = History.prefPane;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		035A4976079DC83E0084B05F = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			name = "Info-HistoryPrefPane.plist";
+			path = "/Users/josh/src/Camino_Project/camino_opt/mozilla/camino/Info-HistoryPrefPane.plist";
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		035A4981079DCA100084B05F = {
+			children = (
+				035A4982079DCA100084B05F,
+				035A4986079DCA100084B05F,
+				035A4988079DCA100084B05F,
+				035A4989079DCA100084B05F,
+				035A498A079DCA100084B05F,
+			);
+			isa = PBXGroup;
+			name = History;
+			path = ../../PreferencePanes/History;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A4982079DCA100084B05F = {
+			children = (
+				035A4983079DCA100084B05F,
+			);
+			isa = PBXVariantGroup;
+			name = History.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A4983079DCA100084B05F = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = English.lproj/History.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A4986079DCA100084B05F = {
+			children = (
+				035A4987079DCA100084B05F,
+			);
+			isa = PBXVariantGroup;
+			name = Localizable.strings;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A4987079DCA100084B05F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
+			name = English;
+			path = English.lproj/Localizable.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A4988079DCA100084B05F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = History.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A4989079DCA100084B05F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			path = History.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A498A079DCA100084B05F = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			path = History.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		035A498B079DCA100084B05F = {
+			fileRef = 035A4982079DCA100084B05F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A498D079DCA100084B05F = {
+			fileRef = 035A4986079DCA100084B05F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A498E079DCA100084B05F = {
+			fileRef = 035A4988079DCA100084B05F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A498F079DCA100084B05F = {
+			fileRef = 035A4989079DCA100084B05F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4990079DCA100084B05F = {
+			fileRef = 035A498A079DCA100084B05F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4991079DCA720084B05F = {
+			buildActionMask = 2147483647;
+			files = (
+				035A4992079DCA8A0084B05F,
+				035A498E079DCA100084B05F,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		035A4992079DCA8A0084B05F = {
+			fileRef = F5A8CE4102DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4999079DCACD0084B05F = {
+			fileRef = F5A8CE4202DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4AA0079DCB0B0084B05F = {
+			fileRef = 1058C7A1FEA54F0111CA2CBB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4AA1079DCB0B0084B05F = {
+			fileRef = F557193A022B4102010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4AA2079DCB0B0084B05F = {
+			fileRef = F52D5CDB027D412A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4AA3079DCB0B0084B05F = {
+			fileRef = 29B97325FDCFA39411CA2CEA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		035A4AA4079DCB790084B05F = {
+			fileRef = 035A4975079DC83D0084B05F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0380F470079DCCD90065A7AB = {
+			containerPortal = 29B97313FDCFA39411CA2CEA;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 035A4974079DC83D0084B05F;
+			remoteInfo = HistoryPrefPane;
+		};
+		0380F471079DCCD90065A7AB = {
+			isa = PBXTargetDependency;
+			target = 035A4974079DC83D0084B05F;
+			targetProxy = 0380F470079DCCD90065A7AB;
+		};
+		0380F472079DCCEC0065A7AB = {
+			containerPortal = 29B97313FDCFA39411CA2CEA;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 035A4974079DC83D0084B05F;
+			remoteInfo = HistoryPrefPane;
+		};
+		0380F473079DCCEC0065A7AB = {
+			isa = PBXTargetDependency;
+			target = 035A4974079DC83D0084B05F;
+			targetProxy = 0380F472079DCCEC0065A7AB;
+		};
 		0382B4D907303CCA00A0228A = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.tiff;
@@ -1124,6 +1402,7 @@
 				3F44AFD405BDFBA100CB4B08,
 				03E2D8530771F73F00BD2443,
 				03C5AB1007722DFC00EAF77D,
+				035A4975079DC83D0084B05F,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -1174,6 +1453,7 @@
 				3F44AFC805BDFBA100CB4B08,
 				03E2D8520771F73F00BD2443,
 				03C5AB0F07722DFC00EAF77D,
+				035A4974079DC83D0084B05F,
 			);
 		};
 		29B97314FDCFA39411CA2CEA = {
@@ -1888,6 +2168,7 @@
 				3F44AFE005BDFBA100CB4B08,
 				03E2D9900771FB9300BD2443,
 				03C5AB1307722EFC00EAF77D,
+				0380F471079DCCD90065A7AB,
 			);
 			isa = PBXNativeTarget;
 			name = Camino;
@@ -4699,6 +4980,7 @@
 				3F44AFF205BDFBA100CB4B08,
 				03E2D9920771FBD400BD2443,
 				03C5AB1907722F3400EAF77D,
+				035A4AA4079DCB790084B05F,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5815,6 +6097,7 @@
 				3F44AFEC05BDFBA100CB4B08,
 				03C5AB1507722F1100EAF77D,
 				03C5AB1707722F1100EAF77D,
+				0380F473079DCCEC0065A7AB,
 			);
 			isa = PBXNativeTarget;
 			name = CaminoStatic;
@@ -9762,6 +10045,7 @@
 				3F44AFD305BDFBA100CB4B08,
 				03E2D8540771F73F00BD2443,
 				03C5AB1107722DFD00EAF77D,
+				035A4976079DC83E0084B05F,
 			);
 			isa = PBXGroup;
 			name = "Target Plists";
@@ -12707,6 +12991,7 @@
 		};
 		F53F21EB022B7C77010001CA = {
 			children = (
+				035A4981079DCA100084B05F,
 				032FFDCC077351A800440548,
 				03E2D8590771F78500BD2443,
 				F5CA1A1D02D4ECDA01F34900,

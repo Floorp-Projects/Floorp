@@ -19,20 +19,19 @@
 *
 * Contributor(s):
 *   william@dell.wisner.name (William Dell Wisner)
+*   joshmoz@gmail.com (Josh Aas)
 */
 
+#import <Cocoa/Cocoa.h>
 #import <PreferencePaneBase.h>
 
-@interface OrgMozillaChimeraPreferenceNavigation : PreferencePaneBase
+@interface OrgMozillaChimeraPreferenceHistory : PreferencePaneBase
 {
-	IBOutlet NSTextField *textFieldHomePage;
-  
-	IBOutlet NSButton *checkboxUseSystemHomePage;
-  IBOutlet NSButton *checkboxNewTabBlank;
-  IBOutlet NSButton *checkboxNewWindowBlank;
+  IBOutlet NSTextField *textFieldHistoryDays;
 }
 
-- (IBAction)checkboxUseSystemHomePageClicked:(id)sender;
-- (IBAction)checkboxStartPageClicked:(id)sender;
+- (IBAction)historyDaysModified:(id)sender;
+- (IBAction)clearGlobalHistory:(id)sender;
+- (IBAction)clearDiskCache:(id)aSender;
 
 @end

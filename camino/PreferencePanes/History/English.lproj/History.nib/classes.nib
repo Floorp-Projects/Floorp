@@ -13,15 +13,10 @@
             SUPERCLASS = NSObject; 
         }, 
         {
-            ACTIONS = {checkboxStartPageClicked = id; checkboxUseSystemHomePageClicked = id; }; 
-            CLASS = OrgMozillaChimeraPreferenceNavigation; 
+            ACTIONS = {clearDiskCache = id; clearGlobalHistory = id; historyDaysModified = id; }; 
+            CLASS = OrgMozillaChimeraPreferenceHistory; 
             LANGUAGE = ObjC; 
-            OUTLETS = {
-                checkboxNewTabBlank = NSButton; 
-                checkboxNewWindowBlank = NSButton; 
-                checkboxUseSystemHomePage = NSButton; 
-                textFieldHomePage = NSTextField; 
-            }; 
+            OUTLETS = {textFieldHistoryDays = NSTextField; }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 
         {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }

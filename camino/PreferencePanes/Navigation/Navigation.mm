@@ -19,6 +19,7 @@
 *
 * Contributor(s):
 *   william@dell.wisner.name (William Dell Wisner)
+*   joshmoz@gmail.com (Josh Aas)
 */
 
 #import <Carbon/Carbon.h>
@@ -26,11 +27,6 @@
 
 #import "Navigation.h"
 #import "NSString+Utils.h"
-
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIBrowserHistory.h"
-#include "nsICacheService.h"
 
 const int kDefaultExpireDays = 9;
 
@@ -41,7 +37,6 @@ const int kDefaultExpireDays = 9;
 - (NSString*)getCurrentHomePage;
 
 @end
-
 
 @implementation OrgMozillaChimeraPreferenceNavigation
 
@@ -70,19 +65,13 @@ const int kDefaultExpireDays = 9;
   
   if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 1))
     [checkboxNewTabBlank setState:YES];
-  
-  int expireDays = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
-  if (!gotPref)
-    expireDays = kDefaultExpireDays;
-
-  [textFieldHistoryDays setIntValue:expireDays];
 
   BOOL useSystemHomePage = [self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref;  
   if (useSystemHomePage)
     [textFieldHomePage setEnabled:NO];
 
   [checkboxUseSystemHomePage setState:useSystemHomePage];
-  [textFieldHomePage   setStringValue: [self getCurrentHomePage]];
+  [textFieldHomePage setStringValue:[self getCurrentHomePage]];
 }
 
 - (void) didUnselect
@@ -95,8 +84,8 @@ const int kDefaultExpireDays = 9;
     [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
   
   // ensure that the prefs exist
-  [self setPref:"browser.startup.page"   toInt: [checkboxNewWindowBlank state] ? 1 : 0];
-  [self setPref:"browser.tabs.startPage" toInt: [checkboxNewTabBlank    state] ? 1 : 0];
+  [self setPref:"browser.startup.page" toInt: [checkboxNewWindowBlank state] ? 1 : 0];
+  [self setPref:"browser.tabs.startPage" toInt: [checkboxNewTabBlank state] ? 1 : 0];
 }
 
 - (IBAction)checkboxUseSystemHomePageClicked:(id)sender
@@ -108,12 +97,12 @@ const int kDefaultExpireDays = 9;
 
   // save the mozilla pref
   if (useSystemHomePage)
-    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
+    [self setPref:"browser.startup.homepage" toString:[textFieldHomePage stringValue]];
   
-  [self setPref:"chimera.use_system_home_page" toBoolean: useSystemHomePage];
-  [textFieldHomePage   setStringValue: [self getCurrentHomePage]];
+  [self setPref:"chimera.use_system_home_page" toBoolean:useSystemHomePage];
+  [textFieldHomePage setStringValue:[self getCurrentHomePage]];
 
-  [textFieldHomePage   setEnabled:!useSystemHomePage];
+  [textFieldHomePage setEnabled:!useSystemHomePage];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -131,39 +120,10 @@ const int kDefaultExpireDays = 9;
     [self setPref:prefName toInt: [sender state] ? 1 : 0];
 }
 
-- (IBAction)historyDaysModified:(id)sender
-{
-  if (!mPrefService)
-    return;
-
-  if (sender == textFieldHistoryDays) {
-    // If any non-numeric characters were entered make some noise and spit it out.
-    if (([[textFieldHistoryDays stringValue] rangeOfCharacterFromSet:[[NSCharacterSet decimalDigitCharacterSet] invertedSet]]).length) {
-      BOOL gotPref;
-      int prefValue = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
-      if (!gotPref)
-        prefValue = kDefaultExpireDays;
-      [textFieldHistoryDays setIntValue:prefValue];
-      NSBeep ();
-      return;
-    }
-  }
-
-  [self setPref:"browser.history_expire_days" toInt:[sender intValue]];
-}
-
-// use the browser history service to clear out the user's global history
-- (IBAction)clearGlobalHistory:(id)sender
-{
-  nsCOMPtr<nsIBrowserHistory> hist ( do_GetService("@mozilla.org/browser/global-history;2") );
-  if ( hist )
-    hist->RemoveAllPages();
-}
-
 - (NSString*)getInternetConfigString:(ConstStr255Param)icPref
 {
-  NSString*     resultString = @"";
-  ICInstance		icInstance = NULL;
+  NSString* resultString = @"";
+  ICInstance icInstance = NULL;
   
   // it would be nice to use PreferenceManager, but I don't want to drag
   // all that code into the plugin
@@ -173,12 +133,12 @@ const int kDefaultExpireDays = 9;
     return resultString;
   }
   
-  ICAttr	dummyAttr;
-  Str255	homePagePStr;
-  long		prefSize = sizeof(homePagePStr);
+  ICAttr dummyAttr;
+  Str255 homePagePStr;
+  long prefSize = sizeof(homePagePStr);
   error = ICGetPref(icInstance, icPref, &dummyAttr, homePagePStr, &prefSize);
   if (error == noErr)
-    resultString = [NSString stringWithCString: (const char*)&homePagePStr[1] length:homePagePStr[0]];
+    resultString = [NSString stringWithCString:(const char*)&homePagePStr[1] length:homePagePStr[0]];
   else
     NSLog(@"Error getting pref from Internet Config");
   
@@ -199,16 +159,7 @@ const int kDefaultExpireDays = 9;
   if ([self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref)
     return [self getSystemHomePage];
     
-  return [self getStringPref: "browser.startup.homepage" withSuccess:&gotPref];
-}
-
-
-// Clear the user's disk cache
--(IBAction) clearDiskCache:(id)aSender
-{
-  nsCOMPtr<nsICacheService> cacheServ ( do_GetService("@mozilla.org/network/cache-service;1") );
-  if ( cacheServ )
-    cacheServ->EvictEntries(nsICache::STORE_ANYWHERE);
+  return [self getStringPref:"browser.startup.homepage" withSuccess:&gotPref];
 }
 
 @end
