@@ -132,7 +132,7 @@ PRInt32 nsMsgBiffManager::FindServer(nsIMsgIncomingServer *server)
 	for(PRInt32 i = 0; i < count; i++)
 	{
 		nsBiffEntry *biffEntry = (nsBiffEntry*)mBiffArray->ElementAt(i);
-		if(server == biffEntry->server)
+		if(server == biffEntry->server.get())
 			return i;
 	}
 	return -1;
@@ -177,3 +177,4 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 	}
 	return NS_OK;
 }
+
