@@ -569,15 +569,6 @@ nsJVMMgr::GetJavaErrorString(JNIEnv* env)
 
 PRLogModuleInfo* NSJAVA = NULL;
 
-#ifdef MOZ_SMARTUPDATE
-
-static NS_DEFINE_IID(kIJRIPluginIID, NS_IJRIPLUGIN_IID);
-
-// Should be in a header; must solve build-order problem first
-extern "C" void SU_Initialize(JRIEnv * env);
-
-#endif
-
 nsJVMStatus
 nsJVMMgr::StartupJVM(void)
 {
@@ -637,25 +628,6 @@ nsJVMMgr::StartupJVM(void)
     if (err == NS_OK) {
         /* assume the JVM is running. */
         fStatus = nsJVMStatus_Running;
-#ifdef MOZ_SMARTUPDATE
-        nsIJRIPlugin* jriJVM;
-        if (fJVM->QueryInterface(kIJRIPluginIID, (void**)&jriJVM) == NS_OK) {
-            JRIEnv* env;
-            nsresult err = jriJVM->GetJRIEnv(&env);
-            if (err == NS_OK) {
-                SU_Initialize(env);
-                if (JRI_ExceptionOccurred(env)) {
-#ifdef DEBUG
-                    JVM_PrintToConsole("LJ:  SU_Initialize failed.  Bugs to atotic.\n");
-#endif	
-                    JRI_ExceptionDescribe(env);
-                    JRI_ExceptionClear(env);
-                }
-                jriJVM->ReleaseJRIEnv(env);
-            }
-            jriJVM->Release();
-        }
-#endif
     }
     else {
         ReportJVMError(err);

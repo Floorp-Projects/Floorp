@@ -18,6 +18,6 @@ DEPTH	= ../../..
 
 MODULE	= java
 
-EXPORTS	= java.h javasec.h lj.h softupdt.h edtplug.h
+EXPORTS	= java.h javasec.h lj.h edtplug.h
 
 include $(DEPTH)/config/rules.mk

@@ -23,9 +23,6 @@
 /* From nspr */
 #include "prthread.h"
 
-/* From softupdt */
-#include "softupdt.h"
-
 /* From edtplug */
 #include "edtplug.h"
 
@@ -462,28 +459,6 @@ JRI_PUBLIC_API(void) PrintToConsole(const char* bytes)
 #ifdef XP_MAC
 #pragma export on
 #endif
-
-/* SU_NewStream                                                                     libnet.so */
-/* ns/modules/softupdt/include/softupdt.h */
-/* ns/modules/softupdt/src/softupdt.c */
-XP_Bool SU_StartSoftwareUpdate(MWContext * context, 
-			       const char * url, 
-			       const char * name, 
-			       SoftUpdateCompletionFunction f,
-			       void * completionClosure,
-                               int32 flags) /* FORCE_INSTALL, SILENT_INSTALL */
-{
-  return SILENT_INSTALL;
-}
-
-/* SU_StartSoftwareUpdate                                                           libmocha.so */
-/* ns/modules/softupdt/include/softupdt.h */
-/* ns/modules/softupdt/src/softupdt.c */
-NET_StreamClass * SU_NewStream (int format_out, void * registration,
-				URL_Struct * request, MWContext *context)
-{
-  return NULL;
-}
 
 
 #ifdef XP_MAC
