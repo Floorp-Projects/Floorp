@@ -21,10 +21,12 @@ include <$(DEPTH)\config\rules.mak>
 
 install::
 	$(MAKE_INSTALL) EdLinkProps.xul       $(DIST)\bin\chrome\editor\dialogs\content
+	$(MAKE_INSTALL) EdLinkProps.js        $(DIST)\bin\chrome\editor\dialogs\content
 	$(MAKE_INSTALL) EdImageProps.xul      $(DIST)\bin\chrome\editor\dialogs\content	
 	$(MAKE_INSTALL) EdCharacterProps.xul  $(DIST)\bin\chrome\editor\dialogs\content
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\EdLinkProps.xul
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\EdLinkProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\EdImageProps.xul	
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\EdCharacterProps.xul	

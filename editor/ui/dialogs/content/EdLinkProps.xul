@@ -7,6 +7,9 @@
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()">
 
+  <html:script>
+  </html:script>
+
   <html:script language="JavaScript" src="chrome://editordlgs/content/EdLinkProps.js">
   </html:script>
 
