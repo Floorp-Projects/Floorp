@@ -251,7 +251,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     // Entry start...
 
     // URI
-    mBuffer.Assign("<b>           Key:</b><a href=\"");
+    mBuffer.Assign("<b>           Key:</b> <a href=\"");
     mBuffer.Append(url);
     mBuffer.Append("\">");
     mBuffer.Append(escapedKey);
@@ -262,7 +262,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     PRUint32 length = 0;
     entryInfo->GetDataSize(&length);
 
-    mBuffer.Append("\n<b>     Data size:</b>");
+    mBuffer.Append("\n<b>     Data size:</b> ");
     mBuffer.AppendInt(length);
     mBuffer.Append(" bytes");
 
@@ -270,7 +270,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     PRInt32 fetchCount = 0;
     entryInfo->GetFetchCount(&fetchCount);
 
-    mBuffer.Append("\n<b>   Fetch count:</b>");
+    mBuffer.Append("\n<b>   Fetch count:</b> ");
     mBuffer.AppendInt(fetchCount);
 
     // vars for reporting time
@@ -278,7 +278,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
     PRUint32 t;
 
     // Last modified time
-    mBuffer.Append("\n<b> Last modified:</b>");
+    mBuffer.Append("\n<b> Last modified:</b> ");
     entryInfo->GetLastModified(&t);
     if (t) {
         PrintTimeString(buf, sizeof(buf), t);
@@ -287,7 +287,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
         mBuffer.Append("No last modified time");
 
     // Expires time
-    mBuffer.Append("\n<b>       Expires:</b>");
+    mBuffer.Append("\n<b>       Expires:</b> ");
     entryInfo->GetExpirationTime(&t);
     if (t < 0xFFFFFFFF) {
         PrintTimeString(buf, sizeof(buf), t);
