@@ -661,6 +661,8 @@ PK11TokenObject * pk11_narrowToTokenObject(PK11Object *);
  * token object utilities
  */
 void pk11_addHandle(PK11SearchResults *search, CK_OBJECT_HANDLE handle);
+PRBool pk11_poisonHandle(PK11Slot *slot, SECItem *dbkey, 
+						CK_OBJECT_HANDLE handle);
 PRBool pk11_tokenMatch(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE class,
                                         CK_ATTRIBUTE_PTR theTemplate,int count);
 CK_OBJECT_HANDLE pk11_mkHandle(PK11Slot *slot, 
