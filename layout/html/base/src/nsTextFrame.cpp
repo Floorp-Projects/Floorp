@@ -68,7 +68,7 @@
 #include "nsIServiceManager.h"
 
 #ifndef PR_ABS
-#define PR_ABS(x) (x < 0 ? -x : x)
+#define PR_ABS(x) ((x) < 0 ? -(x) : (x))
 #endif
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
