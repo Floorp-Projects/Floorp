@@ -479,9 +479,9 @@ nsContextMenu.prototype = {
           // initialize popupURL
           const IOS = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(CI.nsIIOService);
-          var spec = Components.lookupMethod(window.content.opener, "location")
-                     .call();
-          this.popupURL = IOS.newURI(spec, null, null);
+          var opener = new XPCNativeWrapper(window.content, "opener").opener;
+          var location = new XPCNativeWrapper(opener, "location").location;
+          this.popupURL = IOS.newURI(location.href, null, null);
 
           // but cancel if it's an unsuitable URL
           const PM = Components.classes["@mozilla.org/PopupWindowManager;1"]
@@ -675,8 +675,8 @@ nsContextMenu.prototype = {
         // Let's try to unescape it using a character set
         // in case the address is not ASCII.
         try {
-          var characterSet = Components.lookupMethod(this.target.ownerDocument, "characterSet")
-                                       .call(this.target.ownerDocument);
+          var ownerDocument = new XPCNativeWrapper(this.target, "ownerDocument").ownerDocument;
+          var characterSet = new XPCNativeWrapper(ownerDocument, "characterSet").characterSet;
           const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                          .getService(Components.interfaces.nsITextToSubURI);
           addresses = textToSubURI.unEscapeNonAsciiURI(characterSet, addresses);
