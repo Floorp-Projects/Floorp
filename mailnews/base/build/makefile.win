@@ -92,7 +92,6 @@ LLIBS=										\
 			$(DIST)\lib\libplc21.lib		\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcore.lib			\
-			$(DIST)\lib\compose.lib			\
 			$(LIBNSPR)						\
 			$(NULL)
 
