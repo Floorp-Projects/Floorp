@@ -1,0 +1,3 @@
+   interface HTMLHeadElement : HTMLElement {
+     attribute wstring         profile;
+   };

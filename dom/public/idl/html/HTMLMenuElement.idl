@@ -1,0 +1,3 @@
+   interface HTMLMenuElement : HTMLElement {
+     attribute boolean         compact;
+   };

@@ -15,29 +15,31 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIJSGlobalObject_h__
-#define nsIJSGlobalObject_h__
+#ifndef nsIDOMHTMLDListElement_h__
+#define nsIDOMHTMLDListElement_h__
 
 #include "nsISupports.h"
-#include "jsapi.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
+#include "nsIDOMHTMLElement.h"
 
-#define NS_IJSGLOBALOBJECT_IID \
-{ 0x2b16fc80, 0xfa41, 0x11d1,  \
-{ 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3} }
+class nsIDOMHTMLDListElement;
 
-/**
- * The JavaScript specific global object. This often used to store
- * per-window global state.
- */
+#define NS_IDOMHTMLDLISTELEMENT_IID \
+{ 0x6f7652fa,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIJSGlobalObject : public nsISupports {
+class nsIDOMHTMLDListElement : public nsIDOMHTMLElement {
 public:
-  virtual JSObject *GetClassPrototype(JSContext *aContext,
-				      const char *aClassName)=0;
-  virtual void      SetClassPrototype(JSContext *aContext,
-				      const char *aClassName,
-				      JSObject *aPrototype)=0;
+
+  NS_IMETHOD    GetCompact(PRBool* aCompact)=0;
+  NS_IMETHOD    SetCompact(PRBool aCompact)=0;
 };
 
-#endif
+extern nsresult NS_InitHTMLDListElementClass(nsIScriptContext *aContext, void **aPrototype);
+
+extern "C" NS_DOM nsresult NS_NewScriptHTMLDListElement(nsIScriptContext *aContext, nsIDOMHTMLDListElement *aSupports, nsISupports *aParent, void **aReturn);
+
+#endif // nsIDOMHTMLDListElement_h__

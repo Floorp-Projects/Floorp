@@ -1,0 +1,3 @@
+   interface HTMLDListElement : HTMLElement {
+     attribute boolean         compact;
+   };

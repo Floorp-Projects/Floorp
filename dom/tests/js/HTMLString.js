@@ -34,12 +34,12 @@ function htmlString(node, indent)
         // dump the attributes if any
         attributes = node.attributes
         if (null != attributes) {
-            html += " "
             var countAttrs = attributes.length
             var index = 0
             while(index < countAttrs) {
                 att = attributes[index]
                 if (null != att) {
+                    html += " "
                     html += att.name + "=" + att.value;
                 }
                 index++

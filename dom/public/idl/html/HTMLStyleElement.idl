@@ -1,0 +1,5 @@
+   interface HTMLStyleElement : HTMLElement {
+     attribute boolean         disabled;
+     attribute wstring         media;
+     attribute wstring         type;
+   };

@@ -1,0 +1,3 @@
+   interface HTMLTableCaptionElement : HTMLElement {
+     attribute wstring         align;
+   };

@@ -1,0 +1,4 @@
+   interface HTMLOptGroupElement : HTMLElement {
+     attribute boolean         disabled;
+     attribute wstring         label;
+   };

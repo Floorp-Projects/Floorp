@@ -1,0 +1,4 @@
+   interface HTMLBaseElement : HTMLElement {
+     attribute wstring         href;
+     attribute wstring         target;
+   };

@@ -1,0 +1,3 @@
+   interface HTMLQuoteElement : HTMLElement {
+     attribute wstring         cite;
+   };

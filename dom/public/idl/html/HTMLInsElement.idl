@@ -1,0 +1,4 @@
+   interface HTMLInsElement : HTMLElement {
+     attribute wstring         cite;
+     attribute wstring         dateTime;
+   };

@@ -1,0 +1,4 @@
+   interface HTMLUListElement : HTMLElement {
+     attribute boolean         compact;
+     attribute wstring         type;
+   };

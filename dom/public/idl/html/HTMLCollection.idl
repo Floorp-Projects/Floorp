@@ -1,0 +1,5 @@
+   interface HTMLCollection {
+     attribute long            length;
+     Node                      item(in long index);
+     Node                      namedItem(in wstring name);
+   };

@@ -1,0 +1,23 @@
+   interface HTMLDocument : Document {
+     attribute wstring         title;
+     attribute wstring         referrer;
+     attribute wstring         fileSize;
+     attribute wstring         fileCreatedDate;
+     attribute wstring         fileModifiedDate;
+     attribute wstring         fileUpdatedDate;
+     attribute wstring         domain;
+     attribute wstring         URL;
+     attribute HTMLElement     body;
+     attribute HTMLCollection  images;
+     attribute HTMLCollection  applets;
+     attribute HTMLCollection  links;
+     attribute HTMLCollection  forms;
+     attribute HTMLCollection  anchors;
+     attribute wstring         cookie;
+     void                      open();
+     void                      close();
+     void                      write(in wstring text);
+     void                      writeln(in wstring text);
+     Element                   getElementById(in wstring elementId);
+     NodeList                  getElementsByName(in wstring elementName);
+   };
