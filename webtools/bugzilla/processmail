@@ -785,6 +785,8 @@ sub filterEmailGroup ($$$) {
 
             push(@filteredList,$person);            
 
+            my $detectedOn = 0;
+            
             foreach my $attribute (@emailAttributes) {
 
                 my $matchName = 'email' . $emailGroup . $attribute;
@@ -795,13 +797,22 @@ sub filterEmailGroup ($$$) {
                         next; 
                     }
 
-                    if ( $flagName eq $matchName  && $flagValue ne 'on') {
-                        pop(@filteredList);
+                    if ($flagName eq $matchName){
+                        if ($flagValue eq 'on') {
+                            $detectedOn = 1;
+                        }
                     }
 
                 } # for each userFlag
 
             } # for each email attribute
+
+            # if the current flag hasn't been detected on at least once, 
+            # this person gets filtered from this group.
+            #
+            if (! $detectedOn) {
+                pop(@filteredList);
+            }
 
             # check to see if the person was removed from this email 
             # group.
