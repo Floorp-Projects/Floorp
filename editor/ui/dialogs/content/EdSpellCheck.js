@@ -30,7 +30,6 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditorShell found for Spell Checker dialog\n");
 
   // Get the spellChecker shell
   spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
@@ -60,7 +59,7 @@ function Startup()
       !dialog.SuggestedList  ||
       !dialog.LanguageMenulist )
   {
-    dump("Not all dialog controls were found!!!\n");
+    return;
   }
   // NOTE: We shouldn't have been created if there was no misspelled word
   
@@ -71,14 +70,12 @@ function Startup()
   PreviousReplaceWord = MisspelledWord;
   
   if (MisspelledWord.length > 0) {
-    dump("First misspelled word = "+MisspelledWord+"\n");
     // Put word in the borderless button used to show the misspelled word
     dialog.MisspelledWord.setAttribute("value", MisspelledWord);
     // Get the list of suggested replacements
     FillSuggestedList();
   }
 
-//dump("4: replace word="+dialog.ReplaceWordInput.value+"\n");
   if (dialog.LanguageMenulist)
   {
     // Fill in the language menulist and sync it up
@@ -89,7 +86,6 @@ function Startup()
     try {
       curLang = spellChecker.GetCurrentDictionary();
     } catch(ex) {
-      dump(ex);
       curLang = "";
     }
 
@@ -98,9 +94,7 @@ function Startup()
 
   DoEnabling();
 
-//dump("5: replace word="+dialog.ReplaceWordInput.value+"\n");
   SetTextfieldFocus(dialog.ReplaceWordInput);
-//dump("End of Startup: replace word="+dialog.ReplaceWordInput.value+", misspelled word="+MisspelledWord+"\n");
 
   SetWindowLocation();
 }
@@ -135,7 +129,6 @@ function InitLanguageMenu(curLang)
   try {
     languageBundle = srGetStrBundle("chrome://global/locale/languageNames.properties");
   } catch(ex) {
-    // dump(ex);
     languageBundle = null;
   }
 
@@ -146,7 +139,6 @@ function InitLanguageMenu(curLang)
     try {
       regionBundle = srGetStrBundle("chrome://global/locale/regionNames.properties");
     } catch(ex) {
-      // dump(ex);
       regionBundle = null;
     }
   }
@@ -235,11 +227,13 @@ function SetWidgetsForMisspelledWord()
 {
   dialog.MisspelledWord.setAttribute("value",MisspelledWord);
 
-  FillSuggestedList();
 
   // Initial replace word is misspelled word 
   dialog.ReplaceWordInput.value = MisspelledWord;
   PreviousReplaceWord = MisspelledWord;
+
+  // This sets dialog.ReplaceWordInput to first suggested word in list
+  FillSuggestedList();
   
   DoEnabling();
   
@@ -251,12 +245,11 @@ function CheckWord()
 {
   word = dialog.ReplaceWordInput.value;
   if (word != "") {
-    //dump("CheckWord: Word in edit field="+word+"\n");
     isMisspelled = spellChecker.CheckCurrentWord(word);
     if (isMisspelled) {
-      dump("CheckWord says word was misspelled\n");
       MisspelledWord = word;
       FillSuggestedList();
+      SetReplaceEnable();
     } else {
       ClearTreelist(dialog.SuggestedList);
       var item = AppendStringToTreelistById(dialog.SuggestedList, "CorrectSpelling");
@@ -280,6 +273,7 @@ function SelectSuggestedWord()
     {
       var selValue = GetSelectedTreelistValue(dialog.SuggestedList);
       dialog.ReplaceWordInput.value = selValue;
+      PreviousReplaceWord = selValue;
     }
     SetReplaceEnable();
   }
@@ -319,7 +313,6 @@ function IgnoreAll()
 function Replace()
 {
   newWord = dialog.ReplaceWordInput.value;
-  //dump("New = "+newWord+" Misspelled = "+MisspelledWord+"\n");
   if (MisspelledWord != "" && MisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
@@ -331,7 +324,6 @@ function Replace()
 
 function ReplaceAll()
 {
-  dump("SpellCheck: ReplaceAll\n");
   newWord = dialog.ReplaceWordInput.value;
   if (MisspelledWord != "" && MisspelledWord != newWord)
   {
@@ -384,20 +376,21 @@ function Recheck()
 
 function FillSuggestedList()
 {
-  list = dialog.SuggestedList;
+  var list = dialog.SuggestedList;
 
   // Clear the current contents of the list
   allowSelectWord = false;
   ClearTreelist(list);
 
-//dump("PreviousReplaceWord="+PreviousReplaceWord+"\n");
   if (MisspelledWord.length > 0)
   {
     // Get suggested words until an empty string is returned
     var count = 0;
+    var firstWord = 0;
     do {
       word = spellChecker.GetSuggestedWord();
-      dump("Suggested Word="+word+"|\n");
+      if (count==0)
+        firstWord = word;
       if (word.length > 0) {
         AppendStringToTreelist(list, word);
         count++;
@@ -413,16 +406,16 @@ function FillSuggestedList()
       allowSelectWord = false;
     } else {
       allowSelectWord = true;
+      // Initialize with first suggested list by selecting it
+      dialog.SuggestedList.selectedIndex = 0;
     }
   }
-  SetReplaceEnable();
 }
 
 function SetReplaceEnable()
 {
   // Enable "Change..." buttons only if new word is different than misspelled
   var newWord = dialog.ReplaceWordInput.value;
-//dump("SetReplaceEnabled: newWord ="+newWord+"\n");
   var enable = newWord.length > 0 && newWord != MisspelledWord;
   SetElementEnabledById("Replace", enable);
   SetElementEnabledById("ReplaceAll", enable);
