@@ -23,6 +23,10 @@
 
 use strict;
 
+use lib qw(.);
+
+use Bugzilla::Config qw(:DEFAULT :admin);
+
 require "globals.pl";
 require "defparams.pl";
 
@@ -106,7 +110,7 @@ if ($shutdown) {
     # Record the old shutdownhtml so it can be restored at the end (this will
     # only be an issue if we are called using the -force command line param)
     $wasshutdown = Param("shutdownhtml");
-    $::param{'shutdownhtml'} = $shutdown_msg;
+    SetParam('shutdownhtml', $shutdown_msg);
     WriteParams();
     # Now we need to wait for existing connections to this database to clear. We
     # do this by looking for connections to the main or shadow database using
@@ -143,7 +147,7 @@ if ($shutdown) {
             # this happening.
             Verbose ("*** Waited for 10 minutes and there were still active \n" .
                      "    connections to the bugzilla database.  Giving up.");
-            $::param{'shutdownhtml'} = $wasshutdown;
+            SetParam('shutdownhtml', $wasshutdown);
             WriteParams();
             exit;
         }
@@ -153,7 +157,7 @@ if ($shutdown) {
 
 my $wasusing = Param("queryagainstshadowdb");
 
-$::param{'queryagainstshadowdb'} = 1; # Force us to be able to use the
+SetParam('queryagainstshadowdb', 1);  # Force us to be able to use the
                                       # shadowdb, even if other processes
                                       # are not supposed to.
 
@@ -185,13 +189,13 @@ if (!$syncall) {
 if ($syncall) {
     Verbose("Syncing up the shadow database by copying entire database in.");
     if ($wasusing) {
-        $::param{'queryagainstshadowdb'} = 0;
+        SetParam('queryagainstshadowdb',0);
         WriteParams();
         if (! $shutdown) {
             Verbose("Disabled reading from the shadowdb. Sleeping 10 seconds to let other procs catch up.");
             sleep(10);
         }
-        $::param{'queryagainstshadowdb'} = 1;
+        SetParam('queryagainstshadowdb', 1);
     }
     my @tables;
     SendSQL("SHOW TABLES");
@@ -271,12 +275,12 @@ if ($syncall) {
     SendSQL("UNLOCK TABLES");
     if ($wasusing) {
         Verbose("Reenabling other processes to read from the shadow db");
-        $::param{'queryagainstshadowdb'} = 1;
+        SetParam('queryagainstshadowdb', 1);
         WriteParams();
     }
     if ($shutdown) {
         Verbose("Restoring the original shutdown message (if any)");
-        $::param{'shutdownhtml'} = $wasshutdown;
+        SetParam('shutdownhtml', $wasshutdown);
         WriteParams();
     }
     Verbose("OK, done.");

@@ -25,13 +25,11 @@ use strict;
 
 use lib qw(.);
 
-require "CGI.pl";
-require "defparams.pl";
+use Bugzilla::Config qw(:DEFAULT :admin);
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::param,
-    %::param_default,
-    @::param_list;
+require "CGI.pl";
+
+use vars %::MFORM;
 
 ConnectToDatabase();
 confirm_login();
@@ -45,62 +43,57 @@ if (!UserInGroup("tweakparams")) {
     exit;
 }
 
-
 PutHeader("Saving new parameters");
 
-foreach my $i (@::param_list) {
-#    print "Processing $i...<BR>\n";
-    if (exists $::FORM{"reset-$i"}) {
-        if ($::param_type{$i} eq "s") {
-            my $index = get_select_param_index($i, $::param_default{$i}->[1]);
-            die "Param not found for '$i'" if ($index eq undef);
-            $::FORM{$i} = $index; 
-        }
-        elsif ($::param_type{$i} eq "m") {
-            # For 'multi' selects, default is the 2nd anon array of the default
-            @{$::MFORM{$i}} = ();
-            foreach my $defaultPrm (@{$::param_default{$i}->[1]}) {
-                my $index = get_select_param_index($i, $defaultPrm); 
-                die "Param not found for '$i'" if ($index eq undef);
-                push(@{$::MFORM{$i}}, $index); 
-            }
-        }
-        else {
-            $::FORM{$i} = $::param_default{$i};
+foreach my $i (GetParamList()) {
+    my $name = $i->{'name'};
+    my $value = $::FORM{$name};
+    if (exists $::FORM{"reset-$name"}) {
+        $value = $i->{'default'};
+    } else {
+        if ($i->{'type'} eq 'm') {
+            # This simplifies the code below
+            $value = \@{$::MFORM{$name}};
+        } else {
+            # Get rid of windows/mac-style line endings.
+            $value =~ s/\r\n?/\n/g;
+
+            # assume single linefeed is an empty string
+            $value =~ s/^\n$//;
         }
     }
-    $::FORM{$i} =~ s/\r\n?/\n/g;   # Get rid of windows/mac-style line endings.
-    $::FORM{$i} =~ s/^\n$//;      # assume single linefeed is an empty string
-    if ($::FORM{$i} ne Param($i)) {
-        if (defined $::param_checker{$i}) {
-            my $ref = $::param_checker{$i};
-            my $ok = &$ref($::FORM{$i}, $i);
+    my $changed;
+    if ($i->{'type'} eq 'm') {
+        my @old = sort @{Param($name)};
+        my @new = sort @$value;
+        if (scalar(@old) != scalar(@new)) {
+            $changed = 1;
+        } else {
+            $changed = 0; # Assume not changed...
+            for (my $cnt = 0; $cnt < scalar(@old); ++$cnt) {
+                if ($old[$cnt] ne $new[$cnt]) {
+                    # entry is different, therefore changed
+                    $changed = 1;
+                    last;
+                }
+            }
+        }
+    } else {
+        $changed = ($value eq Param($name) ? 0 : 1);
+    }
+    if ($changed) {
+        if (exists $i->{'checker'}) {
+            my $ok = $i->{'checker'}->($value, $i);
             if ($ok ne "") {
-                print "New value for $i is invalid: $ok<p>\n";
+                print "New value for " . html_quote($name) .
+                  " is invalid: $ok<p>\n";
                 print "Please hit <b>Back</b> and try again.\n";
                 PutFooter();
                 exit;
             }
         }
-        print "Changed $i.<br>\n";
-#      print "Old: '" . url_quote(Param($i)) . "'<BR>\n";
-#      print "New: '" . url_quote($::FORM{$i}) . "'<BR>\n";
-        if ($::param_type{$i} eq "s") {
-            $::param{$i} = $::param_default{$i}->[0]->[$::FORM{$i}];
-        }
-        elsif ($::param_type{$i} eq "m") {
-            my $multiParamStr = "[ ";
-            foreach my $chosenParam (@{$::MFORM{$i}}) {
-                $multiParamStr .= 
-                 "'$::param_default{$i}->[0]->[$chosenParam]', ";
-            }
-            $multiParamStr .= " ]";
-
-            $::param{$i} = $multiParamStr;
-        }
-        else {
-            $::param{$i} = $::FORM{$i};
-        }
+        print "Changed " . html_quote($name) . "<br>\n";
+        SetParam($name, $value);
     }
 }
 

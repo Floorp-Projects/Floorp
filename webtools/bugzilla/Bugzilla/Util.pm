@@ -258,3 +258,5 @@ sub trim {
 =back
 
 =cut
+
+1;

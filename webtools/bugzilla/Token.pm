@@ -29,6 +29,8 @@ use strict;
 # Bundle the functions in this file together into the "Token" package.
 package Token;
 
+use Bugzilla::Config;
+
 use Date::Format;
 
 # This module requires that its caller have said "require CGI.pl" to import
@@ -75,14 +77,14 @@ sub IssueEmailChangeToken {
     my $template = $::template;
     my $vars = $::vars;
 
-    $vars->{'oldemailaddress'} = $old_email . &::Param('emailsuffix');
-    $vars->{'newemailaddress'} = $new_email . &::Param('emailsuffix');
+    $vars->{'oldemailaddress'} = $old_email . Param('emailsuffix');
+    $vars->{'newemailaddress'} = $new_email . Param('emailsuffix');
     
     $vars->{'max_token_age'} = $maxtokenage;
     $vars->{'token_ts'} = $token_ts;
 
     $vars->{'token'} = $token;
-    $vars->{'emailaddress'} = $old_email . &::Param('emailsuffix');
+    $vars->{'emailaddress'} = $old_email . Param('emailsuffix');
 
     my $message;
     $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
@@ -93,7 +95,7 @@ sub IssueEmailChangeToken {
     close SENDMAIL;
 
     $vars->{'token'} = $newtoken;
-    $vars->{'emailaddress'} = $new_email . &::Param('emailsuffix');
+    $vars->{'emailaddress'} = $new_email . Param('emailsuffix');
 
     $message = "";
     $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
@@ -136,7 +138,7 @@ sub IssuePasswordToken {
     my $vars = $::vars;
 
     $vars->{'token'} = $token;
-    $vars->{'emailaddress'} = $loginname . &::Param('emailsuffix');
+    $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
 
     $vars->{'max_token_age'} = $maxtokenage;
     $vars->{'token_ts'} = $token_ts;
@@ -206,7 +208,7 @@ sub Cancel {
     my ($issuedate, $tokentype, $eventdata, $loginname, $realname) = &::FetchSQLData();
 
     # Get the email address of the Bugzilla maintainer.
-    my $maintainer = &::Param('maintainer');
+    my $maintainer = Param('maintainer');
 
     # Format the user's real name and email address into a single string.
     my $username = $realname ? $realname . " <" . $loginname . ">" : $loginname;

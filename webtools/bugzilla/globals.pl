@@ -28,6 +28,8 @@
 use strict;
 
 use Bugzilla::Util;
+# Bring ChmodDataFile in until this is all moved to the module
+use Bugzilla::Config qw(:DEFAULT ChmodDataFile);
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -53,7 +55,6 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
-    $zz = %main::param_type;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
@@ -67,12 +68,8 @@ sub globals_pl_sillyness {
 # here
 # 
 
-$::db_host = "localhost";
-$::db_port = 3306;
-$::db_name = "bugs";
-$::db_user = "bugs";
-$::db_pass = "";
-
+# XXX - Move this to Bugzilla::Config once code which uses these has moved out
+# of globals.pl
 do 'localconfig';
 
 use DBI;
@@ -99,9 +96,6 @@ $::ENV{'PATH'} = '';
 $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
-# Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.17';
-
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
 $::defaultqueryname = "(Default query)";
@@ -118,18 +112,6 @@ $::superusergroupset = "9223372036854775807";
 #    confess($err_msg);
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
-
-# Some files in the data directory must be world readable iff we don't have
-# a webserver group. Call this function to do this.
-sub ChmodDataFile($$) {
-    my ($file, $mask) = @_;
-    my $perm = 0770;
-    if ((stat('data'))[2] & 0002) {
-        $perm = 0777;
-    }
-    $perm = $perm & $mask;
-    chmod $perm,$file;
-}
 
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
@@ -346,70 +328,7 @@ sub GetFieldID {
     return $fieldid;
 }
 
-# Generate a string which, when later interpreted by the Perl compiler, will
-# be the same as the given string.
-
-sub PerlQuote {
-    my ($str) = (@_);
-    return SqlQuote($str);
-    
-# The below was my first attempt, but I think just using SqlQuote makes more 
-# sense...
-#     $result = "'";
-#     $length = length($str);
-#     for (my $i=0 ; $i<$length ; $i++) {
-#         my $c = substr($str, $i, 1);
-#         if ($c eq "'" || $c eq '\\') {
-#             $result .= '\\';
-#         }
-#         $result .= $c;
-#     }
-#     $result .= "'";
-#     return $result;
-}
-
-
-# Given the name of a global variable, generate Perl code that, if later
-# executed, would restore the variable to its current value.
-
-sub GenerateCode {
-    my ($name) = (@_);
-    my $result = $name . " = ";
-    if ($name =~ /^\$/) {
-        my $value = eval($name);
-        if (ref($value) eq "ARRAY") {
-            $result .= "[" . GenerateArrayCode($value) . "]";
-        } else {
-            $result .= PerlQuote(eval($name));
-        }
-    } elsif ($name =~ /^@/) {
-        my @value = eval($name);
-        $result .= "(" . GenerateArrayCode(\@value) . ")";
-    } elsif ($name =~ '%') {
-        $result = "";
-        foreach my $k (sort { uc($a) cmp uc($b)} eval("keys $name")) {
-            $result .= GenerateCode("\$" . substr($name, 1) .
-                                    "{" . PerlQuote($k) . "}");
-        }
-        return $result;
-    } else {
-        die "Can't do $name -- unacceptable variable type.";
-    }
-    $result .= ";\n";
-    return $result;
-}
-
-sub GenerateArrayCode {
-    my ($ref) = (@_);
-    my @list;
-    foreach my $i (@$ref) {
-        push @list, PerlQuote($i);
-    }
-    return join(',', @list);
-}
-
-
-
+# XXXX - this needs to go away
 sub GenerateVersionTable {
     SendSQL("SELECT versions.value, products.name " .
             "FROM versions, products " .
@@ -505,8 +424,9 @@ sub GenerateVersionTable {
     print FID "# Any changes you make will be overwritten.\n";
     print FID "#\n";
 
-    print FID GenerateCode('@::log_columns');
-    print FID GenerateCode('%::versions');
+    use Data::Dumper;
+    print FID Data::Dumper->Dump([\@::log_columns, \%::versions],
+                                 ['*::log_columns', '*::versions']);
 
     foreach my $i (@list) {
         if (!defined $::components{$i}) {
@@ -514,18 +434,23 @@ sub GenerateVersionTable {
         }
     }
     @::legal_versions = sort {uc($a) cmp uc($b)} keys(%varray);
-    print FID GenerateCode('@::legal_versions');
-    print FID GenerateCode('%::components');
+    print FID Data::Dumper->Dump([\@::legal_versions, \%::components],
+                                 ['*::legal_versions', '*::components']);
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
-    print FID GenerateCode('@::legal_components');
-    foreach my $i('product', 'priority', 'severity', 'platform', 'opsys',
-                  'bug_status', 'resolution') {
-        print FID GenerateCode('@::legal_' . $i);
-    }
-    print FID GenerateCode('@::settable_resolution');
-    print FID GenerateCode('%::proddesc');
-    print FID GenerateCode('@::enterable_products');
-    print FID GenerateCode('%::prodmaxvotes');
+
+    print FID Data::Dumper->Dump([\@::legal_components, \@::legal_product,
+                                  \@::legal_priority, \@::legal_severity,
+                                  \@::legal_platform, \@::legal_opsys,
+                                  \@::legal_bug_status, \@::legal_resolution],
+                                 ['*::legal_components', '*::legal_product',
+                                  '*::legal_priority', '*::legal_severity',
+                                  '*::legal_platform', '*::legal_opsys',
+                                  '*::legal_bug_status', '*::legal_resolution']);
+
+    print FID Data::Dumper->Dump([\@::settable_resolution, \%::proddesc,
+                                  \@::enterable_products, \%::prodmaxvotes],
+                                 ['*::settable_resolution', '*::proddesc',
+                                  '*::enterable_products', '*::prodmaxvotes']);
 
     if ($dotargetmilestone) {
         # reading target milestones in from the database - matthew@zeroknowledge.com
@@ -548,9 +473,12 @@ sub GenerateVersionTable {
             }
         }
 
-        print FID GenerateCode('%::target_milestone');
-        print FID GenerateCode('@::legal_target_milestone');
-        print FID GenerateCode('%::milestoneurl');
+        print FID Data::Dumper->Dump([\%::target_milestone,
+                                      \@::legal_target_milestone,
+                                      \%::milestoneurl],
+                                     ['*::target_milestone',
+                                      '*::legal_target_milestone',
+                                      '*::milestoneurl']);
     }
 
     SendSQL("SELECT id, name FROM keyworddefs ORDER BY name");
@@ -560,11 +488,13 @@ sub GenerateVersionTable {
         $name = lc($name);
         $::keywordsbyname{$name} = $id;
     }
-    print FID GenerateCode('@::legal_keywords');
-    print FID GenerateCode('%::keywordsbyname');
+
+    print FID Data::Dumper->Dump([\@::legal_keywords, \%::keywordsbyname],
+                                 ['*::legal_keywords', '*::keywordsbyname']);
 
     print FID "1;\n";
     close FID;
+
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";
     ChmodDataFile('data/versioncache', 0666);
 }
@@ -589,10 +519,6 @@ sub ModTime {
     return $mtime;
 }
 
-
-
-# This proc must be called before using legal_product or the versions array.
-
 $::VersionTableLoaded = 0;
 sub GetVersionTable {
     return if $::VersionTableLoaded;
@@ -616,7 +542,6 @@ sub GetVersionTable {
     }
     $::VersionTableLoaded = 1;
 }
-
 
 # Validates a given username as a new username
 # returns 1 if valid, 0 if invalid
@@ -1429,48 +1354,6 @@ sub RemoveVotes {
     }
 }
 
-sub Param ($) {
-    my ($value) = (@_);
-    if (! defined $::param{$value}) {
-        # Um, maybe we haven't sourced in the params at all yet.
-        if (stat("data/params")) {
-            # Write down and restore the version # here.  That way, we get 
-            # around anyone who maliciously tries to tweak the version number
-            # by editing the params file.  Not to mention that in 2.0, there 
-            # was a bug that wrote the version number out to the params file...
-            my $v = $::param{'version'};
-            require "data/params";
-            $::param{'version'} = $v;
-        }
-    }
-
-    if (! defined $::param{$value}) {
-        # Well, that didn't help.  Maybe it's a new param, and the user
-        # hasn't defined anything for it.  Try and load a default value
-        # for it.
-        require "defparams.pl";
-        WriteParams();
-    }
-
-    # If it's still not defined, we're pimped.
-    die "Can't find param named $value" if (! defined $::param{$value});
-
-    ## Check to make sure the entry in $::param_type is there; if we don't, we
-    ## get 'use of uninitialized constant' errors (see bug 162217). 
-    ## Interestingly  enough, placing this check in the die above causes 
-    ## deaths on some params (the "languages" param?) because they don't have
-    ## a type? Odd... seems like a bug to me... but what do I know? -jpr
-
-    if (defined $::param_type{$value} && $::param_type{$value} eq "m") {
-        my $valueList = eval($::param{$value});
-        return $valueList if (!($@) && ref($valueList) eq "ARRAY");
-        die "Multi-list param '$value' eval() failure ('$@'); data/params is horked";
-    }
-    else {
-        return $::param{$value};
-    }
-}
-
 # Take two comma or space separated strings and return what
 # values were removed from or added to the new one.
 sub DiffStrings {
@@ -1768,6 +1651,9 @@ $::vars =
     
     # User Agent - useful for detecting in templates
     'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
+
+    # Bugzilla version
+    'VERSION' => $Bugzilla::Config::VERSION,
   };
 
 1;

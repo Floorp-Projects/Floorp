@@ -96,6 +96,8 @@
 
 use strict;
 
+use Bugzilla::Config qw(:DEFAULT :admin);
+
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll
 # automatically get declared in the process of reading in localconfig, and
@@ -970,36 +972,33 @@ END
 # Just to be sure ...
 unlink "data/versioncache";
 
-# Remove parameters from the data/params file that no longer exist in Bugzilla.
-if (-e "data/params") {
-    require "data/params";
-    require "defparams.pl";
-    use vars @::param_list;
-    my @oldparams;
-    
+# Remove parameters from the data/params file that no longer exist in Bugzilla,
+# and set the defaults for new ones
+
+my @oldparams = UpdateParams();
+
+if (@oldparams) {
     open(PARAMFILE, ">>old-params.txt") 
       || die "$0: Can't open old-params.txt for writing: $!\n";
-      
-    foreach my $item (keys %::param) {
-        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
-            push (@oldparams, $item);
-            print PARAMFILE "\n\n$item:\n$::param{$item}\n";
-                
-            delete $::param{$item};
-        }
+
+    print "The following parameters are no longer used in Bugzilla, " .
+      "and so have been\nremoved from your parameters file and " .
+      "appended to old-params.txt:\n";
+
+    foreach my $p (@oldparams) {
+        my ($item, $value) = @{$p};
+
+        print PARAMFILE "\n\n$item:\n$value\n";
+
+        print $item;
+        print ", " unless $item eq $oldparams[$#oldparams]->[0];
     }
-    
-    if (@oldparams) {
-        print "The following parameters are no longer used in Bugzilla, " .
-              "and so have been\nremoved from your parameters file and " .
-              "appended to old-params.txt:\n";
-        print join(", ", @oldparams) . "\n\n";               
-    }
-    
+    print "\n";
     close PARAMFILE;
-    WriteParams();
 }
 
+# WriteParams will only write out still-valid entries
+WriteParams();
 
 ###########################################################################
 # Set proper rights
@@ -1239,14 +1238,12 @@ END { $dbh->disconnect if $dbh }
 # and that the generated images are accessible.
 #
 
-if(-e "data/params") {
-  require "data/params";
-  if( $::param{'webdotbase'} && $::param{'webdotbase'} !~ /^https?:/ ) {
+if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
     printf("Checking for %15s %-9s ", "GraphViz", "(any)");
-    if(-x $::param{'webdotbase'}) {
-      print "ok: found\n";
+    if(-x Param('webdotbase')) {
+        print "ok: found\n";
     } else {
-      print "not a valid executable: $::param{'webdotbase'}\n";
+        print "not a valid executable: " . Param{'webdotbase'} . "\n";
     }
 
     # Check .htaccess allows access to generated images
@@ -1258,7 +1255,6 @@ if(-e "data/params") {
       }
       close HTACCESS;
     }
-  }
 }
 
 print "\n";
@@ -1948,23 +1944,8 @@ if ($sth->rows == 0) {
   my $pass2 = "*";
   my $admin_ok = 0;
   my $admin_create = 1;
-  my $mailcheckexp = "";
-  my $mailcheck    = ""; 
-
-  # Here we look to see what the emailregexp is set to so we can 
-  # check the email addy they enter. Bug 96675. If they have no 
-  # params (likely but not always the case), we use the default.
-  if (-e "data/params") { 
-    require "data/params"; # if they have a params file, use that
-  }
-  if ($::param{emailregexp}) {
-    $mailcheckexp = $::param{emailregexp};
-    $mailcheck    = $::param{emailregexpdesc};
-  } else {
-    $mailcheckexp = '^[^@]+@[^@]+\\.[^@]+$';
-    $mailcheck    = 'A legal address must contain exactly one \'@\', 
-      and at least one \'.\' after the @.';
-  }
+  my $mailcheckexp = Param('emailregexp');
+  my $mailcheck    = Param('emailregexpdesc');
 
   print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
   print "first time using Bugzilla, or your administrator's privs might have accidently\n";

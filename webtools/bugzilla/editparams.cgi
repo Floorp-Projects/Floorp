@@ -25,13 +25,9 @@
 use strict;
 use lib ".";
 
-require "CGI.pl";
-require "defparams.pl";
+use Bugzilla::Config qw(:DEFAULT :admin);
 
-# Shut up misguided -w warnings about "used only once":
-use vars @::param_desc,
-    @::param_list,
-    @::param_default;
+require "CGI.pl";
 
 ConnectToDatabase();
 confirm_login();
@@ -59,18 +55,19 @@ print "<form method=post action=doeditparams.cgi><table>\n";
 my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
 print $rowbreak;
 
-foreach my $i (@::param_list) {
-    print "<tr><th align=right valign=top>$i:</th><td>$::param_desc{$i}</td></tr>\n";
-    print "<tr><td valign=top><input type=checkbox name=reset-$i>Reset</td><td>\n";
-    my $value = Param($i);
-    SWITCH: for ($::param_type{$i}) {
+foreach my $i (GetParamList()) {
+    my $name = $i->{'name'};
+    my $value = Param($name);
+    print "<tr><th align=right valign=top>$name:</th><td>$i->{'desc'}</td></tr>\n";
+    print "<tr><td valign=top><input type=checkbox name=reset-$name>Reset</td><td>\n";
+    SWITCH: for ($i->{'type'}) {
         /^t$/ && do {
-            print "<input size=80 name=$i value=\"" .
+            print "<input size=80 name=$name value=\"" .
                 value_quote($value) . "\">\n";
             last SWITCH;
         };
         /^l$/ && do {
-            print "<textarea wrap=hard name=$i rows=10 cols=80>" .
+            print "<textarea wrap=hard name=$name rows=10 cols=80>" .
                 value_quote($value) . "</textarea>\n";
             last SWITCH;
         };
@@ -84,64 +81,60 @@ foreach my $i (@::param_list) {
                 $on = "";
                 $off = "checked";
             }
-            print "<input type=radio name=$i value=1 $on>On\n";
-            print "<input type=radio name=$i value=0 $off>Off\n";
+            print "<input type=radio name=$name value=1 $on>On\n";
+            print "<input type=radio name=$name value=0 $off>Off\n";
             last SWITCH;
         };
         /^m$/ && do {
-            my $optList = $::param_default{$i}->[0]; #'cause we use it so much 
+            my @choices = @{$i->{'choices'}};
             ## showing 5 options seems like a nice round number; this should
             ## probably be configurable; if you care, file a bug ;-)
-            my $boxSize = scalar(@{$optList}) < 5 ? scalar(@{$optList}) : 5;
+            my $boxSize = scalar(@choices) < 5 ? scalar(@choices) : 5;
 
-            print "<select multiple size=\"$boxSize\" name=\"$i\">\n";
+            print "<select multiple size=\"$boxSize\" name=\"$name\">\n";
 
-            for (my $optNum = 0; $optNum < scalar(@{$optList}); $optNum++) {
+            foreach my $item (@choices) {
                 my $selected = "";
 
-                foreach my $selectedVal (@{$value}) {
-                    if ($selectedVal eq $optList->[$optNum]) {
-                        $selected = "selected";
-                        last;
-                    }
+                if (lsearch($value, $item) >= 0) {
+                    $selected = "selected";
                 }
 
-                print "<option $selected value=\"$optNum\">" .
-                 "$optList->[$optNum]</option>\n";
+                print "<option $selected value=\"" . html_quote($item) . "\">" .
+                 html_quote($item) . "</option>\n";
             }
 
             print "</select>\n";
             last SWITCH;
         };
         /^s$/ && do {
-            print "<select name=\"$i\">\n";
-            #'cause we use it so much below
-            my $optList = $::param_default{$i}->[0]; 
+            print "<select name=\"$name\">\n";
+            my @choices = @{$i->{'choices'}};
 
-            for (my $optNum = 0; $optNum < scalar(@{$optList}); $optNum++) {
+            foreach my $item (@choices) {
                 my $selected = "";
-                if ($value eq $optList->[$optNum]) {
+
+                if ($value eq $item) {
                     $selected = "selected";
                 }
 
-                print "<option $selected value=\"$optNum\">" .
-                 "$optList->[$optNum]</option>\n";
+                print "<option $selected value=\"" . html_quote($item) . "\">" .
+                  html_quote($item) . "</option>\n";
+
             }
             print "</select>\n";
             last SWITCH;
         };
         # DEFAULT
-        print "<font color=red><blink>Unknown param type $::param_type{$i}!!!</blink></font>\n";
+        print "<font color=red><blink>Unknown param type $i->{'type'}!!!</blink></font>\n";
     }
     print "</td></tr>\n";
     print $rowbreak;
 }
 
 print "<tr><th align=right valign=top>version:</th><td>
-What version of Bugzilla this is.  This can't be modified here, but
-<tt>%version%</tt> can be used as a parameter in places that understand
-such parameters</td></tr>
-<tr><td></td><td>" . Param('version') . "</td></tr>";
+What version of Bugzilla this is. This can't be modified.
+<tr><td></td><td>" . $Bugzilla::Config::VERSION . "</td></tr>";
 
 print "</table>\n";
 

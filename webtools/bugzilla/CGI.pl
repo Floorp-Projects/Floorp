@@ -33,6 +33,7 @@ use lib ".";
 # use Carp;                       # for confess
 
 use Bugzilla::Util;
+use Bugzilla::Config;
 
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 

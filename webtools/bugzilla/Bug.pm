@@ -32,6 +32,7 @@ package Bug;
 use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;
 
+use Bugzilla::Config;
 use Bugzilla::Util;
 
 for my $key (qw (bug_id alias product version rep_platform op_sys bug_status 
@@ -165,7 +166,7 @@ sub initBug  {
     $self->{'cc'} = \@cc;
   }
 
-  if (&::Param("useqacontact") && (defined $self->{'qa_contact'}) ) {
+  if (Param("useqacontact") && (defined $self->{'qa_contact'}) ) {
     my $name = $self->{'qa_contact'} > 0 ? &::DBID_to_name($self->{'qa_contact'}) :"";
     if ($name) {
       $self->{'qa_contact'} = $name;
@@ -273,8 +274,8 @@ sub emitXML {
     if (defined $self->{'longdescs'}) {
         for (my $i=0 ; $i < @{$self->{'longdescs'}} ; $i++) {
             next if ($self->{'longdescs'}[$i]->{'isprivate'} 
-                     && &::Param("insidergroup")
-                     && !&::UserInGroup(&::Param("insidergroup")));
+                     && Param("insidergroup")
+                     && !&::UserInGroup(Param("insidergroup")));
             $xml .= "  <long_desc>\n"; 
             $xml .= "   <who>" . &::DBID_to_name($self->{'longdescs'}[$i]->{'who'}) 
                                . "</who>\n"; 
@@ -289,8 +290,8 @@ sub emitXML {
     if (defined $self->{'attachments'}) {
         for (my $i=0 ; $i < @{$self->{'attachments'}} ; $i++) {
             next if ($self->{'attachments'}[$i]->{'isprivate'} 
-                     && &::Param("insidergroup")
-                     && !&::UserInGroup(&::Param("insidergroup")));
+                     && Param("insidergroup")
+                     && !&::UserInGroup(Param("insidergroup")));
             $xml .= "  <attachment>\n"; 
             $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
                                     . "</attachid>\n"; 

@@ -46,7 +46,7 @@ my $exporter = $::COOKIE{"Bugzilla_login"} || undef;
 my @ids = split (/[, ]+/, $::FORM{'id'});
 
 print "Content-type: text/xml\n\n";
-print Bug::XML_Header(Param("urlbase"), $::param{'version'}, 
+print Bug::XML_Header(Param("urlbase"), $Bugzilla::Config::VERSION, 
                       Param("maintainer"), $exporter);
 foreach my $id (@ids) {
   my $bug = new Bug(trim($id), $::userid);

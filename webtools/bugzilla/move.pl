@@ -93,7 +93,7 @@ unless ($exporter =~ /($movers)/) {
 }
 
 my $xml = "";
-$xml .= Bug::XML_Header( Param("urlbase"), $::param{'version'}, 
+$xml .= Bug::XML_Header( Param("urlbase"), $Bugzilla::Config::VERSION, 
                          Param("maintainer"), $exporter );
 print "<P>\n";
 foreach my $id (split(/:/, $::FORM{'buglist'})) {
