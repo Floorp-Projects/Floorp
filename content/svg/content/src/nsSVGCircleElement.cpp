@@ -114,6 +114,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGCircleElement,nsSVGCircleElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGCircleElement,nsSVGCircleElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGCircleElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGCircleElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGCircleElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGCircleElementBase)
@@ -223,7 +226,7 @@ nsSVGCircleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
   
-  *aReturn = NS_STATIC_CAST(nsSVGCircleElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }

@@ -76,9 +76,6 @@ NS_IMPL_RELEASE_INHERITED(nsSVGElement,nsGenericElement)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIXMLContent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
@@ -317,72 +314,6 @@ nsSVGElement::sFontSpecificationMap[] = {
 // nsIDOMNode methods
 
 NS_IMETHODIMP
-nsSVGElement::GetNodeName(nsAString& aNodeName)
-{
-  mNodeInfo->GetQualifiedName(aNodeName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetNodeValue(nsAString& aNodeValue)
-{
-  SetDOMStringToNull(aNodeValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::SetNodeValue(const nsAString& aNodeValue)
-{
-  // The DOM spec says that when nodeValue is defined to be null "setting it
-  // has no effect", so we don't throw an exception.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::ELEMENT_NODE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetParentNode(nsIDOMNode** aParentNode)
-{
-  return nsGenericElement::GetParentNode(aParentNode);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  return nsGenericElement::GetChildNodes(aChildNodes);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetFirstChild(nsIDOMNode** aNode)
-{
-  return nsGenericElement::GetFirstChild(aNode);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetLastChild(nsIDOMNode** aNode)
-{
-  return nsGenericElement::GetLastChild(aNode);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  return nsGenericElement::GetPreviousSibling(aPreviousSibling);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  return nsGenericElement::GetNextSibling(aNextSibling);
-}
-
-NS_IMETHODIMP
 nsSVGElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   *aAttributes = mAttributes;
@@ -391,99 +322,10 @@ nsSVGElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  return nsGenericElement::GetOwnerDocument(aOwnerDocument);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetNamespaceURI(nsAString& aNamespaceURI)
-{
-  return mNodeInfo->GetNamespaceURI(aNamespaceURI);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetPrefix(nsAString& aPrefix)
-{
-  return nsGenericElement::GetPrefix(aPrefix);
-}
-
-NS_IMETHODIMP
-nsSVGElement::SetPrefix(const nsAString& aPrefix)
-{
-  return nsGenericElement::SetPrefix(aPrefix);
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetLocalName(nsAString& aLocalName)
-{
-  return nsGenericElement::GetLocalName(aLocalName);
-}
-
-NS_IMETHODIMP
-nsSVGElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
-{
-  return nsGenericElement::doInsertBefore(this, aNewChild, aRefChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsSVGElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return nsGenericElement::doReplaceChild(this, aNewChild, aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsSVGElement::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return nsGenericElement::doRemoveChild(this, aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsSVGElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return nsGenericElement::doInsertBefore(this, aNewChild, nsnull, aReturn);
-}
-
-NS_IMETHODIMP
-nsSVGElement::HasChildNodes(PRBool* aReturn)
-{
-  if (0 != mAttrsAndChildren.ChildCount()) {
-    *aReturn = PR_TRUE;
-  }
-  else {
-    *aReturn = PR_FALSE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ASSERTION(1==0,"CloneNode must be implemented by subclass!");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSVGElement::Normalize()
-{
-  return nsGenericElement::Normalize();
-}
-
-NS_IMETHODIMP
 nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSVGElement::HasAttributes(PRBool* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  
-  *aReturn = GetAttrCount() > 0;
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -498,12 +340,12 @@ nsSVGElement::HasAttributes(PRBool* aReturn)
 /* attribute DOMString id; */
 NS_IMETHODIMP nsSVGElement::GetId(nsAString & aId)
 {
-  return GetAttribute(NS_LITERAL_STRING("id"), aId);
+  return GetAttr(kNameSpaceID_None, nsSVGAtoms::id, aId);
 }
 
 NS_IMETHODIMP nsSVGElement::SetId(const nsAString & aId)
 {
-  return SetAttribute(NS_LITERAL_STRING("id"), aId);
+  return SetAttr(kNameSpaceID_None, nsSVGAtoms::id, aId, PR_TRUE);
 }
 
 /* readonly attribute nsIDOMSVGSVGElement ownerSVGElement; */

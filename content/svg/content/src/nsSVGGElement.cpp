@@ -105,6 +105,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGGElement,nsSVGGElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGGElement,nsSVGGElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGGElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGElementBase)
@@ -166,7 +169,7 @@ nsSVGGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
  
-  *aReturn = NS_STATIC_CAST(nsSVGGElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }

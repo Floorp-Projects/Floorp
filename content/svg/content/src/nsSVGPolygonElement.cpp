@@ -107,6 +107,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGPolygonElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPolygonElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPoints)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPolygonElement)
@@ -181,7 +184,7 @@ nsSVGPolygonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
  
-  *aReturn = NS_STATIC_CAST(nsSVGPolygonElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }

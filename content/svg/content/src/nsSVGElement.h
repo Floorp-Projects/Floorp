@@ -56,7 +56,6 @@
 #include "nsISVGContent.h"
 
 class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIXMLContent:nsIStyledContent:nsIContent
-                     public nsIDOMSVGElement,    // :nsIDOMElement:nsIDOMNode
                      public nsISVGValueObserver, 
                      public nsSupportsWeakReference, // :nsISupportsWeakReference
                      public nsISVGContent
@@ -115,14 +114,14 @@ public:
   static const MappedAttributeEntry sFontSpecificationMap[];
   
   // nsIDOMNode
-  NS_DECL_NSIDOMNODE
-  
-  // nsIDOMElement
-  // NS_DECL_IDOMELEMENT
-  NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
+  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);
   
   // nsIDOMSVGElement
-  NS_DECL_NSIDOMSVGELEMENT
+  NS_IMETHOD GetId(nsAString & aId);
+  NS_IMETHOD SetId(const nsAString & aId);
+  NS_IMETHOD GetOwnerSVGElement(nsIDOMSVGSVGElement** aOwnerSVGElement);
+  NS_IMETHOD GetViewportElement(nsIDOMSVGElement** aViewportElement);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);

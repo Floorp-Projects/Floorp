@@ -107,6 +107,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGPolylineElement,nsSVGPolylineElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPolylineElement,nsSVGPolylineElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGPolylineElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPolylineElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPoints)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPolylineElement)
@@ -181,7 +184,7 @@ nsSVGPolylineElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
  
-  *aReturn = NS_STATIC_CAST(nsSVGPolylineElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }

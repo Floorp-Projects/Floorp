@@ -119,6 +119,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGRectElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGRectElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGRectElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGRectElementBase)
@@ -281,7 +284,7 @@ nsSVGRectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
 
-  *aReturn = NS_STATIC_CAST(nsSVGRectElementBase*, it);
+  *aReturn = it;
 
   return NS_OK;
 }
