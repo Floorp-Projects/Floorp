@@ -1160,7 +1160,7 @@ const Commands _commands[] = {
 "Create a new CK_MECHANISM object with type NULL paramters and specified type\n"
 " varName        variable name of the new mechansim\n"
 " mechanismType  CKM_ mechanism type value to set int the type field\n",
-	{ArgMechanism|ArgOut, ArgULong, ArgNone, ArgNone, ArgNone, 
+	{ArgVar|ArgNew, ArgULong, ArgNone, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"BuildTemplate", F_BuildTemplate,
 "BuildTemplate template\n\n"

@@ -748,6 +748,7 @@ DeleteVariable(const char *bp)
 	if (PL_strcasecmp((*current)->vname,vname) == 0) {
 	        argFree((*current)->value);
 		*current = (*current)->next;
+		break;
 	}
     }
     return CKR_OK;
