@@ -41,10 +41,6 @@
 
 #include "nsISupports.h"
 
-class nsIFrame;
-class nsISVGRendererRegion;
-class nsIPresContext;
-
 // {C38FDFC3-7030-47CB-BA69-D7C5F45E657C}
 #define NS_ISVGSVGFRAME_IID \
 { 0xc38fdfc3, 0x7030, 0x47cb, { 0xba, 0x69, 0xd7, 0xc5, 0xf4, 0x5e, 0x65, 0x7c } }
