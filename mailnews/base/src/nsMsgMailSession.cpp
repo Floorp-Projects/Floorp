@@ -90,5 +90,6 @@ nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
   if (!aAM) return NS_ERROR_NULL_POINTER;
   
   *aAM = m_accountManager;
+  NS_IF_ADDREF(*aAM);
   return NS_OK;
 }
