@@ -293,6 +293,11 @@ void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
         return;
     }
 
+    if (!pps->mPACURL) {
+        NS_ERROR("HandlePACLoadEvent: js PACURL component is null");
+        return;
+    }
+
     NS_WITH_SERVICE(nsIIOService, pIOService, kIOServiceCID, &rv);
     if (!pIOService || NS_FAILED(rv)) {
         NS_ERROR("Cannot get IO Service");
