@@ -30,5 +30,6 @@ nsMsgRDFDataSource.h
 nsMsgBiffManager.h
 nsMsgNotificationManager.h
 nsCopyMessageStreamListener.h
+nsMsgCopyService.h
 
 
