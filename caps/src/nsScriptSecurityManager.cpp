@@ -1514,25 +1514,6 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
         return NS_OK;
     }
 
-    //-- Always allow chrome pages to run scripts
-    //   This is for about: URLs, which are chrome but don't
-    //   have the system principal
-    if (!mIsJavaScriptEnabled)
-    {
-        nsCOMPtr<nsIURI> principalURI;
-        aPrincipal->GetURI(getter_AddRefs(principalURI));
-        if (principalURI)
-        {
-            PRBool isChrome = PR_FALSE;
-            principalURI->SchemeIs("chrome", &isChrome);
-            if (isChrome)
-            {
-                *result = PR_TRUE;
-                return NS_OK;              
-            }
-        }
-    }
-
     //-- See if the current window allows JS execution
     nsIScriptContext *scriptContext = GetScriptContext(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
@@ -1563,6 +1544,22 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
             }
 #endif // DEBUG
         } while (treeItem && docshell);
+    }
+
+    // OK, the docshell doesn't have script execution explicitly disabled.
+    // Check whether our URI is "about:".  If it is, we need to allow JS to
+    // run...  In this case, don't apply the JS enabled pref or policies.
+    nsCOMPtr<nsIURI> principalURI;
+    aPrincipal->GetURI(getter_AddRefs(principalURI));
+    if (principalURI)
+    {
+        nsCAutoString spec;
+        principalURI->GetSpec(spec);
+        if (spec.EqualsLiteral("about:"))
+        {
+            *result = PR_TRUE;
+            return NS_OK;              
+        }
     }
 
     //-- See if JS is disabled globally (via prefs)
