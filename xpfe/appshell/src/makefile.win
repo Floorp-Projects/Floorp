@@ -99,6 +99,7 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the DLL
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib        \
+ $(DIST)\lib\timer_s.lib    \
  $(DIST)\lib\gkgfxwin.lib   \
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib         \
