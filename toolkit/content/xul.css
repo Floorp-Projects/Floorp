@@ -597,16 +597,20 @@ label[control] {
 /********** textbox **********/
 
 textbox {
-  -moz-binding: url("chrome://global/content/bindings/textbox.xml#textbox");
+  -moz-binding: url("chrome://global/content/widgets/textbox.xml#textbox");
   -moz-user-select: text;
 }
 
 textbox[multiline="true"] {
-  -moz-binding: url("chrome://global/content/bindings/textbox.xml#textarea");
+  -moz-binding: url("chrome://global/content/widgets/textbox.xml#textarea");
 }
 
 .textbox-input-box {
-  -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box");
+  -moz-binding: url("chrome://global/content/widgets/textbox.xml#input-box");
+}
+
+textbox[type="timed"] {
+  -moz-binding: url("chrome://global/content/widgets/textbox.xml#timed-textbox");
 }
 
 /********** autocomplete textbox **********/
