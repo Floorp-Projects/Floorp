@@ -49,8 +49,8 @@
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
 #include "nsTreeFrame.h"
-//#include "nsToolboxFrame.h"
-//#include "nsToolbarFrame.h"
+#include "nsToolboxFrame.h"
+#include "nsToolbarFrame.h"
 #endif
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
@@ -1903,11 +1903,11 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 	}
 	else if (aTag == nsXULAtoms::toolbox) {
 	  processChildren = PR_TRUE;
-	  //rv = NS_NewToolboxFrame(aNewFrame);
+	  rv = NS_NewToolboxFrame(aNewFrame);
 	}
 	else if (aTag == nsXULAtoms::toolbar) {
 	  processChildren = PR_TRUE;
-	  //rv = NS_NewToolbarFrame(aNewFrame);
+	  rv = NS_NewToolbarFrame(aNewFrame);
 	}
   }
 
