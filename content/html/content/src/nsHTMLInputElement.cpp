@@ -1797,7 +1797,7 @@ nsHTMLInputElement::GetType(nsAString& aValue)
     ++table;
   }
 
-  NS_ERROR("Shound't get here!");
+  NS_ERROR("Shouldn't get here!");
 
   aValue.Truncate();
 
