@@ -295,14 +295,14 @@ clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 build_all: build_nspr build_seamonkey
 
 build_all_dep: depend install
-	
+
 distclean: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake -f gmakefile.win distclean MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)
 	nmake /f client.mak clobber_psm
 	nmake /f client.mak clobber_seamonkey
-		
+
 clobber_nspr: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake -f gmakefile.win clobber_all MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
@@ -314,7 +314,6 @@ clobber_psm:
 clobber_xpconnect:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	-rd /s /q dist
-	set DIST_DIRS=1
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake -f gmakefile.win clobber_all  MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
@@ -331,16 +330,10 @@ clobber_xpconnect:
 clobber_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	-rd /s /q dist
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake -f makefile.win clobber_all 
 
 depend: export
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake -f makefile.win depend 
 
 depend_xpconnect:
@@ -379,53 +372,38 @@ build_xpconnect: build_nspr
 
 build_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake -f makefile.win all
 
 build_client:
 	@cd $(MOZ_SRC)\mozilla\.
-	set CLIENT_DIRS=1
 	nmake -f makefile.win all
 
 build_layout:
 	@cd $(MOZ_SRC)\mozilla\.
-	set LAYOUT_DIRS=1
 	nmake -f makefile.win all
 
 build_dist:
 	@cd $(MOZ_SRC)\mozilla\.
-	set DIST_DIRS=1
 	nmake -f makefile.win all
 
 install:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake -f makefile.win install
 
 export: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake -f makefile.win export
 
 clobber_dist:
 	@cd $(MOZ_SRC)\mozilla\.
-	set DIST_DIRS=1
 	nmake -f makefile.win clobber_all
 
 clobber_client:
 	@cd $(MOZ_SRC)\mozilla\.
-	set CLIENT_DIRS=1
 	nmake -f makefile.win clobber_all
 
 clobber_layout:
 	@cd $(MOZ_SRC)\mozilla\.
-	set LAYOUT_DIRS=1
 	nmake -f makefile.win clobber_all
 
 browse_info::
@@ -436,16 +414,10 @@ browse_info::
 
 regchrome::
 	@cd $(MOZ_SRC)\mozilla\.
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake /f makefile.win regchrome
 
 deliver::
 	@cd $(MOZ_SRC)\mozilla\.
-	set DIST_DIRS=1
-	set LAYOUT_DIRS=1
-	set CLIENT_DIRS=1
 	nmake /f makefile.win splitsymbols
 
 #//------------------------------------------------------------------------

@@ -46,7 +46,6 @@ include <$(DEPTH)\config\config.mak>
 #//------------------------------------------------------------------------
 
 DIRS =                         \
-!if defined(DIST_DIRS)
   config                       \
   include                      \
   jpeg                         \
@@ -72,9 +71,6 @@ DIRS =                         \
   modules\oji                  \
   caps                         \
   rdf                          \
-!endif
-!if defined(LAYOUT_DIRS)
-# the following are associated with the layout engine
   expat                        \
   gfx                          \
   gfx2                         \
@@ -98,9 +94,6 @@ DIRS =                         \
 !if defined(GC_LEAK_DETECTOR)
   gc\boehm                     \
 !endif
-!endif
-!if defined(CLIENT_DIRS)
-# the following are associated with the browser
   xpfe                         \
   xpinstall                    \
 !if defined(BUILD_PSM) || defined(BUILD_PSM2)
@@ -115,7 +108,6 @@ DIRS =                         \
   l10n                     \
 !if !defined(DISABLE_MAILNEWS)
   mailnews                     \
-!endif
 !endif
   xpfe\bootstrap               \
 !if defined(MOZ_STATIC_COMPONENT_LIBS)
