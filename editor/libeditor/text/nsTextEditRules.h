@@ -184,8 +184,6 @@ protected:
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
-  PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
-
 #ifdef IBMBIDI
   nsresult CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode, 
                                      PRInt32               aSelOffset, 

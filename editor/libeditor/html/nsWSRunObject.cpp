@@ -73,27 +73,6 @@ static PRBool IsInlineNode(nsIDOMNode* node)
 }
 
 //- constructor / destructor -----------------------------------------------
-nsWSRunObject::nsWSRunObject(nsHTMLEditor *aEd) :
-mNode()
-,mOffset(0)
-,mStartNode()
-,mStartOffset(0)
-,mStartReason(0)
-,mEndNode()
-,mEndOffset(0)
-,mEndReason(0)
-,mFirstNBSPNode()
-,mFirstNBSPOffset(0)
-,mLastNBSPNode()
-,mLastNBSPOffset(0)
-,mNodeArray()
-,mStartRun(nsnull)
-,mEndRun(nsnull)
-,mHTMLEditor(aEd)
-{
-  mNodeArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-}
-
 nsWSRunObject::nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, PRInt32 aOffset) :
 mNode(aNode)
 ,mOffset(aOffset)
