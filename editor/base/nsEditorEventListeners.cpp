@@ -160,9 +160,9 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsAutoString  key;
-  PRUint32     character;
-  PRUint32 keyCode;
+  nsAutoString key;
+  PRUint32     charCode;
+  PRUint32     keyCode;
 
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aKeyEvent);
@@ -178,6 +178,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
    //
 
   PRBool keyProcessed;
+  // we should check a flag here to see if we should be using built-in key bindings
+  // mEditor->GetFlags(&flags);
+  // if (flags & ...)
   ProcessShortCutKeys(aKeyEvent, keyProcessed);
   if (PR_FALSE==keyProcessed)
   {
@@ -185,6 +188,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     uiEvent->GetCtrlKey(&ctrlKey);
     uiEvent->GetAltKey(&altKey);
     uiEvent->GetMetaKey(&metaKey);
+    uiEvent->GetKeyCode(&keyCode);
+    uiEvent->GetCharCode(&charCode);
 
 #ifdef BLOCK_META_FOR_SOME_REASON
     if (metaKey)
@@ -194,7 +199,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
     if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
 
-    if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
+    // if there is no charCode, then it's a key that doesn't map to a character,
+    // so look for special keys using keyCode
+    if (0==charCode)
     {
       if (nsIDOMUIEvent::VK_BACK==keyCode) 
       {
@@ -241,12 +248,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }
     }
     
-    // i turned off the blocking of alt keys - these are option-keypresses on mac and
-    // it's traditional that those go through (and they are used to generate some additional
-    // characters) - joe
-    if (/*(PR_FALSE==altKey) &&*/ (PR_FALSE==ctrlKey) &&
-        (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
+    if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey))
     {
+      // XXX: this must change.  vk_tab must be handled here, not in keyDown
       if (nsIDOMUIEvent::VK_TAB==character) 
       {
         return NS_OK; // ignore tabs here, they're handled in keyDown if at all
