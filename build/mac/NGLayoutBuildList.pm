@@ -854,6 +854,10 @@ sub BuildClientDist()
 	#DOCSHELL
 	_InstallFromManifest(":mozilla:docshell:base:MANIFEST_IDL",						"$distdirectory:idl:");
 
+	#EMBEDDING
+	_InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",		"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:embedding:browser:setup:MANIFEST_IDL",			"$distdirectory:idl:");
+
 	#WIDGET
 	_InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
 	_InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
@@ -1170,6 +1174,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",						"chrome");
 		
 	BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",					"docshell");
+	BuildIDLProject(":mozilla:embedding:browser:macbuild:browserIDL.mcp",			"embeddingbrowser");
 
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp", "bookmarks");
