@@ -212,7 +212,7 @@ public:
                           nsString& aValue);
 
   NS_IMETHOD ProvideContent(const nsString& aFormType, 
-                            nsVector& aContent,
+                            nsVoidArray& aContent,
                             nsString& aAttribute);
   NS_DECL_ISUPPORTS
 };
@@ -245,7 +245,7 @@ nsTestFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
 }
 
 NS_METHOD nsTestFormProcessor::ProvideContent(const nsString& aFormType, 
-                               nsVector& aContent,
+                               nsVoidArray& aContent,
                                nsString& aAttribute)
 {
   return NS_OK;
