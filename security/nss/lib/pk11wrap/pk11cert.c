@@ -2806,3 +2806,59 @@ PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *privKey)
     return pk11_GetLowLevelKeyFromHandle(privKey->pkcs11Slot,privKey->pkcs11ID);
 }
 
+static SECStatus
+listCertsCallback(CERTCertificate* cert, void*arg)
+{
+    CERTCertList *list = (CERTCertList*)arg;
+
+    return CERT_AddCertToListTail(list, CERT_DupCertificate(cert));
+}
+
+CERTCertList *
+PK11_ListCertsInSlot(PK11SlotInfo *slot)
+{
+    SECStatus status;
+    CERTCertList *certs;
+
+    certs = CERT_NewCertList();
+    if(certs == NULL) return NULL;
+
+    status = PK11_TraverseCertsInSlot(slot, listCertsCallback,
+		(void*)certs);
+
+    if( status != SECSuccess ) {
+	SECKEY_DestroyCertList(certs);
+	certs = NULL;
+    }
+
+    return certs;
+}
+
+static SECStatus
+privateKeyListCallback(SECKEYPrivateKey *key, void *arg)
+{
+    SECKEYPrivateKeyList *list = (SECKEYPrivateKeyList*)arg;
+
+    return SECKEY_AddPrivateKeyToListTail(list, SECKEY_CopyPrivateKey(key));
+}
+
+SECKEYPrivateKeyList*
+PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot)
+{
+    SECStatus status;
+    SECKEYPrivateKeyList *keys;
+
+    keys = SECKEY_NewPrivateKeyList();
+    if(keys == NULL) return NULL;
+
+    status = PK11_TraversePrivateKeysInSlot(slot, privateKeyListCallback,
+		(void*)keys);
+
+    if( status != SECSuccess ) {
+	SECKEY_DestroyPrivateKeyList(keys);
+	keys = NULL;
+    }
+
+    return keys;
+}
+

@@ -1693,3 +1693,112 @@ SECKEY_GetPublicKeyType(SECKEYPublicKey *pubKey)
 {
    return pubKey->keyType;
 }
+
+SECKEYPublicKey*
+SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
+{
+    SECKEYPublicKey *pubk = NULL;
+    SECStatus rv = SECFailure;
+
+    pubk = PORT_New(SECKEYPublicKey);
+    if(pubk == NULL) {
+        goto finish;
+    }
+    pubk->arena = NULL;
+    pubk->pkcs11Slot = NULL;
+    pubk->pkcs11ID = CK_INVALID_HANDLE;
+    pubk->keyType = type;
+
+    if( type == CKK_RSA) {
+        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,
+                                derKey);
+    } else if( type == CKK_DSA) {
+        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DSAPublicKeyTemplate,
+                                derKey);
+    } else {
+        rv = SECFailure;
+    }
+
+finish:
+    if( rv != SECSuccess && pubk != NULL) {
+        PORT_Free(pubk);
+        pubk = NULL;
+    }
+    return pubk;
+}
+
+SECKEYPrivateKeyList*
+SECKEY_NewPrivateKeyList(void)
+{
+    PRArenaPool *arena = NULL;
+    SECKEYPrivateKeyList *ret = NULL;
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if ( arena == NULL ) {
+        goto loser;
+    }
+
+    ret = (SECKEYPrivateKeyList *)PORT_ArenaZAlloc(arena,
+                sizeof(SECKEYPrivateKeyList));
+    if ( ret == NULL ) {
+        goto loser;
+    }
+
+    ret->arena = arena;
+
+    PR_INIT_CLIST(&ret->list);
+
+    return(ret);
+
+loser:
+    if ( arena != NULL ) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+
+    return(NULL);
+}
+
+void
+SECKEY_DestroyPrivateKeyList(SECKEYPrivateKeyList *keys)
+{
+    while( !PR_CLIST_IS_EMPTY(&keys->list) ) {
+        SECKEY_RemovePrivateKeyListNode(
+            (SECKEYPrivateKeyListNode*)(PR_LIST_HEAD(&keys->list)) );
+    }
+
+    PORT_FreeArena(keys->arena, PR_FALSE);
+
+    return;
+}
+
+
+void
+SECKEY_RemovePrivateKeyListNode(SECKEYPrivateKeyListNode *node)
+{
+    PR_ASSERT(node->key);
+    SECKEY_DestroyPrivateKey(node->key);
+    node->key = NULL;
+    PR_REMOVE_LINK(&node->links);
+    return;
+
+}
+
+SECStatus
+SECKEY_AddPrivateKeyToListTail( SECKEYPrivateKeyList *list,
+                                SECKEYPrivateKey *key)
+{
+    SECKEYPrivateKeyListNode *node;
+
+    node = (SECKEYPrivateKeyListNode *)PORT_ArenaZAlloc(list->arena,
+                sizeof(SECKEYPrivateKeyListNode));
+    if ( node == NULL ) {
+        goto loser;
+    }
+
+    PR_INSERT_BEFORE(&node->links, &list->list);
+    node->key = key;
+    return(SECSuccess);
+
+loser:
+    return(SECFailure);
+}
