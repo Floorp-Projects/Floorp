@@ -47,8 +47,10 @@ sub RegisterConfig {
         ['listenIndex', 1, 1, 0],
         ['unhappy', 1, 1, [':)', '/me cries', 'but... but...', '/me is all sad', ':(']],
         ['unhappyIndex', 1, 1, 0],
-        ['happy', 1, 1, [':)', '/me smiles']],
+        ['happy', 1, 1, [':)', '/me smiles', 'yay', '/me beams']],
         ['happyIndex', 1, 1, 0],
+        ['unhappy', 1, 1, [':(', '/me sobs', '/me cries', '*sniff*']],
+        ['unhappyIndex', 1, 1, 0],
         ['vhappy', 1, 1, ['OOoh! %!', 'I love you too, %.']],
         ['vhappyIndex', 1, 1, 0],
         ['whoami', 1, 1, 'I am a bot. /msg me the word \'help\' for a list of commands.'],
@@ -90,13 +92,13 @@ sub Told {
         }
     } elsif ($message =~ /^\s*(?:bye|(?:g?'?|good\s+)night|seeya|ciao)[?!1.\s]*$/osi) {
         $self->Perform($event, 'byes');
-    } elsif ($message =~ /^\s*say[\s:,"']+(hi|hello|good\s*bye|seeya)(?:\s+to\s+(\S+))(?:[,\s]*please)?[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*say[\s:,\"\']+(hi|hello|good\s*bye|seeya)(?:\s+to\s+(\S+))(?:[,\s]*please)?[?!1.\s]*$/osi) {
         if ($2) {
             $self->say($event, "$2: $1");
         } else {
             $self->say($event, "$1");
         }
-    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:oh[!1?.,\s]*)?(?:thanks|thank\s+you|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'thanks');
@@ -106,12 +108,12 @@ sub Told {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*die[!1.\s]*$/osi) {
         $self->Perform($event, 'unhappy');
-    } elsif ($message =~ /^\s*(?:how\s+are\s+you|how\s+do\s+you\s+do|how'?s\s+things|are\s+you\s+ok)(?:[?!1.,\s]+$expandedme)?\s*[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:how\s+are\s+you|how\s+do\s+you\s+do|how\'?s\s+things|are\s+you\s+ok)(?:[?!1.,\s]+$expandedme)?\s*[?!1.\s]*$/osi) {
         $uptime = $self->days($^T);
         $self->say($event, "$event->{'from'}: fine thanks! I've been up $uptime so far!");
     } elsif ($message =~ /^\s*(?:who\s+are\s+you)\s*[?!1.\s]*$/osi) {
         $self->say($event, "$event->{'from'}: $self->{'whoami'}");
-    } elsif ($message =~ /^\s*(?:up\s*(?:time)|status)?[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:up\s*(?:time)|status)[?!1.\s]*$/osi) {
         $uptime = $self->days($^T);
         $self->say($event, "$event->{'from'}: I've been up $uptime.");
     } elsif ($message =~ /^\s*r+h+e(e+)t+[!1.\s]*$/osi) {
@@ -122,7 +124,7 @@ sub Told {
         }
     } elsif ($message =~ /^\s*ping\s*$/osi) {
         $self->say($event, "$event->{'from'}: pong");
-    } elsif ($message =~ /^\s*!?seen\s+(\S+)[\s?]*$/osi) {
+    } elsif ($message =~ /^\s*!?seen\s+(\S+?)[\s?.!]*$/osi) {
         $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Told(@_);
@@ -140,19 +142,21 @@ sub Heard {
     }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
-    if ($message =~ /^\s*(?:(?:hi|heya?|w+a+s+u+p+|hello|mornin[g']?|greetings|yo(?:\s+yo)*|bonjour|hoi)\s+$me|$expandedme\s*)[!1\s]*$/si) {
+    if ($message =~ /^\s*(?:(?:hi|heya?|w+a+s+u+p+|hello|mornin[g\']?|greetings|yo(?:\s+yo)*|bonjour|hoi)\s+$me|$expandedme\s*)[!1\s]*$/si) {
         if ($self->canGreet($event)) {
             $self->Perform($event, 'greetings');
         }
-    } elsif ($message =~ /^\s*(?:bye|(?:g?'?|good\s+)night|seeya|ciao)\s+$me[!1.\s]*$/si) {
+    } elsif ($message =~ /^\s*(?:bye|(?:g?\'?|good\s+)night|seeya|ciao)\s+$me[!1.\s]*$/si) {
         $self->Perform($event, 'byes');
     } elsif ($message =~ /^\s*(?:oh[!1?,.\s]*)?(?:thanks|thank\s*you|cheers)\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
         $self->Perform($event, 'thanks');
-    } elsif (($message =~ /^\s*(?:oh[!1?,.\s]*)?(?:thanks|thank\s*you|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) and ($self->canAssumeThanks($event))) {
+    } elsif (($message =~ /^\s*(?:oh[!1?,.\s]*)?(?:thanks|thank\s*you|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'thanks');
-    } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) and ($self->canAssumeThanks($event))) {
+    } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'happy');
-    } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) and 
+    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot)\s*?$/osi) and ($self->canAssumeThanks($event))) {
+        $self->Perform($event, 'unhappy');
+    } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) and 
              ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:good(?:\s$me)?|yay[\s!1.]*|i\s+love\s+you)\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
@@ -189,7 +193,7 @@ sub Felt {
         $self->{'seenStates'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
-    if ($message =~ /^\s*(?:pokes|prods)\s+$me[\s!1.]*$/si) {
+    if ($message =~ /^\s*(?:pokes|prods)\s+$me(?:[,\s]+too|\s+as\s+well)?[\s!1.]*$/si) {
         $self->Perform($event, 'ow');
     } elsif ($message =~ /^\s*(?:stabs|slaps|kicks|kills|hits|punches)\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'veryow');
@@ -204,6 +208,10 @@ sub Felt {
     } elsif ($message =~ /^\s*(?:glares|stares)\s+at\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:hugs|kisses)\s+$me[\s!1.]*$/si) {
+        $self->Perform($event, 'vhappy');
+    } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+(?:bot\s*)?(?:snack|cookie)|a\s+present|cash|congratulations|applause|praise)[\s!1.]*$/si) {
+        $self->Perform($event, 'happy');
+    } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+hot\s+date)[\s!1.]*$/si) {
         $self->Perform($event, 'vhappy');
     } else {
         return $self->SUPER::Felt(@_);
