@@ -88,6 +88,7 @@ CPPSRCS		= \
 		nsBlender.cpp \
 		nsColor.cpp \
 		nsColorNames.cpp \
+		nsCompressedCharMap.cpp \
 		nsDeviceContext.cpp \
 		nsFont.cpp \
 		nsFontList.cpp \
