@@ -621,6 +621,10 @@ _XfeLiberalGeometryManager(Widget				child,
 						   XtWidgetGeometry *	request,
 						   XtWidgetGeometry *	reply)
 {
+	Widget w = XtParent(child);
+
+	assert( XfeIsManager(w) );
+
 	if (request->request_mode & XtCWQueryOnly)
 	{
 		return XtGeometryYes;
@@ -646,7 +650,13 @@ _XfeLiberalGeometryManager(Widget				child,
 	{
 		_XfeBorderWidth(child) = request->border_width;
 	}
+
+	/* Layout the components */
+	_XfeManagerLayoutComponents(w);
 	
+	/* Layout the children */
+	_XfeManagerLayoutChildren(w);
+
 	return XtGeometryYes;
 }
 /*----------------------------------------------------------------------*/
