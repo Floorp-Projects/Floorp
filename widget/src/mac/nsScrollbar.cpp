@@ -158,14 +158,25 @@ void nsScrollbar::DoScrollAction(ControlPartCode part)
 	}
 	EndDraw();
 	
+	// send event to scroll the parent
 	nsScrollbarEvent scrollBarEvent;
 	scrollBarEvent.eventStructType = NS_GUI_EVENT;
 	scrollBarEvent.widget = this;
 	scrollBarEvent.message = scrollBarMessage;
 	GetPosition(pos);
 	scrollBarEvent.position = pos;
-	DispatchWindowEvent(scrollBarEvent);
-	GetParent()->Update();
+	Inherited::DispatchWindowEvent(scrollBarEvent);
+
+	// update the area of the parent uncovered by the scrolling
+	WindowRecord* savePort;
+	nsIWidget* parent = GetParent();
+	parent->Update();
+	NS_RELEASE(parent);
+
+	// update this scrollbar
+	this-Invalidate(PR_FALSE);
+	this->Update();
+
 	StartDraw();
 }
 
@@ -218,7 +229,9 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 						scrollBarEvent.message = NS_SCROLLBAR_POS;
 						scrollBarEvent.position = mValue;
 						DispatchWindowEvent(scrollBarEvent);
-						GetParent()->Update();
+						nsIWidget* parent = GetParent();
+						parent->Update();
+						NS_RELEASE(parent);
 						StartDraw();
 						break;
 #endif
