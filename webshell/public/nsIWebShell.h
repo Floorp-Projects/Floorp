@@ -115,6 +115,9 @@ public:
 
   NS_IMETHOD Hide() = 0;
 
+  NS_IMETHOD SetFocus() = 0;
+  NS_IMETHOD RemoveFocus() = 0;
+
   NS_IMETHOD Repaint(PRBool aForce) = 0;
 
   // SetContextView moved to bottom to keep branch/tip interfaces

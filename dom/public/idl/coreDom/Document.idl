@@ -14,3 +14,8 @@
                                                in Node value);
      NodeList                  getElementsByTagName(in wstring tagname);
    };
+
+   interface EventCapturer : EventReceiver {
+     void                      captureEvent(in wstring type);
+     void                      releaseEvent(in wstring type);
+   };

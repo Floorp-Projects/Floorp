@@ -179,7 +179,7 @@ public:
   nsresult RenderFrame();
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
-                                  nsHTMLValue& aValue,
+                                  const nsString& aValue,
                                   REFNSIID aIID);
 
   nsresult AttributeToString(nsIAtom* aAttribute,

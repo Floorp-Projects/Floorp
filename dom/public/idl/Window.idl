@@ -1,21 +1,21 @@
       interface Window {
-	readonly attribute  Window window;
+	      readonly attribute  Window window;
         readonly attribute  Window self;
-	readonly attribute  Document document;
-	readonly attribute  Navigator navigator;
+	      readonly attribute  Document document;
+	      readonly attribute  Navigator navigator;
         readonly attribute  Window parent;
         readonly attribute  Window top;
-	readonly attribute  boolean closed;
-	readonly attribute  WindowCollection frames;
-	attribute  Window opener;
-	attribute  wstring status;
-	attribute  wstring defaultStatus;
-	attribute  wstring name;
-	void  dump(in wstring str);
-	void  alert(in wstring str);
-	void  focus();
-	void  blur();
-	void  close();
+	      readonly attribute  boolean closed;
+	      readonly attribute  WindowCollection frames;
+	      attribute  Window opener;
+	      attribute  wstring status;
+	      attribute  wstring defaultStatus;
+	      attribute  wstring name;
+	      void  dump(in wstring str);
+	      void  alert(in wstring str);
+	      void  focus();
+	      void  blur();
+	      void  close();
  
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);
@@ -24,3 +24,7 @@
         Window open(/* ... */);
       };
 
+      interface EventCapturer : EventReceiver {
+	      void   captureEvent(in wstring type);
+	      void   releaseEvent(in wstring type);
+      };

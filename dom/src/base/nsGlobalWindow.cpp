@@ -469,12 +469,14 @@ GlobalWindowImpl::Alert(const nsString& aStr)
 NS_IMETHODIMP
 GlobalWindowImpl::Focus()
 {
+  mWebShell->SetFocus();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Blur()
 {
+  mWebShell->RemoveFocus();
   return NS_OK;
 }
 
@@ -1042,6 +1044,7 @@ GlobalWindowImpl::Open(JSContext *cx,
 
   if (nsnull != newWindow) {
     //How should we do default size/pos
+    newWindow->Hide();
     newWindow->SetChrome(mChrome);
     newWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
     newWindow->MoveTo(mLeft, mTop);
@@ -1395,7 +1398,11 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   if (DOM_EVENT_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
-      if (0 != (*aDOMEvent)->Release()) {
+      nsrefcnt rc;
+      nsIDOMEvent* DOMEvent = *aDOMEvent;
+      // Release the copy since the macro will null the pointer 
+      NS_RELEASE2(DOMEvent, rc);
+      if (0 != rc) {
       //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
       //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
         nsIPrivateDOMEvent *mPrivateEvent;
@@ -1435,12 +1442,12 @@ GlobalWindowImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsII
 }
 
 nsresult 
-GlobalWindowImpl::CaptureEvent(nsIDOMEventListener *aListener)
+GlobalWindowImpl::CaptureEvent(const nsString& aType)
 {
   nsIEventListenerManager *mManager;
 
   if (NS_OK == GetListenerManager(&mManager)) {
-    mManager->CaptureEvent(aListener);
+    //mManager->CaptureEvent(aListener);
     NS_RELEASE(mManager);
     return NS_OK;
   }
@@ -1448,10 +1455,10 @@ GlobalWindowImpl::CaptureEvent(nsIDOMEventListener *aListener)
 }
 
 nsresult 
-GlobalWindowImpl::ReleaseEvent(nsIDOMEventListener *aListener)
+GlobalWindowImpl::ReleaseEvent(const nsString& aType)
 {
   if (nsnull != mListenerManager) {
-    mListenerManager->ReleaseEvent(aListener);
+    //mListenerManager->ReleaseEvent(aListener);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

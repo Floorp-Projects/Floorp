@@ -680,8 +680,8 @@ nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
                                        PRUint32 aFlags,
                                        nsEventStatus& aEventStatus)
 {  
-  nsresult mRet = NS_OK;
-  nsIDOMEvent* mDOMEvent = nsnull;
+  nsresult ret = NS_OK;
+  nsIDOMEvent* DOMEvent = nsnull;
 
   if (DOM_EVENT_INIT == aFlags) {
     nsIEventStateManager *mManager;
@@ -690,38 +690,45 @@ nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
       NS_RELEASE(mManager);
     }
  
-    aDOMEvent = &mDOMEvent;
+    aDOMEvent = &DOMEvent;
   }
   
   //Capturing stage
+  /*if (mDocument->GetEventCapturer) {
+    ret = mEventCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+  }*/
   
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    ret = mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
   }
 
   //Bubbling stage
   if (DOM_EVENT_CAPTURE != aFlags && mParent != nsnull) {
-    mRet = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, DOM_EVENT_BUBBLE, aEventStatus);
+    ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, DOM_EVENT_BUBBLE, aEventStatus);
   }
 
   if (DOM_EVENT_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
-      if (0 != (*aDOMEvent)->Release()) {
+      nsrefcnt rc;
+      nsIDOMEvent* DOMEvent = *aDOMEvent;
+      // Release the copy since the macro will null the pointer 
+      NS_RELEASE2(DOMEvent, rc);
+      if (0 != rc) {
       //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
       //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
-        nsIPrivateDOMEvent *mPrivateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&mPrivateEvent)) {
-          mPrivateEvent->DuplicatePrivateData();
-          NS_RELEASE(mPrivateEvent);
+        nsIPrivateDOMEvent *privateEvent;
+        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&privateEvent)) {
+          privateEvent->DuplicatePrivateData();
+          NS_RELEASE(privateEvent);
         }
       }
     }
     aDOMEvent = nsnull;
   }
 
-  return mRet;
+  return ret;
 }
 
 // XXX i18n: this is wrong (?) because we need to know the outgoing

@@ -1055,44 +1055,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
 
-  // Once the element is added to the doc tree we need to check if
-  // event handler were registered on it.  Unfortunately, this means
-  // doing a GetAttribute for every type of handler.
   if ((nsnull != mDocument) && (nsnull != mAttributes)) {
-    nsHTMLValue val;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onclick, val))
-      AddScriptEventListener(nsHTMLAtoms::onclick, val, kIDOMMouseListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, val))
-      AddScriptEventListener(nsHTMLAtoms::onclick, val, kIDOMMouseListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, val))
-      AddScriptEventListener(nsHTMLAtoms::onmousedown, val, kIDOMMouseListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, val))
-      AddScriptEventListener(nsHTMLAtoms::onmouseup, val, kIDOMMouseListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, val))
-      AddScriptEventListener(nsHTMLAtoms::onmouseover, val, kIDOMMouseListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, val))
-      AddScriptEventListener(nsHTMLAtoms::onmouseout, val, kIDOMMouseListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, val))
-      AddScriptEventListener(nsHTMLAtoms::onkeydown, val, kIDOMKeyListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, val))
-      AddScriptEventListener(nsHTMLAtoms::onkeyup, val, kIDOMKeyListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, val))
-      AddScriptEventListener(nsHTMLAtoms::onkeypress, val, kIDOMKeyListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, val))
-      AddScriptEventListener(nsHTMLAtoms::onmousemove, val, kIDOMMouseMotionListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onload, val))
-      AddScriptEventListener(nsHTMLAtoms::onload, val, kIDOMLoadListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onunload, val))
-      AddScriptEventListener(nsHTMLAtoms::onunload, val, kIDOMLoadListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onabort, val))
-      AddScriptEventListener(nsHTMLAtoms::onabort, val, kIDOMLoadListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onerror, val))
-      AddScriptEventListener(nsHTMLAtoms::onerror, val, kIDOMLoadListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, val))
-      AddScriptEventListener(nsHTMLAtoms::onfocus, val, kIDOMFocusListenerIID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onblur, val))
-      AddScriptEventListener(nsHTMLAtoms::onblur, val, kIDOMFocusListenerIID);
-
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
       sheet->SetAttributesFor(mContent, mAttributes); // sync attributes with sheet
@@ -1257,6 +1220,40 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
     NS_RELEASE(css);
   }
   else {
+    // Check for event handlers
+    if (nsHTMLAtoms::onclick == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onclick, aValue, kIDOMMouseListenerIID); 
+    else if (nsHTMLAtoms::ondblclick == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::ondblclick, aValue, kIDOMMouseListenerIID); 
+    else if (nsHTMLAtoms::onmousedown == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmousedown, aValue, kIDOMMouseListenerIID); 
+    else if (nsHTMLAtoms::onmouseup == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmouseup, aValue, kIDOMMouseListenerIID); 
+    else if (nsHTMLAtoms::onmouseover == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmouseover, aValue, kIDOMMouseListenerIID); 
+    else if (nsHTMLAtoms::onmouseout == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmouseout, aValue, kIDOMMouseListenerIID); 
+    else if (nsHTMLAtoms::onkeydown == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onkeydown, aValue, kIDOMKeyListenerIID); 
+    else if (nsHTMLAtoms::onkeyup == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onkeyup, aValue, kIDOMKeyListenerIID); 
+    else if (nsHTMLAtoms::onkeypress == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onkeypress, aValue, kIDOMKeyListenerIID); 
+    else if (nsHTMLAtoms::onmousemove == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onmousemove, aValue, kIDOMMouseMotionListenerIID); 
+    else if (nsHTMLAtoms::onload == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onload, aValue, kIDOMLoadListenerIID); 
+    else if (nsHTMLAtoms::onunload == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onunload, aValue, kIDOMLoadListenerIID); 
+    else if (nsHTMLAtoms::onabort == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onabort, aValue, kIDOMLoadListenerIID); 
+    else if (nsHTMLAtoms::onerror == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onerror, aValue, kIDOMLoadListenerIID); 
+    else if (nsHTMLAtoms::onfocus == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onfocus, aValue, kIDOMFocusListenerIID); 
+    else if (nsHTMLAtoms::onblur == aAttribute)
+      AddScriptEventListener(nsHTMLAtoms::onblur, aValue, kIDOMFocusListenerIID); 
+
     nsHTMLValue val;
     if (NS_CONTENT_ATTR_NOT_THERE !=
         mContent->StringToAttribute(aAttribute, aValue, val)) {
@@ -2174,7 +2171,7 @@ nsGenericHTMLElement::Release()
 
 nsresult
 nsGenericHTMLElement::AddScriptEventListener(nsIAtom* aAttribute,
-                                             nsHTMLValue& aValue,
+                                             const nsString& aValue,
                                              REFNSIID aIID)
 {
   nsresult ret = NS_OK;
@@ -2193,9 +2190,7 @@ nsGenericHTMLElement::AddScriptEventListener(nsIAtom* aAttribute,
           if (NS_OK == receiver->GetListenerManager(&manager)) {
             nsIScriptObjectOwner *mObjectOwner;
             if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
-              nsString value;
-              aValue.GetStringValue(value);
-              ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, value, aIID);
+              ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID);
               NS_RELEASE(mObjectOwner);
             }
             NS_RELEASE(manager);
@@ -2207,13 +2202,11 @@ nsGenericHTMLElement::AddScriptEventListener(nsIAtom* aAttribute,
       else {
         nsIEventListenerManager *manager;
         if (NS_OK == GetListenerManager(&manager)) {
-          nsString value;
-          aValue.GetStringValue(value);
           nsIScriptObjectOwner* owner;
           if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
                                                 (void**) &owner)) {
             ret = manager->AddScriptEventListener(context, owner,
-                                                  aAttribute, value, aIID);
+                                                  aAttribute, aValue, aIID);
             NS_RELEASE(owner);
           }
           NS_RELEASE(manager);

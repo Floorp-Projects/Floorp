@@ -35,6 +35,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMComment.h"
+#include "nsIDOMEventCapturer.h"
 #include "nsIDOMNodeList.h"
 
 
@@ -51,6 +52,7 @@ static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
+static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
@@ -63,6 +65,7 @@ NS_DEF_PTR(nsIDOMText);
 NS_DEF_PTR(nsIDOMDocumentType);
 NS_DEF_PTR(nsIDOMDocumentFragment);
 NS_DEF_PTR(nsIDOMComment);
+NS_DEF_PTR(nsIDOMEventCapturer);
 NS_DEF_PTR(nsIDOMNodeList);
 
 //
@@ -772,6 +775,102 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 }
 
 
+//
+// Native method CaptureEvent
+//
+PR_STATIC_CALLBACK(JSBool)
+EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMEventCapturer *nativeThis;
+  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventCapturer");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->CaptureEvent(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function captureEvent requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ReleaseEvent
+//
+PR_STATIC_CALLBACK(JSBool)
+EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMEventCapturer *nativeThis;
+  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventCapturer");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->ReleaseEvent(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function releaseEvent requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Document
@@ -815,6 +914,8 @@ static JSFunctionSpec DocumentMethods[] =
   {"createProcessingInstruction",          DocumentCreateProcessingInstruction,     2},
   {"createAttribute",          DocumentCreateAttribute,     2},
   {"getElementsByTagName",          DocumentGetElementsByTagName,     1},
+  {"captureEvent",          EventCapturerCaptureEvent,     1},
+  {"releaseEvent",          EventCapturerReleaseEvent,     1},
   {0}
 };
 
