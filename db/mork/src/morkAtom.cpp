@@ -473,7 +473,10 @@ morkBookAtom::EqualFormAndBody(morkEnv* ev, const morkBookAtom* inAtom) const
     thisForm = ((const morkFarBookAtom*) this)->mFarBookAtom_Form;
   }
   else
+  {
     this->NonBookAtomTypeError(ev);
+    return morkBool_kFalse;
+  }
   
   // if atoms are empty, form is irrelevant
   if ( body && thisBody && size == thisSize && (!size || form == thisForm ))
