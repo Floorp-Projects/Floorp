@@ -9,6 +9,7 @@
   locale/@AB_CD@/messenger/back.png                        (@AB_CD@/chrome/messenger/back.png)
   locale/@AB_CD@/messenger/aboutDialog.dtd                 (@AB_CD@/chrome/messenger/aboutDialog.dtd)
 + locale/@AB_CD@/messenger/junkMail.dtd                    (@AB_CD@/chrome/messenger/junkMail.dtd)
++ locale/@AB_CD@/messenger/junkMailInfo.dtd                (@AB_CD@/chrome/messenger/junkMailInfo.dtd)
 + locale/@AB_CD@/messenger/mailOverlay.dtd                 (@AB_CD@/chrome/messenger/mailOverlay.dtd)
 + locale/@AB_CD@/messenger/messenger.dtd                   (@AB_CD@/chrome/messenger/messenger.dtd)
 + locale/@AB_CD@/messenger/mailTasksOverlay.dtd            (@AB_CD@/chrome/messenger/mailTasksOverlay.dtd)
