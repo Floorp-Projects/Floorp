@@ -1223,13 +1223,13 @@ bltest_rc5_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 SECStatus
 bltest_aes_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 {
-    PRIntervalTime time1, time2;
     bltestSymmKeyParams *aesp = &cipherInfo->params.sk;
     int minorMode;
     int i;
-    /* XXX */ int keylen, blocklen;
-    keylen = aesp->key.buf.len;
-    blocklen = cipherInfo->input.pBuf.len;
+    int keylen   = aesp->key.buf.len;
+    int blocklen = AES_BLOCK_SIZE; 
+    PRIntervalTime time1, time2;
+
     switch (cipherInfo->mode) {
     case bltestAES_ECB:	    minorMode = NSS_AES;	  break;
     case bltestAES_CBC:	    minorMode = NSS_AES_CBC;	  break;
