@@ -98,7 +98,8 @@ SDK_HEADERS =  \
 		nsXPCOMCID.h    \
 		$(NULL)
 
-SDK_BINARY = $(IMPORT_LIBRARY) $(SHARED_LIBRARY)
+SDK_LIBRARY = $(IMPORT_LIBRARY)
+SDK_BINARY = $(SHARED_LIBRARY)
 
 # pull in MoreFiles for MacOSX
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

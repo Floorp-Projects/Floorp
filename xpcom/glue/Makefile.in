@@ -51,7 +51,7 @@ SDK_HEADERS     = \
 		$(XPCOM_GLUE_SRC_LEXPORTS) \
 		$(NULL)
 
-SDK_BINARY     =                        \
+SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(NULL)
 

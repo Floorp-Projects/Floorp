@@ -634,9 +634,10 @@ else
 PUBLIC		= $(DIST)/include
 endif
 
-SDK_PUBLIC	= $(DIST)/sdk/$(MODULE)/include
-SDK_IDL_DIR	= $(DIST)/sdk/$(MODULE)/idl
-SDK_BIN_DIR	= $(DIST)/sdk/$(MODULE)/bin
+SDK_PUBLIC  = $(DIST)/sdk/include
+SDK_IDL_DIR = $(DIST)/sdk/idl
+SDK_LIB_DIR = $(DIST)/sdk/lib
+SDK_BIN_DIR = $(DIST)/sdk/bin
 
 DEPENDENCIES	= .md
 

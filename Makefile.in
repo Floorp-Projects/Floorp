@@ -35,6 +35,7 @@ ifeq ($(BUILD_MODULES),all)
 # Tiers must be defined on module boundaries 
 #
 default: $(SUBMAKEFILES)
+	$(RM) -rf $(DIST)/sdk
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
@@ -395,6 +396,7 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
 
 # Build pseudo-external modules first when export is explicitly called
 export::
+	$(RM) -rf $(DIST)/sdk
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap

@@ -44,7 +44,7 @@ SDK_XPIDLSRCS   = \
                 $(NULL)
 
 
-SDK_BINARY     =                        \
+SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
 		$(NULL)
 

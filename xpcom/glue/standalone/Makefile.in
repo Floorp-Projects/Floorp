@@ -62,7 +62,7 @@ SDK_HEADERS     = \
 		nsXPCOMGlue.h \
 		$(NULL)
 
-SDK_BINARY     	= \
+SDK_LIBRARY     	= \
 		$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(NULL)
 
