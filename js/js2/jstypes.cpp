@@ -184,11 +184,8 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         f << value.f64;
         break;
     case JSValue::object_tag:
-        {
-
-            printFormat(f, "Object @ 0x%08X\n", value.object);
-            f << *value.object;
-        }
+        printFormat(f, "Object @ 0x%08X\n", value.object);
+        f << *value.object;
         break;
     case JSValue::array_tag:
         printFormat(f, "Array @ 0x%08X", value.object);
@@ -206,7 +203,8 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         f << "undefined";
         break;
     case JSValue::type_tag:
-        f << value.type->getName();
+        printFormat(f, "Type @ 0x%08X\n", value.type);
+        f << *value.type;
         break;
     default:
         NOT_REACHED("Bad tag");
