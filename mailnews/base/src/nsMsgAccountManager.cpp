@@ -599,6 +599,9 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     rv = server->RemoveFiles();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the files associated with server");
 
+    rv = server->ForgetPassword();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the password associated with server");
+    
     // now clear out the server once and for all.
     // watch out! could be scary
     server->ClearAllValues();
