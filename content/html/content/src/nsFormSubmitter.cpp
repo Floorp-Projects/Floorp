@@ -37,7 +37,10 @@
 #include "nsGenericElement.h"
 
 // JBK added for submit move from content frame
+#include "nsIFile.h"
+#include "nsIFileStreams.h"
 #include "nsIFileSpec.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFormProcessor.h"
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 #include "nsIURI.h"
@@ -206,7 +209,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
   PRBool isPost = (NS_FORM_METHOD_POST == method) || !isURLEncoded;
 
   nsString data; // this could be more efficient, by allocating a larger buffer
-  nsIFileSpec* multipartDataFile = nsnull;
+  nsCOMPtr<nsIFile> multipartDataFile;
   if (isURLEncoded) {
     rv = ProcessAsURLEncoded(form, aPresContext, formProcessor,
                                  isPost, data,
@@ -215,14 +218,13 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
   }
   else {
     rv = ProcessAsMultipart(form, aPresContext, formProcessor,
-                                multipartDataFile,
+                                getter_AddRefs(multipartDataFile),
                                 aSubmitElement, submitPosition,
                                 ctrlsModAtSubmit, textDirAtSubmit);
   }
 
   // Don't bother submitting form if we failed to generate a valid submission
   if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(multipartDataFile);
     return rv;
   }
 
@@ -423,7 +425,10 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
         nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID));
         if (serv && multipartDataFile) {
           nsCOMPtr<nsIInputStream> rawStream;
-          multipartDataFile->GetInputStream(getter_AddRefs(rawStream));
+          NS_NewLocalFileInputStream(getter_AddRefs(rawStream),
+                                     multipartDataFile,
+                                     PR_RDONLY,
+                                     0600);
           if (rawStream) {
               NS_NewBufferedInputStream(getter_AddRefs(postDataStream),
                                         rawStream, 8192);
@@ -600,7 +605,7 @@ nsresult
 nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
                                     nsIPresContext* aPresContext,
                                     nsIFormProcessor* aFormProcessor,
-                                    nsIFileSpec*& aMultipartDataFile,
+                                    nsIFile** aMultipartDataFile,
                                     nsIContent* aSubmitElement,
                                     PRInt32 aSubmitPosition,
                                     PRUint8 aCtrlsModAtSubmit,
@@ -615,12 +620,21 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
   char buffer[BUFSIZE];
 
   // Create a temporary file to write the form post data to
-  nsSpecialSystemDirectory tempDir(
-                             nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  tempDir += "formpost";
-  tempDir.MakeUnique();
-  nsIFileSpec* postDataFile = nsnull;
-  nsresult rv = NS_NewFileSpecWithSpec(tempDir, &postDataFile);
+  nsCOMPtr<nsIFile> tempDir;
+  nsresult rv;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
+  if (tempDir) {
+    tempDir->Append("formpost");
+    // mode is 0600 so that it's not world-readable
+    rv = tempDir->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0600);
+  }
+  nsCOMPtr<nsIOutputStream> outStream;
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream),
+                                     tempDir,
+                                     (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
+                                     0600); // 600 so others can't read our form data
+  }
   NS_ASSERTION(NS_SUCCEEDED(rv), "Post data file couldn't be created!");
   if (NS_FAILED(rv)) return rv;
 
@@ -629,8 +643,8 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
   sprintf(boundary, "---------------------------%d%d%d",
           rand(), rand(), rand());
   sprintf(buffer, "Content-type: %s; boundary=%s" CRLF, MULTIPART, boundary);
-  PRInt32 wantbytes = 0, gotbytes = 0;
-  rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+  PRUint32 wantbytes = 0, gotbytes = 0;
+  rv = outStream->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
   if (NS_FAILED(rv) || (wantbytes != gotbytes)) return rv;
 
   nsAutoString charset;
@@ -845,8 +859,6 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
         delete [] values;
       }
     }
-
-    aMultipartDataFile = postDataFile;
   }
 
   // Add the post file boundary line
@@ -856,7 +868,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
   ////////////////////
 
   sprintf(buffer, "Content-Length: %d" CRLF CRLF, contentLen);
-  rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+  rv = outStream->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
   if (NS_SUCCEEDED(rv) && (wantbytes == gotbytes)) {
 
     // write the content passing through all of the form controls a 2nd time
@@ -959,49 +971,49 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
             // Print boundary line
             sprintf(buffer, SEP "%s" CRLF, boundary);
             wantbytes = PL_strlen(buffer);
-            rv = postDataFile->Write(buffer, wantbytes, &gotbytes);
+            rv = outStream->Write(buffer, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs should include Content-Transfer-Encoding to prep
             // server side MIME decoders
             if (NS_FORM_INPUT_FILE == type && !compatibleSubmit) {
               wantbytes = PL_strlen(CONTENT_TRANSFER);
-              rv = postDataFile->Write(CONTENT_TRANSFER, wantbytes, &gotbytes);
+              rv = outStream->Write(CONTENT_TRANSFER, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
               // XXX is there any way to tell when "8bit" or "7bit" etc may be
               // more appropriate than always using "binary"?
 
               wantbytes = PL_strlen(BINARY_CONTENT);
-              rv = postDataFile->Write(BINARY_CONTENT, wantbytes, &gotbytes);
+              rv = outStream->Write(BINARY_CONTENT, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
               wantbytes = PL_strlen(CRLF);
-              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
+              rv = outStream->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // Print Content-Disp line
             wantbytes = contDispLen;
-            rv = postDataFile->Write(CONTENT_DISP, wantbytes, &gotbytes);
+            rv = outStream->Write(CONTENT_DISP, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             wantbytes = PL_strlen(name);
-            rv = postDataFile->Write(name, wantbytes, &gotbytes);
+            rv = outStream->Write(name, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs also list filename on Content-Disp line
             if (NS_FORM_INPUT_FILE == type) {
               wantbytes = PL_strlen(FILENAME);
-              rv = postDataFile->Write(FILENAME, wantbytes, &gotbytes);
+              rv = outStream->Write(FILENAME, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               wantbytes = PL_strlen(fname);
-              rv = postDataFile->Write(fname, wantbytes, &gotbytes);
+              rv = outStream->Write(fname, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // End Content Disp
             wantbytes = PL_strlen("\"" CRLF);
-            rv = postDataFile->Write("\"" CRLF , wantbytes, &gotbytes);
+            rv = outStream->Write("\"" CRLF , wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs write Content-Type line
@@ -1010,21 +1022,21 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
               rv = GetContentType(value, &contentType);
               if (NS_FAILED(rv)) break;
               wantbytes = PL_strlen(CONTENT_TYPE);
-              rv = postDataFile->Write(CONTENT_TYPE, wantbytes, &gotbytes);
+              rv = outStream->Write(CONTENT_TYPE, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               wantbytes = PL_strlen(contentType);
-              rv = postDataFile->Write(contentType, wantbytes, &gotbytes);
+              rv = outStream->Write(contentType, wantbytes, &gotbytes);
               nsCRT::free(contentType);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               wantbytes = PL_strlen(CRLF);
-              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
+              rv = outStream->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               // end content-type header
             }
 
             // Blank line before value
             wantbytes = PL_strlen(CRLF);
-            rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
+            rv = outStream->Write(CRLF, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs print file contents next
@@ -1049,23 +1061,23 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
                 rv = contentFile->Read(&readbuffer, BUFSIZE, &size);
                 if (NS_FAILED(rv) || 0 >= size) break;
                 wantbytes = size;
-                rv = postDataFile->Write(readbuffer, wantbytes, &gotbytes);
+                rv = outStream->Write(readbuffer, wantbytes, &gotbytes);
                 if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               }
               NS_RELEASE(contentFile);
               // Print CRLF after file
               wantbytes = PL_strlen(CRLF);
-              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
+              rv = outStream->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
             // Non-file inputs print value line
             else {
               wantbytes = PL_strlen(value);
-              rv = postDataFile->Write(value, wantbytes, &gotbytes);
+              rv = outStream->Write(value, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               wantbytes = PL_strlen(CRLF);
-              rv = postDataFile->Write(CRLF, wantbytes, &gotbytes);
+              rv = outStream->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
             if (name)
@@ -1085,14 +1097,18 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
   if (NS_SUCCEEDED(rv)) {
     sprintf(buffer, SEP "%s" SEP CRLF, boundary);
     wantbytes = PL_strlen(buffer);
-    rv = postDataFile->Write(buffer, wantbytes, &gotbytes);
+    rv = outStream->Write(buffer, wantbytes, &gotbytes);
     if (NS_SUCCEEDED(rv) && (wantbytes == gotbytes)) {
-      rv = postDataFile->CloseStream();
+      rv = outStream->Close();
     }
   }
 
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "Generating the form post temp file failed.\n");
+  if (NS_SUCCEEDED(rv)) {
+    *aMultipartDataFile = tempDir;
+    NS_ADDREF(*aMultipartDataFile);
+  }
   return rv;
 }
 

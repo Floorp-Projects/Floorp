@@ -30,7 +30,7 @@ class nsIForm;
 class nsIPresContext;
 class nsIContent;
 class nsIFormProcessor;
-class nsIFileSpec;
+class nsIFile;
 class nsString;
 class nsIPresContext;
 class nsIUnicodeEncoder;
@@ -63,7 +63,7 @@ protected:
   static nsresult ProcessAsMultipart(nsIForm* form,
                                      nsIPresContext* aPresContext,
                                      nsIFormProcessor* aFormProcessor,
-                                     nsIFileSpec*& aMultipartDataFile,
+                                     nsIFile** aMultipartDataFile,
                                      nsIContent* submitElement,
                                      PRInt32 aSubmitPosition,
                                      PRUint8 aCtrlsModAtSubmit,
