@@ -32,8 +32,13 @@
 #include "nsVoidArray.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMFocusListener.h"
 
 #include "nsIXULParentDocument.h"
+#include "nsIXULPopupListener.h"
+#include "nsIXULChildDocument.h"
+#include "nsRDFCID.h"
 
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
@@ -128,6 +133,9 @@ static NS_DEFINE_IID(kIContextMenuIID, NS_ICONTEXTMENU_IID);
 static NS_DEFINE_IID(kIXULCommandIID,  NS_IXULCOMMAND_IID);
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
+static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
+static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
@@ -1013,7 +1021,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> popupDocument;
-  if (NS_FAILED(rv = parentDocument->CreatePopupDocument(popupContent, getter_AddRefs(popupDocument)))) {
+  if (NS_FAILED(rv = parentDocument->CreatePopupDocument(rootContent, getter_AddRefs(popupDocument)))) {
     NS_ERROR("Unable to create the child popup document.");
     return rv;
   }
@@ -1031,24 +1039,54 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     return rv;
   }
   nsCOMPtr<nsIContentViewerContainer> cvContainer = do_QueryInterface(newShell);
-  docFactory->CreateInstanceForDocument(cvContainer,
+  if (NS_FAILED(rv = docFactory->CreateInstanceForDocument(cvContainer,
                                         popupDocument,
                                         "view",
-                                        getter_AddRefs(documentViewer));
+                                        getter_AddRefs(documentViewer)))) {
+    NS_ERROR("I couldn't get a document viewer for the popup document.");
+    return rv;
+  }
 
-  // (5) Feed the webshell to the document viewer
-  
+  // (5) Feed the webshell to the content viewer
+  documentViewer->SetContainer(cvContainer);
+
   // (6) Tell the content viewer container to embed the content viewer.
   //     (This step causes everything to be set up for an initial flow.)
+  if (NS_FAILED(rv = cvContainer->Embed(documentViewer, "view", nsnull))) {
+    NS_ERROR("Unable to embed the viewer in the container.");
+    return rv;
+  }
   
   // (7) Hook up a blur handler to the window that will cause it to close.
-
+  nsCOMPtr<nsIXULPopupListener> popupListener;
+  if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULPopupListenerCID,
+                                          nsnull,
+                                          kIXULPopupListenerIID,
+                                          (void**) getter_AddRefs(popupListener)))) {
+    NS_ERROR("Unable to create an instance of the popup listener object.");
+    return rv;
+  }
+  nsIContent* popupRoot = popupDocument->GetRootContent(); 
+  nsCOMPtr<nsIDOMElement> popupRootElement = do_QueryInterface(popupRoot);
+  if (NS_FAILED(rv = popupListener->Init(popupRootElement, eXULPopupType_blur))) {
+    NS_ERROR("Unable to initialize our blur listener.");
+    return rv;
+  }
+  NS_IF_RELEASE(popupRoot);
+  nsCOMPtr<nsIDOMFocusListener> blurListener = do_QueryInterface(popupListener);
+  nsCOMPtr<nsIDOMEventTarget> targetWindow = do_QueryInterface(domWindow);
+  targetWindow->AddEventListener("blur", blurListener, PR_FALSE, PR_FALSE);  
+        
   // (8) Show the window, and give the window the focus.
+  newWindow->Show(PR_TRUE);
+  domWindow->Focus();
 
-  // (9) Return the new popup object.
-  
-  // (10) Perform cleanup
+  // (9) Do some layout.
+  nsCOMPtr<nsIXULChildDocument> popupChild = do_QueryInterface(popupDocument);
+  popupChild->LayoutPopupDocument();
 
+  // XXX Do we return the popup document? Might want to, since it's kind of like
+  // a sick and twisted distortion of a window.open call.
   return rv;
 }
 
