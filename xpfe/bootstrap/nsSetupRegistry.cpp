@@ -78,9 +78,6 @@ static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kGlobalHistoryCID,    NS_GLOBALHISTORY_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
-///static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
-//static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
-
 
 /*
  * This evil file will go away when the XPCOM registry can be 
@@ -123,8 +120,6 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
-
-///  nsComponentManager::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
 
 

@@ -105,8 +105,7 @@ PrintUsage(void)
 int main(int argc, char* argv[])
 {
   nsresult rv;
-  nsString controllerCID;
-
+  
   nsICmdLineService *  cmdLineArgs = nsnull;
 
   char *  urlstr=nsnull;
@@ -447,13 +446,7 @@ int main(int argc, char* argv[])
 		}
   }
 
-  /*
-   * XXX: Currently, the CID for the "controller" is passed in as an argument 
-   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
-   *      components this will be specified in the XUL description...
-   */
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  rv = appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
+  rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
                    nsnull, nsnull, widthVal, heightVal);
 
   NS_RELEASE(url);
