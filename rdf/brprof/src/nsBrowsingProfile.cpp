@@ -618,16 +618,16 @@ nsBrowsingProfile::Uint32ToHex(PRUint32 aNum, char aBuf[8])
 void
 nsBrowsingProfile::HexToUint8(const char aBuf[2], PRUint8* aNum)
 {
-    const char* p = aBuf + 2;
     PRUint32 num = 0;
-    while (--p >= aBuf) {
-        const char* hex = PL_strchr(kHexMap, *p);
+    for (PRInt32 count = 2; count > 0; --count) {
+        const char* hex = PL_strchr(kHexMap, *aBuf);
         NS_ASSERTION(hex != nsnull, "invalid character");
         if (! hex)
             break;
 
         num = num << 4;
         num += (hex - kHexMap);
+        ++aBuf;
     }
     *aNum = num;
 }
@@ -635,16 +635,16 @@ nsBrowsingProfile::HexToUint8(const char aBuf[2], PRUint8* aNum)
 void
 nsBrowsingProfile::HexToUint16(const char aBuf[4], PRUint16* aNum)
 {
-    const char* p = aBuf + 4;
     PRUint32 num = 0;
-    while (--p >= aBuf) {
-        const char* hex = PL_strchr(kHexMap, *p);
+    for (PRInt32 count = 4; count > 0; --count) {
+        const char* hex = PL_strchr(kHexMap, *aBuf);
         NS_ASSERTION(hex != nsnull, "invalid character");
         if (! hex)
             break;
 
         num = num << 4;
         num += (hex - kHexMap);
+        ++aBuf;
     }
     *aNum = num;
 }
@@ -652,16 +652,16 @@ nsBrowsingProfile::HexToUint16(const char aBuf[4], PRUint16* aNum)
 void
 nsBrowsingProfile::HexToUint32(const char aBuf[8], PRUint32* aNum)
 {
-    const char* p = aBuf + 8;
     PRUint32 num = 0;
-    while (--p >= aBuf) {
-        const char* hex = PL_strchr(kHexMap, *p);
+    for (PRInt32 count = 8; count > 0; --count) {
+        const char* hex = PL_strchr(kHexMap, *aBuf);
         NS_ASSERTION(hex != nsnull, "invalid character");
         if (! hex)
             break;
 
         num = num << 4;
         num += (hex - kHexMap);
+        ++aBuf;
     }
     *aNum = num;
 }
