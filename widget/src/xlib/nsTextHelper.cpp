@@ -92,7 +92,7 @@ NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPos)
   return NS_OK;
 }
 
-nsTextHelper::nsTextHelper() : nsWidget(), nsITextAreaWidget(), nsITextWidget()
+nsTextHelper::nsTextHelper() : nsWidget(), nsITextWidget()
 {
 }
 

@@ -35,7 +35,7 @@ NS_IMPL_RELEASE_INHERITED(nsTextHelper, nsWidget)
 //
 //-------------------------------------------------------------------------
 
-nsTextHelper::nsTextHelper() : nsWidget(), nsITextAreaWidget(), nsITextWidget()
+nsTextHelper::nsTextHelper() : nsWidget(), nsITextWidget()
 {
   mIsReadOnly = PR_FALSE;
   mIsPassword = PR_FALSE;

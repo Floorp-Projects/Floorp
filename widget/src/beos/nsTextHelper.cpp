@@ -185,7 +185,7 @@ NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPos)
 //
 //-------------------------------------------------------------------------
 
-nsTextHelper::nsTextHelper() : nsWindow(), nsITextAreaWidget(), nsITextWidget()
+nsTextHelper::nsTextHelper() : nsWindow(), nsITextWidget()
 {
   mIsReadOnly = PR_FALSE;
   mIsPassword = PR_FALSE;

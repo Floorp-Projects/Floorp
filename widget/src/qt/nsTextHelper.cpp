@@ -22,7 +22,6 @@
 
 #include "nsTextHelper.h"
 #include "nsTextWidget.h"
-#include "nsTextAreaWidget.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
@@ -42,7 +41,7 @@
 //
 //-------------------------------------------------------------------------
 
-nsTextHelper::nsTextHelper() : nsWidget(), nsITextAreaWidget(), nsITextWidget()
+nsTextHelper::nsTextHelper() : nsWidget(), nsITextWidget()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextHelper::nsTextHelper()\n"));
     mIsReadOnly = PR_FALSE;

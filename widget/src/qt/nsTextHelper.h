@@ -23,15 +23,13 @@
 #define nsTextHelper_h__
 
 #include "nsITextWidget.h"
-#include "nsITextAreaWidget.h"
 #include "nsWidget.h"
 
 /**
- * Base class for nsTextAreaWidget and nsTextWidget
+ * Base class for nsTextAreaWidget (obsolete) and nsTextWidget
  */
 
 class nsTextHelper : public nsWidget,
-                     public nsITextAreaWidget,
                      public nsITextWidget
 {
 
