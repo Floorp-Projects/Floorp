@@ -33,6 +33,7 @@
 #include "nsInstallResources.h"
 #include "nsInstallLogComment.h"
 #include "nsInstallBitwise.h"
+#include "nsXPIDLString.h"
 
 /* Public Methods */
 
@@ -53,6 +54,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              nsInstallFolder *folderSpec,
                              const nsString& inPartialPath,
                              PRInt32 mode,
+                             PRBool  aRegister,
                              PRInt32 *error) 
   : nsInstallObject(inInstall),
     mVersionInfo(nsnull),
@@ -61,9 +63,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     mFinalFile(nsnull),
     mVersionRegistryName(nsnull),
     mReplaceFile(PR_FALSE),
-    mChildFile(PR_TRUE),
-    mUpgradeFile(PR_FALSE),
-    mSkipInstall(PR_FALSE),
+    mRegister(aRegister),
     mMode(mode)
 {
     MOZ_COUNT_CTOR(nsInstallFile);
@@ -158,23 +158,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     {
         *error = nsInstall::OUT_OF_MEMORY;
         return;
-    }
-
-    nsString regPackageName;
-    mInstall->GetRegPackageName(regPackageName);
-    
-    // determine Child status
-    if ( regPackageName.IsEmpty() ) 
-    {
-        // in the "current communicator package" absolute pathnames (start
-        // with slash) indicate shared files -- all others are children
-        mChildFile = ( mVersionRegistryName->CharAt(0) != '/' );
-    } 
-    else 
-    {
-        mChildFile = mVersionRegistryName->EqualsWithConversion( regPackageName,
-                                                                 PR_FALSE,
-                                                                 regPackageName.Length() );
     }
 }
 
@@ -274,9 +257,6 @@ PRInt32 nsInstallFile::Prepare()
 {
     PRInt32 error = nsInstall::SUCCESS;
 
-    if (mSkipInstall)
-        return nsInstall::SUCCESS;
-
     if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull )
         return nsInstall::INVALID_ARGUMENTS;
 
@@ -309,17 +289,16 @@ PRInt32 nsInstallFile::Complete()
        return nsInstall::INVALID_ARGUMENTS;
     }
    
-    if (mSkipInstall)
-        return nsInstall::SUCCESS;
-
     err = CompleteFileMove();
     
-    if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
+    if ( mRegister && (0 == err || nsInstall::REBOOT_NEEDED == err) ) 
     {
-        // XXX Don't register individual files for now -- crucial performance
-        // speed up on the Mac, and we'll switch uninstall schemes after beta
-
-        // RegisterInVersionRegistry();
+        nsXPIDLCString path;
+        mFinalFile->GetPath(getter_Copies(path));
+        VR_Install( NS_ConvertUCS2toUTF8(*mVersionRegistryName), 
+                    (char*)(const char*)path,  // DO NOT CHANGE THIS. 
+                    NS_ConvertUCS2toUTF8(*mVersionInfo), 
+                    PR_FALSE );
     }
     
     return err;
@@ -337,7 +316,6 @@ char* nsInstallFile::toString()
 {
     char* buffer  = new char[RESBUFSIZE];
     char* rsrcVal = nsnull;
-    char* fname   = nsnull;
 
     if (buffer == nsnull || !mInstall)
         return nsnull;
@@ -353,17 +331,6 @@ char* nsInstallFile::toString()
         else
         {
             rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceFile"));
-        }
-    }
-    else if (mSkipInstall)
-    {
-        if(mMode & nsInstall::WIN_SHARED_FILE)
-        {
-            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("SkipSharedFile"));
-        }
-        else
-        {
-            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("SkipFile"));
         }
     }
     else
@@ -388,14 +355,16 @@ char* nsInstallFile::toString()
 
         interimStr.AppendWithConversion(rsrcVal);
         interimCStr = interimStr.ToNewCString();
-        if(interimCStr == nsnull)
-          return interimCStr;
 
-        if (mFinalFile)
-            mFinalFile->GetPath(&fname);
+        if(interimCStr)
+        {
+            nsXPIDLCString fname;
+            if (mFinalFile)
+                mFinalFile->GetPath(getter_Copies(fname));
 
-        PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname );
-
+            PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname );
+            Recycle(interimCStr);
+        }
         Recycle(rsrcVal);
     }
 
@@ -406,8 +375,6 @@ char* nsInstallFile::toString()
 PRInt32 nsInstallFile::CompleteFileMove()
 {
     int    result         = 0;
-    char   *temp;
-    PRBool bAlreadyExists = PR_FALSE;
     PRBool bIsEqual = PR_FALSE;
     
     if (mExtractedFile == nsnull) 
@@ -429,101 +396,12 @@ PRInt32 nsInstallFile::CompleteFileMove()
 
     if(mMode & nsInstall::WIN_SHARED_FILE)
     {
-      if(mReplaceFile || mSkipInstall)
-          bAlreadyExists = PR_TRUE;
-
-      mFinalFile->GetPath(&temp);
-      RegisterSharedFile(temp, bAlreadyExists);
+      nsXPIDLCString path;
+      mFinalFile->GetPath(getter_Copies(path));
+      RegisterSharedFile(path, mReplaceFile);
     }
 
     return result;  
-}
-
-PRInt32
-nsInstallFile::RegisterInVersionRegistry()
-{
-    int refCount;
-    nsString regPackageName;
-    mInstall->GetRegPackageName(regPackageName);
-    
-  
-    // Register file and log for Uninstall
-  
-    if (!mChildFile) 
-    {
-        int found;
-        if (!regPackageName.IsEmpty()) 
-        {
-            found = VR_UninstallFileExistsInList( (char*)(const char*)nsAutoCString(regPackageName) , 
-                                                  (char*)(const char*)nsAutoCString(*mVersionRegistryName));
-        } 
-        else 
-        {
-            found = VR_UninstallFileExistsInList( "", (char*)(const char*)nsAutoCString(*mVersionRegistryName) );
-        }
-        
-        if (found != REGERR_OK)
-            mUpgradeFile = PR_FALSE;
-        else
-            mUpgradeFile = PR_TRUE;
-    } 
-    else if (REGERR_OK == VR_InRegistry( (char*)(const char*)nsAutoCString(*mVersionRegistryName))) 
-    {
-        mUpgradeFile = PR_TRUE;
-    } 
-    else 
-    {
-        mUpgradeFile = PR_FALSE;
-    }
-
-    if ( REGERR_OK != VR_GetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), &refCount )) 
-    {
-        refCount = 0;
-    }
-
-    char* temp;
-    mFinalFile->GetPath(&temp);
-    VR_Install( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 
-                (char*)(const char*)temp,  // DO NOT CHANGE THIS. 
-                (char*)(const char*)nsAutoCString(*mVersionInfo), 
-                PR_FALSE );
-
-    if (mUpgradeFile) 
-    {
-        if (refCount == 0) 
-            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 1 );
-        else 
-            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), refCount );  //FIX?? what should the ref count be/
-    }
-    else
-    {
-        if (refCount != 0) 
-        {
-            VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), refCount + 1 );
-        } 
-        else 
-        {
-            if (mReplaceFile)
-                VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 2 );
-            else
-                VR_SetRefCount( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 1 );
-        }
-    }
-    
-    if ( !mChildFile && !mUpgradeFile ) 
-    {
-        if (!regPackageName.IsEmpty()) 
-        { 
-            VR_UninstallAddFileToList( (char*)(const char*)nsAutoCString(regPackageName), 
-                                       (char*)(const char*)nsAutoCString(*mVersionRegistryName));
-        } 
-        else 
-        {
-            VR_UninstallAddFileToList( "", (char*)(const char*)nsAutoCString(*mVersionRegistryName) );
-        }
-    }
-
-    return nsInstall::SUCCESS;
 }
 
 /* CanUninstall

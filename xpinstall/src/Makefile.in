@@ -50,7 +50,6 @@ CPPSRCS		= \
 		nsSoftwareUpdate.cpp \
 		nsSoftwareUpdateRun.cpp \
 		nsInstallFile.cpp \
-		nsInstallDelete.cpp \
 		nsInstallExecute.cpp \
 		nsInstallPatch.cpp \
 		nsInstallUninstall.cpp \
@@ -60,6 +59,7 @@ CPPSRCS		= \
 		nsLoggingProgressNotifier.cpp \
 		ScheduledTasks.cpp \
 		nsInstallProgressDialog.cpp \
+		nsXPIProxy.cpp \
 		nsXPITriggerInfo.cpp \
 		nsXPInstallManager.cpp \
 		nsInstallFileOpItem.cpp \

@@ -202,9 +202,6 @@ class nsInstall
         JSObject*  RetrieveWinRegPrototype(void);
         JSObject*  RetrieveWinProfilePrototype(void);
 
-        PRInt32    GetUserPackageName(nsString& aUserPackageName);
-        PRInt32    GetRegPackageName(nsString& aRegPackageName);
-
         PRInt32    AbortInstall(PRInt32 aErrorNumber);
 
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRInt32 aMode, PRInt32* aReturn);
@@ -217,8 +214,6 @@ class nsInstall
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aJarSource, PRInt32* aReturn);
 
-        PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
-        PRInt32    DeleteFile(nsInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
         PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn);
         PRInt32    Execute(const nsString& aJarSource, const nsString& aArgs, PRBool aBlocking, PRInt32* aReturn);
         PRInt32    FinalizeInstall(PRInt32* aReturn);
@@ -238,6 +233,7 @@ class nsInstall
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path);
+        PRInt32    RefreshPlugins();
         PRInt32    ResetError();
         PRInt32    SetPackageFolder(nsInstallFolder& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
@@ -284,6 +280,8 @@ class nsInstall
 
         PRUint32   GetInstallFlags()  { return mInstallFlags; }
         void       SetInstallFlags(PRUint32 aFlags) { mInstallFlags = aFlags; }
+        
+        PRInt32    GetInstallPlatform(nsCString& aPlatform);
 
         nsIChromeRegistry*  GetChromeRegistry() { return mChromeRegistry; }
         void                SetChromeRegistry(nsIChromeRegistry* reg)
@@ -317,6 +315,7 @@ class nsInstall
         nsString            mInstallArguments;
         nsString            mInstallURL;
         PRUint32            mInstallFlags;
+        nsCString           mInstallPlatform;
         nsIChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
         nsIDOMWindowInternal* mParent;
         nsInstallFolder*    mPackageFolder;

@@ -25,6 +25,7 @@
 #include "nscore.h"
 #include "nsIScriptContext.h"
 
+#include "nsBuildID.h"
 #include "nsString.h"
 #include "nsInstall.h"
 #include "nsInstallFile.h"
@@ -52,8 +53,8 @@ extern JSClass FileOpClass;
 //
 enum Install_slots 
 {
-  INSTALL_USERPACKAGENAME = -1,
-  INSTALL_REGPACKAGENAME  = -2,
+  INSTALL_PLATFORM        = -1,
+  INSTALL_BUILDID         = -2,
   INSTALL_JARFILE         = -3,
   INSTALL_ARCHIVE         = -4,
   INSTALL_ARGUMENTS       = -5,
@@ -90,33 +91,17 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) 
   {
     switch(JSVAL_TO_INT(id)) {
-      case INSTALL_USERPACKAGENAME:
+      case INSTALL_PLATFORM:
       {
-        nsAutoString prop;
-        if (NS_OK == a->GetUserPackageName(prop)) 
-        {
-            *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.GetUnicode()), prop.Length()) );
-        }
-        else 
-        {
-          return JS_TRUE;
-        }
+        nsCAutoString prop;
+        a->GetInstallPlatform(prop);
+        *vp = STRING_TO_JSVAL( JS_NewStringCopyZ(cx, prop.get()) );
         break;
       }
 
-      case INSTALL_REGPACKAGENAME:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetRegPackageName(prop)) 
-        {
-          *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.GetUnicode()), prop.Length()) );
-        }
-        else 
-        {
-          return JS_TRUE;
-        }
+      case INSTALL_BUILDID:
+        *vp = INT_TO_JSVAL(NS_BUILD_ID);
         break;
-      }
 
       case INSTALL_ARCHIVE:
       case INSTALL_JARFILE:
@@ -720,95 +705,9 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 InstallDeleteComponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
-  nsAutoString b0;
-
+  // this function was once documented but never supported. Return an error,
+  // but don't remove which would kill scripts that reference this.
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if(argc >= 1)
-  {
-    //  public int DeleteComponent ( String registryName);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-
-    if(NS_OK != nativeThis->DeleteComponent(b0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function DeleteComponent requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method DeleteFile
-//
-PR_STATIC_CALLBACK(JSBool)
-InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
-  JSObject* jsObj;
-  nsAutoString b1;
-  nsInstallFolder* folder;
-
-  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if(argc >= 2)
-  {
-    //  public int DeleteFile ( Object folder,
-    //                          String relativeFileName);
-
-    ConvertJSValToStr(b1, cx, argv[1]);
-    if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
-    {
-      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
-      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE;
-    }
-
-    jsObj = JSVAL_TO_OBJECT(argv[0]);
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
-    {
-      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
-      nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
-      return JS_TRUE; 
-    }
-
-    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
-
-    if(NS_OK != nativeThis->DeleteFile(folder, b1, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function DeleteFile requires 2 parameters");
-    return JS_FALSE;
-  }
-
   return JS_TRUE;
 }
 
@@ -1432,6 +1331,10 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // Native method RegisterChrome
 //
+//    int registerChrome(
+//         int  type,
+//         FileSpecObject chrome,
+//         String extraPath) 
 PR_STATIC_CALLBACK(JSBool)
 InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1469,6 +1372,24 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType, NS_ConvertUCS2toUTF8(path).get()));
 
+  return JS_TRUE;
+}
+
+
+//
+// Native method RefreshPlugins
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  // If there's no private data, this must be the prototype, so ignore
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  if (!nativeThis) {
+    *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
+  }
+  else {
+    *rval = INT_TO_JSVAL(nativeThis->RefreshPlugins());
+  }
   return JS_TRUE;
 }
 
@@ -1783,8 +1704,8 @@ JSClass InstallClass = {
 //
 static JSPropertySpec InstallProperties[] =
 {
-  {"userPackageName",   INSTALL_USERPACKAGENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"regPackageName",    INSTALL_REGPACKAGENAME,     JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"platform",          INSTALL_PLATFORM,           JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"buildID",           INSTALL_BUILDID,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"archive",           INSTALL_ARCHIVE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -1877,7 +1798,6 @@ static JSFunctionSpec InstallMethods[] =
   {"alert",                     InstallAlert,                   1},
   {"cancelInstall",             InstallAbortInstall,            1},
   {"confirm",                   InstallConfirm,                 2},
-  {"deleteRegisteredFile",      InstallDeleteComponent,         1},
   {"execute",                   InstallExecute,                 2},
   {"gestalt",                   InstallGestalt,                 1},
   {"getComponentFolder",        InstallGetComponentFolder,      2},
@@ -1891,7 +1811,9 @@ static JSFunctionSpec InstallMethods[] =
   {"patch",                     InstallPatch,                   5},
   {"performInstall",            InstallFinalizeInstall,         0},
   {"registerChrome",            InstallRegisterChrome,          2},
+  {"refreshPlugins",            InstallRefreshPlugins,          0},
   {"resetError",                InstallResetError,              0},
+//  {"selectChrome",              InstallSelectChrome,            2},
   {"setPackageFolder",          InstallSetPackageFolder,        1},
   {"uninstall",                 InstallUninstall,               1},
 
@@ -1916,6 +1838,9 @@ static JSFunctionSpec InstallMethods[] =
   {"fileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
   {"fileMacAlias",              InstallFileOpFileMacAlias,             2},
   {"fileUnixLink",              InstallFileOpFileUnixLink,             2},
+
+  // -- documented but never supported --
+  {"deleteRegisteredFile",      InstallDeleteComponent,         1},
 
   // -- obsolete forms for temporary compatibility --
   {"abortInstall",              InstallAbortInstall,            1}, 
