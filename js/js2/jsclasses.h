@@ -43,10 +43,10 @@ namespace JSClasses {
     using JSTypes::JSObject;
     using JSTypes::JSType;
     using JSTypes::JSScope;
-    
+    using ICG::ICodeModule;
     
     struct JSSlot {
-        const JSType* mType;
+        JSType* mType;
         uint32 mIndex;
         
         JSSlot() : mType(0)
@@ -77,6 +77,9 @@ namespace JSClasses {
         JSScope* mScope;        
         uint32 mSlotCount;
         JSSlots mSlots;
+        ICodeModule* mConstructor;
+        // typedef std::vector<ICodeModule*, gc_allocator<ICodeModule*> > JSMethods;
+        // JSMethods mMethods;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             : JSType(name, superClass), mSuperClass(superClass), mSlotCount(0)
@@ -85,12 +88,27 @@ namespace JSClasses {
             setProperty(widenCString("methods"), JSValue(mScope));
         }
         
-        JSClass* getSuperClass()    { return mSuperClass; }
-        JSScope* getScope()         { return mScope; }
+        JSClass* getSuperClass()
+        {
+            return mSuperClass;
+        }
         
-        virtual bool isClassType() const { return true; }
+        JSScope* getScope()
+        {
+            return mScope;
+        }
+
+        void setConstructor(ICodeModule* ctor)
+        {
+            mConstructor = ctor;
+        }
         
-        JSSlot& addSlot(const String& name, const JSType* type)
+        ICodeModule* getConstructor()
+        {
+            return mConstructor;
+        }
+        
+        JSSlot& addSlot(const String& name, JSType* type)
         {
             JSSlot& slot = mSlots[name];
             ASSERT(slot.mType == 0);
