@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is this file as it was released on
+   - March 27, 2001.
+   -
+   - The Initial Developer of the Original Code is Peter Annema.
+   - Portions created by Peter Annema are Copyright (C) 2001
+   - Peter Annema.  All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Peter Annema <disttsc@bart.nl> (Original Author)
+   -
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable
+   - instead of those above.  If you wish to allow use of your
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+  -->
+
+<bindings id="xulBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ 
+  <binding id="browser" extends="xul:browser">
+
+    <implementation type="application/x-javascript">
+
+      <property name="canGoBack"
+                onget="return this.webNavigation.canGoBack;"
+                readonly="true"/>
+
+      <property name="canGoForward"
+                onget="return this.webNavigation.canGoForward;"
+                readonly="true"/>
+
+      <method name="goBack">
+        <body>
+          <![CDATA[
+            var webNavigation = this.webNavigation;
+            if (webNavigation.canGoBack)
+              webNavigation.goBack();
+          ]]>
+        </body>
+      </method>
+
+      <method name="goForward">
+        <body>
+          <![CDATA[
+            var webNavigation = this.webNavigation;
+            if (webNavigation.canGoForward)
+              webNavigation.goForward();
+          ]]>
+        </body>
+      </method>
+
+      <method name="reload">
+        <body>
+          <![CDATA[
+            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const flags = nsIWebNavigation.LOAD_FLAGS_BYPASS_NONE;
+            this.reloadWithFlags(flags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="reloadWithFlags">
+        <parameter name="aFlags"/>
+        <body>
+          <![CDATA[
+            this.webNavigation.reload(aFlags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="stop">
+        <body>
+          <![CDATA[
+            this.webNavigation.stop();
+          ]]>
+        </body>
+      </method>
+
+      <method name="loadURI">
+        <parameter name="aURI"/>
+        <body>
+          <![CDATA[
+            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const flags = nsIWebNavigation.LOAD_FLAGS_BYPASS_NONE;
+            this.loadURIWithFlags(aURI, flags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="loadURIWithFlags">
+        <parameter name="aURI"/>
+        <parameter name="aFlags"/>
+        <!-- throws exception if loadURI fails -->
+        <body>
+          <![CDATA[
+            if (!aURI)
+              aURI = "about:blank";
+
+            this.webNavigation.loadURI(aURI, aFlags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="goHome">
+        <body>
+          <![CDATA[
+            this.loadURI(this.homePage);
+          ]]>
+        </body>
+      </method>
+
+      <property name="homePage">
+        <getter>
+          <![CDATA[
+            var uri;
+
+            if (this.hasAttribute("homepage"))
+              uri = this.getAttribute("homepage");
+            else
+              uri = "http://www.mozilla.org/"; // widget pride
+
+            return uri;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.setAttribute("homepage", val);
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <method name="gotoIndex">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            this.webNavigation.gotoIndex(aIndex);
+          ]]>
+        </body>
+      </method>
+
+      <property name="currentURI"
+                onget="return this.webNavigation.currentURI;"
+                readonly="true"/>
+
+      <property name="preferences"
+                onget="return Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPref);"
+                readonly="true"/>
+
+      <property name="docShell"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;"
+                readonly="true"/>
+
+      <property name="webNavigation"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
+                readonly="true"/>
+
+      <property name="sessionHistory"
+                onget="return this.webNavigation.sessionHistory;"
+                readonly="true"/>
+
+      <property name="markupDocumentViewer"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);"
+                readonly="true"/>
+
+      <property name="contentViewerEdit"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerEdit);"
+                readonly="true"/>
+
+      <property name="contentViewerFile"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerFile);"
+                readonly="true"/>
+
+      <property name="documentCharsetInfo"
+                onget="return this.docShell.documentCharsetInfo;"
+                readonly="true"/>
+
+    </implementation>
+
+  </binding>
+
+</bindings>
