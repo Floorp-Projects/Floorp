@@ -501,7 +501,7 @@ void nsSpecialFileSpec::operator = (Type aType)
             {
                 *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
-                *this += "Plugins";
+                *this += "Plug-ins";
 #else
                 *this += "plugins";
 #endif
