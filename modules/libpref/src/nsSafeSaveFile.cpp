@@ -48,9 +48,9 @@ nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
     nsresult      rv;
 
     // determine if the target file currently exists
-    aTargetFile->Exists(&mTargetFileExists);
-
     // if the target file doesn't exist this object does nothing
+    if (NS_FAILED(aTargetFile->Exists(&mTargetFileExists)))
+        mTargetFileExists = PR_FALSE;
     if (!mTargetFileExists)
         return;
 
@@ -84,7 +84,7 @@ nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
 nsSafeSaveFile::~nsSafeSaveFile(void)
 {
     // if the target file didn't exist nothing was backed up
-    if (mTargetFileExists) {
+    if (mTargetFileExists && mBackupFile) {
         // if no backups desired, remove the backup file
         if (mBackupCount == 0) {
             mBackupFile->Remove(PR_FALSE);
@@ -103,8 +103,7 @@ nsresult nsSafeSaveFile::CreateBackup(PurgeBackupType aPurgeType)
         return NS_OK;
 
     // if a backup file currently exists... do the right thing
-    mBackupFile->Exists(&bExists);
-    if (bExists) {
+    if (mBackupFile && NS_SUCCEEDED(mBackupFile->Exists(&bExists)) && bExists) {
         rv = ManageRedundantBackups();
         if (NS_FAILED(rv))
             return rv;
@@ -147,6 +146,9 @@ nsresult nsSafeSaveFile::RestoreFromBackup(void)
     // if the target file didn't initially exist there is nothing to restore from
     if (!mTargetFileExists)
         return NS_ERROR_FILE_NOT_FOUND;
+
+    if (!mBackupFile)
+        return NS_ERROR_NOT_INITIALIZED;
 
     rv = mTargetFile->GetNativeLeafName(fileName);
     if (NS_FAILED(rv)) // yikes! out of memory
@@ -213,6 +215,9 @@ nsresult nsSafeSaveFile::PurgeOldestRedundantBackup(void)
     nsCOMPtr<nsIFile> backupFile;
     nsCAutoString     fileName;
     nsresult          rv;
+
+    if (!mBackupFile)
+        return NS_ERROR_NULL_POINTER;
 
     rv = mBackupFile->Clone(getter_AddRefs(backupFile));
     if (NS_FAILED(rv)) // yikes! out of memory, probably best to not continue
