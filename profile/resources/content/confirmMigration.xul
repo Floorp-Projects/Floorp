@@ -17,21 +17,17 @@
   <html:script language="javascript" src="chrome://profile/content/confirmMigration.js"/> 
   <html:script language="javascript" src="chrome://global/content/strres.js"/> 
     
-  <spring style="height: 1em"/>
-  <box align="horizontal" flex="100%" style="width: 400px;">
-    <spring style="width: 1em;"/>
-  	<html:div>
-      <titledbutton class="message-icon plain"/>
-  	</html:div>
-    <spring style="width: 1em;"/>
-  	<box align="vertical" flex="100%">
-		  <html:div> &confirmMigrationPart1.label; </html:div>
-      <spring style="height: 1em"/>
-  		<html:div> &confirmMigrationPart2.label; </html:div>
+  <box>
+    <box orient="vertical">
+      <image class="message-icon"/>
+      <spring flex="1"/>
+    </box>
+    <separator orient="vertical" class="thin"/>
+    <box orient="vertical" flex="1">
+      <html>&confirmMigrationPart1.label;</html>
+      <html>&confirmMigrationPart2.label;</html>
   	</box>
-    <spring style="width: 1em;"/>
   </box>
-  <spring style="height: 1em;"/>
+  <separator class="thin"/>
   <box id="okCancelButtons"/>
-  <spring style="height: 1em;"/>
 </window>

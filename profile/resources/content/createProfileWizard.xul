@@ -20,8 +20,8 @@
 	<html:script language="javascript" src="chrome://global/content/widgetStateManager.js" />
 
   <box type="largeheader" id="header" value="&profileWizard.title;"/>
-  <box id="contentarea" flex="100%">
-  	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content"  id="content" scrolling="auto" flex="100%"/>
+  <box id="contentarea" flex="1">
+  	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content" id="content" scrolling="none" flex="1"/>
   </box>
 	<box id="wizardButtons"/>
   <box type="status" id="status" value="&window.title.label;" progress=""/>

@@ -33,17 +33,10 @@ window.dialog {
 .dimmed-highcontrast {
   color: #99cccc ! important;
 } 
-treeitem[rowMigrate="no"] > treerow > treecell {
-  color: #8F8F8F;
-}
 
 /** icon courtesy of chris nelson, chrisn@statecollege.com **/
 treeitem[rowMigrate="no"] > treerow > treecell > .tree-button {
   list-style-image: url("chrome://profile/skin/migrate.gif");
-}
-
-treeitem[rowMigrate="no"][selected="true"] > treerow > treecell {
-  color: #FFFFFF;
 }
 
 box[type="largeheader"] > toolbar > .circle {
@@ -59,7 +52,7 @@ deck#prattle {
   max-width: 17em;
 }
 
-box#managebuttons > titledbutton {
+box#managebuttons > button {
   min-width: 8em;
 }
 
@@ -72,52 +65,8 @@ box#contentarea {
 
 /* top border on status area */
 box#wizardButtons {
-  border-bottom: 1px solid threedshadow;
   padding-top: 1px;
   padding-bottom: 1px;
-}
-
-/* manager buttons */
-titledbutton.padded {
-  padding-left: 10px ! important;
-  padding-right: 10px ! important;
-}
-titledbutton.padded:hover {
-  padding-left: 10px ! important;
-  padding-right: 10px ! important;
-}
-titledbutton.padded:active {
-  padding-left: 11px ! important;
-  padding-right: 9px ! important;
-}
-titledbutton.padded[disabled="true"],
-titledbutton.padded:active[disabled="true"] {
-  padding-left: 10px ! important; 
-  padding-right: 10px ! important;
-}
-
-/* platform common dialog buttons */
-box#okCancelButtons {
-  margin: 0px ! important;
-}
-/* achieve the right spacing between buttons */
-box#okCancelButtons > spring#Button2Spring {
-  display: none;
-}
-box#okCancelButtons > spring#Button3Spring {
-  display: none;
-}
-box#okCancelButtons > spring#OKSpring {
-  display: none;
-}
-box#okCancelButtons.Button1 > spring#Button2Spring {
-  display: inherit;
-}
-box#okCancelButtons.Button1 > spring#Button3Spring {
-  display: none;
-}
-spring#Button3Spring {
-  width: 5px;
 }
 
 box.selection {
