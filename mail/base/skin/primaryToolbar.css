@@ -31,8 +31,12 @@
 
 .toolbarbutton-1 {
   -moz-box-orient: vertical;
-  min-width: 0px;
+  min-width: 47px;
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
+}
+
+.toolbarbutton-1[type="menu"] > .toolbarbutton-menu-dropmarker {
+  display: none;
 }
 
 toolbar[mode="icons"] .toolbarbutton-text {
@@ -238,6 +242,7 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
+  min-width: 30px;
 }
 
 toolbar[iconsize="small"] #button-getmsg {
