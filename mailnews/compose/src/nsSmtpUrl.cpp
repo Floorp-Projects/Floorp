@@ -43,8 +43,7 @@ nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl(), 
-    m_fileName("")
+nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl()
 {
 	// nsISmtpUrl specific state...
 	m_toPart = nsnull;
@@ -62,6 +61,8 @@ nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl(),
 	m_organizationPart = nsnull;
 	m_replyToPart = nsnull;
 	m_priorityPart = nsnull;
+	m_fileName = nsnull;
+	m_isPostMessage = PR_TRUE;
 }
  
 nsSmtpUrl::~nsSmtpUrl()
@@ -293,17 +294,17 @@ nsresult nsSmtpUrl::ParseUrl()
     return rv;
 }
 
-nsresult nsSmtpUrl::GetUserEmailAddress(const char ** aUserName)
+nsresult nsSmtpUrl::GetUserEmailAddress(char ** aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
-		*aUserName = m_userName.GetBuffer();
+		*aUserName = m_userName.ToNewCString();
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv;
 }
 
-nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
+nsresult nsSmtpUrl::SetUserEmailAddress(char * aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
@@ -317,42 +318,42 @@ nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
 }
 	
 
-nsresult nsSmtpUrl::GetMessageContents(const char ** aToPart, const char ** aCcPart, const char ** aBccPart, 
-		const char ** aFromPart, const char ** aFollowUpToPart, const char ** aOrganizationPart, 
-		const char ** aReplyToPart, const char ** aSubjectPart, const char ** aBodyPart, const char ** aHtmlPart, 
-		const char ** aReferencePart, const char ** aAttachmentPart, const char ** aPriorityPart, 
-		const char ** aNewsgroupPart, const char ** aNewsHostPart, PRBool * aForcePlainText)
+nsresult nsSmtpUrl::GetMessageContents(char ** aToPart, char ** aCcPart, char ** aBccPart, 
+		char ** aFromPart, char ** aFollowUpToPart, char ** aOrganizationPart, 
+		char ** aReplyToPart, char ** aSubjectPart, char ** aBodyPart, char ** aHtmlPart, 
+		char ** aReferencePart, char ** aAttachmentPart, char ** aPriorityPart, 
+		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aForcePlainText)
 {
 	if (aToPart)
-		*aToPart = m_toPart;
+		*aToPart = nsCRT::strdup(m_toPart);
 	if (aCcPart)
-		*aCcPart = m_ccPart;
+		*aCcPart = nsCRT::strdup(m_ccPart);
 	if (aBccPart)
-		*aBccPart = m_bccPart;
+		*aBccPart = nsCRT::strdup(m_bccPart);
 	if (aFromPart)
-		*aFromPart = m_fromPart;
+		*aFromPart = nsCRT::strdup(m_fromPart);
 	if (aFollowUpToPart)
-		*aFollowUpToPart = m_followUpToPart;
+		*aFollowUpToPart = nsCRT::strdup(m_followUpToPart);
 	if (aOrganizationPart)
-		*aOrganizationPart = m_organizationPart;
+		*aOrganizationPart = nsCRT::strdup(m_organizationPart);
 	if (aReplyToPart)
-		*aReplyToPart = m_replyToPart;
+		*aReplyToPart = nsCRT::strdup(m_replyToPart);
 	if (aSubjectPart)
-		*aSubjectPart = m_subjectPart;
+		*aSubjectPart = nsCRT::strdup(m_subjectPart);
 	if (aBodyPart)
-		*aBodyPart = m_bodyPart;
+		*aBodyPart = nsCRT::strdup(m_bodyPart);
 	if (aHtmlPart)
-		*aHtmlPart = m_htmlPart;
+		*aHtmlPart = nsCRT::strdup(m_htmlPart);
 	if (aReferencePart)
-		*aReferencePart = m_referencePart;
+		*aReferencePart = nsCRT::strdup(m_referencePart);
 	if (aAttachmentPart)
-		*aAttachmentPart = m_attachmentPart;
+		*aAttachmentPart = nsCRT::strdup(m_attachmentPart);
 	if (aPriorityPart)
-		*aPriorityPart = m_priorityPart;
+		*aPriorityPart = nsCRT::strdup(m_priorityPart);
 	if (aNewsgroupPart)
-		*aNewsgroupPart = m_newsgroupPart;
+		*aNewsgroupPart = nsCRT::strdup(m_newsgroupPart);
 	if (aNewsHostPart)
-		*aNewsHostPart = m_newsHostPart;
+		*aNewsHostPart = nsCRT::strdup(m_newsHostPart);
 	if (aForcePlainText)
 		*aForcePlainText = m_forcePlainText;
 	return NS_OK;
@@ -363,40 +364,35 @@ nsresult nsSmtpUrl::GetMessageContents(const char ** aToPart, const char ** aCcP
 nsresult nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
 {
 	if (aRecipientsList)
-		*aRecipientsList = m_toPart ? PL_strdup(m_toPart) : nsnull;
+		*aRecipientsList = m_toPart ? nsCRT::strdup(m_toPart) : nsnull;
 	return NS_OK;
 }
 
-// is the url a post message url or a bring up the compose window url? 
-nsresult nsSmtpUrl::IsPostMessage(PRBool * aPostMessage)
-{
-	if (aPostMessage)
-		*aPostMessage = PR_TRUE;
-	return NS_OK;
-}
-	
-// used to set the url as a post message url...
-nsresult nsSmtpUrl::SetPostMessage(PRBool aPostMessage)
-{
-	return NS_OK;
-}
+NS_IMPL_GETSET(nsSmtpUrl, PostMessage, PRBool, m_isPostMessage)
 
 // the message can be stored in a file....allow accessors for getting and setting
 // the file name to post...
-nsresult nsSmtpUrl::SetPostMessageFile(const nsFilePath& aFileName)
+nsresult nsSmtpUrl::SetPostMessageFile(nsIFileSpec * aFileSpec)
 {
 	nsresult rv = NS_OK;
-	if (aFileName)
-		m_fileName = aFileName;
+	if (aFileSpec)
+		m_fileName = dont_QueryInterface(aFileSpec);
+	else
+		rv = NS_ERROR_NULL_POINTER;
 
 	return rv;
 }
 
-nsresult nsSmtpUrl::GetPostMessageFile(const nsFilePath ** aFileName)
+nsresult nsSmtpUrl::GetPostMessageFile(nsIFileSpec ** aFileSpec)
 {
 	nsresult rv = NS_OK;
-	if (aFileName)
-		*aFileName = &m_fileName;
+	if (aFileSpec)
+	{
+		*aFileSpec = m_fileName;
+		NS_IF_ADDREF(*aFileSpec);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
 	
 	return rv;
 }

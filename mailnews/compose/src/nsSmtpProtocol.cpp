@@ -256,13 +256,12 @@ const char * nsSmtpProtocol::GetUserDomainName()
 
 	if (m_runningURL)
 	{
-		const char * mailAddr = nsnull;
 		const char *atSignMarker = nsnull;
-		m_runningURL->GetUserEmailAddress(&mailAddr);
-		if (mailAddr)
+		m_runningURL->GetUserEmailAddress(getter_Copies(m_mailAddr));
+		if (m_mailAddr)
 		{
-			atSignMarker = PL_strchr(mailAddr, '@');
-			return atSignMarker ? atSignMarker+1 : mailAddr;  // return const ptr into buffer in running url...
+			atSignMarker = PL_strchr(m_mailAddr, '@');
+			return atSignMarker ? atSignMarker+1 :  (const char *) m_mailAddr;  // return const ptr into buffer in running url...
 		}
 	}
 
@@ -468,8 +467,8 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	nsCAutoString buffer;
 
 	// extract the email addresss
-	const char * userAddress = nsnull;
-	m_runningURL->GetUserEmailAddress(&userAddress);
+	nsXPIDLCString userAddress;
+	m_runningURL->GetUserEmailAddress(getter_Copies(userAddress));
 
 	/* don't check for a HELO response because it can be bogus and
 	 * we don't care
@@ -1002,13 +1001,15 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 
 PRInt32 nsSmtpProtocol::SendMessageInFile()
 {
-	const nsFilePath * filePath = nsnull;
-	m_runningURL->GetPostMessageFile(&filePath);
-	if (filePath && *filePath)
+	nsCOMPtr<nsIFileSpec> fileSpec;
+	m_runningURL->GetPostMessageFile(getter_AddRefs(fileSpec));
+	if (fileSpec)
 	{
 		// mscott -- this function should be re-written to use the file url code so it can be
 		// asynch
-		nsInputFileStream * fileStream = new nsInputFileStream(nsFileSpec(*filePath), PR_RDONLY, 00700);
+		nsFileSpec afileSpec;
+		fileSpec->GetFileSpec(&afileSpec);
+		nsInputFileStream * fileStream = new nsInputFileStream(afileSpec, PR_RDONLY, 00700);
 		if (fileStream && fileStream->is_open())
 		{
 			PRInt32 amtInBuffer = 0; 
@@ -1135,7 +1136,7 @@ PRInt32 nsSmtpProtocol::SendPostData()
 
 	// check to see if url is a file..if it is...call our file handler...
 	PRBool postMessageInFile = PR_TRUE;
-	m_runningURL->IsPostMessage(&postMessageInFile);
+	m_runningURL->GetPostMessage(&postMessageInFile);
 	if (postMessageInFile)
 	{
 		return SendMessageInFile();
@@ -1206,7 +1207,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 #endif
 			
 		PRBool postMessage = PR_FALSE;
-		m_runningURL->IsPostMessage(&postMessage);
+		m_runningURL->GetPostMessage(&postMessage);
 
 		if(postMessage)
 		{
@@ -1221,14 +1222,14 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 				doesn't matter.
 			*/
 
-			char * addresses = nsnull;
+			nsXPIDLCString addresses;
 			nsCOMPtr<nsIMsgHeaderParser> parser;
             rv = nsComponentManager::CreateInstance(kHeaderParserCID,
                                                nsnull,
                                                nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
                                                getter_AddRefs(parser));
 
-			m_runningURL->GetAllRecipients(&addresses);
+			m_runningURL->GetAllRecipients(getter_Copies(addresses));
 
 			if (NS_SUCCEEDED(rv) && parser)
 			{
@@ -1257,7 +1258,6 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 
 				m_addressCopy = addrs2;
 				m_addresses = m_addressCopy;
-				PR_FREEIF(addresses); // free our original addresses string...
 			} // if parser
 		} // if post message
 		

@@ -152,8 +152,12 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath,
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
-			smtpUrl->SetPostMessageFile(aFilePath);
-			smtpUrl->SetUserEmailAddress(aSender);
+			nsFileSpec aFileSpec (aFilePath);
+			nsCOMPtr<nsIFileSpec> aIFileSpec;
+			NS_NewFileSpecWithSpec(aFileSpec, getter_AddRefs(aIFileSpec));
+			smtpUrl->SetPostMessageFile(aIFileSpec);
+			// this cast is safe....it is necessary because of a bug to the xpidl compiler
+			smtpUrl->SetUserEmailAddress((char *) aSender);
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
@@ -181,9 +185,6 @@ nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer)
 	smtpUrl = do_QueryInterface(aUrl);
     if (smtpUrl)
     {
-		const nsFilePath * fileName = nsnull;
-		smtpUrl->GetPostMessageFile(&fileName);
-
 		// almost there...now create a nntp protocol instance to run the url in...
 		smtpProtocol = new nsSmtpProtocol(aUrl);
 		if (smtpProtocol == nsnull)

@@ -21,10 +21,11 @@
 
 #include "nsMsgProtocol.h"
 #include "nsIStreamListener.h"
-#include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "rosetta.h"
 #include HG40855
 #include "nsISmtpUrl.h"
+#include "nsCOMPtr.h"
 
  /* states of the machine
  */
@@ -99,6 +100,7 @@ private:
 	char	   *m_addresses;
 	PRUint32	m_addressesLeft;
 	char	   *m_verifyAddress;
+	nsXPIDLCString m_mailAddr;
 	
 	SmtpAuthMethod m_authMethod;
 

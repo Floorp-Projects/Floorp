@@ -21,6 +21,8 @@
 
 #include "nsISmtpUrl.h"
 #include "nsMsgMailNewsUrl.h"
+#include "nsIFileSpec.h"
+#include "nsCOMPtr.h"
 
 class nsSmtpUrl : public nsISmtpUrl, public nsMsgMailNewsUrl
 {
@@ -31,46 +33,9 @@ public:
 	NS_IMETHOD SetSpec(char * aSpec);
 
 	// From nsISmtpUrl
+	NS_DECL_NSISMTPURL
 
-	// mscott: I used to have individual getters for ALL of these fields but it was
-	// getting way out of hand...besides in the actual protocol, we want all of these
-	// fields anyway so why go through the extra step of making the protocol call
-	// 12 get functions...
-	NS_IMETHOD GetMessageContents(const char ** aToPart, const char ** aCcPart, const char ** aBccPart, 
-		const char ** aFromPart, const char ** aFollowUpToPart, const char ** aOrganizationPart, 
-		const char ** aReplyToPart, const char ** aSubjectPart, const char ** aBodyPart, const char ** aHtmlPart, 
-		const char ** aReferencePart, const char ** aAttachmentPart, const char ** aPriorityPart, 
-		const char ** aNewsgroupPart, const char ** aNewsHostPart, PRBool * aforcePlainText);
-
-	// Caller must call PR_FREE on list when it is done with it. This list is a list of all
-	// recipients to send the email to. each name is NULL terminated...
-	NS_IMETHOD GetAllRecipients(char ** aRecipientsList);
-
-	// is the url a post message url or a bring up the compose window url? 
-	NS_IMETHOD IsPostMessage(PRBool * aPostMessage); 
-	
-	// used to set the url as a post message url...
-	NS_IMETHOD SetPostMessage(PRBool aPostMessage);
-
-	// the message can be stored in a file....allow accessors for getting and setting
-	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName);
-	NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName);
-
-	/////////////////////////////////////////////////////////////////////////////// 
-	// SMTP Url instance specific getters and setters --> info the protocol needs
-	// to know in order to run the url...these are NOT event sinks which are things
-	// the caller needs to know...
-	///////////////////////////////////////////////////////////////////////////////
-
-	// mscott -- when we have identities it would be nice to just have an identity 
-	// interface here that would encapsulte things like username, domain, password,
-	// etc...
-	NS_IMETHOD GetUserEmailAddress(const char ** aUserName);
-	NS_IMETHOD SetUserEmailAddress(const char * aUserName);
-
-    // nsSmtpUrl
-
+	// nsSmtpUrl
     nsSmtpUrl();
 
 protected:
@@ -98,10 +63,11 @@ protected:
 
 
 	PRBool	    m_forcePlainText;
+	PRBool		m_isPostMessage;
 
 	/* Smtp specific event sinks */
 	nsCString	m_userName;
-	nsFilePath  m_fileName;
+	nsCOMPtr<nsIFileSpec> m_fileName;
 
 	// it is possible to encode the message to parse in the form of a url.
 	// This function is used to decompose the search and path part into the bare
