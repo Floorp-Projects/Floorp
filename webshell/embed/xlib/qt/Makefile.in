@@ -27,7 +27,14 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= embed_xlib_into_qt
 
+MOCSRCS		= \
+			moc_MainWidget.cpp \
+			moc_QMozillaContainer.cpp \
+			moc_nsQtEventProcessor.cpp \
+			$(NULL)
+
 CPPSRCS		= \
+			$(MOCSRCS) \
 			MainWidget.cpp \
 			QMozillaContainer.cpp \
 			nsEmbedXlibIntoQt.cpp \
