@@ -3,3 +3,4 @@ Makefile
 TestQGeckoEmbed
 mainwindow
 moc_*.cpp
+uiimg_collection.cpp
