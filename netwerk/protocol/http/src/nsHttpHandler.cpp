@@ -471,22 +471,12 @@ nsHttpHandler::GetIOService(nsIIOService** result)
 }
 
 
-nsresult
-nsHttpHandler::OnModifyRequest(nsIHttpChannel *chan)
+void
+nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
 {
-    LOG(("nsHttpHandler::OnModifyRequest [chan=%x]\n", chan));
+    LOG(("nsHttpHandler::NotifyObservers [chan=%x event=\"%s\"]\n", chan, event));
     if (mObserverService)
-        mObserverService->NotifyObservers(chan, NS_HTTP_ON_MODIFY_REQUEST_TOPIC, nsnull);
-    return NS_OK;
-}
-
-nsresult
-nsHttpHandler::OnExamineResponse(nsIHttpChannel *chan)
-{
-    LOG(("nsHttpHandler::OnExamineResponse [chan=%x]\n", chan));
-    if (mObserverService)
-        mObserverService->NotifyObservers(chan, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, nsnull);
-    return NS_OK;
+        mObserverService->NotifyObservers(chan, event, nsnull);
 }
 
 //-----------------------------------------------------------------------------

@@ -654,8 +654,7 @@ nsHttpChannel::ProcessResponse()
     SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
     // notify nsIHttpNotify implementations
-    rv = gHttpHandler->OnExamineResponse(this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "OnExamineResponse failed");
+    gHttpHandler->OnExamineResponse(this);
 
     // handle different server response categories
     switch (httpStatus) {
@@ -976,6 +975,10 @@ nsHttpChannel::ProcessPartialContent()
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
+    // notify observers interested in looking at a reponse that has been
+    // merged with any cached headers
+    gHttpHandler->OnExamineMergedResponse(this);
+
     // the cached content is valid, although incomplete.
     mCachedContentIsValid = PR_TRUE;
     return ReadFromCache();
@@ -1049,6 +1052,10 @@ nsHttpChannel::ProcessNotModified()
 
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
+
+    // notify observers interested in looking at a reponse that has been
+    // merged with any cached headers
+    gHttpHandler->OnExamineMergedResponse(this);
 
     mCachedContentIsValid = PR_TRUE;
     rv = ReadFromCache();
@@ -2748,8 +2755,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     AddCookiesToRequest();
 
     // Notify nsIHttpNotify implementations
-    rv = gHttpHandler->OnModifyRequest(this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
+    gHttpHandler->OnModifyRequest(this);
     
     mIsPending = PR_TRUE;
 
@@ -3660,8 +3666,7 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     AddCookiesToRequest();
 
     // notify nsIHttpNotify implementations
-    rv = gHttpHandler->OnModifyRequest(this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
+    gHttpHandler->OnModifyRequest(this);
 
     mIsPending = PR_TRUE;
 

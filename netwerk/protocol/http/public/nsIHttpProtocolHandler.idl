@@ -133,4 +133,11 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
  * the notification is the nsIHttpChannel instance.
  */
 #define NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC "http-on-examine-response"
+
+/**
+ * The observer of this topic is notified after the received HTTP response
+ * is merged with data from the browser cache.  This means that, among other
+ * things, the Content-Type header will be set correctly.
+ */
+#define NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC "http-on-examine-merged-response"
 %}
