@@ -49,6 +49,7 @@
 #include "nsCURILoader.h"
 #include "nsICategoryManager.h"
 #include "nsCRLManager.h"
+#include "nsCipherInfo.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -160,6 +161,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertPicker)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCRLManager)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCipherInfoService)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -359,6 +361,13 @@ static const nsModuleComponentInfo components[] =
     NS_CRLMANAGER_CID,
     NS_CRLMANAGER_CONTRACTID,
     nsCRLManagerConstructor
+  },
+  
+  {
+    "PSM Cipher Info",
+    NS_CIPHERINFOSERVICE_CID,
+    NS_CIPHERINFOSERVICE_CONTRACTID,
+    nsCipherInfoServiceConstructor
   }
 };
 

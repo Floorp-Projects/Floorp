@@ -20,7 +20,6 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Terry Hayes <thayes@netscape.com>
    -   Kai Engert <kaie@netscape.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
@@ -42,37 +41,56 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<?xul-overlay href="chrome://pippki/content/ssl2ciphers.xul"?>
-<?xul-overlay href="chrome://pippki/content/ssl3tlsciphers.xul"?>
-<?xul-overlay href="chrome://pippki/content/ssl3tlsciphers2.xul"?>
-
-<window id="pref-ciphers" title="&cipher.title;"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+<window id="cipherinfo" 
+  title="&cipherinfo.title;"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();">
 
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
-  <script type="application/x-javascript" src="chrome://pippki/content/pref-ciphers.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/cipherinfo.js"/>
 
-  <vbox flex="1">
-    <tabbox flex="1">
-      <tabs id="ciphersTabbox">
-        <tab id="ssl2_tab" label="&cipher.tab.ssl2;"/>
-        <tab id="ssl3tls_tab" label="&cipher.tab.ssl3tls;"/>
-        <tab id="ssl3tls_extra_tab" label="&cipher.tab.ssl3tls_extra;"/>
-      </tabs>
-      <tabpanels flex="1">
-        <vbox id="ssl2_ciphers" flex="1"/>
-        <vbox id="ssl3tls_ciphers" flex="1"/>
-        <vbox id="ssl3tls_extra_ciphers" flex="1"/>
-      </tabpanels>
-    </tabbox>
+  <grid style="margin: 1em;">
+    <columns>
+      <column/>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+        <label value="&cipher.name;"/>
+        <label id="name"/>
+      </row>
+      <row>
+        <label value="&cipher.encryption;"/>
+        <label id="encryption"/>
+      </row>
+      <row>
+        <label value="&cipher.authAlg;"/>
+        <label id="authAlg"/>
+      </row>
+      <row>
+        <label value="&cipher.keyAlg;"/>
+        <label id="keyAlg"/>
+      </row>
+      <row>
+        <label value="&cipher.keySize;"/>
+        <label id="keySize"/>
+      </row>
+      <row>
+        <label value="&cipher.macAlg;"/>
+        <label id="macAlg"/>
+      </row>
+      <row>
+        <label value="&cipher.other;"/>
+        <label id="fips" value="&cipher.fips;" collapsed="true"/>
+      </row>
+      <row>
+        <label value=""/>
+        <label id="exportable" value="&cipher.exportable;" collapsed="true"/>
+      </row>
+    </rows>
+  </grid>
 
-    <separator/>
-
-    <keyset id="dialogKeys"/>
-    <hbox id="okCancelButtonsRight"/>
-  </vbox>
+  <keyset id="dialogKeys"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>
+

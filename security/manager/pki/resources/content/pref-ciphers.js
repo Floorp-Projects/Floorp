@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Terry Hayes <thayes@netscape.com>
  *   Kai Engert <kaie@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,40 +36,64 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsISimpleEnumerator.idl"
+var gPrefs = null;
 
-[scriptable, uuid(028e2b2a-1f0b-43a4-a1a7-365d2d7f35d0)]
-interface nsICipherInfo : nsISupports
-{
-  readonly attribute ACString longName;
+function onLoad() {
+  doSetOKCancel(doOK, doCancel);
 
-  readonly attribute PRBool isSSL2;
-  readonly attribute PRBool isFIPS;
-  readonly attribute PRBool isExportable;
-  readonly attribute PRBool nonStandard;
-  readonly attribute ACString symCipherName;
-  readonly attribute ACString authAlgorithmName;
-  readonly attribute ACString keaTypeName;
-  readonly attribute ACString macAlgorithmName;
-  readonly attribute PRInt32 effectiveKeyBits;
-};
+  // Set checkboxes from prefs
+  const nsIPref = Components.interfaces.nsIPref;
 
-[scriptable, uuid(766d47cb-6d8c-4e71-b6b7-336917629a69)]
-interface nsICipherInfoService : nsISupports
-{
-  nsICipherInfo getCipherInfoByPrefString(in ACString aPrefString);
-};
+  gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
 
-%{C++
+  // Enumerate each checkbox on this page and set value
+  var prefElements = document.getElementsByAttribute("prefstring", "*");
+  for (var i = 0; i < prefElements.length; i++) {
+    var element = prefElements[i];
+    var prefString = element.getAttribute("prefstring");
+    var prefValue = false;
 
-#define NS_CIPHERINFOSERVICE_CID { /* ec693a6f-0832-49dd-877c-89f6552df5de */ \
-    0xec693a6f,                                                        \
-    0x0832,                                                            \
-    0x49dd,                                                            \
-    {0x87, 0x7c, 0x89, 0xf6, 0x55, 0x2d, 0xf5, 0xde}                   \
+    try {
+      prefValue = gPrefs.GetBoolPref(prefString);
+    } catch(e) { /* Put debug output here */ }
+
+    element.setAttribute("checked", prefValue);
+    // disable xul element if the pref is locked.
+    if (gPrefs.PrefIsLocked(prefString)) {
+      element.disabled=true;
+    }
+  }
+}
+
+function showInfo(cipher_name) {
+  window.openDialog('chrome://pippki/content/cipherinfo.xul', cipher_name,
+                    'modal=yes,resizable,chrome');
+}
+
+function doOK() {
+ // Save the prefs
+ try {
+  // Enumerate each checkbox on this page and save the value
+  var prefElements = document.getElementsByAttribute("prefstring", "*");
+  for (var i = 0; i < prefElements.length; i++) {
+    var element = prefElements[i];
+    var prefString = element.getAttribute("prefstring");
+    var prefValue = element.getAttribute("checked");
+
+
+    if (typeof(prefValue) == "string") {
+      prefValue = (prefValue == "true");
+    }
+
+    gPrefs.SetBoolPref(prefString, prefValue);
   }
 
-#define NS_CIPHERINFOSERVICE_CONTRACTID "@mozilla.org/security/cipherinfo;1"
+  gPrefs.savePrefFile(null);
+ } catch(e) { }
 
-%}
+ window.close();
+}
+
+function doCancel() {
+  window.close();
+}

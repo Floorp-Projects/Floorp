@@ -50,6 +50,7 @@ META_COMPONENT	= crypto
 GRE_MODULE	= 1
 
 CPPSRCS = 				\
+	nsCipherInfo.cpp \
 	nsNSSCallbacks.cpp		\
 	nsNSSComponent.cpp		\
 	nsNSSIOLayer.cpp		\
