@@ -387,6 +387,20 @@ nsXULBrowserWindow.prototype =
   }
 }
 
+function getBrowser()
+{
+  return document.getElementById("content");
+}
+
+function getWebNavigation()
+{
+  try {
+    return getBrowser().webNavigation;
+  } catch (e) {
+    return null;
+  }
+}
+
 function UpdateBackForwardButtons()
 {
 	if(!backButton)
@@ -1398,14 +1412,11 @@ function BrowserEditBookmarks()
     }
   }
 
-  function loadURI(href)
-  {
-    var content = document.getElementById("content")
-    var boxObject = content.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject)
-    var docShell = boxObject.docShell
-    var webNavigation = docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
-    return webNavigation.loadURI(href, 0);
-  }
+function loadURI(uri)
+{
+  // window._content.location.href = uri;
+  getWebNavigation().loadURI(uri, Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE);
+}
 
   function BrowserLoadURL()
   {
