@@ -23,6 +23,7 @@
    -    Ryan Cassin (rcassin@supernova.org)
   -->
 
+<!-- Attn: Localization - some of the menus in this dialog directly affect mail also. -->
 
 <!-- File menu items -->
 <!ENTITY fileMenu.label "File">
@@ -305,7 +306,7 @@
 <!ENTITY size-smallCmd.label "small">
 <!ENTITY size-small.accesskey "s">
 <!ENTITY size-mediumCmd.label "medium">
-<!ENTITY size-medium.accesskey "m">
+<!ENTITY size-medium.accesskey "d">
 <!ENTITY size-largeCmd.label "large">
 <!ENTITY size-large.accesskey "l">
 <!ENTITY size-x-largeCmd.label "x-large">
@@ -453,7 +454,7 @@
 
 <!-- Table Menu -->
 <!ENTITY tableMenu.label "Table">
-<!ENTITY tablemenu.accesskey "a">
+<!ENTITY tablemenu.accesskey "b">
 <!-- Select submenu -->
 <!ENTITY tableSelectMenu.label "Select">
 <!ENTITY tableselectmenu.accesskey "s">
@@ -506,7 +507,7 @@
 <!ENTITY tableJoinCells.label "j">
 <!ENTITY tablejoincells.accesskey "j">
 <!ENTITY tableSplitCell.label "Split Cell">
-<!ENTITY tablesplitcell.accesskey "i">
+<!ENTITY tablesplitcell.accesskey "c">
 <!ENTITY tableProperties.label "Table Properties...">
 <!ENTITY tableProperties.accesskey "o">
 
