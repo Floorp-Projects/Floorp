@@ -1126,6 +1126,9 @@ char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
 PRBool keyCancel = PR_FALSE;
 PRBool keySet = PR_FALSE;
+time_t keyExpiresTime;
+// 30 minute duration (60*30=1800 seconds)
+#define keyDuration 1800
 
 PUBLIC void
 Wallet_RestartKey() {
@@ -1143,6 +1146,16 @@ Wallet_GetKey() {
 PUBLIC PRBool
 Wallet_KeySet() {
   return keySet;
+}
+
+PRIVATE PRBool
+wallet_KeyTimedOut() {
+  time_t curTime = time(NULL);
+  if (Wallet_KeySet() && (curTime > keyExpiresTime)) {
+    keySet = PR_FALSE;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 PUBLIC PRBool
@@ -1274,6 +1287,7 @@ Wallet_SetKey(PRBool isNewkey) {
     strm2.close();
     Wallet_RestartKey();
     keySet = PR_TRUE;
+    keyExpiresTime = time(NULL) + keyDuration;
     return PR_TRUE;
 
   } else {
@@ -1290,6 +1304,7 @@ Wallet_SetKey(PRBool isNewkey) {
     if (useDefaultKey && (wallet_KeySize() == 0) ) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
+      keyExpiresTime = time(NULL) + keyDuration;
       return PR_TRUE;
     }
 
@@ -1319,6 +1334,7 @@ Wallet_SetKey(PRBool isNewkey) {
     if (rv) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
+      keyExpiresTime = time(NULL) + keyDuration;
       return PR_TRUE;
     } else {
       *key = '\0';
@@ -1908,6 +1924,11 @@ wallet_Initialize() {
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
     wallet_Initialized = PR_TRUE;
+  }
+
+  /* see if key has timed out */
+  if (wallet_KeyTimedOut()) {
+    wallet_keyInitialized = PR_FALSE;
   }
 
   if (!wallet_keyInitialized) {
