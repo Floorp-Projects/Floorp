@@ -20,23 +20,7 @@
  *
  * Contributor(s): 
  *     Henry Sobotka <sobotka@axess.com>
- * Implementation of nsIFile for OS/2. Freely adapted from the Win32 and
- * UNIX versions, as well as the outgoing nsFileSpecOS2.
- *
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date         Modified by     Description of modification
- * 03/23/2000  IBM Corp.       Updated original version, which was prior to nsIFile drop, to the  latest 
- *                                     Win/Unix versions.
- * 06/09/2000  IBM Corp.       Make more like Windows. (from Doug Turner's windows code).
- * 07/18/2000  IBM Corp.       Sync up with latest Windows code.
- *
+ *     IBM Corp.
  */
 
 
@@ -61,6 +45,7 @@ static unsigned char* PR_CALLBACK
 _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor);
 static nsresult PR_CALLBACK
 CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf);
+static int isleadbyte(int c);
 
 #ifdef XP_OS2_VACPP
 #include <direct.h>
@@ -390,8 +375,14 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
             // we have a drive letter and a colon (eg 'c:'
             // this is resolve already
             
-            *resolvedPath = (char*) nsMemory::Clone( filePath, strlen(filePath)+2 );
-            strcat(*resolvedPath, "\\");
+            int filePathLen = strlen(filePath);
+            char* rp = (char*) nsMemory::Alloc( filePathLen + 2 );
+            if (!rp)
+                return NS_ERROR_OUT_OF_MEMORY;
+            memcpy( rp, filePath, filePathLen );
+            rp[filePathLen] = '\\';
+            rp[filePathLen+1] = 0;
+            *resolvedPath = rp;
 
             nsMemory::Free(filePath);
             return NS_OK;
@@ -575,18 +566,21 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
             return NS_OK;
         }
        
-#ifndef XP_OS2
-        // check to see that this is shortcut.
+        // check to see that this is shortcut, i.e., the leaf is ".lnk"
+        // if the length < 4, then it's not a link.
             
         int pathLen = strlen(workingFilePath);
         const char* leaf = workingFilePath + pathLen - 4;
     
-        if ( (strcmp(leaf, ".lnk") != 0))
+#ifdef XP_OS2
+        if (pathLen < 4)
+#else
+        if (pathLen < 4 || (strcmp(leaf, ".lnk") != 0))
+#endif
         {
-		    mDirty = PR_FALSE;
+            mDirty = PR_FALSE;
             return NS_OK;
         }
-#endif
     }
 
 #ifndef XP_OS2
@@ -652,15 +646,21 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     if ( (filePath[2] == 0) && (filePath[1] == ':') )
     {
-        nativeFilePath = (char*) nsMemory::Clone( filePath, 4 );
         // C : //
+        nativeFilePath = (char*) nsMemory::Alloc( 4 );
+        if (!nativeFilePath)
+            return NS_ERROR_OUT_OF_MEMORY;
+        nativeFilePath[0] = filePath[0];
+        nativeFilePath[1] = ':';
         nativeFilePath[2] = '\\';
+        nativeFilePath[3] = 0;
     }
-
+    // XXX is this an 'else'? Otherwise 'nativeFilePath' could leak.
     if ( ( (filePath[1] == ':')  && (strchr(filePath, '/') == 0) ) ||  // normal windows path
          ( (filePath[0] == '\\') && (filePath[1] == '\\') ) )  // netwerk path
     {
         // This is a native path
+        if (nativeFilePath) nsCRT::free(nativeFilePath);
         nativeFilePath = (char*) nsMemory::Clone( filePath, strlen(filePath)+1 );
     }
     
@@ -670,14 +670,13 @@ nsLocalFile::InitWithPath(const char *filePath)
     // kill any trailing seperator
     char* temp = nativeFilePath;
     int len = strlen(temp) - 1;
-#ifdef XP_OS2
-    if(temp[len] == '\\')    // OS2TODO - fix this for DBCS
-        temp[len] = '\0';
-#else
     // Is '\' second charactor of DBCS?
+#ifdef XP_OS2
+    if(temp[len] == '\\' && !::isleadbyte(temp[len-1]))
+#else
     if(temp[len] == '\\' && !::IsDBCSLeadByte(temp[len-1]))
-        temp[len] = '\0';
 #endif
+        temp[len] = '\0';
     
     mWorkingPath.Assign(nativeFilePath);
     nsMemory::Free( nativeFilePath );
@@ -1688,12 +1687,12 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 {
     NS_ENSURE_ARG_POINTER(aParent);
 
-    nsCString parentPath(mWorkingPath);
+    nsCString parentPath = mWorkingPath;
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
     PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.GetBuffer(), '\\')
                      - (const unsigned char *) parentPath.GetBuffer());
-    if (offset == -1)
+    if (offset < 0)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     parentPath.Truncate(offset);
@@ -2094,13 +2093,27 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
     char* ePath = (char*) nsMemory::Clone((char*)mWorkingPath, strlen(mWorkingPath)+1);
     if (ePath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+#if defined (XP_PC)
     // Replace \ with / to convert to an url
     char* s = ePath;
-    while (*s) {
-        if (*s == '\\')
-            *s = '/';
+    while (*s)
+    {
+        // We need to call IsDBCSLeadByte because
+        // Japanese windows can have 0x5C in the sencond byte 
+        // of a Japanese character, for example 0x8F 0x5C is
+        // one Japanese character
+#ifdef XP_OS2
+        if(::isleadbyte(*s) && *(s+1) != nsnull) {
+#else
+        if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+#endif
+            s++;
+        } else 
+            if (*s == '\\')
+                *s = '/';
         s++;
     }
+#endif
     // Escape the path with the directory mask
     nsCAutoString tmp(ePath);
     tmp.ReplaceChar(":", '|');
@@ -2164,41 +2177,33 @@ NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
     return NS_OK;
 }
 
-
-
-
-// OS2TODO - implement multibyte versions of string search
-
 // Locates the first occurrence of charToSearchFor in the stringToSearch
 static unsigned char* PR_CALLBACK
 _mbschr( const unsigned char* stringToSearch, int charToSearchFor)
 {
-   return( (unsigned char*) strchr( (const char *) stringToSearch, charToSearchFor) );
+   const unsigned char* p = stringToSearch;
+   do {
+       if (*p == charToSearchFor)
+           break;
+       p  = (const unsigned char*)WinNextChar(0,0,0,(char*)p);
+   } while (*p); /* enddo */
+   // Result is p or NULL
+   return *p ? (unsigned char*)p : NULL;
 }
 
 // Locates last occurence of charToSearchFor in the stringToSearch
 static unsigned char* PR_CALLBACK
 _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor)
 {
-   unsigned char * tempString = (unsigned char *) stringToSearch;
-   unsigned char * tempPrev = nsnull;
-
+   int length = strlen((const char*)stringToSearch);
+   const unsigned char* p = stringToSearch+length;
    do {
-
-      tempString = _mbschr( tempString, charToSearchFor );
- 
-      if (tempString != nsnull) 
-      {
-         tempPrev = tempString;
-         tempString++;          // skip past character just found
-      }
-      else
-         break;
-
-   } while ( PR_TRUE); 
-
-  
-   return tempPrev;
+       if (*p == charToSearchFor)
+           break;
+       p  = (const unsigned char*)WinPrevChar(0,0,0,(char*)stringToSearch,(char*)p);
+   } while (p > stringToSearch); /* enddo */
+   // Result is p or NULL
+   return (*p == charToSearchFor) ? (unsigned char*)p : NULL;
 }
 
 // Implement equivalent of Win32 CreateDirectoryA
@@ -2225,4 +2230,41 @@ CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf)
       rv = rc; 
 
    return rv;
+}
+
+static int isleadbyte(int c)
+{
+  static BOOL bDBCSFilled=FALSE;
+  static BYTE DBCSInfo[12] = { 0 };  /* According to the Control Program Guide&Ref,
+                                             12 bytes is sufficient */
+  BYTE *curr;
+  BOOL retval = FALSE;
+
+  if( !bDBCSFilled ) {
+    COUNTRYCODE ctrycodeInfo = { 0 };
+    APIRET rc = NO_ERROR;
+    ctrycodeInfo.country = 0;     /* Current Country */
+    ctrycodeInfo.codepage = 0;    /* Current Codepage */
+
+    rc = DosQueryDBCSEnv( sizeof( DBCSInfo ),
+                          &ctrycodeInfo,
+                          DBCSInfo );
+    if( rc != NO_ERROR ) {
+      /* we had an error, do something? */
+      return FALSE;
+    }
+    bDBCSFilled=TRUE;
+  }
+
+  curr = DBCSInfo;
+  /* DBCSInfo returned by DosQueryDBCSEnv is terminated with two '0' bytes in a row */
+  while(( *curr != 0 ) && ( *(curr+1) != 0)) {
+    if(( c >= *curr ) && ( c <= *(curr+1) )) {
+      retval=TRUE;
+      break;
+    }
+    curr+=2;
+  }
+
+  return retval;
 }

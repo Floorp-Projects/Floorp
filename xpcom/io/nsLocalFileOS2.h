@@ -45,6 +45,8 @@
 #define INCL_DOSERRORS
 #define INCL_DOSPROCESS
 #define INCL_DOSMODULEMGR
+#define INCL_DOSNLS
+#define INCL_WINCOUNTRY
 #include <os2.h>
 
 #if 0 // OLDWAY
