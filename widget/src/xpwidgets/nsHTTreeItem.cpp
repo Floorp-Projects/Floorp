@@ -76,13 +76,18 @@ void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& style
 	styleInfo.showIcon = PR_TRUE;
 	styleInfo.leftJustifyTrigger = PR_FALSE;
 	
+	styleInfo.showHorizontalDivider = PR_TRUE;
+	styleInfo.showVerticalDivider = PR_TRUE;
+	styleInfo.horizontalDividerColor = NS_RGB(255,255,255);
+	styleInfo.verticalDividerColor = NS_RGB(255,255,255);
+
 	if (styleInfo.showTrigger)
 		styleInfo.pTriggerImage = GetTriggerImage();
 	
 	if (styleInfo.showIcon)
 		styleInfo.pIconImage = GetIconImage();
 
-	styleInfo.pBackgroundImage = GetBackgroundImage();
+	styleInfo.pBackgroundImage = nsnull; //GetBackgroundImage();
 }
 
 nsIImage* nsHTTreeItem::GetTriggerImage() const

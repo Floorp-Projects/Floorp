@@ -710,8 +710,11 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 	}
 	
 	// Draw the horizontal divider
-	drawCtx->SetColor(styleInfo.horizontalDividerColor);
-	drawCtx->DrawLine(0, yPosition-1, mColumnBarRect.width, yPosition-1);
+	if (styleInfo.showHorizontalDivider)
+	{
+		drawCtx->SetColor(styleInfo.horizontalDividerColor);
+		drawCtx->DrawLine(0, yPosition-1, mColumnBarRect.width, yPosition-1);
+	}
 
 	// Set to foreground color.
 	drawCtx->SetColor(styleInfo.foregroundColor);
@@ -725,6 +728,8 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 		nsTreeColumn* pColumn = mDataModel->GetNthColumn(n);
 		if (pColumn)
 		{
+			drawCtx->SetColor(styleInfo.foregroundColor); // Will be sorting highlighting eventually
+
 			// Retrieve the column's current pixel width.
 			int pixelWidth = pColumn->GetPixelWidth();
 
@@ -767,6 +772,14 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 			DrawCroppedString(drawCtx, nodeText, textRect);
 			
 			currentPosition += pixelWidth;
+
+			// Draw the vertical divider
+			if (styleInfo.showVerticalDivider)
+			{
+				drawCtx->SetColor(styleInfo.verticalDividerColor);
+				drawCtx->DrawLine(textStart+textRect.width + 1, lineRect.y, 
+								  textStart+textRect.width + 1, lineRect.y + lineRect.height);
+			}
 		}
 	}
 }
