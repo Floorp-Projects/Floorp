@@ -274,3 +274,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
   return res;
 }
 
+#ifdef NS_DEBUG
+NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
+                                        const nsMetricNavFontID   aFontID, 
+                                        const PRInt32             aFontSize, 
+                                        nsSize &aSize)
+{
+  aSize.width  = 0;
+  aSize.height = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+

@@ -277,3 +277,52 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
 }
 
 
+#ifdef NS_DEBUG
+
+NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
+                                        const nsMetricNavFontID   aFontID, 
+                                        const PRInt32             aFontSize, 
+                                        nsSize &aSize)
+{
+  aSize.width  = 0;
+  aSize.height = 0;
+
+  if (aFontSize < 1 || aFontSize > 7) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 kTextFieldWidths[2][7] = {
+    {106,147,169,211,253,338,506}, // Courier
+    {152,214,237,281,366,495,732}  // sans-serif
+  };
+
+  PRInt32 kTextFieldHeights[2][7] = {
+    {18,21,24,27,33,45,63}, // Courier
+    {18,21,24,27,34,48,67}  // sans-serif
+  };
+
+  PRInt32 kTextAreaWidths[2][7] = {
+    {121,163,184,226,268,352,520}, // Courier
+    {163,226,247,289,373,499,730}  // sans-serif
+  };
+
+  PRInt32 kTextAreaHeights[2][7] = {
+    {40,44,48,52,60,76,100}, // Courier
+    {40,44,48,52,62,80,106}  // sans-serif
+  };
+
+  switch (aWidgetID) {
+    case eMetricSize_TextField:
+      aSize.width  = kTextFieldWidths[aFontID][aFontSize-1];
+      aSize.height = kTextFieldHeights[aFontID][aFontSize-1];
+      break;
+    case eMetricSize_TextArea:
+      aSize.width  = kTextAreaWidths[aFontID][aFontSize-1];
+      aSize.height = kTextAreaHeights[aFontID][aFontSize-1];
+      break;
+  } //switch
+
+  return NS_OK;
+
+}
+#endif
