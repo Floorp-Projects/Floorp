@@ -69,11 +69,20 @@ class nsITransferable : public nsISupports {
   /**
     * Given a flavor retrieve the data. 
     *
-    * @param  aFlavor the flavor of data to retrieve
+    * @param  aFlavor (in parameter) the flavor of data to retrieve
     * @param  aData the data. This is NOT a copy, so the caller MUST NOT DELETE it.
     * @param  aDataLen the length of the data
     */
     NS_IMETHOD GetTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
+
+  /**
+    * Given a flavor retrieve the data. 
+    *
+    * @param  aFlavor (out parameter) the flavor of data that was retrieved
+    * @param  aData the data. This is NOT a copy, so the caller MUST NOT DELETE it.
+    * @param  aDataLen the length of the data
+    */
+    NS_IMETHOD GetAnyTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
 
   /**
     * Returns PR_TRUE if the data is large.
