@@ -204,38 +204,36 @@
     
     <separator class="thin"/>
 
-    <hbox flex="1">
-      <hbox align="center">
-        <label value="&resolution.label;" 
-               accesskey="&resolution.accesskey;" 
-               control="screenResolution"/>
-        <menulist id="screenResolution" 
-                  oncommand="changeScreenResolution()"
-                  dpi="&resolution.dpival;">
-          <menupopup>
-            <menuitem value="" 
-                      label="&resolution.dpival;"
-                      id="otherResolution"/>
-            <menuitem value="" 
-                      label="&resolution.dpival;" 
-                      id="defaultResolution"/>
-            <menuitem value="0"
-                      label="&resolution.system.label;" 
-                      id="systemResolution"
-                      hidden="true"/>
-            <menuseparator id="resolutionSeparator"/>
-            <menuitem id="userResolution" hidden="true"/>
-            <menuitem id="arbitraryResolution" value="other" label="&resolution.other;"/>
-          </menupopup>
-        </menulist>
-      </hbox>
+    <hbox align="center" flex="1">
+      <label value="&resolution.label;" 
+             accesskey="&resolution.accesskey;" 
+             control="screenResolution"/>
+      <menulist id="screenResolution" 
+                oncommand="changeScreenResolution()"
+                dpi="&resolution.dpival;">
+        <menupopup>
+          <menuitem value="" 
+                    label="&resolution.dpival;"
+                    id="otherResolution"/>
+          <menuitem value="" 
+                    label="&resolution.dpival;" 
+                    id="defaultResolution"/>
+          <menuitem value="0"
+                    label="&resolution.system.label;" 
+                    id="systemResolution"
+                    hidden="true"/>
+          <menuseparator id="resolutionSeparator"/>
+          <menuitem id="userResolution" hidden="true"/>
+          <menuitem id="arbitraryResolution" value="other" label="&resolution.other;"/>
+        </menupopup>
+      </menulist>
 
       <spacer flex="1"/>
+
       <hbox align="center" pack="end">
         <label value="&minSize.label;"
                accesskey="&minSize.accesskey;"
                control="minSize"/>
-      </hbox>
         <menulist id="minSize">
           <menupopup>
             <menuitem value="0" label="&minSize.none;"/>
@@ -253,11 +251,13 @@
             <menuitem value="22" label="22"/>
             <menuitem value="24" label="24"/>
           </menupopup>
-       </menulist>
-     </hbox>
+        </menulist>
+      </hbox>
+    </hbox>
     
     <separator class="thin"/>
-    <hbox align="center">
+
+    <hbox align="start">
       <!-- Unchecking this removes the ability to select dynamic fonts -->
       <checkbox id="browserUseDocumentFonts" 
                 label="&useDocumentFonts.label;" 
@@ -269,9 +269,7 @@
   <groupbox align="start">
     <caption label="&languagesTitle.label;"/>
 
-    <hbox align="center">
-      <label value="&composingDescription.label;"/>
-    </hbox>
+    <label value="&composingDescription.label;"/>
 
     <separator class="thin"/>
 

@@ -90,16 +90,14 @@
   <groupbox>
     <caption label="&displayWidth.label;"/>
 
-  <description>&viewingPlainText.label;</description>
-    <hbox class="indent" align="start">
+    <description>&viewingPlainText.label;</description>
+    <vbox class="indent" align="start">
       <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
                 prefstring="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
-    </hbox>
 
-    <hbox class="indent" align="start">
       <checkbox class="iconic" id="displayGlyph" label="&convertEmoticons.label;"
                 prefstring="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
-    </hbox>
+    </vbox>
     
     <separator class="thin"/>
     

@@ -95,7 +95,8 @@
   <separator class="thin"/>
   <description>&newThemeDescription.label;</description>
   <separator class="thin"/>
-  <hbox align="start">
+
+  <hbox align="center">
     <html:a class="themesLink" id="themesLink" href="&getNewThemesURL;"
             style="padding-left: 4px; display: block;">&getNewThemes.label;</html:a>
     <spring flex="1"/>

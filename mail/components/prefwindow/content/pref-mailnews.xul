@@ -21,7 +21,6 @@
 #     rcassin@supernova.org
 #     Seth Spitzer <sspitzer@netscape.com>
 
-
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
@@ -41,20 +40,18 @@
 
     var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailnewsDoubleClick2NewWindow", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
-                        "newMailNotificationAlert"];
+                       "newMailNotificationAlert"];
   ]]>
   </script>
   
-  <groupbox>
+  <groupbox align="start">
     <caption label="&generalSettings.label;"/>
     
-    <hbox align="start" id="mapi"/>
+    <hbox id="mapi"/>
 
-    <hbox align="center">
-      <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
-                prefstring="mailnews.remember_selected_message"
-                accesskey="&rememberLastMsg.accesskey;" />
-    </hbox>
+    <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
+              prefstring="mailnews.remember_selected_message"
+              accesskey="&rememberLastMsg.accesskey;"/>
 
     <separator class="thin"/>
     
@@ -90,7 +87,7 @@
 
   <groupbox>
     <caption label="&messengerStartPage.label;"/>
-      <hbox align="center">
+      <hbox align="start">
         <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
                   prefstring="mailnews.start_page.enabled" oncommand="StartPageCheck();"
                   accesskey="&enableStartPage.accesskey;"/>
@@ -108,38 +105,32 @@
       </hbox>
   </groupbox>
 
-  <groupbox>
+  <groupbox align="start">
     <caption label="&newMessagesArrive.label;"/>
 
-    <hbox align="center">
-      <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
-                prefstring="mail.biff.show_alert"
-                accesskey="&showAnimatedAlert.accesskey;" />
-    </hbox>
+    <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
+              prefstring="mail.biff.show_alert"
+              accesskey="&showAnimatedAlert.accesskey;"/>
     
     <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
          prefstring="mail.biff.play_sound" label="&playSound.label;"
          oncommand="PlaySoundCheck()"/>
 
     <hbox>
-      <hbox align="center">
-        <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
-          <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
-          <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
-        </radiogroup>
-      </hbox>
+      <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
+        <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
+        <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
+      </radiogroup>
 
       <vbox>
         <spacer flex="1"/>
         <hbox align="center">
           <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
                    prefstring="mail.biff.play_sound.url"/>
-          <hbox autostretch="never">
-            <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
-                    accesskey="&browse.accesskey;" oncommand="Browse()"/>
-            <button id="preview" label="&preview.label;"
-                    accesskey="&preview.accesskey;" oncommand="PreviewSound()"/>
-          </hbox>
+          <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
+                  accesskey="&browse.accesskey;" oncommand="Browse()"/>
+          <button id="preview" label="&preview.label;"
+                  accesskey="&preview.accesskey;" oncommand="PreviewSound()"/>
         </hbox>
       </vbox>
     </hbox>
