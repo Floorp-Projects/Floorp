@@ -294,6 +294,10 @@ else
     tar cvf all.tar daily_qa        tinderbox
 fi
 gzip all.tar
+# ssh-agent > /u/sonmi/.ssh/ssh-agent.info
+# setenv like it says in that file
+# ssh-add
+
 SSH_AUTH_SOCK=`grep SSH_AUTH_SOCK /u/sonmi/.ssh/ssh-agent.info | sed -e 's/setenv SSH_AUTH_SOCK //' -e 's/;//'`
 SSH_AGENT_PID=`grep SSH_AGENT_PID /u/sonmi/.ssh/ssh-agent.info | sed -e 's/setenv SSH_AGENT_PID //' -e 's/;//'`
 export SSH_AUTH_SOCK SSH_AGENT_PID
