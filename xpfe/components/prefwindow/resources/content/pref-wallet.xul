@@ -47,7 +47,7 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
  
-  <html:fieldset>
+  <html:fieldset id="walletArea">
     <html:legend>&walletHeader;</html:legend>
     <html:div class="hspace-both">&walletDetails;</html:div>
     <spring style="height: 10px;"/>

@@ -45,8 +45,8 @@
     <tabbox>
       <tab selected="true">&tab.signonsstored.label;</tab>
       <tab>&tab.signonsnotstored.label;</tab>
-      <tab>&tab.nopreview.label;</tab>
-      <tab>&tab.nocapture.label;</tab>
+      <tab id="nopreview">&tab.nopreview.label;</tab>
+      <tab id="nocapture">&tab.nocapture.label;</tab>
       <spring flex="1"/>
     </tabbox>
     <tabpanel align="horizontal" style="width: 460px;">
