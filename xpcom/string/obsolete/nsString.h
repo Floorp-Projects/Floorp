@@ -66,7 +66,7 @@ protected:
 public:
   nsCString( const nsAReadableCString& );
 
-#ifdef HAVE_CPP_USING
+#ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
   using nsAWritableCString::Assign;
   using nsAWritableCString::Append;
   using nsAWritableCString::Insert;
@@ -420,7 +420,7 @@ public:
    * @return  this
    */
 #ifdef NEW_STRING_APIS
-  #ifdef HAVE_CPP_USING
+  #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
     using nsAWritableCString::operator=;
   #else
     nsCString& operator=( const nsAReadableCString& aReadable ) { nsAWritableCString::operator=(aReadable); return *this; }
@@ -447,7 +447,7 @@ public:
    * @return  this
    */
 #ifdef NEW_STRING_APIS
-  #ifdef HAVE_CPP_USING
+  #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
     using nsAWritableCString::operator+=;
   #else
     nsCString& operator+=( const nsAReadableCString& aReadable ) { nsAWritableCString::operator+=(aReadable); return *this; }

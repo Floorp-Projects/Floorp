@@ -2252,19 +2252,59 @@ dnl if test $ac_cv_cpp_exceptions = yes ; then
 dnl    AC_DEFINE(HAVE_CPP_EXCEPTIONS)
 dnl fi
 
-AC_CACHE_CHECK(for C++ \"using\" keyword,
-               ac_cv_cpp_using,
+dnl Some compilers have marginal |using| support; for example, gcc-2.7.2.3
+dnl supports it well enough to allow us to use it to change access, but not
+dnl to resolve ambiguity. The next two tests determine how well the |using|
+dnl keyword is supported.
+dnl
+dnl Check to see if we can change access with |using|.
+AC_CACHE_CHECK(to determine if the C++ \"using\" keyword can change access,
+               ac_cv_cpp_using_can_change_access,
                [AC_TRY_COMPILE(class X { public: int go(const X&) {return 3;} };
                                class Y : public X {
                                  public:  int go(int) {return 2;}
                                  private: using X::go;
                                };,
                                X x; Y y;,
-                               ac_cv_cpp_using=yes,
-                               ac_cv_cpp_using=no)])
-if test "$ac_cv_cpp_using" = yes ; then
-   AC_DEFINE(HAVE_CPP_USING)
+                               ac_cv_cpp_using_can_change_access=yes,
+                               ac_cv_cpp_using_can_change_access=no)])
+if test "$ac_cv_cpp_using_can_change_access" = yes ; then
+   AC_DEFINE(HAVE_ACCESS_CHANGING_CPP_USING)
 fi
+
+dnl Check to see if we can resolve ambiguity with |using|.
+AC_CACHE_CHECK(to determine if the C++ \"using\" keyword resolves ambiguity,
+               ac_cv_cpp_using_resolves_ambiguity,
+               [AC_TRY_COMPILE(class X { 
+                                 public: int go(const X&) {return 3;}
+                                         int jo(const X&) {return 3;}
+                               };
+                               class Y : public X {
+                                 public:  int go(int) {return 2;}
+                                          int jo(int) {return 2;}
+                                          using X::jo;
+                                 private: using X::go;
+                               };,
+                               X x; Y y; y.jo(x);,
+                               ac_cv_cpp_using_resolves_ambiguity=yes,
+                               ac_cv_cpp_using_resolves_ambiguity=no)])
+if test "$ac_cv_cpp_using_resolves_ambiguity" = yes ; then
+   AC_DEFINE(HAVE_AMBIGUITY_RESOLVING_CPP_USING)
+fi
+
+dnl Check to see if the |std| namespace is supported. If so, we'll want
+dnl to qualify any standard library calls with "std::" to ensure that
+dnl those functions can be resolved.
+AC_CACHE_CHECK(for \"std::\" namespace,
+               ac_cv_cpp_namespace_std,
+               [AC_TRY_COMPILE([#include <algorithm>],
+                               [return std::min(0, 1);],
+                               ac_cv_cpp_namespace_std=yes,
+                               ac_cv_cpp_namespace_std=no)])
+if test "$ac_cv_cpp_namespace_std" = yes ; then
+   AC_DEFINE(HAVE_CPP_NAMESPACE_STD)
+fi
+
 
 AC_CACHE_CHECK(for C++ reinterpret_cast,
                ac_cv_cpp_reinterpret_cast,
@@ -2278,10 +2318,12 @@ if test "$ac_cv_cpp_reinterpret_cast" = yes ; then
 fi
 
 dnl note that this one is reversed - if the test fails, then
-dnl we require implementations of unused methods
-AC_CACHE_CHECK(whether C++ requires implementation of unused methods,
+dnl we require implementations of unused virtual methods. Which
+dnl really blows because it means we'll have useless vtable
+dnl bloat.
+AC_CACHE_CHECK(whether C++ requires implementation of unused virtual methods,
                ac_cv_cpp_unused_required,
-               [AC_TRY_LINK(class X {private: void never_called();};,
+               [AC_TRY_LINK(class X {private: virtual void never_called();};,
                                X x;,
                                ac_cv_cpp_unused_required=no,
                                ac_cv_cpp_unused_required=yes)])
