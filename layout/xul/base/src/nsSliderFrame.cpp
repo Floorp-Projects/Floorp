@@ -51,7 +51,6 @@
 #include "nsIViewManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsDocument.h"
-#include "nsTitledButtonFrame.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIScrollbarListener.h"
 #include "nsIScrollbarMediator.h"
@@ -1110,50 +1109,6 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
       PageUpDown(thumbFrame, mChange);
     }
 }
-
-/*
-class nsThumbFrame : public nsTitledButtonFrame
-{
-public:
-
-  friend nsresult NS_NewThumbFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-
-  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus) { return NS_OK; }
-
-  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus)  { return NS_OK; }
-
-  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus)  { return NS_OK; }
-
-  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
-                           nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus)  { return NS_OK; }
-
-  nsThumbFrame(nsIPresShell* aPresShell):nsTitledButtonFrame(aPresShell) {}
-};
-
-
-nsresult
-NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
-{
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsThumbFrame* it = new (aPresShell) nsThumbFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
-} // NS_NewSliderFrame
-*/
 
 NS_INTERFACE_MAP_BEGIN(nsSliderMediator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
