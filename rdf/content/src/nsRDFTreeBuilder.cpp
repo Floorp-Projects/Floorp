@@ -159,6 +159,13 @@ public:
     }
 
     nsresult
+    GetWidgetFolderAtom(nsIAtom** aResult) {
+        NS_ADDREF(kTreeItemAtom);
+        *aResult = kTreeItemAtom;
+        return NS_OK;
+    }
+
+    nsresult
     GetInsertionRootAtom(nsIAtom** aResult) {
         NS_ADDREF(kTreeBodyAtom);
         *aResult = kTreeBodyAtom;
@@ -301,7 +308,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
     nsresult rv;
 
     nsCOMPtr<nsIContent> treeChildren;
-    if (IsWidgetItemElement(aElement)) {
+    if (IsWidgetElement(aElement)) {
         // Ensure that the <xul:treechildren> element exists on the parent.
         if (NS_FAILED(rv = EnsureElementHasGenericChild(aElement,
                                                         kNameSpaceID_XUL,
