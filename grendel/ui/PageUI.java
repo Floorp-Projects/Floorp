@@ -50,6 +50,7 @@ import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.JToggleButton;
+import javax.swing.JScrollPane;
 import javax.swing.text.JTextComponent;
 
 import org.w3c.dom.Element;
@@ -119,12 +120,18 @@ public class PageUI extends JPanel {
 
   public void addCtrl(String name, JComponent component) {
     if (name != null) table.put(name, component);
+    if (component instanceof JList) {
+      component = new JScrollPane(component);
+    }
     add(component);
   }
 
   public void addCtrl(String name, JComponent component, 
 			   Object constraints) {
     if (name != null) table.put(name, component);
+    if (component instanceof JList) {
+      component = new JScrollPane(component);
+    }
     add(component, constraints);
   }
 
