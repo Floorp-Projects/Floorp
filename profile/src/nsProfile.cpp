@@ -558,10 +558,11 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
     {		
-        rv = MigrateProfileInfo();
-        if (NS_FAILED(rv)) return rv;
-
         if (cmdResult) {
+
+            rv = MigrateProfileInfo();
+            if (NS_FAILED(rv)) return rv;
+
             PRInt32 num4xProfiles = 0;
             rv = Get4xProfileCount(&num4xProfiles);
             if (NS_FAILED(rv)) return rv;
