@@ -102,6 +102,9 @@ static GtkTargetEntry target_table[] = {
 
 static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
+
+NS_IMPL_ISUPPORTS_INHERITED(nsWindow, nsWidget, nsITimerCallback)
+
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -109,7 +112,7 @@ static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() 
 {
-  NS_INIT_REFCNT();
+  //  NS_INIT_REFCNT();
   mFontMetrics = nsnull;
   mShell = nsnull;
   mResized = PR_FALSE;
@@ -126,6 +129,7 @@ nsWindow::nsWindow()
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
+  mExposeTimer = nsnull;
   // init the hash table if it hasn't happened already
   if (mWindowLookupTable == NULL) {
     mWindowLookupTable = g_hash_table_new(g_int_hash, g_int_equal);
@@ -143,7 +147,7 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-
+  //  printf("%p nsWindow::~nsWindow\n", this);
   // make sure that we release the grab indicator here
   if (mGrabWindow == this) {
     mIsGrabbing = PR_FALSE;
@@ -242,16 +246,19 @@ nsWindow::DestroyNative(void)
 void
 nsWindow::DestroyNativeChildren(void)
 {
+  
   nsCOMPtr <nsIEnumerator> children (getter_AddRefs(GetChildren()));
   
   if (children) {
     children->First();
     do {
-      nsISupports *child;
-      if (NS_SUCCEEDED(children->CurrentItem(&child))) {
-        nsIWidget *childWindow = NS_STATIC_CAST(nsIWidget *, child);
-        NS_RELEASE(child);
+      nsCOMPtr<nsISupports> child;
+      if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+        nsCOMPtr<nsIWidget> childWindow = do_QueryInterface(child);
         childWindow->Destroy();
+        // only one of these should be on at a time...
+        //        printf("destroying child ref=%i\n", childWindow->Release());
+        NS_RELEASE(childWindow);
       }
     } while(NS_SUCCEEDED(children->Next()));
   }
@@ -483,22 +490,6 @@ nsWindow::UnqueueDraw ()
   }
 }
 
-NS_IMETHODIMP nsWindow::GetAbsoluteBounds(nsRect &aRect)
-{
-  gint x;
-  gint y;
-
-  if (mSuperWin)
-  {
-    gdk_window_get_origin(mSuperWin->shell_window, &x, &y);
-    aRect.x = x;
-    aRect.y = y;
-  }
-  else
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
 void 
 nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                    nsIRegion *aClipRegion)
@@ -540,35 +531,35 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
         event.renderingContext->SetClipRect(clipRect,
                                             nsClipCombine_kReplace, rv);
       }
-
 #ifdef NS_DEBUG
-    if (WANT_PAINT_FLASHING)
-    {
-      GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
-      if (gw)
+      if (WANT_PAINT_FLASHING)
       {
-        GdkRectangle   ar;
-        GdkRectangle * area = (GdkRectangle*) NULL;
-        
-        if (event.rect)
+        GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
+        if (gw)
         {
-          ar.x = event.rect->x;
-          ar.y = event.rect->y;
-          
-          ar.width = event.rect->width;
-          ar.height = event.rect->height;
-          
-          area = &ar;
-        }
+          GdkRectangle   ar;
+          GdkRectangle * area = (GdkRectangle*) NULL;
         
-        nsGtkUtils::gdk_window_flash(gw,1,100000,area);
+          if (event.rect)
+          {
+            ar.x = event.rect->x;
+            ar.y = event.rect->y;
+          
+            ar.width = event.rect->width;
+            ar.height = event.rect->height;
+          
+            area = &ar;
+          }
+        
+          nsGtkUtils::gdk_window_flash(gw,1,100000,area);
+        }
       }
-    }
 #endif // NS_DEBUG
       
       DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
     }
+
   }
 }
 
@@ -616,9 +607,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
                                             PRBool aDoCapture,
                                             PRBool aConsumeRollupEvent)
 {
-#ifdef DEBUG_pavlov
-  printf("nsWindow::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture);
-#endif
   GtkWidget *grabWidget;
 
   grabWidget = mWidget;
@@ -626,35 +614,21 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
   if (aDoCapture)
   {
-#ifdef DEBUG_pavlov
-    printf("grabbing widget\n");
-#endif
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
     if (!mSuperWin) {
-#ifdef DEBUG_pavlov
-      printf("no superWin for this widget");
-#endif
-    }
-    else
-      {
-        mIsGrabbing = PR_TRUE;
-        mGrabWindow = this;
-#ifdef DEBUG_pavlov
-        int ret = 
-#endif
-        gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
-                                    (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                                     GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                                     GDK_POINTER_MOTION_MASK),
-                                    (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
-#ifdef DEBUG_pavlov
-      printf("pointer grab returned %i\n", ret);
-#endif
+    } else {
+      mIsGrabbing = PR_TRUE;
+      mGrabWindow = this;
+
+      gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
+                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                         GDK_POINTER_MOTION_MASK),
+                        (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+
       gdk_cursor_destroy(cursor);
     }
-  }
-  else
-    {
+  } else {
 #ifdef DEBUG_pavlov
     printf("ungrabbing widget\n");
 #endif
@@ -675,7 +649,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     gRollupListener = aListener;
     NS_ADDREF(aListener);
     gRollupWidget = this;
-    NS_ADDREF(this);
+    NS_ADDREF(gRollupWidget);
   } else {
     //    gtk_grab_remove(mWidget);
     NS_IF_RELEASE(gRollupListener);
@@ -1800,10 +1774,14 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
 // Just give the window a default icon, Mozilla.
 #include "mozicon50.xpm"
+#include "minimozicon.xpm"
+
 nsresult nsWindow::SetIcon()
 {
   static GdkPixmap *w_pixmap = nsnull;
   static GdkBitmap *w_mask   = nsnull;
+  static GdkPixmap *w_minipixmap = nsnull;
+  static GdkBitmap *w_minimask = nsnull;
   GtkStyle         *w_style;
 
   w_style = gtk_widget_get_style (mShell);
@@ -1815,10 +1793,40 @@ nsresult nsWindow::SetIcon()
 				    &w_style->bg[GTK_STATE_NORMAL],
 				    mozicon50_xpm);
   }
-  
-  return SetIcon(w_pixmap, w_mask);
+
+  if (!w_minipixmap) {
+    w_minipixmap =
+      gdk_pixmap_create_from_xpm_d (mShell->window,
+                                    &w_minimask,
+                                    &w_style->bg[GTK_STATE_NORMAL],
+                                    minimozicon_xpm);
+  }
+
+  if (SetIcon(w_pixmap, w_mask) != NS_OK)
+        return NS_ERROR_FAILURE;
+
+  /* Now set the mini icon */
+  return SetMiniIcon (w_minipixmap, w_minimask);
 }
 
+nsresult nsWindow::SetMiniIcon(GdkPixmap *pixmap,
+                               GdkBitmap *mask)
+{
+   GdkAtom icon_atom;
+   glong data[2];
+
+   if (!mShell)
+      return NS_ERROR_FAILURE;
+   
+   data[0] = ((GdkPixmapPrivate *)pixmap)->xwindow;
+   data[1] = ((GdkPixmapPrivate *)mask)->xwindow;
+
+   icon_atom = gdk_atom_intern ("KWM_WIN_ICON", FALSE);
+   gdk_property_change (mShell->window, icon_atom, icon_atom,
+                        32, GDK_PROP_MODE_REPLACE,
+                        (guchar *)data, 2);
+   return NS_OK;
+}
 
 // Set the iconify icon for the window.
 nsresult nsWindow::SetIcon(GdkPixmap *pixmap, 
@@ -1832,108 +1840,140 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
+
+
+void nsWindow::Notify(nsITimer* aTimer)
+{
+  //  printf("%p nsWindow::Notify()\n", this);
+  mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
+
+#if 0
+
+  //    NS_ADDREF(mUpdateArea);
+  //    event.region = mUpdateArea;
+  if (mScrollExposeCounter > 1) {
+    //printf("mScrollExposeCounter-- = %i\n", mScrollExposeCounter);
+    mScrollExposeCounter--;
+    return NS_OK;
+  }
+
+  //    printf("mScrollExposeCounter   = 0\n");
+  mScrollExposeCounter = 0;
+
+#endif
+
+  nsPaintEvent event;
+
+  event.rect = new nsRect();
+
+  event.message = NS_PAINT;
+  event.widget = this;
+  event.eventStructType = NS_PAINT_EVENT;
+  //  event.point.x = event->xexpose.x;
+  //  event.point.y = event->xexpose.y;
+  /* XXX fix this */
+  event.time = 0;
+
+  //    printf("\n\n");
+  PRInt32 x, y, w, h;
+  mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
+
+  //    printf("\n\n");
+  event.rect->x = x;
+  event.rect->y = y;
+  event.rect->width = w;
+  event.rect->height = h;
+  
+  if (event.rect->width == 0 || event.rect->height == 0)
+  {
+    //printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
+    NS_RELEASE(aTimer);
+    mExposeTimer = nsnull;
+    return;
+  }
+
+  // print out stuff here incase the event got dropped on the floor above
+#ifdef NS_DEBUG
+  if (CAPS_LOCK_IS_ON)
+  {
+    debug_DumpPaintEvent(stdout,
+                         this,
+                         &event,
+                         debug_GetName(GTK_OBJECT(mSuperWin)),
+                         (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
+  }
+#endif // NS_DEBUG
+
+  event.renderingContext = GetRenderingContext();
+  if (event.renderingContext)
+  {
+    PRBool rv;
+      
+    event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
+                                          nsClipCombine_kReplace, rv);
+    
+    DispatchWindowEvent(&event);
+    NS_RELEASE(event.renderingContext);
+    //      NS_RELEASE(mUpdateArea);
+  }
+
+
+  mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
+
+#ifdef NS_DEBUG
+  if (WANT_PAINT_FLASHING)
+  {
+    GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
+    if (gw)
+    {
+      GdkRectangle   ar;
+      GdkRectangle * area = (GdkRectangle*) NULL;
+        
+      if (event.rect)
+      {
+        ar.x = event.rect->x;
+        ar.y = event.rect->y;
+          
+        ar.width = event.rect->width;
+        ar.height = event.rect->height;
+        
+        area = &ar;
+      }
+        
+      nsGtkUtils::gdk_window_flash(gw,1,100000,area);
+    }
+  }
+#endif // NS_DEBUG
+
+  NS_RELEASE(aTimer);
+  mExposeTimer = nsnull;
+}
+
+
 /**
  * Processes an Expose Event
  *
  **/
 PRBool nsWindow::OnExpose(nsPaintEvent &event)
 {
-  nsresult result;
+  nsresult result = PR_TRUE;
 
   // call the event callback
   if (mEventCallback) 
   {
     event.renderingContext = nsnull;
 
+    //    printf("nsWindow::OnExpose\n");
+
     // expose.. we didn't get an Invalidate, so we should up the count here
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
-    mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
-
-#if 0
-
-    //    NS_ADDREF(mUpdateArea);
-    //    event.region = mUpdateArea;
-    if (mScrollExposeCounter > 1) {
-      //printf("mScrollExposeCounter-- = %i\n", mScrollExposeCounter);
-      mScrollExposeCounter--;
-      return NS_OK;
+    if (!mExposeTimer) {
+      if (NS_NewTimer(&mExposeTimer) == NS_OK)
+        mExposeTimer->Init(this, 15);
     }
-
-#endif
-
-    //    printf("mScrollExposeCounter   = 0\n");
-    mScrollExposeCounter = 0;
-
-    //    printf("\n\n");
-    PRInt32 x, y, w, h;
-    mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-
-    //    printf("\n\n");
-    event.rect->x = x;
-    event.rect->y = y;
-    event.rect->width = w;
-    event.rect->height = h;
-
-    if (event.rect->width == 0 || event.rect->height == 0)
-    {
-      //      printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
-      return NS_OK;
-    }
-
-    // print out stuff here incase the event got dropped on the floor above
-#ifdef NS_DEBUG
-    if (CAPS_LOCK_IS_ON)
-    {
-      debug_DumpPaintEvent(stdout,
-                           this,
-                           &event,
-                           debug_GetName(GTK_OBJECT(mSuperWin)),
-                           (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
-    }
-#endif // NS_DEBUG
-
-    event.renderingContext = GetRenderingContext();
-    if (event.renderingContext)
-    {
-      PRBool rv;
-      
-      event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
-                                            nsClipCombine_kReplace, rv);
-
-      result = DispatchWindowEvent(&event);
-      NS_RELEASE(event.renderingContext);
-      //      NS_RELEASE(mUpdateArea);
-    }
-
-
-    mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
-
-#ifdef NS_DEBUG
-    if (WANT_PAINT_FLASHING)
-    {
-      GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
-      if (gw)
-      {
-        GdkRectangle   ar;
-        GdkRectangle * area = (GdkRectangle*) NULL;
-        
-        if (event.rect)
-        {
-          ar.x = event.rect->x;
-          ar.y = event.rect->y;
-          
-          ar.width = event.rect->width;
-          ar.height = event.rect->height;
-          
-          area = &ar;
-        }
-        
-        nsGtkUtils::gdk_window_flash(gw,1,100000,area);
-      }
-    }
-#endif // NS_DEBUG
   }
+
   return result;
 }
 
@@ -2428,10 +2468,6 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
 void
 nsWindow::HandleXlibExposeEvent(XEvent *event)
 {
-  nsPaintEvent pevent;
-
-  pevent.rect = new nsRect(event->xexpose.x, event->xexpose.y,
-                           event->xexpose.width, event->xexpose.height);
 
 #if 0
   if (event->xexpose.count != 0) {
@@ -2448,19 +2484,25 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
     } while (extra_event.xexpose.count > 0);
   }
 #endif
-  
-  pevent.message = NS_PAINT;
-  pevent.widget = this;
-  pevent.eventStructType = NS_PAINT_EVENT;
-  pevent.point.x = event->xexpose.x;
-  pevent.point.y = event->xexpose.y;
-  /* XXX fix this */
-  pevent.time = 0;
-  AddRef();
-  OnExpose(pevent);
-  Release();
-  delete pevent.rect;
 
+  NS_ADDREF_THIS();
+
+  // call the event callback
+  if (mEventCallback) 
+  {
+    // expose.. we didn't get an Invalidate, so we should up the count here
+    mUpdateArea->Union(event->xexpose.x, event->xexpose.y,
+                       event->xexpose.width, event->xexpose.height);
+
+    //    printf("%p nsWindow::HandleXlibExposeEvent: mExposeTimer = %p\n", this, mExposeTimer);
+    if (!mExposeTimer) {
+      if (NS_NewTimer(&mExposeTimer) == NS_OK)
+        mExposeTimer->Init(this, 15);
+    }
+  }
+
+
+  NS_RELEASE_THIS();
 }
  
 void
@@ -2470,48 +2512,43 @@ nsWindow::HandleXlibButtonEvent(XButtonEvent * aButtonEvent)
   
   PRUint32 eventType = 0;
   
-  if (aButtonEvent->type == ButtonPress)
-    {
-      switch(aButtonEvent->button)
-        {
-        case 1:
-          eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
-          break;
+  if (aButtonEvent->type == ButtonPress) {
+    switch(aButtonEvent->button) {
+    case 1:
+      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      break;
           
-        case 2:
-          eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
-          break;
-          
-        case 3:
-          eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
-          break;
-          
-        default:
-          eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
-          break;
-        }
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+      break;
+      
+    case 3:
+      eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+      break;
+      
+    default:
+      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      break;
     }
-  else if (aButtonEvent->type == ButtonRelease)
-    {
-      switch(aButtonEvent->button)
-        {
-        case 1:
-          eventType = NS_MOUSE_LEFT_BUTTON_UP;
-          break;
-          
-        case 2:
-          eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
-          break;
-          
-        case 3:
-          eventType = NS_MOUSE_RIGHT_BUTTON_UP;
-          break;
-          
-        default:
-          eventType = NS_MOUSE_LEFT_BUTTON_UP;
-          break;
-        }
+  } else if (aButtonEvent->type == ButtonRelease) {
+    switch(aButtonEvent->button) {
+    case 1:
+      eventType = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
+      
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+      break;
+      
+    case 3:
+      eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+      break;
+      
+    default:
+      eventType = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
     }
+  }
   
   event.message = eventType;
   event.widget  = this;

@@ -58,6 +58,16 @@ public:
 
 protected:
 
+  void SelectionReceivedCB (GtkWidget        *aWidget,
+                            GdkDragContext   *aContext,
+                            gint              aX,
+                            gint              aY,
+                            GtkSelectionData *aSelectionData,
+                            guint             aInfo,
+                            guint             aTime);
+  void SelectionReceiver (GtkWidget *aWidget, GtkSelectionData *aSD);
+
+
   PRBool DoConvert(GdkAtom type);
 
   static PRBool gHaveDrag;
