@@ -143,7 +143,7 @@ struct XPTTypeDescriptorPrefix {
 #define XPT_TDP_SIZE 1
 
 struct XPTTypeDescriptor {
-    XPTTypeDescriptorPrefix prefix;
+    XPTTypeDescriptorPrefix *prefix;
     union {
         XPTInterfaceDirectoryEntry *interface;
         uint8                      argnum;
@@ -160,7 +160,7 @@ struct XPTTypeDescriptor {
  *
  * int8, uint8, int16, uint16, int32, uint32, 
  * int64, uint64, wchar_t, char, string
- * XPT_HEADER_SIZE
+ * 
  * The type (and thus the size) of the value record is determined by the 
  * contents of the associated TypeDescriptor record. For instance, if type 
  * corresponds to int16, then value is a two-byte record consisting of a 
@@ -238,13 +238,13 @@ struct XPTAnnotationPrefix {
 #define XPT_AP_SIZE 1
 
 struct XPTPrivateAnnotation {
-    XPTString creator;
-    XPTString private_data;
+    XPTString *creator;
+    XPTString *private_data;
 };
 
 struct XPTAnnotation {
-    XPTAnnotationPrefix prefix;
-    XPTPrivateAnnotation private;
+    XPTAnnotationPrefix *prefix;
+    XPTPrivateAnnotation *private;
 };
 
 #endif /* __xpt_struct_h__ */
