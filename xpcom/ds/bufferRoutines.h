@@ -200,8 +200,8 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
 
   PRUnichar* theDest=(PRUnichar*)aDest;
   PRUnichar* to   = theDest+anDestOffset;
-  const char* first= aSource+anOffset;
-  const char* last = first+aCount;
+  const unsigned char* first= (const unsigned char*)aSource+anOffset;
+  const unsigned char* last = first+aCount;
 
   //now loop over characters, shifting them left...
   while(first<last) {
