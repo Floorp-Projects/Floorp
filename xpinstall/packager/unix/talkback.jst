@@ -1,32 +1,13 @@
-var srDest = $SpaceRequired$;
-
 var err = initInstall("Talkback", "/FullCircle/TalkBack", "$Version$"); 
 logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Program");
-logComment("communicatorFolder: " + communicatorFolder);
-
-if (verifyDiskSpace(communicatorFolder, srDest))
+if (err==SUCCESS)
 {
-    err = addDirectory("Program",
-                       "$Version$",
-                       "bin",              // jar source folder 
-                       communicatorFolder, // target folder 
-                       "",                 // target subdir 
-                       true );             // force flag 
-
-    logComment("addDirectory() returned: " + err);
-
-    if (err==SUCCESS)
-    {
-	    err = performInstall(); 
-	    logComment("performInstall() returned: " + err);
-    }
-    else
-    {
-	    cancelInstall(err);
-	    logComment("cancelInstall() returned: " + err);
-    }
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
 }
 else
-    cancelInstall(INSUFFICIENT_DISK_SPACE);
+{
+    cancelInstall(err);
+    logComment("cancelInstall() returned: " + err);
+}
