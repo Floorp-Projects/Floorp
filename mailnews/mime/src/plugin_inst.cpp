@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsIURL.h"
 #include "plugin_inst.h"
 #include <stdio.h>
 #include <string.h>
@@ -27,7 +28,7 @@
 #include "nscore.h"
 #include "nsString.h"
 
-// Need this for FO_NGLAYOUT
+// RICHIE - Need this for FO_NGLAYOUT
 #include "net.h"
 
 //
@@ -214,14 +215,14 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
 										   nsIMimeEmitter::GetIID(),
 										   (void **) getter_AddRefs(mEmitter));
 
-  if (NS_FAILED(res) || (!mEmitter))
+  if ((NS_FAILED(res)) || (!mEmitter))
   {
 	NS_ASSERTION(PR_FALSE, "unable to create the correct converter");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   mEmitter->Initialize(stream);
-  mBridgeStream = mime_bridge_create_stream(this, mEmitter, stream_name, format_out);
+  mBridgeStream = mime_bridge_create_stream(this, mEmitter, nsnull, nsnull, stream_name, format_out);
   if (!mBridgeStream)
   {  
     return NS_ERROR_OUT_OF_MEMORY;
@@ -293,7 +294,9 @@ nsresult MimePluginInstance::InternalCleanup(void)
   // 
   // Now complete the emitter and do necessary cleanup!
   //
+#ifdef DEBUG_rhp
   printf("TOTAL READ    = %d\n", mTotalRead);
+#endif
   if (mEmitter)
   {
     mEmitter->Complete();

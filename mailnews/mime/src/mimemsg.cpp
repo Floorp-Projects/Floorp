@@ -396,11 +396,6 @@ HG09091
   // we need to figure out the content type/charset of the part
   //
   PRBool outer_p = !obj->headers;	/* is this the outermost message? */
-  nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(obj->options);
-
-  // No emitter, no point.
-  if (!mimeEmitter)
-    return -1;
 
   if (
       (outer_p) &&
@@ -420,7 +415,7 @@ HG09091
     if (!obj->options->force_user_charset)  /* Only convert if the user prefs is false */
       outCharset = "UTF-8";
 
-    mimeEmitter->StartBody((obj->options->headers == MimeHeadersNone), msgID, outCharset);
+    mimeEmitterStartBody(obj->options, (obj->options->headers == MimeHeadersNone), msgID, outCharset);
     PR_FREEIF(msgID);
     PR_FREEIF(lct);
     PR_FREEIF(charset);
@@ -447,10 +442,6 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 
   // Once we get to the end of parsing the message, we will notify
   // the emitter that we are done the the body.
-  nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(obj->options);
-  // No emitter, no point.
-  if (!mimeEmitter)
-    return -1;
 
   // Mark the end of the mail body if we are actually emitting the
   // body of the message (i.e. not Header ONLY)
@@ -459,7 +450,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
       ( obj->options && (obj->options->part_to_load == NULL) ) &&
       (obj->options->headers != MimeHeadersOnly)
      )
-    mimeEmitter->EndBody();
+    mimeEmitterEndBody(obj->options);
 
   if (outer_p &&
 	  obj->options &&
@@ -541,7 +532,6 @@ static int
 MimeMessage_write_headers_html (MimeObject *obj)
 {
   MimeMessage     *msg = (MimeMessage *) obj;
-  nsIMimeEmitter  *mimeEmitter = GetMimeEmitter(obj->options);
   int             status;
 
 #ifdef MOZ_SECURITY
@@ -552,10 +542,6 @@ MimeMessage_write_headers_html (MimeObject *obj)
   	return 0;
 
   PR_ASSERT(obj->output_p && obj->options->write_html_p);
-
-  // No emitter - no point!
-  if (!mimeEmitter) 
-    return -1;
 
   // To support the no header option! Make sure we are not
   // suppressing headers on included email messages...
@@ -568,7 +554,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
 	  status = MimeObject_output_init (obj, TEXT_HTML);
 	  if (status < 0) 
     {
-      mimeEmitter->EndHeader();
+      mimeEmitterEndHeader(obj->options);
       return status;
     }
 	  PR_ASSERT(obj->options->state->first_data_written_p);
@@ -577,7 +563,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
   // Start the header parsing by the emitter
   char *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
 									                  PR_FALSE, PR_FALSE);
-  mimeEmitter->StartHeader( 
+  mimeEmitterStartHeader(obj->options, 
                             (obj == obj->options->state->root), 
                             (obj->options->headers == MimeHeadersOnly),
                             msgID,
@@ -592,7 +578,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
   status = MimeHeaders_write_all_headers (msg->hdrs, obj->options, FALSE);
   if (status < 0) 
   {
-    mimeEmitter->EndHeader();
+    mimeEmitterEndHeader(obj->options);
     return status;
   }
 
@@ -627,14 +613,14 @@ MimeMessage_write_headers_html (MimeObject *obj)
         PR_Free(html);
         if (status < 0) 
         {
-          mimeEmitter->EndHeader();
+          mimeEmitterEndHeader(obj->options);
           return status;
         }
       }
     }    
   }
 
-  mimeEmitter->EndHeader();
+  mimeEmitterEndHeader(obj->options);
 
   if (obj->options->headers == MimeHeadersOnly)
     return -1;

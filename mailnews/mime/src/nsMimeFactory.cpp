@@ -22,6 +22,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsStreamConverter.h"
 
 #include "nsINetPlugin.h"
 #include "nsIComponentManager.h"
@@ -41,9 +42,10 @@ static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCE
 static   NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 // These are necessary for the new stream converter/plugin interface...
-static   NS_DEFINE_CID(kINetPluginCID,      NS_INET_PLUGIN_CID);
-static   NS_DEFINE_CID(kINetPluginMIMECID,  NS_INET_PLUGIN_MIME_CID);
-static   NS_DEFINE_IID(kINetPluginIID,      NS_INET_PLUGIN_IID);
+static   NS_DEFINE_CID(kINetPluginCID,       NS_INET_PLUGIN_CID);
+static   NS_DEFINE_CID(kINetPluginMIMECID,   NS_INET_PLUGIN_MIME_CID);
+static   NS_DEFINE_IID(kINetPluginIID,       NS_INET_PLUGIN_IID);
+static   NS_DEFINE_CID(kIStreamConverterCID, NS_STREAM_CONVERTER_CID);
 
 #include "nsMsgHeaderParser.h"
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -163,6 +165,12 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
     if (res != NS_OK)  // was there a problem creating the object ?
 		    return res;
   }
+  else if (mClassID.Equals(kIStreamConverterCID))
+  {
+    res = NS_NewStreamConverter((nsIStreamConverter **) &inst);
+    if (res != NS_OK)  // was there a problem creating the object ?
+		    return res;
+  }
 
 	// End of checking the interface ID code....
 	if (inst)
@@ -252,6 +260,11 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+  // Stream converter interface for use in quoting.
+  rv = compMgr->RegisterComponent(kIStreamConverterCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
   return finalResult;
 }
 
@@ -272,6 +285,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kCMsgHeaderParserCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kCIMimeURLUtilsCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
+  rv = compMgr->UnregisterComponent(kIStreamConverterCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
 
   return finalResult;

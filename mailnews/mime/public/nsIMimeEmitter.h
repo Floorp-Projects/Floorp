@@ -23,6 +23,12 @@
 #include "prtypes.h"
 #include "nsINetOStream.h"
 
+typedef enum {
+  MicroHeaders  = 0,
+  NormalHeaders,
+  AllHeaders
+} HeaderDisplayTypes;
+
 // {D01D7B59-DCCD-11d2-A411-00805F613C79}
 #define NS_IMIME_EMITTER_IID \
       { 0xd01d7b59, 0xdccd, 0x11d2,   \

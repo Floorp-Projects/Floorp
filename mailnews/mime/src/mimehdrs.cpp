@@ -1887,12 +1887,6 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
   int i;
   PRBool wrote_any_p = PR_FALSE;
 
-  nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(opt);
-
-  // No emitter, no point.
-  if (!mimeEmitter)
-    return -1;
-
   PR_ASSERT(hdrs);
   if (!hdrs) 
     return -1;
@@ -1992,10 +1986,10 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     status = MimeHeaders_write_random_header_1(hdrs, name, c2, opt, PR_FALSE);
     ****************************************/
     if (attachment)
-      status = mimeEmitter->AddAttachmentField(name, 
+      status = mimeEmitterAddAttachmentField(opt, name, 
                                 MimeHeaders_convert_header_value(opt, &c2));
     else
-      status = mimeEmitter->AddHeaderField(name, 
+      status = mimeEmitterAddHeaderField(opt, name, 
                                 MimeHeaders_convert_header_value(opt, &c2));
 
     PR_Free(name);
@@ -2500,13 +2494,12 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 {
   int status = 0;
 
-  nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(opt);
-  mimeEmitter->StartAttachment(lname, content_type, lname_url);
+  mimeEmitterStartAttachment(opt, lname, content_type, lname_url);
 
   status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
-  mimeEmitter->AddAttachmentField(HEADER_X_MOZILLA_PART_URL, lname_url);
+  mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, lname_url);
 
-  mimeEmitter->EndAttachment();
+  mimeEmitterEndAttachment(opt);
 
   if (status < 0) 
     return status;

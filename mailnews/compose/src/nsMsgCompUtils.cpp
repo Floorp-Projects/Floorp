@@ -546,7 +546,8 @@ mime_generate_headers (nsMsgCompFields *fields,
 		pNetService->GetAppCodeName(aNSStr);
 		sCStr = aNSStr.ToNewCString();
 		if (sCStr) {
-			PUSH_STRING ("X-Mailer: ");
+			// PUSH_STRING ("X-Mailer: ");  // To be more standards compliant
+			PUSH_STRING ("User-Agent: ");  
 			PUSH_STRING(sCStr);
 			delete [] sCStr;
 

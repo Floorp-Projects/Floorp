@@ -21,7 +21,10 @@
 #include "nsMsgCompFields.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
+#include "nsIOutputStream.h"
+#include "nsIMsgQuote.h"
 
+class QuotingOutputStreamImpl;
 
 class nsMsgCompose : public nsIMsgCompose
 {
@@ -56,9 +59,10 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD CloseWindow();
 
 	/* attribute nsIDOMEditorAppCore editor; */
-	NS_IMETHOD GetEditor(nsIEditorShell * *aEditor);
-	NS_IMETHOD SetEditor(nsIEditorShell * aEditor);
-
+  /* attribute nsIEditorShell editor; */ 
+  NS_IMETHOD GetEditor(nsIEditorShell * *aEditor); 
+  NS_IMETHOD SetEditor(nsIEditorShell * aEditor); 
+  
 	/* readonly attribute nsIDOMWindow domWindow; */
 	NS_IMETHOD GetDomWindow(nsIDOMWindow * *aDomWindow);
 
@@ -71,19 +75,49 @@ class nsMsgCompose : public nsIMsgCompose
 	/* readonly attribute long wrapLength; */
 	NS_IMETHOD GetWrapLength(PRInt32 *aWrapLength);
 /******/
-	
 
 private:
 
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
 	void HackToGetBody(PRInt32 what); //Temporary
-	
+
+  nsresult QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
+
+	nsIEditorShell*		m_editor;
 	nsIDOMWindow*				m_window;
 	nsIWebShell*				m_webShell;
 	nsIWebShellWindow*			m_webShellWin;
-	nsIEditorShell*		m_editor;
 	nsCOMPtr<nsMsgCompFields>	m_compFields;
 	PRBool						m_composeHTML;
+  nsCOMPtr<QuotingOutputStreamImpl>  mOutStream;
+  nsCOMPtr<nsIOutputStream>          mBaseStream;
+  nsCOMPtr<nsIMsgQuote>              mQuote;
 };
 
+////////////////////////////////////////////////////////////////////////////////////
+// THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT
+// FROM LIBMIME. THIS IS FOR QUOTING
+////////////////////////////////////////////////////////////////////////////////////
+class QuotingOutputStreamImpl : public nsIOutputStream
+{
+public:
+    QuotingOutputStreamImpl(void);
+    virtual ~QuotingOutputStreamImpl(void);
 
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIBaseStream interface
+    NS_IMETHOD Close(void);
+
+    // nsIOutputStream interface
+    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
+
+    NS_IMETHOD Flush(void);
+
+    NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
+
+private:
+    nsMsgCompose    *mComposeObj;
+    nsString        mMsgBody;
+};

@@ -23,6 +23,7 @@ include <$(DEPTH)\config\config.mak>
 ## exports
 
 EXPORTS =								\
+		nsMimeTypes.h		\
 		nsMimeObjectClassAccess.h		\
 		nsMimeConverter.h				\
 		mimetext.h						\
@@ -98,6 +99,8 @@ OBJS=											\
 		.\$(OBJDIR)\mimemoz2.obj			\
 		.\$(OBJDIR)\nsMsgHeaderParser.obj	\
 		.\$(OBJDIR)\nsMimeURLUtils.obj		\
+		.\$(OBJDIR)\nsStreamConverter.obj	\
+		.\$(OBJDIR)\nsMimeEmitter2.obj	\
 #
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
 #			.\$(OBJDIR)\mimedrft.obj		\

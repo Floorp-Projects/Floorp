@@ -346,7 +346,7 @@ MakeAbsoluteURL(char * absolute_url, char * relative_url)
   nsMimeURLUtils myUtil;
   char           *retString;
 
-  if (myUtil.MakeAbsoluteURL(absolute_url, relative_url, &retString) == NS_OK)
+  if (NS_SUCCEEDED(myUtil.MakeAbsoluteURL(absolute_url, relative_url, &retString)))
     return retString;
   else
     return NULL;

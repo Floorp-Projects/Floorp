@@ -20,4 +20,4 @@ nsMimeHtmlEmitter.h
 nsMimeXmlEmitter.h
 nsMimeRawEmitter.h
 nsEmitterUtils.h
-
+nsMimeRebuffer.h

@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
+#include "nsIURL.h"
 #include "mimeebod.h"
 #include "prmem.h"
 #include "nsCRT.h"

@@ -21,15 +21,7 @@
 #include "prmem.h"
 #include "plstr.h"
 
-extern "C" char     *nsEscapeHTML(const char *string);
-
-// mscott - I'm dumping this enum here for lack of a better
-// common header file shared by nsMimeRawEmitter & nsMimeXmlEmitter
-typedef enum {
-  MicroHeaders  = 0,
-  NormalHeaders,
-  AllHeaders
-} HeaderDisplayTypes;
+extern "C" PRBool   EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header);
 
 #endif // _nsEmitterUtils_h_
 

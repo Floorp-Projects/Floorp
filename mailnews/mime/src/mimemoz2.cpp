@@ -50,6 +50,7 @@
 #include "nsString.h"
 #include "nsIEventQueueService.h"
 #include "nsMimeStringResources.h"
+#include "nsStreamConverter.h"
 
 #ifdef MOZ_SECURITY
 #include HG01944
@@ -228,20 +229,35 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
 static int
 mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
 {
-  PRUint32  written;
+  PRUint32  written = 0;
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  PR_ASSERT(msd->pluginObj);
-  if ( (!msd->pluginObj) || (!msd->output_emitter) )
+  if ( ( (!msd->pluginObj) && (!msd->pluginObj2)) && ( (!msd->output_emitter) && (msd->output_emitter2)) )
     return -1;
   
   // Now, write to the WriteBody method if this is a message body and not
   // a part retrevial
   if (!msd->options->part_to_load)
   {
-    msd->output_emitter->WriteBody(buf, (PRUint32) size, &written);
+    if (msd->output_emitter)
+    {
+      msd->output_emitter->WriteBody(buf, (PRUint32) size, &written);
+    }
+    else if (msd->output_emitter2)
+    {
+      msd->output_emitter2->WriteBody(buf, (PRUint32) size, &written);
+    }
   }
   else
-    msd->output_emitter->Write(buf, (PRUint32) size, &written);
+  {
+    if (msd->output_emitter)
+    {
+      msd->output_emitter->Write(buf, (PRUint32) size, &written);
+    }
+    else if (msd->output_emitter2)
+    {
+      msd->output_emitter2->Write(buf, (PRUint32) size, &written);
+    }
+  }
   return written;
 }
 
@@ -525,10 +541,10 @@ mime_output_init_fn (const char *type,
   
   // Now, all of this stream creation is done outside of libmime, so this
   // is just a check of the pluginObj member and returning accordingly.
-  if (msd->pluginObj) 
-    return 0;
-  else
+  if ( (!msd->pluginObj) && (!msd->pluginObj2))
     return -1;
+  else
+    return 0;
 
   /* If we've converted to HTML, then we've already done charset conversion,
      so label this data as "internal/parser" to prevent it from being passed
@@ -610,7 +626,10 @@ mime_image_begin(const char *image_url, const char *content_type,
   // RICHIE_URL     return 0;
   // RICHIE_URL   }
 
-  mid->istream = (nsMIMESession *) msd->pluginObj;
+  if (msd->pluginObj)
+    mid->istream = (nsMIMESession *) msd->pluginObj;
+  else
+    mid->istream = (nsMIMESession *) msd->pluginObj2;
   return mid;
 }
 
@@ -699,7 +718,8 @@ mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
                 (struct mime_image_stream_data *) image_closure;
   struct mime_stream_data *msd = mid->msd;
 
-  if ( (!msd->pluginObj) || (!msd->output_emitter) )
+  if ( ( (!msd->pluginObj) && (!msd->output_emitter) ) &&
+       ( (!msd->pluginObj2) && (!msd->output_emitter2) ) )
     return -1;
 
   //
@@ -1009,17 +1029,6 @@ extern int MIME_HasAttachments(MWContext *context)
  **************************************************************
  **************************************************************/
 
-nsIMimeEmitter *
-GetMimeEmitter(MimeDisplayOptions *opt)
-{
-  mime_stream_data  *msd = (mime_stream_data *)opt->stream_closure;
-  if (!msd) 
-    return NULL;
-
-  nsIMimeEmitter     *ptr = (nsIMimeEmitter *)(msd->output_emitter);
-  return ptr;
-}
-
 /* Get the connnection to prefs service manager */
 nsIPref *
 GetPrefServiceManager(MimeDisplayOptions *opt)
@@ -1049,6 +1058,8 @@ mime_bridge_destroy_stream(void *newStream)
 void  *
 mime_bridge_create_stream(MimePluginInstance  *newPluginObj, 
                           nsIMimeEmitter      *newEmitter,
+                          nsStreamConverter   *newPluginObj2,
+                          nsMimeEmitter2      *newEmitter2,
                           const char          *urlString,
                           int                 format_out)
 {
@@ -1095,21 +1106,25 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
 
   // Assign the new mime emitter - will handle output operations
   msd->output_emitter = newEmitter;
+  msd->output_emitter2 = newEmitter2;
   
   // RICHIE_URL (msd->url)->address = PL_strdup(urlString);
-  
-  msd->url_name = PL_strdup(urlString);
-  if (!(msd->url_name))
+
+  if (urlString)
   {
-    delete msd->output_emitter;
-    // RICHIE_URL PR_FREEIF(msd->url);
-    PR_FREEIF(msd);
-    return NULL;
+    msd->url_name = PL_strdup(urlString);
+    if (!(msd->url_name))
+    {
+      // RICHIE_URL PR_FREEIF(msd->url);
+      PR_FREEIF(msd);
+      return NULL;
+    }
   }
   
   msd->context = context;           // SHERRY - need to wax this soon
   msd->format_out = format_out;     // output format
   msd->pluginObj = newPluginObj;    // the plugin object pointer 
+  msd->pluginObj2 = newPluginObj2;    // the plugin object pointer 
   
   msd->options = PR_NEW(MimeDisplayOptions);
   if (!msd->options)
@@ -1509,4 +1524,215 @@ MimeGetStringByID(PRInt32 stringID)
   
   PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
   return PL_strdup(buf);
+}
+
+
+// To support 2 types of emitters...we need these routines :-(
+nsIMimeEmitter *
+GetMimeEmitter(MimeDisplayOptions *opt)
+{
+  mime_stream_data  *msd = (mime_stream_data *)opt->stream_closure;
+  if (!msd) 
+    return NULL;
+
+  nsIMimeEmitter     *ptr = (nsIMimeEmitter *)(msd->output_emitter);
+  return ptr;
+}
+
+mime_stream_data *
+GetMSD(MimeDisplayOptions *opt)
+{
+  if (!opt)
+    return nsnull;
+  mime_stream_data  *msd = (mime_stream_data *)opt->stream_closure;
+  return msd;
+}
+
+extern "C" nsresult
+mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, const char *field, const char *value)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->AddAttachmentField(field, value);
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->AddAttachmentField(field, value);
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char *value)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->AddHeaderField(field, value);
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->AddHeaderField(field, value);
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->StartAttachment(name, contentType, url);
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->StartAttachment(name, contentType, url);
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterEndAttachment(MimeDisplayOptions *opt)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->EndAttachment();
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->EndAttachment();
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID, const char *outCharset)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->StartBody(bodyOnly, msgID, outCharset);
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->StartBody(bodyOnly, msgID, outCharset);
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterEndBody(MimeDisplayOptions *opt)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->EndBody();
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->EndBody();
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterEndHeader(MimeDisplayOptions *opt)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->EndHeader();
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->EndHeader();
+  }
+
+  return -1;
+}
+
+extern "C" nsresult     
+mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                       const char *outCharset)
+{
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return -1;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->StartHeader(rootMailHeader, headerOnly, msgID, outCharset);
+  }
+  else if (msd->output_emitter2)
+  {
+    nsMimeEmitter2 *emitter2 = (nsMimeEmitter2 *)msd->output_emitter2;
+    return emitter2->StartHeader(rootMailHeader, headerOnly, msgID, outCharset);
+  }
+
+  return -1;
+}
+
+
+extern "C" nsresult
+mimeSetNewURL(nsMIMESession *stream, char *url)
+{
+  if ( (!stream) || (!url) || (!*url) )
+    return NS_ERROR_FAILURE;
+
+  mime_stream_data  *msd = (mime_stream_data *)stream->data_object;
+  if (!msd)
+    return NS_ERROR_FAILURE;
+
+  char *tmpPtr = PL_strdup(url);
+  if (!tmpPtr)
+    return NS_ERROR_FAILURE;
+
+  PR_FREEIF(msd->url_name);
+  msd->url_name = PL_strdup(tmpPtr);
+  return NS_OK;
 }

@@ -557,22 +557,22 @@ void
 nsMsgAttachmentHandler::AnalyzeSnarfedFile(void)
 {
 	char chunk[256];
-	PRFileDesc  *fileHdl = NULL;
 	PRInt32 numRead = 0;
+	
 	
 	if (m_file_name && *m_file_name)
 	{
-		fileHdl = PR_Open(m_file_name, PR_RDONLY, 0);
-		if (fileHdl)
+		nsFileSpec aPath(m_file_name);
+		nsInputFileStream fileHdl(aPath, PR_RDONLY, 0);
+		if (fileHdl.is_open())
 		{
 			do
 			{
-				numRead = PR_Read(fileHdl, chunk, 256);
+				numRead = fileHdl.read(chunk, 256);
 				if (numRead > 0)
 					AnalyzeDataChunk(chunk, numRead);
 			}
 			while (numRead > 0);
-			PR_Close(fileHdl);
 		}
 	}
 }

@@ -26,6 +26,11 @@
    { 0xc9cdf8e5, 0x95fa, 0x11d2,    \
    { 0x88, 0x7, 0x0, 0x80, 0x5f, 0x5a, 0x1f, 0xb8 } }
 
+// {588595CB-2012-11d3-8EF0-00A024A7D144}
+#define NS_STREAM_CONVERTER_CID  \
+    { 0x588595cb, 0x2012, 0x11d3,   \
+    { 0x8e, 0xf0, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } };
+
 class nsIStreamConverter : public nsIStreamListener { 
 public: 
   static const nsIID& GetIID() { static nsIID iid = NS_ISTREAM_CONVERTER_IID; return iid; }
@@ -34,7 +39,7 @@ public:
     // This is the output stream where the stream converter will write processed data after 
     // conversion. 
     // 
-    NS_IMETHOD SetOutputStream(nsIOutputStream *outStream) = 0; 
+    NS_IMETHOD SetOutputStream(nsIOutputStream *outStream, char *url) = 0; 
 
     // 
     // The output listener can be set to allow for the flexibility of having the stream converter 
@@ -43,6 +48,12 @@ public:
     // the responsibility of the client of the stream converter to handle the resulting data. 
     // 
     NS_IMETHOD SetOutputListener(nsIStreamListener *outListner) = 0; 
+
+    // 
+    // This is needed by libmime for MHTML link processing...the url is the URL string associated
+    // with this input stream
+    // 
+    NS_IMETHOD SetStreamURL(char *url) = 0; 
 }; 
 
 #endif /* nsIStreamConverter_h_ */

@@ -25,7 +25,9 @@ extern "C" {
 
 #include "prtypes.h"
 #include "plugin_inst.h"
+#include "nsStreamConverter.h"
 #include "nsIMimeEmitter.h"
+#include "nsMimeEmitter2.h"
 
 // SHERRY - Need to get these out of here eventually
 
@@ -97,6 +99,7 @@ struct mime_stream_data {           /* This struct is the state we pass around
   int                 format_out;
   MWContext           *context;     /* Must REMOVE this entry. */
   void                *pluginObj;   /* The new XP-COM stream converter object */
+  void                *pluginObj2;  /* The new XP-COM stream converter object */
   nsMIMESession       *istream;     /* Holdover - new stream we're writing out image data-if any. */
   MimeObject          *obj;         /* The root parser object */
   MimeDisplayOptions  *options;     /* Data for communicating with libmime.a */
@@ -104,7 +107,8 @@ struct mime_stream_data {           /* This struct is the state we pass around
   /* These are used by FO_QUOTE_HTML_MESSAGE stuff only: */
   PRInt16             lastcsid;     /* csid corresponding to above. */
   PRInt16             outcsid;      /* csid passed to EDT_PasteQuoteINTL */
-  nsIMimeEmitter      *output_emitter; /* Output emitter engine for libmime */
+  nsIMimeEmitter      *output_emitter;  /* Output emitter engine for libmime */
+  nsMimeEmitter2      *output_emitter2; /* Output emitter 2 engine for libmime */
   nsIPref             *prefs;       /* Connnection to prefs service manager */
 };
 
@@ -115,6 +119,8 @@ struct mime_stream_data {           /* This struct is the state we pass around
 // Create bridge stream for libmime
 void         *mime_bridge_create_stream(MimePluginInstance  *newPluginObj, 
                                         nsIMimeEmitter      *newEmitter,
+                                        nsStreamConverter   *newPluginObj2,
+                                        nsMimeEmitter2      *newEmitter2,
                                         const char          *urlString,
                                         int                 format_out);
 
@@ -128,6 +134,18 @@ extern "C" void           mime_display_stream_abort (nsMIMESession *stream, int 
 
 // To get the mime emitter...
 extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);
+
+// To support 2 types of emitters...we need these routines :-(
+extern "C" nsresult     mimeSetNewURL(nsMIMESession *stream, char *url);
+extern "C" nsresult     mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, const char *field, const char *value); 
+extern "C" nsresult     mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char *value);
+extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url);
+extern "C" nsresult     mimeEmitterEndAttachment(MimeDisplayOptions *opt);
+extern "C" nsresult     mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID, const char *outCharset);
+extern "C" nsresult     mimeEmitterEndBody(MimeDisplayOptions *opt);
+extern "C" nsresult     mimeEmitterEndHeader(MimeDisplayOptions *opt);
+extern "C" nsresult     mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                                               const char *outCharset);
 
 /* To Get the connnection to prefs service manager */
 extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);

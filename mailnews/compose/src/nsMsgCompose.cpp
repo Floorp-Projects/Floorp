@@ -27,7 +27,8 @@
 #include "nsMsgSend.h"
 #include "nsIMessenger.h"	//temporary!
 #include "nsIMessage.h"		//temporary!
-
+#include "nsMsgQuote.h"
+#include "nsIPref.h"
 
 #ifdef XP_UNIX
 #define TEMP_PATH_DIR "/usr/tmp/"
@@ -69,6 +70,7 @@ nsMsgCompose::nsMsgCompose()
 
 nsMsgCompose::~nsMsgCompose()
 {
+  NS_RELEASE(m_editor);
 }
 
 
@@ -406,28 +408,19 @@ nsresult nsMsgCompose::CloseWindow()
 	return NS_OK;
 }
 
-
-nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor)
-{
-	*aEditor = nsnull;
-	return NS_OK;
-}
-
-
-nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
-{
-	nsresult rv;
-/*
-	if (aEditor)
-		rv = aEditor->QueryInterface(nsIEditorShell::GetIID(), (void **)&m_editor);
-	else
-		return NS_ERROR_NULL_POINTER;
-*/
-	m_editor = aEditor;
-
-	return rv;
-}
-
+nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor) 
+{ 
+ *aEditor = m_editor; 
+ return NS_OK; 
+} 
+  
+nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor) 
+{ 
+ m_editor = aEditor; 
+ NS_ADDREF(m_editor);
+ return NS_OK; 
+} 
+  
 
 nsresult nsMsgCompose::GetDomWindow(nsIDOMWindow * *aDomWindow)
 {
@@ -520,11 +513,13 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
 						if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(cString, encodedCharset, decodedString)))
 							if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
 							{
-								m_compFields->SetTo(aCString, NULL);
+								m_compFields->SetCc(aCString, NULL);
 								PR_Free(aCString);
 							}
 					}
-					HackToGetBody(1);
+
+          QuoteOriginalMessage(originalMsgURI, 1);
+
 					break;
                 }
                 case MSGCOMP_TYPE_ForwardAsAttachment:
@@ -547,17 +542,158 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
 						}
 
                     if (type == MSGCOMP_TYPE_ForwardAsAttachment)
-                        HackToGetBody(0);
+                        QuoteOriginalMessage(originalMsgURI, 0);
                     else if (type == MSGCOMP_TYPE_ForwardInline)
-                        HackToGetBody(2);
+                        QuoteOriginalMessage(originalMsgURI, 2);
                     else
-                        HackToGetBody(1);
+                        QuoteOriginalMessage(originalMsgURI, 1);
                     break;
                 }
 			}
 		}
 	}	
 	return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT
+// FROM LIBMIME. THIS IS FOR QUOTING
+////////////////////////////////////////////////////////////////////////////////////
+QuotingOutputStreamImpl::~QuotingOutputStreamImpl() 
+{
+  if (mComposeObj)
+    NS_RELEASE(mComposeObj);
+}
+
+QuotingOutputStreamImpl::QuotingOutputStreamImpl(void) 
+{ 
+  mComposeObj = nsnull;
+  mMsgBody = "<br><BLOCKQUOTE TYPE=CITE><html><br>--- Original Message ---<br><br>";
+  NS_INIT_REFCNT(); 
+}
+
+nsresult
+QuotingOutputStreamImpl::Close(void) 
+{
+  if (mComposeObj) 
+  {
+    mMsgBody += "</html></BLOCKQUOTE>";
+    nsIMsgCompFields *aCompFields;
+    mComposeObj->GetCompFields(&aCompFields);
+    if (aCompFields)
+      aCompFields->SetBody(nsAutoCString(mMsgBody), NULL);
+
+    nsIEditorShell *aEditor = nsnull;
+    mComposeObj->GetEditor(&aEditor);
+
+    if (aEditor)
+    {
+      if (mMsgBody.Length())
+      {
+        // This is ugly...but hopefully effective...
+        nsString fileName(TEMP_PATH_DIR);
+        fileName += TEMP_MESSAGE_OUT;
+        
+        nsFileSpec aPath(fileName);
+        nsOutputFileStream tempFile(aPath);
+        
+        if (tempFile.is_open())
+        {
+          tempFile.write(nsAutoCString(mMsgBody), mMsgBody.Length());
+          tempFile.close();
+          
+          nsAutoString  urlStr = nsFileURL(aPath).GetURLString();
+          aEditor->LoadUrl(urlStr.GetUnicode());
+        }
+      }
+    }
+
+  }
+  
+  return NS_OK;
+}
+
+nsresult
+QuotingOutputStreamImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) 
+{
+  char *newBuf = (char *)PR_Malloc(aCount + 1);
+  *aWriteCount = 0;
+  if (!newBuf)
+    return NS_ERROR_FAILURE;
+
+  *aWriteCount = aCount;
+  
+  nsCRT::memcpy(newBuf, aBuf, aCount);
+  newBuf[aCount] = '\0';
+  mMsgBody += newBuf;
+  printf("%s", newBuf);
+  PR_FREEIF(newBuf);
+  return NS_OK;
+}
+
+nsresult
+QuotingOutputStreamImpl::Flush(void) 
+{
+  return NS_OK;
+}
+
+nsresult
+QuotingOutputStreamImpl::SetComposeObj(nsMsgCompose *obj)
+{
+  mComposeObj = obj;
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(QuotingOutputStreamImpl, nsIOutputStream::GetIID());
+////////////////////////////////////////////////////////////////////////////////////
+// END OF QUOTING CONSUMER STREAM
+////////////////////////////////////////////////////////////////////////////////////
+
+// net service definitions....
+static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+nsresult
+nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what) // New template
+{
+  nsresult    rv;
+
+  //
+  // For now, you need to set a pref to do the new quoting
+  //
+  PRBool newQuoting = PR_FALSE; 
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+  {
+    rv = prefs->GetBoolPref("mail.new_quoting", &newQuoting);
+  }
+
+  if (!newQuoting)
+  {
+    HackToGetBody(what);
+    return NS_OK;
+  }
+
+  // Create a mime parser (nsIStreamConverter)!
+  rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
+                                          NULL, nsIMsgQuote::GetIID(), 
+                                          (void **) getter_AddRefs(mQuote)); 
+  if (NS_FAILED(rv) || !mQuote)
+    return NS_ERROR_FAILURE;
+
+  // Create the consumer output stream.. this will receive all the HTML from libmime
+  mOutStream = do_QueryInterface(new QuotingOutputStreamImpl());
+  if (!mOutStream)
+  {
+    printf("Failed to create nsIOutputStream\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(this);
+  mOutStream->SetComposeObj(this);
+
+//  mBaseStream = do_QueryInterface(mOutStream);
+  return mQuote->QuoteMessage(originalMsgURI, mOutStream);
 }
 
 void nsMsgCompose::HackToGetBody(PRInt32 what)

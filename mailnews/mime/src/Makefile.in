@@ -26,6 +26,7 @@ MODULE=mime
 LIBRARY_NAME=mime
 IS_COMPONENT=1
 EXPORTS =\
+		nsMimeTypes.h		\
 		nsMimeObjectClassAccess.h		\
 		nsMimeConverter.h			\
 		mimetext.h						\
@@ -85,13 +86,15 @@ CPPSRCS = \
 		comi18n.cpp		\
 		nsMimeTransition.cpp \
 		nsMsgHeaderParser.cpp \
+		nsStreamConverter.cpp \
+		nsMimeEmitter2.cpp \
 		$(NULL)
 
 CSRCS = \
 		oldi18n.c	\
 		$(NULL)
 
-EXTRA_DSO_LDOPTS =	\
+EXTRA_DSO_LDOPTS =             \
 	-L$(DIST)/bin	\
 	$(NSPR_LIBS)	\
 	-lmozjs			\
