@@ -827,7 +827,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
       return NS_ERROR_FAILURE;
     
     nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = OpenChromeWindow(0, browserLocation, "chrome,all,dialog=np",
+    rv = OpenChromeWindow(0, browserLocation, "chrome,all,dialog=no",
 			  nsnull, getter_AddRefs(newWindow));
   }
 
