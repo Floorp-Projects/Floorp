@@ -104,6 +104,15 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\EditorInitPage.html   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\EditorInitPagePlain.html   $(DIST)\bin\res\samples
 
+	$(MAKE_INSTALL) ..\xul\pref-appearance.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-fonts.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\pref-navigator.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\prefbottom.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\PrefsWindow.html   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\PrefsWindow.js   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\preftree.css   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\preftree.xul   $(DIST)\bin\res\samples
+
 	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\Mail_Reply.gif   $(DIST)\bin\res\toolbar
