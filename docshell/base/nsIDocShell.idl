@@ -39,10 +39,10 @@
 
 [ptr] native nsIPresContext(nsIPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
-[ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
 [ptr] native nsIContentViewer(nsIContentViewer);
 
 interface nsIChromeEventHandler;
+interface nsIDocumentLoaderObserver;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
