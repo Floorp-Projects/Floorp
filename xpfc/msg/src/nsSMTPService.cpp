@@ -52,6 +52,14 @@ nsresult nsSMTPService::SendMail(nsString& aServer,
                                  nsIMessage& aMessage,
                                  nsISMTPObserver * aObserver) 
 {
+  /*
+   * Check to see if nsIMessage supports the MIME interface,
+   * and if so , send this message as MIME as do regular 
+   * plain/text mail
+   */
+
+  
+
   return NS_OK;
 }
 
@@ -62,6 +70,10 @@ nsresult nsSMTPService::SendMail(nsString& aServer,
                                  nsString& aBody,
                                  nsISMTPObserver * aObserver)
 {
+  /*
+   * Get a bunch of character strings for passing to SMTP directly
+   */
+
   char * from     = aFrom.ToNewCString();
   char * to       = aTo.ToNewCString();
   char * header   = aSubject.ToNewCString();
@@ -71,7 +83,6 @@ nsresult nsSMTPService::SendMail(nsString& aServer,
   data += header;
   data += "\r\n";
   data += aBody.ToNewCString();
-
   message  = data.ToNewCString();
 
   nsString strdomain ;
