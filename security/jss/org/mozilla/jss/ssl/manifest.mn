@@ -81,7 +81,6 @@ CLASSES =	SSLHandshakeCompletedEvent    \
         SSLServerSocket                 \
 		SSLSocket                     \
 		PrintOutputStreamWriter       \
-		SSLCallbackNotifier           \
 		SSLCertificateApprovalCallback   \
 		SSLClientCertificateSelectionCallback \
         SocketBase \
