@@ -60,10 +60,10 @@ sub parse_params {
     $query->param(-name=>'--with-nspr',
 		  -values=>[$nspr_dir]);
   }
-  if ($query->param('nspr_option') eq 'rpm') {
-    $query->param(-name=>'--with-nspr',
-		  -values=>['/usr']);
-  }
+  #if ($query->param('nspr_option') eq 'rpm') {
+  #  $query->param(-name=>'--with-nspr',
+  #		  -values=>['/usr']);
+  #}
   if ($query->param('nspr_option') eq 'tip') {
     $query->param(-name=>'--with-nspr',
 		  -values=>['@OBJDIR@/nspr']);
@@ -96,10 +96,8 @@ sub print_script_preview {
     <HEAD>
       <TITLE>Configurator Script Preview</TITLE>
     </HEAD>
-    <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+    <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">);
 
-	<form action='.mozconfig' method='get'>
-        <input type='hidden' name='saveas' value='1'>);
 
     foreach $param ($query->param()) {
       if ($param =~ /^(MOZ_|--)/) {
@@ -109,14 +107,24 @@ sub print_script_preview {
 	}
 
   print qq(
+    <TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+    <TR><TD>
+      <A HREF="http://www.mozilla.org/">
+      <IMG SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT="" BORDER=0 WIDTH=600 HEIGHT=58>
+      </A>
+    </TD></TR></TABLE>
+
     <table cellspacing=2 cellpading=0 border=0 width=600><tr><td>
 
     <font size='+1' face='Helvetica,Arial'><b>
     Configurator Script Preview</b></font>
     </td></tr><tr></tr><tr><td>
-    Check the script to make sure the options are correct. When you are done,
-    save this script as <code><b>~/.mozconfig</b></code>.
+    Check the script to make sure the options are correct.
+    Then, save this script as <code><b>~/.mozconfig</b></code>.
     </td></tr></table>
+
+    <form action='.mozconfig' method='get'>
+    <input type='hidden' name='saveas' value='1'>
 
     <!--
     <table cellpadding=0 cellspacing=1><tr><td>
@@ -126,6 +134,7 @@ sub print_script_preview {
 
     <table cellspacing=2 cellpading=0 border=0><tr><td>
 	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
+	<table bgcolor="$chrome_color" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
     <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="600" border=0><tr><td>
     <pre>);
 
@@ -135,43 +144,33 @@ sub print_script_preview {
 	   </td></tr></table>
 	   </td></tr></table>
 	   </td></tr></table>
+	   </td></tr></table>
 
     <table cellpadding=0 cellspacing=1><tr><td>
 	<input type='submit' value='Save the script'>
 	</td></tr></table>
 
-<table cellspacing=0 cellpadding=0>
+<table cellspacing=0 cellpadding=0 border=0>
 <tr><td colspan=3>
 Save the script, then build the tree as follows,
 </td></tr><tr><td>&nbsp;</td><td>
-  1.</td><td> <code>cvs co mozilla/client.mk</code>
+  1.</td><td>  <code>cvs co mozilla/client.mk</code>
 </td></tr><tr><td></td><td>
-  2.</td><td> <code>cd mozilla</code>
+  2.</td><td>  <code>cd mozilla</code>
 </td></tr><tr><td></td><td>
-  3.</td><td> <code>gmake -f client.mk</code><br>
+  3.</td><td>  <code>gmake -f client.mk</code><br>
 </td></tr><tr><td></td><td>
-</td><td>     (default targets = <code>checkout build</code>)
+</td><td>      (default targets = <code>checkout build</code>)
 </td></tr>
-</td></tr><tr><td>&nbsp;</td></tr><tr><td colspan=3>
+</td></tr><tr><td colspan=3>&nbsp;</td></tr><tr><td colspan=3>
 Here is a shortcut you can use to run <code>viewer</code>
 or <code>apprunner</code> when the tree is built,
 </td></tr><tr><td></td><td>
-  1.</td><td> <code>cd &lt;objdir&gt;</code>
+  1.</td><td>   <code>cd &lt;objdir&gt;</code>
 </td></tr><tr><td></td><td>
-  2a.</td><td> <code>gmake run_viewer
+  2a.</td><td>  <code>gmake run_viewer
 </td></tr><tr><td></td><td>
-  2b.</td><td> <code>gmake run_apprunner
-<!--
-</td></tr><tr><td>&nbsp;</td></tr><tr><td colspan=3>
-<A NAME='places'>
- The build searches for mozconfig in the following places,
-</td></tr><tr><td></td><td></td><td>
-   If <code>\$MOZCONFIG</code> is set, use that file,
-</td></tr><tr><td></td><td></td><td>
-   else try <code>&lt;topsrcdir&gt/mozconfig</code>
-</td></tr><tr><td></td><td></td><td>
-   else try <code>\$HOME/.mozconfig</code>
--->
+  2b.</td><td>  <code>gmake run_apprunner
 </td></tr></table>
 <p>
 <hr align=left width=600>
@@ -233,17 +232,27 @@ sub print_configure_form {
     </HEAD>
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
  
-    <font size='+1' face='Helvetica,Arial'><b>
-    Mozilla Unix Build Configurator</b></font><p>
-
     <FORM action='config.cgi' method='POST' name='ff'>
     <INPUT Type='hidden' name='preview' value='1'>
 
+    <TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+    <TR><TD>
+      <A HREF="http://www.mozilla.org/">
+      <IMG SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT="" BORDER=0 WIDTH=600 HEIGHT=58>
+      </A>
+    </TD></TR></TABLE>
+
+    <table cellpadding=0 cellspacing=4 border=0 width="500"><tr><td>
+    <font size='+1' face='Helvetica,Arial'><b>
+    Unix Build Configurator
+    </b></font>
+    </td></tr><tr><td>
     This form produces a script that you can save and use to configure your
     mozilla build. If this form does not have some options you want, you can
 	add them to the script later.
+    </td></tr></table>
 
-    <table><tr><td>
+    <table cellpadding=0 cellspacing=0 border=0><tr><td>
 	<input type="Submit" value="Preview Build Script">
     </td></tr></table>
 
