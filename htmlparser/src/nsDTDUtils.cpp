@@ -19,7 +19,7 @@
 
 #include "nsDTDUtils.h"
 
-
+ 
 /***************************************************************
   First, define the tagstack class
  ***************************************************************/
@@ -72,8 +72,8 @@ void nsTagStack::Empty(void) {
 void nsTagStack::Push(eHTMLTags aTag) {
 
   if(mCount>=mSize) {
-
 #ifdef _dynstack
+      //regrow the dynamic stack... 
     eHTMLTags* tmp=new eHTMLTags[2*mSize];
     nsCRT::zero(tmp,2*mSize*sizeof(eHTMLTag_html));
     nsCRT::memcpy(tmp,mTags,mSize*sizeof(eHTMLTag_html));
@@ -86,8 +86,11 @@ void nsTagStack::Push(eHTMLTags aTag) {
     delete mBits;
     mBits=tmp2;
     mSize*=2;
+#else
+    NS_PRECONDITION(mCount<eStackSize,"TagStack Overflow: DEBUG VERSION!");
 #endif
   }
+
   mTags[mCount++]=aTag;
 }
 

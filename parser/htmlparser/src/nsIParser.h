@@ -51,8 +51,9 @@ class nsIURL;
 enum  eParseMode {
   
   eParseMode_unknown=0,
-  eParseMode_navigator,
-  eParseMode_noquirks,
+  eParseMode_raptor,    //5.0 version of nav. and greater
+  eParseMode_navigator, //pre 5.0 versions
+  eParseMode_noquirks,  //pre 5.0 without quirks (as best as we can...)
   eParseMode_other,
   eParseMode_autodetect
 };

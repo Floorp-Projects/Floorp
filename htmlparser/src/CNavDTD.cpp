@@ -9,7 +9,7 @@
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- *
+ * 
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -361,7 +361,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
-  InitializeDefaultTokenHandlers();
+  InitializeDefaultTokenHandlers(); 
   mHeadContext=new nsDTDContext();
   mBodyContext=new nsDTDContext();
   mFormContext=0;
@@ -1905,7 +1905,13 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
           result=HasOpenContainer(aChild); //don't bother if they're already open...
           break;
 
-        case eHTMLTag_button:       case eHTMLTag_fieldset:
+          //The following line was commented out to fix bug 1166. 
+          //Effectively, this allows a button to exist anywhere in the document,
+          //and not just inside a form.
+
+        //case eHTMLTag_button:       
+
+        case eHTMLTag_fieldset:
         case eHTMLTag_input:        case eHTMLTag_isindex:
         case eHTMLTag_label:        case eHTMLTag_legend:
         case eHTMLTag_select:       case eHTMLTag_textarea:
