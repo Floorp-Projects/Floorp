@@ -1167,9 +1167,6 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	action += "?";
 	action += input;
 
-	// remember the text of the last search operation
-	RememberLastSearchText(searchStr);
-
 	// return a copy of the resulting search URL
 	*resultURL = action.ToNewCString();
 	return(NS_OK);
@@ -1178,11 +1175,11 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 
 
 NS_IMETHODIMP
-InternetSearchDataSource::RememberLastSearchText(const PRUnichar *searchStr)
+InternetSearchDataSource::RememberLastSearchText(const PRUnichar *escapedSearchStr)
 {
 	nsresult		rv;
 	nsCOMPtr<nsIRDFLiteral>	textLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(searchStr, getter_AddRefs(textLiteral))))
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(escapedSearchStr, getter_AddRefs(textLiteral))))
 	{
 		nsCOMPtr<nsIRDFNode>	textNode;
 		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_LastText, PR_TRUE,
@@ -1292,7 +1289,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		}
 		if (searchText.Length() < 1)	return(NS_RDF_NO_VALUE);
 
-		// remember the text of the last search operation
+		// remember the text of the last search
 		RememberLastSearchText(searchText.GetUnicode());
 
 #ifdef	DEBUG_SEARCH_OUTPUT
