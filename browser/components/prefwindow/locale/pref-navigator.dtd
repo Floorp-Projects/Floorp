@@ -14,13 +14,15 @@
 <!ENTITY  windowsAndTabs.label      "Windows and Tabs">
 <!ENTITY  background.label          "Open Links in the background">
 
-<!ENTITY defaultDir.label "Download Folder">
-<!ENTITY rememberLast.label "Ask me where to save every file">
-<!ENTITY useDownloadDir.label "Save all files to this folder:">
-<!ENTITY browse.label   "Browse...">
-
 #ifdef XP_WIN
 <!ENTITY defaultBrowserGroup.label  "Default Browser">
 <!ENTITY defaultBrowserButton.label "Set Default Browser">
 <!ENTITY makeDefaultText            "Set &brandShortName; as your default browser.">
 #endif
+
+<!-- XXXben oh please, can we do better than this text-wise? -->
+<!ENTITY showConnections.label      "Connection Settings">
+<!ENTITY showConnections.accesskey  "o">
+
+<!ENTITY proxiesInfo.label          "Set up Proxies for accessing the internet.">
+<!ENTITY connectionsInfo.caption    "Connection">

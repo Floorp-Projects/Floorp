@@ -18,6 +18,15 @@
 # 
 # Contributor(s): 
 
+var _elementIDs = ["networkProxyType",
+                    "networkProxyFTP", "networkProxyFTP_Port",
+                    "networkProxyGopher", "networkProxyGopher_Port",
+                    "networkProxyHTTP", "networkProxyHTTP_Port", 
+                    "networkProxySOCKS", "networkProxySOCKS_Port",
+                    "networkProxySOCKSVersion",
+                    "networkProxySSL", "networkProxySSL_Port", 
+                    "networkProxyNone", "networkProxyAutoconfigURL"];
+
 function Startup()
 {
   DoEnabling();
@@ -78,10 +87,18 @@ function DoEnabling()
 const nsIProtocolProxyService = Components.interfaces.nsIProtocolProxyService;
 const kPROTPROX_CID = '{e9b301c0-e0e4-11D3-a1a8-0050041caf44}';
 
-function ReloadPAC() {
+function ReloadPAC() 
+{
   var autoURL = document.getElementById("networkProxyAutoconfigURL");
   var pps = Components.classesByID[kPROTPROX_CID]
                        .getService(nsIProtocolProxyService);
   pps.configureFromPAC(autoURL.value);
 }   
+
+function onConnectionsDialogOK()
+{
+  window.opener.top.hPrefWindow.wsm.savePageData(window.location.href, window);
+  
+  return true;
+}
 

@@ -163,3 +163,8 @@ function Startup()
   parent.hPrefWindow.registerOKCallbackFunc(onOK);
 }
       
+function showConnections()
+{
+  openDialog("chrome://browser/content/pref/pref-connection.xul", "", "centerscreen,chrome,modal=yes,dialog=yes");
+}
+

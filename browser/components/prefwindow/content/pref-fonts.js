@@ -53,30 +53,30 @@ var variableSize, fixedSize, minSize, languageList;
 var languageData = [];
 var currentLanguage;
 var gPrefutilitiesBundle;
+var gPrefWindow = window.opener.parent.hPrefWindow;
 
 // manual data retrieval function for PrefWindow
 function GetFields()
   {
-    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
-
+    var dataObject = { };
+    
     // store data for language independent widgets
     var lists = ["selectLangs", "proportionalFont"];
     for( var i = 0; i < lists.length; i++ )
       {
         if( !( "dataEls" in dataObject ) )
-          dataObject.dataEls = [];
-        dataObject.dataEls[ lists[i] ] = [];
+          dataObject.dataEls = new Object;
+        dataObject.dataEls[ lists[i] ] = new Object;
         dataObject.dataEls[ lists[i] ].value = document.getElementById( lists[i] ).value;
       }
 
    dataObject.defaultFont = document.getElementById( "proportionalFont" ).value;
    dataObject.fontDPI = document.getElementById( "screenResolution" ).value;
    dataObject.useMyFonts = document.getElementById( "useMyFonts" ).checked ? 1 : 0;
-
+   
    var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUseSystemColors", "browserUnderlineAnchors", "useMyColors", "useMyFonts"];
-   for (i = 0; i < items.length; ++i) {
-     dataObject.dataEls[items[i]] = [];
-   }
+   for (i = 0; i < items.length; ++i)
+     dataObject.dataEls[items[i]] = new Object;
    dataObject.dataEls["foregroundText"].value = document.getElementById("foregroundtextmenu").color;
    dataObject.dataEls["background"].value = document.getElementById("backgroundmenu").color;
    dataObject.dataEls["unvisitedLinks"].value = document.getElementById("unvisitedlinkmenu").color;
@@ -116,7 +116,7 @@ function SetFields( aDataObject )
             var preftype = element.getAttribute( "preftype" );
             if( prefstring && preftype )
               {
-                prefvalue = parent.hPrefWindow.getPref( preftype, prefstring );
+                prefvalue = gPrefWindow.getPref( preftype, prefstring );
                 element.selectedItem = element.getElementsByAttribute( "value", prefvalue )[0];
               }
           }
@@ -131,7 +131,7 @@ function SetFields( aDataObject )
       }
     else
       {
-        prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
+        prefvalue = gPrefWindow.getPref( "int", "browser.display.screen_resolution" );
         if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
             resolution = prefvalue;
         else
@@ -140,11 +140,11 @@ function SetFields( aDataObject )
     
     setResolution( resolution );
     
-    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.screen_resolution" ) ) {
+    if ( gPrefWindow.getPrefIsLocked( "browser.display.screen_resolution" ) ) {
         screenResolution.disabled = true;
     }
 
-    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.use_document_fonts" ) ) {
+    if ( gPrefWindow.getPrefIsLocked( "browser.display.use_document_fonts" ) ) {
         useMyFontsCheckbox.disabled = true;
     }
    if ("dataEls" in aDataObject) {
@@ -165,7 +165,7 @@ function SetFields( aDataObject )
        elt = document.getElementById(checkboxes[i]);
        prefstring = elt.getAttribute( "prefstring" );
        if( prefstring  ) {
-         prefvalue = parent.hPrefWindow.getPref( "bool", prefstring );
+         prefvalue = gPrefWindow.getPref( "bool", prefstring );
          elt.checked = prefvalue;
        }
      }
@@ -174,13 +174,13 @@ function SetFields( aDataObject )
        elt = document.getElementById(colors[i]);
        prefstring = elt.nextSibling.getAttribute("prefstring");
        if (prefstring) {
-         prefvalue = parent.hPrefWindow.getPref("color", prefstring);
+         prefvalue = gPrefWindow.getPref("color", prefstring);
          elt.color = prefvalue;
        }
      }
-     var useDocColors = parent.hPrefWindow.getPref("bool", "browser.display.use_document_colors");
+     var useDocColors = gPrefWindow.getPref("bool", "browser.display.use_document_colors");
      document.getElementById("useMyColors").checked = !useDocColors;
-     var useDocFonts = parent.hPrefWindow.getPref("int", "browser.display.use_document_fonts");
+     var useDocFonts = gPrefWindow.getPref("int", "browser.display.use_document_fonts");
      document.getElementById("useMyFonts").checked = !useDocFonts;
 
    }
@@ -188,15 +188,13 @@ function SetFields( aDataObject )
 
 function Startup()
   {
+    // Initialize the sub-dialog  
     variableSize = document.getElementById( "sizeVar" );
     fixedSize    = document.getElementById( "sizeMono" );
     minSize      = document.getElementById( "minSize" );
     languageList = document.getElementById( "selectLangs" );
 
     gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
-
-    // register our ok callback function
-    parent.hPrefWindow.registerOKCallbackFunc( saveFontPrefs );
 
     // eventually we should detect the default language and select it by default
     selectLanguage();
@@ -241,7 +239,7 @@ function Startup()
 
     // Get the pref and set up the dialog appropriately. Startup is called
     // after SetFields so we can't rely on that call to do the business.
-    var prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
+    var prefvalue = gPrefWindow.getPref( "int", "browser.display.screen_resolution" );
     if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
         resolution = prefvalue;
     else
@@ -251,10 +249,17 @@ function Startup()
 
     // This prefstring is a contrived pref whose sole purpose is to lock some
     // elements in this panel.  The value of the pref is not used and does not matter.
-    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
+    if ( gPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
       disableAllFontElements();
     }
   }
+  
+function onFontsDialogOK()
+  {
+    window.opener.top.hPrefWindow.wsm.savePageData(window.location.href, window);
+    
+    return true;
+  }   
 
 function getFontEnumerator()
   {
@@ -467,7 +472,7 @@ function saveFontPrefs()
             var currValue = "";
             try
               {
-                currValue = pref.CopyUnicharPref( fontPrefString );
+                currValue = gPrefWindow.pref.CopyUnicharPref( fontPrefString );
               }
             catch(e)
               {
@@ -478,7 +483,7 @@ function saveFontPrefs()
               {
                 if (dataValue)
                   {
-                    pref.SetUnicharPref( fontPrefString, dataValue );
+                    gPrefWindow.pref.SetUnicharPref( fontPrefString, dataValue );
                   }
                 else
                   {
@@ -489,7 +494,7 @@ function saveFontPrefs()
                     try
                       {
                         // ClearUserPref throws an exception...
-                        pref.ClearUserPref( fontPrefString );
+                        gPrefWindow.pref.ClearUserPref( fontPrefString );
                       }
                     catch(e)
                       {
@@ -503,19 +508,19 @@ function saveFontPrefs()
         var currVariableSize = 12, currFixedSize = 12, minSizeVal = 0;
         try
           {
-            currVariableSize = pref.GetIntPref( variableSizePref );
-            currFixedSize = pref.GetIntPref( fixedSizePref );
-            minSizeVal = pref.GetIntPref( minSizePref );
+            currVariableSize = gPrefWindow.pref.GetIntPref( variableSizePref );
+            currFixedSize = gPrefWindow.pref.GetIntPref( fixedSizePref );
+            minSizeVal = gPrefWindow.pref.GetIntPref( minSizePref );
           }
         catch(e)
           {
           }
         if( currVariableSize != dataObject.languageData[language].variableSize )
-          pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
+          gPrefWindow.pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
         if( currFixedSize != dataObject.languageData[language].fixedSize )
-          pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
+          gPrefWindow.pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
         if ( minSizeVal != dataObject.languageData[language].minSize ) {
-          pref.SetIntPref ( minSizePref, dataObject.languageData[language].minSize );
+          gPrefWindow.pref.SetIntPref ( minSizePref, dataObject.languageData[language].minSize );
         }
       }
 
@@ -526,24 +531,24 @@ function saveFontPrefs()
     var myColors = dataObject.dataEls["useMyColors"].checked;
     try
       {
-        var currDPI = pref.GetIntPref( "browser.display.screen_resolution" );
-        var currFonts = pref.GetIntPref( "browser.display.use_document_fonts" );
-        var currColors = pref.GetBoolPref("browser.display.use_document_colors");
-        var currDefault = pref.CopyUnicharPref( "font.default" );
+        var currDPI = gPrefWindow.pref.GetIntPref( "browser.display.screen_resolution" );
+        var currFonts = gPrefWindow.pref.GetIntPref( "browser.display.use_document_fonts" );
+        var currColors = gPrefWindow.pref.GetBoolPref("browser.display.use_document_colors");
+        var currDefault = gPrefWindow.pref.CopyUnicharPref( "font.default" );
       }
     catch(e)
       {
       }
     if( currDPI != fontDPI )
-      pref.SetIntPref( "browser.display.screen_resolution", fontDPI );
+      gPrefWindow.pref.SetIntPref( "browser.display.screen_resolution", fontDPI );
     if( currFonts == myFonts )
-      pref.SetIntPref( "browser.display.use_document_fonts", !myFonts );
+      gPrefWindow.pref.SetIntPref( "browser.display.use_document_fonts", !myFonts );
     if( currDefault != defaultFont )
       {
-        pref.SetUnicharPref( "font.default", defaultFont );
+        gPrefWindow.pref.SetUnicharPref( "font.default", defaultFont );
       }
     if (currColors == myColors)
-      pref.SetBoolPref("browser.display.use_document_colors", !myColors);
+      gPrefWindow.pref.SetBoolPref("browser.display.use_document_colors", !myColors);
 
     var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks"];
     var prefs = ["browser.display.foreground_color", "browser.display.background_color",
@@ -551,13 +556,13 @@ function saveFontPrefs()
     var prefvalue;
     for (var i = 0; i < items.length; ++i) {
       prefvalue = dataObject.dataEls[items[i]].value;
-      pref.SetUnicharPref(prefs[i], prefvalue)
+      gPrefWindow.pref.SetUnicharPref(prefs[i], prefvalue)
     }
     items = ["browserUseSystemColors", "browserUnderlineAnchors"];
     prefs = ["browser.display.use_system_colors", "browser.underline_anchors"];
     for (var i = 0; i < items.length; ++i) {
       prefvalue = dataObject.dataEls[items[i]].checked;
-      pref.SetBoolPref(prefs[i], prefvalue)
+      gPrefWindow.pref.SetBoolPref(prefs[i], prefvalue)
     }
   }
 
@@ -641,11 +646,10 @@ function selectLanguage()
     try 
       {
         var minSizePref = "font.minimum-size." + languageList.value;
-        minSizeVal = pref.GetIntPref( minSizePref );
+        minSizeVal = gPrefWindow.pref.GetIntPref( minSizePref );
       }
     catch(e) { }
     minSizeSelect( minSizeVal );
-
     currentLanguage = languageList.value;
   }
 
