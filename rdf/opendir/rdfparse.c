@@ -39,6 +39,11 @@ getResource (char* key, int createp) {
   } else return NULL;
 }
 
+char* 
+RDF_ResourceID (RDF_Resource u) {
+  return u->url;
+}
+
 void readRDFFile (char* file) {
   FILE* f = fopen(file, "r");	
   if (f) {
@@ -82,13 +87,16 @@ int
 rdf_DigestNewStuff (char* url, char* data, int len) {
   RDFT rf = (RDFT)getRDFT(url, 1) ; 
   int ok = 1;
+  RDF_Resource u;
   unloadRDFT(rf);
   memset(rf, '\0', sizeof(RDF_FileStruct));
   rf->line = (char*)getMem(RDF_BUF_SIZE);
   rf->holdOver = (char*)getMem(RDF_BUF_SIZE);
   rf->depth = 1;
   rf->lastItem = rf->stack[0] ;
-  ok = parseNextRDFXMLBlobInt(rf, data, len);    
+  u = RDF_GetResource("Top/Computers/AI", 0);
+  ok = parseNextRDFXMLBlobInt(rf, data, len); 
+  u = RDF_GetResource("Top/Computers/AI", 0);
   if (!ok) unloadRDFT(rf);
   freeMem(rf->line);
   rf->line = NULL;
@@ -283,23 +291,7 @@ parseNextRDFToken (RDFT f, char* token)
 {
   char* attlist[2*MAX_ATTRIBUTES+1];
   char* elementName;
-  if (token[0] == '<') {
-    size_t len = strlen(token);
-    if (token[len-2] != '/') {
-      if (token[1] == '/') {
-        char* tok = getMem(len);
-        memcpy(tok, &token[2], len-3);
-        if (!stringEquals(tok, f->tagStack[f->tagDepth-1])) {
-          sprintf(error_string, "Unbalanced tags : Expecting </%s>, found %s", 
-                  f->tagStack[f->tagDepth-1], token);
-          return 0;
-        } else {
-          f->tagDepth--;
-          freeMem(tok);
-        }
-      } 
-    }
-  }
+  
         
   if (token[0] != '<')   {
     if ((f->status == EXPECTING_OBJECT) && (f->depth > 1)) {
@@ -372,7 +364,6 @@ parseNextRDFToken (RDFT f, char* token)
       if (url) {
         RDF_Resource eln = getResource(elementName, 1);      
         obj =  getResource(url, 1);        
-        freeMem(url);
         addElementProps (attlist, elementName, f, obj) ;     
         remoteStoreAdd(f, f->stack[f->depth-1], eln, obj, RDF_RESOURCE_TYPE,  1);
       } 

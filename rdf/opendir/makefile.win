@@ -6,20 +6,22 @@ INCLUDES = -I..\..\..\include -I..\..\include
 NSLIB = ..\..\..\lib
 WAILIB= c:\netscape\suitespot\wai\lib
 LIBS = $(WAILIB)\ONEiiop10.lib WSOCK32.lib
-CPPFLAGS=$(INCLUDES) -DXP_WIN32 -DWIN32 -DDEBUG /MD
 OPTIMIZER=-Zi -Od -DDEBUG
+CPPFLAGS=$(INCLUDES) $(OPTIMIZER) -DXP_WIN32 -DWIN32  /MD
+
 
 OBJS = opendir.o \
        rdf.o  \
        rdfparse.o \
        remstore.o \
        hash.o  \
+       genopendir.o \
        $(NULL)	
     
 
 all: opendir
 
-opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c
+opendir: opendir.c rdf.c rdfparse.c remstore.c hash.c genopendir.c
 	$(CC) $(CPPFLAGS) $(LIBS) $? -o  $@
 
 clean:
