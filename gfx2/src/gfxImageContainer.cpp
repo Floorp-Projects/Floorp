@@ -126,7 +126,7 @@ NS_IMETHODIMP gfxImageContainer::AppendFrame(gfxIImageFrame *item)
   this->GetNumFrames(&numFrames);
 
   if (!mTimer){
-    if (numFrames > 0) {
+    if (numFrames > 1) {
       // Since we have more than one frame we need a timer
       mTimer = do_CreateInstance("@mozilla.org/timer;1");
       
@@ -195,19 +195,25 @@ NS_IMETHODIMP gfxImageContainer::StartAnimation()
   PRUint32 numFrames;
   this->GetNumFrames(&numFrames);
 
-  if (numFrames > 0) {
+  if (numFrames > 1) {
   
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
 
     PRInt32 timeout;
     nsCOMPtr<gfxIImageFrame> currentFrame;
     this->GetCurrentFrame(getter_AddRefs(currentFrame));
-    currentFrame->GetTimeout(&timeout);
-    if (timeout != -1 &&
-        timeout >= 0) { // -1 means display this frame forever
+    if (currentFrame) {
+      currentFrame->GetTimeout(&timeout);
+      if (timeout != -1 &&
+          timeout >= 0) { // -1 means display this frame forever
 
+        mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
+                     timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+      }
+    } else {
+      // XXX hack.. the timer notify code will do the right thing, so just get that started
       mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this),
-                   timeout, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+                   100, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
     }
   }
 
@@ -279,13 +285,12 @@ NS_IMETHODIMP_(void) gfxImageContainer::Notify(nsITimer *timer)
     if (numFrames == mCurrentAnimationFrame) {
       GetFrameAt(0, getter_AddRefs(nextFrame));
       mCurrentAnimationFrame = 0;
-      mCurrentFrame = 0;
       nextFrame->GetTimeout(&timeout);
     } else {
       GetFrameAt(mCurrentAnimationFrame++, getter_AddRefs(nextFrame));
-      mCurrentFrame = mCurrentAnimationFrame;
       nextFrame->GetTimeout(&timeout);
     }
+    mCurrentFrame = mCurrentAnimationFrame;
   } else {
     GetFrameAt(mCurrentFrame, getter_AddRefs(nextFrame));
     nextFrame->GetTimeout(&timeout);
