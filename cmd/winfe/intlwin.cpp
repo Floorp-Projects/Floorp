@@ -34,7 +34,6 @@
 #include "java.h"
 #endif
 
-#include "cuvfs.h"
 #include "intl_csi.h"
 #include "edt.h"
 
