@@ -3954,25 +3954,6 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   else
 #endif
   {
-    //check to see if "this" is a blockframe if so we need to advance the linenum immediately
-    //only if its dir is "next"
-    if (aPos->mDirection == eDirNext)
-    {
-      nsCOMPtr<nsILineIteratorNavigator> tempLi; 
-      if (NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(tempLi))))
-      {
-        thisLine++;
-        result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
-                           &lineFlags);
-        if (NS_SUCCEEDED(result) && firstFrame)
-          traversedFrame = firstFrame;
-        else
-        {
-          return NS_ERROR_FAILURE;
-        }
-      }
-    }
-
     result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
                          &lineFlags);
     if (NS_FAILED(result))
