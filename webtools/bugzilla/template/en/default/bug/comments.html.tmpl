@@ -46,17 +46,19 @@
     <div [% "class=\"bz_private\"" IF comment.isprivate %]>
       [% IF count > 0 %]
         <br>
-        ------- <i>Additional Comment
-        <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
-        <a href="mailto:[% comment.email FILTER html %]">
-          [% comment.name FILTER html %]</a>
-        [%+ comment.time FILTER time %] 
-        </i>
-        [% IF mode == "edit" %]
-        <script type="text/javascript" language="JavaScript"><!-- 
-          addReplyLink([% count %]); //--></script>
-        [% END %]
-        -------
+        <span class="bz_comment">
+          ------- <i>Additional Comment
+          <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
+          <a href="mailto:[% comment.email FILTER html %]">
+            [% comment.name FILTER html %]</a>
+          [%+ comment.time FILTER time %] 
+          </i>
+          [% IF mode == "edit" %]
+          <script type="text/javascript" language="JavaScript"><!-- 
+            addReplyLink([% count %]); //--></script>
+          [% END %]
+          -------
+        </span>
       [% END %]
         
       [% IF mode == "edit" && isinsider %]
