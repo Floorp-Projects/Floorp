@@ -122,6 +122,7 @@ GC_stdout
 GC_stderr
 GC_address_to_source
 GC_malloc_atomic
+GC_trace_object
 MWUnmangle
 # GetCatInfoNoName
 # GetDInfo
