@@ -477,7 +477,7 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
       result = mAttrStyleSheet->Reset(aURL);
     }
     if (NS_SUCCEEDED(result)) {
-      AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+      AddStyleSheet(mAttrStyleSheet, 0); // tell the world about our new style sheet
 
       if (!mStyleAttrStyleSheet) {
         result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
@@ -486,7 +486,7 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
         result = mStyleAttrStyleSheet->Reset(aURL);
       }
       if (NS_SUCCEEDED(result)) {
-        AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
+        AddStyleSheet(mStyleAttrStyleSheet, 0); // tell the world about our new style sheet
       }
     }
   }
@@ -1161,8 +1161,9 @@ nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
   return NS_OK;
 }
 
+// subclass hooks for sheet ordering
 void
-nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
+nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   if (aSheet == mAttrStyleSheet) {  // always first
     mStyleSheets.InsertElementAt(aSheet, 0);

@@ -392,7 +392,7 @@ public:
   NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount);
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet);
   NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex);
-  virtual void AddStyleSheet(nsIStyleSheet* aSheet);
+  virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
   
   NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets,
@@ -560,7 +560,9 @@ public:
 protected:
   NS_IMETHOD GetDTD(nsIDTD** aDTD) const;
 
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hooks for sheet ordering
+  // subclass hooks for sheet ordering
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
+                                     PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
                                           PRInt32 aIndex);
 

@@ -196,7 +196,8 @@ protected:
 
   nsIContent *MatchId(nsIContent *aContent, const nsAReadableString& aId);
 
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
+                                     PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
                                           PRInt32 aIndex);
   static PRBool MatchLinks(nsIContent *aContent, nsString* aData);

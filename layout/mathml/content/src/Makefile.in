@@ -61,4 +61,3 @@ EXPORT_RESOURCE_CONTENT = \
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd
 	$(INSTALL) $(srcdir)/mathml.css $(DIST)/bin/res
-	$(PERL) $(srcdir)/mathml-css.pl $(DIST)/bin/res/ua.css

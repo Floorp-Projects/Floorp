@@ -1025,7 +1025,8 @@ XULContentSinkImpl::HandleCDataSection(const PRUnichar *aData, PRUint32 aLength)
 }
 
 NS_IMETHODIMP 
-XULContentSinkImpl::HandleDoctypeDecl(const PRUnichar *aDoctype, PRUint32 aLength)
+XULContentSinkImpl::HandleDoctypeDecl(const PRUnichar *aDoctype, PRUint32 aLength,
+                                      nsISupports* aCatalogData)
 {
     return NS_OK;
 }

@@ -165,60 +165,124 @@ Driver_HandleEndDoctypeDecl(void *aUserData)
   }
 }
 
-
 PR_STATIC_CALLBACK(int)
-Driver_HandleExternalEntityRef(XML_Parser parser,
+Driver_HandleExternalEntityRef(void* aExternalEntityRefHandler,
                                const XML_Char *openEntityNames,
                                const XML_Char *base,
                                const XML_Char *systemId,
                                const XML_Char *publicId)
 {
-  int result = PR_TRUE;
- 
-  // Load the external entity into a buffer
-  nsCOMPtr<nsIInputStream> in;
-  nsAutoString absURL;
-
-  nsresult rv = nsExpatDriver::OpenInputStream(publicId, systemId, base, getter_AddRefs(in), absURL);
-
-  if (NS_FAILED(rv)) {
-    return result;
+  NS_ASSERTION(aExternalEntityRefHandler, "expat driver should exist");
+  if (aExternalEntityRefHandler) {
+    return NS_STATIC_CAST(nsExpatDriver*,
+      aExternalEntityRefHandler)->HandleExternalEntityRef(
+        (const PRUnichar*)openEntityNames, (const PRUnichar*)base,
+        (const PRUnichar*)systemId, (const PRUnichar*)publicId);
   }
-
-  nsCOMPtr<nsIUnicharInputStream> uniIn;
-
-  NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 1024);
-  
-  if (uniIn) {
-    XML_Parser entParser = 
-      XML_ExternalEntityParserCreate(parser, 0, (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
-
-    if (entParser) {
-      PRUint32 readCount = 0;
-      PRUnichar tmpBuff[1024] = {0};
-      PRUnichar *uniBuf = tmpBuff;
-      
-      XML_SetBase(entParser, (const XML_Char*) absURL.get());
-
-      while (NS_SUCCEEDED(uniIn->Read(uniBuf, 0, 1024, &readCount)) && result) {
-        if (readCount) {
-          // Pass the buffer to expat for parsing
-          result = XML_Parse(entParser, (char *)uniBuf,  readCount * sizeof(PRUnichar), 0);
-        }
-        else {
-          // done reading
-          result = XML_Parse(entParser, nsnull, 0, 1);
-          break;
-        }
-      }
-      XML_ParserFree(entParser);
-    }
-  }
-  
-  return result;
+  return 1;
 }
 
 /***************************** END CALL BACKS *********************************/
+
+/***************************** CATALOG UTILS **********************************/
+
+// Initially added for bug 113400 to switch from the remote "XHTML 1.0 plus
+// MathML 2.0" DTD to the the lightweight customized version that Mozilla uses.
+// Since Mozilla is not validating, no need to fetch a *huge* file at each click.
+// XXX The cleanest solution here would be to fix Bug 98413: Implement XML Catalogs 
+struct nsCatalogData {
+  const char* mPublicID;
+  const char* mLocalDTD;
+  const char* mAgentSheet;
+};
+
+// The order of this table is guestimated to be in the optimum order
+static const nsCatalogData kCatalogTable[] = {
+ {"-//W3C//DTD XHTML 1.0 Transitional//EN",    "xhtml11.dtd", nsnull },
+ {"-//W3C//DTD XHTML 1.1//EN",                 "xhtml11.dtd", nsnull },
+ {"-//W3C//DTD XHTML 1.0 Strict//EN",          "xhtml11.dtd", nsnull },
+ {"-//W3C//DTD XHTML 1.0 Frameset//EN",        "xhtml11.dtd", nsnull },
+ {"-//W3C//DTD XHTML Basic 1.0//EN",           "xhtml11.dtd", nsnull },
+ {"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd",  "resource:/res/mathml.css" },
+ {"-//W3C//DTD SVG 20001102//EN",              "svg.dtd",     nsnull },
+ {nsnull, nsnull, nsnull}
+};
+
+static const nsCatalogData*
+LookupCatalogData(const PRUnichar* aPublicID)
+{
+  nsCAutoString publicID;
+  publicID.AssignWithConversion(aPublicID);
+
+  // linear search for now since the number of entries is going to
+  // be negligible, and the fix for bug 98413 would get rid of this
+  // code anyway
+  const nsCatalogData* data = kCatalogTable;
+  while (data->mPublicID) {
+    if (publicID.Equals(data->mPublicID)) {
+      return data;
+    }
+    ++data;
+  }
+  return nsnull;
+}
+
+// aCatalogData can be null. If not null, it provides a hook to additional
+// built-in knowledge on the resource that we are trying to load.
+// aDTD is an in/out parameter.  Returns true if the local DTD specified in the
+// catalog data exists or if the filename contained within the url exists in
+// the special DTD directory. If either of this exists, aDTD is set to the
+// file: url that points to the DTD file found in the local DTD directory AND
+// the old URI is relased.
+static PRBool
+IsLoadableDTD(const nsCatalogData* aCatalogData, nsCOMPtr<nsIURI>* aDTD)
+{
+  PRBool isLoadable = PR_FALSE;
+  nsresult res = NS_OK;
+
+  if (!aDTD || !*aDTD) {
+    NS_ASSERTION(0, "Null parameter.");
+    return PR_FALSE;
+  }
+
+  nsCAutoString fileName;
+  if (aCatalogData) {
+    // remap the DTD to a known local DTD
+    fileName.Assign(aCatalogData->mLocalDTD);
+  }
+  if (fileName.IsEmpty()) {
+    // try to see if the user has installed the DTD file -- we extract the
+    // filename.ext of the DTD here. Hence, for any DTD for which we have
+    // no predefined mapping, users just have to copy the DTD file to our
+    // special DTD directory and it will be picked
+    nsCOMPtr<nsIURL> dtdURL;
+    dtdURL = do_QueryInterface(*aDTD, &res);
+    if (NS_FAILED(res)) {
+      return PR_FALSE;
+    }
+    res = dtdURL->GetFileName(fileName);
+    if (NS_FAILED(res) || fileName.IsEmpty()) {
+      return PR_FALSE;
+    }
+  }
+  nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  dtdPath += PromiseFlatCString(nsDependentCString(kDTDDirectory) + fileName).get();
+  if (dtdPath.Exists()) {
+    // The DTD was found in the local DTD directory.
+    // Set aDTD to a file: url pointing to the local DTD
+    nsFileURL dtdFile(dtdPath);
+    nsCOMPtr<nsIURI> dtdURI;
+    NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
+    if (dtdURI) {
+      *aDTD = dtdURI;
+      isLoadable = PR_TRUE;
+    }
+  }
+
+  return isLoadable;
+}
+
+/***************************** END CATALOG UTILS ******************************/
 
 NS_IMPL_ISUPPORTS2(nsExpatDriver,
                    nsITokenizer,
@@ -241,7 +305,8 @@ nsExpatDriver::nsExpatDriver()
    mBytesParsed(0),
    mBytePosition(0),
    mInternalState(NS_OK),
-   mDoctypePos(-1)
+   mDoctypePos(-1),
+   mCatalogData(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -386,7 +451,15 @@ nsExpatDriver::HandleEndDoctypeDecl()
   const PRUnichar* doctypeEnd   = mBuffer + ( XML_GetCurrentByteIndex(mExpatParser) - mBytesParsed ) / 2;
  
   if(mSink) {
-    mInternalState = mSink->HandleDoctypeDecl(doctypeStart, doctypeEnd - doctypeStart);
+    // let the sink know any additional knowledge that we have about the document
+    // (currently, from bug 124570, we only expect to pass additional agent sheets
+    // needed to layout the XML vocabulary of the document)
+    nsIURI* data = nsnull;
+    if (mCatalogData && mCatalogData->mAgentSheet) {
+      NS_NewURI(&data, mCatalogData->mAgentSheet);
+    }
+    mInternalState = mSink->HandleDoctypeDecl(doctypeStart, doctypeEnd - doctypeStart, data);
+    NS_IF_RELEASE(data);
   }
   
   mDoctypePos = kNotInDoctype;
@@ -394,130 +467,90 @@ nsExpatDriver::HandleEndDoctypeDecl()
   return NS_OK;
 }
 
-// Initially added for bug 113400 to switch from the remote "XHTML 1.0 plus
-// MathML 2.0" DTD to the the lightweight customized version that Mozilla uses.
-// Since Mozilla is not validating, no need to fetch a *huge* file at each click.
-// XXX The cleanest solution here would be to fix Bug 98413: Implement XML Catalogs 
-struct nsCatalogEntry {
-  const char* mPublicID;
-  const char* mLocalDTD;
-};
-
-// The order of this table is guestimated to be in the optimum order
-static const nsCatalogEntry kCatalogTable[] = {
- {"-//W3C//DTD XHTML 1.0 Transitional//EN",    "xhtml11.dtd" },
- {"-//W3C//DTD XHTML 1.1//EN",                 "xhtml11.dtd" },
- {"-//W3C//DTD XHTML 1.0 Strict//EN",          "xhtml11.dtd" },
- {"-//W3C//DTD XHTML 1.0 Frameset//EN",        "xhtml11.dtd" },
- {"-//W3C//DTD XHTML Basic 1.0//EN",           "xhtml11.dtd" },
- {"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd"  },
- {"-//W3C//DTD SVG 20001102//EN",              "svg.dtd"     },
- {nsnull, nsnull}
-};
-
-static void
-RemapDTD(const XML_Char* aPublicID, nsAWritableCString& aLocalDTD)
+int 
+nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
+                                       const PRUnichar *base,
+                                       const PRUnichar *systemId,
+                                       const PRUnichar *publicId)
 {
-  nsCAutoString publicID;
-  publicID.AssignWithConversion((const PRUnichar*)aPublicID);
+  int result = 1;
 
-  // linear search for now since the number of entries is going to
-  // be negligible, and the fix for bug 98413 would get rid of this
-  // code anyway
-  aLocalDTD.Truncate();
-  const nsCatalogEntry* data = kCatalogTable;
-  while (data->mPublicID) {
-    if (publicID.Equals(data->mPublicID)) {
-      aLocalDTD = data->mLocalDTD;
-      return;
-    }
-    ++data;
-  }
-}
+  // Load the external entity into a buffer
+  nsCOMPtr<nsIInputStream> in;
+  nsAutoString absURL;
 
-// aDTD is an in/out parameter.  Returns true if the aDTD is a chrome url or if the
-// filename contained within the url exists in the special DTD directory.  
-// For the latter case, aDTD is set to the file: url that points to the DTD 
-// file found in the local DTD directory AND the old URI is relased.
-static PRBool
-IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
-{
-  PRBool isLoadable = PR_FALSE;
-  nsresult res = NS_OK;
+  nsresult rv = OpenInputStream(publicId, systemId, base, getter_AddRefs(in), absURL);
 
-  if (!aDTD || !*aDTD) {
-    NS_ASSERTION(0, "Null parameter.");
-    return PR_FALSE;
+  if (NS_FAILED(rv)) {
+    return result;
   }
 
-  // Return true if the url is a chrome url
-  res = (*aDTD)->SchemeIs("chrome", &isLoadable);
+  nsCOMPtr<nsIUnicharInputStream> uniIn;
 
-  // If the url is not a chrome url, check to see if a DTD file of the same name
-  // exists in the special DTD directory
-  if (!isLoadable) {
-    // try to see if we can map the public ID to a known local DTD
-    nsCAutoString fileName;
-    if (aFPIStr) {
-      RemapDTD(aFPIStr, fileName);
-    }
-    if (fileName.IsEmpty()) {
-      // try to see if the user has installed the DTD file -- we extract the
-      // filename.ext of the DTD here. Hence, for any DTD for which we have
-      // no predefined mapping, users just have to copy the DTD file to our
-      // special DTD directory and it will be picked
-      nsCOMPtr<nsIURL> dtdURL;
-      dtdURL = do_QueryInterface(*aDTD, &res);
-      if (NS_FAILED(res)) {
-        return PR_FALSE;
+  NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 1024);
+  
+  if (uniIn) {
+    XML_Parser entParser = 
+      XML_ExternalEntityParserCreate(mExpatParser, 0, (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
+
+    if (entParser) {
+      PRUint32 readCount = 0;
+      PRUnichar tmpBuff[1024] = {0};
+      PRUnichar *uniBuf = tmpBuff;
+
+      XML_SetBase(entParser, (const XML_Char*) absURL.get());
+
+      while (NS_SUCCEEDED(uniIn->Read(uniBuf, 0, 1024, &readCount)) && result) {
+        if (readCount) {
+          // Pass the buffer to expat for parsing
+          result = XML_Parse(entParser, (char *)uniBuf,  readCount * sizeof(PRUnichar), 0);
+        }
+        else {
+          // done reading
+          result = XML_Parse(entParser, nsnull, 0, 1);
+          break;
+        }
       }
-      res = dtdURL->GetFileName(fileName);
-      if (NS_FAILED(res) || fileName.IsEmpty()) {
-        return PR_FALSE;
-      }
-    }
-    nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    dtdPath += PromiseFlatCString(nsDependentCString(kDTDDirectory) + fileName).get();
-    if (dtdPath.Exists()) {
-      // The DTD was found in the local DTD directory.
-      // Set aDTD to a file: url pointing to the local DTD
-      nsFileURL dtdFile(dtdPath);
-      nsCOMPtr<nsIURI> dtdURI;
-      NS_NewURI(getter_AddRefs(dtdURI), nsDependentCString(dtdFile.GetURLString()));
-      if (dtdURI) {
-        *aDTD = dtdURI;
-        isLoadable = PR_TRUE;
-      }
+      XML_ParserFree(entParser);
     }
   }
-
-  return isLoadable;
+  
+  return result;
 }
 
 nsresult
-nsExpatDriver::OpenInputStream(const XML_Char* aFPIStr,
-                               const XML_Char* aURLStr, 
-                               const XML_Char* aBaseURL, 
+nsExpatDriver::OpenInputStream(const PRUnichar* aFPIStr,
+                               const PRUnichar* aURLStr, 
+                               const PRUnichar* aBaseURL, 
                                nsIInputStream** in, 
                                nsAString& aAbsURL) 
 {
   nsresult rv;
   nsCOMPtr<nsIURI> baseURI;  
-  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUCS2toUTF8((const PRUnichar*)aBaseURL));
+  rv = NS_NewURI(getter_AddRefs(baseURI), NS_ConvertUCS2toUTF8(aBaseURL).get());
   if (NS_SUCCEEDED(rv) && baseURI) {
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8((const PRUnichar*)aURLStr), nsnull, baseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aURLStr).get(), baseURI);
     if (NS_SUCCEEDED(rv) && uri) {
-      if (IsLoadableDTD(aFPIStr, address_of(uri))) {
-        rv = NS_OpenURI(in, uri);
-        nsCAutoString absURL;
-        uri->GetSpec(absURL);
-        aAbsURL = NS_ConvertUTF8toUCS2(absURL);
-      } 
-      else {
-        rv = NS_ERROR_NOT_IMPLEMENTED;
+      // check if it is alright to load this uri
+      PRBool isChrome = PR_FALSE;
+      uri->SchemeIs("chrome", &isChrome);
+      if (!isChrome) {
+        // since the url is not a chrome url, check to see if we can map the DTD
+        // to a known local DTD, or if a DTD file of the same name exists in the
+        // special DTD directory
+        if (aFPIStr) {
+          // see if the Formal Public Identifier (FPI) maps to a catalog entry
+          mCatalogData = LookupCatalogData(aFPIStr);
+        }
+        if (!IsLoadableDTD(mCatalogData, address_of(uri)))
+          return NS_ERROR_NOT_IMPLEMENTED;
       }
-    }    
+      rv = NS_OpenURI(in, uri);
+      nsCAutoString absURL;
+      uri->GetSpec(absURL);
+      aAbsURL = NS_ConvertUTF8toUCS2(absURL);
+    }
   }
   return rv;
 }
@@ -813,6 +846,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   XML_SetProcessingInstructionHandler(mExpatParser, Driver_HandleProcessingInstruction);
   XML_SetDefaultHandlerExpand(mExpatParser, Driver_HandleDefault);
   XML_SetExternalEntityRefHandler(mExpatParser, Driver_HandleExternalEntityRef);
+  XML_SetExternalEntityRefHandlerArg(mExpatParser, this);
   XML_SetCommentHandler(mExpatParser, Driver_HandleComment);
   XML_SetCdataSectionHandler(mExpatParser, Driver_HandleStartCdataSection,
                              Driver_HandleEndCdataSection);

@@ -256,13 +256,13 @@ public:
   NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount) = 0;
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet) = 0;
   NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex) = 0;
-  virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags) = 0;
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
   NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets) = 0;
 
   NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify) = 0;
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
-                                          PRBool mDisabled) = 0;
+                                          PRBool aDisabled) = 0;
 
   /**
    * Set the object from which a document can get a script context.

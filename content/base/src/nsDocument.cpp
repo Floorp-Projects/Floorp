@@ -1254,7 +1254,8 @@ nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex)
   return NS_OK;
 }
 
-void nsDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
+// subclass hooks for sheet ordering
+void nsDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   mStyleSheets.AppendElement(aSheet);
 }
@@ -1274,10 +1275,10 @@ void nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
   }
 }
 
-void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
+void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  InternalAddStyleSheet(aSheet);
+  InternalAddStyleSheet(aSheet, aFlags);
   NS_ADDREF(aSheet);
   aSheet->SetOwningDocument(this);
 
@@ -1378,7 +1379,7 @@ nsDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aN
     aNewSheets->GetElementAt(i, getter_AddRefs(supp));
     sheet = do_QueryInterface(supp);
     if (sheet) {
-      InternalAddStyleSheet(sheet);
+      InternalAddStyleSheet(sheet, 0);
       nsIStyleSheet* sheetPtr = sheet;
       NS_ADDREF(sheetPtr);
       sheet->SetOwningDocument(this);

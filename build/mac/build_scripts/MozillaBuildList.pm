@@ -186,20 +186,13 @@ sub InstallNonChromeResources()
         MakeAlias(":mozilla:layout:svg:base:src:svg.dtd",                              "$resource_dir"."dtd:");
     }
     
-    if (! $main::options{mathml})
-    {
-        MakeAlias(":mozilla:layout:html:document:src:ua.css",                          "$resource_dir");
-    }
-    else
+    if ($main::options{mathml})
     {
         MakeAlias(":mozilla:layout:mathml:content:src:mathml.dtd",                     "$resource_dir"."dtd:");
-        #// Building MathML so include the mathml.css file in ua.css
         MakeAlias(":mozilla:layout:mathml:content:src:mathml.css",                     "$resource_dir");
-        copy(":mozilla:layout:html:document:src:ua.css",                               "$resource_dir"."ua.css");
-        @ARGV = ("$resource_dir"."ua.css");
-        do ":mozilla:layout:mathml:content:src:mathml-css.pl";
     }
-    
+
+    MakeAlias(":mozilla:layout:html:document:src:ua.css",                          "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:html.css",                            "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:forms.css",                           "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:quirk.css",                           "$resource_dir");

@@ -216,7 +216,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 
 nsXMLDocument::nsXMLDocument() 
   : mAttrStyleSheet(nsnull), mInlineStyleSheet(nsnull), 
-    mParser(nsnull)
+    mCountCatalogSheets(0), mParser(nsnull)
 {
 }
 
@@ -700,10 +700,16 @@ nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
   return NS_OK;
 }
 
-void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
+// subclass hook for sheet ordering
+void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
-  if (aSheet == mAttrStyleSheet) {  // always first
-    mStyleSheets.InsertElementAt(aSheet, 0);
+  if (aFlags & NS_STYLESHEET_FROM_CATALOG) {
+    // always after other catalog sheets
+    mStyleSheets.InsertElementAt(aSheet, mCountCatalogSheets);
+    ++mCountCatalogSheets;
+  }
+  else if (aSheet == mAttrStyleSheet) {  // always after catalog sheets
+    mStyleSheets.InsertElementAt(aSheet, mCountCatalogSheets);
   }
   else if (aSheet == mInlineStyleSheet) {  // always last
     mStyleSheets.AppendElement(aSheet);
@@ -723,7 +729,8 @@ void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass ho
 void
 nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
-  mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset one for the attr style sheet
+  // offset w.r.t. catalog style sheets and the attr style sheet
+  mStyleSheets.InsertElementAt(aSheet, aIndex + mCountCatalogSheets + 1);
 }
 
 // nsIDOMDocument interface
@@ -1005,11 +1012,11 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
       }
     }
     if (NS_OK == result) {
-      AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+      AddStyleSheet(mAttrStyleSheet, 0); // tell the world about our new style sheet
       
       result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aUrl, this);
       if (NS_OK == result) {
-        AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
+        AddStyleSheet(mInlineStyleSheet, 0); // tell the world about our new style sheet
       }
     }
   }

@@ -671,7 +671,7 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
                                                        getter_AddRefs(sheet)))) {
         if (NS_SUCCEEDED(rv = sheet->Init(anURL, this))) {
             mAttrStyleSheet = sheet;
-            AddStyleSheet(mAttrStyleSheet);
+            AddStyleSheet(mAttrStyleSheet, 0);
         }
     }
 
@@ -689,7 +689,7 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
                                                        (void**)&inlineSheet))) {
         if (NS_SUCCEEDED(rv = inlineSheet->Init(anURL, this))) {
             mInlineStyleSheet = dont_QueryInterface(inlineSheet);
-            AddStyleSheet(mInlineStyleSheet);
+            AddStyleSheet(mInlineStyleSheet, 0);
         }
         NS_RELEASE(inlineSheet);
     }
@@ -1224,7 +1224,7 @@ nsXULDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 }
 
 void
-nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet)
+nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 {
     NS_PRECONDITION(aSheet, "null arg");
     if (!aSheet)
@@ -1644,7 +1644,7 @@ nsXULDocument::EndLoad()
                 if (useXULCache && IsChromeURI(sheetURL)) {
                     mCurrentPrototype->AddStyleSheetReference(sheetURL);
                 }
-                AddStyleSheet(sheet);
+                AddStyleSheet(sheet, 0);
             }
         }
     }
@@ -6488,7 +6488,7 @@ nsXULDocument::AddPrototypeSheets()
         rv = sheet->Clone(*getter_AddRefs(newsheet));
         if (NS_FAILED(rv)) return rv;
 
-        AddStyleSheet(newsheet);
+        AddStyleSheet(newsheet, 0);
     }
 
     return NS_OK;

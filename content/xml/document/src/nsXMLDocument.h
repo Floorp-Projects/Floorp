@@ -122,7 +122,8 @@ public:
   NS_DECL_NSIDOMXMLDOCUMENT
 
 protected:
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
+  // subclass hooks for sheet ordering
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
@@ -131,6 +132,10 @@ protected:
   // XXX This is not clean, but is there a better way? 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mInlineStyleSheet;
+  // For additional catalog sheets (if any) needed to layout the XML vocabulary
+  // of the document. Catalog sheets are kept at the beginning of our array of
+  // style sheets and this counter is used as an offset to distinguish them
+  PRInt32 mCountCatalogSheets;
   nsString mBaseTarget;
 
   nsIParser *mParser;
