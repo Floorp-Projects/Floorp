@@ -505,11 +505,11 @@ NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
-XPIDL_COMPILE 	= $(DIST)/host/bin/host_xpidl$(BIN_SUFFIX)
-XPIDL_LINK	= $(DIST)/host/bin/host_xpt_link$(BIN_SUFFIX)
+XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(DIST)/host/bin/host_xpidl$(BIN_SUFFIX)
+XPIDL_LINK	= $(CYGWIN_WRAPPER) $(DIST)/host/bin/host_xpt_link$(BIN_SUFFIX)
 else
-XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
-XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
+XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpidl$(BIN_SUFFIX)
+XPIDL_LINK	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d)
@@ -667,10 +667,10 @@ endif
 
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR	=
-MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND)
+MKDEPEND	= $(CYGWIN_WRAPPER) $(MOZ_NATIVE_MAKEDEPEND)
 else
 MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
-MKDEPEND	= $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
+MKDEPEND	= $(CYGWIN_WRAPPER) $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
 endif
 
 # Set link flags according to whether we want a console.

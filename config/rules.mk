@@ -85,21 +85,15 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 _LIBNAME_RELATIVE_PATHS=1
 else
 ifeq ($(OS_ARCH),WINNT)
-ifndef SRCS_IN_OBJDIR
-_NO_AUTO_VARS=1
-endif
 ifndef GNU_CC
 _LIBNAME_RELATIVE_PATHS=1
 endif
 endif
 endif
 
-ifdef SRCS_IN_OBJDIR
 ifeq ($(OS_ARCH),WINNT)
-_VPATH_SRCS = $(shell cygpath -w $< | sed -e 's|\\|/|g' | grep ^.:/ || cygpath -w `pwd`/$< | sed -e 's|\\|/|g')
-else
-_VPATH_SRCS = $<
-endif
+PWD := $(shell pwd)
+_VPATH_SRCS = $(if $(filter /%,$<),$<,$(PWD)/$<)
 else
 _VPATH_SRCS = $<
 endif
@@ -558,22 +552,6 @@ endif
 endif
 endif
 
-# Dependent libs
-ifdef USE_DEPENDENT_LIBS
-ifdef IS_COMPONENT
-
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst %.$(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%$(DLL_SUFFIX),$(notdir $(filter %.$(IMPORT_LIB_SUFFIX), $(EXTRA_DSO_LDOPTS)))))
-else
-DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst -l%,$(LIB_PREFIX)%$(DLL_SUFFIX),$(filter -l%, $(EXTRA_DSO_LDOPTS))))
-endif
-
-ifneq (,$(strip $(DEPENDENT_LIBS)))
-CXXFLAGS += -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
-endif
-endif
-endif
-
 ################################################################################
 
 all:: 
@@ -640,6 +618,33 @@ else
 endif # IS_COMPONENT
 endif # EXPORT_LIBRARY
 endif # LIBRARY_NAME
+
+# Dependent libs
+ifdef USE_DEPENDENT_LIBS
+ifdef IS_COMPONENT
+
+ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH))$(GNU_CXX))
+DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst %.$(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%$(DLL_SUFFIX),$(notdir $(filter %.$(IMPORT_LIB_SUFFIX), $(EXTRA_DSO_LDOPTS)))))
+else
+DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst -l%,$(DLL_PREFIX)%$(DLL_SUFFIX),$(filter -l%, $(EXTRA_DSO_LDOPTS))))
+endif
+
+ifneq (,$(strip $(DEPENDENT_LIBS)))
+DEFINES	+= -DHAVE_DEPENDENT_LIBS
+INCLUDES += -I.
+# This must match value in nsIGenericFactory.h
+DEPENDENT_LIBS_H = dependentLibs.h
+GARBAGE += $(DEPENDENT_LIBS_H)
+
+export:: $(DEPENDENT_LIBS_H)
+	
+$(DEPENDENT_LIBS_H): Makefile Makefile.in
+	@rm -f $@
+	echo "#define DEPENDENT_LIBS $(foreach f,$(DEPENDENT_LIBS),\"${f}\",) " > $@
+
+endif
+endif
+endif
 
 ##############################################
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
@@ -1049,13 +1054,14 @@ ifndef COMPILER_DEPEND
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
 ifeq ($(OS_ARCH),WINNT)
+_dos_srcdir := $(shell cygpath -w $(srcdir) | sed 's|\\|/|g')
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
-	echo "Building deps for $(srcdir)/$(<F)"; \
+	echo "Building deps for $<"; \
 	touch $(_MDDEPFILE) && \
-	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(srcdir)/$(<F) >/dev/null 2>&1 && \
+	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
-	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
+	cat $(_MDDEPFILE).old | sed -e "s|^$(_dos_srcdir)/||g" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
 fi
 endef
 else
@@ -1076,29 +1082,17 @@ endif # MOZ_AUTO_DEPS
 # Rules for building native targets must come first because of the host_ prefix
 host_%.o: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(srcdir)/$*.c
-else
 	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
-endif
 
 %: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(srcdir)/$*.c
-else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
-endif
 
 %.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(srcdir)/$*.c
-else
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
-endif
 
 moc_%.cpp: %.h Makefile Makefile.in
 	$(MOC) $< $(OUTOPTION)$@ 
@@ -1117,11 +1111,7 @@ endif
 
 %: %.cpp Makefile Makefile.in
 	@$(MAKE_DEPS_AUTO)
-ifdef _NO_AUTO_VARS
-	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(srcdir)/$*.cpp $(LDFLAGS)
-else
 	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(_VPATH_SRCS) $(LDFLAGS)
-endif
 
 #
 # Please keep the next two rules in sync.
@@ -1129,11 +1119,7 @@ endif
 %.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(srcdir)/$*.cc
-else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
-endif
 
 %.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
 	$(REPORT_BUILD)
@@ -1143,45 +1129,25 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
 	rm -f t_$*.cc
 else
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(srcdir)/$*.cpp
-else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
-endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
-	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
 %.s: %.cpp
-ifdef _NO_AUTO_VARS
-	$(CCC) -S $(COMPILE_CXXFLAGS) $(srcdir)/$*.cpp
-else
-	$(CCC) -S $(COMPILE_CXXFLAGS) $<
-endif
+	$(CCC) -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
 %.s: %.c
-ifdef _NO_AUTO_VARS
-	$(CC) -S $(COMPILE_CFLAGS) $(srcdir)/$*.c
-else
-	$(CC) -S $(COMPILE_CFLAGS) $<
-endif
+	$(CC) -S $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 %.i: %.cpp
-ifdef _NO_AUTO_VARS
-	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(srcdir)/$*.cpp > $*.i
-else
-	$(CCC) -C -E $(COMPILE_CXXFLAGS) $< > $*.i
-endif
+	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) > $*.i
 
 %.i: %.c
-ifdef _NO_AUTO_VARS
-	$(CC) -C -E $(COMPILE_CFLAGS) $(srcdir)/$*.c > $*.i
-else
-	$(CC) -C -E $(COMPILE_CFLAGS) $< > $*.i
-endif
+	$(CC) -C -E $(COMPILE_CFLAGS) $(_VPATH_SRCS) > $*.i
 
 %.res: %.rc
 	@echo Creating Resource file: $@
@@ -1189,9 +1155,9 @@ ifeq ($(OS_ARCH),OS2)
 	$(RC) $(RCFLAGS) -i $(subst /,\,$(srcdir)) -r $< $@
 else
 ifdef GNU_CC
-	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $<
+	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $(_VPATH_SRCS)
 else
-	$(RC) $(RCFLAGS) -r $(DEFINES) $(INCLUDES) $(OUTOPTION)$@ $<
+	$(RC) $(RCFLAGS) -r $(DEFINES) $(INCLUDES) $(OUTOPTION)$@ $(_VPATH_SRCS)
 endif
 endif
 
@@ -1332,11 +1298,7 @@ $(XPIDL_GEN_DIR)/.done:
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(XPIDL_COMPILE) -m header -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/$* $(srcdir)/$*.idl
-else
 	$(ELOG) $(XPIDL_COMPILE) -m header -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
-endif
 	@if test -n "$(findstring $*.h, $(EXPORTS) $(SDK_HEADERS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
@@ -1345,15 +1307,11 @@ ifndef NO_GEN_XPT
 # into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(srcdir)/$*.idl
-else
 	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
-endif
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
-$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) Makefile.in Makefile
+$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) Makefile.in Makefile $(XPIDL_LINK)
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS) $(SDK_XPIDLSRCS)) 
 endif # XPIDL_MODULE.xpt != XPIDLSRCS
 

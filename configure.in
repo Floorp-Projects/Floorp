@@ -981,10 +981,10 @@ case "$target" in
     ;;
 
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
-    CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
+    CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
     if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
         _pwd=`pwd`
-         CYGWIN_WRAPPER="sh ${_pwd}/${srcdir}/build/cygwin-wrapper"
+         CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
     fi
     _WIN32_PERL=$PERL
     if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
@@ -994,7 +994,7 @@ case "$target" in
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
-    RC='$(CYGWIN_WRAPPER) rc.exe'
+    RC=rc.exe
     # certain versions of cygwin's makedepend barf on the 
     # #include <string> vs -I./dist/include/string issue so don't use it
     SYSTEM_MAKEDEPEND=
@@ -1016,12 +1016,11 @@ case "$target" in
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
-        USE_DEPENDENT_LIBS=
     else
-        CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
+        CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
         if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
             _pwd=`pwd`
-            CYGWIN_WRAPPER="sh ${_pwd}/${srcdir}/build/cygwin-wrapper"
+            CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
         fi
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
@@ -1515,7 +1514,6 @@ case "$target" in
         AC_DEFINE(MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP)
         ;;
 esac
-
 
 dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
@@ -5299,10 +5297,26 @@ for lib_arg in $NSPR_LIBS $TK_LIBS; do
 done
 AC_SUBST(LIBS_PATH)
 
+dnl ========================================================
+dnl Use cygwin wrapper for win32 builds
+dnl ========================================================
+case "$host_os" in
+mingw*|cygwin*|msvc*|mks*)
+    HOST_CC="\$(CYGWIN_WRAPPER) $HOST_CC"
+    HOST_CXX="\$(CYGWIN_WRAPPER) $HOST_CXX"
+    CC="\$(CYGWIN_WRAPPER) $CC"
+    CXX="\$(CYGWIN_WRAPPER) $CXX"
+    CPP="\$(CYGWIN_WRAPPER) $CPP"
+    LD="\$(CYGWIN_WRAPPER) $LD"
+    AS="\$(CYGWIN_WRAPPER) $AS"
+    RC="\$(CYGWIN_WRAPPER) $RC"
+    MIDL="\$(CYGWIN_WRAPPER) $MIDL"
+    ;;
+esac
+
 my_srcdir=$srcdir
 case "$target_os" in
 msvc*|mks*|cygwin*|mingw*)
-    my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
     my_perl=$_WIN32_PERL
     ;;
 *)
