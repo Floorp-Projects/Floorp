@@ -57,19 +57,20 @@ class nsProxyObjectCallInfo;
 //    {
 //         *x = 0;   <-----  You will blow up here.
 //
+//   
+//  So what gets saved?  
+//
+//  You can safely pass base types by value.  You can also pass interface pointers.
+//  I will make sure that the interface pointers are addrefed while they are being 
+//  proxied.  You can also pass string and wstring.  These I will copy and free.
+//
+//  I do **NOT** copy arrays or strings with size.  If you are using these either
+//  change your interface, or contact me about this feature request.
 
 
 
 
 // Using the ISupports interface just for addrefing.  
-
-#define NS_PROXYOBJECT_CID                       \
-{ 0xeea90d40,                                    \
-  0xb09f,                                        \
-  0x11d2,                                        \
- {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
-} 
-
 
 class nsProxyObject : public nsISupports  
 {
@@ -175,6 +176,8 @@ private:
     nsCOMPtr<nsProxyObject>   mOwner;            /* this is the strong referenced nsProxyObject */
    
     void RefCountInInterfacePointers(PRBool addRef);
+    void CopyStrings(PRBool copy);
+
 };
 
 

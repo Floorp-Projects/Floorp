@@ -63,12 +63,16 @@ nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
     mOwner            = owner;
 
     RefCountInInterfacePointers(PR_TRUE);
+    if (mOwner->GetProxyType() & PROXY_ASYNC)
+        CopyStrings(PR_TRUE);
 }
 
 
 nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
 {
     RefCountInInterfacePointers(PR_FALSE);
+    if (mOwner->GetProxyType() & PROXY_ASYNC)
+        CopyStrings(PR_FALSE);
 
     mOwner = 0;
     
@@ -100,6 +104,45 @@ nsProxyObjectCallInfo::RefCountInInterfacePointers(PRBool addRef)
                     else
                         anInterface->Release();
             
+                }
+            }
+        }
+    }
+}
+
+void
+nsProxyObjectCallInfo::CopyStrings(PRBool copy)
+{
+    for (PRUint32 i = 0; i < mParameterCount; i++)
+    {
+        const nsXPTParamInfo paramInfo = mMethodInfo->GetParam(i);
+
+        if(paramInfo.IsIn())
+        {
+            const nsXPTType& type = paramInfo.GetType();
+            uint8 type_tag = type.TagPart();
+
+            if (type_tag == nsXPTType::T_CHAR_STR || type_tag == nsXPTType::T_WCHAR_STR)
+            {
+                if (mParameterList[i].val.p != nsnull)
+                {
+                    if (copy)
+                    {
+                        nsString str((char*)mParameterList[i].val.p);
+
+                        if (type_tag == nsXPTType::T_CHAR_STR)
+                        {
+                            mParameterList[i].val.p = str.ToNewCString();   
+                        }
+                        else if (type_tag == nsXPTType::T_WCHAR_STR)
+                        {
+                            mParameterList[i].val.p = str.ToNewUnicode();
+                        }
+                    }
+                    else
+                    {
+                        Recycle((char*)mParameterList[i].val.p);
+                    }
                 }
             }
         }

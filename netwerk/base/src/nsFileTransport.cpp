@@ -843,13 +843,7 @@ nsFileTransport::Process(void)
             // XXX fix up this message for i18n
             nsAutoString msg = "Read ";
             msg += (const char*)mSpec;
-            // this should just change to msg.mUStr instead once bug
-            // # 16273 is fixed
-#ifndef BUG_16273_FIXED //TODO
-            (void)mProgress->OnStatus(this, mContext, msg.ToNewUnicode());
-#else
             (void)mProgress->OnStatus(this, mContext, msg.mUStr);
-#endif
         }
         mContext = null_nsCOMPtr();
 

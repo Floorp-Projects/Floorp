@@ -1889,18 +1889,11 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
     mesg.Append(mHostName);
 
   if (NS_FAILED(rv)) return rv;
-#ifndef BUG_16273_FIXED //TODO
-  return mEventSink ? mEventSink->OnStatus(this,
-                                           mReadContext, 
-                                           mesg.ToNewUnicode()) // this gets freed elsewhere.
-                    : NS_ERROR_FAILURE;
-#else
+
   return mEventSink ? mEventSink->OnStatus(this,
                                            mReadContext, 
                                            mesg.mUStr) // this gets freed elsewhere.
                     : NS_ERROR_FAILURE;
-#endif
-
 }
 
 
