@@ -1465,9 +1465,14 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
     if (httpChannel) {
-        // update the DocumentURI indicator since we were just redirected
+        // update the DocumentURI indicator since we are being redirected.
+        // if this was a top-level document channel, then the new channel
+        // should have its mDocumentURI point to newURI; otherwise, we
+        // just need to pass along our mDocumentURI to the new channel.
         if (newURI && (mURI == mDocumentURI))
             httpChannel->SetDocumentURI(newURI);
+        else
+            httpChannel->SetDocumentURI(mDocumentURI);
         // convey the referrer if one was used for this channel to the next one
         if (mReferrer)
             httpChannel->SetReferrer(mReferrer, mReferrerType);
