@@ -938,7 +938,7 @@ RootAccessible::~RootAccessible()
 {
   nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
   if (r) 
-    r->RemoveAccessibleEventListener(this);
+    r->RemoveAccessibleEventListener();
 
   // free up accessibles
   for (int i=0; i < mListCount; i++)
