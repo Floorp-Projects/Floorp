@@ -414,6 +414,7 @@ nsDiskCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsDiskCacheDevice::FindEntry(nsCString * key)
 {
+    if (!Initialized())  return nsnull;  // NS_ERROR_NOT_INITIALIZED
     nsresult                rv;
     nsDiskCacheRecord       record;
     nsCacheEntry *          entry   = nsnull;
@@ -502,6 +503,7 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 {
+    if (!Initialized())  return  NS_ERROR_NOT_INITIALIZED;
     nsresult rv = NS_OK;
     nsDiskCacheRecord record, oldRecord;
     
@@ -746,6 +748,7 @@ private:
 nsresult
 nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
 {
+    if (!Initialized())  return NS_ERROR_NOT_INITIALIZED;
     nsDiskCacheDeviceInfo* deviceInfo = new nsDiskCacheDeviceInfo(this);
     nsCOMPtr<nsICacheDeviceInfo> ref(deviceInfo);
     
@@ -765,12 +768,13 @@ nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
 nsresult
 nsDiskCacheDevice::EvictEntries(const char * clientID)
 {
+    if (!Initialized())  return NS_ERROR_NOT_INITIALIZED;
     nsresult  rv;
 
     if (clientID == nsnull) {
         // we're clearing the entire disk cache
         rv = ClearDiskCache();
-        if (NS_SUCCEEDED(rv) || (rv != NS_ERROR_CACHE_IN_USE))
+        if (rv != NS_ERROR_CACHE_IN_USE)
             return rv;
     }
 
