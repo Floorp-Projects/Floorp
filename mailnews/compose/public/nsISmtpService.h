@@ -53,9 +53,12 @@ public:
 	// a valid nsIURL ptr. You can later interrupt this action by asking the netlib service manager to interrupt the url you 
 	// are given back. Remember to release aURL when you are done with it. Pass nsnull in for aURL if you don't care about 
 	// the returned URL.
+	//
+	// mscott - until we have a mail session, we need to pass in the host name to use....this will go away when we can
+	// read it directly from prefs...
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath,  const nsString& aSender, const nsString& aRecipients, nsIURL ** aURL) = 0; 
+	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& hostName, const nsString& aSender, const nsString& aRecipients, nsIURL ** aURL) = 0; 
 };
 
 #endif /* nsISmtpService_h___ */
