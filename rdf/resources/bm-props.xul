@@ -3,7 +3,6 @@
 
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.w3.org/TR/REC-html40"
   onload="onLoad();">
 
@@ -58,7 +57,6 @@
       }
     }
   </script>
-<html:form>
    <table><tr><td>
     <table>
      <tr>
@@ -95,5 +93,4 @@
     <input type="button" value="Cancel" onclick="return cancel();"/>
    </td></tr></table>
   </td></tr></table>
-</html:form>
 </xul:window>
