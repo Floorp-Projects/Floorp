@@ -15,22 +15,43 @@
 # Reserved.
 #
 
-DEPTH		= ../../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= history
-LIBRARY_NAME	= history
+MODULE		= directory
+LIBRARY_NAME	= directory
 IS_COMPONENT	= 1
 
-CPPSRCS		= nsGlobalHistory.cpp
+XPIDLSRCS	= nsIHTTPIndex.idl
+
+CPPSRCS		= nsDirectoryViewer.cpp
+
+CHROME_DIR		= directory
+CHROME_CONTENT_DIR	= content/default
+CHROME_SKIN_DIR		= skin/default
+CHROME_SOURCE_DIR	= $(srcdir)
+
+CHROME_CONTENT	= \
+		directory.xul	\
+		directory.js	\
+		$(NULL)
+
+CHROME_SKIN	= \
+		directory.css	\
+		$(NULL)
+
+CHROME_L10N	= \
+		./locale/en-US/directory.dtd	\
+		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		-lneckoutil_s \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)
