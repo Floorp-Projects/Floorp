@@ -4,9 +4,9 @@ classic.jar:
     skin/classic/global/browser.css
     skin/classic/global/button.css
     skin/classic/global/checkbox.css
-    skin/classic/global/commonDialog.css
     skin/classic/global/colorpicker.css
     skin/classic/global/console.css
+    skin/classic/global/dialog.css
     skin/classic/global/filepicker.css
     skin/classic/global/formatting.css
     skin/classic/global/global.css
@@ -31,7 +31,6 @@ classic.jar:
     skin/classic/global/classicBindings.xml
     skin/classic/global/menulistBindings.xml
     skin/classic/global/tasksOverlay.css
-    skin/classic/global/dialogOverlay.css
     skin/classic/global/arrow-med-up.gif
     skin/classic/global/arrow-med-up-hover.gif
     skin/classic/global/arrow-med-down.gif
