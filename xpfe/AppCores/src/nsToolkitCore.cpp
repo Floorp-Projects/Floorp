@@ -230,6 +230,16 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   return rv;
 }
 
+NS_IMETHODIMP
+nsToolkitCore::CloseWindow(nsIDOMWindow* aWindow) {
+
+  nsCOMPtr<nsIWebShellWindow> window = DOMWindowToWebShellWindow(aWindow);
+  if (window)
+    window->Close();
+
+  return NS_OK;
+}
+
 // horribly complicated routine to simply convert from one to the other
 nsCOMPtr<nsIWebShellWindow>
 nsToolkitCore::DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow) const {

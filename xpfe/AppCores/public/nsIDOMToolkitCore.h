@@ -40,6 +40,8 @@ public:
   NS_IMETHOD    ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent)=0;
 
   NS_IMETHOD    ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent)=0;
+
+  NS_IMETHOD    CloseWindow(nsIDOMWindow* aWindow)=0;
 };
 
 
@@ -47,6 +49,7 @@ public:
   NS_IMETHOD    ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent);  \
   NS_IMETHOD    ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent);  \
   NS_IMETHOD    ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent);  \
+  NS_IMETHOD    CloseWindow(nsIDOMWindow* aWindow);  \
 
 
 
@@ -54,6 +57,7 @@ public:
   NS_IMETHOD    ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) { return _to##ShowDialog(aUrl, aParent); }  \
   NS_IMETHOD    ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) { return _to##ShowWindow(aUrl, aParent); }  \
   NS_IMETHOD    ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) { return _to##ShowModalDialog(aUrl, aParent); }  \
+  NS_IMETHOD    CloseWindow(nsIDOMWindow* aWindow) { return _to##CloseWindow(aWindow); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitToolkitCoreClass(nsIScriptContext *aContext, void **aPrototype);
