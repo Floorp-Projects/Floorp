@@ -372,7 +372,7 @@ RDFMenuBuilderImpl::RemoveWidgetItem(nsIContent* aMenuItemElement,
         // via the content model, because you're never sure who
         // might've added this stuff in...
         nsCOMPtr<nsIRDFResource> resource;
-        rv = GetElementResource(kid, getter_AddRefs(resource));
+        rv = nsRDFContentUtils::GetElementResource(kid, getter_AddRefs(resource));
         NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving resource");
         if(NS_FAILED(rv)) return rv;
 

@@ -72,19 +72,6 @@ public:
 
     // Implementation methods
     nsresult
-    FindChildByTag(nsIContent* aElement,
-                   PRInt32 aNameSpaceID,
-                   nsIAtom* aTag,
-                   nsIContent** aChild);
-
-    nsresult
-    FindChildByTagAndResource(nsIContent* aElement,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aTag,
-                              nsIRDFResource* aResource,
-                              nsIContent** aChild);
-
-    nsresult
     EnsureElementHasGenericChild(nsIContent* aParent,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aTag,
@@ -152,9 +139,6 @@ public:
 
     virtual nsresult
     CloseWidgetItem(nsIContent* aElement);
-
-    nsresult
-    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 
     virtual nsresult
     GetRootWidgetAtom(nsIAtom** aResult) = 0;

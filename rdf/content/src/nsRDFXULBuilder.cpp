@@ -24,55 +24,53 @@
   
   TO DO
 
-  1) Need to implement nsRDFXULBuilder::RemoveAttribute(), and
-     figure out how to do nsRDFXULBuilder::Remove() (vanilla) when the
-     child isn't a resource element itself.
-
-  2) Implement the remainder of the DOM methods.
+  1) Implement the remainder of the DOM methods.
 
 */
 
+// Not the ALPHABETICAL ORDER
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
-#include "nsIXULParentDocument.h"
-#include "nsIXULChildDocument.h"
+#include "nsIContentViewerContainer.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeObserver.h"
+#include "nsIDOMText.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDocument.h"
+#include "nsIDocumentLoader.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsINameSpaceManager.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
-#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsIStreamListener.h"
-#include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
+#include "nsIStreamListener.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
+#include "nsIWebShell.h"
+#include "nsIXMLContent.h"
+#include "nsIXULChildDocument.h"
+#include "nsIXULDocumentInfo.h"
+#include "nsIXULParentDocument.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
-#include "nsIDOMXULElement.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIXULDocumentInfo.h"
-#include "nsIContentViewerContainer.h"
-#include "nsIDocumentLoader.h"
-#include "nsIWebShell.h"
-#include "nsIXMLContent.h"
-#include "prlog.h"
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
@@ -231,7 +229,10 @@ public:
                            const nsString& aDataSources);
 
     nsresult
-    GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
+    GetRDFResourceFromXULElement(nsIDOMNode* aNode, nsIRDFResource** aResult);
+
+    nsresult
+    GetGraphNodeForXULElement(nsIDOMNode* aNode, nsIRDFNode** aResult);
 
     nsresult
     CreateResourceElement(PRInt32 aNameSpaceID,
@@ -243,9 +244,6 @@ public:
     GetResource(PRInt32 aNameSpaceID,
                 nsIAtom* aNameAtom,
                 nsIRDFResource** aResource);
-
-    nsresult
-    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -331,27 +329,17 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
         kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
         kXULIncludeSrcAtom        = NS_NewAtom("include");
 
-        if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                           kIRDFServiceIID,
-                                                           (nsISupports**) &gRDFService))) {
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          kIRDFServiceIID,
+                                          (nsISupports**) &gRDFService);
 
-            NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf)),
-                      "unable to get resource");
-
-            NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_nextVal, &kRDF_nextVal)),
-                      "unable to get resource");
-
-            NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_type, &kRDF_type)),
-                      "unable to get resource");
-
-            NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_child, &kRDF_child)),
-                      "unable to get resource");
-
-            NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIXUL_element, &kXUL_element)),
-                      "unable to get resource");
-        }
-        else {
-            NS_ERROR("couldn't get RDF service");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+        if (NS_SUCCEEDED(rv)) {
+            gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf);
+            gRDFService->GetResource(kURIRDF_nextVal,    &kRDF_nextVal);
+            gRDFService->GetResource(kURIRDF_type,       &kRDF_type);
+            gRDFService->GetResource(kURIRDF_child,      &kRDF_child);
+            gRDFService->GetResource(kURIXUL_element,    &kXUL_element);
         }
     }
 
@@ -538,12 +526,27 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
         return NS_OK;
 
-    // Get the treeitem's resource so that we can generate cell
-    // values. We could QI for the nsIRDFResource here, but doing this
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsAutoString elementStr;
+        rv = nsRDFContentUtils::GetElementLogString(aElement, elementStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
+
+        char* elementCStr = elementStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder create-contents"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
+
+        delete[] elementCStr;
+    }
+#endif
+
+    // Get the XUL element's resource so that we can generate
+    // children. We _don't_ QI for the nsIRDFResource here: doing this
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetElementResource(aElement, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = nsRDFContentUtils::GetElementResource(aElement, getter_AddRefs(resource)))) {
         NS_ERROR("unable to get element resource");
         return rv;
     }
@@ -551,10 +554,9 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     // Ignore any elements that aren't XUL elements: we can't
     // construct content for them anyway.
     PRBool isXULElement;
-    if (NS_FAILED(rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement))) {
-        NS_ERROR("unable to determine if element is a XUL element");
-        return rv;
-    }
+    rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine if element is a XUL element");
+    if (NS_FAILED(rv)) return rv;
 
     if (! isXULElement)
         return NS_OK;
@@ -711,8 +713,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
 
     // Stuff that we can ignore outright
     // XXX is this the best place to put it???
-    if ((aProperty == kRDF_nextVal) ||
-        (aProperty == kRDF_instanceOf))
+    if (aProperty == kRDF_nextVal)
         return NS_OK;
 
     nsresult rv;
@@ -726,6 +727,28 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
         if (! isXULElement)
             return NS_OK;
     }
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString source;
+        aSource->GetValue(getter_Copies(source));
+
+        nsXPIDLCString property;
+        aProperty->GetValue(getter_Copies(property));
+
+        nsAutoString targetStr;
+        nsRDFContentUtils::GetTextForNode(aTarget, targetStr);
+
+        char* targetCStr = targetStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder on-assert"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("    (%s)",    (const char*) source));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  --[%s]-->", (const char*) property));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("    (%s)",    targetCStr));
+
+        delete[] targetCStr;
+    }
+#endif
 
     nsCOMPtr<nsISupportsArray> elements;
     if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
@@ -744,17 +767,8 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
     for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
         nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
 
-        // Make sure that the element we're looking at is really an
-        // element generated by the XUL content-model builder.
-        nsAutoString instanceOf;
-        if (NS_CONTENT_ATTR_HAS_VALUE !=
-            element->GetAttribute(kNameSpaceID_RDF,
-                                  kInstanceOfAtom,
-                                  instanceOf))
-            continue;
-
-        if (! instanceOf.Equals(kURIXUL_element))
-            continue;
+        // XXX Make sure that the element we're looking at is really
+        // an element generated by this content-model builder?
         
         if (rdf_IsOrdinalProperty(aProperty)) {
             // It's a child node. If the contents of aElement _haven't_
@@ -815,11 +829,32 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
 
     // Stuff that we can ignore outright
     // XXX is this the best place to put it???
-    if ((aProperty == kRDF_nextVal) ||
-        (aProperty == kRDF_instanceOf))
+    if (aProperty == kRDF_nextVal)
         return NS_OK;
 
     nsresult rv;
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString source;
+        aSource->GetValue(getter_Copies(source));
+
+        nsXPIDLCString property;
+        aProperty->GetValue(getter_Copies(property));
+
+        nsAutoString targetStr;
+        nsRDFContentUtils::GetTextForNode(aTarget, targetStr);
+
+        char* targetCStr = targetStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder on-unassert"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("    (%s)",    (const char*) source));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  --[%s]-->", (const char*) property));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("    (%s)",    targetCStr));
+
+        delete[] targetCStr;
+    }
+#endif
 
     nsCOMPtr<nsISupportsArray> elements;
     if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
@@ -919,77 +954,66 @@ RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
 
     // XXX If aNewChild doesn't have a resource, then somebody is
     // inserting a non-RDF element into aParent. Panic for now.
-    nsCOMPtr<nsIRDFResource> newChild;
-    if (NS_FAILED(rv = GetDOMNodeResource(aNewChild, getter_AddRefs(newChild)))) {
-        NS_ERROR("new child doesn't have a resource");
-        return rv;
-    }
+    nsCOMPtr<nsIRDFNode> newChild;
+    rv = GetGraphNodeForXULElement(aNewChild, getter_AddRefs(newChild));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_OK;
 
     // If there was an old parent for newChild, then make sure to
     // remove that relationship.
     nsCOMPtr<nsIDOMNode> oldParentNode;
-    if (NS_FAILED(rv = aNewChild->GetParentNode(getter_AddRefs(oldParentNode)))) {
-        NS_ERROR("unable to get new child's parent");
-        return rv;
-    }
+    rv = aNewChild->GetParentNode(getter_AddRefs(oldParentNode));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get new child's parent");
+    if (NS_FAILED(rv)) return rv;
 
     if (oldParentNode) {
         nsCOMPtr<nsIRDFResource> oldParent;
 
         // If the old parent has a resource...
-        if (NS_SUCCEEDED(rv = GetDOMNodeResource(oldParentNode, getter_AddRefs(oldParent)))) {
+        if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(oldParentNode, getter_AddRefs(oldParent)))) {
 
             // ...and it's a XUL element...
             PRBool isXULElement;
+            rv = mDB->HasAssertion(oldParent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+            if (NS_FAILED(rv)) return rv;
 
-            if (NS_SUCCEEDED(rv = mDB->HasAssertion(oldParent,
-                                                    kRDF_instanceOf,
-                                                    kXUL_element,
-                                                    PR_TRUE,
-                                                    &isXULElement))
-                && isXULElement) {
-
+            if (isXULElement) {
                 // remove the child from the old collection
-                if (NS_FAILED(rv = rdf_ContainerRemoveElement(mDB, oldParent, newChild))) {
-                    NS_ERROR("unable to remove newChild from oldParent");
-                    return rv;
-                }
+                rv = rdf_ContainerRemoveElement(mDB, oldParent, newChild);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove newChild from oldParent");
+                if (NS_FAILED(rv)) return rv;
             }
         }
     }
 
     // If the new parent has a resource...
     nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetDOMNodeResource(aParent, getter_AddRefs(parent)))) {
+    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
 
         // ...and it's a XUL element...
         PRBool isXULElement;
-        if (NS_SUCCEEDED(rv = mDB->HasAssertion(parent,
-                                                kRDF_instanceOf,
-                                                kXUL_element,
-                                                PR_TRUE,
-                                                &isXULElement))
-            && isXULElement) {
+        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+        if (NS_FAILED(rv)) return rv;
 
+        if (isXULElement) {
             // XXX For now, we panic if the refChild doesn't have a resouce
-            nsCOMPtr<nsIRDFResource> refChild;
-            if (NS_FAILED(rv = GetDOMNodeResource(aRefChild, getter_AddRefs(refChild)))) {
-                NS_ERROR("ref child doesn't have a resource");
-                return rv;
-            }
+            nsCOMPtr<nsIRDFNode> refChild;
+            rv = GetGraphNodeForXULElement(aRefChild, getter_AddRefs(refChild));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "ref child doesn't have a resource");
+            if (NS_FAILED(rv)) return rv;
 
             // Determine the index of the refChild in the container
             PRInt32 index;
-            if (NS_FAILED(rv = rdf_ContainerIndexOf(mDB, parent, refChild, &index))) {
-                NS_ERROR("unable to determine index of refChild in container");
-                return rv;
-            }
+            rv = rdf_ContainerIndexOf(mDB, parent, refChild, &index);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of refChild in container");
+            if (NS_FAILED(rv)) return rv;
 
             // ...and insert the newChild before it.
-            if (NS_FAILED(rv = rdf_ContainerInsertElementAt(mDB, parent, newChild, index))) {
-                NS_ERROR("unable to insert new element into container");
-                return rv;
-            }
+            rv = rdf_ContainerInsertElementAt(mDB, parent, newChild, index);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert new element into container");
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -1021,49 +1045,45 @@ RDFXULBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
 
     // XXX If aNewChild doesn't have a resource, then somebody is
     // inserting a non-RDF element into aParent. Panic for now.
-    nsCOMPtr<nsIRDFResource> newChild;
-    if (NS_FAILED(rv = GetDOMNodeResource(aNewChild, getter_AddRefs(newChild)))) {
-        NS_ERROR("new child doesn't have a resource");
-        return rv;
-    }
+    nsCOMPtr<nsIRDFNode> newChild;
+    rv = GetGraphNodeForXULElement(aNewChild, getter_AddRefs(newChild));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_OK;
 
     // XXX ibid
-    nsCOMPtr<nsIRDFResource> oldChild;
-    if (NS_FAILED(rv = GetDOMNodeResource(aOldChild, getter_AddRefs(oldChild)))) {
-        NS_ERROR("old child doesn't have a resource");
-        return rv;
-    }
+    nsCOMPtr<nsIRDFNode> oldChild;
+    rv = GetGraphNodeForXULElement(aOldChild, getter_AddRefs(oldChild));
+    if (NS_FAILED(rv)) return rv;
 
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_OK;
+
+    // Now if we can get the parent's resource...
     nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetDOMNodeResource(aParent, getter_AddRefs(parent)))) {
+    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
         // ...and it's a XUL element...
         PRBool isXULElement;
+        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+        if (NS_FAILED(rv)) return rv;
 
-        if (NS_SUCCEEDED(rv = mDB->HasAssertion(parent,
-                                                kRDF_instanceOf,
-                                                kXUL_element,
-                                                PR_TRUE,
-                                                &isXULElement))
-            && isXULElement) {
-
+        if (isXULElement) {
             // Remember the old child's index...
             PRInt32 index;
-            if (NS_FAILED(rv = rdf_ContainerIndexOf(mDB, parent, oldChild, &index))) {
-                NS_ERROR("unable to get index of old child in container");
-                return rv;
-            }
+            rv = rdf_ContainerIndexOf(mDB, parent, oldChild, &index);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get index of old child in container");
+            if (NS_FAILED(rv)) return rv;
 
             // ...then remove the old child from the old collection...
-            if (NS_FAILED(rv = rdf_ContainerRemoveElement(mDB, parent, oldChild))) {
-                NS_ERROR("unable to remove old child from container");
-                return rv;
-            }
+            rv = rdf_ContainerRemoveElement(mDB, parent, oldChild);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove old child from container");
+            if (NS_FAILED(rv)) return rv;
 
             // ...and add the new child to the collection at the old child's index
-            if (NS_FAILED(rv = rdf_ContainerInsertElementAt(mDB, parent, newChild, index))) {
-                NS_ERROR("unable to add new child to container");
-                return rv;
-            }
+            rv = rdf_ContainerInsertElementAt(mDB, parent, newChild, index);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add new child to container");
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -1091,30 +1111,27 @@ RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
     // XXX If aOldChild doesn't have a resource, then somebody is
     // removing a non-RDF element from aParent. This probably isn't a
     // big deal, but panic for now.
-    nsCOMPtr<nsIRDFResource> oldChild;
-    if (NS_FAILED(rv = GetDOMNodeResource(aOldChild, getter_AddRefs(oldChild)))) {
-        NS_ERROR("new child doesn't have a resource");
-        return rv;
-    }
+    nsCOMPtr<nsIRDFNode> oldChild;
+    rv = GetGraphNodeForXULElement(aOldChild, getter_AddRefs(oldChild));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_OK;
 
     // If the new parent has a resource...
     nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetDOMNodeResource(aParent, getter_AddRefs(parent)))) {
+    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
 
         // ...and it's a XUL element...
         PRBool isXULElement;
-        if (NS_SUCCEEDED(rv = mDB->HasAssertion(parent,
-                                                kRDF_instanceOf,
-                                                kXUL_element,
-                                                PR_TRUE,
-                                                &isXULElement))
-            && isXULElement) {
+        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+        if (NS_FAILED(rv)) return rv;
 
+        if (isXULElement) {
             // ...then remove it from the container
-            if (NS_FAILED(rv = rdf_ContainerRemoveElement(mDB, parent, oldChild))) {
-                NS_ERROR("unable to insert new element into container");
-                return rv;
-            }
+            rv = rdf_ContainerRemoveElement(mDB, parent, oldChild);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert new element into container");
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -1136,65 +1153,55 @@ RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 
     nsresult rv;
 
-    // XXX If aNewChild doesn't have a resource, then somebody is
-    // appending a non-RDF element into aParent. Panic for now.
-    nsCOMPtr<nsIRDFResource> newChild;
-    if (NS_FAILED(rv = GetDOMNodeResource(aNewChild, getter_AddRefs(newChild)))) {
-        NS_ERROR("new child doesn't have a resource");
-        return rv;
-    }
+    nsCOMPtr<nsIRDFNode> newChild;
+    rv = GetGraphNodeForXULElement(aNewChild, getter_AddRefs(newChild));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_OK;
 
     // If there was an old parent for newChild, then make sure to
     // remove that relationship.
     nsCOMPtr<nsIDOMNode> oldParentNode;
-    if (NS_FAILED(rv = aNewChild->GetParentNode(getter_AddRefs(oldParentNode)))) {
-        NS_ERROR("unable to get new child's parent");
-        return rv;
-    }
+    rv = aNewChild->GetParentNode(getter_AddRefs(oldParentNode));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get new child's parent");
+    if (NS_FAILED(rv)) return rv;
 
     if (oldParentNode) {
         nsCOMPtr<nsIRDFResource> oldParent;
 
         // If the old parent has a resource...
-        if (NS_SUCCEEDED(rv = GetDOMNodeResource(oldParentNode, getter_AddRefs(oldParent)))) {
+        if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(oldParentNode, getter_AddRefs(oldParent)))) {
 
             // ...and it's a XUL element...
             PRBool isXULElement;
 
-            if (NS_SUCCEEDED(rv = mDB->HasAssertion(oldParent,
-                                                    kRDF_instanceOf,
-                                                    kXUL_element,
-                                                    PR_TRUE,
-                                                    &isXULElement))
-                && isXULElement) {
+            rv = mDB->HasAssertion(oldParent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+            if (NS_FAILED(rv)) return rv;
 
+            if (isXULElement) {
                 // remove the child from the old collection
-                if (NS_FAILED(rv = rdf_ContainerRemoveElement(mDB, oldParent, newChild))) {
-                    NS_ERROR("unable to remove newChild from oldParent");
-                    return rv;
-                }
+                rv = rdf_ContainerRemoveElement(mDB, oldParent, newChild);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove newChild from oldParent");
+                if (NS_FAILED(rv)) return rv;
             }
         }
     }
 
     // If the new parent has a resource...
     nsCOMPtr<nsIRDFResource> parent;
-    if (NS_SUCCEEDED(rv = GetDOMNodeResource(aParent, getter_AddRefs(parent)))) {
+    if (NS_SUCCEEDED(rv = GetRDFResourceFromXULElement(aParent, getter_AddRefs(parent)))) {
 
         // ...and it's a XUL element...
         PRBool isXULElement;
-        if (NS_SUCCEEDED(rv = mDB->HasAssertion(parent,
-                                                kRDF_instanceOf,
-                                                kXUL_element,
-                                                PR_TRUE,
-                                                &isXULElement))
-            && isXULElement) {
+        rv = mDB->HasAssertion(parent, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+        if (NS_FAILED(rv)) return rv;
 
+        if (isXULElement) {
             // ...then append it to the container
-            if (NS_FAILED(rv = rdf_ContainerAppendElement(mDB, parent, newChild))) {
-                NS_ERROR("unable to insert new element into container");
-                return rv;
-            }
+            rv = rdf_ContainerAppendElement(mDB, parent, newChild);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert new element into container");
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -1212,7 +1219,7 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = GetRDFResourceFromXULElement(aElement, getter_AddRefs(resource)))) {
         // XXX it's not a resource element, so there's no assertions
         // we need to make on the back-end. Should we just do the
         // update?
@@ -1320,7 +1327,7 @@ RDFXULBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aN
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = GetRDFResourceFromXULElement(aElement, getter_AddRefs(resource)))) {
         // XXX it's not a resource element, so there's no assertions
         // we need to make on the back-end. Should we just do the
         // update?
@@ -1396,6 +1403,18 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
                                nsIContent* aElement,
                                nsIRDFNode* aValue)
 {
+    NS_PRECONDITION(aNameSpace != nsnull, "null ptr");
+    if (! aNameSpace)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aValue != nsnull, "null ptr");
+    if (! aValue)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // Add the specified node as a child container of this
@@ -1413,6 +1432,28 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
             NS_ERROR("unable to create new XUL element");
             return rv;
         }
+
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+            nsAutoString parentStr;
+            rv = nsRDFContentUtils::GetElementLogString(aElement, parentStr);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get parent element string");
+
+            nsAutoString childStr;
+            rv = nsRDFContentUtils::GetElementLogString(child, childStr);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element string");
+
+            char* parentCStr = parentStr.ToNewCString();
+            char* childCStr = childStr.ToNewCString();
+
+            PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder append-child"));
+            PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
+            PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
+
+            delete[] childCStr;
+            delete[] parentCStr;
+        }
+#endif
 
         if (NS_FAILED(rv = aElement->AppendChildTo(child, PR_TRUE))) {
             NS_ERROR("unable to add element to content model");
@@ -1442,6 +1483,14 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
 nsresult
 RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
 {
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aValue != nsnull, "null ptr");
+    if (! aValue)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // Remove the specified node from the children of this
@@ -1459,16 +1508,33 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
             nsCOMPtr<nsIContent> child;
             aElement->ChildAt(count, *getter_AddRefs(child));
 
-            // XXX can't identify HTML elements right now.
-            if (IsHTMLElement(child))
-                continue;
-
             nsCOMPtr<nsIRDFResource> elementResource;
-            rv = GetElementResource(child, getter_AddRefs(elementResource));
+            rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(elementResource));
 
             if (resource != elementResource)
                 continue;
 
+#ifdef PR_LOGGING
+            if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+                nsAutoString parentStr;
+                rv = nsRDFContentUtils::GetElementLogString(aElement, parentStr);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get parent element string");
+
+                nsAutoString childStr;
+                rv = nsRDFContentUtils::GetElementLogString(child, childStr);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element string");
+
+                char* parentCStr = parentStr.ToNewCString();
+                char* childCStr = childStr.ToNewCString();
+
+                PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder remove-child"));
+                PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
+                PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
+
+                delete[] childCStr;
+                delete[] parentCStr;
+            }
+#endif
             // okay, found it. now blow it away...
             aElement->RemoveChildAt(count, PR_TRUE);
             return NS_OK;
@@ -1779,13 +1845,13 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
     nsresult rv;
 
     nsCOMPtr<nsIContent> element;
-    if (NS_FAILED(rv = CreateResourceElement(aNameSpaceID,
-                                             aTag,
-                                             aResource,
-                                             getter_AddRefs(element)))) {
-        NS_ERROR("unable to create new content element");
-        return rv;
-    }
+    rv = CreateResourceElement(aNameSpaceID,
+                               aTag,
+                               aResource,
+                               getter_AddRefs(element));
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new content element");
+    if (NS_FAILED(rv)) return rv;
 
     // Initialize the element's containing namespace to that of its
     // parent.
@@ -1825,8 +1891,7 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
 
         // These are special beacuse they're used to specify the tree
         // structure of the XUL: ignore them b/c they're not attributes
-        if ((property.get() == kRDF_instanceOf) ||
-            (property.get() == kRDF_nextVal) ||
+        if ((property.get() == kRDF_nextVal) ||
             (property.get() == kRDF_type) ||
             rdf_IsOrdinalProperty(property))
             continue;
@@ -1958,6 +2023,34 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
         return rv;
     }
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsAutoString elementStr;
+        rv = nsRDFContentUtils::GetElementLogString(aElement, elementStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
+
+        nsAutoString attrStr;
+        rv = nsRDFContentUtils::GetAttributeLogString(aElement, nameSpaceID, tag, attrStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element string");
+
+        nsAutoString valueStr;
+        rv = nsRDFContentUtils::GetTextForNode(aValue, valueStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get value text");
+
+        char* elementCStr = elementStr.ToNewCString();
+        char* attrCStr = attrStr.ToNewCString();
+        char* valueCStr = valueStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder add-attribute"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   elementCStr));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("    %s=\"%s\"", attrCStr, valueCStr));
+
+        delete[] valueCStr;
+        delete[] attrCStr;
+        delete[] elementCStr;
+    }
+#endif
+
     if ((nameSpaceID == kNameSpaceID_XMLNS) ||
         ((nameSpaceID == kNameSpaceID_None) && (tag.get() == kXMLNSAtom))) {
         // This is the receiving end of the namespace hack. The XUL
@@ -2023,31 +2116,14 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
         }
     }
 
-    nsCOMPtr<nsIRDFResource> resource;
-    nsCOMPtr<nsIRDFLiteral> literal;
+    nsAutoString value;
+    rv = nsRDFContentUtils::GetTextForNode(aValue, value);
+    if (NS_FAILED(rv)) return rv;
 
-    // Now we need to figure out the attributes value and actually set
-    // it on the element. What we do differs a bit depending on
-    // whether we're aValue is a resource or a literal.
-    if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFResourceIID,
-                                                 (void**) getter_AddRefs(resource)))) {
-        nsXPIDLCString uri;
-        resource->GetValue( getter_Copies(uri) );
-        rv = aElement->SetAttribute(nameSpaceID, tag, (const char*) uri, PR_TRUE);
-    }
-    else if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFLiteralIID,
-                                                      (void**) getter_AddRefs(literal)))) {
-        nsXPIDLString s;
-        literal->GetValue( getter_Copies(s) );
-        rv = aElement->SetAttribute(nameSpaceID, tag, (const PRUnichar*) s, PR_TRUE);
-    }
-    else {
-        // This should _never_ happen.
-        NS_ERROR("uh, this isn't a resource or a literal!");
-        rv = NS_ERROR_UNEXPECTED;
-    }
+    rv = aElement->SetAttribute(nameSpaceID, tag, value, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -2065,6 +2141,34 @@ RDFXULBuilderImpl::RemoveAttribute(nsIContent* aElement,
         NS_ERROR("unable to split resource into namespace/tag pair");
         return rv;
     }
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsAutoString elementStr;
+        rv = nsRDFContentUtils::GetElementLogString(aElement, elementStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
+
+        nsAutoString attrStr;
+        rv = nsRDFContentUtils::GetAttributeLogString(aElement, nameSpaceID, tag, attrStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element string");
+
+        nsAutoString valueStr;
+        rv = nsRDFContentUtils::GetTextForNode(aValue, valueStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get value text");
+
+        char* elementCStr = elementStr.ToNewCString();
+        char* attrCStr = attrStr.ToNewCString();
+        char* valueCStr = valueStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder remove-attribute"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   elementCStr));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("    %s=\"%s\"", attrCStr, valueCStr));
+
+        delete[] valueCStr;
+        delete[] attrCStr;
+        delete[] elementCStr;
+    }
+#endif
 
     if (IsHTMLElement(aElement)) {
         // XXX HTML elements are picky and only want attributes from
@@ -2204,7 +2308,7 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
 
 
 nsresult
-RDFXULBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource)
+RDFXULBuilderImpl::GetRDFResourceFromXULElement(nsIDOMNode* aNode, nsIRDFResource** aResult)
 {
     nsresult rv;
 
@@ -2213,12 +2317,55 @@ RDFXULBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResou
     // it.
 
     nsCOMPtr<nsIContent> element;
-    if (NS_FAILED(rv = aNode->QueryInterface(kIContentIID, getter_AddRefs(element) ))) {
-        NS_ERROR("DOM element doesn't support nsIContent");
-        return rv;
+    rv = aNode->QueryInterface(kIContentIID, getter_AddRefs(element) );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "DOM element doesn't support nsIContent");
+    if (NS_FAILED(rv)) return rv;
+
+    return nsRDFContentUtils::GetElementResource(element, aResult);
+}
+
+
+nsresult
+RDFXULBuilderImpl::GetGraphNodeForXULElement(nsIDOMNode* aNode, nsIRDFNode** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMText> text( do_QueryInterface(aNode) );
+    if (text) {
+        nsAutoString data;
+        rv = text->GetData(data);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFLiteral> literal;
+        rv = gRDFService->GetLiteral(data, getter_AddRefs(literal));
+        if (NS_FAILED(rv)) return rv;
+
+        *aResult = literal;
+        NS_ADDREF(*aResult);
+    }
+    else {
+        // XXX If aNode doesn't have a resource, then panic for
+        // now. (We may be able to safely just ignore this at some
+        // point.)
+        nsCOMPtr<nsIRDFResource> resource;
+        rv = GetRDFResourceFromXULElement(aNode, getter_AddRefs(resource));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "new child doesn't have a resource");
+        if (NS_FAILED(rv)) return rv;
+
+        // If the node isn't marked as a XUL element in the graph,
+        // then we'll ignore it.
+        PRBool isXULElement;
+        rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+        if (NS_FAILED(rv)) return rv;
+
+        if (! isXULElement)
+            return NS_RDF_NO_VALUE;
+
+        *aResult = resource;
+        NS_ADDREF(*aResult);
     }
 
-    return GetElementResource(element, aResource);
+    return NS_OK;
 }
 
 nsresult
@@ -2283,48 +2430,3 @@ RDFXULBuilderImpl::GetResource(PRInt32 aNameSpaceID,
     return rv;
 }
 
-
-nsresult
-RDFXULBuilderImpl::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
-{
-    // Perform a reverse mapping from an element in the content model
-    // to an RDF resource.
-    nsresult rv;
-    nsAutoString uri;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
-                                              kIdAtom,
-                                              uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("tree element has no ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Since the element will store its ID attribute as a document-relative value,
-    // we may need to qualify it first...
-    NS_ASSERTION(mDocument != nsnull, "builder has no document -- can't fully qualify URI");
-    if (nsnull != mDocument) {
-        nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
-        NS_ASSERTION(doc, "doesn't support nsIDocument");
-        if (doc) {
-          nsIURL* docURL = nsnull;
-          doc->GetBaseURL(docURL);
-          if (docURL) {
-              const char* url;
-              docURL->GetSpec(&url);
-              rdf_PossiblyMakeAbsolute(url, uri);
-              NS_RELEASE(docURL);
-          }
-        }
-    }
-
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResult))) {
-        NS_ERROR("unable to create resource");
-        return rv;
-    }
-
-    return NS_OK;
-}

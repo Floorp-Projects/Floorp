@@ -539,20 +539,22 @@ RDFElementImpl::GetParentNode(nsIDOMNode** aParentNode)
         return mParent->QueryInterface(kIDOMNodeIID, (void**) aParentNode);
     }
     else if (mDocument) {
-        // If we don't have a parent, but we're in the document, we must
-        // be the root node of the document. The DOM says that the root
-        // is the document.
-        return mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
-    }
-    else {
-        // A standalone element (i.e. one without a parent or a document)
-        // implicitly has a document fragment as its parent according to
-        // the DOM.
+        // XXX This is a mess because of our fun multiple inheritance heirarchy
+        nsCOMPtr<nsIContent> root( dont_QueryInterface(mDocument->GetRootContent()) );
+        nsCOMPtr<nsIContent> thisIContent;
+        QueryInterface(kIContentIID, getter_AddRefs(thisIContent));
 
-        // XXX create a doc fragment here as a pseudo-parent.
-        NS_NOTYETIMPLEMENTED("can't handle standalone RDF elements");
-        return NS_ERROR_NOT_IMPLEMENTED;
+        if (root == thisIContent) {
+            // If we don't have a parent, and we're the root content
+            // of the document, DOM says that our parent is the
+            // document.
+            return mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+        }
     }
+
+    // A standalone element (i.e. one without a parent or a document)
+    *aParentNode = nsnull;
+    return NS_OK;
 }
 
 
@@ -562,35 +564,35 @@ RDFElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
     nsresult rv;
 
     nsRDFDOMNodeList* children;
-    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&children))) {
-        NS_ERROR("unable to create DOM node list");
-        return rv;
-    }
+    rv = nsRDFDOMNodeList::Create(&children);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
+    if (NS_FAILED(rv)) return rv;
 
     PRInt32 count;
     if (NS_SUCCEEDED(rv = ChildCount(count))) {
         for (PRInt32 index = 0; index < count; ++index) {
             nsCOMPtr<nsIContent> child;
-            if (NS_FAILED(rv = ChildAt(index, *getter_AddRefs(child)))) {
-                NS_ERROR("unable to get child");
+            rv = ChildAt(index, *getter_AddRefs(child));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child");
+            if (NS_FAILED(rv))
                 break;
-            }
 
             nsCOMPtr<nsIDOMNode> domNode;
-            if (NS_FAILED(rv = child->QueryInterface(kIDOMNodeIID, (void**) getter_AddRefs(domNode)))) {
+            rv = child->QueryInterface(kIDOMNodeIID, (void**) getter_AddRefs(domNode));
+            if (NS_FAILED(rv)) {
                 NS_WARNING("child content doesn't support nsIDOMNode");
                 continue;
             }
 
-            if (NS_FAILED(rv = children->AppendNode(domNode))) {
-                NS_ERROR("unable to append node to list");
+            rv = children->AppendNode(domNode);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append node to list");
+            if (NS_FAILED(rv))
                 break;
-            }
         }
     }
 
+    // Create() addref'd for us
     *aChildNodes = children;
-    NS_ADDREF(*aChildNodes);
     return NS_OK;
 }
 
@@ -1018,15 +1020,41 @@ RDFElementImpl::SetContainingNameSpace(nsINameSpace* aNameSpace)
 NS_IMETHODIMP
 RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 {
+    nsresult rv;
+
     if (mNameSpace) {
+        // If we have a namespace, return it.
         NS_ADDREF(mNameSpace);
         aNameSpace = mNameSpace;
         return NS_OK;
     }
-    else if (mParent) {
-        nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(mParent) );
+
+    // Next, try our parent.
+    nsCOMPtr<nsIContent> parent( dont_QueryInterface(mParent) );
+    while (parent) {
+        nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(parent) );
         if (xml)
             return xml->GetContainingNameSpace(aNameSpace);
+
+        nsCOMPtr<nsIContent> temp = parent;
+        rv = temp->GetParent(*getter_AddRefs(parent));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get parent");
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Allright, we walked all the way to the top of our containment
+    // hierarchy and couldn't find a parent that supported
+    // nsIXMLContent. If we're in a document, try to doc's root
+    // element.
+    if (mDocument) {
+        nsCOMPtr<nsIContent> docroot
+            = dont_QueryInterface( mDocument->GetRootContent() );
+
+        if (docroot) {
+            nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(docroot) );
+            if (xml)
+                return xml->GetContainingNameSpace(aNameSpace);
+        }
     }
 
     aNameSpace = nsnull;
@@ -1616,23 +1644,8 @@ static char kNameSpaceSeparator[] = ":";
         name.Cut(0, nsoffset+1);
     }
 
-    // Figure out the namespace ID
-
-    // XXX This is currently broken, because _nobody_ will ever set
-    // the namespace scope via the nsIXMLElement interface. To make
-    // that work will require a bit more machinery: something that
-    // remembers the XML namespace scoping as nodes get created in the
-    // RDF graph, and can then extract them later when content nodes
-    // are built via the content model builders.
-    //
-    // Since mNameSpace will _always_ be null, specifying
-    // kNameSpaceID_None allows us to at least match on the
-    // tag. You'll start seeing problems when the same name is used in
-    // different namespaces.
-    //
-    // See http://bugzilla.mozilla.org/show_bug.cgi?id=3275 and 3334
-    // for more info.
-
+    // Figure out the namespace ID, defaulting to none if there is no
+    // namespace prefix.
     aNameSpaceID = kNameSpaceID_None;
     if (0 < prefix.Length()) {
         nsCOMPtr<nsIAtom> nameSpaceAtom( getter_AddRefs(NS_NewAtom(prefix)) );
@@ -1658,9 +1671,6 @@ NS_IMETHODIMP
 RDFElementImpl::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, 
                                          nsIAtom*& aPrefix)
 {
-    // XXX mNameSpace will _always_ be null, so this really depends on
-    // fixing Bugs 3275 & 3334, resolving how to map scoped namespace
-    // prefixes back and forth from the graph.
     nsresult rv;
 
     nsCOMPtr<nsINameSpace> ns;
@@ -2425,7 +2435,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
                                                  (void**) getter_AddRefs(rdfDoc))))
         return rv;
 
-    rv = rdfDoc->CreateContents((nsIStyledContent*) unconstThis);
+    rv = rdfDoc->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
     NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
     return rv;
 }
