@@ -55,7 +55,6 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsEditorMode.h"
 #include "nsIDOMSelection.h"
 
 #include "nsIFileWidget.h"
@@ -65,8 +64,6 @@
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
-//#include "nsEditorMode.h"
-#include "nsEditorInterfaces.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsString.h"
