@@ -21,6 +21,6 @@
 	
 	<!-- Edit Menu -->
 	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
-	<key id="key_redo" command="true" key="&redoCmd.key;" observes="cmd_redo"/>
+	<key id="key_redo" command="true" shift="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	
 </overlay>		

@@ -8,4 +8,4 @@
 <!ENTITY quitApplicationCmd.key				"Q"> 
 
 <!ENTITY redoCmd.label						"Redo">  
-<!ENTITY redoCmd.key						"Y">  
+<!ENTITY redoCmd.key						"Z">  
