@@ -53,7 +53,6 @@
 #include "nsNetCID.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +80,6 @@ nsresult nsCookieService::Init()
 {
   COOKIE_RegisterPrefCallbacks();
   nsresult rv;
-  mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   COOKIE_Read();
 
   nsCOMPtr<nsIObserverService> observerService = 
@@ -165,10 +163,7 @@ nsCookieService::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {
-  nsCAutoString spec;
-  nsresult rv = aURL->GetAsciiSpec(spec);
-  if (NS_FAILED(rv)) return rv;
-  *aCookie = COOKIE_GetCookie((char *)spec.get(), mIOService);
+  *aCookie = COOKIE_GetCookie(aURL);
   return NS_OK;
 }
 
@@ -177,47 +172,28 @@ nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char *
   if (!aURL) {
     return NS_ERROR_FAILURE;
   }
-  nsCAutoString spec;
-  nsresult rv = aURL->GetAsciiSpec(spec);
-  if (NS_FAILED(rv)) return rv;
-  if (aFirstURL) {
-    nsCAutoString firstSpec;
-    rv = aFirstURL->GetAsciiSpec(firstSpec);
-    if (NS_FAILED(rv)) return rv;
-    *aCookie = COOKIE_GetCookieFromHttp((char *) spec.get(), (char *) firstSpec.get(), mIOService);
-  } else {
-    *aCookie = COOKIE_GetCookieFromHttp((char *) spec.get(), nsnull, mIOService);
-  }
+
+  *aCookie = COOKIE_GetCookieFromHttp(aURL, aFirstURL);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * aCookie, nsIHttpChannel* aHttpChannel) {
-  nsCAutoString spec;
-  nsresult result = aURL->GetAsciiSpec(spec);
-  NS_ASSERTION(result == NS_OK, "deal with this");
 
-  COOKIE_SetCookieString((char *) spec.get(), aPrompt, aCookie, mIOService, aHttpChannel);
+  COOKIE_SetCookieString(aURL, aPrompt, aCookie, aHttpChannel);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires, nsIHttpChannel* aHttpChannel) 
 {
-  nsXPIDLCString spec;
-  nsresult rv = aURL->GetSpec(spec);
-  if (NS_FAILED(rv)) return rv;
-  nsIURI* firstURL = aFirstURL;
+  nsCOMPtr<nsIURI> firstURL = aFirstURL;
   if (!firstURL) {
     firstURL = aURL;
   }
-  nsXPIDLCString firstSpec;
-  rv = firstURL->GetSpec(firstSpec);
-  if (NS_FAILED(rv)) return rv;
+
   COOKIE_SetCookieStringFromHttp(
-    NS_CONST_CAST(char *, spec.get()),
-    NS_CONST_CAST(char *, firstSpec.get()),
-    aPrompter, aCookie, (char *)aExpires, mIOService, aHttpChannel);
+    aURL, firstURL, aPrompter, aCookie, (char *)aExpires, aHttpChannel);
   return NS_OK;
 }
 
