@@ -152,61 +152,6 @@ GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
 }
 
 /***************************************************************************/
-// These are copied from nsJSUtils.cpp in DOMLand
-#ifdef XPC_OLD_DOM_SUPPORT
-static nsresult
-GetStaticScriptGlobal(JSContext* aContext,
-                      JSObject* aObj,
-                      nsIScriptGlobalObject** aNativeGlobal)
-{
-  nsISupports* supports;
-  JSObject* parent;
-  JSObject* glob = aObj; // starting point for search
-
-  if(!glob)
-    return NS_ERROR_FAILURE;
-
-  while(nsnull != (parent = JS_GetParent(aContext, glob)))
-    glob = parent;
-
-  if(!GetISupportsFromJSObject(aContext, glob, &supports) || !supports)
-    return NS_ERROR_FAILURE;
-
-  return supports->QueryInterface(NS_GET_IID(nsIScriptGlobalObject),
-                                  (void**) aNativeGlobal);
-}
-
-static nsresult
-GetStaticScriptContext(JSContext* aContext,
-                       JSObject* aObj,
-                       nsIScriptContext** aScriptContext)
-{
-  nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
-  GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
-  if(!nativeGlobal)
-    return NS_ERROR_FAILURE;
-  nsIScriptContext* scriptContext = nsnull;
-  nativeGlobal->GetContext(&scriptContext);
-  *aScriptContext = scriptContext;
-  return scriptContext ? NS_OK : NS_ERROR_FAILURE;
-}
-
-static nsresult
-GetDynamicScriptContext(JSContext *aContext,
-                        nsIScriptContext** aScriptContext)
-{
-  // Note: We rely on the rule that if any JSContext in our JSRuntime has a
-  // private set then that private *must* be a pointer to an nsISupports.
-  nsISupports *supports = (nsIScriptContext*) JS_GetContextPrivate(aContext);
-  if(!supports)
-      return NS_ERROR_FAILURE;
-  return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
-                                  (void**)aScriptContext);
-}
-
-#endif /* XPC_OLD_DOM_SUPPORT */
-/***************************************************************************/
-/***************************************************************************/
 
 /*
 * Support for 64 bit conversions where 'long long' not supported.
@@ -834,64 +779,28 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
     }
     else
 #endif /* XPC_DO_DOUBLE_WRAP */
-
     {
-#ifdef XPC_OLD_DOM_SUPPORT
-        // is this a DOM wrapped native object?
-        nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(src);
-        if(owner)
-        {
-            // is a DOM object
-            nsCOMPtr<nsIScriptContext> scriptCX;
-            GetStaticScriptContext(cx, scope, getter_AddRefs(scriptCX));
-            if(!scriptCX)
-                GetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
-            JSObject* aJSObj = nsnull;
-            if(scriptCX &&
-               NS_SUCCEEDED(owner->GetScriptObject(scriptCX, (void **)&aJSObj)))
-            {
-                if(aJSObj)
-                {
-                    nsIXPConnectJSObjectHolder* holder =
-                        XPCJSObjectHolder::newHolder(cx, aJSObj);
-                    if(holder)
-                    {
-                        NS_ADDREF(holder);
-                        *dest = holder;
-                        return JS_TRUE;
-                    }
-                    return JS_FALSE;
-                }
-                return JS_TRUE;
-            }
-            if(pErr)
-                *pErr = NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT;
-        }
-        else
-#endif /* XPC_OLD_DOM_SUPPORT */
-        {
-            // not a DOM object. Just try to build a wrapper
-            XPCWrappedNativeScope* xpcscope =
-                XPCWrappedNativeScope::FindInJSObjectScope(ccx, scope);
-            if(!xpcscope)
-                return JS_FALSE;
+        XPCWrappedNativeScope* xpcscope =
+            XPCWrappedNativeScope::FindInJSObjectScope(ccx, scope);
+        if(!xpcscope)
+            return JS_FALSE;
 
-            XPCNativeInterface* iface =
-                XPCNativeInterface::GetNewOrUsed(ccx, iid);
-            if(!iface)
-                return JS_FALSE;
+        XPCNativeInterface* iface =
+            XPCNativeInterface::GetNewOrUsed(ccx, iid);
+        if(!iface)
+            return JS_FALSE;
 
-            XPCWrappedNative* wrapper;
-            nsresult rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope,
-                                                         iface, &wrapper);
-            if(pErr)
-                *pErr = rv;
-            if(NS_SUCCEEDED(rv) && wrapper)
-            {
-                *dest = NS_STATIC_CAST(nsIXPConnectJSObjectHolder*, wrapper);
-                return JS_TRUE;
-            }
+        XPCWrappedNative* wrapper;
+        nsresult rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope,
+                                                     iface, &wrapper);
+        if(pErr)
+            *pErr = rv;
+        if(NS_SUCCEEDED(rv) && wrapper)
+        {
+            *dest = NS_STATIC_CAST(nsIXPConnectJSObjectHolder*, wrapper);
+            return JS_TRUE;
         }
+        
     }
     return JS_FALSE;
 }
