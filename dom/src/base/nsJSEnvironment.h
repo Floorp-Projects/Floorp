@@ -24,7 +24,12 @@
 #include "nsCOMPtr.h"
 
 class nsIScriptSecurityManager;
+// XXXbe vc5 sucks: must include nsIScriptNameSpaceManager.h to use nsCOMPtr with it
+#if 0
 class nsIScriptNameSpaceManager;
+#else
+#include "nsIScriptNameSpaceManager.h"
+#endif
 class nsIPrincipal;
 
 class nsJSContext : public nsIScriptContext {
