@@ -214,6 +214,12 @@ class nsExpatDTD : public nsIDTD {
     virtual PRBool IsContainer(PRInt32 aTag) const;
 
     /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+
+    /**
      * Retrieve a ptr to the global token recycler...
      * @update	gess8/4/98
      * @return  ptr to recycler (or null)
