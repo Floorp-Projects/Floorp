@@ -45,6 +45,7 @@
 
 char      szTitle[MAX_BUF];
 char      szCmdLineToSetup[MAX_BUF];
+BOOL      gbUncompressOnly;
 DWORD     dwMode;
 HINSTANCE hInst;
 
@@ -445,6 +446,7 @@ void ParseCommandLine(LPSTR lpszCmdLine)
 
   ZeroMemory(szCmdLineToSetup, MAX_BUF);
   dwMode = NORMAL;
+  gbUncompressOnly = FALSE;
   iArgC  = GetArgC(lpszCmdLine);
   i      = 0;
   while(i < iArgC)
@@ -453,6 +455,10 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     if((lstrcmpi(szArgVBuf, "-ms") == 0) || (lstrcmpi(szArgVBuf, "/ms") == 0))
     {
       dwMode = SILENT;
+    }
+    else if((lstrcmpi(szArgVBuf, "-u") == 0) || (lstrcmpi(szArgVBuf, "/u") == 0))
+    {
+      gbUncompressOnly = TRUE;
     }
 
     ++i;
@@ -622,9 +628,14 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 	wsprintf(szStatus, szText, lpszName);
 	SetStatusLine(szStatus);
 
-	// Create a file in the temp directory
-	GetFullTempPathName(lpszName, sizeof(szTmpFile), szTmpFile);
-  CreateDirectoriesAll(szTmpFile);
+  if(gbUncompressOnly == TRUE)
+    lstrcpy(szTmpFile, lpszName);
+  else
+  {
+	  // Create a file in the temp directory
+	  GetFullTempPathName(lpszName, sizeof(szTmpFile), szTmpFile);
+    CreateDirectoriesAll(szTmpFile);
+  }
 
 	// Extract the file
 	hResInfo = FindResource((HINSTANCE)hModule, lpszName, lpszType);
@@ -837,6 +848,9 @@ RunInstaller()
   char                szFilename[MAX_BUF];
   char                szBuf[MAX_BUF];
   DWORD               dwLen;
+
+  if(gbUncompressOnly == TRUE)
+    return(TRUE);
 
   // Update UI
   UpdateProgressBar(100);
