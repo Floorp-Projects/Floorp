@@ -31,26 +31,6 @@
                 textFieldHistoryDays = NSTextField; 
             }; 
             SUPERCLASS = NSPreferencePane; 
-        }, 
-        {
-            ACTIONS = {
-                checkboxClicked = id; 
-                checkboxStartPageClicked = id; 
-                clearGlobalHistory = id; 
-                historyDaysModified = id; 
-                openSystemInternetPanel = id; 
-            }; 
-            CLASS = OrgMozillaNavigatorPreferenceNavigation; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                buttonSystemPreferences = NSButton; 
-                checkboxNewTabBlank = NSButton; 
-                checkboxNewWindowBlank = NSButton; 
-                checkboxOpenTabs = NSButton; 
-                sliderHistoryDays = NSSlider; 
-                textFieldHistoryDays = NSTextField; 
-            }; 
-            SUPERCLASS = NSPreferencePane; 
         }
     ); 
     IBVersion = 1; 
