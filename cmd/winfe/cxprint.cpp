@@ -1258,6 +1258,8 @@ void CPrintCX::FormatAndPrintPages(MWContext *pContext)	{
 				break;
 			}
 
+			SetMappingMode(pDC);  //AJB Fix for scaling problem on some Win95 printers
+
 			//	Print the page
 			PrintPage(m_pcpiPrintJob->m_nCurPage);
 
