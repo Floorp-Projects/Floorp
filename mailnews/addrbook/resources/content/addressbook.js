@@ -56,6 +56,7 @@ var gCardViewBoxEmail1;
 const kDisplayName = 0;
 const kLastNameFirst = 1;
 const kFirstNameFirst = 2;
+const kPABDirectory = 2; // defined in nsDirPrefs.h
 
 var gAddressBookAbListener = {
   onItemAdded: function(parentDir, item) {
@@ -286,7 +287,44 @@ function AbCreateNewAddressBook(name)
 {
   var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
   properties.description = name;
+  properties.dirType = kPABDirectory;
   top.addressbook.newAddressBook(properties);
+}
+
+// not used yet.  just here for when we fix bug #17230
+function AbRenameAddressBook()
+{
+  // When the UI code for renaming addrbooks (bug #17230) is ready, just 
+  // change 'properties.description' setting below and it should just work.
+  // get select ab
+  var selectedABURI = GetSelectedDirectory();
+  //dump("In AbRenameAddressBook() selectedABURI=" + selectedABURI + "\n");
+
+  // the rdf service
+  var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+  // get the datasource for the addressdirectory
+  var addressbookDS = RDF.GetDataSource("rdf:addressdirectory");
+
+  // moz-abdirectory:// is the RDF root to get all types of addressbooks.
+  var parentDir = RDF.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
+
+  // the RDF resource URI for LDAPDirectory will be like: "moz-abmdbdirectory://abook-3.mab"
+  var selectedABDirectory = RDF.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory);
+
+  // Copy existing dir type category id and mod time so they won't get reset.
+  var oldProperties = selectedABDirectory.directoryProperties;
+
+  // Create and fill in properties info
+  var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
+  properties.URI = selectedABURI;
+  properties.dirType = oldProperties.dirType;
+  properties.categoryId = oldProperties.categoryId;
+  properties.syncTimeStamp = oldProperties.syncTimeStamp;
+  // XXX TODO: set description to whatever users enter. hard coded for now.
+  properties.description = "Foo bar";
+
+  // Now do the modification.
+  addressbook.modifyAddressBook(addressbookDS, parentDir, selectedABDirectory, properties);
 }
 
 function GetPrintSettings()

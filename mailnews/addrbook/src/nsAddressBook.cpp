@@ -140,6 +140,34 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook(nsIAbDirectoryProperties *aPropertie
     return rv;
 }
 
+NS_IMETHODIMP nsAddressBook::ModifyAddressBook
+(nsIRDFDataSource* aDS, nsIAbDirectory *aParentDir, nsIAbDirectory *aDirectory, nsIAbDirectoryProperties *aProperties)
+{
+  NS_ENSURE_ARG_POINTER(aDS);
+  NS_ENSURE_ARG_POINTER(aParentDir);
+  NS_ENSURE_ARG_POINTER(aDirectory);
+  NS_ENSURE_ARG_POINTER(aProperties);
+
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> parentArray (do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISupportsArray> resourceElement (do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISupportsArray> resourceArray (do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  parentArray->AppendElement(aParentDir);
+
+  nsCOMPtr<nsIRDFResource> dirSource(do_QueryInterface(aDirectory, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  resourceElement->AppendElement(dirSource);
+  resourceElement->AppendElement(aProperties);
+  resourceArray->AppendElement(resourceElement);
+
+  return DoCommand(aDS, NS_LITERAL_CSTRING(NC_RDF_MODIFY), parentArray, resourceArray);
+}
+
 NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
 (nsIRDFDataSource* aDS, nsISupportsArray *aParentDir, nsISupportsArray *aResourceArray)
 {

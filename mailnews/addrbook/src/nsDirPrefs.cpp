@@ -425,7 +425,7 @@ nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 	return NS_OK;
 }
 
-nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, DirectoryType dirType, DIR_Server** pServer)
+nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, const char * uri, int maxHits, const char * authDn, DirectoryType dirType, DIR_Server** pServer)
 {
 	DIR_Server * server = (DIR_Server *) PR_Malloc(sizeof(DIR_Server));
 	DIR_InitServerWithType (server, dirType);
@@ -443,6 +443,22 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
             server->fileName = nsCRT::strdup(fileName);
 		else
 			DIR_SetFileName(&server->fileName, kPersonalAddressbook);
+    if (dirType == LDAPDirectory) {
+      // We don't actually allow the password to be saved in the preferences;
+      // this preference is (effectively) ignored by the current code base.  
+      // It's here because versions of Mozilla 1.0 and earlier (maybe 1.1alpha
+      // too?) would blow away the .auth.dn preference if .auth.savePassword
+      // is not set.  To avoid trashing things for users who switch between
+      // versions, we'll set it.  Once the versions in question become 
+      // obsolete enough, this workaround can be gotten rid of.
+      server->savePassword = PR_TRUE;
+      if (uri)
+        server->uri = nsCRT::strdup(uri);
+      if (authDn)
+        server->authDn = nsCRT::strdup(authDn);
+    }
+    if (maxHits)
+      server->maxHits = maxHits;
 
 		dir_ServerList->AppendElement(server);
 		if (!migrating) {
@@ -492,18 +508,17 @@ nsresult DIR_IncrementServerRefCount (DIR_Server *server)
 nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
 {
 	DIR_InitServer(server);
+  server->dirType = dirType;
 	if (dirType == LDAPDirectory)
 	{
         server->columnAttributes = nsCRT::strdup(kDefaultLDAPColumnHeaders);
-		server->dirType = LDAPDirectory;
 		server->isOffline = PR_TRUE;
 		server->csid = CS_UTF8;
 		server->locale = nsnull;
 	}
-	else if (dirType == PABDirectory)
+	else if (dirType == PABDirectory || dirType == MAPIDirectory)
 	{
         server->columnAttributes = nsCRT::strdup(kDefaultPABColumnHeaders);
-		server->dirType = PABDirectory;
 		server->isOffline = PR_FALSE;
 		server->csid = CS_UTF8;
 //		server->csid = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
@@ -3889,6 +3904,9 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	DIR_SetStringPref (prefstring, "searchString", tempstring, server->lastSearchString, "");
 	DIR_SetIntPref (prefstring, "dirType", tempstring, server->dirType, LDAPDirectory);
 	DIR_SetBoolPref (prefstring, "isOffline", tempstring, server->isOffline, kDefaultIsOffline);
+
+  if (server->dirType == LDAPDirectory)
+      DIR_SetStringPref(prefstring, "uri", tempstring, server->uri, "");
 
 	/* save the column attributes */
 	if (server->dirType == PABDirectory)

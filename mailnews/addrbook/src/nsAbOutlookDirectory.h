@@ -67,6 +67,7 @@ public:
     NS_IMETHOD HasCard(nsIAbCard *aCard, PRBool *aHasCard) ;
     NS_IMETHOD HasDirectory(nsIAbDirectory *aDirectory, PRBool *aHasDirectory) ;
     NS_IMETHOD DeleteCards(nsISupportsArray *aCardList) ;
+    NS_IMETHOD ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties);
     NS_IMETHOD DeleteDirectory(nsIAbDirectory *aDirectory) ;
   NS_IMETHOD AddCard(nsIAbCard *aData, nsIAbCard **addedCard);
   NS_IMETHOD DropCard(nsIAbCard *aData, PRBool needToCopyCard);

@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIPref.h"
 #include "nsAbBSDirectory.h"
 #include "nsAbUtils.h"
 
@@ -246,11 +247,27 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(nsIAbDirectoryProperties *aPro
 
   nsAutoString description;
   nsXPIDLCString fileName;
+  nsXPIDLCString uri;
+  nsXPIDLCString authDn;
 
   rv = aProperties->GetDescription(description);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aProperties->GetFileName(getter_Copies(fileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aProperties->GetURI(getter_Copies(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 dirType;
+  rv = aProperties->GetDirType(&dirType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 maxHits;
+  rv = aProperties->GetMaxHits(&maxHits);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aProperties->GetAuthDn(getter_Copies(authDn));
   NS_ENSURE_SUCCESS(rv, rv);
 
 	/*
@@ -265,8 +282,9 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(nsIAbDirectoryProperties *aPro
 	DIR_Server* server = nsnull;
 	rv = DIR_AddNewAddressBook(description.get(),
 			(fileName.Length ()) ? fileName.get () : nsnull,
-			PR_FALSE /* is_migrating */,
-			PABDirectory,
+			PR_FALSE /* is_migrating */, uri.get(),
+			maxHits, authDn,
+			(DirectoryType)dirType, 
 			&server);
 	NS_ENSURE_SUCCESS (rv, rv);
 
@@ -274,9 +292,14 @@ NS_IMETHODIMP nsAbBSDirectory::CreateNewDirectory(nsIAbDirectoryProperties *aPro
   rv = aProperties->SetFileName(server->fileName);
   NS_ENSURE_SUCCESS(rv, rv);
 	
+  if (dirType != LDAPDirectory) {
 	// Add the URI property
   nsCAutoString URI(NS_LITERAL_CSTRING(kMDBDirectoryRoot) + nsDependentCString(server->fileName));
   rv = aProperties->SetURI(URI.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = aProperties->SetPrefName(server->prefName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CreateDirectoriesFromFactory(aProperties, server, PR_TRUE /* notify */);
@@ -298,7 +321,7 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *aDisplayNam
     fileName = aURI + kMDBDirectoryRootLen;
 
 	DIR_Server * server = nsnull;
-  rv = DIR_AddNewAddressBook(aDisplayName, fileName, migrating, PABDirectory, &server);
+  rv = DIR_AddNewAddressBook(aDisplayName, fileName, migrating, aURI, 0, nsnull, PABDirectory, &server);
 	NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIAbDirectoryProperties> properties;
@@ -348,13 +371,12 @@ PRBool PR_CALLBACK GetDirectories_getDirectory (nsHashKey *aKey, void *aData, vo
 
 NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 {
-	nsresult rv = NS_OK;
+	nsresult rv;
 	
-	if (!directory)
-		return NS_ERROR_NULL_POINTER;
+	NS_ENSURE_ARG_POINTER(directory);
 
 	// if addressbook is not launched yet mSevers will not be initialized
-	// calling GetChidNodes will initialize mServers
+	// calling GetChildNodes will initialize mServers
 	if (!mInitialized) {
 		nsCOMPtr<nsIEnumerator> subDirectories;
 		rv = GetChildNodes(getter_AddRefs(subDirectories));
@@ -405,6 +427,84 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	}
 
 	return rv;
+}
+
+NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties)
+{
+  nsresult rv;
+
+  NS_ENSURE_ARG_POINTER(directory);
+  NS_ENSURE_ARG_POINTER(aProperties);
+
+  // if addressbook is not launched yet mSevers will not be initialized
+  // calling GetChildNodes will initialize mServers
+  if (!mInitialized) {
+    nsCOMPtr<nsIEnumerator> subDirectories;
+    rv = GetChildNodes(getter_AddRefs(subDirectories));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  DIR_Server *server = nsnull;
+  nsVoidKey key((void *)directory);
+  server = (DIR_Server* )mServers.Get (&key);
+
+  if (!server)
+    return NS_ERROR_FAILURE;
+  GetDirectories getDirectories (server);
+  mServers.Enumerate (GetDirectories_getDirectory, (void *)&getDirectories);
+
+  nsAutoString description;
+  nsXPIDLCString uri;
+  nsXPIDLCString authDn;
+  PRUint32 maxHits, palmSyncTimeStamp;
+  PRInt32 palmCategoryId;
+
+  rv = aProperties->GetDescription(description);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  NS_ConvertUTF8toUCS2 oldValue(server->description);
+  nsCRT::free(server->description);
+  NS_ConvertUCS2toUTF8 utf8str(description.get());
+  server->description = ToNewCString(utf8str);
+
+  rv = aProperties->GetURI(getter_Copies(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCRT::free(server->uri);
+  server->uri = ToNewCString(uri);
+
+  rv = aProperties->GetMaxHits(&maxHits);
+  NS_ENSURE_SUCCESS(rv, rv);
+  server->maxHits = maxHits;
+  
+  rv=aProperties->GetAuthDn(getter_Copies(authDn));
+  NS_ENSURE_SUCCESS(rv, rv);
+  server->authDn = ToNewCString(authDn);
+
+  rv = aProperties->GetSyncTimeStamp(&palmSyncTimeStamp);
+  NS_ENSURE_SUCCESS(rv, rv);
+  server->PalmSyncTimeStamp = palmSyncTimeStamp;
+
+  rv = aProperties->GetCategoryId(&palmCategoryId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  server->PalmCategoryId = palmCategoryId;
+  
+  DIR_SavePrefsForOneServer(server);
+
+  if (!oldValue.Equals(description)) {
+    nsCOMPtr<nsIAbDirectory> modifiedDir;
+    getDirectories.directories->GetElementAt (0, getter_AddRefs(modifiedDir));
+
+    nsCOMPtr<nsIAddrBookSession> abSession = 
+              do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+
+    if (NS_SUCCEEDED(rv))
+      abSession->NotifyItemPropertyChanged(modifiedDir, "DirName", oldValue.get(), description.get());
+  }
+
+  // Save modified address book into pref file.
+  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+  NS_ENSURE_SUCCESS(rv, rv);
+  return prefService->SavePrefFile(nsnull);
 }
 
 NS_IMETHODIMP nsAbBSDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)

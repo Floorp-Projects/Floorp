@@ -48,6 +48,7 @@ interface nsIAbDirectory;
 interface nsIAddressBook : nsISupports 
 {
   void newAddressBook(in nsIAbDirectoryProperties aProperties);
+  void modifyAddressBook(in nsIRDFDataSource aDS, in nsIAbDirectory aParentDir, in nsIAbDirectory aDirectory, in nsIAbDirectoryProperties aProperties);
   void deleteAddressBooks(in nsIRDFDataSource aDS, in nsISupportsArray aParentDir, in nsISupportsArray aResourceArray);
   void setDocShellWindow(in nsIDOMWindowInternal win);
   void exportAddressBook(in nsIAbDirectory aDirectory);

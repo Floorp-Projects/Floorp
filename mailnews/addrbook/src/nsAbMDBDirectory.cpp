@@ -134,6 +134,12 @@ nsresult nsAbMDBDirectory::RemoveCardFromAddressList(nsIAbCard* card)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAbMDBDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP nsAbMDBDirectory::DeleteDirectory(nsIAbDirectory *directory)
 {
   nsresult rv = NS_OK;

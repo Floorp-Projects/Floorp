@@ -61,7 +61,16 @@ var gAddressBookPanelAbListener = {
     }
   },
   onItemPropertyChanged: function(item, property, oldValue, newValue) {
-    // will not be called
+    try {
+      var directory = item.QueryInterface(Components.interfaces.nsIAbDirectory);
+      // check if the item being changed is the directory
+      // that we are showing in the addressbook sidebar
+      if (directory == GetAbView().directory) {
+          LoadPreviouslySelectedAB();
+      }
+    }
+    catch (ex) {
+    }
   }
 };
 
@@ -104,10 +113,12 @@ function AbPanelLoad()
   LoadPreviouslySelectedAB();
 
   // add a listener, so we can switch directories if
-  // the current directory is deleted
+  // the current directory is deleted, and change the name if the
+  // selected directory's name is modified
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
-  // this listener only cares when a directory is removed
-  addrbookSession.addAddressBookListener(gAddressBookPanelAbListener, Components.interfaces.nsIAbListener.directoryRemoved);
+  // this listener only cares when a directory is removed or modified
+  addrbookSession.addAddressBookListener(gAddressBookPanelAbListener,
+                  Components.interfaces.nsIAbListener.directoryRemoved | Components.interfaces.nsIAbListener.changed);
 
   gSearchInput = document.getElementById("searchInput");
 }
@@ -115,7 +126,8 @@ function AbPanelLoad()
 
 function AbPanelOnChange(event)
 {
-  abList.setAttribute("selectedAB", abList.value);
+  var abPopup = document.getElementById('addressbookList');
+  abPopup.setAttribute("selectedAB", abPopup.value);
 }
 
 function AbPanelUnload()

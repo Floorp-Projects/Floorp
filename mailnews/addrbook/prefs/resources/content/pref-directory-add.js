@@ -1,6 +1,4 @@
 /* -*- Mode: Java; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-var gPrefstring = "ldap_2.servers.";
-var gPref_string_desc = "";
 var gPrefInt = null;
 var gCurrentDirectory = null;
 var gCurrentDirectoryString = null;
@@ -8,6 +6,7 @@ var gCurrentDirectoryString = null;
 const kDefaultMaxHits = 100;
 const kDefaultLDAPPort = 389;
 const kDefaultSecureLDAPPort = 636;
+const kLDAPDirectory = 0;  // defined in nsDirPrefs.h
 
 function Startup()
 {
@@ -135,54 +134,6 @@ function fillDefaultSettings()
   sub.radioGroup.selectedItem = sub;
 }
 
-// find a unique server-name for the new directory server
-// from the description entered by the user.
-function createUniqueServername()
-{
-  // gPref_string_desc is the description entered by the user.
-  // Just get the alphabets and digits from the description.
-  // remove spaces and special characters from description.
-  var user_Id = 0;
-  var re = /[A-Za-z0-9]/g;
-  var str = gPref_string_desc.match(re);
-  var temp = "";
-
-  if (!str) {
-    try {
-      user_Id = gPrefInt.getIntPref("ldap_2.user_id");
-    }
-    catch(ex){ 
-      user_Id = 0;
-    }
-    ++user_Id;
-    temp = "user_directory_" + user_Id;
-    str = temp;
-    try {
-      gPrefInt.setIntPref("ldap_2.user_id", user_Id);
-    }
-    catch(ex) {}    
-  }
-  else {
-    var len = str.length;
-    if (len > 20) len = 20;
-    for (var count = 0; count < len; count++)
-    {
-     temp += str[count];
-    }
-  }
-
-  gPref_string_desc = temp;
-  while (temp) {
-    temp = "";
-    try{ 
-      temp = gPrefInt.getComplexValue(gPrefstring+gPref_string_desc+".description",
-                                      Components.interfaces.nsISupportsString).data;
-    } catch(e){}
-    if (temp)
-      gPref_string_desc += str[0];
-  }
-} 
-
 function hasOnlyWhitespaces(string)
 {
   // get all the whitespace characters of string and assign them to str.
@@ -208,14 +159,13 @@ function hasCharacters(number)
 
 function onAccept()
 {
+  var properties = Components.classes["@mozilla.org/addressbook/properties;1"].createInstance(Components.interfaces.nsIAbDirectoryProperties);
+  var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
+  properties.dirType = kLDAPDirectory;
+
   try {
     var pref_string_content = "";
     var pref_string_title = "";
-
-    if (!gPrefInt) {
-      gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
-        .getService(Components.interfaces.nsIPrefBranch);
-    }
 
     var ldapUrl = Components.classes["@mozilla.org/network/ldap-url;1"];
     ldapUrl = ldapUrl.createInstance().
@@ -228,8 +178,7 @@ function onAccept()
     var dn = document.getElementById("login").value;
     var results = document.getElementById("results").value;
     var errorValue = null;
-    gPref_string_desc = description;
-    if ((!gPref_string_desc) || hasOnlyWhitespaces(gPref_string_desc))
+    if ((!description) || hasOnlyWhitespaces(description))
       errorValue = "invalidName";
     else if ((!hostname) || hasOnlyWhitespaces(hostname))
       errorValue = "invalidHostname";
@@ -239,20 +188,7 @@ function onAccept()
     else if (results && hasCharacters(results))
       errorValue = "invalidResults";
     if (!errorValue) {
-      pref_string_content = gPref_string_desc;
-      if (gCurrentDirectory && gCurrentDirectoryString) {
-        gPref_string_desc = gCurrentDirectoryString;
-      } else {
-        createUniqueServername();
-        gPref_string_desc = gPrefstring + gPref_string_desc;
-      }
-
-      pref_string_title = gPref_string_desc + "." + "description";
-      var str = Components.classes["@mozilla.org/supports-string;1"]
-        .createInstance(Components.interfaces.nsISupportsString);
-      str.data = pref_string_content;
-      gPrefInt.setComplexValue(pref_string_title, 
-                               Components.interfaces.nsISupportsString, str);
+      properties.description = description;
   
       ldapUrl.host = hostname;
       ldapUrl.dn = document.getElementById("basedn").value;
@@ -272,49 +208,42 @@ function onAccept()
       }
       if (secure.checked)
         ldapUrl.options |= ldapUrl.OPT_SECURE;
-      pref_string_title = gPref_string_desc + ".uri";
 
-      var uri = Components.classes["@mozilla.org/supports-string;1"]
-        .createInstance(Components.interfaces.nsISupportsString);
-      uri.data = ldapUrl.spec;
-      gPrefInt.setComplexValue(pref_string_title,
-                               Components.interfaces.nsISupportsString, uri);
+      properties.URI = ldapUrl.spec;
+      properties.maxHits = results;
+      properties.authDn = dn;
 
-      pref_string_content = results;
-      pref_string_title = gPref_string_desc + ".maxHits";
-      if (pref_string_content != kDefaultMaxHits) {
-        gPrefInt.setIntPref(pref_string_title, pref_string_content);
-      } else {
-        try {
-          gPrefInt.clearUserPref(pref_string_title);
-        } catch (ex) {
-        }
+      // check if we are modifying an existing directory or adding a new directory
+      if (gCurrentDirectory && gCurrentDirectoryString) {
+        // we are modifying an existing directory
+        // the rdf service
+        var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].
+                         getService(Components.interfaces.nsIRDFService);
+        // get the datasource for the addressdirectory
+        var addressbookDS = RDF.GetDataSource("rdf:addressdirectory");
+
+        // moz-abdirectory:// is the RDF root to get all types of addressbooks.
+        var parentDir = RDF.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
+
+        // the RDF resource URI for LDAPDirectory will be moz-abldapdirectory://<prefName>
+        var selectedABURI = "moz-abldapdirectory://" + gCurrentDirectoryString;
+        var selectedABDirectory = RDF.GetResource(selectedABURI).QueryInterface(Components.interfaces.nsIAbDirectory);
+ 
+        // Carry over existing palm category id and mod time if it was synced before.
+        var oldProperties = selectedABDirectory.directoryProperties;
+        properties.categoryId = oldProperties.categoryId;
+        properties.syncTimeStamp = oldProperties.syncTimeStamp;
+
+        // Now do the modification.
+        addressbook.modifyAddressBook(addressbookDS, parentDir, selectedABDirectory, properties);
+        window.opener.gNewServerString = gCurrentDirectoryString;       
       }
-
-      pref_string_title = gPref_string_desc + ".auth.dn";
-      var dnWString = Components.classes["@mozilla.org/supports-string;1"]
-        .createInstance(Components.interfaces.nsISupportsString);
-      dnWString.data = dn;
-      gPrefInt.setComplexValue(pref_string_title,
-                               Components.interfaces.nsISupportsString, 
-                               dnWString);
-
-      // We don't actually allow the password to be saved in the preferences;
-      // this preference is (effectively) ignored by the current code base.  
-      // It's here because versions of Mozilla 1.0 and earlier (maybe 1.1alpha
-      // too?) would blow away the .auth.dn preference if .auth.savePassword
-      // is not set.  To avoid trashing things for users who switch between
-      // versions, we'll set it.  Once the versions in question become 
-      // obsolete enough, this workaround can be gotten rid of.
-      //
-      try { 
-        gPrefInt.setBoolPref(gPref_string_desc + ".auth.savePassword", true);
-      } catch (ex) {
-        // if this fails, we can live with that; keep going
+      else { // adding a new directory
+        addressbook.newAddressBook(properties);
+        window.opener.gNewServerString = properties.prefName;
       }
 
       window.opener.gNewServer = description;
-      window.opener.gNewServerString = gPref_string_desc;
       // set window.opener.gUpdate to true so that LDAP Directory Servers
       // dialog gets updated
       window.opener.gUpdate = true; 

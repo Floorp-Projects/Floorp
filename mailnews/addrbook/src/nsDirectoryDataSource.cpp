@@ -64,6 +64,7 @@
 #define NC_RDF_ISWRITEABLE			"http://home.netscape.com/NC-rdf#IsWriteable"
 
 //Directory Commands
+#define NC_RDF_MODIFY				"http://home.netscape.com/NC-rdf#Modify"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 #define NC_RDF_DELETECARDS			"http://home.netscape.com/NC-rdf#DeleteCards"
 
@@ -156,6 +157,8 @@ nsAbDirectoryDataSource::Init()
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISWRITEABLE),
                         getter_AddRefs(kNC_IsWriteable));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_MODIFY), getter_AddRefs(kNC_Modify));  
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DELETE),
                         getter_AddRefs(kNC_Delete));  
@@ -383,7 +386,8 @@ nsAbDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 		directory = do_QueryElementAt(aSources, i, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- directory commands are always enabled
-      if (!((aCommand == kNC_Delete) || (aCommand == kNC_DeleteCards))) {
+      if (!((aCommand == kNC_Delete) || (aCommand == kNC_DeleteCards) 
+            ||(aCommand == kNC_Modify))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -402,6 +406,11 @@ nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 	nsresult rv = aSources->Count(&cnt);
 	NS_ENSURE_SUCCESS(rv, rv);
 
+	if (aCommand == kNC_Modify) {
+       rv = DoModifyDirectory(aSources,aArguments);
+  }
+  else
+  {
 	if ((aCommand == kNC_Delete))  
 		rv = DoDeleteFromDirectory(aSources, aArguments);
   else {
@@ -413,6 +422,7 @@ nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
           rv = DoDeleteCardsFromDirectory(directory, aArguments);
       }
     }
+  }
   }
 	//for the moment return NS_OK, because failure stops entire DoCommand process.
 	return NS_OK;
@@ -450,6 +460,37 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory,
 	}
 
 	return NS_OK;
+}
+
+nsresult nsAbDirectoryDataSource::DoModifyDirectory(nsISupportsArray *parentDir, nsISupportsArray *arguments)
+{
+  PRUint32 itemCount;
+  // Parent dir count should be 1.
+  nsresult rv = parentDir->Count(&itemCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(itemCount == 1, "DoModifyDirectory() must have parent directory count = 1.");
+  if (itemCount != 1)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAbDirectory> parent = do_QueryElementAt(parentDir, 0, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Argument count should be 2. 1st one is nsIAbDirectory and 2nd is nsIAbDirectoryProperties.
+  nsCOMPtr<nsISupportsArray> resourceArray = do_QueryElementAt(arguments, 0, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = resourceArray->Count(&itemCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(itemCount == 2, "DoModifyDirectory() must have resource argument count = 2.");
+  if (itemCount != 2)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAbDirectory> modifiedDir = do_QueryElementAt(resourceArray, 0, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIAbDirectoryProperties> properties = do_QueryElementAt(resourceArray, 1, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (modifiedDir && properties)
+    rv = parent->ModifyDirectory(modifiedDir, properties);
+  return rv;
 }
 
 NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirectory, nsISupports *item)
@@ -646,9 +687,6 @@ nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parent
 	PRUint32 item, itemCount;
 	nsresult rv = parentDirs->Count(&itemCount);
 	NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr<nsISupportsArray> dirArray;
-	NS_NewISupportsArray(getter_AddRefs(dirArray));
 
 	for (item = 0; item < itemCount; item++) 
 	{

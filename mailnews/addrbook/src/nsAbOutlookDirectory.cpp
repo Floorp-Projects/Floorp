@@ -331,6 +331,12 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
     return NS_OK ;
 }
 
+NS_IMETHODIMP nsAbOutlookDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }

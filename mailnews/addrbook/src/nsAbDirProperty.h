@@ -78,6 +78,8 @@ protected:
 	nsString m_ListNickName;
 	nsString m_Description;
 	PRBool   m_IsMailList;
+  nsCString m_DirPrefId;  // ie,"ldap_2.servers.pab"
+
 
 	nsCOMPtr<nsISupportsArray> m_AddressList;
 
@@ -97,5 +99,10 @@ private:
   nsCString mURI;
   nsCString mFileName;
   nsCString mPrefName;
+  PRUint32  mDirType;
+  PRUint32  mMaxHits;
+  nsCString mAuthDn;
+  PRUint32  mSyncTimeStamp;
+  PRInt32   mCategoryId;
 };
 #endif

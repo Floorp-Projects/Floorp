@@ -108,11 +108,15 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
 
     nsXPIDLCString uri;
     nsAutoString description;
+    nsXPIDLCString prefName;
 
     rv = aProperties->GetDescription(description);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aProperties->GetURI(getter_Copies(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = aProperties->GetPrefName(getter_Copies(prefName));
     NS_ENSURE_SUCCESS(rv, rv);
     
 	nsCOMPtr<nsIRDFService> rdf = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
@@ -126,6 +130,9 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = directory->SetDirName(description.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = directory->SetDirPrefId(prefName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);

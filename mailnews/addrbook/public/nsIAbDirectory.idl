@@ -55,6 +55,11 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute string URI;
   attribute string prefName;
   attribute string fileName;
+  attribute unsigned long dirType;
+  attribute unsigned long maxHits;
+  attribute string authDn;
+  attribute unsigned long syncTimeStamp;
+  attribute long categoryId;
 };
 
 [scriptable, uuid(AA920C90-1DD1-11B2-96D3-AA81268ADAFC)]
@@ -75,7 +80,7 @@ interface nsIAbDirectory : nsISupports {
 	// The supported operations
 	readonly attribute long operations;
 
-	// The name of the directory
+	// The description of the directory
     attribute wstring dirName;
     
     // will be used for LDAP replication
@@ -85,6 +90,8 @@ interface nsIAbDirectory : nsISupports {
 	// list or not
 	attribute PRBool isMailList;
 
+  // Get the directory properties
+  readonly attribute nsIAbDirectoryProperties directoryProperties;
 
 	// Get the children directories
 	readonly attribute nsIEnumerator childNodes;
@@ -94,6 +101,9 @@ interface nsIAbDirectory : nsISupports {
 	// the mailing lists too
 	readonly attribute nsIEnumerator childCards;
 
+  // Modifies a top level directory, 
+  // which also updates the preferences
+  void modifyDirectory(in nsIAbDirectory directory, in nsIAbDirectoryProperties aProperties);
 
 	// Deletes either a mailing list or a top
 	// level directory, which also updates the
@@ -192,4 +202,7 @@ interface nsIAbDirectory : nsISupports {
 
 	wstring getValueForCard(in nsIAbCard card, in string name);
 	void setValueForCard(in nsIAbCard card, in string name, in wstring value);
+
+  // the id of the directory used in prefs
+	attribute ACString dirPrefId;
 };

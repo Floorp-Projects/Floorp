@@ -88,6 +88,7 @@ public:
 	// nsIAbDirectory methods:
 	NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
 	NS_IMETHOD GetChildCards(nsIEnumerator* *result);
+  NS_IMETHOD ModifyDirectory(nsIAbDirectory *directory, nsIAbDirectoryProperties *aProperties);
   	NS_IMETHOD DeleteDirectory(nsIAbDirectory *directory);
  	NS_IMETHOD DeleteCards(nsISupportsArray *cards);
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
