@@ -651,7 +651,9 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 
 MOZ_ARG_ENABLE_BOOL(md,
 [  --enable-md             use compiler-based dependencies ],
-  DEPEND_CFLAGS="-MMD")
+    [  COMPILER_DEPEND=1
+       DEPEND_CFLAGS='-Wp,-MMD,.deps/$(*F).pp' ]
+)
 
 AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
@@ -683,6 +685,7 @@ AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(MOZ_IDL_TOOL)
+AC_SUBST(COMPILER_DEPEND)
 
 
 dnl Checks for X libraries.
