@@ -1867,12 +1867,6 @@ PRBool
 GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   if (JSVAL_IS_STRING(aID) && 
-      PL_strcmp("arguments", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    int a;
-    a = 6;
-  } // DRaM
-
-  if (JSVAL_IS_STRING(aID) && 
       PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
     nsIDOMLocation *location;
     
@@ -1906,12 +1900,6 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool
 GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-  if (JSVAL_IS_STRING(aID) && 
-      PL_strcmp("arguments", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    int a;
-    a = 6;
-  } // DRaM
-
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsString mPropName;
     nsAutoString mPrefix;
