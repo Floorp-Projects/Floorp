@@ -185,10 +185,11 @@ public:
   PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
   PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
 
-  nsresult ReloadURL();
+  nsresult ReloadURL(nsIPresContext* aPresContext);
 
 protected:
   nsresult CreateDocShell(nsIPresContext* aPresContext, const nsSize& aSize);
+  nsresult DoLoadURL(nsIPresContext* aPresContext);
 
   virtual ~nsHTMLFrameInnerFrame();
 
@@ -262,22 +263,29 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  // XXX this needs to be changed from (200,200) to a better default
-  // for inline frames
+  // If no width/height was specified, use 300/150.
+  // This is for compatability with IE.
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
   else {
-    aDesiredSize.width = NSIntPixelsToTwips(200, p2t);
+    aDesiredSize.width = NSIntPixelsToTwips(300, p2t);
   }
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
     aDesiredSize.height = aReflowState.mComputedHeight;
   }
   else {
-    aDesiredSize.height = NSIntPixelsToTwips(200, p2t);
+    aDesiredSize.height = NSIntPixelsToTwips(150, p2t);
   }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
+
+  // For unknown reasons, the maxElementSize for the InnerFrame is used, but the
+  // maxElementSize for the OuterFrame is ignored, the following is not used!
+  if (aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
 }
 
 PRBool nsHTMLFrameOuterFrame::IsInline()
@@ -334,10 +342,14 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
       aReflowState.availableWidth, aReflowState.availableHeight, aReflowState.reason));
 
   if (IsInline()) {
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+    GetDesiredSize(aPresContext, aReflowState, aDesiredSize); // IFRAME
   } else {
-    aDesiredSize.width  = aReflowState.availableWidth;
+    aDesiredSize.width  = aReflowState.availableWidth; // FRAME
     aDesiredSize.height = aReflowState.availableHeight;
+    if (aDesiredSize.maxElementSize) { // Probably not used...
+      aDesiredSize.maxElementSize->width = aDesiredSize.width;
+      aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    }
   }
 
   nsIFrame* firstChild = mFrames.FirstChild();
@@ -353,13 +365,13 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
   nsPoint offset(0,0);
+  nsMargin border(0,0,0,0);
   if (IsInline() && HasBorder()) {
     const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    nsMargin border;
     spacing->CalcBorderFor(this, border);
     offset.x = border.left;
-    offset.y = border.right;
+    offset.y = border.top;
     // XXX Don't subtract the border!!! The size we are given does not include our
     // border! -EDV
     //innerSize.width  -= border.left + border.right;
@@ -377,17 +389,19 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
   ReflowChild(firstChild, aPresContext, kidMetrics, kidReflowState,
               offset.x, offset.y, 0, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-  
+
+  // For unknown reasons, the maxElementSize for the InnerFrame is used, but the
+  // maxElementSize for the OuterFrame is ignored, add in border here to prevent
+  // a table from shrinking inside the iframe's border when resized.
+  if (IsInline() && HasBorder()) {
+    if (kidMetrics.maxElementSize) {
+      kidMetrics.maxElementSize->width += border.left + border.right;
+      kidMetrics.maxElementSize->height += border.top + border.bottom;
+    }
+  }
+
   // Place and size the child
   FinishReflowChild(firstChild, aPresContext, kidMetrics, offset.x, offset.y, 0);
-
-  // XXX what should the max-element-size of an iframe be? Shouldn't
-  // iframe's normally shrink wrap around their content when they
-  // don't have a specified width/height?
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
-  }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
@@ -415,7 +429,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
     printf("got a request\n");
     nsIFrame* firstChild = mFrames.FirstChild();
     if (nsnull != firstChild) {
-      return ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL();
+      return ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL(aPresContext);
     }
   }
   return NS_OK;
@@ -628,36 +642,11 @@ NS_IMETHODIMP
 nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 {
   nsHTMLFrameOuterFrame* parent;
-  GetParent((nsIFrame**)&parent);
-
-  nsIContent* content;
-  nsresult    rv = parent->GetContent(&content);
-  aContent = content;
+  nsresult rv = GetParent((nsIFrame**)&parent);
+  if (NS_SUCCEEDED(rv) && parent) {
+    rv = parent->GetContent(&aContent);
+  }
   return rv;
-}
-
-
-static
-void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
-{
-  nsIURI* baseURL = nsnull;
-  nsIHTMLContent* htmlContent;
-  if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-    htmlContent->GetBaseURL(baseURL);
-    NS_RELEASE(htmlContent);
-  }
-  else {
-    nsIDocument* doc;
-    if (NS_SUCCEEDED(aContent->GetDocument(doc))) {
-      doc->GetBaseURL(baseURL);
-      NS_RELEASE(doc);
-    }
-  }
-
-  nsString empty;
-  nsresult rv = NS_MakeAbsoluteURI(aAbsURL, aRelURL, baseURL);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
-  NS_IF_RELEASE(baseURL);
 }
 
 NS_IMETHODIMP
@@ -852,6 +841,91 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+nsresult
+nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
+{
+  nsresult rv = NS_OK;
+
+  NS_ENSURE_TRUE (mSubShell, NS_ERROR_UNEXPECTED);
+
+  // Prevent recursion
+  mCreatingViewer=PR_TRUE;
+
+  // Get the URL to load
+  nsCOMPtr<nsIContent> parentContent;
+  rv = GetParentContent(*getter_AddRefs(parentContent));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && parentContent, rv);
+
+  nsAutoString url;
+  NS_ENSURE_TRUE(GetURL(parentContent, url), NS_ERROR_UNEXPECTED);
+
+  // Make an absolute URL
+  nsCOMPtr<nsIURI> baseURL;
+  nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(parentContent, &rv);
+  if (NS_SUCCEEDED(rv) && htmlContent) {
+    htmlContent->GetBaseURL(*getter_AddRefs(baseURL));
+  }
+  else {
+    nsCOMPtr<nsIDocument> doc;
+    rv = parentContent->GetDocument(*getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv) && doc) {
+      doc->GetBaseURL(*getter_AddRefs(baseURL));
+    }
+  }
+  nsAutoString absURL;
+  rv = NS_MakeAbsoluteURI(absURL, url, baseURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), absURL.GetUnicode(), nsnull);
+
+  // Check for security
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get base URL
+  nsCOMPtr<nsIURI> baseURI;
+  rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
+
+  // Get origin URL (from script, or default to base)
+  nsCOMPtr<nsIURI> referrer;
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (principal) {
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+    if (codebase) {
+      rv = codebase->GetURI(getter_AddRefs(referrer));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  if (!referrer) {
+    referrer = baseURI;
+  }
+
+  // Check if we are allowed to load absURL
+  nsCOMPtr<nsIURI> newURI;
+  rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = secMan->CheckLoadURI(referrer, newURI, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv; // We're not
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+  loadInfo->SetReferrer(referrer);
+
+  rv = docShell->LoadURI(uri, loadInfo);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
@@ -870,62 +944,20 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 
   // use the max size set in aReflowState by the nsHTMLFrameOuterFrame as our size
   if (!mCreatingViewer) {
-    nsCOMPtr<nsIContent> content;
-    GetParentContent(*getter_AddRefs(content));
-
-    nsAutoString url;
-    PRBool hasURL = GetURL(content, url);
-
     // create the web shell
     // we do this even if the size is not positive (bug 11762)
     // we do this even if there is no src (bug 16218)
     if (!mSubShell) {
       nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
       rv = CreateDocShell(aPresContext, maxSize);
-#ifdef INCLUDE_XUL
-      // The URL can be destructively altered when a content shell is made.
-      // Refetch it to ensure we have the actual URL to load.
-      hasURL = GetURL(content, url);
-#endif // INCLUDE_XUL
     }
-
-    if (mSubShell) {
-      mCreatingViewer=PR_TRUE;
-      if (hasURL) {
-        // load the document
-        nsString absURL;
-        TempMakeAbsURL(content, url, absURL);
-
-        // Check we can load 'absURL'
-        nsCOMPtr<nsIURI> baseURI, newURI;
-        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-        if (NS_SUCCEEDED(rv))
-          rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
-        if (NS_SUCCEEDED(rv)) 
-          rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);           
-        if (NS_SUCCEEDED(rv)) 
-          rv = securityManager->CheckLoadURI(baseURI, newURI, PR_FALSE);
-
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSubShell));
-          NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-          rv = webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
-          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
-        }
-      }
+    // Whether or not we had to create a webshell, load the document
+    if (NS_SUCCEEDED(rv)) {
+      rv = DoLoadURL(aPresContext);
     }
   }
 
-  aDesiredSize.width  = aReflowState.availableWidth;
-  aDesiredSize.height = aReflowState.availableHeight;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
-  }
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
 
@@ -950,73 +982,11 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
   return rv;
 }
 
+// load a new url
 nsresult
-nsHTMLFrameInnerFrame::ReloadURL()
+nsHTMLFrameInnerFrame::ReloadURL(nsIPresContext* aPresContext)
 {
-  nsresult rv = NS_OK;
-  nsIContent* content;
-  GetParentContent(content);
-  if (nsnull != content) {
-
-    nsAutoString url;
-    GetURL(content, url);
-
-    // load a new url if the size is not 0
-    if ((mRect.width > 0) && (mRect.height > 0)) {
-      if (mSubShell) {
-        mCreatingViewer=PR_TRUE;
-
-        // load the document
-        nsAutoString absURL;
-        TempMakeAbsURL(content, url, absURL);
-
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), absURL.GetUnicode(), nsnull);
-
-
-        // Get the referrer from the currently executing script, if any.
-        NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-        if (NS_FAILED(rv))
-          return rv;
-        nsCOMPtr<nsIPrincipal> principal;
-        rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-        if (NS_FAILED(rv))
-          return rv;
-        
-        nsCOMPtr<nsIURI> referrer;
-        if (principal) {
-          nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-          if (codebase) {
-            rv = codebase->GetURI(getter_AddRefs(referrer));
-            if (NS_FAILED(rv))
-              return rv;
-            nsCOMPtr<nsIURI> newURI;
-            rv = NS_NewURI(getter_AddRefs(newURI), absURL);           
-            if (NS_FAILED(rv))
-              return rv;
-            rv = secMan->CheckLoadURI(referrer, newURI, PR_FALSE);
-            if (NS_FAILED(rv))
-              return rv;
-          }
-        }
-        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
-        NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-        docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-        NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-        loadInfo->SetReferrer(referrer);
-
-        rv = docShell->LoadURI(uri, loadInfo);
-      }
-    } else {
-      mCreatingViewer = PR_TRUE;
-    }
-    NS_RELEASE(content);
-  }
-  return rv;
+  return DoLoadURL(aPresContext);
 }
 
 void 
@@ -1024,12 +994,29 @@ nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                       const nsHTMLReflowState& aReflowState,
                                       nsHTMLReflowMetrics& aDesiredSize)
 {
-  // it must be defined, but not called
-  NS_ASSERTION(0, "this should never be called");
-  aDesiredSize.width   = 0;
-  aDesiredSize.height  = 0;
-  aDesiredSize.ascent  = 0;
+  aDesiredSize.width  = aReflowState.availableWidth;
+  aDesiredSize.height = aReflowState.availableHeight;
+  aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
+
+  // For unknown reasons, the maxElementSize for the InnerFrame is used, but the
+  // maxElementSize for the OuterFrame is ignored, make sure to get it right here!
+  if (aDesiredSize.maxElementSize) {
+    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) ||
+        (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit())) {
+      aDesiredSize.maxElementSize->width = 0; // percent width springy down to 0 px
+    }
+    else {
+      aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    }
+    if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) ||
+        (eStyleUnit_Percent == aReflowState.mStylePosition->mHeight.GetUnit())) {
+      aDesiredSize.maxElementSize->height = 0; // percent height springy down to 0px
+    }
+    else {
+      aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    }
+  }
 }
 
 /*******************************************************************************
