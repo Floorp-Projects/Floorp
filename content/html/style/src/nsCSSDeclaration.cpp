@@ -990,6 +990,10 @@ nsCSSDeclaration::TryOverflowShorthand(nsAString & aString,
     GetValueOrImportantValue(eCSSProperty_overflow_x, xValue);
     GetValueOrImportantValue(eCSSProperty_overflow_y, yValue);
     if (xValue == yValue) {
+      AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_overflow),
+                         aString);
+      aString.AppendLiteral(": ");
+
       AppendCSSValueToString(eCSSProperty_overflow_x, xValue, aString);
       AppendImportanceToString(isImportant, aString);
       aString.AppendLiteral("; ");
