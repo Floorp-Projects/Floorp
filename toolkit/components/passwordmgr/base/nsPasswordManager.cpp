@@ -757,7 +757,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   case 1:  // normal login
     {
       // Search backwards from the password field to find a username field.
-      for (PRUint32 j = firstPasswordIndex - 1; j >= 0; --j) {
+      for (PRInt32 j = (PRInt32) firstPasswordIndex - 1; j >= 0; --j) {
         nsCOMPtr<nsIFormControl> control;
         formElement->GetElementAt(j, getter_AddRefs(control));
 
