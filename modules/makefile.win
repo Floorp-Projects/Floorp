@@ -41,7 +41,9 @@ include <$(DEPTH)/config/liteness.mak>
 #//
 #//------------------------------------------------------------------------
 DIRS=                   \
+!ifdef NO_SECURITY
 	security        \
+!endif
 	libpref         \
 	libhook         \
 	libutil         \

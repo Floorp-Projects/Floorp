@@ -30,8 +30,11 @@ DIRS		= \
 	rdf \
 	xml \
 	schedulr \
-	security \
 	$(NULL)
+
+ifdef NO_SECURITY
+DIRS +=	security
+endif
 
 ifdef MOZ_JAVA
 DIRS		+= libreg softupdt zlib li progress
