@@ -100,6 +100,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds, nsIRDFResource *root);
 	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
+	nsresult GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType);
 	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
 	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *node,
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
@@ -114,6 +115,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult exportBookmarks(nsISupportsArray *aArguments);
     nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource, const PRUnichar *iconURL, nsIRDFNode** aTarget);
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
+  void AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool scheduleFlag);
 
 	nsresult ChangeURL(nsIRDFResource* aOldURL,
                            nsIRDFResource* aNewURL);
