@@ -63,8 +63,3 @@ interface nsITooltipTextProvider : nsISupports
      */
     boolean getNodeText(in nsIDOMNode aNode, out wstring aText);
 };
-
-%{ C++
-#define NS_TOOLTIPTEXTPROVIDER_CONTRACTID \
-"@mozilla.org/embedcomp/tooltiptextprovider;1"
-%}
