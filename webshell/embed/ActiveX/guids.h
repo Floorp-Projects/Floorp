@@ -25,6 +25,7 @@
 NS_EXTERN_IID(kEventQueueServiceCID);
 
 // Interface IDs
+NS_EXTERN_IID(kIBrowserWindowIID);
 NS_EXTERN_IID(kIEventQueueServiceIID);
 NS_EXTERN_IID(kIDocumentViewerIID);
 NS_EXTERN_IID(kIDOMDocumentIID);
