@@ -150,7 +150,6 @@
 
 #include "nsLayoutCID.h"
 #include "nsIFrameManager.h"
-#include "nsILayoutHistoryState.h"
 #include "nsIDocShellTreeItem.h"
 #include "plevent.h"
 
@@ -158,8 +157,6 @@
 #include "nsEscape.h"
 
 #include "nsIElementObserver.h"
-
-static NS_DEFINE_CID(kLayoutHistoryStateCID, NS_LAYOUT_HISTORY_STATE_CID);
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault = PR_FALSE;

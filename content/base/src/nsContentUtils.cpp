@@ -38,6 +38,9 @@
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
+#include "nsAString.h"
+#include "nsPrintfCString.h"
+#include "nsUnicharUtils.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -62,6 +65,14 @@
 #include "nsIParserService.h"
 #include "nsIServiceManager.h"
 #include "nsIAttribute.h"
+#include "nsIContentList.h"
+#include "nsIHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIForm.h"
+#include "nsIFormControl.h"
+#include "nsHTMLAtoms.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -1316,6 +1327,206 @@ nsContentUtils::TrimWhitespace(const nsAString& aStr, PRBool aTrimTrailing)
   // whitespace
 
   return Substring(start, end);
+}
+
+static inline void KeyAppendSep(nsACString& aKey)
+{
+  if (!aKey.IsEmpty()) {
+    aKey.Append('>');
+  }
+}
+
+static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
+{
+  KeyAppendSep(aKey);
+
+  // Could escape separator here if collisions happen.  > is not a legal char
+  // for a name or type attribute, so we should be safe avoiding that extra work.
+
+  aKey.Append(NS_ConvertUCS2toUTF8(aString));
+}
+
+static inline void KeyAppendString(const nsACString& aString, nsACString& aKey)
+{
+  KeyAppendSep(aKey);
+  
+  // Could escape separator here if collisions happen.  > is not a legal char
+  // for a name or type attribute, so we should be safe avoiding that extra work.
+
+  aKey.Append(aString);
+}
+
+static inline void KeyAppendInt(PRInt32 aInt, nsACString& aKey)
+{
+  KeyAppendSep(aKey);
+
+  aKey.Append(nsPrintfCString("%d", aInt));
+}
+
+static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
+{
+  NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
+
+  const char* atomString = nsnull;
+  aAtom->GetUTF8String(&atomString);
+
+  KeyAppendString(nsDependentCString(atomString), aKey);
+}
+
+static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
+{
+  nsAutoString autocomplete;
+  aElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+  return autocomplete.Equals(NS_LITERAL_STRING("off"),
+                             nsCaseInsensitiveStringComparator());
+}
+
+/*static*/ nsresult
+nsContentUtils::GenerateStateKey(nsIContent* aContent,
+                                 nsIStatefulFrame::SpecialStateID aID,
+                                 nsACString& aKey)
+{
+  aKey.Truncate();
+
+  // SpecialStateID case - e.g. scrollbars around the content window
+  // The key in this case is the special state id (always < min(contentID))
+  if (nsIStatefulFrame::eNoID != aID) {
+    KeyAppendInt(aID, aKey);
+    return NS_OK;
+  }
+
+  // We must have content if we're not using a special state id
+  NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
+
+  // Don't capture state for anonymous content
+  PRUint32 contentID;
+  aContent->GetContentID(&contentID);
+  if (!contentID) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
+  if (element && IsAutocompleteOff(element)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(doc));
+
+  PRBool generatedUniqueKey = PR_FALSE;
+
+  if (htmlDocument) {
+    nsCOMPtr<nsIDOMHTMLDocument> domHtmlDocument(do_QueryInterface(htmlDocument));
+    nsCOMPtr<nsIDOMHTMLCollection> forms;
+    domHtmlDocument->GetForms(getter_AddRefs(forms));
+    nsCOMPtr<nsIContentList> htmlForms(do_QueryInterface(forms));
+
+    nsCOMPtr<nsIDOMNodeList> formControls;
+    htmlDocument->GetFormControlElements(getter_AddRefs(formControls));
+    nsCOMPtr<nsIContentList> htmlFormControls(do_QueryInterface(formControls));
+
+    // If we have a form control and can calculate form information, use
+    // that as the key - it is more reliable than contentID.
+    // Important to have a unique key, and tag/type/name may not be.
+    //
+    // If the control has a form, the format of the key is:
+    // type>IndOfFormInDoc>IndOfControlInForm>FormName>name
+    // else:
+    // type>IndOfControlInDoc>name
+    //
+    // XXX We don't need to use index if name is there
+    //
+    nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
+    if (control && htmlFormControls && htmlForms) {
+
+      // Append the control type
+      KeyAppendInt(control->GetType(), aKey);
+
+      // If in a form, add form name / index of form / index in form
+      PRInt32 index = -1;
+      nsCOMPtr<nsIDOMHTMLFormElement> formElement;
+      control->GetForm(getter_AddRefs(formElement));
+      if (formElement) {
+
+        if (IsAutocompleteOff(formElement)) {
+          aKey.Truncate();
+          return NS_OK;
+        }
+
+        // Append the index of the form in the document
+        nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
+        htmlForms->IndexOf(formContent, index, PR_FALSE);
+        if (index <= -1) {
+          //
+          // XXX HACK this uses some state that was dumped into the document
+          // specifically to fix bug 138892.  What we are trying to do is *guess*
+          // which form this control's state is found in, with the highly likely
+          // guess that the highest form parsed so far is the one.
+          // This code should not be on trunk, only branch.
+          //
+          htmlDocument->GetNumFormsSynchronous(&index);
+          index--;
+        }
+        if (index > -1) {
+          KeyAppendInt(index, aKey);
+
+          // Append the index of the control in the form
+          nsCOMPtr<nsIForm> form(do_QueryInterface(formElement));
+          form->IndexOfControl(control, &index);
+          NS_ASSERTION(index > -1,
+                       "nsFrameManager::GenerateStateKey didn't find form control index!");
+
+          if (index > -1) {
+            KeyAppendInt(index, aKey);
+            generatedUniqueKey = PR_TRUE;
+          }
+        }
+
+        // Append the form name
+        nsAutoString formName;
+        formElement->GetName(formName);
+        KeyAppendString(formName, aKey);
+
+      } else {
+
+        // If not in a form, add index of control in document
+        // Less desirable than indexing by form info. 
+
+        // Hash by index of control in doc (we are not in a form)
+        // These are important as they are unique, and type/name may not be.
+
+        // We don't refresh the form control list here (passing PR_TRUE
+        // for aFlush), although we really should. Forcing a flush
+        // causes a signficant pageload performance hit. See bug
+        // 166636. Doing this wrong means you will see the assertion
+        // below being hit.
+        htmlFormControls->IndexOf(aContent, index, PR_FALSE);
+        NS_ASSERTION(index > -1,
+                     "nsFrameManager::GenerateStateKey didn't find content "
+                     "by type! See bug 139568");
+
+        if (index > -1) {
+          KeyAppendInt(index, aKey);
+          generatedUniqueKey = PR_TRUE;
+        }
+      }
+
+      // Append the control name
+      nsAutoString name;
+      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+      KeyAppendString(name, aKey);
+    }
+  }
+
+  if (!generatedUniqueKey) {
+
+    // Either we didn't have a form control or we aren't in an HTML document
+    // so we can't figure out form info, hash by content ID instead :(
+    KeyAppendInt(contentID, aKey);
+  }
+
+  return NS_OK;
 }
 
 void

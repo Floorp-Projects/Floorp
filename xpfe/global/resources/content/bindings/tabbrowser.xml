@@ -232,10 +232,22 @@
                     p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
                 }
               }
-            }
-            ,
+            },
+
+            // The first location change is gotoIndex called from mInstallSH,
+            // the second one is considered a user action.
+            mLocationChangeCount : 0,
 
             onLocationChange : function(aWebProgress, aRequest, aLocation) {
+              if (this.mLocationChangeCount > 0 ||
+                  aLocation.spec != "about:blank")
+                ++this.mLocationChangeCount;
+
+              if (this.mLocationChangeCount == 2) {
+                this.mTabBrowser.backBrowserGroup = [];
+                this.mTabBrowser.forwardBrowserGroup = [];
+              }
+
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
@@ -266,6 +278,58 @@
                     p.onSecurityChange(aWebProgress, aRequest, aState);
                 }
               }
+            },
+
+            QueryInterface : function(aIID)
+            {
+              if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+                  aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+                  aIID.equals(Components.interfaces.nsISupports))
+                return this;
+              throw Components.results.NS_NOINTERFACE;
+            }
+                  
+            });
+        ]]>
+        </body>
+      </method>
+
+      <method name="mInstallSH">
+        <parameter name="aBrowser"/>
+        <parameter name="aSH"/>
+        <body>
+        <![CDATA[
+          return ({
+            mBrowser: aBrowser,
+            mSH: aSH,
+
+            onProgressChange : function (aWebProgress, aRequest,
+                                         aCurSelfProgress, aMaxSelfProgress,
+                                         aCurTotalProgress, aMaxTotalProgress) {
+            },
+            
+            onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {
+              const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+              if ((aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) &&
+                  (aStateFlags & nsIWebProgressListener.STATE_STOP)) {
+                function refresh(closure) {
+                  closure.mBrowser.webNavigation.sessionHistory = closure.mSH;
+                  closure.mBrowser.webProgress.removeProgressListener(closure);
+                  delete closure.mBrowser._SHListener;
+                  closure.mSH.QueryInterface(Components.interfaces.nsIWebNavigation)
+                         .gotoIndex(closure.mSH.index);
+                }
+                setTimeout(refresh, 0, this);
+              }
+            },
+
+            onLocationChange : function(aWebProgress, aRequest, aLocation) {
+            },
+
+            onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
+            },
+
+            onSecurityChange : function(aWebProgress, aRequest, aState) { 
             },
 
             QueryInterface : function(aIID)
@@ -649,15 +713,13 @@
         <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
-            var blank = (aURI == "about:blank");
-
             if (!this.mTabbedMode)
               this.enterTabbedMode();
 
-            var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "browser"); 
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
+
+            var blank = (aURI == "about:blank");
 
             if (blank)
               t.setAttribute("label", this.mStringBundle.getString("tabs.untitled"));
@@ -673,9 +735,12 @@
             t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
             this.mTabContainer.appendChild(t);
 
+            var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "browser"); 
             b.setAttribute("type", "content");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+            //b.setAttribute("src", "");
             
             this.mPanelContainer.appendChild(b);
 
@@ -981,20 +1046,99 @@
         ]]>
         </body>
       </method>
-                                                               
+
+      <field name="backBrowserGroup">
+        []
+      </field>
+
+      <field name="forwardBrowserGroup">
+        []
+      </field>
+
+      <method name="replaceGroup">
+        <parameter name="aGroup"/>
+        <body>
+        <![CDATA[
+          var oldBrowserGroup = [];
+          var oldCount = this.mPanelContainer.childNodes.length;
+          var newCount = aGroup.length;
+          var n = Math.max(oldCount, newCount);
+          for (var i = 0; i < n; ++i) {
+            if (i < newCount) {
+              var data = aGroup[i];
+              if ("sessionHistory" in data) {
+                this.addTab("about:blank", null);
+                var browser = this.mPanelContainer.lastChild;
+                // need to hold on to the listener so it won't go away
+                // addProgressListener only has a weak pointer to it
+                browser._SHListener =
+                    this.mInstallSH(browser, aGroup[i].sessionHistory);
+                browser.webProgress.addProgressListener(browser._SHListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+              } else {
+                var referrerURI = "referrerURI" in data ? data.referrerURI : null;
+                this.addTab(data.URI, referrerURI);
+              }
+            }
+            if (i < oldCount) {
+              var browserData = {
+                sessionHistory : this.mPanelContainer.firstChild.sessionHistory
+              }
+              oldBrowserGroup.push(browserData);
+              this.removeTab(this.mTabContainer.firstChild);
+            }
+          }
+          return oldBrowserGroup;
+        ]]>
+        </body>
+      </method>
+
+      <method name="loadGroup">
+        <parameter name="aGroup"/>
+        <body>
+        <![CDATA[
+          if (aGroup.length == 0)
+            return;
+
+          this.backBrowserGroup = this.replaceGroup(aGroup);
+          this.forwardBrowserGroup = [];
+        ]]>
+        </body>
+      </method>
+
+      <method name="goBackGroup">
+        <body>
+        <![CDATA[
+          this.forwardBrowserGroup = this.replaceGroup(this.backBrowserGroup);
+          this.backBrowserGroup = [];
+        ]]>
+        </body>
+      </method>
+
+      <method name="goForwardGroup">
+        <body>
+        <![CDATA[
+          this.backBrowserGroup = this.replaceGroup(this.forwardBrowserGroup);
+          this.forwardBrowserGroup = [];
+        ]]>
+        </body>
+      </method>
+
       <!-- BEGIN FORWARDED BROWSER PROPERTIES.  IF YOU ADD A PROPERTY TO THE BROWSER ELEMENT
            MAKE SURE TO ADD IT HERE AS WELL. -->
       <property name="canGoBack"
-                onget="return this.mCurrentBrowser.canGoBack;"
+                onget="return this.backBrowserGroup.length != 0 || this.mCurrentBrowser.canGoBack;"
                 readonly="true"/>
 
       <property name="canGoForward"
-                onget="return this.mCurrentBrowser.canGoForward;"
+                onget="return this.forwardBrowserGroup.length != 0 || this.mCurrentBrowser.canGoForward;"
                 readonly="true"/>
 
       <method name="goBack">
         <body>
           <![CDATA[
+            if (this.backBrowserGroup.length != 0)
+              return this.goBackGroup();
+
             return this.mCurrentBrowser.goBack();
           ]]>
         </body>
@@ -1003,6 +1147,9 @@
       <method name="goForward">
         <body>
           <![CDATA[
+            if (this.forwardBrowserGroup.length != 0)
+              return this.goForwardGroup();
+
             return this.mCurrentBrowser.goForward();
           ]]>
         </body>

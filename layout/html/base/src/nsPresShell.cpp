@@ -1144,8 +1144,6 @@ public:
   NS_IMETHOD DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& outValue);
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
-  NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
-  NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);
 
   NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
                                          GeneratedContentType aType,
@@ -1308,7 +1306,6 @@ protected:
   nsCOMPtr<nsIStyleSet>     mStyleSet;
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
-  nsWeakPtr                 mHistoryState; // [WEAK] session history owns this
   PRUint32                  mUpdateCount;
   // normal reflow commands
   nsVoidArray               mReflowCommands; 
@@ -1661,8 +1658,6 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  mHistoryState = nsnull;
-
   nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
                                                  NS_GET_IID(nsIFrameSelection),
                                                  getter_AddRefs(mSelection));
@@ -1798,9 +1793,6 @@ PresShell::Destroy()
   ReleaseAnonymousContent();
 
   mIsDestroying = PR_TRUE;
-
-  // Clobber weak leaks in case of re-entrancy during tear down
-  mHistoryState = nsnull;
 
   // We can't release all the event content in
   // mCurrentEventContentStack here since there might be code on the
@@ -3673,7 +3665,18 @@ PresShell::EndLoad(nsIDocument *aDocument)
   // Restore frame state for the root scroll frame
   nsIFrame* rootFrame = nsnull;
   GetRootFrame(&rootFrame);
-  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+  nsCOMPtr<nsISupports> container;
+  mPresContext->GetContainer(getter_AddRefs(container));
+  if (!container)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsILayoutHistoryState> historyState;
+  docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
+
   if (rootFrame && historyState) {
     nsIFrame* scrollFrame = nsnull;
     GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
@@ -4709,7 +4712,17 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 
   NS_PRECONDITION(nsnull != aState, "null state pointer");
 
-  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+  nsCOMPtr<nsISupports> container;
+  mPresContext->GetContainer(getter_AddRefs(container));
+  if (!container)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (!docShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsILayoutHistoryState> historyState;
+  docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
   if (!historyState) {
     // Create the document state object
     rv = NS_NewLayoutHistoryState(getter_AddRefs(historyState));
@@ -4719,7 +4732,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
       return rv;
     }    
 
-    mHistoryState = getter_AddRefs(NS_GetWeakReference(historyState));
+    docShell->SetLayoutHistoryState(historyState);
   }
 
   *aState = historyState;
@@ -4747,22 +4760,6 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   return rv;
 }
 
-NS_IMETHODIMP
-PresShell::GetHistoryState(nsILayoutHistoryState** aState)
-{
-  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
-  *aState = historyState;
-  NS_IF_ADDREF(*aState);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState)
-{
-  mHistoryState = getter_AddRefs(NS_GetWeakReference(aLayoutHistoryState));
-  return NS_OK;
-}
-  
 NS_IMETHODIMP
 PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
                                        GeneratedContentType aType,

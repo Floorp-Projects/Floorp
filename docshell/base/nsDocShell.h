@@ -68,6 +68,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsISHistory.h"
+#include "nsILayoutHistoryState.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
 #include "nsIWebNavigation.h"
@@ -397,7 +398,7 @@ protected:
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
 
-    // Indivates that a DocShell in this "docshell tree" is printing
+    // Indicates that a DocShell in this "docshell tree" is printing
     PRBool mIsPrintingOrPP;
 
 public:

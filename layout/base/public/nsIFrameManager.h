@@ -188,10 +188,6 @@ public:
                                nsIFrame* aFrame,
                                nsILayoutHistoryState* aState,
                                nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
-  NS_IMETHOD GenerateStateKey(nsIContent* aContent,
-                              nsIStatefulFrame::SpecialStateID aID,
-                              nsACString& aString) = 0;
-
 
   /**
    * Gets a property value for a given frame.

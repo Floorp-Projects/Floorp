@@ -4177,19 +4177,9 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
         break;
     }
 
-    if (mOSHE && updateHistory) {
-        nsCOMPtr<nsILayoutHistoryState> layoutState;
+    if (!updateHistory)
+        SetLayoutHistoryState(nsnull);
 
-        rv = mOSHE->GetLayoutHistoryState(getter_AddRefs(layoutState));
-        if (layoutState) {
-            // This is a SH load. That's why there is a LayoutHistoryState in mOSHE
-            nsCOMPtr<nsIPresShell> presShell;
-            rv = GetPresShell(getter_AddRefs(presShell));
-            if (NS_SUCCEEDED(rv) && presShell) {
-                rv = presShell->SetHistoryState(layoutState);
-            }
-        }
-    }
     return NS_OK;
 }
 
@@ -6270,32 +6260,37 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     return rv;
 }
 
+NS_IMETHODIMP nsDocShell::GetShouldSaveLayoutState(PRBool* aShould)
+{
+    *aShould = PR_FALSE;
+    if (mOSHE) {
+        // Don't capture historystate and save it in history
+        // if the page asked not to do so.
+        mOSHE->GetSaveLayoutStateFlag(aShould);
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
 {
     nsresult  rv = NS_OK;
     
-
     if (mOSHE) {
-        PRBool saveHistoryState = PR_TRUE;
-        mOSHE->GetSaveLayoutStateFlag(&saveHistoryState);
-        // Don't capture historystate and save it in history
-        // if the page asked not to do so.
-        if (!saveHistoryState)
-          return NS_OK;
-        nsCOMPtr<nsIPresShell> shell;
+        PRBool shouldSave;
+        GetShouldSaveLayoutState(&shouldSave);
+        if (!shouldSave)
+            return NS_OK;
 
+        nsCOMPtr<nsIPresShell> shell;
         rv = GetPresShell(getter_AddRefs(shell));
         if (NS_SUCCEEDED(rv) && shell) {
             nsCOMPtr<nsILayoutHistoryState> layoutState;
             rv = shell->CaptureHistoryState(getter_AddRefs(layoutState),
                                             PR_TRUE);
-            if (NS_SUCCEEDED(rv) && layoutState) {
-                rv = mOSHE->SetLayoutHistoryState(layoutState);
-            }
         }
-
     }
+
     return rv;
 }
 
@@ -6930,6 +6925,22 @@ nsDocShell::GetIsExecutingOnLoadHandler(PRBool *aResult)
 {
   NS_ENSURE_ARG(aResult);
   *aResult = mIsExecutingOnLoadHandler;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetLayoutHistoryState(nsILayoutHistoryState **aLayoutHistoryState)
+{
+  if (mOSHE)
+    mOSHE->GetLayoutHistoryState(aLayoutHistoryState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetLayoutHistoryState(nsILayoutHistoryState *aLayoutHistoryState)
+{
+  if (mOSHE)
+    mOSHE->SetLayoutHistoryState(aLayoutHistoryState);
   return NS_OK;
 }
 

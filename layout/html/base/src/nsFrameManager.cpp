@@ -71,6 +71,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIForm.h"
 #include "nsIContentList.h"
+#include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
@@ -368,10 +369,6 @@ public:
                                nsIFrame*              aFrame,
                                nsILayoutHistoryState* aState,
                                nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID);
-  NS_IMETHOD GenerateStateKey(nsIContent* aContent,
-                              nsIStatefulFrame::SpecialStateID aID,
-                              nsACString& aString);
-
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
                               nsIAtom*  aPropertyName,
@@ -415,8 +412,6 @@ private:
   UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
   PropertyList*                   mPropertyList;
-  nsCOMPtr<nsIContentList>        mHTMLForms;
-  nsCOMPtr<nsIContentList>        mHTMLFormControls;
   PRBool                          mIsDestroyingFrames;
 
   void ReResolveStyleContext(nsIPresContext* aPresContext,
@@ -476,23 +471,6 @@ FrameManager::Init(nsIPresShell* aPresShell,
 
   mPresShell = aPresShell;
   mStyleSet = aStyleSet;
-
-  // Force the forms and form control content lists to be added as
-  // document observers *before* us (pres shell) so they will be
-  // up to date when we try to use them.
-  nsCOMPtr<nsIDocument> document;
-  mPresShell->GetDocument(getter_AddRefs(document));
-  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(document));
-  nsCOMPtr<nsIDOMHTMLDocument> domHtmlDocument(do_QueryInterface(htmlDocument));
-  if (domHtmlDocument) {
-    nsCOMPtr<nsIDOMHTMLCollection> forms;
-    domHtmlDocument->GetForms(getter_AddRefs(forms));
-    mHTMLForms = do_QueryInterface(forms);
-
-    nsCOMPtr<nsIDOMNodeList> formControls;
-    htmlDocument->GetFormControlElements(getter_AddRefs(formControls));
-    mHTMLFormControls = do_QueryInterface(formControls);
-  }
 
   return NS_OK;
 }
@@ -2117,7 +2095,7 @@ FrameManager::CaptureFrameStateFor(nsIPresContext* aPresContext,
   rv = aFrame->GetContent(getter_AddRefs(content));
 
   nsCAutoString stateKey;
-  rv = GenerateStateKey(content, aID, stateKey);
+  rv = nsContentUtils::GenerateStateKey(content, aID, stateKey);
   if(NS_FAILED(rv) || stateKey.IsEmpty()) {
     return rv;
   }
@@ -2181,7 +2159,7 @@ FrameManager::RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFram
   }
 
   nsCAutoString stateKey;
-  rv = GenerateStateKey(content, aID, stateKey);
+  rv = nsContentUtils::GenerateStateKey(content, aID, stateKey);
   if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return rv;
   }
@@ -2226,196 +2204,6 @@ FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
   } while (childListName);
 
   return rv;
-}
-
-
-static inline void KeyAppendSep(nsACString& aKey)
-{
-  if (!aKey.IsEmpty()) {
-    aKey.Append('>');
-  }
-}
-
-static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
-{
-  KeyAppendSep(aKey);
-
-  // Could escape separator here if collisions happen.  > is not a legal char
-  // for a name or type attribute, so we should be safe avoiding that extra work.
-
-  aKey.Append(NS_ConvertUCS2toUTF8(aString));
-}
-
-static inline void KeyAppendString(const nsACString& aString, nsACString& aKey)
-{
-  KeyAppendSep(aKey);
-  
-  // Could escape separator here if collisions happen.  > is not a legal char
-  // for a name or type attribute, so we should be safe avoiding that extra work.
-
-  aKey.Append(aString);
-}
-
-static inline void KeyAppendInt(PRInt32 aInt, nsACString& aKey)
-{
-  KeyAppendSep(aKey);
-
-  aKey.Append(nsPrintfCString("%d", aInt));
-}
-
-static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
-{
-  NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
-
-  const char* atomString = nsnull;
-  aAtom->GetUTF8String(&atomString);
-
-  KeyAppendString(nsDependentCString(atomString), aKey);
-}
-
-static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
-{
-  nsAutoString autocomplete;
-  aElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-  ToLowerCase(autocomplete);
-  return autocomplete.Equals(NS_LITERAL_STRING("off"));
-}
-
-NS_IMETHODIMP
-FrameManager::GenerateStateKey(nsIContent* aContent,
-                               nsIStatefulFrame::SpecialStateID aID,
-                               nsACString& aKey)
-{
-  aKey.Truncate();
-
-  // SpecialStateID case - e.g. scrollbars around the content window
-  // The key in this case is the special state id (always < min(contentID))
-  if (nsIStatefulFrame::eNoID != aID) {
-    KeyAppendInt(aID, aKey);
-    return NS_OK;
-  }
-
-  // We must have content if we're not using a special state id
-  NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
-
-  // Don't capture state for anonymous content
-  PRUint32 contentID;
-  aContent->GetContentID(&contentID);
-  if (!contentID) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
-  if (element && IsAutocompleteOff(element)) {
-    return NS_OK;
-  }
-
-  // If we have a form control and can calculate form information, use
-  // that as the key - it is more reliable than contentID.
-  // Important to have a unique key, and tag/type/name may not be.
-  //
-  // If the control has a form, the format of the key is:
-  // type>IndOfFormInDoc>IndOfControlInForm>FormName>name
-  // else:
-  // type>IndOfControlInDoc>name
-  //
-  // XXX We don't need to use index if name is there
-  //
-  nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
-  PRBool generatedUniqueKey = PR_FALSE;
-  if (control && mHTMLFormControls && mHTMLForms) {
-
-    // Append the control type
-    KeyAppendInt(control->GetType(), aKey);
-
-    // If in a form, add form name / index of form / index in form
-    PRInt32 index = -1;
-    nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-    control->GetForm(getter_AddRefs(formElement));
-    if (formElement) {
-
-      if (IsAutocompleteOff(formElement)) {
-        aKey.Truncate();
-        return NS_OK;
-      }
-
-      // Append the index of the form in the document
-      nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
-      mHTMLForms->IndexOf(formContent, index, PR_FALSE);
-      if (index <= -1) {
-        //
-        // XXX HACK this uses some state that was dumped into the document
-        // specifically to fix bug 138892.  What we are trying to do is *guess*
-        // which form this control's state is found in, with the highly likely
-        // guess that the highest form parsed so far is the one.
-        // This code should not be on trunk, only branch.
-        //
-        nsCOMPtr<nsIDocument> doc;
-        formContent->GetDocument(*getter_AddRefs(doc));
-        nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-        if (htmlDoc) {
-          htmlDoc->GetNumFormsSynchronous(&index);
-          index--;
-        }
-      }
-      if (index > -1) {
-        KeyAppendInt(index, aKey);
-
-        // Append the index of the control in the form
-        nsCOMPtr<nsIForm> form(do_QueryInterface(formElement));
-        form->IndexOfControl(control, &index);
-        NS_ASSERTION(index > -1,
-                     "nsFrameManager::GenerateStateKey didn't find form control index!");
-
-        if (index > -1) {
-          KeyAppendInt(index, aKey);
-          generatedUniqueKey = PR_TRUE;
-        }
-      }
-
-      // Append the form name
-      nsAutoString formName;
-      formElement->GetName(formName);
-      KeyAppendString(formName, aKey);
-
-    } else {
-
-      // If not in a form, add index of control in document
-      // Less desirable than indexing by form info. 
-
-      // Hash by index of control in doc (we are not in a form)
-      // These are important as they are unique, and type/name may not be.
-
-      // We don't refresh the form control list here (passing PR_TRUE
-      // for aFlush), although we really should. Forcing a flush
-      // causes a signficant pageload performance hit. See bug
-      // 166636. Doing this wrong means you will see the assertion
-      // below being hit.
-      mHTMLFormControls->IndexOf(aContent, index, PR_FALSE);
-      NS_ASSERTION(index > -1,
-                   "nsFrameManager::GenerateStateKey didn't find content "
-                   "by type! See bug 139568");
-
-      if (index > -1) {
-        KeyAppendInt(index, aKey);
-        generatedUniqueKey = PR_TRUE;
-      }
-    }
-
-    // Append the control name
-    nsAutoString name;
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-    KeyAppendString(name, aKey);
-  }
-
-  if (!generatedUniqueKey) {
-
-    // Either we didn't have a form control or we aren't in an HTML document
-    // so we can't figure out form info, hash by content ID instead :(
-    KeyAppendInt(contentID, aKey);
-  }
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

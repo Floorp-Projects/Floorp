@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
+const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
@@ -277,7 +278,6 @@ function contentAreaFrameFocus()
 
 function updateHomeButtonTooltip()
 {
-  const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   var homePage = getHomePage();
   var tooltip = document.getElementById("home-button-tooltip-inner");
 
@@ -373,7 +373,7 @@ function UpdateBackForwardButtons()
 {
   var backBroadcaster = document.getElementById("canGoBack");
   var forwardBroadcaster = document.getElementById("canGoForward");
-  var webNavigation = getWebNavigation();
+  var browser = getBrowser();
 
   // Avoid setting attributes on broadcasters if the value hasn't changed!
   // Remember, guys, setting attributes on elements is expensive!  They
@@ -382,13 +382,13 @@ function UpdateBackForwardButtons()
 
   var backDisabled = backBroadcaster.hasAttribute("disabled");
   var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
-  if (backDisabled == webNavigation.canGoBack) {
+  if (backDisabled == browser.canGoBack) {
     if (backDisabled)
       backBroadcaster.removeAttribute("disabled");
     else
       backBroadcaster.setAttribute("disabled", true);
   }
-  if (forwardDisabled == webNavigation.canGoForward) {
+  if (forwardDisabled == browser.canGoForward) {
     if (forwardDisabled)
       forwardBroadcaster.removeAttribute("disabled");
     else
@@ -721,11 +721,18 @@ function gotoHistoryIndex(aEvent)
   var index = aEvent.target.getAttribute("index");
   if (!index)
     return false;
-  try {
-    getWebNavigation().gotoIndex(index);
-  }
-  catch(ex) {
-    return false;
+
+  if (index == "back")
+    gBrowser.goBackGroup();
+  else if (index ==  "forward")
+    gBrowser.goForwardGroup();
+  else {
+    try {
+      getWebNavigation().gotoIndex(index);
+    }
+    catch(ex) {
+      return false;
+    }
   }
   return true;
 
@@ -734,7 +741,7 @@ function gotoHistoryIndex(aEvent)
 function BrowserBack()
 {
   try {
-    getWebNavigation().goBack();
+    getBrowser().goBack();
   }
   catch(ex) {
   }
@@ -764,19 +771,41 @@ function BrowserHandleBackspace()
 function BrowserForward()
 {
   try {
-    getWebNavigation().goForward();
+    getBrowser().goForward();
   }
   catch(ex) {
   }
 }
 
+function SetGroupHistory(popupMenu, direction)
+{
+  while (popupMenu.firstChild)
+    popupMenu.removeChild(popupMenu.firstChild);
+
+  var menuItem = document.createElementNS(XUL_NAMESPACE, "menuitem");
+  var label = gNavigatorBundle.getString("tabs.historyItem");
+  menuItem.setAttribute("label", label);
+  menuItem.setAttribute("index", direction);
+  popupMenu.appendChild(menuItem);
+}
+
 function BrowserBackMenu(event)
 {
+  if (gBrowser.backBrowserGroup.length != 0) {
+    SetGroupHistory(event.target, "back");
+    return true;
+  }
+
   return FillHistoryMenu(event.target, "back");
 }
 
 function BrowserForwardMenu(event)
 {
+  if (gBrowser.forwardBrowserGroup.length != 0) {
+    SetGroupHistory(event.target, "forward");
+    return true;
+  }
+
   return FillHistoryMenu(event.target, "forward");
 }
 
@@ -809,8 +838,11 @@ function BrowserHome()
   if (homePage.length == 1) {
     loadURI(homePage[0]);
   } else {
+    var URIs = [];
     for (var i in homePage)
-      gBrowser.addTab(homePage[i]);
+      URIs.push({URI: homePage[i]});
+
+    gBrowser.loadGroup(URIs);
   }
 }
 

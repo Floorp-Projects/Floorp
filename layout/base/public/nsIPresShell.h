@@ -485,8 +485,6 @@ public:
    */
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage = PR_FALSE) = 0;
-  NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
-  NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState) = 0;
 
   /**
    * Determine if reflow is currently locked
