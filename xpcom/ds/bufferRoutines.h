@@ -205,7 +205,7 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
 
   //now loop over characters, shifting them left...
   while(first<last) {
-    *to=kIsoLatin1ToUCS2[*first];  
+    *to=(PRUnichar)(*first);  
     to++;
     first++;
   }
