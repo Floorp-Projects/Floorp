@@ -47,7 +47,7 @@ class nsInternetConfig
 public:
 	nsInternetConfig();
 	~nsInternetConfig();
-	nsresult GetString( unsigned char* inKey, char** outString );
+	nsresult GetString( ConstStr255Param inKey, char** outString );
 
 	static ICInstance GetInstance();
 	static  PRBool		HasSeedChanged();

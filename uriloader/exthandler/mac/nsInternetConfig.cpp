@@ -121,7 +121,7 @@ nsInternetConfig::~nsInternetConfig()
 }
 
 
-nsresult nsInternetConfig::GetString( unsigned char* inKey, char** outString )
+nsresult nsInternetConfig::GetString( ConstStr255Param inKey, char** outString )
 {
 	nsresult result = NS_ERROR_FAILURE;
 	ICInstance instance = nsInternetConfig::GetInstance();
