@@ -448,7 +448,10 @@ nsTextServicesDocument::FirstBlock()
       break;
     }
 
-    mIterator->Next();
+    result = mIterator->Next();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   // Keep track of prev and next blocks, just in case
@@ -526,7 +529,10 @@ nsTextServicesDocument::LastBlock()
       break;
     }
 
-    mIterator->Prev();
+    result = mIterator->Prev();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   // Keep track of prev and next blocks, just in case
@@ -747,7 +753,10 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
 
         content = nsCOMPtr<nsIContent>();
 
-        iter->Prev();
+        result = iter->Prev();
+
+        if (NS_FAILED(result))
+          return result;
       }
 
       if (!content)
@@ -903,7 +912,10 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
 
       }
 
-      iter->Next();
+      result = iter->Next();
+
+      if (NS_FAILED(result))
+        return result;
     }
   }
 
@@ -1021,7 +1033,10 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
       return result;
     }
 
-    iter->Prev();
+    result = iter->Prev();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   // If we get here, we didn't find any block before or inside
@@ -1228,7 +1243,10 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
 
         content = nsCOMPtr<nsIContent>();
 
-        iter->Next();
+        result = iter->Next();
+
+        if (NS_FAILED(result))
+          return result;
       }
 
       if (!content)
@@ -1384,7 +1402,10 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
 
       }
 
-      iter->Prev();
+      result = iter->Prev();
+
+      if (NS_FAILED(result))
+        return result;
     }
   }
 
@@ -1502,7 +1523,10 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
       return result;
     }
 
-    iter->Next();
+    result = iter->Next();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   // If we get here, we didn't find any block before or inside
@@ -2283,6 +2307,8 @@ nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
     {
       entry->mIsValid = PR_FALSE;
     }
+
+    nodeIndex++;
   }
 
   UNLOCK_DOC(this);
@@ -3341,7 +3367,10 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 
     node = nsCOMPtr<nsIDOMNode>();
 
-    iter->Prev();
+    result = iter->Prev();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   if (node)
@@ -3392,7 +3421,10 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 
       node = nsCOMPtr<nsIDOMNode>();
 
-      iter->Next();
+      result = iter->Next();
+
+      if (NS_FAILED(result))
+        return result;
     }
 
     if (!node)
@@ -3651,7 +3683,10 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
         break;
       }
 
-      iter->Next();
+      result = iter->Next();
+
+      if (NS_FAILED(result))
+        return result;
     }
 
     if (!found)
@@ -3699,7 +3734,10 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
         break;
       }
 
-      iter->Prev();
+      result = iter->Prev();
+
+      if (NS_FAILED(result))
+        return result;
     }
 
     if (!found)
@@ -3926,7 +3964,10 @@ nsTextServicesDocument::FirstTextNodeInCurrentBlock(nsIContentIterator *iter)
     else if (last && IsBlockNode(content))
       break;
 
-    iter->Prev();
+    result = iter->Prev();
+
+    if (NS_FAILED(result))
+      return result;
   }
   
   if (last)
@@ -3999,7 +4040,10 @@ nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
     else if (IsBlockNode(content))
       crossedBlockBoundary = PR_TRUE;
 
-    aIterator->Next();
+    result = aIterator->Next();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   return NS_OK;
@@ -4183,7 +4227,10 @@ nsTextServicesDocument::CreateOffsetTable(nsString *aStr)
     else if (IsBlockNode(content))
       break;
 
-    mIterator->Next();
+    result = mIterator->Next();
+
+    if (NS_FAILED(result))
+      return result;
   }
 
   if (first)
