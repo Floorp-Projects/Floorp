@@ -44,7 +44,6 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsMessenger.cpp	\
-	nsIMessenger.cpp	\
 	nsMessengerNameSet.cpp \
 	nsMsgKeyArray.cpp	\
 	nsUrlListenerManager.cpp \
@@ -59,10 +58,7 @@ CPPSRCS = \
 	nsMsgFolderDataSource.cpp \
 	nsMsgMessageDataSource.cpp \
 	nsMessageViewDataSource.cpp \
-	nsMsgAccountDataSource.cpp	\
 	nsMsgAccountManagerDS.cpp	\
-	nsMsgIdentityDataSource.cpp	\
-	nsMsgServerDataSource.cpp	\
 	nsMsgRDFUtils.cpp \
 	$(NULL)
 
