@@ -208,6 +208,8 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
@@ -399,6 +401,24 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsObjectFrame::Destroy(nsIPresContext* aPresContext)
+{
+  // we need to finish with the plugin before native window is destroyed
+  // doing this in the destructor is too late.
+  if(mInstanceOwner != nsnull)
+  {
+    nsIPluginInstance *inst;
+    mInstanceOwner->GetInstance(inst);
+    if(inst != nsnull)
+    {
+      inst->Stop();
+      inst->SetWindow(nsnull);
+    }
+  }
+  return nsObjectFrameSuper::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -1414,8 +1434,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   if (nsnull != mInstance)
   {
     mPluginHost->StopPluginInstance(mInstance);
-    mInstance->Stop();
-    mInstance->SetWindow(nsnull);
     NS_RELEASE(mInstance);
   }
 
