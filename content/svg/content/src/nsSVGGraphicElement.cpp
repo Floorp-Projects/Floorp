@@ -153,7 +153,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   // is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    bindingManager = ownerDoc->GetBindingManager();
+    bindingManager = ownerDoc->BindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -233,7 +233,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   // is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    bindingManager = ownerDoc->GetBindingManager();
+    bindingManager = ownerDoc->BindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;

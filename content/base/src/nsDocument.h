@@ -84,7 +84,7 @@
 #include "nsIHTMLCSSStyleSheet.h"
 
 #include "nsStyleSet.h"
-
+#include "nsXMLEventsManager.h"
 #include "pldhash.h"
 
 
@@ -102,7 +102,6 @@ class nsIDTD;
 class nsXPathDocumentTearoff;
 class nsIRadioVisitor;
 class nsIFormControl;
-class nsXMLEventsManager;
 struct nsRadioGroupStruct;
 
 
@@ -548,7 +547,7 @@ protected:
     return kNameSpaceID_None;
   };
 
-  nsDocument();
+  nsDocument() : nsIDocument() {}
   virtual ~nsDocument();
 
   nsCString mReferrer;

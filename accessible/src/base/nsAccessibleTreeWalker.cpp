@@ -60,7 +60,7 @@ nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsI
   if (aWalkAnonContent) {
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (presShell)
-      mBindingManager = presShell->GetDocument()->GetBindingManager();
+      mBindingManager = presShell->GetDocument()->BindingManager();
   }
   MOZ_COUNT_CTOR(nsAccessibleTreeWalker);
 }

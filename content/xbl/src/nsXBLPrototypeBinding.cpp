@@ -788,8 +788,7 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
     // count to detemine our precise position within the template.
     nsIDocument* doc = aBoundElement->GetOwnerDoc();
     nsCOMPtr<nsIXBLBinding> binding;
-    doc->GetBindingManager()->GetBinding(aBoundElement,
-                                         getter_AddRefs(binding));
+    doc->BindingManager()->GetBinding(aBoundElement, getter_AddRefs(binding));
     
     nsCOMPtr<nsIXBLBinding> currBinding = binding;
     nsCOMPtr<nsIContent> anonContent;

@@ -224,7 +224,7 @@ inLayoutUtils::GetBindingManagerFor(nsIDOMNode* aNode)
   aNode->GetOwnerDocument(getter_AddRefs(domdoc));
   if (domdoc) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-    return doc->GetBindingManager();
+    return doc->BindingManager();
   }
   
   return nsnull;

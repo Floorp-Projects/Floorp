@@ -1474,28 +1474,24 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     if (! doc)
         return NS_ERROR_FAILURE;
 
-    nsIBindingManager *bindingManager = doc->GetBindingManager();
+    nsCOMPtr<nsIDOMNodeList> kids;
+    doc->BindingManager()->GetXBLChildNodesFor(mRoot, getter_AddRefs(kids));
 
-    if (bindingManager) {
-        nsCOMPtr<nsIDOMNodeList> kids;
-        bindingManager->GetXBLChildNodesFor(mRoot, getter_AddRefs(kids));
+    if (kids) {
+        PRUint32 length;
+        kids->GetLength(&length);
 
-        if (kids) {
-            PRUint32 length;
-            kids->GetLength(&length);
+        for (PRUint32 i = 0; i < length; ++i) {
+            nsCOMPtr<nsIDOMNode> node;
+            kids->Item(i, getter_AddRefs(node));
+            if (! node)
+                continue;
 
-            for (PRUint32 i = 0; i < length; ++i) {
-                nsCOMPtr<nsIDOMNode> node;
-                kids->Item(i, getter_AddRefs(node));
-                if (! node)
-                    continue;
+            nsCOMPtr<nsIContent> child = do_QueryInterface(node);
 
-                nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-
-                if (IsTemplateElement(child)) {
-                    NS_ADDREF(*aResult = child.get());
-                    return NS_OK;
-                }
+            if (IsTemplateElement(child)) {
+                NS_ADDREF(*aResult = child.get());
+                return NS_OK;
             }
         }
     }

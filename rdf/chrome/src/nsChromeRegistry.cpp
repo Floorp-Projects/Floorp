@@ -1298,7 +1298,7 @@ static void FlushSkinBindingsForWindow(nsIDOMWindowInternal* aWindow)
     return;
 
   // Annihilate all XBL bindings.
-  document->GetBindingManager()->FlushSkinBindings();
+  document->BindingManager()->FlushSkinBindings();
 }
 
 // XXXbsmedberg: move this to nsIWindowMediator

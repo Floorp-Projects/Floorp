@@ -5346,11 +5346,8 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // We must ensure that the XBL Binding is installed before we hand
   // back this object.
 
-  nsIBindingManager *bindingManager = doc->GetBindingManager();
-  NS_ENSURE_TRUE(bindingManager, NS_ERROR_UNEXPECTED);
-
   nsCOMPtr<nsIXBLBinding> binding;
-  bindingManager->GetBinding(content, getter_AddRefs(binding));
+  doc->BindingManager()->GetBinding(content, getter_AddRefs(binding));
 
   if (binding) {
     // There's already a binding for this element so nothing left to

@@ -541,7 +541,7 @@ nsXBLBinding::GenerateAnonymousContent()
     if (! doc)
       return NS_OK;
     
-    nsIBindingManager *bindingManager = doc->GetBindingManager();
+    nsIBindingManager *bindingManager = doc->BindingManager();
 
     nsCOMPtr<nsIDOMNodeList> children;
     bindingManager->GetContentListFor(mBoundElement, getter_AddRefs(children));
@@ -1016,7 +1016,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 
     // Make sure that henceforth we don't claim that mBoundElement's children
     // have insertion parents in the old document.
-    nsIBindingManager* bindingManager = aOldDocument->GetBindingManager();
+    nsIBindingManager* bindingManager = aOldDocument->BindingManager();
     for (PRUint32 i = mBoundElement->GetChildCount(); i > 0; --i) {
       NS_ASSERTION(mBoundElement->GetChildAt(i-1),
                    "Must have child at i for 0 <= i < GetChildCount()!");

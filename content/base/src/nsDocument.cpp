@@ -122,6 +122,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsContentCreatorFunctions.h"
 
 #include "nsIScriptContext.h"
+#include "nsBindingManager.h"
 
 #include "nsICharsetAlias.h"
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
@@ -508,24 +509,6 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsDocument::nsDocument()
-{
-
-  // NOTE! nsIDocument::operator new() zeroes out all members, so don't
-  // bother initializing members to 0.
-
-  // Force initialization.
-  mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1");
-
-  nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(mBindingManager));
-  if (observer) {
-    // The binding manager must always be the first observer of the
-    // document.
-
-    mObservers.InsertElementAt(observer, 0);
-  }
-}
-
 nsDocument::~nsDocument()
 {
   mInDestructor = PR_TRUE;
@@ -678,6 +661,15 @@ NS_IMPL_RELEASE(nsDocument)
 nsresult
 nsDocument::Init()
 {
+  // Force initialization.
+  nsBindingManager *bindingManager = new nsBindingManager();
+  NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
+  mBindingManager = bindingManager;
+
+  // The binding manager must always be the first observer of the document.
+  // (static cast to the correct interface pointer)
+  mObservers.InsertElementAt(NS_STATIC_CAST(nsIDocumentObserver*, bindingManager), 0);
+
   if (mNodeInfoManager) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
@@ -2619,27 +2611,20 @@ nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAString& aURI)
     return rv;
   }
 
-  if (mBindingManager) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), aURI);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    return mBindingManager->RemoveLayeredBinding(content, uri);
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURI);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
+  return mBindingManager->RemoveLayeredBinding(content, uri);
 }
 
 NS_IMETHODIMP
 nsDocument::LoadBindingDocument(const nsAString& aURI,
                                 nsIDOMDocument** aResult)
 {
-  if (!mBindingManager) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
                           mCharacterSet.get(),
@@ -2739,9 +2724,6 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
                               nsIDOMNodeList** aResult)
 {
   *aResult = nsnull;
-  if (!mBindingManager) {
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   return mBindingManager->GetAnonymousNodesFor(content, aResult);

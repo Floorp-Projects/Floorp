@@ -58,14 +58,10 @@ ChildIterator::Init(nsIContent*    aContent,
   if (! doc)
     return NS_ERROR_FAILURE;
 
-  nsIBindingManager *mgr = doc->GetBindingManager();
-  if (! mgr)
-    return NS_ERROR_FAILURE;
-
   // If this node has XBL children, then use them. Otherwise, just use
   // the vanilla content APIs.
   nsCOMPtr<nsIDOMNodeList> nodes;
-  mgr->GetXBLChildNodesFor(aContent, getter_AddRefs(nodes));
+  doc->BindingManager()->GetXBLChildNodesFor(aContent, getter_AddRefs(nodes));
 
   PRUint32 length;
   if (nodes)

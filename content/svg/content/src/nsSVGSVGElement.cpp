@@ -988,7 +988,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   // is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    bindingManager = ownerDoc->GetBindingManager();
+    bindingManager = ownerDoc->BindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -1066,7 +1066,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   // is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    bindingManager = ownerDoc->GetBindingManager();
+    bindingManager = ownerDoc->BindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;

@@ -862,11 +862,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
         if (doc) {
           // Notify XBL- & nsIAnonymousContentCreator-generated
           // anonymous content that the document is changing.
-          nsIBindingManager *bindingManager = doc->GetBindingManager();
-          NS_ASSERTION(bindingManager, "no binding manager");
-          if (bindingManager) {
-            bindingManager->ChangeDocumentFor(this, doc, aDocument);
-          }
+          doc->BindingManager()->ChangeDocumentFor(this, doc, aDocument);
 
           nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
           nsDoc->SetBoxObjectFor(this, nsnull);
@@ -1388,7 +1384,7 @@ nsXULElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
     if (doc) {
         nsCOMPtr<nsIXBLBinding> binding;
-        doc->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+        doc->BindingManager()->GetBinding(this, getter_AddRefs(binding));
         if (binding) {
             binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
         }
@@ -1599,7 +1595,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         }
 
         nsCOMPtr<nsIXBLBinding> binding;
-        doc->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+        doc->BindingManager()->GetBinding(this, getter_AddRefs(binding));
         if (binding)
             binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
@@ -1794,58 +1790,56 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
     // XXX sXBL/XBL2 issue! Owner or current document?
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-        nsIBindingManager *bindingManager = doc->GetBindingManager();
-        if (bindingManager) {
-            nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-            bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
-                                                 getter_AddRefs(anonymousChildren));
+        nsIBindingManager *bindingManager = doc->BindingManager();
+        nsCOMPtr<nsIDOMNodeList> anonymousChildren;
+        bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
+                                             getter_AddRefs(anonymousChildren));
 
-            if (anonymousChildren) {
-                PRUint32 length;
-                anonymousChildren->GetLength(&length);
-                if (length) {
-                    rdf_Indent(out, aIndent);
-                    fputs("anonymous-children<\n", out);
+        if (anonymousChildren) {
+            PRUint32 length;
+            anonymousChildren->GetLength(&length);
+            if (length) {
+                rdf_Indent(out, aIndent);
+                fputs("anonymous-children<\n", out);
 
-                    for (PRUint32 i2 = 0; i2 < length; ++i2) {
-                        nsCOMPtr<nsIDOMNode> node;
-                        anonymousChildren->Item(i2, getter_AddRefs(node));
-                        nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-                        child->List(out, aIndent + 1);
-                    }
-
-                    rdf_Indent(out, aIndent);
-                    fputs(">\n", out);
+                for (PRUint32 i2 = 0; i2 < length; ++i2) {
+                    nsCOMPtr<nsIDOMNode> node;
+                    anonymousChildren->Item(i2, getter_AddRefs(node));
+                    nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+                    child->List(out, aIndent + 1);
                 }
+
+                rdf_Indent(out, aIndent);
+                fputs(">\n", out);
             }
+        }
 
-            PRBool hasContentList;
-            bindingManager->HasContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
-                                              &hasContentList);
+        PRBool hasContentList;
+        bindingManager->HasContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
+                                          &hasContentList);
 
-            if (hasContentList) {
-                nsCOMPtr<nsIDOMNodeList> contentList;
-                bindingManager->GetContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
-                                                  getter_AddRefs(contentList));
+        if (hasContentList) {
+            nsCOMPtr<nsIDOMNodeList> contentList;
+            bindingManager->GetContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
+                                              getter_AddRefs(contentList));
 
-                NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
+            NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
 
-                PRUint32 length;
-                contentList->GetLength(&length);
-                if (length) {
-                    rdf_Indent(out, aIndent);
-                    fputs("content-list<\n", out);
+            PRUint32 length;
+            contentList->GetLength(&length);
+            if (length) {
+                rdf_Indent(out, aIndent);
+                fputs("content-list<\n", out);
 
-                    for (PRUint32 i2 = 0; i2 < length; ++i2) {
-                        nsCOMPtr<nsIDOMNode> node;
-                        contentList->Item(i2, getter_AddRefs(node));
-                        nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-                        child->List(out, aIndent + 1);
-                    }
-
-                    rdf_Indent(out, aIndent);
-                    fputs(">\n", out);
+                for (PRUint32 i2 = 0; i2 < length; ++i2) {
+                    nsCOMPtr<nsIDOMNode> node;
+                    contentList->Item(i2, getter_AddRefs(node));
+                    nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+                    child->List(out, aIndent + 1);
                 }
+
+                rdf_Indent(out, aIndent);
+                fputs(">\n", out);
             }
         }
     }
@@ -1977,11 +1971,9 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     // XXX sXBL/XBL2 issue! Owner or current document?
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
-        nsIBindingManager* bindingManager = doc->GetBindingManager();
-        if (bindingManager) {
-            // we have a binding manager -- do we have an anonymous parent?
-            bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
-        }
+        // check for an anonymous parent
+        doc->BindingManager()->GetInsertionParent(this,
+                                                  getter_AddRefs(parent));
     }
 
     if (!parent) {

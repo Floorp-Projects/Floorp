@@ -526,7 +526,7 @@ public:
     return mNextContentID++;
   }
 
-  nsIBindingManager* GetBindingManager() const
+  nsIBindingManager* BindingManager() const
   {
     return mBindingManager;
   }

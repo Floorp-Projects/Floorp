@@ -389,7 +389,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
 
     // Remove ourselves from the set of pending docs.
-    nsIBindingManager *bindingManager = doc->GetBindingManager();
+    nsIBindingManager *bindingManager = doc->BindingManager();
     nsIURI* documentURI = mBindingDocument->GetDocumentURI();
     bindingManager->RemoveLoadingDocListener(documentURI);
 
@@ -400,7 +400,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
     // Put our doc info in the doc table.
     nsCOMPtr<nsIXBLDocumentInfo> info;
-    nsIBindingManager *xblDocBindingManager = mBindingDocument->GetBindingManager();
+    nsIBindingManager *xblDocBindingManager = mBindingDocument->BindingManager();
     xblDocBindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
@@ -534,7 +534,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   if (!document)
     return NS_OK;
 
-  nsIBindingManager *bindingManager = document->GetBindingManager();
+  nsIBindingManager *bindingManager = document->BindingManager();
   
   nsCOMPtr<nsIXBLBinding> binding;
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
@@ -649,7 +649,7 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
   if (! document)
     return NS_OK;
 
-  nsIBindingManager *bindingManager = document->GetBindingManager();
+  nsIBindingManager *bindingManager = document->BindingManager();
   
   nsCOMPtr<nsIXBLBinding> binding;
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
@@ -677,10 +677,8 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
 {
   nsIDocument* document = aContent->GetOwnerDoc();
   if (document) {
-    nsIBindingManager *bindingManager = document->GetBindingManager();
-  
-    if (bindingManager)
-      return bindingManager->ResolveTag(aContent, aNameSpaceID, aResult);
+    return document->BindingManager()->ResolveTag(aContent, aNameSpaceID,
+                                                  aResult);
   }
 
   *aNameSpaceID = aContent->GetNameSpaceID();
@@ -709,7 +707,7 @@ nsXBLService::GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement, nsIXBL
     // The second line of defense is the binding manager's document table.
     nsIDocument* boundDocument = aBoundElement->GetOwnerDoc();
     if (boundDocument)
-      boundDocument->GetBindingManager()->GetXBLDocumentInfo(aURI, aResult);
+      boundDocument->BindingManager()->GetXBLDocumentInfo(aURI, aResult);
   }
   return NS_OK;
 }
@@ -1055,7 +1053,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (aBoundDocument) {
-      bindingManager = aBoundDocument->GetBindingManager();
+      bindingManager = aBoundDocument->BindingManager();
       bindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
     }
 
@@ -1103,7 +1101,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                            bindingURL, aForceSyncLoad, getter_AddRefs(document));
    
       if (document) {
-        nsIBindingManager *xblDocBindingManager = document->GetBindingManager();
+        nsIBindingManager *xblDocBindingManager = document->BindingManager();
         xblDocBindingManager->GetXBLDocumentInfo(documentURI, getter_AddRefs(info));
         if (!info) {
           NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
@@ -1198,7 +1196,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     // Add ourselves to the list of loading docs.
     nsIBindingManager *bindingManager;
     if (aBoundDocument)
-      bindingManager = aBoundDocument->GetBindingManager();
+      bindingManager = aBoundDocument->BindingManager();
     else
       bindingManager = nsnull;
 

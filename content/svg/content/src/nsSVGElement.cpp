@@ -464,7 +464,7 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
   // is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    bindingManager = ownerDoc->GetBindingManager();
+    bindingManager = ownerDoc->BindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -656,7 +656,7 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 
   if (document) {
     nsCOMPtr<nsIXBLBinding> binding;
-    document->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding) {
       binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
     }

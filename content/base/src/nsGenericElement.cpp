@@ -1784,11 +1784,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     if (document && aDeep) {
       // Notify XBL- & nsIAnonymousContentCreator-generated
       // anonymous content that the document is changing.
-      nsIBindingManager* bindingManager = document->GetBindingManager();
-      NS_ASSERTION(bindingManager, "No binding manager.");
-      if (bindingManager) {
-        bindingManager->ChangeDocumentFor(this, document, aDocument);
-      }
+      document->BindingManager()->ChangeDocumentFor(this, document, aDocument);
 
       nsCOMPtr<nsIDOMElement> domElement;
       QueryInterface(NS_GET_IID(nsIDOMElement), getter_AddRefs(domElement));
@@ -1930,16 +1926,12 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  // determine the parent:
+  // check for an anonymous parent
   nsCOMPtr<nsIContent> parent;
-  nsIBindingManager* bindingManager = nsnull;
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    bindingManager = ownerDoc->GetBindingManager();
-  }
-  if (bindingManager) {
-    // we have a binding manager -- do we have an anonymous parent?
-    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
+    ownerDoc->BindingManager()->GetInsertionParent(this,
+                                                   getter_AddRefs(parent));
   }
   if (!parent) {
     // if we didn't find an anonymous parent, use the explicit one,
@@ -3184,9 +3176,8 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   nsIDocument *document = GetOwnerDoc();
   if (document) {
-    nsIBindingManager* manager = document->GetBindingManager();
-    if (manager)
-      return manager->GetBindingImplementation(this, aIID, aInstancePtr);
+    return document->BindingManager()->GetBindingImplementation(this, aIID,
+                                                                aInstancePtr);
   }
 
   return NS_NOINTERFACE;
@@ -3439,7 +3430,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   if (document) {
     nsCOMPtr<nsIXBLBinding> binding;
-    document->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
 
@@ -3571,7 +3562,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   if (document) {
     nsCOMPtr<nsIXBLBinding> binding;
-    document->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
@@ -3657,58 +3648,56 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
   nsIDocument *document = GetOwnerDoc();
   if (document) {
-    nsIBindingManager* bindingManager = document->GetBindingManager();
-    if (bindingManager) {
-      nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-      bindingManager->GetAnonymousNodesFor(NS_CONST_CAST(nsGenericElement*, this),
-                                           getter_AddRefs(anonymousChildren));
+    nsIBindingManager* bindingManager = document->BindingManager();
+    nsCOMPtr<nsIDOMNodeList> anonymousChildren;
+    bindingManager->GetAnonymousNodesFor(NS_CONST_CAST(nsGenericElement*, this),
+                                         getter_AddRefs(anonymousChildren));
 
-      if (anonymousChildren) {
-        PRUint32 length;
-        anonymousChildren->GetLength(&length);
-        if (length) {
-          for (index = aIndent; --index >= 0; ) fputs("  ", out);
-          fputs("anonymous-children<\n", out);
+    if (anonymousChildren) {
+      PRUint32 length;
+      anonymousChildren->GetLength(&length);
+      if (length) {
+        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        fputs("anonymous-children<\n", out);
 
-          for (PRUint32 i = 0; i < length; ++i) {
-            nsCOMPtr<nsIDOMNode> node;
-            anonymousChildren->Item(i, getter_AddRefs(node));
-            nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-            child->List(out, aIndent + 1);
-          }
-
-          for (index = aIndent; --index >= 0; ) fputs("  ", out);
-          fputs(">\n", out);
+        for (PRUint32 i = 0; i < length; ++i) {
+          nsCOMPtr<nsIDOMNode> node;
+          anonymousChildren->Item(i, getter_AddRefs(node));
+          nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+          child->List(out, aIndent + 1);
         }
+
+        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        fputs(">\n", out);
       }
+    }
 
-      PRBool hasContentList;
-      bindingManager->HasContentListFor(NS_CONST_CAST(nsGenericElement*, this),
-                                        &hasContentList);
+    PRBool hasContentList;
+    bindingManager->HasContentListFor(NS_CONST_CAST(nsGenericElement*, this),
+                                      &hasContentList);
 
-      if (hasContentList) {
-        nsCOMPtr<nsIDOMNodeList> contentList;
-        bindingManager->GetContentListFor(NS_CONST_CAST(nsGenericElement*, this),
-                                          getter_AddRefs(contentList));
+    if (hasContentList) {
+      nsCOMPtr<nsIDOMNodeList> contentList;
+      bindingManager->GetContentListFor(NS_CONST_CAST(nsGenericElement*, this),
+                                        getter_AddRefs(contentList));
 
-        NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
+      NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
 
-        PRUint32 length;
-        contentList->GetLength(&length);
-        if (length) {
-          for (index = aIndent; --index >= 0; ) fputs("  ", out);
-          fputs("content-list<\n", out);
+      PRUint32 length;
+      contentList->GetLength(&length);
+      if (length) {
+        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        fputs("content-list<\n", out);
 
-          for (PRUint32 i = 0; i < length; ++i) {
-            nsCOMPtr<nsIDOMNode> node;
-            contentList->Item(i, getter_AddRefs(node));
-            nsCOMPtr<nsIContent> child = do_QueryInterface(node);
-            child->List(out, aIndent + 1);
-          }
-
-          for (index = aIndent; --index >= 0; ) fputs("  ", out);
-          fputs(">\n", out);
+        for (PRUint32 i = 0; i < length; ++i) {
+          nsCOMPtr<nsIDOMNode> node;
+          contentList->Item(i, getter_AddRefs(node));
+          nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+          child->List(out, aIndent + 1);
         }
+
+        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        fputs(">\n", out);
       }
     }
   }
