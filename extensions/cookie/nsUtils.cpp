@@ -47,6 +47,7 @@
 
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
+#define MAX_HOST_NAME_LEN 64
 #define BUFSIZE 128
 #define LOCALIZATION "chrome://communicator/locale/wallet/cookie.properties"
 
@@ -97,6 +98,184 @@ CKutil_GetLine(nsInputFileStream& strm, nsString& aLine) {
     }
   }
   return 0;
+}
+
+PUBLIC char * 
+CKutil_ParseURL (const char *url, int parts_requested) {
+  char *rv=0,*colon, *slash, *ques_mark, *hash_mark;
+  char *atSign, *host, *passwordColon, *gtThan;
+  assert(url);
+  if(!url) {
+    return(CKutil_StrAllocCat(rv, ""));
+  }
+  colon = PL_strchr(url, ':'); /* returns a const char */
+  /* Get the protocol part, not including anything beyond the colon */
+  if (parts_requested & GET_PROTOCOL_PART) {
+    if(colon) {
+      char val = *(colon+1);
+      *(colon+1) = '\0';
+      CKutil_StrAllocCopy(rv, url);
+      *(colon+1) = val;
+      /* If the user wants more url info, tack on extra slashes. */
+      if( (parts_requested & GET_HOST_PART)
+          || (parts_requested & GET_USERNAME_PART)
+          || (parts_requested & GET_PASSWORD_PART)) {
+        if( *(colon+1) == '/' && *(colon+2) == '/') {
+          CKutil_StrAllocCat(rv, "//");
+        }
+        /* If there's a third slash consider it file:/// and tack on the last slash. */
+        if( *(colon+3) == '/' ) {
+          CKutil_StrAllocCat(rv, "/");
+        }
+      }
+    }
+  }
+
+  /* Get the username if one exists */
+  if (parts_requested & GET_USERNAME_PART) {
+    if (colon && (*(colon+1) == '/') && (*(colon+2) == '/') && (*(colon+3) != '\0')) {
+      if ( (slash = PL_strchr(colon+3, '/')) != NULL) {
+        *slash = '\0';
+      }
+      if ( (atSign = PL_strchr(colon+3, '@')) != NULL) {
+        *atSign = '\0';
+        if ( (passwordColon = PL_strchr(colon+3, ':')) != NULL) {
+          *passwordColon = '\0';
+        }
+        CKutil_StrAllocCat(rv, colon+3);
+
+        /* Get the password if one exists */
+        if (parts_requested & GET_PASSWORD_PART) {
+          if (passwordColon) {
+            CKutil_StrAllocCat(rv, ":");
+            CKutil_StrAllocCat(rv, passwordColon+1);
+          }
+        }
+        if (parts_requested & GET_HOST_PART) {
+          CKutil_StrAllocCat(rv, "@");
+        }
+        if (passwordColon) {
+          *passwordColon = ':';
+        }
+        *atSign = '@';
+      }
+      if (slash) {
+        *slash = '/';
+      }
+    }
+  }
+
+  /* Get the host part */
+  if (parts_requested & GET_HOST_PART) {
+    if(colon) {
+      if(*(colon+1) == '/' && *(colon+2) == '/') {
+        slash = PL_strchr(colon+3, '/');
+        if(slash) {
+          *slash = '\0';
+        }
+        if( (atSign = PL_strchr(colon+3, '@')) != NULL) {
+          host = atSign+1;
+        } else {
+          host = colon+3;
+        }
+        ques_mark = PL_strchr(host, '?');
+        if(ques_mark) {
+          *ques_mark = '\0';
+        }
+        gtThan = PL_strchr(host, '>');
+        if (gtThan) {
+          *gtThan = '\0';
+        }
+
+        /* limit hostnames to within MAX_HOST_NAME_LEN characters to keep from crashing */
+        if(PL_strlen(host) > MAX_HOST_NAME_LEN) {
+          char * cp;
+          char old_char;
+          cp = host+MAX_HOST_NAME_LEN;
+          old_char = *cp;
+          *cp = '\0';
+          CKutil_StrAllocCat(rv, host);
+          *cp = old_char;
+        } else {
+          CKutil_StrAllocCat(rv, host);
+        }
+        if(slash) {
+          *slash = '/';
+        }
+        if(ques_mark) {
+          *ques_mark = '?';
+        }
+        if (gtThan) {
+          *gtThan = '>';
+        }
+      }
+    }
+  }
+
+  /* Get the path part */
+  if (parts_requested & GET_PATH_PART) {
+    if(colon) {
+      if(*(colon+1) == '/' && *(colon+2) == '/') {
+        /* skip host part */
+        slash = PL_strchr(colon+3, '/');
+      } else {
+        /* path is right after the colon */
+        slash = colon+1;
+      }
+      if(slash) {
+        ques_mark = PL_strchr(slash, '?');
+        hash_mark = PL_strchr(slash, '#');
+        if(ques_mark) {
+          *ques_mark = '\0';
+        }
+        if(hash_mark) {
+          *hash_mark = '\0';
+        }
+        CKutil_StrAllocCat(rv, slash);
+        if(ques_mark) { 
+          *ques_mark = '?';
+        }
+        if(hash_mark) {
+          *hash_mark = '#';
+        }
+      }
+    }
+  }
+
+  if(parts_requested & GET_HASH_PART) {
+    hash_mark = PL_strchr(url, '#'); /* returns a const char * */
+    if(hash_mark) {
+      ques_mark = PL_strchr(hash_mark, '?');
+      if(ques_mark) {
+        *ques_mark = '\0';
+      }
+      CKutil_StrAllocCat(rv, hash_mark);
+      if(ques_mark) {
+        *ques_mark = '?';
+      }
+    }
+  }
+
+  if(parts_requested & GET_SEARCH_PART) {
+    ques_mark = PL_strchr(url, '?'); /* returns a const char * */
+    if(ques_mark) {
+      hash_mark = PL_strchr(ques_mark, '#');
+      if(hash_mark) {
+        *hash_mark = '\0';
+      }
+      CKutil_StrAllocCat(rv, ques_mark);
+      if(hash_mark) {
+        *hash_mark = '#';
+      }
+    }
+  }
+
+  /* copy in a null string if nothing was copied in */
+  if(!rv) {
+    CKutil_StrAllocCopy(rv, "");
+  }
+
+  return rv;
 }
 
 PRUnichar *
