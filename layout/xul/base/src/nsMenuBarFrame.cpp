@@ -581,6 +581,15 @@ nsMenuBarFrame::DismissChain()
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsMenuBarFrame :: KillPendingTimers ( )
+{
+  return NS_OK;
+
+} // KillPendingTimers
+
+
 NS_IMETHODIMP
 nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 {
@@ -682,3 +691,4 @@ nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 
   return nsBoxFrame::Destroy(aPresContext);
 }
+
