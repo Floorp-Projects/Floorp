@@ -388,10 +388,7 @@ pref("security.policy.default.node.previoussibling", "sameOrigin");
 pref("security.policy.default.node.removechild", "sameOrigin");
 pref("security.policy.default.node.replacechild", "sameOrigin");
 
-pref("security.policy.default.window.innerheight.write", "UniversalBrowserWrite");
-pref("security.policy.default.window.innerwidth.write", "UniversalBrowserWrite");
-pref("security.policy.default.window.outerheight.write", "UniversalBrowserWrite");
-pref("security.policy.default.window.outerwidth.write", "UniversalBrowserWrite");
+pref("security.policy.default.window.status", "sameOrigin");
 
 /* 0=lines, 1=pages, 2=history */
 pref("mousewheel.withnokey.action",0);
