@@ -265,7 +265,7 @@ nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
 }
 
 // as many InterfaceDirectoryEntries as we expect to see.
-#define XPT_HASHSIZE 64
+#define XPT_HASHSIZE 512
 
 #ifdef DEBUG_iim
 static PRIntn

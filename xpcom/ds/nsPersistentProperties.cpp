@@ -50,7 +50,7 @@ nsPersistentProperties::nsPersistentProperties()
 
   mIn = nsnull;
   mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
-  mTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
+  mTable = PL_NewHashTable(128, (PLHashFunction) HashKey,
     (PLHashComparator) CompareKeys,
     (PLHashComparator) nsnull, nsnull, nsnull);
 }

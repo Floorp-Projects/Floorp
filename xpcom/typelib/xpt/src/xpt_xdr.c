@@ -92,7 +92,7 @@ typedef struct XPTHashRecord {
     struct XPTHashRecord *next;
 } XPTHashRecord;
 
-#define XPT_HASHSIZE 32
+#define XPT_HASHSIZE 512
 
 struct XPTHashTable {  /* it's already typedef'ed from before. */
     XPTHashRecord *buckets[XPT_HASHSIZE];

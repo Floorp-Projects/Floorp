@@ -111,7 +111,7 @@ nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount
       mModuleName(moduleName),
       mComponentCount(componentCount),
       mComponents(components),
-      mFactories(8, PR_FALSE),
+      mFactories(32, PR_FALSE),
       mDtor(dtor)
 {
     NS_INIT_ISUPPORTS();

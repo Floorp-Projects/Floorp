@@ -148,7 +148,7 @@ NS_COM nsIAtom* NS_NewAtom(const PRUnichar* us)
   // Note: in a low memory condition, this routine could return |NULL|
 {
   if (nsnull == gAtomHashTable) {
-    gAtomHashTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
+    gAtomHashTable = PL_NewHashTable(2048, (PLHashFunction) HashKey,
                                      (PLHashComparator) CompareKeys,
                                      (PLHashComparator) nsnull,
                                      nsnull, nsnull);
@@ -166,7 +166,7 @@ NS_COM nsIAtom* NS_NewAtom(const PRUnichar* us)
   AtomImpl* id = new(us, uslen) AtomImpl();
   if ( id )
     {
-      PL_HashTableRawAdd(gAtomHashTable, hep, hashCode, id->mString, id);
+      PL_HashTableRawAdd(gAtomHashTable, hep, hashCode, id->mString, id);      
       NS_ADDREF(id);
     }
 
