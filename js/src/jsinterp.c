@@ -5266,6 +5266,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             ndefs = cs->ndefs;
             if (ndefs) {
                 SAVE_SP(fp);
+                if (op == JSOP_FORELEM && sp[-1] == JSVAL_FALSE)
+                    --ndefs;
                 for (n = -ndefs; n < 0; n++) {
                     str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
                     if (str) {
