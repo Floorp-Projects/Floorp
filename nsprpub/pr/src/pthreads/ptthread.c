@@ -654,8 +654,12 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thred)
     cv = thred->waiting;
     if ((NULL != cv) && !thred->interrupt_blocked)
     {
-        PRIntn rv = pthread_cond_broadcast(&cv->cv);
+        PRIntn rv;
+        (void)PR_AtomicIncrement(&cv->notify_pending);
+        rv = pthread_cond_broadcast(&cv->cv);
         PR_ASSERT(0 == rv);
+        if (0 > PR_AtomicDecrement(&cv->notify_pending))
+            PR_DestroyCondVar(cv);
     }
     return PR_SUCCESS;
 }  /* PR_Interrupt */
