@@ -153,7 +153,6 @@ endif
 	JAVA_CLIBS = -lthread
 
 ifneq ($(JDK_VERSION), 1.1)
-	JAVA_LIBS  = -L$(JAVA_HOME)/$(JAVA_LIBDIR)/$(JDK_THREADING_MODEL) -lhpi
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/classic -ljvm
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR) -ljava
 else
