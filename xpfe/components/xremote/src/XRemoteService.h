@@ -91,4 +91,7 @@ class XRemoteService : public nsIXRemoteService {
   // the number of non-proxy windows that are set up for X Remote
   PRUint32 mNumWindows;
 
+  // have we been started up from the main loop yet?
+  PRBool   mRunning;
+
 };

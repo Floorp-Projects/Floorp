@@ -60,6 +60,7 @@ XRemoteService::XRemoteService()
 {
   NS_INIT_ISUPPORTS();
   mNumWindows = 0;
+  mRunning = PR_FALSE;
 }
 
 XRemoteService::~XRemoteService()
@@ -72,6 +73,7 @@ NS_IMPL_ISUPPORTS1(XRemoteService, nsIXRemoteService)
 NS_IMETHODIMP
 XRemoteService::Startup(void)
 {
+  mRunning = PR_TRUE;
   if (mNumWindows == 0)
     CreateProxyWindow();
   return NS_OK;
@@ -81,6 +83,7 @@ NS_IMETHODIMP
 XRemoteService::Shutdown(void)
 {
   DestroyProxyWindow();
+  mRunning = PR_FALSE;
   return NS_OK;
 }
 
@@ -402,7 +405,7 @@ NS_IMETHODIMP
 XRemoteService::RemoveBrowserInstance(nsIDOMWindowInternal *aBrowser)
 {
   mNumWindows--;
-  if (mNumWindows == 0)
+  if (mNumWindows == 0 && mRunning)
     CreateProxyWindow();
 
   // remove our keys
