@@ -363,19 +363,13 @@ NS_METHOD nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
 PRInt32 nsContainerFrame::NextChildOffset() const
 {
   PRInt32 result;
-
   if (mChildCount > 0) {
     result = mLastContentOffset;
-
-#ifdef NS_DEBUG
-    if (GetVerifyTreeEnable()) {
-      VerifyLastIsComplete();
-    }
-#endif
     if (mLastContentIsComplete) {
       result++;
     }
-  } else {
+  }
+  else {
     result = mFirstContentOffset;
   }
   return result;
@@ -563,7 +557,11 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
     if (nsnull != parent->mFirstChild) {
       parent->SetFirstContentOffset(parent->mFirstChild);
       if (parent->IsPseudoFrame()) {
-        parent->PropagateContentOffsets();
+        // Tell the parent's parent to update its content offsets
+        nsContainerFrame* pp = (nsContainerFrame*) parent->mGeometricParent;
+        pp->PropagateContentOffsets(parent, parent->mFirstContentOffset,
+                                    parent->mLastContentOffset,
+                                    parent->mLastContentIsComplete);
       }
     }
 
@@ -607,28 +605,31 @@ void nsContainerFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
 {
 }
 
-void nsContainerFrame::PropagateContentOffsets()
+void
+nsContainerFrame::PropagateContentOffsets(nsIFrame* aChild,
+                                          PRInt32 aFirstContentOffset,
+                                          PRInt32 aLastContentOffset,
+                                          PRBool aLastContentIsComplete)
 {
-  NS_PRECONDITION(IsPseudoFrame(), "not a pseudo frame");
-  nsContainerFrame* parent = (nsContainerFrame*)mGeometricParent;
+  NS_PRECONDITION(ChildIsPseudoFrame(aChild), "not a pseudo frame");
 
-  if (nsnull != parent) {
-    // If we're the first child frame then update our parent's content offset
-    if (parent->mFirstChild == this) {
-      parent->mFirstContentOffset = mFirstContentOffset;
-    }
+  // First update our offsets
+  if (mFirstChild == aChild) {
+    mFirstContentOffset = aFirstContentOffset;
+  }
+  nsIFrame* lastChild;
+  LastChild(lastChild);
+  if (lastChild == aChild) {
+    mLastContentOffset = aLastContentOffset;
+    mLastContentIsComplete = aLastContentIsComplete;
+  }
 
-    // If we're the last child frame then update our parent's content offset
-    if (nsnull == mNextSibling) {
-      parent->mLastContentOffset = mLastContentOffset;
-      parent->mLastContentIsComplete = mLastContentIsComplete;
-    }
-
-    // If the parent is being used as a pseudo frame then we need to propagate
-    // the content offsets upwards to its parent frame
-    if (parent->IsPseudoFrame()) {
-      parent->PropagateContentOffsets();
-    }
+  // If we are a pseudo-frame then we need to update our parent
+  if (IsPseudoFrame()) {
+    nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
+    parent->PropagateContentOffsets(this, mFirstContentOffset,
+                                    mLastContentOffset,
+                                    mLastContentIsComplete);
   }
 }
 
@@ -727,14 +728,16 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
       }
     }
     nextInFlow->mChildCount += numChildren;
-#ifdef NS_DEBUG
-    nextInFlow->VerifyLastIsComplete();
-#endif
 
     // If the next-in-flow is being used as a pseudo frame then we need
     // to propagate the content offsets upwards to its parent frame
     if (nextInFlow->IsPseudoFrame()) {
-      nextInFlow->PropagateContentOffsets();
+      nsContainerFrame* parent = (nsContainerFrame*)
+        nextInFlow->mGeometricParent;
+      parent->PropagateContentOffsets(nextInFlow,
+                                      nextInFlow->mFirstContentOffset,
+                                      nextInFlow->mLastContentOffset,
+                                      nextInFlow->mLastContentIsComplete);
     }
 
 #ifdef NOISY
@@ -898,7 +901,12 @@ void nsContainerFrame::AdjustOffsetOfEmptyNextInFlows()
       // If the next-in-flow is a pseudo-frame then we need to have it
       // update it's parents offsets too.
       if (nextInFlow->IsPseudoFrame()) {
-        nextInFlow->PropagateContentOffsets();
+        nsContainerFrame* parent = (nsContainerFrame*)
+          nextInFlow->mGeometricParent;
+        parent->PropagateContentOffsets(nextInFlow,
+                                        nextInFlow->mFirstContentOffset,
+                                        nextInFlow->mLastContentOffset,
+                                        nextInFlow->mLastContentIsComplete);
       }
     } else {
       // We found a non-empty frame. Verify that its first content offset
