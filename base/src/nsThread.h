@@ -69,8 +69,7 @@ public:
 
     // nsIThreadPool methods:
     NS_IMETHOD DispatchRequest(nsIRunnable* runnable);
-    NS_IMETHOD Join();
-    NS_IMETHOD Interrupt();
+    NS_IMETHOD Shutdown();
 
     // nsThreadPool methods:
     nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads);
@@ -89,6 +88,7 @@ protected:
     PRMonitor*          mRequestMonitor;
     PRUint32            mMinThreads;
     PRUint32            mMaxThreads;
+    PRBool              mShuttingDown;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -231,7 +231,7 @@ nsIThread::GetCurrent(nsIThread* *result)
 
 nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
     : mThreads(nsnull), mRequests(nsnull),
-      mMinThreads(minThreads), mMaxThreads(maxThreads)
+      mMinThreads(minThreads), mMaxThreads(maxThreads), mShuttingDown(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -285,6 +285,7 @@ nsThreadPool::Init(PRUint32 stackSize,
 
 nsThreadPool::~nsThreadPool()
 {
+    Shutdown();
     if (mThreads) {
         // clean up the worker threads
         PRUint32 count = mThreads->Count();
@@ -311,10 +312,14 @@ nsThreadPool::DispatchRequest(nsIRunnable* runnable)
     nsresult rv;
     PR_EnterMonitor(mRequestMonitor);
 
-    rv = mRequests->AppendElement(runnable);
-    if (NS_SUCCEEDED(rv))
-        PR_Notify(mRequestMonitor);
-    
+    if (mShuttingDown) {
+        rv = NS_ERROR_FAILURE;
+    }
+    else {
+        rv = mRequests->AppendElement(runnable);
+        if (NS_SUCCEEDED(rv))
+            PR_Notify(mRequestMonitor);
+    }
     PR_ExitMonitor(mRequestMonitor);
     return rv;
 }
@@ -330,11 +335,15 @@ nsThreadPool::GetRequest()
     PR_EnterMonitor(mRequestMonitor);
 
     while (mRequests->Count() == 0) {
+        if (mShuttingDown) {
+            rv = NS_ERROR_FAILURE;
+            break;
+        }
 //        printf("thread %x waiting\n", PR_CurrentThread());
         PRStatus status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
-        if (status != PR_SUCCESS) {
+        if (status != PR_SUCCESS || mShuttingDown) {
             rv = NS_ERROR_FAILURE;
-            break;        // interrupted -- quit
+            break;
         }
     }
 
@@ -351,7 +360,7 @@ nsThreadPool::GetRequest()
 }
 
 NS_IMETHODIMP
-nsThreadPool::Join()
+nsThreadPool::Shutdown()
 {
     nsresult rv = NS_OK;
     PRUint32 count;
@@ -368,29 +377,21 @@ nsThreadPool::Join()
     }
     PR_CExitMonitor(this);
     if (NS_FAILED(rv)) return rv;
+
+    mShuttingDown = PR_TRUE;
     
     // then interrupt the threads and join them
-    Interrupt();
     count = mThreads->Count();
     for (i = 0; i < count; i++) {
-        nsIThread* thread = (nsIThread*)((*mThreads)[i]);
-        rv = thread->Join();
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsThreadPool::Interrupt()
-{
-    nsresult rv = NS_OK;
-    PRUint32 count = mThreads->Count();
-    for (PRUint32 i = 0; i < count; i++) {
-        nsIThread* thread = (nsIThread*)((*mThreads)[i]);
+        nsIThread* thread = (nsIThread*)((*mThreads)[0]);
         rv = thread->Interrupt();
         if (NS_FAILED(rv)) return rv;
+        rv = thread->Join();
+        if (NS_FAILED(rv)) return rv;
+        rv = mThreads->RemoveElementAt(0);
+        if (NS_FAILED(rv)) return rv;
     }
+
     return rv;
 }
 
@@ -456,6 +457,7 @@ nsThreadPoolRunnable::Run()
         PR_CNotify(mPool);
         PR_CExitMonitor(mPool);
     }
+//    printf("quitting %x, thread %x\n", this, PR_CurrentThread());
     return rv;
 }
 
