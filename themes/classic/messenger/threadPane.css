@@ -152,7 +152,7 @@ treechildren:-moz-tree-image(junkStatusCol, junk) {
 }
 
 treechildren:-moz-tree-image(junkStatusCol, notjunk) {
-  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
   padding-left: 0px;
   padding-right: 4px;
 }
