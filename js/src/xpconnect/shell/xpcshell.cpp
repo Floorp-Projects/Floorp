@@ -223,11 +223,9 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         filename = JS_GetStringBytes(str);
         script = JS_CompileFile(cx, obj, filename);
         if (!script)
-            ok = JS_FALSE;
-        else {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
-            JS_DestroyScript(cx, script);
-        }
+            return JS_FALSE;
+        ok = JS_ExecuteScript(cx, obj, script, &result);
+        JS_DestroyScript(cx, script);
         if (!ok)
             return JS_FALSE;
     }
@@ -342,6 +340,29 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+CompileFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    JSScript *script;
+    JSObject *scrobj;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
+    script = JS_CompileFile(cx, obj, JS_GetStringBytes(str));
+    if (!script)
+        return JS_FALSE;
+    scrobj = JS_NewScriptObject(cx, script);
+    if (!scrobj) {
+        JS_DestroyScript(cx, script);
+        return JS_FALSE;
+    }
+    *rval = OBJECT_TO_JSVAL(scrobj);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0},
     {"load",            Load,           1},
@@ -352,6 +373,7 @@ static JSFunctionSpec glob_functions[] = {
     {"dump",            Dump,           1},
     {"gc",              GC,             0},
     {"clear",           Clear,          1},
+    {"compileFile",     CompileFile,    1},
     {0}
 };
 
