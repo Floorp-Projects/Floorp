@@ -584,7 +584,7 @@
     }</programlisting>
       This says that only users in the group "quality_assurance" can change
       the QA Contact field of a bug. Getting more weird:
-      <programlisting>    if (($field eq "priority") &&
+      <programlisting><![CDATA[    if (($field eq "priority") &&
         (Bugzilla->user->email =~ /.*\@example\.com$/))
     {
         if ($oldvalue eq "P1") {
@@ -593,7 +593,7 @@
         else {
             return 0;
         }
-    }</programlisting>
+    }]]></programlisting>
       This says that if the user is trying to change the priority field,
       and their email address is @example.com, they can only do so if the
       old value of the field was "P1". Not very useful, but illustrative.
