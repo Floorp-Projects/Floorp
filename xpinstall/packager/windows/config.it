@@ -7,6 +7,7 @@
 ;            values.
 Run Mode=Normal
 
+Company Name=$CompanyName$
 Product Name=$ProductName$
 
 ; Destination Path values:
@@ -90,8 +91,7 @@ Setup Title2 Font Size=
 Setup Title2 Font Color=
 Setup Title2 Font Shadow=TRUE
 
-; HKey:              valid decryptable setup keys are [Mozilla Seamonkey CurrentVersion]
-;                    and [Mozilla Seamonkey CurrentVersion].
+; HKey:              valid decryptable setup key is [Product CurrentVersion]
 ; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
 ; Contains Filename: tells setup that the path contains filename needed to be removed before
 ;                    using it as a path.
@@ -99,7 +99,7 @@ Setup Title2 Font Shadow=TRUE
 ;
 [Locate Previous Product Path0]
 HRoot=HKEY_LOCAL_MACHINE
-HKey=[Mozilla Seamonkey CurrentVersion]\Main
+HKey=[Product CurrentVersion]\Main
 Name=Install Directory
 Decrypt HKey=TRUE
 Contains Filename=FALSE
@@ -121,7 +121,7 @@ Message2=Click Delete to delete the directory when installation begins. If you p
 [Dialog Welcome]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=Welcome
+Title=$ProductName$ Setup - Welcome
 ;*** LOCALIZE ME BABY ***
 Message0=Welcome to %s Setup.
 ;*** LOCALIZE ME BABY ***
@@ -132,7 +132,7 @@ Message2=Click Cancel to quit Setup and then close any programs you have running
 [Dialog License]
 Show Dialog=FALSE
 ;*** LOCALIZE ME BABY ***
-Title=Software License Agreement
+Title=$ProductName$ Setup - Software License Agreement
 License File=license.txt
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
@@ -142,7 +142,7 @@ Message1=Click Accept if you accept the terms of the preceeding license agreemen
 [Dialog Setup Type]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=Setup Type
+Title=$ProductName$ Setup - Setup Type
 ;*** LOCALIZE ME BABY ***
 Message0=Click the type of setup you prefer, then click Next.
 Readme Filename=readme.txt
@@ -209,7 +209,7 @@ C7=Component En US lang pack
 [Dialog Select Components]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=Select Components
+Title=$ProductName$ Setup - Select Components
 ;*** LOCALIZE ME BABY ***
 Message0=The browser is always installed.  Select or clear the additional components you want to install.
 
@@ -217,7 +217,7 @@ Message0=The browser is always installed.  Select or clear the additional compon
 ; do not localize this part because it is not currently being used
 [Dialog Windows Integration]
 Show Dialog=FALSE
-Title=Windows Integration
+Title=$ProductName$ Setup - Windows Integration
 Message0=Check the Mozilla Preference options you would like Setup to perform.
 Message1=These settings allow you to set default Internet preferences for browsing and searching.  They affect browsers installed on your machine, including Mozilla Communicator and Microsoft Internet Explorer.
 
@@ -242,7 +242,7 @@ Archive=
 [Dialog Program Folder]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=Select Program Folder
+Title=$ProductName$ Setup - Select Program Folder
 ;*** LOCALIZE ME BABY ***
 Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
@@ -263,7 +263,7 @@ Proxy Port=
 [Dialog Start Install]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=Start Install
+Title=$ProductName$ Setup - Start Install
 ;*** LOCALIZE ME BABY ***
 Message Install=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
 ;*** LOCALIZE ME BABY ***
@@ -571,9 +571,9 @@ Timing=pre smartupdate
 
 [Windows Registry1]
 Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ $UserAgentShort$
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=DisplayName
-Name Value=$ProductName$ $UserAgentShort$
+Name Value=$ProductName$ ($UserAgentShort$)
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
@@ -584,7 +584,7 @@ Timing=post smartupdate
 
 [Windows Registry2]
 Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ $UserAgentShort$
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=UninstallString
 ;*** LOCALIZE ME BABY ***
 Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"

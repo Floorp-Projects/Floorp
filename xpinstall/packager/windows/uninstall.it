@@ -7,6 +7,7 @@
 ;            values.
 Run Mode=Normal
 
+Company Name=$CompanyName$
 Product Name=$ProductName$
 
 ; Valid Path values:
@@ -46,11 +47,11 @@ Product Name=$ProductName$
 ; This provides information on where in the Windows Registry to locate the Uninstall log files
 ;
 Main Root Key=HKEY_LOCAL_MACHINE
-Main Key=[WinRegKey Mozilla Seamonkey]
+Main Key=[Product WinRegKey]
 Decrypt Main Key=TRUE
 
 Root Key=HKEY_LOCAL_MACHINE
-Key=[Mozilla Seamonkey CurrentVersion]\Uninstall
+Key=[Product CurrentVersion]\Uninstall
 Decrypt Key=TRUE
 
 Uninstall Filename=$UninstallFile$
@@ -58,7 +59,7 @@ Uninstall Filename=$UninstallFile$
 
 [Dialog Uninstall]
 Show Dialog=TRUE
-Title=$ProductName$ $UserAgentShort$ Uninstaller
+Title=$ProductName$ Uninstaller
 Message0=This will uninstall %s from your system.  Click Uninstall to begin uninstallation.
 
 ;[Check Instance0]
