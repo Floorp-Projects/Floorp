@@ -44,6 +44,8 @@ public:
   NS_IMETHOD    NotifySelectionChanged();
   
   // nsIDocumentStateListener interface
+  NS_IMETHOD  	NotifyDocumentCreated();
+  NS_IMETHOD  	NotifyDocumentWillBeDestroyed();
   NS_IMETHOD    NotifyDocumentStateChanged(PRBool aNowDirty);
   
 protected:
@@ -57,7 +59,7 @@ protected:
   nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
 
   nsresult      UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat);
-
+  nsresult      UpdateListState(const char* observerName, const char* tagName);
   nsresult      UpdateTextState(const char* tagName, const char* observerName, const char* attributeName, PRInt8& ioState);
   nsresult      UpdateFontFace(const char* observerName, const char* attributeName, nsString& ioFontString);
   nsresult      UpdateDirtyState(PRBool aNowDirty);
@@ -77,6 +79,7 @@ protected:
   
   nsString      mParagraphFormat;
   nsString      mFontString;
+  nsString      mListTag;				// contains "" for none, "ol" or "ul"
   
 };
 
