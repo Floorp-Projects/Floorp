@@ -707,7 +707,7 @@ FileCount=$FileCount$
 ; This particular value will set the checkbox checked [number]% of the time.
 ; This logic is done only during the initialization of setup, not in any
 ; particular dialog.
-Random Install Percentage=100
+Random Install Percentage=20
 
 [Core]
 Source=[XPI PATH]\xpcom.xpi
