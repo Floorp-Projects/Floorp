@@ -247,6 +247,7 @@ PRLogModuleInfo* nsPluginLogging::gNPPLog = nsnull;
 PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 #endif
 
+#define BRAND_PROPERTIES_URL "chrome://global/brand.properties"
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
 #define PLUGIN_REGIONAL_URL "chrome://global-region/locale/region.properties"
 
@@ -6141,6 +6142,15 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
       return rv;
 
     nsCOMPtr<nsIStringBundle> bundle;
+    rv = strings->CreateBundle(BRAND_PROPERTIES_URL, getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsXPIDLString brandName;
+    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                 getter_Copies(brandName))))
+      return rv;
+
     rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle));
     if (NS_FAILED(rv))
       return rv;
@@ -6150,8 +6160,9 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
                                  getter_Copies(title))))
       return rv;
 
-    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(),
-                                 getter_Copies(message))))
+    const PRUnichar *formatStrings[] = { brandName.get() };
+    if (NS_FAILED(rv = bundle->FormatStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(),
+                                 formatStrings, 1, getter_Copies(message))))
       return rv;
 
     if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(),
