@@ -449,9 +449,7 @@ NS_IMETHODIMP nsPref::StartUpWith(nsFileSpec* inFile)
             }
         }
 
-#if !defined(XP_PC) && !defined(XP_OS2)
         ok = pref_InitInitialObjects();
-#endif
     }
     else 
         JS_BeginRequest(gMochaContext);

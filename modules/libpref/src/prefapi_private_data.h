@@ -47,10 +47,8 @@ PR_EXTERN(PrefResult) pref_saveLIPref(PLHashEntry *he, int i, void *arg);
 PR_EXTERN(PRBool) pref_VerifyLockFile(char* buf, long buflen);
 PR_EXTERN(PrefResult) PREF_SetSpecialPrefsLocal(void);
 PR_EXTERN(int) pref_CompareStrings(const void *v1, const void *v2);
-/* -- Platform specific function extern */
-#if !defined(XP_WIN) && !defined(XP_OS2)
 extern JSBool pref_InitInitialObjects(void);
-#endif
+
 NSPR_END_EXTERN_C
 
 /* Possibly exportable */

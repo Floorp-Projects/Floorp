@@ -451,9 +451,7 @@ PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
 		    }
 		}
 
-#if !defined(XP_PC) && !defined(XP_OS2)
 		ok = pref_InitInitialObjects();
-#endif
 	}
 	else 
 	    JS_BeginRequest(gMochaContext);

@@ -66,11 +66,6 @@ typedef enum {
 	PREF_PROFILE_UPGRADE	        = 2
 } PrefResult;
 
-#if defined(XP_PC) 
-// horrible pre-declaration...so kill me.
-PrefResult pref_InitInitialObjects(JSContext *js_context,JSObject *js_object);
-#endif
-
 /*
 // <font color=blue>
 // The Init function sets up of the JavaScript preference context and creates
