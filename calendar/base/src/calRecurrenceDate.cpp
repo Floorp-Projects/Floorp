@@ -210,7 +210,7 @@ calRecurrenceDate::GetIcalProperty(calIIcalProperty **aProp)
     icalproperty_set_value(dateprop, v);
 
     calIIcalProperty *icp = new calIcalProperty(dateprop, nsnull);
-    if (icp) {
+    if (!icp) {
         icalproperty_free(dateprop);
         return NS_ERROR_FAILURE;
     }
