@@ -441,8 +441,32 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), (void **)&m_runningUrl);
-		if (NS_SUCCEEDED(rv) && m_runningUrl && !m_transport /* and we don't have a transport yet */)
+		nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
+                                           (void **)&m_runningUrl);
+        if (NS_FAILED(rv)) return;
+
+        nsCOMPtr<nsIMsgIncomingServer> aServer;
+        rv = m_runningUrl->GetServer(getter_AddRefs(aServer));
+        if (NS_FAILED(rv)) return;
+
+        char *username = nsnull;
+        const char* hostname = nsnull;
+        aServer->GetUserName(&username);
+        m_runningUrl->GetHost(&hostname);
+
+        if (PL_strcmp(GetImapHostName(), hostname) ||
+            PL_strcmp(GetImapUserName(), username))
+        {
+            // ** jt - we might want to check for the port number too.
+            // wrong hostname and username, must be reusing the connection for
+            // different account -- *** jt
+            m_transport = null_nsCOMPtr();
+            m_outputStream = null_nsCOMPtr();
+            m_outputConsumer = null_nsCOMPtr();
+        }
+        PR_FREEIF(username);
+
+		if ( m_runningUrl && !m_transport /* and we don't have a transport yet */)
 		{
 			// extract the file name and create a file transport...
 			PRUint32 port = IMAP_PORT;
@@ -952,7 +976,7 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool &aIsConnectionBusy,
 		aIsConnectionBusy = PR_TRUE;
     if (GetServerStateParser().GetSelectedMailboxName() && 
         PL_strcasecmp(GetServerStateParser().GetSelectedMailboxName(),
-                  "Inbox"))
+                  "Inbox") == 0)
         isInboxConnection = PR_TRUE;
         
 	NS_UNLOCK_INSTANCE();
