@@ -75,7 +75,5 @@ Contributor(s):
 
   <!-- used to store the find text -->
   <data style="display:none;" id="fBLT" label="&findButton.label;" accesskey="&findButton.accesskey;"/>
-
-  <separator/>
   
 </dialog>
