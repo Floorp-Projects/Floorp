@@ -66,6 +66,11 @@
 #define CAL_RECURRENCEDATESET_CONTRACTID \
     "@mozilla.org/calendar/recurrence-date-set;1"
 
+#define CAL_RECURRENCEDATE_CID \
+    { 0x99706e71, 0x3df5, 0x475e, { 0x84, 0xf8, 0x0f, 0xc5, 0x21, 0x1f, 0x92, 0x09 } }
+#define CAL_RECURRENCEDATE_CONTRACTID \
+    "@mozilla.org/calendar/recurrence-date;1"
+
 /* JS -- Update these from calItemModule.js */
 #define CAL_ITEM_OCCURRENCE_CID \
     { 0xbad672b3, 0x30b8, 0x4ecd, { 0x80, 0x75, 0x71, 0x53, 0x31, 0x3d, 0x1f, 0x2c } }

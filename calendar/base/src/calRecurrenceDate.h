@@ -1,4 +1,4 @@
-/* -*- Mode: C++; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-off: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Shaver <mike.x.shaver@oracle.com>
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,48 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef CALRECURRENCEDATE_H_
+#define CALRECURRENCEDATE_H_
+
 #include "nsCOMPtr.h"
-#include "calIICSService.h"
 
-#include "nsInterfaceHashtable.h"
+#include "calIDateTime.h"
+#include "calIRecurrenceDate.h"
 
-extern "C" {
-#   include "ical.h"
-}
-
-class calIIcalComponent;
-class calIcalComponent;
-
-class calICSService : public calIICSService
+class calRecurrenceDate : public calIRecurrenceDate
 {
 public:
-    calICSService();
-    virtual ~calICSService() { }
-    
+    calRecurrenceDate();
+
     NS_DECL_ISUPPORTS
-    NS_DECL_CALIICSSERVICE
+
+    NS_DECL_CALIRECURRENCEITEM
+
+    NS_DECL_CALIRECURRENCEDATE
 protected:
-    nsInterfaceHashtable<nsCStringHashKey, calIIcalComponent> mTzHash;
+    PRBool mImmutable;
+    PRBool mIsNegative;
+
+    nsCOMPtr<calIDateTime> mDate;
 };
 
-class calIcalProperty : public calIIcalProperty
-{
-public:
-    calIcalProperty(icalproperty *prop, calIIcalComponent *parent) :
-        mProperty(prop), mParent(parent) { }
-    virtual ~calIcalProperty()
-    {
-        if (!mParent)
-            icalproperty_free(mProperty);
-    }
-
-    icalproperty *getIcalProperty() { return mProperty; }
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_CALIICALPROPERTY
-
-    friend class calIcalComponent;
-protected:
-    icalproperty *mProperty;
-    nsCOMPtr<calIIcalComponent> mParent;
-};
+#endif /* CALRECURRENCEDATE_H_ */

@@ -73,8 +73,10 @@ interface calIRecurrenceInfo : nsISupports
   void setRecurrenceItems (in unsigned long aCount, [array,size_is(aCount)] in calIRecurrenceItem aItems);
 
   unsigned long countRecurrenceItems ();
-  calIRecurrenceItem getRecurrenceItemAt (in unsigned long aIndex);
+  void clearRecurrenceItems ();
   void appendRecurrenceItem (in calIRecurrenceItem aItem);
+
+  calIRecurrenceItem getRecurrenceItemAt (in unsigned long aIndex);
   void deleteRecurrenceItemAt (in unsigned long aIndex);
   // inserts the item at the given index, pushing the item that was previously there forward
   void insertRecurrenceItemAt (in calIRecurrenceItem aItem, in unsigned long aIndex);
@@ -93,8 +95,4 @@ interface calIRecurrenceInfo : nsISupports
                        in calIDateTime aRangeEnd,
                        in unsigned long aMaxCount,
                        out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
-
-  // get a calIIcalProperty corresponding to the full
-  // recurrence specification (including all the items)
-  attribute calIIcalProperty icalProperty;
 };

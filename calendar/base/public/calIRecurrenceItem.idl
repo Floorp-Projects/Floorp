@@ -76,5 +76,5 @@ interface calIRecurrenceItem : nsISupports
 		       in unsigned long aMaxCount,
 		       out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
 
-  readonly attribute calIIcalProperty icalProperty;
+  attribute calIIcalProperty icalProperty;
 };

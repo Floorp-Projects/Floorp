@@ -42,6 +42,7 @@
 #include "calICSService.h"
 #include "calRecurrenceInfo.h"
 #include "calRecurrenceRule.h"
+#include "calRecurrenceDate.h"
 #include "calRecurrenceDateSet.h"
 
 #include "calBaseCID.h"
@@ -50,6 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceRule)
+NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDate)
 NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDateSet)
 
 static const nsModuleComponentInfo components[] =
@@ -70,6 +72,10 @@ static const nsModuleComponentInfo components[] =
       CAL_RECURRENCERULE_CID,
       CAL_RECURRENCERULE_CONTRACTID,
       calRecurrenceRuleConstructor },
+    { "Calendar Recurrence Date",
+      CAL_RECURRENCEDATE_CID,
+      CAL_RECURRENCEDATE_CONTRACTID,
+      calRecurrenceDateConstructor },
     { "Calendar Recurrence Date Set",
       CAL_RECURRENCEDATESET_CID,
       CAL_RECURRENCEDATESET_CONTRACTID,

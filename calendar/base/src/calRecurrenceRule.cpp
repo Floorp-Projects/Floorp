@@ -487,6 +487,9 @@ calRecurrenceRule::GetOccurrences(calIDateTime *aStartTime,
     return NS_OK;
 }
 
+/**
+ ** ical property getting/setting
+ **/
 NS_IMETHODIMP
 calRecurrenceRule::GetIcalProperty(calIIcalProperty **prop)
 {
@@ -503,3 +506,52 @@ calRecurrenceRule::GetIcalProperty(calIIcalProperty **prop)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+calRecurrenceRule::SetIcalProperty(calIIcalProperty *aProp)
+{
+    NS_ENSURE_ARG_POINTER(aProp);
+
+    if (mImmutable)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv;
+
+    // XXX we really should do some CID checking here
+    calIcalProperty *cprop = NS_STATIC_CAST(calIcalProperty *, aProp);
+    nsCAutoString propname;
+
+    rv = cprop->GetPropertyName(propname);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (propname.EqualsLiteral("RRULE"))
+        mIsNegative = PR_FALSE;
+    else if (propname.EqualsLiteral("EXRULE"))
+        mIsNegative = PR_TRUE;
+    else
+        return NS_ERROR_INVALID_ARG;
+
+    icalproperty *prop;
+    struct icalrecurrencetype icalrecur;
+
+    prop = cprop->getIcalProperty();
+
+    icalrecur = icalproperty_get_rrule(prop);
+
+    // XXX Note that we ignore the dtstart and use the one from the
+    // event, though I realize now that we shouldn't.  Ignoring
+    // dtstart makes it impossible to have multiple RRULEs on one
+    // event that start at different times (e.g. every day starting on
+    // jan 1 for 2 weeks, every other day starting on feb 1 for 2
+    // weeks).  Neither the server nor the UI supports this now,
+    // but we really ought to!
+    //struct icaltimetype icaldtstart;
+    //icaldtstrat = icalproperty_get_dtstart(prop);
+
+    if (icalrecur.count != 0)
+        mIsByCount = PR_TRUE;
+    else
+        mIsByCount = PR_FALSE;
+
+    *mIcalRecur = icalrecur;
+
+    return NS_OK;
+}

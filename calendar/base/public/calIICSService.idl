@@ -46,6 +46,9 @@ interface calIDateTime;
 
 interface calIIcalProperty;
 
+[ptr] native icalpropertyptr(void);
+[ptr] native icalcomponentptr(void);
+
 /**
  * General notes:
  *
@@ -124,6 +127,19 @@ interface calIIcalComponent : nsISupports
     calIIcalProperty getNextProperty(in AUTF8String kind);
     void addProperty(in calIIcalProperty prop);
     void removeProperty(in calIIcalProperty prop);
+
+    /**
+     * Timezones need special handling, as they must be
+     * emitted as children of VCALENDAR, but can be referenced by
+     * any sub component.  The components this expects to receive
+     * are VCALENDAR components with a single VTIMEZONE child.
+     * Adding the same TZID twice will cause the second and later
+     * adds to be ignored.  Appropriate calIIcalComponents can
+     * be obtained via the calIICSService.
+     */
+    void addTimezoneReference(in calIIcalComponent aTimezone);
+
+    [noscript,notxpcom] icalcomponentptr getIcalComponent();
 };
 
 [scriptable,uuid(17349a10-5d80-47fa-9bea-f22957357675)]
@@ -146,6 +162,7 @@ interface calIIcalProperty : nsISupports
     void removeParameter(in AUTF8String paramname);
     void clearXParameters();
 
+    [noscript,notxpcom] icalpropertyptr getIcalProperty();
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
@@ -158,4 +175,12 @@ interface calIICSService : nsISupports
     boolean isLegalParameterValue(in AUTF8String paramKind,
                                   in AUTF8String paramValue);
     */
+
+    /* Return a calIIcalComponent for the given timezone.  Note that
+     * the component returned is a VCALENDAR with a VTIMEZONE child,
+     * not the VTIMEZONE itself.
+     */
+    calIIcalComponent getTimezone(in AUTF8String tzid);
+    AUTF8String getTimezoneLatitude(in AUTF8String tzid);
+    AUTF8String getTimezoneLongitude(in AUTF8String tzid);
 };

@@ -64,6 +64,7 @@ CPPSRCS = calDateTime.cpp \
 	  calICSService.cpp \
 	  calRecurrenceInfo.cpp \
 	  calRecurrenceRule.cpp \
+	  calRecurrenceDate.cpp \
 	  calRecurrenceDateSet.cpp \
 	  $(NULL)
 

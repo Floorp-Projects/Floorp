@@ -77,6 +77,10 @@ const kCalRecurrenceDateSetContractID = "@mozilla.org/calendar/recurrence-date-s
 const kCalIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
 const CalRecurrenceDateSet = new Components.Constructor(kCalRecurrenceDateSetContractID, kCalIRecurrenceDateSet);
 
+const kCalRecurrenceDateContractID = "@mozilla.org/calendar/recurrence-date;1";
+const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
+const CalRecurrenceDate = new Components.Constructor(kCalRecurrenceDateContractID, kCalIRecurrenceDate);
+
 const kMozStorageStatementWrapperContractID = "@mozilla.org/storage/statement-wrapper;1";
 const kMozStorageStatementWrapperIID = Components.interfaces.mozIStorageStatementWrapper;
 if (kMozStorageStatementWrapperIID) {
@@ -104,6 +108,39 @@ function createStatement (dbconn, sql) {
     var wrapper = MozStorageStatementWrapper();
     wrapper.initialize(stmt);
     return wrapper;
+}
+
+function textToDate(d) {
+    var dval = parseInt(d.substr(2));
+    var date;
+    if (d[0] == 'U') {
+        // isutc
+        date = newDateTime(dval);
+    } else if (d[0] == 'L') {
+        // is local time
+        date = newDateTime(dval, true);
+    }
+    if (d[1] == 'D')
+        date.isDate = true;
+    return date;
+}
+
+function dateToText(d) {
+    var datestr;
+    if (d.isUtc) {
+        datestr = "U";
+    } else {
+        datestr = "L";
+    }
+
+    if (d.isDate) {
+        datestr += "D";
+    } else {
+        datestr += "T";
+    }
+
+    datestr += d.nativeTime;
+    return datestr;
 }
 
 // 
@@ -461,7 +498,7 @@ calStorageCalendar.prototype = {
                     if (iid == kCalIEvent) {
                         item = makeOccurrence(item, item.startDate, item.endDate);
                     } else if (iid == kCalITodo) {
-                        item = makeOccurrence(item, item.entryTime, item.entryTime);
+                        item = makeOccurrence(item, item.entryDate, item.entryDate);
                     }
                     iid = kCalIItemOccurrence;
                 }
@@ -708,7 +745,7 @@ calStorageCalendar.prototype = {
             item.stampTime = newDateTime(row.event_stamp);
             item.isAllDay = ((row.flags & CAL_ITEM_FLAG_EVENT_ALLDAY) != 0);
         } else if (row.item_type == CAL_ITEM_TYPE_TODO) {
-            item.entryTime = newDateTime(row.todo_entry);
+            item.entryDate = newDateTime(row.todo_entry);
             item.dueDate = newDateTime(row.todo_due);
             item.completedDate = newDateTime(row.todo_complete);
             item.percentComplete = row.todo_complete;
@@ -758,25 +795,20 @@ calStorageCalendar.prototype = {
 
                 var ritem = null;
 
-                if (row.recur_type == null) {
+                if (row.recur_type == null ||
+                    row.recur_type == "x-dateset")
+                {
                     ritem = new CalRecurrenceDateSet();
 
                     var dates = row.dates.split(",");
                     for (var i = 0; i < dates.length; i++) {
-                        var d = dates[i];
-                        var dval = parseInt(d.substr(2));
-                        var date;
-                        if (d[0] == 'U') {
-                            // isutc
-                            date = newDateTime(dval);
-                        } else if (d[0] == 'L') {
-                            // is local time
-                            date = newDateTime(dval, true);
-                        }
-                        if (d[1] == 'D')
-                            date.isDate = true;
+                        var date = textToDate(dates[i]);
                         ritem.addDate(date);
                     }
+                } else if (row.recur_type == "x-date") {
+                    ritem = new CalRecurrenceDate();
+                    var d = row.dates;
+                    ritem.date = textToDate(d);
                 } else {
                     ritem = new CalRecurrenceRule();
 
@@ -880,6 +912,8 @@ calStorageCalendar.prototype = {
         // for now, we just delete and insert
         // set up params before transaction
 
+        dump ("flushItem: item: " + item + "\n");
+
         if (olditem) {
             this.mDeleteItem.params.id = olditem.id;
             this.mDeleteItem.params.cal_id = this.mCalId;
@@ -911,7 +945,7 @@ calStorageCalendar.prototype = {
         } else if (item instanceof kCalITodo) {
             ip.item_type = CAL_ITEM_TYPE_TODO;
 
-            ip.todo_entry = item.entryTime.jsDate;
+            ip.todo_entry = item.entryDate.jsDate;
             ip.todo_due = item.dueDate.jsDate;
             ip.todo_completed = item.completedDate.jsDate;
             ip.todo_complete = item.percentComplete;
@@ -980,9 +1014,14 @@ calStorageCalendar.prototype = {
                     ap.item_id = item.id;
                     ap.recur_index = i;
                     ap.is_negative = ritem.isNegative;
-                    if (ritem instanceof kCalIRecurrenceDateSet) {
+                    if (ritem instanceof kCalIRecurrenceDate) {
+                        ritem = ritem.QueryInterface(kCalIRecurrenceDate);
+                        ap.recur_type = "x-date";
+                        ap.dates = dateToText(ritem.date);
+
+                    } else if (ritem instanceof kCalIRecurrenceDateSet) {
                         ritem = ritem.QueryInterface(kCalIRecurrenceDateSet);
-                        ap.recur_type = null;
+                        ap.recur_type = "x-dateset";
 
                         var rdates = ritem.getDates({});
                         var datestr = "";
@@ -990,19 +1029,7 @@ calStorageCalendar.prototype = {
                             if (j != 0)
                                 datestr += ",";
 
-                            if (rdates[j].isUtc) {
-                                datestr += "U";
-                            } else {
-                                datestr += "L";
-                            }
-
-                            if (rdates[j].isDate) {
-                                datestr += "D";
-                            } else {
-                                datestr += "T";
-                            }
-
-                            datestr += rdates[j].nativeTime;
+                            datestr += dateToText(rdates[j]);
                         }
 
                         ap.dates = datestr;

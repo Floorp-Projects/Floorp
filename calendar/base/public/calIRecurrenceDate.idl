@@ -1,4 +1,4 @@
-/* -*- Mode: C++; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Shaver <mike.x.shaver@oracle.com>
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,48 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "calIICSService.h"
+#include "nsISupports.idl"
 
-#include "nsInterfaceHashtable.h"
+#include "calIRecurrenceItem.idl"
 
-extern "C" {
-#   include "ical.h"
-}
+interface calIItemBase;
+interface calIDateTime;
+interface calIItemOccurrence;
 
-class calIIcalComponent;
-class calIcalComponent;
+interface calIIcalProperty;
 
-class calICSService : public calIICSService
+// an interface implementing a RDATE or EXDATE
+
+[scriptable, uuid(c5b331d4-b470-475b-9497-db9e2731e559)]
+interface calIRecurrenceDate : calIRecurrenceItem
 {
-public:
-    calICSService();
-    virtual ~calICSService() { }
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_CALIICSSERVICE
-protected:
-    nsInterfaceHashtable<nsCStringHashKey, calIIcalComponent> mTzHash;
-};
-
-class calIcalProperty : public calIIcalProperty
-{
-public:
-    calIcalProperty(icalproperty *prop, calIIcalComponent *parent) :
-        mProperty(prop), mParent(parent) { }
-    virtual ~calIcalProperty()
-    {
-        if (!mParent)
-            icalproperty_free(mProperty);
-    }
-
-    icalproperty *getIcalProperty() { return mProperty; }
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_CALIICALPROPERTY
-
-    friend class calIcalComponent;
-protected:
-    icalproperty *mProperty;
-    nsCOMPtr<calIIcalComponent> mParent;
+  //
+  // recurrence date set
+  //
+  attribute calIDateTime date;
 };

@@ -274,8 +274,38 @@ calRecurrenceDateSet::GetOccurrences(calIDateTime *aStartTime,
     return NS_OK;
 }
 
+/**
+ ** ical property getting/setting
+ **/
 NS_IMETHODIMP
 calRecurrenceDateSet::GetIcalProperty(calIIcalProperty **aProp)
+{
+    icalproperty *dateset = nsnull;
+
+    for (int i = 0; i < mDates.Count(); i++) {
+        if (mIsNegative)
+            dateset = icalproperty_new(ICAL_EXDATE_PROPERTY);
+        else
+            dateset = icalproperty_new(ICAL_RDATE_PROPERTY);
+
+        struct icaltimetype icalt;
+        mDates[i]->ToIcalTime(&icalt);
+
+        icalvalue *v;
+
+        if (icalt.is_date)
+            v = icalvalue_new_date(icalt);
+        else
+            v = icalvalue_new_datetime(icalt);
+
+        icalproperty_set_value(dateset, v);
+    }
+    
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+calRecurrenceDateSet::SetIcalProperty(calIIcalProperty *aProp)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

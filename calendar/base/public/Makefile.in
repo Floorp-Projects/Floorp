@@ -54,6 +54,7 @@ XPIDLSRCS	= calIAttachment.idl \
 		  calIICSService.idl \
 		  calIItemBase.idl   \
 		  calIRecurrenceInfo.idl \
+		  calIRecurrenceDate.idl \
 		  calIRecurrenceDateSet.idl \
 		  calIRecurrenceItem.idl \
 		  calIRecurrenceRule.idl \

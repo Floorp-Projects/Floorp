@@ -192,6 +192,13 @@ calRecurrenceInfo::InsertRecurrenceItemAt (calIRecurrenceItem *aItem, PRUint32 a
     return NS_OK;
 }
 
+NS_IMETHODIMP
+calRecurrenceInfo::ClearRecurrenceItems ()
+{
+    mRecurrenceItems.Clear();
+    return NS_OK;
+}
+
 //
 // recurrence calculation
 //
@@ -388,16 +395,4 @@ calRecurrenceInfo::GetOccurrences (calIDateTime *aRangeStart,
     }
     *aCount = count;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::GetIcalProperty(calIIcalProperty **aProp)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetIcalProperty(calIIcalProperty *aProp)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }

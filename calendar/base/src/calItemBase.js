@@ -41,6 +41,22 @@
 // calItemBase.js
 //
 
+const kCalRecurrenceInfoContractID = "@mozilla.org/calendar/recurrence-info;1";
+const kCalIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
+const CalRecurrenceInfo = new Components.Constructor(kCalRecurrenceInfoContractID, kCalIRecurrenceInfo);
+
+const kCalRecurrenceRuleContractID = "@mozilla.org/calendar/recurrence-rule;1";
+const kCalIRecurrenceRule = Components.interfaces.calIRecurrenceRule;
+const CalRecurrenceRule = new Components.Constructor(kCalRecurrenceRuleContractID, kCalIRecurrenceRule);
+
+const kCalRecurrenceDateSetContractID = "@mozilla.org/calendar/recurrence-date-set;1";
+const kCalIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
+const CalRecurrenceDateSet = new Components.Constructor(kCalRecurrenceDateSetContractID, kCalIRecurrenceDateSet);
+
+const kCalRecurrenceDateContractID = "@mozilla.org/calendar/recurrence-date;1";
+const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
+const CalRecurrenceDate = new Components.Constructor(kCalRecurrenceDateContractID, kCalIRecurrenceDate);
+
 const ICAL = Components.interfaces.calIIcalComponent;
 
 function calItemBase() { }
@@ -314,6 +330,34 @@ calItemBase.prototype = {
         var gen = icalcomp.getFirstProperty("X-MOZILLA-GENERATION");
         if (gen)
             this.mGeneration = parseInt(gen.stringValue);
+
+        // find recurrence properties
+        var rec = null;
+        for (var recprop = icalcomp.getFirstProperty("ANY");
+             recprop;
+             recprop = icalcomp.getNextProperty("ANY"))
+        {
+            var ritem = null;
+            if (recprop.propertyName == "RRULE" ||
+                recprop.propertyName == "EXDATE")
+            {
+                ritem = new CalRecurrenceRule();
+            } else if (recprop.propertyName == "RDATE" ||
+                       recprop.propertyName == "EXDATE")
+            {
+                ritem = new CalRecurrenceDate();
+            } else {
+                continue;
+            }
+
+            if (!rec) {
+                rec = new CalRecurrenceInfo();
+                rec.initialize(this);
+            }
+
+            rec.appendRecurrenceItem(ritem);
+        }
+        this.mRecurrenceInfo = rec;
     },
 
     importUnpromotedProperties: function (icalcomp, promoted) {
@@ -344,8 +388,12 @@ calItemBase.prototype = {
             genprop.stringValue = String(this.mGeneration);
             icalcomp.addProperty(genprop);
         }
-        if (this.mRecurrenceInfo)
-            icalcomp.addProperty(this.mRecurrenceInfo.icalProperty);
+        if (this.mRecurrenceInfo) {
+            var ritems = this.mRecurrenceInfo.getRecurrenceItems({});
+            for (i in ritems) {
+                icalcomp.addProperty(ritems[i].icalProperty);
+            }
+        }
     },
     
 };

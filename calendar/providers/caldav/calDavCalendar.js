@@ -138,7 +138,7 @@ calDavCalendar.prototype = {
     addItem: function (aItem, aListener) {
 
         if (aItem.id == null && aItem.isMutable)
-            aItem.id = "uuid:" + (new Date()).getTime();
+            aItem.id = "uuid" + (new Date()).getTime();
 
         if (aItem.id == null) {
             if (aListener)
@@ -469,13 +469,13 @@ calDavCalendar.prototype = {
                 if (itemStartTime <= endTime) {
                     // figure out if there are recurrences here we care about
                     if (itemReturnOccurrences && item.recurrenceInfo)
-                        {
-                            // there might be some recurrences here that we need to handle
-                            var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, {});
-                            for (i = 0; i < recs.length; i++) {
-                                itemsFound.push(recs[i]);
-                            }
-                        } else if (itemEndTime >= startTime) {
+                    {
+                        // there might be some recurrences here that we need to handle
+                        var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
+                        for (var i = 0; i < recs.length; i++) {
+                            itemsFound.push(recs[i]);
+                        }
+                    } else if (itemEndTime >= startTime) {
                         // no occurrences
                         if (itemReturnOccurrences)
                             itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
