@@ -130,9 +130,8 @@ nsShouldIgnoreFile(nsString& name)
 
   PRInt32 len = name.Length();
 
-#if defined (XP_PC) || defined (XP_MAC) 
   // don't add summary files to the list of folders;
-  //don't add popstate files to the list either, or rules (sort.dat). 
+  // don't add popstate files to the list either, or rules (sort.dat). 
   if ((len > 4 && name.RFind(".snm", PR_TRUE) == len - 4) ||
       name.EqualsIgnoreCase("popstate.dat") ||
       name.EqualsIgnoreCase("sort.dat") ||
@@ -140,7 +139,7 @@ nsShouldIgnoreFile(nsString& name)
       name.EqualsIgnoreCase("filters.js") ||
       name.RFind(".toc", PR_TRUE) == len - 4)
     return PR_TRUE;
-#endif
+
   if ((len > 4 && name.RFind(".sbd", PR_TRUE) == len - 4) ||
 		(len > 4 && name.RFind(".msf", PR_TRUE) == len - 4))
 	  return PR_TRUE;

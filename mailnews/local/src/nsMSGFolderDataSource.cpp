@@ -187,30 +187,6 @@ static const char* NameFromPathname(const char* pathname)
   return pathname;
 }
 
-static PRBool ShouldIgnoreFile (const char *name)
-{
-  if (name[0] == '.' || name[0] == '#' || name[PL_strlen(name) - 1] == '~')
-    return PR_TRUE;
-
-  if (!PL_strcasecmp (name, "rules.dat"))
-    return PR_TRUE;
-
-#if defined (XP_PC) || defined (XP_MAC) 
-  // don't add summary files to the list of folders;
-  //don't add popstate files to the list either, or rules (sort.dat). 
-  if ((PL_strlen(name) > 4 &&
-      !PL_strcasecmp(name + PL_strlen(name) - 4, ".snm")) ||
-      !PL_strcasecmp(name, "popstate.dat") ||
-      !PL_strcasecmp(name, "sort.dat") ||
-      !PL_strcasecmp(name, "mailfilt.log") ||
-      !PL_strcasecmp(name, "filters.js") ||
-      !PL_strcasecmp(name + PL_strlen(name) - 4, ".toc"))
-      return PR_TRUE;
-#endif
-
-  return PR_FALSE;
-}
-
 nsMSGFolderDataSource::nsMSGFolderDataSource():
   mURI(nsnull),
   mObservers(nsnull),
