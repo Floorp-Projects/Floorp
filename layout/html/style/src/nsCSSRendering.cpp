@@ -2657,7 +2657,10 @@ RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRIn
 {
 PRInt32 width;
 
+#ifdef DEBUG_dcone
   printf("Starting Button\n");
+#endif
+
   width = aLeft+aWidth;
 
   if( aRadius > (aWidth>>1) )
