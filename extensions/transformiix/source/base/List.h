@@ -32,6 +32,7 @@
 
 #include "baseutils.h"
 #include "TxObject.h"
+#include "txError.h"
 
 class txListIterator;
 
@@ -69,17 +70,22 @@ public:
     /**
      * Adds the given Object to the specified position in the list
     **/
-    void insert(int index, void* objPtr);
+    nsresult insert(int index, void* objPtr);
 
     /**
      * Adds the given Object to the list
     **/
-    void add(void* objPtr);
+    nsresult add(void* objPtr);
 
     /**
      * Removes the given Object pointer from the list
     **/
     void* remove(void* objPtr);
+    
+    /*
+     * Removes all the objects from the list
+     */
+    void clear();
 
 
 protected:
@@ -104,9 +110,8 @@ private:
       ListItem* lastItem;
       PRInt32 itemCount;
 
-      void insertAfter(void* objPtr, ListItem* sItem);
-      void insertBefore(void* objPtr, ListItem* sItem);
-
+      nsresult insertAfter(void* objPtr, ListItem* sItem);
+      nsresult insertBefore(void* objPtr, ListItem* sItem);
 };
 
 
@@ -134,7 +139,7 @@ public:
      * based on the current position within the txList
      * @param objPtr the Object pointer to add to the list
     **/
-    void addAfter(void* objPtr);
+    nsresult addAfter(void* objPtr);
 
     /**
      * Adds the Object pointer to the txList pointed to by this txListIterator.
@@ -142,7 +147,7 @@ public:
      * based on the current position within the txList
      * @param objPtr the Object pointer to add to the list
     **/
-    void addBefore(void* objPtr);
+    nsresult addBefore(void* objPtr);
 
     /**
      * Returns true if a sucessful call to the next() method can be made

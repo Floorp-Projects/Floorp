@@ -85,6 +85,16 @@ void String::append(const String& aSource)
   mLength += aSource.mLength;
 }
 
+void String::append(const UNICODE_CHAR* aSource, PRUint32 aLength)
+{
+  if (!ensureCapacity(aLength)) {
+    return;
+  }
+  memcpy(&mBuffer[mLength], aSource,
+         aLength * sizeof(UNICODE_CHAR));
+  mLength += aLength;
+}
+
 void String::insert(PRUint32 aOffset, UNICODE_CHAR aSource)
 {
   if (!ensureCapacity(1)) {
@@ -375,8 +385,8 @@ ostream& operator<<(ostream& aOutput, const String& aSource)
 
 // XXX DEPRECATED
 String::String(PRUint32 aSize) : mBuffer(0),
-                                        mBufferLength(0),
-                                        mLength(0)
+                                 mBufferLength(0),
+                                 mLength(0)
 {
   ensureCapacity(aSize);
 }
@@ -435,4 +445,19 @@ MBool String::isEqual(const char* aData) const
     }
   }
   return MB_TRUE;
+}
+
+NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2(const char* aSource)
+{
+  NS_ASSERTION(aSource, "can't convert a null to UCS2");
+
+  PRUint32 length = strlen(aSource);
+  if (!ensureCapacity(length)) {
+    return;
+  }
+  PRUint32 counter;
+  for (counter = 0; counter < length; ++counter) {
+    mBuffer[counter] = (UNICODE_CHAR)aSource[counter];
+  }
+  mLength = length;
 }

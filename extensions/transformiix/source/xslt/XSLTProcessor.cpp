@@ -48,7 +48,7 @@
 #include "XMLUtils.h"
 #include "XMLDOMUtils.h"
 #include "txNodeSorter.h"
-#include "Numbering.h"
+#include "txXSLTNumber.h"
 #include "Tokenizer.h"
 #include "txURIUtils.h"
 #include "txAtoms.h"
@@ -1499,7 +1499,8 @@ void XSLTProcessor::processAction(Node* aNode,
     // xsl:number
     else if (localName == txXSLTAtoms::number) {
         String result;
-        Numbering::doNumbering(actionElement, result, aPs);
+        // XXX ErrorReport, propagate result from ::createNumber
+        txXSLTNumber::createNumber(actionElement, aPs, result);
         NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
         mResultHandler->characters(result);
     }
