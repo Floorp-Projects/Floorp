@@ -895,15 +895,9 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
 
     if (isCollapsed)
     {
-      // efficiency hack.  we cache prior results for being collapsed in a given text node.
-      // this speeds up typing.  Note that other parts of the editor code have to clear out 
-      // this cache after certain actions.
       range->GetStartContainer(getter_AddRefs(collapsedNode));
       if (!collapsedNode) return NS_ERROR_FAILURE;
-/*    // refresh the cache if we need to
-      if (collapsedNode != mCachedNode) CacheInlineStyles(collapsedNode);
-      // cache now current, use it!  But override it with typeInState results if any...
-*/    PRBool isSet, theSetting;
+      PRBool isSet, theSetting;
       if (aAttribute)
       {
         nsString tString(*aAttribute); //MJUDGE SCC NEED HELP
@@ -923,52 +917,13 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         return NS_OK;
       }
       nsCOMPtr<nsIDOMNode> resultNode;
-      IsTextPropertySetByContent(collapsedNode, aProperty, 0, 0, isSet, getter_AddRefs(resultNode));
+      IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue, 
+                                 isSet, getter_AddRefs(resultNode), outValue);
       *aFirst = *aAny = *aAll = isSet;
       return NS_OK;
-      /*
-      if (aProperty == mBoldAtom.get())
-      {
-        mTypeInState->GetTypingState(isSet, theSetting, aProperty);
-        if (isSet) 
-        {
-          *aFirst = *aAny = *aAll = theSetting;
-        }
-        else
-        {
-          *aFirst = *aAny = *aAll = mCachedBoldStyle;
-        }
-        return NS_OK;
-      }
-      else if (aProperty == mItalicAtom.get())
-      {
-        mTypeInState->GetTypingState(isSet, theSetting, aProperty);
-        if (isSet) 
-        {
-          *aFirst = *aAny = *aAll = theSetting;
-        }
-        else
-        {
-          *aFirst = *aAny = *aAll = mCachedItalicStyle;
-        }
-        return NS_OK;
-      }
-      else if (aProperty == mUnderlineAtom.get())
-      {
-        mTypeInState->GetTypingState(isSet, theSetting, aProperty);
-        if (isSet) 
-        {
-          *aFirst = *aAny = *aAll = theSetting;
-        }
-        else
-        {
-          *aFirst = *aAny = *aAll = mCachedUnderlineStyle;
-        }
-        return NS_OK;
-      } */
     }
 
-    // either non-collapsed selection or no cached value: do it the hard way
+    // non-collapsed selection
     nsCOMPtr<nsIContentIterator> iter;
     iter = do_CreateInstance(kCContentIteratorCID);
     if (!iter) return NS_ERROR_NULL_POINTER;
