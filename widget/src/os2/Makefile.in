@@ -46,8 +46,6 @@ CPPSRCS		= \
 		nsDirPicker.cpp \
 		nsFSTree.cpp \
 		nsFilePicker.cpp \
-		nsFontRetrieverService.cpp \
-		nsFontSizeIterator.cpp \
 		nsFrameWindow.cpp \
 		nsLookAndFeel.cpp \
 		nsModule.cpp \

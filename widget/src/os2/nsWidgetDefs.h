@@ -120,7 +120,6 @@ static nsUconvInfo gUconvInfo[15  /* eCharSet_COUNT from nsFontMetricsOS2.cpp */
   { "JOHAB",       1361, NULL }
 };
 
-class nsIFontRetrieverService;
 class nsDragService;
 class nsIAppShell;
 

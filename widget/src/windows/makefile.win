@@ -31,8 +31,6 @@ CPPSRCS =              \
 	Accessible.cpp      \
 	SimpleDOMNode.cpp      \
 !endif
-	nsFontRetrieverService.cpp      \
-	nsFontSizeIterator.cpp      \
 	nsNativeDragTarget.cpp      \
 	nsNativeDragSource.cpp      \
 	nsDragService.cpp      \
@@ -58,8 +56,6 @@ OBJS =                             \
 	.\$(OBJDIR)\Accessible.obj  \
 	.\$(OBJDIR)\SimpleDOMNode.obj  \
 !endif
-	.\$(OBJDIR)\nsFontRetrieverService.obj  \
-	.\$(OBJDIR)\nsFontSizeIterator.obj  \
 	.\$(OBJDIR)\nsNativeDragTarget.obj  \
 	.\$(OBJDIR)\nsNativeDragSource.obj  \
 	.\$(OBJDIR)\nsDragService.obj  \

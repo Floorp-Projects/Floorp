@@ -47,9 +47,6 @@ XPIDLSRCS =               \
   $(NULL)
 
 EXPORTS=\
-  nsIFontSizeIterator.h \
-  nsIFontNameIterator.h \
-  nsIFontRetrieverService.h \
   nsIWidget.h \
   nsIKBStateControl.h \
   nsIButton.h \

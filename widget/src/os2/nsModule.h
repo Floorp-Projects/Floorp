@@ -34,7 +34,6 @@
 #define _H_NSMODULE
 
 #include "nsISupports.h"
-#include "nsIFontRetrieverService.h"
 #include "nsDragService.h"
 #include "nsWidgetDefs.h"
 
@@ -58,7 +57,6 @@ class nsWidgetModuleData : public nsISupports
    BOOL    bIsDBCS;         // true if system is dbcs
 
    // xptoolkit services we look after, & the primaeval appshell too.
-   nsIFontRetrieverService *fontService;
    nsDragService           *dragService;
    nsIAppShell             *appshell;
 

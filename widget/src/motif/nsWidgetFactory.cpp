@@ -36,7 +36,6 @@
 #include "nsTextWidget.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
-// #include "nsFontRetrieverService.h"
 
 // Drag & Drop, Clipboard
 // #include "nsClipboard.h"
@@ -64,10 +63,8 @@ static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
 
 // Drag & Drop, Clipboard
-static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCClipboardHelper,  NS_CLIPBOARDHELPER_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
@@ -208,9 +205,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
     }
 #endif // IBMBIDI
-//     else if (mClassID.Equals(kCFontRetrieverService)) {
-//         inst = (nsISupports*)(nsIFontRetrieverService *) new nsFontRetrieverService();
-//     }
 #if 0
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)new nsDragService();

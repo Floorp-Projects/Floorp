@@ -44,7 +44,6 @@
 //       * atom management
 //       * printing bits & pieces (though not really any more)
 
-#include "nsIFontRetrieverService.h"
 #include "nsDragService.h"
 #include "nsAppShell.h"
 
@@ -97,8 +96,6 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    DosQueryDBCSEnv( CCHMAXPATH, &cc, buffer);
    bIsDBCS = buffer[0] || buffer[1];
 
-   fontService = nsnull;
-
    // XXXX KNOCKED OUT UNTIL nsDragService.cpp builds again
    //   dragService = new nsDragService;
    //   NS_ADDREF(dragService);
@@ -123,8 +120,6 @@ nsWidgetModuleData::~nsWidgetModuleData()
       UniFreeUconvObject( converter);
 
    NS_IF_RELEASE(dragService);
-
-   NS_IF_RELEASE(fontService);
 
    PRInt32  cAtoms = atoms.Count();
    HATOMTBL systbl = WinQuerySystemAtomTable();

@@ -75,7 +75,6 @@ static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-static NS_DEFINE_IID(kCFontRetrieverServiceCID,  NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
 static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
@@ -137,7 +136,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kDataFlavorCID,           NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCHTMLFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "@mozilla.org/widget/dragservice;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCFontRetrieverServiceCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "@mozilla.org/sound;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "@mozilla.org/filepicker;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifdef XP_PC

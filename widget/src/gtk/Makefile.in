@@ -39,8 +39,6 @@ CPPSRCS		= \
 		nsCheckButton.cpp \
 		nsClipboard.cpp \
 		nsDragService.cpp \
-		nsFontRetrieverService.cpp \
-		nsFontSizeIterator.cpp \
 		nsGtkEventHandler.cpp \
 		nsGtkUtils.cpp \
 		nsKeyboardUtils.cpp \

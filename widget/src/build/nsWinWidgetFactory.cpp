@@ -34,7 +34,6 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
-#include "nsFontRetrieverService.h"
 #include "nsSound.h"
 #include "nsITimer.h"
 
@@ -66,7 +65,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager)
 #ifdef IBMBIDI
@@ -195,10 +193,6 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/dragservice/win;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
-  { "Font Retriever Service",
-    NS_FONTRETRIEVERSERVICE_CID,
-    "@mozilla.org/widget/fontretrieverservice/win;1",
-    nsFontRetrieverServiceConstructor },
   { "Timer",
     NS_TIMER_CID,
 	"@mozilla.org/timer;1",
