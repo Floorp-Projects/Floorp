@@ -76,8 +76,8 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   nsresult rv = nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext,
                                 aPrevInFlow);
   // Figure out if we allow events.
-  nsString attrValue;
-  nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, attrValue);
+  nsAutoString attrValue;
+  nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, attrValue);
   attrValue.ToLowerCase();
   PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
 					    (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
@@ -165,7 +165,7 @@ nsTreeCellFrame::GetFrameForPoint(const nsPoint& aPoint,
       if (content) {
         // This allows selective overriding for subcontent.
         nsAutoString value;
-        content->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, value);
+        content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
         if (value == "true")
           return result;
       }

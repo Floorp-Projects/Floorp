@@ -49,7 +49,7 @@ Rights Reserved.
 				<treechildren id="addressWidgetBody">
 					<treeitem>
 						<treerow>
-							<treecell treeallowevents="true">
+							<treecell allowevents="true">
 								<html:select id="msgRecipientType#1">
 									<html:option value="addr_to">&toAddr.label;</html:option>
 									<html:option value="addr_cc">&ccAddr.label;</html:option>
@@ -64,7 +64,7 @@ Rights Reserved.
 								<titledbutton/>
 							</treecell>
 							
-							<treecell treeallowevents="true">
+							<treecell allowevents="true">
 								<html:input id="msgRecipient#1"
 											class="addressingWidget"
 											type="text"

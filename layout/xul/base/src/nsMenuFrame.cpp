@@ -207,6 +207,18 @@ NS_IMETHODIMP
 nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint, 
                               nsIFrame**     aFrame)
 {
+  nsresult result = nsBoxFrame::GetFrameForPoint(aPoint, aFrame);
+  nsCOMPtr<nsIContent> content;
+  if (*aFrame) {
+    (*aFrame)->GetContent(getter_AddRefs(content));
+    if (content) {
+      // This allows selective overriding for subcontent.
+      nsAutoString value;
+      content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
+      if (value == "true")
+        return result;
+    }
+  }
   *aFrame = this; // Capture all events so that we can perform selection
   return NS_OK;
 }

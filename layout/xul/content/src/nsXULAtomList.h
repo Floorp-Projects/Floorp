@@ -57,7 +57,7 @@ XUL_ATOM(treecell, "treecell") // An item in the tree view
 XUL_ATOM(treeitem, "treeitem") // A cell in the tree view
 XUL_ATOM(treechildren, "treechildren") // The children of an item in the tree view
 XUL_ATOM(treeindentation, "treeindentation") // Specifies that the indentation for the level should occur here.
-XUL_ATOM(treeallowevents, "treeallowevents") // Lets events be handled on the cell contents.
+XUL_ATOM(allowevents, "allowevents") // Lets events be handled on the cell contents or in menus.
 XUL_ATOM(treecol, "treecol") // A column in the tree view
 XUL_ATOM(treecolgroup, "treecolgroup") // A column group in the tree view
 XUL_ATOM(treefoot, "treefoot") // The footer of the tree view

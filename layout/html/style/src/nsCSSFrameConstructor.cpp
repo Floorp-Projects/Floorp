@@ -3968,7 +3968,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
       content->SetAttribute(kNameSpaceID_None, classAtom, "twisty", PR_FALSE);
       if (container != "true")
         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, "true", PR_FALSE);
-      else content->SetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, "true", PR_FALSE);
+      else content->SetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, "true", PR_FALSE);
 
       boxElement->AppendChild(node, getter_AddRefs(dummy));
     }
