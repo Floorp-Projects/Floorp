@@ -75,6 +75,7 @@
 #include "nsIURIContentListener.h"
 #include "nsIDOMDocument.h"
 #include "nsTimer.h"
+#include "nsIBaseWindow.h"
 
 #include "nsILocaleService.h"
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -162,7 +163,8 @@ class nsWebShell : public nsIWebShell,
                    public nsIRefreshURI,
                    public nsIURIContentListener,
                    public nsIClipboardCommands,
-                   public nsIInterfaceRequestor
+                   public nsIInterfaceRequestor,
+                   public nsIBaseWindow
 {
 public:
   nsWebShell();
@@ -190,16 +192,13 @@ public:
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE);
-  NS_IMETHOD Destroy(void);
   NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h);
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
   NS_IMETHOD SizeToContent();
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
-  NS_IMETHOD SetFocus();
   NS_IMETHOD RemoveFocus();
-  NS_IMETHOD Repaint(PRBool aForce);
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
@@ -279,10 +278,6 @@ public:
   NS_IMETHOD GetHistoryLength(PRInt32& aResult);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
-
-  // Chrome api's
-  NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-  NS_IMETHOD GetTitle(const PRUnichar** aResult);
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
@@ -382,6 +377,9 @@ public:
   NS_IMETHOD SelectNone(void);
 
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+
+  // nsIBaseWindow
+  NS_DECL_NSIBASEWINDOW
 
   // nsWebShell
   nsIEventQueue* GetEventQueue(void);
@@ -791,6 +789,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -1108,106 +1107,15 @@ nsWebShell::IsBusy(PRBool& aResult)
 
 
 NS_IMETHODIMP
-nsWebShell::Destroy()
-{
-  nsresult rv = NS_OK;
-
-  //Fire unload event before we blow anything away.
-  if (nsnull != mScriptGlobal) {
-    nsIDocumentViewer* docViewer;
-    if (nsnull != mContentViewer &&
-        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
-      nsIPresContext *presContext;
-      if (NS_OK == docViewer->GetPresContext(presContext)) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_PAGE_UNLOAD;
-        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-        NS_RELEASE(presContext);
-      }
-      NS_RELEASE(docViewer);
-    }
-  }
-
-  // Stop any URLs that are currently being loaded...
-  Stop();
-  mDocLoader->Destroy();
-
-  SetContainer(nsnull);
-  SetDocLoaderObserver(nsnull);
-
-  // Remove this webshell from its parent's child list
-  if (nsnull != mParent) {
-    mParent->RemoveChild(this);
-  }
-
-  if (nsnull != mDocLoader) {
-    mDocLoader->SetContainer(nsnull);
-  }
-
-  NS_IF_RELEASE(mContentViewer);
-
-  // Destroy our child web shells and release references to them
-  DestroyChildren();
-  return rv;
-}
-
-
-NS_IMETHODIMP
 nsWebShell::GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h)
 {
-nsRect aResult;
-
-  /* old code path --dwc001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  aResult.SetRect(0, 0, 0, 0);
-  if (nsnull != mWindow) {
-    mWindow->GetClientBounds(aResult);
-  }
-  */
-
-  if (nsnull != mWindow) {
-    mWindow->GetClientBounds(aResult);
-  } else {
-    aResult = mBounds;
-  }
-
-  x = aResult.x;
-  y = aResult.y;
-  w = aResult.width;
-  h = aResult.height;
-
-  return NS_OK;
+   return GetPositionAndSize(&x, &y, &w, &h);
 }
 
 NS_IMETHODIMP
 nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
-  /*
-  --dwc0001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  */
-
-  PRInt32 borderWidth  = 0;
-  PRInt32 borderHeight = 0;
-  if (nsnull != mWindow) {
-    mWindow->GetBorderSize(borderWidth, borderHeight);
-    // Don't have the widget repaint. Layout will generate repaint requests
-    // during reflow
-    mWindow->Resize(x, y, w, h, PR_FALSE);
-  }
-
-  mBounds.SetRect(x,y,w,h);   // set the webshells bounds --dwc0001
-
-  // Set the size of the content area, which is the size of the window
-  // minus the borders
-  if (nsnull != mContentViewer) {
-    nsRect rr(0, 0, w-(borderWidth*2), h-(borderHeight*2));
-    mContentViewer->SetBounds(rr);
-  }
-  return NS_OK;
+   return SetPositionAndSize(x, y, w, h, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -1269,64 +1177,19 @@ nsWebShell::SizeToContent()
 NS_IMETHODIMP
 nsWebShell::MoveTo(PRInt32 aX, PRInt32 aY)
 {
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-
-  if (nsnull != mWindow) {
-    mWindow->Move(aX, aY);
-  }
-
-  return NS_OK;
+   return SetPosition(aX, aY);
 }
 
 NS_IMETHODIMP
 nsWebShell::Show()
 {
-  /*
-  --dwc001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  */
-
-  if (nsnull != mWindow) {
-    mWindow->Show(PR_TRUE);
-  }
-  if (nsnull != mContentViewer) {
-    mContentViewer->Show();
-  }
-
-  return NS_OK;
+   return SetVisibility(PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsWebShell::Hide()
 {
-  /*
-  --dwc0001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  */
-
-  if (nsnull != mWindow) {
-    mWindow->Show(PR_FALSE);
-  }
-  if (nsnull != mContentViewer) {
-    mContentViewer->Hide();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetFocus()
-{
-  /*
-  --dwc0001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  */
-
-  if (nsnull != mWindow) {
-    mWindow->SetFocus();
-  }
-
-  return NS_OK;
+   return SetVisibility(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -1346,34 +1209,6 @@ nsWebShell::RemoveFocus()
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::Repaint(PRBool aForce)
-{
-  /*
-  --dwc0001
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  */
-
-  if (nsnull != mWindow) {
-    mWindow->Invalidate(aForce);
-  }
-
-#if 0
-	if (nsnull != mWindow) {
-		mWindow->Invalidate(aForce);
-	}
-	return NS_OK;
-#else
-	nsresult rv;
-	nsCOMPtr<nsIViewManager> viewManager;
-	rv = GetViewManager(getter_AddRefs(viewManager));
-	if (NS_SUCCEEDED(rv) && viewManager) {
-		rv = viewManager->UpdateAllViews(0);
-	}
-	return rv;
-#endif
 }
 
 NS_IMETHODIMP
@@ -2776,49 +2611,6 @@ nsWebShell::ShowHistory()
 
 //----------------------------------------
 
-// Chrome API's
-
-NS_IMETHODIMP
-nsWebShell::SetTitle(const PRUnichar* aTitle)
-{
-  // Record local title
-  mTitle = aTitle;
-
-  // Title's set on the top level web-shell are passed ont to the container
-  nsIWebShell* parent;
-  GetParent(parent);
-  if (nsnull == parent) {
-    nsIBrowserWindow *browserWindow = GetBrowserWindow();
-    if (nsnull != browserWindow) {
-      browserWindow->SetTitle(aTitle);
-      NS_RELEASE(browserWindow);
-
-      // Oh this hack sucks. But there isn't any other way that I can
-      // reliably get the title text. Sorry.
-      do {
-        nsresult rv;
-        NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
-        if (NS_FAILED(rv)) break;
-
-        rv = history->SetPageTitle(nsCAutoString(mURL), aTitle);
-        if (NS_FAILED(rv)) break;
-      } while (0);
-    }
-  } else {
-    parent->SetTitle(aTitle);
-    NS_RELEASE(parent);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetTitle(const PRUnichar** aResult)
-{
-  *aResult = mTitle.GetUnicode();
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 // WebShell container implementation
@@ -3936,7 +3728,6 @@ nsWebShell::CancelRefreshURITimers(void)
 nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 {
 
-  const PRUnichar * title=nsnull;
   PRInt32     curIndex=0;
   nsresult rv;
 
@@ -3947,13 +3738,9 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   char* spec;
   aURL->GetSpec(&spec);
  
-  //Get the title from webshell
-  rv = GetTitle(&title);
-
   //Set it in session history
-  if (NS_SUCCEEDED(rv) && title) {
-    nsString titleStr(title);
-    mSHist->SetTitleForIndex(curIndex, title);
+  if (NS_SUCCEEDED(rv) && !mTitle.IsEmpty()) {
+    mSHist->SetTitleForIndex(curIndex, mTitle.GetUnicode());
     // Replace the top most history entry with the new url
     mSHist->SetURLForIndex(curIndex, spec);
   }
@@ -4319,6 +4106,280 @@ nsresult nsWebShell::GetViewManager(nsIViewManager* *viewManager)
 		rv = shell->GetViewManager(viewManager);
 	} while (0);
 	return rv;
+}
+
+
+//*****************************************************************************
+// nsWebShell::nsIBaseWindow
+//*****************************************************************************   
+
+NS_IMETHODIMP nsWebShell::InitWindow(nativeWindow parentNativeWindow,
+   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::Create()
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::Destroy()
+{
+  nsresult rv = NS_OK;
+
+  //Fire unload event before we blow anything away.
+  if (nsnull != mScriptGlobal) {
+    nsIDocumentViewer* docViewer;
+    if (nsnull != mContentViewer &&
+        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
+      nsIPresContext *presContext;
+      if (NS_OK == docViewer->GetPresContext(presContext)) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_PAGE_UNLOAD;
+        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+        NS_RELEASE(presContext);
+      }
+      NS_RELEASE(docViewer);
+    }
+  }
+
+  // Stop any URLs that are currently being loaded...
+  Stop();
+  mDocLoader->Destroy();
+
+  SetContainer(nsnull);
+  SetDocLoaderObserver(nsnull);
+
+  // Remove this webshell from its parent's child list
+  if (nsnull != mParent) {
+    mParent->RemoveChild(this);
+  }
+
+  if (nsnull != mDocLoader) {
+    mDocLoader->SetContainer(nsnull);
+  }
+
+  NS_IF_RELEASE(mContentViewer);
+
+  // Destroy our child web shells and release references to them
+  DestroyChildren();
+  return rv;
+}
+
+NS_IMETHODIMP nsWebShell::SetPosition(PRInt32 aX, PRInt32 aY)
+{
+   NS_PRECONDITION(nsnull != mWindow, "null window");
+
+   if(mWindow)
+      mWindow->Move(aX, aY);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetPosition(PRInt32* aX, PRInt32* aY)
+{
+   PRInt32 dummyHolder;
+
+   return GetPositionAndSize(aX, aY, &dummyHolder, &dummyHolder);
+}
+
+NS_IMETHODIMP nsWebShell::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+{
+   PRInt32 x = 0, y = 0;
+   GetPosition(&x, &y);
+   return SetPositionAndSize(x, y, aCX, aCY, aRepaint);
+}
+
+NS_IMETHODIMP nsWebShell::GetSize(PRInt32* aCX, PRInt32* aCY)
+{
+   PRInt32 dummyHolder;
+
+   return GetPositionAndSize(&dummyHolder, &dummyHolder, aCX, aCY);
+}
+
+NS_IMETHODIMP nsWebShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
+   PRInt32 cy, PRBool fRepaint)
+{
+     /*
+  --dwc0001
+  NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
+
+  PRInt32 borderWidth  = 0;
+  PRInt32 borderHeight = 0;
+  if (nsnull != mWindow) {
+    mWindow->GetBorderSize(borderWidth, borderHeight);
+    // Don't have the widget repaint. Layout will generate repaint requests
+    // during reflow
+    mWindow->Resize(x, y, cx, cy, fRepaint);
+  }
+
+  mBounds.SetRect(x,y,cx,cy);   // set the webshells bounds --dwc0001
+
+  // Set the size of the content area, which is the size of the window
+  // minus the borders
+  if (nsnull != mContentViewer) {
+    nsRect rr(0, 0, cx-(borderWidth*2), cy-(borderHeight*2));
+    mContentViewer->SetBounds(rr);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* aX, PRInt32* aY, 
+   PRInt32* aCX, PRInt32* aCY)
+{
+   nsRect result;
+
+   if(mWindow)
+      mWindow->GetClientBounds(result);
+   else
+      result = mBounds;
+
+   *aX = result.x;
+   *aY = result.y;
+   *aCX = result.width;
+   *aCY = result.height;
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::Repaint(PRBool aForce)
+{
+  /*
+  --dwc0001
+  NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
+
+  if (nsnull != mWindow) {
+    mWindow->Invalidate(aForce);
+  }
+
+#if 0
+	if (nsnull != mWindow) {
+		mWindow->Invalidate(aForce);
+	}
+	return NS_OK;
+#else
+	nsresult rv;
+	nsCOMPtr<nsIViewManager> viewManager;
+	rv = GetViewManager(getter_AddRefs(viewManager));
+	if (NS_SUCCEEDED(rv) && viewManager) {
+		rv = viewManager->UpdateAllViews(0);
+	}
+	return rv;
+#endif
+}
+
+NS_IMETHODIMP nsWebShell::GetParentWidget(nsIWidget** parentWidget)
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::SetParentWidget(nsIWidget* parentWidget)
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::GetParentNativeWindow(nativeWindow* parentNativeWindow)
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::SetParentNativeWindow(nativeWindow parentNativeWindow)
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::GetVisibility(PRBool* aVisibility)
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::SetVisibility(PRBool aVisibility)
+{
+   if(mWindow)
+      mWindow->Show(aVisibility);
+
+   if(aVisibility)
+      {
+      if(mContentViewer)
+         mContentViewer->Show();
+      }
+   else
+      {
+      if(mContentViewer)
+         mContentViewer->Hide();
+      }
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetMainWidget(nsIWidget** mainWidget)
+{
+   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::SetFocus()
+{
+  /*
+  --dwc0001
+  NS_PRECONDITION(nsnull != mWindow, "null window");
+  */
+
+  if (nsnull != mWindow) {
+    mWindow->SetFocus();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetTitle(PRUnichar** aTitle)
+{
+  *aTitle = mTitle.ToNewUnicode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
+{
+  // Record local title
+  mTitle = aTitle;
+
+  // Title's set on the top level web-shell are passed ont to the container
+  nsIWebShell* parent;
+  GetParent(parent);
+  if (nsnull == parent) {
+    nsIBrowserWindow *browserWindow = GetBrowserWindow();
+    if (nsnull != browserWindow) {
+      browserWindow->SetTitle(aTitle);
+      NS_RELEASE(browserWindow);
+
+      // Oh this hack sucks. But there isn't any other way that I can
+      // reliably get the title text. Sorry.
+      do {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
+        if (NS_FAILED(rv)) break;
+
+        rv = history->SetPageTitle(nsCAutoString(mURL), aTitle);
+        if (NS_FAILED(rv)) break;
+      } while (0);
+    }
+  } else {
+    parent->SetTitle(aTitle);
+    NS_RELEASE(parent);
+  }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
