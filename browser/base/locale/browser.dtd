@@ -2,9 +2,9 @@
 <!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
 
 <!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
-<!ENTITY mainWindow.title "&brandShortName;">
+<!ENTITY mainWindow.title "&brandFullName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
-<!ENTITY mainWindow.titlemodifier "&brandShortName;">
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
@@ -174,7 +174,7 @@
 
 <!ENTITY releaseCmd.label       "Release Notes">
 <!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandShortName;">
+<!ENTITY aboutCmd.label         "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey       "A">
 
 <!ENTITY openCmd.commandkey           "l">
