@@ -288,8 +288,8 @@ real_checkout:
         cvs_co $(CVSCO_LDAPCSDK) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
-#	@: Check the log for conflicts. ;\
-	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
+#	@: Check the log for conflicts. ;
+	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
