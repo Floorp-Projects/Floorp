@@ -4258,7 +4258,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       nsCOMPtr<nsIAtom> tag;
       aContainer->GetTag(*getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::treechildren ||
-        tag == nsXULAtoms::treeitem) {
+          tag.get() == nsXULAtoms::treeitem) {
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
         if (treeRowGroup->IsLazy()) {
