@@ -26,7 +26,7 @@
 [scriptable, uuid(8ec49a08-5cb0-11d3-a52c-0060b0fc04b7)]
 
 interface nsIImapServerSink : nsISupports {
-	void PossibleImapMailbox(in string folderPath);
+	void PossibleImapMailbox(in string folderPath, in wchar hierarchyDelim, in long boxFlags);
 	void DiscoveryDone();
 	void OnlineFolderDelete(in string aFolderName);
 	void OnlineFolderCreateFailed(in string aFolderName);

@@ -564,14 +564,18 @@ NS_IMETHODIMP nsDBFolderInfo::SetLocale(nsString *locale)
 }
 
 
-PRInt16	nsDBFolderInfo::GetIMAPHierarchySeparator() 
+NS_IMETHODIMP nsDBFolderInfo::GetIMAPHierarchySeparator(PRUnichar *hierarchySeparator) 
 {
-	return m_IMAPHierarchySeparator;
+	if (!hierarchySeparator)
+		return NS_ERROR_NULL_POINTER;
+	*hierarchySeparator = m_IMAPHierarchySeparator;
+	return NS_OK;
 }
 
-void nsDBFolderInfo::SetIMAPHierarchySeparator(PRInt16 hierarchySeparator) 
+NS_IMETHODIMP nsDBFolderInfo::SetIMAPHierarchySeparator(PRUnichar hierarchySeparator) 
 {
 	m_IMAPHierarchySeparator = hierarchySeparator; 
+	return NS_OK;
 }
 
 NS_IMETHODIMP

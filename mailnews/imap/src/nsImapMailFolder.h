@@ -144,6 +144,8 @@ public:
 	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
     NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
+	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
+	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
     
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
@@ -339,6 +341,8 @@ protected:
     PRMonitor *m_appendMsgMonitor;
     PRBool	m_verifiedAsOnlineFolder;
 	PRBool	m_explicitlyVerify; // whether or not we need to explicitly verify this through LIST
+	PRUnichar m_hierarchyDelimiter;
+	PRInt32 m_boxFlags;
 
 };
 

@@ -533,7 +533,7 @@ nsImapIncomingServer::CloseCachedConnections()
 }
 
 // nsIImapServerSink impl
-NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath)
+NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, PRUnichar hierarchyDelimiter, PRInt32 boxFlags)
 {
 	nsresult rv;
     PRBool found = PR_FALSE;
@@ -592,14 +592,18 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath)
     if (!found)
     {
         hostFolder->CreateClientSubfolderInfo(folderPath);
+		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
     }
-	else
+	if (child)
 	{
 		nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
 		if (imapFolder)
+		{
 			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
-	}
-    
+			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+			imapFolder->SetBoxFlags(boxFlags);
+		}
+    }
 	return NS_OK;
 }
 

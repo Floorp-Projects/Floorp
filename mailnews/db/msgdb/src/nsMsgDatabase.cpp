@@ -977,17 +977,22 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 		nsMsgKey key = nsMsgKeys->ElementAt(kindex);
 		nsIMsgDBHdr *msgHdr = NULL;
 		
-		err = GetMsgHdrForKey(key, &msgHdr);
-        if (NS_FAILED(err)) 
+		PRBool hasKey;
+
+		if (NS_SUCCEEDED(ContainsKey(key, &hasKey)) && hasKey)
 		{
-			err = NS_MSG_MESSAGE_NOT_FOUND;
-			break;
+			err = GetMsgHdrForKey(key, &msgHdr);
+			if (NS_FAILED(err)) 
+			{
+				err = NS_MSG_MESSAGE_NOT_FOUND;
+				break;
+			}
+			if (msgHdr)
+				err = DeleteHeader(msgHdr, instigator, kindex % 300 == 0, PR_TRUE);
+			NS_IF_RELEASE(msgHdr);
+			if (err != NS_OK)
+				break;
 		}
-		if (msgHdr)
-			err = DeleteHeader(msgHdr, instigator, kindex % 300 == 0, PR_TRUE);
-		NS_IF_RELEASE(msgHdr);
-		if (err != NS_OK)
-			break;
 	}
 	Commit(nsMsgDBCommitType::kSmallCommit);
 	return err;

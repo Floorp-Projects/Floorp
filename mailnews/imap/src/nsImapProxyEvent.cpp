@@ -1840,12 +1840,13 @@ ProgressStatusProxyEvent::ProgressStatusProxyEvent(
     nsImapMiscellaneousSinkProxyEvent(aProxy)
 {
 	m_statusMsgId = aMsgId;
-	m_extraInfo = nsCRT::strdup(extraInfo);
+	m_extraInfo = (extraInfo) ? nsCRT::strdup(extraInfo) : nsnull;
 }
 
 ProgressStatusProxyEvent::~ProgressStatusProxyEvent()
 {
-	PR_FREEIF(m_extraInfo);
+	if (m_extraInfo)
+		nsCRT::free(m_extraInfo);
 }
 
 NS_IMETHODIMP

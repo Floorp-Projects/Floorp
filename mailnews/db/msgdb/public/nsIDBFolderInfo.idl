@@ -50,8 +50,10 @@ interface  nsIDBFolderInfo : nsISupports {
 	attribute unsigned long Version;
 	attribute long ImapTotalPendingMessages;
 	attribute long ImapUnreadPendingMessages;
+	attribute wchar IMAPHierarchySeparator;
     void ChangeExpungedBytes(in long delta);
 
+	void GetCharPtrProperty(in string propertyName, out string resultProperty);
 	void SetUint32Property(in string propertyName, in unsigned long propertyValue);
 	unsigned long GetUint32Property(in string propertyName);
 

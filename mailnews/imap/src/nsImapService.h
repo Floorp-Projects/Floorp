@@ -201,7 +201,8 @@ protected:
 	nsresult CreateStartOfImapUrl(nsIImapUrl  **imapUrl,
                                   nsIMsgFolder* aImapFolder,
                                   nsIUrlListener * aUrlListener,
-                                  nsCString & urlSpec);
+                                  nsCString & urlSpec,
+								  PRUnichar &hierarchyDelimiter);
     nsresult GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue, 
                                          nsIImapUrl* aImapUrl,
                                          nsISupports* aConsumer,

@@ -48,7 +48,7 @@
 #include "nsIMsgCopyService.h"
 #include "nsICopyMsgStreamListener.h"
 #include "nsImapStringBundle.h"
-
+#include "nsIMsgFolderCacheElement.h"
 #include "nsIMsgStatusFeedback.h"
 
 #include "nsIMsgFilter.h"
@@ -96,6 +96,8 @@ nsImapMailFolder::nsImapMailFolder() :
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                             getter_AddRefs(m_eventQueue));
 	m_moveCoalescer = nsnull;
+	m_boxFlags = 0;
+	m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
 
 }
 
@@ -662,6 +664,40 @@ NS_IMETHODIMP nsImapMailFolder::SetVerifiedAsOnlineFolder(PRBool aVerifiedAsOnli
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailFolder::SetHierarchyDelimiter(PRUnichar aHierarchyDelimiter)
+{
+	m_hierarchyDelimiter = aHierarchyDelimiter;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelimiter)
+{
+	if (!aHierarchyDelimiter)
+		return NS_ERROR_NULL_POINTER;
+	*aHierarchyDelimiter = m_hierarchyDelimiter;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
+{
+	m_boxFlags = aBoxFlags;
+	if (m_boxFlags & kNoinferiors)
+		mFlags |= MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
+	else
+		mFlags &= ~MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetBoxFlags(PRInt32 *aBoxFlags)
+{
+	if (!aBoxFlags)
+		return NS_ERROR_NULL_POINTER;
+	*aBoxFlags = m_boxFlags;
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsImapMailFolder::GetExplicitlyVerify(PRBool *aExplicitlyVerify)
 {
 	if (!aExplicitlyVerify)
@@ -884,9 +920,7 @@ NS_IMETHODIMP
 nsImapMailFolder::GetCanCreateSubfolders(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  // if it's the Inbox, then you can't create a subfolder.
-  // yes, I know this isn't true for all IMAP servers, but it works for now
-  *aResult = !(mFlags & MSG_FOLDER_FLAG_INBOX);
+  *aResult = !(mFlags & MSG_FOLDER_FLAG_IMAP_NOINFERIORS);
   return NS_OK;
 }
 
@@ -960,6 +994,27 @@ nsImapMailFolder::MarkAllMessagesRead(void)
 
 	return rv;
 }
+
+NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
+{
+	nsresult rv = nsMsgDBFolder::ReadFromFolderCacheElem(element);
+	PRInt32 hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
+
+	element->GetInt32Property("boxFlags", &m_boxFlags);
+	if (NS_SUCCEEDED(element->GetInt32Property("hierDelim", &hierarchyDelimiter)))
+		m_hierarchyDelimiter = (PRUnichar) hierarchyDelimiter;
+	return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *element)
+{
+	nsresult rv = nsMsgDBFolder::WriteToFolderCacheElem(element);
+	element->SetInt32Property("boxFlags", m_boxFlags);
+	element->SetInt32Property("hierDelim", (PRInt32) m_hierarchyDelimiter);
+	return rv;
+}
+
+
 
 NS_IMETHODIMP
 nsImapMailFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
@@ -3017,10 +3072,11 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
 			{
 				nsCOMPtr <nsIMsgStatusFeedback> feedback;
 				mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
-				if (feedback && aInfo->message)
+				if (feedback)
 				{
 					feedback->ShowProgress(aInfo->percent);
-					feedback->ShowStatusString(aInfo->message);
+					if (aInfo->message)
+						feedback->ShowStatusString(aInfo->message);
 				}
 			}
 		}

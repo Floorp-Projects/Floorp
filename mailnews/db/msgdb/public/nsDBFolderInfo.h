@@ -51,62 +51,7 @@ public:
 
     NS_DECL_ISUPPORTS
 	// interface methods.
-	NS_IMETHOD			GetFlags(PRInt32 *result);
-	NS_IMETHOD			SetFlags(PRInt32 flags);
-	NS_IMETHOD			OrFlags(PRInt32 flags, PRInt32 *result);
-	NS_IMETHOD			AndFlags(PRInt32 flags, PRInt32 *result);
-	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force) ;
-	NS_IMETHOD			SetHighWater(nsMsgKey aHighWater);
-	NS_IMETHOD			GetHighWater(nsMsgKey *result) ;
-	NS_IMETHOD			SetExpiredMark(nsMsgKey expiredKey);
-	NS_IMETHOD			GetExpiredMark(nsMsgKey *aExpiredMark);
-	NS_IMETHOD			ChangeNumNewMessages(PRInt32 delta);
-	NS_IMETHOD			ChangeNumMessages(PRInt32 delta);
-	NS_IMETHOD			ChangeNumVisibleMessages(PRInt32 delta);
-	NS_IMETHOD			GetNumNewMessages(PRInt32 *result) ;
-	NS_IMETHOD			GetNumMessages(PRInt32 *result) ;
-	NS_IMETHOD			GetNumVisibleMessages(PRInt32 *result) ;
-	NS_IMETHOD			SetNumMessages(PRInt32 aNumMessages);
-	NS_IMETHOD			SetNumNewMessages(PRInt32 aNumNewMessages);
-	NS_IMETHOD			SetNumVisibleMessages(PRInt32 aNumVisibleMessages);
-	NS_IMETHOD			GetImapUidValidity(PRInt32 *result) ;
-	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
-	NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) ;
-	NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) ;
-	NS_IMETHOD			SetImapTotalPendingMessages(PRInt32 totalPending) ;
-	NS_IMETHOD			SetImapUnreadPendingMessages(PRInt32 unreadPending) ;
-	NS_IMETHOD			GetCharacterSet(nsString *result) ;
-	NS_IMETHOD			SetCharacterSet(nsString *charSet) ;
-	NS_IMETHOD			GetCharPtrCharacterSet(char **result);
-
-	NS_IMETHOD			GetLocale(nsString *result) ;
-	NS_IMETHOD			SetLocale(nsString *locale) ;
-
-	NS_IMETHOD			SetMailboxName(nsString *newBoxName);
-	NS_IMETHOD			GetMailboxName(nsString *boxName);
-
-	NS_IMETHOD			SetVersion(PRUint32 version) ;
-	NS_IMETHOD			GetVersion(PRUint32 *result);
-
-	NS_IMETHOD			GetLastMessageLoaded(nsMsgKey *result);
-	NS_IMETHOD			SetLastMessageLoaded(nsMsgKey lastLoaded);
-
-	NS_IMETHOD			GetFolderSize(PRUint32 *size);
-	NS_IMETHOD			SetFolderSize(PRUint32 size);
-	NS_IMETHOD			GetFolderDate(PRUint32 *date);
-	NS_IMETHOD			SetFolderDate(PRUint32 date);
-
-    NS_IMETHOD			ChangeExpungedBytes(PRInt32 delta);
-  
-	NS_IMETHOD			GetProperty(const char *propertyName, nsString *resultProperty);
-	NS_IMETHOD			SetProperty(const char *propertyName, nsString *propertyStr);
-	NS_IMETHOD			GetCharPtrProperty(const char *propertyName, char **resultProperty);
-	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
-	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 *propertyValue);
-
-	NS_IMETHOD		    SetKnownArtsSet(nsString *newsArtSet);
-	NS_IMETHOD		    GetKnownArtsSet(nsString *newsArtSet);
-
+	NS_DECL_NSIDBFOLDERINFO
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
 	// accessor methods.

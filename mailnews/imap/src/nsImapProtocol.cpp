@@ -3824,7 +3824,8 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 
                 if (m_imapServerSink)
                 {
-                    m_imapServerSink->PossibleImapMailbox(boxNameCopy);
+                    m_imapServerSink->PossibleImapMailbox(boxNameCopy, 
+									adoptedBoxSpec->hierarchySeparator, adoptedBoxSpec->box_flags);
 //                    WaitForFEEventCompletion();
                 
                     PRBool useSubscription = PR_FALSE;
