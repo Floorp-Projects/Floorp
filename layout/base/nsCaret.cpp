@@ -259,7 +259,14 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 	// find the frame that contains the content node that has focus
 	nsIFrame*       theFrame = nsnull;
 	PRInt32         theFrameOffset = 0;
-  err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, &theFrame, &theFrameOffset);
+  PRBool hintRight;
+  domSelection->GetHint(&hintRight);//translate hint.
+  nsIFrameSelection::HINT hint;
+  if (hintRight)
+    hint = nsIFrameSelection::HINTRIGHT;
+  else
+    hint = nsIFrameSelection::HINTLEFT;
+  err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, hint, &theFrame, &theFrameOffset);
 	if (NS_FAILED(err) || !theFrame)
 		return err;
 	
@@ -473,8 +480,14 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
           return NS_ERROR_FAILURE;
 				if (NS_FAILED(err) || !frameSelection)
 					return PR_FALSE;
-				
-				err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, &theFrame, &theFrameOffset);
+        PRBool hintRight;
+        domSelection->GetHint(&hintRight);//translate hint.
+        nsIFrameSelection::HINT hint;
+        if (hintRight)
+          hint = nsIFrameSelection::HINTRIGHT;
+        else
+          hint = nsIFrameSelection::HINTLEFT;
+				err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, hint, &theFrame, &theFrameOffset);
 				if (NS_FAILED(err))
 					return PR_FALSE;
 				else

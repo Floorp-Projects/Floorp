@@ -116,6 +116,7 @@ class nsIScrollableView;
 class nsIFrameSelection : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
+  enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
 
   /** Init will initialize the frame selector with the necessary focus tracker to 
    *  be used by most of the methods
@@ -269,7 +270,10 @@ public:
    * @param aReturnFrame will contain the return frame. MUST NOT BE NULL or will return error
    * @param aReturnOffset will contain offset into frame.
    */
-  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)=0;
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)=0;
+
+  NS_IMETHOD GetHint(HINT *aHint)=0;
+  NS_IMETHOD SetHint(HINT aHint)=0;
 
   /** CharacterMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one character left or right.
