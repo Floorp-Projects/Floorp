@@ -986,15 +986,13 @@ sub detaint_natural {
 # expressions.
 
 sub quoteUrls {
-    my ($knownattachments, $text) = (@_);
+    my ($text) = (@_);
     return $text unless $text;
     
     my $base = Param('urlbase');
 
     my $protocol = join '|',
     qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
-
-    my %options = ( metachars => 1, @_ );
 
     my $count = 0;
 
@@ -1046,9 +1044,9 @@ sub quoteUrls {
         $item = GetBugLink($num, $item);
         $things[$count++] = $item;
     }
-    while ($text =~ s/\battachment(\s|%\#)*(\d+)/"##$count##"/ei) {
+    while ($text =~ s/\b(Created an )?attachment(\s|%\#)*(\(id=)?(\d+)\)?/"##$count##"/ei) {
         my $item = $&;
-        my $num = $2;
+        my $num = $4;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
         $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
@@ -1060,14 +1058,6 @@ sub quoteUrls {
         my $bug_link;
         $bug_link = GetBugLink($num, $num);
         $item =~ s@\d+@$bug_link@;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
-        my $item = $&;
-        my $num = $1;
-        if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
-        }
         $things[$count++] = $item;
     }
 
@@ -1232,6 +1222,33 @@ sub GetLongDescriptionAsHTML {
 
     return $result;
 }
+
+
+sub GetComments {
+    my ($id) = (@_);
+    my @comments;
+    
+    SendSQL("SELECT profiles.realname, profiles.login_name, 
+                date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
+                longdescs.thetext
+            FROM longdescs, profiles
+            WHERE profiles.userid = longdescs.who
+                AND longdescs.bug_id = $id 
+            ORDER BY longdescs.bug_when");
+             
+    while (MoreSQLData()) {
+        my %comment;
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'}) = FetchSQLData();
+        
+        $comment{'email'} .= Param('emailsuffix');
+        $comment{'name'} = $comment{'name'} || $comment{'email'};
+         
+        push (@comments, \%comment);
+    }
+    
+    return \@comments;
+}
+
 
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
@@ -1560,6 +1577,182 @@ sub trim {
     $str =~ s/\s+$//g;
     return $str;
 }
+
+###############################################################################
+# Global Templatization Code
+
+# Use the template toolkit (http://www.template-toolkit.org/) to generate
+# the user interface using templates in the "template/" subdirectory.
+use Template;
+
+# Create the global template object that processes templates and specify
+# configuration parameters that apply to all templates processed in this script.
+our $template = Template->new(
+  {
+    # Colon-separated list of directories containing templates.
+    INCLUDE_PATH => "template/custom:template/default" ,
+
+    # Allow templates to be specified with relative paths.
+    RELATIVE => 1 ,
+
+    # Remove white-space before template directives (PRE_CHOMP) and at the
+    # beginning and end of templates and template blocks (TRIM) for better 
+    # looking, more compact content.  Use the plus sign at the beginning 
+    # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
+    PRE_CHOMP => 1 ,
+    TRIM => 1 , 
+
+    # Functions for processing text within templates in various ways.
+    FILTERS =>
+      {
+        # Render text in strike-through style.
+        strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
+      } ,
+  }
+);
+
+# Use the Toolkit Template's Stash module to add utility pseudo-methods
+# to template variables.
+use Template::Stash;
+
+# Add "contains***" methods to list variables that search for one or more 
+# items in a list and return boolean values representing whether or not 
+# one/all/any item(s) were found.
+$Template::Stash::LIST_OPS->{ contains } =
+  sub {
+      my ($list, $item) = @_;
+      return grep($_ eq $item, @$list);
+  };
+
+$Template::Stash::LIST_OPS->{ containsany } =
+  sub {
+      my ($list, $items) = @_;
+      foreach my $item (@$items) { 
+          return 1 if grep($_ eq $item, @$list);
+      }
+      return 0;
+  };
+
+# Add a "substr" method to the Template Toolkit's "scalar" object
+# that returns a substring of a string.
+$Template::Stash::SCALAR_OPS->{ substr } = 
+  sub {
+      my ($scalar, $offset, $length) = @_;
+      return substr($scalar, $offset, $length);
+  };
+    
+# Add a "truncate" method to the Template Toolkit's "scalar" object
+# that truncates a string to a certain length.
+$Template::Stash::SCALAR_OPS->{ truncate } = 
+  sub {
+      my ($string, $length, $ellipsis) = @_;
+      $ellipsis ||= "";
+      
+      return $string if !$length || length($string) <= $length;
+      
+      my $strlen = $length - length($ellipsis);
+      my $newstr = substr($string, 0, $strlen) . $ellipsis;
+      return $newstr;
+  };
+    
+# Define the global variables and functions that will be passed to the UI
+# template.  Additional values may be added to this hash before templates
+# are processed.
+our $vars =
+  {
+    # Function for retrieving global parameters.
+    'Param' => \&Param ,
+
+    # Function for processing global parameters that contain references
+    # to other global parameters.
+    'PerformSubsts' => \&PerformSubsts ,
+  };
+my $suppress_used_only_once_warning = $vars;
+
+sub GetOutputFormats {
+    # Builds a list of possible output formats for a script by looking for
+    # format files in the appropriate template directories as specified by 
+    # the template include path and the "sub-directory name" parameter.
+    
+    # This function is relevant for scripts with one basic function whose
+    # results can be represented in multiple formats, f.e. buglist.cgi, 
+    # which has one function (query and display of a list of bugs) that can 
+    # be represented in multiple formats (i.e. html, rdf, xml, etc.).
+    
+    # It is *not* relevant for scripts with several functions but only one
+    # basic output format, f.e. editattachstatuses.cgi, which not only lists 
+    # statuses but also provides adding, editing, and deleting functions.
+    
+    # Format files have names that look like NAME_format.EXT.atml, where NAME
+    # is the name of the format and EXT is the filename extension identifying
+    # the type of content the format file generates.  If the generated content
+    # gets saved to a file, the name of that file should have the extension
+    # appended to it.  If the content gets sent to the user without being saved
+    # in a file (f.e. when returned as the response to an HTTP request),
+    # the content type (in MIME type format) should be looked up from the list
+    # of types, indexed by extension, in the "localconfig" file.
+    
+    my ($subdir) = @_;
+
+    # A set of output format records, indexed by format name, each record 
+    # containing template, extension, and contenttype fields.
+    my $formats = {};
+    
+    # The list of directories in which we look for templates to process.
+    my $includepath = $template->context->{ LOAD_TEMPLATES }->[0]->include_path();
+    
+    # Use the Perl module wrapper to the directory manipulation routines.
+    use IO::Dir;
+    
+    foreach my $path (@$includepath) {
+        my $dirname = $path . "/" . $subdir;
+        my $dir = new IO::Dir $dirname;
+        next if !defined $dir;
+        my $file;
+        while (defined($file = $dir->read())) {
+            if ($file =~ /^(.+)_format\.(.+)\.(atml|tmpl)$/ 
+                && $::contenttypes->{$2}) 
+            {
+                $formats->{$1} = { 
+                  'template' => $file , 
+                  'extension' => $2 , 
+                  'contenttype' => $::contenttypes->{$2} 
+                };
+            }
+        }
+    }
+    return $formats;
+}
+
+sub ValidateOutputFormat {
+    my ($subdir, $name) = @_;
+
+    if ($name eq "default") {
+        return 
+          { 
+            'template' => "default_format.html.tmpl" , 
+            'extension' => "html" , 
+            'contenttype' => "text/html" 
+          };
+    }
+    
+    # Get the list of output formats supported by this script.
+    my $formats = GetOutputFormats($subdir);
+    
+    # Validate the output format requested by the user.
+    if (!$formats->{$name}) {
+        my $escapedname = html_quote($name);
+        DisplayError("The <em>$escapedname</em> output format is not 
+          supported by this script.  Supported formats are <em>" 
+          . join("</em>, <em>", map(html_quote($_), keys(%$formats))) . 
+          "</em>.");
+        exit;
+    }
+    
+    # Return the record of information about this output format.
+    return $formats->{$name};
+}
+###############################################################################
 
 ###############################################################################
 # Global Templatization Code
