@@ -151,16 +151,7 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
   
     if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox))) {
 	    checkbox->SetState(checked);
-
-      const nsStyleColor* color = 
-        nsStyleUtil::FindNonTransparentBackground(mStyleContext);
-
-      if (nsnull != color) {
-        mWidget->SetBackgroundColor(color->mBackgroundColor);
-      } else {
-        mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
-      }
-
+      SetColors();
       NS_IF_RELEASE(checkbox);
     }
   }
