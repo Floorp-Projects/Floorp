@@ -126,7 +126,7 @@ function MsgMoveMessage() {}
 function MsgCopyMessage() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
-function MsgMarkfunction MsgAsRead() {}
+function MsgMarkMsgAsRead() {}
 function MsgMarkThreadAsRead() {}
 function MsgMarkByDate() {}
 function MsgMarkAllRead() {}
