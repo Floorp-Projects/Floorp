@@ -18,6 +18,8 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
+  #                 Vitaly Harisov <vitaly@rathedg.com>
+  #                 Svetlana Harisova <light@rathedg.com>
   #%]
 
 [%# INTERFACE:
@@ -114,29 +116,20 @@
 
 [% INCLUDE global/banner.html.tmpl %]
 
-[% IF h1 || h2 %]
-    <table border="0" cellspacing="0" width="100%">
-      <tr>
-        <td valign="top" align="left">
-          <table border="0" cellpadding="0" cellspacing="2">
-            <tr>
-              <td valign="top" align="left" nowrap="nowrap">
-                <font size="+1"><b>[% h1 %]</b></font>
-              </td>
-            </tr>
-          </table>
-        </td>
-        <td valign="middle" align="left">&nbsp;</td>
-        <td valign="middle" align="left">[% h2 %]</td>
-        [% IF h3 %]
-          <td valign="middle" align="right">[% h3 %]</td>
-        [% END %]
-      </tr>
-    </table>
-[% END %]
+<div id="header">
+  [% IF h1 %]
+    <h1>[% h1 %]</h1>
+  [% END %]
+
+  [% IF h2 %]
+    <h2>[% h2 %]</h2>
+  [% END %]
+
+  [% IF h3 %]
+    <h3>[% h3 %]</h3>
+  [% END %]
+</div>
 
 [% IF message %]
-  <table width="100%" cellspacing="0" cellpadding="5" border="1"><tr><td>
-    <font color="green">[% message %]</font>
-  </td></tr></table>
+<div id="message">[% message %]</div>
 [% END %]

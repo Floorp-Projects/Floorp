@@ -64,6 +64,111 @@ body
     }
 /* banner (end) */
 
+/* header (begin) */
+    #header
+    {
+        width: 100%;
+    }
+
+    #header *
+    {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#header
+    {
+        display: table;
+    }
+
+    /* IE hack for float content*/
+    * html #header
+    {
+        height: 1%;
+    }
+
+    /* hide from NN4 */
+    div#header h1
+    {
+        float: left;
+    }
+
+    #header h1
+    {
+        font-family: serif;
+        font-weight: bold;
+        font-size: 110%;
+
+        white-space: nowrap;
+        padding: 0.2em 1em 0.1em 0.2em;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#header h1
+    {
+        float: none;
+        display: table-cell;
+
+        vertical-align: top;
+    }
+
+    /* hide from NN4 */
+    div#header h2
+    {
+        float: left;
+        width: 70%;
+
+        text-align: center;
+        padding: 0.2em 1em 0.1em 0.1em;
+    }
+
+    #header h2
+    {
+        font-family: serif;
+        font-weight: normal;
+        font-size: 100%;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#header h2
+    {
+        float: none;
+        width: auto;
+
+        text-align: left;
+        vertical-align: top;
+    }
+
+    #header h3
+    {
+        font-family: serif;
+        font-weight: normal;
+        font-size: 100%;
+
+        padding: 0.2em 0.2em 0.1em 0.1em;
+        float: right;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#header h3
+    {
+        display: table-cell;
+        float: none;
+
+        text-align: right;
+        vertical-align: top;
+    }
+
+    #message
+    {
+    	border: 1px solid red;
+
+    	padding: 0.3em;
+    	color: green;
+    }
+/* header (end)   */
+
 /* footer (begin) */
     #footer
     {
