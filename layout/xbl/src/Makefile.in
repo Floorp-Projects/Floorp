@@ -32,6 +32,7 @@ LIBRARY_NAME	= gkxbl_s
 CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLEventHandler.cpp \
+    nsXBLPrototypeHandler.cpp \
 		nsXBLService.cpp \
 		nsBindingManager.cpp \
 		$(NULL)

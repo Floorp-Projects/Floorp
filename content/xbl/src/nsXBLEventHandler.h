@@ -40,6 +40,7 @@ class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIAtom;
 class nsIController;
+class nsIXBLPrototypeHandler;
 
 class nsXBLEventHandler : public nsIDOMKeyListener, 
                           public nsIDOMMouseListener,
@@ -48,7 +49,7 @@ class nsXBLEventHandler : public nsIDOMKeyListener,
                           public nsIDOMScrollListener
 {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIContent* aHandlerElement, const nsString& aEventName);
+  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, const nsString& aEventName);
   virtual ~nsXBLEventHandler();
   
   NS_IMETHOD BindingAttached();
@@ -94,21 +95,12 @@ public:
   void RemoveEventHandlers();
 
   void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mHandlerElement = nsnull; mEventReceiver = nsnull;
+    if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
   }
 
 protected:
-  inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
-  inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
-  
-  inline PRUint32 GetMatchingKeyCode(const nsString& aKeyName);
-
   NS_IMETHOD GetController(nsIController** aResult);
-
   NS_IMETHOD ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent);
-
-  void ConstructMask();
-  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
@@ -122,36 +114,19 @@ protected:
   static nsIAtom* kBindingDetachedAtom;
   static nsIAtom* kModifiersAtom;
 
-  static PRInt32 kAccessKey;
-  static void InitAccessKey();
-
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
-
-  static const PRInt32 cShift;
-  static const PRInt32 cAlt;
-  static const PRInt32 cControl;
-  static const PRInt32 cMeta;
 
 protected:
   nsIDOMEventReceiver* mEventReceiver; // Both of these refs are weak.
-  nsIContent* mHandlerElement;
+  nsIXBLPrototypeHandler* mProtoHandler;
+
   nsAutoString mEventName;
-
-  PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
-                             // in order to be matched.
-
-  PRUint32 mDetail;          // For key events, contains a charcode or keycode. For
-                             // mouse events, stores the button info.
-  
-  PRInt32 mDetail2;          // Miscellaneous extra information.  For key events,
-                             // stores whether or not we're a key code or char code.
-                             // For mouse events, stores the clickCount.
 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 
 extern nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIContent* aHandlerElement, 
+NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
                       const nsString& aEventName,
                       nsXBLEventHandler** aResult);
 

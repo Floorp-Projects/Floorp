@@ -30,12 +30,14 @@ CPPSRCS=					\
   nsXBLBinding.cpp \
   nsXBLService.cpp \
   nsXBLEventHandler.cpp \
+  nsXBLPrototypeHandler.cpp \
   nsBindingManager.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \
+  .\$(OBJDIR)\nsXBLPrototypeHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
   .\$(OBJDIR)\nsBindingManager.obj \
 	$(NULL)

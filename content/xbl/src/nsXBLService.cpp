@@ -51,6 +51,8 @@
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
 
+#include "nsIXBLPrototypeHandler.h"
+
 #include "nsIChromeRegistry.h"
 #include "nsIPref.h"
 
@@ -325,11 +327,18 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIContent> root = getter_AddRefs(mBindingDocument->GetRootContent());
     if (root)
       nsXBLService::StripWhitespaceNodes(root);
+    else {
+      NS_ERROR("*** XBL doc with no root element! Something went horribly wrong! ***");
+      return NS_ERROR_FAILURE;
+    }
 
     // Put our doc in the doc table.
     nsCOMPtr<nsIXBLDocumentInfo> info;
     NS_NewXBLDocumentInfo(mBindingDocument, getter_AddRefs(info));
  
+    // Construct our prototype handlers.
+    nsXBLService::ConstructPrototypeHandlers(info);
+
     // If the doc is a chrome URI, then we put it into the XUL cache.
     PRBool cached = PR_FALSE;
     if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
@@ -470,6 +479,7 @@ PRUint32 nsXBLService::gClassLRUListLength = 0;
 PRUint32 nsXBLService::gClassLRUListQuota = 64;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
+nsIAtom* nsXBLService::kHandlersAtom = nsnull;
 nsIAtom* nsXBLService::kScrollbarAtom = nsnull;
 nsIAtom* nsXBLService::kInputAtom = nsnull;
 
@@ -509,6 +519,7 @@ nsXBLService::nsXBLService(void)
 
     // Create our atoms
     kExtendsAtom = NS_NewAtom("extends");
+    kHandlersAtom = NS_NewAtom("handlers");
     kScrollbarAtom = NS_NewAtom("scrollbar");
     kInputAtom = NS_NewAtom("input");
 
@@ -544,6 +555,7 @@ nsXBLService::~nsXBLService(void)
     
     // Release our atoms
     NS_RELEASE(kExtendsAtom);
+    NS_RELEASE(kHandlersAtom);
     NS_RELEASE(kScrollbarAtom);
     NS_RELEASE(kInputAtom);
 
@@ -999,6 +1011,9 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
    
       if (document) {
         NS_NewXBLDocumentInfo(document, getter_AddRefs(info));
+
+        // Construct our prototype handlers.
+        ConstructPrototypeHandlers(info);
         
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;
@@ -1178,6 +1193,74 @@ nsXBLService::StripWhitespaceNodes(nsIContent* aElement)
       }
     }
     else StripWhitespaceNodes(child);
+  }
+
+  return NS_OK;
+}
+
+static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** aResult) 
+{
+  *aResult = nsnull;
+  PRInt32 childCount;
+  aParent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aParent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) {
+      *aResult = child;
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+}
+
+nsresult 
+nsXBLService::ConstructPrototypeHandlers(nsIXBLDocumentInfo* aInfo)
+{
+  nsCOMPtr<nsIDocument> doc;
+  aInfo->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIContent> bindings = getter_AddRefs(doc->GetRootContent());
+  PRInt32 childCount;
+  bindings->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> binding;
+    bindings->ChildAt(i, *getter_AddRefs(binding));
+
+    // See if this binding has a handler elt.
+    nsCOMPtr<nsIContent> handlers;
+    GetImmediateChild(kHandlersAtom, binding, getter_AddRefs(handlers));
+    if (handlers) {
+      nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
+      nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
+
+      PRInt32 handlerCount;
+      handlers->ChildCount(handlerCount);
+      for (PRInt32 j = 0; j < handlerCount; j++) {
+        nsCOMPtr<nsIContent> handler;
+        handlers->ChildAt(j, *getter_AddRefs(handler));
+        
+        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+        NS_NewXBLPrototypeHandler(handler, getter_AddRefs(newHandler));
+        if (newHandler) {
+          if (currHandler)
+            currHandler->SetNextHandler(newHandler);
+          else firstHandler = newHandler;
+          currHandler = newHandler;
+        }
+      }
+
+      if (firstHandler) {
+        nsAutoString ref;
+        binding->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, ref);
+        
+        nsCAutoString cref;
+        cref.AssignWithConversion(ref);
+
+        aInfo->SetPrototypeHandler(cref, firstHandler);
+      }
+    }
   }
 
   return NS_OK;
