@@ -321,17 +321,6 @@ nsEditorShell::Init()
   mEditorTypeString = editorType;
   mEditorTypeString.ToLowerCase();
 
-  // Get pointer to our string bundle
-  nsresult res;
-  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(kCStringBundleServiceCID, &res);
-  if (!stringBundleService) { 
-    NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
-    return res;
-  }
-  res = stringBundleService->CreateBundle(EDITOR_BUNDLE_URL, getter_AddRefs(mStringBundle));
-
-  // XXX: why are we returning NS_OK here rather than res?
-  // is it ok to fail to get a string bundle?  if so, it should be documented.
   mInitted = PR_TRUE;
   
   return NS_OK;
@@ -483,20 +472,26 @@ const char* const gSupportedTextTypes[] = {
   NULL      // IMPORTANT! Null must be at end
 };
 
-PRBool
-nsEditorShell::IsSupportedTextType(const char* aMIMEType)
+NS_IMETHODIMP
+nsEditorShell::IsSupportedTextType(const char* aMIMEType, PRBool *aResult)
 {
-  PRInt32   i = 0;
-  
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(aMIMEType);
+  *aResult = PR_FALSE;
+
+  PRInt32 i = 0;
   while (gSupportedTextTypes[i])
   {
     if (nsCRT::strcmp(gSupportedTextTypes[i], aMIMEType) == 0)
-      return PR_TRUE;
-  
+    {
+      *aResult = PR_TRUE;
+      return NS_OK;
+    }
+
     i ++;
   }
   
-  return PR_FALSE;
+  return NS_OK;
 }
 
 nsresult    
@@ -993,7 +988,9 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     EEditorType editorType  = eHTMLTextEditorType;
     
     // if the MIME type of the docment we are editing is text/plain, make a text editor
-    if (IsSupportedTextType(mContentMIMEType.get()))
+    PRBool makeATextEditor;
+    IsSupportedTextType(mContentMIMEType.get(), &makeATextEditor);
+    if (makeATextEditor)
     {
       editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
       editorType  = ePlainTextEditorType;
@@ -2074,7 +2071,8 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsCAutoString mimeTypeCStr; mimeTypeCStr.AssignWithConversion(aMimeType);
-  PRBool saveAsText = IsSupportedTextType(mimeTypeCStr.get());
+  PRBool saveAsText;
+  IsSupportedTextType(mimeTypeCStr.get(), &saveAsText);
 
   // Currently, we only understand plain text and html
   if (!mimeTypeCStr.Equals("text/html") && !saveAsText)
@@ -2118,7 +2116,6 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
   PRBool replacing = !aSaveAs;
   PRBool titleChanged = PR_FALSE;
 
-  nsCOMPtr<nsIURL> docURL(do_QueryInterface(docFile));
   nsCOMPtr<nsIFileURL> docFileURL(do_QueryInterface(docFile));
   nsCOMPtr<nsIFile> resultingFileLocation;
   if (docFileURL)
@@ -3016,14 +3013,24 @@ nsEditorShell::Replace()
 NS_IMETHODIMP
 nsEditorShell::GetString(const PRUnichar *stringName, PRUnichar **_retval)
 {
-  if (!stringName || !_retval)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(stringName);
+  NS_ENSURE_ARG_POINTER(_retval);
 
   *_retval = NULL;
-  
-  NS_ASSERTION(mStringBundle, "No string bundle!");
-  if (!mStringBundle) return NS_ERROR_NOT_INITIALIZED;
-  
+
+  if (!mStringBundle)
+  {
+    nsresult res;
+    nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(kCStringBundleServiceCID, &res);
+    if (NS_FAILED(res))
+      return res;
+    if (stringBundleService)
+      res = stringBundleService->CreateBundle(EDITOR_BUNDLE_URL, getter_AddRefs(mStringBundle));
+
+    NS_ASSERTION(mStringBundle, "No string bundle!");
+    if (!mStringBundle) return NS_ERROR_NOT_INITIALIZED;
+  }
+
   return mStringBundle->GetStringFromName(stringName, _retval);
 }
 
@@ -3361,6 +3368,23 @@ nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)
   return NS_NOINTERFACE;
 }
 
+NS_IMETHODIMP
+nsEditorShell::DoAfterSave(PRBool aShouldUpdateURL, const PRUnichar *aURLString)
+{
+  if (aShouldUpdateURL)
+  {
+    NS_ENSURE_ARG_POINTER(aURLString);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
+    if (!webShell) return NS_ERROR_NULL_POINTER;
+
+    nsresult res = webShell->SetURL(aURLString);
+  }
+
+  // Update window title to show possibly different filename
+  // This also covers problem that after undoing a title change,
+  //   window title loses the extra [filename] part that this adds
+  return UpdateWindowTitleAndRecentMenu(PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList)
@@ -5181,18 +5205,23 @@ nsresult nsEditorShell::StartPageLoad(nsIChannel *aChannel)
     // fine, do nothing
     mContentTypeKnown = PR_TRUE;
   }
-  else if (IsSupportedTextType(contentType))
-  {
-    // set the mime type to text/plain so that it renders as text
-    aChannel->SetContentType("text/plain");
-    mContentTypeKnown = PR_TRUE;
-  }
   else
   {
-    // we don't know what this is yet. It might be HTML loaded from 
-    // a directory URL (http://www.foo.com/). We'll know the real
-    // MIME type later.
-    mContentTypeKnown = PR_FALSE;
+    PRBool canBeText;
+    IsSupportedTextType(contentType, &canBeText);
+    if (canBeText)
+    {
+      // set the mime type to text/plain so that it renders as text
+      aChannel->SetContentType("text/plain");
+      mContentTypeKnown = PR_TRUE;
+    }
+    else
+    {
+      // we don't know what this is yet. It might be HTML loaded from 
+      // a directory URL (http://www.foo.com/). We'll know the real
+      // MIME type later.
+      mContentTypeKnown = PR_FALSE;
+    }
   }
 
   // Start the throbber
@@ -5260,8 +5289,10 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
           mContentMIMEType.Assign(contentType);
       }
     }    
-    
-    if ( !mContentMIMEType.Equals("text/html") && !IsSupportedTextType(mContentMIMEType.get()) )
+
+    PRBool canBeText;
+    IsSupportedTextType(mContentMIMEType.get(), &canBeText);
+    if (!mContentMIMEType.Equals("text/html") && !canBeText)
     {
         mCloseWindowWhenLoaded = PR_TRUE;
         mCantEditReason = eCantEditMimeType;
