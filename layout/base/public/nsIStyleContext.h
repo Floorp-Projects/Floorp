@@ -159,8 +159,6 @@ struct nsStyleMolecule : public nsStyleStruct {
   PRInt32 proportionalWidth;
   PRInt32 fixedHeight;
   PRInt32 proportionalHeight;
-  PRUint8 positionFlags;
-  nscoord top, left;
 
 protected:
   // The constructor is protected because you may not make these

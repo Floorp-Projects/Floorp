@@ -668,22 +668,34 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           position->mPosition = ourPosition->mPosition.GetIntValue();
         }
 
-        // box offsets
+        // box offsets. note: default value is auto so we don't check for it here
         if (ourPosition->mLeft.IsLengthUnit()) {
           position->mLeftOffset = CalcLength(ourPosition->mLeft, font, aPresContext);
           position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
+          position->mLeftOffset = (nscoord)(100 * ourPosition->mLeft.GetFloatValue());
+          position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_PCT;
         }
         if (ourPosition->mTop.IsLengthUnit()) {
           position->mTopOffset = CalcLength(ourPosition->mTop, font, aPresContext);
           position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
+          position->mTopOffset = (nscoord)(100 * ourPosition->mTop.GetFloatValue());
+          position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_PCT;
         }
         if (ourPosition->mWidth.IsLengthUnit()) {
           position->mWidth = CalcLength(ourPosition->mWidth, font, aPresContext);
           position->mWidthFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        } else if (ourPosition->mWidth.GetUnit() == eCSSUnit_Percent) {
+          position->mWidth = (nscoord)(100 * ourPosition->mWidth.GetFloatValue());
+          position->mWidthFlags = NS_STYLE_POSITION_VALUE_PCT;
         }
         if (ourPosition->mHeight.IsLengthUnit()) {
           position->mHeight = CalcLength(ourPosition->mHeight, font, aPresContext);
           position->mHeightFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        } else if (ourPosition->mHeight.GetUnit() == eCSSUnit_Percent) {
+          position->mHeight = (nscoord)(100 * ourPosition->mHeight.GetFloatValue());
+          position->mHeightFlags = NS_STYLE_POSITION_VALUE_PCT;
         }
       }
     }

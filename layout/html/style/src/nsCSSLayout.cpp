@@ -26,6 +26,7 @@
 #include "nsIPtr.h"
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -224,11 +225,12 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
 
     kid->GetContent(kidContent.AssignRef());
     kid->GetStyleContext(aCX, kidSC.AssignRef());
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    if (NS_STYLE_POSITION_RELATIVE == kidMol->positionFlags) {
+    nsStylePosition* kidPosition = (nsStylePosition*)kidSC->GetData(kStylePositionSID);
+    if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
-      nscoord dx = kidMol->left;
-      nscoord dy = kidMol->top;
+      // XXX Check the flags: could be auto or percent (not just length)
+      nscoord dx = kidPosition->mLeftOffset;
+      nscoord dy = kidPosition->mTopOffset;
       kid->MoveTo(origin.x + dx, origin.y + dy);
     }
     kid->GetNextSibling(kid);
