@@ -234,27 +234,27 @@ function checkUserServerChanges(showAlert) {
   for (var i=0; i<pageElements.length; i++) {
     if (pageElements[i].id) {
       var vals = pageElements[i].id.split(".");
-      var type = vals[0];
-      var slot = vals[1];
-      //dump("In checkUserServerChanges() ***: accountValues[" + type + "][" + slot + "] = " + getFormElementValue(pageElements[i]) + "/" + accountValues[type][slot] + "\n");
-
-      // if this type doesn't exist (just removed) then return.
-      if (! accountValues[type]) return true;
-
-      if (slot == "realHostName") {
-        oldHost = accountValues[type][slot];
-        newHost = getFormElementValue(pageElements[i]);
-        hIndx = i;
+      if (vals.length >= 2) {
+          var type = vals[0];
+          var slot = vals[1];
+          //dump("In checkUserServerChanges() ***: accountValues[" + type + "][" + slot + "] = " + getFormElementValue(pageElements[i]) + "/" + accountValues[type][slot] + "\n");
+    
+          // if this type doesn't exist (just removed) then return.
+          if (!(type in accountValues) || !accountValues[type]) return true;
+    
+          if (slot == "realHostName") {
+            oldHost = accountValues[type][slot];
+            newHost = getFormElementValue(pageElements[i]);
+            hIndx = i;
+          }
+          else if (slot == "realUsername") {
+            oldUser = accountValues[type][slot];
+            newUser = getFormElementValue(pageElements[i]);
+            uIndx = i;
+          }
+          else if (slot == "type")
+            newType = getFormElementValue(pageElements[i]);
       }
-      else
-      if (slot == "realUsername") {
-        oldUser = accountValues[type][slot];
-        newUser = getFormElementValue(pageElements[i]);
-        uIndx = i;
-      }
-      else
-      if (slot == "type")
-        newType = getFormElementValue(pageElements[i]);
     }
   }
 
@@ -513,7 +513,7 @@ function saveAccount(accountValues, account)
          }
       }
       else {
-      if (dest[slot] != typeArray[slot]) {
+      if (slot in dest && dest[slot] != typeArray[slot]) {
         try {
           dest[slot] = typeArray[slot];
           } 
@@ -692,7 +692,7 @@ function savePage(serverId) {
   if (!serverId) return;
 
   // tell the page that it's about to save
-  if (top.frames["contentFrame"].onSave)
+  if ("onSave" in top.frames["contentFrame"])
       top.frames["contentFrame"].onSave();
 
   var accountValues = getValueArrayFor(serverId);
@@ -704,19 +704,21 @@ function savePage(serverId) {
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].id) {
         var vals = pageElements[i].id.split(".");
-        var type = vals[0];
-        var slot = vals[1];
-
-        setAccountValue(accountValues,
-                        type, slot,
-                        getFormElementValue(pageElements[i]));
+        if (vals.length >= 2) {
+            var type = vals[0];
+            var slot = vals[1];
+    
+            setAccountValue(accountValues,
+                            type, slot,
+                            getFormElementValue(pageElements[i]));
+         }
       }
   }
 
 }
 
 function setAccountValue(accountValues, type, slot, value) {
-  if (!accountValues[type])
+  if (!(type in accountValues))
     accountValues[type] = new Array;
 
   //dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
@@ -725,11 +727,11 @@ function setAccountValue(accountValues, type, slot, value) {
 }
 
 function getAccountValue(account, accountValues, type, slot, preftype, isGeneric) {
-  if (!accountValues[type])
+  if (!(type in accountValues))
     accountValues[type] = new Array;
 
   // fill in the slot from the account if necessary
-  if (accountValues[type][slot]== undefined) {
+  if (!(slot in accountValues[type]) || !accountValues[type][slot]) {
     // dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
     var server;
     if (account)
@@ -762,7 +764,7 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
 
     if (source) {
       if (isGeneric) {
-        if (!gGenericAttributeTypes[type])
+        if (!(type in gGenericAttributeTypes))
           gGenericAttributeTypes[type] = new Array;
 
         // we need the preftype later, for setting when we save.
@@ -785,10 +787,15 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
             break;
           }
       }
-      else {
-      accountValues[type][slot] = source[slot];
+      else if (slot in source) {
+        accountValues[type][slot] = source[slot];
+      } else {
+        accountValues[type][slot] = null;
+      }
     }
-  }
+    else {
+      accountValues[type][slot] = null;
+    }
   }
   var value = accountValues[type][slot];
   //dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
@@ -806,29 +813,31 @@ function restorePage(pageId, serverId) {
 
   var account = getAccountFromServerId(serverId);
 
-  if (top.frames["contentFrame"].onPreInit)
+  if ("onPreInit" in top.frames["contentFrame"])
     top.frames["contentFrame"].onPreInit(account, accountValues);
 
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].id) {
         var vals = pageElements[i].id.split(".");
-        var type = vals[0];
-        var slot = vals[1];
-        // buttons are lockable, but don't have any data so we skip that part.
-        // elements that do have data, we get the values at poke them in.
-        if (pageElements[i].localName != "button") {
-          var value = getAccountValue(account, accountValues, type, slot, pageElements[i].getAttribute("preftype"), (pageElements[i].getAttribute("genericattr") == "true"));
-          setFormElementValue(pageElements[i], value);
-        }
-        updateElementWithKeys(account,pageElements[i],type);
-        var isLocked = getAccountValueIsLocked(pageElements[i]);
-        setEnabled(pageElements[i],!isLocked);
+        if (vals.length >= 2) {
+            var type = vals[0];
+            var slot = vals[1];
+            // buttons are lockable, but don't have any data so we skip that part.
+            // elements that do have data, we get the values at poke them in.
+            if (pageElements[i].localName != "button") {
+              var value = getAccountValue(account, accountValues, type, slot, pageElements[i].getAttribute("preftype"), (pageElements[i].getAttribute("genericattr") == "true"));
+              setFormElementValue(pageElements[i], value);
+            }
+            updateElementWithKeys(account,pageElements[i],type);
+            var isLocked = getAccountValueIsLocked(pageElements[i]);
+            setEnabled(pageElements[i],!isLocked);
+         }
       }
   }
 
   // tell the page that new values have been loaded
-  if (top.frames["contentFrame"].onInit)
+  if ("onInit" in top.frames["contentFrame"])
       top.frames["contentFrame"].onInit();
 
   // everything has succeeded, vervied by setting currentPageId
@@ -849,11 +858,9 @@ function getFormElementValue(formElement) {
     else
       return formElement.checked;
   }
-
   else if (type == "radiogroup" || type=="menulist") {
     return formElement.selectedItem.value;
   }
-
   else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
@@ -876,15 +883,16 @@ function getFormElementValue(formElement) {
       return null;
     }
   }
-
   else if (type == "text") {
     var val = formElement.getAttribute("value");
     if (val) return val;
     else return null;
   }
-
-  else {
+  else if ("value" in formElement) {
     return formElement.value;
+  }
+  else {
+    return null;
   }
  }
  catch (ex) {
@@ -903,7 +911,7 @@ function setFormElementValue(formElement, value) {
   var type = formElement.localName;
   if (type == "checkbox") {
     if (value == undefined) {
-      if (formElement.defaultChecked)
+      if ("defaultChecked" in formElement && formElement.defaultChecked)
         formElement.checked = formElement.defaultChecked;
       else
         formElement.checked = false;
@@ -940,7 +948,7 @@ function setFormElementValue(formElement, value) {
         dump("Still need to fix uninitialized filespec problem!\n");
       }
     } else {
-      if (formElement.defaultValue)
+      if ("defaultValue" in formElement)
         formElement.value = formElement.defaultValue;
       else
         formElement.value = "";
@@ -958,7 +966,7 @@ function setFormElementValue(formElement, value) {
       }
 
     } else {
-      if (formElement.defaultValue)
+      if ("defaultValue" in formElement)
         formElement.value = formElement.defaultValue;
       else
         formElement.value = "";
@@ -975,7 +983,7 @@ function setFormElementValue(formElement, value) {
   // let the form figure out what to do with it
   else {
     if (value == undefined) {
-      if (formElement.defaultValue)
+      if ("defaultValue" in formElement && formElement.defaultValue)
         formElement.value = formElement.defaultValue;
     }
     else
@@ -1010,9 +1018,11 @@ function getAccountFromServerId(serverId) {
 //
 function getPageFormElements() {
  try {
-  var pageElements =
-      top.frames["contentFrame"].document.getElementsByAttribute("wsm_persist", "true");
-  return pageElements;
+    if("getElementsByAttribute" in top.frames["contentFrame"].document) {
+        var pageElements =
+            top.frames["contentFrame"].document.getElementsByAttribute("wsm_persist", "true");
+        return pageElements;
+    }
  }
  catch (ex) {
   dump("getPageFormElements() failed: " + ex + "\n");
@@ -1026,7 +1036,7 @@ function getPageFormElements() {
 function getValueArrayFor(serverId) {
   if (serverId == undefined) serverId="global";
 
-  if (accountArray[serverId] == null) {
+  if (!(serverId in accountArray)) {
     accountArray[serverId] = new Array;
   }
 
