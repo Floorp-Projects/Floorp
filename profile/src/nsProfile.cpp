@@ -149,15 +149,15 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
 	nsCOMPtr<nsIFileSpec> spec;
 	rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
 	if (NS_SUCCEEDED(rv)) {
-        	rv = spec->GetPersistentDescriptorString(string);
+        rv = spec->GetNativePath(string);
 		if (NS_SUCCEEDED(rv)) {
 			return NS_OK;
-                }
+        }
 		else {
 			PR_FREEIF(*string);
 			return rv;
 		}
-        } 
+    } 
 	else {
 		*string = nsnull;
 		return rv;
@@ -630,12 +630,14 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 					if (NS_SUCCEEDED(rv))
 					{
 						nsXPIDLCString isMigrated;
-						
-						// Use persistent classes to make the directory names XPlatform
-						nsInputStringStream stream(encodedProfileDir);
-						nsPersistentFileDescriptor descriptor;
-						stream >> descriptor;
-						*profileDir = descriptor;
+
+						nsCOMPtr<nsIFileSpec>spec;
+						rv = NS_NewFileSpec(getter_AddRefs(spec));
+						if (NS_FAILED(rv)) return rv;
+						rv = spec->SetPersistentDescriptorString(encodedProfileDir);
+						if (NS_FAILED(rv)) return rv;
+						rv = spec->GetFileSpec(profileDir);
+						if (NS_FAILED(rv)) return rv;
 
 						// Get the value of entry "migrated" to check the nature of the profile
 						m_reg->GetString( newKey, "migrated",
@@ -1189,13 +1191,13 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 						tmpDir.CreateDirectory();
 					}
 					
-					// Persistency
-					nsPersistentFileDescriptor descriptor(profileDir);
 					char* profileDirString = nsnull;
-					rv = GetStringFromSpec(profileDir, &profileDirString);
-				        NS_ASSERTION((NS_SUCCEEDED(rv) && profileDirString && *profileDirString), "profileDir is bad?");
-					nsOutputStringStream stream(profileDirString);
-					stream << descriptor;
+					
+					nsCOMPtr<nsIFileSpec>spec;
+					rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
+					if (NS_SUCCEEDED(rv)) {
+						rv = spec->GetPersistentDescriptorString(&profileDirString);
+					}
     
 					// Set the entry "directory" for this profile
 					if (profileDirString && *profileDirString)
@@ -2215,17 +2217,19 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 						if (NS_SUCCEEDED(rv))
 						{
 							nsFileSpec profileDir(gOldProfLocations[idx]);
-						
-							nsPersistentFileDescriptor descriptor(profileDir);
-							char* profileDirString = nsnull;
-							nsOutputStringStream stream(profileDirString);
-							stream << descriptor;
-  
-							if (profileDirString && *profileDirString)
+							
+							char* profileDirString = nsnull;	
+							nsCOMPtr<nsIFileSpec>spec;
+							rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
+							if (NS_SUCCEEDED(rv)) {
+								rv = spec->GetPersistentDescriptorString(&profileDirString);
+							}
+
+							if (NS_SUCCEEDED(rv) && profileDirString && *profileDirString)
 							{
 
 								rv = m_reg->SetString(newKey, "directory", profileDirString);
-	
+								
 								if (NS_FAILED(rv))
 								{
 #if defined(DEBUG_profile)
@@ -2301,8 +2305,9 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	nsFileSpec oldProfDir;
 	nsFileSpec newProfDir;
 
-	GetProfileDir(profileName, &oldProfDir);
-
+	rv = GetProfileDir(profileName, &oldProfDir);
+	if (NS_FAILED(rv)) return rv;
+	
 	// Create new profile dir path
         NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 	if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
