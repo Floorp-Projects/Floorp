@@ -365,11 +365,13 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
   // every image button will get every event.
   nsIView* view;
   GetView(view);
-  nsInput* content = (nsInput *)mContent;
-  if (view && (content->GetWidgetSupports() != aEvent->widgetSupports)) {
-    aEventStatus = nsEventStatus_eIgnore;
+  if (view) {
     NS_RELEASE(view);
-    return NS_OK;
+    nsInput* content = (nsInput *)mContent;
+    if (content->GetWidgetSupports() != aEvent->widgetSupports) {
+      aEventStatus = nsEventStatus_eIgnore;
+      return NS_OK;
+    }
   }
 
   switch (aEvent->message) {
