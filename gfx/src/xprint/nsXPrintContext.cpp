@@ -389,7 +389,7 @@ nsresult nsXPrintContext::SetMediumSize(const char *aPaperName)
   char *s;
   
   /* Did we get a tray name and paper name (e.g. "manual/din-a4") ? */
-  if (s = strchr(paper_name, '/'))
+  if ((s = strchr(paper_name, '/')) != nsnull)
   {
     const char *tray_name;
     *s = '\0';

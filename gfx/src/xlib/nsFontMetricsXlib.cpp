@@ -110,7 +110,9 @@ static PRLogModuleInfo *FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 
 /* Local prototypes */
 static PRBool                 FreeNode(nsHashKey* aKey, void* aData, void* aClosure);
+#ifdef USE_FREETYPE
 static void                   CharSetNameToCodeRangeBits(const char*, PRUint32*, PRUint32*);
+#endif /* USE_FREETYPE */
 static nsFontCharSetMapXlib  *GetCharSetMap(const char *aCharSetName);
 
 // the font catalog is so expensive to generate
@@ -222,14 +224,16 @@ static PRInt32 gBitmapScaleMinimum = 10;
 static double  gBitmapOversize = 1.2;
 static double  gBitmapUndersize = 0.8;
 
+#ifdef USE_AASB
 static PRInt32 gAntiAliasMinimum = 8;
+#endif /* USE_AASB */
 static PRInt32 gEmbeddedBitmapMaximumHeight = 1000000;
 
-#ifdef USE_FREETYOE
+#ifdef USE_FREETYPE
 static PRBool  gEnableFreeType2 = PR_TRUE;
 static PRBool  gFreeType2Autohinted = PR_FALSE;
 static PRBool  gFreeType2Unhinted = PR_TRUE;
-#endif /* USE_FREETYOE */
+#endif /* USE_FREETYPE */
 #ifdef USE_AASB
 static PRUint8 gAATTDarkTextMinValue = 64;
 static double  gAATTDarkTextGain = 0.8;
@@ -3262,7 +3266,9 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
 
   PRBool      use_scaled_font               = PR_FALSE;
   PRBool      have_nearly_rightsized_bitmap = PR_FALSE;
+#ifdef USE_AASB
   nsFontXlib *base_aafont                   = nsnull;
+#endif /* USE_AASB */
 
 #ifdef USE_XPRINT
 #define ALWAYS_USE_SCALED_FONTS_FOR_XPRINT 1
@@ -3463,11 +3469,13 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
   return AddToLoadedFontsList(font);
 }
 
+PR_BEGIN_EXTERN_C
 static int
 CompareSizes(const void* aArg1, const void* aArg2, void *data)
 {
   return (*((nsFontXlib**) aArg1))->mSize - (*((nsFontXlib**) aArg2))->mSize;
 }
+PR_END_EXTERN_C
 
 void
 nsFontStretchXlib::SortSizes(void)
@@ -5340,6 +5348,7 @@ EnumerateNode(void* aElement, void* aData)
   return PR_TRUE; // continue
 }
 
+PR_BEGIN_EXTERN_C
 static int
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
@@ -5350,6 +5359,7 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 
   return nsCRT::strcmp(str1, str2);
 }
+PR_END_EXTERN_C
 
 static nsresult
 EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,
@@ -5441,6 +5451,7 @@ nsFontCharSetMapXlib *GetCharSetMap(const char *aCharSetName)
   return charSetMap;
 }
 
+#ifdef USE_FREETYPE
 static
 void CharSetNameToCodeRangeBits(const char *aCharset,
                                 PRUint32 *aCodeRange1, PRUint32 *aCodeRange2)
@@ -5451,4 +5462,5 @@ void CharSetNameToCodeRangeBits(const char *aCharset,
   *aCodeRange1 = charSetInfo->mCodeRange1Bits;
   *aCodeRange2 = charSetInfo->mCodeRange2Bits;
 }
+#endif /* USE_FREETYPE */
 

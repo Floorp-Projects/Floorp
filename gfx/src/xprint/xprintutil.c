@@ -787,7 +787,7 @@ XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
     {
       Display *pdpy;
       
-      if( pdpy = XOpenDisplay(display) )
+      if( (pdpy = XOpenDisplay(display)) != NULL )
       {
         XPPrinterList list;
         int           list_count;
