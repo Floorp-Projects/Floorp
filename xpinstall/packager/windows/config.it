@@ -1081,7 +1081,7 @@ Timing=pre smartupdate
 ;                    this flag when displaying the window for the first time.
 [Program Folder0]
 Timing=post smartupdate
-Show Folder=SHOW
+Show Folder=HIDE
 Program Folder=[Default Folder]
 
 [Program Folder0-Shortcut0]
