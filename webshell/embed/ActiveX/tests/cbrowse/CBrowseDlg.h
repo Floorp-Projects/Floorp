@@ -23,6 +23,7 @@ public:
 	CLSID m_clsid;
 	BOOL m_bUseCustomPopupMenu;
 	BOOL m_bUseCustomDropTarget;
+	CMenu m_menu;
 
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
 
@@ -83,6 +84,17 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnEditMode();
+	afx_msg void OnFileExit();
+	afx_msg void OnViewGotoBack();
+	afx_msg void OnViewGotoForward();
+	afx_msg void OnViewGotoHome();
+	afx_msg void OnEditCopy();
+	afx_msg void OnEditCut();
+	afx_msg void OnEditPaste();
+	afx_msg void OnHelpAbout();
+	afx_msg void OnUpdateViewGotoBack(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateViewGotoForward(CCmdUI* pCmdUI);
+	afx_msg void OnEditSelectAll();
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();

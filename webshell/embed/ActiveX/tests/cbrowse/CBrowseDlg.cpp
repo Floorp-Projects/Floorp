@@ -82,6 +82,17 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_EDITMODE, OnEditMode)
+	ON_COMMAND(ID_FILE_EXIT, OnFileExit)
+	ON_COMMAND(ID_VIEW_GOTO_BACK, OnViewGotoBack)
+	ON_COMMAND(ID_VIEW_GOTO_FORWARD, OnViewGotoForward)
+	ON_COMMAND(ID_VIEW_GOTO_HOME, OnViewGotoHome)
+	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
+	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
+	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
+	ON_COMMAND(ID_HELP_ABOUT, OnHelpAbout)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_GOTO_BACK, OnUpdateViewGotoBack)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_GOTO_FORWARD, OnUpdateViewGotoForward)
+	ON_COMMAND(ID_EDIT_SELECTALL, OnEditSelectAll)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(IDB_BOLD, OnEditBold)
 	ON_COMMAND(IDB_ITALIC, OnEditItalic)
@@ -102,8 +113,6 @@ END_MESSAGE_MAP()
 BOOL CBrowseDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	CWinApp *pApp = AfxGetApp();
 	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
@@ -163,6 +172,11 @@ BOOL CBrowseDlg::OnInitDialog()
 	// Create the contained web browser
 	CreateWebBrowser();
 
+	// Load the menu
+	m_menu.LoadMenu(IDR_MAIN);
+	SetMenu(&m_menu);
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -214,7 +228,7 @@ struct EnumData
 BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
 {
 	EnumData *pData = (EnumData *) lParam;
-	CBrowseDlg *pThis =pData->pBrowseDlg;
+	CBrowseDlg *pThis = pData->pBrowseDlg;
 
 	switch (::GetDlgCtrlID(hwnd))
 	{
@@ -262,6 +276,11 @@ BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
 void CBrowseDlg::OnSize(UINT nType, int cx, int cy) 
 {
 	CDialog::OnSize(nType, cx, cy);
+
+	if (m_hWnd == NULL)
+	{
+		return;
+	}
 
 	static CSize sizeOld(-1, -1);
 	CSize sizeNew(cx, cy);
@@ -753,3 +772,64 @@ void CBrowseDlg::OnEditUnderline()
 {
 	ExecOleCommand(&CGID_MSHTML, IDM_UNDERLINE);
 }
+
+void CBrowseDlg::OnFileExit() 
+{
+	OnClose();
+}
+
+void CBrowseDlg::OnViewGotoBack() 
+{
+	OnBackward();
+}
+
+void CBrowseDlg::OnViewGotoForward() 
+{
+	OnForward();
+}
+
+void CBrowseDlg::OnUpdateViewGotoBack(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+}
+
+void CBrowseDlg::OnUpdateViewGotoForward(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+}
+
+void CBrowseDlg::OnViewGotoHome() 
+{
+	IWebBrowser *pIWebBrowser = NULL;
+	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
+	{
+		pIWebBrowser->GoHome();
+		pIWebBrowser->Release();
+	}
+}
+
+void CBrowseDlg::OnEditCopy() 
+{
+	ExecOleCommand(NULL, OLECMDID_COPY);
+}
+
+void CBrowseDlg::OnEditCut() 
+{
+	ExecOleCommand(NULL, OLECMDID_CUT);
+}
+
+void CBrowseDlg::OnEditPaste() 
+{
+	ExecOleCommand(NULL, OLECMDID_PASTE);
+}
+
+void CBrowseDlg::OnEditSelectAll() 
+{
+	ExecOleCommand(NULL, OLECMDID_SELECTALL);
+}
+
+void CBrowseDlg::OnHelpAbout() 
+{
+	AfxMessageBox(_T("CBrowse - Browser Control Test Harness"));
+}
+

@@ -20,6 +20,7 @@
 #define IDD_TAB_DOM                     137
 #define IDR_DHTMLEDIT                   138
 #define IDI_TESTPARTIAL                 140
+#define IDR_MAIN                        141
 #define IDC_URL                         1000
 #define IDC_GO                          1001
 #define IDC_BROWSER_MARKER              1002
@@ -52,13 +53,21 @@
 #define IDB_PARAGRAPH                   32776
 #define ID_ORDEREDLIST                  32777
 #define IDB_UNORDEREDLIST               32778
+#define ID_FILE_EXIT                    32779
+#define ID_VIEW_VIEWSOURCE              32783
+#define ID_HELP_ABOUT                   32784
+#define ID_VIEW_GOTO_BACK               32786
+#define ID_VIEW_GOTO_FORWARD            32787
+#define ID_VIEW_STOP                    32788
+#define ID_VIEW_GOTO_HOME               32789
+#define ID_EDIT_SELECTALL               32790
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32779
+#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_COMMAND_VALUE         32791
 #define _APS_NEXT_CONTROL_VALUE         1027
 #define _APS_NEXT_SYMED_VALUE           107
 #endif
