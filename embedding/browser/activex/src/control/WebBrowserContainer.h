@@ -25,7 +25,7 @@
 #ifndef WEBBROWSERCONTAINER_H
 #define WEBBROWSERCONTAINER_H
 
-#include "nsIDOMMouseListener.h"
+#include "nsIContextMenuListener.h"
 
 // This is the class that handles the XPCOM side of things, callback
 // interfaces into the web shell and so forth.
@@ -40,7 +40,7 @@ class CWebBrowserContainer :
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
-		public nsIDOMMouseListener
+        public nsIContextMenuListener
 {
 public:
 	CWebBrowserContainer(CMozillaBrowser *pOwner);
@@ -58,6 +58,7 @@ protected:
 	CDWebBrowserEvents1 *m_pEvents1;
 	CDWebBrowserEvents2 *m_pEvents2;
 
+
 public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIBASEWINDOW
@@ -68,18 +69,10 @@ public:
 	NS_DECL_NSIDOCUMENTLOADEROBSERVER
 	NS_DECL_NSIINTERFACEREQUESTOR
 	NS_DECL_NSIWEBPROGRESSLISTENER
+    NS_DECL_NSICONTEXTMENULISTENER
 
 	// "Services" accessed through nsIInterfaceRequestor
 	NS_DECL_NSIPROMPT
-
-	// nsIDOMMouseListener
-	virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-	virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-	virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-	virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-	virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
-	virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
-	virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
 };
 
 #endif
