@@ -45,6 +45,12 @@
 interface nsIBrowserHistory : nsISupports
 {
     /**
+     * count
+     * The number of entries in global history
+     */
+    readonly attribute PRUint32 count;
+
+    /**
      * setPageTitle
      * set the page title for the given url. Ignores urls that are not
      * already in the history
@@ -58,7 +64,22 @@ interface nsIBrowserHistory : nsISupports
     void removePage(in string aURL);
 
     /**
-     * removePAgesFromHost
+     * startBatchUpdate
+     * Signals the beginning of some kind of batch update (e.g. delete).
+     * Observers won't be notified until there are no batches in progress
+     * (a startBatchUpdate call should always be followed by one to
+     * endBatchUpdate).
+     */
+    void startBatchUpdate();
+
+    /**
+     * endBatchUpdate
+     * Signals the end of a batch update.
+     */
+    void endBatchUpdate();
+    
+    /**
+     * removePagesFromHost
      * Remove all pages from the given host.
      * If aEntireDomain is true, will assume aHost is a domain,
      * and remove all pages from the entire domain.

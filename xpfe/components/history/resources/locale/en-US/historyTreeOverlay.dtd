@@ -5,3 +5,4 @@
 <!ENTITY tree.header.referrer.label "Referrer">
 <!ENTITY tree.header.hostname.label "Hostname">
 <!ENTITY tree.header.visitcount.label "Visit Count">
+<!ENTITY collapseExpand.accesskey   "e">

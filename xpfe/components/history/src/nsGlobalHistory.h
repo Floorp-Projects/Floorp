@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
+ *   Blake Ross <blaker@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -144,6 +145,7 @@ public:
   // these must be public so that the callbacks can call them
   PRBool MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate);
   PRBool MatchHost(nsIMdbRow *row, matchHost_t *hostInfo);
+  PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
 
 protected:
 
@@ -193,7 +195,6 @@ protected:
   nsresult TokenListToSearchQuery(const nsVoidArray& tokens,
                                   searchQuery& aResult);
   nsresult FindUrlToSearchQuery(const char *aURL, searchQuery& aResult);
-  PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
   nsresult NotifyFindAssertions(nsIRDFResource *aSource, nsIMdbRow *aRow);
   nsresult NotifyFindUnassertions(nsIRDFResource *aSource, nsIMdbRow *aRow);
     
@@ -217,6 +218,7 @@ protected:
   // caching of PR_Now() so we don't call it every time we do
   // a history query
   PRInt64   mLastNow;           // cache the last PR_Now()
+  PRInt32   mBatchesInProgress;
   PRBool    mNowValid;          // is mLastNow valid?
   nsCOMPtr<nsITimer> mExpireNowTimer;
   
@@ -237,7 +239,6 @@ protected:
   
   static void fireSyncTimer(nsITimer *aTimer, void *aClosure)
   {((nsGlobalHistory *)aClosure)->Sync(); }
-  
 
   //
   // RDF stuff

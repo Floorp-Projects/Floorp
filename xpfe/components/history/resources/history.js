@@ -64,12 +64,15 @@ function HistoryInit()
     if ("arguments" in window && window.arguments[0] && window.arguments.length >= 1) {
         // We have been supplied a resource URI to root the tree on
         var uri = window.arguments[0];
-        setRoot(uri);
-        if (uri.substring(0,5) == "find:") {
+        gHistoryOutliner.setAttribute("ref", uri);
+        if (uri.substring(0,5) == "find:" &&
+            !(window.arguments.length > 1 && window.arguments[1] == "newWindow")) {
             // Update the windowtype so that future searches are directed 
             // there and the window is not re-used for bookmarks. 
             var windowNode = document.getElementById("history-window");
             windowNode.setAttribute("windowtype", "history:searchresults");
+            windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
+
         }
         document.getElementById("groupingMenu").setAttribute("hidden", "true");
     }
@@ -93,6 +96,11 @@ function HistoryInit()
                 document.getElementById("groupByDay").setAttribute("checked", "true");
             }        
         }
+        else {  // must be the sidebar panel
+            var pb = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+            var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+            pbi.addObserver("browser.history.grouping", groupObserver, false);
+        }
     } 
     gHistoryOutliner.focus();
     gHistoryOutliner.outlinerBoxObject.view.selection.select(0);
@@ -106,6 +114,11 @@ function updateHistoryCommands()
 
 function historyOnSelect()
 {
+    if (!gHistoryStatus) {
+        OpenURL(false);
+        return;
+    }
+
     // every time selection changes, save the last hostname
     gLastHostname = "";
     gLastDomain = "";
@@ -121,12 +134,10 @@ function historyOnSelect()
         if (match && match.length>1)
             gLastHostname = match[1];
       
-        if (gHistoryStatus)
-           gHistoryStatus.label = url;
+        gHistoryStatus.label = url;
     }
     else {
-        if (gHistoryStatus)
-            gHistoryStatus.label = "";
+        gHistoryStatus.label = "";
     }
 
     if (gLastHostname) {
@@ -225,22 +236,33 @@ var historyDNDObserver = {
 
 function validClickConditions(event)
 {
+  var container = isContainer(gHistoryOutliner, gHistoryOutliner.currentIndex);
   return (event.button == 0 &&
-          event.originalTarget.localName == 'outlinerchildren');
+          event.originalTarget.localName == 'outlinerchildren' &&
+          !container && gHistoryStatus);
+}
+
+function collapseExpand()
+{
+    var currentIndex = gHistoryOutliner.currentIndex;
+    gHistoryOutliner.outlinerBoxObject.view.toggleOpenState(currentIndex);
 }
 
 function OpenURL(aInNewWindow)
 {
-    var currentIndex = gHistoryOutliner.currentIndex;
-    if (isContainer(gHistoryOutliner, currentIndex))
-        return false;
-      
-    var url = gHistoryOutliner.outlinerBoxObject.view.getCellText(currentIndex, "URL");
+    var currentIndex = gHistoryOutliner.currentIndex;     
+    var builder = gHistoryOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    var url = builder.getResourceAtIndex(currentIndex).Value;
 
     if (aInNewWindow) {
       var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
-      if (count == 1)
-        window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+      if (count == 1) {
+        if (isContainer(gHistoryOutliner, currentIndex))
+          openDialog("chrome://communicator/content/history/history.xul", 
+                     "", "chrome,all,dialog=no", url, "newWindow");
+        else      
+          openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+      }
       else {
         var min = new Object(); 
         var max = new Object();
@@ -257,16 +279,6 @@ function OpenURL(aInNewWindow)
     else
         openTopWin(url);
     return true;
-}
-
-/**
- * Root the tree on a given URI (used for displaying search results)
- */
-function setRoot(root)
-{
-    var windowNode = document.getElementById("history-window");
-    windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
-    document.getElementById("historyOutliner").setAttribute("ref", root);
 }
 
 function GroupBy(groupingType)
@@ -286,6 +298,16 @@ function GroupBy(groupingType)
         break;
     }
     gPrefService.setCharPref("browser.history.grouping", groupingType);
+}
+
+var groupObserver = {
+  observe: function(aPrefBranch, aTopic, aPrefName) {
+    try {
+      GroupBy(aPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch).getCharPref(aPrefName));
+    }
+    catch(ex) {
+    }
+  }
 }
 
 function historyAddBookmarks()
@@ -319,9 +341,13 @@ function updateItems()
 {
   var count = gHistoryOutliner.outlinerBoxObject.view.selection.count;
   var openItem = document.getElementById("miOpen");
+  var bookmarkItem = document.getElementById("miAddBookmark");
+  var copyLocationItem = document.getElementById("miCopyLinkLocation");
+  var sep1 = document.getElementById("pre-bookmarks-separator");
   var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
+  var collapseExpandItem = document.getElementById("miCollapseExpand");
   if (count > 1) {
-    document.getElementById("miAddBookmark").setAttribute("label", document.getElementById('multipleBookmarks').getAttribute("label"));
+    var hasContainer = false;
     if (gHistoryGrouping == "day") {
       var min = new Object(); 
       var max = new Object();
@@ -329,21 +355,53 @@ function updateItems()
       for (var i = 0; i < rangeCount; ++i) {
         gHistoryOutliner.outlinerBoxObject.view.selection.getRangeAt(i, min, max);
         for (var k = max.value; k >= min.value; --k) {
-          if (isContainer(gHistoryOutliner, k))          
-            return false;
+          if (isContainer(gHistoryOutliner, k)) {
+            hasContainer = true;
+            break;
+          }
         }
       }
     }
-    openItem.setAttribute("hidden", "true");
-    openItem.removeAttribute("default");
-    openItemInNewWindow.setAttribute("default", "true");
+    if (hasContainer) {
+      bookmarkItem.setAttribute("hidden", "true");
+      copyLocationItem.setAttribute("hidden", "true");
+      sep1.setAttribute("hidden", "true");
+      document.getElementById("post-bookmarks-separator").setAttribute("hidden", "true");
+      openItem.setAttribute("hidden", "true");
+      openItemInNewWindow.setAttribute("hidden", "true");
+      collapseExpandItem.setAttribute("hidden", "true");
+    }
+    else {
+      bookmarkItem.removeAttribute("hidden");
+      copyLocationItem.removeAttribute("hidden");
+      sep1.removeAttribute("hidden");
+      bookmarkItem.setAttribute("label", document.getElementById('multipleBookmarks').getAttribute("label"));
+      openItem.setAttribute("hidden", "true");
+      openItem.removeAttribute("default");
+      openItemInNewWindow.setAttribute("default", "true");
+    }
   }
   else {
-    document.getElementById("miAddBookmark").removeAttribute("disabled");
-    document.getElementById("miAddBookmark").setAttribute("label", document.getElementById('oneBookmark').getAttribute("label"));
+    bookmarkItem.setAttribute("label", document.getElementById('oneBookmark').getAttribute("label"));
     var currentIndex = gHistoryOutliner.currentIndex;
-    if (isContainer(gHistoryOutliner, currentIndex))
-      return false;
+    if (isContainer(gHistoryOutliner, currentIndex)) {
+        openItem.setAttribute("hidden", "true");
+        openItem.removeAttribute("default");
+        collapseExpandItem.removeAttribute("hidden");
+        collapseExpandItem.setAttribute("default", "true");
+        bookmarkItem.setAttribute("hidden", "true");
+        copyLocationItem.setAttribute("hidden", "true");
+        sep1.setAttribute("hidden", "true");
+        if (isContainerOpen(gHistoryOutliner, currentIndex))
+          collapseExpandItem.setAttribute("label", gHistoryBundle.getString("collapseLabel"));
+        else
+          collapseExpandItem.setAttribute("label", gHistoryBundle.getString("expandLabel"));
+        return true;
+    }
+    collapseExpandItem.setAttribute("hidden", "true");
+    bookmarkItem.removeAttribute("hidden");
+    copyLocationItem.removeAttribute("hidden");
+    sep1.removeAttribute("hidden");
     if (!gWindowManager) {
       gWindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
       gWindowManager = gWindowManager.QueryInterface( Components.interfaces.nsIWindowMediator);

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Blake Ross <blakeross@telocity.com> (Original Author)
+ *   Blake Ross <blaker@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -51,14 +51,17 @@ const nsITransferable = Components.interfaces.nsITransferable;
 const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
 const nsIRDFContainer = Components.interfaces.nsIRDFContainer;
 
-var gClipboard;
-var gOutliner;
-var gRDFC;
 var gRDF;
+var gClipboard;
 
 function isContainer(outliner, index)
 {
   return outliner.outlinerBoxObject.view.isContainer(index);
+}
+
+function isContainerOpen(outliner, index)
+{
+  return outliner.outlinerBoxObject.view.isContainerOpen(index);
 }
 
 function nsOutlinerController_SetTransferData(transferable, flavor, text)
@@ -74,7 +77,7 @@ function nsOutlinerController_SetTransferData(transferable, flavor, text)
 
 function nsOutlinerController_copy()
 {
-  var rangeCount = this.getOutlinerSelection().getRangeCount();
+  var rangeCount = this.outlinerSelection.getRangeCount();
   if (rangeCount < 1)
     return false;
    
@@ -87,14 +90,14 @@ function nsOutlinerController_copy()
   var max = new Object();
 
   for (var i = rangeCount - 1; i >= 0; --i) {
-    this.getOutlinerSelection().getRangeAt(i, min, max);
+    this.outlinerSelection.getRangeAt(i, min, max);
     for (var k = max.value; k >= min.value; --k) {
       // If one of the selected items is
       // a container, ignore it.
-      if (isContainer(this.getOutliner(), k))
+      if (isContainer(this.outliner, k))
         continue;
-      var pageUrl  = this.getOutlinerView().getCellText(k, "URL");        
-      var pageName = this.getOutlinerView().getCellText(k, "Name");
+      var pageUrl  = this.outlinerView.getCellText(k, "URL");        
+      var pageName = this.outlinerView.getCellText(k, "Name");
 
       url += "ID:{" + pageUrl + "};";
       url += "NAME:{" + pageName + "};";
@@ -136,64 +139,64 @@ function nsOutlinerController_cut()
 
 function nsOutlinerController_selectAll()
 {
-  this.getOutlinerSelection().selectAll();
+  this.outlinerSelection.selectAll();
 }
 
 function nsOutlinerController_delete()
 {  
-  var rangeCount = this.getOutlinerSelection().getRangeCount();
+  var rangeCount = this.outlinerSelection.getRangeCount();
   if (rangeCount < 1)
     return false;      
+  
+  var datasource = this.outliner.database;
+  var dsEnum = datasource.GetDataSources(); 
+  dsEnum.getNext();
+  var ds = dsEnum.getNext();
 
-  if (!gRDFC)
-    gRDFC = Components.classes[rdfc_contractid].getService(nsIRDFContainer);
+  var count = this.outlinerSelection.count;
+  
+  // XXX 9 is a random number, just looking for a sweetspot
+  // don't want to rebuild outliner content for just a few items
+  if (count > 9)
+    ds.QueryInterface(Components.interfaces.nsIBrowserHistory).startBatchUpdate();
 
-  var datasource = this.getOutliner().database;
   var min = new Object(); 
   var max = new Object();
   var dirty = false;
-
   for (var i = rangeCount - 1; i >= 0; --i) {
-    this.getOutlinerSelection().getRangeAt(i, min, max);
+    this.outlinerSelection.getRangeAt(i, min, max);
     for (var k = max.value; k >= min.value; --k) {
-      var url = this.getOutlinerView().getCellText(k, "URL");
-      if (!url)
-        continue;
-        
       if (!gRDF)
         gRDF = Components.classes[rdf_contractid].getService(Components.interfaces.nsIRDFService);
 
-      var IDRes = gRDF.GetResource(url);
+      var IDRes = this.outlinerBuilder.getResourceAtIndex(k);
       if (!IDRes)
         continue;
 
-      var root = this.getOutliner().getAttribute('ref');
-      var parentIDRes = gRDF.GetResource(root);
+      var root = this.outliner.getAttribute('ref');
+      var parentIDRes;
+      try {
+        parentIDRes = this.outlinerBuilder.getResourceAtIndex(this.outlinerView.getParentIndex(k));
+      }
+      catch(ex) {
+        parentIDRes = gRDF.GetResource(root);
+      }
       if (!parentIDRes)
         continue;
       
-      // XXX - This should not be necessary
-      // Why doesn't the unassertion fan out to all of the datasources in
-      // the nsIRDFCompositeDataSource so they can handle it?
-      var dsEnum = datasource.GetDataSources();   
-      while (dsEnum.hasMoreElements()) {
-        var ds = dsEnum.getNext().QueryInterface(Components.interfaces.nsIRDFDataSource);
-
-        try {
-          // try a container-based approach
-          gRDFC.Init(ds, parentIDRes);
-          gRDFC.RemoveElement(IDRes, true);
-        } catch (ex) {
-          // otherwise remove the parent/child assertion then
-          var containment = gRDF.GetResource("http://home.netscape.com/NC-rdf#child");
-          ds.Unassert(parentIDRes, containment, IDRes);
-        }
-        dirty = true;
-      }
+      // otherwise remove the parent/child assertion then
+      var containment = gRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+      ds.QueryInterface(Components.interfaces.nsIRDFDataSource).Unassert(parentIDRes, containment, IDRes);
+      dirty = true;
     }
   }
 
   if (dirty) {    
+    if (count > 9) {
+      ds.QueryInterface(Components.interfaces.nsIBrowserHistory).endBatchUpdate();
+      this.outliner.builder.rebuild();
+    }
+
     try {
       var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
       remote.Flush();
@@ -202,42 +205,54 @@ function nsOutlinerController_delete()
   }
   if (max.value) {
     var newIndex = max.value - (max.value - min.value);
-    if (newIndex >= this.getOutlinerView().rowCount)
+    if (newIndex >= this.outlinerView.rowCount)
       --newIndex;
-    this.getOutlinerSelection().select(newIndex);
+    this.outlinerSelection.select(newIndex);
   }
   return true;
 }
 
 function nsOutlinerController(outliner)
 {
-  this.outlinerId = outliner.id;
+  this._outliner = outliner;
   outliner.controllers.appendController(this);
 }
 
 nsOutlinerController.prototype = 
 {
-  // store the outliner's ID, rather than the outliner,
-  // to avoid holding a strong ref
-  outlinerId: null,
-  outlinerBodyId: null,
-  getOutliner : function()
+  _outlinerSelection: null,
+  _outlinerView: null,
+  _outlinerBuilder: null,
+  _outlinerBoxObject: null,
+  _outliner: null,
+  get outliner()
   {
-    if (!gOutliner)
-      gOutliner = document.getElementById(this.outlinerId);
-    return gOutliner;
+    return this._outliner;
   },
-  getOutlinerBoxObject : function()
+  get outlinerBoxObject()
   {
-    return this.getOutliner().outlinerBoxObject;
+    if (this._outlinerBoxObject)
+      return this._outlinerBoxObject;
+    return this._outlinerBoxObject = this.outliner.outlinerBoxObject;
   },
-  getOutlinerView : function()
+  get outlinerView()
   {
-    return this.getOutliner().outlinerBoxObject.view;
+    if (this._outlinerView)
+      return this._outlinerView;
+    return this._outlinerView = this.outliner.outlinerBoxObject.view;
   },
-  getOutlinerSelection : function()
+  get outlinerSelection()
   {
-    return this.getOutliner().outlinerBoxObject.view.selection;
+    if (this._outlinerSelection)
+      return this._outlinerSelection;
+    return this._outlinerSelection = this.outliner.outlinerBoxObject.view.selection;
+  },
+  get outlinerBuilder()
+  {
+    if (this._outlinerBuilder)
+      return this._outlinerBuilder;
+    return this._outlinerBuilder = this.outliner.builder.
+                                   QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
   },
   SetTransferData : nsOutlinerController_SetTransferData,
 
@@ -262,7 +277,7 @@ nsOutlinerController.prototype =
     {
       // commands which do not require selection              
       case "cmd_selectAll":
-        var outlinerView = this.getOutlinerView();
+        var outlinerView = this.outlinerView;
         return (outlinerView.rowCount !=  outlinerView.selection.count);
                 
       // these commands require selection
@@ -278,7 +293,7 @@ nsOutlinerController.prototype =
     }
         
     // if we get here, then we have a command that requires selection
-    var haveSelection = (this.getOutlinerSelection().count);
+    var haveSelection = (this.outlinerSelection.count);
     return (haveCommand && haveSelection);
   },
 

@@ -23,6 +23,7 @@
  *   Chris Waterson <waterson@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Joe Hewitt <hewitt@netscape.com>
+ *   Blake Ross <blaker@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -142,6 +143,11 @@ struct matchSearchTerm_t {
   PRBool haveClosure;           // are the rest of the fields valid?
   PRInt64 now;
   PRInt32 intValue;
+};
+
+struct matchQuery_t {
+  searchQuery* query;
+  nsGlobalHistory* history;
 };
 
 // simple token/value struct
@@ -371,6 +377,13 @@ matchHostCallback(nsIMdbRow *row, void *aClosure)
   matchHost_t *hostInfo = (matchHost_t*)aClosure;
   return hostInfo->history->MatchHost(row, hostInfo);
 }
+
+static PRBool
+matchQueryCallback(nsIMdbRow *row, void *aClosure)
+{
+  matchQuery_t *query = (matchQuery_t*)aClosure;
+  return query->history->RowMatches(row, query->query);
+}
 //----------------------------------------------------------------------
 
 nsMdbTableEnumerator::nsMdbTableEnumerator()
@@ -486,6 +499,7 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 nsGlobalHistory::nsGlobalHistory()
   : mExpireDays(9), // make default be nine days
     mNowValid(PR_FALSE),
+    mBatchesInProgress(0),
     mDirty(PR_FALSE),
     mEnv(nsnull),
     mStore(nsnull),
@@ -578,7 +592,6 @@ nsGlobalHistory::AddPage(const char *aURL)
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
 
   nsresult rv;
-
   rv = SaveLastPageVisited(aURL);
   if (NS_FAILED(rv)) return rv;
 
@@ -884,6 +897,17 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 }
 
 NS_IMETHODIMP
+nsGlobalHistory::GetCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
+  if (!mTable) return NS_ERROR_FAILURE;
+
+  mdb_err err = mTable->GetCount(mEnv, aCount);
+  return (err == 0) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 {
   NS_PRECONDITION(aURL != nsnull, "null ptr");
@@ -954,15 +978,19 @@ nsGlobalHistory::RemovePage(const char *aURL)
   rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
   if (NS_FAILED(rv)) return NS_OK;
 
-  // get the resource so we can do the notification
-  nsCOMPtr<nsIRDFResource> oldRowResource;
-  gRDFService->GetResource(aURL, getter_AddRefs(oldRowResource));
-
   // remove the row
   err = mTable->CutRow(mEnv, row);
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
 
-  NotifyFindUnassertions(oldRowResource, row);
+  // if there are batches in progress, we don't want to notify
+  // observers that we're deleting items. the caller promises
+  // to handle whatever UI updating is necessary when we're finished.  
+  if (!mBatchesInProgress) {
+    // get the resource so we can do the notification
+    nsCOMPtr<nsIRDFResource> oldRowResource;
+    gRDFService->GetResource(aURL, getter_AddRefs(oldRowResource));
+    NotifyFindUnassertions(oldRowResource, row);
+  }
 
   // not a fatal error if we can't cut all column
   err = row->CutAllColumns(mEnv);
@@ -1037,6 +1065,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
                                     void *aClosure,
                                     PRBool notify)
 {
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsresult rv;
   if (!mTable) return NS_OK;
 
@@ -1045,8 +1074,8 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->GetCount(mEnv, &count);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  // XXX tell RDF observers that we're about to do a batch update
-  
+  StartBatchUpdate();
+
   // Begin the batch.
   int marker;
   err = mTable->StartBatchChangeHint(mEnv, &marker);
@@ -1091,11 +1120,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
     NS_ASSERTION(err == 0, "couldn't cut row");
     if (err != 0)
       continue;
-    
-    // Notify observers that the row is, er, history.
-    if (notify)
-      NotifyFindUnassertions(resource, row);
-    
+  
     // possibly avoid leakage
     err = row->CutAllColumns(mEnv);
     NS_ASSERTION(err == 0, "couldn't cut all columns");
@@ -1109,8 +1134,8 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->EndBatchChangeHint(mEnv, &marker);
   NS_ASSERTION(err == 0, "error ending batch");
 
-  // XXX tell RDF observers that we're done with the batch
-  
+  EndBatchUpdate();
+
   return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1635,6 +1660,7 @@ nsGlobalHistory::Sync()
     Flush();
   
   mDirty = PR_FALSE;
+  mSyncTimer = nsnull;
 }
 
 void
@@ -1662,6 +1688,7 @@ nsGlobalHistory::SetDirty()
   mSyncTimer->Init(fireSyncTimer, this, HISTORY_SYNC_TIMEOUT,
                    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
   
+
   return NS_OK;
 }
 
@@ -1774,12 +1801,32 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
       aProperty == kNC_child) {
 
     nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget, &rv);
-
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED; 
 
     const char* targetUrl;
     rv = resource->GetValueConst(&targetUrl);
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
+
+    if (IsFindResource(resource)) {
+      // convert uri to a query
+      searchQuery query;
+      rv = FindUrlToSearchQuery(targetUrl, query);
+      if (NS_FAILED(rv)) NS_RDF_ASSERTION_REJECTED;
+ 
+      matchQuery_t matchQuery;
+      matchQuery.history = this;
+      matchQuery.query = &query;
+      rv = RemoveMatchingRows(matchQueryCallback, (void*)&matchQuery, PR_TRUE); 
+      FreeSearchQuery(query);
+      if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
+
+      // if there are batches in progress, we don't want to notify
+      // observers that we're deleting items. the caller promises
+      // to handle whatever UI updating is necessary when we're finished.
+      if (!mBatchesInProgress)
+        NotifyUnassert(aSource, aProperty, aTarget);
+      return NS_OK;
+    }
 
     // ignore any error
     rv = RemovePage(targetUrl);
@@ -2129,7 +2176,65 @@ nsGlobalHistory::Flush()
   return Commit(kLargeCommit);
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::StartBatchUpdate()
+{
+  nsresult rv = NS_OK;
 
+  ++mBatchesInProgress;
+  
+  // we could call mObservers->EnumerateForwards() here
+  // to save the addref/release on each observer, but
+  // it's unlikely that anyone but the outliner builder
+  // is observing us
+  if (mObservers) {
+    PRUint32 count;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+      NS_ASSERTION(observer != nsnull, "null ptr");
+      if (! observer)
+        continue;
+
+      rv = observer->BeginUpdateBatch(this);
+      NS_RELEASE(observer);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::EndBatchUpdate()
+{
+  nsresult rv = NS_OK;
+
+  --mBatchesInProgress;
+
+  // we could call mObservers->EnumerateForwards() here
+  // to save the addref/release on each observer, but
+  // it's unlikely that anyone but the outliner builder
+  // is observing us
+  if (mObservers) {
+    PRUint32 count;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+      NS_ASSERTION(observer != nsnull, "null ptr");
+      if (! observer)
+        continue;
+
+      rv = observer->EndUpdateBatch(this);
+      NS_RELEASE(observer);
+    }
+  }
+  return rv;
+}
 
 //----------------------------------------------------------------------
 //
@@ -2900,7 +3005,6 @@ nsGlobalHistory::IsFindResource(nsIRDFResource *aResource)
   return (PL_strncmp(value, "find:", 5)==0);
 }
 
-
 //
 // convert a list of name/value pairs into a search query with 0 or
 // more terms and an optional groupby
@@ -3668,7 +3772,7 @@ nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 {
   if (HasCell(mEnv, aRow, mHiddenColumn))
     return PR_FALSE;
-  
+
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
   
