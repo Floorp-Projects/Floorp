@@ -202,6 +202,11 @@ static void SaveAllPrefs(int number, CMTSetPrefElement* list)
 NS_IMETHODIMP
 nsPSMComponent::PassPrefs()
 {
+    // if we have not passed anything to psm yet, this function can just return.
+
+    if (!mControl)
+        return NS_OK;
+
     int i;
     nsresult rv = NS_ERROR_FAILURE;
     char* strpref = NULL;
