@@ -31,6 +31,9 @@
 #define INITIAL_MAX_ITEMS 128
 #define ITEMS_GROWSIZE    128
 
+NS_IMPL_ADDREF(nsComboBox)
+NS_IMPL_RELEASE(nsComboBox)
+
 //-------------------------------------------------------------------------
 //
 // nsComboBox constructor
