@@ -19,13 +19,13 @@
 * Contributor(s): igor@icesoft.no, pschwartau@netscape.com
 * Date: 24 September 2001
 *
-* SUMMARY: Testing arrays that are large but sparse
+* SUMMARY: Truncating arrays with non-index decimal property names.
 * From correspondence with Igor Bukanov <igor@icesoft.no>:
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';
-var summary = 'Testing arrays that are large but sparse -';
+var summary = 'Truncating arrays with non-index decimal property names';
 var BIG_INDEX = 4294967290;
 var status = '';
 var statusitems = [];
@@ -41,6 +41,8 @@ arr = Array(BIG_INDEX);
 arr[BIG_INDEX - 1] = 'a';
 arr[BIG_INDEX - 10000] = 'b';
 arr[BIG_INDEX - 0.5] = 'c';  // not an array index - but a valid property name
+
+// Truncate the array - 
 arr.length = BIG_INDEX - 5000;
 
 var s = '';
@@ -51,8 +53,8 @@ for (var i in arr)
 
 
 /*
- * We expect s='cb' (or 'bc': EcmaScript does not fix the order). 
- * Note 'c' is included, since for..in includes ALL enumerable properties,
+ * We expect s == 'cb' or 'bc' (EcmaScript does not fix the order). 
+ * Note 'c' is included, as for..in includes ALL enumerable properties,
  * not just array-index properties. The bug was: Rhino was giving s=''.
  */
 actual = sortThis(s);
