@@ -24,8 +24,6 @@
   
   TO DO
 
-  1) Implement the remainder of the DOM methods.
-
 */
 
 // Note the ALPHABETICAL ORDER. Heed it. Or die.
@@ -149,6 +147,8 @@ private:
     static PRInt32  kNameSpaceID_XUL;
 
     static nsIAtom* kDataSourcesAtom;
+    static nsIAtom* kFrameAtom;
+    static nsIAtom* kIFrameAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kKeysetAtom;
     static nsIAtom* kRefAtom;
@@ -220,39 +220,18 @@ public:
     IsHTMLElement(nsIContent* aElement);
 
     PRBool
+    IsHTMLFrame(nsIContent* aElement);
+
+    PRBool
     IsAttributeProperty(nsIRDFResource* aProperty);
 
     nsresult AddAttribute(nsIContent* aElement,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aValue);
 
-    nsresult RemoveAttribute(nsIContent* aElement,
-                             nsIRDFResource* aProperty,
-                             nsIRDFNode* aValue);
-
     nsresult CreateTemplateBuilder(nsIContent* aElement,
                                    const nsString& aDataSources,
                                    nsIRDFContentModelBuilder** aResult);
-
-    nsresult
-    GetRDFResourceFromXULElement(nsIDOMNode* aNode, nsIRDFResource** aResult);
-
-    nsresult
-    GetGraphNodeForXULElement(nsIDOMNode* aNode, nsIRDFNode** aResult);
-
-    nsresult
-    GetResource(PRInt32 aNameSpaceID,
-                nsIAtom* aNameAtom,
-                nsIRDFResource** aResource);
-
-    nsresult
-    MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFResource** aResult);
-
-    nsresult
-    GetParentNodeWithHTMLHack(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* aResult);
-
-    PRBool
-    IsXULElement(nsIContent* aElement);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -268,6 +247,8 @@ PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
+nsIAtom*        RDFXULBuilderImpl::kFrameAtom;
+nsIAtom*        RDFXULBuilderImpl::kIFrameAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kKeysetAtom;
 nsIAtom*        RDFXULBuilderImpl::kRefAtom;
@@ -334,6 +315,8 @@ RDFXULBuilderImpl::Init()
         if (NS_FAILED(rv)) return rv;
 
         kDataSourcesAtom          = NS_NewAtom("datasources");
+        kFrameAtom                = NS_NewAtom("frame");
+        kIFrameAtom               = NS_NewAtom("iframe");
         kIdAtom                   = NS_NewAtom("id");
         kKeysetAtom               = NS_NewAtom("keyset");
         kRefAtom                  = NS_NewAtom("ref");
@@ -409,6 +392,8 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kXUL_tag);
 
         NS_IF_RELEASE(kDataSourcesAtom);
+        NS_IF_RELEASE(kFrameAtom);
+        NS_IF_RELEASE(kIFrameAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kKeysetAtom);
         NS_IF_RELEASE(kRefAtom);
@@ -869,8 +854,21 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
         rv = gRDFService->IsAnonymousResource(aResource, &isAnonymous);
         if (NS_FAILED(rv)) return rv;
 
-        if (!isAnonymous || aForceIDAttr) {
-            // Set the 'id' attribute
+        if (!isAnonymous || aForceIDAttr || IsHTMLFrame(element)) {
+            // Set the 'id' attribute. We set the 'id' attribute on
+            // any content that either:
+            //
+            // 1) has an 'id' attribute specified in the original XUL
+            //     - because the author wanted it to be there
+            //
+            // 2) is beneath a 'xul:template' tag
+            //     - because we need this to maintain partial construction
+            //       state in the nsRDFGenericBuilder.
+            //
+            // 3) is an html:frame or html:iframe
+            //     - because this is a hack of a way to get context menus
+            //       to forward right click events to the right webshell.
+            //
             nsXPIDLCString uri;
             rv = aResource->GetValue( getter_Copies(uri) );
             if (NS_FAILED(rv)) return rv;
@@ -991,6 +989,10 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
             // for 'id' and 'ref' attribute changes, so we're sure that
             // this will get properly hashed into the document's
             // resource-to-element map.
+            //
+            // See above (CreateHTMLElement) for the bizarre reasons
+            // we sometimes will set an attribute on an anonymous
+            // node.
             nsXPIDLCString uri;
             rv = aResource->GetValue( getter_Copies(uri) );
             if (NS_FAILED(rv)) return rv;
@@ -1142,13 +1144,32 @@ RDFXULBuilderImpl::IsHTMLElement(nsIContent* aElement)
     nsresult rv;
 
     PRInt32 nameSpaceID;
-    if (NS_FAILED(rv = aElement->GetNameSpaceID(nameSpaceID))) {
-        NS_ERROR("unable to get element's namespace ID");
+    rv = aElement->GetNameSpaceID(nameSpaceID);
+    if (NS_FAILED(rv))
         return PR_FALSE;
-    }
 
     return (kNameSpaceID_HTML == nameSpaceID);
 }
+
+
+PRBool
+RDFXULBuilderImpl::IsHTMLFrame(nsIContent* aElement)
+{
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    rv = aElement->GetNameSpaceID(nameSpaceID);
+    if (NS_SUCCEEDED(rv) && (kNameSpaceID_HTML == nameSpaceID)) {
+        nsCOMPtr<nsIAtom> tag;
+        rv = aElement->GetTag(*getter_AddRefs(tag));
+        if (NS_SUCCEEDED(rv) && ((tag.get() == kFrameAtom) || (tag.get() == kIFrameAtom))) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
+
 
 PRBool
 RDFXULBuilderImpl::IsAttributeProperty(nsIRDFResource* aProperty)
@@ -1297,72 +1318,6 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
 }
 
 
-nsresult
-RDFXULBuilderImpl::RemoveAttribute(nsIContent* aElement,
-                                   nsIRDFResource* aProperty,
-                                   nsIRDFNode* aValue)
-{
-    nsresult rv;
-
-    // First, split the property into its namespace and tag components
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> tag;
-    if (NS_FAILED(rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag)))) {
-        NS_ERROR("unable to split resource into namespace/tag pair");
-        return rv;
-    }
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        nsAutoString elementStr;
-        rv = gXULUtils->GetElementLogString(aElement, elementStr);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
-
-        nsAutoString attrStr;
-        rv = gXULUtils->GetAttributeLogString(aElement, nameSpaceID, tag, attrStr);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element string");
-
-        nsAutoString valueStr;
-        rv = gXULUtils->GetTextForNode(aValue, valueStr);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get value text");
-
-        char* elementCStr = elementStr.ToNewCString();
-        char* attrCStr = attrStr.ToNewCString();
-        char* valueCStr = valueStr.ToNewCString();
-
-        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder remove-attribute"));
-        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   elementCStr));
-        PR_LOG(gLog, PR_LOG_DEBUG, ("    %s=\"%s\"", attrCStr, valueCStr));
-
-        nsCRT::free(valueCStr);
-        nsCRT::free(attrCStr);
-        nsCRT::free(elementCStr);
-    }
-#endif
-
-    if (IsHTMLElement(aElement)) {
-        // XXX HTML elements are picky and only want attributes from
-        // certain namespaces. We'll just assume that, if the
-        // attribute _isn't_ in one of these namespaces, it never got
-        // added, so removing it is a no-op.
-        switch (nameSpaceID) {
-        case kNameSpaceID_HTML:
-        case kNameSpaceID_None:
-        case kNameSpaceID_Unknown:
-            break;
-
-        default:
-            NS_WARNING("ignoring non-HTML attribute on HTML tag");
-            return NS_OK;
-        }
-    }
-
-    // XXX At this point, we may want to be extra clever, and see if
-    // the Unassert() actually "exposed" some other multiattribute...
-    rv = aElement->UnsetAttribute(nameSpaceID, tag, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "problem unsetting attribute");
-    return rv;
-}
 
 nsresult
 RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
@@ -1488,179 +1443,3 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
     return NS_OK;
 }
 
-
-nsresult
-RDFXULBuilderImpl::GetRDFResourceFromXULElement(nsIDOMNode* aNode, nsIRDFResource** aResult)
-{
-    nsresult rv;
-
-    // Given an nsIDOMNode that presumably has been created as a proxy
-    // for an RDF resource, pull the RDF resource information out of
-    // it.
-
-    nsCOMPtr<nsIContent> element;
-    rv = aNode->QueryInterface(nsCOMTypeInfo<nsIContent>::GetIID(), getter_AddRefs(element) );
-    NS_ASSERTION(NS_SUCCEEDED(rv), "DOM element doesn't support nsIContent");
-    if (NS_FAILED(rv)) return rv;
-
-    return gXULUtils->GetElementResource(element, aResult);
-}
-
-
-nsresult
-RDFXULBuilderImpl::GetGraphNodeForXULElement(nsIDOMNode* aNode, nsIRDFNode** aResult)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIDOMText> text( do_QueryInterface(aNode) );
-    if (text) {
-        nsAutoString data;
-        rv = text->GetData(data);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIRDFLiteral> literal;
-        rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(literal));
-        if (NS_FAILED(rv)) return rv;
-
-        *aResult = literal;
-        NS_ADDREF(*aResult);
-    }
-    else {
-        // XXX If aNode doesn't have a resource, then panic for
-        // now. (We may be able to safely just ignore this at some
-        // point.)
-        nsCOMPtr<nsIRDFResource> resource;
-        rv = GetRDFResourceFromXULElement(aNode, getter_AddRefs(resource));
-//        NS_ASSERTION(NS_SUCCEEDED(rv), "new child doesn't have a resource");
-        if (NS_FAILED(rv)) return rv;
-
-        // If the node isn't marked as a XUL element in the graph,
-        // then we'll ignore it.
-        PRBool isXULElement;
-        rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-        if (NS_FAILED(rv)) return rv;
-
-        if (! isXULElement)
-            return NS_RDF_NO_VALUE;
-
-        *aResult = resource;
-        NS_ADDREF(*aResult);
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-RDFXULBuilderImpl::GetResource(PRInt32 aNameSpaceID,
-                               nsIAtom* aNameAtom,
-                               nsIRDFResource** aResource)
-{
-    NS_PRECONDITION(aNameAtom != nsnull, "null ptr");
-    if (! aNameAtom)
-        return NS_ERROR_NULL_POINTER;
-
-    // XXX should we allow nodes with no namespace???
-    NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
-    if (aNameSpaceID == kNameSpaceID_Unknown)
-        return NS_ERROR_UNEXPECTED;
-
-    // construct a fully-qualified URI from the namespace/tag pair.
-    nsAutoString uri;
-    gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
-
-    // XXX check to see if we need to insert a '/' or a '#'
-    const PRUnichar *unicodeString;
-    aNameAtom->GetUnicode(&unicodeString);
-    nsAutoString tag(unicodeString);
-    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
-        uri.Append('#');
-
-    uri.Append(tag);
-
-    nsresult rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-    return rv;
-}
-
-
-
-nsresult
-RDFXULBuilderImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFResource** aResult)
-{
-    // Using the namespace ID and the tag, construct a fully-qualified
-    // URI and turn it into an RDF property.
-
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
-    if (! document)
-        return NS_ERROR_UNEXPECTED;
-
-    nsresult rv;
-    nsCOMPtr<nsINameSpaceManager> nsmgr;
-    rv = document->GetNameSpaceManager(*getter_AddRefs(nsmgr));
-    if (NS_FAILED(rv)) return rv;
-
-    nsAutoString uri;
-    rv = nsmgr->GetNameSpaceURI(aNameSpaceID, uri);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get URI for namespace");
-    if (NS_FAILED(rv)) return rv;
-
-    if (uri.Last() != PRUnichar('#') && uri.Last() != PRUnichar('/'))
-        uri.Append('#');
-
-    const PRUnichar *unicodeString;
-    aTagName->GetUnicode(&unicodeString);
-    uri.Append(unicodeString);
-
-    rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResult);
-    return rv;
-}
-
-
-
-
-nsresult
-RDFXULBuilderImpl::GetParentNodeWithHTMLHack(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* aResult)
-{
-    // Since HTML nodes will return the document as their parent node
-    // when their mParent == nsnull && mDocument != nsnull, we need to
-    // deal. See bug 6917 for details.
-    nsresult rv;
-
-    nsCOMPtr<nsIDOMNode> result;
-
-    rv = aNode->GetParentNode(getter_AddRefs(result));
-    if (NS_FAILED(rv)) return rv;
-
-    if (result) {
-        // If we can QI to nsIDocument, then we've hit the case where
-        // HTML nodes screw us. Make the parent be null.
-        if (nsCOMPtr<nsIDocument>(do_QueryInterface(result))) {
-            result = nsnull;
-        }
-    }
-
-    *aResult = result;
-    return NS_OK;
-}
-
-
-PRBool
-RDFXULBuilderImpl::IsXULElement(nsIContent* aElement)
-{
-    // Return PR_TRUE if the element is a XUL element; that is, it is
-    // part of the original XUL document, or has been created via the
-    // DOM. We can tell because it'll be decorated with an
-    // "[RDF:instanceOf]-->[XUL:element]" attribute.
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = gXULUtils->GetElementResource(aElement, getter_AddRefs(resource));
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    PRBool isXULElement;
-    rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    return isXULElement;
-}
