@@ -30,14 +30,14 @@ class nsDiskModule : public nsCacheModule
 {
 
 public:
-	nsDiskModule();
-	~nsDiskModule();
-	PRBool          AddObject(nsCacheObject* i_pObject);
-	nsCacheObject*  GetObject(PRUint32 i_index) const;
+    nsDiskModule(const PRUint32 size);
+    ~nsDiskModule();
+    PRBool          AddObject(nsCacheObject* i_pObject);
+    nsCacheObject*  GetObject(PRUint32 i_index) const;
 
 private:
-	nsDiskModule(const nsDiskModule& dm);
-	nsDiskModule& operator=(const nsDiskModule& dm);	
+    nsDiskModule(const nsDiskModule& dm);
+    nsDiskModule& operator=(const nsDiskModule& dm);
 };
 
 #endif

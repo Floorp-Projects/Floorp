@@ -16,36 +16,42 @@
  * Reserved.
  */
 
-/* 
- * nsDiskModule
- *
- * Gagan Saksena 02/02/98
- * 
- */
+#ifndef nsCachePref_h__
+#define nsCachePref_h__
 
+//#include "nsISupports.h"
 #include <prtypes.h>
-#include "nsDiskModule.h"
-#include "nsCacheObject.h"
-//
-// Constructor: nsDiskModule
-//
-nsDiskModule::nsDiskModule(const PRUint32 size):
-    nsCacheModule(size)
+
+class nsCachePref //: public nsISupports
 {
 
-}
+public:
+    enum Refresh 
+    {
+        NEVER,
+        ONCE,
+        ALWAYS
+    } r;
+            nsCachePref();
 
-nsDiskModule::~nsDiskModule()
-{
+    PRUint32        MemCacheSize() const;
+    PRUint32        DiskCacheSize() const;
+    const char*     DiskCacheFolder() const;
+    nsCachePref::Refresh
+                    Frequency() const;
 
-}
+/*
+    NS_IMETHOD              QueryInterface(const nsIID& aIID, 
+                                           void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt)   AddRef(void);
+    NS_IMETHOD_(nsrefcnt)   Release(void);
+*/
+protected:
 
-nsCacheObject* nsDiskModule::GetObject(PRUint32 i_index) const
-{
-    return 0;
-}
+private:
+    nsCachePref(const nsCachePref& o);
+    nsCachePref& operator=(const nsCachePref& o);
+};
 
-PRBool nsDiskModule::AddObject(nsCacheObject* i_pObject)
-{
-    return PR_FALSE;
-}
+#endif // nsCachePref_h__
+

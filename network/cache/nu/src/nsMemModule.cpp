@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <prtypes.h>
+#include <plstr.h>
 
 #include "nsMemModule.h"
 #include "nsMemCacheObject.h"
@@ -29,15 +30,11 @@
  * 
  */
 
+//NS_DEFINE_IID(kMemModuleIID, NS_MEMMODULE_IID);
 
-static const PRUint32 DEFAULT_SIZE = 5*1024*1024;
-
-nsMemModule::nsMemModule():m_pFirstObject(0)
-{
-    Size(DEFAULT_SIZE);
-}
-
-nsMemModule::nsMemModule(const PRUint32 size): m_pFirstObject(0)
+nsMemModule::nsMemModule(const PRUint32 size): 
+    m_pFirstObject(0),
+    nsCacheModule(size)
 {
     Size(size);
 }
@@ -50,18 +47,26 @@ nsMemModule::~nsMemModule()
 	}
 }
 
-/* TODO dont make copies */
 PRBool nsMemModule::AddObject(nsCacheObject* i_pObject)
 {
-	if (i_pObject)
+
+#if 0
+    if (i_pObject)
+    {
+        m_ht.Put(
+    }
+    return PR_FALSE;
+#endif
+
+    if (i_pObject)
 	{
 		if (m_pFirstObject) 
 		{
-			LastObject()->Next(new nsMemCacheObject(*i_pObject)); 
+			LastObject()->Next(new nsMemCacheObject(i_pObject)); 
 		}
 		else
 		{
-			m_pFirstObject = new nsMemCacheObject(*i_pObject);
+			m_pFirstObject = new nsMemCacheObject(i_pObject);
 		}
 		m_Entries++;
 		return PR_TRUE;
@@ -71,45 +76,31 @@ PRBool nsMemModule::AddObject(nsCacheObject* i_pObject)
 
 PRBool nsMemModule::Contains(const char* i_url) const
 {
-	if (m_pFirstObject && i_url && *i_url)
-	{
-		nsMemCacheObject* pObj = m_pFirstObject;
-		int inlen = strlen(i_url);
-		do
-		{
-			if (0 == _strnicmp(pObj->Address(), i_url, inlen))
-				return PR_TRUE;
-			pObj = pObj->Next();
-		}
-		while (pObj);
-	}
-	return PR_FALSE;
+    if (m_pFirstObject && i_url && *i_url)
+    {
+        nsMemCacheObject* pObj = m_pFirstObject;
+        PRUint32 inlen = PL_strlen(i_url);
+        do
+        {
+            if (0 == PL_strncasecmp(pObj->ThisObject()->Address(), i_url, inlen))
+                return PR_TRUE;
+            pObj = pObj->Next();
+        }
+        while (pObj);
+    }
+    return PR_FALSE;
 }
 
 PRBool nsMemModule::Contains(nsCacheObject* i_pObject) const
 {
-    if (i_pObject && i_pObject->Address())
+    if (i_pObject && *i_pObject->Address())
     {
         return this->Contains(i_pObject->Address());
     }
     return 0;
-    /* //XXX Think!
-	if (m_pFirstObject && i_pObject)
-	{
-		nsMemCacheObject* pNext = m_pFirstObject;
-		do
-		{
-            if (pNext == i_pObject) // Equality operator ?
-                return 1;
-			pNext = pNext->Next();
-		}
-		while (pNext);
-	}
-	return 0;
-    */
 }
 
-nsCacheObject* nsMemModule::GetObject(PRUint32 i_index) const
+nsCacheObject* nsMemModule::GetObject(const PRUint32 i_index) const
 {
 	nsMemCacheObject* pNth = 0;
 	if (m_pFirstObject)
@@ -121,7 +112,7 @@ nsCacheObject* nsMemModule::GetObject(PRUint32 i_index) const
 			pNth = pNth->Next();
 		}
 	}
-	return pNth;
+	return pNth->ThisObject();
 }
 
 nsCacheObject* nsMemModule::GetObject(const char* i_url) const
@@ -132,8 +123,8 @@ nsCacheObject* nsMemModule::GetObject(const char* i_url) const
 		int inlen = strlen(i_url);
 		do
 		{
-			if (0 == _strnicmp(pObj->Address(), i_url, inlen))
-				return pObj;
+			if (0 == _strnicmp(pObj->ThisObject()->Address(), i_url, inlen))
+				return pObj->ThisObject();
 			pObj = pObj->Next();
 		}
 		while (pObj);
@@ -152,3 +143,35 @@ nsMemCacheObject* nsMemModule::LastObject(void) const
 	}
 	return pLast;
 }
+
+/*
+NS_IMETHOD nsMemModule::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+
+}
+NS_IMETHOD_(nsrefcnt) nsMemModule::AddRef(void)
+{
+
+}
+
+NS_IMETHOD_(nsrefcnt) nsMemModule::Release(void)
+{
+
+}
+*/
+
+/*
+PRUint32 nsMemModule::nsMemKey::HashValue()
+{
+    return 0;
+}
+PRBool nsMemModule::nsMemKey::Equals(nsHashKey *aKey)
+{
+    return PR_FALSE;
+}
+
+nsHashKey* nsMemModule::nsMemKey::Clone()
+{
+    return new nsMemModule::nsMemKey();
+}
+*/

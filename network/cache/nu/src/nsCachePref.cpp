@@ -16,36 +16,48 @@
  * Reserved.
  */
 
-/* 
- * nsDiskModule
- *
- * Gagan Saksena 02/02/98
- * 
- */
+#include "nsCachePref.h"
 
-#include <prtypes.h>
-#include "nsDiskModule.h"
-#include "nsCacheObject.h"
-//
-// Constructor: nsDiskModule
-//
-nsDiskModule::nsDiskModule(const PRUint32 size):
-    nsCacheModule(size)
+static const PRUint32 MEM_CACHE_SIZE_DEFAULT = 1024*1024;
+static const PRUint32 DISK_CACHE_SIZE_DEFAULT = 5*MEM_CACHE_SIZE_DEFAULT;
+
+nsCachePref::nsCachePref()
 {
-
 }
 
-nsDiskModule::~nsDiskModule()
+nsCachePref::~nsCachePref()
 {
-
 }
 
-nsCacheObject* nsDiskModule::GetObject(PRUint32 i_index) const
+PRUint32 nsCachePref::MemCacheSize() const
 {
-    return 0;
+    return MEM_CACHE_SIZE_DEFAULT;
 }
 
-PRBool nsDiskModule::AddObject(nsCacheObject* i_pObject)
+PRUint32 nsCachePref::DiskCacheSize() const
 {
-    return PR_FALSE;
+    return DISK_CACHE_SIZE_DEFAULT;
 }
+
+/*
+nsrefcnt nsCachePref::AddRef(void)
+{
+    return ++m_RefCnt;
+}
+nsrefcnt nsCachePref::Release(void)
+{
+    if (--m_RefCnt == 0)
+    {
+        delete this;
+        return 0;
+    }
+    return m_RefCnt;
+}
+
+nsresult nsCachePref::QueryInterface(const nsIID& aIID,
+                                        void** aInstancePtrResult)
+{
+    return NS_OK;
+}
+*/
+

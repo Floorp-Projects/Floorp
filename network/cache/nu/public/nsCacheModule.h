@@ -25,100 +25,106 @@
  * Gagan Saksena 02/03/98
  * 
  */
-
+//#include <nsISupports.h>
 #include "nsCacheObject.h"
-//class nsCacheObject;
-/* Why the hell is forward decl. not working? */
 
-class nsCacheModule 
+/* Why the hell is forward decl. not working? */
+//class nsCacheObject;
+
+/*
+// {5D51B24F-E6C2-11d1-AFE5-006097BFC036}
+static const NS_CACHEMODULE_ID = 
+{ 0x5d51b24f, 0xe6c2, 0x11d1, { 0xaf, 0xe5, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
+*/
+
+class nsCacheModule /*: public nsISupports */
 {
 
 public:
-	nsCacheModule();
-	nsCacheModule(const PRUint32 i_size);
+    nsCacheModule(const PRUint32 i_size /*= DEFAULT_SIZE */);
 
-	virtual
-		~nsCacheModule();
-
-	virtual 
-		PRBool          AddObject(nsCacheObject* i_pObject)=0;
     virtual
+        ~nsCacheModule();
+
+    virtual 
+        PRBool          AddObject(nsCacheObject* i_pObject)=0;
+        virtual
         PRBool          Contains(const char* i_url) const=0;
-	virtual 
-		PRBool		    Contains(nsCacheObject* i_pObject) const=0;
-	void				Enable(PRBool i_Enable);
-	const PRUint32      Entries() const;
+    virtual 
+        PRBool          Contains(nsCacheObject* i_pObject) const=0;
+    void                Enable(PRBool i_Enable);
+    const PRUint32      Entries() const;
 
-	nsCacheObject*		GetFirstObject() const ;//TODO-?/
-
-    virtual
-	    nsCacheObject*	GetObject(const char* i_url) const=0;
+    nsCacheObject*      GetFirstObject() const ;//TODO-?/
 
     virtual
-		nsCacheObject*	GetObject(PRUint32 i_index) const =0;
+        nsCacheObject*  GetObject(const char* i_url) const=0;
 
-    PRBool				IsEnabled() const;
+    virtual
+        nsCacheObject*  GetObject(const PRUint32 i_index) const =0;
 
-	nsCacheModule*		Next() const;
-	void				Next(nsCacheModule*);
+    PRBool              IsEnabled() const;
 
-	const PRUint32		Size() const;
-	void			    Size(const PRUint32 i_size);
+    nsCacheModule*      Next() const;
+    void                Next(nsCacheModule*);
 
-	const char*		    Trace() const;
+    const PRUint32      Size() const;
+    void                Size(const PRUint32 i_size);
+
+    const char*         Trace() const;
 
 protected:
 
-	PRUint32    m_Entries;
-	PRUint32	m_Size;
-	PRBool		m_Enabled;
+    PRUint32    m_Entries;
+    PRUint32    m_Size;
+    PRBool      m_Enabled;
 
-	nsCacheModule* m_pNext;
+    nsCacheModule* m_pNext;
 
 private:
-	nsCacheModule(const nsCacheModule& cm);
-	nsCacheModule& operator=(const nsCacheModule& cm);	
+    nsCacheModule(const nsCacheModule& cm);
+    nsCacheModule& operator=(const nsCacheModule& cm);
 
 };
 
 inline void nsCacheModule::Enable(PRBool i_Enable)
 {
-	m_Enabled = i_Enable;
+    m_Enabled = i_Enable;
 }
 
 inline PRBool nsCacheModule::IsEnabled() const
 {
-	return m_Enabled;
+    return m_Enabled;
 }
 
 inline const PRUint32 nsCacheModule::Entries() const 
 {
-	return m_Entries;
+    return m_Entries;
 }
 
 inline nsCacheObject* nsCacheModule::GetFirstObject() const 
 {
-	return this->GetObject((PRUint32)0);
+    return this->GetObject((PRUint32)0);
 }
 
 inline nsCacheModule* nsCacheModule::Next() const 
 {
-	return m_pNext;
+    return m_pNext;
 }
 
 inline void nsCacheModule::Next(nsCacheModule* pNext) 
 {
-	m_pNext = pNext;
+    m_pNext = pNext;
 }
 
 inline const PRUint32 nsCacheModule::Size() const
 {
-	return m_Size;
+    return m_Size;
 }
 
 inline void nsCacheModule::Size(const PRUint32 size)
 {
-	m_Size = size;
+    m_Size = size;
 }
 
 #endif // nsCacheModule_h__

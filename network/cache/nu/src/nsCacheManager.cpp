@@ -44,11 +44,8 @@ nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_pPref(new nsCachePref())
 
 nsCacheManager::~nsCacheManager()
 {
-#if 0
-    // this is crashing!?!
 	if (m_pFirstModule)
 		delete m_pFirstModule;
-#endif
     delete m_pPref;
 }
 
