@@ -73,7 +73,7 @@
 
 - (void)insertItemWithTitle:(NSString *)itemTitle atIndex:(int)index
 {
-  NSMenuItem *aMenuItem;
+  id<NSMenuItem> aMenuItem;
   [super insertItemWithTitle:itemTitle atIndex:index];
 
   aMenuItem = [self itemWithTitle:itemTitle];
