@@ -199,7 +199,7 @@ GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
 nsresult 
 GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset)
 {
-  NS_ASSERTION((inChild && outParent && outOffset), "bad args");
+  NS_ASSERTION((outParent && outOffset), "bad args");
   nsresult result = NS_ERROR_NULL_POINTER;
   if (inChild && outParent && outOffset)
   {
@@ -285,51 +285,54 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   
   if (editor)
   {
-	  switch (GetReplyOnTop())
-	  {
-      // This should set the cursor after the body but before the sig
-		  case 0	:
-		  {
-		    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-        if (!htmlEditor)
-        {
-          editor->BeginningOfDocument();
-          break;
-        }
+    if (aBuf.IsEmpty())
+      editor->BeginningOfDocument();
+    else
+	    switch (GetReplyOnTop())
+	    {
+        // This should set the cursor after the body but before the sig
+		    case 0	:
+		    {
+		      nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+          if (!htmlEditor)
+          {
+            editor->BeginningOfDocument();
+            break;
+          }
 
-        nsCOMPtr<nsIDOMSelection> selection = nsnull; 
-        nsCOMPtr<nsIDOMNode>      parent = nsnull; 
-        PRInt32                   offset;
-        nsresult                  rv;
+          nsCOMPtr<nsIDOMSelection> selection = nsnull; 
+          nsCOMPtr<nsIDOMNode>      parent = nsnull; 
+          PRInt32                   offset;
+          nsresult                  rv;
 
-        // get parent and offset of mailcite 
-        rv = GetNodeLocation(nodeInserted, &parent, &offset); 
-        if ( NS_FAILED(rv) || (!parent) )
-        {
-          editor->BeginningOfDocument();
-          break;
-        }
+          // get parent and offset of mailcite
+          rv = GetNodeLocation(nodeInserted, &parent, &offset); 
+          if ( NS_FAILED(rv) || (!parent))
+          {
+            editor->BeginningOfDocument();
+            break;
+          }
 
-        // get selection
-        editor->GetSelection(getter_AddRefs(selection));
-        if (!selection)
-        {
-          editor->BeginningOfDocument();
-          break;
-        }
+          // get selection
+          editor->GetSelection(getter_AddRefs(selection));
+          if (!selection)
+          {
+            editor->BeginningOfDocument();
+            break;
+          }
 
-        // place selection after mailcite
-        selection->Collapse(parent, offset+1);
+          // place selection after mailcite
+          selection->Collapse(parent, offset+1);
 
-        // insert a break at current selection
-        htmlEditor->InsertBreak();
+          // insert a break at current selection
+          htmlEditor->InsertBreak();
 
-        // i'm not sure if you need to move the selection back to before the
-        // break. expirement.
-        selection->Collapse(parent, offset+1);
+          // i'm not sure if you need to move the selection back to before the
+          // break. expirement.
+          selection->Collapse(parent, offset+1);
  
-		    break;
-		  }
+		      break;
+		    }
 		  
 		  case 2	: 
 		  {
@@ -2104,7 +2107,6 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   //
   m_compFields->GetBody(&bod);
 
-  nsAutoString    tSignature;
   /* Some time we want to add a signature and sometime we wont. Let's figure that now...*/
   PRBool addSignature;
   switch (mType)
@@ -2133,19 +2135,18 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   		addSignature = PR_FALSE;
   		break;
   }
-  if (addSignature)
-  	ProcessSignature(m_identity, &tSignature);
+
   if (m_editor)
   {
     nsAutoString empty;
-    if (bod) {
-      nsAutoString bodStr(bod);
-      rv = ConvertAndLoadComposeWindow(m_editor, empty, bodStr, empty,
+    nsAutoString bodStr(bod);
+    nsAutoString tSignature;
+
+    if (addSignature)
+  	  ProcessSignature(m_identity, &tSignature);
+
+    rv = ConvertAndLoadComposeWindow(m_editor, empty, bodStr, tSignature,
                                        PR_FALSE, m_composeHTML);
-    } else {
-      rv = ConvertAndLoadComposeWindow(m_editor, empty, empty, tSignature,
-                                       PR_FALSE, m_composeHTML);
-    }
   }
 
   PR_FREEIF(bod);
