@@ -568,8 +568,8 @@ public:
   nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
   
   /** Find the deep first and last children. Returned nodes are AddReffed */
-  nsresult GetFirstEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outFirstNode);
-  nsresult GetLastEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outLastNode);
+  nsresult GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outFirstNode);
+  nsresult GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode);
 
 
   /** from html rules code - migration in progress */
