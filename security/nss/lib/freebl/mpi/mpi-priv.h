@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.7 2000/08/08 03:20:34 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.8 2000/08/09 20:42:18 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -105,6 +105,11 @@ extern const float s_logv_2[];
 
 #define  CARRYOUT(W)  (mp_digit)((W)>>DIGIT_BIT)
 #define  ACCUM(W)     (mp_digit)(W)
+
+#define MP_MIN(a,b)   (((a) < (b)) ? (a) : (b))
+#define MP_MAX(a,b)   (((a) > (b)) ? (a) : (b))
+#define MP_HOWMANY(a,b) (((a) + (b) - 1)/(b))
+#define MP_ROUNDUP(a,b) (MP_HOWMANY(a,b) * (b))
 
 /* }}} */
 
