@@ -72,7 +72,7 @@ NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *res
 {
 	if (memcmp(&uuid, &nsIPrompt::GetIID(), sizeof(nsIID)) == 0)
 	{
-		*result = this;
+		*result = (nsIPrompt *) this;
 		AddRef();
 		return NS_OK;
 	}
