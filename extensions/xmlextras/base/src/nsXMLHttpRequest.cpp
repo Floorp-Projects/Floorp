@@ -1525,15 +1525,16 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     if (!listener) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    // Bypass the network cache since caching makes no sense with
+    // multipart mixed replace documents.
+    nsLoadFlags flags;
+    mChannel->GetLoadFlags(&flags);
+    flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
+    mChannel->SetLoadFlags(flags);
   } else {
     listener = this;
   }
-
-  // Bypass the network cache.
-  nsLoadFlags flags;
-  mChannel->GetLoadFlags(&flags);
-  flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
-  mChannel->SetLoadFlags(flags);
 
   // Start reading from the channel
   ChangeState(XML_HTTP_REQUEST_SENT);
