@@ -125,9 +125,24 @@ NS_IMETHODIMP nsBaseDragService::GetTargetSize (nsSize * aDragTargetSize)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsBaseDragService::GetNumDropItems (PRUint32 * aNumItems)
+
+{
+
+  *aNumItems = 0;
+
+  return NS_ERROR_FAILURE;
+
+}
+
+
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable)
+
+NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
+
 {
   return NS_ERROR_FAILURE;
 }

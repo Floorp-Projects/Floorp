@@ -74,71 +74,108 @@ NS_IMPL_ISUPPORTS_INHERITED(nsDragService,nsBaseDragService,nsIDragSessionMac);
 //
 NS_IMETHODIMP
 nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsIRegion * aDragRgn, PRUint32 aActionType)
-
 {
-  OSErr result = ::NewDrag(&mDragRef);
-  if ( !result )
+  DragReference theDragRef;
+  OSErr result = ::NewDrag(&theDragRef);
+  if ( result )
     return NS_ERROR_FAILURE;
-
-  // add the flavors from the transferables. Cache this array for the send data proc
-  RegisterDragItemsAndFlavors ( aTransferableArray ) ;
-  mDataItems = aTransferableArray;
+  mDragRef = theDragRef;
   
-  // create the drag region. Pull out the native mac region from the nsIRegion we're
-  // given, copy it, inset it one pixel, and subtract them so we're left with just an
-  // outline. Too bad we can't do this with gfx api's.
-  //
-  // At the end, we are left with an outline of the region in global coordinates.
-  RgnHandle dragRegion = nsnull;
-  aDragRgn->GetNativeRegion(dragRegion);
-  RgnHandle insetDragRegion = ::NewRgn();
-  if ( dragRegion && insetDragRegion ) {
-    ::CopyRgn ( dragRegion, insetDragRegion );
-    ::InsetRgn ( insetDragRegion, 1, 1 );
-    ::DiffRgn ( dragRegion, insetDragRegion, insetDragRegion ); 
-
-    // now shift the region into global coordinates.
-    Point offsetFromLocalToGlobal = { 0, 0 };
-    ::LocalToGlobal ( &offsetFromLocalToGlobal );
-    ::OffsetRgn ( insetDragRegion, offsetFromLocalToGlobal.h, offsetFromLocalToGlobal.v );
-  }
-
-  // register drag send proc which will call us back when asked for the actual
-  // flavor data (instead of placing it all into the drag manager)
-  ::SetDragSendProc ( mDragRef, sDragSendDataUPP, this );
-
+  // add the flavors from the transferables. Cache this array for the send data proc
+  mDataItems = aTransferableArray;
+  RegisterDragItemsAndFlavors ( aTransferableArray ) ;
+  
   // we have to synthesize the native event because we may be called from JavaScript
   // through XPConnect. In that case, we only have a DOM event and no way to
   // get to the native event. As a consequence, we just always fake it.
   Point globalMouseLoc;
   ::GetMouse(&globalMouseLoc);
   ::LocalToGlobal(&globalMouseLoc);
-  WindowPtr theWindow = nsnull;;
+  WindowPtr theWindow = nsnull;
   if ( ::FindWindow(globalMouseLoc, &theWindow) != inContent ) {
     // debugging sanity check
     #ifdef NS_DEBUG
-    DebugStr("\pAbout to start drag, but FindWindow() != inContent");
+    DebugStr("\pAbout to start drag, but FindWindow() != inContent; g");
     #endif
-  }
-
+  }  
   EventRecord theEvent;
   theEvent.what = mouseDown;
   theEvent.message = reinterpret_cast<UInt32>(theWindow);
   theEvent.when = 0;
   theEvent.where = globalMouseLoc;
   theEvent.modifiers = 0;
+  
+  RgnHandle theDragRgn = ::NewRgn();
+  BuildDragRegion ( aDragRgn, globalMouseLoc, theDragRgn );
 
-  // start the drag
-  result = ::TrackDrag ( mDragRef, &theEvent, insetDragRegion );
+  // register drag send proc which will call us back when asked for the actual
+  // flavor data (instead of placing it all into the drag manager)
+  ::SetDragSendProc ( theDragRef, sDragSendDataUPP, this );
+
+  // start the drag. Be careful, mDragRef will be invalid AFTER this call (it is
+  // reset by the dragTrackingHandler).
+  ::TrackDrag ( theDragRef, &theEvent, theDragRgn );
 
   // clean up after ourselves 
-  ::DisposeRgn ( insetDragRegion );
-  ::DisposeDrag ( mDragRef );
+  ::DisposeRgn ( theDragRgn );
+  result = ::DisposeDrag ( theDragRef );
+  NS_ASSERTION ( result == noErr, "Error disposing drag" );
+  mDragRef = 0L;
   mDataItems = nsnull;
 
   return NS_OK; 
 
 } // StartDragSession
+
+
+//
+// BuildDragRegion
+//
+// Given the XP region describing the drag rectangles, build up an appropriate drag region. If
+// the region we're given is null, create our own placeholder.
+//
+void
+nsDragService :: BuildDragRegion ( nsIRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn )
+{
+  // create the drag region. Pull out the native mac region from the nsIRegion we're
+  // given, copy it, inset it one pixel, and subtract them so we're left with just an
+  // outline. Too bad we can't do this with gfx api's.
+  //
+  // At the end, we are left with an outline of the region in global coordinates.
+  if ( inRegion ) {
+    RgnHandle dragRegion = nsnull;
+    inRegion->GetNativeRegion(dragRegion);
+    if ( dragRegion && ioDragRgn ) {
+      ::CopyRgn ( dragRegion, ioDragRgn );
+      ::InsetRgn ( ioDragRgn, 1, 1 );
+      ::DiffRgn ( dragRegion, ioDragRgn, ioDragRgn ); 
+
+      // now shift the region into global coordinates.
+      Point offsetFromLocalToGlobal = { 0, 0 };
+      ::LocalToGlobal ( &offsetFromLocalToGlobal );
+      ::OffsetRgn ( ioDragRgn, offsetFromLocalToGlobal.h, offsetFromLocalToGlobal.v );
+    }
+  }
+  else {
+    // no region provided, so we create a default one that is 50 x 50, with the topLeft
+    // being at the cursor location.
+    //NS_WARNING ( "you MUST pass a drag region for MacOS. This is a warning" );    
+    if ( ioDragRgn ) {
+      Rect placeHolderRect = { inGlobalMouseLoc.v, inGlobalMouseLoc.h, inGlobalMouseLoc.v + 50, 
+                                inGlobalMouseLoc.h + 50 };
+      RgnHandle placeHolderRgn = ::NewRgn();
+      if ( placeHolderRgn ) {
+        ::RectRgn ( placeHolderRgn, &placeHolderRect );
+        ::CopyRgn ( placeHolderRgn, ioDragRgn );
+        ::InsetRgn ( ioDragRgn, 1, 1 );
+        ::DiffRgn ( placeHolderRgn, ioDragRgn, ioDragRgn );
+        
+        ::DisposeRgn ( placeHolderRgn );
+      }
+    }
+  }
+
+} // BuildDragRegion
 
 
 //
@@ -180,18 +217,12 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
 //
 // GetData
 //
-// Pull data out of the OS drag items and stash it into the given transferable.
-// Only put in the data with the highest fidelity asked for.
-//
-// NOTE: THIS API NEEDS TO CHANGE TO RETURN A LIST OF TRANSFERABLES. IT IS 
-// UNSUITABLE FOR MULTIPLE DRAG ITEMS. AS A HACK, THE INITIAL IMPLEMENTATION WILL
-// ONLY LOOK AT THE FIRST DRAG ITEM.
-//
-// NOTE: I ALSO NEED TO COME BACK IN AND DO BETTER ERROR CHECKING ON DRAGMANAGER ROUTINES
-// BUT NOT UNTIL THIS IS CLEANED UP TO WORK WITH MULTIPLE TRANSFERABLES.
+// Pull data out of the  OS drag item at the requested index and stash it into the 
+// given transferable. Only put in the data with the highest fidelity asked for and
+// stop as soon as we find a match.
 //
 NS_IMETHODIMP
-nsDragService :: GetData (nsITransferable * aTransferable)
+nsDragService :: GetData (nsITransferable * aTransferable, PRUint32 aItemIndex)
 {
 printf("------nsDragService :: getData\n");
   nsresult errCode = NS_ERROR_FAILURE;
@@ -202,85 +233,75 @@ printf("------nsDragService :: getData\n");
 
   // get flavor list that includes all acceptable flavors (including ones obtained through
   // conversion)
-  nsVoidArray * flavorList;
+  nsVoidArray* flavorList;
   errCode = aTransferable->FlavorsTransferableCanImport ( &flavorList );
   if ( errCode != NS_OK )
     return NS_ERROR_FAILURE;
 
-  // get the data for each drag item. Remember that GetDragItemReferenceNumber()
-  // is one-based NOT zero-based.
-  unsigned short numDragItems = 0;
-  ::CountDragItems ( mDragRef, &numDragItems );
-printf("CountDragItems says :: %ld\n", numDragItems);
-  for ( int item = 1; item <= numDragItems; ++item ) {
-  
-    ItemReference itemRef;
-    ::GetDragItemReferenceNumber ( mDragRef, item, &itemRef );
+  // get the data for the requested drag item. Remember that GetDragItemReferenceNumber()
+  // is one-based NOT zero-based like |aItemIndex| is.   
+  ItemReference itemRef;
+  ::GetDragItemReferenceNumber ( mDragRef, aItemIndex + 1, &itemRef );
 printf("item ref = %ld\n", itemRef );
  
-	  // Now walk down the list of flavors. When we find one that is actually present,
-	  // copy out the data into the transferable in that format. SetTransferData()
-	  // implicitly handles conversions.
-	  PRUint32 cnt = flavorList->Count();
-	  for ( int i = 0; i < cnt; ++i ) {
-	    nsString * currentFlavor = NS_STATIC_CAST(nsString*, (*flavorList)[i]);
-	    if ( nsnull != currentFlavor ) {
-	      // find MacOS flavor
-	      FlavorType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(*currentFlavor);
+  // Now walk down the list of flavors. When we find one that is actually present,
+  // copy out the data into the transferable in that format. SetTransferData()
+  // implicitly handles conversions.
+  PRUint32 cnt = flavorList->Count();
+  for ( int i = 0; i < cnt; ++i ) {
+    nsString * currentFlavor = NS_STATIC_CAST(nsString*, (*flavorList)[i]);
+    if ( nsnull != currentFlavor ) {
+      // find MacOS flavor
+      FlavorType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(*currentFlavor);
 printf("looking for data in type %s, mac flavor %ld\n", currentFlavor->ToNewCString(), macOSFlavor);
 	    
-	      // check if it is present in the current drag item.
-	      FlavorFlags unused;
-	      if ( ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
+      // check if it is present in the current drag item.
+      FlavorFlags unused;
+      if ( ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
 	      
 printf("flavor found\n");
-	        // we have it, pull it out of the drag manager. Put it into memory that we allocate
-	        // with new[] so that the tranferable can own it (and then later use delete[]
-	        // on it).
-	        Size dataSize = 0;
-	        OSErr err = ::GetFlavorDataSize ( mDragRef, itemRef, macOSFlavor, &dataSize );
-printf("flavor data size is %ld, err is %ld\n", dataSize, err);
-	        if ( !err && dataSize > 0 ) {
-	          char* dataBuff = new char[dataSize];
-	          if ( !dataBuff )
-	            return NS_ERROR_OUT_OF_MEMORY;
+        // we have it, pull it out of the drag manager. Put it into memory that we allocate
+        // with new[] so that the tranferable can own it (and then later use delete[]
+        // on it).
+        Size dataSize = 0;
+        OSErr err = ::GetFlavorDataSize ( mDragRef, itemRef, macOSFlavor, &dataSize );
+printf("flavor data size is %ld\n", dataSize);
+        if ( !err && dataSize > 0 ) {
+          char* dataBuff = new char[dataSize];
+          if ( !dataBuff )
+            return NS_ERROR_OUT_OF_MEMORY;
 	          
-	          err = ::GetFlavorData ( mDragRef, itemRef, macOSFlavor, dataBuff, &dataSize, 0 );
-	          if ( err ) {
-	            #ifdef NS_DEBUG
-	               printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
-	            #endif
-	            return NS_ERROR_FAILURE;
-	          }
+          err = ::GetFlavorData ( mDragRef, itemRef, macOSFlavor, dataBuff, &dataSize, 0 );
+          if ( err ) {
+            #ifdef NS_DEBUG
+              printf("nsClipboard: Error getting data out of drag manager, #%ld\n", err);
+            #endif
+            return NS_ERROR_FAILURE;
+          }
 	          
-	          // put it into the transferable
-	          errCode = aTransferable->SetTransferData ( currentFlavor, dataBuff, dataSize );
-	          #ifdef NS_DEBUG
-	            if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
-	          #endif
-	        } 
-	        else {
-	           #ifdef NS_DEBUG
-	             printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
-	           #endif
-	           errCode = NS_ERROR_FAILURE;
-	        }
+          // put it into the transferable
+          errCode = aTransferable->SetTransferData ( currentFlavor, dataBuff, dataSize );
+          #ifdef NS_DEBUG
+            if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
+          #endif
+        } 
+        else {
+          #ifdef NS_DEBUG
+            printf("nsDragService: Error getting data out of drag manager, #%ld\n", err);
+          #endif
+          errCode = NS_ERROR_FAILURE;
+        }
 	        
-	        // we found one, get out of this loop!
-	        break;
+        // we found one, get out of this loop!
+        break;
 	        
-	      } // if a flavor found
-	    }
-	  } // foreach flavor
-  
-  	  // SMARMY HACK UNTIL API IS UPDATED. ONLY GET THE FIRST DRAG ITEM
-      break;
-      
-  } // foreach drag item
-  
+        } // if a flavor found
+      }
+  } // foreach flavor
+    
   delete flavorList;
   
-printf("------nsDragService :: getData\n");
+printf("------nsDragService :: getData ending\n");
   return errCode;
 }
 
@@ -320,6 +341,25 @@ nsDragService :: IsDataFlavorSupported(nsString * aDataFlavor)
 
 
 //
+// GetNumDropItems
+//
+// Returns the number of drop items present in the current drag.
+//
+NS_IMETHODIMP
+nsDragService :: GetNumDropItems ( PRUint32 * aNumItems )
+{
+  // we have to put it inot a short first because that's what the MacOS API's expect.
+  // After it's in a short, getting it into a long is no problem. Oh well.
+  unsigned short numDragItems = 0;
+  OSErr result = ::CountDragItems ( mDragRef, &numDragItems );
+  *aNumItems = numDragItems;
+  
+  return ( result == noErr ? NS_OK : NS_ERROR_FAILURE );
+
+} // GetNumDropItems
+
+
+//
 // SetDragReference
 //
 // An API to allow the drag manager callback functions to tell the session about the
@@ -352,24 +392,46 @@ nsDragService :: DragSendDataProc ( FlavorType inFlavor, void* inRefCon, ItemRef
   nsDragService* self = NS_STATIC_CAST(nsDragService*, inRefCon);
   NS_ASSERTION ( self, "Refcon not set correctly for DragSendDataProc" );
   if ( self ) {
-    nsCOMPtr<nsITransferable> item ( do_QueryInterface(self->mDataItems->ElementAt(inItemRef)) );
-    if ( item ) {
-    
-      nsString mimeFlavor;
-      nsMimeMapperMac::MapMacOSTypeToMimeType ( inFlavor, mimeFlavor ); 
-      
-      void* data = nsnull;
-      PRUint32 dataSize = 0;
-      if ( NS_SUCCEEDED(item->GetTransferData(&mimeFlavor, &data, &dataSize)) ) {      
+    void* data = nsnull;
+    PRUint32 dataSize = 0;
+    retVal = self->GetDataForFlavor ( self->mDataItems, inItemRef, inFlavor, &data, &dataSize );
+    if ( retVal == noErr ) {      
         // make the data accessable to the DragManager
         retVal = ::SetDragItemFlavorData ( inDragRef, inItemRef, inFlavor, data, dataSize, 0 );
-      }
-      else
-        retVal = cantGetFlavorErr;
-        
-    } // if valid item
+        NS_ASSERTION ( retVal == noErr, "SDIFD failed in DragSendDataProc" );
+    }  
   } // if valid refcon
   
   return retVal;
   
 } // DragSendDataProc
+
+
+//
+// GetDataForFlavor
+//
+// Given a MacOS flavor and an index for which drag item to lookup, get the information from the
+// drag item corresponding to this flavor.
+//
+OSErr
+nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, unsigned int inItemIndex, 
+                                      FlavorType inFlavor, void** outData, unsigned int* outDataSize )
+{
+  if ( !inDragItems )
+    return paramErr;
+    
+  OSErr retVal = noErr;
+  
+  nsCOMPtr<nsITransferable> item ( do_QueryInterface(inDragItems->ElementAt(inItemIndex)) );
+  if ( item ) {   
+    nsString mimeFlavor;
+    nsMimeMapperMac::MapMacOSTypeToMimeType ( inFlavor, mimeFlavor ); 
+      
+    *outDataSize = 0;
+    if ( NS_FAILED(item->GetTransferData(&mimeFlavor, outData, outDataSize)) )    
+      retVal = cantGetFlavorErr;        
+  } // if valid item
+
+  return retVal;
+
+} // GetDataForFlavor

@@ -30,10 +30,6 @@ class nsIRegion;
 #define NS_IDRAGSERVICE_IID      \
 { 0x8b5314bb, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
-#define DRAGDROP_ACTION_NONE 0x0000
-#define DRAGDROP_ACTION_COPY 0x0001
-#define DRAGDROP_ACTION_MOVE 0x0002
-#define DRAGDROP_ACTION_LINK 0x0004
 
 class nsIDragService : public nsISupports {
 
@@ -41,11 +37,19 @@ class nsIDragService : public nsISupports {
 
     static const nsIID& GetIID() { static nsIID iid = NS_IDRAGSERVICE_IID; return iid; }
 
-
+    enum {
+      DRAGDROP_ACTION_NONE = 0x0000,
+      DRAGDROP_ACTION_COPY = 0x0001,
+      DRAGDROP_ACTION_MOVE = 0x0002,
+      DRAGDROP_ACTION_LINK = 0x0004
+    };
+    
   /**
     * Starts a modal drag session with an array of transaferables 
     *
-    * @param  an array of transferables to be dragged
+    * @param  anArrayTransferables - an array of transferables to be dragged
+    * @param  aRegion - a region containing rectangles for cursor feedback, 
+    *            in window coordinates.
     */
     NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType) = 0;
 
@@ -53,6 +57,8 @@ class nsIDragService : public nsISupports {
     * Starts a modal drag session with a single transferable
     *
     * @param  aTransferable the transferable to be dragged
+    * @param  aRegion - a region containing rectangles for cursor feedback, 
+    *            in window coordinates.
     */
     NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType) = 0;
 

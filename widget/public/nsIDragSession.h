@@ -90,9 +90,19 @@ class nsIDragSession : public nsISupports {
     * Get data from a Drag->Drop   
     *
     * @param  aTransferable the transferable for the data to be put into
+    * @param  aItemIndex which of multiple drag items, zero-based
     */
 
-    NS_IMETHOD GetData (nsITransferable * aTransferable) = 0;
+    NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex) = 0;
+
+  /**
+    * Get the number items that were dropped
+    *
+    * @param  aNumItems the number of dropped items
+    */
+
+    NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems) = 0;
+
 
    /**
     * Check to set if ant of the native data on the clipboard matches this data flavor

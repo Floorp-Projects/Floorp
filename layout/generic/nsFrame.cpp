@@ -51,6 +51,20 @@
 #include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
 
+#define NORMAL_DRAG_HANDLING 1       // remove this to try out new D&D stuff.
+#if !NORMAL_DRAG_HANDLING
+#include "nsWidgetsCID.h"
+#include "nsIDragService.h"
+#include "nsIDragSession.h"
+#include "nsITransferable.h"
+#include "nsISupportsArray.h"
+#include "nsIServiceManager.h"
+
+// Define Class IDs -- i hate having to do this
+static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
+static NS_DEFINE_IID(kCTransferableCID,  NS_TRANSFERABLE_CID);
+#endif
+
 
 // Some Misc #defines
 #define SELECTION_DEBUG        0
@@ -793,8 +807,48 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
         frameselection = do_QueryInterface(selection);
         if (frameselection) {
           PRBool mouseDown = PR_FALSE;
-          if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && mouseDown){
+          if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && mouseDown) {
+
+#if NORMAL_DRAG_HANDLING
             HandleDrag(aPresContext, aEvent, aEventStatus);
+#else
+  nsIDragService* dragService; 
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
+                                             nsIDragService::GetIID(), 
+                                             (nsISupports **)&dragService); 
+  if (NS_OK == rv) { 
+    nsCOMPtr<nsITransferable> trans; 
+    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                              nsITransferable::GetIID(), getter_AddRefs(trans)); 
+    nsCOMPtr<nsITransferable> trans2; 
+    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                              nsITransferable::GetIID(), getter_AddRefs(trans2)); 
+    if ( trans && trans2 ) {
+      nsString* flavor = new nsString("text/plain");
+      trans->AddDataFlavor(flavor);                                    // transferable consumes the flavor
+      nsString dragText = "Drag Text";
+      PRUint32 len = 9; 
+      trans->SetTransferData(flavor, dragText.ToNewCString(), len);   // transferable consumes the data
+
+      nsString* flavor2 = new nsString("text/plain");
+      trans2->AddDataFlavor(flavor2);                                    // transferable consumes the flavor
+      nsString dragText2 = "More Drag Text";
+      len = 14; 
+      trans2->SetTransferData(flavor2, dragText2.ToNewCString(), len);   // transferable consumes the data
+
+      nsCOMPtr<nsISupportsArray> items;
+      NS_NewISupportsArray(getter_AddRefs(items));
+      if ( items ) {
+        items->AppendElement(trans);
+        items->AppendElement(trans2);
+        dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
+      }
+    } 
+    nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
+  } 
+//--------------------------------------------------- 
+#endif             
+            
           }
         }
       }

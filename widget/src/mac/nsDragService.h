@@ -52,8 +52,9 @@ public:
   //NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType);
 
   //nsIDragSession
-  NS_IMETHOD GetData (nsITransferable * aTransferable);
+  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
   NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
+  NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
 
   //nsIDragSessionMac
   NS_IMETHOD SetDragReference ( DragReference aDragRef ) ;  
@@ -61,6 +62,9 @@ public:
 private:
 
   void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
+  void BuildDragRegion ( nsIRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn ) ;
+  OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, unsigned int inItemIndex, 
+                             FlavorType inFlavor, void** outData, unsigned int * outSize ) ;
 
     // callback for the MacOS DragManager when a drop site asks for data
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,
