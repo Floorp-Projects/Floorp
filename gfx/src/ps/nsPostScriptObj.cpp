@@ -68,9 +68,6 @@
 #include <stdlib.h>
 #endif
 
-/* This is deprecated but we still need it until all platforms set the paper name in nsIPrintSettings... */
-#define PS_FIND_PAPER_BY_SIZE 1
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
 #endif /* PR_LOGGING */
@@ -255,30 +252,6 @@ nsPostScriptObj::settitle(PRUnichar * aTitle)
   }
 }
 
-#ifdef PS_FIND_PAPER_BY_SIZE
-static
-const PSPaperSizeRec *paper_size_to_PSPaperSizeRec(float width_in_inch, float height_in_inch)
-{
-#define MORE_OR_LESS_EQUAL(a, b, tolerance) (PR_ABS((a) - (b)) <= (tolerance))
-#define MATCH_PAGE(width, height, paper_width, paper_height) \
-          (MORE_OR_LESS_EQUAL((width),  (paper_width),  0.4f) && \
-           MORE_OR_LESS_EQUAL((height), (paper_height), 0.4f))
-  int i;
-  
-  for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
-  {
-    const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
-
-    if (MATCH_PAGE(width_in_inch, height_in_inch, PSPaperSizeRec_FullPaperWidth(curr), PSPaperSizeRec_FullPaperHeight(curr)))
-      return curr;
-  }      
-#undef MATCH_PAGE
-#undef MORE_OR_LESS_EQUAL
-
-  return nsnull;
-}
-#endif /* PS_FIND_PAPER_BY_SIZE */
-
 static
 const PSPaperSizeRec *paper_name_to_PSPaperSizeRec(const char *paper_name)
 {
@@ -334,16 +307,6 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       const char *paper_name = nsnull;
       aSpec->GetPaperName(&paper_name);    
       mPrintSetup->paper_size = paper_name_to_PSPaperSizeRec(paper_name);
-
-#ifdef PS_FIND_PAPER_BY_SIZE
-      if (!mPrintSetup->paper_size) {
-        PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("No paper matched by name '%s' - trying deprecated match-by-size way...\n", paper_name));
-        PRInt32 paper_width_in_twips,
-                paper_height_in_twips;
-        aSpec->GetPageSizeInTwips(&paper_width_in_twips, &paper_height_in_twips);
-        mPrintSetup->paper_size = paper_size_to_PSPaperSizeRec(NS_TWIPS_TO_INCHES(paper_width_in_twips), NS_TWIPS_TO_INCHES(paper_height_in_twips));
-      }
-#endif /* PS_FIND_PAPER_BY_SIZE */
 
       if (!mPrintSetup->paper_size)
         return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;

@@ -422,24 +422,11 @@ nsDeviceContextXp::GetPrintContext(nsXPrintContext*& aContext)
   return NS_OK;
 }
 
-/* Enable hack "fix" for bug 88554/116158 ("Xprint module should avoid using
- * GFX fonts unless there is no other option...") until bug 93771 ("Mozilla
- * uses low-resolution bitmap fonts on high resolution X11 displays") gets
- * fixed.
- *
- * Obsoleted with patch from bug 148690 ("RFE: Force use of outline
- * scaleable fonts if possible") ; code will be removed in a later step
- */
-// #define XPRINT_FONT_HACK 1
-
 class nsFontCacheXp : public nsFontCache
 {
 public:
   /* override DeviceContextImpl::CreateFontCache() */
   NS_IMETHOD CreateFontMetricsInstance(nsIFontMetrics** aResult);
-#ifdef XPRINT_FONT_HACK
-  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics *&aMetrics);
-#endif /* XPRINT_FONT_HACK */
 };
 
 
@@ -453,71 +440,6 @@ NS_IMETHODIMP nsFontCacheXp::CreateFontMetricsInstance(nsIFontMetrics** aResult)
   *aResult = fm;
   return NS_OK;
 }
-
-#ifdef XPRINT_FONT_HACK
-NS_IMETHODIMP nsFontCacheXp::GetMetricsFor(const nsFont& aFont, 
-                                           nsIAtom *aLangGroup,
-                                           nsIFontMetrics *&aMetrics)
-{
-  nsFont filteredFont(aFont);
-  nsAutoString filteredName;
-  
-  /* We're limiting here the font search to some "common" font families
-   * (which are available in PostScript printers by default) only now
-   * until we have a fix for bug 93771 ("Mozilla uses 
-   * low-resolution bitmap fonts on high resolution X11 displays") 
-   */
-  char   *inbuffer,
-         *tok_lasts,
-         *name;
-  PRBool  first = PR_TRUE;
-  
-  inbuffer = PL_strdup(NS_ConvertUCS2toUTF8(filteredFont.name).get());
-  if (!inbuffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-     
-  for( name = PL_strtok_r(inbuffer, ",", &tok_lasts) ;
-       name != nsnull ;
-       name = PL_strtok_r(nsnull,   ",", &tok_lasts) )
-  {     
-    /* Strip leading whitespaces */
-    while( isspace(*name) && *name!='\0' )
-      name++;
-      
-    if ((!strcasecmp(name, "serif"))      ||
-        (!strcasecmp(name, "sans-serif")) ||
-        (!strcasecmp(name, "courier"))    ||
-        (!strcasecmp(name, "times"))      ||
-        (!strcasecmp(name, "helvetica")) )
-    {
-      if (first)
-      {
-        filteredName.AssignWithConversion(name);
-        first = PR_FALSE;
-      }
-      else
-      {
-        filteredName.Append(NS_LITERAL_STRING(","));
-        filteredName.AppendWithConversion(name);
-      }
-    }  
-  } 
-  
-  PL_strfree(inbuffer);
-
-#ifdef DEBUG_gisburn
-  printf("nsFontMetricsXlib::Init: in list = '%s', filtered list '%s'\n", 
-         NS_ConvertUCS2toUTF8(filteredFont.name).get(), 
-         NS_ConvertUCS2toUTF8(filteredName).get());
-#endif /* DEBUG_gisburn */
-
-  /* Replace font name with the filtered version for now. */
-  filteredFont.name = filteredName;
-  
-  return nsFontCache::GetMetricsFor(filteredFont, aLangGroup, aMetrics);
-}
-#endif /* XPRINT_FONT_HACK */
-
 
 /* override DeviceContextImpl::CreateFontCache() */
 NS_IMETHODIMP nsDeviceContextXp::CreateFontCache()
