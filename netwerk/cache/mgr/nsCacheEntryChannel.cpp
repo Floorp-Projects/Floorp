@@ -121,12 +121,22 @@ class CacheManagerStreamListener: public nsIStreamListener  {
 
     public:
     
-    CacheManagerStreamListener(nsIStreamListener *aListener,
-                               nsILoadGroup *aLoadGroup, nsIChannel *aChannel):
-        mListener(aListener), mLoadGroup(aLoadGroup), mChannel(aChannel)
+    CacheManagerStreamListener()
         { NS_INIT_REFCNT(); }
 
     virtual ~CacheManagerStreamListener() {}
+    
+    nsresult Init(nsIStreamListener *aListener, nsILoadGroup *aLoadGroup, 
+                  nsIChannel *aChannel, nsISupports *aContext)
+    {
+        nsresult rv = NS_OK;
+        mListener = aListener;
+        mLoadGroup = aLoadGroup;
+        mChannel = aChannel;
+        if (!mListener || !mLoadGroup || !mChannel) return NS_ERROR_NOT_INITIALIZED;
+
+        return mLoadGroup->AddChannel(mChannel, aContext);
+    }
 
     private:
 
@@ -140,8 +150,6 @@ class CacheManagerStreamListener: public nsIStreamListener  {
 
     NS_IMETHOD
     OnStartRequest(nsIChannel *channel, nsISupports *aContext) {
-        if (mLoadGroup)
-            mLoadGroup->AddChannel(mChannel, aContext);
         return mListener->OnStartRequest(mChannel, aContext);
     }
 
@@ -192,9 +200,14 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
     nsIChannel *channelForListener;
 
     channelForListener = mProxyChannel ? mProxyChannel.get() : NS_STATIC_CAST(nsIChannel*, this);
-    cacheManagerStreamListener =
-        new CacheManagerStreamListener(headListener, mLoadGroup, channelForListener);
+    cacheManagerStreamListener = new CacheManagerStreamListener();
     if (!cacheManagerStreamListener) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = cacheManagerStreamListener->Init(headListener, mLoadGroup, channelForListener, aContext);
+    if (NS_FAILED(rv)) {
+        delete cacheManagerStreamListener;
+        return rv;
+    }
     
     NS_ADDREF(cacheManagerStreamListener);
     rv = mChannel->AsyncRead(aStartPosition, aReadCount, aContext,
