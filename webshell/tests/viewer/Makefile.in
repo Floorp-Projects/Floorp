@@ -108,6 +108,8 @@ GECKO_LIBS =		      \
 	-lraptorhtml	      \
 	$(TOOLKIT_BASE_LIB)   \
 	-lraptorhtmlpars      \
+	-lexpat \
+	-lxmltok \
 	-lraptorview	      \
 	-ljsdom		      \
 	-lraptorplugin	      \
