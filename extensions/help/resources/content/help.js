@@ -169,18 +169,22 @@ function init() {
 
 function contentClick(event) {
   // is this a left click on a link?
-  if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey ||
-      event.button != 0 || !(event.target instanceof HTMLAnchorElement))
+  if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.button != 0)
     return true;
 
+  // is this a link?
+  var target = event.target;
+  while (!(target instanceof HTMLAnchorElement))
+    if (!(target = target.parentNode))
+      return true;
+
   // is this an internal link?
-  var href = event.target.href;
-  if (href.lastIndexOf("chrome:", 0) == 0)
+  if (target.href.lastIndexOf("chrome:", 0) == 0)
     return true;
 
   const loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
   try {
-    helpExternal.webNavigation.loadURI(href, loadFlags, null, null, null);
+    helpExternal.webNavigation.loadURI(target.href, loadFlags, null, null, null);
   } catch (e) {}
   return false;
 }
