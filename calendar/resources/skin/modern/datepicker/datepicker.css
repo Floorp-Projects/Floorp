@@ -113,14 +113,12 @@
 
 #oe-date-picker-month-grid
 {
-   margin-top            : 14px;
    margin-right          : 2px;
    margin-bottom         : 2px;
 }
 
 .oe-date-picker-month-day-box-class
 {
-   text-align           : right;  
    min-width            : 27px;
    min-height           : 27px;
 }
@@ -130,3 +128,18 @@
    background-color       : #6699CC;
 }
 
+.oe-date-picker-month-days-header-class
+{
+	margin					: 0px;
+	padding					: 0px;
+}
+
+#oe-date-picker-month-days-header-box
+{
+	margin					: 2px 0px;
+}
+
+.oe-date-picker-month-days-box-header-class
+{
+	-moz-box-align			: center;
+}
