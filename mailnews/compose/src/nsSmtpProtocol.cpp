@@ -73,19 +73,6 @@
 #include "nsIPrefService.h"
 
 #include "nsISSLSocketControl.h"
-/* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
-   which defines PostMessage to be either PostMessageA or PostMessageW... of course it does this
-   without using parameters, so any use of PostMessage now becomes PostMessageA...
-   since this file is XP and doesn't need windows.h, i'm going to just undef this out for now
-
-   when someone comes up with a better solution, please let me know.
-
-   Stuart Parmenter <pavlov@netscape.com>
-*/
-#ifdef PostMessage
-#undef PostMessage
-#endif
-
 
 #ifndef XP_UNIX
 #include <stdarg.h>
@@ -1189,7 +1176,9 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
   nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	m_runningURL->GetPostMessageFile(getter_AddRefs(fileSpec));
 	if (url && fileSpec)
-        PostMessage(url, fileSpec);
+        // need to fully qualify to avoid getting overwritten by a #define
+        // in some windows header file
+        nsMsgAsyncWriteProtocol::PostMessage(url, fileSpec);
 
 	SetFlag(SMTP_PAUSE_FOR_READ);
 
