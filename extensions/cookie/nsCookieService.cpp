@@ -86,6 +86,7 @@ nsCookieService::nsCookieService() {
 }
 
 nsCookieService::~nsCookieService(void) {
+  NS_IF_RELEASE(mCookieHTTPNotify);
   gCookieService = nsnull;
 }
 
