@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.5 1998/07/30 08:43:06 leif Exp $
+# $Id: Utils.pm,v 1.6 1998/07/30 09:18:38 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -27,6 +27,7 @@
 package Mozilla::LDAP::Utils;
 
 use Mozilla::LDAP::API qw(:constant);
+use Mozilla::LDAP::Conn;
 use vars qw(@ISA %EXPORT_TAGS);
 
 require Exporter;
@@ -42,7 +43,8 @@ require Exporter;
 			   str2Scope
 			   askPassword
 			   ldapArgs
-			   unixCrypt)]
+			   unixCrypt
+			   userCredentials)]
 		);
 
 
@@ -242,4 +244,35 @@ sub unixCrypt
 
    srand(time ^ $$);
    crypt($_[0], $salt);
+}
+
+
+#############################################################################
+# Try to find a user to bind as, and possibly ask for the password. Pass
+# a pointer to the hash array with parameters to this function.
+#
+sub userCredentials
+{
+  my ($ld) = @_;
+  my ($conn, $entry, $pswd);
+
+  if ($ld->{bind} eq "")
+    {
+      $conn = new Mozilla::LDAP::Conn($ld);
+      die "Could't connect to LDAP server $ld->{host}" unless $conn;
+
+      $search = "(&(objectclass=inetOrgPerson)(uid=$ENV{USER}))";
+      $entry = $conn->search($ld->{root}, "subtree", $search, 0, ("uid"));
+      return 0 if (!$entry || $conn->nextEntry());
+
+      $conn->close();
+      $ld->{bind} = $entry->getDN();
+      print "Binding as $ld->{bind}\n\n" if $main::opt_v;
+    }
+
+  if ($ld->{pswd} eq "")
+    {
+      print "Enter bind password: ";
+      $ld->{pswd} = Mozilla::LDAP::Utils::askPassword();
+    }
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: ldappasswd.pl,v 1.2 1998/07/30 09:02:33 leif Exp $
+# $Id: ldappasswd.pl,v 1.3 1998/07/30 09:22:15 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -49,37 +49,7 @@ if (!getopts('nvb:s:h:D:w:P:')) {
    exit;
 }
 %ld = Mozilla::LDAP::Utils::ldapArgs();
-
-
-#############################################################################
-# If there was no user to bind as, try to bind as this user (from the
-# environment).
-#
-if ($ld{bind} eq "")
-{
-  $conn = new Mozilla::LDAP::Conn(\%ld);
-  die "Could't connect to LDAP server $ld{host}" unless $conn;
-
-  $search = "(&(objectclass=inetOrgPerson)(uid=$ENV{USER}))";
-  $entry = $conn->search($ld{root}, "subtree", $search, 0, ("uid"));
-  if (!$entry || $conn->nextEntry())
-    {
-      print "Couldn't locate a user to bind as, abort.\n";
-      $conn->close();
-
-      exit;
-    }
-
-  $conn->close();
-  $ld{bind} = $entry->getDN();
-  print "Binding as $ld{bind}.\n\n" if $opt_v;
-}
-
-if ($ld{pswd} eq "")
-{
-  print "Enter bind password: ";
-  $ld{pswd} = Mozilla::LDAP::Utils::askPassword();
-}
+Mozilla::LDAP::Utils::userCredentials(\%ld) unless $opt_n;
 
 
 #############################################################################
