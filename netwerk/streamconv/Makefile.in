@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS=          \
 	public \
 	src    \
+	converters \
 	$(NULL)
 
 ifdef ENABLE_TESTS

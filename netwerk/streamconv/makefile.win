@@ -22,6 +22,7 @@ MODULE = streamconv
 DIRS=          \
     public \
     src    \
+    converters \
     test   \
     $(NULL)
 
