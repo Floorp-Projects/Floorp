@@ -1,8 +1,0 @@
-${license_xml}
-
-<!ENTITY app.name.short "${app_name_short}">
-<!ENTITY app.name.long "${app_name_long}">
-<!ENTITY app.version "${app_version}">
-<!ENTITY app.author "${app_author}">
-
-<!ENTITY ${app_name_short}Button.label "click here to exit ${app_name_long}">
