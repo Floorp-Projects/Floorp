@@ -82,7 +82,7 @@ protected:
     nsXPIDLCString                      mHost;
     PRInt32                             mPort;
     char                                mType;
-    nsXPIDLCString                      mSelector;
+    nsCString                           mSelector;
     nsCString                           mRequest;
 
     nsCOMPtr<nsISupports>               mResponseContext;

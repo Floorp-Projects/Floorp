@@ -115,10 +115,21 @@ nsGopherChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
     // No path given
     if (buffer[0]=='\0' || (buffer[0]=='/' && buffer[1]=='\0')) {
         mType = '1';
-        mSelector.Adopt(nsCRT::strdup(""));
+        mSelector.Truncate();
     } else {
         mType = buffer[1]; // Ignore leading '/'
-        mSelector.Adopt(nsCRT::strdup(nsUnescape(NS_CONST_CAST(char*,buffer.get()+2))));
+
+        // Do it this way in case selector contains embedded nulls after
+        // unescaping
+        char* selector = nsCRT::strdup(buffer.get()+2);
+        PRInt32 count = nsUnescapeCount(selector);
+        mSelector.Assign(selector,count);
+        nsCRT::free(selector);
+
+        if (mSelector.FindCharInSet(nsCString("\t\n\r\0",4)) != -1) {
+            // gopher selectors cannot containt tab, cr, lf, or \0
+            return NS_ERROR_MALFORMED_URI;
+        }
     }
 
     PR_LOG(gGopherLog,
