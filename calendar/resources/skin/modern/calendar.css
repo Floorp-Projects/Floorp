@@ -417,7 +417,8 @@
 
 .multiweek-day-event-box-class
 {
-  border	       : 1px solid #F9F4FF;
+  border	       : 1px solid #1D7AB5;
+  margin               : 1px;
   background-color     : #F9F4FF;
   text-align           : left; 	
   font-size            : 0.9em;
@@ -427,14 +428,14 @@
 
 .multiweek-day-event-box-class:hover
 {
-  background-color      : #F9F4FF;
   border		: 1px solid #003366;
 }
 
 .multiweek-day-event-box-class[eventselected="true"]
 {
    background-color     :  #D5E3F2;  
-   border-color         :  #003366;
+   border	        : 2px solid #990000;
+   margin               : 0px;
 }
 
 .multiweek-view-event-dot-class
@@ -660,9 +661,7 @@
 .month-day-event-box-class
 {
    border               : 1px solid #1D7AB5;
-   margin-bottom        : 1px;
-   margin-left          : 2px;
-   margin-right         : 2px;
+   margin               : 1px;
    background-color     : #F9F4FF;
    text-align           : left; 	
    font-size            : 0.9em;
@@ -672,16 +671,15 @@
 
 .month-day-event-box-class:hover
 {
-   background-color  : #F9F4FF;
-	border				: 1px solid #003366;
+   border	        : 1px solid #003366;
 }
 
 .month-day-event-box-class[eventselected="true"]
 {
    background-color     :  #D5E3F2;  
-   border-color         :  #003366;
+   border	        : 2px solid #990000;
+   margin               : 0px;
 }
-
 
 .all-day-event-class,
 .month-allday-busy-ind-class[busy="true"]
@@ -880,10 +878,15 @@
    cursor            : pointer;
 }
 
+.day-view-event-class:hover
+{
+  border		: 1px solid #003366;
+}
+
 .day-view-event-class[eventselected="true"]
 {
-   background-color  : #d5e3f2;
-	border-color      : #003366
+   background-color     :  #D5E3F2;
+   border               : 2px solid #990000;
 }
  
 /*--------------------------------------------------------------------
@@ -1116,10 +1119,15 @@ then observed (ERic 20/06/03)
    cursor            : pointer;
 }
 
+.week-view-event-class:hover
+{
+  border		: 1px solid #003366;
+}
+
 .week-view-event-class[eventselected="true"]
 {
-   background-color  : #D5E3F2;
-	border				: 1px solid #003366;
+   background-color     :  #D5E3F2;
+   border               : 2px solid #990000;
 }
 
 /*--------------------------------------------------------------------
