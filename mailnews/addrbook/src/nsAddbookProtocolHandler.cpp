@@ -110,7 +110,7 @@ NS_IMETHODIMP nsAddbookProtocolHandler::NewURI(const nsACString &aSpec,
   nsCOMPtr <nsIURI> uri = do_QueryInterface(addbookUrl, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  NS_IF_ADDREF(*_retval = uri);
+  NS_ADDREF(*_retval = uri);
   return NS_OK;
 }
 
