@@ -1266,7 +1266,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       }
     }
     
-    hostFolder->CreateClientSubfolderInfo(dupFolderPath.get(), hierarchyDelimiter,boxFlags);
+    hostFolder->CreateClientSubfolderInfo(dupFolderPath.get(), hierarchyDelimiter,boxFlags, PR_FALSE);
     caseInsensitive = (nsCRT::strcasecmp("INBOX", dupFolderPath.get())== 0);
     a_nsIFolder->GetChildWithURI(uri.get(), PR_TRUE, caseInsensitive , getter_AddRefs(child));
   }

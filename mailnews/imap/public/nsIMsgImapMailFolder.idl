@@ -56,7 +56,7 @@ interface nsIMsgImapFolderProps : nsISupports {
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
   void removeSubFolder(in nsIMsgFolder folder);
-  void createClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter, in long flags);
+  void createClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter, in long flags, in boolean suppressNotification);
   void list();
   void renameLocal(in string newname, in nsIMsgFolder parent);
   void prepareToRename();

@@ -558,7 +558,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (NS_FAILED(rv) || numFolders == 0 || !inboxFolder)
       {
         // create an inbox if we don't have one.
-        CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown,0);
+        CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown,0, PR_TRUE);
       }
     }
     UpdateSummaryTotals(PR_FALSE);
@@ -639,7 +639,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
           GetHasSubFolders(&hasSubFolders);
           if (!hasSubFolders)
           {
-              rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown,0);
+              rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown,0, PR_FALSE);
               if (NS_FAILED(rv)) 
                   return rv;
           }
@@ -732,7 +732,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName, PRUnichar hierarchyDelimiter, PRInt32 flags)
+NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName, PRUnichar hierarchyDelimiter, PRInt32 flags, PRBool suppressNotification)
 {
   nsresult rv = NS_OK;
     
@@ -786,7 +786,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (NS_FAILED(rv)) return rv;
         nsCAutoString leafnameC;
         leafnameC.AssignWithConversion(leafName);
-		return parentFolder->CreateClientSubfolderInfo(leafnameC.get(), hierarchyDelimiter,flags);
+		return parentFolder->CreateClientSubfolderInfo(leafnameC.get(), hierarchyDelimiter,flags, suppressNotification);
     }
     
   // if we get here, it's really a leaf, and "this" is the parent.
@@ -853,6 +853,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         }
   }
   nsCOMPtr <nsIAtom> folderCreateAtom;
+  if (!suppressNotification)
+  {
   if(NS_SUCCEEDED(rv) && child)
   {
     nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
@@ -869,6 +871,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   {
     folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
     NotifyFolderEvent(folderCreateAtom);
+  }
   }
   return rv;
 }
