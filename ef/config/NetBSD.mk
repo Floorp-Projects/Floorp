@@ -51,11 +51,12 @@ SYS_INCLUDES		+=  -I$(subst libgcc.a,include, \
 
 ifeq ($(CPU_ARCH),x86)
 DEPENDFLAGS		+= -D__i386__
+OS_REL_CFLAGS           = -mno-486 -Di386
 endif
 
-OS_REL_CFLAGS           = -mno-486 -Di386
-
+ifndef NETBSD_ELF
 OS_CFLAGS               = -DGLOBALS_NEED_UNDERSCORE
+endif
 
 OS_CFLAGS		+= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -DNETBSD -ansi -Wall -pipe -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 OS_CXXFLAGS		= $(OS_CFLAGS)
