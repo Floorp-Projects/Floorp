@@ -395,8 +395,14 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
 {
     mDefaultLoadRequest = aRequest;
     // Inherit the group load flags from the default load request
-    if (mDefaultLoadRequest)
+    if (mDefaultLoadRequest) {
         mDefaultLoadRequest->GetLoadFlags(&mLoadFlags);
+        //
+        // Mask off any bits that are not part of the nsIRequest flags.
+        // in particular, nsIChannel::LOAD_DOCUMENT_URI...
+        //
+        mLoadFlags &= 0xFFFF;
+    }
     // Else, do not change the group's load flags (see bug 95981)
     return NS_OK;
 }
