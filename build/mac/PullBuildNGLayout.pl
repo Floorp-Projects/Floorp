@@ -28,12 +28,14 @@ use Moz;
 # configuration variables
 $DEBUG = 0;
 $ALIAS_SYM_FILES = $DEBUG;
-$CLOBBER_LIBS = 0;
+$CLOBBER_LIBS = 1;
 $MOZ_FULLCIRCLE = 0;
+$CARBON = 0;				# turn on to build with TARGET_CARBON
 
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
 $CLOBBER_DIST_LIBS = 0;     # turn on to clobber the aliases to libraries and sym files in dist
+$USE_XPIDL = 0;             # turn on to use the XPIDL plugin to generate files.
 
 $pull{all} = 1;
 $pull{lizard} = 0;
@@ -76,9 +78,25 @@ if ($build{all})
 chdir("::::");
 $MOZ_SRC = cwd();
 
-OpenErrorLog("NGLayoutBuildLog");
-#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
-
+$USE_TIMESTAMPED_LOGS = 0;
+if ($USE_TIMESTAMPED_LOGS)
+{
+	#Use timestamped names so that you don't clobber your previous log file!
+	my $now = localtime();
+	while ($now =~ s@:@.@) {} # replace all colons by periods
+	my $logdir = ":Build Logs:";
+	if (!stat($logdir))
+	{
+	        print "Creating directory $logdir\n";
+	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+	}
+	OpenErrorLog("$logdir$now");
+}
+else
+{
+	OpenErrorLog("NGLayoutBuildLog");		# Release build requires that name
+	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+}
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 

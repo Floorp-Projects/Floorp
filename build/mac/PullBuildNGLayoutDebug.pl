@@ -30,11 +30,17 @@ $DEBUG = 1;
 $ALIAS_SYM_FILES = $DEBUG;
 $CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
 							# building each project
-$MOZ_FULLCIRCLE = 0;
-
+$CARBON = 0;				# turn on to build with TARGET_CARBON
+							
 # The following two options will delete all files, but leave the directory structure intact.
-$CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
-$CLOBBER_DIST_LIBS = 0;     # turn on to clobber the aliases to libraries and sym files in dist
+$CLOBBER_DIST_ALL = 0;      # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
+$CLOBBER_DIST_LIBS = 0;     # turn on to clobber only aliases/files for libraries/sym files in dist
+$USE_XPIDL = 1;             # turn on to use the XPIDL plugin to generate files.
+
+$CodeWarriorLib::CLOSE_PROJECTS_FIRST = 0;
+							#1 = close then make (for development), 0 = make then close (for tinderbox).
+
+$MOZ_FULLCIRCLE = 0;
 
 $pull{all} = 1;
 $pull{lizard} = 0;
@@ -44,7 +50,8 @@ $pull{netlib} = 0;
 $pull{nglayout} = 0;
 $pull{mac} = 0;
 
-$build{all} = 1;			# turn off to do individual builds
+$build{all} = 1;			# turn off to do individual builds, or to do "most"
+$build{most} = 1;			# turn off to do individual builds
 $build{dist} = 0;
 $build{stubs} = 0;
 $build{common} = 0;
@@ -70,9 +77,23 @@ if ($build{all})
 		$build{$k} = 1;
 	}
 }
+if ($build{most})
+{
+### Just uncomment/comment to get the ones you want (if "most" is selected).
+#	$build{dist} = 1;
+#    $build{stubs} = 1;
+#	$build{common} = 1; # Requires intl
+#   $build{intl} = 1; 
+#	$build{nglayout} = 1;
+#	$build{resources} = 1;
+#	$build{editor} = 1;
+	$build{mailnews} = 1;
+#	$build{viewer} = 1;
+#	$build{xpapp} = 1;
+}
 
 # do the work
-# you should not have to edit anything bellow
+# you should not have to edit anything below
 
 chdir("::::");
 $MOZ_SRC = cwd();
@@ -83,8 +104,25 @@ if ($MOZ_FULLCIRCLE)
 	$buildnum = Moz::SetBuildNumber();
 }
 
-OpenErrorLog("NGLayoutDebugBuildLog");
+$USE_TIMESTAMPED_LOGS = 1;
+if ($USE_TIMESTAMPED_LOGS)
+{
+	#Use time-stamped names so that you don't clobber your previous log file!
+	my $now = localtime();
+	while ($now =~ s@:@.@) {} # replace all colons by periods
+	my $logdir = ":Build Logs:";
+	if (!stat($logdir))
+	{
+	        print "Creating directory $logdir\n";
+	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+	}
+	OpenErrorLog("$logdir$now");
+}
+else
+{
+	OpenErrorLog("NGLayoutBuildLog");		# Release build
 #OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+}
 
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
@@ -93,8 +131,10 @@ if ($pull{all}) {
    Checkout();
 }
 
+if ($build{dist}) {
 chdir($MOZ_SRC);
 BuildDist();
+}
 
 chdir($MOZ_SRC);
 BuildProjects();
