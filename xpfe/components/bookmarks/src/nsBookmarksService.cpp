@@ -4122,11 +4122,14 @@ nsBookmarksService::ReadFavorites()
 #endif
 
 NS_IMETHODIMP
-nsBookmarksService::ReadBookmarks()
+nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
 {
   if (!gLoadedBookmarks) {
     LoadBookmarks();
     gLoadedBookmarks = PR_TRUE;
+    *didLoadBookmarks = PR_TRUE;
+  } else {
+    *didLoadBookmarks = PR_FALSE;
   }
   return(NS_OK);
 }
