@@ -25,9 +25,6 @@ var tagName = "table"
 var tableElement = null;
 var rowElement = null;
 var cellElement = null;
-var maxRows = 10000;
-var maxColumns = 10000;
-var maxPixels = 10000;
 var rows;
 var columns;
 var prefs = GetPrefs();
@@ -114,21 +111,21 @@ function ChangeRowOrColumn(id)
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  rows = ValidateNumber(gDialog.rowsInput, null, 1, maxRows, null, null, true)
+  rows = ValidateNumber(gDialog.rowsInput, null, 1, gMaxRows, null, null, true)
   if (gValidationError)
     return false;
 
-  columns = ValidateNumber(gDialog.columnsInput, null, 1, maxColumns, null, null, true)
+  columns = ValidateNumber(gDialog.columnsInput, null, 1, gMaxColumns, null, null, true)
   if (gValidationError)
     return false;
 
   // Set attributes: NOTE: These may be empty strings (last param = false)
-  ValidateNumber(gDialog.borderInput, null, 0, maxPixels, globalElement, "border", false);
+  ValidateNumber(gDialog.borderInput, null, 0, gMaxPixels, globalElement, "border", false);
   // TODO: Deal with "BORDER" without value issue
   if (gValidationError) return false;
 
   ValidateNumber(gDialog.widthInput, gDialog.widthPixelOrPercentMenulist,
-                 1, maxPixels, globalElement, "width", false);
+                 1, gMaxTableSize, globalElement, "width", false);
   if (gValidationError)
     return false;
 

@@ -32,10 +32,16 @@ var gDialog = {};
 var gValidationError = false;
 
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
-var gPixel = 0;
-var gPercent = 1;
+const gPixel = 0;
+const gPercent = 1;
 
-var maxPixels  = 10000;
+const gMaxPixels  = 100000; // Used for image size, borders, spacing, and padding
+// Gecko code uses 1000 for maximum rowspan, colspan
+// Also, editing performance is really bad above this
+const gMaxRows    = 1000;
+const gMaxColumns = 1000;
+const gMaxTableSize = 1000000; // Width or height of table or cells
+
 // For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
 var SeeMore = false;
 
