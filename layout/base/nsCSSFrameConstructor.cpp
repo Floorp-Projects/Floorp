@@ -497,7 +497,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
                                                      nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
-  NS_WARNING("WARNING - an anonymous table frame was created. \n");
+  NS_WARNING("an anonymous table frame was created. \n");
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
   const nsStyleDisplay* parentDisplay = 
@@ -643,7 +643,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
     // the caller is responsible for calling SetInitialChildList on the outer, inner frames
     aNewTopFrame = aNewCaptionFrame;
   } else { // parent is not a table, need to create a new table
-    NS_WARNING("WARNING - a non table contains a table caption child. \n");
+    NS_WARNING("a non table contains a table caption child. \n");
     nsIFrame* outerFrame;
     ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, aNewTopFrame,
                                  outerFrame, innerFrame, aAbsoluteItems, aFixedItems, 
@@ -717,7 +717,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
                                       aAbsoluteItems, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
                                       aFixedItems, aTableCreator, contentDisplayIsGroup);
   } else { // construct anonymous frames
-    NS_WARNING("WARNING - a non table contains a table row or col group child. \n");
+    NS_WARNING("a non table contains a table row or col group child. \n");
     nsIFrame* innerFrame;
     nsIFrame* outerFrame;
 
@@ -857,7 +857,6 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                     aFixedItems, aTableCreator);
     aNewTopFrame = aNewRowFrame;
   } else { // construct an anonymous row group frame
-    NS_WARNING("WARNING - a non table row/col group contains a table row child. \n");
     nsIFrame* groupFrame;
     nsTableList localToDo;
     nsTableList* toDo = (aToDo) ? aToDo : &localToDo;
@@ -938,7 +937,6 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
                                     aFixedItems, aTableCreator);
     aNewTopFrame = aNewColFrame;
   } else { // construct anonymous col group frame
-    NS_WARNING("WARNING - a non table col group contains a table col child. \n");
     nsTableList toDo;
     nsIFrame* groupFrame;
     rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, aStyleContext,
