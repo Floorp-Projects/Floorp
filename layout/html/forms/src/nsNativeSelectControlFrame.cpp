@@ -1428,7 +1428,7 @@ nsNativeSelectControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::UpdateWidgetToCache(PRBool aDeselectFirst = PR_TRUE)
+nsNativeSelectControlFrame::UpdateWidgetToCache(PRBool aDeselectFirst)
 {
   // Grab the list widget
   nsIListWidget* listWidget;
