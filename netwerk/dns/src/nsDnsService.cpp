@@ -530,7 +530,7 @@ nsDNSService::LateInit()
     }
 #endif
 
-	gNeedLateInitialization = PR_FALSE;
+    gNeedLateInitialization = PR_FALSE;
     return NS_OK;
 }
 
@@ -736,7 +736,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     if (NS_FAILED(rv)) return rv;
     if (offline) return NS_ERROR_OFFLINE;
 
-	if (gNeedLateInitialization) {
+    if (gNeedLateInitialization) {
         rv = LateInit();
         if (NS_FAILED(rv)) return rv;
     }
@@ -753,6 +753,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     }
 
     if (numeric) {
+        PRIntervalTime startTime = PR_IntervalNow();
         nsHostEnt*  hostentry = new nsHostEnt;
         if (!hostentry) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -801,7 +802,20 @@ nsDNSService::Lookup(nsISupports*    clientContext,
             // XXX: The hostentry should really be reference counted so the 
             //      listener does not need to copy it...
 	        
-            return listener->OnStopLookup(clientContext, hostName, NS_OK);
+            rv = listener->OnStopLookup(clientContext, hostName, NS_OK);
+#ifdef DNS_TIMING
+            if (gService->mOut) {
+                PRIntervalTime stopTime = PR_IntervalNow();
+                double duration = PR_IntervalToMicroseconds(stopTime - startTime);
+                gService->mCount++;
+                gService->mTimes += duration;
+                gService->mSquaredTimes += duration * duration;
+                fprintf(gService->mOut, "DNS time #%d: %u us for %s\n", 
+                        (PRInt32)gService->mCount,
+                        (PRInt32)duration, hostName);
+            }
+#endif
+            return rv;
         }
     }
 
