@@ -56,7 +56,7 @@ public:
      * used to cancel the URL load..
      */
     NS_IMETHOD
-    OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo) = 0;
+    OnStartBinding(nsIPluginStreamInfo* pluginInfo) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -69,12 +69,12 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnDataAvailable(const char* url, nsIInputStream* input,
-                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo) = 0;
+    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length) = 0;
 
     NS_IMETHOD
-    OnFileAvailable(const char* url, const char* fileName) = 0;
-    /**
+    OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName) = 0;
+ 
+	/**
      * Notify the observer that the URL has finished loading.  This method is 
      * called once when the networking library has finished processing the 
      * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
@@ -86,10 +86,8 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo) = 0;
+    OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status) = 0;
 
-    NS_IMETHOD
-    OnNotify(const char* url, nsresult status) = 0;
 
     NS_IMETHOD
     GetStreamType(nsPluginStreamType *result) = 0;

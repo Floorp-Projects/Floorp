@@ -157,7 +157,6 @@ public:
 	Close(void);
 
 protected:
-	
 	char* mTarget;
 	nsFileURL mFileURL;
 	nsFileSpec mFileSpec;
@@ -165,11 +164,16 @@ protected:
 	nsIPluginInstanceOwner* mOwner;
 };
 
+NS_IMPL_ADDREF(nsPluginStreamToFile);
+NS_IMPL_RELEASE(nsPluginStreamToFile);
+
 nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner)
 :	mTarget(PL_strdup(target))
 ,	mFileURL(nsnull)
 ,	mOwner(owner)
 {
+	NS_INIT_REFCNT();
+
 	// open the file and prepare it for writing
 	char buf[400], tpath[300];
 #ifdef XP_PC
@@ -192,7 +196,7 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
 
 	// Create and validate the file spec object. (When we have a constructor for the temp
 	// directory, we should use this instead of the per-platform hack above).
-	mFileSpec = buf; 
+	mFileSpec = PL_strdup(buf); 
 	if (mFileSpec.Error())
 		return;
 
@@ -217,10 +221,6 @@ nsPluginStreamToFile::~nsPluginStreamToFile()
 		PL_strfree(mTarget);
 
 }
-
-
-NS_IMPL_ADDREF(nsPluginStreamToFile)
-NS_IMPL_RELEASE(nsPluginStreamToFile)
 
 nsresult nsPluginStreamToFile::QueryInterface(const nsIID& aIID,
                                               void** aInstancePtrResult)

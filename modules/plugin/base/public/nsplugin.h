@@ -79,8 +79,7 @@
 #ifndef nsplugins_h___
 #define nsplugins_h___
 
-#define NEW_PLUGIN_STREAM_API
-
+#include "nsRepository.h"       // for NSGetFactory
 #include "nsIComponentManager.h"       // for NSGetFactory
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,22 +113,10 @@
  */
 #include "nsIPluginInstance.h"
 
-#ifdef NEW_PLUGIN_STREAM_API
-
 /**
  * A plugin stream listener ...
  */
 #include "nsIPluginStreamListener.h"
-
-#else // !NEW_PLUGIN_STREAM_API
-
-/**
- * A plugin stream gets instantiated when a plugin instance receives data from
- * the browser. 
- */
-#include "nsIPluginStream.h"
-
-#endif // !NEW_PLUGIN_STREAM_API
 
 /**
  * The nsILiveConnectPlugin interface provides additional operations that a 
@@ -177,31 +164,10 @@
  */
 #include "nsIWindowlessPlugInstPeer.h"
 
-#ifdef NEW_PLUGIN_STREAM_API
-
 /**
  *
  */
 #include "nsIPluginInputStream.h"
-
-#else // !NEW_PLUGIN_STREAM_API
-
-/**
- * A plugin stream peer gets create by the browser and associated with each
- * plugin stream to represent stream and URL information, and provides
- * other callbacks needed by the plugin stream.
- */
-#include "nsIPluginStreamPeer.h"
-
-/**
- * The nsISeekablePluginStreamPeer provides additional operations for seekable
- * plugin streams. 
- *
- * To obtain: QueryInterface on nsIPluginStreamPeer
- */
-#include "nsISeekablePluginStreamPeer.h"
-
-#endif // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -236,24 +202,10 @@
  */
 //#include "nsILiveConnectPlugInstPeer.h"
 
-#ifdef NEW_PLUGIN_STREAM_API
-
 /**
  *
  */
 #include "nsIPluginInputStream2.h"
-
-#else // !NEW_PLUGIN_STREAM_API
-
-/**
- * The nsIPluginStreamPeer2 interface provides additional plugin stream
- * peer features only available in Communicator 5.0. 
- *
- * To obtain: QueryInterface on nsIPluginStreamPeer
- */
-#include "nsIPluginStreamPeer2.h"
-
-#endif // !NEW_PLUGIN_STREAM_API
 
 /**
  * The nsIPluginTagInfo2 interface provides additional html tag information

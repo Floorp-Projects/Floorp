@@ -39,6 +39,9 @@ public:
 	GetLastModified(PRUint32* result) = 0;
 
 	NS_IMETHOD
+	GetURL(const char** result) = 0;
+
+	NS_IMETHOD
 	RequestRead(nsByteRange* rangeList) = 0;
 };
 

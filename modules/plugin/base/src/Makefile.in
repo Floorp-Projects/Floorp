@@ -41,7 +41,6 @@ CPPSRCS =                              \
     ns4xPlugin.cpp  \
     ns4xPluginInstance.cpp  \
     nsPluginInstancePeer.cpp  \
-    nsMalloc.cpp  \
     $(NULL)
 
 REQUIRES = raptor plugin java xpcom netlib libplc21 oji

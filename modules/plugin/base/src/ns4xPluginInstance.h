@@ -61,22 +61,11 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window);
 
-#ifdef NEW_PLUGIN_STREAM_API
     NS_IMETHOD
     NewStream(nsIPluginStreamListener** listener);
-#else
-	NS_IMETHOD
-    NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result);
-#endif
 
     NS_IMETHOD
     Print(nsPluginPrint* platformPrint);
-
-#ifndef NEW_PLUGIN_STREAM_API
-    NS_IMETHOD
-    URLNotify(const char* url, const char* target,
-              nsPluginReason reason, void* notifyData);
-#endif
 
     NS_IMETHOD
     GetValue(nsPluginInstanceVariable variable, void *value);

@@ -54,6 +54,7 @@ class nsIAllocator;
 class ns4xPlugin : public nsIPlugin
 {
 public:
+
   ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
   ~ns4xPlugin(void);
 
@@ -69,13 +70,8 @@ public:
 
   //nsIPlugin interface
 
-#ifndef NEW_PLUGIN_STREAM_API
-  NS_IMETHOD
-  Initialize(nsISupports* browserInterfaces);
-#else
   NS_IMETHOD
   Initialize(void);
-#endif
 
   NS_IMETHOD
   Shutdown(void);
@@ -109,36 +105,36 @@ protected:
   // Static stub functions that are exported to the 4.x plugin as entry
   // points via the CALLBACKS variable.
   //
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _requestread(NPStream *pstream, NPByteRange *rangeList);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _geturlnotify(NPP npp, const char* relativeURL, const char* target, void* notifyData);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _getvalue(NPP npp, NPNVariable variable, void *r_value);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _setvalue(NPP npp, NPPVariable variable, void *r_value);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _geturl(NPP npp, const char* relativeURL, const char* target);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _posturlnotify(NPP npp, const char* relativeURL, const char *target,
                     uint32 len, const char *buf, NPBool file, void* notifyData);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
               const char *buf, NPBool file);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _newstream(NPP npp, NPMIMEType type, const char* window, NPStream** pstream);
 
   static int32 NP_EXPORT
   _write(NPP npp, NPStream *pstream, int32 len, void *buffer);
 
-  static nsresult NP_EXPORT
+  static NPError NP_EXPORT
   _destroystream(NPP npp, NPStream *pstream, NPError reason);
 
   static void NP_EXPORT
