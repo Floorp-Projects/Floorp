@@ -82,7 +82,8 @@ il_png_init(il_container *ic)
 
 /* Gather n characters from the input stream and then enter state s. */
 
-int il_png_write(il_container *ic, const unsigned char *buf, int32 len)
+int 
+il_png_write(il_container *ic, const unsigned char *buf, int32 len)
 {
    ipng_structp ipng_ptr;
 
@@ -147,6 +148,7 @@ png_set_dims( il_container *ic, png_structp png_ptr)
     return;
 }
 
+void
 il_png_init_transparency(png_structp png_ptr, il_container *ic, int index)
 {
     IL_IRGB *src_trans_pixel /*= ic->src_header->transparent_pixel*/;
@@ -179,7 +181,7 @@ il_png_init_transparency(png_structp png_ptr, il_container *ic, int index)
        from frame to frame in an animated gif. */
     src_trans_pixel->index = index;
 
-    return TRUE;
+    return; 
 }
 
 
@@ -216,7 +218,8 @@ png_delay_time_callback(void *closure)
     
 }
 
-void il_png_complete(il_container *ic)
+void 
+il_png_complete(il_container *ic)
 {
 	ipng_structp ipng_ptr;
 
