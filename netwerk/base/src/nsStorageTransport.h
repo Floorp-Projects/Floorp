@@ -198,6 +198,10 @@ private:
     nsSegment      *mSegments;
     nsSegment      *mSegmentsLast; 
 
+    // these 2 members are used to optimize GetNthSegment.
+    nsSegment      *mNthSegment;
+    PRUint32        mNthSegmentIndex;
+
     nsSegment      *mWriteSegment;
     PRUint32        mWriteCursor;
 
