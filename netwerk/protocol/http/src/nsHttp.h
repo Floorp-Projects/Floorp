@@ -35,7 +35,7 @@
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsHttp2:5
+//    set NSPR_LOG_MODULES=nsHttp:5
 //    set NSPR_LOG_FILE=http.log
 //
 // this enables PR_LOG_ALWAYS level information and places all output in
