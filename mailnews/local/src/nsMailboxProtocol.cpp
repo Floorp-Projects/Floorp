@@ -420,7 +420,6 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
   {
     // now mark the message as read
     nsCOMPtr<nsIMsgDBHdr> msgHdr;
-    nsMsgKey msgKey;
     if (m_runningUrl)
       rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
     NS_ASSERTION(msgHdr, "no msg hdr!");

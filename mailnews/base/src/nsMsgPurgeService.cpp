@@ -162,7 +162,6 @@ nsresult nsMsgPurgeService::PerformPurge()
 {
   PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("performing purge"));
 
-  nsTime currentTime;
   nsresult rv;
   
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
