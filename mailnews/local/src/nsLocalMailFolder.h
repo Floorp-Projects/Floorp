@@ -102,11 +102,11 @@ public:
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
 
 	//nsIDBChangeListener
-	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                          nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator);
 	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
 

@@ -1146,7 +1146,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 
   
 NS_IMETHODIMP nsImapMailFolder::OnKeyChange(nsMsgKey aKeyChanged, 
-											int32 aFlags, 
+											PRInt32 aFlags, 
 											nsIDBChangeListener * aInstigator)
 {
 	nsresult rv = NS_ERROR_FAILURE;
@@ -1154,7 +1154,7 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyChange(nsMsgKey aKeyChanged,
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, 
-											 int32 aFlags, 
+											 PRInt32 aFlags, 
 											 nsIDBChangeListener * aInstigator)
 {
 	nsIMsgDBHdr *pMsgDBHdr = nsnull;
@@ -1187,7 +1187,7 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged,
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, 
-										   int32 aFlags, 
+										   PRInt32 aFlags, 
 										   nsIDBChangeListener * aInstigator)
 {
 	nsresult rv;

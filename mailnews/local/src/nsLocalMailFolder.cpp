@@ -243,22 +243,22 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
 	if (nsCRT::strcmp(mURI, kMailboxRootURI) == 0) {
-      // don't concat the full separator with .sbd
-    }
-    else {
-      nsAutoString sep;
-      rv = nsGetMailFolderSeparator(sep);
-      if (NS_FAILED(rv)) return rv;
-
-      // see if there's a dir with the same name ending with .sbd
-      // unfortunately we can't just say:
-      //          path += sep;
-      // here because of the way nsFileSpec concatenates
-      nsAutoString str((nsFilePath)path);
-      str += sep;
-      path = nsFilePath(str);
-    }
-
+    // don't concat the full separator with .sbd
+  }
+  else {
+    nsAutoString sep;
+    rv = nsGetMailFolderSeparator(sep);
+    if (NS_FAILED(rv)) return rv;
+    
+    // see if there's a dir with the same name ending with .sbd
+    // unfortunately we can't just say:
+    //          path += sep;
+    // here because of the way nsFileSpec concatenates
+    nsAutoString str((nsFilePath)path);
+    str += sep;
+    path = nsFilePath(str);
+  }
+  
 	return rv;
 }
 
@@ -934,7 +934,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 #ifdef HAVE_PORT
   if (m_expungedBytes > 0)
   {
-    int32 purgeThreshhold = m_master->GetPrefs()->GetPurgeThreshhold();
+    PRInt32 purgeThreshhold = m_master->GetPrefs()->GetPurgeThreshhold();
     PRBool purgePrompt = m_master->GetPrefs()->GetPurgeThreshholdEnabled();;
     return (purgePrompt && m_expungedBytes / 1000L > purgeThreshhold);
   }
@@ -946,7 +946,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32 size)
 {
 #ifdef HAVE_PORT
-  int32 ret = 0;
+  PRInt32 ret = 0;
   XP_StatStruct st;
 
   if (!XP_Stat(GetPathname(), &st, xpMailFolder))
@@ -1132,13 +1132,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDB
 }
 
 
-NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                          nsIDBChangeListener * aInstigator)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
 	nsIMsgDBHdr *pMsgDBHdr = nsnull;
@@ -1170,7 +1170,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFl
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
 	nsresult rv;
