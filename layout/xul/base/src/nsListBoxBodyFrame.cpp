@@ -1362,7 +1362,6 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
   nsBoxLayoutState state(aPresContext);
   if (aChildFrame) {
     RemoveChildFrame(state, aChildFrame);
-    aChildFrame->Destroy(mPresContext);
   }
 
   MarkDirtyChildren(state);
