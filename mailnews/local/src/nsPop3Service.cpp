@@ -61,11 +61,13 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsMsgUtils.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 #define SECURE_POP3_PORT 995 // The port for Pop3 over SSL
 
-#define PREF_MAIL_ROOT_POP3 "mail.root.pop3"
+#define PREF_MAIL_ROOT_POP3 "mail.root.pop3"        // old - for backward compatibility only
+#define PREF_MAIL_ROOT_POP3_REL "mail.root.pop3-rel"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
@@ -395,11 +397,18 @@ NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 NS_IMETHODIMP
 nsPop3Service::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
+    NS_ENSURE_ARG(aPath);
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    
+    nsFileSpec spec;
+    rv = aPath->GetFileSpec(&spec);
     if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsILocalFile> localFile;
+    NS_FileSpecToIFile(&spec, getter_AddRefs(localFile));
+    if (!localFile) return NS_ERROR_FAILURE;
+    
+    rv = NS_SetPersistentFile(PREF_MAIL_ROOT_POP3_REL, PREF_MAIL_ROOT_POP3, localFile);
 
-    rv = prefs->SetFilePref(PREF_MAIL_ROOT_POP3, aPath, PR_FALSE /* set default */);
     return rv;
 }     
 
@@ -410,30 +419,20 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-    
-    PRBool havePref = PR_FALSE;
-    nsCOMPtr<nsILocalFile> prefLocal;
-    nsCOMPtr<nsIFile> localFile;
-    rv = prefs->GetFileXPref(PREF_MAIL_ROOT_POP3, getter_AddRefs(prefLocal));
-    if (NS_SUCCEEDED(rv)) {
-        localFile = prefLocal;
-        havePref = PR_TRUE;
-    }
-    if (!localFile) {
-        rv = NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(localFile));
+    PRBool havePref;
+    nsCOMPtr<nsILocalFile> localFile;    
+    rv = NS_GetPersistentFile(PREF_MAIL_ROOT_POP3_REL,
+                              PREF_MAIL_ROOT_POP3,
+                              NS_APP_MAIL_50_DIR,
+                              havePref,
+                              getter_AddRefs(localFile));
         if (NS_FAILED(rv)) return rv;
-        havePref = PR_FALSE;
-    }
         
     PRBool exists;
     rv = localFile->Exists(&exists);
-    if (NS_FAILED(rv)) return rv;
-    if (!exists) {
+    if (NS_SUCCEEDED(rv) && !exists)
         rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
         if (NS_FAILED(rv)) return rv;
-    }
     
     // Make the resulting nsIFileSpec
     // TODO: Convert arg to nsILocalFile and avoid this
@@ -441,12 +440,14 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(outSpec));
     if (NS_FAILED(rv)) return rv;
     
-    if (!havePref || !exists)
-        rv = SetDefaultLocalPath(outSpec);
+    if (!havePref || !exists) {
+        rv = NS_SetPersistentFile(PREF_MAIL_ROOT_POP3_REL, PREF_MAIL_ROOT_POP3, localFile);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to set root dir pref.");
+    }
         
     *aResult = outSpec;
     NS_IF_ADDREF(*aResult);
-    return rv;
+    return NS_OK;
 }
     
 

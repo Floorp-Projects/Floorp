@@ -82,6 +82,8 @@
 
 #define PORT_NOT_SET -1
 
+NS_NAMED_LITERAL_CSTRING(REL_FILE_PREF_SUFFIX, "-rel");
+
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
 
 nsMsgIncomingServer::nsMsgIncomingServer():
@@ -134,17 +136,17 @@ nsMsgIncomingServer::SetRootFolder(nsIMsgFolder * aRootFolder)
 NS_IMETHODIMP
 nsMsgIncomingServer::GetRootFolder(nsIMsgFolder * *aRootFolder)
 {
-  if (!aRootFolder)
-    return NS_ERROR_NULL_POINTER;
-  if (m_rootFolder) {
+  NS_ENSURE_ARG_POINTER(aRootFolder);
+  if (m_rootFolder)
+  {
     *aRootFolder = m_rootFolder;
     NS_ADDREF(*aRootFolder);
-  } else {
+  } 
+  else 
+  {
     nsresult rv = CreateRootFolder();
-    if (NS_FAILED(rv)) return rv;
-    
-    *aRootFolder = m_rootFolder;
-    NS_IF_ADDREF(*aRootFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_IF_ADDREF(*aRootFolder = m_rootFolder);
   }
   return NS_OK;
 }
@@ -471,11 +473,21 @@ nsMsgIncomingServer::GetFileValue(const char* prefname,
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
   
+  nsCAutoString fullRelPrefName(fullPrefName);
+  fullRelPrefName.Append(REL_FILE_PREF_SUFFIX);
   nsCOMPtr<nsILocalFile> prefLocal;
   
-  nsresult rv = m_prefBranch->GetComplexValue(fullPrefName.get(),
-                                              NS_GET_IID(nsILocalFile),
-                                              getter_AddRefs(prefLocal));
+  PRBool gotRelPref;
+  nsresult rv = NS_GetPersistentFile(fullRelPrefName.get(), fullPrefName.get(),
+                                     nsnull, gotRelPref, getter_AddRefs(prefLocal));
+  if (NS_FAILED(rv)) return rv;
+
+  if (NS_SUCCEEDED(rv) && !gotRelPref) 
+  {
+    rv = NS_SetPersistentFile(fullRelPrefName.get(), fullPrefName.get(), prefLocal);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update file pref.");
+  }
+  
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIFileSpec> outSpec;
@@ -494,21 +506,19 @@ nsMsgIncomingServer::SetFileValue(const char* prefname,
 {
   nsCAutoString fullPrefName;
   getPrefName(m_serverKey.get(), prefname, fullPrefName);
+  nsCAutoString fullRelPrefName(fullPrefName);
+  fullRelPrefName.Append(REL_FILE_PREF_SUFFIX);
   
   nsresult rv;
   nsFileSpec tempSpec;
   rv = spec->GetFileSpec(&tempSpec);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsILocalFile> prefLocal;
-  rv = NS_FileSpecToIFile(&tempSpec, getter_AddRefs(prefLocal));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = m_prefBranch->SetComplexValue(fullPrefName.get(), NS_GET_IID(nsILocalFile),
-                                     prefLocal);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK;
+  nsCOMPtr<nsILocalFile> localFile;
+  NS_FileSpecToIFile(&tempSpec, getter_AddRefs(localFile));
+  if (!localFile) 
+    return NS_ERROR_FAILURE;
+  return NS_SetPersistentFile(fullRelPrefName.get(), fullPrefName.get(), localFile);
 }
 
 nsresult

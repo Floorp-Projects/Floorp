@@ -58,8 +58,11 @@
 #include "prprf.h"
 #include "nsISupportsObsolete.h"
 #include "nsISupportsPrimitives.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
+static NS_NAMED_LITERAL_CSTRING(REL_FILE_PREF_SUFFIX, "-rel");
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgIdentity,
                    nsIMsgIdentity)
@@ -388,39 +391,44 @@ nsMsgIdentity::ToString(PRUnichar **aResult)
 
 /* Identity attribute accessors */
 
-// XXX - these are a COM objects, use NS_ADDREF
-//NS_IMPL_GETSET(nsMsgIdentity, Signature, nsIMsgSignature*, m_signature);
 NS_IMETHODIMP
-nsMsgIdentity::GetSignature(nsILocalFile **sig) {
+nsMsgIdentity::GetSignature(nsILocalFile **sig) 
+{
   nsresult rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
   
   char *prefName = getPrefName(m_identityKey, "sig_file");
-  rv = m_prefBranch->GetComplexValue(prefName, NS_GET_IID(nsILocalFile), (void **)sig);
-  if (NS_FAILED(rv))
-    *sig = nsnull;
+  if (!prefName)
+    return NS_ERROR_FAILURE;  
+  nsCAutoString relPrefName(prefName);
+  relPrefName.Append(REL_FILE_PREF_SUFFIX);
+  
+  PRBool gotRelPref;
+  rv = NS_GetPersistentFile(relPrefName.get(), prefName, nsnull, gotRelPref, sig);
+  if (NS_SUCCEEDED(rv) && !gotRelPref) 
+  {
+    rv = NS_SetPersistentFile(relPrefName.get(), prefName, *sig);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write signature file pref.");
+  }
+  PR_Free(prefName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgIdentity::SetSignature(nsILocalFile *sig)
 {
-
-  nsresult rv = getPrefService();
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = NS_OK;
-  char *prefName = getPrefName(m_identityKey, "sig_file");
+  nsresult rv = NS_OK;
   if (sig) 
-      rv = m_prefBranch->SetComplexValue(prefName, NS_GET_IID(nsILocalFile), sig);
-  /*
-  else
-    m_prefBranch->ClearFilePref(prefName);
-  */
-  PR_Free(prefName);
-  return rv;
+  {
+    char *prefName = getPrefName(m_identityKey, "sig_file");
+    if (!prefName)
+      return NS_ERROR_FAILURE;  
   
-  return NS_OK;
+    nsCAutoString relPrefName(prefName);
+    relPrefName.Append(REL_FILE_PREF_SUFFIX);
+    rv = NS_SetPersistentFile(relPrefName.get(), prefName, sig);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

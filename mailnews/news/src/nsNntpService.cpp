@@ -24,6 +24,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Håkan Waara <hwaara@chello.se>
+ *   David Bienvenu < bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -82,6 +83,7 @@
 #include "nsNewsDownloader.h"
 #include "prprf.h"
 #include "nsICacheService.h"
+#include "nsMsgUtils.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 
@@ -89,7 +91,8 @@
 #undef SetPort  // XXX Windows!
 
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
-#define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
+#define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"        // old - for backward compatibility only
+#define PREF_MAIL_ROOT_NNTP_REL 	"mail.root.nntp-rel"
 
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -961,6 +964,7 @@ nsNntpService::GetNntpServerByIdentity(nsIMsgIdentity *aSenderIdentity, nsIMsgIn
       if(serverType.Equals("nntp"))
       {
         *aNntpServer = inServer;
+
         NS_IF_ADDREF(*aNntpServer);
         break;
       }
@@ -1463,11 +1467,16 @@ NS_IMETHODIMP nsNntpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 NS_IMETHODIMP
 nsNntpService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    return prefBranch->SetComplexValue(PREF_MAIL_ROOT_NNTP, NS_GET_IID(nsIFileSpec), aPath);
+    NS_ENSURE_ARG(aPath);
+    
+    nsFileSpec spec;
+    nsresult rv = aPath->GetFileSpec(&spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsILocalFile> localFile;
+    NS_FileSpecToIFile(&spec, getter_AddRefs(localFile));
+    if (!localFile) return NS_ERROR_FAILURE;
+    
+    return NS_SetPersistentFile(PREF_MAIL_ROOT_NNTP_REL, PREF_MAIL_ROOT_NNTP, localFile);
 }
 
 NS_IMETHODIMP
@@ -1480,44 +1489,34 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    PRBool havePref = PR_FALSE;
-    nsCOMPtr<nsIFile> localFile;
-    nsCOMPtr<nsILocalFile> prefLocal;
-    rv = prefBranch->GetComplexValue(PREF_MAIL_ROOT_NNTP, NS_GET_IID(nsILocalFile),
-                                     getter_AddRefs(prefLocal));
-    if (NS_SUCCEEDED(rv))
-    {
-        localFile = prefLocal;
-        havePref = PR_TRUE;
-    }
-    if (!localFile)
-    {
-        rv = NS_GetSpecialDirectory(NS_APP_NEWS_50_DIR, getter_AddRefs(localFile));
-        if (NS_FAILED(rv)) return rv;
-        havePref = PR_FALSE;
-    }
+    PRBool havePref;
+    nsCOMPtr<nsILocalFile> localFile;    
+    rv = NS_GetPersistentFile(PREF_MAIL_ROOT_NNTP_REL,
+                              PREF_MAIL_ROOT_NNTP,
+                              NS_APP_NEWS_50_DIR,
+                              havePref,
+                              getter_AddRefs(localFile));
+    if (NS_FAILED(rv)) return rv;
 
     PRBool exists;
     rv = localFile->Exists(&exists);
-    if (NS_FAILED(rv)) return rv;
-    if (!exists)
-    {
+    if (NS_SUCCEEDED(rv) && !exists)
         rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
+    NS_ENSURE_SUCCESS(rv, rv);    
     // Make the resulting nsIFileSpec
     // TODO: Convert arg to nsILocalFile and avoid this
     nsCOMPtr<nsIFileSpec> outSpec;
     rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(outSpec));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);    
     
     if (!havePref || !exists)
-        rv = SetDefaultLocalPath(outSpec);
+    {
+        rv = NS_SetPersistentFile(PREF_MAIL_ROOT_NNTP_REL, PREF_MAIL_ROOT_NNTP, localFile);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to set root dir pref.");
+    }
         
-    *aResult = outSpec;
-    NS_IF_ADDREF(*aResult);
-    return rv;
+    NS_IF_ADDREF(*aResult = outSpec);
+    return NS_OK;
 }
     
 NS_IMETHODIMP

@@ -46,6 +46,8 @@
 #include "msgCore.h"
 #include "nsCOMPtr.h"
 
+class nsILocalFile;
+
 //These are utility functions that can used throughout the mailnews code
 
 NS_MSG_BASE nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractID);
@@ -82,6 +84,16 @@ NS_MSG_BASE nsresult GetExistingFolder(const char *aFolderURI, nsIMsgFolder **aF
 // Escape lines starting with "From ", ">From ", etc. in a buffer.
 NS_MSG_BASE nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end);
 NS_MSG_BASE PRBool IsAFromSpaceLine(char *start, const char *end);
+
+NS_MSG_BASE nsresult NS_GetPersistentFile(const char *relPrefName,
+                                          const char *absPrefName,
+                                          const char *dirServiceProp, // Can be NULL
+                                          PRBool& gotRelPref,
+                                          nsILocalFile **aFile);
+
+NS_MSG_BASE nsresult NS_SetPersistentFile(const char *relPrefName,
+                                          const char *absPrefName,
+                                          nsILocalFile *aFile);
 
 NS_MSG_BASE nsresult CreateServicesForPasswordManager();
 
