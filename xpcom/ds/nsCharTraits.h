@@ -463,20 +463,28 @@ struct nsCharTraits<wchar_t>
 #endif
 
 
-
 template <class InputIterator>
 struct nsCharSourceTraits
   {
+#if 0
     static
     PRUint32
-    readable_size( const InputIterator& iter )
+    distance( const InputIterator& first, const InputIterator& last )
+      {
+        // ...
+      }
+#endif
+
+    static
+    PRUint32
+    readable_distance( const InputIterator& iter )
       {
         return iter.size_forward();
       }
 
     static
     PRUint32
-    readable_size( const InputIterator& first, const InputIterator& last )
+    readable_distance( const InputIterator& first, const InputIterator& last )
       {
         return PRUint32(SameFragment(first, last) ? last.operator->()-first.operator->() : first.size_forward());
       }
@@ -494,9 +502,18 @@ struct nsCharSourceTraits
 template <class CharT>
 struct nsCharSourceTraits<CharT*>
   {
+#if 0
     static
     PRUint32
-    readable_size( CharT* s )
+    distance( CharT* first, CharT* last )
+      {
+        return PRUint32(last-first);
+      }
+#endif
+
+    static
+    PRUint32
+    readable_distance( CharT* s )
       {
         return PRUint32(nsCharTraits<CharT>::length(s));
 //      return numeric_limits<PRUint32>::max();
@@ -504,7 +521,7 @@ struct nsCharSourceTraits<CharT*>
 
     static
     PRUint32
-    readable_size( CharT* first, CharT* last )
+    readable_distance( CharT* first, CharT* last )
       {
         return PRUint32(last-first);
       }
@@ -522,9 +539,18 @@ struct nsCharSourceTraits<CharT*>
 NS_SPECIALIZE_TEMPLATE
 struct nsCharSourceTraits<const char*>
   {
+#if 0
     static
     PRUint32
-    readable_size( const char* s )
+    distance( const char* first, const char* last )
+      {
+        return PRUint32(last-first);
+      }
+#endif
+
+    static
+    PRUint32
+    readable_distance( const char* s )
       {
         return PRUint32(nsCharTraits<char>::length(s));
 //      return numeric_limits<PRUint32>::max();
@@ -532,7 +558,7 @@ struct nsCharSourceTraits<const char*>
 
     static
     PRUint32
-    readable_size( const char* first, const char* last )
+    readable_distance( const char* first, const char* last )
       {
         return PRUint32(last-first);
       }
