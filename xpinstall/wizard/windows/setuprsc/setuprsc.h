@@ -40,6 +40,7 @@
 #define IDS_STR_PROCESSINGFILE          26
 #define IDS_STR_INSTALLING              27
 #define IDS_STR_COPYINGFILE             28
+#define IDS_MB_WARNING_STR              29
 #define IDI_ICON1                       105
 #define IDI_SETUP                       105
 #define IDB_BITMAP_WELCOME              108

@@ -2923,7 +2923,12 @@ BOOL CheckLegacy()
       {
         if(FileExists(szDecryptedFilePath))
         {
-          if(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
+          char szMBWarningStr[MAX_BUF];
+
+          if(NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
+            lstrcpy(szMBWarningStr, "Warning");
+
+          if(MessageBox(hWndMain, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
             return(TRUE);
         }
         /* file does not exist, so it's okay.  Continue with the next check */
@@ -2935,7 +2940,12 @@ BOOL CheckLegacy()
         TranslateVersionStr(szVersionNew, &vbVersionNew);
         if(CompareVersion(vbVersionOld, vbVersionNew) < 0)
         {
-          if(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
+          char szMBWarningStr[MAX_BUF];
+
+          if(NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
+            lstrcpy(szMBWarningStr, "Warning");
+
+          if(MessageBox(hWndMain, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
             return(TRUE);
         }
       }
@@ -2971,7 +2981,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(CheckInstances())
     return(1);
 
-  ShowWindow(hWndMain, SW_SHOWNORMAL);
+  ShowWindow(hWndMain, SW_MAXIMIZE);
   UpdateWindow(hWndMain);
 
   if(InitSetupGeneral())

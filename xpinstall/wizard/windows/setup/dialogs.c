@@ -31,6 +31,7 @@
 #include <shlobj.h>
 
 static WNDPROC OldListBoxWndProc;
+static BOOL    gbProcessingXpnstallFiles;
 
 void AskCancelDlg(HWND hDlg)
 {
@@ -128,7 +129,8 @@ LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       break;
 
     case WM_CLOSE:
-      AskCancelDlg(hWnd);
+      if(gbProcessingXpnstallFiles == FALSE)
+        AskCancelDlg(hWnd);
       bReturn = FALSE;
       break;
 
@@ -810,14 +812,14 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   DWORD               dwItemsSelected[MAX_BUF];
   HWND                hwndLBComponents;
   RECT                rDlg;
-  RECT                rLBComponentSize;
-  RECT                rListBox;
+//  RECT                rLBComponentSize;
+//  RECT                rListBox;
   TCHAR               tchBuffer[MAX_BUF];
   TEXTMETRIC          tm;
   DWORD               y;
-  HDC                 hdcComponentSize;
+//  HDC                 hdcComponentSize;
   LPDRAWITEMSTRUCT    lpdis;
-  RECT                rTemp;
+//  RECT                rTemp;
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
 
@@ -874,9 +876,9 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         break;
 
       SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
-      GetClientRect(lpdis->hwndItem, &rTemp);
-      hdcComponentSize = GetDC(lpdis->hwndItem);
-      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
+//      GetClientRect(lpdis->hwndItem, &rTemp);
+//      hdcComponentSize = GetDC(lpdis->hwndItem);
+//      SelectObject(hdcComponentSize, GetCurrentObject(lpdis->hDC, OBJ_FONT));
 
       if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
       {
@@ -891,15 +893,15 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         {
           SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
           SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
-          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
+//          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_WINDOWTEXT));
+//          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_WINDOW));
         }
         else
         {
           SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
           SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_HIGHLIGHTTEXT));
-          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_HIGHLIGHT));
+//          SetTextColor(hdcComponentSize,  GetSysColor(COLOR_HIGHLIGHTTEXT));
+//          SetBkColor(hdcComponentSize,    GetSysColor(COLOR_HIGHLIGHT));
         }
       }
 
@@ -918,6 +920,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
                    strlen(tchBuffer),
                    NULL);
 
+#ifdef XXX_SSU
         siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE);
         _ui64toa(siCTemp->ullInstallSizeArchive, tchBuffer, 10);
         lstrcat(tchBuffer, " K");
@@ -947,6 +950,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
                    tchBuffer,
                    strlen(tchBuffer),
                    NULL);
+#endif
       }
       
       DrawCheck(lpdis);
@@ -958,7 +962,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
       }
 
-      ReleaseDC(lpdis->hwndItem, hdcComponentSize);
+//      ReleaseDC(lpdis->hwndItem, hdcComponentSize);
       bReturn = TRUE;
 
       /* update the disk space required info in the dialog.  It is already
@@ -1653,6 +1657,7 @@ void DlgSequenceNext()
   {
     case DLG_NONE:
       dwWizardState = DLG_WELCOME;
+      gbProcessingXpnstallFiles = FALSE;
       if(diWelcome.bShowDialog)
         InstantiateDialog(dwWizardState, diWelcome.szTitle, DlgProcWelcome);
       else
@@ -1661,6 +1666,7 @@ void DlgSequenceNext()
 
     case DLG_WELCOME:
       dwWizardState = DLG_LICENSE;
+      gbProcessingXpnstallFiles = FALSE;
       if(diLicense.bShowDialog)
         InstantiateDialog(dwWizardState, diLicense.szTitle, DlgProcLicense);
       else
@@ -1670,6 +1676,7 @@ void DlgSequenceNext()
 
     case DLG_LICENSE:
       dwWizardState = DLG_SETUP_TYPE;
+      gbProcessingXpnstallFiles = FALSE;
       if(diSetupType.bShowDialog)
         InstantiateDialog(dwWizardState, diSetupType.szTitle, DlgProcSetupType);
       else
@@ -1683,6 +1690,7 @@ void DlgSequenceNext()
       /* depending on what the users chooses, the Select Components dialog  */
       /* might not be the next dialog in the sequence.                      */
       dwWizardState = DLG_SELECT_COMPONENTS;
+      gbProcessingXpnstallFiles = FALSE;
       if(diSelectComponents.bShowDialog)
         InstantiateDialog(dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
       else
@@ -1691,6 +1699,7 @@ void DlgSequenceNext()
 
     case DLG_SELECT_COMPONENTS:
       dwWizardState = DLG_WINDOWS_INTEGRATION;
+      gbProcessingXpnstallFiles = FALSE;
       if(diWindowsIntegration.bShowDialog)
         InstantiateDialog(dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
       else
@@ -1699,6 +1708,7 @@ void DlgSequenceNext()
 
     case DLG_WINDOWS_INTEGRATION:
       dwWizardState = DLG_PROGRAM_FOLDER;
+      gbProcessingXpnstallFiles = FALSE;
       do
       {
         hrValue = VerifyDiskSpace();
@@ -1729,6 +1739,7 @@ void DlgSequenceNext()
 
     case DLG_PROGRAM_FOLDER:
       dwWizardState = DLG_START_INSTALL;
+      gbProcessingXpnstallFiles = FALSE;
       if(diStartInstall.bShowDialog)
         InstantiateDialog(dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
       else
@@ -1737,6 +1748,7 @@ void DlgSequenceNext()
 
     default:
       dwWizardState = DLG_START_INSTALL;
+      gbProcessingXpnstallFiles = TRUE;
 
       /* PRE_DOWNLOAD process file manipulation functions */
       ProcessFileOps(T_PRE_DOWNLOAD);
@@ -1794,6 +1806,7 @@ void DlgSequenceNext()
         CleanupCoreFile();
         PostQuitMessage(0);
       }
+      gbProcessingXpnstallFiles = FALSE;
 
       break;
   }
@@ -1805,6 +1818,7 @@ void DlgSequencePrev()
   {
     case DLG_START_INSTALL:
       dwWizardState = DLG_PROGRAM_FOLDER;
+      gbProcessingXpnstallFiles = FALSE;
       if(diStartInstall.bShowDialog)
         InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
       else
@@ -1813,6 +1827,7 @@ void DlgSequencePrev()
 
     case DLG_PROGRAM_FOLDER:
       dwWizardState = DLG_WINDOWS_INTEGRATION;
+      gbProcessingXpnstallFiles = FALSE;
       if(diWindowsIntegration.bShowDialog)
         InstantiateDialog(dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
       else
@@ -1826,6 +1841,7 @@ void DlgSequencePrev()
       /* depending on what the users chooses, the Select Components dialog  */
       /* might not be the next dialog in the sequence.                      */
       dwWizardState = DLG_SELECT_COMPONENTS;
+      gbProcessingXpnstallFiles = FALSE;
       if(diSelectComponents.bShowDialog)
         InstantiateDialog(dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
       else
@@ -1834,6 +1850,7 @@ void DlgSequencePrev()
 
     case DLG_SELECT_COMPONENTS:
       dwWizardState = DLG_SETUP_TYPE;
+      gbProcessingXpnstallFiles = FALSE;
       if(diSetupType.bShowDialog)
         InstantiateDialog(dwWizardState, diSetupType.szTitle, DlgProcSetupType);
       else
@@ -1842,6 +1859,7 @@ void DlgSequencePrev()
 
     case DLG_SETUP_TYPE:
       dwWizardState = DLG_LICENSE;
+      gbProcessingXpnstallFiles = FALSE;
       if(diLicense.bShowDialog)
         InstantiateDialog(dwWizardState, diLicense.szTitle, DlgProcLicense);
       else
@@ -1850,6 +1868,7 @@ void DlgSequencePrev()
 
     case DLG_LICENSE:
       dwWizardState = DLG_WELCOME;
+      gbProcessingXpnstallFiles = FALSE;
       if(diWelcome.bShowDialog)
         InstantiateDialog(dwWizardState, diWelcome.szTitle, DlgProcWelcome);
       else
@@ -1858,6 +1877,7 @@ void DlgSequencePrev()
 
     default:
       dwWizardState = DLG_WELCOME;
+      gbProcessingXpnstallFiles = FALSE;
       if(diWelcome.bShowDialog)
         InstantiateDialog(DLG_WELCOME, diWelcome.szTitle, DlgProcWelcome);
       else
