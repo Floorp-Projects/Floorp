@@ -185,11 +185,13 @@ calDavCalendar.prototype = {
                                                newItem);
         }
 
+        dump("aItem.icalString = " + aItem.icalString + "\n");
         var newItem = aItem.clone();
         newItem.parent = this;
         newItem.generation = 1;
         newItem.makeImmutable();
 
+        dump("icalString = " + newItem.icalString + "\n");
         // XXX use if not exists
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -465,7 +467,7 @@ calDavCalendar.prototype = {
                         item.recurrenceInfo.recurType != calIRecurrenceInfo.CAL_RECUR_INVALID)
                         {
                             // there might be some recurrences here that we need to handle
-                            var recs = item.recurrenceInfo.getOccurrencesBetween (item, startTime, endTime, {});
+                            var recs = item.recurrenceInfo.getOccurrencesBetween (item, aRangeStart, aRangeEnd, {});
                             for (var i = 0; i < recs.length; i++) {
                                 itemsFound.push(recs[i]);
                             }
