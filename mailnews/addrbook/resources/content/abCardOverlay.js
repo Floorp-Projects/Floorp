@@ -94,6 +94,8 @@ function OnLoadNewCard()
       if (editCard.card.displayName.length)
         editCard.generateDisplayName = false;
     }
+    if ("aimScreenName" in window.arguments[0])
+      editCard.card.aimScreenName = window.arguments[0].aimScreenName;
   }
 
   // set popup with address book names
