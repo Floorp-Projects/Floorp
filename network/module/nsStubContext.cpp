@@ -323,6 +323,9 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
         pListener->OnProgress(pConn->pURL, total_bytes_read, 
                               content_length);
+        // XXX The comment above no longer applies, and this function does
+        // get called...
+        NS_RELEASE(pListener);
     }
 }
 
