@@ -72,11 +72,10 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-ifdef MOZILLA_BSAFE_BUILD
 moz_import::
 	$(NSINSTALL) -L ../../../dist include $(DIST)
 	$(NSINSTALL) -L ../../../dist lib $(DIST)
-endif
+	cp $(DIST)/lib/libmozdbm_s.a $(DIST)/lib/libdbm.a
 
 nsm:: all 
 	cd ssm/lib/protocol; gmake
