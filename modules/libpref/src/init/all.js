@@ -580,3 +580,7 @@ pref("bidi.characterset", 1);
 
 
 pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");
+
+// used for double-click word selection behavior. Mac will override.
+pref("layout.word_select.eat_space_to_next_word", true);
+pref("layout.word_select.stop_at_punctuation", false);

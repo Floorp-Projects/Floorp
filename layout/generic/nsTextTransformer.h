@@ -275,6 +275,10 @@ protected:
   // Flag for controling mLeaveAsAscii, mHasMultibyte, mTransformedTextIsAscii
   PRUint8 mFlags;
 
+  // prefs used to configure the double-click word selection behavior
+  static PRPackedBool sWordSelectPrefInited;            // have we read the prefs yet?
+  static PRPackedBool sWordSelectStopAtPunctuation;     // should we stop at punctuation?
+
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,
                        nsIWordBreaker* aWordBreaker,

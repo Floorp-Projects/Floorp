@@ -49,6 +49,12 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "prenv.h"
+#include "nsIPref.h"
+
+
+PRPackedBool nsTextTransformer::sWordSelectPrefInited = PR_FALSE;
+PRPackedBool nsTextTransformer::sWordSelectStopAtPunctuation = PR_FALSE;
+
 
 nsAutoTextBuffer::nsAutoTextBuffer()
   : mBuffer(mAutoBuffer),
@@ -102,6 +108,18 @@ nsresult
 nsTextTransformer::Initialize()
 {
   nsresult res = NS_OK;
+  
+  // read in our global word selection prefs
+  if ( !sWordSelectPrefInited ) {
+    nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+    if ( prefService ) {
+      PRBool temp = PR_FALSE;
+      prefService->GetBoolPref("layout.word_select.stop_at_punctuation", &temp);
+      sWordSelectStopAtPunctuation = temp;
+    }
+    sWordSelectPrefInited = PR_TRUE;
+  }
+  
   return res;
 }
 static nsresult EnsureCaseConv()
@@ -375,6 +393,10 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
         break;
     }
     else if (XP_IS_SPACE(ch)) {
+      break;
+    }
+    else if (sWordSelectStopAtPunctuation && !isalnum(ch)) {
+      // on some platforms, punctuation breaks words too.
       break;
     }
     else if (IS_DISCARDED(ch)) {
