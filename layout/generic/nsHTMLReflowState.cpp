@@ -689,24 +689,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       computedOffsets.SizeTo(0, 0, 0, 0);
     }
 
-    // Compute margins from the specified margin style information. These
-    // become the default computed values, and may be adjusted below
-
-    // XXX fix to provide 0,0 for the top&bottom margins for
-    // inline-non-replaced elements
-
-    // XXX Make into non-static methods?
-    ComputeMarginFor(frame, parentReflowState, computedMargin);
-#ifdef DEBUG_kipp
-    NS_ASSERTION((computedMargin.left > -200000) &&
-                 (computedMargin.left < 200000), "oy");
-    NS_ASSERTION((computedMargin.right > -200000) &&
-                 (computedMargin.right < 200000), "oy");
-#endif
-    ComputeBorderFor(frame, mComputedBorderPadding);
-    ComputePaddingFor(frame, parentReflowState, mComputedPadding);
-    mComputedBorderPadding += mComputedPadding;
-
     // Get the containing block width and height. We'll need them when
     // calculating the computed width and height. For all elements other
     // than absolutely positioned elements, the containing block is formed
@@ -745,6 +727,21 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
         NS_IF_RELEASE(frameType);
       }
     }
+
+    // Compute margins from the specified margin style information. These
+    // become the default computed values, and may be adjusted below
+    // XXX fix to provide 0,0 for the top&bottom margins for
+    // inline-non-replaced elements
+    ComputeMargin(containingBlockWidth);
+#ifdef DEBUG_kipp
+    NS_ASSERTION((computedMargin.left > -200000) &&
+                 (computedMargin.left < 200000), "oy");
+    NS_ASSERTION((computedMargin.right > -200000) &&
+                 (computedMargin.right < 200000), "oy");
+#endif
+    ComputeBorderFor(frame, mComputedBorderPadding);
+    ComputePaddingFor(frame, parentReflowState, mComputedPadding);
+    mComputedBorderPadding += mComputedPadding;
 
     nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
     nsStyleUnit heightUnit = mStylePosition->mHeight.GetUnit();
@@ -1194,6 +1191,75 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
       else {
         aResult.top = 0;
         aResult.bottom = 0;
+      }
+    }
+  }
+}
+
+void
+nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth)
+{
+  // If style style can provide us the margin directly, then use it.
+#if 0
+  if (!mStyleSpacing->GetMargin(aResult) && (nsnull != aParentRS))
+#else
+  mStyleSpacing->CalcMarginFor(frame, computedMargin);
+  if ((eStyleUnit_Percent == mStyleSpacing->mMargin.GetTopUnit()) ||
+      (eStyleUnit_Percent == mStyleSpacing->mMargin.GetRightUnit()) ||
+      (eStyleUnit_Percent == mStyleSpacing->mMargin.GetBottomUnit()) ||
+      (eStyleUnit_Percent == mStyleSpacing->mMargin.GetLeftUnit()))
+#endif
+  {
+    // We have to compute the value (because it's uncomputable by
+    // the style code).
+    if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
+      computedMargin.left = 0;
+      computedMargin.right = 0;
+
+    } else {
+      nsStyleCoord left, right;
+      ComputeHorizontalValue(aContainingBlockWidth,
+                             mStyleSpacing->mMargin.GetLeftUnit(),
+                             mStyleSpacing->mMargin.GetLeft(left),
+                             computedMargin.left);
+      ComputeHorizontalValue(aContainingBlockWidth,
+                             mStyleSpacing->mMargin.GetRightUnit(),
+                             mStyleSpacing->mMargin.GetRight(right),
+                             computedMargin.right);
+    }
+
+    const nsHTMLReflowState* rs2 = GetPageBoxReflowState(parentReflowState);
+    nsStyleCoord top, bottom;
+    if (nsnull != rs2) {
+      // According to the CSS2 spec, margin percentages are
+      // calculated with respect to the *height* of the containing
+      // block when in a paginated context.
+      ComputeVerticalValue(rs2->computedHeight,
+                           mStyleSpacing->mMargin.GetTopUnit(),
+                           mStyleSpacing->mMargin.GetTop(top),
+                           computedMargin.top);
+      ComputeVerticalValue(rs2->computedHeight,
+                           mStyleSpacing->mMargin.GetBottomUnit(),
+                           mStyleSpacing->mMargin.GetBottom(bottom),
+                           computedMargin.bottom);
+    }
+    else {
+      // According to the CSS2 spec, margin percentages are
+      // calculated with respect to the *width* of the containing
+      // block, even for margin-top and margin-bottom.
+      if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
+        computedMargin.top = 0;
+        computedMargin.bottom = 0;
+
+      } else {
+        ComputeHorizontalValue(aContainingBlockWidth,
+                               mStyleSpacing->mMargin.GetTopUnit(),
+                               mStyleSpacing->mMargin.GetTop(top),
+                               computedMargin.top);
+        ComputeHorizontalValue(aContainingBlockWidth,
+                               mStyleSpacing->mMargin.GetBottomUnit(),
+                               mStyleSpacing->mMargin.GetBottom(bottom),
+                               computedMargin.bottom);
       }
     }
   }

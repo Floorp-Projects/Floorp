@@ -344,6 +344,10 @@ protected:
   static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame,
                                            const nsStylePosition* aPosition,
                                            const nsStyleDisplay* aDisplay);
+
+  // Computes margins from the specified margin style information, and
+  // fills in the mComputedMargin member
+  void ComputeMargin(nscoord aContainingBlockWidth);
 };
 
 //----------------------------------------------------------------------
