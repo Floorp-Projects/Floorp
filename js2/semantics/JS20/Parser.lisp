@@ -105,15 +105,13 @@
     
     (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier)
     (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator)
-    (production :attribute-expression (:attribute-expression :class-of-operator) attribute-expression-class-of-operator)
     (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call)
     
     (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression)
     (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier)
     (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression)
     (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator)
-    (production :full-postfix-expression (:super-expression :member-operator) full-postfix-expression-super-member-operator)
-    (production :full-postfix-expression (:full-postfix-expression :class-of-operator) full-postfix-expression-class-of-operator)
+    (production :full-postfix-expression (:super-expression :dot-operator) full-postfix-expression-super-dot-operator)
     (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call)
     (production :full-postfix-expression (:full-super-expression :arguments) full-postfix-expression-super-call)
     (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment)
@@ -129,8 +127,7 @@
     (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier)
     (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression)
     (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator)
-    (production :full-new-subexpression (:super-expression :member-operator) full-new-subexpression-super-member-operator)
-    (production :full-new-subexpression (:full-new-subexpression :class-of-operator) full-new-subexpression-class-of-operator)
+    (production :full-new-subexpression (:super-expression :dot-operator) full-new-subexpression-super-dot-operator)
     
     (production :short-new-expression (new :short-new-subexpression) short-new-expression-new)
     (production :short-new-expression (new :super-expression) short-new-expression-super-new)
@@ -139,10 +136,12 @@
     (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
     
     
-    (production :member-operator (\. :qualified-identifier) member-operator-qualified-identifier)
-    (production :member-operator (:brackets) member-operator-brackets)
-    
-    (production :class-of-operator (\. class) class-of-operator-class)
+    (production :member-operator (:dot-operator) member-operator-dot-operator)
+    (production :member-operator (\. class) member-operator-class)
+    (production :member-operator (\. :parenthesized-expression) member-operator-indirect)
+
+    (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier)
+    (production :dot-operator (:brackets) dot-operator-brackets)
     
     (production :brackets ([ ]) brackets-none)
     (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed)
