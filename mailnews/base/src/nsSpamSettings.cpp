@@ -101,14 +101,14 @@ NS_IMETHODIMP nsSpamSettings::SetActionTargetFolder(const char * aActionTargetFo
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSpamSettings::GetPurgeInterval(PRBool *aPurgeInterval)
+NS_IMETHODIMP nsSpamSettings::GetPurgeInterval(PRInt32 *aPurgeInterval)
 {
   NS_ENSURE_ARG_POINTER(aPurgeInterval);
   *aPurgeInterval = mPurgeInterval;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSpamSettings::SetPurgeInterval(PRBool aPurgeInterval)
+NS_IMETHODIMP nsSpamSettings::SetPurgeInterval(PRInt32 aPurgeInterval)
 {
   NS_ASSERTION(aPurgeInterval >= 0, "bad purge interval");
   mPurgeInterval = aPurgeInterval;
