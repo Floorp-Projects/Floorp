@@ -132,8 +132,7 @@ struct mime_draft_data
   nsOutputFileStream  *tmpFileStream;      // output file handle 
 
   MimeDecoderData     *decoder_data;
-  char                *mailcharset;        // get it from CHARSET of
-										   // Content-Type 
+  char                *mailcharset;        // get it from CHARSET of Content-Type 
   PRBool forwardInline;
 };
 
@@ -271,7 +270,8 @@ CreateCompositionFields(const char        *from,
 									      const char        *attachment,
                         const char        *newspost_url,
                         PRBool            xlate_p,
-                        PRBool            sign_p)
+                        PRBool            sign_p,
+                        char              *charset)
 {
   nsIMsgCompFields *cFields = nsnull;
 
@@ -284,7 +284,7 @@ CreateCompositionFields(const char        *from,
   NS_ADDREF(cFields);
 
   // Now set all of the passed in stuff...
-  cFields->SetCharacterSet(nsString("UTF-8").GetUnicode());
+  cFields->SetCharacterSet(nsString(charset).GetUnicode());
   cFields->SetFrom(mime_decode_string(from).GetUnicode());
   cFields->SetSubject(mime_decode_string(subject).GetUnicode());
   cFields->SetReplyTo(mime_decode_string(reply_to).GetUnicode());
@@ -523,8 +523,8 @@ static void
 mime_intl_mimepart_2_str(char **str, char *mcharset)
 {
   //
-  // RICHIE - Big question here, what charset should I be converting
-  // to when I pull up old data????
+  // Converting these header values for UTF-8 for proper display
+  // in the text input widgets.
   //
 	if (str && *str)
 	{
@@ -1207,7 +1207,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
     
     fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
       org, subj, refs, 0, priority, 0, news_host,
-      xlate_p, sign_p);
+      xlate_p, sign_p, mdd->mailcharset);
     
     draftInfo = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_DRAFT_INFO, PR_FALSE, PR_FALSE);
     if (draftInfo && fields && !forward_inline) 
@@ -1339,7 +1339,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
     fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
                                       org, subj, refs, 0, priority, 0, news_host,
                                       GetMailXlateionPreference(), 
-                                      GetMailSigningPreference());
+                                      GetMailSigningPreference(),
+                                      mdd->mailcharset);
     if (fields)
       CreateTheComposeWindow(fields, newAttachData, nsMsgDefault);
   }

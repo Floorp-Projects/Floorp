@@ -1176,6 +1176,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 	// Convert body to mail charset
 	char      *outCString;
   nsString  aCharset = mCompFields->GetCharacterSet();
+
   if (aCharset != "")
   {
     // Convert to entities.

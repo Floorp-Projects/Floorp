@@ -230,6 +230,12 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   if (editor)
     editor->EnableUndo(PR_FALSE);
 
+  // RICHIE TODO
+  // Ok - now we need to figure out the charset of the aBuf we are going to send
+  // into the editor shell. There are I18N calls to sniff the data and then we need
+  // to call the new routine in the editor that will allow us to send in the charset
+  //
+
   // Now, insert it into the editor...
   if ( (aQuoted) )
   {
@@ -265,6 +271,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
     {
       if (!aBuf.IsEmpty())
         aEditorShell->InsertText(aBuf.GetUnicode());
+
       if (!aSignature.IsEmpty())
         aEditorShell->InsertText(aSignature.GetUnicode());
     }
@@ -510,9 +517,29 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     mMsgSend = do_QueryInterface( tMsgComp );
     if (mMsgSend)
     {
-      const char *bodyString = m_compFields->GetBody();
-      PRInt32 bodyLength = PL_strlen(bodyString);
+      PRBool      newBody = PR_FALSE;
+      char        *bodyString = (char *)m_compFields->GetBody();
+      PRInt32     bodyLength;
+      char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
       
+      // Convert body to mail charset
+      char      *outCString;
+      nsString  aCharset = m_compFields->GetCharacterSet();
+      
+      if (aCharset != "")
+      {
+        // Apply entity conversion then convert to a mail charset. 
+        char charset[65];
+        nsresult rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), 
+                                             nsString(bodyString).GetUnicode(), &outCString);
+        if (NS_SUCCEEDED(rv)) 
+        {
+          bodyString = outCString;
+          newBody = PR_TRUE;
+        }
+      }
+      
+      bodyLength = PL_strlen(bodyString);
       
       // Create the listener for the send operation...
       m_sendListener = new nsMsgComposeSendListener();
@@ -561,6 +588,10 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
                     nsnull,             					// nsMsgSendPart                     *relatedPart,
                     tArray);                   			// listener array
       
+      // Cleanup converted body...
+      if (newBody)
+        PR_FREEIF(bodyString);
+
       PR_Free(tArray);
     }
     else
@@ -1751,7 +1782,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // looking manner
   //
   char      *htmlBreak = "<BR>";
-  char      *dashes = "-- ";
+  char      *dashes = "--";
   if (sigData != "")
   {
     if (m_composeHTML)
