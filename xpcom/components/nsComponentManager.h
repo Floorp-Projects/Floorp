@@ -192,6 +192,14 @@ protected:
     // there was an error
     int AddLoaderType(const char *typeStr);
 
+public:
+    int GetLoaderCount() { return mNLoaderData + 1; }
+
+    // registers only the files in spec's location by loaders other than the
+    // native loader.  This is an optimization method only.
+    nsresult AutoRegisterNonNativeComponents(nsIFile* spec);
+
+
 private:
     nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec, PRBool fileIsCompDir=PR_TRUE);
 

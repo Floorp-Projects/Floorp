@@ -458,7 +458,7 @@ NS_CategoryManagerGetFactory( nsIFactory** aFactory )
  * this will attempt to notify the observer with the origin, observerTopic string
  * as parameter.
  */
-NS_EXPORT nsresult
+NS_COM nsresult
 NS_CreateServicesFromCategory(const char *category,
                               nsISupports *origin,
                               const char *observerTopic)

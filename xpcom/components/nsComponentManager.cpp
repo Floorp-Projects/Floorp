@@ -669,7 +669,21 @@ ConvertContractIDKeyToString(PLDHashTable *table,
     return NS_OK;    
 }
 
-
+// this is safe to call during InitXPCOM
+static nsresult GetDefaultComponentsDirectory(nsIFile** aDirectory)
+{
+    nsCOMPtr<nsIProperties> directoryService;
+    nsDirectoryService::Create(nsnull, 
+                               NS_GET_IID(nsIProperties), 
+                               getter_AddRefs(directoryService));  
+    
+    if (!directoryService) 
+        return NS_ERROR_FAILURE;
+    
+    return directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
+                                 NS_GET_IID(nsIFile), 
+                                 (void**)aDirectory);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl
@@ -785,15 +799,7 @@ nsresult nsComponentManagerImpl::Init(void)
     }
 #endif
 
-    nsCOMPtr<nsIProperties> directoryService;
-    nsDirectoryService::Create(nsnull, 
-                               NS_GET_IID(nsIProperties), 
-                               getter_AddRefs(directoryService));  
-
-    directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
-                          NS_GET_IID(nsIFile), 
-                          getter_AddRefs(mComponentsDir));
-
+    GetDefaultComponentsDirectory(getter_AddRefs(mComponentsDir));
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3004,21 +3010,9 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     } 
     else 
     {
-        // Do default components directory
-
-        nsCOMPtr<nsIProperties> directoryService;
-        nsDirectoryService::Create(nsnull, 
-                                   NS_GET_IID(nsIProperties), 
-                                   getter_AddRefs(directoryService));  
-
-        if (!directoryService) 
-            return NS_ERROR_FAILURE;
-
-        rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
-                                   NS_GET_IID(nsIFile), 
-                                   getter_AddRefs(dir));
-        if (NS_FAILED(rv)) 
-            return rv; // XXX translate error code?
+        GetDefaultComponentsDirectory(getter_AddRefs(dir));
+        if (!dir)
+            return NS_ERROR_UNEXPECTED;
     }
 
     nsCOMPtr<nsIInterfaceInfoManager> iim = 
@@ -3074,38 +3068,9 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
         nsCOMPtr<nsIComponentLoader> loader;
         GetLoaderForType(AddLoaderType(loaderType.get()), getter_AddRefs(loader));
     }
-
-    /* iterate over all known loaders and ask them to autoregister. */
-    /* XXX convert when to nsIComponentLoader::(when) properly */
-    nsIFile *spec = dir.get();
-    for (int i = NS_COMPONENT_TYPE_NATIVE + 1; i < mNLoaderData; i++) {
-        if (!mLoaderData[i].loader) {
-            rv = GetLoaderForType(i, &mLoaderData[i].loader);
-            if (NS_FAILED(rv))
-                continue;
-        }
-        rv = mLoaderData[i].loader->AutoRegisterComponents(when, spec);
-        if (NS_FAILED(rv))
-            break;
-    }
-
-    if (NS_SUCCEEDED(rv))
-    {
-        PRBool registered;
-        do {
-            registered = PR_FALSE;
-            for (int i = NS_COMPONENT_TYPE_NATIVE; i < mNLoaderData; i++) {
-                PRBool b = PR_FALSE;
-                if (mLoaderData[i].loader) {
-                    rv = mLoaderData[i].loader->RegisterDeferredComponents(when, &b);
-                    if (NS_FAILED(rv))
-                        continue;
-                    registered |= b;
-                }
-            }
-        } while (NS_SUCCEEDED(rv) && registered);
-    }
-
+    
+    rv = AutoRegisterNonNativeComponents(dir.get()); 
+    
     // Notify observers of xpcom autoregistration completion
     NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, 
                                   nsnull,
@@ -3116,6 +3081,47 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     return rv;
 }
 
+nsresult
+nsComponentManagerImpl::AutoRegisterNonNativeComponents(nsIFile* spec)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIFile> directory = spec;
+
+    if (!directory) {
+        GetDefaultComponentsDirectory(getter_AddRefs(directory));
+        if (!directory)
+            return NS_ERROR_UNEXPECTED;
+    }
+
+    for (int i = 1; i < mNLoaderData; i++) {
+        if (!mLoaderData[i].loader) {
+            rv = GetLoaderForType(i, &mLoaderData[i].loader);
+            if (NS_FAILED(rv))
+                continue;
+        }
+        rv = mLoaderData[i].loader->AutoRegisterComponents(0, directory);
+        if (NS_FAILED(rv))
+            break;
+    }
+
+    if (NS_SUCCEEDED(rv))
+    {
+        PRBool registered;
+        do {
+            registered = PR_FALSE;
+            for (int i = 0; i < mNLoaderData; i++) {
+                PRBool b = PR_FALSE;
+                if (mLoaderData[i].loader) {
+                    rv = mLoaderData[i].loader->RegisterDeferredComponents(0, &b);
+                    if (NS_FAILED(rv))
+                        continue;
+                    registered |= b;
+                }
+            }
+        } while (NS_SUCCEEDED(rv) && registered);
+    }
+    return rv;
+}
 nsresult
 nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
                                               nsIFile *component)
