@@ -74,14 +74,14 @@ protected:
   nsIDeviceContext  *mContext;
   XFontStruct       *mFontInfo;
   Font              mFontHandle;
-  nscoord           mCharWidths[256];
+  nscoord           mCharWidths[256];*/
   nscoord           mHeight;
   nscoord           mAscent;
   nscoord           mDescent;
   nscoord           mLeading;
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
-  nscoord           mMaxAdvance;*/
+  nscoord           mMaxAdvance;
 
   nsFont            *mFont;
   nsIDeviceContext  *mContext;
