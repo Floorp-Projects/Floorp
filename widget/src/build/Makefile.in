@@ -24,6 +24,8 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME := widget$(MOZ_WIDGET_TOOLKIT)
 
+DEFINES += -D_IMPL_NS_WIDGET
+
 TOOLKIT_INCLUDES := -I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT)
 
 LOCAL_INCLUDES := \

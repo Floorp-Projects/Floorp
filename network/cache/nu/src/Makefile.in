@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 TARGET = $(LIBRARY)
 
 LIBRARY_NAME=cache
+DEFINES		+= -D_IMPL_NS_NET
 
 MISCDEP = 		    \
     $(NSPR_LIBS)  	    \

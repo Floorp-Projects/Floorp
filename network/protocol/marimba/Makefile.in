@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= marimurl
 LIBRARY_NAME	= marimurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CPPSRCS		= \
 	mkmarimb.cpp	\
 	$(NULL)

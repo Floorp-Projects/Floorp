@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= netcnvts
 LIBRARY_NAME	= netcnvts
 
+DEFINES         += -D_IMPL_NS_NET
+
 CPPSRCS		= \
 	cvplugin.cpp	\
 	nsNetConverterStream.cpp \

@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ftpurl
 LIBRARY_NAME	= ftpurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mkftp.c	\
 	$(NULL)

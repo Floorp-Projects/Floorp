@@ -27,6 +27,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE			= security
 LIBRARY_NAME		= secfree
 
+INHIBIT_STRIP_NOT_EXPORTED = 1
+
 EXPORTS			= base64.h \
 			  cert.h \
 			  preenc.h \

@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= imap4url
 LIBRARY_NAME	= imap4url
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	imap4url.c	\
 	$(NULL)

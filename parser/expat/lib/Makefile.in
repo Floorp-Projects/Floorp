@@ -24,6 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = expat
 
+ifdef MOZ_STRIP_NOT_EXPORTED
+DEFINES += -DXMLPARSEAPI="__attribute__ ((dllexport))"
+endif
+
+
 CSRCS = \
 	hashtable.c \
 	xmlparse.c \

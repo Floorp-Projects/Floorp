@@ -24,6 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = xmltok
 
+ifdef MOZ_STRIP_NOT_EXPORTED
+DEFINES += -DXMLTOKAPI="__attribute__ ((dllexport))"
+endif
+
 CSRCS = \
 	xmltok.c \
 	xmlrole.c \

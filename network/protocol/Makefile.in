@@ -26,6 +26,8 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+DEFINES		+= -D_IMPL_NS_NET
+
 DIRS	= about	\
 	file	\
 	ftp	\

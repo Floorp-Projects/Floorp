@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= util
 LIBRARY_NAME	= $(MOZ_LIB_UTIL_PREFIX)util
 
+INHIBIT_STRIP_NOT_EXPORTED = 1
+
 CSRCS		= obs.c
 
 REQUIRES	= util
