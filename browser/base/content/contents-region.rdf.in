@@ -2,12 +2,16 @@
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
+  <!-- list all the packages being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:package:root">
     <RDF:li resource="urn:mozilla:package:browser-region"/>
   </RDF:Seq>
 
-  <!-- we need a dummy package so that browser-region works correctly -->
+  <!-- package information -->
   <RDF:Description about="urn:mozilla:package:browser-region"
-        chrome:name="browser-region"
-        chrome:localeVersion="0.9.9" />
+ 	                 chrome:displayName="US Regional Contents"
+                   chrome:author="mozilla.org"
+                   chrome:name="browser-region"
+                   chrome:localeVersion="@MOZILLA_REGION_VERSION@"/>
+
 </RDF:RDF>

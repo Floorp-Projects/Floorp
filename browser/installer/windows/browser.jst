@@ -380,6 +380,8 @@ if(verifyDiskSpace(fProgram, srDest))
     // register chrome
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/browser/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/browser/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/browser-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "browser.jar"), "content/browser-platform/");
 
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/passwordmgr/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/mozapps/");
