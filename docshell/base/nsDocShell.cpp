@@ -2325,7 +2325,22 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
       }   
     // Restore up any HistoryLayoutState this page might have.
     nsresult rv = NS_OK;
-    if (mSessionHistory) {
+	PRBool updateHistory = PR_TRUE;
+
+    // Determine if this type of load should update history   
+    switch(mLoadType)
+    {
+    case loadHistory:
+    case loadReloadNormal:
+    case loadReloadBypassCache:
+    case loadReloadBypassProxy:
+    case loadReloadBypassProxyAndCache:
+        updateHistory = PR_FALSE;
+        break;
+    default:
+        break;
+    } 
+    if (mSessionHistory && !updateHistory) {
       PRInt32 index = 0;
       mSessionHistory->GetIndex(&index);
       if (-1 < index) {
