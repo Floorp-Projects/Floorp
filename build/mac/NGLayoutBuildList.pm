@@ -445,9 +445,11 @@ sub BuildLayoutProjects()
 	#// PowerPlant now used by widget, etc.
 	BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",							"PowerPlant$D.shlb");
 	MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb",							"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb.xSYM",		"$dist_dir") : 0;
 
 	BuildProject(":mozilla:base:macbuild:base.mcp",										"base$D.shlb");
 	MakeAlias(":mozilla:base:macbuild:base$D.shlb",										"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:base:macbuild:base$D.shlb.xSYM",					"$dist_dir") : 0;
 	
 	BuildProject(":mozilla:modules:libutil:macbuild:libutil.mcp",						"libutil$D.shlb");
 	MakeAlias(":mozilla:modules:libutil:macbuild:libutil$D.shlb",						"$dist_dir");
@@ -469,15 +471,19 @@ sub BuildLayoutProjects()
 	
 	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",							"htmlparser$D.shlb");
 	MakeAlias(":mozilla:htmlparser:macbuild:htmlparser$D.shlb",							"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:htmlparser:macbuild:htmlparser$D.shlb.xSYM",		"$dist_dir") : 0;
 	
 	BuildProject(":mozilla:dom:macbuild:dom.mcp",										"dom$D.shlb");
 	MakeAlias(":mozilla:dom:macbuild:dom$D.shlb",										"$dist_dir") ;
+	$main::DEBUG ? MakeAlias(":mozilla:dom:macbuild:dom$D.shlb.xSYM",					"$dist_dir") : 0;
 
 	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",										"gfx$D.shlb");
 	MakeAlias(":mozilla:gfx:macbuild:gfx$D.shlb",										"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:gfx:macbuild:gfx$D.shlb.xSYM",					"$dist_dir") : 0;
 	
 	BuildProject(":mozilla:layout:macbuild:layout.mcp",									"layout$D.shlb");
 	MakeAlias(":mozilla:layout:macbuild:layout$D.shlb",									"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:layout:macbuild:layout$D.shlb.xSYM",				"$dist_dir") : 0;
 	
 	BuildProject(":mozilla:view:macbuild:view.mcp",										"view$D.shlb");
 	MakeAlias(":mozilla:view:macbuild:view$D.shlb",										"$dist_dir");
@@ -485,6 +491,7 @@ sub BuildLayoutProjects()
 
 	BuildProject(":mozilla:widget:macbuild:widget.mcp",									"widget$D.shlb");
 	MakeAlias(":mozilla:widget:macbuild:widget$D.shlb",									"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:widget:macbuild:widget$D.shlb.xSYM",				"$dist_dir") : 0;
 	
 	#// This isn't quite ready yet...
 	#BuildProject(":mozilla:rdf:macbuild:rdf.mcp",										"rdf$D.shlb");
@@ -492,6 +499,7 @@ sub BuildLayoutProjects()
 	
 	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",								"webshell$D.shlb");
 	MakeAlias(":mozilla:webshell:macbuild:webshell$D.shlb",								"$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:webshell:macbuild:webshell$D.shlb.xSYM",			"$dist_dir") : 0;
 	
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",						"viewer$D");
 	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",								"xpfeViewer$D");
