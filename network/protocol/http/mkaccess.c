@@ -111,6 +111,7 @@ PRIVATE XP_List * net_proxy_auth_list = NULL;
 PRIVATE Bool cookies_changed = FALSE;
 #if defined(CookieManagement)
 PRIVATE Bool cookie_permissions_changed = FALSE;
+PRIVATE Bool cookie_remember_checked = FALSE;
 #endif
 
 PRIVATE NET_CookieBehaviorEnum net_CookieBehavior = NET_Accept;
@@ -1284,7 +1285,7 @@ PRIVATE void
 NET_SetCookieWarningPref(Bool x)
 {
 /* morse start -- temporary until preference bug is fixed */
-/*    x = TRUE; */
+   /* x = TRUE; */
 /* morse end */
 	net_WarnAboutCookies = x;
 }
@@ -1604,6 +1605,21 @@ net_AddCookiePermission
 }
 #endif
 
+
+/*
+ * temporary UI until FE implements this function as a single dialog box
+ */
+XP_Bool FE_CheckConfirm (
+	MWContext *pContext,
+	char* pConfirmMessage,
+	char* pCheckMessage,
+	XP_Bool* pChecked) {
+
+    Bool userHasAccepted = ET_PostMessageBox(pContext, pConfirmMessage, TRUE);
+    *pChecked = ET_PostMessageBox (pContext, pCheckMessage, TRUE);
+    return userHasAccepted;
+}
+/* end of temporary UI */
 
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
@@ -1944,6 +1960,9 @@ net_IntSetCookieString(MWContext * context,
 		XP_List * list_ptr;
 		net_CookieStruct * cookie;
 		int count = 0;
+		char * remember_string = 0;
+		StrAllocCopy
+		    (remember_string, XP_GetString(MK_ACCESS_COOKIES_REMEMBER));
 
 		/* find out how many cookies this host has already set */
 		net_lock_cookie_list();
@@ -2012,23 +2031,23 @@ net_IntSetCookieString(MWContext * context,
 #if defined(CookieManagement)
 
 	    {
-		Bool userHasAccepted =
-			ET_PostMessageBox(context, new_string, TRUE);
-		Bool userWantsRemembered =
-			ET_PostMessageBox
-			    (context,
-			     XP_GetString(MK_ACCESS_COOKIES_REMEMBER),
-			     TRUE);
+		XP_Bool userHasAccepted = FE_CheckConfirm
+		    (context,
+		     new_string,
+		     remember_string,
+		     &cookie_remember_checked);
+		PR_FREEIF(new_string);
+		PR_FREEIF(remember_string);
 
+		if (cookie_remember_checked) {
 		net_lock_cookie_permission_list();
-		if (userWantsRemembered) {
-			net_AddCookiePermission
-			    (host_from_header, userHasAccepted, TRUE);
-		}
+		net_AddCookiePermission
+		    (host_from_header, userHasAccepted, TRUE);
 		net_unlock_cookie_permission_list();
+		}
+
 		if (!userHasAccepted) {
-			PR_FREEIF(new_string);
-			return;
+		    return;
 		}
 	    }
 #else
@@ -2036,8 +2055,8 @@ net_IntSetCookieString(MWContext * context,
 			PR_FREEIF(new_string);
 			return;
 		}
-#endif
 		PR_FREEIF(new_string);
+#endif
 	  }
 
 	TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
@@ -3451,6 +3470,7 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
      * Note: we can't delete cookie while "list" is pointing to it because
      * that would destroy "list".  So we do a lazy deletion
      */
+    net_lock_cookie_list();
     list = net_cookie_list;
     cookieNumber = 0;
     while ( (cookie=(net_CookieStruct *) XP_ListNextObject(list)) ) {
@@ -3463,11 +3483,12 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 	cookieNumber++;
     }
 
-	if (cookieToDelete) {
-		net_FreeCookie(cookieToDelete);
-		cookies_changed = TRUE;
-		NET_SaveCookies(NULL);
-	}
+    if (cookieToDelete) {
+	net_FreeCookie(cookieToDelete);
+	cookies_changed = TRUE;
+	NET_SaveCookies(NULL);
+    }
+    net_unlock_cookie_list();
 
     /* get the comma-separated sequence of permissions to be deleted */
     gone = XP_FindValueInArgs("goneP", argv, argc);
@@ -3494,11 +3515,11 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 	cookieNumber++;
     }
 
-	if (cookiePermissionToDelete) {
-		net_FreeCookiePermission(cookiePermissionToDelete, TRUE);
-		cookie_permissions_changed = TRUE;
-		net_SaveCookiePermissions(NULL);
-	}
+    if (cookiePermissionToDelete) {
+	net_FreeCookiePermission(cookiePermissionToDelete, TRUE);
+	cookie_permissions_changed = TRUE;
+	net_SaveCookiePermissions(NULL);
+    }
 
     net_unlock_cookie_permission_list();
     return PR_FALSE;
