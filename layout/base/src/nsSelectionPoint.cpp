@@ -21,10 +21,10 @@ nsSelectionPoint::nsSelectionPoint(nsIContent * aContent,
                                    PRInt32      aOffset,
                                    PRBool       aIsAnchor) 
 {
-  fContent  = aContent;
-  fOffset   = aOffset;
-  fIsAnchor = aIsAnchor; 
-  fEntireContent = PR_FALSE;
+  fContent        = aContent;
+  fOffset         = aOffset;
+  fIsAnchor       = aIsAnchor; 
+  fEntireContent  = PR_FALSE;
 }
 
 nsSelectionPoint::~nsSelectionPoint() 
@@ -38,11 +38,10 @@ void nsSelectionPoint::SetPoint(nsIContent * aContent,
   fContent  = aContent;
   fOffset   = aOffset;
   fIsAnchor = aIsAnchor;
-};
-
+}
 
 /**
-  * For debug only, it potentially leaks memory
+  * For debug only, it leaks memory
  */
 char * nsSelectionPoint::ToString() {
   char * str = new char[256];

@@ -255,7 +255,8 @@ protected:
 
   virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
                               nsGUIEvent*     aEvent,
-                              nsIFrame *      aNewFrame);
+                              nsIFrame *      aNewFrame,
+                              PRUint32&       aAcutalContentOffset);
 
   virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
                                 nsGUIEvent    * aEvent,

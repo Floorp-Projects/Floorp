@@ -35,16 +35,16 @@ class nsSelectionPoint {
 
     virtual ~nsSelectionPoint();
 
-    nsIContent * GetContent() { return fContent; }
-    PRInt32      GetOffset()  { return fOffset;  }
-    PRBool       IsAnchor()   { return fIsAnchor;}
+    nsIContent * GetContent()                              { return fContent; }
+    PRInt32      GetOffset()                               { return fOffset;  }
+    PRBool       IsAnchor()                                { return fIsAnchor;}
 
     PRBool       IsEntireContentSelected()                 { return fEntireContent;   }
     void         setEntireContentSelected(PRBool aState)   { fEntireContent = aState; }
 
-    void         SetContent(nsIContent * aValue)   { fContent  = aValue; }
-    void         SetOffset(PRInt32 aValue)         { fOffset   = aValue; }
-    void         SetAnchor(PRBool aValue)          { fIsAnchor = aValue; }
+    void         SetContent(nsIContent * aValue)           { fContent  = aValue; }
+    void         SetOffset(PRInt32 aValue)                 { fOffset   = aValue; }
+    void         SetAnchor(PRBool aValue)                  { fIsAnchor = aValue; }
 
     void         SetPoint(nsIContent * aContent,
                           PRInt32      aOffset,
