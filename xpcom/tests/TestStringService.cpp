@@ -45,35 +45,37 @@ int
 main(void)
 {
   nsresult rv;
-  nsCOMPtr<nsIServiceManager> servMan;
-  rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-  if (NS_FAILED(rv)) {
-    printf("NS_InitXPCOM2 failed\n");
-    return -1;
-  }
+  {
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    if (NS_FAILED(rv)) {
+      printf("NS_InitXPCOM2 failed\n");
+      return -1;
+    }
 
-  nsCOMPtr<nsIStringService> stringService = do_GetService("@mozilla.org/stringService;1");
-  if (!stringService) {
-    printf("String Service not found.\n");
-    return -1;
-  }
+    nsCOMPtr<nsIStringService> stringService = do_GetService("@mozilla.org/stringService;1");
+    if (!stringService) {
+      printf("String Service not found.\n");
+      return -1;
+    }
 
-  char *in1 = "The quick brown fox jumped over the lazy dog."; 
-  nsACString *aCString;
-  rv = stringService->CreateACString(in, 
-                                     &aCString);
-  if (NS_FAILED(rv)) {
-    printf("cound not create nsACString.\n");
-    return -1;
-  }
+    char in1[] = "The quick brown fox jumped over the lazy dog."; 
+    nsACString *aCString;
+    rv = stringService->CreateACString(in1, 
+                                       sizeof in1,
+                                       &aCString);
+    if (NS_FAILED(rv)) {
+      printf("cound not create nsACString.\n");
+      return -1;
+    }
 
-  char* out1;
-  rv = stringService->GetString(*aCString, &out1);
-  if (NS_FAILED(rv)) {
-    printf("Could not obtain string from nsACString.\n");
-    return -1;
+    char* out1;
+    rv = stringService->GetString(*aCString, &out1);
+    if (NS_FAILED(rv)) {
+      printf("Could not obtain string from nsACString.\n");
+      return -1;
+    }
   }
-
   rv = NS_ShutdownXPCOM(nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return 0;
