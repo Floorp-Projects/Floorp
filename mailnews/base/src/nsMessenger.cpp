@@ -357,6 +357,70 @@ nsMessenger::InitializeDisplayCharset()
   }
 }
 
+
+nsresult
+nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    if (fileSpec.Exists())
+    {
+        nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));
+        if (!dialog) return rv;
+        nsString path;
+        PRBool dialogResult = PR_FALSE;
+        nsXPIDLString errorMessage;
+
+        fileSpec.GetNativePathString(path);
+        const PRUnichar *pathFormatStrings[] = { path.GetUnicode() };
+        NS_NAMED_LITERAL_STRING(fileExistsPropertyTag, "fileExists");
+        const PRUnichar *fpropertyTag = fileExistsPropertyTag.get();
+        if (!mStringBundle)
+        {
+            rv = InitStringBundle();
+            if (NS_FAILED(rv)) return rv;
+        }
+        rv = mStringBundle->FormatStringFromName(fpropertyTag,
+                                                 pathFormatStrings, 1,
+                                                 getter_Copies(errorMessage));
+        if (NS_FAILED(rv)) return rv;
+        rv = dialog->Confirm(nsnull, errorMessage, &dialogResult);
+        if (NS_FAILED(rv)) return rv;
+
+        if (dialogResult)
+        {
+            return NS_OK; // user says okay to replace
+        }
+        else
+        {
+            PRInt16 dialogReturn;
+            nsCOMPtr<nsIFilePicker> filePicker =
+                do_CreateInstance("@mozilla.org/filepicker;1", &rv);
+            if (NS_FAILED(rv)) return rv;
+            NS_NAMED_LITERAL_STRING(saveAttachmentTag, "Save Attachment");
+            const PRUnichar *spropertyTag = saveAttachmentTag.get();
+            filePicker->Init(nsnull, spropertyTag, nsIFilePicker::modeSave);
+            filePicker->SetDefaultString(path.GetUnicode());
+            filePicker->AppendFilters(nsIFilePicker::filterAll);
+            filePicker->Show(&dialogReturn);
+            if (dialogReturn == nsIFilePicker::returnCancel)
+                return NS_ERROR_FAILURE;
+            nsCOMPtr<nsILocalFile> localFile;
+            nsXPIDLCString filePath;
+            rv = filePicker->GetFile(getter_AddRefs(localFile));
+            if (NS_FAILED(rv)) return rv;
+            rv = localFile->GetPath(getter_Copies(filePath));
+            if (NS_FAILED(rv)) return rv;
+            fileSpec = (const char*) filePath;
+            return NS_OK;
+        }
+    }
+    else
+    {
+        return NS_OK;
+    }
+    return rv;
+}
+
 nsresult
 nsMessenger::InitializeSearch( nsIFindComponent *finder )
 {
@@ -706,6 +770,8 @@ nsMessenger::SaveAllAttachments(PRUint32 count, const char **urlArray,
         PR_FREEIF(unescapedName);
         unescapedName = tempCStr;
         aFileSpec += unescapedName;
+        rv = PromptIfFileExists(aFileSpec);
+        if (NS_FAILED(rv)) return rv;
         fileSpec->SetFromFileSpec(aFileSpec);
         rv = SaveAttachment(fileSpec, unescapedUrl, messageUriArray[0], 
                             (void *)saveState);
@@ -1605,6 +1671,8 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
           PR_FREEIF(unescapedName);
           unescapedName = tempCStr;
           aFileSpec += unescapedName;
+          rv = m_messenger->PromptIfFileExists(aFileSpec);
+          if (NS_FAILED(rv)) goto done;
           fileSpec->SetFromFileSpec(aFileSpec);
           rv = m_messenger->SaveAttachment(fileSpec, unescapedUrl,
                                            state->m_messageUriArray[i],
@@ -1686,6 +1754,26 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
+nsresult
+nsMessenger::InitStringBundle()
+{
+    nsresult res = NS_OK;
+    if (!mStringBundle)
+    {
+		char    *propertyURL = MESSENGER_STRING_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
+                        kStringBundleServiceCID, &res);
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+			res = sBundleService->CreateBundle(propertyURL, locale,
+                                               getter_AddRefs(mStringBundle));
+		}
+    }
+    return res;
+}
+
 PRUnichar *
 nsMessenger::GetString(const PRUnichar *aStringName)
 {
@@ -1693,16 +1781,7 @@ nsMessenger::GetString(const PRUnichar *aStringName)
   PRUnichar   *ptrv = nsnull;
 
 	if (!mStringBundle)
-	{
-		char    *propertyURL = MESSENGER_STRING_URL;
-
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-		{
-			nsILocale   *locale = nsnull;
-			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(mStringBundle));
-		}
-	}
+        res = InitStringBundle();
 
 	if (mStringBundle)
 		res = mStringBundle->GetStringFromName(aStringName, &ptrv);

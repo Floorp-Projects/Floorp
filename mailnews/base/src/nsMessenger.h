@@ -48,12 +48,14 @@ public:
   nsresult Alert(const char * stringName);
     nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
                             const char* messageUri, void *closure);
+  nsresult PromptIfFileExists(nsFileSpec &fileSpec);
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
   PRUnichar *GetString(const PRUnichar *aStringName);
+  nsresult InitStringBundle();
 
 private:
   nsresult InitializeSearch(nsIFindComponent *finder);
