@@ -1,0 +1,156 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # watchedusers: string. 
+  #               Comma-separated list of email addresses this user watches.
+  # excludeself:  boolean.
+  #               True if user is not receiving self-generated mail.
+  # <rolename>:   Multiple hashes, one for each rolename (e.g. owner; see 
+  #               below), keyed by reasonname (e.g. comments; again, see 
+  #               below). The value is a boolean - true if the user is 
+  #               receiving mail for that reason when in that role.
+  # Also references the 'supportwatchers' Param.
+  #%]
+ 
+<table>
+  [% IF Param('supportwatchers') %]
+    <tr>
+      <td colspan="4">
+        <hr />
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="4">
+        If you want to help cover for someone when they're on vacation, or if
+        you need to do the QA related to all of their bugs, you can tell 
+        Bugzilla to send mail related to their bugs to you also.  List the 
+        email addresses of any users you wish to watch here, separated by
+        commas.
+      </td>
+    </tr>
+
+    <tr>
+      <th align="right">Users to watch:</th>
+      <td>
+        <input size="35" name="watchedusers" value="[% watchedusers %]" />
+      </td>
+    </tr>
+  [% END %]
+
+  <tr>
+    <td colspan="2">
+      <p>
+        If you don't like getting a notification for "trivial"
+        changes to bugs, you can use the settings below to
+        filter some (or even all) notifications.
+      </p>
+    </td>
+  </tr>
+</table>
+
+<hr />
+
+<table>
+  <tr>
+    <td colspan="2">
+      <b>Global options:</b>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="150"></td>
+    <td>
+      Only email me reports of changes made by other people
+      <input type="checkbox" name="ExcludeSelf" value="on"
+        [% " checked" IF excludeself %]>
+      <br />
+    </td>
+  </tr>
+</table>
+
+<hr />
+<b>Field/recipient specific options:</b>
+<br />
+<br />
+
+
+<table width="100%" border="1">
+  <tr>
+    <td colspan="5" align="center" width="50%">
+      <b>When my relationship to this bug is:</b>
+    </td>
+    <td rowspan="2" width="50%">
+      <b>I want to receive mail when:</b>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center" width="10%">
+      <b>Reporter</b>
+    </td>
+    <td align="center" width="10%">
+      <b>Assignee</b>
+    </td>
+    <td align="center" width="10%">
+      <b>QA Contact</b>
+    </td>
+    <td align="center" width="10%">
+      <b>CC</b>
+    </td>
+    <td align="center" width="10%">
+      <b>Voter</b>
+    </td>
+  </tr>
+
+  [% FOREACH reason = [ 
+      { name = 'Removeme',    
+        description = 'I\'m added to or removed from this capacity' },
+      { name = 'Comments',    
+        description = 'New Comments are added' },
+      { name = 'Attachments', 
+        description = 'New Attachments are added' },
+      { name = 'Status',      
+        description = 'Priority, status, severity, and/or milestone changes' },
+      { name = 'Resolved',    
+        description = 'The bug is resolved or verified' },
+      { name = 'Keywords',    
+        description = 'Keywords field changes' },
+      { name = 'CC',          
+        description = 'CC field changes' },
+      { name = 'Other',       
+        description = 'Any field not mentioned above changes' } ] %]
+    <tr>
+      [% FOREACH role = [ "Owner", "Reporter", "QAcontact", "CClist", "Voter" ] 
+       %]
+        <td align="center">
+          <input type="checkbox" name="email[% role %][% reason.name %]" value="on"
+            [% " checked" IF $role.${reason.name} %]>
+        </td>
+      [% END %]
+      <td>
+        [% reason.description %]
+      </td>
+    </tr>
+  [% END %]
+</table>       
+
+<br />
