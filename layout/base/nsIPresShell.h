@@ -63,6 +63,8 @@ public:
 
   virtual nsIStyleSet* GetStyleSet() = 0;
 
+  virtual nsresult SetFocus(nsIFrame *aFrame) = 0;
+
   NS_IMETHOD EnterReflowLock() = 0;
 
   NS_IMETHOD ExitReflowLock() = 0;
