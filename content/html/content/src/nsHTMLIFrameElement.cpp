@@ -89,6 +89,7 @@ public:
 
   // nsIFrameLoaderOwner
   NS_IMETHOD GetFrameLoader(nsIFrameLoader **aFrameLoader);
+  NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
@@ -305,6 +306,14 @@ nsHTMLIFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
 {
   *aFrameLoader = mFrameLoader;
   NS_IF_ADDREF(*aFrameLoader);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLIFrameElement::SetFrameLoader(nsIFrameLoader *aFrameLoader)
+{
+  mFrameLoader = aFrameLoader;
 
   return NS_OK;
 }
