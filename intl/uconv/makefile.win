@@ -20,6 +20,7 @@ DEPTH=..\..
 DIRS=public src  \
      ucvlatin \
      ucvja \
+     ucvja2 \
      tests
 
 include <$(DEPTH)\layout\config\rules.mak>

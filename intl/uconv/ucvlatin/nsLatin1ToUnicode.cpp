@@ -21,7 +21,7 @@
 
 #include "nsIUnicodeDecoder.h"
 #include "nsLatin1ToUnicode.h"
-#include "nsConverterCID.h"
+#include "nsUCvLatinCID.h"
 #include "nsUCvLatinDll.h"
 
 //----------------------------------------------------------------------
