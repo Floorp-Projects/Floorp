@@ -1799,7 +1799,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
             event.isShift = PR_FALSE;  // OS2TODO - Why do we need this?
             event.keyCode = 0;
          }
-         else if (usChar != VK_SPACE)
+         else if (usVKey != VK_SPACE)
          {
             event.charCode = 0;
          }
@@ -1924,7 +1924,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
     
         case WM_HSCROLL:
         case WM_VSCROLL:
-          result = OnScroll( mp1, mp2);
+          result = OnScroll( msg, mp1, mp2);
           break;
 
         case WM_FOCUSCHANGED:
@@ -2393,11 +2393,79 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
 
 //-------------------------------------------------------------------------
 //
-// Deal with scrollbar messages (actually implemented only in nsScrollbar)
+// Deal with scrollbar messages
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::OnScroll( MPARAM mp1, MPARAM mp2)
+PRBool nsWindow::OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2)
 {
+   return( (msgid == WM_HSCROLL) ? OnHScroll(mp1, mp2) : OnVScroll(mp1, mp2) );
+}
+
+PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
+{
+    if (nsnull != mEventCallback) {
+        nsMouseScrollEvent scrollEvent;
+        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+        InitEvent(scrollEvent, NS_MOUSE_SCROLL);
+        scrollEvent.isShift = WinIsKeyDown( VK_SHIFT);
+        scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
+        scrollEvent.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
+        scrollEvent.isMeta = PR_FALSE;
+        switch (SHORT2FROMMP(mp2)) {
+          case SB_LINEUP:
+            scrollEvent.deltaLines = -1;
+            break;
+          case SB_LINEDOWN:
+            scrollEvent.deltaLines = 1;
+            break;
+          case SB_PAGEUP:
+            scrollEvent.deltaLines = -10; /* OS2TODO ??? */
+            break;
+          case SB_PAGEDOWN:
+            scrollEvent.deltaLines = 10; /* OS2TODO ??? */
+            break;
+          default:
+            scrollEvent.deltaLines = 0;
+            break;
+        }
+        DispatchWindowEvent(&scrollEvent);
+    }
+// OS2TODO    NS_RELEASE(scrollEvent.widget);
+    return PR_FALSE;
+}
+
+PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
+{
+#if 0  /* OS2TODO */
+    if (nsnull != mEventCallback) {
+        nsMouseScrollEvent scrollEvent;
+        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+        InitEvent(scrollEvent, NS_MOUSE_SCROLL);
+        scrollEvent.isShift = WinIsKeyDown( VK_SHIFT);
+        scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
+        scrollEvent.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
+        scrollEvent.isMeta = PR_FALSE;
+        switch (SHORT2FROMMP(mp2)) {
+          case SB_LINELEFT:
+            scrollEvent.deltaColumns = -1;
+            break;
+          case SB_LINERIGHT:
+            scrollEvent.deltaColumns = 1;
+            break;
+          case SB_PAGELEFT:
+            scrollEvent.deltaColumns = -10; /* OS2TODO ??? */
+            break;
+          case SB_PAGERIGHT:
+            scrollEvent.deltaColumns = 10; /* OS2TODO ??? */
+            break;
+          default:
+            scrollEvent.deltaColumns = 0;
+            break;
+        }
+        DispatchWindowEvent(&scrollEvent);
+    }
+// OS2TODO    NS_RELEASE(scrollEvent.widget);
+#endif
     return PR_FALSE;
 }
 
