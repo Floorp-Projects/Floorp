@@ -135,7 +135,7 @@ class Tracer : public Context::Listener {
         printFormat(stdOut, "%04X: ", offset);
         Instruction* i = *pc;
         stdOut << *i;
-        if (i->count() > 0) {
+        if (i->op() != BRANCH && i->count() > 0) {
             stdOut << " [";
             i->printOperands(stdOut, *registers);
             stdOut << "]\n";
