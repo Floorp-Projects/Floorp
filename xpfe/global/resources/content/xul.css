@@ -72,22 +72,27 @@ window {
 
 /******** box *******/
 
+hbox[autostretch="never"],
 box[autostretch="never"] {
   vertical-align: middle;
 }
 
+hbox[autostretch="never"][valign="top"],
 box[autostretch="never"][valign="top"] {
   vertical-align: top;
 }
 
+hbox[autostretch="never"][valign="bottom"],
 box[autostretch="never"][valign="bottom"] {
   vertical-align: bottom;
 }
 
+hbox[autostretch="never"][halign="center"],
 box[autostretch="never"][halign="center"] {
   text-align: center;
 }
 
+hbox[autostretch="never"][halign="right"],
 box[autostretch="never"][halign="right"] {
   text-align: right;
 }
@@ -157,10 +162,11 @@ radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
 }
 
-/******** titledbox *******/
+/******** titledbox (moving solely to groupbox later) *******/
 
-titledbox {
-  -moz-binding: url("chrome://global/content/bindings/titledbox.xml#titledbox");
+titledbox,
+groupbox {
+  -moz-binding: url("chrome://global/content/bindings/titledbox.xml#groupbox");
   display: -moz-xul-groupbox;
 }
 
@@ -168,7 +174,7 @@ label {
   -moz-binding: url("chrome://global/content/bindings/titledbox.xml#label");
 }
 
-.titledbox-body {
+.groupbox-body {
   text-align: inherit;
   vertical-align: inherit;
 }

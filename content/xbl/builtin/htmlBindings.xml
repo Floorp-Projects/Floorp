@@ -2,9 +2,9 @@
 
 <!--
 Can't yet put script tags in XBL (hyatt has the bug)
-  <script type="text/javascript" src="chrome://embed/content/nsTransferable.js"/>
-  <script type="text/javascript" src="chrome://embed/content/nsClipboard.js"/>
-  <script type="text/javascript" src="chrome://embed/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://embed/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://embed/content/nsClipboard.js"/>
+  <script type="application/x-javascript" src="chrome://embed/content/nsDragAndDrop.js"/>
 -->
 
 <bindings id="htmlBindings"

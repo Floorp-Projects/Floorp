@@ -4,11 +4,11 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="fieldset" extends="xul:titledbox">
+  <binding id="fieldset" extends="xul:groupbox">
     <content>
-      <xul:box class="fieldset-title" autostretch="never" orient="vertical">
+      <xul:vbox class="fieldset-title" autostretch="never">
         <children includes="legend"/>
-      </xul:box>
+      </xul:vbox>
       <xul:box flex="1" class="fieldset-body">
         <xul:html flex="1">
           <children/>
