@@ -210,4 +210,55 @@ echo "      MOZ_PROGRAM=$MOZ_PROGRAM"
 
 export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
 
-exec ./$MOZ_PROGRAM ${1+"$@"}
+crc_prog=`which md5sum`
+
+if [ -x $crc_prog ]
+then
+	DEBUG_CORE_FILES=1
+fi
+
+if [ "$DEBUG_CORE_FILES" ]
+then
+	crc_old=
+
+	if [ -f core ]
+	then
+		crc_old=`$crc_prog core | awk '{print $1;}' `
+	fi
+fi
+
+./$MOZ_PROGRAM ${1+"$@"}
+
+if [ "$DEBUG_CORE_FILES" ]
+then
+	if [ -f core ]
+	then
+		crc_new=`$crc_prog core | awk '{print $1;}' `
+	fi
+fi
+
+if [ "$crc_old" != "$crc_new" ]
+then
+	printf "\n\nOh no!  %s just dumped a core file.\n\n" $MOZ_PROGRAM
+	printf "Do you want to debug this ? [y/n] "
+
+	read ans
+
+	if [ "$ans" = "y" ]
+	then
+		debugger=`which ddd`
+
+		if [ ! -x $debugger ]
+		then
+			debugger=gdb
+		fi
+
+		if [ ! -x $debugger ]
+		then
+			printf "\n\nCouldnt find a debugger on your system.  sorry.\n\n"
+			exit
+		fi
+
+		$debugger $MOZ_PROGRAM core
+	fi
+fi
