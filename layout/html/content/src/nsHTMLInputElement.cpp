@@ -178,6 +178,7 @@ protected:
   nsGenericHTMLLeafElement mInner;
   nsIForm*                 mForm;
   PRInt32                  mType;
+  PRBool                   mSkipFocusEvent;
 
   PRBool IsImage() const {
     nsAutoString tmp;
@@ -209,6 +210,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mInner.Init(this, aTag);
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
+  mSkipFocusEvent = PR_FALSE;
   //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
 
 }
@@ -535,19 +537,21 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled))
       return NS_OK;
- 
+
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     NS_RELEASE(esm);
   }
-  
+
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    // XXX commented out - redundant 
+    // formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
   }
+
   return rv;
 }
 
@@ -611,6 +615,11 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus)
 {
+  if ((aEvent->message == NS_FOCUS_CONTENT && mSkipFocusEvent) ||
+      (aEvent->message == NS_BLUR_CONTENT && mSkipFocusEvent)) {
+    return NS_OK;
+  }
+
   // Try script event handlers first
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
@@ -622,7 +631,9 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
         nsIFormControlFrame* formControlFrame = nsnull;
         nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
         if (NS_SUCCEEDED(rv)) {
+          mSkipFocusEvent = PR_TRUE;
           formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+          mSkipFocusEvent = PR_FALSE;
           return NS_OK;
         }                                                                       
       }                                                                         
