@@ -41,11 +41,13 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
 		$(NULL)
 
+EXTRA_DSO_LIBS	= gkgfx
+
 LIBS		+= \
-		$(DIST)/lib/libgkbase_s.a \
-		-lgkgfx \
+		$(DIST)/lib/libgkbase_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
 
