@@ -167,6 +167,7 @@ interface nsIWebNavigation : nsISupports
   *
   * @param reloadFlags - Flags modifying reload behaviour. Generally you will
   *                      pass LOAD_FLAGS_NONE for this parameter.
+  * @throws NS_BINDING_ABORTED if the user cancels the reload.
   */
   void reload(in unsigned long reloadFlags);
 

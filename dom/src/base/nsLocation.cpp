@@ -825,6 +825,12 @@ LocationImpl::Reload(PRBool aForceget)
                     nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
     }
     rv = webNav->Reload(reloadFlags);
+    if (rv == NS_BINDING_ABORTED) {
+      // This happens when we attempt to reload a POST result and the user says
+      // no at the "do you want to reload?" prompt.  Don't propagate this one
+      // back to callers.
+      rv = NS_OK;
+    }
   } else {
     NS_ASSERTION(0, "nsIWebNavigation interface is not available!");
     rv = NS_ERROR_FAILURE;

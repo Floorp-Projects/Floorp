@@ -6459,11 +6459,11 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
           
         if (NS_SUCCEEDED(rv) && messageStr) {
           prompter->Confirm(nsnull, messageStr, &repost);
-          /* If the user pressed cancel in the dialog, 
-           * return failure. 
+          /* If the user pressed cancel in the dialog, return.  We're
+           * done here.
            */
           if (!repost)
-            return NS_ERROR_FAILURE;  
+            return NS_BINDING_ABORTED;  
         }
       }
     }
