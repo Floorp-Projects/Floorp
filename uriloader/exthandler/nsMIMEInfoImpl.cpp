@@ -52,7 +52,7 @@ nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
     char **_retExts = (char**)nsMemory::Alloc((count)*sizeof(char*));
     if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
 
-    for (PRUint8 i=0; i < count; i++) {
+    for (PRUint32 i=0; i < count; i++) {
         nsCString* ext = mExtensions.CStringAt(i);
         _retExts[i] = ext->ToNewCString();
         if (!_retExts[i]) {
