@@ -47,7 +47,7 @@ class nsIAtom;
 class nsIDocument;
 class nsIScriptContext;
 class nsISupportsArray;
-class nsSupportsHashtable;
+class nsObjectHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
 class nsXBLEventHandler;
@@ -99,7 +99,7 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetDocURI(nsCString& aResult);
   NS_IMETHOD GetID(nsCString& aResult);
 
-  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult);
+  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult);
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex, nsIContent** aDefaultContent);
   NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, 
@@ -176,7 +176,7 @@ protected:
 
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
-  nsSupportsHashtable* mInsertionPointTable;    // A hash from nsIContent* -> (a sorted array of nsIXBLInsertionPoint*)
+  nsObjectHashtable* mInsertionPointTable;    // A hash from nsIContent* -> (a sorted array of nsXBLInsertionPoint*)
 
   PRPackedBool mIsStyleBinding;
   PRPackedBool mMarkedForDeath;

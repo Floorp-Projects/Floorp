@@ -64,7 +64,7 @@
 #include "nsINameSpace.h"
 #include "nsXBLService.h"
 #include "nsXBLBinding.h"
-#include "nsIXBLInsertionPoint.h"
+#include "nsXBLInsertionPoint.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsFixedSizeAllocator.h"
 #include "xptinfo.h"
@@ -602,17 +602,16 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
     binding->GetBoundElement(getter_AddRefs(realContent));
 
   // Now that we have the real content, look it up in our table.
-  nsCOMPtr<nsISupportsArray> points;
-  binding->GetInsertionPointsFor(realContent, getter_AddRefs(points));
-  nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
-  PRUint32 count;
-  points->Count(&count);
-  PRUint32 i = 0;
+  nsVoidArray* points;
+  binding->GetInsertionPointsFor(realContent, &points);
+  nsXBLInsertionPoint* insertionPoint = nsnull;
+  PRInt32 count = points->Count();
+  PRInt32 i = 0;
   PRInt32 currIndex = 0;  
   
   for ( ; i < count; i++) {
-    nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)points->ElementAt(i));
-    currPoint->GetInsertionIndex(&currIndex);
+    nsXBLInsertionPoint* currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, points->ElementAt(i));
+    currIndex = currPoint->GetInsertionIndex();
     if (currIndex == (PRInt32)index) {
       // This is a match. Break out of the loop and set our variable.
       insertionPoint = currPoint;
@@ -626,7 +625,7 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
 
   if (!insertionPoint) {
     // We need to make a new insertion point.
-    NS_NewXBLInsertionPoint(realContent, index, defContent, getter_AddRefs(insertionPoint));
+    insertionPoint = new nsXBLInsertionPoint(realContent, index, defContent);
     points->InsertElementAt(insertionPoint, i);
   }
 
@@ -857,25 +856,22 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
       tempBinding->GetBaseBinding(getter_AddRefs(currBinding));
     }
 
-    nsCOMPtr<nsISupportsArray> points;
+    nsVoidArray* points;
     if (anonContent == copyParent)
-      currBinding->GetInsertionPointsFor(aBoundElement, getter_AddRefs(points));
+      currBinding->GetInsertionPointsFor(aBoundElement, &points);
     else
-      currBinding->GetInsertionPointsFor(copyParent, getter_AddRefs(points));
-    nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
-    PRUint32 count;
-    points->Count(&count);
-    for (PRUint32 i = 0; i < count; i++) {
+      currBinding->GetInsertionPointsFor(copyParent, &points);
+    PRInt32 count = points->Count();
+    for (PRInt32 i = 0; i < count; i++) {
       // Next we have to find the real insertion point for this proto insertion
       // point.  If it does not contain any default content, then we should 
       // return null, since the content is not in the clone.
-      nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)points->ElementAt(i));
-      nsCOMPtr<nsIContent> defContent;
-      currPoint->GetDefaultContentTemplate(getter_AddRefs(defContent));
+      nsXBLInsertionPoint* currPoint = NS_STATIC_CAST(nsXBLInsertionPoint*, points->ElementAt(i));
+      nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContentTemplate();
       if (defContent == childPoint) {
         // Now check to see if we even built default content at this
         // insertion point.
-        currPoint->GetDefaultContent(getter_AddRefs(defContent));
+        defContent = currPoint->GetDefaultContent();
         if (defContent) {
           // Find out the index of the template element within the <children> elt.
           PRInt32 index;

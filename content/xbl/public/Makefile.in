@@ -33,7 +33,6 @@ EXPORTS		= \
 	nsIXBLBinding.h \
 	nsIXBLBindingAttachedHandler.h \
 	nsIXBLDocumentInfo.h \
-	nsIXBLInsertionPoint.h \
 	nsIXBLService.h \
 	$(NULL)
 

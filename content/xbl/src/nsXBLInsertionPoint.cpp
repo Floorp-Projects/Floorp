@@ -37,138 +37,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
 #include "nsXBLInsertionPoint.h"
-#include "nsIContent.h"
-#include "nsISupportsArray.h"
 
-nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefaultContent)
-:mElements(nsnull)
+nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement,
+                                         PRUint32 aIndex,
+                                         nsIContent* aDefaultContent)
+  : mParentElement(aParentElement),
+    mIndex(aIndex),
+    mDefaultContentTemplate(aDefaultContent)
 {
-  mParentElement = aParentElement;
-  mIndex = aIndex;
-  mDefaultContentTemplate = aDefaultContent;
 }
 
 nsXBLInsertionPoint::~nsXBLInsertionPoint()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXBLInsertionPoint, nsIXBLInsertionPoint)
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::GetInsertionParent(nsIContent** aParentElement)
+already_AddRefed<nsIContent>
+nsXBLInsertionPoint::GetInsertionParent()
 {
-  *aParentElement = mParentElement;
   NS_IF_ADDREF(mParentElement);
-  return NS_OK;
+  return mParentElement;
 }
 
-NS_IMETHODIMP
-nsXBLInsertionPoint::GetInsertionIndex(PRInt32 *aResult)
+already_AddRefed<nsIContent>
+nsXBLInsertionPoint::GetDefaultContent()
 {
-  *aResult = mIndex;
-  return NS_OK;
+  nsIContent* defaultContent = mDefaultContent;
+  NS_IF_ADDREF(defaultContent);
+  return defaultContent;
 }
 
-NS_IMETHODIMP
-nsXBLInsertionPoint::SetDefaultContent(nsIContent* aDefaultContent)
+already_AddRefed<nsIContent>
+nsXBLInsertionPoint::GetDefaultContentTemplate()
 {
-  mDefaultContent = aDefaultContent;
-  return NS_OK;
+  nsIContent* defaultContent = mDefaultContentTemplate;
+  NS_IF_ADDREF(defaultContent);
+  return defaultContent;
 }
 
-NS_IMETHODIMP
-nsXBLInsertionPoint::GetDefaultContent(nsIContent** aDefaultContent)
+already_AddRefed<nsIContent>
+nsXBLInsertionPoint::ChildAt(PRUint32 aIndex)
 {
-  *aDefaultContent = mDefaultContent;
-  NS_IF_ADDREF(*aDefaultContent);
-  return NS_OK;
+  nsIContent* result = mElements.ObjectAt(aIndex);
+  NS_IF_ADDREF(result);
+  return result;
 }
 
-NS_IMETHODIMP
-nsXBLInsertionPoint::SetDefaultContentTemplate(nsIContent* aDefaultContent)
+PRBool
+nsXBLInsertionPoint::Matches(nsIContent* aContent, PRUint32 aIndex)
 {
-  mDefaultContentTemplate = aDefaultContent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::GetDefaultContentTemplate(nsIContent** aDefaultContent)
-{
-  *aDefaultContent = mDefaultContentTemplate;
-  NS_IF_ADDREF(*aDefaultContent);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::AddChild(nsIContent* aChildElement)
-{
-  if (!mElements)
-    NS_NewISupportsArray(getter_AddRefs(mElements));
-
-  mElements->AppendElement(aChildElement);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement)
-{
-  if (!mElements)
-    NS_NewISupportsArray(getter_AddRefs(mElements));
-
-  mElements->InsertElementAt(aChildElement, aIndex);
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::RemoveChild(nsIContent* aChildElement)
-{
-  if (mElements)
-    mElements->RemoveElement(aChildElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::ChildCount(PRUint32* aResult)
-{
-  *aResult = 0;
-  if (mElements)
-    mElements->Count(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::ChildAt(PRUint32 aIndex, nsIContent** aResult)
-{
-  if (!mElements) {
-    *aResult = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResult = (nsIContent*)(mElements->ElementAt(aIndex)); // Addref happens in return.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLInsertionPoint::Matches(nsIContent* aContent, PRUint32 aIndex, PRBool* aResult)
-{
-  *aResult = (aContent == mParentElement && mIndex != -1 && ((PRInt32)aIndex) == mIndex);
-  return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent,
-                        nsIXBLInsertionPoint** aResult)
-{
-  *aResult = new nsXBLInsertionPoint(aParentElement, aIndex, aDefContent);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
-  return NS_OK;
+  return (aContent == mParentElement && mIndex != -1 && ((PRInt32)aIndex) == mIndex);
 }
