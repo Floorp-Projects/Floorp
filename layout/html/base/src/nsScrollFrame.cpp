@@ -333,11 +333,10 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                                      kidReflowSize);
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
 
-  // Recompute the computed width/height based on the scroll area size
+  // Recompute the computed width based on the scroll area size
   kidReflowState.computedWidth = scrollAreaSize.width - padding.left -
     padding.right;
-  kidReflowState.computedHeight = scrollAreaSize.height - padding.top -
-    padding.bottom;
+  kidReflowState.computedHeight = NS_AUTOHEIGHT;
 
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
               aStatus);
