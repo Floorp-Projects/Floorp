@@ -4,7 +4,9 @@
 <head>
 <title>loadHistoryPage</title>
 
-// called from SHListenerTest.html. Sets the sHistory listener, and purges sHistory.
+<! -- called from SHListenerTest.html.
+   -- Sets the sHistory listener, and purges sHistory.
+   -->
 
 
 <script TYPE="text/javascript" src="nsISHistoryTestLib.js">
@@ -15,26 +17,27 @@
 <script TYPE="text/javascript">
 
 var tc ;
-var debug=0;
+var debug=1;
 
 function SetListener(listener)
 {
-    sHistory = sHistoryInit();
-    alert("session history object = " + sHistory + "\n About to set listener");
- 	setSHistoryListener(sHistory, listener);
-
+   sHistory = sHistoryInit(window);	// js window
+   ddump("loadHistoryPage.html: session history object = " + sHistory + "\n About to set listener\n");
+   setSHistoryListener(sHistory, listener);
 }
 
 function ddump(s)
 {
    if (debug==1)
      dump(s);
+   else if (debug==2)
+     alert(s);
 }
 
 function purgeTheEntries(entries)
 {
-   sHistory = sHistoryInit();
-   alert("session history object = " + sHistory + "\n About to purge history.");
+   sHistory = sHistoryInit(window);  // js window
+   ddump("session history object = " + sHistory + "\n About to purge history.\n");
    purgeEntries(sHistory, entries);
 }
 

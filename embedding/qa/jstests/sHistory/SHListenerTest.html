@@ -35,6 +35,7 @@
 
 <script TYPE="text/javascript" SRC="nsISHListenerTestLib.js">
 </script>
+
 <script TYPE="text/javascript">
 
 // *** Variables ***
@@ -45,11 +46,11 @@ var testWin=null;
 var updateInfo="<p>Creating New window ....<br>";
 
 var cnt = 0;
-var urlList = ["http://www.aol.com",
+var urlList = ["file://D|/Embed-info/scripts/nsISHistory/loadHistoryPage.html",
+			   "http://www.worldcom.com",
                "http://www.yahoo.com",
                "http://www.mozilla.org",
                "http://www.mozilla.org/newsbot",
-               "file://D|/Embed-info/scripts/nsISHistory/loadHistoryPage.html",
                "http://www.cisco.com"
                ];
 // Variables to verify if the callbacks are invoked properly
@@ -61,12 +62,13 @@ var purgeCallback = false;
 var histLenInChild = 0;
 
 
-
 function ddump(s)
 {
-   if (debug==1)
-     dump(s);
-   else
+   if (debug==1) {
+     t = s + "\n";
+     dump(t);
+   }
+   else if (debug==2)
      alert(s);
 }
 
@@ -78,43 +80,46 @@ function startTestcase()
 
 function loadPages()
 {
-  alert("In loadPages\n");
+  ddump("In loadPages");
   alert("cnt = " + cnt);
+  alert("the uri = " + urlList[cnt]);
 
   /* Load pages sequentially in the child window
    * The first url will set up the listener
    * The last url will test nsISHistory
    */
 
-   if (cnt == 0)
-      testWin = window.open(urlList[cnt], "testWin");
+   if (cnt == 0) {
+      testWin = window.open(urlList[cnt++], "testWin");
+      testWin.onLoad = myLoadFunction();
+   }
    else
-      testWin.location = urlList[cnt];
+      testWin.location = urlList[cnt++];
 
-   alert("the uri = " + urlList[cnt]);
    uriTotal = urlList.length;
    if (cnt == (uriTotal - 1)) {
-     SetListenerInChild();
-     DoWebNavigationInChild();
+      DoWebNavigationInChild();	// includes loading last page
    }
-   else if (cnt < (uriTotal - 1)) {
-     ddump("calling SetTimeOut again\n");
-     cnt++;
+   else {
+     ddump("calling SetTimeOut again");
      setTimeout("loadPages()", 6000);
    }
 }
 
-
+function myLoadFunction()
+{
+   setTimeout("SetListenerInChild()", 6000);
+}
 
 function DoWebNavigationInChild()
 {
-   // Trigger History operaions
+   // Trigger History operations
    setTimeout("GoBackInChild()", 5000);
 }
 
 function GoBackInChild()
 {
-   alert("Inside GoBackInChild");
+   ddump("Inside GoBackInChild");
    if (testWin) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -125,19 +130,18 @@ function GoBackInChild()
 
 function GoForwardInChild()
 {
-   alert("Inside GoForwardInChild\n");
+   ddump("Inside GoForwardInChild");
    if (testWin) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       testWin.history.forward();
       setTimeout("DoReloadInChild()", 6000);
    }
-
 }
 
 function DoReloadInChild()
 {
-   alert("Inside DoReloadInChild\n");
+   ddump("Inside DoReloadInChild");
    if (testWin) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
  	  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -150,35 +154,30 @@ function DoReloadInChild()
 
 function GotoIndexInChild(index)
 {
-   alert("Inside GotoIndexInChild; index = " + index);
+   ddump("Inside GotoIndexInChild; index = " + index);
    if (testWin) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       testWin.history.go(index);
- //     if (index == -1)
- //       setTimeout("GotoIndexInChild(1)", 6000);
- //     else if (index == 1)
-        setTimeout("LoadLastPageInChild()", 5000);
+      setTimeout("LoadLastPageInChild()", 5000);
    }
 }
 
 function LoadLastPageInChild()
 {
-   alert("Inside LoadLastPageInChild\n");
+   ddump("Inside LoadLastPageInChild");
    if (testWin) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       // Load the last page in the child window
-      //testWin.location.href = urlList[cnt];
-      testWin.location.href = "file://D|/Embed-info/scripts/nsISHistory/lastURL.html";
+      testWin.location.href = urlList[cnt];
       setTimeout("PurgeHistoryInChild()", 6000);
    }
-
 }
 
 function PurgeHistoryInChild()
 {
-    alert("Inside PurgeHistoryInChild");
+    ddump("Inside PurgeHistoryInChild");
     if (testWin) {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -187,10 +186,11 @@ function PurgeHistoryInChild()
       // Purge all history entries in the child window.
       if (histLenInChild >0) {
          netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
-         testWin.purgeTheEntries(histLenInChild);
+      sHistory = sHistoryInit(testWin);
+ 	  purgeEntries(sHistory, histLenInChild);
       }
     }
-       alert("End of script.");
+       ddump("End of script.");
 }
 
 
@@ -201,7 +201,7 @@ function SetListenerInChild()
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
     sHListener = new sessionHistoryListener();
-    alert("sHistoryListener object = " + sHListener);
+    ddump("in SHListenerTest.html: sHistoryListener object = " + sHListener);
     testWin.SetListener(sHListener);
 }
 

@@ -28,36 +28,44 @@
 // of how to use these methods.
 
 // ***************************************************************************
-// init() creates and returns the session history object. 
-function init()
+// sHistoryInit() creates and returns the session history object. 
+function sHistoryInit(theWindow)
 {
-  //alert("In nsISHistoryTest::Init method");
   var sHistory = null;
+  var ifaceReq;
+  var webNav;
+  
   try
   {       
     netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");       
   
-    var ifaceReq = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);    
-    if (!ifaceReq) {
-       alert("Unable to get interface requestor object");
+    try {
+       ifaceReq = theWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    }
+    catch(e){
+       alert("Unable to get interface requestor object: " + e);
        return false;
     }
-    var webNav = ifaceReq.getInterface(Components.interfaces.nsIWebNavigation);
-    if(!webNav) {
-      alert("Unable to get WebNavigation");
+    try {
+       webNav = ifaceReq.getInterface(Components.interfaces.nsIWebNavigation);
+    }
+    catch(e) {
+      alert("Unable to get WebNavigation: " + e);
       return false;
     }               
-    sHistory = webNav.sessionHistory;
-    if (!sHistory) {
-      alert("Didn't get SessionHistory object");
+    try {
+       sHistory = webNav.sessionHistory;
+    }
+    catch(e) {
+      alert("Didn't get SessionHistory object: " + e);
       return false;
     } 
     return sHistory;
   }
   catch(e) 
   {
-    alert("Could not find Session History component" + e);
+    alert("Could not find Session History component: " + e);
     return false;
   }
 }
@@ -146,15 +154,15 @@ function  testHistoryEntry(entry, index)
    // Get URI for the  next Entry
    Uri = entry.URI;
    uriSpec = Uri.spec;
-   alert("The URI = " + uriSpec);
+   dump("The URI = " + uriSpec);
 
    // Get Title for the nextEntry
    title = entry.title;
-   alert("The page title = " + title);
+   dump("The page title = " + title);
     
    // Get SubFrame Status for the nextEntry
    frameStatus = entry.isSubFrame;
-   alert("The subframe value = " + frameStatus);
+   dump("The subframe value = " + frameStatus);
 }
 
 // *************************************************************************
@@ -216,4 +224,19 @@ function purgeEntries(sHistory, numEntries)
     alert("Didn't get SessionHistory object"); 
   }         
   sHistory.PurgeHistory(numEntries);        
-} 	
+} 
+
+// *************************************************************************
+// setSHistoryListener() adds a session history listener. This enables session
+// history events to be tracked (i.e. url load, forward, back, ...). A listener
+// and the session history object are the input parameters.
+function setSHistoryListener(sHistory, listener)
+{
+  dump("Inside nsISHistoryTestLib.js: setSHistoryListener()");
+  if (!sHistory) {
+    alert("Didn't get SessionHistory object");
+  }
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");       
+    sHistory.addSHistoryListener(listener);
+}
