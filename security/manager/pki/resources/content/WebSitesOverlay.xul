@@ -46,6 +46,9 @@
       </treecols>
       <treechildren ondblclick="viewCerts();"/>
     </tree>
+
+    <separator class="thin"/>
+
     <hbox>
       <button id="websites_viewButton"
               label="&certmgr.view.label;"

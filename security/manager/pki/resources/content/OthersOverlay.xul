@@ -62,6 +62,9 @@
       </treecols>
       <treechildren flex="1" ondblclick="viewCerts();"/>
     </tree>
+    
+    <separator class="thin"/>
+
     <hbox>
       <button id="email_viewButton"
               label="&certmgr.view.label;"
