@@ -1044,10 +1044,13 @@ nsCachedNetData::Delete(void)
         nsCOMPtr<nsINetDataCacheRecord> record;
 
         rv = GetRecord(getter_AddRefs(record));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = record->Delete();
-        if (NS_FAILED(rv)) return rv;
+        if (NS_SUCCEEDED(rv))
+        {
+            // Delete the record if we can get a record.
+            record->Delete();
+            // Ignore error from delete as the file might not have been created
+            // on disk for performance reasons.
+        }
 
         // Now record is available for recycling
         SetFlag(RECYCLED);
