@@ -53,7 +53,7 @@
 #include "prefldap.h"
 #endif
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "sechash.h"
 #endif
 #include "plstr.h"
@@ -292,7 +292,7 @@ PrefResult pref_OpenFile(
    where each 'xx' is a hex value. */
 PRBool pref_VerifyLockFile(char* buf, long buflen)
 {
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 	PRBool success = PR_FALSE;
 	const int obscure_value = 7;
 	const long hash_length = 51;		/* len = 48 chars of MD5 + // + EOL */

@@ -35,7 +35,6 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
 LIBS		= \
 		-lpref \
-		-lsecfree \
 		-lmozjs \
 		-lxpcom \
 		$(ZLIB_LIBS) \
