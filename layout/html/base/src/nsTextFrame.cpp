@@ -783,6 +783,10 @@ protected:
                 PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult->width size*/);
   nsresult GetContentAndOffsetsForSelection(nsIPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
 
+  // prefs used to configure the double-click word selection behavior
+  static PRPackedBool sWordSelectPrefInited;            // have we read the prefs yet?
+  static PRPackedBool sWordSelectEatSpaceAfter;         // should we include whitespace up to next word?
+  
 #ifdef IBMBIDI
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -805,6 +809,11 @@ NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_FAILURE;
 }
 #endif
+
+
+PRPackedBool nsTextFrame::sWordSelectPrefInited = PR_FALSE;
+PRPackedBool nsTextFrame::sWordSelectEatSpaceAfter = PR_TRUE;
+
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
@@ -1251,6 +1260,16 @@ NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsTextFrame::nsTextFrame()
 {
+  // read in our global word selection prefs
+  if ( !sWordSelectPrefInited ) {
+    nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+    if ( prefService ) {
+      PRBool temp = PR_FALSE;
+      prefService->GetBoolPref("layout.word_select.eat_space_to_next_word", &temp);
+      sWordSelectEatSpaceAfter = temp;
+    }
+    sWordSelectPrefInited = PR_TRUE;
+  }
 }
 
 nsTextFrame::~nsTextFrame()
@@ -4055,37 +4074,44 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
           if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
             aPos->mContentOffset = aPos->mStartOffset + contentLen;
-            //check for whitespace next.
-            keepSearching = PR_TRUE;
-            aPos->mEatingWS = PR_TRUE;
-            if (!isWhitespace){
-					while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
-					{
-						if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
-							goto TryNextFrame;
-						if (isWhitespace)
-							aPos->mContentOffset += contentLen;
-						else
-							break;
-					}
-					keepSearching = PR_FALSE;
-					found = PR_TRUE;
-            }
-				else  //we just need to jump the space, done here
-				{
-					while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
-					{
-						if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
-							goto TryNextFrame;
+            // check for whitespace next. On some platforms (mac), we want the selection to end
+            // at the end of the word (not the beginning of the next one), so don't slurp up any extra whitespace.
+            if ( sWordSelectEatSpaceAfter ) {
+              keepSearching = PR_TRUE;
+              aPos->mEatingWS = PR_TRUE;
+              if (!isWhitespace){
+                while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                {
+                  if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
+                    goto TryNextFrame;
+                  if (isWhitespace)
+                    aPos->mContentOffset += contentLen;
+                  else
+                    break;
+                }
+                keepSearching = PR_FALSE;
+                found = PR_TRUE;
+              }
+              else  //we just need to jump the space, done here
+              {
+                while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                {
+                  if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
+                    goto TryNextFrame;
 
-						if (isWhitespace)
-							aPos->mContentOffset += contentLen;		
-						 else
-							 break;
-					}
-					keepSearching = PR_FALSE;
-					found = PR_TRUE;
-				}
+                  if (isWhitespace)
+                    aPos->mContentOffset += contentLen;		
+                  else
+                    break;
+                }
+                keepSearching = PR_FALSE;
+                found = PR_TRUE;
+              }
+            } // if we should eat space to the next word
+            else {
+              keepSearching = PR_FALSE;
+              found = PR_TRUE;
+            }
           }
           else if (aPos->mEatingWS)
 			 {
