@@ -476,7 +476,6 @@ function delayedStartup()
 
   // Enable/Disable URL Bar Auto Fill
   gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
-  pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener, false);
 
   pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
