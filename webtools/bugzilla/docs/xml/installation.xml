@@ -1736,14 +1736,15 @@ exit;
 	<step>
 	  <para>
 	    Modify the invocation of all system() calls in all perl
-	    scripts in your Bugzilla directory.  For instance, change
+	    scripts in your Bugzilla directory.  You should specify the
+	    full path to perl for each system() call.  For instance, change
 	    this line in processmail: 
-	    <programlisting> 
-system ("./processmail.pl",@ARGLIST); 
+	    <programlisting><![CDATA[ 
+system ("./processmail",@ARGLIST); 
 	    </programlisting> to
 	    <programlisting> 
-system ("perl processmail.pl",@ARGLIST);
-	    </programlisting>
+system ("C:\\perl\\bin\\perl", "processmail", @ARGLIST);
+]]>	    </programlisting>
 	  </para>
 	</step>
         <step>
