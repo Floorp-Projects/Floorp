@@ -170,7 +170,7 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         rv = mProxySvc->ExamineForProxy(url, this);
         if (NS_FAILED(rv)) return rv;
 
-        if (mProxyHost.IsEmpty() || !mProxyType.Compare("socks")) {
+        if (mProxyHost.IsEmpty() || mProxyType.Equals("socks")) {
             *result = channel;
             return NS_OK;
         }
