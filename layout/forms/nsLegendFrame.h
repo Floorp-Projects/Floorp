@@ -50,6 +50,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;

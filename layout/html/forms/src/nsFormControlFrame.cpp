@@ -126,7 +126,13 @@ nsFormControlFrame::~nsFormControlFrame()
     mFormFrame->RemoveRadioControlFrame(this);
     mFormFrame = nsnull;
   }
-  RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::Destroy(nsIPresContext *aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  return nsLeafFrame::Destroy(aPresContext);
 }
 
 // Frames are not refcounted, no need to AddRef

@@ -66,7 +66,13 @@ nsLegendFrame::nsLegendFrame()
 
 nsLegendFrame::~nsLegendFrame()
 {
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsLegendFrame::Destroy(nsIPresContext *aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  return nsAreaFrame::Destroy(aPresContext);
 }
 
 // Frames are not refcounted, no need to AddRef
