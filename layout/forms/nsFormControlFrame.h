@@ -219,10 +219,12 @@ public:
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
   // Resize Reflow Optimiaztion Methods
   static void SetupCachedSizes(nsSize& aCacheSize,
+                               nscoord& aCachedAscent,
                                nsSize& aCachedMaxElementSize,
                                nsHTMLReflowMetrics& aDesiredSize);
 
   static void SkipResizeReflow(nsSize& aCacheSize,
+                               nscoord& aCachedAscent,
                                nsSize& aCachedMaxElementSize,
                                nsSize& aCachedAvailableSize,
                                nsHTMLReflowMetrics& aDesiredSize,
@@ -329,6 +331,7 @@ protected:
 
   // Reflow Optimization
   nsSize       mCacheSize;
+  nscoord      mCachedAscent;
   nsSize       mCachedMaxElementSize;
 
 private:

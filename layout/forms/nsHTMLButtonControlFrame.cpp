@@ -410,6 +410,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
 static
 void ButtonHack(nsHTMLReflowState& aReflowState, const char* aMessage)
 {
+  // XXXbz is this still relevant?
   if (aReflowState.mComputedWidth == 0) {
     aReflowState.mComputedWidth = aReflowState.availableWidth;
   }
@@ -551,7 +552,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
               focusPadding.left + aReflowState.mComputedBorderPadding.left,
               focusPadding.top + aReflowState.mComputedBorderPadding.top,
               0, aStatus);
-
+  
   // calculate the min internal size so the contents gets centered correctly
   // minInternalWidth is not being used at all and causes a warning--commenting
   // out until someone wants it.
@@ -573,7 +574,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
 
   // Place the child
   FinishReflowChild(firstKid, aPresContext, &reflowState, aDesiredSize,
-                    focusPadding.left + aReflowState.mComputedBorderPadding.right,
+                    focusPadding.left + aReflowState.mComputedBorderPadding.left,
                     yoff + focusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 
 #if 0 // old way
@@ -602,6 +603,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
 #endif
 
   AddComputedBorderPaddingToDesiredSize(aDesiredSize, aReflowState);
+
   //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
@@ -611,9 +613,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.AddBorderPaddingToMaxElementSize(aReflowState.mComputedBorderPadding);
   }
 #endif
-
-  aDesiredSize.ascent  = aDesiredSize.height;
-  aDesiredSize.descent = 0;
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
@@ -633,10 +632,15 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   }
   if (aDesiredSize.height < aReflowState.mComputedMinHeight) {
     aDesiredSize.height = aReflowState.mComputedMinHeight;
-  }  
+  }
+
+  aDesiredSize.ascent  += aReflowState.mComputedBorderPadding.top + focusPadding.top;
+  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+
   aStatus = NS_FRAME_COMPLETE;
 
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent,
+                                       mCachedMaxElementSize, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }

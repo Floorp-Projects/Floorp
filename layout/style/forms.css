@@ -74,6 +74,9 @@ label {
 /* default inputs, text inputs, and selects */
 input {
   -moz-appearance: textfield;
+  /* The sum of border-top, border-bottom, padding-top, padding-bottom
+     must be the same here, for buttons, and for <select> (including its
+     internal padding magic) */
   padding: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
   background-color: -moz-Field;
@@ -82,7 +85,6 @@ input {
   line-height: normal !important;
   text-align: start;
   text-transform: none;
-  vertical-align: text-bottom;
   cursor: text;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
@@ -126,7 +128,6 @@ select {
   line-height: normal !important;
   white-space: nowrap;
   text-align: start; 
-  vertical-align: text-bottom;
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
@@ -138,10 +139,14 @@ select {
 }
 
 select[size] {
+  /* Different alignment and padding for listbox vs combobox */
+  vertical-align: text-bottom;
   padding: 1px 0 1px 0;
 }
 
 select[size="1"] {
+  /* Except this is not a listbox */
+  vertical-align: baseline;
   padding: 0;
   -moz-appearance: menulist;
 }
@@ -178,6 +183,8 @@ select:-moz-dummy-option {
 
 *|*:-moz-display-comboboxcontrol-frame {
   overflow: hidden;
+  /* This top/bottom padding plus the combobox top/bottom border need to
+     add up to the top/bottom borderpadding of text inputs and buttons */ 
   padding: 1px 0 1px 4px;
   background-color: inherit;
   color: inherit;
@@ -263,7 +270,6 @@ input[type="image"] {
   padding: 0;
   border: none;
   background-color: transparent;
-  vertical-align: baseline;
   font-family: sans-serif;
   font-size: small;
   cursor: pointer;
@@ -293,17 +299,14 @@ input[type="file"] > input[type="text"] {
   border-color: inherit;
   background-color: inherit;
   color: inherit;
+  font-size: inherit;
+  height: inherit;
 }
 
 /* button part of file selector */
 input[type="file"] > input[type="button"] {
   height: inherit;
-}
-
-input[type="file"] > input[type="button"]:-moz-focus-inner
- {
-  padding: 0px 2px 0px 2px;
-  border: 1px dotted transparent;
+  font-size: inherit;
 }
 
 /* radio buttons */
@@ -313,7 +316,6 @@ input[type="radio"] {
   height: 13px;
   margin: 3px 3px 0px 5px;
   padding: 0;
-  vertical-align: baseline;
   cursor: default;
   -moz-binding: none;
 
@@ -383,14 +385,16 @@ input[type="reset"],
 input[type="button"],
 input[type="submit"] { 
   -moz-appearance: button;
-  padding: 2px 0 2px 0;
+  /* The sum of border-top, border-bottom, padding-top, padding-bottom
+     must be the same here, for text inputs, and for <select>.  For
+     buttons, make sure to include the -moz-focus-inner border/padding. */
+  padding: 0px 8px 0px 8px;
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   color: ButtonText; 
   font: -moz-button;
   line-height: normal !important;
   white-space: pre;
-  vertical-align: text-bottom;
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
@@ -407,15 +411,16 @@ button:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  padding: 3px 0 1px 0;
+  padding: 0px 7px 0px 9px;
   border-style: inset;
 }
 
 button:-moz-focus-inner,
 input[type="reset"]:-moz-focus-inner,
 input[type="button"]:-moz-focus-inner,
-input[type="submit"]:-moz-focus-inner {
-  padding: 1px 2px 1px 2px;
+input[type="submit"]:-moz-focus-inner,
+input[type="file"] > input[type="button"]:-moz-focus-inner {
+  padding: 0px 2px 0px 2px;
   border: 1px dotted transparent;
 }
 
@@ -436,7 +441,9 @@ select[disabled] > input[type="button"],
 select[disabled] > input[type="button"]:active,
 input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
-  padding: 3px 1px 3px 1px;
+  /* The sum of border-top, border-bottom, padding-top, padding-bottom
+     must be the same here and for text inputs */
+  padding: 1px 8px 1px 8px;
   border: 1px outset ButtonShadow;
   color: GrayText;
 }

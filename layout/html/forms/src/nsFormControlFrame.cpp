@@ -149,11 +149,13 @@ nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 void nsFormControlFrame::SetupCachedSizes(nsSize& aCacheSize,
-                                              nsSize& aCachedMaxElementSize,
-                                              nsHTMLReflowMetrics& aDesiredSize)
+                                          nscoord& aCachedAscent,
+                                          nsSize& aCachedMaxElementSize,
+                                          nsHTMLReflowMetrics& aDesiredSize)
 {
   aCacheSize.width  = aDesiredSize.width;
   aCacheSize.height = aDesiredSize.height;
+  aCachedAscent = aDesiredSize.ascent;
   if (aDesiredSize.maxElementSize != nsnull) {
     aCachedMaxElementSize.width  = aDesiredSize.maxElementSize->width;
     aCachedMaxElementSize.height = aDesiredSize.maxElementSize->height;
@@ -254,6 +256,7 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
 #else
 //------------------------------------------------------------
 void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
+                                          nscoord& aCachedAscent,
                                           nsSize& aCachedMaxElementSize,
                                           nsSize& aCachedAvailableSize,
                                           nsHTMLReflowMetrics& aDesiredSize,
@@ -362,13 +365,13 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
     if (aBailOnWidth || aBailOnHeight) {
       aDesiredSize.width  = aCacheSize.width;
       aDesiredSize.height = aCacheSize.height;
+      aDesiredSize.ascent = aCachedAscent;
+      aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
       if (aDesiredSize.maxElementSize != nsnull) {
         aDesiredSize.maxElementSize->width  = aCachedMaxElementSize.width;
         aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
       }
-      aDesiredSize.ascent = aDesiredSize.height;
-      aDesiredSize.descent = 0;
     }
   }
 }
@@ -555,7 +558,7 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   aStatus = NS_FRAME_COMPLETE;
-  SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+  SetupCachedSizes(mCacheSize, mCachedAscent, mCachedMaxElementSize, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
