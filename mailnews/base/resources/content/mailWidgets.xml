@@ -765,6 +765,8 @@
             if (junkStatus.length > 0) 
               children[6].selectedItem = junkStatus[0];
           }
+          else 
+            children[0].value = val.str;
           return val;
           ]]>
         </setter>
