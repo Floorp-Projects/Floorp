@@ -1250,11 +1250,16 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
             }
         } else { /* ECMA 3, 1-9 or 01-99 */
             num = JS7_UNDEC(dc);
+            if (num > res->parenCount)
+                return NULL;
             cp = dp + 2;
-            dc = dp[2];
+            dc = *cp;
             if ((dc != 0) && JS7_ISDEC(dc)) {
-                num = 10 * num + JS7_UNDEC(dc);
-                cp++;
+                tmp = 10 * num + JS7_UNDEC(dc);
+                if (tmp <= res->parenCount) {
+                    cp++;
+                    num = tmp;
+                }
             }
             if (num == 0)
                 return NULL;
