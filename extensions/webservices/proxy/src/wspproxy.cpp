@@ -925,7 +925,7 @@ WSPProxy::VariantToValue(uint8 aTypeTag, void* aValue,
                          nsIInterfaceInfo* aInterfaceInfo,
                          nsIVariant* aProperty)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   switch(aTypeTag) {
     case nsXPTType::T_I8:
