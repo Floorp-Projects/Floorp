@@ -25,6 +25,6 @@
 
 DEPTH=..
 
-DIRS= public res src stub notifier
+DIRS= public res src stub notifier wizard/windows
 
 include <$(DEPTH)\config\rules.mak>
