@@ -123,6 +123,13 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     return NS_OK;
   nsCOMPtr<nsIDOMHTMLSelectElement> sel(do_QueryInterface(target));
   if (sel) {
+    PRInt32 size = 0;
+    sel->GetSize(&size);
+    PRBool multiple = PR_FALSE;
+    sel->GetMultiple(&multiple);
+    if(size > 1 || multiple)
+      return NS_OK;
+      
     NSMenu* menu = [[NSMenu alloc] init]; // Retain the menu.
 
     // We'll set the disabled state as the options are created, so disable
