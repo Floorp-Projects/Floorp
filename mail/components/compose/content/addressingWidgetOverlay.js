@@ -1,3 +1,39 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 top.MAX_RECIPIENTS = 0;
 
 var inputElementType = "";
@@ -8,7 +44,7 @@ var gNumberOfCols = 0;
 
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
-gMimeHeaderParser = null;
+var gMimeHeaderParser = null;
 
 /**
  * global variable inherited from MsgComposeCommands.js
@@ -79,29 +115,72 @@ function Recipients2CompFields(msgCompFields)
 {
   if (msgCompFields)
   {
+    var i = 1;
+    var addrTo = "";
+    var addrCc = "";
+    var addrBcc = "";
+    var addrReply = "";
+    var addrNg = "";
+    var addrFollow = "";
+    var addrOther = "";
+    var to_Sep = "";
+    var cc_Sep = "";
+    var bcc_Sep = "";
+    var reply_Sep = "";
+    var ng_Sep = "";
+    var follow_Sep = "";
+
     gMimeHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
 
+    var recipientType;
+    var inputField;
+    var fieldValue;
+    var recipient;
+    while ((inputField = awGetInputElement(i)))
+    {
+      fieldValue = inputField.value;
 
-    var toValue = document.getElementById("toField").value;
-    try {
-      msgCompFields.to = gMimeHeaderParser.reformatUnquotedAddresses(toValue);
-    } catch (ex) {
-      msgCompFields.to = toValue;
+      if (fieldValue == null)
+        fieldValue = inputField.getAttribute("value");
+
+      if (fieldValue != "")
+      {
+        recipientType = awGetPopupElement(i).selectedItem.getAttribute("value");
+        recipient = null;
+
+        switch (recipientType)
+        {
+          case "addr_to"    :
+          case "addr_cc"    :
+          case "addr_bcc"   :
+          case "addr_reply" :
+            try {
+              recipient = gMimeHeaderParser.reformatUnquotedAddresses(fieldValue);
+            } catch (ex) {recipient = fieldValue;}
+            break;
+        }
+
+        switch (recipientType)
+        {
+          case "addr_to"          : addrTo += to_Sep + recipient; to_Sep = ",";               break;
+          case "addr_cc"          : addrCc += cc_Sep + recipient; cc_Sep = ",";               break;
+          case "addr_bcc"         : addrBcc += bcc_Sep + recipient; bcc_Sep = ",";            break;
+          case "addr_reply"       : addrReply += reply_Sep + recipient; reply_Sep = ",";      break; 
+          case "addr_newsgroups"  : addrNg += ng_Sep + fieldValue; ng_Sep = ",";              break;
+          case "addr_followup"    : addrFollow += follow_Sep + fieldValue; follow_Sep = ",";  break;
+          case "addr_other"       : addrOther += awGetPopupElement(i).selectedItem.getAttribute("label") + " " + fieldValue + "\n";break;
+        }
+      }
+      i ++;
     }
 
-    var ccValue = document.getElementById("ccField").value;
-    try {
-      msgCompFields.cc = gMimeHeaderParser.reformatUnquotedAddresses(ccValue);
-    } catch (ex) {
-      msgCompFields.cc = ccValue;
-    }
-
-    var bccValue = document.getElementById("bccField").value;
-    try {
-      msgCompFields.bcc = gMimeHeaderParser.reformatUnquotedAddresses(bccValue);
-    } catch (ex) {
-      msgCompFields.bcc = bccValue;
-    }
+    msgCompFields.to = addrTo;
+    msgCompFields.cc = addrCc;
+    msgCompFields.bcc = addrBcc;
+    msgCompFields.replyTo = addrReply;
+    msgCompFields.newsgroups = addrNg;
+    msgCompFields.followupTo = addrFollow;
+    msgCompFields.otherRandomHeaders = addrOther;
 
     gMimeHeaderParser = null;
   }
@@ -113,20 +192,210 @@ function CompFields2Recipients(msgCompFields, msgType)
 {
   if (msgCompFields) {
     gMimeHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
-  
+
+    var listbox = document.getElementById('addressingWidget');
+    var newListBoxNode = listbox.cloneNode(false);
+    var listBoxColsClone = listbox.firstChild.cloneNode(true);
+    newListBoxNode.appendChild(listBoxColsClone);
+    var templateNode = listbox.getElementsByTagName("listitem")[0];
+    
     top.MAX_RECIPIENTS = 0;
     var msgReplyTo = msgCompFields.replyTo;
     var msgTo = msgCompFields.to;
     var msgCC = msgCompFields.cc;
     var msgBCC = msgCompFields.bcc;
+    var msgRandomHeaders = msgCompFields.otherRandomHeaders;
+    var msgNewsgroups = msgCompFields.newsgroups;
+    var msgFollowupTo = msgCompFields.followupTo;
+    if(msgReplyTo)
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgReplyTo, false), 
+                                  "addr_reply", newListBoxNode, templateNode);
     if(msgTo)
-      document.getElementById("toField").value = msgTo;
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgTo, false), 
+                                  "addr_to", newListBoxNode, templateNode);
     if(msgCC)
-      document.getElementById("ccField").value = msgCC;
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCC, false),
+                                  "addr_cc", newListBoxNode, templateNode);
     if(msgBCC)
-      document.getElementById("bccField").value = msgBCC;
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgBCC, false),
+                                  "addr_bcc", newListBoxNode, templateNode);
+    if(msgRandomHeaders)
+      awSetInputAndPopup(msgRandomHeaders, "addr_other", newListBoxNode, templateNode);
+    if(msgNewsgroups)
+      awSetInputAndPopup(msgNewsgroups, "addr_newsgroups", newListBoxNode, templateNode);
+    if(msgFollowupTo)
+      awSetInputAndPopup(msgFollowupTo, "addr_followup", newListBoxNode, templateNode);
+
+    //If it's a new message, we need to add an extrat empty recipient.
+    if (!msgTo && !msgNewsgroups)
+      _awSetInputAndPopup("", "addr_to", newListBoxNode, templateNode);
+    // dump("replacing child in comp fields 2 recips \n");
+    var parent = listbox.parentNode;
+    parent.replaceChild(newListBoxNode, listbox);
+    awFitDummyRows(2);
+    setTimeout("awFinishCopyNodes();", 0);
+
     gMimeHeaderParser = null; //Release the mime parser
   }
+}
+
+function awSetInputAndPopupValue(inputElem, inputValue, popupElem, popupValue, rowNumber)
+{
+  // remove leading spaces
+  while (inputValue && inputValue[0] == " " )
+    inputValue = inputValue.substring(1, inputValue.length);
+
+  inputElem.setAttribute("value", inputValue);
+  inputElem.value = inputValue;
+
+  popupElem.selectedItem = popupElem.childNodes[0].childNodes[awGetSelectItemIndex(popupValue)];
+
+  if (rowNumber >= 0)
+  {
+    inputElem.setAttribute("id", "addressCol2#" + rowNumber);
+    popupElem.setAttribute("id", "addressCol1#" + rowNumber);
+  }
+
+  _awSetAutoComplete(popupElem, inputElem);
+}
+
+function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
+{
+    top.MAX_RECIPIENTS++;
+
+    var newNode = templateNode.cloneNode(true);
+    parentNode.appendChild(newNode); // we need to insert the new node before we set the value of the select element!
+
+    var input = newNode.getElementsByTagName(awInputElementName());
+    var select = newNode.getElementsByTagName(awSelectElementName());
+
+    if (input && input.length == 1 && select && select.length == 1)
+      awSetInputAndPopupValue(input[0], inputValue, select[0], popupValue, top.MAX_RECIPIENTS)
+}
+
+function awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
+{
+  if ( inputValue && popupValue )
+  {
+    var addressArray = inputValue.split(",");
+
+    for ( var index = 0; index < addressArray.length; index++ )
+        _awSetInputAndPopup(addressArray[index], popupValue, parentNode, templateNode);
+  }
+}
+
+function awSetInputAndPopupFromArray(inputArray, popupValue, parentNode, templateNode)
+{
+  if ( inputArray && popupValue )
+  {
+    var recipient;
+    for ( var index = 0; index < inputArray.count; index++ )
+    {
+      recipient = null;
+      if (gMimeHeaderParser)
+        try {
+          recipient = gMimeHeaderParser.unquotePhraseOrAddrWString(inputArray.StringAt(index), true);
+        } catch (ex) {};
+      if (!recipient)
+        recipient = inputArray.StringAt(index)
+      _awSetInputAndPopup(recipient, popupValue, parentNode, templateNode);
+    }
+  }
+}
+
+function awRemoveRecipients(msgCompFields, recipientType, recipientsList)
+{
+  if (!msgCompFields)
+    return;
+
+  var recipientArray = msgCompFields.SplitRecipients(recipientsList, false);
+  if (! recipientArray)
+    return;
+
+  for ( var index = 0; index < recipientArray.count; index++ )
+    for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
+    {
+      var popup = awGetPopupElement(row);
+      if (popup.selectedItem.getAttribute("value") == recipientType)
+      {
+        var input = awGetInputElement(row);
+        if (input.value == recipientArray.StringAt(index))
+        {
+          awSetInputAndPopupValue(input, "", popup, "addr_to", -1);
+          break;
+        }
+      }
+    }
+}
+
+function awAddRecipients(msgCompFields, recipientType, recipientsList)
+{
+  if (!msgCompFields)
+    return;
+
+  var recipientArray = msgCompFields.SplitRecipients(recipientsList, false);
+  if (! recipientArray)
+    return;
+
+  for ( var index = 0; index < recipientArray.count; index++ )
+  {
+    for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
+    {
+      if (awGetInputElement(row).value == "")
+        break;
+    }
+    if (row > top.MAX_RECIPIENTS)
+      awAppendNewRow(false);
+
+    awSetInputAndPopupValue(awGetInputElement(row), recipientArray.StringAt(index), awGetPopupElement(row), recipientType, row);
+
+    /* be sure we still have an empty row left at the end */
+    if (row == top.MAX_RECIPIENTS)
+    {
+      awAppendNewRow(true);
+      awSetInputAndPopupValue(awGetInputElement(top.MAX_RECIPIENTS), "", awGetPopupElement(top.MAX_RECIPIENTS), "addr_to", top.MAX_RECIPIENTS);
+    }
+  }
+}
+
+function awTestRowSequence()
+{
+  /*
+    This function is for debug and testing purpose only, normal user should not run it!
+
+    Everytime we insert or delete a row, we must be sure we didn't break the ID sequence of
+    the addressing widget rows. This function will run a quick test to see if the sequence still ok
+
+    You need to define the pref mail.debug.test_addresses_sequence to true in order to activate it
+  */
+
+  if (! test_addresses_sequence)
+    return true;
+
+  /* debug code to verify the sequence still good */
+
+  var listbox = document.getElementById('addressingWidget');
+  var listitems = listbox.getElementsByTagName('listitem');
+  if (listitems.length >= top.MAX_RECIPIENTS )
+  {
+    for (var i = 1; i <= listitems.length; i ++)
+    {
+      var item = listitems [i - 1];
+      var inputID = item.getElementsByTagName(awInputElementName())[0].getAttribute("id").split("#")[1];
+      var popupID = item.getElementsByTagName(awSelectElementName())[0].getAttribute("id").split("#")[1];
+      if (inputID != i || popupID != i)
+      {
+        dump("#ERROR: sequence broken at row " + i + ", inputID=" + inputID + ", popupID=" + popupID + "\n");
+        return false;
+      }
+      dump("---SEQUENCE OK---\n");
+      return true;
+    }
+  }
+  else
+    dump("#ERROR: listitems.length(" + listitems.length + ") < top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
+
+  return false;
 }
 
 function awResetAllRows()
@@ -175,6 +444,46 @@ function awDeleteRow(rowToDelete)
   awTestRowSequence();
 }
 
+function awClickEmptySpace(target, setFocus)
+{
+  if (target == null ||
+      (target.localName != "listboxbody" &&
+      target.localName != "listcell" &&
+      target.localName != "listitem"))
+    return;
+
+  var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+
+  if ( lastInput && lastInput.value )
+    awAppendNewRow(setFocus);
+  else
+    if (setFocus)
+      awSetFocus(top.MAX_RECIPIENTS, lastInput);
+}
+
+function awReturnHit(inputElement)
+{
+  var row = awGetRowByInputElement(inputElement);
+  var nextInput = awGetInputElement(row+1);
+
+  if ( !nextInput )
+  {
+    if ( inputElement.value )
+      awAppendNewRow(true);
+    else // No address entered, switch to Subject field
+    {
+      var subjectField = document.getElementById( 'msgSubject' );
+      subjectField.select();
+      subjectField.focus();
+    }
+  }
+  else
+  {
+    nextInput.select();
+    awSetFocus(row+1, nextInput);
+  }
+}
+
 function awDeleteHit(inputElement)
 {
   var row = awGetRowByInputElement(inputElement);
@@ -200,6 +509,9 @@ function awDeleteHit(inputElement)
 
 function awInputChanged(inputElement)
 {
+  dump("awInputChanged\n");
+//  AutoCompleteAddress(inputElement);
+
   //Do we need to add a new row?
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
   if ( lastInput && lastInput.value && !top.doNotCreateANewRow)
@@ -342,6 +654,52 @@ function awRemoveNodeAndChildren(parent, nodeToRemove)
   nodeToRemove.parentNode.removeChild(nodeToRemove);
 }
 
+function awSetFocus(row, inputElement)
+{
+  top.awRow = row;
+  top.awInputElement = inputElement;
+  top.awFocusRetry = 0;
+  setTimeout("_awSetFocus();", 0);
+}
+
+function _awSetFocus()
+{
+  var listbox = document.getElementById('addressingWidget');
+  //try
+  //{
+    var theNewRow = awGetListItem(top.awRow);
+    //temporary patch for bug 26344
+    awFinishCopyNode(theNewRow);
+
+    //Warning: firstVisibleRow is zero base but top.awRow is one base!
+    var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
+    var numOfVisibleRows = listbox.getNumberOfVisibleRows();
+
+    //Do we need to scroll in order to see the selected row?
+    if (top.awRow <= firstVisibleRow)
+      listbox.scrollToIndex(top.awRow - 1);
+    else
+      if (top.awRow - 1 >= (firstVisibleRow + numOfVisibleRows))
+        listbox.scrollToIndex(top.awRow - numOfVisibleRows);
+
+    top.awInputElement.focus();
+    // stop supressing command updating and update the toolbar, since focus has changed
+    SuppressComposeCommandUpdating(false);
+  /*}
+  catch(ex)
+  {
+    top.awFocusRetry ++;
+    if (top.awFocusRetry < 3)
+    {
+      dump("_awSetFocus failed, try it again...\n");
+      setTimeout("_awSetFocus();", 0);
+    }
+    else
+      dump("_awSetFocus failed, forget about it!\n");
+  }*/
+}
+
+
 //temporary patch for bug 26344 & 26528
 function awFinishCopyNode(node)
 {
@@ -354,6 +712,30 @@ function awFinishCopyNodes()
 {
   var listbox = document.getElementById('addressingWidget');
   awFinishCopyNode(listbox);
+}
+
+function awTabFromRecipient(element, event)
+{
+  //If we are le last element in the listbox, we don't want to create a new row.
+  if (element == awGetInputElement(top.MAX_RECIPIENTS))
+    top.doNotCreateANewRow = true;
+
+  var row = awGetRowByInputElement(element);
+  if (!event.shiftKey && row < top.MAX_RECIPIENTS) {
+    var listBoxRow = row - 1; // listbox row indices are 0-based, ours are 1-based.
+    var listBox = document.getElementById("addressingWidget");
+    listBox.listBoxObject.ensureIndexIsVisible(listBoxRow + 1);
+  }
+}
+
+function awTabFromMenulist(element, event)
+{
+  var row = awGetRowByInputElement(element);
+  if (event.shiftKey && row > 1) {
+    var listBoxRow = row - 1; // listbox row indices are 0-based, ours are 1-based.
+    var listBox = document.getElementById("addressingWidget");
+    listBox.listBoxObject.ensureIndexIsVisible(listBoxRow - 1);
+  }
 }
 
 function awGetNumberOfRecipients()
@@ -388,7 +770,7 @@ function DropOnAddressingWidget(event)
     var len = new Object();
     trans.getAnyTransferData ( bestFlavor, dataObj, len );
     if ( dataObj )  
-      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
     if ( !dataObj ) 
       continue;
 
@@ -412,10 +794,7 @@ function DropRecipient(target, recipient)
 
 function _awSetAutoComplete(selectElem, inputElem)
 {
-  if (selectElem.value != 'addr_newsgroups' && selectElem.value != 'addr_followup')
-    inputElem.disableAutocomplete = false;
-  else
-    inputElem.disableAutocomplete = true;
+  inputElem.disableAutocomplete = selectElem.value == 'addr_newsgroups' || selectElem.value == 'addr_followup' || selectElem.value == 'addr_other';
 }
 
 function awSetAutoComplete(rowNumber)
@@ -423,6 +802,12 @@ function awSetAutoComplete(rowNumber)
     var inputElem = awGetInputElement(rowNumber);
     var selectElem = awGetPopupElement(rowNumber);
     _awSetAutoComplete(selectElem, inputElem)
+}
+
+function awRecipientTextCommand(userAction, element)
+{
+  if (userAction == "typing" || userAction == "scrolling")
+    awReturnHit(element);
 }
 
 // Called when an autocomplete session item is selected and the status of
@@ -449,14 +834,14 @@ function awRecipientErrorCommand(errItem, element)
 
     // try and get the string of the specific error to contruct the complete
     // err msg, otherwise fall back to something generic.  This message is
-    // handed to us as an nsISupportsWString in the param slot of the 
+    // handed to us as an nsISupportsString in the param slot of the 
     // autocomplete error item, by agreement documented in 
     // nsILDAPAutoCompFormatter.idl
     //
     var specificErrString = "";
     try {
 	var specificError = errItem.param.QueryInterface(
-	    Components.interfaces.nsISupportsWString);
+	    Components.interfaces.nsISupportsString);
 	specificErrString = specificError.data;
     } catch (ex) {
     }
@@ -509,6 +894,15 @@ function awKeyDown(event, listboxElement)
       if (inputs && inputs.length == 1)
         awDeleteHit(inputs[0]);
     }
+    break;
+  }
+}
+
+function awMenulistKeyPress(event, element)
+{
+  switch(event.keyCode) {
+  case 9:
+    awTabFromMenulist(element, event);
     break;
   }
 }
@@ -621,3 +1015,11 @@ function awSizerMouseUp()
   document.removeEventListener("mouseup", awSizerMouseUp, false);
 }
 
+function awDocumentKeyPress(event)
+{
+  try {
+    var id = event.target.getAttribute('id');
+    if (id.substr(0, 11) == 'addressCol1')
+      awMenulistKeyPress(event, event.target);
+  } catch (e) { }
+}

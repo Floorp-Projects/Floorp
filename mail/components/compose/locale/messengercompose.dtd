@@ -11,57 +11,62 @@
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
 <!-- File menu items -->
-<!ENTITY newMessage.label				"Message">  
-	<!ENTITY newMessage.accesskey			"M">  
+<!ENTITY newMessage.label "Message">  
+<!ENTITY newMessage.accesskey "M">  
 <!ENTITY saveCmd.label "Save">
-	<!ENTITY saveCmd.key "S">
-  <!ENTITY saveCmd.accesskey "s">
+<!ENTITY saveCmd.key "S">
+<!ENTITY saveCmd.accesskey "s">
 <!ENTITY saveAsCmd.label "Save As">
-	<!ENTITY saveAsCmd.accesskey "A">
+<!ENTITY saveAsCmd.accesskey "A">
 <!ENTITY saveAsFileCmd.label "File...">
-	<!ENTITY saveAsFileCmd.accesskey "F">
+<!ENTITY saveAsFileCmd.accesskey "F">
 <!ENTITY saveAsDraftCmd.label "Draft">
-	<!ENTITY saveAsDraftCmd.accesskey "D">
+<!ENTITY saveAsDraftCmd.accesskey "D">
 <!ENTITY saveAsTemplateCmd.label "Template">
-	<!ENTITY saveAsTemplateCmd.accesskey "T">
+<!ENTITY saveAsTemplateCmd.accesskey "T">
 <!ENTITY attachFileCmd.label "Attach File...">
-	<!ENTITY attachFileCmd.key "">
-	<!ENTITY attachFileCmd.accesskey "F">
+<!ENTITY attachFileCmd.key "">
+<!ENTITY attachFileCmd.accesskey "F">
 <!ENTITY attachPageCmd.label "Attach Web Page...">
-	<!ENTITY attachPageCmd.accesskey "W">
+<!ENTITY attachPageCmd.accesskey "W">
 <!ENTITY sendNowCmd.label "Send Now">
-	<!ENTITY sendCmd.keycode "VK_RETURN">
-	<!ENTITY sendNowCmd.accesskey "d">
+<!ENTITY sendCmd.keycode "VK_RETURN">
+<!ENTITY sendNowCmd.accesskey "d">
 <!ENTITY sendLaterCmd.label "Send Later">
-	<!ENTITY sendLaterCmd.keycode "VK_RETURN">
-	<!ENTITY sendLaterCmd.accesskey "L">
+<!ENTITY sendLaterCmd.keycode "VK_RETURN">
+<!ENTITY sendLaterCmd.accesskey "L">
 <!ENTITY printSetupCmd.label "Page Setup...">
-	<!ENTITY printSetupCmd.accesskey "u">
+<!ENTITY printSetupCmd.accesskey "u">
 <!ENTITY printCmd.label "Print...">
-	<!ENTITY printCmd.key "P">
-	<!ENTITY printCmd.accesskey "P">
+<!ENTITY printCmd.key "P">
+<!ENTITY printCmd.accesskey "P">
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
 <!ENTITY findCmd.label "Find and Replace...">
-	<!ENTITY findCmd.key "F">
-	<!ENTITY findCmd.accesskey "F">
+<!ENTITY findCmd.key "F">
+<!ENTITY findCmd.accesskey "F">
 <!ENTITY findAgainCmd.label "Find Again">
-	<!ENTITY findAgainCmd.key "G">
-	<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.key "G">
+<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.key2 "VK_F3">
+<!ENTITY findPrevCmd.label "Find Previous">
+<!ENTITY findPrevCmd.key "G">
+<!ENTITY findPrevCmd.key2 "VK_F3">
+<!ENTITY findPrevCmd.accesskey "v">
 <!ENTITY accountManagerCmd.label "Mail &amp; Newsgroups Account Settings...">
-	<!ENTITY accountManagerCmd.accesskey "m">
+<!ENTITY accountManagerCmd.accesskey "m">
 
 <!-- View menu items -->
 <!ENTITY showComposeToolbarCmd.label "Mail Toolbar">
-	<!ENTITY showComposeToolbarCmd.accesskey "o">
+<!ENTITY showComposeToolbarCmd.accesskey "o">
 <!ENTITY showFormatToolbarCmd.label "Formatting Toolbar">
-	<!ENTITY showFormatToolbarCmd.accesskey "F">
+<!ENTITY showFormatToolbarCmd.accesskey "F">
 <!ENTITY showParagraphMarksCmd.label ".Show Paragraph Marks">
 <!ENTITY pageSourceCmd.label ".Page Source">
-	<!ENTITY pageSourceCmd.accesskey "u">
+<!ENTITY pageSourceCmd.accesskey "u">
 <!ENTITY pageInfoCmd.label ".Page Info">
-	<!ENTITY pageInfoCmd.accesskey "I">
+<!ENTITY pageInfoCmd.accesskey "I">
 <!ENTITY dcharMenu.label "Character Set">
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
 <!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
@@ -84,6 +89,28 @@
 <!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
 <!ENTITY dcharDEFAULT.label "Set Default Mail Send Character Set">
 
+<!-- Insert menu items -->
+<!ENTITY insertSmiley.label "Smiley">
+<!ENTITY insertSmiley.accesskey "S">
+
+<!-- Insert Smiley Menu items -->
+<!ENTITY smiley1Cmd.label "Smile">
+<!ENTITY smiley1Cmd.accesskey "S">
+<!ENTITY smiley2Cmd.label "Frown">
+<!ENTITY smiley2Cmd.accesskey "F">
+<!ENTITY smiley3Cmd.label "Wink">
+<!ENTITY smiley3Cmd.accesskey "W">
+<!ENTITY smiley4Cmd.label "Tongue-out">
+<!ENTITY smiley4Cmd.accesskey "T">
+<!ENTITY smiley5Cmd.label "Laughing">
+<!ENTITY smiley5Cmd.accesskey "L">
+<!ENTITY smiley6Cmd.label "Embarrassed">
+<!ENTITY smiley6Cmd.accesskey "E">
+<!ENTITY smiley7Cmd.label "Undecided">
+<!ENTITY smiley7Cmd.accesskey "U">
+<!ENTITY SmileButton.tooltip "Insert a smiley face">
+
+
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
 <!ENTITY formatMenu.accesskey "o">
@@ -98,19 +125,19 @@
 <!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
 <!ENTITY addSignatureCmd.label ".Add Signature File">
 <!ENTITY attachVCardCmd.label ".Include Personal Card (vCard)">
-	<!ENTITY attachVCardCmd.accesskey "P">
+<!ENTITY attachVCardCmd.accesskey "P">
 
 <!ENTITY quoteCmd.label "Quote Message">
-	<!ENTITY quoteCmd.accesskey "Q">
+<!ENTITY quoteCmd.accesskey "Q">
 <!ENTITY editRewrapCmd.label "Rewrap">
 <!ENTITY editRewrapCmd.accesskey  "R">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
-	<!ENTITY selectAddressCmd.key "">
-	<!ENTITY selectAddressCmd.accesskey "c">
+<!ENTITY selectAddressCmd.key "">
+<!ENTITY selectAddressCmd.accesskey "c">
 
 <!ENTITY checkSpellingCmd.label "Check Spelling...">
-	<!ENTITY checkSpellingCmd.key "K">
-	<!ENTITY checkSpellingCmd.accesskey "S">
+<!ENTITY checkSpellingCmd.key "K">
+<!ENTITY checkSpellingCmd.accesskey "S">
 
 <!ENTITY priorityMenu.label "Priority">
 <!ENTITY priorityMenu.accesskey "p">
@@ -166,6 +193,10 @@
 <!-- Toolbar items -->
 <!ENTITY sendButton.label "Send">
 <!ENTITY quoteButton.label "Quote">
+<!ENTITY addressButton.label "Address">
+<!ENTITY attachButton.label "Attach">
+<!ENTITY spellingButton.label "Spelling">
+<!ENTITY saveButton.label "Save">
 <!ENTITY stopButton.label "Stop">
 
 <!--tooltips-->
@@ -203,26 +234,3 @@
 <!ENTITY selectAll.accesskey "A">
 <!ENTITY addAttachment.label "Add Attachment">
 <!ENTITY addAttachment.accesskey "t">
-
-<!ENTITY toField.label               "To:"> 
-<!ENTITY ccField.label               "Cc:"> 
-<!ENTITY bccField.label              "Bcc:"> 
-
-<!ENTITY toBtn.label                 "To"> 
-<!ENTITY ccBtn.label                 "Cc"> 
-<!ENTITY bccBtn.label                "Bcc"> 
-
-<!ENTITY toggleCcRow.label           "Show Cc Field">
-<!ENTITY toggleCcRow.accesskey       "c">
-<!ENTITY toggleBccRow.label          "Show Bcc Field">
-<!ENTITY toggleBccRow.accesskey      "B">
-
-<!ENTITY abFind.label                "Find:">
-
-<!ENTITY addressButton.label         "Addresses">
-<!ENTITY attachButton.label          "Add Attachments">
-<!ENTITY spellButton.label           "Check Spelling">
-<!ENTITY saveButton.label            "Save Draft">
-<!ENTITY moreButton.label            "More">
-
-

@@ -559,3 +559,7 @@ Rights Reserved.
 <!ENTITY releaseCmd.accesskey "R">
 <!ENTITY aboutCmd.label "About">
 <!ENTITY aboutCmd.accesskey "A">
+<!ENTITY viewMenu.label "View">
+<!ENTITY viewMenu.accesskey "V">
+<!ENTITY viewToolbars.label "Toolbars">
+<!ENTITY viewToolbars.accesskey "T">

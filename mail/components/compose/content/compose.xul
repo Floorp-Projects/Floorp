@@ -201,7 +201,7 @@
 </popup>
 
   <toolbox class="toolbox-top" id="headers-box">
-    <menubar id="compose-menubar" grippytooltiptext="&menuBar.tooltip;">
+    <menubar id="compose-menubar">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
           <menu id="menu_New">
@@ -380,7 +380,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed" grippytooltiptext="&mailToolbar.tooltip;">
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed">
       <hbox id="toolbar_button_box">
        <toolbarbutton class="toolbarbutton-1"
                id="button-send" label="&sendButton.label;"
@@ -420,8 +420,7 @@
     </toolbar>
   
     <toolbar id="MsgHeadersToolbar" persist="collapsed" flex="1"
-             tborient="vertical" tbalign="stretch"
-             grippytooltiptext="&addressBar.tooltip;">
+             tborient="vertical">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="1" id="addresses-box">
           <hbox align="center">

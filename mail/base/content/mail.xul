@@ -1082,9 +1082,9 @@ Rights Reserved.
         </menupopup>
       </menu>
     
-      <menu id="menu_View">
+      <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
         <menupopup id="menu_View_Popup" onpopupshowing="view_init()">
-          <menu id="menu_Toolbars">
+          <menu label="&viewToolbars.label;" accesskey="&viewToolbars.accesskey;">
             <menupopup id="view_toolbars_popup">
               <menuitem id="menu_showMessengerToolbar"
                type="checkbox"
@@ -1098,15 +1098,15 @@ Rights Reserved.
                accesskey="&showSearchToolbarCmd.accesskey;"
                oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar'); SearchBarToggled();"
                checked="true"/>
-              <menuitem type="checkbox" id="menu_showTaskbar"/>
-              <menuseparator/>
-              <menuitem id="menu_showMessage"
-               type="checkbox"
-               label="&showMessageCmd.label;"
-               accesskey="&showMessageCmd.accesskey;"
-               oncommand="MsgToggleMessagePane();"/>
             </menupopup>
           </menu>
+          <menuitem type="checkbox" id="menu_showTaskbar"/>
+          <menuitem id="menu_showMessage"
+           type="checkbox"
+           label="&showMessageCmd.label;"
+           accesskey="&showMessageCmd.accesskey;"
+           oncommand="MsgToggleMessagePane();"/>
+
           <menuseparator/>
           <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
             <menupopup onpopupshowing="InitViewSortByMenu()">

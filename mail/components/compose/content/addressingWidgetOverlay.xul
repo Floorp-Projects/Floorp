@@ -19,13 +19,13 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/addressingWidgetOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://mail/locale/messengercompose/addressingWidgetOverlay.dtd">
 
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
+<script type="application/x-javascript" src="chrome://mail/content/messengercompose/addressingWidgetOverlay.js"/>
 
   <!-- Addressing Widget -->
   <listbox id="addressingWidget" seltype="multiple" rows="4"
@@ -60,13 +60,13 @@ Rights Reserved.
                  type="autocomplete" flex="1"
                  searchSessions="addrbook" timeout="300" maxrows="4" 
                  autoFill="true" autoFillAfterMatch="true" forceComplete="true"
-                 minResultsForPopup="3" 
+                 minResultsForPopup="3" ignoreBlurWhileSearching="true"
                  ontextcommand="awRecipientTextCommand(eventParam, this)"
                  onerrorcommand="awRecipientErrorCommand(eventParam, this)"
                  oninput="gContentChanged=true; setupAutocomplete();" disableonsend="true"
                  onkeypress="awRecipientKeyPress(event, this)"
                  onkeydown="awRecipientKeyDown(event, this)">
-          <image class="person-icon"/>
+          <image class="person-icon" onclick="this.parentNode.select();"/>
         </textbox>
       </listcell>
     </listitem>

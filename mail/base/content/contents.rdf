@@ -24,7 +24,6 @@
     <RDF:li resource="chrome://communicator/content/pref/pref-scripts.xul"/>
     <RDF:li resource="chrome://cookie/content/pref-cookies.xul"/>
     <RDF:li resource="chrome://cookie/content/pref-images.xul"/>
-    <RDF:li resource="chrome://mail/content/messengercompose/messengercompose.xul"/>
     <RDF:li resource="chrome://mail/content/addressbook/addressbook.xul"/>
     <RDF:li resource="chrome://mail/content/addressbook/abSelectAddressesDialog.xul"/>
   </RDF:Seq>
@@ -55,11 +54,6 @@
     <RDF:li>chrome://mail/content/mailPrefsOverlay.xul</RDF:li>
   </RDF:Seq>
 
-  <!-- messenger items for Mail Compose -->
-  <RDF:Seq about="chrome://mail/content/messengercompose/messengercompose.xul">
-    <RDF:li>chrome://mail/content/mailMessengerComposeOverlay.xul</RDF:li>
-  </RDF:Seq>
-  
   <!-- messenger items for Addressbook -->
   <RDF:Seq about="chrome://mail/content/addressbook/addressbook.xul">
     <RDF:li>chrome://mail/content/mailABOverlay.xul</RDF:li>
