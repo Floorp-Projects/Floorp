@@ -191,7 +191,6 @@ bin/chrome/toolkit.jar
 bin/chrome/comm.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
-bin/chrome/blue.jar
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:

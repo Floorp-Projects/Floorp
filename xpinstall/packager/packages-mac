@@ -168,7 +168,6 @@ viewer:chrome:comm.jar
 viewer:chrome:toolkit.jar
 viewer:chrome:modern.jar
 viewer:chrome:classic.jar
-viewer:chrome:blue.jar
 -viewer:chrome:comm:content:editor:EditorInitPage.html
 -viewer:chrome:comm:content:editor:EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
