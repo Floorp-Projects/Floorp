@@ -197,8 +197,25 @@ NS_IMPL_URI_ATTR(nsHTMLAreaElement, Href, href)
 NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
-NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Target, target)
 
+NS_IMETHODIMP
+nsHTMLAreaElement::GetTarget(nsAString& aValue)
+{
+  aValue.Truncate();
+
+  nsresult rv;
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    GetBaseTarget(aValue);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetTarget(const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,

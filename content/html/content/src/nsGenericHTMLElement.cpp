@@ -2144,13 +2144,13 @@ nsGenericHTMLElement::GetBaseURI() const
   return nsGenericContainerElement::GetBaseURI();
 }
 
-nsresult
+void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::_baseTarget);
   if (val) {
     val->ToString(aBaseTarget);
-    return NS_OK;
+    return;
   }
 
   if (mDocument) {
@@ -2159,8 +2159,6 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
   else {
     aBaseTarget.Truncate();
   }
-
-  return NS_OK;
 }
 
 #ifdef DEBUG

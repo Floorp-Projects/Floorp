@@ -213,7 +213,6 @@ public:
   NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   already_AddRefed<nsIURI> GetBaseURI() const;
-  NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   //----------------------------------------
   /**
@@ -249,6 +248,16 @@ public:
 
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+
+  /**
+   * Get the base target for any links within this piece
+   * of content. Generally, this is the document's base target,
+   * but certain content carries a local base for backward
+   * compatibility.
+   *
+   * @param aBaseTarget the base target [OUT]
+   */
+  void GetBaseTarget(nsAString& aBaseTarget) const;
 
 #ifdef DEBUG
   void ListAttributes(FILE* out) const;

@@ -101,16 +101,6 @@ public:
    * @param aMapRuleFunc the mapping function [OUT]
    */
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const = 0;
-
-  /**
-   * Get the base target for any links within this piece
-   * of content. Generally, this is the document's base target,
-   * but certain content carries a local base for backward
-   * compatibility.
-   *
-   * @param aBaseTarget the base target [OUT]
-   */
-  NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const = 0;
 };
 
 #endif /* nsIHTMLContent_h___ */
