@@ -147,15 +147,3 @@ CFLAGS		+= -DUSE_NSREG -D__STDC__
 REQUIRES	= $(MODULE) libxpcom 
 
 include $(topsrcdir)/config/rules.mk
-
-#
-# This is here because AIX can't handle really long arg lists, like
-# the list of all .o files in this directory.  So break it into two
-# distinct commands.
-#
-avoid_arglist_probs: FORCE
-	rm -f core nsU*.o
-
-clean realclean distclean:: avoid_arglist_probs
-
-.PHONY: avoid_arglist_probs
