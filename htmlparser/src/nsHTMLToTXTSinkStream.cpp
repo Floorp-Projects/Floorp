@@ -762,7 +762,13 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   printf("        '%s'    ", text.ToNewCString());
 #endif
 
-  if (type == eHTMLTag_text)
+  if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select)
+  {
+    // Don't output the contents of SELECT elements;
+    // Might be nice, eventually, to output just the selected element.
+    return NS_OK;
+  }
+  else if (type == eHTMLTag_text)
   {
     Write(text);
   } 
