@@ -158,7 +158,7 @@ static eHTMLTags gHTMLKidList[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,e
 CTagList  gHtmlKids(sizeof(gHTMLKidList)/sizeof(eHTMLTag_unknown),gHTMLKidList);
 
 static eHTMLTags gHeadKidList[]=
-  {eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript};
+  {eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript,eHTMLTag_newline};
 CTagList  gHeadKids(sizeof(gHeadKidList)/sizeof(eHTMLTag_unknown),gHeadKidList);
 
 CTagList  gLIKids(2,0,eHTMLTag_ol,eHTMLTag_ul);
@@ -285,7 +285,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE|kFlowEntity), kNone,	
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
 
@@ -830,7 +830,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (SPECIALTYPE|kSelf), kNone,	
+    /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (kFlowEntity|SPECIALTYPE|kSelf), kNone,	
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
 
@@ -982,7 +982,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, (kInlineEntity|kSelf|kFlowEntity), kNone,	
+    /*parent,incl,exclgroups*/          kBlockEntity, (kInlineEntity|kSelf|kFlowEntity), kNone,	
     /*special props, prop-range*/       0,kDefaultPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 

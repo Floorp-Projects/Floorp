@@ -2733,11 +2733,21 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode& aNode){
       return result;
     }
 
+  if(eHTMLTag_newline==theTag)  //omit newlines from head...
+    return result;
+
   if(mSink) {
     result=OpenHead(aNode);
     if(NS_OK==result) {
       if(eHTMLTag_title==theTag) {
-        mSink->SetTitle(aNode.GetSkippedContent());
+
+        ///XXX this evil hack is necessary only for beta.
+        //Post beta, lets make the GetSkippedContent() call non-const.
+
+        const nsString& theString=aNode.GetSkippedContent();
+        nsString* theStr=(nsString*)&theString;
+        theStr->CompressWhitespace();
+        mSink->SetTitle(theString);
       }
       else result=AddLeaf(aNode);
         // XXX If the return value tells us to block, go
