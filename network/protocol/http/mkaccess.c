@@ -855,7 +855,7 @@ NET_AskForAuthString(MWContext *context,
             /* XXX now we have FALSE == WAIT_FOR_AUTH */
             return(NET_WAIT_FOR_AUTH);
 
-#ifdef notused /* with async dialogs, we never have a user/pass here */a
+#ifdef notused /* with async dialogs, we never have a user/pass here */
 			TRACEMSG(("User canceled login!!!"));
 
 			/* if the paths are exact and the user cancels
