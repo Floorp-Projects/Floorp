@@ -19,6 +19,8 @@
 #include "nsIDocument.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIStyleRule.h"
+#include "nsIStyleContext.h"
+#include "nsIPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
@@ -28,6 +30,8 @@
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
+
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 
 nsHTMLTagContent::nsHTMLTagContent()
 {
@@ -645,6 +649,39 @@ PRBool nsHTMLTagContent::ImagePropertyToString(nsIAtom* aAttribute,
     return ValueOrPercentToString(aValue, aResult);
   }
   return PR_FALSE;
+}
+
+void
+nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext, 
+                                         nsIPresContext* aPresContext)
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStylePosition* pos = (nsStylePosition*)
+      aContext->GetData(kStylePositionSID);
+
+    // width: value
+    GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      pos->mWidth.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mWidth.SetPercentValue(value.GetPercentValue());
+    }
+
+    // height: value
+    GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      pos->mHeight.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mHeight.SetPercentValue(value.GetPercentValue());
+    }
+  }
 }
 
 PRBool nsHTMLTagContent::ParseColor(const nsString& aString,
