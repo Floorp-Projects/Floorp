@@ -232,7 +232,7 @@ nsFileView.prototype = {
 
   /* void selectionChanged(); */
   selectionChanged: function() {
-    if (this.mSelectionCallback && this.mSelection.currentIndex > 0) {
+    if (this.mSelectionCallback && this.mSelection.currentIndex != -1) {
       var file;
       if (this.mSelection.currentIndex < this.mDirList.length) {
         file = this.mDirList[this.mSelection.currentIndex].file;
