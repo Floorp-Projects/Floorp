@@ -961,7 +961,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow)
 
   // Create an application shell
   NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
-  gAppShell->Create();
+  gAppShell->Create(nsnull,nsnull);
   gAppShell->SetDispatchListener(this);
   
     // Create a top level window for the WebWidget
