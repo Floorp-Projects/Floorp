@@ -243,7 +243,7 @@ function OnLoadMessenger()
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't
   //set up correctly.
-  if(window.arguments && window.arguments[0])
+  if ("arguments" in window && window.arguments[0])
   {
 	gStartFolderUri = window.arguments[0];
   }
