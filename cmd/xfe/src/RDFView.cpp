@@ -36,6 +36,11 @@
 
 extern "C" RDF_NCVocab  gNavCenter;
 
+extern "C"
+{
+   extern PRBool fe_getPixelFromRGB(MWContext *, char * rgbString, Pixel * pixel);
+};
+
 #ifdef DEBUG_slamm
 #define D(x) x
 #else
