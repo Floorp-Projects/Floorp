@@ -1,0 +1,149 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <title>JavaScript Overview</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+Rhino Overview</h1></center>
+
+<h3>
+Overview of Rhino</h3>
+Most people who have used JavaScript before have done so by adding scripts
+to their HTML web pages. However, Rhino is an implementation of the core
+language only and doesn't contain objects or methods for manipulating HTML
+documents.
+<p>Rhino contains
+<ul>
+<li>
+All the features of JavaScript 1.5</li>
+
+<li>
+<a href="http://developer.netscape.com/library/documentation/communicator/jsguide4/livecon.htm">LiveConnect</a>
+-- allows direct scripting of Java</li>
+
+<li>
+A JavaScript shell for executing JavaScript scripts</li>
+
+<li>
+A JavaScript compiler to transform JavaScript source files into Java class
+files</li>
+</ul>
+
+<h3>
+Language</h3>
+The JavaScript language itself is standardized by Standard ECMA-262 <i>ECMAScript:
+A general purpose, cross-platform programming language</i>. Rhino 1.5 implements
+JavaScript 1.5, which conforms to Edition 3 of the Standard. The Standard
+may be <a href="http://www.ecma.ch/stand/ecma-262.htm">downloaded</a> or
+obtained by mail from ECMA, 114 Rue du Rh&ocirc;ne, CH1204 Geneva, Switzerland.
+<p>In addition, Rhino has implemented JavaAdapters, which allows JavaScript
+to implement any Java interface or extend any Java class with a JavaScript
+object. See the <tt>enum.js</tt> example for more information.
+<p>Numerous books and tutorials on JavaScript are available.
+<br>&nbsp;
+<br>&nbsp;
+<h3>
+Deprecated Language Features</h3>
+Several language features introduced in JavaScript 1.2 are now deprecated.
+These features allow "computational reflection": that is, the ability for
+a script to determine and influence aspects of the way it is evaluated.
+These features are generally not broadly useful, yet they impose significant
+constraints on implementations that hamper or prevent optimization. The
+deprecated features are the <tt>__proto__</tt> and <tt>__parent__</tt>
+properties, and the constructors <tt>With</tt>, <tt>Closure</tt>, and <tt>Call</tt>.
+Attempts to invoke these constructors with the language version 1.4 will
+result in an error. For other versions, a warning will be generated.
+<br>&nbsp;
+<br>&nbsp;
+<h3>
+Internationalization</h3>
+The messages reported by the JavaScript engine are by default retrieved
+from the property file <tt>org/mozilla/javascript/resources/Messages.properties</tt>.
+If other properties files with extensions corresponding to the current
+locale exist, they will be used instead.
+<br>&nbsp;
+<br>&nbsp;
+<h3>
+<a NAME="versions"></a>JavaScript Language Versions</h3>
+Some behavior in the JavaScript engine is dependent on the language version.
+In browser embeddings, this language version is selected using the LANGUAGE
+attribute of the SCRIPT tag with values such as "JavaScript1.2".
+<p>Version 1.3 and greater are ECMA conformant.
+<p><b>Operators <tt>==</tt> and <tt>!=</tt></b>
+<p>Version 1.2 only uses strict equality for the == and != operators. In
+version 1.3 and greater, == and != have the same meanings as ECMA. The
+operators === and !== use strict equality in all versions.
+<p><b>ToBoolean</b>
+<p><tt>Boolean(new Boolean(false))</tt> is false for all versions before
+1.3. It is true (and thus ECMA conformant) for version 1.3 and greater.
+<p><b>Array.prototype.toString and Object.prototype.toString</b>
+<p>Version 1.2 only returns array or object literal notation ("[1,2,3]"
+or "{a:1, b:2}" for example). In version 1.3 and greater these functions
+are ECMA conformant.
+<p><b>Array constructor</b>
+<p><tt>Array(i)</tt> for a number argument <tt>i</tt> constructs an array
+with a single element equal to <tt>i</tt> for version 1.2 only. Otherwise
+the ECMA conformant version is used (an array is constructed with no elements
+but with length property equal to <tt>i</tt>).
+<p><b>String.prototype.substring</b>
+<p>For version 1.2 only, the two arguments are not swapped if the first
+argument is less than the second one. All other versions are ECMA compliant.
+<p><b>String.prototype.split</b>
+<p>For version 1.2 only, split performs the Perl4 special case when given
+a single space character as an argument (skips leading whitespace, and
+splits on whitespace). All other versions split on the space character
+proper as specified by ECMA.
+<br>&nbsp;
+<br>&nbsp;
+<h3>
+Security</h3>
+The security features in Rhino provide the ability to track the origin
+of a piece of code (and any pieces of code that it may in turn generate).
+These features allow for the implementation of a traditional URL-based
+security policy for JavaScript as in Netscape Navigator. Embeddings that
+trust the JavaScript code they execute may ignore the security features.
+<p>Embeddings that run untrusted JavaScript code must do two things to
+enable the security features. First, every <tt>Context</tt> that is created
+must be supplied an instance of an object that implements the <tt>SecuritySupport</tt>
+interface. This will provide Rhino the support functionality it needs to
+perform security-related tasks.
+<p>Second, the value of the property <tt>security.requireSecurityDomain</tt>
+should be changed to <tt>true</tt> in the resource bundle <tt>org.mozilla.javascript.resources.Security</tt>.
+The value of this property can be determined at runtime by calling the
+<tt>isSecurityDomainRequired</tt>
+method of <tt>Context</tt>. Setting this property to true requires that
+any calls that compile or evaluate JavaScript must supply a security domain
+object of any object type that will be used to identify JavaScript code.
+In a typical client embedding, this object might be a string with the URL
+of the server that supplied the script, or an object that contains a representation
+of the signers of a piece of code for certificate-based security policies.
+<p>When JavaScript code attempts a restricted action, the security domain
+can be retrieved in the following manner. The class context should be obtained
+from the security manager (see <tt>java.lang.SecurityManager.getClassContext()</tt>).
+Then, the class of the code that called to request the restricted action
+can be obtained by looking an appropriate index into the class context
+array. If the caller is JavaScript the class obtained may be one of two
+types. First, it may be the class of the interpreter if interpretive mode
+is in effect. Second, it may be a generated class if classfile generation
+is supported. An embedding can distinguish the two cases by calling <tt>isInterpreterClass()</tt>
+in the <tt>Context</tt> class. If it is the interpreter class, call the
+getInterpreterSecurityDomain() method of Context to obtain the security
+domain of the currently executing interpreted script or function. Otherwise,
+it must be a generated class, and an embedding can call <tt>getSecurityDomain()</tt>
+in the class implementing
+<tt>SecuritySupport</tt>. When the class was
+defined and loaded, the appropriate security domain was associated with
+it, and can be retrieved by calling this method. Once the security domain
+has been determined, an embedding can perform whatever checks are appropriate
+to determine whether access should be allowed.
+<p>
+<hr WIDTH="100%">
+<br><a href="index.html">back to top</a>
+</body>
+</html>

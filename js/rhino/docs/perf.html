@@ -1,0 +1,83 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en]C-NSCP  (WinNT; I) [Netscape]">
+   <title>Performance Hints</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+Performance Hints</h1></center>&nbsp;
+<h3>
+<tt>var</tt> Statements</h3>Use <tt>var</tt> statements when possible. Not only is it good 
+programming practice, it can speed up your code by allowing the compiler to 
+generate special code to access the variables. For example, you could rewrite
+<p><tt>function sum(a) {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; result = 0;</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; for (i=0; i &lt; 
+a.length; i++)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result += a[i];</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; return result;</tt>
+<br><tt>}</tt>
+<p>as
+<p><tt>function sum(a) {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; var result = 0;</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; for (var i=0; i 
+&lt; a.length; i++)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; result += a[i];</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; return result;</tt>
+<br><tt>}</tt>
+<p>This is not equivalent code because the second version does 
+not modify global variables <tt>result</tt> and <tt>i</tt>. However, if you don't intend for any other function to 
+access these variables, then storing them globally is probably wrong anyway 
+(what if you called another function that had a loop like the one in <tt>sum</tt>!).
+<br>&nbsp;
+<h3>
+Arrays</h3>Use the forms of the Array constructor that 
+specify a size or take a list of initial elements. For example, the code
+<p><tt>var a = new Array();</tt>
+<br><tt>for (var i=0; i &lt; n; i++)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; a[i] = i;</tt>
+<p>could be sped up by changing the constructor call to <tt>new Array(n)</tt>. A constructor call like that indicates to 
+the runtime that a Java array should be used for the first <i>n</i> entries of the array. Similarly,
+<tt>new 
+Array(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)</tt> or <tt>[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</tt> will cause a 3-element 
+Java array to be allocated to hold the contents of the JavaScript array.
+<br>&nbsp;
+<br>&nbsp;
+<h3>
+<tt>eval</tt> and <tt>new Function</tt></h3>Avoid calling <tt>eval</tt> when 
+possible. Calls to <tt>eval</tt> are slow because the script 
+being executed must be compiled. Constructing a new function object can be slow 
+for the same reason, while function expressions are more efficient because the 
+function can be compiled. For example, the code
+<p><tt>function MyObject(a) {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; this.s = a;</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; this.toString = new 
+Function(&quot;return this.s&quot;);</tt>
+<br><tt>}</tt>
+<p>could be written more efficiently as
+<p><tt>function MyObject(a) {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; this.s = a;</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; this.toString = 
+function () { return this.s }</tt>
+<br><tt>}</tt>
+<p>Beginning with Rhino 1.4 Release 2, code 
+passed to eval and new Function will be interpreted rather than compiled to 
+class files.
+<br>&nbsp;</p>
+<h3>
+with</h3>Using the <tt>with</tt> 
+statement prevents the compiler from generating code for fast access to local 
+variables. You're probably better off explicitly accessing any properties of the 
+object.
+<br>&nbsp;
+<p>
+<hr WIDTH="100%">
+<br><a href="index.html">back to top</a>
+<br>
+</body>
+</html>

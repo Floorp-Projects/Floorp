@@ -1,0 +1,361 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (WinNT; U) [Netscape]">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java, Debugger">
+   <title>Rhino Debugger</title>
+</head>
+<body bgcolor="#FFFFFF">
+<script src="owner.js"></script>
+
+<center>
+<h1>
+Rhino JavaScript Debugger</h1></center>
+Christopher Oliver
+<br><script>document.write(owner());</script>
+
+<br><script>
+	var d = new Date(document.lastModified);
+	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
+	document.write('<br>');
+</script>
+
+<center>
+<hr WIDTH="100%"></center>
+The Rhino JavaScript debugger is a GUI that allows debugging of interpreted
+JavaScript scripts run in Rhino. Note that this debugger <i>will not</i>
+work with JavaScript scripts run in the mozilla browser since Rhino is
+not the engine used in such environments.
+<p><img SRC="jsdebug.jpg" height=460 width=600>
+<p>Current limitations:
+<ul>
+<li>
+Requires JDK 1.2</li>
+
+<li>
+Requires rhinoTip.jar</li>
+
+<li>
+No breakpoint menu</li>
+</ul>
+<b><font face="Arial"><font color="#000080"><font size=+2>Using the Rhino
+JavaScript Debugger</font></font></font></b>
+<ol>&nbsp;
+<br><font size=-1>The Mozilla Rhino JavaScript engine includes a source-level
+debugger for debugging JavaScript scripts. The debugger is itself a Java
+program which you may run as</font>
+<p><font face="Arial"><font size=-1>java org.mozilla.javascript.tools.debugger.JSDebugger
+[options] [filename.js] [script-arguments]</font></font>
+<p><font size=-1>where the options are the same as the shell.</font>
+<ol>
+<li>
+<a NAME="_Toc502165108"></a><b><font face="Arial"><font color="#000080"><font size=+1>Features</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>The Rhino JavaScript Debugger can debug scripts running
+in multiple threads and provides facilities to set and clear breakpoints,
+control execution, view variables, and evaluate arbitrary JavaScript code
+in the current scope of an executing script.</font>
+<ol>
+<li>
+<a NAME="_Toc502165109"></a><b><font face="Arial"><font color="#000080"><font size=-1>Console
+Window</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>The debugger redirects the <font face="Arial">System.out</font>,
+<font face="Arial">System.in</font>,
+and <font face="Arial">System.err</font> streams to an internal JavaScript
+console window which provides an editable command line for you to enter
+JavaScript code and view system output. The console window maintains a
+history of the commands you have entered. You may move backward and forward
+through the history list by pressing the Up/Down arrow keys on the keyboard.</font>
+<li>
+<a NAME="_Toc502165110"></a><b><font face="Arial"><font color="#000080"><font size=-1>Opening
+Scripts</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>You may select the <b><i>File->Open</i></b> menu item
+on the menu bar to load JavaScript scripts contained in files. This action
+will display a file-selection dialog box prompting you for the location
+of a script to load. The selected file will be compiled and displayed in
+a new window.</font>
+<li>
+<b><font face="Arial"><font color="#000080">Running Scripts</font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>You may select the <b><i>File->Run</i></b> menu item on
+the menu bar to execute JavaScript scripts contained in files. This action
+will display a file-selection dialog box prompting you for the location
+of a script to execute. The loaded script will be run in a new thread and
+control will be given to the debugger on its first instruction.</font>
+<li>
+<a NAME="_Toc502165111"></a><b><font face="Arial"><font color="#000080"><font size=-1>Controlling
+Execution</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>The debugger provides the following facilities for you
+to control the execution of scripts you are debugging:</font>
+<ol>
+<li>
+<b><font face="Arial"><font color="#000080">Step Into</font></font></b></li>
+</ol>
+</ol>
+</ol>
+</ol>
+<font size=-1>To single step entering any function calls, you may do any
+of the following:</font>
+<ul>
+<li>
+<font size=-1>Select the <b><i>Debug->Step Into </i></b>menu item on the
+menu bar</font></li>
+
+<li>
+<font size=-1>Press the <b><i>Step Into</i></b> button on the toolbar</font></li>
+
+<li>
+<font size=-1>Press the F11 key on the keyboard</font></li>
+</ul>
+<font size=-1>Execution will resume. If the current line in the script
+contains a function call control will return to the debugger upon entry
+into the function. Otherwise control will return to the debugger at the
+next line in the current function.</font>
+<ol>
+<ol>
+<ol>
+<ol>
+<li>
+<b><font face="Arial"><font color="#000080">Step Over</font></font></b></li>
+</ol>
+</ol>
+</ol>
+</ol>
+<font size=-1>To single step to the next line in the current function,
+you may do any of the following:</font>
+<ul>
+<li>
+<font size=-1>Select the <b><i>Debug->Step Over</i></b> menu item on the
+menu bar</font></li>
+
+<li>
+<font size=-1>Press the <b><i>Step Over</i></b> button on the toolbar</font></li>
+
+<li>
+<font size=-1>Press the F7 key on the keyboard</font></li>
+</ul>
+<font size=-1>Execution will resume but control will return to the debugger
+at the next line in the current function or top-level script.</font>
+<ol>
+<ol>
+<ol>
+<ol>
+<li>
+<b><font face="Arial"><font color="#000080">Step Out</font></font></b></li>
+</ol>
+</ol>
+</ol>
+</ol>
+<font size=-1>To continue execution until the current function returns
+you may do any of the following:</font>
+<ul>
+<li>
+<font size=-1>Select the <b><i>Debug->Step Out</i></b> menu item on the
+menu bar</font></li>
+
+<li>
+<font size=-1>Press the <b><i>Step Out</i></b> button on the toolbar</font></li>
+
+<li>
+<font size=-1>Press the F8 key on the keyboard</font></li>
+</ul>
+<font size=-1>Execution will resume until the current function returns
+or a breakpoint is hit.</font>
+<ol>
+<ol>
+<ol>
+<ol>
+<li>
+<b><font face="Arial"><font color="#000080">Go</font></font></b></li>
+</ol>
+</ol>
+</ol>
+</ol>
+<font size=-1>To resume execution of a script you may do any of the following:</font>
+<ul>
+<li>
+<font size=-1>Select the <b><i>Debug->Go</i></b> menu item on the menu
+bar</font></li>
+
+<li>
+<font size=-1>Press the <b><i>Go</i></b> button on the toolbar</font></li>
+
+<li>
+<font size=-1>Press the F5 key on the keyboard</font></li>
+</ul>
+<font size=-1>Execution will resume until a breakpoint is hit or the script
+completes.</font>
+<br>&nbsp;
+<br>&nbsp;
+<ol>
+<ol>
+<ol>
+<ol>
+<li>
+<b><font face="Arial"><font color="#000080">Break</font></font></b></li>
+</ol>
+</ol>
+</ol>
+</ol>
+<font size=-1>To stop all running scripts and give control to the debugger
+you may do any of the following:</font>
+<ul>
+<li>
+<font size=-1>Select the <b><i>Debug->Break</i></b> menu item on the menu
+bar</font></li>
+
+<li>
+<font size=-1>Press the <b><i>Break</i></b> button on the toolbar</font></li>
+
+<li>
+<font size=-1>Press the Pause/Break key on the keyboard</font></li>
+</ul>
+
+<ol>
+<ol>
+<ol>
+<li>
+<a NAME="_Toc502165112"></a><b><font face="Arial"><font color="#000080"><font size=-1>Moving
+Up and Down the Stack</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>The lower-left (dockable) pane in the debugger main window
+contains a combo-box labeled "Context:" which displays the current stack
+of the executing script. You may move up and down the stack by selecting
+an entry in the combo-box. When you select a stack frame the variables
+and watch windows are updated to reflect the names and values of the variables
+visible at that scope.</font>
+<li>
+<a NAME="_Toc502165113"></a><b><font face="Arial"><font color="#000080"><font size=-1>Setting
+and Clearing Breakpoints</font></font></font></b></li>
+</ol>
+</ol>
+</ol>
+<font size=-1>The main desktop of the debugger contains file windows which
+display the contents of each script you are debugging. You may set a breakpoint
+in a script by doing one of the following:</font>
+<ul>
+<li>
+<font size=-1>Place the cursor on the line at which you want to set a breakpoint
+and right-click with the mouse. This action will display a pop-up menu.
+Select the <b><i>Set Breakpoint</i></b> menu item.</font></li>
+
+<li>
+<font size=-1>Simply single-click on the line number of the line at which
+you want to set a breakpoint.</font></li>
+</ul>
+<font size=-1>If the selected line contains executable code a red dot will
+appear next to the line number and a breakpoint will be set at that location.</font>
+<p><font size=-1>You may set clear breakpoint in a script by doing one
+of the following:</font>
+<ul>
+<li>
+<font size=-1>Place the cursor on the line at which you want to clear a
+breakpoint and right-click with the mouse. This action will display a pop-up
+menu. Select the <b><i>Clear Breakpoint</i></b> menu item.</font></li>
+
+<li>
+<font size=-1>Simply single-click on the red dot or the line number of
+the line at which you want to clear a breakpoint.</font></li>
+</ul>
+<font size=-1>The red dot will disappear and the breakpoint at that location
+will be cleared.</font>
+<ol>
+<ol>
+<ol>
+<li>
+<a NAME="_Toc502165114"></a><b><font face="Arial"><font color="#000080"><font size=-1>Viewing
+Variables</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>The lower-left (dockable) pane in the debugger main window
+contains a tab-pane with two tabs, labeled "this" and "Locals". Each pane
+contains a tree-table which displays the properties of the current object
+and currently visible local variables, respectively.</font>
+<ol>
+<li>
+<b><font face="Arial"><font color="#000080">This</font></font></b></li>
+</ol>
+<font size=-1>The properties of the current object are displayed in the
+<b><i>this</i></b>
+table. If a property is itself a JavaScript object the property may be
+expanded to show its sub-properties. The <b><i>this</i></b> table is updated
+each time control returns to the debugger or when you change the stack
+location in the <b><i>Context:</i></b> window.</font>
+<li>
+<a NAME="_Toc502165115"></a><b><font face="Arial"><font color="#000080"><font size=-1>Locals</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>The local variables of the current function are displayed
+in the <b><i>Locals</i></b> table. If a variable is itself a JavaScript
+object the variable may be expanded to show its sub-properties. The <b><i>Locals</i></b>
+table is updated each time control returns to the debugger or when you
+change the stack location in the <b><i>Context:</i></b> window</font>
+<li>
+<a NAME="_Toc502165116"></a><b><font face="Arial"><font color="#000080"><font size=-1>Watch
+Window</font></font></font></b></li>
+
+<br>&nbsp;
+<p>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><font size=-1>You may enter arbitrary JavaScript expressions in the
+<b><i>Watch:</i></b>
+table located in the lower-right (dockable) pane in the debugger main window.
+The expressions you enter are reevaluated in the current scope and their
+current values displayed each time control returns to the debugger or when
+you change the stack location in the <b><i>Context:</i></b> window.</font>
+<li>
+<a NAME="_Toc502165117"></a><b><font face="Arial"><font color="#000080"><font size=-1>Evaluation
+Window</font></font></font></b></li>
+</ol>
+</ol>
+</ol>
+<font size=-1>The <b><i>Evaluate</i></b> pane located in the lower-right
+(dockable) pane in the debugger main window contains an editable command
+line where you may enter arbitrary JavaScript code. The code is evaluated
+in the context of the current stack frame. The window maintains a history
+of the commands you have entered. You may move backward or forward through
+the history by pressing the Up/Down arrow keys on the keyboard.</font>
+<br>&nbsp;
+<h3>
+
+<hr WIDTH="100%"><br>
+<a href="index.html">back to top</a></h3>
+
+</body>
+</html>

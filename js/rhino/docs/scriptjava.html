@@ -1,0 +1,199 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; U) [Netscape]">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java">
+   <title>Scripting Java</title>
+</head>
+<body bgcolor="#FFFFFF">
+<script src="owner.js"></script>
+
+<center>
+<h1>
+Scripting Java</h1></center>
+<script>document.write(owner());</script>
+
+<br><script>
+	var d = new Date(document.lastModified);
+	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
+	document.write('<br>');
+</script>
+
+<center>
+<hr WIDTH="100%"></center>
+
+<p>It's possible to use Rhino just for scripting Java. You don't have to
+write any additional Java code; just use the existing Rhino shell and then
+make calls into Java.
+<br>&nbsp;
+<h2>
+Rhino Shell</h2>
+The Rhino shell allows you to run scripts from files or interactively at
+a command line.
+<p>If you download the zip file for rhino, it will contain a single JAR
+file, <tt>js.jar</tt>. If you add the JAR file to your class path, you
+can start the Rhino shell using the command
+<pre>&nbsp;&nbsp;&nbsp; java org.mozilla.javascript.tools.shell.Main</pre>
+or if you have Java 2 (JDK 1.2), you can avoid changing your classpath
+and simply use the command
+<pre>&nbsp;&nbsp;&nbsp; java -jar js.jar</pre>
+Unfortunately the <tt>-jar</tt> option to <tt>java</tt> will overwrite
+your existing classpath. The shell's interactive mode is a good way to
+begin exploring Rhino.
+<p><i>Note: Earlier versions of Rhino have two JAR files, js.jar and jstools.jar,
+and don't support the -jar option. Both JAR files must be added to the
+class path to start the shell</i>.
+<p>You can execute a JavaScript file by putting the file name as an argument
+to the shell class:
+<pre>&nbsp;&nbsp;&nbsp; java org.mozilla.javascript.tools.shell.Main myScript.js</pre>
+There are a number of options for evaluating scripts using the shell. See
+the <a href="http://www.mozilla.org/rhino/shell.html">command description</a>
+for more information.
+<br>&nbsp;
+<h2>
+LiveConnect: Communicating with Java from JavaScript</h2>
+If you are planning to script Java using Rhino, you'll want to use LiveConnect,
+which allows you to create Java classes and call Java methods from within
+JavaScript. For example, here's a log from an interactive session. If you
+type it in, you'll see a window with a button filling it.
+<center>
+<p><img SRC="scriptjavaframe.jpg" height=100 width=200>
+<br><i><font size=-1>A Java frame created from the Rhino shell.</font></i></center>
+
+<pre>$ java org.mozilla.javascript.tools.shell.Main
+js> importPackage(java.awt);
+js> frame = new Frame("JavaScript")
+java.awt.Frame[frame0,0,0,0x0,invalid,hidden,layout=java.awt.BorderLayout,resizable,title=JavaScript]
+js> frame.show()
+js> frame.setSize(new Dimension(200,100))
+js> button = new Button("OK")
+java.awt.Button[button0,0,0,0x0,invalid,label=OK]
+js> frame.add(button)
+java.awt.Button[button0,0,0,0x0,invalid,label=OK]
+js> frame.show()
+js> quit()
+$</pre>
+If you wish to load classes from JavaScript that aren't in the <tt>java</tt>
+package, you'll need to prefix the package name with "<tt>Packages.</tt>".
+For example:
+<pre>$ java org.mozilla.javascript.tools.shell.Main
+js> cx = Packages.org.mozilla.javascript.Context.enter()
+org.mozilla.javascript.Context@25980b44
+js> cx.evaluateString(this, "3+2", null, 0, null)
+5.0
+js> quit()
+$</pre>
+
+<h2>
+Accessing JavaBean Properties</h2>
+Java classes can define JavaBean properties using getter and setter methods.
+For example, the following class defines two properties:
+<p><tt>public class Me {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; public int getAge() { return age; }</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; public void setAge(int anAge) { age = anAge;
+}</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; public String getSex() { return "male"; }</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; private int age;</tt>
+<br><tt>};</tt>
+<p>The two properties defined are <i>age</i> and <i>sex</i>. The <i>sex</i>
+property is read-only: it has no setter.
+<p>Using Rhino we can access the bean properties as if they where JavaScript
+properties. We can also continue to call the methods that define the property.
+<p><tt>js> me = new Packages.Me();</tt>
+<br><tt>Me@93</tt>
+<br><tt>js> me.getSex()</tt>
+<br><tt>male</tt>
+<br><tt>js> me.sex</tt>
+<br><tt>male</tt>
+<br><tt>js> me.age = 33;</tt>
+<br><tt>33</tt>
+<br><tt>js> me.age</tt>
+<br><tt>33</tt>
+<br><tt>js> me.getAge()</tt>
+<br><tt>33</tt>
+<br><tt>js></tt>
+<p>Since the <i>sex</i> property is read-only, we are not allowed to write
+to it.
+<p><i>Note: JavaBean reflection is not available in versions of Rhino before
+1.5.</i>
+<br><tt></tt>&nbsp;
+<h2>
+Importing Java Classes and Packages</h2>
+Above we saw the use of the <tt>importPackage</tt> function to import all
+the classes from a particular Java package. There is also <tt>importClass</tt>,
+which imports a single class:
+<pre>$ java org.mozilla.javascript.tools.shell.Main
+js> importClass(Packages.org.mozilla.javascript.Context)
+js> cx = Context.enter()
+org.mozilla.javascript.Context@25980d62
+js> cx.evaluateString(this, "3+2", null, 0, null)
+5.0
+js> quit()
+$</pre>
+
+<h2>
+Extending Java Classes and Implementing Java Interfaces with JavaScript</h2>
+Starting from the example above of creating a Java frame using JavaScript,
+we can add a listener for the button. Once we call <tt>addActionListener</tt>
+we can then click on the button to get the current date printed out:
+<pre>$ java org.mozilla.javascript.tools.shell.Main
+js> importPackage(java.awt);
+js> frame = new Frame("JavaScript")
+java.awt.Frame[frame0,0,0,0x0,invalid,hidden,layout=java.awt.BorderLayout,resizable,title=JavaScript]
+js> button = new Button("OK")
+java.awt.Button[button0,0,0,0x0,invalid,label=OK]
+js> frame.setSize(new Dimension(200,100))
+js> frame.add(button)
+java.awt.Button[button0,0,0,0x0,invalid,label=OK]
+js> frame.show()
+js> function printDate() { print(new Date()) }
+js> printDate()
+Wed Mar 15 15:42:20 GMT-0800 (PST) 2000
+js> o = { actionPerformed: printDate }
+[object Object]
+js> o.actionPerformed()
+Wed Mar 15 15:42:39 GMT-0800 (PST) 2000
+js> buttonListener = java.awt.event.ActionListener(o)
+adapter0@6acc0f66
+js>&nbsp; button.addActionListener(buttonListener)
+js> Wed Mar 15 15:43:05 GMT-0800 (PST) 2000
+Wed Mar 15 15:43:05 GMT-0800 (PST) 2000
+Wed Mar 15 15:43:08 GMT-0800 (PST) 2000
+quit()
+$</pre>
+When we type <tt>buttonListener = java.awt.event.ActionListener(o)</tt>,
+Rhino actually creates a new Java class that implements <tt>ActionListener</tt>
+and forwards calls from that class to the JavaScript object. So when you
+click on the button, the <tt>printDate</tt> method is called.
+<br>&nbsp;
+<h2>
+JavaAdapter constructor</h2>
+Another way to create a JavaAdapter is to call the JavaAdapter constructor
+explicitly. Using the JavaAdapter constructor gives you additional features
+that cannot be had by "constructing" a Java interface as was done above.
+<p>Instead of writing
+<pre>&nbsp;&nbsp;&nbsp; buttonListener = java.awt.event.ActionListener(o)</pre>
+above we can also write
+<pre>&nbsp;&nbsp;&nbsp; buttonListener = new JavaAdapter(java.awt.event.ActionListener, o)</pre>
+which is equivalent. If we also wanted to extend class <tt>Foo</tt>, while
+also implementing <tt>java.lang.Runnable</tt>, we would write
+<pre>&nbsp;&nbsp;&nbsp; buttonListener = new JavaAdapter(Packages.Foo,&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; java.awt.event.ActionListener,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; java.lang.Runnable, o)</pre>
+In general the syntax is
+<p>&nbsp;&nbsp;&nbsp; <tt>new JavaAdapter(</tt><i>java-class</i>, [<i>java-class</i>,
+...] <i>javascript-object</i><tt>)</tt>
+<p>where at most one <i>java-class</i> is a Java class and the remaining
+<i>java-class</i>es
+are interfaces. The result will be a Java adapter that extends any specified
+Java class, implements the Java interfaces, and forwards any calls to the
+methods of the <i>javascript-object</i>.
+<h3>
+
+<hr WIDTH="100%"><br>
+<a href="index.html">back to top</a></h3>
+
+</body>
+</html>

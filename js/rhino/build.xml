@@ -9,37 +9,31 @@ Requires Ant version 1.2
   <target name="properties">
     <property name="name" value="rhino"/>
     <property name="Name" value="Rhino"/>
+    <property name="version" value="1_5R2pre"/>
     <property name="rhino.jar" value="js.jar"/>
   
     <property name="build.compiler" value="classic"/>
     <property name="debug" value="off"/>
   
-    <property name="src.dir" value="."/>
-    <property name="src.examples" value="${src.dir}/examples"/>
-    <property name="src.debugger" 
-              value="${src.dir}/org/mozilla/javascript/tools/debugger"/>
+    <property name="src.dir" value="src"/>
+    <property name="toolsrc.dir" value="toolsrc"/>
+    <property name="src.examples" value="examples"/>
   
     <property name="build.dir" value="./build"/>
     <property name="build.dest" value="${build.dir}/classes"/>
   
-    <property name="dist.name" value="rhino15R2pre"/>
+    <property name="dist.name" value="rhino${version}"/>
     <property name="dist.dir" value="${build.dir}/${dist.name}"/>
     <property name="dist.src" value="${dist.dir}/src"/>
+    <property name="dist.toolsrc" value="${dist.dir}/toolsrc"/>
     <property name="dist.examples" value="${dist.dir}/examples"/>
     <property name="dist.docs" value="${dist.dir}/docs"/>
     <property name="dist.apidocs" value="${dist.docs}/apidocs"/>
-    <property name="dist.file" value="rhinoTip.zip"/>
+    <property name="dist.file" value="rhino${version}.zip"/>
 
     <property file="apiClasses.properties"/>
-    <property name="cvs.javasrc.dir" value="${src.dir}"/>
-    <property name="cvs.docsrc.dir" value="../../../mozilla-org/html/rhino/"/>
-    <property name="dist.javasrc.dir" value="${src.dir}/src"/>
+    <property name="docsrc.dir" value="docs"/>
     <property name="dist.docsrc.dir" value="${src.dir}/docs"/>
-    <available file="${cvs.javasrc.dir}/org" property="in-cvs-tree"/>
-    <available file="${src.debugger}/AbstractCellEditor.java"
-               property="swing-ex-available"/>
-    <available classname="java.lang.reflect.Proxy"
-               property="jdk1.3"/>
   </target>
 
   <target name="init" depends="properties">
@@ -50,99 +44,28 @@ Requires Ant version 1.2
     <mkdir dir="${build.dest}"/>
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.src}"/>
+    <mkdir dir="${dist.toolsrc}"/>
     <mkdir dir="${dist.examples}"/>
     <mkdir dir="${dist.docs}"/>
     <mkdir dir="${dist.apidocs}"/>
   </target>
 
-  <target name="get-swing-ex" unless="swing-ex-available">
-    <!-- Download source from Sun's site, unzip it, remove
-         the files we don't need, and change the package
-    -->
-    <get src="http://java.sun.com/products/jfc/tsc/articles/treetable2/downloads/src.zip" dest="${build.dir}/swingExSrc.zip"/>
-    <unzip src="${build.dir}/swingExSrc.zip" dest="${src.debugger}"/>
-    <delete file="${src.debugger}/FileSystemModel2.java" />
-    <delete file="${src.debugger}/MergeSort.java" />
-    <delete file="${src.debugger}/TreeTableExample2.java" />
-    <replace file="${src.debugger}/AbstractCellEditor.java">
-       <replacetoken>import java.awt.Component;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import java.awt.Component;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/AbstractTreeTableModel.java">
-       <replacetoken>import javax.swing.tree.*;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.tree.*;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/JTreeTable.java">
-       <replacetoken>import javax.swing.*;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.*;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/TreeTableModel.java">
-       <replacetoken>import javax.swing.tree.TreeModel;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.tree.TreeModel;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/TreeTableModelAdapter.java">
-       <replacetoken>import javax.swing.JTree;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.JTree;
-       </replacevalue>
-    </replace>
+  <target name="compile-src" depends="prepare">
+    <ant dir="${src.dir}"/>
   </target>
 
-  <target name="compile-from-cvs" 
-          if="in-cvs-tree" 
-          depends="prepare,get-swing-ex">
-    <javac srcdir="${cvs.javasrc.dir}" 
-           destdir="${build.dest}" 
-           includes="org/**/*.java"
-           deprecation="on"
-           debug="${debug}">
-      <exclude name="**/debugger/*.java" unless="jdk1.3"/>
-    </javac>
+  <target name="compile-toolsrc" depends="prepare">
+    <ant dir="${toolsrc.dir}"/>
   </target>
 
-  <target name="compile-from-dist" unless="in-cvs-tree" depends="prepare">
-    <javac srcdir="${dist.javasrc.dir}" 
-           destdir="${build.dest}" 
-           includes="org/**/*.java"
-           deprecation="on"
-           debug="${debug}" />
-  </target>
+  <target name="compile" depends="compile-src,compile-toolsrc"/>
 
-  <target name="compile" depends="compile-from-dist,compile-from-cvs"/>
-
-  <target name="copy-properties" depends="prepare">
-    <copy todir="${build.dest}">
-      <fileset dir="${src.dir}" includes="org/**/*.properties" />
-    </copy>
-  </target>
-
-  <target name="jar" depends="compile,copy-properties">
+  <target name="jar" depends="compile">
     <jar jarfile="${dist.dir}/${rhino.jar}" 
          basedir="${build.dest}"
          manifest="${src.dir}/manifest" />
   </target>
   
-  <target name="copy-source" depends="prepare">
-    <copy todir="${dist.src}">
-      <fileset dir="${src.dir}"
-               includes="org/**/*.java,org/**/*.properties" 
-               excludes="**/AbstractCellEditor.java,**/TreeTableModel.java,**/AbstractTreeTableModel.java,**/TreeTableModelAdapter.java,**/JTreeTable.java" />
-    </copy>
-  </target>
-
   <target name="copy-examples" depends="prepare">
     <copy todir="${dist.examples}">
       <fileset dir="${src.examples}" includes="*.java,*.js,*.html" />
@@ -153,35 +76,28 @@ Requires Ant version 1.2
     <tstamp/>
     <filter token="datestamp" value="${TODAY}"/>
     <copy todir="${dist.dir}" filtering="yes">
-      <fileset dir="${src.dir}">
+      <fileset dir=".">
         <patternset>
           <include name="build.xml"/>
           <include name="apiClasses.properties"/>
-          <include name="manifest"/>
-          <include name="built-on-date"/>
+          <include name="build-date"/>
         </patternset>
       </fileset>
     </copy>
   </target>
 
-  <target name="copy-all" depends="copy-source,copy-examples,copy-misc">
+  <target name="copy-all" depends="copy-examples,copy-misc">
   </target>
 
-  <target name="copy-docs-cvs" if="in-cvs-tree" depends="prepare"> 
-    <echo message="copy from ${cvs.docsrc.dir}"/>
+  <target name="copy-docs" depends="prepare"> 
+    <echo message="copy from ${docsrc.dir}"/>
     <copy todir="${dist.docs}">
-      <fileset dir="${cvs.docsrc.dir}" 
+      <fileset dir="${docsrc.dir}" 
                includes="**/*.html,**/*.jpg,**/*.gif" />
     </copy>
   </target>
 
-  <target name="copy-docs-dist" unless="in-cvs-tree" depends="prepare"> 
-    <echo message="Docs and source not copied on build from dist."/>
-  </target>
-
-  <target name="copy-docs" depends="copy-docs-dist,copy-docs-cvs"/> 
-
-  <target name="javadoc" if="in-cvs-tree" depends="copy-source,copy-docs">
+  <target name="javadoc" depends="compile,copy-docs">
     <javadoc sourcefiles="${apiClasses}"
              sourcepath="${dist.src}"
              destdir="${dist.apidocs}"
@@ -192,9 +108,9 @@ Requires Ant version 1.2
              windowtitle="${Name}" />
   </target>
 
-  <target name="package" depends="copy-all,jar,javadoc">
-    <delete file="${src.dir}/${dist.file}" />
-    <zip zipfile="${src.dir}/${dist.file}"
+  <target name="package" depends="copy-all,jar">
+    <delete file="${dist.file}" />
+    <zip zipfile="${dist.file}"
          basedir="${build.dir}" 
          includes="**"
          excludes="classes/**" />

@@ -1,0 +1,128 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; U) [Netscape]">
+   <title>JavaScript API</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+Rhino API Reference.</h1></center>
+
+<h4>
+The Control API</h4>
+These APIs provide methods for controlling the actions of JavaScript in
+a host environment.
+<ul>
+<li>
+<a href="org/mozilla/javascript/Context.html">Context</a> - Represents
+the runtime context of an executing script. Has methods to associate the
+JavaScript evaluation engine with a Java thread, set attributes of the
+engine, and compile and evaluate scripts.</li>
+
+<li>
+<a href="org/mozilla/javascript/ContextListener.html">ContextListener</a> 
+- Allows embeddings to be notified of the creation, entering, exiting,
+and releasing of Contexts. </li>
+
+<li>
+<a href="org/mozilla/javascript/Script.html">Script</a> - The result of
+compiling a JavaScript script. Also encapsulates script execution.</li>
+
+<li>
+<a href="org/mozilla/javascript/ErrorReporter.html">ErrorReporter</a> -
+This interface can be implemented to control the actions the JavaScript
+engine takes when it encounters errors.</li>
+
+<li>
+<a href="org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+- Optional support routines that must be provided by embeddings implementing
+security controls on scripts.</li>
+
+<li>
+<a href="org/mozilla/javascript/Wrapper.html">Wrapper</a> - Interface implemented
+by objects wrapping other objects. Provides a method for recovering the
+wrapped value.</li>
+
+<li>
+<a href="org/mozilla/javascript/WrapHandler.html">WrapHandler</a> - Interface
+embedders can implement in order to control the way Java objects are wrapped
+for use by JavaScript.</li>
+
+<li>
+<a href="org/mozilla/javascript/ClassOutput.html">ClassOutput</a> - Interface
+embedders can implement in order to control the placement of generated
+class bytecodes.</li>
+</ul>
+
+<h4>
+The Host Object API</h4>
+These APIs provide support for adding objects specific to a particular
+embedding of JavaScript in a host environment. Note that if you just want
+to script existing Java classes, you should just use <a href="http://developer.netscape.com/library/documentation/communicator/jsguide4/livecon.htm">LiveConnect</a>.
+It is also helpful to understand some of the implementation of the <a href="runtime.html">runtime</a>.
+<ul>
+<li>
+<a href="org/mozilla/javascript/Scriptable.html">Scriptable</a> - All JavaScript
+objects must implement this interface. Provides methods to access properties
+and attributes of those properties, as well as other services required
+of JavaScript objects.</li>
+
+<li>
+<a href="org/mozilla/javascript/Function.html">Function</a> - All JavaScript
+functions must implement this interface. Extends Scriptable, adding methods
+to support invocation.</li>
+
+<li>
+<a href="org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
+- A default implementation of Scriptable that may be extended. Implements
+property and attribute storage and lookup and other default JavaScript
+object behavior.</li>
+
+<li>
+<a href="org/mozilla/javascript/FunctionObject.html">FunctionObject</a>
+- An implementation of Function that allows Java methods and constructors
+to be used as JavaScript function objects.</li>
+
+<li>
+<a href="org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
+- Allows embeddings to use the importClass and importPackage functions.</li>
+</ul>
+
+<h4>
+Exceptions</h4>
+These exceptions are thrown by JavaScript.
+<ul>
+<li>
+<a href="org/mozilla/javascript/JavaScriptException.html">JavaScriptException</a>
+- Thrown from within JavaScript by the JavaScript 'throw' statement, or
+by LiveConnect calls from JavaScript into Java. Wraps a JavaScript value.</li>
+
+<li>
+<a href="org/mozilla/javascript/ClassDefinitionException.html">ClassDefinitionException</a>
+- Thrown if errors are detected while attempting to define a host object
+from a Java class.</li>
+
+<li>
+<a href="org/mozilla/javascript/PropertyException.html">PropertyException</a>
+- Thrown if errors are detected while attempting to define a property of
+a host object from a Java class or method, or if a property is not found.</li>
+
+<li>
+<a href="org/mozilla/javascript/NotAFunctionException.html">NotAFunctionException</a>
+- Thrown when attempting to call an object that is not a function.</li>
+
+<li>
+<a href="org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
+- An exception thrown when an error is detected during the execution of
+a script. The default error reporter will throw EvaluatorExceptions when
+an error is encountered.</li>
+</ul>
+
+<hr WIDTH="100%">
+<br><a href="overview-summary.html">back to top</a>
+</body>
+</html>

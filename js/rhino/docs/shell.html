@@ -1,0 +1,128 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <title>JavaScript Shell</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+JavaScript Shell</h1></center>
+The JavaScript shell provides a simple way to run scripts in batch mode
+or an interactive environment for exploratory programming.
+<h2>
+Invoking the Shell</h2>
+<tt>java org.mozilla.javascript.tools.shell.Main</tt> [<i>options</i>]
+<i>file</i><tt>.js
+[<i>script-arguments</i>]</tt>
+<p>where <i>options</i> are:
+<p><tt>-e </tt><i>script-source</i>
+<blockquote>Executes <i>script-source</i> as a JavaScript script.</blockquote>
+<tt>-f </tt><i>script-filename</i>
+<blockquote>Reads filename specified by <i>script-filename</i> and executes
+it as a JavaScript script.</blockquote>
+<tt>-opt </tt><i>optLevel</i>
+<br><tt>-O</tt> <i>optLevel</i>
+<ul>Optimizes at level <i>optLevel</i>, which must be an integer between
+0 and 9. See <a href="opt.html">Optimization</a> for more details.</ul>
+<tt>-version </tt><i>versionNumber</i>
+<ul>Specifies the language version to compile with. The string <i>versionNumber</i>
+must be one of <tt>100</tt>, <tt>110</tt>, <tt>120</tt>, <tt>130</tt>,
+or <tt>140</tt>. See <a href="overview.html#versions">JavaScript Language
+Versions</a> for more information on language versions.</ul>
+
+<h2>
+Predefined Properties</h2>
+Scripts executing in the shell have access to some additional properties
+of the top-level object.
+<br>&nbsp;
+<h4>
+arguments</h4>
+
+<blockquote>The <tt>arguments</tt> object is an array containing the strings
+of all the arguments given at the command line when the shell was invoked.</blockquote>
+
+<h4>
+help()</h4>
+
+<blockquote>Executing the help function will print usage and help messages.</blockquote>
+
+<h4>
+defineClass(<i>className</i>)</h4>
+
+<blockquote>Define an extension using the Java class named with the string
+argument <i>className</i>. Uses ScriptableObject.defineClass() to define
+the extension.</blockquote>
+
+<h4>
+load([<i>filename</i>, ...])</h4>
+
+<blockquote>Load JavaScript source files named by string arguments. If
+multiple arguments are given, each file is read in and executed in turn.</blockquote>
+
+<h4>
+loadClass(<i>className</i>)</h4>
+
+<blockquote>Load and execute the class named by the string argument <i>className</i>.
+The class must be a class that implements the Script interface, as will
+any script compiled by <a href="jsc.html">jsc</a>.</blockquote>
+
+<h4>
+print([<i>expr</i> ...])</h4>
+
+<blockquote>Evaluate and print expressions. Evaluates each expression,
+converts the result to a string, and prints it.</blockquote>
+
+<h4>
+quit()</h4>
+
+<blockquote>Quit shell. The shell will also quit in interactive mode if
+an end-of-file character is typed at the prompt.</blockquote>
+
+<h4>
+version([<i>number</i>])</h4>
+
+<blockquote>Get or set JavaScript version number. If no argument is supplied,
+the current version number is returned. If an argument is supplied, it
+is expected to be one of <tt>100</tt>, <tt>110</tt>, <tt>120</tt>, <tt>130,</tt>
+or <tt>140</tt> to indicate JavaScript version 1.0, 1.1, 1.2, 1.3, or 1.4
+respectively.</blockquote>
+
+<h2>
+Example</h2>
+Here the shell is invoked three times from the command line. (The system
+command prompt is shown as <tt>$</tt>.) The first invocation executes a
+script specified on the command line itself. The next invocation has no
+arguments, so the shell goes into interactive mode, reading and evaluating
+each line as it is typed in. Finally, the last invocation executes a script
+from a file and accesses arguments to the script itself.
+<p><tt>$ java org.mozilla.javascript.tools.shell.Main -e print('hi')</tt>
+<p><tt>hi</tt>
+<p><tt>$ java org.mozilla.javascript.tools.shell.Main</tt>
+<p><tt>js> print('hi')</tt>
+<br><tt>hi</tt>
+<br><tt>js> 6*7</tt>
+<br><tt>42</tt>
+<br><tt>js> function f() {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return a;</tt>
+<br><tt>}</tt>
+<br><tt>js> var a = 34;</tt>
+<br><tt>js> f()</tt>
+<br><tt>34</tt>
+<br><tt>js> quit()</tt>
+<p><tt>$ cat echo.js</tt>
+<br><tt>for (i in arguments) {</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print(arguments[i])</tt>
+<br><tt>}</tt>
+<br><tt>$ java org.mozilla.javascript.tools.shell.Main echo.js foo bar</tt>
+<p><tt>foo</tt>
+<br><tt>bar</tt>
+<p><tt>$</tt>
+<p>
+<hr WIDTH="100%">
+<br><a href="index.html">back to top</a>
+</body>
+</html>

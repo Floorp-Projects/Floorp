@@ -1,0 +1,48 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
+   <title>Small Footprint</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+Small Footprint</h1></center>
+A few changes can be made to reduce the footprint of Rhino for embeddings
+where space is at a premium. On a recent build, Rhino consumed 355,883
+bytes of space for uncompressed class files. With various changes that
+number can be reduced to 281,455 bytes.
+<br>&nbsp;
+<h3>
+Tools</h3>
+Most embeddings won't need any of the classes in <tt>org.mozilla.javascript.tools</tt>
+or any of its subpackages.
+<br>&nbsp;
+<h3>
+Regular Expressions</h3>
+The package <tt>org.mozilla.javascript.regexp</tt> can be removed. Rhino
+will continue to run, although it will not be able to execute any regular
+expression matches. This change saves 37,792 bytes of class files.
+<br>&nbsp;
+<h3>
+JavaAdapter</h3>
+Implementing the JavaAdapter functionality requires the ability to generate
+classes on the fly. Removing <tt>org.mozilla.javascript.JavaAdapter</tt> and all
+the classes in package <tt>org.mozilla.classfile</tt> will disable this 
+functionality, but Rhino will otherwise run correctly. These changes save 
+36,636 bytes.
+<br>&nbsp;
+<h3>
+Optimizer</h3>
+It is possible to run Rhino with interpreter mode only, allowing you to remove
+classes for classfile generation. Remove the classes in packages
+<tt>org.mozilla.classfile</tt> and <tt>org.mozilla.javascript.optimizer</tt>.
+<br>&nbsp;
+<p>
+<hr WIDTH="100%">
+<br><a href="index.html">back to top</a>
+</body>
+</html>

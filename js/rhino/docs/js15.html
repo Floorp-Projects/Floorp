@@ -1,0 +1,162 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java">
+   <title>What's New in Rhino 1.5</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+What's New in Rhino 1.5</h1></center>
+
+<h2>
+ECMA 262 Edition 3 Conformance</h2>
+Rhino 1.5 implements JavaScript 1.5, which conforms to ECMA 262 Edition
+3 (sometimes referred to as "ECMAScript"). Edition 3 standardized several
+features of JavaScript that were present in JavaScript 1.4, including:
+<ul>
+<li>
+regular expressions</li>
+
+<li>
+<tt>switch</tt> statements</li>
+
+<li>
+<tt>do</tt>...<tt>while</tt> loops</li>
+
+<li>
+statement labels and labelled <tt>break</tt> and <tt>continue</tt></li>
+
+<li>
+object literals</li>
+
+<li>
+nested functions</li>
+
+<li>
+exception handling</li>
+
+<li>
+the <tt>instanceof</tt> operator</li>
+
+<li>
+the <tt>in</tt> operator</li>
+</ul>
+In addition, new features were added to Edition 3 and JavaScript 1.5, including:
+<ul>
+<li>
+Perl 5 regular expressions, including operators like greedy quantifiers</li>
+
+<li>
+errors as exceptions</li>
+
+<li>
+number formatting (<tt>Number.prototype.toFixed</tt>, <tt>Number.prototype.toExponential</tt>,
+and <tt>Number.prototype.toGeneral</tt>)</li>
+</ul>
+
+<h2>
+Changes since Rhino 1.4 Release 3</h2>
+Other significant changes to Rhino since the initial release to open source
+(1.4 Release 3) are listed below. Bug fixes won't be mentioned here, just
+API changes or significant functionality changes.
+<h3>
+Compilation mode</h3>
+Rhino has two modes of execution available. Interpretive mode has an interpreter
+loop implemented in Java. Compilation mode compiles JavaScript code to
+Java bytecodes in class files. This compilation can be done as part of
+script evaluation using the same APIs already available for the interpreter,
+or in a separate compile-time step. The code for the interpreter is located
+in the <tt>org.mozilla.javascript.optimizer</tt> package.
+<br>&nbsp;
+<h3>
+JavaScript Compiler</h3>
+The distribution now contains an extra class that can be invoked from the
+command line. This is <tt>jsc</tt>, the JavaScript compiler. This tool
+can be used to create Java classes from JavaScript. Options exist to allow
+creation of Java classes that implement arbitrary interfaces and extend
+arbitrary base classes, allowing JavaScript scripts to implement important
+protocols like applets and servlets. See <a href="http://www.mozilla.org/rhino/jsc.html">http://www.mozilla.org/rhino/jsc.html</a>.
+<br>&nbsp;
+<h3>
+LiveConnect 3</h3>
+Rhino now supports the LiveConnect 3 specification, or LC3. The most notable
+change is support for overloaded method resolution. See <a href="http://www.mozilla.org/js/liveconnect/lc3_proposal.html">LiveConnect
+Release 3 Goals/Features</a>.
+<br>&nbsp;
+<h3>
+JavaBeans properties reflected as Java properties</h3>
+Java classes with getFoo/setFoo methods will have a "foo" property in the
+JavaScript reflection. Boolean methods are also reflected.
+<br>&nbsp;
+<h3>
+Dynamic scope support</h3>
+Rhino 1.5 implements support for dynamic scopes, which are particularly
+useful for multithreaded environments like server embeddings.
+<br>&nbsp;
+<h3>
+New semantics for <tt>ScriptableObject.defineClass</tt></h3>
+The old rules for defining JavaScript objects using a Java class were getting
+baroque. Those rules are still supported, but a cleaner definition is now
+supported. See the <a href="http://www.mozilla.org/js/rhino/org/mozilla/javascript/ScriptableObject.html#defineClass(org.mozilla.javascript.Scriptable, java.lang.Class)">javadoc</a>
+for details.
+<br>&nbsp;
+<h3>
+Support for the Java 2 <tt>-jar</tt> option</h3>
+It's now possible to start the shell using the new <tt>-jar</tt> option
+in Java 2.
+<br>&nbsp;
+<h3>
+Shell changes</h3>
+Two changes here: addition of the "environment" and "history" top-level
+variables.
+<br>&nbsp;
+<h3>
+Java classes visible to scripts</h3>
+An attendee at JavaOne raised the point that many embeddings may not want
+scripts to be able to access all Java classes. This is an excellent point,
+and I've implemented an addition to the <a href="../js/rhino/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+interface that allows embedders to choose which classes are exposed to
+scripts.
+<br>&nbsp;
+<h3>
+SecuritySupport and JavaAdapter</h3>
+Andrew Wason pointed a problem with the new JavaAdapter feature (which
+allows JavaScript objects to implement arbitrary Java interfaces by generating
+class files). It didn't support the <a href="../js/rhino/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+interface, which allows Rhino to delegate the creation of classes from
+byte arrays to a routine provided by the embedding. This ability is important
+from a security standpoint because class creation is considered a privileged
+action.
+<p>I've checked in changes that fix this problem. If a SecuritySupport
+class is specified when a Context is created, uses of JavaAdapter will
+will delegate class creation to the SecuritySupport class.
+<br>&nbsp;
+<h3>
+Context.exit()</h3>
+Context.exit() has been changed from an instance method to a static method.
+This makes it match the Context.enter() method, which is also static. See
+the <a href="http://www.mozilla.org/js/rhino/org/mozilla/javascript/Context.html#exit()">javadoc</a>
+for more information on its operation.
+<br>&nbsp;
+<h3>
+Context.enter(Context)</h3>
+A new overloaded form of Context.enter has been added. Without the addition
+of this method it was not possible to attach an existing context to a thread.
+See the <a href="http://www.mozilla.org/js/rhino/org/mozilla/javascript/Context.html#enter(org.mozilla.javascript.Context)">javadoc</a>
+for more information on its operation.
+<br>&nbsp;
+<h3>
+Listeners for Context</h3>
+Context now supports property change listeners for a couple of its properties.
+<h3>
+
+<hr WIDTH="100%"><br>
+<a href="index.html">back to top</a></h3>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (WinNT; U) [Netscape]">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java">
+   <title>Rhino FAQ</title>
+</head>
+<body bgcolor="#FFFFFF">
+<script src="owner.js"></script>
+
+<center>
+<h1>
+Frequently Asked Questions about Rhino</h1></center>
+<script>document.write(owner());</script>
+
+<br><script>
+	var d = new Date(document.lastModified);
+	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
+	document.write('<br>');
+</script>
+
+<center>
+<hr WIDTH="100%"></center>
+
+<p><b><font size=+2>Q</font>.</b> <i>Is it possible to make Rhino classes
+serializable?</i>
+<p><b><font size=+2>A.</font></b> A number of people have asked about making
+Rhino data serializable. It certainly seems like it would be useful for
+a variety of applications.
+<p>The reason I haven't implemented Serializiable has been that java.lang.Class
+is not Serializable, so any functions or scripts that have been compiled
+to Java bytecodes can't be serialized. One Rhino embedder suggested that
+we could get around this restriction by actually saving the bytecode in
+a byte array and then having some mechanism for loading those bytes at
+the destination. That would work, but is an extra mechanism beyond standard
+serialization and imposes a significant space overhead on all users of
+compiled scripts. I'm also curious as to whether that mechanism would be
+any faster than simply recompiling from the script source, which would
+be significantly smaller than the serialized form.
+<p>It'd be great to have some solutions to the serialization problem, and
+I'd certainly be happy to roll changes back into Rhino.
+<p>Perhaps the best solution is to implement some serialization for Rhino's
+interpretive mode and assume for Rhino's compiled mode that the class has
+also been compiled on the receiving end (which is the assumption Java makes).
+<br>&nbsp;
+<p><b><font size=+2>Q</font>.</b> <i>Every time I compile a script I seem
+to lose a bit of memory. Is this a Rhino bug?</i>
+<p><b><font size=+2>A.</font></b> The problem is that most JVMs do not
+garbage collect unused classes or the interned strings associated with
+those classes. By default Rhino will compile scripts to class files, creating
+one class for every script or function compiled. So if you sit in a loop
+and evaluate a string there will be a little bit of memory lost on each
+iteration.
+<p>There are two solutions to this problem. First, if you have a relatively
+small set of strings that you evaluate multiple times, consider first compiling
+the strings to <tt>Script</tt> objects and then executing the scripts.
+Classes will only be generated during the compilation step, not the execution
+step (unless the scripts have an <tt>eval()</tt> call). Not only will this
+fix the memory problem, but will provide faster performance since you amortize
+the cost of compilation over multiple executions.
+<p>The second solution is to use Rhino's interpretive mode. Simply call
+<tt>setOptimizationLevel(-1)</tt>
+on the current context before you compile or evaluate, and no classes will
+be generated. Instead Rhino compiles to an internal format that is later
+interpreted. All the structures that are created can later be collected.
+Interpretive mode is slower than compiled mode, but depending on your application
+the slowdown may not be noticeable.
+<p><b><font size=+2>Q</font>.</b> <i>When I try to execute a script I the
+exception </i><tt>Required security context missing</tt><i>. What's going
+on?</i>
+<p><b><font size=+2>A.</font></b> You've likely missed placing the <tt>Security.properties</tt>
+file in your class path at <tt>org.mozilla.javascript.resources</tt>.
+<h3>
+
+<hr WIDTH="100%"><br>
+<a href="index.html">back to top</a></h3>
+
+</body>
+</html>

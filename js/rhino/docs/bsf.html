@@ -1,0 +1,43 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (WinNT; U) [Netscape]">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java, BSF, Apache">
+   <title>Rhino and BSF</title>
+</head>
+<body bgcolor="#FFFFFF">
+<script src="owner.js"></script>
+
+<center>
+<h1>
+Using Rhino with BSF and Apache</h1></center>
+<script>document.write(owner());</script>
+
+<br><script>
+	var d = new Date(document.lastModified);
+	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
+	document.write('<br>');
+</script>
+
+<hr WIDTH="100%">
+<br>The <a href="http://oss.software.ibm.com/developerworks/projects/bsf">Bean
+Scripting Framework</a> (or BSF) was originally developed by IBM and now
+published as open source. It provides a framework for using a number of
+scripting languages with Java. Rhino is one of the supported languages.
+<p>This framework has been embedded in a number of open source projects,
+including the XSL processor <a href="http://xml.apache.org/xalan/index.html">Xalan</a>
+and the XML/Java build tool <a href="http://jakarta.apache.org/ant/index.html">Ant</a>.
+<p>You can download a version of <tt>bsf.jar</tt> from <a href="http://oss.software.ibm.com/developerworks/projects/bsf">http://oss.software.ibm.com/developerworks/projects/bsf</a>
+that includes the <tt>com.ibm.bsf.engines.javascript.JavaScriptEngine</tt>
+class. The current version is 2.2 release candidate at the time of this
+writing. This version thus supports JavaScript through Rhino when used
+with the <tt>js.jar</tt> file from either <tt>rhino15R1.zip</tt> or <tt>rhinoTip.zip</tt>.
+<p>See <a href="http://xml.apache.org/xalan/extensions.html#ex-basic">Xalan-Java
+Extensions</a> for more information on adding JavaScript to XSL and the
+<a href="http://jakarta.apache.org/ant/jakarta-ant/docs/#script">Script
+task</a> for using scripting in Ant build files.
+<p><a href="index.html">back to top</a>
+</body>
+</html>

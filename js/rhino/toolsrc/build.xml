@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
+Requires Ant version 1.2
+-->
+<project name="toolsrc" default="build" basedir=".">
+
+  <target name="properties">
+    <property name="nest" value=".."/> 
+    <property name="src.debugger" 
+              value="org/mozilla/javascript/tools/debugger"/>
+    <available file="${src.debugger}/AbstractCellEditor.java"
+               property="swing-ex-available"/>
+    <available classname="java.lang.reflect.Proxy"
+               property="jdk1.3"/>
+  </target>
+
+  <target name="get-swing-ex" unless="swing-ex-available">
+    <!-- Download source from Sun's site, unzip it, remove
+         the files we don't need, and change the package
+    -->
+    <get src="http://java.sun.com/products/jfc/tsc/articles/treetable2/downloads/src.zip" dest="${nest}/${build.dir}/swingExSrc.zip"/>
+    <unzip src="${nest}/${build.dir}/swingExSrc.zip" dest="${src.debugger}"/>
+    <delete file="${src.debugger}/FileSystemModel2.java" />
+    <delete file="${src.debugger}/MergeSort.java" />
+    <delete file="${src.debugger}/TreeTableExample2.java" />
+    <replace file="${src.debugger}/AbstractCellEditor.java">
+       <replacetoken>import java.awt.Component;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import java.awt.Component;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/AbstractTreeTableModel.java">
+       <replacetoken>import javax.swing.tree.*;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.tree.*;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/JTreeTable.java">
+       <replacetoken>import javax.swing.*;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.*;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/TreeTableModel.java">
+       <replacetoken>import javax.swing.tree.TreeModel;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.tree.TreeModel;
+       </replacevalue>
+    </replace>
+    <replace file="${src.debugger}/TreeTableModelAdapter.java">
+       <replacetoken>import javax.swing.JTree;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger;
+         import javax.swing.JTree;
+       </replacevalue>
+    </replace>
+  </target>
+
+  <target name="compile" depends="properties,get-swing-ex">
+    <javac srcdir="."
+           destdir="${nest}/${build.dest}" 
+           includes="org/**/*.java"
+           deprecation="on"
+           debug="${debug}">
+    </javac>
+  </target>
+
+  <target name="copy-properties">
+    <copy todir="${nest}/${build.dest}">
+      <fileset dir="." includes="org/**/*.properties" />
+    </copy>
+  </target>
+
+  <target name="copy-source">
+    <copy todir="${nest}/${dist.toolsrc}">
+      <fileset dir="."
+               includes="org/**/*.java,org/**/*.properties,build.xml" 
+               excludes="**/AbstractCellEditor.java,**/TreeTableModel.java,**/AbstractTreeTableModel.java,**/TreeTableModelAdapter.java,**/JTreeTable.java" />
+    </copy>
+  </target>
+
+  <target name="build" depends="compile,copy-properties,copy-source"/>
+
+</project>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
+Requires Ant version 1.2
+-->
+<project name="src" default="build" basedir=".">
+
+  <target name="properties">
+    <property name="nest" value=".."/> 
+  </target>
+
+  <target name="compile" depends="properties">
+    <javac srcdir="."
+           destdir="${nest}/${build.dest}" 
+           includes="org/**/*.java"
+           deprecation="on"
+           debug="${debug}">
+    </javac>
+  </target>
+
+  <target name="copy-properties">
+    <copy todir="${nest}/${build.dest}">
+      <fileset dir="." includes="org/**/*.properties" />
+    </copy>
+  </target>
+
+  <target name="copy-source">
+    <copy todir="${nest}/${dist.src}">
+      <fileset dir="."
+               includes="org/**/*.java,org/**/*.properties,build.xml,manifest"/>
+    </copy>
+  </target>
+
+  <target name="build" depends="compile,copy-properties,copy-source"/>
+
+</project>
