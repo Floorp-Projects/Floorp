@@ -66,8 +66,6 @@
         command="cmd_selectWordNext"/>
     <handler event="keypress" key="y" modifiers="accel"
         command="cmd_redo"/>
-    <handler event="keypress" key="r" modifiers="accel"
-        command="cmd_redo"/>
     <handler event="keypress" key="a" modifiers="alt"
         command="cmd_selectAll"/>
     <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
@@ -156,8 +154,6 @@
         command="cmd_deleteWordBackward"/>
     <handler event="keypress" key="y" modifiers="accel"
         command="cmd_redo"/>
-    <handler event="keypress" key="r" modifiers="accel"
-        command="cmd_redo"/>
     <handler event="keypress" key="a" modifiers="alt"
         command="cmd_selectAll"/>
     <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
@@ -213,7 +209,6 @@
       <handler event="keypress" key="c" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" key="v" modifiers="control" command="cmd_paste"/>
       <handler event="keypress" key="z" modifiers="control" command="cmd_undo"/>
-      <handler event="keypress" key="r" modifiers="accel"   command="cmd_redo"/>
       <handler event="keypress" key="y" modifiers="accel"   command="cmd_redo"/>
       <handler event="keypress" key="a" modifiers="alt" command="cmd_selectAll"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cutOrDelete"/>
