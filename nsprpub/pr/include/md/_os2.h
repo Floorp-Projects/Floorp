@@ -71,7 +71,7 @@
 
 #define HAVE_DLL
 #undef  HAVE_THREAD_AFFINITY
-#undef  _PR_HAVE_ATOMIC_OPS
+#define _PR_HAVE_ATOMIC_OPS
 
 #define HANDLE unsigned long
 #define HINSTANCE HMODULE
@@ -280,11 +280,11 @@ extern PRInt32 _MD_SELECT(int nfds, fd_set *readfds, fd_set *writefds,
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define _MD_SET_FD_INHERITABLE        (_PR_MD_SET_FD_INHERITABLE)
 
-#define _MD_INIT_ATOMIC               _PR_MD_INIT_ATOMIC
-#define _MD_ATOMIC_INCREMENT(x)       _PR_MD_ATOMIC_INCREMENT(x)
-#define _MD_ATOMIC_ADD(x,y)			  _PR_MD_ATOMIC_ADD(x,y)
-#define _MD_ATOMIC_DECREMENT(x)       _PR_MD_ATOMIC_DECREMENT(x)
-#define _MD_ATOMIC_SET(x,y)           _PR_MD_ATOMIC_SET(x, y)
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
+#define _MD_ATOMIC_ADD                _PR_MD_ATOMIC_ADD
+#define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
+#define _MD_ATOMIC_SET                _PR_MD_ATOMIC_SET
 
 #define _MD_INIT_IO                   (_PR_MD_INIT_IO)
 #define _MD_PR_POLL                   (_PR_MD_PR_POLL)

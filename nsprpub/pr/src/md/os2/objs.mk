@@ -18,20 +18,24 @@
 # This makefile appends to the variable OBJS the platform-dependent
 # object modules that will be part of the nspr20 library.
 
-CSRCS =      \
-  os2io.c    \
-	os2sock.c  \
-	os2thred.c \
-	os2cv.c    \
-	os2gc.c    \
-	os2misc.c  \
-	os2inrval.c \
-	os2sem.c	  \
+CSRCS = \
+	os2io.c      \
+	os2sock.c    \
+	os2thred.c   \
+	os2cv.c      \
+	os2gc.c      \
+	os2misc.c    \
+	os2inrval.c  \
+	os2sem.c     \
 	os2_errors.c \
-	os2poll.c  \
-	os2rng.c   \
+	os2poll.c    \
+	os2rng.c     \
 	$(NULL)
 
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+ASFILES = os2vacpp.asm
+endif
+
 OBJS += $(addprefix md/os2/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
-	$(addprefix md/os2/$(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
+	$(addprefix md/os2/$(OBJDIR)/,$(ASFILES:.asm=.$(OBJ_SUFFIX)))
 

@@ -447,6 +447,7 @@ dnl ========================================================
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 DLL_SUFFIX=so
+ASM_SUFFIX=s
 MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
 PR_MD_ASFILES=
 PR_MD_CSRCS=
@@ -1632,6 +1633,7 @@ mips-sony-newsos*)
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
     DLL_SUFFIX=dll
+    ASM_SUFFIX=asm
     DLLTOOL=''
     RC=rc.exe
     PR_MD_ARCH_DIR=os2
@@ -1671,6 +1673,8 @@ mips-sony-newsos*)
         AC_DEFINE(OS2,4)
         AC_DEFINE(TCPV40HDRS)
         AC_DEFINE(_X86_)
+        AS=alp
+        ASFLAGS='-Mb'
         AR=-ilib
         AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
         CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl-'
@@ -2163,6 +2167,7 @@ AC_SUBST(CPU_ARCH)
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(DLL_SUFFIX)
+AC_SUBST(ASM_SUFFIX)
 AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
