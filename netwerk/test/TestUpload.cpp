@@ -187,7 +187,7 @@ main(int argc, char* argv[])
 
     channel->AsyncOpen(listener, nsnull);
 
-    while ( 1 ) {
+    while ( gKeepRunning ) {
 #ifdef WIN32
         MSG msg;
         

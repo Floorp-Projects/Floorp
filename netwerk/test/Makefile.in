@@ -54,7 +54,7 @@ CPPSRCS		= \
 		TestIDN.cpp \
 		TestURLParser.cpp \
 		TestStandardURL.cpp \
-		TestPerf.cpp \
+		TestUpload.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
