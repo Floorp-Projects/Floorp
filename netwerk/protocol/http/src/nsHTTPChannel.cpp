@@ -2754,8 +2754,10 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
             // 8 = 7 for http:// +  1 for @ 
             NS_ASSERTION(7 == ref.Find(prehost.get(), PR_TRUE), "bad url!");
             PRInt32 remainingStart = 8 + PL_strlen(prehost.get());
+#if 0
             ref = Substring(ref, 0, 7) +
                 Substring(ref, remainingStart, ref.Length()-remainingStart);
+#endif
         }
 
         if ((referrerLevel == nsIHTTPChannel::REFERRER_NON_HTTP) || 
