@@ -99,11 +99,6 @@ nsSampleModule::Initialize()
         return NS_OK;
     }
     mInitialized = PR_TRUE;
-
-    // Create and stash the factory object for creating new instances
-    // of Sample
-    nsresult rv;
-    rv = NS_NewGenericFactory(getter_AddRefs(mFactory), CreateNewSample);
     return NS_OK;
 }
 
@@ -143,6 +138,14 @@ nsSampleModule::GetClassObject(nsIComponentManager *aCompMgr,
     // class type (aClass).
     nsCOMPtr<nsIGenericFactory> fact;
     if (aClass.Equals(kSampleCID)) {
+        if (!mFactory) {
+            // Create and save away the factory object for creating
+            // new instances of Sample. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
+                                      CreateNewSample);
+        }
         fact = mFactory;
     }
     else {
