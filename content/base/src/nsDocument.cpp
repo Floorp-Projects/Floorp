@@ -3446,6 +3446,28 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
         {
           if (NS_SUCCEEDED(aSelection->GetFocusNode(getter_AddRefs(focus))))
           {
+            //check to see if these are text nodes if so there is still a chance at optimization
+            //from checking their respective parents
+            if (focus.get() != anchor.get()) 
+            {
+              nsCOMPtr<nsIDOMText> domText(do_QueryInterface(focus));
+              if (domText)
+              {
+                nsCOMPtr<nsIDOMNode> parent;
+                result = focus->GetParentNode(getter_AddRefs(parent));
+                if (NS_SUCCEEDED(result) && parent)
+                  focus = parent;
+              }
+              domText = do_QueryInterface(anchor);
+              if (domText)
+              {
+                nsCOMPtr<nsIDOMNode> parent;
+                result = anchor->GetParentNode(getter_AddRefs(parent));
+                if (NS_SUCCEEDED(result) && parent)
+                  anchor = parent;
+              }
+            }//end parent checking
+
             if (focus.get() == anchor.get())
             {
               rootElement = do_QueryInterface(focus);//set root to top of selection
