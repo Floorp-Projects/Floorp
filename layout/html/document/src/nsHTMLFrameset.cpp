@@ -704,10 +704,14 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
   if (firstTime) {
     // set the visibility of borders
     for (int verX = 0; verX < mNumCols-1; verX++) {
-      verBorders[verX]->SetVisibility(verBordersVis[verX]);
+      if (verBorders[verX]) {
+        verBorders[verX]->SetVisibility(verBordersVis[verX]);
+      }
     }
     for (int horX = 0; horX < mNumRows-1; horX++) {
-      horBorders[horX]->SetVisibility(horBordersVis[horX]);
+      if (horBorders[horX]) {
+        horBorders[horX]->SetVisibility(horBordersVis[horX]);
+      }
     }
 
     delete[] verBordersVis;    
