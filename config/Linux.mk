@@ -141,3 +141,5 @@ ifeq ($(USE_JDK11),1)
 JAVA_HOME		= /usr/local/java
 JAVAC_ZIP		= $(JAVA_HOME)/lib/classes.zip
 endif 
+
+ASFLAGS                 += -x assembler-with-cpp
