@@ -2245,7 +2245,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
       if (mLastMouseOverContent.get() != targetContent.get()) {
 
         //Before firing mouseout, check for recursion
-        if (mLastMouseOverContent.get() != mFirstMouseOutEventContent.get()) {
+        if (mLastMouseOverContent.get() != mFirstMouseOutEventContent.get() || !mFirstMouseOutEventContent) {
         
           //Store the first mouseOut event we fire and don't refire mouseOut
           //to that element while the first mouseOut is still ongoing.
@@ -2287,6 +2287,48 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
             NS_IF_RELEASE(mCurrentRelatedContent);
 
             mFirstMouseOutEventContent = nsnull;
+          }
+          else {
+            //If not mLastMouseOverFrame then this is a new entry into this window.
+            //Check to see if we're an IFRAME and if so dispatch an mouseover to the
+            //IFRAME element above us.  This will result in over-out-over combo to 
+            //the IFRAME but as long as IFRAMEs are native windows this will
+            //serve as a workaround to maintain IFRAME mouseover state.
+            nsCOMPtr<nsIDocument> parentDoc;
+            //If this is the first event in this window then mDocument might not be set yet.
+            //Call EnsureDocument to set it.
+            EnsureDocument(aPresContext);
+            mDocument->GetParentDocument(getter_AddRefs(parentDoc));
+            if (parentDoc) {
+              nsCOMPtr<nsIContent> docContent;
+              parentDoc->FindContentForSubDocument(mDocument, getter_AddRefs(docContent));
+              if (docContent) {
+                nsCOMPtr<nsIAtom> tag;
+                docContent->GetTag(*getter_AddRefs(tag));
+                if (tag == nsHTMLAtoms::iframe) {
+                  //We're an IFRAME.  Send an event to our IFRAME tag.
+                  nsCOMPtr<nsIPresShell> parentShell;
+                  parentDoc->GetShellAt(0, getter_AddRefs(parentShell));
+                  if (parentShell) {
+                    nsEventStatus status = nsEventStatus_eIgnore;
+                    nsMouseEvent event;
+                    event.eventStructType = NS_MOUSE_EVENT;
+                    event.message = NS_MOUSE_ENTER_SYNTH;
+                    event.widget = aEvent->widget;
+                    event.clickCount = 0;
+                    event.point = aEvent->point;
+                    event.refPoint = aEvent->refPoint;
+                    event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+                    event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+                    event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+                    event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+                    event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
+
+                    parentShell->HandleDOMEventWithTarget(docContent, &event, &status);
+                  }
+                }
+              }
+            }
           }
         }
 
@@ -2391,6 +2433,45 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           NS_IF_RELEASE(mCurrentTargetContent);
 
           mFirstMouseOutEventContent = nsnull;
+        }
+      }
+      //Check to see if we're an IFRAME and if so dispatch an mouseover to the
+      //IFRAME element above us.  This will result in out-over-out combo to 
+      //the IFRAME but as long as IFRAMEs are native windows this will
+      //serve as a workaround to maintain IFRAME mouseover state.
+      nsCOMPtr<nsIDocument> parentDoc;
+      //If this is the first event in this window then mDocument might not be set yet.
+      //Call EnsureDocument to set it.
+      EnsureDocument(aPresContext);
+      mDocument->GetParentDocument(getter_AddRefs(parentDoc));
+      if (parentDoc) {
+        nsCOMPtr<nsIContent> docContent;
+        parentDoc->FindContentForSubDocument(mDocument, getter_AddRefs(docContent));
+        if (docContent) {
+          nsCOMPtr<nsIAtom> tag;
+          docContent->GetTag(*getter_AddRefs(tag));
+          if (tag == nsHTMLAtoms::iframe) {
+            //We're an IFRAME.  Send an event to our IFRAME tag.
+            nsCOMPtr<nsIPresShell> parentShell;
+            parentDoc->GetShellAt(0, getter_AddRefs(parentShell));
+            if (parentShell) {
+              nsEventStatus status = nsEventStatus_eIgnore;
+              nsMouseEvent event;
+              event.eventStructType = NS_MOUSE_EVENT;
+              event.message = NS_MOUSE_EXIT_SYNTH;
+              event.widget = aEvent->widget;
+              event.clickCount = 0;
+              event.point = aEvent->point;
+              event.refPoint = aEvent->refPoint;
+              event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+              event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+              event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+              event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+              event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
+
+              parentShell->HandleDOMEventWithTarget(docContent, &event, &status);
+            }
+          }
         }
       }
     }
