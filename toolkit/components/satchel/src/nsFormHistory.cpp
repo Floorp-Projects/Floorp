@@ -538,7 +538,6 @@ nsFormHistory::AppendRow(const nsAString &aName, const nsAString &aValue, nsIMdb
 
   PRBool exists;
   EntryExists(aName, aValue, &exists);
-  printf("duplicate (%d) for %s - %s\n", exists, ToNewCString(aName), ToNewCString(aValue));
   if (exists)
     return NS_OK;
 
