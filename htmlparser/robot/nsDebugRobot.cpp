@@ -237,7 +237,8 @@ extern "C" NS_EXPORT int DebugRobot(
     }
     g_bReadyForNextUrl = PR_FALSE;
     if (ww) {
-      ww->LoadURL(url->GetSpec(), pl);/* XXX hook up stream listener here! */
+      ww->SetObserver(pl);
+      ww->LoadURL(url->GetSpec());/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
          if (yieldProc != NULL)
             (*yieldProc)(url->GetSpec());
