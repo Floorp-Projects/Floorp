@@ -545,6 +545,19 @@ nsresult nsImageDocument::UpdateTitle( void )
       mimeType.EndReading(end);
       nsXPIDLCString::const_iterator iter = end;
       if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) && iter != end) {
+        // strip out "X-" if any
+        if (*iter == 'X') {
+          ++iter;
+          if (iter != end && *iter == '-') {
+            ++iter;
+            if (iter == end) {
+              // looks like "IMAGE/X-" is the type??  Bail out of here.
+              mimeType.BeginReading(iter);
+            }
+          } else {
+            --iter;
+          }
+        }
         CopyASCIItoUCS2(Substring(iter, end), typeStr);
       } else {
         CopyASCIItoUCS2(mimeType, typeStr);
