@@ -22,9 +22,12 @@
 */
 
 #import <Foundation/Foundation.h>
+#include "nsIAutoCompleteSession.h"
 
 @interface CHAutoCompleteDataSource : NSObject {
-
+  nsIAutoCompleteSession* mAutoComplete;
 }
+
+-(void)initialize;
 
 @end
