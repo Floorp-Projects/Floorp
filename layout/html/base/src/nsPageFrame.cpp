@@ -524,7 +524,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
     if (len == 0) {
       return; // bail is empty string
     }
-    // find how much text fits, the "position" is the size of the avilable area
+    // find how much text fits, the "position" is the size of the available area
     if (BinarySearchForPosition(&aRenderingContext, text, 0, 0, 0, len,
                                 PRInt32(contentWidth), indx, textWidth)) {
       if (indx < len-1 && len > 3) {

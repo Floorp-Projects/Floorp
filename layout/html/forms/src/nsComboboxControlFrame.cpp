@@ -1702,8 +1702,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 #endif
 
   // cache the availabe size to be our desired size minus the borders
-  // this is so if our cached avilable size is ever equal to or less 
-  // than the real avilable size we can bail out
+  // this is so if our cached available size is ever equal to or less 
+  // than the real available size we can bail out
   if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
     mCachedAvailableSize.width  = aDesiredSize.width -
       (aReflowState.mComputedBorderPadding.left +

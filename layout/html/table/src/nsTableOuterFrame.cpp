@@ -930,7 +930,7 @@ nsTableOuterFrame::BalanceLeftRightCaption(nsIPresContext* aPresContext,
   *     aCaptionWidth = capPercent/(1-capPercent) * 
   *                      (aCaptionMargin.left + aCaptionMargin.right + aInnerwidth + aInnerMargin.right)
   *     this result will cause problems for capPercent >= 1, in these cases the algorithm will now bail out
-  *     a similiar expression can be found for the right case
+  *     a similar expression can be found for the right case
   *  d) both frames have percent widths in this case the caption width will be the inner width multiplied 
   *     by the weight capPercent/innerPercent
   */

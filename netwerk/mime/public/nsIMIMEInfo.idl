@@ -126,7 +126,7 @@ interface nsIMIMEInfo : nsISupports {
 
     /**
      * Returns whether or not these two MIME infos are logically
-     * equivelent maintaining the one-to-many relationship between
+     * equivalent maintaining the one-to-many relationship between
      * MIME types and file extensions.
      *
      * @returns TRUE if the two are considered equal

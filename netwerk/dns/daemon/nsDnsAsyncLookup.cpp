@@ -180,7 +180,7 @@ static dns_lookup *dns_lookup_queue = 0;
 //  Name:  getNextDnsEntry
 //
 //  Description:  Return the idx entry to the caller. Bump the index up
-//                by 1 before the return.  Similiar to an iterator.
+//                by 1 before the return.  Similar to an iterator.
 //
 static dns_lookup*
 getNextDnsEntry (int *idx)
