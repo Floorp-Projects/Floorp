@@ -134,6 +134,24 @@ nsMemCacheRecord::SetStoredContentLength(PRUint32 aStoredContentLength)
 }
 
 NS_IMETHODIMP
+nsMemCacheRecord::GetSecurityInfo (nsISupports ** o_SecurityInfo)
+{
+    NS_ENSURE_ARG(o_SecurityInfo);
+    *o_SecurityInfo = mSecurityInfo;
+    if (*o_SecurityInfo)
+        NS_ADDREF (*o_SecurityInfo);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMemCacheRecord::SetSecurityInfo (nsISupports  * o_SecurityInfo)
+{
+    mSecurityInfo = o_SecurityInfo;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMemCacheRecord::Delete(void)
 {
     if (mNumChannels)

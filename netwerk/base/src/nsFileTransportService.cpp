@@ -36,7 +36,10 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsFileTransportService::nsFileTransportService()
+nsFileTransportService::nsFileTransportService()    :
+    mConnectedTransports (0),
+    mTotalTransports (0),
+    mInUseTransports (0)
 {
     NS_INIT_REFCNT();
 }
@@ -92,7 +95,7 @@ nsFileTransportService::CreateTransport(nsIFile* file,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(file, ioFlags, perm);
+    rv = trans->Init(this, file, ioFlags, perm);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -113,7 +116,7 @@ nsFileTransportService::CreateTransportFromStream(const char* name,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(name, fromStream, contentType, contentLength);
+    rv = trans->Init(this, name, fromStream, contentType, contentLength);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -131,7 +134,7 @@ nsFileTransportService::CreateTransportFromStreamIO(nsIStreamIO *io,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(io);
+    rv = trans->Init(this, io);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -190,3 +193,36 @@ nsFileTransportService::Resume(nsIRunnable* request)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileTransportService::GetTotalTransportCount    (PRUint32 * o_TransCount)
+{
+    if (!o_TransCount)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_TransCount = (PRUint32) mTotalTransports;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransportService::GetConnectedTransportCount (PRUint32 * o_TransCount)
+{
+    if (!o_TransCount)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_TransCount = (PRUint32) mConnectedTransports;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransportService::GetInUseTransportCount     (PRUint32 * o_TransCount)
+{
+    if (!o_TransCount)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_TransCount = (PRUint32) mInUseTransports;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

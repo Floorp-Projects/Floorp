@@ -39,6 +39,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIFile.h"
 #include "prlog.h"
+#include "nsFileTransportService.h"
 
 class nsIInterfaceRequestor;
 
@@ -61,14 +62,14 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIFile* file,
+    nsresult Init(nsFileTransportService *aService, nsIFile* file,
                   PRInt32 ioFlags,
                   PRInt32 perm);
-    nsresult Init(const char* name, 
+    nsresult Init(nsFileTransportService *aService, const char* name, 
                   nsIInputStream* fromStream,
                   const char* contentType,
                   PRInt32 contentLength);
-    nsresult Init(nsIStreamIO* io);
+    nsresult Init(nsFileTransportService *aService, nsIStreamIO* io);
 
     void Process(void);
     void DoClose(void);
@@ -126,6 +127,7 @@ protected:
     nsCOMPtr<nsIOutputStream>           mSink;
     char*                               mBuffer;
     nsCString                           mStreamName;
+    nsFileTransportService*             mService;
 };
 
 #define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (2*1024)

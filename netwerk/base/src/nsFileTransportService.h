@@ -45,6 +45,10 @@ public:
 
     nsresult Init();
 
+    PRInt32   mConnectedTransports;
+    PRInt32   mTotalTransports;
+    PRInt32   mInUseTransports;
+    
 protected:
     nsCOMPtr<nsIThreadPool>     mPool;
     nsCOMPtr<nsISupportsArray>  mOpened;

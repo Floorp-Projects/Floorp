@@ -928,6 +928,8 @@ nsHTTPPipelinedRequest::Resume ()
     return rv;
 }
 
+static  PRUint32 sLongestPipeline = 0;
+
 nsresult
 nsHTTPPipelinedRequest::AddToPipeline (nsHTTPRequest *aRequest)
 {
@@ -969,6 +971,14 @@ nsHTTPPipelinedRequest::AddToPipeline (nsHTTPRequest *aRequest)
 
     if (mBufferMaxSize < aRequest -> mBufferMaxSize)
         mBufferMaxSize = aRequest -> mBufferMaxSize;
+
+    if (sLongestPipeline < count + 1)
+        sLongestPipeline = count + 1;
+
+    PR_LOG (gHTTPLog, PR_LOG_DEBUG, 
+        ("nsHTTPPipelinedRequest::AddToPipeline () [this=%x]"
+        " count=%u, longest pipeline=%u\n",
+        this, count + 1, sLongestPipeline));
 
     return NS_OK;
 }

@@ -53,6 +53,19 @@ interface nsIFileTransportService : nsISupports
     void resume(in nsIRunnable trans);
     void processPendingRequests();
     void shutdown();
+
+	/**
+	 * Total number of transports currently alive
+	 */
+	readonly attribute unsigned long totalTransportCount;
+	/**
+	 * A number of transports with I/O operation currently in-progress
+	 */
+	readonly attribute unsigned long inUseTransportCount;
+	/**
+	 * A number of transports connected/opened
+	 */
+	readonly attribute unsigned long connectedTransportCount;
 };
 
 %{C++
