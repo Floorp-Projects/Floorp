@@ -64,7 +64,7 @@ public:
   virtual ~imgContainer();
 
 private:
-  nsSize mSize;
+  nsIntSize mSize;
   nsCOMPtr<gfxIImageFrame> mFrame;
 };
 

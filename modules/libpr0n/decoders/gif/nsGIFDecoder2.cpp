@@ -169,31 +169,31 @@ nsGIFDecoder2::FlushImageData()
 {
   PRInt32 imgWidth;
   mImageContainer->GetWidth(&imgWidth);
-  nsRect frameRect;
+  nsIntRect frameRect;
   mImageFrame->GetRect(frameRect);
   
   switch (mCurrentPass - mLastFlushedPass) {
     case 0: {  // same pass
       PRInt32 remainingRows = mCurrentRow - mLastFlushedRow;
       if (remainingRows) {
-        nsRect r(0, frameRect.y + mLastFlushedRow + 1,
-                 imgWidth, remainingRows);
+        nsIntRect r(0, frameRect.y + mLastFlushedRow + 1,
+                    imgWidth, remainingRows);
         mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
       }    
     }
     break;
   
     case 1: {  // one pass on - need to handle bottom & top rects
-      nsRect r(0, frameRect.y, imgWidth, mCurrentRow + 1);
+      nsIntRect r(0, frameRect.y, imgWidth, mCurrentRow + 1);
       mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
-      nsRect r2(0, frameRect.y + mLastFlushedRow + 1,
-                imgWidth, frameRect.height - mLastFlushedRow - 1);
+      nsIntRect r2(0, frameRect.y + mLastFlushedRow + 1,
+                   imgWidth, frameRect.height - mLastFlushedRow - 1);
       mObserver->OnDataAvailable(nsnull, mImageFrame, &r2);
     }
     break;
 
     default: {  // more than one pass on - push the whole frame
-      nsRect r(0, frameRect.y, imgWidth, frameRect.height);
+      nsIntRect r(0, frameRect.y, imgWidth, frameRect.height);
       mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
     }
   }
@@ -326,7 +326,7 @@ int nsGIFDecoder2::BeginImageFrame(
     PRInt32 imgWidth;
     decoder->mImageContainer->GetWidth(&imgWidth);
     if (aFrameYOffset > 0) {
-      nsRect r(0, 0, imgWidth, aFrameYOffset);
+      nsIntRect r(0, 0, imgWidth, aFrameYOffset);
       decoder->mObserver->OnDataAvailable(nsnull, decoder->mImageFrame, &r);
     }
   }
@@ -378,7 +378,7 @@ int nsGIFDecoder2::EndImageFrame(
         PRInt32 imgWidth;
         decoder->mImageContainer->GetWidth(&imgWidth);
 
-        nsRect r(0, realFrameHeight, imgWidth, imgHeight - realFrameHeight);
+        nsIntRect r(0, realFrameHeight, imgWidth, imgHeight - realFrameHeight);
         decoder->mObserver->OnDataAvailable(nsnull, decoder->mImageFrame, &r);
       }
     }
@@ -451,8 +451,7 @@ int nsGIFDecoder2::HaveDecodedRow(
   }
   
   if (aRowBufPtr) {
-    nscoord width;
-
+    PRInt32 width;
     decoder->mImageFrame->GetWidth(&width);
 
     gfx_format format;

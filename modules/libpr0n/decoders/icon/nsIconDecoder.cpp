@@ -136,7 +136,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mObserver->OnStartFrame(nsnull, mFrame);
   
   PRUint32 bpr, abpr;
-  nscoord width, height;
+  PRInt32 width, height;
   mFrame->GetImageBytesPerRow(&bpr);
   mFrame->GetAlphaBytesPerRow(&abpr);
   mFrame->GetWidth(&width);
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     PRUint8 *line = (PRUint8*)data + i*bpr;
     mFrame->SetImageData(line, bpr, (rownum++)*bpr);
 
-    nsRect r(0, rownum, width, 1);
+    nsIntRect r(0, rownum, width, 1);
     mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
     wroteLen += bpr ;

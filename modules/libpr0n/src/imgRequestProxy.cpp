@@ -355,7 +355,7 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
 
 /** imgIContainerObserver methods **/
 
-void imgRequestProxy::FrameChanged(imgIContainer *container, gfxIImageFrame *newframe, nsRect * dirtyRect)
+void imgRequestProxy::FrameChanged(imgIContainer *container, gfxIImageFrame *newframe, nsIntRect * dirtyRect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
@@ -401,7 +401,7 @@ void imgRequestProxy::OnStartFrame(gfxIImageFrame *frame)
   }
 }
 
-void imgRequestProxy::OnDataAvailable(gfxIImageFrame *frame, const nsRect * rect)
+void imgRequestProxy::OnDataAvailable(gfxIImageFrame *frame, const nsIntRect * rect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 

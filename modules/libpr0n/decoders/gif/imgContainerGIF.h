@@ -164,7 +164,7 @@ private:
    * @param aNextFrame  Frame we need to incorperate/display
    * @param aNextFrameIndex Position of aNextFrame in mFrames list
    */
-  nsresult DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
+  nsresult DoComposite(gfxIImageFrame** aFrameToUse, nsIntRect* aDirtyRect,
                        gfxIImageFrame* aPrevFrame,
                        gfxIImageFrame* aNextFrame,
                        PRInt32 aNextFrameIndex);
@@ -197,7 +197,7 @@ private:
                          PRBool aVisible);
   //! @overload
   void SetMaskVisibility(gfxIImageFrame *aFrame,
-                         nsRect &aRect, PRBool aVisible) {
+                         nsIntRect &aRect, PRBool aVisible) {
     SetMaskVisibility(aFrame, aRect.x, aRect.y,
                       aRect.width, aRect.height, aVisible);
   }
@@ -213,7 +213,7 @@ private:
   void BlackenFrame(gfxIImageFrame* aFrame,
                     PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   //! @overload
-  inline void BlackenFrame(gfxIImageFrame* aFrame, nsRect &aRect) {
+  inline void BlackenFrame(gfxIImageFrame* aFrame, nsIntRect &aRect) {
     BlackenFrame(aFrame, aRect.x, aRect.y, aRect.width, aRect.height);
   }
 
@@ -228,9 +228,9 @@ private:
   nsCOMArray<gfxIImageFrame> mFrames;
 
   //! Size of GIF (not necessarily the frame)
-  nsSize                     mSize;
+  nsIntSize                  mSize;
   //! Area of the first frame that needs to be redrawn on subsequent loops
-  nsRect                     mFirstFrameRefreshArea;
+  nsIntRect                  mFirstFrameRefreshArea;
 
   PRInt32                    mCurrentDecodingFrameIndex; // 0 to numFrames-1
   PRInt32                    mCurrentAnimationFrameIndex; // 0 to numFrames-1

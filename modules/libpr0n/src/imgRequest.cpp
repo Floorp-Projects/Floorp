@@ -216,12 +216,12 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 
     if (!(mState & onStopContainer)) {
       // OnDataAvailable
-      nsRect r;
+      nsIntRect r;
       frame->GetRect(r);  // XXX we should only send the currently decoded rectangle here.
       proxy->OnDataAvailable(frame, &r);
     } else {
       // OnDataAvailable
-      nsRect r;
+      nsIntRect r;
       frame->GetRect(r);  // We're done loading this image, send the the whole rect
       proxy->OnDataAvailable(frame, &r);
 
@@ -357,10 +357,10 @@ NS_IMETHODIMP imgRequest::GetIsMultiPartChannel(PRBool *aIsMultiPartChannel)
 
 /** imgIContainerObserver methods **/
 
-/* [noscript] void frameChanged (in imgIContainer container, in gfxIImageFrame newframe, in nsRect dirtyRect); */
+/* [noscript] void frameChanged (in imgIContainer container, in gfxIImageFrame newframe, in nsIntRect dirtyRect); */
 NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container,
                                        gfxIImageFrame *newframe,
-                                       nsRect * dirtyRect)
+                                       nsIntRect * dirtyRect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");
 
@@ -456,10 +456,10 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
   return NS_OK;
 }
 
-/* [noscript] void onDataAvailable (in imgIRequest request, in gfxIImageFrame frame, [const] in nsRect rect); */
+/* [noscript] void onDataAvailable (in imgIRequest request, in gfxIImageFrame frame, [const] in nsIntRect rect); */
 NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
                                           gfxIImageFrame *frame,
-                                          const nsRect * rect)
+                                          const nsIntRect * rect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
 

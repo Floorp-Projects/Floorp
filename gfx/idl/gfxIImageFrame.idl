@@ -46,16 +46,18 @@
 #include "nsRect.h"
 %}
 
-native nsRectRef(nsRect &);
+native nsRectRef(nsIntRect &);
 
 /**
  * gfxIImageFrame interface
+ *
+ * All x, y, width, height values are in pixels.
  *
  * @author Tim Rowley <tor@cs.brown.edu>
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[scriptable, uuid(51cc27a8-1dd2-11b2-a1aa-dad33ab193b4)]
+[scriptable, uuid(20caf74f-2c35-450f-9f87-c3ecc213553c)]
 interface gfxIImageFrame : nsISupports
 {
   /**
@@ -69,10 +71,10 @@ interface gfxIImageFrame : nsISupports
    *
    * @note The data of a new image is unspecified (Whats the word i'm looking for here?).
    */
-  void init(in nscoord aX,
-            in nscoord aY,
-            in nscoord aWidth,
-            in nscoord aHeight,
+  void init(in PRInt32 aX,
+            in PRInt32 aY,
+            in PRInt32 aWidth,
+            in PRInt32 aHeight,
             in gfx_format aFormat,
             in gfx_depth aDepth);
 
@@ -85,22 +87,22 @@ interface gfxIImageFrame : nsISupports
   /**
    * The x-offset of the image.
    */
-  readonly attribute nscoord x;
+  readonly attribute PRInt32 x;
 
   /**
    * The y-offset of the image.
    */
-  readonly attribute nscoord y;
+  readonly attribute PRInt32 y;
 
   /**
    * The width of the image.
    */
-  readonly attribute nscoord width;
+  readonly attribute PRInt32 width;
 
   /**
    * The height of the image.
    */
-  readonly attribute nscoord height;
+  readonly attribute PRInt32 height;
 
   /**
    * The rectangle this frame ocupies.
@@ -184,11 +186,11 @@ interface gfxIImageFrame : nsISupports
   /**
    * Blit this frame into another frame. Used for GIF animation compositing
    */
-  void drawTo(in gfxIImageFrame aDst, 
-              in nscoord aDX, 
-              in nscoord aDY, 
-              in nscoord aDWidth, 
-              in nscoord aDHeight);
+  void drawTo(in gfxIImageFrame aDst,
+              in PRInt32 aDX,
+              in PRInt32 aDY,
+              in PRInt32 aDWidth,
+              in PRInt32 aDHeight);
 
   /**
    * Represents the number of milliseconds until the next frame should be displayed.

@@ -44,12 +44,6 @@
 
 #include "nsrootidl.idl"
 
-/*! @verbatim */
-%{C++
-#include "nsCoord.h"
-%}
-/*! @endverbatim */
-
 /**
  * A color is a 32 bit unsigned integer with
  * four components: R, G, B and A.
@@ -71,7 +65,4 @@ typedef unsigned short      gfx_depth; // is short ok?
  */
 typedef long                gfx_format;
 
-typedef PRInt32             nscoord;
-
-[ptr] native nsRect(nsRect);
 [ptr] native nsIntRect(nsIntRect);
