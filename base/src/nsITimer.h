@@ -78,6 +78,9 @@ public:
 
   /// Change the millisecond interval for the timeout
   virtual void SetDelay(PRUint32 aDelay)=0;
+
+  /// @return the opaque pointer
+  virtual void* GetClosure()=0;
 };
 
 /** Factory method for creating an nsITimer */

@@ -72,6 +72,8 @@ class TimerImpl : public nsITimer
 	  virtual PRUint32 GetDelay();
 
 	  virtual void SetDelay(PRUint32 aDelay);
+
+    virtual void* GetClosure();
 	
 	private:
 	// Calculates mFireTime too
@@ -171,6 +173,11 @@ void TimerImpl::SetDelay(PRUint32 aDelay)
 	TimerPeriodical::GetPeriodical()->RemoveTimer(this);
 	TimerPeriodical::GetPeriodical()->AddTimer(this);
 	NS_RELEASE(this);
+}
+
+void* TimerImpl::GetClosure()
+{
+  return mClosure;
 }
 
 void TimerImpl::Fire()
