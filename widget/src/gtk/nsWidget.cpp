@@ -1996,9 +1996,10 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
     gint x, y;
     gint w, h;
 
-    // XXX these cause round trips to the ever lovely X server.  fix me.
+    // XXX this causes a round trip to the ever lovely X server.  fix me.
     gdk_window_get_origin(rollupWindow, &x, &y);
 
+    // this doesn't... it just pokes GdkWindowPrivate :-)
     gdk_window_get_size(rollupWindow, &w, &h);
 
 
