@@ -219,13 +219,12 @@ BOOL WINAPI DllMain(HANDLE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	switch (dwReason) {
 		case DLL_PROCESS_ATTACH: {
-			if (!_init())
-				return FALSE;
+			pyxpcom_construct();
 			break;
 		}
 		case DLL_PROCESS_DETACH: 
 		{
-			_fini();
+			pyxpcom_destruct();
 			break;
 		}
 		default:
