@@ -43,7 +43,7 @@
 function Startup() 
 {
   var bookmarksView = document.getElementById("bookmarks-view");  
-  bookmarksView.view.selection.select(0);
+  bookmarksView.tree.view.selection.select(0);
 }
 
 function manageBookmarks() {
