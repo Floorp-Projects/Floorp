@@ -88,8 +88,8 @@ NCR_CSRCS = \
 SCOOS_CSRCS = \
 	scoos.c \
 	$(NULL)
-	
-	
+
+
 ifeq ($(PTHREADS_USER),1)
 CSRCS += $(PTH_USER_CSRCS)
 endif
@@ -170,7 +170,7 @@ endif
 ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)
     ASFILES = os_BSD_386_2.s
 endif
-	
+
 OBJS += $(addprefix md/unix/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
 	$(addprefix md/unix/$(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
 
