@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.16 2001/05/12 12:00:43 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.h,v 1.17 2001/05/15 06:13:02 axel%pike.org Exp $
  */
 
 
@@ -63,7 +63,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.16 $ $Date: 2001/05/12 12:00:43 $
+ * @version $Revision: 1.17 $ $Date: 2001/05/15 06:13:02 $
 **/
 class XSLTProcessor
 #ifdef MOZ_XSL
@@ -268,7 +268,7 @@ private:
      * Looks up the given XSLType with the given name
      * The ProcessorState is used to get the current XSLT namespace
     **/
-    short getElementType(String& name, ProcessorState* ps);
+    short getElementType(const String& name, ProcessorState* ps);
 
 
     /**

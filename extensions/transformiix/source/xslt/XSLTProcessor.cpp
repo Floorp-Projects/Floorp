@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.45 2001/05/14 14:22:49 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.46 2001/05/15 06:13:02 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.45 $ $Date: 2001/05/14 14:22:49 $
+ * @version $Revision: 1.46 $ $Date: 2001/05/15 06:13:02 $
 **/
 
 /**
@@ -729,7 +729,7 @@ void XSLTProcessor::bindVariable
  * Returns the type of Element represented by the given name
  * @return the XSLType represented by the given element name
 **/
-short XSLTProcessor::getElementType(String& name, ProcessorState* ps) {
+short XSLTProcessor::getElementType(const String& name, ProcessorState* ps) {
 
 
     String namePart;
@@ -1007,30 +1007,30 @@ void XSLTProcessor::processAction
             case XSLType::CHOOSE :
             {
                 Node* tmp = actionElement->getFirstChild();
-                Element* xslTemplate = 0;
-                while (tmp) {
-                    if ( tmp->getNodeType() != Node::ELEMENT_NODE ) {
-                      tmp = tmp->getNextSibling();
-                      continue;
-                    }
-                    xslTemplate = (Element*)tmp;
-                    String nodeName = xslTemplate->getNodeName();
-                    switch ( getElementType(nodeName, ps) ) {
-                        case XSLType::WHEN :
-                        {
-                            expr = ps->getExpr(xslTemplate->getAttribute(TEST_ATTR));
-                            ExprResult* result = expr->evaluate(node, ps);
-                            if ( result->booleanValue() ) {
-                                processTemplate(node, xslTemplate, ps);
-                                return;
+                MBool caseFound = MB_FALSE;
+                Element* xslTemplate;
+                while (!caseFound && tmp) {
+                    if ( tmp->getNodeType() == Node::ELEMENT_NODE ) {
+                        xslTemplate = (Element*)tmp;
+                        switch (getElementType(xslTemplate->getNodeName(),
+                                               ps)) {
+                            case XSLType::WHEN :
+                            {
+                                expr = ps->getExpr(xslTemplate->getAttribute(TEST_ATTR));
+                                ExprResult* result = expr->evaluate(node, ps);
+                                if ( result->booleanValue() ) {
+                                    processTemplate(node, xslTemplate, ps);
+                                    caseFound = MB_TRUE;
+                                }
+                                break;
                             }
-                            break;
+                            case XSLType::OTHERWISE:
+                                processTemplate(node, xslTemplate, ps);
+                                caseFound = MB_TRUE;
+                                break;
+                            default: //-- invalid xsl:choose child
+                                break;
                         }
-                        case XSLType::OTHERWISE:
-                            processTemplate(node, xslTemplate, ps);
-                            return; //-- important to break out of everything
-                        default: //-- invalid xsl:choose child
-                            break;
                     }
                     tmp = tmp->getNextSibling();
                 } //-- end for-each child of xsl:choose
