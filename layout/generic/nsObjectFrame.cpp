@@ -1529,6 +1529,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
               nsAutoString  name;
               atom->ToString(name);
 
+/*       Changing to ToNewUTF8String addressing 17169, 39789
+
               mAttrNames[mNumAttrs] = (char *)PR_Malloc(name.Length() + 1);
               mAttrVals[mNumAttrs] = (char *)PR_Malloc(value.Length() + 1);
 
@@ -1553,6 +1555,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
                   mAttrVals[mNumAttrs] = nsnull;
                 }
               }
+*/
+              mAttrNames[mNumAttrs] = name.ToNewUTF8String();
+              mAttrVals[mNumAttrs] = value.ToNewUTF8String();
+              mNumAttrs++;
             }
             NS_RELEASE(atom);
           }
@@ -1865,6 +1871,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
                     if ((NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name)) &&
                         (NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, val)))
                     {
+
+/*       Changing to ToNewUTF8String addressing 17169, 39789
+
                       mParamNames[mNumParams] = (char *)PR_Malloc(name.Length() + 1);
                       mParamVals[mNumParams] = (char *)PR_Malloc(val.Length() + 1);
 
@@ -1890,6 +1899,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
                           mParamVals[mNumParams] = nsnull;
                         }
                       }
+*/
+                      mParamNames[mNumParams] = name.ToNewUTF8String();
+                      mParamVals[mNumParams]  = val.ToNewUTF8String();
+                      mNumParams++;
                     }
                   }
 
@@ -2389,6 +2402,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         }
         else
         {
+          mWidget->Resize(mPluginWindow.width, mPluginWindow.height, PR_FALSE);
           mPluginWindow.window = GetPluginPort();
           mPluginWindow.type = nsPluginWindowType_Window;
 
