@@ -20,6 +20,7 @@
 #include "nsIFactory.h"
 #include "nsIStreamObject.h"
 #include "nsIStreamListener.h"
+#include "nsIXPFCCanvas.h"
 
 class nsStreamObject : public nsIStreamObject,
                        public nsIStreamListener
@@ -62,6 +63,7 @@ public:
   nsIDTD * mDTD;
   nsIContentSink * mSink;
   nsIStreamListener * mStreamListener;
+  nsIXPFCCanvas * mParentCanvas;
 };
 
 

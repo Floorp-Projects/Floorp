@@ -45,8 +45,6 @@ static NS_DEFINE_IID(kViewCID,                    NS_VIEW_CID);
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
 
-nsString gCommandString;
-
 nsXPButton :: nsXPButton(nsISupports* outer) : nsXPItem(outer)
 {
   NS_INIT_REFCNT();
@@ -129,17 +127,24 @@ nsresult nsXPButton :: SetParameter(nsString& aKey, nsString& aValue)
 
   } else if (aKey.EqualsIgnoreCase(XPFC_STRING_COMMAND)) {
 
-    // XXX: Total hack here for demo purposes ... sorry
-    
-    aValue.Mid(gCommandString,8,aValue.Length()-8);
-    
+    // XXX: Hardcoded to LoadUrl?
+    nsString command;
 
-  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_ENABLE)) {
+    aValue.Mid(command,8,aValue.Length()-8);
 
+    SetCommand(command);    
+    
+  //} else if (aKey.EqualsIgnoreCase(XPFC_STRING_ENABLE)) {
+
+
+  } else {
+
+    return (nsXPItem::SetParameter(aKey, aValue));
 
   }
 
-  return (nsXPItem::SetParameter(aKey, aValue));
+  return NS_OK;
+
 }
 
 nsresult nsXPButton :: GetClassPreferredSize(nsSize& aSize)
@@ -371,19 +376,7 @@ nsEventStatus nsXPButton :: OnLeftButtonUp(nsGUIEvent *aEvent)
   bounds.y = 0;
   gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
 
-#if 0
-  if (gCommandString.Length() > 0)
-  {
-    nsIWebViewerContainer * webViewerContainer = nsnull;
-    gXPFCToolkit->GetApplicationShell()->GetWebViewerContainer(&webViewerContainer);
-
-    if (webViewerContainer != nsnull)
-    {
-      webViewerContainer->LoadURL(gCommandString,nsnull);
-      NS_RELEASE(webViewerContainer);
-    }
-  }
-#endif
+  SendCommand();
 
   return (nsXPItem::OnLeftButtonUp(aEvent));
 }

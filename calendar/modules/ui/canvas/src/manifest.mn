@@ -29,6 +29,7 @@ CPPSRCS = \
 	nsCalTimebarScale.cpp \
 	nsCalMultiDayViewCanvas.cpp \
 	nsCalDayViewCanvas.cpp \
+	nsCalMonthViewCanvas.cpp \
     nsCalCanvas.cpp \
     events.cpp \
 	$(NULL)

@@ -68,10 +68,10 @@
 </panel> 
 
 <!-- This is the root GUI panel. This is where life begins -->
-<rootpanel id="MainCalendarPanel" label="Calendar UI"> 
+<panel id="MainCalendarPanel" label="Calendar UI"> 
   <control id="uhr" rule="CalendarAndFolder" layout="xbox"/>
   <ctx id="StartContext" majorinterval="PT01H" minorinterval="PT15M" default="today"/>
-</rootpanel> 
+</panel> 
 
 
 </Calendar>

@@ -64,6 +64,7 @@ class nsICalendarShell;
 #include "nsFont.h"
 
 #include "nsCalDayViewCanvas.h"
+#include "nsCalMonthViewCanvas.h"
 #include "nsCalMultiDayViewCanvas.h"
 #include "nsCalTodoComponentCanvas.h"
 #include "nsCalTimebarHeading.h"
@@ -132,42 +133,14 @@ nsresult nsCalendarWidget::Init(nsIView * aParent,
                                 nsICalendarShell * aCalendarShell)
 {
 
-  nsresult res ;
-
   mCalendarShell = aCalendarShell;
-
-  nsIXPFCCanvas * root;
 
   NS_ADDREF(((nsIApplicationShell *)mCalendarShell));
 
   gXPFCToolkit->SetObserverManager(mCalendarShell->GetObserverManager());
 
-  /*
-   * Create the Root Canvas
-   */
+  return NS_OK;
 
-  static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
-
-
-  res = nsRepository::CreateInstance(kCXPFCCanvasCID, 
-                                     nsnull, 
-                                     kCXPFCCanvasCID, 
-                                     (void **)&root);
-
-  if (NS_OK != res)
-    return res ;
-  
-  root->Init();
-
-  nsIXPFCCanvas * root_canvas ;
-
-  gXPFCToolkit->GetRootCanvas(&root_canvas);
-
-  root_canvas->AddChildCanvas(root);
-
-  NS_RELEASE(root_canvas);
-
-  return res ;
 }
 
 nsRect nsCalendarWidget::GetBounds()
@@ -217,10 +190,17 @@ nsresult nsCalendarWidget::GetContainer(nsIContentViewerContainer*& aContainerRe
   return NS_OK;
 }
 
-nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, nsIStreamObserver* aListener, nsIPostData * aPostData)
+nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, 
+                                   nsIStreamObserver* aListener, 
+                                   nsIXPFCCanvas * aParentCanvas,
+                                   nsIPostData * aPostData)
 {
 
   nsresult res ;
+
+  nsString aURLToLoad = aURLSpec;
+
+  nsIXPFCCanvas * target_canvas = aParentCanvas;
 
   nsIStreamManager * stream_manager  = ((nsCalendarShell *)mCalendarShell)->mShellInstance->GetStreamManager();
 
@@ -230,6 +210,68 @@ nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, nsIStreamObserver* 
   nsIID * iid_dtd = nsnull;
   nsIID * iid_sink = nsnull ;
 
+  /*
+   * Let's see if there is a target on this URL and delete that tree.
+   *
+   * Note we need some way of maintaining the model hookup here .... I think
+   */
+
+  if (aURLSpec.Find("?") != -1)
+  {
+    /*
+     * We have options, let's see if one of them in target=
+     */
+
+    PRInt32 offset = aURLSpec.Find("target=");
+
+    if (offset != -1)
+    {
+
+      /*
+       * Ok, find the container with the specified name,
+       * destroy all its contents, and use it as the target
+       * base parent for the new XML!
+       */
+
+      nsString target ;
+      nsString temp = aURLSpec ;
+
+      offset += 7;
+
+      temp.Mid(target, offset, aURLSpec.Length() - offset);
+
+      offset = target.Find("?");
+
+      if (offset != -1)
+      {
+        target.Cut(offset, target.Length() - offset);
+      }
+
+      /*
+       * find the target canvas
+       */
+
+      nsIXPFCCanvas * root = nsnull ;
+  
+      gXPFCToolkit->GetRootCanvas(&root);
+
+      target_canvas = root->CanvasFromName(target);
+
+      if (target_canvas)
+      {
+        target_canvas->DeleteChildren();
+      }
+
+      NS_RELEASE(root);
+
+    }
+
+  }
+
+  /*
+   * change the DTD and Sink if this is a Calendar XML
+   */
+
   if (aURLSpec.Find(".cal") != -1)
   {
     static NS_DEFINE_IID(kCCalXMLDTD, NS_ICALXML_DTD_IID);
@@ -238,19 +280,39 @@ nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, nsIStreamObserver* 
     iid_dtd  = (nsIID *) &kCCalXMLDTD;
     iid_sink = (nsIID *) &kCCalXMLContentSinkCID;
 
-    nsIXPFCCanvas * root = nsnull ;
-  
-    gXPFCToolkit->GetRootCanvas(&root);
-
-    root->DeleteChildren();
-
-    NS_RELEASE(root);
-
   }
 
+  /*
+   * XXX: Get rid of this code!
+   * 
+   * If we do not understand this url, lets create a canvas that embeds
+   * raptor.
+   *
+   * Ideally, we'd all be using netlib and some sort of mime registration,
+   * but til then....
+   */
+
+  if (aURLSpec.Find(".cal") == -1 && aURLSpec.Find(".ui") == -1)
+  {
+    aURLToLoad = "resource://res/ui/julian_html_blank.cal?target=content" ;
+
+    /*
+     * Register ourselves as a StreamListener, and then load the actual
+     * URL when the ui framework is done
+     */
+  }
+
+
+  /*
+   * Load the URL
+   */
+
   res = stream_manager->LoadURL(((nsCalendarShell*)mCalendarShell)->mDocumentContainer,
-                              aURLSpec, 
-                              aPostData,iid_dtd,iid_sink);
+                              target_canvas,
+                              aURLToLoad, 
+                              aPostData,
+                              iid_dtd,
+                              iid_sink);
 
   return res;
 

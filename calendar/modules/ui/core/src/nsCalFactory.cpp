@@ -25,6 +25,7 @@
 #include "nsCalComponent.h"
 #include "nsCalDurationCommand.h"
 #include "nsCalDayListCommand.h"
+#include "nsCalNewModelCommand.h"
 #include "nsCalContextController.h"
 #include "nsCalTimebarContextController.h"
 #include "nsCalMonthContextController.h"
@@ -39,6 +40,7 @@
 #include "nsCalTimebarScale.h"
 #include "nsCalMultiDayViewCanvas.h"
 #include "nsCalDayViewCanvas.h"
+#include "nsCalMonthViewCanvas.h"
 #include "nsCalTodoComponentCanvas.h"
 
 #include "nsCalToolkit.h"
@@ -47,6 +49,7 @@ static NS_DEFINE_IID(kCCalTimeContext, NS_CAL_TIME_CONTEXT_CID);
 static NS_DEFINE_IID(kCCalComponent, NS_CAL_COMPONENT_CID);
 static NS_DEFINE_IID(kCCalDurationCommand, NS_CAL_DURATION_COMMAND_CID);
 static NS_DEFINE_IID(kCCalDayListCommand, NS_CAL_DAYLIST_COMMAND_CID);
+static NS_DEFINE_IID(kCCalNewModelCommand, NS_CAL_NEWMODEL_COMMAND_CID);
 static NS_DEFINE_IID(kCCalContextController, NS_CAL_CONTEXT_CONTROLLER_CID);
 static NS_DEFINE_IID(kCCalTimebarContextController, NS_CAL_TIMEBAR_CONTEXT_CONTROLLER_CID);
 static NS_DEFINE_IID(kCCalMonthContextController, NS_CAL_MONTH_CONTEXT_CONTROLLER_CID);
@@ -61,6 +64,7 @@ static NS_DEFINE_IID(kCCalCommandCanvas, NS_CAL_COMMANDCANVAS_CID);
 static NS_DEFINE_IID(kCCalTimebarComponentCanvas, NS_CAL_TIMEBARCOMPONENTCANVAS_CID);
 static NS_DEFINE_IID(kCCalMultiDayViewCanvas, NS_CAL_MULTIDAYVIEWCANVAS_CID);
 static NS_DEFINE_IID(kCCalDayViewCanvas, NS_CAL_DAYVIEWCANVAS_CID);
+static NS_DEFINE_IID(kCCalMonthViewCanvas, NS_CAL_MONTHVIEWCANVAS_CID);
 static NS_DEFINE_IID(kCCalTodoComponentCanvas, NS_CAL_TODOCOMPONENTCANVAS_CID);
 static NS_DEFINE_IID(kCCalTimebarHeading, NS_CAL_TIMEBARHEADING_CID);
 static NS_DEFINE_IID(kCCalTimebarUserHeading, NS_CAL_TIMEBARUSERHEADING_CID);
@@ -170,6 +174,9 @@ nsresult nsCalFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCCalDayListCommand)) {
     inst = (nsISupports *)new nsCalDayListCommand();
   }
+  else if (mClassID.Equals(kCCalNewModelCommand)) {
+    inst = (nsISupports *)new nsCalNewModelCommand();
+  }
   else if (mClassID.Equals(kCCalContextController)) {
     nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalContextController(aOuter);
     canvas->QueryInterface(kISupportsIID,(void **)&inst);
@@ -228,6 +235,10 @@ nsresult nsCalFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCCalDayViewCanvas)) {
     nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalDayViewCanvas(aOuter);
+    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+  }
+  else if (mClassID.Equals(kCCalMonthViewCanvas)) {
+    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalMonthViewCanvas(aOuter);
     canvas->QueryInterface(kISupportsIID,(void **)&inst);
   }
   else if (mClassID.Equals(kCCalToolkit)) {

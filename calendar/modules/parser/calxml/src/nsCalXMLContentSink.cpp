@@ -47,6 +47,7 @@ static NS_DEFINE_IID(kCCalTimebarContextControllerCID, NS_CAL_TIMEBAR_CONTEXT_CO
 static NS_DEFINE_IID(kCCalMonthContextControllerCID, NS_CAL_MONTH_CONTEXT_CONTROLLER_CID);
 static NS_DEFINE_IID(kCCalTodoComponentCanvasCID, NS_CAL_TODOCOMPONENTCANVAS_CID);
 static NS_DEFINE_IID(kCCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
+static NS_DEFINE_IID(kCalMonthViewCanvasCID, NS_CAL_MONTHVIEWCANVAS_CID);
 static NS_DEFINE_IID(kCCalCommandCanvasCID, NS_CAL_COMMANDCANVAS_CID);
 static NS_DEFINE_IID(kCalTimebarUserHeadingCID,     NS_CAL_TIMEBARUSERHEADING_CID);
 static NS_DEFINE_IID(kCalTimebarScaleCID,     NS_CAL_TIMEBARSCALE_CID);
@@ -311,7 +312,9 @@ NS_IMETHODIMP nsCalXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   nsIXPFCCanvas * canvas = (nsIXPFCCanvas *)mCanvasStack->Pop();  
 
+#if 0
   NS_IF_RELEASE(canvas);
+#endif
 
   return NS_OK;
 }
@@ -387,6 +390,10 @@ NS_IMETHODIMP nsCalXMLContentSink::CIDFromTag(eCalXMLTags tag, nsCID &aClass)
 
     case eCalXMLTag_multidayviewcanvas:
       aClass = kCalMultiDayViewCanvasCID;
+      break;
+
+    case eCalXMLTag_monthviewcanvas:
+      aClass = kCalMonthViewCanvasCID;
       break;
 
     case eCalXMLTag_panel:
@@ -980,4 +987,9 @@ nsIXPFCCanvas * nsCalXMLContentSink::CanvasFromName(nsString& aName)
   NS_RELEASE(iterator);
 
   return nsnull;
+}
+nsresult nsCalXMLContentSink::SetRootCanvas(nsIXPFCCanvas * aCanvas)
+{
+  mCanvasStack->Push(aCanvas);
+  return NS_OK;
 }

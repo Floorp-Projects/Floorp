@@ -60,6 +60,7 @@ nsCalXMLTagEntry gCalXMLTagTable[] =
   {"htmlcanvas",            eCalXMLTag_htmlcanvas},
   {"leaf",                  eCalXMLTag_leaf},
   {"mcc",                   eCalXMLTag_mcc},
+  {"monthviewcanvas",       eCalXMLTag_monthviewcanvas},
   {"multidayviewcanvas",    eCalXMLTag_multidayviewcanvas},
   {"object",                eCalXMLTag_object},
   {"panel",                 eCalXMLTag_panel},
@@ -268,6 +269,7 @@ nsresult nsCalXMLDTD::HandleStartToken(CToken* aToken)
         case eCalXMLTag_tcc:
         case eCalXMLTag_ctx:
         case eCalXMLTag_commandcanvas:
+        case eCalXMLTag_monthviewcanvas:
         case eCalXMLTag_multidayviewcanvas:
         case eCalXMLTag_timebarscale:
         case eCalXMLTag_timebaruserheading:
@@ -341,6 +343,7 @@ nsresult nsCalXMLDTD::HandleEndToken(CToken* aToken)
     case eCalXMLTag_mcc:
     case eCalXMLTag_ctx:
     case eCalXMLTag_commandcanvas:
+    case eCalXMLTag_monthviewcanvas:
     case eCalXMLTag_multidayviewcanvas:
     case eCalXMLTag_timebarscale:
     case eCalXMLTag_timebaruserheading:

@@ -625,15 +625,9 @@ nsresult nsCalendarShell::LoadUI()
   /*
    * Now Load the Canvas UI
    */
-#ifdef XP_UNIX
+
   mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_CALENDAR,pUI,&i);
   res = mDocumentContainer->LoadURL(pUI,nsnull);
-#else
-  mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_MENUBAR,pUI,&i);
-  res = mDocumentContainer->LoadURL(pUI,nsnull);
-  mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_CALENDAR,pUI,&i);
-  res = mDocumentContainer->LoadURL(pUI,nsnull);
-#endif
 
   mShellInstance->ShowApplicationWindow(PR_TRUE) ;
 

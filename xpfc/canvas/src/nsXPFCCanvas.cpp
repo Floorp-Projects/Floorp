@@ -606,6 +606,8 @@ nsresult nsXPFCCanvas :: LoadView(const nsCID &aViewClassIID,
   else if (GetParent() != nsnull)
     view = GetParent()->GetView();
 
+  nsViewClip clip ;
+
   mView->Init(gXPFCToolkit->GetViewManager(),
               bounds,
               view,
@@ -1017,8 +1019,8 @@ void nsXPFCCanvas :: AddChildCanvas(nsIXPFCCanvas * aChildCanvas,PRInt32 aPositi
 void nsXPFCCanvas :: RemoveChildCanvas(nsIXPFCCanvas * aChildCanvas)
 {
   mChildWidgets->Remove(aChildCanvas);
-  NS_IF_RELEASE(aChildCanvas);
   aChildCanvas->SetParent(nsnull);
+  NS_IF_RELEASE(aChildCanvas);
   return ;
 }
 
@@ -1284,7 +1286,7 @@ nsEventStatus nsXPFCCanvas :: PaintChildWidgets(nsIRenderingContext& aRenderingC
 
     canvas->GetBounds(rect);
 
-    if (rect.width != 0 && rect.height != 0)
+    if ((rect.width != 0) && (rect.height != 0) /*&& (rect.Contains(aDirtyRect) == PR_TRUE)*/)
       canvas->OnPaint(aRenderingContext,aDirtyRect);
 
     iterator->Next();
@@ -1846,6 +1848,9 @@ nsresult nsXPFCCanvas :: DeleteChildren(PRUint32 aCount)
   {
     widget = (nsIXPFCCanvas *) iterator->CurrentItem();
 
+    if (widget != nsnull)
+      widget->DeleteChildren();
+
     if (mChildWidgets != nsnull)
       mChildWidgets->Remove(widget);
 
@@ -2322,3 +2327,58 @@ nsSplittableOrientation nsXPFCCanvas :: GetSplittableOrientation(nsPoint& aPoint
 
   return (orientation);
 }
+
+nsresult nsXPFCCanvas :: SendCommand()
+{
+  if (mCommand.Length() > 0)
+  {
+    nsIWebViewerContainer * webViewerContainer = nsnull;
+    gXPFCToolkit->GetApplicationShell()->GetWebViewerContainer(&webViewerContainer);
+
+    if (webViewerContainer != nsnull)
+    {
+      webViewerContainer->LoadURL(mCommand,nsnull);
+      NS_RELEASE(webViewerContainer);
+    }
+  }
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvas :: BroadcastCommand(nsIXPFCCommand& aCommand)
+{
+  nsresult res ;
+  nsIIterator * iterator ;
+  nsIXPFCCanvas * canvas;
+
+  /*
+   * Call this container's Action Method. We should change the action
+   * method to return something about ignoring and consuming commands
+   */
+
+  Action(&aCommand);
+
+  /*
+   * Iterate through the children and pass it on
+   */
+
+  res = CreateIterator(&iterator);
+
+  if (NS_OK != res)
+    return NS_OK;
+
+  iterator->Init();
+
+  while(!(iterator->IsDone()))
+  {
+    canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
+
+    canvas->BroadcastCommand(aCommand);
+
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+
+  return NS_OK;
+}
+

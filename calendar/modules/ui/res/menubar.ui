@@ -76,9 +76,9 @@
 
 <!-- This is the View Pulldown -->
 <menucontainer name="ViewPulldown"> 
-  <menuitem label="Day"  enable="False" command="ViewDay" commandkey="\ad" />
-  <menuitem label="Week" enable="False" command="ViewWeek" commandkey="\aw" />
-  <menuitem label="Month" enable="False" command="ViewMonth" commandkey="\am" />
+  <menuitem label="Day"  enable="True"  command="LoadUrl?resource://res/ui/julian_day.cal?target=content"   commandkey="\ad" />
+  <menuitem label="Week" enable="True"  command="LoadUrl?resource://res/ui/julian_week.cal?target=content"  commandkey="\aw" />
+  <menuitem label="Month" enable="True" command="LoadUrl?resource://res/ui/julian_month_sum.cal?target=content" commandkey="\am" />
 </menucontainer> 
 
 <!-- This is the Compose Pulldown -->

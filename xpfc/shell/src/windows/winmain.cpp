@@ -150,7 +150,7 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
     NS_RELEASE(pShellInstance);
 
     NS_ShutdownINetService();
-    PR_Cleanup();
+    //PR_Cleanup();
 
     // book out of here
 	return result;

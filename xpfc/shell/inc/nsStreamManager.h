@@ -21,6 +21,7 @@
 #include "nsIVector.h"
 #include "nsIIterator.h"
 #include "nsIStreamManager.h"
+#include "nsIXPFCCanvas.h"
 
 class nsStreamManager : public nsIStreamManager 
 {
@@ -45,6 +46,7 @@ public:
   NS_IMETHOD Init();
 
   NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                     nsIXPFCCanvas * aParentCanvas,
                      const nsString& aURLSpec, 
                      nsIPostData * aPostData,
                      nsIID *aDTDIID = nsnull,

@@ -27,6 +27,7 @@
 
 #include "nsCalToolkit.h"
 #include "nsCalDayListCommand.h"
+#include "nsCalNewModelCommand.h"
 
 #include "nscalstrings.h"
 
@@ -516,110 +517,179 @@ nsresult nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
   nsresult res;
   PRUint32 count = 0;
 
-  nsCalDayListCommand * daylist_command = nsnull;
+  nsCalDayListCommand *  daylist_command = nsnull;
+  nsCalNewModelCommand * newmodel_command = nsnull;
   static NS_DEFINE_IID(kCalDayListCommandCID, NS_CAL_DAYLIST_COMMAND_CID);                 
+  static NS_DEFINE_IID(kCalNewModelCommandCID, NS_CAL_NEWMODEL_COMMAND_CID);                 
 
   res = aCommand->QueryInterface(kCalDayListCommandCID,(void**)&daylist_command);
 
-  if (NS_OK != res)
-    return (nsXPFCCanvas::Action(aCommand));
-
-
-  /*
-   * It's a day list command ... set the date
-   */
-
-  nsIIterator * iterator;
-
-  res = daylist_command->CreateIterator(&iterator);
-
-  if (NS_OK != res)
-    return res;
-
-  iterator->Init();
-
-  count = iterator->Count();
-
-  if (iterator->Count() < mMinRepeat)
-    count = mMinRepeat;
-  if (iterator->Count() > mMaxRepeat)
-    count = mMaxRepeat;
-
-  if (count != GetChildCount()) {
-
+  if (NS_OK == res)
+  {
+    
     /*
-     * The number of new days is different from current. If the number is
-     * less, delete the difference.  If it is more, add new canvas.
-     * 
+     * It's a day list command ... set the date
      */
 
-    if (count < GetChildCount()) {
+    nsIIterator * iterator;
+
+    res = daylist_command->CreateIterator(&iterator);
+
+    if (NS_OK != res)
+      return res;
+
+    iterator->Init();
+
+    count = iterator->Count();
+
+    if (iterator->Count() < mMinRepeat)
+      count = mMinRepeat;
+    if (iterator->Count() > mMaxRepeat)
+      count = mMaxRepeat;
+
+    if (count != GetChildCount()) {
 
       /*
-       * Delete the difference
+       * The number of new days is different from current. If the number is
+       * less, delete the difference.  If it is more, add new canvas.
+       * 
        */
 
-      PRUint32 delta = GetChildCount() - count;
+      if (count < GetChildCount()) {
 
-      DeleteChildren(delta);
+        /*
+         * Delete the difference
+         */
 
-    } else if (count > GetChildCount()) {
+        PRUint32 delta = GetChildCount() - count;
 
-      /*
-       * Add new children
-       */
+        DeleteChildren(delta);
 
-      PRUint32 delta = count - GetChildCount();
+      } else if (count > GetChildCount()) {
 
-      PRUint32 i;
+        /*
+         * Add new children
+         */
 
-      for (i=0; i<delta; i++) 
-      {
-        AddDayViewCanvas();
+        PRUint32 delta = count - GetChildCount();
+
+        PRUint32 i;
+
+        for (i=0; i<delta; i++) 
+        {
+          AddDayViewCanvas();
+        }
+
+
+        mNumberViewableDays += delta;
+
+        /*
+         * Set the time context to be based off multi-day
+         */
+
+        SetTimeContext(GetTimeContext());
+
       }
 
+    }
 
-      mNumberViewableDays += delta;
+    /*
+     * Now we have the right number of days, lets update the context
+     */
+
+
+    PRUint32 index = 0;
+
+    while(!(iterator->IsDone()))
+    {
+
+      if (index > count)
+        break;
+
+      nsDateTime * datetime = (nsDateTime *) iterator->CurrentItem();
+
+      if (datetime != nsnull) {
+
+        ChangeChildDateTime(index,datetime);
+
+      }
+  
+      index++;
+
+      iterator->Next();
+    }
+
+
+    Layout();
+  }
+
+  res = aCommand->QueryInterface(kCalNewModelCommandCID,(void**)&newmodel_command);
+
+  if (NS_OK == res)
+  {
+    nsIXPFCCanvas * canvas = AddDayViewCanvas();
+
+    /*
+     * Get the last sibling and set it's model....
+     */
+
+    if (canvas != nsnull)
+    {
+
+      nsDateTime * nsdatetime;
+      static NS_DEFINE_IID(kCalDateTimeCID, NS_DATETIME_CID);
+      static NS_DEFINE_IID(kCalDateTimeIID, NS_IDATETIME_IID);
+      nsresult res = nsRepository::CreateInstance(kCalDateTimeCID,nsnull, kCalDateTimeCID, (void **)&nsdatetime);
 
       /*
-       * Set the time context to be based off multi-day
+       * Apply to all children ....
        */
+      nsIIterator * iterator ;
+      nsCalTimebarCanvas * tbc ;
 
-      SetTimeContext(GetTimeContext());
+      res = canvas->CreateIterator(&iterator);
+
+      if (NS_OK == res)
+      {
+        iterator->Init();
+
+        while(!(iterator->IsDone()))
+        {
+
+          tbc = (nsCalTimebarCanvas *) iterator->CurrentItem();
+
+          nsCalTimebarCanvas * canvas_iface = nsnull;;
+
+          tbc->QueryInterface(kCalTimebarCanvasCID, (void**) &canvas_iface);
+
+          if (canvas_iface) 
+          {
+        
+            SetChildTimeContext(canvas_iface, GetTimeContext(), 0);
+            ChangeChildDateTime(canvas_iface, nsdatetime);      
+            canvas_iface->SetModel(newmodel_command->mModel);
+            
+            NS_RELEASE(canvas_iface);
+          }
+
+          iterator->Next();
+
+        }
+       
+        iterator->Next();
+      }
+
+      Layout();
+
+      nsRect bounds;
+      GetView()->GetBounds(bounds);
+      gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+
+      NS_RELEASE(tbc);
 
     }
-
   }
-
-  /*
-   * Now we have the right number of days, lets update the context
-   */
-
-
-  PRUint32 index = 0;
-
-  while(!(iterator->IsDone()))
-  {
-
-    if (index > count)
-      break;
-
-    nsDateTime * datetime = (nsDateTime *) iterator->CurrentItem();
-
-    if (datetime != nsnull) {
-
-      ChangeChildDateTime(index,datetime);
-
-    }
   
-    index++;
-
-    iterator->Next();
-  }
-
-
-  Layout();
-
   return (nsXPFCCanvas::Action(aCommand));
 
 }

@@ -24,7 +24,7 @@
 
 <!-- This is the MultiDayView and Command Bar -->
 <panel name="MultiDayViewRule"> 
-  <multidayviewcanvas name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext" minrepeat="1" maxrepeat="1" count="1"> 
+  <multidayviewcanvas name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext" minrepeat="1" maxrepeat="31" count="31"> 
   <commandcanvas name="CommandCanvas" weightmajor="0" weightminor="0"> 
 </panel> 
 

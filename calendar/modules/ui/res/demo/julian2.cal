@@ -4,7 +4,7 @@
 
 <!-- This is the User Heading Rule -->
 <panel name="UserHeadingRule" > 
-  <tcc backgroundcolor="#C0C0C0" foregroundcolor="#0000FF" name="PrevDay" orientation="west" control="MultiCalendarEventWeekView" major="tbh" usectxrule="day-1" weightminor="0" weightmajor="0"/> 
+  <tcc backgroundcolor="#C0C0C0" foregroundcolor="#0000FF" name="PrevDay" orientation="west" control="MultiCalendarEventWeekView" usectxrule="day-1" weightminor="0" weightmajor="0"/> 
   <object class="timebaruserheading" backgroundcolor="#C0C0C0" name="tuh" title="Customer Council Demo 0.1" weightmajor="1"/>
   <tcc foregroundcolor="#0000FF" backgroundcolor="#C0C0C0" name="NextDay" orientation="east" control="MultiCalendarEventWeekView" usectxrule="day+1" weightminor="0" weightmajor="0"/> 
 </panel> 
@@ -52,10 +52,10 @@
 </panel> 
 
 <!-- This is the root GUI panel. This is where life begins -->
-<rootpanel id="MainCalendarPanel" label="Calendar UI"> 
+<panel id="MainCalendarPanel" label="Calendar UI"> 
   <control id="uhr" rule="CalendarAndFolder" layout="xbox"/>
   <ctx id="StartContext" majorinterval="PT01H" minorinterval="PT15M" default="today"/>
-</rootpanel> 
+</panel> 
 
 
 </Calendar>

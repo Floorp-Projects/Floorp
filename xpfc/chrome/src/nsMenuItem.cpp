@@ -111,12 +111,24 @@ nsresult nsMenuItem :: SetParameter(nsString& aKey, nsString& aValue)
     
     SetLabel(aValue);
 
-  } else if (aKey == "command") {
-    
-    SetCommand(aValue);
+  } else if (aKey.EqualsIgnoreCase("command")) {
 
+    if (aValue.Find("LoadUrl?") != -1)
+    {
+      nsString command;
+
+      aValue.Mid(command,8,aValue.Length()-8);
+
+      SetCommand(command);    
+
+    } else {
+
+      SetCommand(aValue);    
+
+    }
+    
   }
-  
+
 
   return NS_OK;
 }

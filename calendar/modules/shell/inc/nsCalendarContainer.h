@@ -44,6 +44,7 @@ public:
                   nsICalendarShell * aCalendarShell);
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
                      nsIStreamObserver* aListener,
+                     nsIXPFCCanvas * aParentCanvas = 0,
                      nsIPostData* aPostData = 0);
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 

@@ -25,6 +25,7 @@ PRIVATE_EXPORTS = \
 	nsCalMultiDayViewCanvas.h \
     nsCalCanvas.h \
 	nsCalDayViewCanvas.h \
+	nsCalMonthViewCanvas.h \
     events.h \
 	$(NULL)
 

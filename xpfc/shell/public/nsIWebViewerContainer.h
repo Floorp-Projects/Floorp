@@ -28,6 +28,7 @@
 #include "nsIXPFCDialog.h"
 #include "nsIApplicationShell.h"
 #include "nsIXPFCCommand.h"
+#include "nsIXPFCCanvas.h"
 
 //06245670-306a-11d2-9247-00805f8a7ab6
 #define NS_IWEB_VIEWER_CONTAINER_IID   \
@@ -62,6 +63,7 @@ public:
 
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
                      nsIStreamObserver* aListener,
+                     nsIXPFCCanvas * aParentCanvas = 0,
                      nsIPostData* aPostData = 0) = 0;
 
 };

@@ -51,7 +51,6 @@ public:
   NS_IMETHOD Action(nsIXPFCCommand * aCommand);
 
 
-private:
   NS_IMETHOD SetChildTimeContext(nsCalTimebarCanvas * aCanvas,
                                  nsICalTimeContext * aContext,
                                  PRUint32 increment);

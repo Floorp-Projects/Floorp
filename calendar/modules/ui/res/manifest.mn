@@ -19,4 +19,5 @@ libs::
 	$(INSTALL) menubar.ui $(DIST)/bin/res/ui
 	$(INSTALL) toolbar.ui $(DIST)/bin/res/ui
 	$(INSTALL) test.ui $(DIST)/bin/res/ui
+	$(INSTALL) trex.ui $(DIST)/bin/res/ui
 	$(INSTALL) compose_event.ui $(DIST)/bin/res/ui

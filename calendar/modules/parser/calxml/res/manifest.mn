@@ -18,4 +18,8 @@ libs::
 	$(INSTALL) julian_folders.cal $(DIST)/bin/res/ui
 	$(INSTALL) julianht.cal $(DIST)/bin/res/ui
 	$(INSTALL) julian_day.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_week.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_month.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_month_sum.cal $(DIST)/bin/res/ui
 	$(INSTALL) julian_html.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_html_blank.cal $(DIST)/bin/res/ui

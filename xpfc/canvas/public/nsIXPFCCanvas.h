@@ -31,6 +31,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 
+class nsIXPFCCommand;
 class nsIModel;
 class nsIXPFCCommand;
 class nsIView;
@@ -643,6 +644,9 @@ public:
   NS_IMETHOD_(nsCursor) GetCursor(void) = 0;
   NS_IMETHOD_(void)     SetCursor(nsCursor aCursor) = 0;
   NS_IMETHOD_(nsSplittableOrientation)     GetSplittableOrientation(nsPoint& aPoint) = 0;
+
+  NS_IMETHOD BroadcastCommand(nsIXPFCCommand& aCommand) = 0;
+  NS_IMETHOD SendCommand() = 0;
 
   /**
    * Dump the canvas hierarchy to a file

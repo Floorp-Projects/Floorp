@@ -41,6 +41,7 @@ enum eCalXMLTags
   eCalXMLTag_htmlcanvas,
   eCalXMLTag_leaf,
   eCalXMLTag_mcc,
+  eCalXMLTag_monthviewcanvas,
   eCalXMLTag_multidayviewcanvas,
   eCalXMLTag_object,
   eCalXMLTag_panel,

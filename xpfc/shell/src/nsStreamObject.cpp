@@ -41,6 +41,7 @@ nsStreamObject::nsStreamObject()
   mDTD = nsnull;
   mSink = nsnull;
   mStreamListener = nsnull;
+  mParentCanvas = nsnull;
 }
 
 nsStreamObject::~nsStreamObject()

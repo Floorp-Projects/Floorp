@@ -3,7 +3,7 @@
 <Calendar>
 
 <panel name="HTMLCanvas"> 
-  <object class="htmlcanvas" src="resource://res/samples/test1.html" weightminor="1" weightmajor="1"/>
+  <object class="htmlcanvas" src="about:blank" weightminor="1" weightmajor="1"/>
 </panel> 
 
 </Calendar>
