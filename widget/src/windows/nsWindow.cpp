@@ -5132,7 +5132,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   // convert the composition string text into unicode before it is sent to xp-land
   // but, on Windows NT / 2000, need not convert.
   //
-  if (!nsToolkit::mIsNT) {
+  if (!nsToolkit::mUseImeApiW) {
     unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
       mIMECompString->get(),
       mIMECompString->Length(),
@@ -5302,7 +5302,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
   // IME strings already store to mIMECompUnicode.
   //
 
-  long maxlen = nsToolkit::mIsNT ? mIMECompUnicode->Length() : mIMECompString->Length();
+  long maxlen = nsToolkit::mUseImeApiW ? mIMECompUnicode->Length() : mIMECompString->Length();
   long cursor = mIMECursorPosition;
   NS_ASSERTION(cursor <= maxlen, "wrong cursor positoin");
   if(cursor > maxlen)
@@ -5315,12 +5315,12 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		*textRangeListLengthResult = 2;
 		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
-		substringLength = nsToolkit::mIsNT ? mIMECompUnicode->Length() :
+		substringLength = nsToolkit::mUseImeApiW ? mIMECompUnicode->Length() :
       ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
 				mIMECompString->get(), maxlen,NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
-		substringLength = nsToolkit::mIsNT ? cursor :
+		substringLength = nsToolkit::mUseImeApiW ? cursor :
       ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->get(),
 								cursor,NULL,0);
 		(*textRangeListResult)[1].mStartOffset=substringLength;
@@ -5341,7 +5341,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		// figure out the cursor position
 		//
 		
-		substringLength =  nsToolkit::mIsNT ? cursor :
+		substringLength =  nsToolkit::mUseImeApiW ? cursor :
       ::MultiByteToWideChar(gCurrentKeyboardCP,
           MB_PRECOMPOSED,mIMECompString->get(),cursor,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
@@ -5364,7 +5364,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
         PlatformToNSAttr(mIMEAttributeString[lastMBCSOffset]);
 			(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
 
-			lastUnicodeOffset += nsToolkit::mIsNT ? current - lastMBCSOffset :
+			lastUnicodeOffset += nsToolkit::mUseImeApiW ? current - lastMBCSOffset :
         ::MultiByteToWideChar(gCurrentKeyboardCP,
           MB_PRECOMPOSED,mIMECompString->get()+lastMBCSOffset,
 				current-lastMBCSOffset,NULL,0);
@@ -5462,7 +5462,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
     //
 
 		long compStrLen;
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       // Imm* Unicode API works on Windows NT / 2000.
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_RESULTSTR, NULL, 0, compStrLen);
 
@@ -5511,7 +5511,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		// This provides us with the attribute string necessary 
 		// for doing hiliting
 		long attrStrLen;
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       // Imm* Unicode API works on Windows NT / 2000.
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_COMPATTR, NULL, 0, attrStrLen);
       if (attrStrLen > mIMEAttributeStringSize) {
@@ -5541,7 +5541,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		//--------------------------------------------------------
 		long compClauseLen;
     long compClauseLen2;
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       // Imm* Unicode API works on Windows NT / 2000.
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext,
         GCS_COMPCLAUSE, NULL, 0, compClauseLen);
@@ -5587,7 +5587,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		//--------------------------------------------------------
 		// 3. Get GCS_CURSOPOS
 		//--------------------------------------------------------
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       // Imm* Unicode API works on Windows NT / 2000.
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_CURSORPOS, NULL, 0, mIMECursorPosition);
     } else {
@@ -5598,7 +5598,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		// 4. Get GCS_COMPSTR
 		//--------------------------------------------------------
 		long compStrLen;
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       // Imm* Unicode API works on Windows NT / 2000.
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_COMPSTR, NULL, 0, compStrLen);
 
@@ -5628,7 +5628,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 #ifdef DEBUG
                 for(int kk=0;kk<mIMECompClauseStringLength;kk++)
                 {
-                  NS_ASSERTION(mIMECompClauseString[kk] <= (nsToolkit::mIsNT ? mIMECompUnicode->Length() : mIMECompString->Length()), "illegal pos");
+                  NS_ASSERTION(mIMECompClauseString[kk] <= (nsToolkit::mUseImeApiW ? mIMECompUnicode->Length() : mIMECompString->Length()), "illegal pos");
                 }
 #endif
 		//--------------------------------------------------------
@@ -5645,7 +5645,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		if(! mIMEIsComposing) 
 			HandleStartComposition(hIMEContext);
 
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       mIMECompUnicode->Truncate();
     } else {
       mIMECompString->Truncate();
@@ -5689,7 +5689,7 @@ BOOL nsWindow::OnIMEEndComposition()
 		// first when we hit space in composition mode
 		// we need to clear out the current composition string 
 		// in that case. 
-    if (nsToolkit::mIsNT) {
+    if (nsToolkit::mUseImeApiW) {
       mIMECompUnicode->Truncate(0);
     } else {
       mIMECompString->Truncate(0);
