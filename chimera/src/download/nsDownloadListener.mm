@@ -307,4 +307,17 @@ nsDownloadListener::DownloadDone()
   [mDownloadDisplay onEndDownload];
 }
 
+//
+// DetachDownloadDisplay
+//
+// there are times when the download dislpay UI goes away before the
+// listener (quit, for example). This alerts us that we should forget all
+// about having any UI.
+//
+void
+nsDownloadListener::DetachDownloadDisplay()
+{
+  mDownloadDisplay = nil;
+}
+
 #pragma mark -

@@ -149,6 +149,7 @@ public:
     virtual void ResumeDownload() = 0;
     virtual void CancelDownload() = 0;
     virtual void DownloadDone() = 0;
+    virtual void DetachDownloadDisplay() = 0;		// tell downloader to forget about its display
 
     virtual void CreateDownloadDisplay();
     
