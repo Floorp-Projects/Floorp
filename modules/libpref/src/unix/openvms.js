@@ -56,6 +56,6 @@ pref("print.postscript.print_command", "print /delete");
 pref("print.print_command", "print /delete");
 pref("print.print_color", false);
 
-pref("browser.cache.disk.capacity", 4000);
+pref("browser.cache.disk.capacity", 4096);
 pref("plugin.soname.list", "");
 

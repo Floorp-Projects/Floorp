@@ -71,7 +71,7 @@ pref("browser.startup.autoload_homepage",   true);
 
 pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.disk.enable",           true);
-pref("browser.cache.disk.capacity",         50000);
+pref("browser.cache.disk.capacity",         51200);
 pref("browser.cache.memory.enable",         true);
 pref("browser.cache.memory.capacity",       4096);
 pref("browser.cache.disk_cache_ssl",        false);

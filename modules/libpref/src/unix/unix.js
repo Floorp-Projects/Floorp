@@ -45,7 +45,7 @@ pref("mail.check_new_mail", true);
 pref("browser.display.screen_resolution", 0); // System setting
 pref("browser.startup.license_accepted", "");
 pref("browser.cache.memory.capacity", 4096);
-pref("browser.cache.disk.capacity", 50000);
+pref("browser.cache.disk.capacity", 51200);
 pref("browser.drag_out_of_frame_style", 1);
 pref("mail.signature_file", "~/.signature");
 pref("mail.default_fcc", "~/nsmail/Sent");
