@@ -140,17 +140,15 @@ GetScreenOrigin(nsIDOMElement* aElement)
         nsPoint offset;
         frame->GetOffsetFromView(presContext, offset, &view);
         if (view) {
-          nscoord dummy;
-          nsCOMPtr<nsIWidget> widget;
-          rv = view->GetOffsetFromWidget(&dummy, &dummy, *getter_AddRefs(widget));
+          nsPoint widgetOffset(0, 0);
+          nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
           if (widget) {
             nsRect oldBox(0,0,0,0);
             widget->WidgetToScreen(oldBox, *rect);
           }
           
-          nsPoint viewPos = view->GetPosition();
-          rect->x += NSTwipsToIntPixels(offset.x+viewPos.x, scale);
-          rect->y += NSTwipsToIntPixels(offset.y+viewPos.y, scale);
+          rect->x += NSTwipsToIntPixels(offset.x+widgetOffset.x, scale);
+          rect->y += NSTwipsToIntPixels(offset.y+widgetOffset.y, scale);
         }
         
         size = frame->GetSize();
