@@ -1323,7 +1323,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       computedWidth += borderPadding.right;
     }
 
-    // See if we should compute our max element size
     if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
       // Add in border and padding dimensions to already computed
       // max-element-width values.
@@ -3446,13 +3445,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       nscoord maxElementWidth = 0;
       if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
         maxElementWidth = brc.GetMaxElementWidth();
-        if (aState.IsImpactedByFloater() &&
-            (NS_FRAME_SPLITTABLE_NON_RECTANGULAR != splitType)) {
-          // Add in floater impacts to the lines max-element-width, but
-          // only if the block element isn't one of us (otherwise the
-          // floater impacts will be counted twice).
-          ComputeLineMaxElementWidth(aState, aLine, &maxElementWidth);
-        }
       }
       // If we asked the block to update its maximum width, then record the
       // updated value in the line, and update the current maximum width
@@ -4355,24 +4347,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   aState.mY = newY;
-  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
-#ifdef DEBUG
-    if (gNoisyMaxElementWidth) {
-      IndentBy(stdout, gNoiseIndent);
-      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-        printf("PASS1 ");
-      }
-      ListTag(stdout);
-      printf(": band.floaterCount=%d\n",
-             //aLine->mFloaters.NotEmpty() ? "yes" : "no",
-             aState.mBand.GetFloaterCount());
-    }
-#endif
-    if (0 != aState.mBand.GetFloaterCount()) {
-      // Add in floater impacts to the lines max-element-width
-      ComputeLineMaxElementWidth(aState, aLine, &maxElementWidth);
-    }
-  }
   
   // If we're reflowing the line just to incrementally update the
   // maximum width, then don't post-place the line. It's doing work we
@@ -4456,40 +4430,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   return PR_FALSE;
-}
-
-// Compute the line's max-element-width by adding into the raw value
-// computed by reflowing the contents of the line (aMaxElementWidth)
-// the impact of floaters on this line or the preceeding lines.
-void
-nsBlockFrame::ComputeLineMaxElementWidth(nsBlockReflowState& aState,
-                                         nsLineBox* aLine,
-                                         nscoord* aMaxElementWidth)
-{
-  nscoord maxWidth;
-  aState.mBand.GetMaxElementWidth(aState.mPresContext, &maxWidth);
-#ifdef DEBUG
-  if (gNoisyMaxElementWidth) {
-    IndentBy(stdout, gNoiseIndent);
-    if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-      printf("PASS1 ");
-    }
-    ListTag(stdout);
-    printf(": maxFloaterWidth=%d\n", maxWidth);
-  }
-#endif
-
-  // To ensure that we always place some content next to a floater,
-  // _add_ the max floater width to our line's max element size.
-  *aMaxElementWidth += maxWidth;
-
-#ifdef DEBUG
-  if (gNoisyMaxElementWidth) {
-    IndentBy(stdout, gNoiseIndent);
-    printf ("nsBlockFrame::ComputeLineMaxElementWidth: %p returning MEW %d\n", 
-            this, *aMaxElementWidth);
-  }
-#endif
 }
 
 void
@@ -5276,9 +5216,7 @@ nsBlockFrame::DeleteNextInFlowChild(nsIPresContext* aPresContext,
 nsresult
 nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsPlaceholderFrame* aPlaceholder,
-                            nsRect&             aCombinedRectResult,
-                            nsMargin&           aMarginResult,
-                            nsMargin&           aComputedOffsetsResult,
+                            nsFloaterCache*     aFloaterCache,
                             nsReflowStatus&     aReflowStatus)
 {
   // Delete the placeholder's next in flows, if any
@@ -5379,7 +5317,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   nsCollapsingMargin margin;
   nsresult rv = brc.ReflowBlock(availSpace, PR_TRUE, margin, isAdjacentWithTop, 
-                                aComputedOffsetsResult, floaterRS, aReflowStatus);
+                                aFloaterCache->mOffsets, floaterRS,
+                                aReflowStatus);
   // An incomplete reflow status means we should split the floater 
   // if the height is constrained (bug 145305). 
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && (NS_UNCONSTRAINEDSIZE == availHeight)) 
@@ -5399,7 +5338,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                                       nsSize(availSpace.width, availSpace.height), 
                                       aState.mReflowState.reason, PR_FALSE);
       rv = brc.ReflowBlock(availSpace, PR_TRUE, marginMEW, isAdjacentWithTop, 
-                           aComputedOffsetsResult, redoFloaterRS, aReflowStatus);
+                           aFloaterCache->mOffsets, redoFloaterRS,
+                           aReflowStatus);
     }
   }
 
@@ -5417,14 +5357,14 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Capture the margin information for the caller
   const nsMargin& m = brc.GetMargin();
-  aMarginResult.top = brc.GetTopMargin();
-  aMarginResult.right = m.right;
+  aFloaterCache->mMargins.top = brc.GetTopMargin();
+  aFloaterCache->mMargins.right = m.right;
   brc.GetCarriedOutBottomMargin().Include(m.bottom);
-  aMarginResult.bottom = brc.GetCarriedOutBottomMargin().get();
-  aMarginResult.left = m.left;
+  aFloaterCache->mMargins.bottom = brc.GetCarriedOutBottomMargin().get();
+  aFloaterCache->mMargins.left = m.left;
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
-  aCombinedRectResult = metrics.mOverflowArea;
+  aFloaterCache->mCombinedArea = metrics.mOverflowArea;
 
   // Set the rect, make sure the view is properly sized and positioned,
   // and tell the frame we're done reflowing it
@@ -5444,11 +5384,17 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   floater->DidReflow(aState.mPresContext, &floaterRS, NS_FRAME_REFLOW_FINISHED);
 
   // If we computed it, then stash away the max-element-width for later
-  if (computeMaxElementWidth) {
-    nscoord mew = brc.GetMaxElementWidth();
-    mew += aMarginResult.left + aMarginResult.right;
-    aState.StoreMaxElementWidth(floater, mew);
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
+    nscoord mew = brc.GetMaxElementWidth() +
+                  aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
+
+    // This is all we need to do to include the floater
+    // max-element-width since we don't require that we end up with
+    // content next to floaters.
     aState.UpdateMaxElementWidth(mew); // fix for bug 13553
+
+    // Allow the floater width to be restored in state recovery.
+    aFloaterCache->mMaxElementWidth = mew;
   }
 #ifdef NOISY_FLOATER
   printf("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);

@@ -591,6 +591,14 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
     }
 #endif
     UpdateMaxElementWidth(aLine->mMaxElementWidth);
+
+    // Recover the floater MEWs for floaters in this line (but not in
+    // blocks within it, since their MEWs are already part of the block's
+    // MEW).
+    if (aLine->HasFloaters()) {
+      for (nsFloaterCache* fc = aLine->GetFirstFloater(); fc; fc = fc->Next())
+        UpdateMaxElementWidth(fc->mMaxElementWidth);
+    }
   }
 
   // If computing the maximum width, then update mMaximumWidth
@@ -669,6 +677,7 @@ nsBlockReflowState::AddFloater(nsLineLayout&       aLineLayout,
   nsFloaterCache* fc = mFloaterCacheFreeList.Alloc();
   fc->mPlaceholder = aPlaceholder;
   fc->mIsCurrentLineFloater = aLineLayout.CanPlaceFloaterNow();
+  fc->mMaxElementWidth = 0;
 
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
@@ -884,8 +893,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   }
 
   // Reflow the floater
-  mBlock->ReflowFloater(*this, placeholder, aFloaterCache->mCombinedArea,
-                        aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
+  mBlock->ReflowFloater(*this, placeholder, aFloaterCache, aReflowStatus);
 
   // Get the floaters bounding box and margin information
   floater->GetRect(region);
@@ -968,8 +976,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       mY += mAvailSpaceRect.height;
       GetAvailableSpace();
       // reflow the floater again now since we have more space
-      mBlock->ReflowFloater(*this, placeholder, aFloaterCache->mCombinedArea,
-                            aFloaterCache->mMargins, aFloaterCache->mOffsets, aReflowStatus);
+      mBlock->ReflowFloater(*this, placeholder, aFloaterCache, aReflowStatus);
       // Get the floaters bounding box and margin information
       floater->GetRect(region);
       // Adjust the floater size by its margin. That's the area that will
