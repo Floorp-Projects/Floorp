@@ -119,6 +119,10 @@ toolbar#PersonalToolbar {
     border: none;
 }
 
+toolbar#PersonalToolbar:-moz-drop-marker {
+   color: white;
+}
+
 titledbutton.bookmarkbutton {
    margin: 0px;
    max-width: 8em;
