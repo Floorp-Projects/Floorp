@@ -66,7 +66,8 @@
  * attributes, tiny or short id, and a field telling for..in order.  Note that
  * labels are not unique in the tree, but they are unique among a node's kids
  * (barring rare and benign multi-threaded race condition outcomes, see below)
- * and along any ancestor line from the tree root to a given leaf node.
+ * and along any ancestor line from the tree root to a given leaf node (except
+ * for the hard case of duplicate formal parameters to a function).
  *
  * Thus the root of the tree represents all empty scopes, and the first ply
  * of the tree represents all scopes containing one property, etc.  Each node
@@ -223,10 +224,15 @@ struct JSScope {
 
 /* Scope flags and some macros to hide them from other files than jsscope.c. */
 #define SCOPE_MIDDLE_DELETE             0x0001
+#define SCOPE_SEALED                    0x0002
 
 #define SCOPE_HAD_MIDDLE_DELETE(scope)  ((scope)->flags & SCOPE_MIDDLE_DELETE)
 #define SCOPE_SET_MIDDLE_DELETE(scope)  ((scope)->flags |= SCOPE_MIDDLE_DELETE)
 #define SCOPE_CLR_MIDDLE_DELETE(scope)  ((scope)->flags &= ~SCOPE_MIDDLE_DELETE)
+
+#define SCOPE_IS_SEALED(scope)          ((scope)->flags & SCOPE_SEALED)
+#define SCOPE_SET_SEALED(scope)         ((scope)->flags |= SCOPE_SEALED)
+#define SCOPE_CLR_SEALED(scope)         ((scope)->flags &= ~SCOPE_SEALED)
 
 /*
  * A little information hiding for scope->lastProp, in case it ever becomes

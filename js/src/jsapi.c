@@ -2020,6 +2020,100 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     return js_NewObject(cx, clasp, proto, parent);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
+{
+    JSScope *scope;
+    JSIdArray *ida;
+    uint32 nslots;
+    jsval v, *vp, *end;
+
+    if (!OBJ_IS_NATIVE(obj)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_CANT_SEAL_OBJECT,
+                             OBJ_GET_CLASS(cx, obj)->name);
+        return JS_FALSE;
+    }
+
+    /* Nothing to do if obj's scope is already sealed. */
+    scope = OBJ_SCOPE(obj);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(scope->ownercx == cx);
+#endif
+    if (SCOPE_IS_SEALED(scope))
+        return JS_TRUE;
+
+    /* XXX Enumerate lazy properties now, as they can't be added later. */
+    ida = JS_Enumerate(cx, obj);
+    if (!ida)
+        return JS_FALSE;
+    JS_DestroyIdArray(cx, ida);
+
+    /* Ensure that obj has its own, mutable scope, and seal that scope. */
+    JS_LOCK_OBJ(cx, obj);
+    scope = js_GetMutableScope(cx, obj);
+    if (scope)
+        SCOPE_SET_SEALED(scope);
+    JS_UNLOCK_SCOPE(cx, scope);
+    if (!scope)
+        return JS_FALSE;
+
+    /* If we are not sealing an entire object graph, we're done. */
+    if (!deep)
+        return JS_TRUE;
+
+    /* Walk obj->slots and if any value is a non-null object, seal it. */
+    nslots = JS_MIN(scope->map.freeslot, scope->map.nslots);
+    for (vp = obj->slots, end = vp + nslots; vp < end; vp++) {
+        v = *vp;
+        if (JSVAL_IS_PRIMITIVE(v))
+            continue;
+        if (!JS_SealObject(cx, JSVAL_TO_OBJECT(v), deep))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_UnsealObject(JSContext *cx, JSObject *obj, JSBool deep)
+{
+    JSScope *scope;
+    uint32 nslots;
+    jsval v, *vp, *end;
+
+    if (!OBJ_IS_NATIVE(obj)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_CANT_UNSEAL_OBJECT,
+                             OBJ_GET_CLASS(cx, obj)->name);
+        return JS_FALSE;
+    }
+
+    scope = OBJ_SCOPE(obj);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(scope->ownercx == cx);
+#endif
+    if (!SCOPE_IS_SEALED(scope))
+        return JS_TRUE;
+
+    JS_ASSERT(scope == OBJ_SCOPE(obj));
+    JS_LOCK_SCOPE(cx, scope);
+    SCOPE_CLR_SEALED(scope);
+    JS_UNLOCK_SCOPE(cx, scope);
+
+    if (!deep)
+        return JS_TRUE;
+
+    nslots = JS_MIN(scope->map.freeslot, scope->map.nslots);
+    for (vp = obj->slots, end = vp + nslots; vp < end; vp++) {
+        v = *vp;
+        if (JSVAL_IS_PRIMITIVE(v))
+            continue;
+        if (!JS_UnsealObject(cx, JSVAL_TO_OBJECT(v), deep))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent)
