@@ -492,7 +492,7 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool del
     PRFileDesc* fd;
     rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &fd);
     if (NS_FAILED(rv)) return rv;
-    
+
     return InitWithFileDescriptor(fd, file, deleteOnClose);
 }
 
