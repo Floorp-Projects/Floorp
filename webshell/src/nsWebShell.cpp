@@ -1329,10 +1329,12 @@ nsWebShell::GetObserver(nsIStreamObserver*& aResult)
 NS_IMETHODIMP
 nsWebShell::SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver)
 {
+//	if (anObserver != nsnull) {
   NS_IF_RELEASE(mDocLoaderObserver);
 
   mDocLoaderObserver = anObserver;
   NS_IF_ADDREF(mDocLoaderObserver);
+//	}
   return NS_OK;
 }
 
