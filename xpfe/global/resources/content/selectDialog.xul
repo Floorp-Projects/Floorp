@@ -28,7 +28,6 @@ Contributor(s): ______________________________________. -->
       ondialogaccept="return commonDialogOnOK();"
       ondialogcancel="return commonDialogOnCancel();">
 
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
   <vbox style="width: 24em;margin: 5px;">
