@@ -68,6 +68,7 @@ public:
 
 	NS_IMETHOD ClearDatabase();
 	NS_IMETHOD NotifyDirItemAdded(nsISupports *item) { return NotifyItemAdded(item);}
+	NS_IMETHOD RemoveElementsFromAddressList();
 
 	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 
@@ -77,6 +78,7 @@ protected:
 	nsresult NotifyItemDeleted(nsISupports *item);
 	nsresult AddChildCards(nsAutoString name, nsIAbCard **childDir);
 	nsresult DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Server *server);
+	nsresult RemoveCardFromAddressList(const nsIAbCard* card);
 
 	nsresult AddMailList(const char *uriName);
 

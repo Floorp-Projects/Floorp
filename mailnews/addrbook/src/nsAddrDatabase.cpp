@@ -1635,7 +1635,8 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(PRUint32 listRowID, ns
 	{
 		PRUint32 totalAddress = GetListAddressTotal(pListRow) + 1;
 		SetListAddressTotal(pListRow, totalAddress);
-		err = AddListCardColumnsToRow(newCard, pListRow, totalAddress);
+		nsCOMPtr<nsIAbCard> pNewCard;
+		err = AddListCardColumnsToRow(newCard, pListRow, totalAddress, getter_AddRefs(pNewCard));
 		//  do notification
 		if (notify)
 		{
@@ -1646,7 +1647,8 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(PRUint32 listRowID, ns
 
 }
 
-nsresult nsAddrDatabase::AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos)
+nsresult nsAddrDatabase::AddListCardColumnsToRow
+(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos, nsIAbCard** pNewCard)
 {
 	if (!pCard && !pListRow )
 		return NS_ERROR_NULL_POINTER;
@@ -1678,6 +1680,9 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pL
 				//notify RDF a new card row
 				nsCOMPtr<nsIAbCard>	newCard;
 				CreateABCard(pCardRow, getter_AddRefs(newCard));
+				*pNewCard = newCard;
+				NS_IF_ADDREF(*pNewCard);
+
 				NotifyCardEntryChange(AB_NotifyInserted, newCard, NULL);
 			}
 			PR_FREEIF(pUTF8Email);
@@ -1800,7 +1805,12 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 			pCard->GetPrimaryEmail(&email);
 			PRInt32 emailLength = nsCRT::strlen(email);
 			if (email && emailLength)
-				err = AddListCardColumnsToRow(pCard, listRow, pos);
+			{
+				nsCOMPtr<nsIAbCard> pNewCard;
+				err = AddListCardColumnsToRow(pCard, listRow, pos, getter_AddRefs(pNewCard));
+				if (pNewCard)
+					pAddressLists->ReplaceElementAt(pNewCard, i);
+			}
 		}
 	}
 	return NS_OK;
@@ -3957,3 +3967,6 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 	}
 	return NS_OK;
 }
+
+
+

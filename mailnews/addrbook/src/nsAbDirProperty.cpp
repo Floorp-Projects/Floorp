@@ -215,6 +215,10 @@ NS_IMETHODIMP
 nsAbDirProperty::NotifyDirItemAdded(nsISupports *item)
 { return NS_OK; }
 
+NS_IMETHODIMP 
+nsAbDirProperty::RemoveElementsFromAddressList()
+{ return NS_OK; }
+
 nsresult nsAbDirProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)

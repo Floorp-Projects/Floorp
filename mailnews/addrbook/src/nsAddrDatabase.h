@@ -301,7 +301,7 @@ protected:
 	nsresult GetAnonymousAttributesFromDB();
 	nsresult AddRecordKeyColumnToRow(nsIMdbRow *pRow);
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
-	nsresult AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos);
+	nsresult AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos, nsIAbCard** pNewCard);
 	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
 	nsresult RemoveAnonymousList(nsVoidArray* pArray);
 	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 

@@ -406,6 +406,55 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 	return rv;
 }
 
+NS_IMETHODIMP nsAbDirectory::RemoveElementsFromAddressList()
+{
+	if (m_AddressList)
+	{
+		PRUint32 count;
+		nsresult rv = m_AddressList->Count(&count);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+		PRInt32 i;
+		for (i = count - 1; i >= 0; i--)
+			m_AddressList->RemoveElementAt(i);
+	}
+	m_AddressList = null_nsCOMPtr();
+	return NS_OK;
+}
+
+nsresult nsAbDirectory::RemoveCardFromAddressList(const nsIAbCard* card)
+{
+	nsresult rv = NS_OK;
+	PRUint32 listTotal;
+	PRInt32 i, j;
+	rv = m_AddressList->Count(&listTotal);
+	for (i = listTotal - 1; i >= 0; i--)
+	{						
+		nsISupports* pSupport = m_AddressList->ElementAt(i);
+		if (!pSupport)
+			continue;
+
+		nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
+		if (listDir)
+		{
+			nsISupportsArray* pAddressLists;
+			listDir->GetAddressLists(&pAddressLists);
+			if (pAddressLists)
+			{	
+				PRUint32 total;
+				rv = pAddressLists->Count(&total);
+				for (j = total - 1; j >= 0; j--)
+				{
+					nsISupports* pSupport = pAddressLists->ElementAt(j);
+					nsCOMPtr<nsIAbCard> cardInList(do_QueryInterface(pSupport, &rv));
+					if (card == cardInList.get())
+						pAddressLists->RemoveElementAt(j);
+				}
+			}
+		}
+	}
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 {
 	nsresult rv = NS_OK;
@@ -416,9 +465,10 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 	if (NS_SUCCEEDED(rv) && mDatabase)
 	{
 		PRUint32 cardCount;
+		PRUint32 i;
 		rv = cards->Count(&cardCount);
 		if (NS_FAILED(rv)) return rv;
-		for(PRUint32 i = 0; i < cardCount; i++)
+		for (i = 0; i < cardCount; i++)
 		{
 			nsCOMPtr<nsISupports> cardSupports;
 			nsCOMPtr<nsIAbCard> card;
@@ -454,8 +504,11 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 							if (listDir)
 								NotifyItemDeleted(listDir);
 							PR_smprintf_free(listUri);
-							return NS_OK;
 						}
+					}
+					else
+					{ 
+						RemoveCardFromAddressList(card);
 					}
 				}
 			}
@@ -542,70 +595,72 @@ nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Serv
 
 NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
+	
+	if (!directory)
+		return NS_ERROR_FAILURE;
 
-	if (directory)
-	{
-		DIR_Server *server = nsnull;
-		rv = directory->GetServer(&server);
-		if (server)
-		{	//it's an address book
-			DeleteDirectoryCards(directory, server);
-			
-			nsISupportsArray* pAddressLists;
-			directory->GetAddressLists(&pAddressLists);
-			if (pAddressLists)
-			{	//remove mailing list node
-				PRUint32 total;
-				rv = pAddressLists->Count(&total);
-				if (total)
+	DIR_Server *server = nsnull;
+	rv = directory->GetServer(&server);
+	if (server)
+	{	//it's an address book		
+		nsISupportsArray* pAddressLists;
+		directory->GetAddressLists(&pAddressLists);
+		if (pAddressLists)
+		{	//remove mailing list node
+			PRUint32 total;
+			rv = pAddressLists->Count(&total);
+			if (total)
+			{
+				PRInt32 i;
+				for (i = total - 1; i >= 0; i--)
 				{
-					PRInt32 i;
-					for (i = total - 1; i >= 0; i--)
+					nsISupports* pSupport = pAddressLists->ElementAt(i);
+					if (pSupport)
 					{
-						nsISupports* pSupport = pAddressLists->ElementAt(i);
-						if (pSupport)
+						nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
+						if (listDir)
 						{
-							nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
-							if (listDir)
-								directory->DeleteDirectory(listDir);
+							directory->DeleteDirectory(listDir);
+							listDir->RemoveElementsFromAddressList();
 						}
 					}
+					pAddressLists->RemoveElement(pSupport);
 				}
 			}
-			DIR_DeleteServerFromList(server);
-			directory->ClearDatabase();
-
-			rv = mSubDirectories->RemoveElement(directory);
-			NotifyItemDeleted(directory);
 		}
-		else
-		{	//it's a mailing list
-			nsresult rv = NS_OK;
+		DIR_DeleteServerFromList(server);
+		directory->ClearDatabase();
 
-			char *uri;
-			rv = directory->GetDirUri(&uri);
-			if (NS_FAILED(rv)) return rv;
+		rv = mSubDirectories->RemoveElement(directory);
+		NotifyItemDeleted(directory);
+	}
+	else
+	{	//it's a mailing list
+		nsresult rv = NS_OK;
 
-			nsCOMPtr<nsIAddrDatabase> database;
-			NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		char *uri;
+		rv = directory->GetDirUri(&uri);
+		if (NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsIAddrDatabase> database;
+		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
+			nsMemory::Free(uri);
+
 			if (NS_SUCCEEDED(rv))
-			{
-				rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
-				nsMemory::Free(uri);
+				rv = database->DeleteMailList(directory, PR_TRUE);
 
-				if (NS_SUCCEEDED(rv))
-					rv = database->DeleteMailList(directory, PR_TRUE);
+			if (NS_SUCCEEDED(rv))
+				database->Commit(kLargeCommit);
 
-				if (NS_SUCCEEDED(rv))
-					database->Commit(kLargeCommit);
+			if (m_AddressList)
+				m_AddressList->RemoveElement(directory);
+			rv = mSubDirectories->RemoveElement(directory);
 
-				if (m_AddressList)
-					m_AddressList->RemoveElement(directory);
-				rv = mSubDirectories->RemoveElement(directory);
-
-				NotifyItemDeleted(directory);
-			}
+			NotifyItemDeleted(directory);
 		}
 	}
 
