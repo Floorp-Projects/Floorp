@@ -68,6 +68,7 @@ public:
 
   NS_IMETHOD Init(nsIPresShell *inPresShell) = 0;
   
+  NS_IMETHOD GetCaretDOMSelection(nsISelection **aDOMSel) = 0;
   NS_IMETHOD SetCaretDOMSelection(nsISelection *aDOMSel) = 0;
 
   /** SetCaretVisible will set the visibility of the caret

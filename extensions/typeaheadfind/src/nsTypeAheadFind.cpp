@@ -1708,8 +1708,11 @@ nsTypeAheadFind::SetSelectionLook(nsIPresShell *aPresShell,
     lookNFeel->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection,
                          isCaretVisibleDuringSelection);
     caret->SetVisibilityDuringSelection(isCaretVisibleDuringSelection != 0);
-    caret->SetCaretVisible(isCaretVisibleDuringSelection != 0);
-    mFocusedDocSelCon->SetCaretEnabled(isCaretVisibleDuringSelection != 0);
+    nsCOMPtr<nsISelection> caretDomSelection;
+    caret->GetCaretDOMSelection(getter_AddRefs(caretDomSelection));
+    if (mFocusedDocSelection == caretDomSelection)  {
+      mFocusedDocSelCon->SetCaretEnabled(isCaretVisibleDuringSelection != 0);
+    }
   }
 }
 
