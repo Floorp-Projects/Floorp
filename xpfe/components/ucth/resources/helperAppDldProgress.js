@@ -264,7 +264,7 @@ function loadDialog()
   
   var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
   if (prefs)
-    keepProgressWindowUpBox.checked = prefs.GetBoolPref("browser.download.keepProgressWndAlive");
+    keepProgressWindowUpBox.checked = prefs.GetBoolPref("browser.download.progressDnldDialog.keepAlive");
 
 
 }
@@ -318,7 +318,7 @@ function onUnload()
 
   var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
   if (prefs)
-    prefs.SetBoolPref("browser.download.keepProgressWndAlive", keepProgressWindowUpBox.checked);
+    prefs.SetBoolPref("browser.download.progressDnldDialog.keepAlive", keepProgressWindowUpBox.checked);
 
    // Cancel app launcher.
    if (helperAppLoader)
