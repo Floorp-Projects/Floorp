@@ -557,7 +557,7 @@ sub make_selection_widget {
                     } elsif ($type eq "RADIO") {
                         $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\" check>$displaytext<br>";
                     } else {
-                        $popup .= "<OPTION SELECTED VALUE=\"$item\">$displaytext";
+                        $popup .= "<OPTION SELECTED VALUE=\"$item\">$displaytext\n";
                     }
                     $found = 1;
                 } else {
@@ -578,7 +578,7 @@ sub make_selection_widget {
         } elsif ($type eq "RADIO") {
             $popup .= "<INPUT NAME=$groupname type=radio checked>$default";
         } else {
-            $popup .= "<OPTION SELECTED>$default";
+            $popup .= "<OPTION SELECTED>$default\n";
         }
     }
     if ($type eq "LIST") {
@@ -605,10 +605,10 @@ sub make_options {
                 }
                 $last = $item;
                 if ($isregexp ? $item =~ $default : $default eq $item) {
-                    $popup .= "<OPTION SELECTED VALUE=\"$item\">$item";
+                    $popup .= "<OPTION SELECTED VALUE=\"$item\">$item\n";
                     $found = 1;
                 } else {
-                    $popup .= "<OPTION VALUE=\"$item\">$item";
+                    $popup .= "<OPTION VALUE=\"$item\">$item\n";
                 }
             }
         }
@@ -631,7 +631,7 @@ sub make_options {
         exit 0;
               
       } else {
-	$popup .= "<OPTION SELECTED>$default";
+	$popup .= "<OPTION SELECTED>$default\n";
       }
     }
     return $popup;
