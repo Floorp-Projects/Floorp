@@ -135,6 +135,11 @@ nsUnknownContentTypeDialog.prototype = {
         
         // Since we're automatically downloading, we don't get the file picker's 
         // logic to check for existing files, so we need to do that here.
+        //
+        // Note - this code is identical to that in 
+        //   browser/base/content/contentAreaUtils.js. 
+        // If you are updating this code, update that code too! We can't share code
+        // here since this is called in a js component. 
         while (result.exists()) {
           var parts = /.+-(\d+)(\..*)?$/.exec(result.leafName);
           if (parts) {
