@@ -62,12 +62,10 @@ REQUIRES	= xpcom \
 		  import \
 		  necko \
 		  msgbase \
-		  mailnews \
 		  msgbaseutil \
 		  profile \
 		  prefmigr \
 		  unicharutil \
-		  uconv \
 		  $(NULL)
 
 CPPSRCS		= 	nsComm4xMailFactory.cpp 	\

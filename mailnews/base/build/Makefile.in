@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  widget \
 		  layout \
-		  webshell \
 		  mime \
 		  uriloader \
 		  mailnews \

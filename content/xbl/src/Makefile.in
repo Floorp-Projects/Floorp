@@ -48,11 +48,9 @@ REQUIRES	= xpcom \
 		  lwbrk \
 		  xul \
 		  xuldoc \
-		  gfx2 \
 		  rdf \
 		  imglib2 \
 		  unicharutil \
-		  webbrwsr \
 		  locale \
 		  $(NULL)
 

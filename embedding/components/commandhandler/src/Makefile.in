@@ -29,11 +29,9 @@ REQUIRES	= string \
 		  xpcom \
 		  dom \
 		  widget \
-		  docshell \
 		  layout \
 		  content \
 		  xuldoc \
-		  commandhandler \
 		  $(NULL)
 
 LIBRARY_NAME	= commandhandler_s

@@ -39,7 +39,6 @@ REQUIRES	= js \
 		  xpcom \
 		  string \
 		  windowwatcher \
-		  printingui \
 		  webbrwsr \
 		  gfx \
 		  webbrowserpersist \

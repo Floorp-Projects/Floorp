@@ -28,30 +28,21 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = accessibility
 LIBRARY_NAME = accessibility_xul_s
-REQUIRES = \
-  content \
-  content_xul \
-  docshell \
-  dom \
-  gfx \
-  gfx2 \
-  htmlparser \
-  imglib2 \
-  intl \
-  layout \
-  layout_xul \
-  locale \
-  necko \
-  plugin \
-  pref \
-  string \
-  uriloader \
-  view \
-  webshell \
-  widget \
-  xpcom \
-  webbrwsr \
-  $(NULL)
+REQUIRES	= content \
+		  docshell \
+		  dom \
+		  gfx \
+		  htmlparser \
+		  intl \
+		  layout \
+		  locale \
+		  necko \
+		  pref \
+		  string \
+		  view \
+		  widget \
+		  xpcom \
+		  $(NULL)
 
 CPPSRCS = \
   nsXULColorPickerAccessible.cpp \

@@ -31,7 +31,6 @@ LIBRARY_NAME	= msgmdn_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
 		  string \
-		  editor \
 		  dom \
 		  msgbase \
 		  mailnews \
@@ -39,11 +38,9 @@ REQUIRES	= xpcom \
 		  mime \
 		  pref \
 		  intl \
-		  locale \
 		  msgbaseutil \
 		  msgdb \
 		  msgimap \
-		  msgnews \
 		  mimetype \
 		  msgcompose \
 		  $(NULL)

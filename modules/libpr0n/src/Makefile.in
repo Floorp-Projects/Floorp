@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  gfx \
 		  gfx2 \
-		  mimetype \
 		  $(NULL)
 
 CPPSRCS		= \

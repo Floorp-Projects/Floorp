@@ -51,8 +51,6 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  xpconnect \
 		  unicharutil \
-		  pref \
-      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

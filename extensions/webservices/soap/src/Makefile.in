@@ -44,7 +44,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE                = xmlextras
 LIBRARY_NAME        = xmlextrassoap_s
-REQUIRES        = xpcom string caps dom js widget xpconnect necko schema
+REQUIRES	= xpcom \
+		  string \
+		  caps \
+		  dom \
+		  js \
+		  xpconnect \
+		  necko \
+		  $(NULL)
 
 CPPSRCS        =                                 \
                 nsDefaultSOAPEncoder.cpp\

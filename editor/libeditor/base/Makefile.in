@@ -29,25 +29,24 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= editor
 LIBRARY_NAME	= editorbase_s
 
-REQUIRES        = xpcom \
-                  string \
-                  dom \
-                  locale \
-                  layout \
-                  content \
-                  txmgr \
-                  htmlparser \
-                  necko \
-                  pref \
-                  view \
-                  appshell \
-                  gfx \
-                  widget \
-                  xuldoc \
-                  unicharutil \
-                  webbrwsr \
-			commandhandler \
-                  $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  locale \
+		  layout \
+		  content \
+		  txmgr \
+		  htmlparser \
+		  necko \
+		  pref \
+		  view \
+		  appshell \
+		  gfx \
+		  widget \
+		  xuldoc \
+		  unicharutil \
+		  commandhandler \
+		  $(NULL)
 
 # Internal header files, needed by other editor sublibs:
 INTERNAL_HDR_DIR = ../internal

@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  view \
 		  necko \
-      webbrwsr \
 		  $(NULL)
 
 CPPSRCS	= \

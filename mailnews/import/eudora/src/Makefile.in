@@ -51,7 +51,6 @@ REQUIRES	= xpcom \
 		  msglocal \
 		  mimetype \
 		  unicharutil \
-			mime \
 		  pref \
 		  $(NULL)
 

@@ -50,7 +50,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  unicharutil \
 		  editor \
-		  cookie \
 		  windowwatcher \
 		  xpconnect \
 		  js \

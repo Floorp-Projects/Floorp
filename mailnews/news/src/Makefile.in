@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  mime \
 		  intl \
 		  webshell \
-		  wallet \
 		  rdfutil \
 		  nkcache \
 		  windowwatcher \

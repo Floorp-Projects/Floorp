@@ -43,11 +43,9 @@ REQUIRES	= xpcom \
 		  caps \
 		  pref \
 		  uriloader \
-		  shistory \
 		  xpconnect \
 		  accessibility \
 		  webbrwsr \
-		  webBrowser_core \
 		  $(NULL)
 
 CPPSRCS		= \

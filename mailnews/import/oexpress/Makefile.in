@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgcompose \
 		  msglocal \
-			mime \
 		  $(NULL)
 
 CPPSRCS		= \

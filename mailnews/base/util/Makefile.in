@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  msgcompose \
 		  docshell \
 		  webshell \
-		  wallet \
 		  uriloader \
 		  appshell \
 		  msgimap \

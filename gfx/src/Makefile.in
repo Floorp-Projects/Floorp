@@ -30,19 +30,18 @@ MODULE      = gfx
 EXPORTS         = nsFontList.h
 LIBRARY_NAME    = gkgfx
 EXPORT_LIBRARY = 1
-REQUIRES    = xpcom \
-			windowwatcher \
-			dom \
-          string \
-          widget \
-          locale \
-          view \
-          pref \
-          gfx2 \
-          imglib2 \
-          uconv \
-          unicharutil \
-          $(NULL)
+REQUIRES	= xpcom \
+		  windowwatcher \
+		  dom \
+		  string \
+		  widget \
+		  locale \
+		  view \
+		  pref \
+		  gfx2 \
+		  imglib2 \
+		  unicharutil \
+		  $(NULL)
 
 DIRS        =
 
@@ -107,6 +106,7 @@ CPPSRCS += nsTransform2D.cpp
 endif
 
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES += uconv
 CPPSRCS += nsCompressedCharMap.cpp
 endif
 

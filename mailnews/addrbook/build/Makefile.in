@@ -35,7 +35,6 @@ MODULE_NAME	= nsAbModule
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  msgcompose \
 		  mime \
 		  rdf \
 		  msgbase \

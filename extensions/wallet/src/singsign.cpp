@@ -378,9 +378,6 @@ si_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   return Wallet_3ButtonConfirm(szMessage, window);
 }
 
-// This will go away once select is passed a prompter interface
-#include "nsAppShellCIDs.h" // TODO remove later
-
 PRIVATE PRBool
 si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList, PRInt32* pCount) {
   if (si_UserHasBeenSelected) {

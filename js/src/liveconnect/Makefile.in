@@ -46,7 +46,6 @@ LIBRARY_NAME	= jsj$(MOZ_BITS)$(VERSION_NUMBER)
 MAPFILE		= $(LIBRARY_NAME).map
 endif
 REQUIRES	= js \
-		  string \
 		  xpcom \
 		  xpconnect \
 		  $(NULL)

@@ -39,10 +39,8 @@ REQUIRES	= xpcom \
 		  mime \
 		  msgbase \
 		  msgbaseutil \
-		  msgcompose \
 		  msgdb \
 		  necko \
-		  intl \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)

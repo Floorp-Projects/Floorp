@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  mailnews \
 		  msgdb \
-		  addrbook \
 		  mimetype \
 		  msgnews \
 		  unicharutil \

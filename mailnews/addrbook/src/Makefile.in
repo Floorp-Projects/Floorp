@@ -44,12 +44,10 @@ REQUIRES	= xpcom \
 		  necko \
 		  locale \
 		  unicharutil \
-		  webshell \
 		  uconv \
 		  msgbase \
 		  msgbaseutil \
 		  mime \
-		  msgcompose \
 		  appcomps \
 		  intl \
 		  import \

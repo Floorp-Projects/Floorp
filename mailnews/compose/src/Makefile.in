@@ -50,7 +50,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  msgimap \
 		  msgnews \
-		  uconv \
 		  docshell \
 		  webshell \
 		  addrbook \
@@ -59,11 +58,9 @@ REQUIRES	= xpcom \
 		  txmgr \
 		  exthandler \
 		  mork \
-		  wallet \
 		  nkcache \
 		  mimetype \
 		  windowwatcher \
-      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

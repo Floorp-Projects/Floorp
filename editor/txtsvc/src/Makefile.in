@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  content \
 		  dom \
 		  widget \
-      webbrwsr \
 		  unicharutil \
 		  $(NULL)
 

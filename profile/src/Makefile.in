@@ -40,13 +40,11 @@ REQUIRES	= xpcom \
 		  widget \
 		  necko \
 		  uriloader \
-		  cookie \
 		  intl \
 		  pref \
 		  prefmigr \
 		  appshell \
 		  uconv \
-		  appcomps \
 		  windowwatcher \
 		  $(NULL)
 

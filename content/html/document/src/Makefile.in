@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  webshell \
 		  docshell \
-		  cookie \
 		  caps \
 		  util \
 		  uconv \
@@ -57,7 +56,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  xpconnect \
 		  unicharutil \
-      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  txmgr \
 		  docshell \
 		  msgimap \
-		  chrome \
 		  nkcache \
 		  $(NULL)
 

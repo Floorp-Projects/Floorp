@@ -31,10 +31,9 @@ LIBRARY_NAME	= npnul32
 RESFILE		= npnul32.res
 DEFFILE		= $(srcdir)/npnul32.def
 REQUIRES	= java \
-                  plugin \
-                  xpcom \
-                  pref \
-                  $(NULL)
+		  xpcom \
+		  pref \
+		  $(NULL)
 
 CPPSRCS		= \
 		maindll.cpp \

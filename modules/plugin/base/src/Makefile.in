@@ -46,10 +46,8 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  dom \
 		  gfx \
-		  layout \
 		  content \
 		  widget \
-		  cookie \
 		  mimetype \
 		  oji \
 		  exthandler \

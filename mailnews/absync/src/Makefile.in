@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  mime \
-		  cookie \
 		  docshell \
 		  uriloader \
 		  pref \

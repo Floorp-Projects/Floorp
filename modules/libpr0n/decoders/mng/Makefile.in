@@ -32,8 +32,7 @@ MODULE_NAME	= nsMNGDecoderModule
 
 EXTRA_DSO_LIBS	= gkgfx
 
-REQUIRES	= string \
-		  xpcom \
+REQUIRES	= xpcom \
 		  gfx \
 		  gfx2 \
 		  imglib2 \

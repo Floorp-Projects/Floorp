@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  js \
 		  appshell \
-		  chrome \
 		  caps \
 		  pref \
 		  docshell \

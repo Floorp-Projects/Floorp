@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  webshell \
 		  docshell \
-		  appshell \
 		  intl \
 		  unicharutil \
 		  windowwatcher \
