@@ -62,6 +62,10 @@ struct nsStyleColor : public nsStyleStruct {
   nsString mCursorImage;          // [reset] url string
   float mOpacity;                 // [reset] percentage
 
+  PRBool BackgroundIsTransparent() const {return (mBackgroundFlags &
+    (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE)) ==
+    (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE);}
+
 protected:
   nsStyleColor(void);
   ~nsStyleColor(void);
