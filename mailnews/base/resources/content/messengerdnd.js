@@ -389,7 +389,7 @@ function BeginDragOutliner(event, outliner, selArray, flavor)
     // let's build the drag region
     var region = null;
     try {
-      region = Components.classesByID["{da5b130a-1dd1-11b2-ad47-f455b1814a78}"].createInstance(Components.interfaces.nsIScriptableRegion);
+      region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
       region.init();
       var obo = outliner.outlinerBoxObject;
       var bo = obo.outlinerBody.boxObject;
