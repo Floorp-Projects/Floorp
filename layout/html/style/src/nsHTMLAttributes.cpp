@@ -477,9 +477,7 @@ static void ParseClasses(const nsString& aClassString, nsClassList** aClassList)
 {
   NS_ASSERTION(nsnull == *aClassList, "non null start list");
 
-  nsAutoString  classStr;
-  aClassString.ToUpperCase(classStr); // copy to work buffer as upper
-
+  nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
 
   PRUnichar* start = (PRUnichar*)classStr;
