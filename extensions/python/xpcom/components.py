@@ -24,6 +24,13 @@ import types
 
 StringTypes = [types.StringType, types.UnicodeType]
 
+def _get_good_iid(iid):
+    if iid is None:
+        iid = _xpcom.IID_nsISupports
+    elif type(iid) in StringTypes and len(iid)>0 and iid[0] != "{":
+        iid = getattr(interfaces, iid)
+    return iid
+
 # The "manager" object.
 manager = xpcom.client.Interface(_xpcom.NS_GetGlobalComponentManager(), _xpcom.IID_nsIComponentManager)
 
@@ -144,13 +151,9 @@ class _Class:
         raise AttributeError, "%s class has no attribute '%s'" % (self.contractid, attr)
     def createInstance(self, iid = None):
         import xpcom.client
-        if iid is None:
-            iid = _xpcom.IID_nsISupports
-        elif type(iid) in StringTypes and len(iid)>0 and iid[0] != "{":
-            iid = getattr(interfaces, iid)
-        return xpcom.client.Component(self.contractid, iid)
+        return xpcom.client.Component(self.contractid, _get_good_iid(iid))
     def getService(self, iid):
-        return _xpcom.GetGlobalServiceManager().getService(self.contractid, iid)
+        return _xpcom.GetGlobalServiceManager().getService(self.contractid, _get_good_iid(iid))
 
 class _Classes(_ComponentCollection):
     def __init__(self):
