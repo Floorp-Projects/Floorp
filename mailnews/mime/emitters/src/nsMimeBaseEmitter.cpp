@@ -626,6 +626,8 @@ NS_IMETHODIMP
 nsMimeBaseEmitter::AddAllHeaders(const char *allheaders, 
                                  const PRInt32 allheadersize)
 {
+  if (mDocHeader) //We want to set only the main headers of a message, not the potentially embedded one
+  {
     nsresult rv;
     nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(mURL));
     if (msgurl)
@@ -635,7 +637,8 @@ nsMimeBaseEmitter::AddAllHeaders(const char *allheaders,
         mimeHeaders->Initialize(allheaders, allheadersize);
         msgurl->SetMimeHeaders(mimeHeaders);
     }
-    return NS_OK;
+  }
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
