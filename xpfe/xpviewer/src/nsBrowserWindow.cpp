@@ -448,11 +448,14 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                        (void**)&mWindow);
   if (NS_OK != rv) {
-  return rv;
+    return rv;
   }
+
+  nsWidgetInitData initData;
+  initData.mBorderStyle = eBorderStyle_dialog;
+
   nsRect r(0, 0, aBounds.width, aBounds.height);
-  mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-          nsnull, aAppShell);
+  mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent, nsnull, aAppShell, nsnull, &initData);
   mWindow->GetBounds(r);
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
@@ -539,8 +542,12 @@ HandleToolbarMgrEvent(nsGUIEvent *aEvent)
 
     //nsRect rect(*(((nsPaintEvent*)aEvent)->rect));
     nsRect rect(r);
-    drawCtx->SetColor(NS_RGB(255,255,255));
+    drawCtx->SetColor(NS_RGB(128,128,128));
     drawCtx->DrawLine(0,0,rect.width,0);
+    //drawCtx->SetColor(NS_RGB(255,255,255));
+    //drawCtx->DrawLine(0,1,rect.width,1);
+    //drawCtx->SetColor(NS_RGB(255,255,255));
+    //drawCtx->DrawLine(0,0,rect.width,0);
     drawCtx->SetColor(NS_RGB(128,128,128));
     drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
   }
