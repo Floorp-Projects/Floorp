@@ -45,7 +45,6 @@
 <!ENTITY findAgainCmd.label ".Find Again">
 	<!ENTITY findAgainCmd.key "G">
 	<!ENTITY findAgainCmd.accesskey "g">
-<!ENTITY EditHtmlCmd.label ".Edit HTML Source...">
 
 <!-- View menu items -->
 <!ENTITY showComposeToolbarCmd.label "Show Mail Toolbar">

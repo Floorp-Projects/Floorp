@@ -194,15 +194,13 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-                        <menuitem id="menu_pasteQuote"/>
+      <menuitem id="menu_pasteQuote"/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
 			<menuitem value="&findCmd.label;" disabled="true" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
 			<menuitem value="&findAgainCmd.label;" disabled="true" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
-			<menuseparator/>
-			<menuitem value="&EditHtmlCmd.label;" disabled="true" oncommand="nsCmd:ComposeNYI"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-messages.xul')"/>
 		</menupopup>
@@ -456,33 +454,33 @@ END of Deprecated -->
 
     <!-- These toolbar items get filled out from the editorOverlay -->
     <toolbar id="FormatToolbar" persist="collapsed">
-      <html:div>
-        <!-- items are filled out from editorOverlay -->
-        <html:select id="ParagraphSelect"/>
-        <html:select id="FontFaceSelect"/>
-      </html:div>
+      <!-- We need this else menulists get stretched -->
+      <box autostretch="never">
+        <menulist id="ParagraphSelect"/>
+        <menulist id="FontFaceSelect"/>
 
-      <html:div id="ColorButtons"/>
-      
-      <titledbutton id="DecreaseFontSizeButton"/>
-      <titledbutton id="IncreaseFontSizeButton"/>
-      <titledbutton id="boldButton"/>
-      <titledbutton id="italicButton"/>
-      <titledbutton id="underlineButton"/>
-      <titledbutton id="ulButton"/>
-      <titledbutton id="olButton"/>
-      <titledbutton id="outdentButton"/>
-      <titledbutton id="indentButton"/>
+        <stack id="ColorButtons"/>
 
-      <menu>
-        <titledbutton id="AlignPopupButton"/>
-        <menupopup id="AlignmentPopup"/>
-      </menu>
+        <button id="DecreaseFontSizeButton"/>
+        <button id="IncreaseFontSizeButton"/>
+        <button id="boldButton"/>
+        <button id="italicButton"/>
+        <button id="underlineButton"/>
+        <button id="ulButton"/>
+        <button id="olButton"/>
+        <button id="outdentButton"/>
+        <button id="indentButton"/>
 
-      <menu>
-        <titledbutton id="InsertPopupButton"/>
-	    <menupopup id="InsertPopup"/>
-      </menu>
+        <menu>
+          <button id="AlignPopupButton"/>
+          <menupopup id="AlignmentPopup"/>
+        </menu>
+
+        <menu>
+          <button id="InsertPopupButton"/>
+	      <menupopup id="InsertPopup"/>
+        </menu>
+      </box>
       <spring flex="100%"/>
     </toolbar>
 </toolbox>
