@@ -286,7 +286,11 @@ typedef struct JSResolvingKey {
 typedef struct JSResolvingEntry {
     JSDHashEntryHdr     hdr;
     JSResolvingKey      key;
+    uint32              flags;
 } JSResolvingEntry;
+
+#define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
+#define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
 
 struct JSContext {
     JSCList             links;
