@@ -349,7 +349,7 @@ class TokenStream
                         int escapeVal = 0;
                         for (int i = 0; i != 4; ++i) {
                             c = getChar();
-                            escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                            escapeVal = Kit.xDigitToInt(c, escapeVal);
                             // Next check takes care about c < 0 and bad escape
                             if (escapeVal < 0) { break; }
                         }
@@ -427,7 +427,7 @@ class TokenStream
                 }
 
                 if (base == 16) {
-                    while (0 <= xDigitToInt(c)) {
+                    while (0 <= Kit.xDigitToInt(c, 0)) {
                         addToString(c);
                         c = getChar();
                     }
@@ -540,8 +540,7 @@ class TokenStream
                             escapeVal = 0;
                             for (int i = 0; i != 4; ++i) {
                                 c = getChar();
-                                escapeVal = (escapeVal << 4)
-                                            | xDigitToInt(c);
+                                escapeVal = Kit.xDigitToInt(c, escapeVal);
                                 if (escapeVal < 0) {
                                     continue strLoop;
                                 }
@@ -556,15 +555,14 @@ class TokenStream
                             // Get 2 hex digits, defaulting to 'x'+literal
                             // sequence, as above.
                             c = getChar();
-                            escapeVal = xDigitToInt(c);
+                            escapeVal = Kit.xDigitToInt(c, 0);
                             if (escapeVal < 0) {
                                 addToString('x');
                                 continue strLoop;
                             } else {
                                 int c1 = c;
                                 c = getChar();
-                                escapeVal = (escapeVal << 4)
-                                            | xDigitToInt(c);
+                                escapeVal = Kit.xDigitToInt(c, escapeVal);
                                 if (escapeVal < 0) {
                                     addToString('x');
                                     addToString(c1);
@@ -819,20 +817,6 @@ class TokenStream
     static boolean isDigit(int c)
     {
         return '0' <= c && c <= '9';
-    }
-
-    static int xDigitToInt(int c)
-    {
-        // Use 0..9 < A..Z < a..z
-        if (c <= '9') {
-            c -= '0';
-            if (0 <= c) { return c; }
-        } else if (c <= 'F') {
-            if ('A' <= c) { return c - ('A' - 10); }
-        } else if (c <= 'f') {
-            if ('a' <= c) { return c - ('a' - 10); }
-        }
-        return -1;
     }
 
     /* As defined in ECMA.  jsscan.c uses C isspace() (which allows

@@ -157,6 +157,34 @@ public class Kit
     }
 
     /**
+     * If character <tt>c</tt> is a hexadecimal digit, return
+     * <tt>accumulator</tt> * 16 plus corresponding
+     * number. Otherise return -1.
+     */
+    public static int xDigitToInt(int c, int accumulator)
+    {
+        check: {
+            // Use 0..9 < A..Z < a..z
+            if (c <= '9') {
+                c -= '0';
+                if (0 <= c) { break check; }
+            } else if (c <= 'F') {
+                if ('A' <= c) {
+                    c -= ('A' - 10);
+                    break check;
+                }
+            } else if (c <= 'f') {
+                if ('a' <= c) {
+                    c -= ('a' - 10);
+                    break check;
+                }
+            }
+            return -1;
+        }
+        return (accumulator << 4) | c;
+    }
+
+    /**
      * Add <i>listener</i> to <i>bag</i> of listeners.
      * The function does not modify <i>bag</i> and return a new collection
      * containing <i>listener</i> and all listeners from <i>bag</i>.

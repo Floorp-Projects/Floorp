@@ -487,7 +487,7 @@ public class NativeGlobal implements Serializable, IdFunctionCall
                     if (end <= L) {
                         int x = 0;
                         for (int i = start; i != end; ++i) {
-                            x = (x << 4) | TokenStream.xDigitToInt(buf[i]);
+                            x = Kit.xDigitToInt(buf[i], x);
                         }
                         if (x >= 0) {
                             c = (char)x;

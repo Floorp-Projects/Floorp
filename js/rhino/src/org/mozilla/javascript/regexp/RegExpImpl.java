@@ -398,7 +398,7 @@ public class RegExpImpl implements RegExpProxy {
                 cp = dp;
                 while (++cp < daL && NativeRegExp.isDigit(dc = da.charAt(cp)))
                 {
-                    tmp = 10 * num + NativeRegExp.unDigit(dc);
+                    tmp = 10 * num + (dc - '0');
                     if (tmp < num)
                         break;
                     num = tmp;
@@ -406,14 +406,14 @@ public class RegExpImpl implements RegExpProxy {
             }
             else {  /* ECMA 3, 1-9 or 01-99 */
                 int parenCount = (res.parens == null) ? 0 : res.parens.length;
-                num = NativeRegExp.unDigit(dc);
+                num = dc - '0';
                 if (num > parenCount)
                     return null;
                 cp = dp + 2;
                 if ((dp + 2) < daL) {
                     dc = da.charAt(dp + 2);
                     if (NativeRegExp.isDigit(dc)) {
-                        tmp = 10 * num + NativeRegExp.unDigit(dc);
+                        tmp = 10 * num + (dc - '0');
                         if (tmp <= parenCount) {
                             cp++;
                             num = tmp;

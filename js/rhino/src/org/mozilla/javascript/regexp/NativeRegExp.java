@@ -340,49 +340,12 @@ if (regexp.anchorCh >= 0) {
         return regexp;
     }
 
-    static char getEscape(char c)
-    {
-        switch (c) {
-        case 'b':
-            return '\b';
-        case 'f':
-            return '\f';
-        case 'n':
-            return '\n';
-        case 'r':
-            return '\r';
-        case 't':
-            return '\t';
-        case 'v':
-            return (char) 11; // '\v' is not vtab in Java
-        }
-        throw new RuntimeException();
-    }
-
     static boolean isDigit(char c)
     {
         return '0' <= c && c <= '9';
     }
 
-    static int unDigit(char c)
-    {
-        return c - '0';
-    }
-
-    static boolean isHex(char c)
-    {
-        return ('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
-            ('A' <= c && c <= 'F');
-    }
-
-    static int unHex(char c)
-    {
-        if ('0' <= c && c <= '9')
-            return c - '0';
-        return 10 + Character.toLowerCase(c) - 'a';
-    }
-
-    static boolean isWord(char c)
+    private static boolean isWord(char c)
     {
         return Character.isLetter(c) || isDigit(c) || c == '_';
     }
@@ -583,16 +546,14 @@ if (regexp.anchorCh >= 0) {
                     n = 0;
                     for (i = 0; (i < nDigits) && (index < end); i++) {
                         c = src[index++];
-                        if (!isHex(c)) {
-                            /*
-                             * Back off to accepting the original
-                             *'\' as a literal
-                             */
+                        n = Kit.xDigitToInt(c, n);
+                        if (n < 0) {
+                            // Back off to accepting the original
+                            // '\' as a literal
                             index -= (i + 1);
                             n = '\\';
                             break;
                         }
-                        n = (n << 4) | unHex(c);
                     }
                     localMax = n;
                     break;
@@ -924,16 +885,14 @@ if (regexp.anchorCh >= 0) {
                                 && (state.cp < state.cpend); i++) {
                             int digit;
                             c = src[state.cp++];
-                            if (!isHex(c)) {
-                                /*
-                                 *  back off to accepting the original
-                                 *  'u' or 'x' as a literal
-                                 */
+                            n = Kit.xDigitToInt(c, n);
+                            if (n < 0) {
+                                // Back off to accepting the original
+                                // 'u' or 'x' as a literal
                                 state.cp -= (i + 2);
                                 n = src[state.cp++];
                                 break;
                             }
-                            n = (n << 4) | unHex(c);
                         }
                         c = (char)(n);
                     }
@@ -2216,8 +2175,6 @@ System.out.println("Testing at " + gData.cp + ", op = " + op);
     matchRegExp(REGlobalData gData, RECompiled re,
                 char[] chars, int start, int end, boolean multiline)
     {
-        final int INITIAL_STATESTACK = 20;
-
         if (re.parenCount != 0) {
             gData.parens = new long[re.parenCount];
         } else {
