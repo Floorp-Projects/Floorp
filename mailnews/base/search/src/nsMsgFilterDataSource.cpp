@@ -42,9 +42,14 @@ nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFilterArcsOut;
 nsMsgFilterDataSource::nsMsgFilterDataSource()
 {
     NS_INIT_ISUPPORTS();
+
     if (mGlobalRefCount == 0)
         initGlobalObjects(getRDFService());
-  
+
+#ifdef DEBUG_alecf
+    printf("nsMsgFilterDataSource::nsMsgFilterDataSource()\n");
+#endif
+    
     mGlobalRefCount++;
     /* member initializers and constructor code */
 }
@@ -87,6 +92,18 @@ nsMsgFilterDataSource::GetTargets(nsIRDFResource *aSource,
                                   PRBool aTruthValue,
                                   nsISimpleEnumerator **aResult)
 {
+#ifdef DEBUG_alecf
+    nsXPIDLCString source;
+    aSource->GetValue(getter_Copies(source));
+
+    nsXPIDLCString property;
+    aProperty->GetValue(getter_Copies(property));
+
+    printf("nsMsgFilterDataSource::GetTargets(%s, %s, %s..);\n",
+           (const char*)source,
+           (const char*)property, aTruthValue ? "TRUE" : "FALSE");
+
+#endif
     nsresult rv;
     nsCOMPtr<nsIMsgFilterList> filterList;
     
@@ -100,12 +117,9 @@ nsMsgFilterDataSource::GetTargets(nsIRDFResource *aSource,
         rv = getFilterListTargets(filterList, aSource, aProperty,
                                   aTruthValue, resourceList);
     else {
-        // maybe it's just a filter
-        nsCOMPtr<nsIMsgFilter> filter;
-        rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilter),
-                                  (void **)getter_AddRefs(filter));
-        if (NS_SUCCEEDED(rv))
-            rv = getFilterTargets(filter, aProperty, aTruthValue, resourceList);
+        // maybe it's a filter?
+        // not sure if RDF will ask us or not.
+        NS_WARNING("nsMsgFilterDataSource: Filters don't have multiple targets");
     }
 
     nsArrayEnumerator *cursor = new nsArrayEnumerator(resourceList);
@@ -115,6 +129,17 @@ nsMsgFilterDataSource::GetTargets(nsIRDFResource *aSource,
     NS_ADDREF(*aResult);
     
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilterDataSource::GetTarget(nsIRDFResource *aSource,
+                                 nsIRDFResource *aProperty,
+                                 PRBool aTruthValue,
+                                 nsIRDFNode **aResult)
+{
+    *aResult = nsnull;
+    
+    return NS_RDF_NO_VALUE;
 }
 
 

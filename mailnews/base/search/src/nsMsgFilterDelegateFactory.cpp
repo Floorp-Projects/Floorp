@@ -56,18 +56,33 @@ NS_IMETHODIMP nsMsgFilterDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
     // otherwise make sure it's in the form
     // mailbox://userid@server/foldername#filter4
 
+#ifdef DEBUG_alecf
+    nsXPIDLCString outerValue;
+    aOuter->GetValue(getter_Copies(outerValue));
+    printf("nsMsgFilterDelegateFactory::CreateDelegate(%s, %s, ..)\n",
+           outerValue, aKey);
+#endif
+    
     *aResult = nsnull;
     
     nsresult rv;
     if (aIID.Equals(NS_GET_IID(nsIMsgFilterList))) {
         nsIMsgFilterList *filterList;
         rv = getFilterListDelegate(aOuter, &filterList);
+#ifdef DEBUG_alecf
+        if (NS_SUCCEEDED(rv))
+            printf("  creating nsIMsgFilterList delegate\n");
+#endif
         if (NS_SUCCEEDED(rv))
             *aResult = (void *)filterList;
 
     } else if (aIID.Equals(NS_GET_IID(nsIMsgFilter))) {
         nsIMsgFilter *filter;
         rv = getFilterDelegate(aOuter, &filter);
+#ifdef DEBUG_alecf
+        if (NS_SUCCEEDED(rv))
+            printf("  creating nsIMsgFilter delegate\n");
+#endif
         if (NS_SUCCEEDED(rv))
             *aResult = (void *)filter;
     }

@@ -42,6 +42,12 @@ public:
                           nsIRDFResource *property,
                           PRBool aTruthValue,
                           nsISimpleEnumerator **_retval);
+    
+    NS_IMETHOD GetTarget(nsIRDFResource *aSource,
+                         nsIRDFResource *aProperty,
+                         PRBool aTruthValue,
+                         nsIRDFNode **aResult);
+    
     NS_IMETHOD ArcLabelsOut(nsIRDFResource *source,
                             nsISimpleEnumerator **_retval);
 
