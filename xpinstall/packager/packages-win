@@ -186,6 +186,8 @@ bin\chrome\xpinstall\*
 bin\chrome\registry.rdf
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
+bin\chrome\htmlBindings.xml
+bin\chrome\platformHTMLBindings.xml
 bin\chrome\search\*
 bin\defaults\pref\all.js
 bin\defaults\pref\config.js
