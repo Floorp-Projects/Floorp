@@ -211,13 +211,15 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
   row->GetCells(&cells);
   PRUint32 numCells;
   cells->GetLength(&numCells);
-  for (PRUint32 i = 0; i < numCells; i++) {
+  PRBool found = PR_FALSE;
+  for (PRUint32 i = 0; (i < numCells) && !found; i++) {
     nsIDOMNode *node = nsnull;
     cells->Item(i, &node);
     if (this == node) {
       *aCellIndex = i;
-      break;
+	  found = PR_TRUE;
     }
+	NS_IF_RELEASE(node);
   }
   NS_RELEASE(cells);
   NS_RELEASE(row);
@@ -229,35 +231,39 @@ NS_IMETHODIMP
 nsHTMLTableCellElement::SetCellIndex(PRInt32 aCellIndex)
 {
   PRInt32 oldIndex;
-  GetCellIndex(&oldIndex);
-  if (oldIndex == aCellIndex) {        // no change in index, don't do anything
+  nsresult result = GetCellIndex(&oldIndex);
+  if ((-1 == oldIndex) || (oldIndex == aCellIndex) || (NS_OK != result)) {
     return NS_OK;
   }
 
   nsIDOMHTMLTableRowElement* row = nsnull;
   GetRow(&row);
-
-  row->DeleteCell(oldIndex);       // delete this from the row
-
   nsIDOMHTMLCollection *cells = nsnull;
   row->GetCells(&cells);
-  PRUint32 numCells;
-  cells->GetLength(&numCells);
-  nsIDOMNode *returnNode;
-  if (numCells <= 0) {
-    row->AppendChild(this, &returnNode); // add this back into the row
-  } else {
-    PRInt32 newIndex = oldIndex;
-    if (aCellIndex <= 0) {
-      newIndex = 0;
-    } else if ((PRUint32)aCellIndex >= numCells) {
-      newIndex = numCells - 1;
-    } else if (aCellIndex > oldIndex) {
-      newIndex--;                   // since this got removed before GetLength was called
-    }
-    nsIDOMNode *refNode;
-    cells->Item(newIndex, &refNode);
-    row->InsertBefore(this, refNode, &returnNode); // add this back into the row
+  PRUint32 numCellsU;
+  cells->GetLength(&numCellsU);
+  PRInt32 numCells = numCellsU;
+
+  // check if it really moves
+  if ( !(((0 == oldIndex) && (aCellIndex <= 0)) || ((numCells-1 == oldIndex) && (aCellIndex >= numCells-1)))) {
+    AddRef(); // don't use NS_ADDREF_THIS
+    row->DeleteCell(oldIndex);       // delete this from the row
+    numCells--;
+    nsIDOMNode *returnNode;
+    if ((numCells <= 0) || (aCellIndex >= numCells)) {
+      row->AppendChild(this, &returnNode); // add this back into the row
+		} else {
+      PRInt32 newIndex = aCellIndex;
+      if (aCellIndex <= 0) {
+        newIndex = 0;
+			} else if (aCellIndex > oldIndex) {
+        newIndex--;
+			}
+      nsIDOMNode *refNode;
+      cells->Item(newIndex, &refNode);
+      row->InsertBefore(this, refNode, &returnNode); // add this back into the row
+      NS_IF_RELEASE(refNode);
+		}
   }
 
   NS_RELEASE(cells);

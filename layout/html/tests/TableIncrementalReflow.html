@@ -254,6 +254,13 @@ function changeCellStyle() {
   dump("SCRIPT: changed width for first CELL to 400\n");
 }
 
+function setCellIndex() {
+  dump("\nSCRIPT: starting setCellIndex\n");
+  var cell = document.getElementsByTagName("TD")[0];
+  cell.cellIndex = 99;
+  dump("SCRIPT: ending setCellIndex - placed 1st cell at end\n");
+}
+
 function AddALot() {
   dump("\nSCRIPT: starting AddALot\n");
   var table = document.getElementsByTagName("TABLE")[0];
@@ -325,6 +332,7 @@ delete removes the first object of [type].
 <INPUT TYPE="button" NAME="Ins Cell" VALUE="InsertCell" onClick="insertCell()" width=100>
 <INPUT TYPE="button" NAME="App Cell" VALUE="AppendCell" onClick="appendCell()" width=100>
 <INPUT TYPE="button" NAME="Del Cell" VALUE="DeleteCell" onClick="deleteCell()" width=100>
+<INPUT TYPE="button" NAME="Set Cell Index" VALUE="Set Cell Index" onClick="setCellIndex()" width=100>
 <br>
 <INPUT TYPE="button" NAME="Add a lot" VALUE="AddALot" onClick="AddALot()" width=100>
 <br>

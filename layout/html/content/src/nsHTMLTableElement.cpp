@@ -212,74 +212,73 @@ TableRowsCollection::GetLength(PRUint32* aLength)
         NS_RELEASE(content);
         NS_RELEASE(node);
         tbodies->Item(index, &node);
-        NS_RELEASE(tbodies);
       }
+      NS_RELEASE(tbodies);
     }
   }
   return rv;
 }
 
+// increments aReturn refcnt by 1
 NS_IMETHODIMP 
 TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  *aReturn=nsnull;
+  *aReturn = nsnull;
   nsresult rv = NS_OK;
   PRUint32 count = 0;
-  PRUint32 rowsInHead;
-  if (nsnull!=mParent)
-  {
-    // count the rows in the thead, tfoot, and all tbodies
+ 
+  if (nsnull != mParent) {
     nsIDOMHTMLTableSectionElement *rowGroup;
+
+    // check the thead
     mParent->GetTHead(&rowGroup);
-    if (nsnull!=rowGroup)
-    {
-      nsIContent *content=nsnull;
+    if (nsnull != rowGroup) {
+      nsIContent *content = nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&content);
       GenericElementCollection head(content, nsHTMLAtoms::tr);
+      PRUint32 rowsInHead;
       head.GetLength(&rowsInHead);
       count = rowsInHead;
-      if (count>aIndex)
-      {
-        head.Item(aIndex, aReturn);
-        return NS_OK;
-      }
       NS_RELEASE(content);
       NS_RELEASE(rowGroup);
+      if (count > aIndex) {
+        head.Item(aIndex, aReturn);
+        return NS_OK; 
+      }
     }
+
+	// check the tbodies
     nsIDOMHTMLCollection *tbodies;
     mParent->GetTBodies(&tbodies);
-    if (nsnull!=tbodies)
-    {
+    if (nsnull != tbodies) {
       rowGroup = nsnull;
       nsIDOMNode *node;
       PRUint32 index=0;
       tbodies->Item(index, &node);
-      while (nsnull!=node)
-      {
-        nsIContent *content=nsnull;
+      while (nsnull != node) {
+        nsIContent *content = nsnull;
         node->QueryInterface(kIContentIID, (void **)&content);
-        NS_ADDREF(nsHTMLAtoms::tr);
         GenericElementCollection body(content, nsHTMLAtoms::tr);
+        NS_RELEASE(content);
+        NS_RELEASE(node);
         PRUint32 rows;
         body.GetLength(&rows);
-        if ((count+rows)>aIndex)
-        {
+        if ((count+rows) > aIndex) {
           body.Item(aIndex-count, aReturn);
-          return NS_OK;
+          NS_RELEASE(tbodies);
+		  return NS_OK;
         }
         count += rows;
         index++;
-        NS_RELEASE(content);
-        NS_RELEASE(node);
         tbodies->Item(index, &node);
-        NS_RELEASE(tbodies);
       }
+      NS_RELEASE(tbodies);
     }
-    // if it is to be found, it must be in the tfoot
+
+    // check the tfoot
     mParent->GetTFoot(&rowGroup);
-    if (nsnull!=rowGroup)
-    {
-      nsIContent *content=nsnull;
+    if (nsnull != rowGroup) {
+      nsIContent *content = nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&content);
       GenericElementCollection foot(content, nsHTMLAtoms::tr);
       foot.Item(aIndex-count, aReturn);
@@ -519,7 +518,7 @@ nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
   if (nsnull==mRows)
   {
-    NS_ADDREF(nsHTMLAtoms::tr);
+    // XXX why was this here NS_ADDREF(nsHTMLAtoms::tr);
     mRows = new TableRowsCollection(this);
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
