@@ -98,7 +98,10 @@ function SetForcedCharset(charset)
 
 function UpdateCurrentCharset()
 {
-    var charset = document.commandDispatcher.focusedWindow.document.characterSet;
+    var wnd = document.commandDispatcher.focusedWindow;
+    if (window == wnd) wnd = window.content;
+
+    var charset = wnd.document.characterSet;
 	dump("Update current charset: " + charset + "\n");
 
     var menuitem = document.getElementById('charset.' + charset);
