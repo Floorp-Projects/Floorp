@@ -34,7 +34,11 @@
 #include <windows.h>
 #endif
 
-#define NOISY_IMAGES
+#ifdef DEBUG
+#undef NOISY_IMAGES
+#else
+#undef NOISY_IMAGES
+#endif
 
 int
 PrefChangedCallback(const char* aPrefName, void* instance_data)
@@ -506,6 +510,21 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               PRBool aNeedSizeUpdate,
                               nsIFrameImageLoader*& aLoaderResult)
 {
+#ifdef NOISY_IMAGES
+  nsIDocument* doc = mShell->GetDocument();
+  if (nsnull != doc) {
+    nsIURL* url = doc->GetDocumentURL();
+    if (nsnull != url) {
+      printf("%s: ", url->GetSpec());
+      NS_RELEASE(url);
+    }
+    NS_RELEASE(doc);
+  }
+  printf("start load for %p (", aTargetFrame);
+  fputs(aURL, stdout);
+  printf(")\n");
+#endif
+
   aLoaderResult = nsnull;
  
   // Lookup image request in our loaders array. Note that we need
@@ -578,6 +597,18 @@ nsPresContext::StopLoadImage(nsIFrame* aForFrame)
     nsIFrame* loaderFrame;
     loader->GetTargetFrame(loaderFrame);
     if (loaderFrame == aForFrame) {
+#ifdef NOISY_IMAGES
+      nsIDocument* doc = mShell->GetDocument();
+      if (nsnull != doc) {
+        nsIURL* url = doc->GetDocumentURL();
+        if (nsnull != url) {
+          printf("%s: ", url->GetSpec());
+          NS_RELEASE(url);
+        }
+        NS_RELEASE(doc);
+      }
+      printf("stop load for %p\n", aForFrame);
+#endif
       loader->StopImageLoad();
       NS_RELEASE(loader);
       mImageLoaders.RemoveElementAt(i);
