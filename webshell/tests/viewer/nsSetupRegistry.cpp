@@ -38,6 +38,7 @@
 #endif // NECKO
 #ifdef OJI
 #include "nsILiveconnect.h"
+#include "nsIJVMManager.h"
 #endif
 #include "nsIPluginManager.h"
 #include "nsIProperties.h"
@@ -202,8 +203,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // PLUGIN
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
+
+// OJI
 #ifdef OJI
-static NS_DEFINE_CID(kCLiveconnectCID,             NS_CLIVECONNECT_CID);
+static NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
+static NS_DEFINE_CID(kCJVMManagerCID, NS_JVMMANAGER_CID);
 #endif
 
 extern "C" void
@@ -403,7 +407,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
 
 #ifdef OJI
-  nsComponentManager::RegisterComponentLib(kCLiveconnectCID, NULL, NULL, LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCLiveconnectCID, "LiveConnect", "component://netscape/javascript/liveconnect", LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCJVMManagerCID, "JVMManager", "component://netscape/oji/jvmmanager", OJI_DLL, PR_FALSE, PR_FALSE);
 #endif
 }
-
