@@ -774,12 +774,20 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   mHTMLEditor->GetIsCSSEnabled(&useCSS);
   NS_NAMED_LITERAL_STRING(typeAttrName, "align");
   nsIAtom  *dummyProperty = nsnull;
-  if (useCSS && mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(nodeToExamine, dummyProperty, &typeAttrName))
+  nsCOMPtr<nsIDOMNode> blockParent;
+  if (mHTMLEditor->IsBlockNode(nodeToExamine))
+    blockParent = nodeToExamine;
+  else
+    blockParent = mHTMLEditor->GetBlockNodeParent(nodeToExamine);
+
+  if (!blockParent) return NS_ERROR_FAILURE;
+
+  if (useCSS && mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParent, dummyProperty, &typeAttrName))
   {
     // we are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
     // let's get the value(s) of text-align or margin-left/margin-right
-    mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(nodeToExamine,
+    mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(blockParent,
                                                      dummyProperty,
                                                      &typeAttrName,
                                                      value,
