@@ -1,2 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.CurrentPage_selectAll
-PAGES_TO_LOAD=

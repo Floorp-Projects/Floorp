@@ -1,4 +1,0 @@
-JAVA_SRC = \
-	manual/rendering/applets/MouseTest.java \
-	manual/rendering/javascript/DemoApplet.java \
-	$(NULL)

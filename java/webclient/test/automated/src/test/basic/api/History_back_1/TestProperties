@@ -1,4 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.History_back
-TEST_ID=basic/api/History_back_1
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/bastest1.html,<HTML_ROOT>/test/basic/bastest2.html,<HTML_ROOT>/test/basic/bastest3.html,<HTML_ROOT>/test/basic/bastest4.html
-#PAGES_TO_LOAD=http://earth:11111,http://sirius,http://router,http://dubhe

@@ -1,2 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.mixed.EventRegistration_addMouseListener_2
-PAGES_TO_LOAD=

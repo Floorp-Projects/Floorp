@@ -1,3 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.mixed.WindowControl_removeFocus
-TEST_ID=basic/mixed/WindowControl_removeFocus
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/remfocus.html

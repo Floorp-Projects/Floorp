@@ -1,2 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.EventRegistration_addDocLoadListener_2
-PAGES_TO_LOAD=

@@ -1,3 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.History_setCurrentHistoryIndex
-TEST_ID=basic/api/History_setCurrentHistoryIndex_2
-PAGES_TO_LOAD=

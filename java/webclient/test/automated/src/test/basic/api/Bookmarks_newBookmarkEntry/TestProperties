@@ -1,3 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.Bookmarks_newBookmarkEntry
-TEST_ID=basic/api/Bookmarks_newBookmarksEntry
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/bastest1.html,<HTML_ROOT>/test/basic/bastest2.html,<HTML_ROOT>/test/basic/bastest3.html,<HTML_ROOT>/test/basic/bastest4.html

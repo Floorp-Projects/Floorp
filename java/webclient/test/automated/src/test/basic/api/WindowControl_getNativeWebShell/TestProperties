@@ -1,3 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.WindowControl_getNativeWebShell
-TEST_ID=basic/api/WindowControl_getNativeWebShell
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/bastest1.html

@@ -1,8 +1,0 @@
-0:0,START_DOCUMENT_LOAD_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-1:1,END_DOCUMENT_LOAD_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-2:2,START_URL_LOAD_EVENT_MASK,www.mozilla.org
-3:3,END_URL_LOAD_EVENT_MASK,www.mozilla.org
-4:4,PROGRESS_URL_LOAD_EVENT_MASK,www.mozilla.org
-5:5,STATUS_URL_LOAD_EVENT_MASK,www.mozilla.org
-6:6,UNKNOWN_CONTENT_EVENT_MASK,<HTML_ROOT>/test/basic/bastest11.html
-7:7,FETCH_INTERRUPT_EVENT_MASK,www.mozilla.org

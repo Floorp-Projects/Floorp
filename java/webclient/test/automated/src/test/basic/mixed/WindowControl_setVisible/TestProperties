@@ -1,5 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.mixed.WindowControl_setVisible
-TEST_ID=basic/mixed/WindowControl_setVisible
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/bastest1.html
-#Set MAX tester reaction time to the 10 minuts 
-DELAY_EXTERNAL=600

@@ -1,6 +1,0 @@
-0:0,MOUSE_DOWN_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-1:1,MOUSE_UP_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-2:2,MOUSE_CLICK_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-3:3,MOUSE_DOUBLE_CLICK_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-4:4,MOUSE_OVER_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html
-5:5,MOUSE_OUT_EVENT_MASK,<HTML_ROOT>/test/basic/bastest1.html

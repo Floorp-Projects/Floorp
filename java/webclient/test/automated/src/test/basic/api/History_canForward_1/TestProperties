@@ -1,3 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.api.History_canForward
-TEST_ID=basic/api/History_canForward_1
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/bastest1.html,<HTML_ROOT>/test/basic/bastest2.html,<HTML_ROOT>/test/basic/bastest3.html,<HTML_ROOT>/test/basic/bastest4.html

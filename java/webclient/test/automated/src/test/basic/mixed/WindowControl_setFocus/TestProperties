@@ -1,3 +1,0 @@
-TEST_CLASS=org.mozilla.webclient.test.basic.mixed.WindowControl_setFocus
-TEST_ID=basic/mixed/WindowControl_setFocus
-PAGES_TO_LOAD=<HTML_ROOT>/test/basic/setfocus.html
