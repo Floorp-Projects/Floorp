@@ -3488,35 +3488,33 @@ nsImapService::GetSpecialFoldersDeletionAllowed(PRBool *specialFoldersDeletionAl
 NS_IMETHODIMP
 nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow, const char *folderPath)
 {
-	nsresult rv;
+  nsresult rv;
 
 #ifdef DEBUG_sspitzer
-	printf("GetListOfFoldersWithPath(%s)\n",folderPath);
+  printf("GetListOfFoldersWithPath(%s)\n",folderPath);
 #endif
-	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aServer);
-	if (!server) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aServer);
+  if (!server) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIFolder> rootFolder;
-    rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-	if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  rv = server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
 
-    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!rootMsgFolder) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return rv;
+  if (!rootMsgFolder) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIUrlListener> listener = do_QueryInterface(aServer, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!listener) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIUrlListener> listener = do_QueryInterface(aServer, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!listener) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIEventQueue> queue;
-    // get the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> pEventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (NS_FAILED(rv)) return rv;
-
+  nsCOMPtr<nsIEventQueue> queue;
+  // get the Event Queue for this thread...
+  nsCOMPtr<nsIEventQueueService> pEventQService = 
+    do_GetService(kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+  if (NS_FAILED(rv)) return rv;
+  
   // Locate the folder so that the correct hierarchical delimiter is used in the folder
   // pathnames, otherwise root's (ie, '^') is used and this is wrong.
   nsCOMPtr<nsIMsgFolder> msgFolder;
@@ -3535,25 +3533,25 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
     }
     else
       tokenStr.Assign(tempFolderName);
-
+    
     if ((nsCRT::strcasecmp(tokenStr.get(), "INBOX")==0) && (nsCRT::strcmp(tokenStr.get(), "INBOX") != 0))
       changedStr.Append("INBOX");
     else
       changedStr.Append(tokenStr);
-
+    
     if (slashPos > 0 ) 
       changedStr.Append(remStr);
-
-
+    
+    
     rv = rootMsgFolder->FindSubFolder(changedStr.get(), getter_AddRefs(subFolder));
     if (NS_SUCCEEDED(rv))
       msgFolder = do_QueryInterface(subFolder);
   }
-
-	rv = DiscoverChildren(queue, msgFolder, listener, folderPath, nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-	return NS_OK;
+  
+  rv = DiscoverChildren(queue, msgFolder, listener, folderPath, nsnull);
+  if (NS_FAILED(rv)) return rv;
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3564,11 +3562,9 @@ nsImapService::GetListOfFoldersOnServer(nsIImapIncomingServer *aServer, nsIMsgWi
         nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aServer);
 	if (!server) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIFolder> rootFolder;
-        rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-	if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+        rv = server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
 
-        nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
 	if (NS_FAILED(rv)) return rv;
 	if (!rootMsgFolder) return NS_ERROR_FAILURE;
 
