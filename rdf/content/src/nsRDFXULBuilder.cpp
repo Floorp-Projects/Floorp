@@ -147,8 +147,6 @@ private:
     static PRInt32  kNameSpaceID_XUL;
 
     static nsIAtom* kDataSourcesAtom;
-    static nsIAtom* kFrameAtom;
-    static nsIAtom* kIFrameAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kKeysetAtom;
     static nsIAtom* kRefAtom;
@@ -220,9 +218,6 @@ public:
     IsHTMLElement(nsIContent* aElement);
 
     PRBool
-    IsHTMLFrame(nsIContent* aElement);
-
-    PRBool
     IsAttributeProperty(nsIRDFResource* aProperty);
 
     nsresult AddAttribute(nsIContent* aElement,
@@ -247,8 +242,6 @@ PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
-nsIAtom*        RDFXULBuilderImpl::kFrameAtom;
-nsIAtom*        RDFXULBuilderImpl::kIFrameAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kKeysetAtom;
 nsIAtom*        RDFXULBuilderImpl::kRefAtom;
@@ -315,8 +308,6 @@ RDFXULBuilderImpl::Init()
         if (NS_FAILED(rv)) return rv;
 
         kDataSourcesAtom          = NS_NewAtom("datasources");
-        kFrameAtom                = NS_NewAtom("frame");
-        kIFrameAtom               = NS_NewAtom("iframe");
         kIdAtom                   = NS_NewAtom("id");
         kKeysetAtom               = NS_NewAtom("keyset");
         kRefAtom                  = NS_NewAtom("ref");
@@ -392,8 +383,6 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kXUL_tag);
 
         NS_IF_RELEASE(kDataSourcesAtom);
-        NS_IF_RELEASE(kFrameAtom);
-        NS_IF_RELEASE(kIFrameAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kKeysetAtom);
         NS_IF_RELEASE(kRefAtom);
@@ -854,7 +843,7 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
         rv = gRDFService->IsAnonymousResource(aResource, &isAnonymous);
         if (NS_FAILED(rv)) return rv;
 
-        if (!isAnonymous || aForceIDAttr || IsHTMLFrame(element)) {
+        if (!isAnonymous || aForceIDAttr) {
             // Set the 'id' attribute. We set the 'id' attribute on
             // any content that either:
             //
@@ -864,10 +853,6 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
             // 2) is beneath a 'xul:template' tag
             //     - because we need this to maintain partial construction
             //       state in the nsRDFGenericBuilder.
-            //
-            // 3) is an html:frame or html:iframe
-            //     - because this is a hack of a way to get context menus
-            //       to forward right click events to the right webshell.
             //
             nsXPIDLCString uri;
             rv = aResource->GetValue( getter_Copies(uri) );
@@ -1149,25 +1134,6 @@ RDFXULBuilderImpl::IsHTMLElement(nsIContent* aElement)
         return PR_FALSE;
 
     return (kNameSpaceID_HTML == nameSpaceID);
-}
-
-
-PRBool
-RDFXULBuilderImpl::IsHTMLFrame(nsIContent* aElement)
-{
-    nsresult rv;
-
-    PRInt32 nameSpaceID;
-    rv = aElement->GetNameSpaceID(nameSpaceID);
-    if (NS_SUCCEEDED(rv) && (kNameSpaceID_HTML == nameSpaceID)) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_SUCCEEDED(rv) && ((tag.get() == kFrameAtom) || (tag.get() == kIFrameAtom))) {
-            return PR_TRUE;
-        }
-    }
-
-    return PR_FALSE;
 }
 
 
