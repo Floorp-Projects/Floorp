@@ -441,7 +441,6 @@ extern "C" void ProfileMigrationController(void *data)
 NS_IMETHODIMP
 nsPrefMigration::WindowCloseCallback()
 {
-  nsresult rv;
   nsCOMPtr<nsIScriptGlobalObject> scriptGO(do_QueryInterface(mPMProgressWindow));
   if (!scriptGO) return NS_ERROR_FAILURE;
 
