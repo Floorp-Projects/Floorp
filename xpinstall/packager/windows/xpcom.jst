@@ -81,23 +81,9 @@ function updateWinReg()
 
 function upgradeCleanup()
 {
-  var fComponentReg;
-  var fXpti;
-
-  fComponentReg = getFolder("Program", "component.reg");
-  logComment("Component.reg file: " + fComponentReg);
-  if(File.exists(fComponentReg))
-    fileDelete(fComponentReg);
-
-  fXpti = getFolder("Components", "xpti.dat");
-  logComment("xpti.dat file: " + fXpti);
-  if(File.exists(fXpti))
-    fileDelete(fXpti);
-
-  fXpti = getFolder("Components", "xptitemp.dat");
-  logComment("xptitemp.dat file: " + fXpti);
-  if(File.exists(fXpti))
-    fileDelete(fXpti);
+  deleteThisFile("Program",    "component.reg");
+  deleteThisFile("Components", "xpti.dat");
+  deleteThisFile("Components", "xptitemp.dat");
 }
 
 // main

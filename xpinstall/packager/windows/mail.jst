@@ -180,8 +180,9 @@ function createShortcuts()
 
 function upgradeCleanup()
 {
-  // uncomment this function call after beta1
-  // deleteThisFile("Components", "signed.dll");
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Components", "signed.dll");
 }
 
 // main
