@@ -30,10 +30,22 @@ sub Cleanup
 
 sub JarIt
 {
-    my ($jarfile, $args) = @_;
-    system "zip -u $jarfile $args\n" || die "zip failed";
+    my ($destPath, $jarfile, $copyFiles, $args, $overrides) = @_;
+    if ($copyFiles eq true) {
+        foreach $file (split(' ', "$args $overrides")) {
+            EnsureFileInDir($destPath, $file);
+        }
+    }
+
+    if (!($args eq "")) {
+        system "zip -u $destPath/$jarfile $args\n" || die "zip failed";
+    }
+    if (!($overrides eq "")) {
+        system "zip $destPath/$jarfile $overrides\n" || die "zip failed";
+    }
+
     my $cwd = cwd();
-    print "+++ jarred $cwd => $jarfile\n";
+    print "+++ made chrome $cwd => $destPath/$jarfile\n";
     Cleanup();
 }
 
@@ -137,22 +149,20 @@ if (defined($opt_d)) {
     $destPath = $opt_d;
 }
 
+getopt("c:");
+
+my $copyFiles = false;
+if (defined($opt_c)) {
+    $copyFiles = true;
+}
+
 while (<>) {
     chomp;
   start: 
     if (/^([\w\d.\-\\\/]+)\:\s*$/) {
-        my $jarfileDest = $1;  
-        my $jarfile = "$destPath/$jarfileDest"; 
-        $jarfileDest =~ s/[^\/]+$//;
-        if ( ! -e "$destPath/$jarfileDest" )  {
-            my $currentDir = cwd();
-            chdir($destPath);
-            MkDirs($jarfileDest,".");
-            chdir($currentDir);
-            @cleanupList = (); 
-        }
-
+        my $jarfile = $1;
         my $args = "";
+        my $overrides = "";
         while (<>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
@@ -164,15 +174,25 @@ while (<>) {
 
                 EnsureFileInDir($dest, $srcPath);
                 $args = "$args$dest ";
+            } elsif (/^\+\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
+                my $dest = $1;
+                my $srcPath = $2;
+
+                if ( $srcPath ) {  
+                    $srcPath = substr($srcPath,1,-1);
+                }
+
+                EnsureFileInDir($dest, $srcPath);
+                $overrides = "$overrides$dest ";
             } elsif (/^\s*$/) {
                 # end with blank line
                 last;
             } else {
-        	JarIt($jarfile, $args);
+                JarIt($destPath, $jarfile, $copyFiles, $args, $overrides);
                 goto start;
             }
         }
-        JarIt($jarfile, $args);
+        JarIt($destPath, $jarfile, $copyFiles, $args, $overrides);
 
     } elsif (/^\s*\#.*$/) {
         # skip comments
