@@ -926,15 +926,19 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 		{
 			if ((*uni1) && (*uni2))
 			{
+				nsresult rv = NS_ERROR_FAILURE;
 				bothValid = PR_TRUE;
 				sortOrder = 0;  
 				if(collationService) 
 				{
 					nsAutoString v1(uni1);
 					nsAutoString v2(uni2);
-					collationService->CompareString(
+					rv = collationService->CompareString(
 						kCollationCaseInSensitive,
 						v1,v2,&sortOrder);
+				}
+				if (NS_FAILED(rv)) {
+					sortOrder = nsCRT::strcasecmp(uni1, uni2);
 				}
 			}
 			else if (*uni1)	sortOrder = -1;
