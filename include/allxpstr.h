@@ -562,9 +562,9 @@ choose Software from the Help menu.")
 ResDef(MK_TIMEBOMB_WARNING_MESSAGE, -326,
 "This is a pre-release copy of "MOZ_NAME_FULL" that\n\
 will expire at %s.\n\
-Using this software may cause data loss, computer crashes, \
-or bodily harm, including (but not limited to) accidental death \
-or dismemberment.\nYOU HAVE BEEN WARNED.\n")
+This is ALPHA SOFTWARE.  It has not been tested at all.\n\
+It may delete all your files and smoke your hard drive.\n\
+YOU HAVE BEEN WARNED.\n")
 
 /* #define MK_UNABLE_TO_DELETE_FILE */
 ResDef(MK_UNABLE_TO_DELETE_FILE, -327,
