@@ -98,5 +98,5 @@ export:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
 clobber::
-    $(RM) $(DIST)\bin\$(DLL)
-    $(RM) $(DIST)\lib\$(LIBRARY)
+    $(RM) $(DIST)\bin\$(LIBNAME).dll
+    $(RM) $(DIST)\lib\$(LIBNAME).lib
