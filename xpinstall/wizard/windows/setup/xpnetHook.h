@@ -23,7 +23,11 @@
 #ifndef _XPNETHOOK_H_
 #define _XPNETHOOK_H_
 
-int WGet(char *szUrl);
+int WGet(char *szUrl,
+         char *szProxyServer,
+         char *szProxyPort,
+         char *szProxyUser,
+         char *szProxyPasswd);
 int DownloadFiles(char *szInputIniFile,
                   char *szDownloadDir,
                   char *szProxyServer,

@@ -446,13 +446,41 @@ void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, DWORD *dwTotalEst
 }
 
 /* Function used only to send the message stream error */
-int WGet(char *szUrl)
+int WGet(char *szUrl,
+         char *szProxyServer,
+         char *szProxyPort,
+         char *szProxyUser,
+         char *szProxyPasswd)
 {
-  int rv;
+  int        rv;
+  char       proxyURL[MAX_BUF];
+  nsHTTPConn *conn = NULL;
 
-  nsHTTPConn *conn = new nsHTTPConn(szUrl);
-  if(conn == NULL)
-    return(WIZ_OUT_OF_MEMORY);
+  if((szProxyServer != NULL) && (szProxyPort != NULL) &&
+     (*szProxyServer != '\0') && (*szProxyPort != '\0'))
+  {
+    /* detected proxy information, let's use it */
+    memset(proxyURL, 0, sizeof(proxyURL));
+    wsprintf(proxyURL, "http://%s:%s", szProxyServer, szProxyPort);
+
+    conn = new nsHTTPConn(proxyURL);
+    if(conn == NULL)
+      return(WIZ_OUT_OF_MEMORY);
+
+    if((szProxyUser != NULL) && (*szProxyUser != '\0') &&
+       (szProxyPasswd != NULL) && (*szProxyPasswd != '\0'))
+      /* detected user and password info */
+      conn->SetProxyInfo(szUrl, szProxyUser, szProxyPasswd);
+    else
+      conn->SetProxyInfo(szUrl, NULL, NULL);
+  }
+  else
+  {
+    /* no proxy information supplied. set up normal http object */
+    conn = new nsHTTPConn(szUrl);
+    if(conn == NULL)
+      return(WIZ_OUT_OF_MEMORY);
+  }
   
   rv = conn->Open();
   if(rv == WIZ_OK)

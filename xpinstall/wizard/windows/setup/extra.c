@@ -6565,11 +6565,19 @@ void DeInitialize()
                         sgProduct.szProductName,
                         MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
             // PrintError(szMsg, ERROR_CODE_HIDE);
-            WGet(szFullURL);
+            WGet(szFullURL,
+                 diAdvancedSettings.szProxyServer,
+                 diAdvancedSettings.szProxyPort,
+                 diAdvancedSettings.szProxyUser,
+                 diAdvancedSettings.szProxyPasswd);
         }
         else if(!gErrorMessageStream.bShowConfirmation)
           //PrintError(szMsg, ERROR_CODE_HIDE);
-          WGet(szFullURL);
+          WGet(szFullURL,
+               diAdvancedSettings.szProxyServer,
+               diAdvancedSettings.szProxyPort,
+               diAdvancedSettings.szProxyUser,
+               diAdvancedSettings.szProxyPasswd);
 
         FreeMemory(&szFullURL);
       }
