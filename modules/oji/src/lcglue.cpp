@@ -375,18 +375,17 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 	JVMContext* context = GetJVMContext();
 	JSContext *pJSCX = context->js_context;
 
-	/* TODO: Get to the mocha lock.
- ** LM_LockJS(cx, errp);
- */
-	if (pJSCX == NULL) {
-  // TODO: get to the new LM api.
-		// pJSCX = LM_GetCrippledContext();
-	}
-
 	if (pNSISecurityContext != NULL) {
 
-        nsISecurityContext* jscontext = JVM_GetJSSecurityContext();
-        nsISecurityContext* jvcontext = (nsISecurityContext*)pNSISecurityContext;
+        nsCOMPtr<nsISecurityContext> jscontext = dont_AddRef(JVM_GetJSSecurityContext());
+        nsISecurityContext* jvcontext = NS_STATIC_CAST(nsISecurityContext*,pNSISecurityContext);
+                                        // Should be NS_DYNAMIC_CAST, but no such define exists.
+                                        // So for the sake of portability, we'll live 
+                                        // dangerously and use brute force.
+
+        if( !jscontext || !jvcontext ) {
+            return PR_FALSE;
+        }
 
         // Check that the origin + certificate are the same.
         // If not, then return false.
@@ -400,7 +399,7 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
         jscontext->GetOrigin(jsorigin,buflen);
         jvcontext->GetOrigin(jvorigin,buflen);
 
-        if( nsCRT::strcmp(jsorigin,jvorigin) ) {
+        if( nsCRT::strcasecmp(jsorigin,jvorigin) ) {
             return PR_FALSE;
         }
 
@@ -412,7 +411,7 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
         jscontext->GetCertificateID(jscertid,buflen);
         jvcontext->GetCertificateID(jvcertid,buflen);
 
-        if( nsCRT::strcmp(jscertid,jvcertid) ) {
+        if( nsCRT::strcasecmp(jscertid,jvcertid) ) {
             return PR_FALSE;
         }
 

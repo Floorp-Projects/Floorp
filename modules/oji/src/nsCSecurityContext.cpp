@@ -44,6 +44,8 @@
 #include "nsCertificatePrincipal.h"
 #include "nsScriptSecurityManager.h"
 
+#include "nsTraceRefcnt.h"
+
 static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -81,7 +83,7 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
     nsIPrincipal* pIPrincipal = NULL;
 
     if(!bAllowedAccess) {
-        return PR_FALSE;
+        return NS_ERROR_FAILURE;
     }
   
     if(!nsCRT::strcmp(target,"UniversalBrowserRead")) {
@@ -93,7 +95,7 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
     } else {
         *bAllowedAccess = PR_FALSE;
     }
-    return PR_TRUE;
+    return NS_OK;
 }
 
 
@@ -101,14 +103,13 @@ NS_METHOD
 nsCSecurityContext::GetOrigin(char* buf, int buflen)
 {
     nsCOMPtr<nsIPrincipal> principal = NULL;
-    //    nsIPrincipal* principal = NULL;
   
     // Get the Script Security Manager.
 
     nsresult rv      = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
-    if (NS_FAILED(rv) || !secMan) return PR_FALSE;
+    if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
 
     if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
@@ -127,7 +128,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
             if( origin ) {
                 nsCRT::free(origin);
             }
-            return PR_FALSE;
+            return NS_ERROR_FAILURE;
         }
 
         // Copy the string into to user supplied buffer. Is there a better
@@ -140,21 +141,20 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
         *buf = nsnull;
     }
 
-    return PR_TRUE;
+    return NS_OK;
 }
 
 NS_METHOD 
 nsCSecurityContext::GetCertificateID(char* buf, int buflen)
 {
     nsCOMPtr<nsIPrincipal> principal = NULL;
-    //nsIPrincipal* principal = NULL;
   
     // Get the Script Security Manager.
 
     nsresult rv      = NS_OK;
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
-    if (NS_FAILED(rv) || !secMan) return PR_FALSE;
+    if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
 
     secMan->GetSubjectPrincipal(getter_AddRefs(principal));
@@ -169,7 +169,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
         PRInt32 certlen = (PRInt32) nsCRT::strlen(certificate);
         if( buflen<=certlen ) {
             nsCRT::free(certificate);
-            return PR_FALSE;
+            return NS_ERROR_FAILURE;
         }
         nsCRT::memcpy(buf,certificate,certlen);
         buf[certlen]=nsnull;
@@ -178,18 +178,22 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
         *buf = nsnull;
     }
 
-    return PR_TRUE;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsCSecurityContext:
 extern PRUintn tlsIndex3_g;
+
+MOZ_DECL_CTOR_COUNTER(nsCSecurityContext);
+
 nsCSecurityContext::nsCSecurityContext(JSContext* cx)
-                   : m_pJStoJavaFrame(NULL), m_pJSCX(NULL),
+                   : m_pJStoJavaFrame(NULL), m_pJSCX(cx),
                      m_pPrincipal(NULL),
                      m_HasUniversalBrowserReadCapability(PR_FALSE),
                      m_HasUniversalJavaCapability(PR_FALSE)
 {
+    MOZ_COUNT_CTOR(nsCSecurityContext);
     NS_INIT_REFCNT();
 
       // Get the Script Security Manager.
@@ -199,13 +203,37 @@ nsCSecurityContext::nsCSecurityContext(JSContext* cx)
                   NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
     if (NS_FAILED(rv) || !secMan) return;
 
-    // Do early evaluation of "UniversalJavaPermission" capability.
     
-    secMan->IsCapabilityEnabled("UniversalBrowserRead",&m_HasUniversalBrowserReadCapability);
-    secMan->IsCapabilityEnabled("UniversalJavaPermission",&m_HasUniversalJavaCapability);
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+        // return;
+        ; // Don't return here because the security manager returns 
+          // NS_ERROR_FAILURE when there is no subject principal. In
+          // that case we are not done.
+
+    nsCOMPtr<nsIPrincipal> sysprincipal;
+    if (NS_FAILED(secMan->GetSystemPrincipal(getter_AddRefs(sysprincipal))))
+        return;
+
+    // Do early evaluation of "UniversalJavaPermission" capability.
+
+    PRBool equals;
+    if (!principal || 
+        NS_SUCCEEDED(principal->Equals(sysprincipal, &equals)) && equals) 
+    {
+        // We have native code or the system principal: just allow general access
+        m_HasUniversalBrowserReadCapability = PR_TRUE;
+        m_HasUniversalJavaCapability = PR_TRUE;
+    }
+    else {
+        // Otherwise, check with the js security manager.
+        secMan->IsCapabilityEnabled("UniversalBrowserRead",&m_HasUniversalBrowserReadCapability);
+        secMan->IsCapabilityEnabled("UniversalJavaPermission",&m_HasUniversalJavaCapability);
+    }
 }
 
 nsCSecurityContext::~nsCSecurityContext()
 {
+  MOZ_COUNT_DTOR(nsCSecurityContext);
 }
 
