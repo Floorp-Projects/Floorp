@@ -28,11 +28,12 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
-static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 
 class nsRDFFactory : public nsIFactory
@@ -117,6 +118,12 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFMemoryDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFMemoryDataSource((nsIRDFDataSource**) &inst)))
+            return rv;
+
+        wasRefCounted = PR_TRUE;
+    }
+    else if (mClassID.Equals(kRDFStreamDataSourceCID)) {
+        if (NS_FAILED(rv = NS_NewRDFStreamDataSource((nsIRDFDataSource**) &inst)))
             return rv;
 
         wasRefCounted = PR_TRUE;
