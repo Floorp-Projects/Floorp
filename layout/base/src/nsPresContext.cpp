@@ -1506,19 +1506,22 @@ nsPresContext::LoadImage(const nsString& aURL,
     if (content) {
       nsCOMPtr<nsIDocument> document;
       rv = content->GetDocument(*getter_AddRefs(document));
-      if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIScriptGlobalObject> globalScript;
-      rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
-      if (NS_FAILED(rv)) return rv;
+      // If there is no document, skip the policy check
+      if (document) {
+        nsCOMPtr<nsIScriptGlobalObject> globalScript;
+        rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
 
-      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
+        if (globalScript) {
+          nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
 
-      PRBool shouldLoad = PR_TRUE;
-      rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                     uri, element, domWin, &shouldLoad);
-      if (NS_SUCCEEDED(rv) && !shouldLoad)
-        return NS_ERROR_FAILURE;
+          PRBool shouldLoad = PR_TRUE;
+          rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                         uri, element, domWin, &shouldLoad);
+          if (NS_SUCCEEDED(rv) && !shouldLoad)
+            return NS_ERROR_FAILURE;
+        }
+      }
     }
 
     nsImageLoader *newLoader = new nsImageLoader();
