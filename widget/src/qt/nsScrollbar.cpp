@@ -22,6 +22,8 @@
 #include "nsUnitConversion.h"
 #include "nsWindow.h"
 
+PRLogModuleInfo * QtScrollLM = PR_NewLogModule("QtScroll");
+
 //=============================================================================
 //
 // nsQScrollBar class
@@ -74,28 +76,16 @@ nsQScrollBar::~nsQScrollBar()
 
 void nsQScrollBar::SetValue(int value)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsQScrollBar::SetValue: setting %d\n",
             value));
     ScrollBarMoved(NS_SCROLLBAR_POS, value);
-    if (mWidget)
-    {
-        nsScrollbarEvent nsEvent;
-
-        nsEvent.message = NS_SCROLLBAR_POS;
-        nsEvent.widget = mWidget;
-        NS_IF_ADDREF(nsEvent.widget);
-        nsEvent.eventStructType = NS_SCROLLBAR_EVENT;
-        nsEvent.position = value;
-        
-        ((nsScrollbar *)mWidget)->OnScroll(nsEvent, value);
-    }
 }
 
 void nsQScrollBar::PreviousLine()
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsQScrollBar::PreviousLine()\n"));
     ScrollBarMoved(NS_SCROLLBAR_LINE_PREV);
@@ -103,7 +93,7 @@ void nsQScrollBar::PreviousLine()
 
 void nsQScrollBar::NextLine()
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsQScrollBar::NextLine()\n"));
     ScrollBarMoved(NS_SCROLLBAR_LINE_NEXT);
@@ -111,7 +101,7 @@ void nsQScrollBar::NextLine()
 
 void nsQScrollBar::PreviousPage()
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsQScrollBar::PreviousPage()\n"));
     ScrollBarMoved(NS_SCROLLBAR_PAGE_PREV);
@@ -119,7 +109,7 @@ void nsQScrollBar::PreviousPage()
 
 void nsQScrollBar::NextPage()
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsQScrollBar::NextPage()\n"));
     ScrollBarMoved(NS_SCROLLBAR_PAGE_NEXT);
@@ -127,7 +117,7 @@ void nsQScrollBar::NextPage()
 
 void nsQScrollBar::ScrollBarMoved(int message, int value)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsQScrollBar::ScrollBarMoved()\n"));
     if (mWidget)
@@ -154,9 +144,9 @@ NS_IMPL_RELEASE (nsScrollbar);
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget (), nsIScrollbar ()
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::nsScrollbar()\n"));
+           ("nsScrollBar::nsScrollbar()\n"));
     mOrientation = aIsVertical ? QScrollBar::Vertical : QScrollBar::Horizontal;
     mLineStep = 1;
     mPageStep = 10;
@@ -171,9 +161,9 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget (), nsIScrollbar ()
 //-------------------------------------------------------------------------
 nsScrollbar::~nsScrollbar()
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::~nsScrollbar()\n"));
+           ("nsScrollBar::~nsScrollbar()\n"));
 }
 
 //-------------------------------------------------------------------------
@@ -183,9 +173,9 @@ nsScrollbar::~nsScrollbar()
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::CreateNative(QWidget * parentWindow)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::CreateNative: max=%d, linestep=%d, pagestep=%d\n",
+           ("nsScrollBar::CreateNative: max=%d, linestep=%d, pagestep=%d\n",
             mMaxValue, 
             mLineStep, 
             mPageStep));
@@ -215,9 +205,9 @@ NS_METHOD nsScrollbar::CreateNative(QWidget * parentWindow)
 //-------------------------------------------------------------------------
 nsresult nsScrollbar::QueryInterface(const nsIID & aIID, void **aInstancePtr)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::QueryInterface()\n"));
+           ("nsScrollBar::QueryInterface()\n"));
     nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
@@ -238,9 +228,9 @@ nsresult nsScrollbar::QueryInterface(const nsIID & aIID, void **aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::SetMaxRange()\n"));
+           ("nsScrollBar::SetMaxRange()\n"));
     mMaxValue = aEndRange;
 
     ((QScrollBar *)mWidget)->setRange(0, mMaxValue - mPageStep);
@@ -256,9 +246,9 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::GetMaxRange: %d\n",
+           ("nsScrollBar::GetMaxRange: %d\n",
             aMaxRange));
     aMaxRange = mMaxValue;
 
@@ -273,9 +263,9 @@ NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
-           ("nsQScrollBar::SetPosition()\n"));
+           ("nsScrollBar::SetPosition()\n"));
     mValue = aPos;
 
     ((QScrollBar *)mWidget)->setValue(aPos);
@@ -291,7 +281,7 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetPosition(PRUint32 & aPos)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::GetPosition %u\n", 
             mValue));
@@ -308,7 +298,7 @@ NS_METHOD nsScrollbar::GetPosition(PRUint32 & aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::SetThumbSize()\n"));
     if (aSize > 0)
@@ -329,7 +319,7 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetThumbSize(PRUint32 & aThumbSize)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::GetThumbSize: %u\n",
             mPageStep));
@@ -346,7 +336,7 @@ NS_METHOD nsScrollbar::GetThumbSize(PRUint32 & aThumbSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::SetLineIncrement\n"));
     if (aLineIncrement > 0)
@@ -367,7 +357,7 @@ NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetLineIncrement(PRUint32 & aLineInc)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::GetLineIncrement: %u\n",
             mLineStep));
@@ -387,7 +377,7 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange,
                                      PRUint32 aPosition, 
                                      PRUint32 aLineIncrement)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::SetParameters: max=%d,thumb=%d,pos=%d,inc=%d\n", 
             aMaxRange, 
@@ -413,7 +403,7 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange,
 //-------------------------------------------------------------------------
 PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
-    PR_LOG(QtWidgetsLM, 
+    PR_LOG(QtScrollLM, 
            PR_LOG_DEBUG, 
            ("nsScrollBar::OnScroll()\n"));
     PRBool result = PR_TRUE;
@@ -512,7 +502,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     }
     }
 
-    ((QScrollBar *)mWidget)->setValue(mValue);
+    //((QScrollBar *)mWidget)->setValue(mValue);
 
     return result;
 }
