@@ -70,10 +70,10 @@
 #endif
 
 // define default product directory
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_BEOS)
+#ifdef XP_MAC
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("Mozilla")
-#elif defined (XP_UNIX)
-#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(".mozilla")
+#else
+#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(MOZ_USER_DIR)
 #endif
 
 // Locally defined keys used by nsAppDirectoryEnumerator

@@ -496,6 +496,7 @@ IMPORT_LIB_SUFFIX=
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
+MOZ_USER_DIR=".mozilla"
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
@@ -824,6 +825,7 @@ case "$target" in
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar"
     _MOZ_USE_RTTI=1
     USE_DEPENDENT_LIBS=
+    MOZ_USER_DIR="Mozilla"
     ;;
 
 *-bsdi*)
@@ -1068,6 +1070,7 @@ case "$target" in
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
+    MOZ_USER_DIR="Mozilla"
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
@@ -1250,6 +1253,7 @@ case "$target" in
     MOZ_ENABLE_POSTSCRIPT=
     RC=rc.exe
     RCFLAGS='-n -x2'
+    MOZ_USER_DIR="Mozilla"
 
     if test "$MOZTOOLS"; then
         MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
@@ -3113,6 +3117,7 @@ mac|cocoa)
     TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+    MOZ_USER_DIR="Mozilla"
     AC_DEFINE(XP_MACOSX)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
@@ -4286,9 +4291,10 @@ MOZ_ARG_WITH_STRING(user-appdir,
 if echo "$val" | grep "\/" >/dev/null; then
     AC_MSG_ERROR("Homedir must be single relative path.")
 else 
-    AC_DEFINE_UNQUOTED(MOZ_USER_DIR,"$val")
-fi], 
-    AC_DEFINE(MOZ_USER_DIR,".mozilla") )
+    MOZ_USER_DIR="$val"
+fi])
+
+AC_DEFINE_UNQUOTED(MOZ_USER_DIR,"$MOZ_USER_DIR")
 
 dnl ========================================================
 dnl = Doxygen configuration
