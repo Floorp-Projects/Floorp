@@ -273,21 +273,17 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   
   if (mDocument) {
     nsIDocument* doc;
-    nsIURI* docURL = 0;
+    nsCOMPtr<nsIURI> docURL;
 
     if (mDocument && NS_SUCCEEDED(mDocument->QueryInterface(kIDocumentIID, (void**)&doc))) {
-      docURL = doc->GetDocumentURL();
+      docURL = dont_AddRef(doc->GetDocumentURL());
       NS_RELEASE(doc);
     }
 
     if (docURL) {
-#ifdef NECKO
       char* str;
       docURL->GetSpec(&str);
-#else
-      PRUnichar* str;
-      docURL->ToString(&str);
-#endif
+
       nsAutoString url = str;
 
       //about:blank URL's do not have ClearScope called on page change.
@@ -305,11 +301,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
                         (JSObject *)mScriptObject);
         }
       }
-#ifdef NECKO
       nsCRT::free(str);
-#else
-      delete[] str;
-#endif
     }
   }
 
@@ -2973,7 +2965,7 @@ GlobalWindowImpl::GetPrincipal(nsIPrincipal **result)
 
     mPrincipal = doc->GetDocumentPrincipal();
     if (!mPrincipal) {
-      nsCOMPtr<nsIURI> uri = doc->GetDocumentURL();
+      nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
       if (!uri) 
         return NS_ERROR_FAILURE;
 
