@@ -43,8 +43,6 @@ CPPSRCS		= \
 		$(NULL)
 
 
-OS_LIBS += -llibuni
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/..

@@ -70,8 +70,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-OS_LIBS += -llibuni -luconv -lunikbd
-
 ifdef ENABLE_TESTS
 HAS_EXTRAEXPORTS = 1
 endif
@@ -79,9 +77,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_WIDGET
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-DEFINES   += -DUSE_OS2_TOOLKIT_HEADERS
-endif
 
 LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
 

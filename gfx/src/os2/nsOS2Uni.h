@@ -41,10 +41,6 @@
 #include <uconv.h>
 #include "nsHashTable.h"
 
-#ifdef XP_OS2_EMX
-#include <ulserr.h>
-#endif
-
 class OS2Uni {
 public:
   static UconvObject GetUconvObject(int CodePage);

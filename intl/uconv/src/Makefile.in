@@ -117,10 +117,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-OS_LIBS += -llibuni
-endif
-
 LOCAL_INCLUDES	= -I$(srcdir)/../util
 
 ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
