@@ -277,14 +277,17 @@ sub file_mod_time ($) {
 
 sub ValidateDate {
     my ($date, $format) = @_;
+    my $date2;
 
-    my $ts  = str2time($date);
-    my $date2 = time2str("%Y-%m-%d", $ts);
+    # $ts is undefined if the parser fails.
+    my $ts = str2time($date);
+    if ($ts) {
+        $date2 = time2str("%Y-%m-%d", $ts);
 
-    $date =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/; 
-    $date2 =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/;
-
-    if ($date ne $date2) {
+        $date =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/; 
+        $date2 =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/;
+    }
+    if (!$ts || $date ne $date2) {
         ThrowUserError('illegal_date', {date => $date, format => $format});
     } 
 }

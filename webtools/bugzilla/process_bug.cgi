@@ -1767,7 +1767,17 @@ foreach my $id (@idlist) {
             {
                 $check_dep_bugs = 1;
             }
-            
+
+            # Convert deadlines to the YYYY-MM-DD format. We use an
+            # intermediate $xxxtime to prevent errors in the web
+            # server log file when str2time($xxx) is undefined.
+            if ($col eq 'deadline') {
+                my $oldtime = str2time($old);
+                $old = ($oldtime) ? time2str("%Y-%m-%d", $oldtime) : '';
+                my $newtime = str2time($new);
+                $new = ($newtime) ? time2str("%Y-%m-%d", $newtime) : '';
+            }
+
             LogActivityEntry($id,$col,$old,$new,$whoid,$timestamp);
             $bug_changed = 1;
         }

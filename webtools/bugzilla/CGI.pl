@@ -396,11 +396,6 @@ sub GetBugActivity {
                 $changes = [];
             }  
             
-            if ($fieldname eq 'deadline') {
-                $removed = time2str("%Y-%m-%d", str2time($removed));
-                $added = time2str("%Y-%m-%d", str2time($added));
-            }
-        
             $operation->{'who'} = $who;
             $operation->{'when'} = $when;            
         

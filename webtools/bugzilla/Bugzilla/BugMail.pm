@@ -201,7 +201,9 @@ sub ProcessOneBug($) {
     }
     $values{'estimated_time'} = format_time_decimal($values{'estimated_time'});
 
-    $values{'deadline'} = time2str("%Y-%m-%d", str2time($values{'deadline'}));
+    if ($values{'deadline'}) {
+        $values{'deadline'} = time2str("%Y-%m-%d", str2time($values{'deadline'}));
+    }
 
     my @dependslist;
     SendSQL("SELECT dependson FROM dependencies WHERE 
@@ -262,10 +264,6 @@ sub ProcessOneBug($) {
                      WHERE attach_id = $attachid");
             $diffpart->{'isprivate'} = FetchOneColumn();
         }
-        if( $fieldname eq 'deadline' ) {
-            $old = time2str("%Y-%m-%d", str2time($old));
-            $new = time2str("%Y-%m-%d", str2time($new));
-        }  
         $difftext = FormatTriple($what, $old, $new);
         $diffpart->{'header'} = $diffheader;
         $diffpart->{'fieldname'} = $fieldname;
