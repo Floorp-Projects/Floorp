@@ -52,12 +52,18 @@ select {
   font-size: 11px;
 }
 
-select[size] {
+/* Need the "select[size][multiple]" selector to override the settings on
+   'select[size="1"]', eg if one has <select size="1" multiple> */
+
+select[size],
+select[multiple],
+select[size][multiple] {
   -moz-appearance: listbox;
   margin: 0px;
   background-color: -moz-Field !important;
 }
 
+select[size="0"],
 select[size="1"] {
   -moz-appearance: menulist;
   margin: 1px;

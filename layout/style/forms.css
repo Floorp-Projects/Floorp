@@ -145,12 +145,19 @@ select {
   -moz-border-radius: 0 !important;
 }
 
-select[size] {
+/* Need the "select[size][multiple]" selector to override the settings on
+   'select[size="1"]', eg if one has <select size="1" multiple> */
+   
+select[size],
+select[multiple],
+select[size][multiple] {
   /* Different alignment and padding for listbox vs combobox */
   vertical-align: text-bottom;
   padding: 1px 0 1px 0;
+  -moz-appearance: listbox;
 }
 
+select[size="0"],
 select[size="1"] {
   /* Except this is not a listbox */
   vertical-align: baseline;
@@ -173,10 +180,6 @@ select > input[type="button"] {
 
 select > input[type="button"]:active {
   background-image: url("arrowd.gif") !important;
-}
-
-select[size] {
-   -moz-appearance: listbox;
 }
 
 select::-moz-dummy-option { 
