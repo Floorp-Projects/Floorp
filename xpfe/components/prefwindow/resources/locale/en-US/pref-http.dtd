@@ -16,7 +16,3 @@
 <!ENTITY prefEnablePipelining.label          "Enable Pipelining">
 <!ENTITY prefEnablePipelining.accesskey      "P">
 <!ENTITY prefEnablePipeliningProxy.accesskey "I">
-<!ENTITY acceptEncoding.label                "Accept-Encoding:">
-<!ENTITY acceptEncoding.accesskey            "A">
-<!ENTITY resetButton.label                   "Restore Default">
-<!ENTITY resetButton.accesskey               "R">

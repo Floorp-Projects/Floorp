@@ -61,19 +61,3 @@ function checkPipeliningProxy()
   } catch(e) {}
 }
 
-/* Function to restore pref values to application defaults */
-function restoreAcceptEncoding()
-{
-  try {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-    var prefs = prefService.getDefaultBranch(null);
-
-    /* get the current pref setting */
-    var prefValue = prefs.getCharPref("network.http.accept-encoding");
-    var editfield = document.getElementById("acceptEncodingString");
-    if (editfield)
-      editfield.value = prefValue;
-  } catch (e) {}
-}
-
