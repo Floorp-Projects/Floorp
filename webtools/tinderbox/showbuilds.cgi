@@ -410,7 +410,7 @@ sub print_table_header {
 
     my $last_status = tb_last_status($ii);
     if ($last_status eq 'busted') {
-      unless ($form{legend} or $form{flames}) {
+      if ($form{noflames}) {
         print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
       } else {
         print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
