@@ -104,6 +104,11 @@ private:
 
         if (mFreeElements == PR_TRUE)
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSize, mArray);
+        else
+        {
+          nsMemory::Free(mArray);
+          mArray=nsnull;
+        }
     }
 };
 
@@ -192,7 +197,12 @@ private:
             return;
 
         if (mFreeElements == PR_TRUE)
-            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSize, mArray);
+          NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSize, mArray);
+        else
+        {
+          nsMemory::Free(mArray);
+          mArray=nsnull;
+        }
     }
 };
 

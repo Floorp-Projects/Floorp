@@ -66,10 +66,9 @@ nsresult CStringArrayToCharPtrArray::Convert (nsCStringArray& array,
     {
 
         if (copyElements == PR_TRUE)
-            (*returnPropertiesArray)[i] =
-                ToNewCString(*array[i]);
-        else
             (*returnPropertiesArray)[i] = ToNewCString(*array[i]);
+        else
+            (*returnPropertiesArray)[i] = NS_CONST_CAST(char*, (*array[i]).get());
     }
 
     return NS_OK;
@@ -120,10 +119,9 @@ nsresult StringArrayToPRUnicharPtrArray::Convert (nsStringArray& array,
     {
 
         if (copyElements == PR_TRUE)
-            (*returnPropertiesArray)[i] =
-                ToNewUnicode(*array[i]);
+          (*returnPropertiesArray)[i] = ToNewUnicode(*array[i]);
         else
-            (*returnPropertiesArray)[i] = ToNewUnicode(*array[i]);
+          (*returnPropertiesArray)[i] = NS_CONST_CAST(PRUnichar*, (*array[i]).get());
     }
 
     return NS_OK;
