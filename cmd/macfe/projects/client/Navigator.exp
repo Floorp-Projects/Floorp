@@ -3793,7 +3793,7 @@ XP_Stat
 # XP_StrfTime
 # XP_StringHash
 # XP_StringHash2
-# XP_StripLine
+XP_StripLine
 XP_TempDirName
 XP_Trace
 # XP_Trace1
