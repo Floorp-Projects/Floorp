@@ -453,6 +453,50 @@ nsHttpResponseHead::Reset()
     mContentCharset.Adopt(0);
 }
 
+nsresult
+nsHttpResponseHead::ParseDateHeader(nsHttpAtom header, PRUint32 *result)
+{
+    const char *val = PeekHeader(header);
+    if (!val)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    PRTime time;
+    PRStatus st = PR_ParseTimeString(val, PR_TRUE, &time);
+    if (st != PR_SUCCESS)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    *result = PRTimeToSeconds(time); 
+    return NS_OK;
+}
+
+nsresult
+nsHttpResponseHead::GetAgeValue(PRUint32 *result)
+{
+    const char *val = PeekHeader(nsHttp::Age);
+    if (!val)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    *result = (PRUint32) atoi(val);
+    return NS_OK;
+}
+
+// Return the value of the (HTTP 1.1) max-age directive, which itself is a
+// component of the Cache-Control response header
+nsresult
+nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result)
+{
+    const char *val = PeekHeader(nsHttp::Cache_Control);
+    if (!val)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    const char *p = PL_strcasestr(val, "max-age=");
+    if (!p)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    *result = (PRUint32) atoi(p + 8);
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpResponseHead <private>
 //-----------------------------------------------------------------------------
@@ -461,6 +505,8 @@ void
 nsHttpResponseHead::ParseVersion(const char *str)
 {
     // Parse HTTP-Version:: "HTTP" "/" 1*DIGIT "." 1*DIGIT
+
+    LOG(("nsHttpResponseHead::ParseVersion [version=%s]\n", str));
 
     // make sure we have HTTP at the beginning
     if (PL_strncasecmp(str, "HTTP", 4) != 0) {
@@ -549,48 +595,5 @@ nsHttpResponseHead::ParseContentType(char *type)
 
     mContentType.Adopt(nsCRT::strdup(type));
 
-    return NS_OK;
-}
-
-nsresult
-nsHttpResponseHead::ParseDateHeader(nsHttpAtom header, PRUint32 *result)
-{
-    const char *val = PeekHeader(header);
-    if (!val)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    PRTime time;
-    PRStatus st = PR_ParseTimeString(val, PR_TRUE, &time);
-    if (st != PR_SUCCESS)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    *result = PRTimeToSeconds(time); 
-    return NS_OK;
-}
-
-nsresult
-nsHttpResponseHead::GetAgeValue(PRUint32 *result)
-{
-    const char *val = PeekHeader(nsHttp::Age);
-    if (!val)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    *result = (PRUint32) atoi(val);
-    return NS_OK;
-}
-
-// Return the value of the (HTTP 1.1) max-age directive, which itself is a
-// component of the Cache-Control response header
-nsresult nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result)
-{
-    const char *val = PeekHeader(nsHttp::Cache_Control);
-    if (!val)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    const char *p = PL_strcasestr(val, "max-age=");
-    if (!p)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    *result = (PRUint32) atoi(p + 8);
     return NS_OK;
 }
