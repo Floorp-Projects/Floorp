@@ -510,7 +510,7 @@ GetEncoding(const nsString& aFontName, PRUnichar** aValue)
       return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
     // init the property now
-    rv = InitFontEncodingProperties();
+    nsresult rv = InitFontEncodingProperties();
     if NS_FAILED(rv)
       return rv;
   }
@@ -568,7 +568,8 @@ GetCCMapThroughConverter(nsIUnicodeEncoder *converter)
 static PRBool PR_CALLBACK
 HashtableFreeCCMap(nsHashKey *aKey, void *aData, void *closure)
 {
-    FreeCCMap((PRUint16*) aData);
+    PRUint16* ccmap = (PRUint16*)aData;
+    FreeCCMap(ccmap);
     return PR_TRUE;
 }
 
