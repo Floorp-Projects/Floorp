@@ -298,8 +298,6 @@ function loadCalendarEventDialog()
       setFieldValue( "server-field-label", "true", "disabled" );
    }
    
-   //the next line seems to crash Mozilla
-   
    
    // update enabling and disabling
    updateRepeatItemEnabled();
