@@ -7378,7 +7378,6 @@ void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
         //  text element with just a space in a table cell
         // This is OK and is needed to show cell border in browser
         XP_Bool bIsTableCellWithOneSpace = FALSE;
-
         if( pParent && pParent->IsTableCell() && GetNextSibling() == NULL )
         {
             if( !pChild )
@@ -7408,7 +7407,9 @@ void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
                     bIsTableCellWithOneSpace = TRUE;
                 }
             }
-            if( ! bIsTableCellWithOneSpace )
+            CEditBuffer *t_buffer;
+            t_buffer = GetEditBuffer();
+            if( ! bIsTableCellWithOneSpace && (t_buffer && !t_buffer->m_bNoRelayout))
             {
                 for ( CEditElement* pChild = GetChild();
                     pChild;

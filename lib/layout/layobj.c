@@ -327,7 +327,7 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 	}
 #ifdef	ANTHRAX
 	else /* we didn't find a TYPE param, so check the filename to get the type - amusil */
-		{
+	{
 		buff = lo_FetchParamValue(context, tag, PARAM_SRC);
 		/* if no src, check if there's a DATA param */
 		if(buff == NULL)
@@ -335,41 +335,43 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 			
 		
 		/* extract the mimetype info */
-		PA_LOCK(str, char *, buff);
-		fileInfo = NET_cinfo_find_type(str);
-		
-		str = fileInfo->type;
-		if((appletName = NPL_FindAppletEnabledForMimetype(str)) != NULL)
-			{
-			/* Set the type */
-			type = LO_EMBED;
-			sub_type = LO_JAVA;
-			
-			/* set the CLASSID to whatever was put into "appletName" */
-			/*lo_SetClassID(tag, appletName);*/
-			
-			lo_SetArgs((char*)tag->data, top);
-			lo_RemoveParam(tag, "type");
-			lo_RemoveParam(tag, "src");
-			lo_RemoveParam(tag, "data");
-			lo_AddParam(tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
-			lo_AddParam(tag, "CODE", appletName);
-			
-			/* do the same for the clone_tag */
-			if(top->clone_tag)
-				{
-				lo_AddParam(top->clone_tag, "CODE", appletName);
-				lo_RemoveParam(top->clone_tag, "type");
-				lo_RemoveParam(top->clone_tag, "src");
-				lo_RemoveParam(top->clone_tag, "data");
-				lo_AddParam(top->clone_tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
-				}
-			
-			XP_FREE(appletName);			/* do we need to free this regardless? */
-			}
-		if(buff)
-			XP_FREE(buff);
-		}
+        if (buff)
+        {
+		    PA_LOCK(str, char *, buff);
+		    fileInfo = NET_cinfo_find_type(str);
+		    
+		    str = fileInfo->type;
+		    if((appletName = NPL_FindAppletEnabledForMimetype(str)) != NULL)
+	        {
+			    /* Set the type */
+			    type = LO_EMBED;
+			    sub_type = LO_JAVA;
+			    
+			    /* set the CLASSID to whatever was put into "appletName" */
+			    /*lo_SetClassID(tag, appletName);*/
+			    
+			    lo_SetArgs((char*)tag->data, top);
+			    lo_RemoveParam(tag, "type");
+			    lo_RemoveParam(tag, "src");
+			    lo_RemoveParam(tag, "data");
+			    lo_AddParam(tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
+			    lo_AddParam(tag, "CODE", appletName);
+			    
+			    /* do the same for the clone_tag */
+			    if(top->clone_tag)
+			    {
+				    lo_AddParam(top->clone_tag, "CODE", appletName);
+				    lo_RemoveParam(top->clone_tag, "type");
+				    lo_RemoveParam(top->clone_tag, "src");
+				    lo_RemoveParam(top->clone_tag, "data");
+				    lo_AddParam(top->clone_tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
+			    }
+		        XP_FREE(appletName);			/* do we need to free this regardless? */
+		    }
+		    if(buff)
+			    XP_FREE(buff);
+        }
+	}
 #endif	/* ANTRHAX */
 
 
