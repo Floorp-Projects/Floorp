@@ -75,10 +75,10 @@ public:
   // nsIStreamListener
   NS_IMETHOD GetBindInfo(void);
   NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
-                        const char *aMsg);
-  NS_IMETHOD OnStartBinding(void);
+                        const nsString& aMsg);
+  NS_IMETHOD OnStartBinding(const char *aContentType);
   NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-  NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
+  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
 
   // nsILinkHandler
   NS_IMETHOD Init(nsIWebWidget* aWidget);

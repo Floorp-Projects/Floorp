@@ -21,6 +21,7 @@
 #include "net.h"
 #include "mktrace.h"
 
+#include "nsString.h"
 #include "nsIProtocolConnection.h"
 
 /* XXX: Legacy definitions... */
@@ -318,7 +319,9 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
              * closed (or possibly created).  So, the binding has failed...
              */
             if (pConn->pConsumer) {
-                pConn->pConsumer->OnStopBinding(NS_BINDING_FAILED, nsnull);
+                nsAutoString status;
+
+                pConn->pConsumer->OnStopBinding(NS_BINDING_FAILED, status);
                 pConn->pConsumer->Release();
                 pConn->pConsumer = NULL;
             }

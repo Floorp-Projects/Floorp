@@ -130,15 +130,17 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetBindInfo(void) { return NS_OK; }
-  NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg) { return NS_OK; }
-  NS_IMETHOD OnStartBinding(void) { return NS_OK; }
+  NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg) { return NS_OK; }
+  NS_IMETHOD OnStartBinding(const char *aContentType) { return NS_OK; }
   NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)   { return NS_OK; }
-  NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
+  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
 };
 
-NS_IMETHODIMP CStreamListener::OnStopBinding(PRInt32 status, const char *msg)
+NS_IMETHODIMP CStreamListener::OnStopBinding(PRInt32 status, const nsString& aMsg)
 {
-   printf("CStreamListener: stream complete: %s\n", msg);
+   fputs("CStreamListener: stream complete: ", stdout);
+   fputs(aMsg, stdout);
+   fputs("\n", stdout);
    g_bReadyForNextUrl = PR_TRUE;
    return NS_OK;
 }

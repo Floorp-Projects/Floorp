@@ -307,17 +307,18 @@ DocObserver::GetBindInfo(void)
 
 NS_IMETHODIMP
 DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
-                        const char *aMsg)
+                        const nsString& aMsg)
 {
   fputs("[progress ", stdout);
   fputs(mURL, stdout);
-  printf(" %d %d %s]\n", aProgress, aProgressMax,
-         aMsg ? aMsg : "");
+  printf(" %d %d ", aProgress, aProgressMax);
+  fputs(aMsg, stdout);
+  fputs("]\n", stdout);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DocObserver::OnStartBinding(void)
+DocObserver::OnStartBinding(const char *aContentType)
 {
   fputs("Loading ", stdout);
   fputs(mURL, stdout);
@@ -332,7 +333,7 @@ DocObserver::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
 }
 
 NS_IMETHODIMP
-DocObserver::OnStopBinding(PRInt32 status, const char *msg)
+DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
 {
   fputs("Done loading ", stdout);
   fputs(mURL, stdout);
