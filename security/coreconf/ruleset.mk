@@ -205,6 +205,7 @@ endif
 
 
 ifeq ($(OS_ARCH),WINNT)
+	OBJS += $(RES)
 	MAKE_OBJDIR		= $(INSTALL) -D $(OBJDIR)
 else
 	define MAKE_OBJDIR
