@@ -47,6 +47,7 @@
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
 
 #include "nsFileSpecImpl.h"
+#include "xptinfo.h"
 
 #include "nsThread.h"
 
@@ -468,6 +469,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     nsrefcnt cnt;
 
+    // Release our own singletons...
+    XPTI_FreeInterfaceInfoManager();
+
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
                                                              
@@ -482,6 +486,13 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #ifdef DEBUG
     extern void _FreeAutoLockStatics();
     _FreeAutoLockStatics();
+#endif
+
+    NS_PurgeAtomTable();
+
+#ifdef DEBUG_kipp
+    nsTraceRefcnt::DumpLeaks(stderr);
+    nsTraceRefcnt::FlushCtorRegistry();
 #endif
 
 #ifdef GC_LEAK_DETECTOR
