@@ -222,6 +222,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    mFontMetrics = nsnull;
    mCurrFontMetrics = nsnull;
    mCurrDrawingColor = NS_RGB( 0, 0, 0);
+   mAlreadySetDrawingColor = PR_FALSE;
    mCurrTextColor = NS_RGB( 0, 0, 0);
    mLineStyle = nsLineStyle_kSolid;
    mCurrLineStyle = nsLineStyle_kSolid;
@@ -864,7 +865,7 @@ nsresult nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTransform)
 // !! this method could do with a rename...
 void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
 {
-   if( bForce || mColor != mCurrDrawingColor)
+   if( bForce || mColor != mCurrDrawingColor || !mAlreadySetDrawingColor)
    {
 
       AREABUNDLE areaBundle;
@@ -885,8 +886,8 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
       if (((nsDeviceContextOS2 *) mContext)->mDC )
       {
 
-         areaBundle.lBackColor = 0x00FFFFFF;   //OS2TODO
-         lineBundle.lBackColor = 0x00FFFFFF;
+         areaBundle.lBackColor = CLR_BACKGROUND;
+         lineBundle.lBackColor = CLR_BACKGROUND;
 
 //         areaBundle.usMixMode     = FM_LEAVEALONE;
 //         areaBundle.usBackMixMode = BM_LEAVEALONE;
@@ -905,6 +906,7 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
 
 
       mCurrDrawingColor = mColor;
+      mAlreadySetDrawingColor = PR_TRUE;
    }
 
    if( bForce || mLineStyle != mCurrLineStyle)
