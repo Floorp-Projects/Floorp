@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.10 2004/10/06 21:49:45 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.11 2004/10/08 04:15:23 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -28,8 +28,24 @@ ifeq ($(MACH),sparc)
 	$(ROOT)/usr/lib/mps/sparcv9
 endif
 
-DIST64 = $(shell echo $(DIST) | sed -e "s|_OPT|_64_OPT|g" -e "s|_DBG|_64_DBG|g")
-OBJ32 = $(shell basename $(DIST))
+ifeq ($(USE_64), 1)
+ifeq ($(MACH), sparc)
+# Sparc
+	PROTO += $(ROOT)/usr/lib/mps/sparcv9 \
+	$(ROOT)/usr/share/lib/mps/sparcv9
+else
+# AMD64
+	PROTO += $(ROOT)/usr/lib/mps/amd64 \
+	$(ROOT)/usr/share/lib/mps/amd64
+endif
+	DIST64 = $(DIST)
+	DIST32 = $(shell echo $(DIST) | sed -e "s|_64_OPT|_OPT|g" -e "s|_64_DBG|_DBG|g")
+else
+	DIST32 = $(DIST)
+	DIST64 = $(shell echo $(DIST) | sed -e "s|_OPT|_64_OPT|g" -e "s|_DBG|_64_DBG|g")
+endif
+
+OBJ32 = $(shell basename $(DIST32))
 OBJ64 = $(shell basename $(DIST64))
 
 ifeq ($(BUILD_OPT),1)
@@ -66,6 +82,15 @@ $(ROOT)/usr/share/lib/mps/sparcv9:
 ifdef JSS3_LOCATION
 	$(CP) $(JSS3_LOCATION)/$(IMPORT_XPCLASS_JAR) $@/jss3.jar
 endif
+
+$(ROOT)/usr/lib/mps/amd64:
+	mkdir -p $@
+	$(CP) -r $(DIST64)/lib/*.so $@ 
+
+$(ROOT)/usr/share/lib/mps/amd64:
+	echo "target=$(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_JSS_JAR)"
+	mkdir -p $@
+	$(CP) $(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_JSS_JAR) $@/jss4.jar
 
 $(ROOT)/usr/lib/mps:
 	mkdir -p $@

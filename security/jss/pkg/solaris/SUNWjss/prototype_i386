@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_i386,v 1.3 2004/06/14 23:24:58 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: prototype_i386,v 1.4 2004/10/08 04:15:24 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -27,3 +27,13 @@
 #
 #
 # SUNWjss
+#64#s none usr/lib/mps/64=amd64
+#64#s none usr/lib/mps/secv1/64=amd64
+#64#d none usr/lib/mps/amd64 755 root bin
+#64#d none usr/share/lib/mps/amd64 755 root bin
+#64#d none usr/lib/mps/secv1/amd64 755 root bin
+#64#d none usr/share/lib/mps/secv1/amd64 755 root bin
+#64#f none usr/lib/mps/amd64/libjss4.so 755 root bin
+#64#f none usr/share/lib/mps/amd64/jss4.jar 644 root bin
+#64#s none usr/lib/mps/secv1/amd64/libjss4.so=../../amd64/libjss4.so
+#64#s none usr/share/lib/mps/secv1/amd64/jss4.jar=../../amd64/jss4.jar

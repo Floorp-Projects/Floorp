@@ -2,8 +2,10 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.targ,v 1.5 2004/07/22 17:52:04 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.targ,v 1.6 2004/10/08 04:15:23 christophe.ravel.bugs%sun.com Exp $"
 #
+
+include ../proto64.mk
 
 ifdef JSS3_LOCATION
 	PROTOTYPE_BASE=prototype3_
@@ -14,9 +16,12 @@ endif
 pkginfo: pkginfo.tmpl ../awk_pkginfo
 	$(RM) $@; nawk -f ../awk_pkginfo $@.tmpl > $@
 
-pkg: $(PKGARCHIVE) pkgdepend $(PROTOTYPE_BASE)$(MACH)
+prototype: prototype_$(MACH)
 	@echo "Using $(PROTOTYPE_BASE)$(MACH) to build package $(PACKAGE)"
-	pkgmk -f $(PROTOTYPE_BASE)$(MACH) -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE)
+	cat $(PROTOTYPE_BASE)$(MACH) | sed $(sed_proto64) >prototype
+
+pkg: $(PKGARCHIVE) pkgdepend prototype
+	pkgmk -f prototype -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE)
 
 $(PKGARCHIVE):
 	[ -d $(PKGARCHIVE) ] || mkdir -p $(PKGARCHIVE)
