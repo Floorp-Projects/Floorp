@@ -916,8 +916,43 @@ CompositeDataSourceImpl::Change(nsIRDFResource* aSource,
                                 nsIRDFNode* aOldTarget,
                                 nsIRDFNode* aNewTarget)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aOldTarget != nsnull, "null ptr");
+    if (! aOldTarget)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewTarget != nsnull, "null ptr");
+    if (! aNewTarget)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    // XXX So we're assuming that a datasource _must_ accept the
+    // atomic change; i.e., we can't split it up across two
+    // datasources. That sucks.
+
+    // We iterate backwards from the last data source which was added
+    // ("the most remote") to the first ("the most local"), trying to
+    // apply the change in each.
+    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        rv = ds->Change(aSource, aProperty, aOldTarget, aNewTarget);
+        if (NS_RDF_ASSERTION_ACCEPTED == rv)
+            return rv;
+
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    // nobody wanted to accept it
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 NS_IMETHODIMP
@@ -926,8 +961,43 @@ CompositeDataSourceImpl::Move(nsIRDFResource* aOldSource,
                               nsIRDFResource* aProperty,
                               nsIRDFNode* aTarget)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aOldSource != nsnull, "null ptr");
+    if (! aOldSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aNewSource != nsnull, "null ptr");
+    if (! aNewSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    if (! aTarget)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    // XXX So we're assuming that a datasource _must_ accept the
+    // atomic move; i.e., we can't split it up across two
+    // datasources. That sucks.
+
+    // We iterate backwards from the last data source which was added
+    // ("the most remote") to the first ("the most local"), trying to
+    // apply the assertion in each.
+    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        rv = ds->Move(aOldSource, aNewSource, aProperty, aTarget);
+        if (NS_RDF_ASSERTION_ACCEPTED == rv)
+            return rv;
+
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    // nobody wanted to accept it
+    return NS_RDF_ASSERTION_REJECTED;
 }
 
 
