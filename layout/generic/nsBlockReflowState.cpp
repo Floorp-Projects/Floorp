@@ -51,6 +51,11 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 // XXX for IsEmptyLine
 #include "nsTextFragment.h"
 
+// XXX TODO:
+
+// If I can add in IsAPlaceHolder then we can remove the mFloaters
+// void array from the nsLineBox
+
 #ifdef NS_DEBUG
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
@@ -403,9 +408,8 @@ nsBlockReflowState::GetAvailableSpace()
 
 //----------------------------------------------------------------------
 
-/* 52b33130-0b99-11d2-932e-00805f8add32 */
 #define NS_BLOCK_FRAME_CID \
-{ 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ { 0xa6cf90df, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
@@ -431,11 +435,6 @@ nsBaseIBFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(nsnull != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kBlockFrameCID)) {
-    nsBaseIBFrame* ib = this;
-    *aInstancePtr = (void*) ib;
-    return NS_OK;
   }
   return nsBaseIBFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
@@ -1047,8 +1046,9 @@ nsBaseIBFrame::PrepareFrameInsertedReflow(nsBlockReflowState& aState)
   nsIFrame* prevSibling;
   aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
 
-  // Insert the frame. This marks the affected lines dirty
-  InsertNewFrame(aState.mPresContext, newFrame, prevSibling);
+  // Insert the frames. This marks the affected lines dirty
+  InsertNewFrames(aState.mPresContext, newFrame, prevSibling);
+
   // XXX temporary: incremental reflow doesn't (yet) work in this case
   PrepareResizeReflow(aState);
   return NS_OK;
@@ -3076,147 +3076,157 @@ nsBaseIBFrame::AppendNewFrames(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+// XXX rewrite to deal with a list of frames
 nsresult
-nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
-                              nsIFrame*       aNewFrame,
-                              nsIFrame*       aPrevSibling)
+nsBaseIBFrame::InsertNewFrames(nsIPresContext& aPresContext,
+                               nsIFrame*       aFrameList,
+                               nsIFrame*       aPrevSibling)
 {
   if (nsnull == mLines) {
     NS_ASSERTION(nsnull == aPrevSibling, "prev-sibling and empty line list!");
-    return AppendNewFrames(aPresContext, aNewFrame);
+    return AppendNewFrames(aPresContext, aFrameList);
   }
 
-  const nsStyleDisplay* display;
-  aNewFrame->GetStyleData(eStyleStruct_Display,
-                          (const nsStyleStruct*&) display);
-  const nsStylePosition* position;
-  aNewFrame->GetStyleData(eStyleStruct_Position,
-                          (const nsStyleStruct*&) position);
-  PRUint16 newFrameIsBlock =
-    nsLineLayout::TreatFrameAsBlock(display, position)
-    ? LINE_IS_BLOCK
-    : 0;
+  nsIFrame* newFrame = aFrameList;
+  while (nsnull != newFrame) {
+    nsIFrame* next;
+    newFrame->GetNextSibling(next);
+    newFrame->SetNextSibling(nsnull);
 
-  // See if we need to move the frame outside of the flow, and insert a
-  // placeholder frame in its place
-  nsIFrame* placeholder;
-  if (MoveFrameOutOfFlow(aPresContext, aNewFrame, display, position,
-                         placeholder)) {
-    // Add the placeholder frame to the flow
-    aNewFrame = placeholder;
-    newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
-  }
-  else {
-    // Wrap the frame in a view if necessary
-    nsIStyleContext* kidSC;
-    aNewFrame->GetStyleContext(kidSC);
-    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);    
-    NS_RELEASE(kidSC);
-    if (NS_OK != rv) {
-      return rv;
+    const nsStyleDisplay* display;
+    newFrame->GetStyleData(eStyleStruct_Display,
+                           (const nsStyleStruct*&) display);
+    const nsStylePosition* position;
+    newFrame->GetStyleData(eStyleStruct_Position,
+                           (const nsStyleStruct*&) position);
+    PRUint16 newFrameIsBlock =
+      nsLineLayout::TreatFrameAsBlock(display, position)
+      ? LINE_IS_BLOCK
+      : 0;
+
+    // See if we need to move the frame outside of the flow, and insert a
+    // placeholder frame in its place
+    nsIFrame* placeholder;
+    if (MoveFrameOutOfFlow(aPresContext, newFrame, display, position,
+                           placeholder)) {
+      // Add the placeholder frame to the flow
+      newFrame = placeholder;
+      newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
     }
-  }
-
-  // Insert/append the frame into flows line list at the right spot
-  nsLineBox* newLine;
-  nsLineBox* line = mLines;
-  if (nsnull == aPrevSibling) {
-    // Insert new frame into the sibling list
-    aNewFrame->SetNextSibling(line->mFirstChild);
-
-    if (line->IsBlock() || newFrameIsBlock) {
-      // Create a new line
-      newLine = new nsLineBox(aNewFrame, 1, newFrameIsBlock);
-      if (nsnull == newLine) {
-        return NS_ERROR_OUT_OF_MEMORY;
+    else {
+      // Wrap the frame in a view if necessary
+      nsIStyleContext* kidSC;
+      newFrame->GetStyleContext(kidSC);
+      nsresult rv = CreateViewForFrame(aPresContext, newFrame, kidSC, PR_FALSE);    
+      NS_RELEASE(kidSC);
+      if (NS_OK != rv) {
+        return rv;
       }
-      newLine->mNext = mLines;
-      mLines = newLine;
-    } else {
-      // Insert frame at the front of the line
-      line->mFirstChild = aNewFrame;
-      line->mChildCount++;
-      line->MarkDirty();
     }
-  }
-  else {
-    // Find line containing the previous sibling to the new frame
-    line = nsLineBox::FindLineContaining(line, aPrevSibling);
-    NS_ASSERTION(nsnull != line, "no line contains the previous sibling");
-    if (nsnull != line) {
-      if (line->IsBlock()) {
-        // Create a new line just after line
-        newLine = new nsLineBox(aNewFrame, 1, newFrameIsBlock);
+
+    // Insert/append the frame into flows line list at the right spot
+    nsLineBox* newLine;
+    nsLineBox* line = mLines;
+    if (nsnull == aPrevSibling) {
+      // Insert new frame into the sibling list
+      newFrame->SetNextSibling(line->mFirstChild);
+
+      if (line->IsBlock() || newFrameIsBlock) {
+        // Create a new line
+        newLine = new nsLineBox(newFrame, 1, newFrameIsBlock);
         if (nsnull == newLine) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        newLine->mNext = line->mNext;
-        line->mNext = newLine;
-      }
-      else if (newFrameIsBlock) {
-        // Split line in two, if necessary. We can't allow a block to
-        // end up in an inline line.
-        if (line->IsLastChild(aPrevSibling)) {
-          // The new frame goes after prevSibling and prevSibling is
-          // the last frame on the line. Therefore we don't need to
-          // split the line, just create a new line.
-          newLine = new nsLineBox(aNewFrame, 1, newFrameIsBlock);
-          if (nsnull == newLine) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          newLine->mNext = line->mNext;
-          line->mNext = newLine;
-        }
-        else {
-          // The new frame goes after prevSibling and prevSibling is
-          // somewhere in the line, but not at the end. Split the line
-          // just after prevSibling.
-          PRInt32 i, n = line->ChildCount();
-          nsIFrame* frame = line->mFirstChild;
-          for (i = 0; i < n; i++) {
-            if (frame == aPrevSibling) {
-              nsIFrame* nextSibling;
-              aPrevSibling->GetNextSibling(nextSibling);
-
-              // Create new line to hold the remaining frames
-              NS_ASSERTION(n - i - 1 > 0, "bad line count");
-              newLine = new nsLineBox(nextSibling, n - i - 1, 0);
-              if (nsnull == newLine) {
-                return NS_ERROR_OUT_OF_MEMORY;
-              }
-              newLine->mNext = line->mNext;
-              line->mNext = newLine;
-              line->MarkDirty();
-              line->mChildCount = i + 1;
-              break;
-            }
-            frame->GetNextSibling(frame);
-          }
-
-          // Now create a new line to hold the block
-          newLine = new nsLineBox(aNewFrame, 1, newFrameIsBlock);
-          if (nsnull == newLine) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          newLine->mNext = line->mNext;
-          line->mNext = newLine;
-        }
-      }
-      else {
-        // Insert frame into the line.
-        //XXX NS_ASSERTION(line->GetLastContentIsComplete(), "bad line LCIC");
+        newLine->mNext = mLines;
+        mLines = newLine;
+      } else {
+        // Insert frame at the front of the line
+        line->mFirstChild = newFrame;
         line->mChildCount++;
         line->MarkDirty();
       }
     }
+    else {
+      // Find line containing the previous sibling to the new frame
+      line = nsLineBox::FindLineContaining(line, aPrevSibling);
+      NS_ASSERTION(nsnull != line, "no line contains the previous sibling");
+      if (nsnull != line) {
+        if (line->IsBlock()) {
+          // Create a new line just after line
+          newLine = new nsLineBox(newFrame, 1, newFrameIsBlock);
+          if (nsnull == newLine) {
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          newLine->mNext = line->mNext;
+          line->mNext = newLine;
+        }
+        else if (newFrameIsBlock) {
+          // Split line in two, if necessary. We can't allow a block to
+          // end up in an inline line.
+          if (line->IsLastChild(aPrevSibling)) {
+            // The new frame goes after prevSibling and prevSibling is
+            // the last frame on the line. Therefore we don't need to
+            // split the line, just create a new line.
+            newLine = new nsLineBox(newFrame, 1, newFrameIsBlock);
+            if (nsnull == newLine) {
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            newLine->mNext = line->mNext;
+            line->mNext = newLine;
+          }
+          else {
+            // The new frame goes after prevSibling and prevSibling is
+            // somewhere in the line, but not at the end. Split the line
+            // just after prevSibling.
+            PRInt32 i, n = line->ChildCount();
+            nsIFrame* frame = line->mFirstChild;
+            for (i = 0; i < n; i++) {
+              if (frame == aPrevSibling) {
+                nsIFrame* nextSibling;
+                aPrevSibling->GetNextSibling(nextSibling);
 
-    // Insert new frame into the sibling list; note: this must be done
-    // after the above logic because the above logic depends on the
-    // sibling list being in the "before insertion" state.
-    nsIFrame* nextSibling;
-    aPrevSibling->GetNextSibling(nextSibling);
-    aNewFrame->SetNextSibling(nextSibling);
-    aPrevSibling->SetNextSibling(aNewFrame);
+                // Create new line to hold the remaining frames
+                NS_ASSERTION(n - i - 1 > 0, "bad line count");
+                newLine = new nsLineBox(nextSibling, n - i - 1, 0);
+                if (nsnull == newLine) {
+                  return NS_ERROR_OUT_OF_MEMORY;
+                }
+                newLine->mNext = line->mNext;
+                line->mNext = newLine;
+                line->MarkDirty();
+                line->mChildCount = i + 1;
+                break;
+              }
+              frame->GetNextSibling(frame);
+            }
+
+            // Now create a new line to hold the block
+            newLine = new nsLineBox(newFrame, 1, newFrameIsBlock);
+            if (nsnull == newLine) {
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            newLine->mNext = line->mNext;
+            line->mNext = newLine;
+          }
+        }
+        else {
+          // Insert frame into the line.
+          //XXX NS_ASSERTION(line->GetLastContentIsComplete(), "bad line LCIC");
+          line->mChildCount++;
+          line->MarkDirty();
+        }
+      }
+
+      // Insert new frame into the sibling list; note: this must be done
+      // after the above logic because the above logic depends on the
+      // sibling list being in the "before insertion" state.
+      nsIFrame* nextSibling;
+      aPrevSibling->GetNextSibling(nextSibling);
+      newFrame->SetNextSibling(nextSibling);
+      aPrevSibling->SetNextSibling(newFrame);
+    }
+    aPrevSibling = newFrame;
+    newFrame = next;
   }
 
   MarkEmptyLines(aPresContext);
@@ -4290,7 +4300,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     const nsStyleList* styleList;
     GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
-      InsertNewFrame(aPresContext, mBullet, nsnull);
+      InsertNewFrames(aPresContext, mBullet, nsnull);
     }
   }
 
@@ -4980,4 +4990,133 @@ nsBlockFrame::PaintChildren(nsIPresContext&      aPresContext,
   nsBlockFrameSuper::PaintChildren(aPresContext,
                                    aRenderingContext,
                                    aDirtyRect, aWhichLayer);
+}
+
+//----------------------------------------------------------------------
+
+nsresult
+NS_NewAnonymousBlockFrame(nsIFrame*& aNewFrame)
+{
+  nsBlockFrame* it = new nsAnonymousBlockFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aNewFrame = it;
+  return NS_OK;
+}
+
+nsAnonymousBlockFrame::nsAnonymousBlockFrame()
+{
+}
+
+nsAnonymousBlockFrame::~nsAnonymousBlockFrame()
+{
+}
+
+NS_IMETHODIMP
+nsAnonymousBlockFrame::AppendFrames(nsIPresContext& aPresContext,
+                                    nsIPresShell&   aPresShell,
+                                    nsIAtom*        aListName,
+                                    nsIFrame*       aFrameList)
+{
+  return mParent->AppendFrames(aPresContext, aPresShell, aListName,
+                               aFrameList);
+}
+
+NS_IMETHODIMP
+nsAnonymousBlockFrame::InsertFrames(nsIPresContext& aPresContext,
+                                    nsIPresShell&   aPresShell,
+                                    nsIAtom*        aListName,
+                                    nsIFrame*       aPrevFrame,
+                                    nsIFrame*       aFrameList)
+{
+  return mParent->InsertFrames(aPresContext, aPresShell, aListName,
+                               aPrevFrame, aFrameList);
+}
+
+NS_IMETHODIMP
+nsAnonymousBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
+                                   nsIPresShell&   aPresShell,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aOldFrame)
+{
+  return mParent->RemoveFrame(aPresContext, aPresShell, aListName,
+                              aOldFrame);
+}
+
+nsresult
+nsAnonymousBlockFrame::AppendFrames2(nsIPresContext& aPresContext,
+                                     nsIPresShell&   aPresShell,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aFrameList)
+{
+  return nsFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+}
+
+nsresult
+nsAnonymousBlockFrame::InsertFrames2(nsIPresContext& aPresContext,
+                                     nsIPresShell&   aPresShell,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aPrevFrame,
+                                     nsIFrame*       aFrameList)
+{
+  return nsFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+}
+
+nsresult
+nsAnonymousBlockFrame::RemoveFrame2(nsIPresContext& aPresContext,
+                                    nsIPresShell&   aPresShell,
+                                    nsIAtom*        aListName,
+                                    nsIFrame*       aOldFrame)
+{
+  return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+}
+
+void
+nsAnonymousBlockFrame::StealFirstFrame()
+{
+  nsLineBox* line = mLines;
+  if (nsnull != line) {
+    nsIFrame* firstChild = line->mFirstChild;
+
+    // If the line has floaters on it, see if the frame being removed
+    // is a placeholder frame. If it is, then remove it from the lines
+    // floater array and from the block frames floater child list.
+    if (nsnull != line->mFloaters) {
+      // XXX UNTESTED!
+      nsPlaceholderFrame* placeholderFrame;
+      nsVoidArray& floaters = *line->mFloaters;
+      PRInt32 i, n = floaters.Count();
+      for (i = 0; i < n; i++) {
+        placeholderFrame = (nsPlaceholderFrame*) floaters[i];
+        if (firstChild == placeholderFrame) {
+          // Remove placeholder from the line's floater array
+          floaters.RemoveElementAt(i);
+          if (0 == floaters.Count) {
+            delete line->mFloaters;
+            line->mFloaters = nsnull;
+          }
+
+          // Remove the floater from the block frames mFloaters list too
+          mFloaters.RemoveFrame(placeholderFrame->GetAnchoredItem());
+          break;
+        }
+      }
+    }
+
+    if (1 == line->mChildCount) {
+      // Remove line when last frame goes away
+      mLines = line->mNext;
+      delete line;
+    }
+    else {
+      // Remove frame from line and mark the line dirty
+      --line->mChildCount;
+      line->MarkDirty();
+      firstChild->GetNextSibling(line->mFirstChild);
+    }
+
+    // Break linkage to next child after stolen frame
+    firstChild->SetNextSibling(nsnull);
+  }
 }
