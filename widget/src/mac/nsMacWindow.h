@@ -45,6 +45,7 @@ using std::auto_ptr;
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
 #include "nsIEventSink.h"
+#include "nsIMacTextInputEventSink.h"
 #include "nsPIWidgetMac.h"
 #include "nsPIEventSinkStandalone.h"
 
@@ -62,7 +63,8 @@ struct PhantomScrollbarData;
 //-------------------------------------------------------------------------
 //	MacOS native window
 
-class nsMacWindow : public nsChildWindow, public nsIEventSink, public nsPIWidgetMac, public nsPIEventSinkStandalone
+class nsMacWindow : public nsChildWindow, public nsIEventSink, public nsPIWidgetMac, 
+                    public nsPIEventSinkStandalone, public nsIMacTextInputEventSink
 {
 private:
 	typedef nsChildWindow Inherited;
@@ -75,6 +77,7 @@ public:
     NS_DECL_NSIEVENTSINK 
     NS_DECL_NSPIWIDGETMAC
     NS_DECL_NSPIEVENTSINKSTANDALONE
+    NS_DECL_NSIMACTEXTINPUTEVENTSINK
     
 /*
     // nsIWidget interface

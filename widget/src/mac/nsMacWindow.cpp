@@ -176,7 +176,8 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 } // DragReceiveHandler
 
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsMacWindow, Inherited, nsIEventSink, nsPIWidgetMac, nsPIEventSinkStandalone);
+NS_IMPL_ISUPPORTS_INHERITED4(nsMacWindow, Inherited, nsIEventSink, nsPIWidgetMac, nsPIEventSinkStandalone, 
+                                          nsIMacTextInputEventSink);
 
 
 //-------------------------------------------------------------------------
@@ -1573,6 +1574,99 @@ NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
   return NS_OK;
 }
 
+
+#pragma mark -
+
+//
+// impleemnt nsIMacTextInputEventSink: forward to the right method in nsMacEventHandler 
+//
+
+/* OSStatus HandleUpdateActiveInputArea (in wstring text, in long textLength, in short script, in short language, in long fixLen, in voidPtr hiliteRng); */
+NS_IMETHODIMP 
+nsMacWindow::HandleUpdateActiveInputArea(const nsAString & text, 
+                                         PRInt16 script, PRInt16 language, PRInt32 fixLen, void * hiliteRng, 
+                                         OSStatus *_retval)
+{
+  *_retval = eventNotHandledErr;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  const nsPromiseFlatString& buffer = PromiseFlatString(text);
+  // ignore script and langauge information for now. 
+  nsresult res = mMacEventHandler->UnicodeHandleUpdateInputArea((PRUnichar*)buffer.get(), buffer.Length(), fixLen, (TextRangeArray*) hiliteRng);
+  // we will lost the real OSStatus for now untill we change the nsMacEventHandler
+  if (NS_SUCCEEDED(res))
+    *_retval = noErr;
+  return res;
+}
+
+/* OSStatus HandleUpdateActiveInputAreaForNonUnicode (in string text, in long textLength, in short script, in short language, in long fixLen, in voidPtr hiliteRng); */
+NS_IMETHODIMP 
+nsMacWindow::HandleUpdateActiveInputAreaForNonUnicode(const nsACString & text, 
+                                                      PRInt16 script, PRInt16 language, 
+                                                      PRInt32 fixLen, void * hiliteRng, 
+                                                      OSStatus *_retval)
+{
+  *_retval = eventNotHandledErr;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  const nsPromiseFlatCString& buffer = PromiseFlatCString(text);
+  // ignore langauge information for now. 
+  nsresult res = mMacEventHandler->HandleUpdateInputArea((char*)buffer.get(), buffer.Length(), script, fixLen, (TextRangeArray*) hiliteRng);
+  // we will lost the real OSStatus for now untill we change the nsMacEventHandler
+  if (NS_SUCCEEDED(res))
+    *_retval = noErr;
+  return res;
+}
+
+/* OSStatus HandleUnicodeForKeyEvent (in wstring text, in long textLength, in short script, in short language, in voidPtr keyboardEvent); */
+NS_IMETHODIMP 
+nsMacWindow::HandleUnicodeForKeyEvent(const nsAString & text, 
+                                      PRInt16 script, PRInt16 language, void * keyboardEvent, 
+                                      OSStatus *_retval)
+{
+  *_retval = eventNotHandledErr;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  // ignore langauge information for now. 
+  // we will lost the real OSStatus for now untill we change the nsMacEventHandler
+  EventRecord* eventPtr = (EventRecord*)keyboardEvent;
+  const nsPromiseFlatString& buffer = PromiseFlatString(text);
+  nsresult res = mMacEventHandler->HandleUKeyEvent((PRUnichar*)buffer.get(), buffer.Length(), *eventPtr);
+  // we will lost the real OSStatus for now untill we change the nsMacEventHandler
+  if(NS_SUCCEEDED(res))
+    *_retval = noErr;
+  return res;
+}
+
+/* OSStatus HandleOffsetToPos (in long offset, out short pointX, out short pointY); */
+NS_IMETHODIMP 
+nsMacWindow::HandleOffsetToPos(PRInt32 offset, PRInt16 *pointX, PRInt16 *pointY, OSStatus *_retval)
+{
+  *_retval = eventNotHandledErr;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  *pointX = *pointY = 0;
+  Point thePoint = {0,0};
+  nsresult res = mMacEventHandler->HandleOffsetToPosition(offset, &thePoint);
+  // we will lost the real OSStatus for now untill we change the nsMacEventHandler
+  if(NS_SUCCEEDED(res))
+    *_retval = noErr;
+  *pointX = thePoint.h;
+  *pointY = thePoint.v;  
+  return res;
+}
+
+/* OSStatus 
+HandlePosToOffset (in short currentPointX, in short currentPointY, out long offset, out short regionClass); */
+NS_IMETHODIMP 
+nsMacWindow::HandlePosToOffset(PRInt16 currentPointX, PRInt16 currentPointY, 
+                               PRInt32 *offset, PRInt16 *regionClass, OSStatus *_retval)
+{
+  *_retval = eventNotHandledErr;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  *_retval = noErr;
+  Point thePoint;
+  thePoint.h = currentPointX;
+  thePoint.v = currentPointY;
+  *offset = mMacEventHandler->HandlePositionToOffset(thePoint, regionClass);
+  return NS_OK;
+}
 
 #pragma mark -
 
