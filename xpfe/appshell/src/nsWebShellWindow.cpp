@@ -1468,7 +1468,7 @@ void nsWebShellWindow::LoadContentAreas() {
                           nsnull,
                           nsnull,
                           nsnull);
-          delete [] urlChar;
+          nsMemory::Free(urlChar);
         }
         NS_RELEASE(contentShell);
       }
