@@ -569,7 +569,7 @@ endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 
-$(LIBRARY): $(OBJS) $(LOBJS)
+$(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
 	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
@@ -599,7 +599,7 @@ endif
 endif
 
 ifneq ($(OS_ARCH),OS2)
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS)
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),OpenVMS)
 ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
@@ -634,7 +634,7 @@ endif
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
 else
-$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE)
+$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE) Makefile Makefile.in
 	rm -f $@
 	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	chmod +x $@
