@@ -5,13 +5,96 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <binding id="treeitem">
+    <interface>
+      <method name="toggleOpenState">
+        <body>
+          <![CDATA[
+            if ((this.getAttribute('container') == 'true') &&
+                 (this.getAttribute('empty') != 'true')) {
+               if (this.getAttribute('open') == 'true')
+                 this.removeAttribute('open');
+               else this.setAttribute('open', 'true');
+            }
+          ]]>
+        </body>
+      </method>
+     <method name="open">
+       <body>
+          <![CDATA[
+            if ((this.getAttribute('container') == 'true') &&
+                 (this.getAttribute('empty') != 'true')) {
+               if (this.getAttribute('open') != 'true')
+                 this.setAttribute('open', 'true');
+            }
+          ]]>
+        </body>
+     </method>
+     <method name="close">
+       <body>
+          <![CDATA[
+            if ((this.getAttribute('container') == 'true') &&
+                 (this.getAttribute('empty') != 'true')) {
+               if (this.getAttribute('open') == 'true')
+                 this.removeAttribute('open');
+            }
+          ]]>
+        </body>
+     </method>    
+   </interface>
+  </binding>     
+
+  <binding id="treecell-indented-folder">
+    <content autostretch="never">
+      <xul:treeindentation/>
+      <xul:image class="tree-cell-twisty" twisty="true" allowevents="true"/>
+      <xul:image class="tree-cell-primary-icon" inherits="src"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+  
+  <binding id="treecell-indented-leaf">
+    <content autostretch="never">
+      <xul:treeindentation/>
+      <xul:image class="tree-cell-primary-icon" inherits="src"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="treecell-iconic">
+    <content autostretch="never">
+      <xul:image class="tree-cell-icon" inherits="src"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="treecell-image">
+    <content autostretch="never">
+      <xul:image class="tree-cell-image" inherits="src"/>
+    </content>
+  </binding>
+  
+  <binding id="treecell">
+    <content autostretch="never">
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+  
+  <binding id="treecell-header">
+    <content autostretch="never">
+      <xul:image class="tree-header-image" inherits="src"/>
+      <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>
+      <xul:image class="tree-header-sortdirection"/>
+    </content>
+  </binding>
+
   <binding id="tree">
-    <content>
+    <!-- <content>
       <children/>
       <xul:treerows>
         <children includes="treehead,treechildren"/>
       </xul:treerows> 
-    </content>
+    </content> -->
     <interface>
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
@@ -219,89 +302,8 @@
     </handlers>
   </binding>
  
-  <binding id="treeitem">
-    <interface>
-      <method name="toggleOpenState">
-        <body>
-          <![CDATA[
-            if ((this.getAttribute('container') == 'true') &&
-                 (this.getAttribute('empty') != 'true')) {
-               if (this.getAttribute('open') == 'true')
-                 this.removeAttribute('open');
-               else this.setAttribute('open', 'true');
-            }
-          ]]>
-        </body>
-      </method>
-     <method name="open">
-       <body>
-          <![CDATA[
-            if ((this.getAttribute('container') == 'true') &&
-                 (this.getAttribute('empty') != 'true')) {
-               if (this.getAttribute('open') != 'true')
-                 this.setAttribute('open', 'true');
-            }
-          ]]>
-        </body>
-     </method>
-     <method name="close">
-       <body>
-          <![CDATA[
-            if ((this.getAttribute('container') == 'true') &&
-                 (this.getAttribute('empty') != 'true')) {
-               if (this.getAttribute('open') == 'true')
-                 this.removeAttribute('open');
-            }
-          ]]>
-        </body>
-     </method>    
-   </interface>
-  </binding>     
+  
               
-  <binding id="treecell-indented-folder">
-    <content autostretch="never">
-      <xul:treeindentation/>
-      <xul:image class="tree-cell-twisty" twisty="true" allowevents="true"/>
-      <xul:image class="tree-cell-primary-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
-    </content>
-  </binding>
-  
-  <binding id="treecell-indented-leaf">
-    <content autostretch="never">
-      <xul:treeindentation/>
-      <xul:image class="tree-cell-primary-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
-    </content>
-  </binding>
-
-  <binding id="treecell-iconic">
-    <content autostretch="never">
-      <xul:image class="tree-cell-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
-    </content>
-  </binding>
-
-  <binding id="treecell-image">
-    <content autostretch="never">
-      <xul:image class="tree-cell-image" inherits="src"/>
-    </content>
-  </binding>
-  
-  <binding id="treecell">
-    <content autostretch="never">
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
-    </content>
-  </binding>
-  
-  <binding id="treecell-header">
-    <content autostretch="never">
-      <xul:image class="tree-header-image" inherits="src"/>
-      <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>
-      <xul:image class="tree-header-sortdirection"/>
-    </content>
-  </binding>
-
   <binding id="listbox" extends="xul:tree">
     <content>
       <xul:cols>
