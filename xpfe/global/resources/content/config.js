@@ -350,7 +350,7 @@ function onConfigUnload()
 
 function FilterPrefs()
 {
-  var substring = document.getElementById("textbox").value.toString();
+  var substring = document.getElementById("textbox").value.toString().toLowerCase();
   var prefCol = view.selection.currentIndex < 0 ? null : gPrefView[view.selection.currentIndex].prefCol;
   var array = gPrefView;
   gPrefView = gPrefArray;
