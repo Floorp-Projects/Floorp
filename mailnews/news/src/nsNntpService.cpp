@@ -1286,6 +1286,14 @@ NS_IMETHODIMP nsNntpService::GetScheme(char * *aScheme)
 	return rv; 
 }
 
+NS_IMETHODIMP nsNntpService::GetDefaultDoBiff(PRBool *aDoBiff)
+{
+    NS_ENSURE_ARG_POINTER(aDoBiff);
+    // by default, don't do biff for NNTP servers
+    *aDoBiff = PR_FALSE;    
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsNntpService::GetDefaultPort(PRInt32 *aDefaultPort)
 {
     NS_ENSURE_ARG_POINTER(aDefaultPort);

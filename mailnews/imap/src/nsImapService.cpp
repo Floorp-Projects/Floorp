@@ -2859,6 +2859,14 @@ NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapService::GetDefaultDoBiff(PRBool *aDoBiff)
+{
+    NS_ENSURE_ARG_POINTER(aDoBiff);
+    // by default, do biff for IMAP servers
+    *aDoBiff = PR_TRUE;    
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImapService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {

@@ -998,6 +998,49 @@ nsMsgIncomingServer::GetHostName(char **aResult)
     return rv;
 }
 
+#define BIFF_PREF_NAME "check_new_mail"
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetDoBiff(PRBool *aDoBiff)
+{
+    NS_ENSURE_ARG_POINTER(aDoBiff);
+    nsresult rv;
+   
+    nsCAutoString fullPrefName;
+    getPrefName(m_serverKey, BIFF_PREF_NAME, fullPrefName);
+    rv = m_prefs->GetBoolPref(fullPrefName, aDoBiff);
+    if (NS_SUCCEEDED(rv)) return rv;
+
+    // if the pref isn't set, use the default
+    // value based on the protocol
+    nsCOMPtr<nsIMsgProtocolInfo> protocolInfo;
+
+    rv = getProtocolInfo(getter_AddRefs(protocolInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = protocolInfo->GetDefaultDoBiff(aDoBiff);
+    // note, don't call SetDoBiff()
+    // since we keep changing our minds on
+    // if biff should be on or off, let's keep the ability
+    // to change the default in future builds.
+    // if we call SetDoBiff() here, it will be in the users prefs.
+    // and we can't do anything after that.
+    return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetDoBiff(PRBool aDoBiff)
+{
+    nsresult rv;
+    nsCAutoString fullPrefName;
+    getPrefName(m_serverKey, BIFF_PREF_NAME, fullPrefName);
+
+    rv = m_prefs->SetBoolPref(fullPrefName, aDoBiff);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsMsgIncomingServer::GetPort(PRInt32 *aPort)
 {
@@ -1134,7 +1177,6 @@ NS_IMETHODIMP nsMsgIncomingServer::DisplayOfflineMsg(nsIMsgWindow *aMsgWindow)
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, IsSecure, "isSecure");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");

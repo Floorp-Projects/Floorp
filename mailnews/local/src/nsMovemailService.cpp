@@ -616,6 +616,15 @@ nsMovemailService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopie
     return NS_OK;
 }   
 
+NS_IMETHODIMP 
+nsMovemailService::GetDefaultDoBiff(PRBool *aDoBiff)
+{
+    NS_ENSURE_ARG_POINTER(aDoBiff);
+    // by default, do biff for movemail
+    *aDoBiff = PR_TRUE;    
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMovemailService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {

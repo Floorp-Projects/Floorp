@@ -87,5 +87,10 @@ interface nsIMsgProtocolInfo : nsISupports
        the secure port value is returned. If isSecure is set to false the default
        port value is returned  */
     long getDefaultServerPort(in boolean isSecure);
+
+    /**
+     * do biff by default?
+     */
+    readonly attribute boolean defaultDoBiff;
 };
 

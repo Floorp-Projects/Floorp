@@ -174,6 +174,15 @@ nsNoneService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     return NS_OK;
 }   
 
+NS_IMETHODIMP 
+nsNoneService::GetDefaultDoBiff(PRBool *aDoBiff)
+{
+    NS_ENSURE_ARG_POINTER(aDoBiff);
+    // by default, don't do biff for "none" servers
+    *aDoBiff = PR_FALSE;    
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNoneService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {

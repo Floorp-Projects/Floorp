@@ -310,6 +310,14 @@ NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsPop3Service::GetDefaultDoBiff(PRBool *aDoBiff)
+{
+    NS_ENSURE_ARG_POINTER(aDoBiff);
+    // by default, do biff for POP3 servers
+    *aDoBiff = PR_TRUE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
     nsresult rv = NS_ERROR_FAILURE;
