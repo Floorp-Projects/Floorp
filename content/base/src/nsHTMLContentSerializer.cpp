@@ -787,6 +787,9 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aS
   }
 }
 
+static PRUint16 kValNBSP = 160;
+static const char* kEntityNBSP = "nbsp";
+
 static PRUint16 kGTVal = 62;
 static const char* kEntities[] = {
   "", "", "", "", "", "", "", "", "", "",
@@ -856,7 +859,11 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
         // needs to be replaced
         for (; c < fragmentEnd; c++, advanceLength++) {
           PRUnichar val = *c;
-          if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
+          if (val == kValNBSP) {
+            entityText = kEntityNBSP;
+            break;
+          }
+          else if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
             entityText = entityTable[val];
             break;
           } else if (mIsLatin1 && val > 127 && val < 256) {
