@@ -26,130 +26,180 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
 
-<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window debug="false"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&title.label;"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-composer' ); else parent.queuedTag = 'pref-composer'; InitColors();">
+        onload="if( parent.handle ) parent.handle.onpageload( 'pref-composer' ); else parent.queuedTag = 'pref-composer'">
 
-  <html:script language="JavaScript" src="chrome://pref/content/pref-composer.js"/>
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box type="smallheader" title="&lHeader;" description="&rHeader2;"/>
 
-		<titledbox orient="vertical">
-		<box autostretch="never" valign="middle">
-			<text value="&authorName;"/>
-			<html:input class="indent" name="author" type="text" id="editorAuthor"
-                  pref="true" preftype="string" prefstring="editor.author" flex="1"/>
-		</box>
-	</titledbox>
-
+<!-- Take out Auto-Save; not supported at this time
     <titledbox orient="vertical">
-  		<title><text value="&pageColorHeader;"/></title> 
-    	<box align="horizontal">
-    	<box align="vertical" flex="0">
-    		<box flex="100%">
-          <html:label>
-            &NormalText.label;
-          </html:label>
-          <spring flex="100%"/>
-    			<menu id="normaltextmenu" allowevents="true" class="colorpicker">
-    				<html:div id="pref:#000000:color:editor.text_color" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
-    				<menupopup id="normalMenuPopup">
-    					<colorpicker allowevents="true" id="normalColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'normaltext', false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="normalText"
-                      pref="true" preftype="color" prefstring="editor.text_color"/>
-    		</box>
-    
-    		<box>
-          <html:label>
-            &LinkText.label;
-          </html:label>
-          <spring flex="100%"/>
-    			<menu id="linktextmenu" class="colorpicker">
-    				<html:div id="pref:#000000:color:editor.link_color" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
-    				<menupopup>
-    					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'linktext',false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="linkText"
-                      pref="true" preftype="color" prefstring="editor.link_color"/>
-    		</box>
-    
-    		<box>
-          <html:label>
-            &ActiveLinkText.label;
-          </html:label>
-          <spring flex="100%"/>
-    			<menu id="activelinktextmenu" class="colorpicker">
-    				<html:div id="pref:#000000:color:editor.active_link_color" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
-    				<menupopup>
-    					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'activelinktext',false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="activeLinkText"
-                      pref="true" preftype="color" prefstring="editor.active_link_color"/>
-    		</box>
-    
-    		<box>
-          <html:label>
-            &FollowedLinkText.label;
-          </html:label>
-          <spring flex="100%"/>
-    			<menu id="followedlinktextmenu" class="colorpicker">
-    				<html:div id="pref:#000000:color:editor.followed_link_color" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
-    				<menupopup>
-    					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'followedlinktext',false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="followedLinkText"
-                      pref="true" preftype="color" prefstring="editor.followed_link_color"/>
-    		</box>
-    
-    		<box>
-          <html:label>
-            &BackgroundColor.label;
-          </html:label>
-          <spring flex="100%"/>
-    			<menu id="colorpreviewmenu" class="colorpicker">
-    				<html:div id="pref:#000000:color:editor.background_color" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
-    				<menupopup>
-    					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'colorpreview',true);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="backgroundColor"
-                      pref="true" preftype="color" prefstring="editor.background_color"/>
-    		</box>
-    
-    	</box>
-        <spring style="width: 7px;"/>
-    	<box align="vertical" flex="100%" id="colorpreview" basestyle="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; " style="min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; ">
-      	<html:div id="normaltext">  &NormalText.label;  </html:div>
-        <spring style="height: 7px;"/>
-      	<html:div id="linktext">  &LinkText.label;  </html:div>
-        <spring style="height: 7px;"/>
-      	<html:div id="activelinktext">  &ActiveLinkText.label;  </html:div>
-        <spring style="height: 7px;"/>
-    	  <html:div id="followedlinktext">  &FollowedLinkText.label;  </html:div>
-    	</box>
-  	</box>
+    <box align="horizontal" valign="middle">
+      <checkbox 
+        pref       = "true" 
+        preftype   = "int" 
+        prefindex  = "0" 
+        prefstring = "editor.auto_save"
+        value="&AutoSaveCheck.label;"
+        name="autosave" 
+      />
+      <textfield 
+        name="time" 
+        type="text" 
+        size="3" 
+        value="5" 
+        pref="true" 
+        preftype="int" 
+        prefindex="5" 
+        prefstring="editor.auto_save_delay"
+      />
+      <text value="&minText;" />
+    </box>
+  </titledbox>
+-->
 
-    <spring/>
+<!-- External Editors are not supported at this time
+    <titledbox orient="vertical">
+          <title><text value="&exterLegend.label;"/></title> 
+    <box>
+      <checkbox 
+        name  = "htmlSourceEditorCheckbox"
+        value = "&htmlSource;"
+        pref       = "true" 
+        preftype   = "int" 
+        prefindex  = "0" 
+        prefstring = "editor.use_html_editor"
+      />
+      <textfield 
+        name = "&chooseButton.label;"
+        pref       = "true" 
+        preftype   = "string" 
+        prefstring = "editor.html_editor"
+      />
+      <button 
+        class = "dialog" 
+        name  = ""
+        value = "&chooseButton.label;"
+      />
+    </box>
 
-  	<box>
-	   <spring/>
-		  <!-- clicking this button should reset the colors below to be same as navigator colors -->
-		  <titledbutton class="dialog push" name=""  value="&UseNavigatorColor.label;" />
-  	</box>
+    <box>
+      <checkbox 
+        name  = "htmlImageEditorCheckbox" 
+        value = "&imageeditor.label;"
+        pref       = "true" 
+        preftype   = "int" 
+        prefindex  = "0" 
+        prefstring ="editor.use_image_editor"
+      />
 
-    <spring/>
- 	</titledbox>
+      <textfield 
+        name="chooseButton.label" 
+        pref       = "true" 
+        preftype   = "string" 
+        prefstring = "editor.image_editor"
+      />
+      <button class="dialog" value="&chooseButton.label;" />
+    </box> 
+
+  </titledbox>
+  -->
+
+  <titledbox  orient="vertical">
+    <title><text value="Table Editing"/></title>
+    <box>
+      <checkbox 
+        name  = "maintainTable"
+        value = "&maintainTableStructure.label;" 
+        pref       = "true" 
+        preftype   = "int" 
+        prefindex  = "0" 
+        prefstring ="editor.maintain_table_structure"
+      />
+    </box>
+    <box valign="middle">
+      <text value="Pressing [delete] key should " />
+      <radiogroup orient="vertical">
+        pref       = "true" 
+        preftype   = "int" 
+        prefindex  = "0" 
+        prefstring ="editor.table_delete_key"
+      >
+        <radio value = "delete cell (content and structure)" />
+        <radio value = "delete only cell content" />
+      </radiogroup>
+    </box>
+  </titledbox>  
+<!--
+    <html:div >
+      &returnkey.label;
+    </html:div>
+    <html:div class="vertical-gap">
+      <radio name="returnkey" type="" id="returnkey0"
+                  pref="true" preftype="int" prefindex="0" prefstring="editor.returnkey_mapping"/>
+      <html:label for="returnkey0" accesskey="" tabindex="0">
+        &returnkeyradio0.label;
+      </html:label>
+    </html:div>
+    <html:div >
+      <radio name="returnkey" id="returnkey1"
+                  pref="true" preftype="int" prefindex="1" prefstring="editor.returnkey_mapping"/>
+      <html:label for="returnkey1" accesskey="" tabindex="0">
+        &returnkeyradio1.label;
+      </html:label>
+    </html:div>
+    <html:div >
+      <radio name="returnkey" id="returnkey2"
+                  pref="true" preftype="int" prefindex="2" prefstring="editor.returnkey_mapping"/>
+      <html:label for="returnkey2" accesskey="" tabindex="0">      
+        &returnkeyradio2.label;
+      </html:label>
+    </html:div>
+    <html:div >
+      <radio name="returnkey" id="returnkey3"
+                  pref="true" preftype="int" prefindex="3" prefstring="editor.returnkey_mapping"/>
+      <html:label for="returnkey3" accesskey="" tabindex="0">      
+        &returnkeyradio3.label;
+      </html:label>
+    </html:div>
+
+    <spring style="height: 10px;"/>
+
+    <html:div >
+      &enterkey.label;
+    </html:div>
+    <html:div  class="vertical-gap">
+      <radio name="enterkey" id="enterkey0"
+                  pref="true" preftype="int" prefindex="0" prefstring="editor.enterkey_mapping"/>
+      <html:label for="enterkey0" accesskey="" tabindex="0">
+        &returnkeyradio0.label;
+      </html:label>
+    </html:div>
+    <html:div >
+      <radio name="enterkey" id="enterkey1"
+                  pref="true" preftype="int" prefindex="1" prefstring="editor.enterkey_mapping"/>
+      <html:label for="enterkey1" accesskey="" tabindex="0">
+        &returnkeyradio1.label;
+      </html:label>
+    </html:div>
+    <html:div >
+      <radio name="enterkey" id="enterkey2"
+                  pref="true" preftype="int" prefindex="2" prefstring="editor.enterkey_mapping"/>
+      <html:label for="enterkey2" accesskey="" tabindex="0">      
+        &returnkeyradio2.label;
+      </html:label>
+    </html:div>
+    <html:div >
+      <radio name="enterkey" id="enterkey3"
+                  pref="true" preftype="int" prefindex="3" prefstring="editor.enterkey_mapping"/>
+      <html:label for="enterkey3" accesskey="" tabindex="0">      
+        &returnkeyradio3.label;
+      </html:label>
+    </html:div>
+  -->
+
 </window>
 
