@@ -176,9 +176,10 @@ NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 
 NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
 {
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mCacheEntry)                  return NS_ERROR_NOT_AVAILABLE;
+    if (!mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_NOT_STREAM;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mCacheEntry->CacheDevice()->GetTransportForEntry(mCacheEntry, aTransport);
 }
 
 
