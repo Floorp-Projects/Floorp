@@ -425,7 +425,7 @@ HandleLocationEvent(nsGUIEvent *aEvent)
         nsAutoString text;
         PRUint32 size;
         bw->mLocation->GetText(text, 1000, size);
-        bw->GoTo(text);
+        bw->GoTo(text.GetUnicode());
       }
       break;
 
@@ -559,7 +559,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.Append("/test");
       url.Append(ix, 10);
       url.Append(".html");
-      mWebShell->LoadURL(url);
+      mWebShell->LoadURL(url.GetUnicode());
     }
     break;
 
@@ -567,14 +567,14 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     {
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/toolbarTest1.xul");
-      mWebShell->LoadURL(url);
+      mWebShell->LoadURL(url.GetUnicode());
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
     {
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/treeTest1.xul");
-      mWebShell->LoadURL(url);
+      mWebShell->LoadURL(url.GetUnicode());
       break;
     }
   
@@ -643,7 +643,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     nsIBrowserWindow* bw = nsnull;
     mApp->OpenWindow(PRUint32(~0), bw);
     bw->Show();
-    ((nsBrowserWindow *)bw)->GoTo(url);
+    ((nsBrowserWindow *)bw)->GoTo(url.GetUnicode());
     NS_RELEASE(bw);
   }
 #endif
@@ -664,7 +664,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   }
 
   /* invoke the javascript wallet editor */
-  mWebShell->LoadURL(urlString);
+  mWebShell->LoadURL(urlString.GetUnicode());
 
   break;
 #endif
@@ -765,9 +765,9 @@ nsBrowserWindow::DoFileOpen()
   nsAutoString fileName;
   if (GetFileNameFromFileSelector(mWindow, &fileName, &mOpenFileDirectory)) {
     nsAutoString fileURL;
-    BuildFileURL(fileName, fileURL);
+    BuildFileURL(fileName.GetUnicode(), fileURL);
     // Ask the Web widget to load the file URL
-    mWebShell->LoadURL(fileURL);
+    mWebShell->LoadURL(fileURL.GetUnicode());
     Show();
   }
 }
@@ -1619,7 +1619,7 @@ nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 NS_IMETHODIMP
 nsBrowserWindow::GetTitle(const PRUnichar** aResult)
 {
-  *aResult = mTitle;
+  *aResult = mTitle.GetUnicode();
   return NS_OK;
 }
 

@@ -628,7 +628,7 @@ nsViewerApp::OpenWindow()
     mCrawler->Start();
   }
   else {
-    bw->GoTo(mStartURL);
+    bw->GoTo(mStartURL.GetUnicode());
   }
   NS_RELEASE(bw);
 
@@ -1188,7 +1188,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
           if (gWinData) {
             nsString urlStr(gTop100List[--gTop100Pointer]);
             mSiteLabel->SetLabel(urlStr);
-            gWinData->GoTo(urlStr);
+            gWinData->GoTo(urlStr.GetUnicode());
           }
         } else  {
           NS_EnableWidget(mSitePrevBtn,PR_FALSE);
@@ -1202,7 +1202,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
           if (gWinData) {
             nsString urlStr(gTop100List[gTop100Pointer]);
             mSiteLabel->SetLabel(urlStr);
-            gWinData->GoTo(urlStr);
+            gWinData->GoTo(urlStr.GetUnicode());
           }
           NS_EnableWidget(mSitePrevBtn,PR_TRUE);
         } else {
@@ -1331,7 +1331,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
  
   if (gWinData) {
     nsString urlStr(gTop100List[gTop100Pointer]);
-    gWinData->GoTo(urlStr);
+    gWinData->GoTo(urlStr.GetUnicode());
     mSiteLabel->SetLabel(urlStr);
   }
 
