@@ -1852,12 +1852,15 @@ fe_InitColormap (MWContext *context)
         goto colorspace_init_complete;
       }
 
-      max = 256;
-      /* User-specified max number of cells. */
+      if(fe_globalData.max_image_colors > 0 )
+           max = fe_globalData.max_image_colors;
+      else
+	   max = 256;
 
+      /* User-specified max number of cells. */
       if (!colormap->private_p)
         {
-          if ((fe_globalData.max_image_colors) > 0 && !colormap->private_p)
+          if ((fe_globalData.max_image_colors) > 0  && !colormap->private_p)
             max = fe_globalData.max_image_colors;
 
 #ifdef __sgi
