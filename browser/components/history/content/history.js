@@ -234,6 +234,7 @@ function SortBy(sortKey)
   // Look on the bright side: you can rest assured that no code you see in the future
   // will even come close to the lameness of the code below.
 
+  var sortDirection;
   switch(sortKey) {
     case "visited":
       sortKey = "VisitCount";    
