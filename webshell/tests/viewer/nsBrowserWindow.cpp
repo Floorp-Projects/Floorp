@@ -119,6 +119,10 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
+
+static const char* gsAOLFormat = "AOLMAIL";
+static const char* gsHTMLFormat = "text/html";
+
 //----------------------------------------------------------------------
 
 nsVoidArray nsBrowserWindow::gBrowsers;
@@ -1103,6 +1107,69 @@ nsBrowserWindow::GetPresShell()
   return shell;
 }
 
+#ifdef WIN32
+void PlaceHTMLOnClipboard(PRUint32 aFormat, char* aData, int aLength)
+{
+  HGLOBAL     hGlobalMemory;
+  PSTR        pGlobalMemory;
+
+  PRUint32    cf_aol = RegisterClipboardFormat(gsAOLFormat);
+  PRUint32    cf_html = RegisterClipboardFormat(gsHTMLFormat);
+
+  char*       preamble = "";
+  char*       postamble = "";
+
+  if (aFormat == cf_aol || aFormat == CF_TEXT)
+  {
+    preamble = "<HTML>";
+    postamble = "</HTML>";
+  }
+
+  PRInt32 size = aLength + 1 + strlen(preamble) + strlen(postamble);
+
+
+  if (aLength)
+  {
+    // Copy text to Global Memory Area
+    hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, size);
+    if (hGlobalMemory != NULL) 
+    {
+      pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+
+      int i;
+
+      // AOL requires HTML prefix/postamble
+      char*     s  = preamble;
+      PRInt32   len = strlen(s); 
+      for (i=0; i < len; i++)
+      {
+        *pGlobalMemory++ = *s++;
+      }
+
+      s  = aData;
+      len = aLength;
+      for (i=0;i< len;i++) {
+        *pGlobalMemory++ = *s++;
+      }
+
+
+      s = postamble;
+      len = strlen(s); 
+      for (i=0; i < len; i++)
+      {
+        *pGlobalMemory++ = *s++;
+      }
+      
+      // Put data on Clipboard
+      GlobalUnlock(hGlobalMemory);
+      SetClipboardData(aFormat, hGlobalMemory);
+    }
+  }  
+}
+#endif
+
+
+
 void
 nsBrowserWindow::DoCopy()
 {
@@ -1149,40 +1216,20 @@ nsBrowserWindow::DoCopy()
           char* str = data.str();
 
 #if defined(WIN32)
-          PRUint32 aolMail = RegisterClipboardFormat("AOLMAIL");
-          PRUint32 textHtml = RegisterClipboardFormat("text/html");
-
-
-          HGLOBAL     hGlobalMemory1;
-          PSTR        pGlobalMemory1;
-
-          HGLOBAL     hGlobalMemory2;
-          PSTR        pGlobalMemory2;
-
-          PRInt32 len = data.pcount();
+          PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
+          PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
+         
+          PRInt32     len = data.pcount();
           if (len)
-          {
-            // Copy text to Global Memory Area
-            hGlobalMemory1 = (HGLOBAL)GlobalAlloc(GHND, len+1);
-            hGlobalMemory2 = (HGLOBAL)GlobalAlloc(GHND, len+1);
-            if (hGlobalMemory1 != NULL && hGlobalMemory2 != NULL) {
-              pGlobalMemory1 = (PSTR) GlobalLock(hGlobalMemory1);
-              pGlobalMemory2 = (PSTR) GlobalLock(hGlobalMemory2);
-              char * s  = str;
-              for (int i=0;i< len;i++) {
-                *pGlobalMemory1++ = *s;
-                *pGlobalMemory2++ = *s++;
-              }
-
-              // Put data on Clipboard
-              GlobalUnlock(hGlobalMemory1);
-              GlobalUnlock(hGlobalMemory2);
-              OpenClipboard(NULL);
-              EmptyClipboard();
-              SetClipboardData(aolMail, hGlobalMemory1);
-              SetClipboardData(textHtml, hGlobalMemory2);
-              CloseClipboard();
-            }
+          {   
+            OpenClipboard(NULL);
+            EmptyClipboard();
+        
+            PlaceHTMLOnClipboard(cf_aol,str,len);
+            PlaceHTMLOnClipboard(cf_html,str,len);
+            PlaceHTMLOnClipboard(CF_TEXT,str,len);            
+                        
+            CloseClipboard();
           }
           // in ostrstreams if you cal the str() function
           // then you are responsible for deleting the string
