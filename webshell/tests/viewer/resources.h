@@ -117,8 +117,8 @@
 #define VIEWER_TWO_COLUMN       40052
 #define VIEWER_THREE_COLUMN     40053
 
-#define VIEWER_PRINT            40060
-#define VIEWER_PRINT_SETUP      40061
+#define VIEWER_PRINT            40080
+#define VIEWER_PRINT_SETUP      40081
 
 #define JS_CONSOLE              40100
 #define EDITOR_MODE             40120
