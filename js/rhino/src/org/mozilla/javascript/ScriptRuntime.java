@@ -1282,13 +1282,15 @@ public class ScriptRuntime {
         Function f;
         try {
             f = (Function) fun;
+            if (f != null)
+                return f.construct(cx, f.getParentScope(), args);
+            // else fall through to error
         } catch (ClassCastException e) {
-            Object[] errorArgs = { toString(fun) };
-            throw Context.reportRuntimeError(cx.getMessage
-                                             ("msg.isnt.function", errorArgs));
+            // fall through to error
         }
-        // OPT: call construct directly?
-        return f.construct(cx, f.getParentScope(), args);
+        Object[] errorArgs = { toString(fun) };
+        throw Context.reportRuntimeError(cx.getMessage
+                                         ("msg.isnt.function", errorArgs));
     }
 
     public static Scriptable newObjectSpecial(Context cx, Object fun, 
