@@ -38,8 +38,10 @@
 class nsDebug {
 public:
   /**
-   * Log a fatal abort message (to stdout and to the NSPR log file)
-   * and then abort the program when called.
+   * When called, this will log a fatal abort message (to stderr and
+   * to the NSPR log file) and then abort the program. This is
+   * used by the NS_ABORT_IF_FALSE macro below when debugging is
+   * enabled.
    */
   static NS_COM void AbortIfFalse(const char* aStr, const char* aExpr,
                                   const char* aFile, PRIntn aLine);
@@ -48,7 +50,7 @@ public:
    * Log a warning message when an expression is not true. Used by
    * the NS_WARN_IF_FALSE macro below when debugging is enabled.
    *
-   * The default behavior of this method is print a message to stdout
+   * The default behavior of this method is print a message to stderr
    * and to log an event in the NSPR log file.
    */
   static NS_COM PRBool WarnIfFalse(const char* aStr, const char* aExpr,
@@ -57,10 +59,17 @@ public:
   /**
    * Enable flying a warning message box (if the platform supports
    * such a thing) when WarnIfFalse is called in addition to
-   * the usual printing to stdout and the NSPR log file.
+   * the usual printing to stderr and the NSPR log file.
    *
    * If aOnOff is PR_TRUE then the message-box is enabled, otherwise
    * the message-box is disabled.
+   *
+   * The default state for the message-box enable is "off".
+   *
+   * Note also that the implementation looks at an environment
+   * variable (for those platforms that have environment variables...)
+   * called MOZ_WARNING_MESSAGE_BOX that when set enables the
+   * warning message box by default.
    */
   static NS_COM void SetWarningMessageBoxEnable(PRBool aOnOff);
 
@@ -148,9 +157,12 @@ public:
  * Note also that the non-debug version of this macro does <b>not</b>
  * evaluate the message argument.
  */
-#define NS_ABORT_IF_FALSE(_expr,_msg) \
-if (!(_expr))                         \
-  nsDebug::AbortIfFalse(_msg, #_expr, __FILE__, __LINE__)
+#define NS_ABORT_IF_FALSE(_expr,_msg)                        \
+PR_BEGIN_MACRO                                               \
+  if (!(_expr)) {                                            \
+    nsDebug::AbortIfFalse(_msg, #_expr, __FILE__, __LINE__); \
+  }                                                          \
+PR_END_MACRO
 
 /**
  * Warn if a given condition is false.

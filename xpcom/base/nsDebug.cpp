@@ -116,17 +116,23 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
 {
   InitLog();
 
-  char buf[2000];
-  buf[0] = PR_snprintf(buf + 1, sizeof(buf) - 1,
-              "AbortIfFalse: %s: '%s', file %s, line %d",
-              aStr, aExpr, aFile, aLine);
+  char buf[1000];
+#ifdef XP_MAC
+  PRUint32 len =
+#endif
+    PR_snprintf(buf + 1, sizeof(buf) - 1,
+                "AbortIfFalse: %s: '%s', file %s, line %d",
+                aStr, aExpr, aFile, aLine);
+#ifdef XP_MAC
+  buf[0] = (char) (len > 255 ? 255 : len);
+#endif
 
   // Write out the message to the debug log
-  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
+  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf + 1));
   PR_LogFlush();
 
   // And write it out to the stdout
-  printf("%s\n", buf + 1);
+  fprintf(stderr, "%s\n", buf + 1);
   fflush(stdout);
 
   // Now exit the application, trying to make the local equivalent of
@@ -154,7 +160,7 @@ NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
 {
   InitLog();
 
-  char buf[2000];
+  char buf[1000];
   PR_snprintf(buf, sizeof(buf),
               "Warning: %s: '%s', file %s, line %d",
               aStr, aExpr, aFile, aLine);
@@ -162,7 +168,7 @@ NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
 #if defined(_WIN32)
   PRBool abortInstead = PR_FALSE;
   if (gWarningMessageBoxEnable) {
-    char msg[2000];
+    char msg[1200];
     PR_snprintf(msg, sizeof(msg),
                 "%s\n\nDo you wish to continue running?", buf);
     if (IDNO == ::MessageBox(NULL, msg, "nsDebug::WarnIfFalse", 
