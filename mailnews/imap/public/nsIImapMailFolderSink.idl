@@ -69,7 +69,6 @@ interface nsIImapMailFolderSink : nsISupports {
   attribute boolean folderNeedsACLListed;
   attribute boolean folderNeedsSubscribing;
   attribute boolean folderNeedsAdded;
-  attribute boolean folderVerifiedOnline;
   attribute unsigned long aclFlags;
   attribute long uidValidity;
   /**

@@ -1722,9 +1722,9 @@ NS_IMETHODIMP  nsImapIncomingServer::FolderVerifiedOnline(const char *folderName
     rv = rootFolder->FindSubFolder(nsDependentCString(folderName), getter_AddRefs(aFolder));
     if (NS_SUCCEEDED(rv) && aFolder)
     {
-      nsCOMPtr<nsIImapMailFolderSink> imapFolder = do_QueryInterface(aFolder);
+      nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aFolder);
       if (imapFolder)
-        imapFolder->GetFolderVerifiedOnline(aResult);
+        imapFolder->GetVerifiedAsOnlineFolder(aResult);
     }
   }
   return rv;

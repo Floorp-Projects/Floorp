@@ -1027,6 +1027,28 @@ NS_IMETHODIMP nsImapMailFolder::GetVerifiedAsOnlineFolder(PRBool *aVerifiedAsOnl
 NS_IMETHODIMP nsImapMailFolder::SetVerifiedAsOnlineFolder(PRBool aVerifiedAsOnlineFolder)
 {
   m_verifiedAsOnlineFolder = aVerifiedAsOnlineFolder;
+  // mark ancestors as verified as well
+  if (aVerifiedAsOnlineFolder)
+  {
+    nsCOMPtr<nsIMsgFolder> parent;
+    do
+    {
+      GetParent(getter_AddRefs(parent));
+      if (parent)
+      {
+        nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
+        if (imapParent)
+        {
+          PRBool verifiedOnline;
+          imapParent->GetVerifiedAsOnlineFolder(&verifiedOnline);
+          if (verifiedOnline)
+            break;
+          imapParent->SetVerifiedAsOnlineFolder(PR_TRUE);
+        }
+      }
+    }
+    while (parent);
+  }
   return NS_OK;
 }
 
@@ -7036,20 +7058,6 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsAdded(PRBool *bVal)
 NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsAdded(PRBool bVal)
 {
     m_folderNeedsAdded = bVal;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::GetFolderVerifiedOnline(PRBool *bVal)
-{
-    if (!bVal)
-        return NS_ERROR_NULL_POINTER;
-    *bVal = m_verifiedAsOnlineFolder;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::SetFolderVerifiedOnline(PRBool bVal)
-{
-    m_verifiedAsOnlineFolder = bVal;
     return NS_OK;
 }
 
