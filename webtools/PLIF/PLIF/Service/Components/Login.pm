@@ -172,7 +172,6 @@ sub cmdLoginSendPassword {
 
 # user.login
 # if this returns undef, don't do anything!
-# XXX need a quieter version of this to enable/disable UI elements
 sub hasRight {
     my $self = shift;
     my($app, $right) = @_;
@@ -199,7 +198,8 @@ sub requireLogin {
         $app->getSelectingServiceList('user.login.required.generic')->loginRequired($app);
     }
     my $address = $app->input->address;
-    if (defined($address) and not defined($app->getService('user.factory')->getUserByContactDetails($app, $app->input->protocol, $address))) {
+    if (defined($address) and
+        not defined($app->getService('user.factory')->getUserByContactDetails($app, $app->input->protocol, $address))) {
         my($user, $password) = $self->createUser($app, $app->input->protocol, $address);
         $self->sendPassword($app, $user, $app->input->protocol, $password);
         return;
