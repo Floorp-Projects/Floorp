@@ -36,7 +36,7 @@
 
 
 /**
- * Native WIN32 window wrapper. 
+ * Native Motif window wrapper. 
  */
 
 class nsWindow : public nsIWidget
@@ -82,6 +82,7 @@ public:
     virtual void            Enable(PRBool bState);
     virtual void            SetFocus(void);
     virtual void            GetBounds(nsRect &aRect);
+    virtual void            SetBounds(const nsRect &aRect);
     virtual nscolor         GetForegroundColor(void);
     virtual void            SetForegroundColor(const nscolor &aColor);
     virtual nscolor         GetBackgroundColor(void);
@@ -122,6 +123,10 @@ public:
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
 
+    virtual void            SetIgnoreResize(PRBool aIgnore);
+    virtual PRBool          IgnoreResize();
+
+    char gInstanceClassName[256];
 protected:
   void InitCallbacks(char * aName = nsnull);
   void CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetParent,
@@ -145,6 +150,8 @@ protected:
   nsCursor    mCursor;
   nsBorderStyle mBorderStyle;
   nsRect      mBounds;
+
+  PRBool      mIgnoreResize;
 
   nsISupports* mOuter;
 
@@ -213,6 +220,7 @@ public: \
     virtual void            Enable(PRBool bState); \
     virtual void            SetFocus(void); \
     virtual void            GetBounds(nsRect &aRect); \
+    virtual void            SetBounds(const nsRect &aRect); \
     virtual nscolor         GetForegroundColor(void); \
     virtual void            SetForegroundColor(const nscolor &aColor); \
     virtual nscolor         GetBackgroundColor(void); \
@@ -333,6 +341,10 @@ public: \
     void _classname::_aggname::GetBounds(nsRect &aRect) \
     { \
         GET_OUTER()->GetBounds(aRect); \
+    } \
+    void _classname::_aggname::SetBounds(const nsRect &aRect) \
+    { \
+        GET_OUTER()->SetBounds(aRect); \
     } \
     nscolor _classname::_aggname::GetForegroundColor(void) \
     { \

@@ -40,7 +40,7 @@
 
 #include "stdio.h"
 
-#define DBG 0
+#define DBG 1
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
@@ -164,8 +164,10 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mFontMetrics(nsnull),
   mContext(nsnull),
   mWidget(nsnull),
-  mEventCallback(nsnull)
+  mEventCallback(nsnull),
+  mIgnoreResize(PR_FALSE)
 {
+  strcpy(gInstanceClassName, "nsWindow");
   // XXX Til can deal with ColorMaps!
   SetForegroundColor(1);
   SetBackgroundColor(2);
@@ -324,6 +326,11 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
                 nsXtWidget_Resize_Callback,
                 this);
 
+  XtAddCallback(mWidget,
+                XmNexposeCallback,
+                nsXtWidget_Resize_Callback,
+                this);
+
 
 }
 
@@ -386,10 +393,10 @@ void nsWindow::InitCallbacks(char * aName)
                     nsXtWidget_ResizeRedirectMask_EventHandler,
                     this);*/
 
-  XtAddCallback(mWidget, 
+  /*XtAddCallback(mWidget, 
                 XmNresizeCallback, 
                 nsXtWidget_Resize_Callback, 
-                NULL);
+                NULL);*/
 
 
 }
@@ -510,6 +517,10 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+ // if (DBG) 
+  printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
@@ -521,6 +532,13 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+  mBounds.x      = aX;
+  mBounds.y      = aY;
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  XtVaSetValues(mWidget, XmNx, aX, XmNy, aY, 
+                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
 }
 
     
@@ -549,9 +567,22 @@ void nsWindow::SetFocus(void)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
+void nsWindow::SetBounds(const nsRect &aRect)
+{
+ mBounds = aRect;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get this component dimension
+//
+//-------------------------------------------------------------------------
 void nsWindow::GetBounds(nsRect &aRect)
 {
-  XWindowAttributes attrs ;
+
+  printf("$$$$$$$$$ %s::GetBounds 0x%x\n", gInstanceClassName, this);
+
+  /*XWindowAttributes attrs ;
   Window w = nsnull;
 
   if (mWidget)
@@ -577,7 +608,9 @@ void nsWindow::GetBounds(nsRect &aRect)
    // and fix it there.
     aRect = mBounds;
   
-}
+  }
+  */
+  aRect = mBounds;
 }
 
     
@@ -981,17 +1014,17 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-  if (mWidget) {
+  /*if (mWidget) {
     Arg arg[3];
-
+    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Setting to 600,800\n");
     XtSetArg(arg[0], XtNwidth, 600);
     XtSetArg(arg[1], XtNheight,800);
 
     XtSetValues(mWidget, arg, 2);
 
-  }
+  }*/
 
-  if (mEventCallback) {
+  if (mEventCallback && !mIgnoreResize) {
     return(DispatchEvent(&aEvent));
   }
   return FALSE;
@@ -1011,6 +1044,16 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
  return FALSE;
+}
+
+void nsWindow::SetIgnoreResize(PRBool aIgnore)
+{
+  mIgnoreResize = aIgnore;
+}
+
+PRBool nsWindow::IgnoreResize()
+{
+  return mIgnoreResize;
 }
 
 
