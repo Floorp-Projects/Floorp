@@ -55,6 +55,8 @@ while (<XUL_FILE>)
     $BuildNo = $LineList[1];
   }
 }
+@LineList = split (/ /, $BuildNo);
+$BuildNo = $LineList[2];
 $BuildNo =~ s/"//g;
 $BuildNo =~ s/[>]//g;
 debug_print ("Build Number: $BuildNo\n");
