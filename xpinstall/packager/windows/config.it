@@ -199,15 +199,15 @@ Archive=
 [Dialog Program Folder]
 Show Dialog=TRUE
 Title=Select Program Folder
-Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folder list.  Click Install to begin installation.
+Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folder list.  Click Next to continue.
 
-[Dialog Site Selector]
+[Dialog Advanced Settings]
 Show Dialog=FALSE
-Title=Site Selector
+Title=Advanced Settings
 Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from relative to where you are.
 
 [Dialog Start Install]
-Show Dialog=FALSE
+Show Dialog=TRUE
 Title=Start Install
 Message0=Setup has enough information to start copying the program files.  If you want to review or change settings, click Back.  If you are satisfied with the current settings, click Install to begin copying files.
 
