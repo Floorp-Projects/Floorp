@@ -2676,6 +2676,7 @@ nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
   return NS_OK;
 }
 
+// XXX rewrite this
 nsresult
 nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
 {
@@ -2690,6 +2691,7 @@ nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
   // Insert the frame. This marks the line dirty...
   InsertNewFrame(aState.mPresContext, this, newFrame, prevSibling);
 
+#if XXX
   LineData* line = mLines;
   while (nsnull != line->mNext) {
     if (line->IsDirty()) {
@@ -2699,6 +2701,7 @@ nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
   }
   NS_ASSERTION(nsnull != line, "bad inserted reflow");
   //XXX return ReflowDirtyLines(aState, line);
+#endif
 
   // XXX Correct implementation: reflow the dirty lines only; all
   // other lines can be moved; recover state before first dirty line.
@@ -2710,6 +2713,7 @@ nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)
   return ReflowLinesAt(aState, mLines);
 }
 
+// XXX rewrite this
 nsresult
 nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
 {
@@ -2723,7 +2727,8 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
 
   // Find the previous sibling frame
   nsIFrame* prevSibling = nsnull;
-  for (nsIFrame* f = mLines->mFirstChild; f != deletedFrame; f->GetNextSibling(f)) {
+  for (nsIFrame* f = mLines->mFirstChild; f != deletedFrame;
+       f->GetNextSibling(f)) {
     if (nsnull == f) {
       // We didn't find the deleted frame in our child list
       NS_WARNING("Can't find deleted frame");
@@ -2802,17 +2807,6 @@ nsBlockFrame::FrameRemovedReflow(nsBlockReflowState& aState)
       prevSibling = nsnull;
     }
   }
-
-  // Find the first dirty line. That's where we start to reflow
-  line = mLines;
-  while (nsnull != line->mNext) {
-    if (line->IsDirty()) {
-      break;
-    }
-    line = line->mNext;
-  }
-  NS_ASSERTION(nsnull != line, "bad inserted reflow");
-  //XXX return ReflowDirtyLines(aState, line);
 
   // XXX Correct implementation: reflow the dirty lines only; all
   // other lines can be moved; recover state before first dirty line.
