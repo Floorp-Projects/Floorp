@@ -26,6 +26,6 @@
 
 DEPTH=..\..
 
-DIRS=accessproxy accessiblehandler speechout
+DIRS=accessproxy
 
 include <$(DEPTH)\config\rules.mak>
