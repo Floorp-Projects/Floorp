@@ -1899,11 +1899,15 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         content->DoneCreatingElement();
         break;
       case eHTMLTag_textarea:
+      {
         // XXX textarea deserves to be treated like the container it is.
         nsCOMPtr<nsITextAreaElement> textarea(do_QueryInterface(content));
         if (textarea) {
           textarea->DoneAddingChildren();
         }
+        break;
+      }
+      default:
         break;
       }
 
@@ -1936,7 +1940,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
     }
     break;
 
-  case eToken_skippedcontent:
+  default:
     break;
   }
 
