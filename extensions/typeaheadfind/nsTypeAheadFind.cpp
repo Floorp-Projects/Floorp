@@ -387,8 +387,6 @@ nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aDOMEventTarget));
   if (!domNode)
     return NS_OK;  
-  if (!gIsFindingText) // prevents listener callbacks from resetting us during typeahead find processing
-    CancelFind();
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -403,6 +401,16 @@ nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget
   doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
   nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
   nsCOMPtr<nsIDOMEventTarget> rootTarget(do_QueryInterface(domWin));
+
+  if (!gIsFindingText) { // prevents listener callbacks from resetting us during typeahead find processing
+    nsCOMPtr<nsIDOMWindow> isDomWin(do_QueryInterface(aDOMEventTarget));
+    nsCOMPtr<nsIDOMDocument> isDomDoc(do_QueryInterface(aDOMEventTarget));\
+    // CancelFind() only when we're in a new window or we're focusing on 
+    // something other than a window or doc. This rule helps us behave 
+    // better with sloppy focus on Unix window managers.
+    if (domWin != mFocusedWindow || (!isDomWin && !isDomDoc))
+      CancelFind();
+  }
 
   if (!rootTarget || (domWin == mFocusedWindow && docTarget != aDOMEventTarget))
     return NS_OK;  // Return early for elements focused within currently focused  document
@@ -435,17 +443,6 @@ nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget
 
 NS_IMETHODIMP nsTypeAheadFind::Blur(nsIDOMEvent* aEvent) 
 { 
-  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
-  aEvent->GetTarget(getter_AddRefs(domEventTarget));
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(domEventTarget));
-  if (domWindow) {
-    RemoveCurrentSelectionListener();
-    RemoveCurrentScrollPositionListener();
-    RemoveCurrentKeypressListener();
-    CancelFind();
-    mFocusedWindow = nsnull;
-  }
-
   return NS_OK; 
 }
 
@@ -561,14 +558,13 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   PRBool isFirstVisiblePreferred = PR_FALSE;
   PRBool isBackspace = PR_FALSE;  // When backspace is pressed
-  PRBool isLinksOnly = mLinksOnly;
 
   // ------------- Escape pressed ---------------------
   if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE) {
     // Escape accomplishes 2 things: 
     // 1. it is a way for the user to deselect with the keyboard
+    // 2. it is a way for the user to cancel incremental find with visual feedback
     mFocusedDocSelection->CollapseToStart();
-    // 2. it is a way for the user to cancel incremental find with visual feedback (the selection disappears)
     if (mTypeAheadBuffer.IsEmpty())
       return NS_OK;
     aEvent->PreventDefault(); // If Escape is normally used for a command, don't do it
@@ -1088,6 +1084,7 @@ NS_IMETHODIMP nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow, PRBool aLinks
     nsCOMPtr<nsIDOMDocument> domDoc;
     aWindow->GetDocument(getter_AddRefs(domDoc));
     eventTarget = do_QueryInterface(domDoc);
+    CancelFind();
     if (eventTarget)
       HandleFocusInternal(eventTarget);  // This routine will set up the keypress listener
   }
@@ -1167,8 +1164,8 @@ void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
   if (!aPresShell || !mFocusedDocSelCon)
     return;
   // Paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
-  mFocusedDocSelCon->SetDisplaySelection(aEnabled? nsISelectionController::SELECTION_ATTENTION: 
-                                         nsISelectionController::SELECTION_ON);
+  mFocusedDocSelCon->SetDisplaySelection(aEnabled? NS_CONST_CAST(PRInt16, nsISelectionController::SELECTION_ATTENTION): 
+                                         NS_CONST_CAST(PRInt16, nsISelectionController::SELECTION_ON));
   mFocusedDocSelCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
 
   nsCOMPtr<nsICaret> caret;
