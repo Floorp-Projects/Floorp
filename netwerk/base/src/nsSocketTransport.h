@@ -198,6 +198,7 @@ protected:
   PRUint32          mReadWriteState;
 
   PRInt32           mSuspendCount;
+  PRBool            mCancelOperation;
 
   PRFileDesc*   mSocketFD;
   PRNetAddr     mNetAddress;
