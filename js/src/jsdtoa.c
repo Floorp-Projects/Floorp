@@ -1246,8 +1246,6 @@ JS_strtod(CONST char *s00, char **se, int *err)
     ULong y, z;
     Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
 
-    SET_FPU();
-
     *err = 0;
 
 	bb = bd = bs = delta = NULL;
@@ -1868,8 +1866,7 @@ ret:
     RELEASE_DTOA_LOCK();
     if (se)
         *se = (char *)s;
-    rv0 = sign ? -rv : rv;
-    goto ret1;
+    return sign ? -rv : rv;
 
 nomem:
     Bfree(bb);
@@ -1878,11 +1875,7 @@ nomem:
     Bfree(bd0);
     Bfree(delta);
     *err = JS_DTOA_ENOMEM;
-    rv0 = 0;
-
-ret1:
-    RESTORE_FPU();
-    return rv0;
+    return 0;
 }
 
 
@@ -2100,9 +2093,6 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     Bigint *b, *b1, *delta, *mlo, *mhi, *S;
     double d2, ds, eps;
     char *s;
-    JSBool ok;
-
-    SET_FPU();
 
     if (word0(d) & Sign_bit) {
         /* set sign for everything, including 0's and NaNs */
@@ -2119,16 +2109,14 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if ((s[0] == 'I' && bufsize < 9) || (s[0] == 'N' && bufsize < 4)) {
             JS_ASSERT(JS_FALSE);
 /*          JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
-            ok = JS_FALSE;
-            goto ret2;
+            return JS_FALSE;
         }
         strcpy(buf, s);
         if (rve) {
             *rve = buf[3] ? buf + 8 : buf + 3;
             JS_ASSERT(**rve == '\0');
         }
-        ok = JS_TRUE;
-        goto ret2;
+        return JS_TRUE;
     }
     
     b = NULL;                           /* initialize for abort protection */
@@ -2141,8 +2129,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if (bufsize < 2) {
             JS_ASSERT(JS_FALSE);
 /*          JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
-            ok = JS_FALSE;
-            goto ret2;
+            return JS_FALSE;
         }
         buf[0] = '0'; buf[1] = '\0';  /* copy "0" to buffer */
         if (rve)
@@ -2155,8 +2142,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if (mlo != mhi)
             Bfree(mlo);
         Bfree(mhi);
-        ok = JS_TRUE;
-        goto ret2;
+        return JS_TRUE;
     }
 
     b = d2b(d, &be, &bbits);
@@ -2285,8 +2271,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     if (bufsize <= (size_t)i) {
         Bfree(b);
         JS_ASSERT(JS_FALSE);
-        ok = JS_FALSE;
-        goto ret2;
+        return JS_FALSE;
     }
     s = buf;
 
@@ -2749,8 +2734,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     if (rve)
         *rve = s;
     *decpt = k + 1;
-    ok =  JS_TRUE;
-    goto ret2;
+    return JS_TRUE;
 
 nomem:
     Bfree(S);
@@ -2760,11 +2744,7 @@ nomem:
         Bfree(mhi);
     }
     Bfree(b);
-    ok = JS_FALSE;
-    
-ret2:
-    RESTORE_FPU();
-    return ok;
+    return JS_FALSE;
 }
 
 

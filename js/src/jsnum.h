@@ -252,29 +252,6 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp);
 extern JSBool
 js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint radix, jsdouble *dp);
 
-
-#ifdef XP_OS2
-/* XXX see bug 224487
- * On OS/2, some system function calls seem to change the FPU control word,
- * such that we crash with a floating underflow exception.  The FIX_FPU() call
- * in jsnum.c does not always work, as sometimes FIX_FPU() is called BEFORE the
- * OS/2 system call that horks the FPU control word.  So, on OS/2, we need to do
- * what the comment at the top of this file (around line 80) suggests: setting
- * the FPU precision (& exceptions mask) before calling strtod or dtoa.  Also,
- * we play nice by reverting to the previous FPU control word at the end of
- * those functions.
- *
- * Set the exception mask to mask all exceptions and set the FPU precision
- * to 53 bit mantissa.
- */
- #define SET_FPU()      unsigned cw = _control87(0,0); \
-                        _control87((CW_DEFAULT & ~MCW_PC) | PC_53, 0xffff)
- #define RESTORE_FPU()  _control87(cw, MCW_EM | MCW_IC | MCW_RC | MCW_PC)
-#else
- #define SET_FPU()      ((void)0)
- #define RESTORE_FPU()  ((void)0)
-#endif
-
 JS_END_EXTERN_C
 
 #endif /* jsnum_h___ */
