@@ -18,7 +18,7 @@ function folderPropsOKButtonCallback()
 
     // set charset attributes
     var folderCharsetList = document.getElementById("folderCharsetList");
-    gMsgFolder.charset = folderCharsetList.getAttribute("data");
+    gMsgFolder.charset = folderCharsetList.getAttribute("value");
     gMsgFolder.charsetOverride = document.getElementById("folderCharsetOverride").checked;
   }
   window.close();
@@ -86,8 +86,8 @@ function folderPropsOnLoad()
 
     // select the menu item 
     var folderCharsetList = document.getElementById("folderCharsetList");
-    folderCharsetList.setAttribute("value", charsetTitle);
-    folderCharsetList.setAttribute("data", gMsgFolder.charset);
+    folderCharsetList.setAttribute("label", charsetTitle);
+    folderCharsetList.setAttribute("value", gMsgFolder.charset);
 
     // set override checkbox
     document.getElementById("folderCharsetOverride").checked = gMsgFolder.charsetOverride;
