@@ -1069,9 +1069,6 @@ nsWindow::SetFocus(void)
   // check to see if we need to send a focus out event for the old window
   if (sFocusWindow)
   {
-#ifdef USE_XIM
-    sFocusWindow->IMEUnsetFocusWidget();
-#endif // USE_XIM 
     // let the current window loose its focus
     sFocusWindow->DispatchLostFocusEvent();
     sFocusWindow->LoseFocus();
@@ -1091,10 +1088,6 @@ nsWindow::SetFocus(void)
     DispatchActivateEvent();
     gJustGotActivate = PR_FALSE;
   }
-
-#ifdef USE_XIM
-    IMEActivateWidget();
-#endif // USE_XIM 
 
   return NS_OK;
 }
@@ -1153,6 +1146,10 @@ void nsWindow::DispatchActivateEvent(void)
   if(!gJustGotDeactivate)
     return;
 
+#ifdef USE_XIM
+  IMEBeingActivate(PR_TRUE);
+#endif // USE_XIM
+
   gJustGotDeactivate = PR_FALSE;
 
   nsGUIEvent event;
@@ -1168,6 +1165,10 @@ void nsWindow::DispatchActivateEvent(void)
   NS_ADDREF_THIS();  
   DispatchFocus(event);
   NS_RELEASE_THIS();
+
+#ifdef USE_XIM
+  IMEBeingActivate(PR_FALSE);
+#endif // USE_XIM
 }
 
 void nsWindow::DispatchDeactivateEvent(void)
@@ -1175,6 +1176,9 @@ void nsWindow::DispatchDeactivateEvent(void)
 #ifdef DEBUG_FOCUS
   printf("nsWindow::DispatchDeactivateEvent %p\n", this);
 #endif
+#ifdef USE_XIM
+  IMEBeingActivate(PR_TRUE);
+#endif // USE_XIM
 
   gJustGotDeactivate = PR_TRUE;
 
@@ -1191,6 +1195,10 @@ void nsWindow::DispatchDeactivateEvent(void)
   NS_ADDREF_THIS();
   DispatchFocus(event);
   NS_RELEASE_THIS();
+
+#ifdef USE_XIM
+  IMEBeingActivate(PR_FALSE);
+#endif // USE_XIM
 }
 
 // this function is called whenever there's a focus in event on the
@@ -2634,17 +2642,6 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
 #ifdef DEBUG_FOCUS
   printf("handle_toplevel_focus_out %p\n", widget); 
 #endif
-
-#ifdef USE_XIM
-  widget->IMEDeactivateWidget();
-#endif // USE_XIM 
-
-  if (widget->sFocusWindow)
-  {
-#ifdef USE_XIM
-    widget->sFocusWindow->IMEUnsetFocusWidget();
-#endif // USE_XIM 
-  }
 
   // addref the widget here since we might send > 1 event to it.
   NS_ADDREF(widget);
