@@ -33,34 +33,743 @@
  *
  */
 
+const CMD_CONSOLE    = 0x01; // command is available via the console
+const CMD_NEED_STACK = 0x02; // command only works if we're stopped
+const CMD_NO_STACK   = 0x04; // command only works if we're *not* stopped
+const CMD_NO_HELP    = 0x08; // don't whine if there is no help for this command
+
 function initCommands(commandObject)
 {
+    console.commandManager = new CommandManager();
+    
+    CommandManager.contextFunction = getCommandContext;
+    
+    var cmdary =
+        [/* "real" commands */
+         ["break",          cmdBreak,              CMD_CONSOLE],
+         ["bp-props",       cmdBPProps,            0],
+         ["clear",          cmdClear,              CMD_CONSOLE],
+         ["clear-all",      cmdClearAll,           CMD_CONSOLE],
+         ["clear-script",   cmdClearScript,        0],
+         ["commands",       cmdCommands,           CMD_CONSOLE],
+         ["cont",           cmdCont,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["eval",           cmdEval,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["evald",          cmdEvald,              CMD_CONSOLE],
+         ["fbreak",         cmdFBreak,             CMD_CONSOLE],
+         ["find-bp",        cmdFindBp,             0],
+         ["find-creator",   cmdFindCreatorOrCtor,  0],
+         ["find-ctor",      cmdFindCreatorOrCtor,  0],
+         ["find-frame",     cmdFindFrame,          CMD_NEED_STACK],
+         ["find-url",       cmdFindURL,            0],
+         ["find-url-soft",  cmdFindURL,            0],
+         ["find-script",    cmdFindScript,         0],
+         ["finish",         cmdFinish,             CMD_CONSOLE | CMD_NEED_STACK],
+         ["focus-input",    cmdFocusInput,         0],
+         ["frame",          cmdFrame,              CMD_CONSOLE | CMD_NEED_STACK],
+         ["help",           cmdHelp,               CMD_CONSOLE],
+         ["loadd",          cmdLoadd,              CMD_CONSOLE],
+         ["next",           cmdNext,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["pprint",         cmdPPrint,             CMD_CONSOLE],
+         ["pref",           cmdPref,               CMD_CONSOLE],
+         ["props",          cmdProps,              CMD_CONSOLE | CMD_NEED_STACK],
+         ["propsd",         cmdPropsd,             CMD_CONSOLE],
+         ["quit",           cmdQuit,               CMD_CONSOLE],
+         ["reload",         cmdReload,             CMD_CONSOLE],
+         ["scope",          cmdScope,              CMD_CONSOLE | CMD_NEED_STACK],
+         ["startup-init",   cmdStartupInit,        CMD_CONSOLE],
+         ["step",           cmdStep,               CMD_CONSOLE | CMD_NEED_STACK],
+         ["stop",           cmdStop,               CMD_CONSOLE | CMD_NO_STACK],
+         ["tmode",          cmdTMode,              CMD_CONSOLE],
+         ["version",        cmdVersion,            CMD_CONSOLE],
+         ["where",          cmdWhere,              CMD_CONSOLE | CMD_NEED_STACK],
+         
+         /* aliases */
+         ["this",          "props this",           CMD_CONSOLE],
+         ["toggle-ias",    "startup-init toggle",  0],
+         ["tm-cycle",      "tmode cycle",          0],
+         ["tm-ignore",     "tmode ignore",         0],
+         ["tm-trace",      "tmode trace",          0],
+         ["tm-break",      "tmode break",          0]
+        ];
 
-    console._commands = new CCommandManager();
+    defineVenkmanCommands (cmdary);
 
-    function add (name, func, usage, help)
+    console.commandManager.argTypes.__aliasTypes__ (["index", "breakpointIndex",
+                                                     "lineNumber"], "int");
+    console.commandManager.argTypes.__aliasTypes__ (["scriptText",
+                                                     "expression"], "rest");
+}
+
+/**
+ * Defines commands stored in |cmdary| on the venkman command manager.  Expects
+ * to find "properly named" strings for the commands via getMsg().
+ */
+function defineVenkmanCommands (cmdary)
+{
+    var cm = console.commandManager;
+    var len = cmdary.length;
+    for (var i = 0; i < len; ++i)
     {
-        console._commands.add (name, func, usage, help);
+        var name  = cmdary[i][0];
+        var func  = cmdary[i][1];
+        var flags = cmdary[i][2];
+        var usage = getMsg("cmd." + name + ".params", null, "");
+
+        var helpDefault;
+        var labelDefault = name;
+        var aliasFor;
+        if (flags & CMD_NO_HELP)
+            helpDefault = MSG_NO_HELP;
+
+        if (typeof func == "string")
+        {
+            var ary = func.match(/(\S+)/);
+            if (ary)
+                aliasFor = ary[1];
+            helpDefault = getMsg (MSN_DEFAULT_ALIAS_HELP, func); 
+            labelDefault = getMsg ("cmd." + aliasFor + ".label", null, name);
+        }
+
+        var label = getMsg("cmd." + name + ".label", null, labelDefault);
+        var help  = getMsg("cmd." + name + ".help", null, helpDefault);
+        var command = new CommandRecord (name, func, usage, help, label, flags);
+        cm.addCommand(command);
+
+        var key = getMsg ("cmd." + name + ".key", null, "");
+        if (key)
+            cm.setKey("dynamicKeys", command, key);
+    }
+}
+
+/**
+ * Used as CommandManager.contextFunction.
+ */
+function getCommandContext (id, cx)
+{
+    switch (id)
+    {
+        case "popup:project":
+            cx = console.projectView.getContext(cx);
+            break;
+
+        case "popup:source":
+            cx = console.sourceView.getContext(cx);
+            break;
+            
+        case "popup:script":
+            cx = console.scriptsView.getContext(cx);
+            break;
+            
+        case "popup:stack":
+            cx = console.stackView.getContext(cx);
+            break;
+
+        default:
+            dd ("getCommandContext: unknown id '" + id + "'");
+            cx = {
+                commandManager: console.commandManager,
+                contextSource: "default"
+            };
+            break;
     }
 
-    add (CMD_BREAK,  "onInputBreak",     CMD_BREAK_PARAMS,  CMD_BREAK_HELP);
-    add (CMD_CLEAR,  "onInputClear",     CMD_CLEAR_PARAMS,  CMD_CLEAR_HELP);
-    add (CMD_CMDS,   "onInputCommands",  CMD_CMDS_PARAMS,   CMD_CMDS_HELP);
-    add (CMD_CONT,   "onInputCont",      CMD_CONT_PARAMS,   CMD_CONT_HELP);
-    add (CMD_EVAL,   "onInputEval",      CMD_EVAL_PARAMS,   CMD_EVAL_HELP);
-    add (CMD_EVALD,  "onInputEvalD",     CMD_EVALD_PARAMS,  CMD_EVALD_HELP);
-    add (CMD_FBREAK, "onInputFBreak",    CMD_FBREAK_PARAMS, CMD_FBREAK_HELP);
-    add (CMD_FINISH, "onInputFinish",    CMD_FINISH_PARAMS, CMD_FINISH_HELP);
-    add (CMD_FRAME,  "onInputFrame",     CMD_FRAME_PARAMS,  CMD_FRAME_HELP);
-    add (CMD_HELP,   "onInputHelp",      CMD_HELP_PARAMS,   CMD_HELP_HELP);
-    add (CMD_NEXT,   "onInputNext",      CMD_NEXT_PARAMS,   CMD_NEXT_HELP);
-    add (CMD_PROPS,  "onInputProps",     CMD_PROPS_PARAMS,  CMD_PROPS_HELP);
-    add (CMD_PROPSD, "onInputPropsD",    CMD_PROPSD_PARAMS, CMD_PROPSD_HELP);
-    add (CMD_SCOPE,  "onInputScope",     CMD_SCOPE_PARAMS,  CMD_SCOPE_HELP);
-    add (CMD_STEP,   "onInputStep",      CMD_STEP_PARAMS,   CMD_STEP_HELP);
-    add (CMD_TMODE,  "onInputTMode",     CMD_TMODE_PARAMS,  CMD_TMODE_HELP);
-    add (CMD_WHERE,  "onInputWhere",     CMD_WHERE_PARAMS,  CMD_WHERE_HELP);
-    add (CMD_QUIT,   "onInputQuit",      CMD_QUIT_PARAMS,   CMD_QUIT_HELP);
+    if (typeof cx == "object")
+    {
+        cx.commandManager = console.commandManager;
+        if (!("contextSource" in cx))
+            cx.contextSource = id;
+        dd ("context '" + id + "'\n" + dumpObjectTree(cx));
+    }
+
+    return cx;
+}
+
+/**
+ * Used as a callback for CommandRecord.getDocumentation() to format the command
+ * flags for the "Notes:" field.
+ */
+function formatCommandFlags (f)
+{
+    var ary = new Array();
+    if (f & CMD_CONSOLE)
+        ary.push(MSG_NOTE_CONSOLE);
+    if (f & CMD_NEED_STACK)
+        ary.push(MSG_NOTE_NEEDSTACK);
+    if (f & CMD_NO_STACK)
+        ary.push(MSG_NOTE_NOSTACK);
     
+    return ary.length ? ary.join ("\n") : MSG_VAL_NA;
+}
+
+/********************************************************************************
+ * Command implementations from here on down...
+ *******************************************************************************/
+    
+function cmdBreak (e)
+{    
+    var i;
+    
+    if (!e.fileName)
+    {  /* if no input data, just list the breakpoints */
+        var bplist = console.breakpoints.childData;
+
+        if (bplist.length == 0)
+        {
+            display (MSG_NO_BREAKPOINTS_SET);
+            return true;
+        }
+        
+        display (getMsg(MSN_BP_HEADER, bplist.length));
+        for (i = 0; i < bplist.length; ++i)
+        {
+            var bpr = bplist[i];
+            display (getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
+                                          bpr.scriptMatches]));
+        }
+        return true;
+    }
+
+    var matchingFiles = matchFileName (e.fileName);
+    if (matchingFiles.length == 0)
+    {
+        display (getMsg(MSN_ERR_BP_NOSCRIPT, e.fileName), MT_ERROR);
+        return false;
+    }
+    
+    for (i in matchingFiles)
+        setBreakpoint (matchingFiles[i], e.lineNumber);
+    
+    return true;
+}
+
+function cmdBPProps (e)
+{
+    dd ("command bp-props");
+}
+
+function cmdClear (e)
+{
+    return clearBreakpointByNumber (e.breakpointIndex);
+}
+
+function cmdClearAll(e)
+{
+    for (var i = console.breakpoints.childData.length - 1; i >= 0; --i)
+        clearBreakpointByNumber (i);
+}
+
+function cmdClearScript (e)
+{
+    if ("scriptRecList" in e)
+    {
+        do
+        {
+            dd ("clearing script " + e.scriptRecList[0].constructor.name);
+            cmdClearScript ({scriptRec: e.scriptRecList[0]});
+            e.scriptRecList.shift();
+        }
+        while (e.scriptRecList.length > 0);
+        
+        return true;
+    }
+
+    /* walk backwards so as not to disturb the indicies */
+    for (var i = console.breakpoints.childData.length - 1; i >= 0; --i)
+    {
+        var bpr = console.breakpoints.childData[i];
+        if (bpr.hasScriptRecord(e.scriptRec))
+        {
+            dd ("found one");
+            clearBreakpointByNumber (i);
+        }
+    }
+
+    return true;
+}
+
+function cmdCommands (e)
+{
+    display (MSG_TIP_HELP);
+    var names = console.commandManager.listNames(e.pattern, CMD_CONSOLE);
+    names = names.join(MSG_COMMASP);
+    
+    if (e.pattern)
+        display (getMsg(MSN_CMDMATCH, [e.pattern, "["  + names + "]"]));
+    else
+        display (getMsg(MSN_CMDMATCH_ALL, "[" + names + "]"));
+    return true;
+}
+
+function cmdCont (e)
+{
+    disableDebugCommands();
+    --console._stopLevel;
+    console.stackView.saveState();
+    console.jsds.exitNestedEventLoop();
+}
+
+function cmdEval (e)
+{
+    display (e.scriptText, MT_FEVAL_IN);
+    var rv = evalInTargetScope (e.scriptText);
+    if (typeof rv != "undefined")
+    {
+        if (rv != null)
+        {
+            refreshValues();
+            var l = $.length;
+            $[l] = rv;
+            
+            display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
+                     MT_FEVAL_OUT);
+        }
+        else
+            dd ("evalInTargetScope returned null");
+    }
+    return true;
+}
+
+function cmdEvald (e)
+{
+    display (e.scriptText, MT_EVAL_IN);
+    var rv = evalInDebuggerScope (e.scriptText);
+    if (typeof rv != "undefined")
+        display (String(rv), MT_EVAL_OUT);
+    return true;
+}
+
+function cmdFBreak(e)
+{
+    if (!e.filePattern)
+    {  /* if no input data, just list the breakpoints */
+        var bplist = console.breakpoints.childData;
+
+        if (bplist.length == 0)
+        {
+            display (MSG_NO_FBREAKS_SET);
+            return true;
+        }
+        
+        display (getMsg(MSN_FBP_HEADER, bplist.length));
+        for (var i = 0; i < bplist.length; ++i)
+        {
+            var bpr = bplist[i];
+            if (bpr.scriptMatches == 0)
+                display (getMsg(MSN_FBP_LINE, [i, bpr.fileName, bpr.line]));
+        }
+        return true;
+    }
+
+    setFutureBreakpoint (e.filePattern, e.lineNumber);
+    return true;
+}
+
+function cmdFinish (e)
+{
+    if (console.frames.length == 1)
+        return cmdCont();
+    
+    console._stepOverLevel = 1;
+    setStopState(false);
+    console.jsds.functionHook = console._callHook;
+    disableDebugCommands()
+    --console._stopLevel;
+    console.stackView.saveState();
+    console.jsds.exitNestedEventLoop();
+    return true;
+}
+
+function cmdFindBp (e)
+{
+    var scriptRec = console.scripts[e.breakpointRec.fileName];
+    if (!scriptRec)
+    {
+        dd ("breakpoint in unknown source");
+        return false;
+    }
+
+    var sourceView = console.sourceView;
+    cmdFindURL ({url: scriptRec.script.fileName,
+                  rangeStart: e.breakpointRec.line,
+                  rangeEnd: e.breakpointRec.line});
+    return true;
+}
+
+function cmdFindCreatorOrCtor (e)
+{
+    var objVal = e.jsdValue.objectValue;
+    if (!objVal)
+    {
+        display (MSG_NOT_AN_OBJECT, MT_ERROR);
+        return false;
+    }
+
+    var name = e.command.name;
+    var url;
+    var line;
+    if (name == "find-creator")
+    {
+        url  = objVal.creatorURL;
+        line = objVal.creatorLine;
+    }
+    else
+    {
+        url  = objVal.constructorURL;
+        line = objVal.constructorLine;
+    }
+
+    return cmdFindURL ({url: url, rangeStart: line - 1, rangeEnd: line - 1});
+}
+
+function cmdFindURL (e)
+{
+    if (!e.url)
+    {
+        console.sourceView.displaySourceText(null);
+        return true;
+    }
+    
+    if (!(e.url in console.scripts))
+    {
+        display (getMsg (MSN_ERR_NO_SOURCE, e.url), MT_ERROR);
+        return false;
+    }
+
+    console.sourceView.details = null;
+    console.highlightFile = e.url;
+    var line = 1;
+    delete console.highlightStart;
+    delete console.highlightEnd;
+    if ("rangeStart" in e && e.rangeStart != null)
+    {
+        line = e.rangeStart;
+        if (e.rangeEnd != null)
+        {
+            console.highlightStart = e.rangeStart - 1;
+            console.highlightEnd = e.rangeEnd - 1;
+        }
+    }
+    
+    if ("lineNumber" in e && e.lineNumber != null)
+        line = e.lineNumber;
+
+    console.sourceView.displaySourceText(console.scripts[e.url].sourceText);
+    console.sourceView.outliner.invalidate();
+    if ("command" in e && e.command.name == "find-url-soft")
+        console.sourceView.softScrollTo (line);
+    else
+        console.sourceView.scrollTo (line - 2, -1);
+    return true;
+}
+
+function cmdFindFrame (e)
+{
+    if (e.frameIndex != getCurrentFrameIndex())
+        dispatch ("frame", {frameIndex: e.frameIndex});
+
+    var frame = getCurrentFrame();
+    var scriptContainer = console.scripts[frame.script.fileName];
+    if (!scriptContainer)
+    {
+        dd ("frame from unknown source");
+        return false;
+    }
+    var scriptRecord =
+        scriptContainer.locateChildByScript (frame.script);
+    if (!scriptRecord)
+    {
+        dd ("frame with unknown script");
+        return false;
+    }
+
+    return cmdFindScript ({scriptRec: scriptRecord});
+}
+
+function cmdFindScript (e)
+{
+    if (console.sourceView.prettyPrint)
+    {
+        delete console.highlightFile;
+        delete console.highlightStart;
+        delete console.highlightEnd;
+        console.sourceView.displaySourceText(e.scriptRec.sourceText);
+    }
+    else
+    {
+        cmdFindURL({url: e.scriptRec.parentRecord.fileName,
+                     rangeStart: e.scriptRec.baseLineNumber,
+                     rangeEnd: e.scriptRec.baseLineNumber + 
+                               e.scriptRec.lineExtent - 1
+                    });
+    }
+
+    console.sourceView.details = e.scriptRec;
+    
+    return true;
+}
+
+function cmdFocusInput (e)
+{
+    console.ui["sl-input"].focus();
+}
+
+function cmdFrame (e)
+{
+    if (isNaN(e.frameIndex))
+        e.frameIndex = getCurrentFrameIndex();
+
+    setCurrentFrameByIndex(e.frameIndex);
+    displayFrame (console.frames[e.frameIndex], e.frameIndex, true);
+    return true;
+}
+            
+function cmdHelp (e)
+{
+    var ary;
+    if (!e.pattern)
+    {
+        console.sourceView.displaySourceText(console.sourceText);
+    }
+    else
+    {
+        ary = console.commandManager.list (e.pattern, CMD_CONSOLE);
+ 
+        if (ary.length == 0)
+        {
+            display (getMsg(MSN_ERR_NO_COMMAND, e.pattern), MT_ERROR);
+            return false;
+        }
+
+        for (var i in ary)
+        {        
+            display (getMsg(MSN_FMT_USAGE, [ary[i].name, ary[i].usage]), 
+                     MT_USAGE);
+            display (ary[i].help, MT_HELP);
+        }
+    }
+
+    return true;    
+}
+
+function cmdLoadd (e)
+{
+    var ex;
+    
+    if (!("_loader" in console))
+    {
+        const LOADER_CTRID = "@mozilla.org/moz/jssubscript-loader;1";
+        const mozIJSSubScriptLoader = 
+            Components.interfaces.mozIJSSubScriptLoader;
+
+        var cls;
+        if ((cls = Components.classes[LOADER_CTRID]))
+            console._loader = cls.createInstance(mozIJSSubScriptLoader);
+    }
+    
+    var obj = ("scope" in e) ? e.scope : null;
+    try
+    {
+        var rvStr;
+        var rv = rvStr = console._loader.loadSubScript(e.url, obj);
+        if (typeof rv == "function")
+            rvStr = MSG_TYPE_FUNCTION;
+        display(getMsg(MSN_SUBSCRIPT_LOADED, [e.url, rvStr]), MT_INFO);
+        return rv;
+    }
+    catch (ex)
+    {
+        display (getMsg(MSN_ERR_SCRIPTLOAD, e.url));
+        display (formatException(ex), MT_ERROR);
+    }
+    
+    return null;
+}
+
+function cmdNext ()
+{
+    console._stepOverLevel = 0;
+    dispatch ("step");
+    console.jsds.functionHook = console._callHook;
+    return true;
+}
+
+function cmdPPrint (e)
+{
+    console.sourceView.prettyPrint = !console.sourceView.prettyPrint;
+    if (console.sourceView.details)
+        cmdFindScript({scriptRec: console.sourceView.details});        
+    return true;
+}
+
+function cmdPref (e)
+{
+    if (e.prefName)
+    {
+        if (!(e.prefName in console.prefs))
+        {
+            display (getMsg(MSN_ERR_INVALID_PARAM, ["prefName", e.prefName]),
+                     MT_ERROR);
+            return false;
+        }
+        
+        if (e.prefValue)
+            console.prefs[e.prefName] = e.prefValue;
+        else
+            e.prefValue = console.prefs[e.prefName];
+
+        display (getMsg(MSN_FMT_PREFVALUE, [e.prefName, e.prefValue]));
+    }
+    else
+    {
+        for (var i in console.prefs.prefNames)
+        {
+            var name = console.prefs.prefNames[i];
+            display (getMsg(MSN_FMT_PREFVALUE, [name, console.prefs[name]]));
+        }
+    }
+
+    return true;
+}
+        
+function cmdProps (e, forceDebuggerScope)
+{
+    var v;
+    
+    if (forceDebuggerScope)
+        v = evalInDebuggerScope (e.scriptText);
+    else
+        v = evalInTargetScope (e.scriptText);
+    
+    if (!(v instanceof jsdIValue) || v.jsType != jsdIValue.TYPE_OBJECT)
+    {
+        var str = (v instanceof jsdIValue) ? formatValue(v) : String(v)
+        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, str]),
+                 MT_ERROR);
+        return false;
+    }
+    
+    display (getMsg(forceDebuggerScope ? MSN_PROPSD_HEADER : MSN_PROPS_HEADER,
+                    e.scriptText));
+    displayProperties(v);
+    return true;
+}
+
+function cmdPropsd (e)
+{
+    return cmdProps (e, true);
+}
+
+function cmdQuit ()
+{
+    window.close();
+    return true;
+}
+
+function cmdReload ()
+{
+    if (!("childData" in console.sourceView))
+        return false;
+    
+    console.sourceView.childData.reloadSource();
+    return true;
+}
+
+function cmdScope ()
+{
+    if (getCurrentFrame().scope.propertyCount == 0)
+        display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE));
+    else
+        displayProperties (getCurrentFrame().scope);
+    
+    return true;
+}
+
+function cmdStartupInit (e)
+{
+    if (e.toggle != null)
+    {
+        if (e.toggle == "toggle")
+            console.jsds.initAtStartup = !console.jsds.initAtStartup;
+        else
+            console.jsds.initAtStartup = e.toggle;
+    }
+
+    display (getMsg(MSN_IASMODE,
+                    console.jsds.initAtStartup ? MSG_VAL_ON : MSG_VAL_OFF));
+    return true;
+}
+
+function cmdStep()
+{
+    setStopState(true);
+    var topFrame = console.frames[0];
+    console._stepPast = topFrame.script.fileName;
+    if (console.sourceView.prettyPrint)
+    {
+        console._stepPast +=
+            topFrame.script.pcToLine(topFrame.pc, PCMAP_PRETTYPRINT);
+    }
+    else
+    {
+        console._stepPast += topFrame.line;
+    }
+    disableDebugCommands()
+    --console._stopLevel;
+    console.stackView.saveState();
+    console.jsds.exitNestedEventLoop();
+    return true;
+}
+
+function cmdStop (e)
+{
+    if (console.jsds.interruptHook)
+        setStopState(false);
+    else
+        setStopState(true);
+}
+
+function cmdTMode (e)
+{
+    if (e.mode.search(/ignore/i) != -1)
+    {
+        setThrowMode(TMODE_IGNORE);
+        return true;
+    }
+    else if (e.mode.search(/trace/i) != -1)
+    {
+        setThrowMode(TMODE_TRACE);
+        return true;
+    }
+    else if (e.mode.search(/breaK/i) != -1)
+    {
+        setThrowMode(TMODE_BREAK);
+        return true;
+    }
+    else if (e.mode.search(/cycle/i) != -1)
+    {
+        cycleThrowMode();
+        return true;
+    }
+    else if (e.mode)
+    {
+        display (getMsg(MSN_ERR_INVALID_PARAM, ["mode", e.mode]), MT_ERROR);
+        return false;
+    }
+
+    /* display the current throw mode */
+    setThrowMode(getThrowMode());
+    return true;
+}
+
+function cmdVersion ()
+{
+    display(MSG_HELLO, MT_HELLO);
+    display(getMsg(MSN_VERSION, console.version), MT_HELLO);
+}
+
+function cmdWhere ()
+{
+    displayCallStack();
+    return true;
 }
 

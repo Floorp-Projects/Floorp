@@ -69,10 +69,10 @@
     <script src="chrome://venkman/content/venkman-commands.js"/>
     <script src="chrome://venkman/content/venkman-prefs.js"/>
     <script src="chrome://venkman/content/venkman-eval.js"/>
+    <script src="chrome://venkman/content/venkman-menus.js"/>
     <script src="chrome://venkman/content/venkman-msg.js"/>
     <script src="chrome://venkman/content/venkman-munger.js"/>
     <script src="chrome://venkman/content/venkman-outliners.js"/>
-    <script src="chrome://venkman/content/venkman-dev.js"/>
   
   </overlaytarget>
 

@@ -33,85 +33,6 @@
  *
  */
 
-console.displayUsageError =
-function con_dusage (command)
-{
-    display (getMsg(MSN_FMT_USAGE, [command.name, command.usage]), MT_ERROR);
-}
-
-console.doCommandNext =
-function con_next()
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-
-    next();
-    return true;
-}
-
-console.doCommandStep =
-function con_step()
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-
-    step();
-    return true;
-}
-
-console.doCommandStepOut =
-function con_step()
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-
-    stepOut();
-    return true;
-}
-
-console.doCommandToggleStop =
-function con_step()
-{
-    toggleStopState();
-    return true;
-}
-
-console.doCommandTogglePPrint =
-function con_tpprint ()
-{
-    console.sourceView.prettyPrint = !console.sourceView.prettyPrint;
-    console.sourceView.setCurrentSourceProvider (console.sourceView.provider);
-}
-
-console.doCommandCont =
-function con_step()
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-
-    cont();
-    return true;
-}
-
-console.doCommandReload =
-function con_reload ()
-{
-    if ("childData" in console.sourceView)
-        console.sourceView.childData.reloadSource();
-}
-
 console.onDebugTrap =
 function con_ondt ()
 {
@@ -144,43 +65,6 @@ function con_ondc ()
     console.sourceView.outliner.invalidate();
 }
 
-console.onViewMenuShowing =
-function con_showview ()
-{
-    var val = console.sourceView.prettyPrint;
-    console.ui["menu_PrettyPrint"].setAttribute("checked", val);
-}
-
-console.onDebugMenuShowing =
-function con_showdebug ()
-{
-    console.ui["menu_InitAtStartup"].setAttribute ("checked",
-                                                   console.jsds.initAtStartup);
-
-    var check;
-    
-    switch (getThrowMode())
-    {
-        case TMODE_IGNORE:
-            check = "menu_TModeIgnore";
-            break;
-        case TMODE_TRACE:
-            check = "menu_TModeTrace";
-            break;
-        case TMODE_BREAK:
-            check = "menu_TModeBreak";
-            break;
-    }
-    
-    var menu = console.ui["menu_TModeIgnore"];
-    console.ui["menu_TModeIgnore"].setAttribute("checked",
-                                                "menu_TModeIgnore" == check);
-    console.ui["menu_TModeTrace"].setAttribute("checked",
-                                               "menu_TModeTrace" == check);
-    console.ui["menu_TModeBreak"].setAttribute("checked",
-                                               "menu_TModeBreak" == check);
-}
-
 console.onLoad =
 function con_load (e)
 {
@@ -209,11 +93,14 @@ function con_fchanged (currentFrame, currentFrameIndex)
         var vr = frameRecord.calculateVisualRow();
         console.stackView.selectedIndex = vr;
         console.stackView.scrollTo (vr, 0);
-        var scriptRec = console.scripts[currentFrame.script.fileName];
-        if (scriptRec)
+        var containerRec = console.scripts[currentFrame.script.fileName];
+        if (containerRec)
         {
-            console.sourceView.setCurrentSourceProvider(scriptRec);
-            console.sourceView.softScrollTo(currentFrame.line);
+            dispatch ("find-url-soft", {url: containerRec.fileName,
+                      rangeStart: currentFrame.script.baseLineNumber,
+                      rangeEnd: currentFrame.script.baseLineNumber + 
+                                currentFrame.script.lineExtent - 1,
+                      lineNumber: currentFrame.line});
         }
         else
         {
@@ -231,398 +118,16 @@ function con_fchanged (currentFrame, currentFrameIndex)
 console.onInputCompleteLine =
 function con_icline (e)
 {    
-    if (console._inputHistory.length == 0 || console._inputHistory[0] != e.line)
-        console._inputHistory.unshift (e.line);
+    if (console.inputHistory.length == 0 || console.inputHistory[0] != e.line)
+        console.inputHistory.unshift (e.line);
     
-    if (console._inputHistory.length > console.prefs["input.history.max"])
-        console._inputHistory.pop();
+    if (console.inputHistory.length > console.prefs["input.history.max"])
+        console.inputHistory.pop();
     
-    console._lastHistoryReferenced = -1;
-    console._incompleteLine = "";
+    console.lastHistoryReferenced = -1;
+    console.incompleteLine = "";
     
-    var ary = e.line.match (/(\S+) ?(.*)/);
-    var command = ary[1];
-    
-    e.command = command;
-    e.inputData =  ary[2] ? stringTrim(ary[2]) : "";
-    e.line = e.line;
-    
-    ary = console._commands.list (e.command);
-    
-    switch (ary.length)
-    {            
-        case 0:
-            display (getMsg(MSN_ERR_NO_COMMAND, e.command), MT_ERROR);
-            break;
-            
-        case 1:
-            if (typeof console[ary[0].func] == "undefined")        
-                display (getMsg(MSN_ERR_NOTIMPLEMENTED, ary[0].name), MT_ERROR);
-            else
-            {
-                e.commandEntry = ary[0];
-                console[ary[0].func](e)
-            }
-            break;
-            
-        default:
-            var str = "";
-            for (var i in ary)
-                str += str ? MSG_COMMASP + ary[i].name : ary[i].name;
-            display (getMsg (MSN_ERR_AMBIGCOMMAND, [e.command, ary.length, str]),
-                     MT_ERROR);
-    }
-
-}
-
-console.onInputBreak =
-function cli_ibreak(e)
-{    
-    var i;
-    
-    if (!e.inputData)
-    {  /* if no input data, just list the breakpoints */
-        var bplist = console.breakpoints.childData;
-
-        if (bplist.length == 0)
-        {
-            display (MSG_NO_BREAKPOINTS_SET);
-            return true;
-        }
-        
-        display (getMsg(MSN_BP_HEADER, bplist.length));
-        for (i = 0; i < bplist.length; ++i)
-        {
-            var bpr = bplist[i];
-            display (getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
-                                          bpr.scriptMatches]));
-        }
-        return true;
-    }
-
-    var ary = e.inputData.match(/([^\s]+)\s*(\d+)\s*$/);
-    if (!ary)
-    {
-        console.displayUsageError(e.commandEntry);
-        return false;
-    }
-
-    var matchingFiles = matchFileName (ary[1]);
-    if (matchingFiles.length == 0)
-    {
-        display (getMsg(MSN_ERR_BP_NOSCRIPT, ary[1]), MT_ERROR);
-        return false;
-    }
-    
-    for (i in matchingFiles)
-        setBreakpoint (matchingFiles[i], ary[2]);
-    
-    return true;
-    
-}
-
-console.onInputClear =
-function cli_iclear (e)
-{
-    var ary = e.inputData.match(/(\d+)|([^\s]+)\s*(\d+)\s*$/);
-    if (!ary)
-    {
-        console.displayUsageError(e.commandEntry);
-        return false;
-    }
-
-    if (ary[1])
-    {
-        /* disable by breakpoint number */
-        var idx = Number(ary[1]);
-        return clearBreakpointByNumber (idx);
-    }
-
-    /* else disable breakpoint by filename pattern and line number */
-    var matchingFiles = matchFileName (ary[2]);
-    if (matchingFiles.length == 0)
-    {
-        display (getMsg(MSN_ERR_BP_NOSCRIPT, ary[2]), MT_ERROR);
-        return false;
-    }
-
-    for (var i in matchingFiles)
-        return clearBreakpoint (fileName, ary[3]);
-    
-    return true;
-}
-
-console.onInputCommands =
-function cli_icommands (e)
-{
-    displayCommands (e.inputData);
-    return true;
-}
-
-console.onInputCont =
-function cli_icommands (e)
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return;
-    }
-    cont();
-}
-
-/*
-    
-console.onInputCompleteLine =
-function con_icline (e)
-{
-    if (console._inputHistory.length == 0 || console._inputHistory[0] != e.line)
-        console._inputHistory.unshift (e.line);
-    
-    if (console._inputHistory.length > console.prefs["input.history.max"])
-        console._inputHistory.pop();
-
-    console._lastHistoryReferenced = -1;
-    console._incompleteLine = "";
-
-    var ary = e.line.match (/(\S+) ?(.*)/);
-    var command = ary[1];
-
-    e.command = command;
-    e.inputData =  ary[2] ? stringTrim(ary[2]) : "";
-    e.line = e.line;
-    console.onInputCommand (e);
-
-}
-
-*/
-
-console.onInputEval =
-function con_ieval (e)
-{
-    if (e.inputData)
-    {       
-        display (e.inputData, MT_FEVAL_IN);
-        var rv = evalInTargetScope (e.inputData);
-        if (typeof rv != "undefined")
-        {
-            if (rv != null)
-            {
-                refreshValues();
-                var l = $.length;
-                $[l] = rv;
-                
-                display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
-                         MT_FEVAL_OUT);
-            }
-            else
-                display (formatValue (rv), MT_FEVAL_OUT);
-        }
-    }
-    return true;
-}
-
-console.onInputEvalD =
-function con_ievald (e)
-{
-    if (e.inputData)
-    {       
-        display (e.inputData, MT_EVAL_IN);
-        var rv = evalInDebuggerScope (e.inputData)
-        if (typeof rv != "undefined")
-            display (String(rv), MT_EVAL_OUT);
-    }
-    return true;
-}
-
-console.onInputFBreak =
-function cli_ifbreak(e)
-{
-    if (!e.inputData)
-    {  /* if no input data, just list the breakpoints */
-        var bplist = console.breakpoints.childData;
-
-        if (bplist.length == 0)
-        {
-            display (MSG_NO_FBREAKS_SET);
-            return true;
-        }
-        
-        display (getMsg(MSN_FBP_HEADER, bplist.length));
-        for (var i = 0; i < bplist.length; ++i)
-        {
-            var bpr = bplist[i];
-            if (bpr.scriptMatches == 0)
-                display (getMsg(MSN_FBP_LINE, [i, bpr.fileName, bpr.line]));
-        }
-        return true;
-    }
-
-    var ary = e.inputData.match(/([^\s]+)\s*(\d+)\s*$/);
-    if (!ary)
-    {
-        console.displayUsageError(e.commandEntry);
-        return false;
-    }
-
-    setFutureBreakpoint (ary[1], ary[2]);
-    
-    return true;
-    
-}
-
-console.onInputFinish =
-function cli_ifinish (e)
-{
-    console.doCommandStepOut();
-}
-
-console.onInputFrame =
-function con_iframe (e)
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-
-    var idx = parseInt(e.inputData);    
-    if (isNaN(idx))
-        idx = getCurrentFrameIndex();
-
-    setCurrentFrameByIndex(idx);    
-    displayFrame (console.frames[idx], idx, true);
-    return true;
-}
-            
-console.onInputHelp =
-function cli_ihelp (e)
-{
-    var ary = console._commands.list (e.inputData);
- 
-    if (ary.length == 0)
-    {
-        display (getMsg(MSN_ERR_NO_COMMAND, e.inputData), MT_ERROR);
-        return false;
-    }
-
-    for (var i in ary)
-    {        
-        display (getMsg(MSN_FMT_USAGE, [ary[i].name, ary[i].usage]), MT_USAGE);
-        display (ary[i].help, MT_HELP);
-    }
-
-    return true;    
-}
-
-console.onInputNext =
-function con_iwhere ()
-{
-    return console.doCommandNext();
-}
-
-console.onInputProps =
-function con_iprops (e, forceDebuggerScope)
-{
-    if (!e.inputData)
-    {
-        display (getMsg(MSN_ERR_REQUIRED_PARAM, MSG_VAL_EXPR));
-        return false;
-    }
-
-    var v;
-    
-    if (forceDebuggerScope)
-        v = evalInDebuggerScope (e.inputData);
-    else
-        v = evalInTargetScope (e.inputData);
-    
-    if (!(v instanceof jsdIValue) || v.jsType != jsdIValue.TYPE_OBJECT)
-    {
-        var str = (v instanceof jsdIValue) ? formatValue(v) : String(v)
-        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, str]),
-                 MT_ERROR);
-        return false;
-    }
-    
-    display (getMsg(forceDebuggerScope ? MSN_PROPSD_HEADER : MSN_PROPS_HEADER,
-                    e.inputData));
-    displayProperties(v);
-    return true;
-}
-
-console.onInputPropsD =
-function con_ipropsd (e)
-{
-    return console.onInputProps (e, true);
-}
-            
-console.onInputScope =
-function con_iscope ()
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-    
-    if (getCurrentFrame().scope.propertyCount == 0)
-        display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE));
-    else
-        displayProperties (getCurrentFrame().scope);
-    
-    return true;
-}
-
-console.onInputStep =
-function con_iwhere ()
-{
-    return console.doCommandStep();
-}
-
-console.onInputTMode =
-function con_itmode (e)
-{
-    if (typeof e.inputData == "string")
-    {
-        if (e.inputData.search(/ignore/i) != -1)
-        {
-            setThrowMode(TMODE_IGNORE);
-            return true;
-        }
-        else if (e.inputData.search(/trace/i) != -1)
-        {
-            setThrowMode(TMODE_TRACE);
-            return true;
-        }
-        else if (e.inputData.search(/breaK/i) != -1)
-        {
-            setThrowMode(TMODE_BREAK);
-            return true;
-        }
-    }
-
-    /* display the current throw mode */
-    setThrowMode(getThrowMode());
-    return true;
-}
-
-console.onInputQuit =
-function con_iquit ()
-{
-    window.close();
-}
-
-console.onInputWhere =
-function con_iwhere ()
-{
-    if (!console.frames)
-    {
-        display (MSG_ERR_NO_STACK, MT_ERROR);
-        return false;
-    }
-    
-    displayCallStack();
-    return true;
+    dispatch (e.line, null, CMD_CONSOLE);
 }
 
 console.onSingleLineKeypress =
@@ -633,28 +138,39 @@ function con_slkeypress (e)
         case 13:
             if (!e.target.value)
                 return;
-            
-            dispatchCommand(e.target.value);
+            e.line = e.target.value;
+            console.onInputCompleteLine (e);
             e.target.value = "";
             break;
 
         case 38: /* up */
-            if (console._lastHistoryReferenced <
-                console._inputHistory.length - 1)
+            if (console.lastHistoryReferenced == -2)
+            {
+                console.lastHistoryReferenced = -1;
+                e.target.value = console.incompleteLine;
+            }
+            else if (console.lastHistoryReferenced <
+                     console.inputHistory.length - 1)
+            {
                 e.target.value =
-                    console._inputHistory[++console._lastHistoryReferenced];
+                    console.inputHistory[++console.lastHistoryReferenced];
+            }
             break;
 
         case 40: /* down */
-            if (console._lastHistoryReferenced > 0)
+            if (console.lastHistoryReferenced > 0)
                 e.target.value =
-                    console._inputHistory[--console._lastHistoryReferenced];
+                    console.inputHistory[--console.lastHistoryReferenced];
+            else if (console.lastHistoryReferenced == -1)
+            {
+                e.target.value = "";
+                console.lastHistoryReferenced = -2;
+            }
             else
             {
-                console._lastHistoryReferenced = -1;
-                e.target.value = console._incompleteLine;
+                console.lastHistoryReferenced = -1;
+                e.target.value = console.incompleteLine;
             }
-            
             break;
             
         case 33: /* pgup */
@@ -681,7 +197,8 @@ function con_slkeypress (e)
             break;       
 
         default:
-            console._incompleteLine = e.target.value;
+            console.lastHistoryReferenced = -1;
+            console.incompleteLine = e.target.value;
             break;
     }
 }
@@ -708,26 +225,7 @@ function con_projsel (e)
     }
 
     if (row instanceof BPRecord)
-    {
-        var scriptRec = console.scripts[row.fileName];
-        if (!scriptRec)
-        {
-            dd ("breakpoint in unknown source");
-            return;
-        }
-        
-        var sourceView = console.sourceView;
-        sourceView.setCurrentSourceProvider (scriptRec);
-        sourceView.scrollTo (row.line - 3, -1);
-        if ("childData" in sourceView && sourceView.childData.isLoaded)
-        {
-            sourceView.outliner.selection.timedSelect (row.line - 1, 500);
-        }
-        else
-        {
-            sourceView.pendingSelect = row.line - 1;
-        }
-    }
+        dispatch ("find-bp", {breakpointRec: row});        
     else
         dd ("not a bp record");
 }
@@ -757,59 +255,15 @@ function con_stacksel (e)
     
     var sourceView = console.sourceView;
     if (row instanceof FrameRecord)
-    {        
-        var index = row.childIndex;
-        if (index != getCurrentFrameIndex())
-        {
-            setCurrentFrameByIndex(index);
-            displayFrame (console.frames[index], index, false);
-        }
-        var scriptContainer = console.scripts[row.frame.script.fileName];
-        if (!scriptContainer)
-        {
-            dd ("frame from unknown source");
-            return;
-        }
-        var scriptRecord =
-            scriptContainer.locateChildByScript (row.frame.script);
-        if (!scriptRecord)
-        {
-            dd ("frame with unknown script");
-            return;
-        }
-        sourceView.setCurrentSourceProvider(scriptRecord);
-        sourceView.softScrollTo(row.frame.line);
-        var script = row.frame.script;
-        console.highlightFile = script.fileName;
-        console.highlightStart = script.baseLineNumber - 1;
-        console.highlightEnd = script.baseLineNumber + script.lineExtent - 2;
+    {
+        dispatch ("find-frame", {frameIndex: row.childIndex});
     }
     else if (row instanceof ValueRecord && row.jsType == jsdIValue.TYPE_OBJECT)
     {
         if (row.parentRecord instanceof FrameRecord &&
             row == row.parentRecord.scopeRec)
             return;
-        
-        var objVal = row.value.objectValue;
-        var creatorURL = objVal.creatorURL;
-        if (!creatorURL)
-        {
-            dd ("object with no creator");
-            return;
-        }
-        
-        if (!(creatorURL in console.scripts))
-        {
-            dd ("object from unknown source ``" + creatorURL + "''");
-            return;
-        }
-
-        sourceView.setCurrentSourceProvider(console.scripts[creatorURL]);
-        console.highlightFile = creatorURL;
-        var creatorLine = objVal.creatorLine;
-        sourceView.scrollTo (creatorLine);
-        console.highlightStart = console.highlightEnd = creatorLine - 1;
-        console.sourceView.outliner.invalidate();
+        dispatch ("find-creator", {jsdValue: row.value});
     }
 }
 
@@ -834,8 +288,11 @@ function con_scptsel (e)
     var row =
         console.scriptsView.childData.locateChildByVisualRow(rowIndex);
     ASSERT (row, "bogus row");
-    
-    row.makeCurrent();
+
+    if (row instanceof ScriptRecord)
+        dispatch ("find-script", {scriptRec: row});
+    else if (row instanceof ScriptContainerRecord)
+        dispatch ("find-url", {url: row.fileName});
 }
 
 console.onScriptClick =
@@ -915,22 +372,10 @@ function con_sourceclick (e)
         colID = colID.value;
         row = row.value;
         
-        if (!console.sourceView.prettyPrint && colID == "breakpoint-col")
+        if (colID == "breakpoint-col")
         {
-            var line = row + 1;
-            var url = console.sourceView.childData.fileName;
-            if (url)
-            {
-                if (getBreakpoint(url, line))
-                {
-                    clearBreakpoint (url, line);
-                }
-                else
-                {
-                    setBreakpoint (url, line);
-                }
-                outliner.invalidateRow(row);
-            }
+            if ("onMarginClick" in console.sourceView.childData)
+                console.sourceView.childData.onMarginClick (e, row + 1);
         }
     }
 
@@ -963,7 +408,7 @@ function con_tabcomplete (e)
          * a command
          */
         var partialCommand = v.substring(0, firstSpace).toLowerCase();
-        var cmds = console._commands.listNames(partialCommand);
+        var cmds = console.commandManager.listNames(partialCommand, CMD_CONSOLE);
 
         if (!cmds)
             /* partial didn't match a thing */

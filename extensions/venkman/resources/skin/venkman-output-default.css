@@ -82,11 +82,12 @@ a.venkman-link:hover {
 }
 
 .msg-data[msg-type="HELP"]:before {
-    content: "";
+    content: "Help:";
 }
 
 .msg-data[msg-type="USAGE"]:before {
-    content: "?";
+    font-style: normal;
+    content: "Usage:";
 }
 
 .msg-data[msg-type="SOURCE"]:before {

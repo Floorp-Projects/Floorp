@@ -142,7 +142,7 @@ function dumpObjectTree (o, recurse, compress, level)
                 break;
 
             case "object":
-                s += pfx + tee + i + " (object)\n";
+                s += pfx + tee + i + " (object) " + o[i] + "\n";
                 if (!compress)
                     s += pfx + "|\n";
                 if ((i != "parent") && (recurse))
@@ -172,6 +172,18 @@ function dumpObjectTree (o, recurse, compress, level)
     
     return s;
     
+}
+
+function getWindowByType (windowType)
+{
+    const MEDIATOR_CONTRACTID =
+        "@mozilla.org/rdf/datasource;1?name=window-mediator";
+    const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
+
+    var windowManager =
+        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
+
+    return windowManager.getMostRecentWindow(windowType);
 }
 
 function argumentsAsArray (args, start)
@@ -213,6 +225,25 @@ function splitLongWord (str, pos)
     ary.push (right);
 
     return ary;
+}
+
+function wrapText (str, width)
+{
+    var rv = "";
+    while (str.length > width)
+    {
+        rv += str.substr(0, width) + "\n";
+        str = str.substr(width);
+    }
+    return rv + str;
+}
+
+function wordCap (str)
+{
+    if (!str)
+        return str;
+    
+    return str[0].toUpperCase() + str.substr(1);
 }
 
 /*

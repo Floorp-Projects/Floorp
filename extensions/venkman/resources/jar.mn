@@ -4,6 +4,7 @@ venkman.jar:
   skin/modern/venkman/contents.rdf      (skin/contents.rdf)
   content/venkman/venkman.xul           (content/venkman.xul)
   content/venkman/venkman-menus.xul     (content/venkman-menus.xul)
+  content/venkman/venkman-menus.js      (content/venkman-menus.js)
   content/venkman/venkman-scripts.xul   (content/venkman-scripts.xul)
   content/venkman/venkman-utils.js      (content/venkman-utils.js)
   content/venkman/venkman-dev.js        (content/venkman-dev.js)

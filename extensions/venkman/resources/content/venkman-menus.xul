@@ -44,6 +44,9 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <overlaytarget id="menu-overlay-target">
+    <!-- parents for the command manager-managed objects -->
+    <keyset id="dynamicKeys"/>
+    <popupset id="dynamicPopups"/>
 
     <!-- Commands -->
     <commandset id="venkmanCommands">
@@ -64,39 +67,15 @@
       <command id="cmd_delete"/>
       <command id="cmd_selectAll"/>
 
-      <!-- View commands -->
-      <command id="cmd_pprint" oncommand="console.doCommandTogglePPrint();"/>
-      <command id="cmd_reload" oncommand="console.doCommandReload();"/>
-
-      <!-- Debug commands -->
-      <command id="cmd_reload_ui"
-        oncommand="if (typeof reloadUI =='function') reloadUI(); else window.location.href = window.location.href;"/>
-      <command id="cmd_focus" oncommand="console._slInputElement.focus();"/>
-      <command id="cmd_tmode_cycle" oncommand="cycleThrowMode();"/>
-      <command id="cmd_tmode_ignore" oncommand="setThrowMode(TMODE_IGNORE);"/>
-      <command id="cmd_tmode_trace" oncommand="setThrowMode(TMODE_TRACE);"/>
-      <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
-      <command id="cmd_stop" oncommand="console.doCommandToggleStop();"/>
-      <command id="cmd_init_at_startup" 
-        oncommand="console.jsds.initAtStartup = !console.jsds.initAtStartup"/>
-
       <!-- Tasks commands, from overlay -->
       <commandset id="tasksCommands"/>
     </commandset>
 
-    <commandset id="venkmanStackCommands">
-      <!-- commands in this set will only be enabled when we have a stack  -->
-      <command id="cmd_step_over" oncommand="console.doCommandNext();"/>
-      <command id="cmd_step_in" oncommand="console.doCommandStep();"/>
-      <command id="cmd_step_out" oncommand="console.doCommandStepOut();"/>
-      <command id="cmd_cont" oncommand="console.doCommandCont();"/>
-    </commandset>
-
     <!-- Keys -->
+
     <keyset id="venkmanKeys">
-      <!-- Hidden keys -->
-      <key id="key_reload_ui" observes="cmd_reload_ui"
-        modifiers="accel alt" key="R"/>
+      <key id="key:reloadui" modifiers="accel alt" key="R"
+        oncommand="if (typeof cmdReloadUI =='function') cmdReloadUI(); else window.location.href = window.location.href;"/>
 
       <!-- File keys -->
       <key id="key_close"/>
@@ -110,30 +89,13 @@
       <key id="key_delete"/>
       <key id="key_selectAll"/>
 
-      <!-- View keys -->
-      <key id="key_pprint" observes="cmd_pprint" 
-        modifiers="accel" key="P"/>
-      <key id="key_reload" observes="cmd_reload" 
-        modifiers="accel" key="R"/>
-
-      <!-- Debug keys -->
-      <key id="key_focus" observes="cmd_focus" keycode="VK_TAB"/>
-      <key id="key_stop" observes="cmd_stop" keycode="VK_F4"/>
-      <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
-      <key id="key_step_over" observes="cmd_step_over" keycode="VK_F10"/>
-      <key id="key_step_in" observes="cmd_step_in" keycode="VK_F11"/>
-      <key id="key_step_out" observes="cmd_step_out" modifiers="shift"
-        keycode="VK_F11"/>
-      <key id="key_tmode_cycle" observes="cmd_tmode_cycle"
-           modifiers="accel" key="T"/>  
-
       <!-- Tasks keys, from overlay -->
       <keyset id="tasksKeys"/>
     </keyset>
 
     <!-- Main menu bar -->
     <toolbox flex="1">
-      <menubar id="main-menubar" persist="collapsed"
+      <menubar id="mainmenu" persist="collapsed"
         grippytooltiptext="&MenuBar.tooltip;">
 
         <!-- File menu -->
@@ -161,87 +123,24 @@
           </menupopup>
         </menu> 
   
-        <!-- View menu -->
-        <menu id="menu_View">
-          <menupopup id="menu_ViewPopup"
-            onpopupshowing="console.onViewMenuShowing(event);">
-            <menuitem id="menu_PrettyPrint" key="key_pprint"
-              observes="cmd_pprint" type="checkbox"
-              label="&PPrint.label;" accesskey="&PPrint.aKey;"/>
-            <menuitem id="menu_Reload" key="key_reload" observes="cmd_reload"
-              label="&Reload.label;" accesskey="&Reload.aKey;"/>
-          </menupopup>
-        </menu>
+        <!-- View menu placeholder, see venkman-menus.js -->
+        <menu id="mainmenu:view"/>
   
-        <!-- Debug menu -->
-        <menu id="menu_Debug" label="&Debug.label;" accesskey="&Debug.aKey;">
-          <menupopup id="menu_DebugPopup"
-            onpopupshowing="console.onDebugMenuShowing(event);">
-            <menuitem id="menu_Stop" key="key_stop"
-              observes="cmd_stop"
-              label="&Stop.label;" accesskey="&Stop.aKey;"/>
-            <menuitem id="menu_Cont" key="key_cont"
-              observes="cmd_cont"
-              label="&Cont.label;" accesskey="&Cont.aKey;"/>
-            <menuitem id="menu_StepOver" key="key_step_over"
-              observes="cmd_step_over"
-              label="&StepOver.label;" accesskey="&StepOver.aKey;"/>
-            <menuitem id="menu_StepInto" key="key_step_in"
-              observes="cmd_step_in"
-              label="&StepIn.label;" accesskey="&StepIn.aKey;"/>
-            <menuitem id="menu_StepOut" key="key_step_out"
-              observes="cmd_step_out"
-              label="&StepOut.label;" accesskey="&StepOut.aKey;"/>
-            <menuseparator/>
-
-            <menuitem id="menu_TModeIgnore"
-              observes="cmd_tmode_ignore" type="radio"
-              label="&TModeIgnore.label;"
-              accesskey="&TModeIgnore.aKey;"/>
-            <menuitem id="menu_TModeTrace"
-              observes="cmd_tmode_trace" type="radio"
-              label="&TModeTrace.label;"
-              accesskey="&TModeTrace.aKey;"/>
-            <menuitem id="menu_TModeBreak"
-              observes="cmd_tmode_break" type="radio"
-              label="&TModeBreak.label;"
-              accesskey="&TModeBreak.aKey;"/>
-            <menuseparator/>
-
-            <menuitem id="menu_InitAtStartup" observes="cmd_init_at_startup"
-              type="checkbox"
-              label="&InitAtStartup.label;" accesskey="&InitAtStartup.aKey;"/>
-          </menupopup>
-        </menu>
+        <!-- Debug menu placeholder, see venkman-menus.js -->
+        <menu id="mainmenu:debug"/>
 
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>
       </menubar>  
 
       <!-- Debug toolbar -->
-      <toolbar class="toolbar-primary chromeclass-toolbar" id="main-toolbar"
+      <toolbar class="toolbar-primary chromeclass-toolbar" id="maintoolbar-outer"
         grippytooltiptext="&DebugBar.tooltip;">
-        <hbox id="main-toolbar-buttons">
-          <toolbarbutton class="toolbarbutton-1" id="stop-button"
-            label="&Stop.label;" observes="cmd_stop"
-            tooltiptext="&Stop.tooltip;"/>
-          <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="cont-button"
-            label="&Cont.label;" observes="cmd_cont"
-            tooltiptext="&Cont.tooltip;"/>
-          <toolbarbutton class="toolbarbutton-1" id="step-over-button"
-            label="&StepOver.label;" observes="cmd_step_over"
-            tooltiptext="&StepOver.tooltip;"/>
-          <toolbarbutton class="toolbarbutton-1" id="step-in-button"
-            label="&StepIn.label;" observes="cmd_step_in"
-            tooltiptext="&StepIn.tooltip;"/>
-          <toolbarbutton class="toolbarbutton-1" id="step-out-button"
-            label="&StepOut.label;" observes="cmd_step_out"
-            tooltiptext="&StepOut.tooltip;"/>
-        </hbox>
+        <hbox id="maintoolbar"/>
       </toolbar>
-        
+
     </toolbox>  
+
   </overlaytarget>
 
   <!-- Statusbar (hey, it's /almost/ a menu) -->

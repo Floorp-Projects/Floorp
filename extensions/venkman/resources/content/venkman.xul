@@ -63,7 +63,7 @@
           <!-- project view -->
 
           <outliner flex="1" id="project-outliner" persist="height"
-            onselect="console.onProjectSelect(event);">
+            ondblclick="console.onProjectSelect(event);">
 
             <outlinercols>
               <outlinercol id="project-col-0" label="" primary="true" flex="5"
@@ -87,7 +87,7 @@
           <!-- script view -->
 
           <outliner flex="1" id="script-list-outliner" persist="height"
-            onselect="console.onScriptSelect(event);"
+            ondblclick="console.onScriptSelect(event);"
             onclick="console.onScriptClick(event);">
 
             <outlinercols>
@@ -109,7 +109,7 @@
         <!-- source view -->
 
         <outliner id="source-outliner" flex="50" persist="width"
-          onselect="console.onSourceSelect(event);"
+          onselectXXX="console.onSourceSelect(event);"
           onclick="console.onSourceClick(event);">
           <outlinercols>
             <outlinercol id="breakpoint-col" flex="3"
@@ -118,7 +118,8 @@
             <outlinercol id="source-line-number" flex="7"
               display="&SourceCol1.display;" persist="hidden width"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="source-line-text" flex="90" persist="hidden width"/>
+            <outlinercol id="source-line-text" flex="90"
+              ignoreincolumnpicker="true" persist="hidden width"/>
           </outlinercols>
           <outlinerchildren id="source-outliner-body"/>
         </outliner>
@@ -132,7 +133,7 @@
         <!-- stack view -->
 
         <outliner flex="2" id="stack-outliner" persist="width"
-          onselect="console.onStackSelect(event);">
+          ondblclick="console.onStackSelect(event);">
 
           <outlinercols>
             <outlinercol id="stack-col-0" flex="1" persist="hidden width"

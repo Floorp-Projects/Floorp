@@ -42,13 +42,18 @@ if (DEBUG)
     _dd_pfx = "vnk: ";
     warn = function (msg) { dumpln ("** WARNING " + msg + " **"); }
     ASSERT = function (expr, msg) {
-        if (!expr)
-            dump ("** ASSERTION FAILED: " + msg + " **\n" + getStackTrace() +
-                  "\n"); 
-    }
+                 if (!expr) {
+                     dump ("** ASSERTION FAILED: " + msg + " **\n" + 
+                           getStackTrace() + "\n"); 
+                     return false;
+                 } else {
+                     return true;
+                 }
+             }
 }    
 else
     dd = warn = ASSERT = function (){};
+
 
 var MAX_STR_LEN = 100;  /* max string length to display before changing to
                          * "n characters" display mode.  as a var so we can
@@ -64,63 +69,9 @@ console.version = "0.6.1";
 
 const jsdIFilter = Components.interfaces.jsdIFilter;
 
-function cont ()
-{
-    disableDebugCommands();
-    --console._stopLevel;
-    console.stackView.saveState();
-    console.jsds.exitNestedEventLoop();
-}
-
-function next ()
-{
-    console._stepOverLevel = 0;
-    step();
-    console.jsds.functionHook = console._callHook;
-}
-
-function step ()
-{
-    setStopState(true);
-    var topFrame = console.frames[0];
-    console._stepPast = topFrame.script.fileName
-    if (console.sourceView.prettyPrint)
-    {
-        console._stepPast +=
-            topFrame.script.pcToLine(topFrame.pc, PCMAP_PRETTYPRINT);
-    }
-    else
-    {
-        console._stepPast += topFrame.line;
-    }
-    disableDebugCommands()
-    --console._stopLevel;
-    console.stackView.saveState();
-    console.jsds.exitNestedEventLoop();
-}
-
-function stepOut ()
-{
-    console._stepOverLevel = 1;
-    setStopState(false);
-    console.jsds.functionHook = console._callHook;
-    disableDebugCommands()
-    --console._stopLevel;
-    console.stackView.saveState();
-    console.jsds.exitNestedEventLoop();
-}
-
-function toggleStopState()
-{
-    if (console.jsds.interruptHook)
-        setStopState(false);
-    else
-        setStopState(true);
-}
-
 function setStopState(state)
 {
-    var tb = document.getElementById("stop-button");
+    var tb = document.getElementById("maintoolbar-stop");
     if (state)
     {
         console.jsds.interruptHook = console._executionHook;
@@ -135,55 +86,149 @@ function setStopState(state)
 
 function enableReloadCommand()
 {
-    var cmd = document.getElementById("cmd_reload");
-    cmd.removeAttribute ("disabled");
+    console.commandManager.commands["reload"].enabled = true;
 }
 
 function disableReloadCommand()
 {
-    var cmd = document.getElementById("cmd_reload");
-    cmd.setAttribute ("disabled", "true");
+    console.commandManager.commands["reload"].enabled = false;
 }
 
 function enableDebugCommands()
 {
-    var cmds = document.getElementById("venkmanStackCommands");
-    var sib = cmds.firstChild;
-
-    while (sib)
-    {
-        sib.removeAttribute ("disabled");
-        sib = sib.nextSibling;
-    }
-
-    var tb = document.getElementById("cmd_stop");
-    tb.setAttribute("disabled", "true");
-    if (console.frames.length == 1)
-    {
-        tb = document.getElementById("cmd_step_out");
-        tb.setAttribute("disabled", "true");
-    }
+    var cmds = console.commandManager.list ("", CMD_NEED_STACK);
+    for (var i in cmds)
+        cmds[i].enabled = true;
+    
+    cmds = console.commandManager.list ("", CMD_NO_STACK);
+    for (i in cmds)
+        cmds[i].enabled = false;
 }
 
 function disableDebugCommands()
 {
-    var cmds = document.getElementById("venkmanStackCommands");
-    var sib = cmds.firstChild;
-    while (sib)
-    {
-        sib.setAttribute ("disabled", "true");
-        sib = sib.nextSibling;
-    }
-
-    var tb = document.getElementById("cmd_stop");
-    tb.removeAttribute("disabled");
+    var cmds = console.commandManager.list ("", CMD_NEED_STACK);
+    for (var i in cmds)
+        cmds[i].enabled = false;
+    
+    cmds = console.commandManager.list ("", CMD_NO_STACK);
+    for (i in cmds)
+        cmds[i].enabled = true;
 }
 
-function dispatchCommand (text)
+
+function displayUsageError (e, details)
 {
-    var ev = new Object();
-    ev.line = text;
-    console.onInputCompleteLine (ev);
+    display (details, MT_ERROR);
+    display (getMsg(MSN_FMT_USAGE, [e.command.name, e.command.usage]), MT_USAGE);
+}
+
+function dispatch (text, e, flags)
+{
+    if (!e)
+    {
+        if (typeof CommandManager.cx == "object")
+            e = CommandManager.cx;
+        else
+            e = new Object();
+    }
+
+    if (!("inputData" in e))
+        e.inputData = "";
+    
+    /* split command from arguments */
+    var ary = text.match (/(\S+) ?(.*)/);
+    e.commandText = ary[1];
+    e.inputData =  ary[2] ? stringTrim(ary[2]) : "";
+    
+    /* list matching commands */
+    ary = console.commandManager.list (e.commandText, flags);
+    var i;
+    
+    switch (ary.length)
+    {            
+        case 0:
+            /* no match, try again */
+            display (getMsg(MSN_ERR_NO_COMMAND, e.commandText), MT_ERROR);
+            break;
+            
+        case 1:
+            /* one match, good for you */
+            return dispatchCommand(ary[0], e, flags);
+            break;
+            
+        default:
+            /* more than one match, show the list */
+            var str = "";
+            for (i in ary)
+                str += (str) ? MSG_COMMASP + ary[i].name : ary[i].name;
+            display (getMsg (MSN_ERR_AMBIGCOMMAND,
+                             [e.commandText, ary.length, str]), MT_ERROR);
+    }
+
+    return null;
+}
+
+function dispatchCommand (command, e, flags)
+{
+    if (!e)
+    {
+        if (typeof CommandManager.cx == "object")
+            e = CommandManager.cx;
+        else
+            e = new Object();
+    }
+
+    e.command = command;
+
+    if ((e.command.flags & CMD_NEED_STACK) &&
+        (!("frames" in console)))
+    {
+        /* doc, it hurts when I do /this/... */
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return null;
+    }
+    
+    if (!e.command.enabled)
+    {
+        /* disabled command */
+        display (getMsg(MSG_ERR_DISABLED, e.command.name),
+                 MT_ERROR);
+        return null;
+    }                
+    
+    if (typeof e.command.func == "function")
+    {
+        /* dispatch a real function */
+        if (e.command.usage)
+            console.commandManager.parseArguments (e);
+        if ("parseError" in e)
+            displayUsageError (e, e.parseError);
+        else
+            e.returnValue = e.command.func(e);
+        return e;
+    }
+    
+    if (typeof e.command.func == "string")
+    {
+        /* dispatch an alias (semicolon delimited list of subcommands) */
+        var commandList = e.command.func.split(";");
+        for (var i = 0; i < commandList.length; ++i)
+        {
+            commandList[i] = stringTrim(commandList[i]);
+            if (i == 1)
+                dispatch (commandList[i] + " " + e.inputData, e, flags);
+            else
+                dispatch (commandList[i], null, flags);
+        }
+        return e;
+    }
+
+    /* by process of elimination... */
+    display (getMsg(MSN_ERR_NOTIMPLEMENTED, e.command.name),
+             MT_ERROR);
+
+    return null;    
 }
 
 function display(message, msgtype)
@@ -220,21 +265,6 @@ function display(message, msgtype)
 
     console._outputElement.appendChild(msgRow);
     console.scrollDown();
-}
-
-function displayCommands (pattern)
-{
-    display (MSG_TIP_HELP);
-    
-    if (pattern)
-        display (getMsg(MSN_CMDMATCH,
-                        [pattern, "["  + 
-                        console._commands.listNames(pattern).join(MSG_COMMASP) +
-                        "]"]));
-    else
-        display (getMsg(MSN_CMDMATCH_ALL,
-                        "[" + console._commands.listNames().join(MSG_COMMASP) +
-                        "]"));
 }
 
 function setCurrentSource (url, line)
@@ -289,7 +319,7 @@ function evalInTargetScope (script)
         display (MSG_ERR_NO_STACK, MT_ERROR);
         return null;
     }
-    
+
     try
     {
         return getCurrentFrame().eval (script, MSG_VAL_CONSOLE, 1);
@@ -299,6 +329,26 @@ function evalInTargetScope (script)
         display (formatEvalException (ex), MT_ERROR);
         return null;
     }
+
+    return null;
+    
+    /*
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return null;
+    }
+    
+    var rval = new Object();
+    
+    if (!getCurrentFrame().eval (script, MSG_VAL_CONSOLE, 1, rval))
+    {
+        dd ("exception: " + dumpObjectTree(rval.value));
+        display (formatEvalException (rval.value), MT_ERROR);
+        return null;
+    }
+    return ("value" in rval) ? rval.value : null;
+    */
 }
 
 function formatException (ex)
@@ -319,6 +369,8 @@ function formatEvalException (ex)
 {
     if (ex instanceof BadMojo || ex instanceof Error)
         return formatException (ex);
+    else if (ex instanceof jsdIValue)
+        ex = ex.stringValue;
     
     return getMsg (MSN_EVAL_THREW,  String(ex));
 }
@@ -345,6 +397,7 @@ function init()
 {    
     initPrefs();
     initCommands();
+    initMenus();
     initOutliners();
     
     disableDebugCommands();
@@ -372,23 +425,25 @@ function init()
 
     initDebugger(); /* debugger may need display() to init */
 
-    display(MSG_HELLO, MT_HELLO);
-    display(getMsg(MSN_VERSION, console.version), MT_HELLO);
-    displayCommands();
-
     console.ui = new Object();
-    console.ui["menu_PrettyPrint"] =
-        document.getElementById ("menu_PrettyPrint");
-    console.ui["menu_InitAtStartup"] =
-        document.getElementById ("menu_InitAtStartup");
-    console.ui["menu_TModeIgnore"] = document.getElementById("menu_TModeIgnore");
-    console.ui["menu_TModeTrace"] = document.getElementById("menu_TModeTrace");
-    console.ui["menu_TModeBreak"] = document.getElementById("menu_TModeBreak");
     console.ui["status-text"] = document.getElementById ("status-text");
-
+    console.ui["sl-input"] = document.getElementById ("input-single-line");
     console._statusStack = new Array();
 
-    startupTests();
+    dispatch("version");
+
+    var ary = console.prefs["initialScripts"].split();
+    for (var i = 0; i < ary.length; ++i)
+    {
+        var url = stringTrim(ary[i]);
+        if (url)
+            dispatch ("loadd", {url: ary[i]});
+    }
+    
+    console.sourceText = new HelpText();
+
+    dispatch("commands");
+    dispatch("help");
 }
 
 function destroy ()
@@ -420,30 +475,6 @@ function insertLink (matchText, containerTag)
     
     var anchor = htmlVA (null, href);
     containerTag.appendChild (anchor);    
-}
-
-function load(url, obj)
-{
-    var rv;
-    var ex;
-    
-    if (!console._loader)
-    {
-        const LOADER_CTRID = "@mozilla.org/moz/jssubscript-loader;1";
-        const mozIJSSubScriptLoader = 
-            Components.interfaces.mozIJSSubScriptLoader;
-
-        var cls;
-        if ((cls = Components.classes[LOADER_CTRID]))
-            console._loader = cls.createInstance(mozIJSSubScriptLoader);
-    }
-    
-    rv = console._loader.loadSubScript(url, obj);
-        
-    display(getMsg(MSN_SUBSCRIPT_LOADED, url), MT_INFO);
-    
-    return rv;
-    
 }
 
 function matchFileName (pattern)
@@ -478,7 +509,7 @@ function stringToDOM (message)
     return span;
 }
 
-/* some of the drag and drop code has an annoying apetite for exceptions.  any
+/* some of the drag and drop code has an annoying appetite for exceptions.  any
  * exception raised during a dnd operation causes the operation to fail silently.
  * passing the function through one of these adapters lets you use "return
  * false on planned failure" symantics, and dumps any exceptions caught
@@ -540,15 +571,14 @@ function bm_tostring ()
 /* console object */
 
 /* input history (up/down arrow) related vars */
-console._inputHistory = new Array();
-console._lastHistoryReferenced = -1;
-console._incompleteLine = "";
+console.inputHistory = new Array();
+console.lastHistoryReferenced = -1;
+console.incompleteLine = "";
 
 /* tab complete */
 console._lastTabUp = new Date();
 
 console.display = display;
-console.load = load;
 
 console.__defineGetter__ ("status", con_getstatus);
 function con_getstatus ()
@@ -600,7 +630,7 @@ function con_scrolldn ()
 
 function SourceText (scriptContainer)
 {
-    this.sourceText = new Array();
+    this.lines = new Array();
     this.tabWidth = console.prefs["sourcetext.tab.width"];
     this.fileName = scriptContainer.fileName;
     this.scriptContainer = scriptContainer;
@@ -610,43 +640,31 @@ function SourceText (scriptContainer)
 SourceText.prototype.invalidate =
 function st_invalidate ()
 {
-    if (console.scriptsView.childData == this)
+    if ("childData" in console.sourceView &&
+        console.sourceView.childData == this)
     {
         if (!("lastRowCount" in this) || 
-            this.lastRowCount != this.sourceText.length)
+            this.lastRowCount != this.lines.length)
         {
-            this.lastRowCount = this.sourceText.length;
-            console.scriptsView.outliner.rowCountChanged(this.lastRowCount);
+            this.lastRowCount = this.lines.length;
+            console.sourceView.outliner.rowCountChanged(0, this.lastRowCount);
         }    
-        console.scriptsView.outliner.invalidate();
+        console.sourceView.outliner.invalidate();
     }
 }
 
 SourceText.prototype.onMarginClick =
 function st_marginclick (e, line)
 {
-    setBreakpoint (this.fileName, line + 1);
-}
-
-SourceText.prototype.onBreakpointCreated =
-function st_newbp (line)
-{
-    dd ("breakpoint created at line " + line);
-    
-    if (!(line in this.lineMap))
-        this.lineMap[line - 1] = SourceText.LINE_BREAKPOINT;
+    if (getBreakpoint(this.fileName, line))
+    {
+        clearBreakpoint (this.fileName, line);
+    }
     else
-        this.lineMap[line - 1] |= SourceText.LINE_BREAKPOINT;
-    this.invalidate();
-}
-
-SourceText.prototype.onBreakpointCleared =
-function st_newbp (line)
-{
-    ASSERT ((line - 1) in this.lineMap,
-            "cleared breakpoint for non-existant line");
-    this.lineMap[line - 1] &= !SourceText.LINE_BREAKPOINT;
-    this.invalidate();
+    {
+        setBreakpoint (this.fileName, line);
+    }
+    console.sourceView.outliner.invalidateRow(line - 1);
 }
 
 SourceText.prototype.isLoaded = false;
@@ -663,25 +681,22 @@ function st_reloadsrc (cb)
     }
 
     this.isLoaded = false;
-    this.sourceText = new Array();
+    this.lines = new Array();
     this.invalidate();
     this.loadSource(reloadCB);
 }
 
-SourceText.LINE_BREAKABLE  = 1;
-SourceText.LINE_BREAKPOINT = 2;
-
 SourceText.prototype.markBreakableLines =
 function st_initmap()
 {
-    var sourceRec = this;
+    var sourceText = this;
     
     function setFlag (line, flag)
     {
-        if (line in sourceRec.lineMap)
-            sourceRec.lineMap[line] |= flag;
+        if (line in sourceText.lineMap)
+            sourceText.lineMap[line] |= flag;
         else
-            sourceRec.lineMap[line] = flag;
+            sourceText.lineMap[line] = flag;
     }
     
     console.pushStatus (getMsg(MSN_STATUS_MARKING,
@@ -696,7 +711,7 @@ function st_initmap()
         {
             var script = scriptRec.script;
             if (script.isLineExecutable(j + 1, PCMAP_SOURCETEXT)) {
-                setFlag (j, SourceText.LINE_BREAKABLE);
+                setFlag (j, console.sourceView.LINE_BREAKABLE);
             }
         }
     }
@@ -723,7 +738,7 @@ function st_loadsrc (cb)
         return;
     }
 
-    var sourceRec = this;
+    var sourceText = this;
     this.isLoading = true;    
     
     var observer = {
@@ -731,19 +746,19 @@ function st_loadsrc (cb)
             function callall (status)
             {
                 cb (status);
-                if ("extraCallbacks" in sourceRec)
+                if ("extraCallbacks" in sourceText)
                 {
-                    while (sourceRec.extraCallbacks)
+                    while (sourceText.extraCallbacks)
                     {
-                        cb = sourceRec.extraCallbacks.pop();
+                        cb = sourceText.extraCallbacks.pop();
                         cb (status);
-                        if (sourceRec.extraCallbacks.length < 1)
-                            delete sourceRec.extraCallbacks;
+                        if (sourceText.extraCallbacks.length < 1)
+                            delete sourceText.extraCallbacks;
                     }
                 }
             }
             
-            delete sourceRec.isLoading;
+            delete sourceText.isLoading;
             
             if (status != Components.results.NS_OK)
             {
@@ -753,7 +768,7 @@ function st_loadsrc (cb)
                 return;
             }
             
-            sourceRec.isLoaded = true;
+            sourceText.isLoaded = true;
             var ary = data.split(/\r\n|\n|\r/m);
             for (var i = 0; i < ary.length; ++i)
             {
@@ -764,14 +779,14 @@ function st_loadsrc (cb)
                  */
                 ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
             }
-            sourceRec.sourceText = ary;
+            sourceText.lines = ary;
             ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
             if (ary)
-                sourceRec.tabWidth = ary[1];
+                sourceText.tabWidth = ary[1];
             
-            sourceRec.scriptContainer.guessFunctionNames(sourceRec.sourceText);
-            sourceRec.markBreakableLines();
-            sourceRec.invalidate();
+            sourceText.scriptContainer.guessFunctionNames(sourceText);
+            sourceText.markBreakableLines();
+            sourceText.invalidate();
             callall(status);
             console.popStatus();
         }
@@ -799,62 +814,103 @@ function st_loadsrc (cb)
 
 function PPSourceText (scriptRecord)
 {
-    var sourceRec = this;
-    
-    function setFlag (line, flag)
-    {
-        if (line in sourceRec.lineMap)
-            sourceRec.lineMap[line] |= flag;
-        else
-            sourceRec.lineMap[line] = flag;
-    }
-
-    this.tabWidth = console.prefs["sourcetext.tab.width"];
     this.scriptRecord = scriptRecord;
-    this.fileName = scriptRecord.script.fileName;
-    this.sourceText = String(scriptRecord.script.functionSource).split("\n");
-    this.lineMap = new Array();
-    var len = this.sourceText.length;
-    for (var i = 0; i < len; ++i)
-    {
-        if (scriptRecord.script.isLineExecutable(i + 1, PCMAP_PRETTYPRINT))
-        {
-            setFlag (i, SourceText.LINE_BREAKABLE);
-        }
-    }
-}
-
-PPSourceText.prototype.invalidate =
-function ppst_invalidate ()
-{
-    if (console.scriptsView.childData == this)
-    {
-        if (!("lastRowCount" in this) || 
-            this.lastRowCount != this.sourceText.length)
-        {
-            this.lastRowCount = this.sourceText.length;
-            console.scriptsView.outliner.rowCountChanged(this.lastRowCount);
-        }    
-        console.scriptsView.outliner.invalidate();
-    }
-}
-
-PPSourceText.prototype.onBreakpointCreated =
-function ppst_newbp (line)
-{
-    if (!(line in this.lineMap))
-        this.lineMap[line] = SourceText.LINE_BREAKPOINT;
-    else
-        this.lineMap[line] |= SourceText.LINE_BREAKPOINT;
-    this.invalidate();
-}
-
-PPSourceText.prototype.onBreakpointCleared =
-function ppst_newbp (line)
-{
-    ASSERT (line in this.lineMap, "cleared breakpoint for non-existant line");
-    this.lineMap[line] &= !SourceText.LINE_BREAKPOINT;
-    this.invalidate();
+    this.reloadSource();
 }
 
 PPSourceText.prototype.isLoaded = true;
+
+PPSourceText.prototype.reloadSource =
+function (cb)
+{
+    var sourceText = this;
+    
+    function setFlag (line, flag)
+    {
+        if (line in sourceText.lineMap)
+            sourceText.lineMap[line] |= flag;
+        else
+            sourceText.lineMap[line] = flag;
+    }
+
+    this.tabWidth = console.prefs["sourcetext.tab.width"];
+    this.fileName = this.scriptRecord.script.fileName;
+    this.lines = String(this.scriptRecord.script.functionSource).split("\n");
+    this.lineMap = new Array();
+    var len = this.lines.length;
+    for (var i = 0; i < len; ++i)
+    {
+        if (this.scriptRecord.script.isLineExecutable(i + 1, PCMAP_PRETTYPRINT))
+        {
+            setFlag (i, console.sourceView.LINE_BREAKABLE);
+        }
+    }
+
+    if (typeof cb == "function")
+        cb (Components.results.NS_OK);
+}
+
+PPSourceText.prototype.invalidate =
+function st_invalidate ()
+{
+    dd ("invalidate ppsourcetext");
+    
+    if ("childData" in console.sourceView &&
+        console.sourceView.childData == this)
+    {
+        var topRow = console.sourceView.outliner.getFirstVisibleRow() + 1;
+        if (!("lastRowCount" in this) || 
+            this.lastRowCount != this.lines.length)
+        {
+            this.lastRowCount = this.lines.length;
+            console.sourceView.outliner.rowCountChanged(0, this.lastRowCount);
+        }    
+        console.sourceView.scrollTo(topRow, -1);
+        console.sourceView.outliner.invalidate();
+    }
+}
+
+function HelpText ()
+{
+    this.tabWidth = console.prefs["sourcetext.tab.width"];
+    this.lineMap = new Array();
+    this.fileName = MSG_HELP_TITLE;
+    this.reloadSource();
+}
+
+HelpText.prototype.isLoaded = true;
+
+HelpText.prototype.reloadSource =
+function (cb)
+{
+    var ary = console.commandManager.list();
+    var str = "";
+    for (var c in ary)
+    {
+        str += "\n                                        ===\n"
+            + ary[c].getDocumentation(formatCommandFlags);
+    }
+    
+    this.lines = str.split("\n");
+    this.invalidate();
+    if (typeof cb == "function")
+        cb (Components.results.NS_OK);
+}
+        
+HelpText.prototype.invalidate =
+function st_invalidate ()
+{
+    if ("childData" in console.sourceView &&
+        console.sourceView.childData == this)
+    {
+        var topRow = console.sourceView.outliner.getFirstVisibleRow() + 1;
+        if (!("lastRowCount" in this) || 
+            this.lastRowCount != this.lines.length)
+        {
+            this.lastRowCount = this.lines.length;
+            console.sourceView.outliner.rowCountChanged(0, this.lastRowCount);
+        }    
+        console.sourceView.scrollTo(topRow, -1);
+        console.sourceView.outliner.invalidate();
+    }
+}

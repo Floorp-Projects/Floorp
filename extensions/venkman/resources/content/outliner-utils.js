@@ -669,8 +669,11 @@ function tovr_open ()
     this.resort(true);
     this.visualFootprint += delta;
     if ("parentRecord" in this)
+    {
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(), 0);
         this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() + 1,
                                                    delta);
+    }
 }
 
 /*
@@ -686,10 +689,14 @@ function tovr_close ()
     this.isContainerOpen = false;
     var delta = 1 - this.visualFootprint;
     this.visualFootprint += delta;
-    if (this.parentRecord)
+    if ("parentRecord" in this)
+    {
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(), 0);
         this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() + 1,
                                                    delta);
-    if (this.onPostClose)
+    }
+
+    if ("onPostClose" in this)
         this.onPostClose();
 }
 
@@ -866,7 +873,7 @@ TOLabelRecord.prototype = new TreeOViewRecord (null);
 TOLabelRecord.prototype.__defineGetter__("_share", tolr_getshare);
 function tolr_getshare()
 {
-    if (this.parentRecord)
+    if ("parentRecord" in this)
         return this.parentRecord._share;
 
     ASSERT (0, "TOLabelRecord cannot be the root of a visible tree.");
@@ -993,7 +1000,7 @@ function torr_vfpchange (start, amount)
     else
     {
         this._treeView.changeAmount += amount;
-        if (this._treeView.changeStart)
+        if ("changeStart" in this._treeView)
             this._treeView.changeStart = 
                 Math.min (start, this._treeView.changeStart);
         else
@@ -1090,7 +1097,7 @@ function tov_isctr (index)
     return rv;
     */
 
-    return Boolean(row && row.childData);
+    return Boolean(row && "childData" in row);
 }
 
 TreeOView.prototype.__defineGetter__("selectedIndex", tov_getsel);
@@ -1209,7 +1216,7 @@ function tov_getcelltxt (index, colID)
 {
     var row = this.childData.locateChildByVisualRow (index);
     //ASSERT(row, "bogus row " + index);
-    if (row && row._colValues)
+    if (row && row._colValues && colID in row._colValues)
         return row._colValues[colID];
     else
         return "";

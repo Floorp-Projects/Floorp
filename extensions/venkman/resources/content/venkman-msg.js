@@ -35,33 +35,40 @@
 
 console._bundle = srGetStrBundle("chrome://venkman/locale/venkman.properties");
 
-function getMsg (msgName)
+function getMsg (msgName, params, deflt)
 {
-    var restCount = arguments.length - 1;
-    
     try 
     {
-        if (restCount == 1 && arguments[1] instanceof Array)
+        var rv;
+        
+        if (params && params instanceof Array)
         {
-            return console._bundle.formatStringFromName (msgName, arguments[1], 
-                                                         arguments[1].length);
+            rv = console._bundle.formatStringFromName (msgName, params,
+                                                       params.length);
         }
-        else if (restCount > 0)
+        else if (params)
         {
-            var subPhrases = new Array();
-            for (var i = 1; i < arguments.length; ++i)
-                subPhrases.push(arguments[i]);
-            return console._bundle.formatStringFromName (msgName, subPhrases,
-                                                         subPhrases.length);
+            rv = console._bundle.formatStringFromName (msgName, [params], 1);
         }
+        else
+        {
+            rv = console._bundle.GetStringFromName (msgName);
+        }
+        
+        rv = rv.replace (/^\"/, "");
+        rv = rv.replace (/\"$/, "");
 
-        return console._bundle.GetStringFromName (msgName);
+        return rv;
     }
     catch (ex)
     {
-        ASSERT (0, "caught exception getting value for ``" + msgName +
-                "''\n" + ex + "\n");
-        return msgName;
+        if (typeof deflt == "undefined")
+        {
+            ASSERT (0, "caught exception getting value for ``" + msgName +
+                    "''\n" + ex + "\n");
+            return msgName;
+        }
+        return deflt;
     }
 }
 
@@ -70,6 +77,7 @@ const MT_CONT      = "CONT";
 const MT_ERROR     = "ERROR";
 const MT_HELLO     = "HELLO";
 const MT_HELP      = "HELP";
+const MT_WARN      = "WARN";
 const MT_INFO      = "INFO";
 const MT_SOURCE    = "SOURCE";
 const MT_STEP      = "STEP";
@@ -93,6 +101,7 @@ const exceptionMsgNames = ["err.notimplemented",
 
 /* message values for non-parameterized messages */
 const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
+const MSG_ERR_DISABLED    = getMsg("msg.err.disabled");
 const MSG_ERR_NO_SOURCE   = getMsg("msg.err.nosource");
 const MSG_ERR_CANT_CLOSE  = getMsg("msg.err.cant.close");
 
@@ -153,62 +162,22 @@ const MSG_TMODE_IGNORE     = getMsg("msg.tmode.ignore");
 const MSG_TMODE_TRACE      = getMsg("msg.tmode.trace");
 const MSG_TMODE_BREAK      = getMsg("msg.tmode.break");
 
-const CMD_BREAK           = getMsg("cmd.break");
-const CMD_BREAK_PARAMS    = getMsg("cmd.break.params");
-const CMD_BREAK_HELP      = getMsg("cmd.break.help");
-const CMD_CLEAR           = getMsg("cmd.clear");
-const CMD_CLEAR_PARAMS    = getMsg("cmd.clear.params");
-const CMD_CLEAR_HELP      = getMsg("cmd.clear.help");
-const CMD_CMDS            = getMsg("cmd.commands");
-const CMD_CMDS_PARAMS     = getMsg("cmd.commands.params");
-const CMD_CMDS_HELP       = getMsg("cmd.commands.help");
-const CMD_CONT            = getMsg("cmd.cont");
-const CMD_CONT_PARAMS     = getMsg("cmd.cont.params");
-const CMD_CONT_HELP       = getMsg("cmd.cont.help");
-const CMD_EVAL            = getMsg("cmd.eval");
-const CMD_EVAL_PARAMS     = getMsg("cmd.eval.params");
-const CMD_EVAL_HELP       = getMsg("cmd.eval.help");
-const CMD_EVALD           = getMsg("cmd.evald");
-const CMD_EVALD_PARAMS    = getMsg("cmd.evald.params");
-const CMD_EVALD_HELP      = getMsg("cmd.evald.help");
-const CMD_FBREAK          = getMsg("cmd.fbreak");
-const CMD_FBREAK_PARAMS   = getMsg("cmd.fbreak.params");
-const CMD_FBREAK_HELP     = getMsg("cmd.fbreak.help");
-const CMD_FINISH          = getMsg("cmd.finish");
-const CMD_FINISH_PARAMS   = getMsg("cmd.finish.params");
-const CMD_FINISH_HELP     = getMsg("cmd.finish.help");
-const CMD_FRAME           = getMsg("cmd.frame");
-const CMD_FRAME_PARAMS    = getMsg("cmd.frame.params");
-const CMD_FRAME_HELP      = getMsg("cmd.frame.help");
-const CMD_HELP            = getMsg("cmd.help");
-const CMD_HELP_PARAMS     = getMsg("cmd.help.params");
-const CMD_HELP_HELP       = getMsg("cmd.help.help");
-const CMD_NEXT            = getMsg("cmd.next");
-const CMD_NEXT_PARAMS     = getMsg("cmd.next.params");
-const CMD_NEXT_HELP       = getMsg("cmd.next.help");
-const CMD_PROPS           = getMsg("cmd.props");
-const CMD_PROPS_PARAMS    = getMsg("cmd.props.params");
-const CMD_PROPS_HELP      = getMsg("cmd.props.help");
-const CMD_PROPSD          = getMsg("cmd.propsd");
-const CMD_PROPSD_PARAMS   = getMsg("cmd.propsd.params");
-const CMD_PROPSD_HELP     = getMsg("cmd.propsd.help");
-const CMD_SCOPE           = getMsg("cmd.scope");
-const CMD_SCOPE_PARAMS    = getMsg("cmd.scope.params");
-const CMD_SCOPE_HELP      = getMsg("cmd.scope.help");
-const CMD_STEP            = getMsg("cmd.step");
-const CMD_STEP_PARAMS     = getMsg("cmd.step.params");
-const CMD_STEP_HELP       = getMsg("cmd.step.help");
-const CMD_TMODE           = getMsg("cmd.tmode");
-const CMD_TMODE_PARAMS    = getMsg("cmd.tmode.params");
-const CMD_TMODE_HELP      = getMsg("cmd.tmode.help");
-const CMD_WHERE           = getMsg("cmd.where");
-const CMD_WHERE_PARAMS    = getMsg("cmd.where.params");
-const CMD_WHERE_HELP      = getMsg("cmd.where.help");
-const CMD_QUIT            = getMsg("cmd.quit");
-const CMD_QUIT_PARAMS     = getMsg("cmd.quit.params");
-const CMD_QUIT_HELP       = getMsg("cmd.quit.help");
+const MSG_NO_HELP          = getMsg("msg.no.help");
+const MSG_NOTE_CONSOLE     = getMsg("msg.note.console");
+const MSG_NOTE_NEEDSTACK   = getMsg("msg.note.needstack");
+const MSG_NOTE_NOSTACK     = getMsg("msg.note.nostack");
+const MSG_DOC_NOTES        = getMsg("msg.doc.notes");
+const MSG_DOC_DESCRIPTION  = getMsg("msg.doc.description");
+const MSG_HELP_TITLE       = getMsg("msg.help.title");
 
 /* message names for parameterized messages */
+const MSN_IASMODE          = "msg.iasmode";
+const MSN_EXTRA_PARAMS     = "msg.extra.params";
+const MSN_DOC_COMMANDLABEL = "msg.doc.commandlabel";
+const MSN_DOC_KEY          = "msg.doc.key";
+const MSN_DOC_SYNTAX       = "msg.doc.syntax";
+
+const MSN_ERR_SCRIPTLOAD     = "err.subscript.load";
 const MSN_ERR_NO_COMMAND     = "msg.err.nocommand";
 const MSN_ERR_NOTIMPLEMENTED = "msg.err.notimplemented";
 const MSN_ERR_AMBIGCOMMAND   = "msg.err.ambigcommand";
@@ -235,6 +204,7 @@ const MSN_FMT_TMP_ASSIGN     = "fmt.tmp.assign";
 const MSN_FMT_LONGSTR        = "fmt.longstr";
 const MSN_FMT_USAGE          = "fmt.usage";
 const MSN_FMT_GUESSEDNAME    = "fmt.guessedname";
+const MSN_FMT_PREFVALUE      = "fmt.prefvalue";
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
@@ -256,13 +226,13 @@ const MSN_FBP_EXISTS         = "msg.fbp.exists";
 const MSN_SOURCE_LINE        = "msg.source.line";
 const MSN_EXCP_TRACE         = "msg.exception.trace";
 const MSN_VERSION            = "msg.version";
+const MSN_DEFAULT_ALIAS_HELP = "msg.default.alias.help";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
 const MSN_EVAL_THREW       = "msg.eval.threw";
 const MSN_STOP             = "msg.stop";
 const MSN_SUBSCRIPT_LOADED = "msg.subscript.load";
-
 const MSN_STATUS_LOADING   = "msg.status.loading";
 const MSN_STATUS_MARKING   = "msg.status.marking";
 const MSN_STATUS_STOPPED   = "msg.status.stopped";

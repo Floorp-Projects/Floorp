@@ -33,41 +33,24 @@
  *
  */
 
-function reloadUI()
+function initDev()
 {
-    if (console._stopLevel != 0)
-        return;
+    var cmdary =
+        [["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
+         ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
+         ["testargs",      cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
+         ["testargs1",     cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
+         ["testfilters",   cmdTestFilters,   CMD_CONSOLE | CMD_NO_HELP],
+         ["treetest",      cmdTreeTest,      CMD_CONSOLE | CMD_NO_HELP],
+
+         ["multialias",    "help pref; help props", CMD_CONSOLE | CMD_NO_HELP]];
     
-    var bs = Components.classes["@mozilla.org/intl/stringbundle;1"];
-    bs = bs.createInstance(Components.interfaces.nsIStringBundleService);
-    bs.flushBundles();
-    window.location.href = window.location.href;
+    defineVenkmanCommands (cmdary);
+
+    return "Venkman development functions loaded OK.";
 }
 
-function treeTest()
-{
-    var w = openDialog("chrome://venkman/content/tests/tree.xul", "", "");
-    var testsFilter = {
-        glob: w,
-        flags: jsdIFilter.FLAG_ENABLED | jsdIFilter.FLAG_PASS,
-        urlPattern: null,
-        startLine: 0,
-        endLine: 0
-    };
-    /* make sure this filter goes at the top, so the system
-     * "chrome://venkman/ *" filter doesn't get to it first.
-     */
-    console.jsds.insertFilter (testsFilter, null);
-}
-
-function startupTests()
-{
-    if (0)
-        treeTest();
-    
-}
-
-function dumpFilters()
+function cmdDumpFilters()
 {
     var i = 0;
     
@@ -81,7 +64,24 @@ function dumpFilters()
     console.jsds.enumerateFilters (enumer);
 }
 
-function testFilters ()
+function cmdReloadUI()
+{
+    if (typeof console != "udefined" && 
+        ("_stopLevel" in console) && console._stopLevel != 0)
+        return;
+    
+    var bs = Components.classes["@mozilla.org/intl/stringbundle;1"];
+    bs = bs.createInstance(Components.interfaces.nsIStringBundleService);
+    bs.flushBundles();
+    window.location.href = window.location.href;
+}    
+
+function cmdTestArgs (e)
+{
+    dd (dumpObjectTree(e));
+}
+
+function cmdTestFilters ()
 {
     var filter1 = {
         glob: null,
@@ -112,8 +112,6 @@ function testFilters ()
         endLine: 0
     };
 
-    console.jsds.clearFilters();
-    
     dd ("append f3 into an empty list.");
     console.jsds.appendFilter (filter3);
     console.jsds.GC();
@@ -135,3 +133,22 @@ function testFilters ()
 
     dumpFilters();
 }
+
+
+function cmdTreeTest()
+{
+    var w = openDialog("chrome://venkman/content/tests/tree.xul", "", "");
+    var testsFilter = {
+        glob: w,
+        flags: jsdIFilter.FLAG_ENABLED | jsdIFilter.FLAG_PASS,
+        urlPattern: null,
+        startLine: 0,
+        endLine: 0
+    };
+    /* make sure this filter goes at the top, so the system
+     * "chrome://venkman/ *" filter doesn't get to it first.
+     */
+    console.jsds.insertFilter (testsFilter, null);
+}
+
+initDev();

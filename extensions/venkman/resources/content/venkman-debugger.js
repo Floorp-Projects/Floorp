@@ -63,12 +63,12 @@ console._scriptHook = {
                      },
     
     onScriptDestroyed: function scripthook (script) {
-                         if (script.fileName && 
-                             script.fileName != MSG_VAL_CONSOLE)
-                         {
-                             unrealizeScript (script);
-                         }
-                     }
+                           if (script.fileName && 
+                               script.fileName != MSG_VAL_CONSOLE)
+                           {
+                               unrealizeScript (script);
+                           }
+                       }
 };
 
 console._executionHook = {
@@ -100,10 +100,27 @@ console._callHook = {
             }
 };
 
+console._debugHook = {
+    onExecute: function debughook (frame, type, rv) {
+                   display ("debug hook");
+               }
+};
+
 console._errorHook = {
-    onExecute: function exehook (frame, type, rv) {
-        display ("error hook");
-    }
+    onError: function errorhook (message, fileName, line, pos, flags,
+                                 exception) {
+                 try {
+                     
+                     dd ("===\n" + message + "\n" + fileName + "@" + line + ":" +
+                         pos + "; " + flags);
+                     return true;
+                 }
+                 catch (ex)
+                 {
+                     dd ("error in error hook: " + ex);
+                 }
+                 return true;
+             }
 };
 
 function initDebugger()
@@ -124,7 +141,8 @@ function initDebugger()
     console.jsds.on();
     console.jsds.breakpointHook = console._executionHook;
     console.jsds.debuggerHook = console._executionHook;
-    console.jsds.errorHook = console._errorHook;
+    //console.jsds.debugHook = console._debugHook;
+    //console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
 
     var venkmanFilter1 = { /* glob based filter goes first, because it's the */
@@ -184,18 +202,22 @@ function detachDebugger()
 
 function realizeScript(script)
 {
-    var container = console.scripts[script.fileName];
-    if (!container)
+    var container
+    if (script.fileName in console.scripts)
+    {
+        container = console.scripts[script.fileName];
+        if (!("parentRecord" in container))
+        {
+            /* source record exists but is not inserted in the source tree,
+             * either we are reloading it, or the user added it manually */
+            console.scriptsView.childData.appendChild(container);
+        }
+    }
+    else
     {
         container = console.scripts[script.fileName] =
             new ScriptContainerRecord (script.fileName);
         container.reserveChildren();
-        console.scriptsView.childData.appendChild(container);
-    }
-    else if (!container.parentRecord)
-    {
-        /* source record exists but is not inserted in the source tree, either
-         * we are reloading it, or the user added it manually */
         console.scriptsView.childData.appendChild(container);
     }
     
@@ -275,12 +297,12 @@ const TMODE_BREAK = 2;
 
 function getThrowMode (tmode)
 {
-    return console._throwMode;
+    return console.throwMode;
 }
 
 function cycleThrowMode ()
 {
-    switch (console._throwMode)
+    switch (console.throwMode)
     {
         case TMODE_IGNORE:
             setThrowMode(TMODE_TRACE);
@@ -318,7 +340,7 @@ function setThrowMode (tmode)
             throw new BadMojo (ERR_INVALID_PARAM, "tmode");
     }
     
-    console._throwMode = tmode;
+    console.throwMode = tmode;
 }
 
 function debugTrap (frame, type, rv)
@@ -345,7 +367,7 @@ function debugTrap (frame, type, rv)
             if (rv.value.jsClassName == "Error")
                 display (formatProperty(rv.value.getProperty("message")));
 
-            if (console._throwMode != TMODE_BREAK)
+            if (console.throwMode != TMODE_BREAK)
                 return jsdIExecutionHook.RETURN_CONTINUE_THROW;
 
             $[0] = rv.value;
@@ -375,7 +397,7 @@ function debugTrap (frame, type, rv)
 
     if (tn)
         display (getMsg(MSN_STOP, tn), MT_STOP);
-    if ($[0])
+    if (0 in $)
         display (getMsg(MSN_FMT_TMP_ASSIGN, [0, formatValue ($[0])]),
                  MT_FEVAL_OUT);
     
@@ -393,7 +415,10 @@ function debugTrap (frame, type, rv)
         console.frames.push(frame);
     }
 
-    console.trapType = type;    
+    console.trapType = type;
+    window.focus();
+    window.GetAttention();
+
     console.jsds.enterNestedEventLoop({onNest: console.onDebugTrap}); 
 
     /* execution pauses here until someone calls 
@@ -411,7 +436,7 @@ function debugTrap (frame, type, rv)
     if (tn)
         display (getMsg(MSN_CONT, tn), MT_CONT);
 
-    rv.value = $[0];
+    rv.value = (0 in $) ? $[0] : null;
 
     $ = new Array();
     clearCurrentFrame();
@@ -633,45 +658,6 @@ function formatValue (v, formatType)
 
 }
 
-function XXXsetSourceFunctionMarks (url)
-{
-    source = console._sources[url];
-    scriptArray = console._scripts[url];
-    
-    if (!source || !scriptArray)
-    {
-        dd ("Can't set function marks for " + url);
-        return;
-    }
-    
-    for (var i = 0; i < scriptArray.length; ++i)
-    {
-        /* the only scripts with empty filenames *should* be top level scripts,
-         * and we don't show function marks for them, because the whole file
-         * would end up being marked. */
-        if (scriptArray[i].functionName && scriptArray[i].baseLineNumber > 1)
-        {
-            var j = scriptArray[i].baseLineNumber - 1;
-            var stop = j + scriptArray[i].lineExtent - 1;
-            if (!source[j] || !source[stop])
-            {
-                dd ("Script " + scriptArray[i].functionName + "(" +
-                    scriptArray[i].baseLineNumber + ", " + 
-                    scriptArray[i].lineExtent + ") does not actually exist in " +
-                    url + " (" + source.length + " lines.)");
-            }
-            else
-            {
-                source[j].functionStart = true;
-                source[stop].functionEnd = true;
-                for (; j <= stop ; ++j)
-                    source[j].functionLine = true;
-            }
-        }
-        
-    }
-}
-
 function displayCallStack ()
 {
     for (i = 0; i < console.frames.length; ++i)
@@ -714,10 +700,10 @@ function displaySource (url, line, contextLines)
     if (sourceText.isLoaded)
         for (var i = line - contextLines; i <= line + contextLines; ++i)
         {
-            if (i > 0 && i < sourceText.length)
+            if (i > 0 && i < sourceText.lines.length)
             {
                 display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3),
-                                                  sourceText[i - 1]]),
+                                                  sourceText.lines[i - 1]]),
                          i == line ? MT_STEP : MT_SOURCE);
             }
         }
@@ -812,9 +798,9 @@ function clearBreakpointByNumber (number)
     var sourceRecord = console.scripts[fileName];
 
     if (sourceRecord.sourceText.isLoaded &&
-        sourceRecord.sourceText.sourceText[line - 1])
+        sourceRecord.sourceText.lines[line - 1])
     {
-        delete sourceRecord.sourceText.sourceText[line - 1].bpRecord;
+        delete sourceRecord.sourceText.lines[line - 1].bpRecord;
         if (console.sourceView.childData.fileName == fileName)
             console.sourceView.outliner.invalidateRow (line - 1);
     }
@@ -863,9 +849,9 @@ function setBreakpoint (fileName, line)
     }
     
     if (scriptRec.sourceText.isLoaded &&
-        scriptRec.sourceText.sourceText[line - 1])
+        scriptRec.sourceText.lines[line - 1])
     {
-        scriptRec.sourceText.sourceText[line - 1].bpRecord = bpr;
+        scriptRec.sourceText.lines[line - 1].bpRecord = bpr;
         if (console.sourceView.childData.fileName == fileName)
             console.sourceView.outliner.invalidateRow (line - 1);
     }

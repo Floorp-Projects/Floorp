@@ -35,25 +35,86 @@
 
 console.prefs = new Object();
 
+const PREF_CTRID = "@mozilla.org/preferences-service;1";
+const nsIPrefService = Components.interfaces.nsIPrefService;
+const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+
 function initPrefs()
 {
-    console.prefs = new Object();
 
+    console.prefs = new Object();
+    console.prefs.prefService =
+        Components.classes[PREF_CTRID].getService(nsIPrefService);
+    console.prefs.prefBranch = 
+        console.prefs.prefService.getBranch("extensions.venkman.");
+    console.prefs.prefNames = new Array();
+    
     //    console.addPref ("input.commandchar", "/");    
     console.addPref ("sourcetext.tab.width", 4);
     console.addPref ("input.history.max", 20);
     console.addPref ("input.dtab.time", 500);
-}
+    console.addPref ("initialScripts", "");
 
-console.prefs.save =
-function pfs_save ()
-{
-    throw new BadMojo(ERR_NOT_IMPLEMENTED);
+    var list = console.prefs.prefBranch.getChildList("extensions.venkman.", {});
+    for (var p in list)
+    {
+        dd ("pref list " + list[p]);
+        if (!(list[p] in console.prefs))
+            console.addPref(list[p]);
+    }                                                 
 }
 
 console.addPref =
 function con_addpref (prefName, defaultValue)
 {
-    /* XXX convert this to get/set wrappers around mozilla pref api */
-    console.prefs[prefName] = defaultValue;
+    function prefGetter ()
+    {
+        var type = this.prefBranch.getPrefType (prefName);
+
+        switch (type)
+        {
+            case nsIPrefBranch.PREF_STRING:
+                return this.prefBranch.getCharPref (prefName);
+                
+            case nsIPrefBranch.PREF_INT:
+                return this.prefBranch.getIntPref (prefName);
+                
+            case nsIPrefBranch.PREF_BOOL:
+                return this.prefBranch.getCharPref (prefName);
+                
+            default:
+                return defaultValue;
+        }
+        
+        return null;
+    }
+    
+    function prefSetter (value)
+    {
+        switch (typeof value)
+        {
+            case "int":
+                this.prefBranch.setIntPref (prefName, value);
+                break;
+
+            case "boolean":
+                this.prefBranch.setBoolPref (prefName, value);
+                break;
+
+            default:
+                this.prefBranch.setCharPref (prefName, value);
+                break;       
+        }
+
+        this.prefService.savePrefFile(null);
+        return value;
+    }
+
+    if (prefName in console.prefs)
+        return;
+
+    console.prefs.prefNames.push(prefName);    
+    console.prefs.prefNames.sort();
+    console.prefs.__defineGetter__(prefName, prefGetter);
+    console.prefs.__defineSetter__(prefName, prefSetter);
 }
