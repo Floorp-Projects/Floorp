@@ -408,7 +408,9 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
   PRInt32 colX;
   PRInt32 numCols = mTableFrame->GetColCount();
   for (colX = 0; colX < numCols; colX++) { 
-    if (-1 != aAllocTypes[colX]) {
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);  
+    PRBool skipColumn = aSkip0Proportional && (e0ProportionConstraint == colFrame->GetConstraint());
+    if (-1 != aAllocTypes[colX] && !skipColumn ) {
       divisor += mTableFrame->GetColumnWidth(colX);
       numColsAllocated++;
     }
