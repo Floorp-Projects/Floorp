@@ -463,6 +463,7 @@ protected:
   nsCString m_ownerUserName;  // username of the "other user," as in
                               // "Other Users' Mailboxes"
 
+  nsCString m_adminUrl;   // url to run to set admin privileges for this folder
   nsIMAPNamespace  *m_namespace;	// Opaque pointer to the IMAP namespace for this folder
 											// Use libnet accessors for various namespace functionality
   PRPackedBool m_verifiedAsOnlineFolder;

@@ -305,6 +305,7 @@ public:
 	// Clears all rights for a given folder, for all users.
 	void ClearAllFolderRights(const char *mailboxName, nsIMAPNamespace *nsForMailbox);
 
+        nsresult SetFolderAdminUrl(const char *mailboxName);
   void WaitForFEEventCompletion();
   void HandleMemoryFailure();
 	void HandleCurrentUrlError();

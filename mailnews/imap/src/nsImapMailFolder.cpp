@@ -3139,20 +3139,28 @@ NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
   nsresult rv = NS_ERROR_NULL_POINTER;  // if no window...
   if (window) 
   {
-    nsXPIDLCString manageMailAccountUrl;
-    rv = GetServerAdminUrl(getter_Copies(manageMailAccountUrl));
-    if (NS_SUCCEEDED(rv) && manageMailAccountUrl.Length())
+    if (!m_adminUrl.IsEmpty())
     {
       nsCOMPtr <nsIDocShell> docShell;
       rv = window->GetRootDocShell(getter_AddRefs(docShell));
       if (NS_SUCCEEDED(rv) && docShell)
       {
         nsCOMPtr<nsIURI> uri;
-        if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), manageMailAccountUrl.get())))
+        if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), m_adminUrl.get())))
           return rv;
         rv = docShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_IS_LINK);
 
       }
+    }
+    else
+    {
+    nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
+    if (NS_FAILED(rv)) return rv;
+    // selecting the folder with m_downloadingFolderForOfflineUse true will cause
+    // us to fetch any message bodies we don't have.
+    rv = imapService->GetFolderAdminUrl(m_eventQueue, this, window, this, nsnull);
+    if (NS_SUCCEEDED(rv))
+      m_urlRunning = PR_TRUE;
     }
   }
   return rv;
@@ -3167,6 +3175,18 @@ NS_IMETHODIMP nsImapMailFolder::GetHasAdminUrl(PRBool *aBool)
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::GetAdminUrl(char **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = ToNewCString(m_adminUrl);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetAdminUrl(const char *adminUrl)
+{
+  m_adminUrl = adminUrl;
+  return NS_OK;
+}
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                                    nsIMsgDatabase *sourceDB, 
                                                    const char *destFolderUri,
@@ -4228,6 +4248,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 
             }
             break;
+          case nsIImapUrl::nsImapRefreshFolderUrls:
+            // we finished getting an admin url for the folder.
+            if (!m_adminUrl.IsEmpty())
+              FolderPrivileges(aWindow);
+            break;
         default:
             break;
         }
@@ -4674,14 +4699,15 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
     rv = bundle->FormatStringFromID(IMAP_OTHER_USERS_FOLDER_TYPE_DESCRIPTION, params, 1, getter_Copies(folderTypeDesc));
   }
 
-  // personal folder - 4.x distinguished between shared and not personal folders,
-  // but put up the same folder type, so we don't need to distinguish here, I guess.
-//  else if (GetFolderACL()->GetIsFolderShared())
-//    folderTypeStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME;
-  else
+  if (GetFolderACL()->GetIsFolderShared())
   {
     folderTypeStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME;
     folderTypeDescStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_DESCRIPTION;
+  }
+  else
+  {
+    folderTypeStringID = IMAP_PERSONAL_SHARED_FOLDER_TYPE_NAME;
+    folderTypeDescStringID = IMAP_PERSONAL_FOLDER_TYPE_DESCRIPTION;
   }
 
   rv = IMAPGetStringByID(folderTypeStringID, getter_Copies(folderType));

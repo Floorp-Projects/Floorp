@@ -5173,7 +5173,7 @@ void nsImapProtocol::XMailboxInfo(const char *mailboxName)
 
   command.Append(" XMAILBOXINFO \"");
   command.Append(mailboxName);
-  command.Append("\"  MANAGEURL POSTURL" CRLF);
+  command.Append("\" MANAGEURL POSTURL" CRLF);
             
     nsresult rv = SendData(command.get());
     if (NS_SUCCEEDED(rv))
@@ -5286,6 +5286,29 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
   return rv;
 }
 
+nsresult nsImapProtocol::SetFolderAdminUrl(const char *mailboxName)
+{
+  nsresult rv;
+
+  nsIMAPNamespace *nsForMailbox = nsnull;
+  m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(),
+                                                     mailboxName, nsForMailbox);
+
+  nsXPIDLCString name;
+
+  if (nsForMailbox)
+    m_runningUrl->AllocateCanonicalPath(mailboxName,
+                                            nsForMailbox->GetDelimiter(),
+                                            getter_Copies(name));
+  else
+    m_runningUrl->AllocateCanonicalPath(mailboxName,
+                                            kOnlineHierarchySeparatorUnknown, 
+                                            getter_Copies(name));
+
+  if (m_imapServerSink)
+    rv = m_imapServerSink->SetFolderAdminURL(name, GetServerStateParser().GetManageFolderUrl());
+  return rv;
+}
 // returns PR_TRUE is the delete succeeded (regardless of subscription changes)
 PRBool nsImapProtocol::DeleteMailboxRespectingSubscriptions(const char *mailboxName)
 {
@@ -6426,11 +6449,9 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
       break;
     case nsIImapUrl::nsImapRefreshFolderUrls:
       sourceMailbox = OnCreateServerSourceFolderPathString();
-#ifdef UNREADY_CODE
       XMailboxInfo(sourceMailbox);
       if (GetServerStateParser().LastCommandSuccessful()) 
-        InitializeFolderUrl(sourceMailbox);
-#endif
+        SetFolderAdminUrl(sourceMailbox);
       break;
     case nsIImapUrl::nsImapDeleteFolder:
       sourceMailbox = OnCreateServerSourceFolderPathString();

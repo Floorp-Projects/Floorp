@@ -237,6 +237,11 @@ interface nsIImapService : nsISupports
 							in nsIUrlListener aUrlListener);
 
 
+  nsIURI getFolderAdminUrl(in nsIEventQueue aClientEventQueue,
+                      in nsIMsgFolder aMailFolder,
+                      in nsIMsgWindow   aMsgWindow,
+                      in nsIUrlListener aUrlListener);
+
   void getListOfFoldersOnServer(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
   void getListOfFoldersWithPath(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string folderPath);
 

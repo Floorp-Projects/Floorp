@@ -3146,20 +3146,6 @@ char *CreateIMAPStatusFolderURL(const char *imapHost, const char *mailboxName, c
 
 }
 
-/* Refresh the admin url for a folder on the given IMAP host */
-char *CreateIMAPRefreshFolderURLs(const char *imapHost, const char *mailboxName, char delimiter)
-{
-	static const char *formatString = "refreshfolderurls>%c%s";
-
-	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + nsCRT::strlen(mailboxName));
-	if (returnString)
-		sprintf(returnString + nsCRT::strlen(returnString), formatString, delimiter, mailboxName);
-   /* Reviewed 4.51 safe use of sprintf */
-	
-	return returnString;
-
-}
-
 /* Force the reload of all parts of the message given in url */
 char *IMAP_CreateReloadAllPartsUrl(const char *url)
 {
@@ -3665,6 +3651,52 @@ nsImapService::UnsubscribeFolder(nsIEventQueue* eventQueue,
         }
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::GetFolderAdminUrl(nsIEventQueue *aClientEventQueue,
+                      nsIMsgFolder *anImapFolder,
+                      nsIMsgWindow   *aMsgWindow,
+                      nsIUrlListener *aUrlListener,
+                      nsIURI** aURL)
+{
+  NS_ENSURE_ARG_POINTER(aClientEventQueue);
+  NS_ENSURE_ARG_POINTER(anImapFolder);
+  NS_ENSURE_ARG_POINTER(aMsgWindow);
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  nsresult rv;
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(anImapFolder);
+  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), anImapFolder, aUrlListener, urlSpec, hierarchySeparator);
+  
+  if (NS_SUCCEEDED(rv) && imapUrl)
+  {
+    // nsImapUrl::SetSpec() will set the imap action properly
+    rv = imapUrl->SetImapAction(nsIImapUrl::nsImapRefreshFolderUrls);
+    
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+    mailNewsUrl->SetMsgWindow(aMsgWindow);
+    mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+    imapUrl->AddChannelToLoadGroup();
+    rv = SetImapUrlSink(anImapFolder, imapUrl);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLCString folderName;
+      GetFolderName(anImapFolder, getter_Copies(folderName));
+      urlSpec.Append("/refreshfolderurls>");
+      urlSpec.AppendWithConversion(hierarchySeparator);
+      urlSpec.Append((const char *) folderName);
+      rv = mailNewsUrl->SetSpec(urlSpec.get());
+      if (NS_SUCCEEDED(rv))
+        rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+        imapUrl,
+        nsnull,
+        aURL);
+    }
+  } // if we have a url to run....
+  
+  return rv;
 }
 
 NS_IMETHODIMP
