@@ -105,18 +105,28 @@ function InitImage()
   LoadPreviewImage();
 
   var hasAltText = globalElement.hasAttribute("alt");
+  var altText;
   if (hasAltText)
-    gDialog.altTextInput.value = globalElement.getAttribute("alt");
-
-  if (gInsertNewImage || !hasAltText || (hasAltText && gDialog.altTextInput.value))
   {
-    SetAltTextDisabled(false);
-    gDialog.altTextRadioGroup.selectedItem = gDialog.altTextRadio;
+    altText = globalElement.getAttribute("alt");
+    gDialog.altTextInput.value = altText;
   }
-  else
+
+  // Initialize altText widgets during dialog startup 
+  //   or if user enterred altText in Advanced Edit dialog
+  //  (this preserves "Don't use alt text" radio button state)
+  if (!gDialog.altTextRadioGroup.selectedItem || altText)
   {
-    SetAltTextDisabled(true);
-    gDialog.altTextRadioGroup.selectedItem = gDialog.noAltTextRadio;
+    if (gInsertNewImage || !hasAltText || (hasAltText && gDialog.altTextInput.value))
+    {
+      SetAltTextDisabled(false);
+      gDialog.altTextRadioGroup.selectedItem = gDialog.altTextRadio;
+    }
+    else
+    {
+      SetAltTextDisabled(true);
+      gDialog.altTextRadioGroup.selectedItem = gDialog.noAltTextRadio;
+    }
   }
 
   // setup the height and width widgets
