@@ -121,6 +121,7 @@ protected:
                          gpointer       aData);
 
   virtual gint OnDrawSignal(GdkRectangle * aArea);
+  virtual void OnRealize();
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 

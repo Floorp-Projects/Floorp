@@ -389,6 +389,10 @@ void nsWindow::InitCallbacks(char * aName)
   InstallFocusInSignal(mWidget);
   InstallFocusOutSignal(mWidget);
 
+  // realize on toplevel
+  if (mIsToplevel && mShell)
+    InstallRealizeSignal(mShell);
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
                      GTK_SIGNAL_FUNC(nsWindow::DrawSignal),
@@ -474,10 +478,6 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
     return NS_ERROR_FAILURE;
 
   gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
-
-  // XXX Hack.  Set the window icon here until we have
-  // a way to do this XP, from XUL.
-  SetIcon();
 
   return NS_OK;
 }
@@ -595,29 +595,6 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
   return PR_FALSE;
 }
 
-/* very big ugly nasty hack */
-gint do_auto_change_focus(nsWindow *win)
-{
-  nsGUIEvent gevent;
-  gevent.message = NS_GOTFOCUS;
-  gevent.widget  = (nsWidget *)win;
-
-  gevent.eventStructType = NS_GUI_EVENT;
-
-  gevent.time = 0;
-  gevent.point.x = 0;
-  gevent.point.y = 0;
-
-  win->AddRef();
-  win->DispatchFocus(gevent);
-  win->Release();
-
-  g_print("generating focus event\n");
-  
-  return FALSE;
-}
-
-
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 {
   if (mMenuBar == aMenuBar) {
@@ -663,6 +640,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (!mWidget)
     return NS_OK; // Will be null durring printing
 
+  mShown = bState;
+
   // show
   if (bState)
   {
@@ -677,7 +656,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
         gtk_widget_show(mVBox);
 
       gtk_widget_show(mShell);
-      gtk_timeout_add(500, (GtkFunction)do_auto_change_focus, this);
     }
   }
   // hide
@@ -872,6 +850,29 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 #endif
 
   return NS_OK;
+}
+
+/* virtual */ void
+nsWindow::OnRealize()
+{
+  SetIcon();
+
+
+  nsGUIEvent gevent;
+  gevent.message = NS_GOTFOCUS;
+  gevent.widget  = (nsWidget *)this;
+
+  gevent.eventStructType = NS_GUI_EVENT;
+
+  gevent.time = 0;
+  gevent.point.x = 0;
+  gevent.point.y = 0;
+
+  NS_ADDREF_THIS();
+  DispatchFocus(gevent);
+  NS_RELEASE_THIS();
+
+  g_print("generating focus event\n");
 }
 
 //////////////////////////////////////////////////////////////////////
