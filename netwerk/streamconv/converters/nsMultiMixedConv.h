@@ -110,12 +110,12 @@ public:
     }
 
 protected:
-    nsresult SendStart(nsIChannel *aChannel, nsISupports *context);
-    nsresult SendStop(nsISupports *context);
-    nsresult SendData(char *aBuffer, PRUint32 aLen, nsISupports *aCtxt);
+    nsresult SendStart(nsIChannel *aChannel);
+    nsresult SendStop();
+    nsresult SendData(char *aBuffer, PRUint32 aLen);
     nsresult BuildURI(nsIChannel *aChannel, nsIURI **_retval);
-    nsresult ParseHeaders(nsIChannel *aChannel, nsISupports *aContext,
-						  char *&aPtr, PRUint32 &aLen, PRBool *_retval);
+    nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
+                          PRUint32 &aLen, PRBool *_retval);
     PRInt8 PushOverLine(char *&aPtr, PRUint32 &aLen);
     char *FindToken(char *aCursor, PRUint32 aLen);
     nsresult BufferData(char *aData, PRUint32 aLen);
@@ -133,6 +133,7 @@ protected:
     PRUint16            mPartCount;     // the number of parts we've seen so far
     nsCOMPtr<nsIChannel>mPartChannel;   // the channel for the given part we're processing.
                                         // one channel per part.
+    nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;
     PRInt32             mContentLength;
     
