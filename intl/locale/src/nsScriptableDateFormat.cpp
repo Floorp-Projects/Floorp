@@ -58,7 +58,7 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                         PRInt32 second, 
                         const PRUnichar **timeString)
                         {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector, 
-                                               0, 0, 1, hour, minute, second, timeString);}
+                                               1999, 1, 1, hour, minute, second, timeString);}
 
   nsScriptableDateFormat() {NS_INIT_REFCNT();}
 private:
