@@ -252,6 +252,13 @@ public:
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer);
 
+  NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
+                             nsIDocument*    aDocument,
+                             nsIContent*     aContainer,
+                             nsIContent*     aOldChild,
+                             nsIContent*     aNewChild,
+                             PRInt32         aIndexInContainer);
+
   NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
                             nsIDocument*    aDocument,
                             nsIContent*     aContainer,
@@ -1569,6 +1576,18 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
 
   NS_RELEASE(shell);
   return rv;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ContentReplaced(nsIPresContext* aPresContext,
+                                    nsIDocument*    aDocument,
+                                    nsIContent*     aContainer,
+                                    nsIContent*     aOldChild,
+                                    nsIContent*     aNewChild,
+                                    PRInt32         aIndexInContainer)
+{
+  NS_NOTYETIMPLEMENTED("content replaced");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

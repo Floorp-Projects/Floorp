@@ -774,12 +774,8 @@ NS_IMETHODIMP StyleSetImpl::ContentReplaced(nsIPresContext* aPresContext,
                                             nsIContent*     aNewChild,
                                             PRInt32         aIndexInContainer)
 {
-#if 0
   return mFrameConstructor->ContentReplaced(aPresContext, aDocument, aContainer,
                                             aOldChild, aNewChild, aIndexInContainer);
-#else
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentRemoved(nsIPresContext* aPresContext,

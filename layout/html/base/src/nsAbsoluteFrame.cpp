@@ -97,24 +97,6 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-NS_IMETHODIMP nsAbsoluteFrame::ContentReplaced(nsIPresShell*   aShell,
-                                               nsIPresContext* aPresContext,
-                                               nsIContent*     aContainer,
-                                               nsIContent*     aOldChild,
-                                               nsIContent*     aNewChild,
-                                               PRInt32         aIndexInParent)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-replaced target");
-
-  // Forward the notification to the absolutely positioned frame
-  if (nsnull != mFrame) {
-    return mFrame->ContentReplaced(aShell, aPresContext, aContainer,
-                                   aOldChild, aNewChild, aIndexInParent);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsAbsoluteFrame::ContentChanged(nsIPresShell*   aShell,
                                               nsIPresContext* aPresContext,
                                               nsIContent*     aChild,

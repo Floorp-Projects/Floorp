@@ -139,24 +139,6 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPlaceholderFrame::ContentReplaced(nsIPresShell*   aShell,
-                                                  nsIPresContext* aPresContext,
-                                                  nsIContent*     aContainer,
-                                                  nsIContent*     aOldChild,
-                                                  nsIContent*     aNewChild,
-                                                  PRInt32         aIndexInParent)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-replaced target");
-
-  // Forward the notification to the floater
-  if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->ContentReplaced(aShell, aPresContext, aContainer,
-                                          aOldChild, aNewChild, aIndexInParent);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresShell*   aShell,
                                                  nsIPresContext* aPresContext,
                                                  nsIContent*     aChild,

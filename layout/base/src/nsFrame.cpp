@@ -1141,16 +1141,6 @@ NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::ContentReplaced(nsIPresShell*   aShell,
-                                   nsIPresContext* aPresContext,
-                                   nsIContent*     aContainer,
-                                   nsIContent*     aOldChild,
-                                   nsIContent*     aNewChild,
-                                   PRInt32         aIndexInParent)
-{
-  return NS_OK;
-}
-
 NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
                                   nsIPresContext* aPresContext,
                                   nsIContent*     aChild,
