@@ -90,6 +90,7 @@ protected:
   void ConstructContentChain(nsIContent* aRowContent);
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);
+  void GetFirstRowContent(nsIContent** aRowContent);
 
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.

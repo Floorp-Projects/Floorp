@@ -167,12 +167,35 @@ nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 
   // Move up the chain until we hit our content node.
   nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aRowContent);
-  while (currContent && (currContent != mContent)) {
+  while (currContent && (currContent.get() != mContent)) {
     mContentChain->InsertElementAt(currContent, 0);
     currContent->GetParent(*getter_AddRefs(currContent));
   }
 
   NS_ASSERTION(currContent.get() == mContent, "Disaster! Content not contained in our tree!\n");
+}
+
+void 
+nsTreeRowGroupFrame::GetFirstRowContent(nsIContent** aResult)
+{
+  *aResult = nsnull;
+  nsIFrame* kid = GetFirstFrame();
+  while (kid) {
+    const nsStyleDisplay *childDisplay;
+    kid->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
+    {
+      ((nsTreeRowGroupFrame*)kid)->GetFirstRowContent(aResult);
+      if (*aResult)
+        return;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    {
+      kid->GetContent(aResult); // The ADDREF happens here.
+      return;
+    }
+    GetNextFrame(kid, &kid);
+  }
 }
 
 void 
@@ -196,12 +219,17 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
     parentContent->ChildCount(index);
   }
 
+  nsIAtom* aAtom;
+  parentContent->GetTag(aAtom);
+  nsString result;
+  aAtom->ToString(result);
+  
   for (PRInt32 i = index-1; i >= 0; i--) {
     nsCOMPtr<nsIContent> childContent;
     parentContent->ChildAt(i, *getter_AddRefs(childContent));
     nsCOMPtr<nsIAtom> tag;
     childContent->GetTag(*getter_AddRefs(tag));
-    if (tag == nsXULAtoms::treerow) {
+    if (tag.get() == nsXULAtoms::treerow) {
       aDelta--;
       if (aDelta == 0) {
         *aResult = childContent;
@@ -209,7 +237,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
         return;
       }
     }
-    else if (tag == nsXULAtoms::treeitem) {
+    else if (tag.get() == nsXULAtoms::treeitem) {
       // If it's open, descend into its treechildren node first.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsString isOpen;
@@ -224,7 +252,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
           childContent->ChildAt(j, *getter_AddRefs(grandChild));
           nsCOMPtr<nsIAtom> grandChildTag;
           grandChild->GetTag(*getter_AddRefs(grandChildTag));
-          if (grandChildTag == nsXULAtoms::treechildren)
+          if (grandChildTag.get() == nsXULAtoms::treechildren)
             break;
         }
         if (j >= 0 && grandChild)
@@ -274,15 +302,13 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
       DestroyRows(aPresContext, loseRows);
     }
     else {
+      // Get our first row content.
+      nsCOMPtr<nsIContent> rowContent;
+      GetFirstRowContent(getter_AddRefs(rowContent));
+
       // Figure out how many rows we have to lose off the bottom.
       ReverseDestroyRows(aPresContext, loseRows);
     
-      nsTableCellFrame* tableCellFrame = tableFrame->GetCellFrameAt(0, 0);
-      nsCOMPtr<nsIContent> cellContent;
-      tableCellFrame->GetContent(getter_AddRefs(cellContent));
-      nsCOMPtr<nsIContent> rowContent;
-      cellContent->GetParent(*getter_AddRefs(rowContent));
-      
       // Now that we've lost some rows, we need to create a
       // content chain that provides a hint for moving forward.
       nsCOMPtr<nsIContent> topRowContent;
