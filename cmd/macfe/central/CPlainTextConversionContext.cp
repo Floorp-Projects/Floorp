@@ -31,7 +31,7 @@
 #include "xlate.h"
 
 //_EXTERN_C
-__extern_c
+extern "C" {
 
 // prototypes for text.c functions
 
@@ -56,7 +56,7 @@ extern void TXFE_LayoutNewDocument(MWContext *cx, URL_Struct *url, int32 *w, int
 MWContext* CreatePlainTextConversionContext(MWContext* inUIContext);
 void DisposePlainTextConversionContext(MWContext* inContext);
 
-__end_extern_c
+} // extern "C"
 
 #pragma mark --- CALLBACKS ---
 
