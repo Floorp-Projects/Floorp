@@ -521,11 +521,11 @@ NS_IMETHODIMP
 nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
   nsresult result = NS_OK;
+  NS_IF_RELEASE(mForm);
   if (nsnull == aForm) {
     mForm = nsnull;
     return NS_OK;
   } else {
-    NS_IF_RELEASE(mForm);
     nsIFormControl* formControl = nsnull;
     result = QueryInterface(kIFormControlIID, (void**)&formControl);
     if ((NS_OK == result) && formControl) {
