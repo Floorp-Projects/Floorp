@@ -1,0 +1,24 @@
+body {
+  background-color: #CCCCCC;
+}
+
+table {
+  empty-cells: show
+}
+
+table.editlist {
+  border-spacing: 0px;
+  border-collapse: collapse
+}
+
+table.editlist td {
+  border: 1px solid black
+}
+
+table.editlist th {
+  border: 0px solid black
+}
+
+.obsolete {
+  text-decoration: line-through
+}
