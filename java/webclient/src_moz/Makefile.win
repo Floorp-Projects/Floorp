@@ -44,7 +44,7 @@ OBJS =                              \
     .\$(OBJDIR)\RDFEnumeration.obj  \
     .\$(OBJDIR)\RDFTreeNode.obj  \
     .\$(OBJDIR)\ISupportsPeer.obj  \
-    .\$(OBJDIR)\nsSetupRegistry.obj  \
+#    .\$(OBJDIR)\nsSetupRegistry.obj  \
     $(NULL)
 
 
@@ -66,7 +66,8 @@ DLLNAME = webclient
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS = \
-	$(DIST)\lib\gkweb.lib \
+	$(DIST)\lib\baseembed_s.lib \
+	$(DIST)\lib\appfilelocprovider_s.lib \
 	$(DIST)\lib\raptorbasewidget_s.lib \
 	$(DIST)\lib\gkwidget.lib \
 	$(DIST)\lib\xpcom.lib \
@@ -78,6 +79,14 @@ LLIBS = \
 #	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
 
+WIN_LIBS=                       \
+    ole32.lib                   \
+    comdlg32.lib                \
+    shell32.lib                 \
+    version.lib                 \
+    $(NULL)
+
+
 !ifdef BAL_INTERFACE
 LLIBS = $(LLIBS) \
 	$(DIST)\lib\wc_share_bal.lib \
@@ -87,10 +96,6 @@ LLIBS = $(LLIBS) \
 	$(DIST)\lib\wc_share.lib \
 	$(NULL)
 !endif
-
-
-WIN_LIBS = \
-  version.lib
 
 include <$(DEPTH)\config\rules.mak>
 

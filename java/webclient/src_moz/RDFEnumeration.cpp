@@ -31,6 +31,10 @@
 
 #include "prlog.h" // for PR_ASSERT
 
+#include "nsRDFCID.h" // for NS_RDFCONTAINER_CID
+
+static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
+
 //
 // Local function prototypes
 //
@@ -199,10 +203,10 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     PR_ASSERT(gComponentManager);
     
     // get a container in order to get the enum
-    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
-                                                   nsnull,
-                                                   NS_GET_IID(nsIRDFContainer),
-                                                   getter_AddRefs(container));
+    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIRDFContainer),
+                                           getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         if (prLogModuleInfo) {
             PR_LOG(prLogModuleInfo, 3, 

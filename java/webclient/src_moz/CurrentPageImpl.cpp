@@ -43,7 +43,6 @@
 #include "nsIFindComponent.h"
 #include "nsISearchContext.h"
 #include "nsIDocShell.h"
-#include "nsIDOMSelection.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -54,7 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
 
@@ -96,26 +95,28 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   //First get the FindComponent object
   nsresult rv;
   
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
+
   if (NS_FAILED(rv) || nsnull == findComponent)  {
         initContext->initFailCode = kFindComponentError;
         ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");
         return;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
   if (initContext->docShell != nsnull) {
       nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
-      nsCOMPtr<nsIURI> url;
-      rv = initContext->docShell->GetCurrentURI(getter_AddRefs(url));
+      nsCOMPtr<nsIURI> url = nsnull;
+      // PENDING(edburns): commented out for 52883
+      // rv = initContext->docShell->GetCurrentURI(getter_AddRefs(url));
       if (NS_FAILED(rv) || nsnull == url)  {
           ::util_ThrowExceptionToJava(env, "Exception: NULL URL passed to Find call");
           return;
       } 
 
       if (interfaceRequestor != nsnull) {
-          rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
-          if (NS_FAILED(rv) || nsnull == domWindow)  {
+          rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(domWindowInternal));
+          if (NS_FAILED(rv) || nsnull == domWindowInternal)  {
               initContext->initFailCode = kGetDOMWindowError;
               ::util_ThrowExceptionToJava(env, "Exception: cant get DOMWindow from DocShell");
               return;
@@ -136,7 +137,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
       }
 
   nsCOMPtr<nsISupports> searchContext;
-  rv = findComponent->CreateContext(domWindow, nsnull, getter_AddRefs(searchContext));
+  rv = findComponent->CreateContext(domWindowInternal, nsnull, getter_AddRefs(searchContext));
   if (NS_FAILED(rv))  {
         initContext->initFailCode = kSearchContextError;
         ::util_ThrowExceptionToJava(env, "Exception: can't create SearchContext for Find");
@@ -190,7 +191,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   //First get the FindComponent object
   nsresult rv;
   
-  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
   if (NS_FAILED(rv))  {
         initContext->initFailCode = kFindComponentError;
         ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");

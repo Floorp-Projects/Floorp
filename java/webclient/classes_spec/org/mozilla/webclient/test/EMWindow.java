@@ -54,7 +54,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.20 2000/09/19 00:18:13 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.21 2000/09/20 21:53:01 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -243,6 +243,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             eventRegistration.addDocumentLoadListener(this);
             eventRegistration.addMouseListener(this);
 
+            /*********
             // PENDING(edburns): test code, replace with production code
             bookmarks = 
                 (Bookmarks)
@@ -250,7 +251,6 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             System.out.println("debug: edburns: got Bookmarks instance");
 
             bookmarksTree = bookmarks.getBookmarks();
-            /*********
             TreeNode bookmarksRoot = (TreeNode) bookmarksTree.getRoot();
 
             System.out.println("debug: edburns: testing the Enumeration");

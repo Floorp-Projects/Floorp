@@ -27,6 +27,8 @@
 
 #include "nsIServiceManager.h"
 
+#include "nsRDFCID.h" // for NS_RDFCONTAINER_CID
+
 #include "prlog.h" // for PR_ASSERT
 
 static PRBool rdf_inited = PR_FALSE;
@@ -42,6 +44,7 @@ nsCOMPtr<nsIRDFResource> kNC_URL = nsnull;
 nsCOMPtr<nsIRDFResource> kNC_Folder = nsnull;
 nsCOMPtr<nsIRDFResource> kRDF_type = nsnull;
 
+static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 
 nsresult rdf_InitRDFUtils()
 {
@@ -55,7 +58,7 @@ nsresult rdf_InitRDFUtils()
     
     if (nsnull == gBookmarks) {
         // Get the bookmarks service
-        gBookmarks = do_GetService(NS_BOOKMARKS_SERVICE_PROGID, &rv);
+        gBookmarks = do_GetService(NS_BOOKMARKS_SERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -184,10 +187,10 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         PR_ASSERT(gComponentManager);
         // get a container in order to recurr
         rv = gComponentManager->
-            CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
-                                   nsnull,
-                                   NS_GET_IID(nsIRDFContainer),
-                                   getter_AddRefs(container));
+            CreateInstance(kRDFContainerCID,
+                           nsnull,
+                           NS_GET_IID(nsIRDFContainer),
+                           getter_AddRefs(container));
         if (NS_FAILED(rv)) {
             if (prLogModuleInfo) {
                 PR_LOG(prLogModuleInfo, 3, 
@@ -424,10 +427,10 @@ nsresult rdf_getChildAt(int index, nsIRDFResource *theParent,
 
     PR_ASSERT(gComponentManager);
 
-    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
-                                                   nsnull,
-                                                   NS_GET_IID(nsIRDFContainer),
-                                                   getter_AddRefs(container));
+    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIRDFContainer),
+                                           getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -492,10 +495,10 @@ nsresult rdf_getChildCount(nsIRDFResource *theParent, PRInt32 *count)
         return NS_OK;
     }
     PR_ASSERT(gComponentManager);
-    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
-                                                   nsnull,
-                                                   NS_GET_IID(nsIRDFContainer),
-                                                   getter_AddRefs(container));
+    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIRDFContainer),
+                                           getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -537,10 +540,10 @@ nsresult rdf_getIndexOfChild(nsIRDFResource *theParent,
         return NS_OK;
     }
     PR_ASSERT(gComponentManager);
-    rv = gComponentManager->CreateInstanceByProgID(NS_RDFCONTAINER_PROGID,
-                                                   nsnull,
-                                                   NS_GET_IID(nsIRDFContainer),
-                                                   getter_AddRefs(container));
+    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIRDFContainer),
+                                           getter_AddRefs(container));
     if (NS_FAILED(rv)) {
         return rv;
     }

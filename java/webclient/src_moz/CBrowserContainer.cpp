@@ -129,6 +129,14 @@ NS_IMETHODIMP CBrowserContainer::Alert(const PRUnichar *dialogTitle,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP CBrowserContainer::AlertCheck(const PRUnichar *dialogTitle, 
+                                            const PRUnichar *text, 
+                                            const PRUnichar *checkMsg, 
+                                            PRBool *checkValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* boolean confirm (in wstring text); */
 NS_IMETHODIMP CBrowserContainer::Confirm(const PRUnichar *dialogTitle,
                                          const PRUnichar *text, 
@@ -148,29 +156,35 @@ NS_IMETHODIMP CBrowserContainer::ConfirmCheck(const PRUnichar *dialogTitle,
 }
 
 /* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
-NS_IMETHODIMP CBrowserContainer::Prompt(const PRUnichar *dialogTitle,
+NS_IMETHODIMP CBrowserContainer::Prompt(const PRUnichar *dialogTitle, 
                                         const PRUnichar *text, 
-                                        const PRUnichar* passwordRealm,
-                                        const PRUnichar* defaultText,
+                                        const PRUnichar *passwordRealm, 
+                                        PRUint32 savePassword, 
+                                        const PRUnichar *defaultText, 
                                         PRUnichar **result, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
-NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
-                                                           const PRUnichar *text, const PRUnichar *passwordRealm, PRBool persistPassword, 
-                                                           PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
+                                                           const PRUnichar *text, 
+                                                           const PRUnichar *passwordRealm, 
+                                                           PRUint32 savePassword, 
+                                                           PRUnichar **user, 
+                                                           PRUnichar **pwd, 
+                                                           PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
-NS_IMETHODIMP CBrowserContainer::PromptPassword(const PRUnichar *dialogTitle,
+NS_IMETHODIMP CBrowserContainer::PromptPassword(const PRUnichar *dialogTitle, 
                                                 const PRUnichar *text, 
-                                                const PRUnichar* passwordRealm,
-                                                PRBool persistPassword, 
-                                                PRUnichar **pwd, PRBool *_retval)
+                                                const PRUnichar *passwordRealm, 
+                                                PRUint32 savePassword, 
+                                                PRUnichar **pwd, 
+                                                PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -191,8 +205,28 @@ NS_IMETHODIMP CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
+NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress, 
+                                               nsIRequest *aRequest, 
+                                               PRInt32 aStateFlags, 
+                                               PRUint32 aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                                  nsIRequest *aRequest, 
+                                                  PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* void onProgressChange (in nsIChannel channel, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
-NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
+NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress, 
+                                                  nsIRequest *aRequest, 
+                                                  PRInt32 aCurSelfProgress, 
+                                                  PRInt32 aMaxSelfProgress, 
+                                                  PRInt32 curTotalProgress, 
+                                                  PRInt32 maxTotalProgress)
 {
   //	NG_TRACE(_T("CBrowserContainer::OnProgressChange(...)\n"));
 	
@@ -217,31 +251,20 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIChannel *channel, PRInt32 c
     return NS_OK;
 }
 
-
-/* void onChildProgressChange (in nsIChannel channel, in long curChildProgress, in long maxChildProgress); */
-NS_IMETHODIMP CBrowserContainer::OnChildProgressChange(nsIChannel *channel, PRInt32 curChildProgress, PRInt32 maxChildProgress)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 /* void onStatusChange (in nsIChannel channel, in long progressStatusFlags); */
-NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIWebProgress *aWebProgress, 
+                                                nsIRequest *aRequest, 
+                                                nsresult aStatus, 
+                                                const PRUnichar *aMessage)
 {
 
     return NS_OK;
 }
 
-
-/* void onChildStatusChange (in nsIChannel channel, in long progressStatusFlags); */
-NS_IMETHODIMP CBrowserContainer::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 /* void onLocationChange (in nsIURI location); */
-NS_IMETHODIMP CBrowserContainer::OnLocationChange(nsIURI *location)
+NS_IMETHODIMP CBrowserContainer::OnLocationChange(nsIWebProgress *aWebProgress, 
+                                                  nsIRequest *aRequest, 
+                                                  nsIURI *location)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -351,6 +374,13 @@ CBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
 
 NS_IMETHODIMP
 CBrowserContainer::ShowModal()
+{
+	// Ignore request to be shown modally
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::ExitModalLoop(nsresult aStatus)
 {
 	// Ignore request to be shown modally
 	return NS_OK;
@@ -519,21 +549,7 @@ CBrowserContainer::SetTitle(const PRUnichar * aTitle)
 // nsIWebBrowserChrome implementation
 
 NS_IMETHODIMP
-CBrowserContainer::SetJSStatus(const PRUnichar *status)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
-CBrowserContainer::SetJSDefaultStatus(const PRUnichar *status)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
-CBrowserContainer::SetOverLink(const PRUnichar *link)
+CBrowserContainer::SetStatus(PRUint32 statusType, const PRUnichar *status)
 {
 	return NS_ERROR_FAILURE;
 }
@@ -552,27 +568,25 @@ CBrowserContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 	return NS_ERROR_FAILURE;
 }
 
-
 NS_IMETHODIMP
-CBrowserContainer::GetChromeMask(PRUint32 *aChromeMask)
+CBrowserContainer::GetChromeFlags(PRUint32 *aChromeFlags)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
-
 NS_IMETHODIMP
-CBrowserContainer::SetChromeMask(PRUint32 aChromeMask)
+CBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
-
 NS_IMETHODIMP
-CBrowserContainer::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **_retval)
+CBrowserContainer::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, 
+                                       PRInt32 aY, PRInt32 aCX, PRInt32 aCY, 
+nsIWebBrowser **aWebBrowser)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP
 CBrowserContainer::FindNamedBrowserItem(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
@@ -593,6 +607,25 @@ CBrowserContainer::ShowAsModal(void)
 {
 	return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+CBrowserContainer::ExitModalEventLoop(nsresult aStatus)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::SetPersistence(PRBool persistX, PRBool persistY, PRBool persistCX, PRBool persistCY, PRBool persistSizeMode)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::GetPersistence(PRBool *persistX, PRBool *persistY, PRBool *persistCX, PRBool *persistCY, PRBool *persistSizeMode)
+{
+    return NS_ERROR_FAILURE;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -624,10 +657,8 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 {
     // remove the old mouse listener for the old document
     if (mDomEventTarget) {
-        nsCAutoString eType("mouseover");
-        PRUnichar *eTypeUni = eType.ToNewUnicode();
-        mDomEventTarget->RemoveEventListener(eTypeUni, this, PR_FALSE);
-        nsCRT::free(eTypeUni);
+        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), 
+                                             this, PR_FALSE);
         mDomEventTarget = nsnull;
     }
 
@@ -685,11 +716,8 @@ CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCha
                     do_QueryInterface(mInitContext->currentDocument);
                 // if successful
                 if (mDomEventTarget) {
-                    nsCAutoString eType("mouseover");
-                    PRUnichar *eTypeUni = eType.ToNewUnicode();
-                    mDomEventTarget->AddEventListener(eTypeUni, this, 
-                                                      PR_FALSE);
-                    nsCRT::free(eTypeUni);
+                    mDomEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"), 
+                                                      this, PR_FALSE);
                 }
             }
         }
@@ -1025,10 +1053,8 @@ NS_IMETHODIMP CBrowserContainer::RemoveDocumentLoadListener()
 NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
 {
     if (mDomEventTarget) {
-        nsCAutoString eType("mouseover");
-        PRUnichar *eTypeUni = eType.ToNewUnicode();
-        mDomEventTarget->RemoveEventListener(eTypeUni, this, PR_FALSE);
-        nsCRT::free(eTypeUni);
+        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), 
+                                             this, PR_FALSE);
         mDomEventTarget = nsnull;
     }   
 

@@ -32,7 +32,7 @@
 #include "ns_util.h"
 #include "ns_globals.h"
 
-#include "nsIServiceManager.h"  // for NS_InitXPCOM
+#include "nsEmbedAPI.h"  // for NS_InitEmbedding
 
 #include "nsIProfile.h" // for the profile manager
 #include "nsICmdLineService.h" // for the cmdline service to give to the
@@ -446,16 +446,16 @@ void DoMozInitialization(WebShellInitContext * initContext)
         JNIEnv *   env = initContext->env;
         const char * BinDir = gBinDir;
 
-        rv = NS_NewLocalFile(BinDir, &pathFile);
+        rv = NS_NewLocalFile(BinDir, PR_TRUE, &pathFile);
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, "call to NS_NewLocalFile failed.");
             return;
         }
     
-        // It is vitally important to call NS_InitXPCOM before calling
+        // It is vitally important to call NS_InitEmbedding before calling
         // anything else.
-        NS_InitXPCOM(nsnull, pathFile);
-        NS_SetupRegistry();
+        NS_InitEmbedding(pathFile, nsnull);
+        //        NS_SetupRegistry();
         rv = NS_GetGlobalComponentManager(&gComponentManager);
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, "NS_GetGlobalComponentManager() failed.");
@@ -475,7 +475,7 @@ void DoMozInitialization(WebShellInitContext * initContext)
 
         // handle the profile manager nonsense
         nsCOMPtr<nsICmdLineService> cmdLine =do_GetService(kCmdLineServiceCID);
-        nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_PROGID);
+        nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_CONTRACTID);
         if (!cmdLine || !profile) {
             ::util_ThrowExceptionToJava(env, "Can't get the profile manager.");
             return;
@@ -507,7 +507,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     PR_ASSERT(gComponentManager);
 
     nsCOMPtr<nsIEventQueueService> 
-        aEventQService = do_GetService(NS_EVENTQUEUESERVICE_PROGID);
+        aEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
     
     // if we get here, we know that aEventQService is not null.
     if (!aEventQService) {
@@ -583,8 +583,8 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     PRBool allowPlugins = PR_TRUE;
     
     // Create the WebBrowser.
-    nsCOMPtr<nsIWebBrowser> webBrowser;
-    webBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+    nsCOMPtr<nsIWebBrowser> webBrowser = nsnull;
+    webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
     
     initContext->webBrowser = webBrowser;
     
@@ -625,12 +625,9 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     
     // Create the DocShell
     
-    nsIDocShell * docShell;
-    rv = webBrowser->GetDocShell(getter_AddRefs(&docShell));
-    initContext->docShell = docShell;
-    printf("docShell is %l \n", docShell);
+    initContext->docShell = do_GetInterface(initContext->webBrowser);
     
-    if (NS_FAILED(rv)) {
+    if (!initContext->docShell) {
         initContext->initFailCode = kCreateDocShellError;
         return rv;
     }
@@ -645,7 +642,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     // because nsWebShell.cpp still checks for mContainer all over the
     // place.
     nsCOMPtr<nsIWebShellContainer> wsContainer(do_QueryInterface(initContext->browserContainer));
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(initContext->docShell));
     webShell->SetContainer(wsContainer);
     
     // set the URIContentListener
@@ -653,13 +650,13 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     webBrowser->SetParentURIContentListener(contentListener);
     
     // set the TreeOwner
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(initContext->docShell));
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(initContext->browserContainer));
     docShellAsItem->SetTreeOwner(treeOwner);
     
     // set the docloaderobserver
     nsCOMPtr<nsIDocumentLoaderObserver> observer(do_QueryInterface(initContext->browserContainer));
-    docShell->SetDocLoaderObserver(observer);
+    initContext->docShell->SetDocLoaderObserver(observer);
     
     if (nsnull == gHistory) {
         rv = gComponentManager->CreateInstance(kSHistoryCID, nsnull, 
