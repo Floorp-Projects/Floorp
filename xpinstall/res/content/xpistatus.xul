@@ -1,5 +1,29 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+   
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+   
+  The Original Code is Mozilla Communicator client code.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s): 
+    Don Bragg (dbragg@netscape.com) 12/08/1999
+ -->
+
+<?xml-stylesheet href="chrome://xpinstall/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://xpinstall/skin/xpinstall.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://xpinstall/locale/xpistatus.dtd" >
 
@@ -11,39 +35,34 @@
 		align = "vertical"
 		class = "dialog"
 		width="350"
-		height="300"> 
+		height="300"
+        > 
 
-    <html:script language="javascript" src="xpistatus.js">
-    </html:script>
+    <html:script language="javascript" src="xpistatus.js"/>
   
-        <box align="horizontal">
-          <box align="horizontal" flex="100%" >
-            <html:div> <html:h3> &progress.label; </html:h3> </html:div>
-          </box>
-          <spring flex="80%"/>
-          <!--box align="vertical"-->
-            <!--html:img src="chrome://global/skin/aler-icon.gif"/-->
-          <!--/box-->
+    <box align="vertical" id="mainBox">
+        <box align="horizontal" id="interiorTitleBox">
+            <html:div id="interiorTitle"> &progress.label; </html:div>
+            <spring flex="100%"/>
+            <titlebutton class="graphic"/>
         </box>
 
-        <html:div style="height:10px; width:100%">
+        <html:div>
 		    <html:hr/>
 		</html:div>
 
-        <html:div> <html:h5> &currentlyProcessing.text; </html:h5> </html:div>
+        <spring id="verticalSmallSpace"/>  
 
-        <spring style="height: 1em"/>  
-
-        <box align="vertical">  
-		    <html:div id="table-housing" flex="100%">
-                <tree id="tree">
-		            <treecol style="width:55%"/>
-			        <treecol style="width:40%"/>
+        <box align="vertical" id="treeBox">  
+		    <html:div id="table-housing">
+                <tree id="modulesTree">
+		            <treecol />
+			        <treecol />
 
 			        <treehead>
 			            <treerow>
-			                <treecell value="&moduleName.label;" />
-			                <treecell value="&moduleSource.label;"/>
+			                <treecell id="moduleName" value="&moduleName.label;" />
+			                <treecell id="moduleSource" value="&moduleSource.label;"/>
 			            </treerow>
 			        </treehead>
 
@@ -53,29 +72,10 @@
 			</html:div>
         </box>
 
-        <spring flex="100%"/>
+        <spring id="verticalLargeSpace"/>
 
-        <!--Testing
-		<html:table flex="100%">
-            <html:tr>
-                <html:td>
-		-->
-                    <html:input id="dialog.uiPackageName" readonly="" style="width:100%" />
-		<!--Testing
-                </html:td>
-            </html:tr>
-		-->
-
-        <!--
-		    <html:tr>
-                <html:td>
-		-->
-                    <html:input id="dialog.currentAction" readonly="" style="width:100%" />
-		<!--
-                </html:td>
-            </html:tr>
-		</html:table>
-		-->
+        <html:input id="dialog.uiPackageName" readonly="" style="width:100%" />
+        <html:input id="dialog.currentAction" readonly="" style="width:100%" />
         
 		<spring style="height:1em"/>
 
@@ -94,6 +94,6 @@
                 <html:button id="dialog.cancel" onclick="cancel()">&dialogCancel.label;</html:button>
             <!--/box-->
         </box>
-
+    </box>
 
 </window>
