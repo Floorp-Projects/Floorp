@@ -107,7 +107,7 @@
       <method name="createBTContextMenu">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var hbox = (document.getAnonymousNodes(theToolbar))[0].firstChild;
+          var hbox = (document.getAnonymousNodes(this))[0].firstChild;
           hbox.focus() <!-- buttons in the pt have -moz-user-focus: ignore -->
           this._selection   = this.getBTSelection(document.popupNode);
           this._orientation = this.getBTOrientation(aEvent, document.popupNode);
