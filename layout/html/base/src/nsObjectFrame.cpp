@@ -51,6 +51,7 @@
 #include "nsITimerCallback.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDOMElement.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -96,6 +97,8 @@ public:
                            const char*const*& values);
 
   NS_IMETHOD GetAttribute(const char* name, const char* *result);
+
+  NS_IMETHOD GetDOMElement(nsIDOMElement* *result);
 
   //nsIPluginTagInfo2 interface
 
@@ -1660,6 +1663,28 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttribute(const char* name, const char* 
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *result = nsnull;
+
+  if (nsnull != mOwner)
+  {
+    nsIContent  *cont;
+
+    mOwner->GetContent(&cont);
+
+    if (nsnull != cont)
+    {
+      rv = cont->QueryInterface(nsIDOMElement::GetIID(), (void **)result);
+      NS_RELEASE(cont);
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)

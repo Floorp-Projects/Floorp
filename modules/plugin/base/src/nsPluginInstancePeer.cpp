@@ -358,6 +358,28 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetAttribute(const char* name, const cha
   }
 }
 
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetDOMElement(nsIDOMElement* *result)
+{
+  if (mOwner == nsnull)
+  {
+    *result = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIPluginTagInfo  *tinfo;
+  nsresult          rv;
+
+  rv = mOwner->QueryInterface(kIPluginTagInfoIID, (void **)&tinfo);
+
+  if (NS_OK == rv) 
+  {
+    rv = tinfo->GetDOMElement(result);
+    NS_RELEASE(tinfo);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetTagType(nsPluginTagType *result)
 {
   if (nsnull != mOwner)

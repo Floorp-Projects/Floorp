@@ -98,6 +98,9 @@ public:
   NS_IMETHOD
   GetAttribute(const char* name, const char* *result);
 
+  NS_IMETHOD
+  GetDOMElement(nsIDOMElement* *result);
+
   //nsIPluginTagInfo2 interface
 
   NS_IMETHOD
