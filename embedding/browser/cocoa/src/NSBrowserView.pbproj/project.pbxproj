@@ -46,8 +46,7 @@
 		};
 		034768E0FF38A50411DB9C8B = {
 			isa = PBXFrameworkReference;
-			name = NSBrowserView.framework;
-			path = "";
+			path = NSBrowserView.framework;
 			refType = 2;
 		};
 //030
@@ -114,7 +113,6 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
-				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib";
 				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -127,7 +125,6 @@
 			);
 			isa = PBXFrameworkTarget;
 			name = NSBrowserView;
-			productInstallPath = "$(HOME)/Library/Frameworks";
 			productName = NSBrowserView;
 			productReference = 034768E0FF38A50411DB9C8B;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
