@@ -157,7 +157,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
   //
   else if (IsHeaderMultiple(aHeader)) {
     if (nsHTTPAtoms::Set_Cookie == aHeader ||
-            nsHTTPAtoms::WWW_Authenticate == aHeader) {
+        nsHTTPAtoms::WWW_Authenticate == aHeader ||
+        nsHTTPAtoms::Proxy_Authenticate == aHeader) {
         // special case these headers and use a newline
         // delimiter to delimit the cookies from one another
         // we can't use the standard comma because there
