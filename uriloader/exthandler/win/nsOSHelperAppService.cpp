@@ -203,7 +203,10 @@ static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
 PRBool nsOSHelperAppService::GetValueString(HKEY hKey, PRUnichar* pValueName, nsAString& result)
 {
   if (!mIsNT) {
-    char* pBytes = (char*)GetValueBytes(hKey, NS_LossyConvertUTF16toASCII(pValueName).get());
+    nsCAutoString cValueName;
+    if (pValueName)
+      NS_CopyUnicodeToNative(nsDependentString(pValueName), cValueName);
+    char* pBytes = (char*)GetValueBytes(hKey, cValueName.get());
     if (pBytes) {
       nsresult rv = NS_CopyNativeToUnicode(nsDependentCString(pBytes), result);
       delete[] pBytes;
