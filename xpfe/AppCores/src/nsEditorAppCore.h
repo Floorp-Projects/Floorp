@@ -187,11 +187,11 @@ class nsEditorAppCore : public nsBaseAppCore,
     nsIScriptContext   *mToolbarScriptContext;
     nsIScriptContext   *mContentScriptContext;
 
-    nsIDOMWindow       *mToolbarWindow;
-    nsIDOMWindow       *mContentWindow;
+    nsIDOMWindow       *mToolbarWindow;			// weak reference
+    nsIDOMWindow       *mContentWindow;			// weak reference
 
-    nsIWebShellWindow  *mWebShellWin;
-    nsIWebShell *       mWebShell;
+    nsIWebShellWindow  *mWebShellWin;				// weak reference
+    nsIWebShell        *mWebShell;					// weak reference
 
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)

@@ -152,12 +152,13 @@ nsEditorAppCore::nsEditorAppCore()
 
 nsEditorAppCore::~nsEditorAppCore()
 {
-  NS_IF_RELEASE(mToolbarWindow);
   NS_IF_RELEASE(mToolbarScriptContext);
-  NS_IF_RELEASE(mContentWindow);
   NS_IF_RELEASE(mContentScriptContext);
-  NS_IF_RELEASE(mWebShellWin);
-  NS_IF_RELEASE(mWebShell);
+
+  //NS_IF_RELEASE(mToolbarWindow);
+  //NS_IF_RELEASE(mContentWindow);
+  //NS_IF_RELEASE(mWebShellWin);
+  //NS_IF_RELEASE(mWebShell);
   DecInstanceCount();  
 }
 
@@ -380,7 +381,7 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 				nsCOMPtr<nsIDOMDocument> aDOMDoc;
 				if (NS_SUCCEEDED(aDoc->QueryInterface(kIDOMDocumentIID, (void**)getter_AddRefs(aDOMDoc))))
 				{
-					nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(GetPresShellFor(aWebShell));
+					nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
 					if( presShell )
 					{
 						err = InstantiateEditor(aDOMDoc, presShell);
@@ -652,7 +653,7 @@ nsEditorAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
 	    return NS_ERROR_NULL_POINTER;
 
   mToolbarWindow = aWin;
-  NS_ADDREF(aWin);
+  //NS_ADDREF(aWin);
   mToolbarScriptContext = GetScriptContext(aWin);
 
 	return NS_OK;
@@ -666,7 +667,8 @@ nsEditorAppCore::SetContentWindow(nsIDOMWindow* aWin)
 	    return NS_ERROR_NULL_POINTER;
 
   mContentWindow = aWin;
-  NS_ADDREF(aWin);
+  //NS_ADDREF(aWin);
+  
   mContentScriptContext = GetScriptContext(aWin);
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
@@ -699,31 +701,35 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWebShell * webShell;
-  globalObj->GetWebShell(&webShell);
-  if (nsnull != webShell) {
-    mWebShell = webShell;
-    NS_ADDREF(mWebShell);
-    const PRUnichar * name;
-    webShell->GetName( &name);
-    nsAutoString str(name);
+  nsresult  rv = NS_OK;
+  
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (!webShell)
+    return NS_ERROR_NOT_INITIALIZED;
 
+  mWebShell = webShell;
+  //NS_ADDREF(mWebShell);
+  
 #ifdef APP_DEBUG
-    char* cstr = str.ToNewCString();
-    printf("Attaching to WebShellWindow[%s]\n", cstr);
-    delete[] cstr;
+  const PRUnichar * name;
+  webShell->GetName( &name);
+  nsAutoString str(name);
+
+  char* cstr = str.ToNewCString();
+  printf("Attaching to WebShellWindow[%s]\n", cstr);
+  delete[] cstr;
 #endif
 
-    nsIWebShellContainer * webShellContainer;
-    webShell->GetContainer(webShellContainer);
-    if (nsnull != webShellContainer) {
-      if (NS_OK == webShellContainer->QueryInterface(kIWebShellWindowIID, (void**) &mWebShellWin)) {
-      }
-      NS_RELEASE(webShellContainer);
-    }
-    NS_RELEASE(webShell);
-  }
-  return NS_OK;
+  nsCOMPtr<nsIWebShellContainer> webShellContainer;
+  mWebShell->GetContainer(*getter_AddRefs(webShellContainer));
+  if (!webShellContainer)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIWebShellWindow> webShellWin = do_QueryInterface(webShellContainer, &rv);
+  mWebShellWin = webShellWin;
+    
+  return rv;
 }
 
 NS_IMETHODIMP
