@@ -199,11 +199,16 @@ endif
 # AIX/PPC
 #
 ifeq ($(OS_ARCH),AIX)
+ifdef HAVE_64BIT_OS
+CPPSRCS		:= xptcinvoke_ppc_aix64.cpp xptcstubs_ppc_aix64.cpp
+ASFILES		:= xptcinvoke_asm_ppc_aix64.s xptcstubs_asm_ppc_aix64.s
+else
 CPPSRCS		:= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
 ASFILES		:= xptcinvoke_asm_ppc_aix.s xptcstubs_asm_ppc_aix.s
+endif
 
 # #24617  Building the CPP's (CXX) optimized causes a crash
-CXXFLAGS 	:=  $(filter-out -O, $(CXXFLAGS))
+CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
 endif
 
 ifeq ($(OS_ARCH)$(OS_TEST),Linuxppc)
