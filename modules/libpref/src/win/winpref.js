@@ -42,10 +42,16 @@ pref("font.name.cursive.he", "Comic Sans MS");
 pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
 pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
+pref("font.name.serif.ja.1", "MS PMincho"); // "MS PMincho"
+pref("font.name.sans-serif.ja.1", "MS PMincho"); // "MS PGothic"
+pref("font.name.monospace.ja.1", "MS Gothic"); // "MS Gothic"
 
 pref("font.name.serif.ko", "굴림"); // "Gulim" 
 pref("font.name.sans-serif.ko", "굴림"); // "Gulim" 
 pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
+pref("font.name.serif.ko.1", "Gulim"); 
+pref("font.name.sans-serif.ko.1", "Gulim"); 
+pref("font.name.monospace.ko.1", "GulimChe"); 
 
 pref("font.name.serif.th", "Times New Roman");
 pref("font.name.sans-serif.th", "Arial");
@@ -82,13 +88,19 @@ pref("font.name.sans-serif.x-western", "Arial");
 pref("font.name.monospace.x-western", "Courier New");
 pref("font.name.cursive.x-western", "Comic Sans MS");
 
-pref("font.name.serif.zh-CN", "MS Song");
-pref("font.name.sans-serif.zh-CN", "MS Hei");
-pref("font.name.monospace.zh-CN", "MS Hei");
+pref("font.name.serif.zh-CN", "宋体"); //MS Song
+pref("font.name.sans-serif.zh-CN", "黑体"); //MS Hei
+pref("font.name.monospace.zh-CN", "黑体");  //MS Hei
+pref("font.name.serif.zh-CN.1", "MS Song");
+pref("font.name.sans-serif.zh-CN.1", "MS Hei");
+pref("font.name.monospace.zh-CN.1", "MS Hei");
 
 pref("font.name.serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.monospace.zh-TW", "細明體"); // "MingLiU" 
+pref("font.name.serif.zh-TW.1", "MingLiU"); 
+pref("font.name.sans-serif.zh-TW.1", "MingLiU"); 
+pref("font.name.monospace.zh-TW.1", "MingLiU"); 
 
 pref("font.size.nav4rounding", false);
 
