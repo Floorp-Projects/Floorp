@@ -1,0 +1,102 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+
+  This file contains an interface to the Cookie Service.
+
+ */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+#include "nsIPrompt.idl"
+
+interface nsIHttpChannel;
+
+[scriptable, uuid(011C3190-1434-11d6-A618-0010A401EB10)]
+interface nsICookieService : nsISupports
+{
+  /*
+   * Get the complete cookie string associated with the URL
+   *
+   * @param aURL The URL for which to get the cookie string
+   * @param aCookie The string object which will hold the result
+   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   */
+  string getCookieString(in nsIURI aURL);
+
+  /*
+   * Get the complete cookie string associated with the URL
+   *
+   * @param aURL The URL for which to get the cookie string
+   * @param aFirstURL The URL which the user typed in or clicked on
+   * @param aCookie The string object which will hold the result
+   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   */
+  string getCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL);
+
+  /*
+   * Set the cookie string associated with the URL
+   *
+   * @param aURL The URL for which to set the cookie string
+   * @param aCookie The string to set
+   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   */
+  void setCookieString(in nsIURI aURL, in nsIPrompt aPrompt, in string aCookie, in nsIHttpChannel aHttpChannel);
+
+  /*
+   * Set the cookie string and expires associated with the URL
+   *
+   * @param aURL The URL for which to set the cookie string
+   * @param aFirstURL The URL which the user typed in or clicked on
+   * @param aPrompter The nsIPrompt implementation to use. If null, a default
+   *                  will be used.
+   * @param aCookie The char * string to set
+   * @param aExpires The expiry information of the cookie
+   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   */
+  void setCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL, in nsIPrompt aPrompter, in string aCookie, in string aExpires, in nsIHttpChannel aHttpChannel);
+
+};
+
+%{ C++
+// {011C3190-1434-11d6-A618-0010A401EB10}
+#define NS_COOKIESERVICE_CID \
+{ 0xc375fa80, 0x150f, 0x11d6, { 0xa6, 0x18, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
+#define NS_COOKIESERVICE_CONTRACTID "@mozilla.org/cookieService;1"
+%}
