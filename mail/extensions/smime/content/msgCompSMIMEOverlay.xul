@@ -59,7 +59,7 @@
   </menupopup>
 
   <toolbarpalette id="MsgComposeToolbarPalette">
-    <toolbarbutton id="button-security" type="menu-button" insertbefore="saveSeparator"
+    <toolbarbutton id="button-security" type="menu-button" insertbefore="button-save"
                    oncommand="doSecurityButton();" class="toolbarbutton-1"
                    label="&securityButton.label;" tooltiptext="&securityButton.tooltip;">
       <menupopup onpopupshowing="setSecuritySettings(2)">
