@@ -1018,7 +1018,7 @@ RDFGenericElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 			if (xulListener->mAttribute.EqualsIgnoreCase(aString))
 			{
 				// Set the attribute in the broadcast listener.
-				nsCOMPtr<nsIContent> contentNode(xulListener->mListener);
+				nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
 				if (contentNode)
 				{
 					contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
@@ -1101,7 +1101,7 @@ RDFGenericElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBo
 			if (xulListener->mAttribute.EqualsIgnoreCase(aString))
 			{
 				// Unset the attribute in the broadcast listener.
-				nsCOMPtr<nsIContent> contentNode(xulListener->mListener);
+				nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
 				if (contentNode)
 				{
 					contentNode->UnsetAttribute(aNameSpaceID, aName, aNotify);
