@@ -116,6 +116,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         tmpStr.Append(NS_LITERAL_STRING("pt"));
         break;
       }
+    case CSS_IDENT :
     case CSS_STRING :
       {
         tmpStr.Append(mValue.mString);
@@ -180,6 +181,43 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         tmpStr.Append(sideValue + NS_LITERAL_STRING(")"));
         break;
       }
+    case CSS_RGBCOLOR :
+      {
+        NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
+        NS_NAMED_LITERAL_STRING(comma, ", ");
+        nsCOMPtr<nsIDOMCSSPrimitiveValue> colorCSSValue;
+        nsAutoString colorValue;
+        tmpStr = NS_LITERAL_STRING("rgb(");
+
+        // get the red component
+        result = mValue.mColor->GetRed(getter_AddRefs(colorCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = colorCSSValue->GetCssText(colorValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(colorValue + comma);
+
+        // get the green component
+        result = mValue.mColor->GetGreen(getter_AddRefs(colorCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = colorCSSValue->GetCssText(colorValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(colorValue + comma);
+
+        // get the blue component
+        result = mValue.mColor->GetBlue(getter_AddRefs(colorCSSValue));
+        if (NS_FAILED(result))
+          break;
+        result = colorCSSValue->GetCssText(colorValue);
+        if (NS_FAILED(result))
+          break;
+        tmpStr.Append(colorValue + NS_LITERAL_STRING(")"));
+
+        break;
+      }
     case CSS_PC :
     case CSS_UNKNOWN :
     case CSS_EMS :
@@ -192,10 +230,8 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
     case CSS_HZ :
     case CSS_KHZ :
     case CSS_DIMENSION :
-    case CSS_IDENT :
     case CSS_ATTR :
     case CSS_COUNTER :
-    case CSS_RGBCOLOR :
       NS_ERROR("We have a bogus value set.  This should not happen");
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
@@ -275,6 +311,11 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       *aReturn = NSTwipsToFloatPoints(mValue.mTwips);
       break;
+    case CSS_PC :
+      if (mType != CSS_PX)
+        return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      *aReturn = NS_TWIPS_TO_PICAS(mValue.mTwips);
+      break;
     case CSS_PERCENTAGE :
       if (mType != CSS_PERCENTAGE)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -285,7 +326,6 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       *aReturn = mValue.mFloat;
       break;
-    case CSS_PC :
     case CSS_UNKNOWN :
     case CSS_EMS :
     case CSS_EXS :
@@ -323,6 +363,7 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetStringValue(nsAWritableString& aReturn)
 {
   switch (mType) {
+    case CSS_IDENT:
     case CSS_STRING:
       aReturn.Assign(mValue.mString);
       break;
@@ -331,7 +372,6 @@ nsROCSSPrimitiveValue::GetStringValue(nsAWritableString& aReturn)
                      nsDependentString(mValue.mString) +
                      NS_LITERAL_STRING(")"));
       break;
-    case CSS_IDENT:
     case CSS_ATTR:
     default:
       aReturn.Truncate();
@@ -364,6 +404,11 @@ nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aReturn)
 NS_IMETHODIMP 
 nsROCSSPrimitiveValue::GetRGBColorValue(nsIDOMRGBColor** aReturn)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (mType != CSS_RGBCOLOR) {
+    *aReturn = nsnull;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+  NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
+  return CallQueryInterface(mValue.mColor, aReturn);
 }
 

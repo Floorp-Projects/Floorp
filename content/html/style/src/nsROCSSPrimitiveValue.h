@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 #include "nsDOMCSSRect.h"
+#include "nsDOMCSSRGBColor.h"
 
 class nsROCSSPrimitiveValue : public nsIDOMCSSPrimitiveValue
 {
@@ -85,32 +86,60 @@ public:
     mType = CSS_PX;
   }
 
+  void SetIdent(const nsACString& aString)
+  {
+    Reset();
+    mValue.mString = ToNewUnicode(aString);
+    mType = (mValue.mString != nsnull) ? CSS_IDENT : CSS_UNKNOWN;
+  }
+
+  void SetIdent(const nsAString& aString)
+  {
+    Reset();
+    mValue.mString = ToNewUnicode(aString);
+    mType = (mValue.mString != nsnull) ? CSS_IDENT : CSS_UNKNOWN;
+  }
+
   void SetString(const nsACString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = CSS_STRING;
+    mType = (mValue.mString != nsnull) ? CSS_STRING : CSS_UNKNOWN;
   }
 
   void SetString(const nsAString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = CSS_STRING;
+    mType = (mValue.mString != nsnull) ? CSS_STRING : CSS_UNKNOWN;
   }
 
   void SetURI(const nsACString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = CSS_URI;
+    mType = (mValue.mString != nsnull) ? CSS_URI : CSS_UNKNOWN;
   }
 
   void SetURI(const nsAString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = CSS_URI;
+    mType = (mValue.mString != nsnull) ? CSS_URI : CSS_UNKNOWN;
+  }
+
+  void SetColor(nsIDOMRGBColor* aColor)
+  {
+    NS_PRECONDITION(aColor, "Null RGBColor being set!");
+    Reset();
+    mValue.mColor = aColor;
+    if (mValue.mColor) {
+      NS_ADDREF(mValue.mColor);
+      mType = CSS_RGBCOLOR;
+    }
+    else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetRect(nsIDOMRect* aRect)
@@ -118,21 +147,35 @@ public:
     NS_PRECONDITION(aRect, "Null rect being set!");
     Reset();
     mValue.mRect = aRect;
-    NS_ADDREF(mValue.mRect);
-    mType = CSS_RECT;
+    if (mValue.mRect) {
+      NS_ADDREF(mValue.mRect);
+      mType = CSS_RECT;
+    }
+    else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void Reset(void)
   {
-    if (mType == CSS_STRING || mType == CSS_URI) {
-      NS_ASSERTION(mValue.mString, "Null string should never happen");
-      nsMemory::Free(mValue.mString);
-      mValue.mString = nsnull;
-    } 
-    else if (mType == CSS_RECT) {
-      NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
-      NS_RELEASE(mValue.mRect);
-      mValue.mRect = nsnull;
+    switch (mType) {
+      case CSS_IDENT:
+      case CSS_STRING:
+      case CSS_URI:
+        NS_ASSERTION(mValue.mString, "Null string should never happen");
+        nsMemory::Free(mValue.mString);
+        mValue.mString = nsnull;
+        break;
+      case CSS_RECT:
+        NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
+        NS_RELEASE(mValue.mRect);
+        mValue.mRect = nsnull;
+        break;
+      case CSS_RGBCOLOR:
+        NS_ASSERTION(mValue.mColor, "Null RGBColor should never happen");
+        NS_RELEASE(mValue.mColor);
+        mValue.mColor = nsnull;
+        break;
     }
   }
 
@@ -140,10 +183,11 @@ private:
   PRUint16 mType;
 
   union {
-    nscoord mTwips;
-    float mFloat;
-    nsIDOMRect* mRect;
-    PRUnichar* mString;
+    nscoord         mTwips;
+    float           mFloat;
+    nsIDOMRGBColor* mColor;
+    nsIDOMRect*     mRect;
+    PRUnichar*      mString;
   } mValue;
   
   nsISupports *mOwner;

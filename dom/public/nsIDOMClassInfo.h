@@ -242,11 +242,16 @@ enum nsDOMClassInfoID {
   // We are now trying to preserve binary compat in classinfo.  No
   // more putting things in those categories up there.  New entries
   // are to be added right before eDOMClassInfoIDCount
+
+  // Rect object used by getComputedStyle
   eDOMClassInfo_CSSRect_id,
 
   // DOM Chrome Window class, almost identical to Window
   eDOMClassInfo_ChromeWindow_id,
-  
+
+  // RGBColor object used by getComputedStyle
+  eDOMClassInfo_CSSRGBColor_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
