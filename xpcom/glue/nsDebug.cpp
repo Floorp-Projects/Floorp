@@ -284,7 +284,7 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
          ("###!!! Break: at file %s, line %d", aFile, aLine));
    PR_LogFlush();
 
-  fprintf(stderr, "Break: at file %s\n",aFile, aLine);  fflush(stderr);
+  fprintf(stderr, "Break: at file %s, line %d\n",aFile, aLine);  fflush(stderr);
   fflush(stderr);
 
 #if defined(_WIN32)
