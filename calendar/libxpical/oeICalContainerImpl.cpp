@@ -843,7 +843,7 @@ NS_IMETHODIMP oeICalContainerImpl::ModifyTodo(oeIICalTodo *icalevent, char **ret
     icalevent->GetParent( &calendar );    
     if( !calendar ) {
         #ifdef ICAL_DEBUG
-        printf( "oeICalContainerImpl::ModifyEvent()-Error: Event does not have a parent calendar\n" );
+        printf( "oeICalContainerImpl::ModifyEvent()-Error: ToDo does not have a parent calendar\n" );
         #endif
         return NS_ERROR_FAILURE;
     }
