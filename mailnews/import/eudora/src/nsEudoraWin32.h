@@ -24,6 +24,7 @@
 #include "nsIFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsEudoraMailbox.h"
+#include "nsEudoraAddress.h"
 
 #include <windows.h>
 
@@ -32,7 +33,7 @@ class nsIMsgAccountManager;
 class nsIMsgAccount;
 
 
-class nsEudoraWin32 : public nsEudoraMailbox {
+class nsEudoraWin32 : public nsEudoraMailbox, public nsEudoraAddress {
 public:
 	nsEudoraWin32();
 	~nsEudoraWin32();
@@ -46,6 +47,12 @@ public:
 
 	virtual nsresult	GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType);
 
+	// Things that must be overridden because they are platform specific.
+		// retrieve the address book folder
+	virtual PRBool		FindAddressFolder( nsIFileSpec *pFolder);
+		// get the list of address books
+	virtual nsresult	FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **ppArray);
+
 		// import settings from Win32 ini file
 	static PRBool	ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **localMailAccount);
 	static PRBool	FindSettingsFile( nsIFileSpec *pIniFile) { return( FindEudoraLocation( pIniFile, PR_TRUE));}
@@ -58,6 +65,9 @@ private:
 	nsresult	FoundMailbox( nsIFileSpec *mailFile, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport);
 	PRBool		FindMimeIniFile( nsIFileSpec *pSpec);
 	void		GetMimeTypeFromExtension( nsCString& ext, nsCString& mimeType);
+	nsresult	FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pName, nsISupportsArray *pArray, nsIImportService *impSvc);
+	nsresult	ScanAddressDir( nsIFileSpec *pDir, nsISupportsArray *pArray, nsIImportService *impSvc);
+
 
 	static PRBool		FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni = PR_FALSE);
 
@@ -76,6 +86,7 @@ private:
 private:
 	PRUint32		m_depth;
 	nsIFileSpec *	m_mailImportLocation;
+	nsIFileSpec *	m_addressImportFolder;
 	char *			m_pMimeSection;
 };
 

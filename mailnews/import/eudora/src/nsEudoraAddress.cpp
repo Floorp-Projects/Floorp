@@ -238,7 +238,7 @@ CAliasEntry *nsEudoraAddress::ProcessAlias( const char *pLine, PRInt32 len, nsSt
 	pLine += cnt;
 	len -= cnt;
 	if (!cnt || !len)
-		return( nil);
+		return( nsnull);
 
 	// we have 3 known forms of addresses in Eudora
 	// 1) real name <email@address>
@@ -552,7 +552,7 @@ CAliasEntry *nsEudoraAddress::ResolveAlias( nsCString& name)
 			return( pEntry);
 	}
 	
-	return( nil);
+	return( nsnull);
 }
 
 void nsEudoraAddress::ResolveEntries( nsCString& name, nsVoidArray& list, nsVoidArray& result)

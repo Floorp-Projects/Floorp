@@ -32,6 +32,7 @@ CPP_OBJS=\
 		.\$(OBJDIR)\nsEudoraWin32.obj			\
 		.\$(OBJDIR)\nsEudoraSettings.obj		\
 		.\$(OBJDIR)\nsEudoraCompose.obj			\
+		.\$(OBJDIR)\nsEudoraAddress.obj			\
         $(NULL)
 
 LLIBS=\

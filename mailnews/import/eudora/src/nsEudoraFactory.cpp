@@ -34,6 +34,23 @@ static NS_DEFINE_CID(kEudoraImportCID,    	NS_EUDORAIMPORT_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kRegistryCID,			NS_REGISTRY_CID);
 
+/*
+	This doesn't work for me because I need to do some
+	additional work in RegisterSelf.
+	However, I should be able to delegate to the generic implementation
+	and just do the extra work I need?
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraImport)
+
+static nsModuleComponentInfo components[] = {
+    {	"Eudora Import Component", 
+		NS_EUDORAIMPORT_CID,
+		"component://mozilla/import/import-eudora", 
+		nsEudoraImportConstructor}
+};
+
+NS_IMPL_NSGETMODULE("nsEudoraImportModule", components)
+*/
 
 // Module implementation for the Eudora import library
 class nsEudoraImportModule : public nsIModule
