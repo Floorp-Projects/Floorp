@@ -18,7 +18,7 @@
   <TD ALIGN=LEFT VALIGN=CENTER>
    <NOBR><FONT SIZE="+2"><B>
     <A HREF="$baseurl">Mozilla Cross Reference:</A>
-   </B></FONT></NOBR>
+   </B></FONT></NOBR><I>$treename</I>
    <BR><B>$banner</B>
   </TD>
 
@@ -27,7 +27,7 @@
     <TR>
      <TD NOWRAP BGCOLOR="#FAFAFA">
       <BR>
-      <A HREF="$dotdoturl/bonsai/cvslog.cgi?file=mozilla$pathname">Full Change Log</A>
+      <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla$pathname">Full Change Log</A>
       <BR><BR>
      </TD>
     </TR>
@@ -44,9 +44,9 @@
          changes to<BR>this file in<BR>the last:
         </TD>
         <TD NOWRAP>
-         <A HREF="$dotdoturl/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=day">day</A><BR>
-         <A HREF="$dotdoturl/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=week">week</A><BR>
-         <A HREF="$dotdoturl/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=month">month</A><BR>
+         <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=day">day</A><BR>
+         <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=week">week</A><BR>
+         <A HREF="http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=month">month</A><BR>
         </TD>
        </TR>
       </TABLE>

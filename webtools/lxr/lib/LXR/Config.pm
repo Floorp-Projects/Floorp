@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.3 1998/07/28 19:17:42 jwz%netscape.com Exp $
+# $Id: Config.pm,v 1.4 1999/03/10 22:58:55 endico%mozilla.org Exp $
 
 package LXR::Config;
 
@@ -16,9 +16,53 @@ sub new {
     my $self = {};
     bless($self);
     $self->_initialize(@parms);
-    return($self);
+    return(treeify($self));
 }
 
+sub treeify {
+    my ($self) = @_;
+
+    #If there are multiple definitions of sourceroot in lxr.conf then
+    #this installation is configured for multiple trees. For a single
+    #tree "sourceroot" is a single directory where the source can be
+    #found. If the file contains multiple definitions of sourceroot then
+    #each definition is a tree,directory pair.
+
+    if ($self->{'sourceroot'} =~ /\S\s+\S/) {
+        #remove the extra space that i stupidly added when parsing lxr.conf
+        $self->{'sourceroot'} =~ s/^\s+//;;
+        $self->{'oldroot'} = $self->{'sourceroot'};
+
+        #since there's whitespace within the root directory definition
+        #there is one or more tree defined. (Using directory names with
+        #embedded spaces here would be a bad thing.)
+        my %treehash = split(/\s+/, $self->{'sourceroot'});
+
+        #To compute which tree we're looking at, grab the second to last
+        #component from the script name which will be of the form: 
+        # /seamonkey/source
+        $self->{'treename'} = $ENV{'SCRIPT_NAME'};
+        $self->{'treename'} =~ s/.*\/([^\/]+)\/[\w]*/$1/;
+
+        #Match the tree name against our list of trees and extract the proper
+        #directory. Set "sourceroot" to this directory.
+        $self->{'sourceroot'} = $treehash{$self->{'treename'}};
+
+        #set srcrootname to tree name
+        $self->{'sourcerootname'} = $self->{'treename'};
+
+        #append tree name to virtroot
+        $self->{'virtroot'} =  $self->{'virtroot'} . "/" . $self->{'treename'} ;
+
+        #append tree name to baserul
+        $self->{'baseurl'} =  $self->{'baseurl'} . $self->{'treename'};
+
+        #append tree name to dbdir
+        $self->{'dbdir'} =  $self->{'dbdir'} . "/" . $self->{'treename'} ;
+
+    }
+    return($self);
+}
 
 sub makevalueset {
     my $val = shift;
@@ -115,8 +159,12 @@ sub _initialize {
 		     $dir eq 'searchhead' ||
 		     $dir eq 'searchtail' ||
 		     $dir eq 'htmldir') {
-		if ($arg =~ /(\S+)/) {
+		if ($arg =~ /([^\n]+)/) {
+	            if ($dir eq 'sourceroot') {
+		        $self->{$dir} = $self->{$dir} . " " . $1;
+                    }else{
 		    $self->{$dir} = $1;
+                    }
 		}
 	    } elsif ($dir eq 'map') {
 		if ($arg =~ /(\S+)\s+(\S+)/) {

@@ -76,18 +76,41 @@ If it doesn't work:
  - Check that all the Perl scripts find their library files, also when
    executed by the webserver.
 
+
+Multiple Trees
+
+ To have the same lxr source directory index multiple trees, use
+ a web server (such as apache) that supports virtual hosts and/or
+ aliases. At mozilla.org, we set the document root of lxr.mozilla.org
+ to the lxr/root directory and for each tree, set up an alias with
+ the tree name pointing to the main lxr directory. 
+
+ From our httpd.conf:
+ <VirtualHost 207.200.73.38:80>
+        DocumentRoot /opt/webtools/lxr.mozilla.org/root
+        ServerName lxr.mozilla.org
+        Alias /classic /opt/webtools/lxr.mozilla.org
+        Alias /ef /opt/webtools/lxr.mozilla.org
+        Alias /grendel /opt/webtools/lxr.mozilla.org
+        Alias /mailnews /opt/webtools/lxr.mozilla.org
+        Alias /mozilla /opt/webtools/lxr.mozilla.org
+        Alias /nspr /opt/webtools/lxr.mozilla.org
+        Alias /seamonkey /opt/webtools/lxr.mozilla.org
+ </VirtualHost>
+
+
 The lxr.conf file:
 
  LXR does not care much about your directory structure, all relevant
  paths can be configured from the lxr.conf file. This file is located
- in the same directory as the perl script files. This makes it
- possible to have different source trees in different directories on
- the web server. 
+ in the same directory as the perl script files.
 
  LXR recognizes the following options in the configuration file. 
 
  baseurl
-  The url for the root directory of your source. 
+  The url for the root directory of your source. Tree name (if any) 
+  is appened to this.
+ 
 
  htmlhead
   The header of all html files. This is a template that
@@ -111,6 +134,10 @@ The lxr.conf file:
   several version you could include a variable in the path.
       sourceroot: /usr/local/lxr/source/$v/linux/
 
+  To index more than one tree, include one sourceroot entry for 
+  each tree. Each entry is a tree name/directory pair.
+      sourceroot: classic /export2/lxr-data/classic/mozilla
+
  virtroot
   This is prepended to the path name when forming the url in links.
 
@@ -127,7 +154,7 @@ The lxr.conf file:
 
  dbdir 
   Where to find the database files that lxr needs (fileidx xref and 
-  the glimpse files).
+  the glimpse files). The tree name (if any) is appended to this.
 
  glimpsebin 
   Location of the glimpse binary on your system.

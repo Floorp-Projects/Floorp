@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.12 1999/01/21 00:42:23 endico%mozilla.org Exp $
+# $Id: source,v 1.13 1999/03/10 22:58:50 endico%mozilla.org Exp $
 # source --	Present sourcecode as html, complete with references
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -282,6 +282,3 @@ if (!($Path->{'file'} =~ /\.(html)$/)) {
 	&makefooter('sourcedir');
     }
 }
-
-#$len = length($file);
-#print ("length is: ", $len) ;

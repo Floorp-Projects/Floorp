@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.15 1999/01/31 11:18:32 jwz%mozilla.org Exp $
+# $Id: Common.pm,v 1.16 1999/03/10 22:58:54 endico%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -526,6 +526,11 @@ sub pathname {
 }
 
 
+sub treename {
+    return $Conf->{'treename'};
+}
+
+
 sub titleexpand {
     if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
 	return($Conf->sourcerootname.$Path->{'virtf'});
@@ -739,6 +744,7 @@ sub makeheader {
 			  ('dotdoturl',	\&dotdoturl),
 			  ('thisurl',	\&thisurl),
 			  ('pathname',	\&pathname),
+			  ('treename',	\&treename),
     			  ('modes',	\&modeexpand),
     			  ('variables',	\&varexpand)));
 }
