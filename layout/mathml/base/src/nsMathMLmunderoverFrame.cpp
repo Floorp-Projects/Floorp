@@ -138,7 +138,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (baseFrame && NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
     nsCOMPtr<nsIContent> baseContent;
     baseFrame->GetContent(getter_AddRefs(baseContent));
-    if (NS_CONTENT_ATTR_HAS_VALUE == baseContent->GetAttribute(kNameSpaceID_None, 
+    if (NS_CONTENT_ATTR_HAS_VALUE == baseContent->GetAttr(kNameSpaceID_None, 
                      nsMathMLAtoms::movablelimits_, value)) {
       if (value.EqualsWithConversion("true")) {
         mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
@@ -167,7 +167,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
           mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                           nsMathMLAtoms::accentunder_, value))
           {
             if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
@@ -195,7 +195,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
           mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accent attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                           nsMathMLAtoms::accent_, value))
           {
             if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;

@@ -137,7 +137,7 @@ GetAlignValueAt(nsIPresContext* aPresContext,
         nsAutoString values;
         nsCOMPtr<nsIContent> content;
         aTableOrRowFrame->GetContent(getter_AddRefs(content));
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, aAttributeAtom, values)) {
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, aAttributeAtom, values)) {
           valueList = new nsValueList(values);
           if (valueList) {
             frameManager->SetFrameProperty(aTableOrRowFrame, aAttributeAtom,
@@ -186,7 +186,7 @@ MapAlignAttributesInto(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(rv)) {
     // see if the rowalign attribute is not already set
     nsIAtom* atom = nsMathMLAtoms::rowalign_;
-    rv = aCellContent->GetAttribute(kNameSpaceID_None, atom, value);
+    rv = aCellContent->GetAttr(kNameSpaceID_None, atom, value);
     if (NS_CONTENT_ATTR_NOT_THERE == rv) {
       // see if the rowalign attribute is specified on the row
       rowalign = GetAlignValueAt(aPresContext, rowFrame, atom, index);
@@ -205,7 +205,7 @@ MapAlignAttributesInto(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(rv)) {
     // see if the columnalign attribute is not already set
     nsIAtom* atom = nsMathMLAtoms::columnalign_;
-    rv = aCellContent->GetAttribute(kNameSpaceID_None, atom, value);
+    rv = aCellContent->GetAttr(kNameSpaceID_None, atom, value);
     if (NS_CONTENT_ATTR_NOT_THERE == rv) {
       // see if the columnalign attribute is specified on the row
       columnalign = GetAlignValueAt(aPresContext, rowFrame, atom, index);
@@ -219,13 +219,13 @@ MapAlignAttributesInto(nsIPresContext* aPresContext,
   // set the attributes without notifying that we want a reflow
   if (rowalign) {
     value.Assign(rowalign);
-    aCellContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::rowalign_,
-                               value, PR_FALSE);
+    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::rowalign_,
+                          value, PR_FALSE);
   }
   if (columnalign) {
     value.Assign(columnalign);
-    aCellContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::columnalign_,
-                               value, PR_FALSE);
+    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::columnalign_,
+                          value, PR_FALSE);
   }
   // then, re-resolve the style contexts in our subtree
   if (rowalign || columnalign) {

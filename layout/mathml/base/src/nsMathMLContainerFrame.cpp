@@ -70,7 +70,7 @@ nsMathMLContainerFrame::GetAttribute(nsIContent* aContent,
 
   // see if we can get the attribute from the content
   if (aContent) {
-    rv = aContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue);
+    rv = aContent->GetAttr(kNameSpaceID_None, aAttributeAtom, aValue);
   }
 
   if (NS_CONTENT_ATTR_NOT_THERE == rv) {
@@ -839,8 +839,8 @@ nsMathMLContainerFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
     }
 
     // set the -moz-math-font-size attribute without notifying that we want a reflow
-    mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::fontsize,
-                           fontsize, PR_FALSE);
+    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize,
+                      fontsize, PR_FALSE);
     // then, re-resolve the style contexts in our subtree
     nsCOMPtr<nsIStyleContext> newStyleContext;
     aPresContext->ResolveStyleContextFor(mContent, aParentContext,
