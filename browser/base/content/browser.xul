@@ -566,7 +566,7 @@
 #else
                defaultset="menubar-items,spring,throbber-box"
 #endif
-               mode="icons" iconsize="small">
+               mode="icons" iconsize="small" context="toolbar-context-menu">
         <toolbaritem id="menubar-items" align="center">
           <menubar id="main-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu label="&fileMenu.label;"
@@ -1039,7 +1039,8 @@
 
     <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
              customizable="true" defaultset="personal-bookmarks" mode="icons"
-             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"/>
+             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
+             context="toolbar-context-menu"/>
     
   </toolbox>
   
