@@ -1123,7 +1123,7 @@ NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
+NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext&  aPresContext,
                                     nsReflowMetrics& aMetrics)
 {
   aMetrics.width = mRect.width;
