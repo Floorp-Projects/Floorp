@@ -36,6 +36,10 @@ public:
                       nsIFrame* aTargetFrame,
                       nsFrameImageLoaderCB aCallBack,
                       nsHTMLReflowMetrics& aDesiredSize);
+
+  void StopLoadImage(nsIPresContext& aPresContext,
+                     nsIFrame* aTargetFrame);
+
 };
 
 class nsTitledButtonFrame : public nsLeafFrame
