@@ -76,6 +76,10 @@
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
 
+#ifdef TOOLBAR_DD
+#include "nsToolbarItemFrame.h"
+#endif
+
 nsresult
 NS_NewTabFrame ( nsIFrame** aNewFrame );
 
@@ -1797,6 +1801,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::menubutton      == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
+        (nsXULAtoms::toolbaritem     == tag.get())  ||
         (nsXULAtoms::deck            == tag.get())  ||
         (nsXULAtoms::tabcontrol      == tag.get())  ||
         (nsXULAtoms::tabbox          == tag.get())  ||
@@ -3010,6 +3015,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       processChildren = PR_TRUE;
       rv = NS_NewToolbarFrame(&newFrame);
     }
+#ifdef TOOLBAR_DD
+    else if (aTag == nsXULAtoms::toolbaritem) {
+      processChildren = PR_TRUE;
+      rv = NS_NewToolbarItemFrame(&newFrame);
+    }
+#endif
     // End of TOOLBAR CONSTRUCTION logic
 
     // PROGRESS METER CONSTRUCTION
