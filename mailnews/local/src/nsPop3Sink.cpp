@@ -127,7 +127,8 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
                                              PR_WRONLY | PR_CREATE_FILE | PR_APPEND);
 
 	// create a new mail parser
-	m_newMailParser = new nsParseNewMailState(NULL, nsFilePath(path));
+    nsFilePath parsePath(path);
+	m_newMailParser = new nsParseNewMailState(nsnull, parsePath);
     PR_FREEIF(path);
 
 #ifdef DEBUG
