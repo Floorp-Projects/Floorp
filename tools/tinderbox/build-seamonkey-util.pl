@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.162 $ ';
+$::UtilsVersion = '$Revision: 1.163 $ ';
 
 package TinderUtils;
 
@@ -801,14 +801,35 @@ sub BuildIt {
             $build_failure_count = 0;
         }
 
+        # win98 just ain't up to the task of continuous builds
+        print_log "System going down for a reboot!! " . scalar localtime() . "\n"
+            if $Settings::OS eq 'WIN98' && $Settings::RebootSystem;
+
         close LOG;
         chdir $build_dir;
 
         mail_build_finished_message($start_time, $build_status, $logfile)
             if $Settings::ReportStatus;
 
+        rebootSystem() if $Settings::OS eq 'WIN98' && $Settings::RebootSystem;
+
         $exit_early++ if $Settings::TestOnly and $build_status ne 'success';
         $exit_early++ if $Settings::BuildOnce;
+    }
+}
+
+
+sub rebootSystem {
+    # assumption is that system has been configured to automatically 
+    # startup tinderbox again on the other side of the reboot
+    if ($Settings::OS eq 'WIN98') {
+        # http://support.microsoft.com/directory/article.asp?ID=KB;EN-US;Q234216
+        #   6 == RESTART | FORCE; applies to win98 and winME
+        print "System going down for a reboot!! ", scalar localtime, "\n";
+        system("rundll32.exe shell32.dll,SHExitWindowsEx 6") == 0 ||
+            warn "Failed to $! $@ $?";
+    } else {
+        print "rebootSystem() called on non-Win9x system. wtf?\n";
     }
 }
 
@@ -851,18 +872,18 @@ sub find_pref_file {
     }
 
     unless (-e $profile_dir) {
-	print_log "ERROR: profile $profile_dir does not exist\n";
-	#XXX should make 'run_all_tests' throw a 'testfailed' exception
-	# and just skip all the continual checking for $test_result
-	return; # empty list
+        print_log "ERROR: profile $profile_dir does not exist\n";
+        #XXX should make 'run_all_tests' throw a 'testfailed' exception
+        # and just skip all the continual checking for $test_result
+        return; # empty list
     }
 
     my $found = undef;
     my $sub = sub {$pref_file = $File::Find::name, $found++ if $pref_file eq $_};
     File::Find::find($sub, $profile_dir);
     unless ($found) {
-	print_log "ERROR: couldn't find prefs.js in $profile_dir\n";
-	return; # empty list
+        print_log "ERROR: couldn't find prefs.js in $profile_dir\n";
+        return; # empty list
     }
 
     # Find full profile_dir while we're at it.

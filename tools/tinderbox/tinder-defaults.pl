@@ -114,3 +114,16 @@ $ConfigureEnvArgs = '';
 $Compiler = 'gcc';
 $NSPRArgs = '';
 $ShellOverride = '';
+
+# allow override of timezone value (for win32 POSIX::strftime)
+$Timezone = '';
+
+# Reboot the OS at the end of build-and-test cycle. This is primarily
+# intended for Win9x, which can't last more than a few cycles before
+# locking up (and testing would be suspect even after a couple of cycles).
+# Right now, there is only code to force the reboot for Win9x, so even
+# setting this to 1, will not have an effect on other platforms. Setting
+# up win9x to automatically logon and begin running tinderbox is left 
+# as an exercise to the reader. 
+$RebootSystem = 0;
+
