@@ -373,10 +373,3 @@ jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.c Makefile.in
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
 endif
 
-ifeq ($(OS_ARCH),OS2)
-# Work around for compiler bug; do not optimize this file - see bug 224487
-jsnum.o: jsnum.c Makefile Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
-	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(subst -O2,,$(COMPILE_CFLAGS)) $(_VPATH_SRCS)
-endif

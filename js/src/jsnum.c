@@ -423,7 +423,7 @@ static JSConstDoubleSpec number_constants[] = {
 static jsdouble NaN;
 
 
-#if defined XP_WIN &&                                                         \
+#if (defined XP_WIN || defined XP_OS2) &&                                     \
     !defined __MWERKS__ &&                                                    \
     (defined _M_IX86 ||                                                       \
      (defined __GNUC__ && !defined __MINGW32__))
@@ -568,19 +568,14 @@ JSBool
 js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
     jsint i;
-    JSBool ok;
-
-    SET_FPU();
 
     if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
 	*rval = INT_TO_JSVAL(i);
-        ok = JS_TRUE;
     } else {
-        ok = js_NewDoubleValue(cx, d, rval);
+	if (!js_NewDoubleValue(cx, d, rval))
+	    return JS_FALSE;
     }
-    
-    RESTORE_FPU();
-    return ok;
+    return JS_TRUE;
 }
 
 JSObject *
