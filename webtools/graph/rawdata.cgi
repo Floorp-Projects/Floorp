@@ -34,6 +34,7 @@ sub show_data {
   #my ($year2, $mon2, $mday2) = Add_Delta_Days($year, $mon, $mday, -$DAYS);
   #$n_days_ago= sprintf "%04d:%02d:%02d:%02d:%02d:%02d", $year2, $mon2, $mday2, $hour, $min, $sec;
 
+  print "<center><h3>Data for $TBOX $TESTNAME</h3></center>\n";
 
   # Print data that got plotted.
   print "<b>Data in plot form: (t, y)</b><br>\n";
@@ -61,7 +62,8 @@ sub show_data {
 {
 	
   print "Content-type: text/html\n\n<HTML>\n";
-  print "<title>rawdata for $TBOX $TESTNAME</title>";
+  print "<title>rawdata for $TBOX $TESTNAME</title><br>\n";
+  print "<body>\n";
 
   if(!$TESTNAME) {
 	print "Error: need testname.";
@@ -70,6 +72,8 @@ sub show_data {
   } else {
 	show_data();
   }
+  print "</body>\n";
+  print "</html>\n";
 }
 
 exit 0;
