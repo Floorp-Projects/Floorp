@@ -352,7 +352,7 @@ xpcom/base/Makefile
 xpcom/build/Makefile
 xpcom/components/Makefile
 xpcom/ds/Makefile
-xpcom/idl/Makefile
+# xpcom/idl/Makefile
 xpcom/io/Makefile
 xpcom/typelib/Makefile
 xpcom/reflect/Makefile
@@ -377,9 +377,9 @@ xpcom/proxy/Makefile
 xpcom/proxy/public/Makefile
 xpcom/proxy/src/Makefile
 xpcom/proxy/tests/Makefile
-xpcom/public/Makefile
+# xpcom/public/Makefile
 xpcom/sample/Makefile
-xpcom/src/Makefile
+# xpcom/src/Makefile
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
 xpcom/tests/services/Makefile
