@@ -41,6 +41,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdTableProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
@@ -71,7 +72,7 @@
           </grid>
           <spring class="bigspacer"/>
           <grid>
-            <columns><column/><column/><column/></columns>
+            <columns><column/><column/><column flex="1"/></columns>
             <rows>
               <row valign="middle">
                 <text class="label" value="&tableWidth.label;"/>
@@ -268,8 +269,7 @@
     <!-- from EdDialogOverlay -->
     <box>
       <spring flex="1"/>
-      <button class="dialog" label="&applyButton.label;" oncommand="Apply();"/>
-      <box id="okCancelButtons"/> 
+      <box id="okCancelHelpButtonsRight"/> 
     </box>
   </tabbox>
 </window>

@@ -218,7 +218,7 @@ function Startup()
     }
   }
 
-  doSetOKCancel(onOK, onCancel);
+  doSetOKCancel(onOK, onCancel, 0, onApply);
 
   // Note: we must use TableElement, not globalTableElement for these,
   //  thus we should not put this in InitDialog.
@@ -261,6 +261,14 @@ function Startup()
 
 function InitDialog()
 {
+// turn on Button3 to be "apply"
+  var applyButton = document.getElementById("Button3");
+  if (applyButton)
+  {
+    applyButton.label = GetString("Apply");
+    applyButton.removeAttribute("collapsed");
+  }
+  
   // Get Table attributes
   dialog.TableRowsInput.value = rowCount;
   dialog.TableColumnsInput.value = colCount;
@@ -1220,6 +1228,12 @@ function SetCloseButton()
     document.getElementById("cancel").setAttribute("label",GetString("Close"));
     ApplyUsed = true;
   }
+}
+
+function onApply()
+{
+  Apply();
+  return false; // don't close window
 }
 
 function Apply()
