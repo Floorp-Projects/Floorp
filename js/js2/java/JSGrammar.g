@@ -1,3 +1,13 @@
+/*
+	TODO:
+	
+		* Add semantic feedback to lexer for:
+		    * JS 1.x regexps
+			* Capturing blocks that have syntax errors
+		* Add semicolon abbreviation
+		* Ensure that optional function parameters do not precede required function parameters
+*/		
+
 {
 import java.io.*;
 // Test program
@@ -6,7 +16,7 @@ class TestMain {
 		try {
 			JSLexer lexer = new JSLexer(new DataInputStream(System.in));
 			JSParser parser = new JSParser(lexer);
-			parser.expression(true, true);
+			parser.program();
 		} catch(Exception e) {
 			System.err.println("exception: "+e);
 		}
@@ -30,12 +40,6 @@ options {
 	static final int TopLevelScope = 0;
 	static final int ClassScope = 1;
 	static final int BlockScope = 2;
-
-	// Possible abbreviation contexts
-/*	static final int Abbrev = 0;
-	static final int AbbrevNonEmpty = 1;
-	static final int AbbrevNoShortIf = 2;
-	static final int Full = 3;*/
 }
 
 // ********* Identifiers **********
@@ -65,7 +69,7 @@ qualified_identifier_or_parenthesized_expression returns [ExpressionNode e]
 // ********* Primary Expressions **********
 primary_expression[boolean initial] returns [ExpressionNode e]
     { e = null; }
-	:	{initial}?
+	:	{!initial}?
 		(
 			e = function_expression
 		|	e = object_literal
@@ -373,15 +377,21 @@ type_expression[boolean initial, boolean allowIn]
 
 statement[int scope, boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
     { c = null; }
-	:	c = code_statement[non_empty, prev]
-	|	definition[scope]
+	:	(definition[scope]) => definition[scope]
+	|	c = code_statement[non_empty, prev]
 	;
 
 code_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
     { c = null; }
 	:	empty_statement[non_empty]
 	|	(identifier ":") => labeled_statement[non_empty, prev]
-	|	c = expression_statement[prev] semicolon
+
+// Bogus predicate required to eliminate ANTLR nondeterminism warning
+// on lookahead of '{' between expression_statement and block, even
+// though the symantic predicate in the primary_expression rule disambiguates
+// the two.
+	|	{true}? c = expression_statement[prev] semicolon
+	|	(identifier ":") => labeled_statement[non_empty, prev]
 	|	block[BlockScope]
 	|	c = if_statement[non_empty, prev]
 	|	switch_statement
@@ -595,7 +605,10 @@ definition[int scope]
 global_definition
 	:	version_definition semicolon
 	|	variable_definition semicolon
-	|	function_definition
+
+	// Syntactic predicate is required to disambiguate between getter/setter methods
+	// and getter/setter functions
+	|	("traditional" | "function" | (("getter" | "setter") "function")) => function_definition
 	|	member_definition
 	|	class_definition
 	;
@@ -988,4 +1001,4 @@ IDENT
 //         division and regexps.
 REGEXP
 	: '/' (~('/'|'*'))+ '/'
-        ;
+    ;
