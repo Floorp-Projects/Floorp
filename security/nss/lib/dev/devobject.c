@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.4 $ $Date: 2001/12/07 01:35:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.5 $ $Date: 2001/12/11 20:28:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -59,6 +59,11 @@ static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.4 $ $D
 #ifndef PKIT_H
 #include "pkit.h"
 #endif /* PKIT_H */
+
+/* XXX */
+#ifndef NSSPKI_H
+#include "nsspki.h"
+#endif /* NSSPKI_H */
 
 #ifdef NSS_3_4_CODE
 #include "pkim.h" /* for cert decoding */
@@ -267,58 +272,25 @@ loser:
     return PR_FAILURE;
 }
 
-static PRStatus 
-add_object_instance
+static nssCryptokiInstance *
+create_cryptoki_instance
 (
-  nssPKIObject *object,
+  NSSArena *arena,
   NSSToken *t, 
   CK_OBJECT_HANDLE h,
-  NSSTrustDomain *td, 
-  NSSCryptoContext *cc
+  PRBool isTokenObject
 )
 {
-    nssPKIObjectInstance *oi;
-    oi = nss_ZNEW(object->arena, nssPKIObjectInstance);
-    if (!oi) {
-	return PR_FAILURE;
+    nssCryptokiInstance *instance;
+    instance = nss_ZNEW(arena, nssCryptokiInstance);
+    if (!instance) {
+	return NULL;
     }
-    oi->cryptoki.handle = h;
-    oi->cryptoki.token = t;
-    oi->trustDomain = td;
-    oi->cryptoContext = cc;
-    nssList_Add(object->instanceList, oi);
-    return PR_SUCCESS;
+    instance->handle = h;
+    instance->token = t;
+    instance->isTokenObject = isTokenObject;
+    return instance;
 }
-
-#if 0
-#ifdef NSS_3_4_CODE
-static void make_nss3_nickname(NSSCertificate *c) 
-{
-    /* In NSS 3.4, the semantic is that nickname = token name + label */
-    PRStatus utf8rv;
-    NSSUTF8 *tokenName;
-    NSSUTF8 *label;
-    char *fullname;
-    PRUint32 len, tlen;
-    tokenName = nssToken_GetName(c->token);
-    label = c->nickname ? c->nickname : c->email;
-    if (!label) return;
-    tlen = nssUTF8_Length(tokenName, &utf8rv); /* token name */
-    tlen += 1;                                 /* :          */
-    len = nssUTF8_Length(label, &utf8rv);      /* label      */
-    len += 1;                                  /* \0         */
-    len += tlen;
-    fullname = nss_ZAlloc(c->arena, len);
-    utf8rv = nssUTF8_CopyIntoFixedBuffer(tokenName, fullname, tlen, ':');
-    utf8rv = nssUTF8_CopyIntoFixedBuffer(label, fullname + tlen, 
-                                                len - tlen, '\0');
-    nss_ZFreeIf(c->nickname);
-    c->nickname = nssUTF8_Create(c->arena, 
-                                 nssStringType_UTF8String, 
-                                 fullname, len);
-}
-#endif
-#endif
 
 static NSSCertificateType
 nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
@@ -344,7 +316,7 @@ get_token_cert
 )
 {
     NSSCertificate *rvCert;
-    nssPKIObject *object;
+    struct nssPKIObjectBaseStr *object; /* XXX needs to go */
     NSSArena *arena;
     nssSession *session;
     PRStatus nssrv;
@@ -373,6 +345,8 @@ get_token_cert
     object->arena = arena;
     object->refCount = 1;
     object->instanceList = nssList_Create(arena, PR_TRUE);
+    /* XXX this is only valid if tokens are unique in trust domains... */
+    object->trustDomain = token->trustDomain; 
     if (!object->instanceList) {
 	goto loser;
     }
@@ -403,7 +377,6 @@ get_token_cert
 	email = dc->getEmailAddress(dc);
 	if (email) rvCert->email = nssUTF8_Duplicate(email, arena);
     }
-    /*make_nss3_nickname(rvCert);*/
 #endif
     return rvCert;
 loser:
@@ -417,45 +390,43 @@ nssToken_ImportCertificate
   NSSToken *tok,
   nssSession *sessionOpt,
   NSSCertificate *cert,
-  NSSTrustDomain *td,
-  NSSCryptoContext *cc
+  PRBool asTokenObject
 )
 {
+    nssCryptokiInstance *instance;
     CK_CERTIFICATE_TYPE cert_type = CKC_X_509;
     CK_OBJECT_HANDLE handle;
-    CK_ATTRIBUTE cert_tmpl[] = {
-	{ CKA_TOKEN,            NULL, 0 },
-	{ CKA_CLASS,            NULL, 0 },
-	{ CKA_CERTIFICATE_TYPE, NULL, 0 },
-	{ CKA_ID,               NULL, 0 },
-	{ CKA_LABEL,            NULL, 0 },
-	{ CKA_VALUE,            NULL, 0 },
-	{ CKA_ISSUER,           NULL, 0 },
-	{ CKA_SUBJECT,          NULL, 0 },
-	{ CKA_SERIAL_NUMBER,    NULL, 0 }
-    };
-    CK_ULONG ctsize = sizeof(cert_tmpl)/sizeof(cert_tmpl[0]);
-    if (td) {
-	/* trust domain == token object */
-	NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 0, &g_ck_true);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE cert_tmpl[9];
+    CK_ULONG ctsize;
+    NSS_CK_TEMPLATE_START(cert_tmpl, attr, ctsize);
+    if (asTokenObject) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     } else {
-	/* crypto context == session object */
-	NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 0, &g_ck_false);
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
     }
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 1, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_VAR( cert_tmpl, 2,  cert_type);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 3, &cert->id);
-    NSS_CK_SET_ATTRIBUTE_UTF8(cert_tmpl, 4,  cert->nickname);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 5, &cert->encoding);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 6, &cert->issuer);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 7, &cert->subject);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_tmpl, 8, &cert->serial);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS,            &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CERTIFICATE_TYPE,  cert_type);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID,               &cert->id);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL,             cert->nickname);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_VALUE,            &cert->encoding);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,           &cert->issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT,          &cert->subject);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,    &cert->serial);
+    NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
     /* Import the certificate onto the token */
     handle = import_object(tok, sessionOpt, cert_tmpl, ctsize);
     if (handle == CK_INVALID_HANDLE) {
 	return PR_FAILURE;
     }
-    return add_object_instance(&cert->object, tok, handle, td, cc);
+    instance = create_cryptoki_instance(cert->object.arena, 
+                                        tok, handle, asTokenObject);
+    if (!instance) {
+	/* XXX destroy object */
+	return PR_FAILURE;
+    }
+    nssList_Add(cert->object.instanceList, instance);
+    return PR_SUCCESS;
 }
 
 static PRBool 
@@ -475,7 +446,7 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     nssTokenCertSearch *search = (nssTokenCertSearch *)arg;
     NSSCertificate *cert = NULL;
     nssListIterator *instances;
-    nssPKIObjectInstance *oi;
+    nssCryptokiInstance *ci;
     CK_ATTRIBUTE issuersn_tmpl[] = {
 	{ CKA_ISSUER,        NULL, 0 },
 	{ CKA_SERIAL_NUMBER, NULL, 0 }
@@ -494,11 +465,11 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     found = PR_FALSE;
     if (cert) {
 	instances = cert->object.instances;
-	for (oi  = (nssPKIObjectInstance *)nssListIterator_Start(instances);
-	     oi != (nssPKIObjectInstance *)NULL;
-	     oi  = (nssPKIObjectInstance *)nssListIterator_Next(instances))
+	for (ci  = (nssCryptokiInstance *)nssListIterator_Start(instances);
+	     ci != (nssCryptokiInstance *)NULL;
+	     ci  = (nssCryptokiInstance *)nssListIterator_Next(instances))
 	{
-	    if (oi->cryptoki.handle == h && oi->cryptoki.token == t) {
+	    if (ci->handle == h && ci->token == t) {
 		found = PR_TRUE;
 		break;
 	    }
@@ -509,12 +480,16 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
 	if (!cert) return PR_FAILURE;
     }
     if (!found) {
-	nssrv = add_object_instance(&cert->object, t, h, 
-	                            search->trustDomain, 
-	                            search->cryptoContext);
-	if (nssrv != PR_SUCCESS) {
-	    return nssrv;
+	PRBool isTokenObject;
+	/* XXX this is incorrect if the search is over both types */
+	isTokenObject = (search->searchType == nssTokenSearchType_TokenOnly) ?
+	                PR_TRUE : PR_FALSE;
+	ci = create_cryptoki_instance(cert->object.arena, t, h, isTokenObject);
+	if (!ci) {
+	    NSSCertificate_Destroy(cert);
+	    return PR_FAILURE;
 	}
+	nssList_Add(cert->object.instanceList, ci);
     }
     return (*search->callback)(cert, search->cbarg);
 }
@@ -531,12 +506,18 @@ nssToken_TraverseCertificates
 )
 {
     PRStatus nssrv;
-    /* this is really traversal - the template is all certs */
-    CK_ATTRIBUTE cert_template[] = {
-	{ CKA_CLASS, NULL, 0 }
-    };
-    CK_ULONG ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE cert_template[2];
+    CK_ULONG ctsize;
+    NSS_CK_TEMPLATE_START(cert_template, attr, ctsize);
+    /* Set the search to token/session only if provided */
+    if (search->searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (search->searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
+    NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
     nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
     nssrv = traverse_objects_by_template(token, sessionOpt,
                                          cert_template, ctsize,
@@ -554,18 +535,23 @@ nssToken_TraverseCertificatesBySubject
 )
 {
     PRStatus nssrv;
-    CK_ATTRIBUTE subj_tmpl[] =
-    {
-	{ CKA_CLASS,   NULL, 0 },
-	{ CKA_SUBJECT, NULL, 0 }
-    };
-    CK_ULONG stsize = (CK_ULONG)(sizeof(subj_tmpl) / sizeof(subj_tmpl[0]));
-    NSS_CK_SET_ATTRIBUTE_ITEM(subj_tmpl, 0, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_ITEM(subj_tmpl, 1, subject);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE subj_template[3];
+    CK_ULONG stsize;
+    NSS_CK_TEMPLATE_START(subj_template, attr, stsize);
+    /* Set the search to token/session only if provided */
+    if (search->searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (search->searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
+    NSS_CK_TEMPLATE_FINISH(subj_template, attr, stsize);
     nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
-	                                 subj_tmpl, stsize,
+	                                 subj_template, stsize,
                                          retrieve_cert, search);
     return nssrv;
 }
@@ -580,20 +566,23 @@ nssToken_TraverseCertificatesByNickname
 )
 {
     PRStatus nssrv;
-    CK_ATTRIBUTE nick_tmpl[] =
-    {
-	{ CKA_CLASS, NULL, 0 },
-	{ CKA_LABEL, NULL, 0 }
-    };
-    CK_ULONG ntsize = sizeof(nick_tmpl) / sizeof(nick_tmpl[0]);
-    /* set up the search template */
-    NSS_CK_SET_ATTRIBUTE_ITEM(nick_tmpl, 0, &g_ck_class_cert);
-    nick_tmpl[1].pValue = (CK_VOID_PTR)name;
-    nick_tmpl[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE nick_template[3];
+    CK_ULONG ntsize;
+    NSS_CK_TEMPLATE_START(nick_template, attr, ntsize);
+    /* Set the search to token/session only if provided */
+    if (search->searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (search->searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, name);
+    NSS_CK_TEMPLATE_FINISH(nick_template, attr, ntsize);
     nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
-	                                 nick_tmpl, ntsize, 
+	                                 nick_template, ntsize, 
                                          retrieve_cert, search);
     if (nssrv != PR_SUCCESS) {
 	return nssrv;
@@ -604,9 +593,9 @@ nssToken_TraverseCertificatesByNickname
      * leaving it in until I have surveyed more tokens to see if it needed.
      * well, its needed by the builtin token...
      */
-    nick_tmpl[1].ulValueLen++;
+    nick_template[1].ulValueLen++;
     nssrv = traverse_objects_by_template(token, sessionOpt,
-	                                 nick_tmpl, ntsize,
+	                                 nick_template, ntsize,
                                          retrieve_cert, search);
     return nssrv;
 }
@@ -621,20 +610,23 @@ nssToken_TraverseCertificatesByEmail
 )
 {
     PRStatus nssrv;
-    CK_ATTRIBUTE email_tmpl[] =
-    {
-	{ CKA_CLASS,          NULL, 0 },
-	{ CKA_NETSCAPE_EMAIL, NULL, 0 }
-    };
-    CK_ULONG etsize = sizeof(email_tmpl) / sizeof(email_tmpl[0]);
-    /* set up the search template */
-    NSS_CK_SET_ATTRIBUTE_ITEM(email_tmpl, 0, &g_ck_class_cert);
-    email_tmpl[1].pValue = (CK_VOID_PTR)email;
-    email_tmpl[1].ulValueLen = (CK_ULONG)nssUTF8_Length(email, &nssrv);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE email_template[3];
+    CK_ULONG etsize;
+    NSS_CK_TEMPLATE_START(email_template, attr, etsize);
+    /* Set the search to token/session only if provided */
+    if (search->searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (search->searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL, email);
+    NSS_CK_TEMPLATE_FINISH(email_template, attr, etsize);
     nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
-	                                 email_tmpl, etsize,
+	                                 email_template, etsize,
                                          retrieve_cert, search);
     if (nssrv != PR_SUCCESS) {
 	return nssrv;
@@ -659,25 +651,29 @@ nssToken_FindCertificateByIssuerAndSerialNumber
   NSSToken *token,
   nssSession *sessionOpt,
   NSSDER *issuer,
-  NSSDER *serial
+  NSSDER *serial,
+  nssTokenSearchType searchType
 )
 {
     NSSCertificate *rvCert = NULL;
     nssSession *session;
-    PRBool tokenObject;
     PRStatus nssrv;
-    CK_ULONG ctsize;
     CK_OBJECT_HANDLE object;
-    CK_ATTRIBUTE cert_template[] = {
-	{ CKA_CLASS,         NULL, 0 },
-	{ CKA_ISSUER,        NULL, 0 },
-	{ CKA_SERIAL_NUMBER, NULL, 0 }
-    };
-    ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE cert_template[4];
+    CK_ULONG ctsize;
+    NSS_CK_TEMPLATE_START(cert_template, attr, ctsize);
+    /* Set the search to token/session only if provided */
+    if (searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
     /* Set the unique id */
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 1, issuer);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 2, serial);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS,         &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,         issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,  serial);
+    NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
     /* get the object handle */
     object = find_object_by_template(token, sessionOpt, cert_template, ctsize);
     if (object == CK_INVALID_HANDLE) {
@@ -686,21 +682,18 @@ nssToken_FindCertificateByIssuerAndSerialNumber
     session = (sessionOpt) ? sessionOpt : token->defaultSession;
     rvCert = get_token_cert(token, sessionOpt, object);
     if (rvCert) {
-	NSSTrustDomain *td;
-	NSSCryptoContext *cc;
-	tokenObject = nssCKObject_IsAttributeTrue(object, CKA_TOKEN,
-	                                          session, token->slot, 
-	                                          &nssrv);
-	if (tokenObject) {
-	    td = token->trustDomain;
-	    cc = NULL;
-	} else {
-	    td = NULL;
-	    cc = NULL; /* XXX how to recover the crypto context from 
-	                *     the token? 
-	                */
+	PRBool isTokenObject;
+	nssCryptokiInstance *instance;
+	isTokenObject = nssCKObject_IsAttributeTrue(object, CKA_TOKEN,
+	                                            session, token->slot, 
+	                                            &nssrv);
+	instance = create_cryptoki_instance(rvCert->object.arena,
+	                                    token, object, isTokenObject);
+	if (!instance) {
+	    NSSCertificate_Destroy(rvCert);
+	    return NULL;
 	}
-	add_object_instance(&rvCert->object, token, object, td, cc);
+	nssList_Add(rvCert->object.instanceList, instance);
     }
     return rvCert;
 }
@@ -710,22 +703,27 @@ nssToken_FindCertificateByEncodedCertificate
 (
   NSSToken *token,
   nssSession *sessionOpt,
-  NSSBER *encodedCertificate
+  NSSBER *encodedCertificate,
+  nssTokenSearchType searchType
 )
 {
     NSSCertificate *rvCert = NULL;
     nssSession *session;
-    PRBool tokenObject;
     PRStatus nssrv;
-    CK_ULONG ctsize;
     CK_OBJECT_HANDLE object;
-    CK_ATTRIBUTE cert_template[] = {
-	{ CKA_CLASS, NULL, 0 },
-	{ CKA_VALUE, NULL, 0 }
-    };
-    ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 1, encodedCertificate);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE cert_template[3];
+    CK_ULONG ctsize;
+    NSS_CK_TEMPLATE_START(cert_template, attr, ctsize);
+    /* Set the search to token/session only if provided */
+    if (searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_VALUE, encodedCertificate);
+    NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
     /* get the object handle */
     object = find_object_by_template(token, sessionOpt, cert_template, ctsize);
     if (object == CK_INVALID_HANDLE) {
@@ -734,21 +732,18 @@ nssToken_FindCertificateByEncodedCertificate
     session = (sessionOpt) ? sessionOpt : token->defaultSession;
     rvCert = get_token_cert(token, sessionOpt, object);
     if (rvCert) {
-	NSSTrustDomain *td;
-	NSSCryptoContext *cc;
-	tokenObject = nssCKObject_IsAttributeTrue(object, CKA_TOKEN,
-	                                          session, token->slot, 
-	                                          &nssrv);
-	if (tokenObject) {
-	    td = token->trustDomain;
-	    cc = NULL;
-	} else {
-	    td = NULL;
-	    cc = NULL; /* XXX how to recover the crypto context from 
-	                *     the token? 
-	                */
+	PRBool isTokenObject;
+	nssCryptokiInstance *instance;
+	isTokenObject = nssCKObject_IsAttributeTrue(object, CKA_TOKEN,
+	                                            session, token->slot, 
+	                                            &nssrv);
+	instance = create_cryptoki_instance(rvCert->object.arena,
+	                                    token, object, isTokenObject);
+	if (!instance) {
+	    NSSCertificate_Destroy(rvCert);
+	    return NULL;
 	}
-	add_object_instance(&rvCert->object, token, object, td, cc);
+	nssList_Add(rvCert->object.instanceList, instance);
     }
     return rvCert;
 }
@@ -779,26 +774,14 @@ nssToken_ImportTrust
   NSSToken *tok,
   nssSession *sessionOpt,
   NSSTrust *trust,
-  NSSTrustDomain *trustDomain,
-  NSSCryptoContext *cryptoContext
+  PRBool asTokenObject
 )
 {
-    PRStatus nssrv;
     CK_OBJECT_HANDLE handle;
     CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
-    CK_ATTRIBUTE trust_tmpl[] = {
-	{ CKA_TOKEN,                  NULL, 0 }, 
-	{ CKA_CLASS,                  NULL, 0 }, 
-	{ CKA_ISSUER,                 NULL, 0 },
-	{ CKA_SERIAL_NUMBER,          NULL, 0 },
-	{ CKA_CERT_SHA1_HASH,         NULL, 0 },
-	{ CKA_CERT_MD5_HASH,          NULL, 0 },
-	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
-	{ CKA_TRUST_CLIENT_AUTH,      NULL, 0 },
-	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
-	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
-    };
-    CK_ULONG tsize = sizeof(trust_tmpl) / sizeof(trust_tmpl[0]);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE trust_tmpl[10];
+    CK_ULONG tsize;
     PRUint8 sha1[20]; /* this is cheating... */
     PRUint8 md5[16];
     NSSItem sha1_result, md5_result;
@@ -807,30 +790,37 @@ nssToken_ImportTrust
     md5_result.data = md5; md5_result.size = sizeof md5;
     sha1_hash(&c->encoding, &sha1_result);
     md5_hash(&c->encoding, &md5_result);
-    if (trustDomain) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 0, &g_ck_true);
+    NSS_CK_TEMPLATE_START(trust_tmpl, attr, tsize);
+    if (asTokenObject) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     } else {
-	NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 0, &g_ck_false);
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
     }
-    NSS_CK_SET_ATTRIBUTE_VAR( trust_tmpl, 1, tobjc);
-    NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 2, &c->issuer);
-    NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 3, &c->serial);
-    NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 4, &sha1_result);
-    NSS_CK_SET_ATTRIBUTE_ITEM(trust_tmpl, 5, &md5_result);
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS,           tobjc);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,         &c->issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,  &c->serial);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_SHA1_HASH, &sha1_result);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_MD5_HASH,  &md5_result);
     /* now set the trust values */
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_tmpl, 6, trust->serverAuth);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_tmpl, 7, trust->clientAuth);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_tmpl, 8, trust->emailProtection);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_tmpl, 9, trust->codeSigning);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_SERVER_AUTH,  trust->serverAuth);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CLIENT_AUTH,  trust->clientAuth);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING, trust->codeSigning);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_EMAIL_PROTECTION, 
+                                                       trust->emailProtection);
+    NSS_CK_TEMPLATE_FINISH(trust_tmpl, attr, tsize);
     /* import the trust object onto the token */
     handle = import_object(tok, NULL, trust_tmpl, tsize);
     if (handle != CK_INVALID_HANDLE) {
-	nssrv = add_object_instance(&trust->object, tok, handle,
-	                            trustDomain, cryptoContext);
-    } else {
-	nssrv = PR_FAILURE;
-    }
-    return nssrv;
+	nssCryptokiInstance *instance;
+	instance = create_cryptoki_instance(trust->object.arena,
+	                                    tok, handle, asTokenObject);
+	if (!instance) {
+	    return PR_FAILURE;
+	}
+	nssList_Add(trust->object.instanceList, instance);
+	return PR_SUCCESS;
+    } 
+    return PR_FAILURE;
 }
 
 static CK_OBJECT_HANDLE
@@ -838,34 +828,39 @@ get_cert_trust_handle
 (
   NSSToken *token,
   nssSession *session,
-  NSSCertificate *c
+  NSSCertificate *c,
+  nssTokenSearchType searchType
 )
 {
     CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
-    CK_ATTRIBUTE tobj_template[] = {
-	{ CKA_CLASS,          NULL,   0 }, 
-	{ CKA_CERT_SHA1_HASH, NULL,   0 },
-	{ CKA_ISSUER,         NULL,   0 },
-	{ CKA_SERIAL_NUMBER,  NULL,   0 }
-    };
-    CK_ULONG tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE tobj_template[5];
+    CK_ULONG tobj_size;
     PRUint8 sha1[20]; /* this is cheating... */
     NSSItem sha1_result;
     sha1_result.data = sha1; sha1_result.size = sizeof sha1;
     sha1_hash(&c->encoding, &sha1_result);
-    NSS_CK_SET_ATTRIBUTE_VAR( tobj_template, 0, tobjc);
-    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 1, &sha1_result);
-    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 2, &c->issuer);
-    NSS_CK_SET_ATTRIBUTE_ITEM(tobj_template, 3, &c->serial);
+    NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
+    if (searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (searchType == nssTokenSearchType_TokenOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS,          tobjc);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_SHA1_HASH, &sha1_result);
 #ifdef NSS_3_4_CODE
-    if (PK11_HasRootCerts(token->pk11slot)) {
-	tobj_size -= 2;
+    if (!PK11_HasRootCerts(token->pk11slot)) {
+#endif
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,         &c->issuer);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER , &c->serial);
+#ifdef NSS_3_4_CODE
     }
     /*
      * we need to arrange for the built-in token to lose the bottom 2 
      * attributes so that old built-in tokens will continue to work.
      */
 #endif
+    NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
     return find_object_by_template(token, session,
                                    tobj_template, tobj_size);
 }
@@ -875,33 +870,36 @@ nssToken_FindTrustForCert
 (
   NSSToken *token,
   nssSession *sessionOpt,
-  NSSCertificate *c
+  NSSCertificate *c,
+  nssTokenSearchType searchType
 )
 {
     PRStatus nssrv;
     NSSTrust *rvTrust;
     nssSession *session;
     NSSArena *arena;
-    nssPKIObject *object;
+    struct nssPKIObjectBaseStr *object;
+    nssCryptokiInstance *instance;
+    PRBool isTokenObject;
+    CK_BBOOL isToken;
     CK_TRUST saTrust, caTrust, epTrust, csTrust;
     CK_OBJECT_HANDLE tobjID;
-    CK_ATTRIBUTE trust_template[] = {
-	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
-	{ CKA_TRUST_CLIENT_AUTH,      NULL, 0 },
-	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
-	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
-    };
-    CK_ULONG trust_size = sizeof(trust_template) / sizeof(trust_template[0]);
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE trust_template[5];
+    CK_ULONG trust_size;
     session = (sessionOpt) ? sessionOpt : token->defaultSession;
-    tobjID = get_cert_trust_handle(token, session, c);
+    tobjID = get_cert_trust_handle(token, session, c, searchType);
     if (tobjID == CK_INVALID_HANDLE) {
 	return NULL;
     }
     /* Then use the trust object to find the trust settings */
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 0, saTrust);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, caTrust);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, epTrust);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 3, csTrust);
+    NSS_CK_TEMPLATE_START(trust_template, attr, trust_size);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TOKEN,                  isToken);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_SERVER_AUTH,      saTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CLIENT_AUTH,      caTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_EMAIL_PROTECTION, epTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     csTrust);
+    NSS_CK_TEMPLATE_FINISH(trust_template, attr, trust_size);
     nssrv = nssCKObject_GetAttributes(tobjID,
                                       trust_template, trust_size,
                                       NULL, session, token->slot);
@@ -920,6 +918,8 @@ nssToken_FindTrustForCert
     object = &rvTrust->object;
     object->arena = arena;
     object->refCount = 1;
+    /* XXX this is only valid if tokens are unique in trust domains... */
+    object->trustDomain = token->trustDomain;
     object->instanceList = nssList_Create(arena, PR_TRUE);
     if (!object->instanceList) {
 	nssArena_Destroy(arena);
@@ -930,10 +930,9 @@ nssToken_FindTrustForCert
 	nssArena_Destroy(arena);
 	return NULL;
     }
-    /* need to figure out trust domain and/or crypto context */
-    nssrv = add_object_instance(object, token, tobjID, 
-                                token->trustDomain, NULL);
-    if (nssrv != PR_SUCCESS) {
+    isTokenObject = (isToken == CK_TRUE) ? PR_TRUE : PR_FALSE;
+    instance = create_cryptoki_instance(arena, token, tobjID, isTokenObject);
+    if (!instance) {
 	nssArena_Destroy(arena);
 	return NULL;
     }

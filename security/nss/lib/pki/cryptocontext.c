@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.6 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.7 $ $Date: 2001/12/11 20:28:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -125,7 +125,7 @@ NSSCryptoContext_ImportCertificate
 	return PR_FAILURE;
     }
 #endif
-    return nssToken_ImportCertificate(token, session, c, NULL, cc);
+    return nssToken_ImportCertificate(token, session, c, PR_FALSE);
 }
 
 NSS_IMPLEMENT NSSCertificate *

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.19 $ $Date: 2001/12/07 01:36:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.20 $ $Date: 2001/12/11 20:28:36 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -106,13 +106,13 @@ NSSCertificate_DeleteStoredObject
      */
     /* XXX use callback to log in if neccessary */
     PRStatus nssrv = PR_SUCCESS;
-    nssPKIObjectInstance *instance;
+    nssCryptokiInstance *instance;
     nssListIterator *instances = c->object.instances;
-    for (instance  = (nssPKIObjectInstance *)nssListIterator_Start(instances);
-         instance != (nssPKIObjectInstance *)NULL;
-         instance  = (nssPKIObjectInstance *)nssListIterator_Next(instances)) 
+    for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
+         instance != (nssCryptokiInstance *)NULL;
+         instance  = (nssCryptokiInstance *)nssListIterator_Next(instances)) 
     {
-	nssrv = nssToken_DeleteStoredObject(&instance->cryptoki);
+	nssrv = nssToken_DeleteStoredObject(instance);
 	if (nssrv != PR_SUCCESS) {
 	    break;
 	}
@@ -316,15 +316,7 @@ NSSCertificate_GetTrustDomain
   NSSCertificate *c
 )
 {
-    PRStatus nssrv = PR_SUCCESS;
-    nssPKIObjectInstance *instance;
-    nssList *instances = c->object.instanceList;
-    nssrv = nssList_GetArray(instances, (void **)&instance, 1);
-    if (nssrv == PR_SUCCESS) {
-	return instance->trustDomain;
-    } else {
-	return (NSSTrustDomain *)NULL;
-    }
+    return c->object.trustDomain;
 }
 
 NSS_IMPLEMENT NSSToken *

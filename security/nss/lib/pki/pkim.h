@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.10 $ $Date: 2001/12/07 01:36:08 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.11 $ $Date: 2001/12/11 20:28:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -261,7 +261,7 @@ nssDecodedCert_Destroy
 NSS_EXTERN PRStatus
 nssPKIObject_Destroy
 (
-  nssPKIObject *object
+  struct nssPKIObjectBaseStr *object
 );
 
 NSS_EXTERN NSSTime *
