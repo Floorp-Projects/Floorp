@@ -373,8 +373,6 @@ public class ObjArray implements Serializable
         }
     }
 
-    static final long serialVersionUID = -8887981051569446902L;
-
 // Number of data elements
     private int size;
 

@@ -429,9 +429,6 @@ public class UintMap implements Serializable {
         }
     }
 
-    static final long serialVersionUID = -6916326879143724506L;
-
-
 // A == golden_ratio * (1 << 32) = ((sqrt(5) - 1) / 2) * (1 << 32)
 // See Knuth etc.
     private static final int A = 0x9e3779b9;

@@ -455,8 +455,6 @@ public class ObjToIntMap implements Serializable {
         }
     }
 
-    static final long serialVersionUID = 3396438333234169727L;
-
 // A == golden_ratio * (1 << 32) = ((sqrt(5) - 1) / 2) * (1 << 32)
 // See Knuth etc.
     private static final int A = 0x9e3779b9;
