@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.27 $ $Date: 2002/08/09 18:48:31 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.28 $ $Date: 2002/08/14 20:42:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -883,7 +883,8 @@ nssToken_FindCertificateByIssuerAndSerialNumber
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    } else if ((searchType == nssTokenSearchType_TokenOnly) ||
+               (searchType == nssTokenSearchType_TokenForced)) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     /* Set the unique id */
@@ -893,9 +894,15 @@ nssToken_FindCertificateByIssuerAndSerialNumber
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,  serial);
     NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
     /* get the object handle */
-    objects = find_objects_by_template(token, sessionOpt,
+    if (searchType == nssTokenSearchType_TokenForced) {
+	objects = find_objects(token, sessionOpt,
+	                       cert_template, ctsize,
+	                       1, statusOpt);
+    } else {
+	objects = find_objects_by_template(token, sessionOpt,
                                        cert_template, ctsize,
                                        1, statusOpt);
+    }
     if (objects) {
 	rvObject = objects[0];
 	nss_ZFreeIf(objects);
@@ -914,9 +921,15 @@ nssToken_FindCertificateByIssuerAndSerialNumber
 	    return NULL;
 	}
     	NSS_CK_SET_ATTRIBUTE_ITEM(serialAttr,CKA_SERIAL_NUMBER,&serialDecode);
-	objects = find_objects_by_template(token, sessionOpt,
+	if (searchType == nssTokenSearchType_TokenForced) {
+	    objects = find_objects(token, sessionOpt,
+	                       cert_template, ctsize,
+	                       1, statusOpt);
+	} else {
+	    objects = find_objects_by_template(token, sessionOpt,
                                        cert_template, ctsize,
                                        1, statusOpt);
+	}
 	if (objects) {
 	    rvObject = objects[0];
 	    nss_ZFreeIf(objects);

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.38 2002/08/02 00:53:15 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.39 2002/08/14 20:42:34 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -222,6 +222,10 @@ CERT_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,
 			SECItem *key)
 {
     key->len = sn->len + issuer->len;
+
+    if ((sn->data == NULL) || (issuer->data == NULL)) {
+	goto loser;
+    }
     
     key->data = (unsigned char*)PORT_ArenaAlloc(arena, key->len);
     if ( !key->data ) {
