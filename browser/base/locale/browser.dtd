@@ -155,11 +155,9 @@
 <!ENTITY helpMenu.accesskey       "H"> 
 
 <!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "r">
+<!ENTITY releaseCmd.accesskey       "R">
 <!ENTITY aboutCmd.label         "About &brandShortName;">
 <!ENTITY aboutCmd.accesskey       "A">
-<!ENTITY aboutCommPluginsCmd.label      "About Plug-ins">
-<!ENTITY aboutCommPluginsCmd.accesskey      "P">
 
 <!ENTITY openCmd.commandkey           "l">
 
