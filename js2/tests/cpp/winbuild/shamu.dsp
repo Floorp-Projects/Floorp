@@ -63,11 +63,12 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "shamu___Win32_Debug"
-# PROP Intermediate_Dir "shamu___Win32_Debug"
+# PROP Output_Dir "shamu_Debug"
+# PROP Intermediate_Dir "shamu_Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SHAMU_EXPORTS" /YX /FD /GZ  /c
-# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\..\js\src" /I "..\..\..\src" /I "..\..\..\src\regexp" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SHAMU_EXPORTS" /D "DEBUG" /D "XP_PC" /D "EXPORT_JS_API" /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SHAMU_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\..\js\src" /I "..\..\..\src" /I "..\..\..\src\regexp" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SHAMU_EXPORTS" /D "DEBUG" /D "XP_PC" /D "EXPORT_JS_API" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -91,6 +92,15 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=..\shamu.cpp
+
+!IF  "$(CFG)" == "shamu - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "shamu - Win32 Debug"
+
+# PROP Intermediate_Dir "shamu_Debug"
+
+!ENDIF 
+
 # End Source File
 # End Group
 # Begin Group "Header Files"
