@@ -223,7 +223,7 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
    }
 
    // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsPMThread())
+   if( !mOS2Toolkit->IsGuiThread())
    {
       ULONG args[7] = { hwndP, (ULONG) aParent, (ULONG) &aRect,
                         (ULONG) aHandleEventFunction,
@@ -394,7 +394,7 @@ nsWindow::~nsWindow()
 nsresult nsWindow::Destroy()
 {
    // Switch to the PM thread if necessary...
-   if( mToolkit && !mOS2Toolkit->IsPMThread())
+   if( mToolkit && !mOS2Toolkit->IsGuiThread())
    {
       MethodInfo info( this, nsWindow::W_DESTROY);
       mOS2Toolkit->CallMethod( &info);
@@ -1657,7 +1657,7 @@ nsresult nsWindow::Enable( PRBool bState)
 nsresult nsWindow::SetFocus()
 {
    // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsPMThread())
+   if( !mOS2Toolkit->IsGuiThread())
    {
       MethodInfo info(this, nsWindow::W_SET_FOCUS);
       mOS2Toolkit->CallMethod(&info);
@@ -2106,7 +2106,7 @@ nsresult nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchron
 nsresult nsWindow::Update()
 {
    // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsPMThread())
+   if( !mOS2Toolkit->IsGuiThread())
    {
       MethodInfo info(this, nsWindow::W_UPDATE_WINDOW);
       mOS2Toolkit->CallMethod(&info);
@@ -2119,7 +2119,7 @@ nsresult nsWindow::Update()
 nsresult nsWindow::SetTitle( const nsString &aTitle) 
 {
    // Switch to the PM thread if necessary...
-   if( mOS2Toolkit && !mOS2Toolkit->IsPMThread())
+   if( mOS2Toolkit && !mOS2Toolkit->IsGuiThread())
    {
       ULONG ulong = (ULONG) &aTitle;
       MethodInfo info( this, nsWindow::W_SET_TITLE, 1, &ulong);
@@ -2136,7 +2136,7 @@ nsresult nsWindow::SetTitle( const nsString &aTitle)
 nsresult nsWindow::GetWindowText( nsString &aStr, PRUint32 *rc)
 {
    // Switch to the PM thread if necessary...
-   if( !mOS2Toolkit->IsPMThread())
+   if( !mOS2Toolkit->IsGuiThread())
    {
       ULONG args[] = { (ULONG) &aStr, (ULONG) rc };
       MethodInfo info( this, nsWindow::W_GET_TITLE, 2, args);
@@ -2359,9 +2359,9 @@ void nsWindow::FreeNativeData( void *aDatum, PRUint32 aDataType)
 }
 
 // Thread switch callback
-nsresult nsWindow::CallMethod(MethodInfo *info)
+BOOL nsWindow::CallMethod(MethodInfo *info)
 {
-   nsresult rc = NS_ERROR_FAILURE;
+    BOOL bRet = TRUE;
 
    switch( info->methodId)
    {
@@ -2376,7 +2376,7 @@ nsresult nsWindow::CallMethod(MethodInfo *info)
 		   (nsIAppShell*)      (info->args[5]),
 		   nsnull, /* toolkit */
 		   (nsWidgetInitData*) (info->args[6]));
-	 rc = NS_OK;
+	 bRet = TRUE;
 	 break;
 #if 0
       case nsWindow::W_CREATE:
@@ -2387,7 +2387,7 @@ nsresult nsWindow::CallMethod(MethodInfo *info)
 		(nsIAppShell *)(info->args[4]),
 		(nsIToolkit*)(info->args[5]),
 		(nsWidgetInitData*)(info->args[6]));
-         rc = NS_OK;
+	 bRet = TRUE;
          break;
 
       case nsWindow::W_CREATE_NATIVE:
@@ -2398,44 +2398,46 @@ nsresult nsWindow::CallMethod(MethodInfo *info)
 		(nsIAppShell *)(info->args[4]),
 		(nsIToolkit*)(info->args[5]),
 		(nsWidgetInitData*)(info->args[6]));
-         rc = NS_OK;
+	 bRet = TRUE;
          break;
 #endif
       case nsWindow::W_DESTROY:
          NS_ASSERTION(info->nArgs == 0, "Bad args to Destroy");
          Destroy();
-         rc = NS_OK;
+	 bRet = TRUE;
          break;
 
       case nsWindow::W_SET_FOCUS:
          NS_ASSERTION(info->nArgs == 0, "Bad args to SetFocus");
          SetFocus();
-         rc = NS_OK;
+	 bRet = TRUE;
          break;
 
       case nsWindow::W_UPDATE_WINDOW:
          NS_ASSERTION(info->nArgs == 0, "Bad args to UpdateWindow");
          Update();
-         rc = NS_OK;
+	 bRet = TRUE;
          break;
 
       case nsWindow::W_SET_TITLE:
          NS_ASSERTION(info->nArgs == 1, "Bad args to SetTitle");
          SetTitle( (const nsString &) info->args[0]);
-         rc = NS_OK;
+	 bRet = TRUE;
          break;
 
       case nsWindow::W_GET_TITLE:
          NS_ASSERTION(info->nArgs == 2, "Bad args to GetTitle");
-         rc = GetWindowText( *((nsString*) info->args[0]),
-                             (PRUint32*)info->args[1]);
+         GetWindowText( *((nsString*) info->args[0]),
+                        (PRUint32*)info->args[1]);
+	 bRet = TRUE;
          break;
 
       default:
+            bRet = FALSE;
          break;
    }
 
-   return rc;
+   return bRet;
 }
 
 // function to translate from a WM_CHAR to an NS VK_ constant ---------------

@@ -1,256 +1,219 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Fairhurst <john_fairhurst@iname.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   IBM Corp.
  */
 
 #include "nsToolkit.h"
+#include "nsSwitchToUIThread.h"
 
-#include "nsIAppShell.h"
-#include "nsGUIEvent.h"
-#include "nsWidgetsCID.h"
-#include "nsIComponentManager.h"
-
-static PRUintn gToolkitTLSIndex = 0;
-
-// Bits to deal with the case where a new toolkit is initted with a null ----
-// thread.  In this case it has to create a new thread to be the PM thread.
-// Hopefully this will never happen!
-
-// struct passed to new thread
-struct ThreadInitInfo
-{
-   PRMonitor *pMonitor;
-   nsToolkit *toolkit;
-
-   ThreadInitInfo( nsToolkit *tk, PRMonitor *pMon)
-      : pMonitor( pMon), toolkit( tk)
-   {}
-};
-
-// main for the message pump thread
-extern "C" void RunPump( void *arg)
-{
-   ThreadInitInfo *info = (ThreadInitInfo *) arg;
-   nsIAppShell    *pShell = nsnull;
-   nsresult        res;
-
-   static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
-
-   res = nsComponentManager::CreateInstance( kAppShellCID, nsnull,
-                                             NS_GET_IID(nsIAppShell),
-                                             (void **) &pShell);
-   NS_ASSERTION( res == NS_OK, "Couldn't create new shell");
-
-   pShell->Create( 0, 0);
-
-   // do registration and creation in this thread
-   info->toolkit->CreateInternalWindow( PR_GetCurrentThread());
-
-   // let the main thread continue
-   PR_EnterMonitor( info->pMonitor);
-   PR_Notify( info->pMonitor);
-   PR_ExitMonitor( info->pMonitor);
-
-   pShell->Run();
-   NS_RELEASE( pShell);
-}
-
-// toolkit method to create a new thread and process the msgq there
-void nsToolkit::CreatePMThread()
-{
-   PR_EnterMonitor( mMonitor);
-
-   ThreadInitInfo ti( this, mMonitor);
-
-   // create a pm thread
-   mPMThread = ::PR_CreateThread( PR_SYSTEM_THREAD,
-                                  RunPump,
-                                  &ti,
-                                  PR_PRIORITY_NORMAL,
-                                  PR_LOCAL_THREAD,
-                                  PR_UNJOINABLE_THREAD,
-                                  0);
-   // wait for it to start
-   PR_Wait( mMonitor, PR_INTERVAL_NO_TIMEOUT);
-   PR_ExitMonitor( mMonitor);
-}
-
-// 'Normal use' toolkit methods ---------------------------------------------
-nsToolkit::nsToolkit()  : mDispatchWnd( 0), mPMThread( 0)
-{
-   NS_INIT_REFCNT();
-   mMonitor = PR_NewMonitor();
-}
-
-nsToolkit::~nsToolkit()
-{
-   // Destroy the Dispatch Window
-   WinDestroyWindow( mDispatchWnd);
-
-   // Destroy monitor
-   PR_DestroyMonitor( mMonitor);
-}
-
-// nsISupports implementation macro
 NS_IMPL_ISUPPORTS(nsToolkit, NS_GET_IID(nsIToolkit))
 
-static MRESULT EXPENTRY fnwpDispatch( HWND, ULONG, MPARAM, MPARAM);
-#define UWC_DISPATCH "DispatchWndClass"
+//
+// Static thread local storage index of the Toolkit 
+// object associated with a given thread...
+//
+static PRUintn gToolkitTLSIndex = 0;
 
-// Create the internal window - also sets the pm thread 'formally'
-void nsToolkit::CreateInternalWindow( PRThread *aThread)
-{
-   NS_PRECONDITION(aThread, "null thread");
-   mPMThread  = aThread;
+//
+// main for the message pump thread
+//
+PRBool gThreadState = PR_FALSE;
 
-   BOOL rc = WinRegisterClass( 0/*hab*/, UWC_DISPATCH, fnwpDispatch, 0, 0);
-   NS_ASSERTION( rc, "Couldn't register class");
-
-   // create the internal window - just use a static
-   mDispatchWnd = WinCreateWindow( HWND_DESKTOP,
-                                   UWC_DISPATCH,
-                                   0, 0,
-                                   0, 0, 0, 0,
-                                   HWND_DESKTOP,
-                                   HWND_BOTTOM,
-                                   0, 0, 0);
-
-   NS_ASSERTION( mDispatchWnd, "Couldn't create toolkit internal window");
-
-#if DEBUG_sobotka
-   printf("\n+++++++++++nsToolkit created dispatch window 0x%lx\n", mDispatchWnd);
-#endif
-}
-
-// Set up the toolkit - create window, check for thread.
-nsresult nsToolkit::Init( PRThread *aThread)
-{
-   // Store the thread ID of the thread with the message queue.
-   // If no thread is provided create one (!!)
-   if( aThread)
-      CreateInternalWindow( aThread);
-   else
-      // create a thread where the message pump will run
-      CreatePMThread();
-   return NS_OK;
-}
-
-// Bits to reflect events into the pm thread --------------------------------
-
-// additional structure to provide synchronization & returncode
-// Unlike Windows, we cannot use WinSendMsg()
-struct RealMethodInfo
-{
-   MethodInfo *pInfo;
-   PRMonitor  *pMonitor;
-   nsresult    rc;
-
-   RealMethodInfo( MethodInfo *info, PRMonitor *pMon)
-        : pInfo( info), pMonitor( pMon), rc( NS_ERROR_FAILURE)
-   {}
+struct ThreadInitInfo {
+    PRMonitor *monitor;
+    nsToolkit *toolkit;
 };
 
-nsresult nsToolkit::CallMethod( MethodInfo *pInfo)
+void PR_CALLBACK RunPump(void* arg)
 {
-   PR_EnterMonitor( mMonitor);
+    ThreadInitInfo *info = (ThreadInitInfo*)arg;
+    ::PR_EnterMonitor(info->monitor);
 
-   RealMethodInfo rminfo( pInfo, mMonitor);
+    // do registration and creation in this thread
+    info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
 
-   // post the message to the window
-   WinPostMsg( mDispatchWnd, WMU_CALLMETHOD, MPFROMP(&rminfo), 0);
+    gThreadState = PR_TRUE;
 
-   // wait for it to complete...
-   PR_Wait( mMonitor, PR_INTERVAL_NO_TIMEOUT);
-   PR_ExitMonitor( mMonitor);
+    ::PR_Notify(info->monitor);
+    ::PR_ExitMonitor(info->monitor);
 
-   // cleanup & return
-   return rminfo.rc;
+    delete info;
+
+    // Process messages
+    QMSG qmsg;
+    while (WinGetMsg((HAB)0, &qmsg, 0, 0, 0)) {
+        WinDispatchMsg((HAB)0, &qmsg);
+    }
 }
 
-struct SendMsgStruct
+//-------------------------------------------------------------------------
+//
+// constructor
+//
+//-------------------------------------------------------------------------
+nsToolkit::nsToolkit()  
 {
-   HWND    hwnd;
-   ULONG   msg;
-   MPARAM  mp1, mp2;
-   MRESULT rc;
-
-   PRMonitor *pMonitor;
-
-   SendMsgStruct( HWND h, ULONG m, MPARAM p1, MPARAM p2, PRMonitor *pMon)
-        : hwnd( h), msg( m), mp1( p1), mp2( p2), rc( 0), pMonitor( pMon)
-   {}
-};
-
-MRESULT nsToolkit::SendMsg( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
-{
-   MRESULT rc = 0;
-
-   if( hwnd && IsPMThread())
-      rc = WinSendMsg( hwnd, msg, mp1, mp2);
-   else if( hwnd)
-   {
-      PR_EnterMonitor( mMonitor);
-
-      SendMsgStruct data( hwnd, msg, mp1, mp2, mMonitor);
-
-      // post a message to the window
-      WinPostMsg( mDispatchWnd, WMU_SENDMSG, MPFROMP(&data), 0);
-
-      // wait for it to complete...
-      PR_Wait( mMonitor, PR_INTERVAL_NO_TIMEOUT);
-      PR_ExitMonitor( mMonitor);
-
-      rc = data.rc;
-   }
-
-   return rc;
+    NS_INIT_REFCNT();
+    mGuiThread  = NULL;
+    mDispatchWnd = 0;
+    mMonitor = PR_NewMonitor();
 }
 
-MRESULT EXPENTRY fnwpDispatch( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
+
+//-------------------------------------------------------------------------
+//
+// destructor
+//
+//-------------------------------------------------------------------------
+nsToolkit::~nsToolkit()
 {
-   MRESULT mRC = 0;
+    NS_PRECONDITION(::WinIsWindow((HAB)0, mDispatchWnd), "Invalid window handle");
 
-   if( msg == WMU_CALLMETHOD)
-   {
-      RealMethodInfo *pInfo = (RealMethodInfo*) mp1;
-      // call the method (indirection-fest :-)
-      pInfo->rc = pInfo->pInfo->target->CallMethod( pInfo->pInfo);
-      // signal the monitor to let the caller continue
-      PR_EnterMonitor( pInfo->pMonitor);
-      PR_Notify( pInfo->pMonitor);
-      PR_ExitMonitor( pInfo->pMonitor);
-   }
-   else if( msg == WMU_SENDMSG)
-   {
-      SendMsgStruct *pData = (SendMsgStruct*) mp1;
-      // send the message
-      pData->rc = WinSendMsg( pData->hwnd, pData->msg, pData->mp1, pData->mp2);
-      // signal the monitor to let the caller continue
-      PR_EnterMonitor( pData->pMonitor);
-      PR_Notify( pData->pMonitor);
-      PR_ExitMonitor( pData->pMonitor);
-   }
-   else
-      mRC = WinDefWindowProc( hwnd, msg, mp1, mp2);
+    // Destroy the Dispatch Window
+    ::WinDestroyWindow(mDispatchWnd);
+    mDispatchWnd = NULL;
 
-   return mRC;
+    // Remove the TLS reference to the toolkit...
+    PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
+    PR_DestroyMonitor( mMonitor);
 }
+
+
+//-------------------------------------------------------------------------
+//
+// Register the window class for the internal window and create the window
+//
+//-------------------------------------------------------------------------
+void nsToolkit::CreateInternalWindow(PRThread *aThread)
+{
+    
+    NS_PRECONDITION(aThread, "null thread");
+    mGuiThread  = aThread;
+
+    //
+    // create the internal window
+    //
+    WinRegisterClass((HAB)0, "nsToolkitClass", nsToolkitWindowProc, NULL, 0);
+    mDispatchWnd = ::WinCreateWindow(HWND_DESKTOP,
+                                     "nsToolkitClass",
+                                     "NetscapeDispatchWnd",
+                                     WS_DISABLED,
+                                     -50, -50,
+                                     10, 10,
+                                     HWND_DESKTOP,
+                                     HWND_BOTTOM,
+                                     0, 0, 0);
+    VERIFY(mDispatchWnd);
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Create a new thread and run the message pump in there
+//
+//-------------------------------------------------------------------------
+void nsToolkit::CreateUIThread()
+{
+    PRMonitor *monitor = ::PR_NewMonitor();
+
+    ::PR_EnterMonitor(monitor);
+
+    ThreadInitInfo *ti = new ThreadInitInfo();
+    ti->monitor = monitor;
+    ti->toolkit = this;
+
+    // create a gui thread
+    mGuiThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
+                                    RunPump,
+                                    (void*)ti,
+                                    PR_PRIORITY_NORMAL,
+                                    PR_LOCAL_THREAD,
+                                    PR_UNJOINABLE_THREAD,
+                                    0);
+
+    // wait for the gui thread to start
+    while(gThreadState == PR_FALSE) {
+        ::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
+    }
+
+    // at this point the thread is running
+    ::PR_ExitMonitor(monitor);
+    ::PR_DestroyMonitor(monitor);
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsToolkit::Init(PRThread *aThread)
+{
+    // Store the thread ID of the thread containing the message pump.  
+    // If no thread is provided create one
+    if (NULL != aThread) {
+        CreateInternalWindow(aThread);
+    } else {
+        // create a thread where the message pump will run
+        CreateUIThread();
+    }
+    return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// nsToolkit WindowProc. Used to call methods on the "main GUI thread"...
+//
+//-------------------------------------------------------------------------
+MRESULT EXPENTRY nsToolkitWindowProc(HWND hWnd, ULONG msg, MPARAM mp1,
+                                     MPARAM mp2)
+{
+    switch (msg) {
+        case WM_CALLMETHOD:
+        {
+            MethodInfo *info = (MethodInfo *)mp2;
+            PRMonitor *monitor = (PRMonitor *)mp1;
+            info->Invoke();
+            PR_EnterMonitor(monitor);
+            PR_Notify(monitor);
+            PR_ExitMonitor(monitor);
+        }
+        case WM_SENDMSG:
+        {
+            SendMsgStruct *pData = (SendMsgStruct*) mp1;
+            // send the message
+            pData->rc = WinSendMsg( pData->hwnd, pData->msg, pData->mp1, pData->mp2);
+            // signal the monitor to let the caller continue
+            PR_EnterMonitor( pData->pMonitor);
+            PR_Notify( pData->pMonitor);
+            PR_ExitMonitor( pData->pMonitor);
+        }
+        default:
+            return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
+    }
+}
+
+
 
 //-------------------------------------------------------------------------
 //
@@ -299,4 +262,39 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
 
   return rv;
+}
+
+void nsToolkit::CallMethod(MethodInfo *info)
+{
+   PR_EnterMonitor(mMonitor);
+
+   ::WinPostMsg(mDispatchWnd, WM_CALLMETHOD, MPFROMP(mMonitor), MPFROMP(info));
+
+   PR_Wait(mMonitor, PR_INTERVAL_NO_TIMEOUT);
+   PR_ExitMonitor( mMonitor);
+}
+
+MRESULT nsToolkit::SendMsg( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+   MRESULT rc = 0;
+
+   if( hwnd && IsGuiThread())
+      rc = WinSendMsg( hwnd, msg, mp1, mp2);
+   else if( hwnd)
+   {
+      PR_EnterMonitor( mMonitor);
+
+      SendMsgStruct data( hwnd, msg, mp1, mp2, mMonitor);
+
+      // post a message to the window
+      WinPostMsg( mDispatchWnd, WM_SENDMSG, MPFROMP(&data), 0);
+
+      // wait for it to complete...
+      PR_Wait( mMonitor, PR_INTERVAL_NO_TIMEOUT);
+      PR_ExitMonitor( mMonitor);
+
+      rc = data.rc;
+   }
+
+   return rc;
 }
