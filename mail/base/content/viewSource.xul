@@ -35,13 +35,17 @@
    - GPL.
   -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://navigator/locale/viewSource.dtd" >
 %sourceDTD;
+<!ENTITY % msgDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%msgDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
 ]>
@@ -75,9 +79,30 @@
       <command id="cmd_close" oncommand="ViewSourceClose()"/>
     </commandset>
   </commandset>  
-  
+
+
+  <!-- keys are appended from the overlay -->
+  <keyset id="viewSourceKeys">
+
+    <!-- File Menu -->
+    <key id="key_close"/>
+
+    <!-- Edit Menu -->
+    <key id="key_undo"/>
+    <key id="key_redo"/>
+    <key id="key_cut"/>
+    <key id="key_copy"/>
+    <key id="key_paste"/>
+    <key id="key_delete"/>
+    <key id="key_selectAll"/>
+    <key id="key_find"         key="&findCmd.key;" command="Browser:Find" modifiers="accel"/>
+    <key id="key_findAgain"    key="&findAgainCmd.key;" command="Browser:FindAgain" modifiers="accel"/>
+    <key id="key_findPrev"     key="&findPrevCmd.key;"  command="Browser:FindPrev"  modifiers="accel, shift"/>
+    <key keycode="&findAgainCmd.key2;" command="Browser:FindAgain"/>
+    <key keycode="&findPrevCmd.key2;"  command="Browser:FindPrev"  modifiers="shift"/>
+  </keyset>
+
   <stringbundleset id="viewSource-stringbundleset">
-    <stringbundle id="bundle_viewZoom"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
     
@@ -116,13 +141,14 @@
           <menuitem id="menu_selectAll"/>
           <menuseparator /> 
           <menuitem id="menu_find" key="key_find" command="Browser:Find"
-                    label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+                    label="&findCmd.label;" accesskey="&findCmd.accesskey;"/>
           <menuitem id="menu_findAgain" key="key_findAgain" command="Browser:FindAgain"
                     label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;"/>
           <menuitem id="menu_findPrev" key="key_findPrev" command="Browser:FindPrev"
                     label="&findPrevCmd.label;" accesskey="&findPrevCmd.accesskey;"/>
         </menupopup>
       </menu>
+    </menubar>
   </toolbox>
 
   <vbox id="appcontent" flex="1"
