@@ -894,6 +894,10 @@ NS_IMETHODIMP
 nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
+  if (!aRequest) {
+    return NS_OK;
+  }
+
   if (aStateFlags & STATE_IS_DOCUMENT) {
     nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
