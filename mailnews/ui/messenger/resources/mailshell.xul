@@ -102,66 +102,66 @@ function OpenURL(url)
 
   <menubar>
     <menu name="File">
-      <menuitem name="New Message" onClick="NewMessage();"/>
+      <menuitem name="New Message" onclick="NewMessage();"/>
       <separator/>
-      <menuitem name="Get New Message" onClick="GetMessage();"/>
-      <menuitem name="Subscribe" onClick="Subscribe();"/>
+      <menuitem name="Get New Message" onclick="GetMessage();"/>
+      <menuitem name="Subscribe" onclick="Subscribe();"/>
       <separator/>
-      <menuitem name="Rename Folder.." onClick="RenameFolder();"/>
-      <menuitem name="Empty Trash" onClick="EmptyTrash();"/>
+      <menuitem name="Rename Folder.." onclick="RenameFolder();"/>
+      <menuitem name="Empty Trash" onclick="EmptyTrash();"/>
       <separator/>
-      <menuitem name="Print" onClick="Print();"/>
+      <menuitem name="Print" onclick="Print();"/>
       <separator/>
-      <menuitem name="Close" onClick="Close();"/>
-      <menuitem name="Exit" onClick="Exit();"/>
+      <menuitem name="Close" onclick="Close();"/>
+      <menuitem name="Exit" onclick="Exit();"/>
     </menu>
     <menu name="Edit">
-      <menuitem name="Delete Message" onClick="DeleteMessage();"/>
+      <menuitem name="Delete Message" onclick="DeleteMessage();"/>
     </menu>
     <menu name="View">
-      <menuitem name="View Attachments Inline" onClick="ViewAttachInline();"/>
-      <menuitem name="Wrap Long Lines" onClick="WrapLongLines();"/>
+      <menuitem name="View Attachments Inline" onclick="ViewAttachInline();"/>
+      <menuitem name="Wrap Long Lines" onclick="WrapLongLines();"/>
       <separator/>
-      <menuitem name="Page Source" onClick="ViewPageSource();"/>
-      <menuitem name="Page Info" onClick="ViewPageInfo();"/>
+      <menuitem name="Page Source" onclick="ViewPageSource();"/>
+      <menuitem name="Page Info" onclick="ViewPageInfo();"/>
     </menu>
     <menu name="Go">
-      <menuitem name="Next Message" onClick="NextMessage();"/>
-      <menuitem name="Next Unread Message" onClick="NextUnreadMessage();"/>
+      <menuitem name="Next Message" onclick="NextMessage();"/>
+      <menuitem name="Next Unread Message" onclick="NextUnreadMessage();"/>
     </menu>
     <menu name="Message">
-      <menuitem name="New Message" onClick="NewMessage();"/>
-      <menuitem name="Reply" onClick="ReplyMessage();"/>
-      <menuitem name="Forward" onClick="ForwardMessage();"/>
+      <menuitem name="New Message" onclick="NewMessage();"/>
+      <menuitem name="Reply" onclick="ReplyMessage();"/>
+      <menuitem name="Forward" onclick="ForwardMessage();"/>
      </menu>
     <menu name="Demo">
-      <menuitem name="News Message 1" onClick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
-      <menuitem name="News Message 2" onClick="OpenURL('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
+      <menuitem name="News Message 1" onclick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
+      <menuitem name="News Message 2" onclick="OpenURL('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
     </menu>
   </menubar>
 
 <html:div html:id="header">
 	<toolbox>
     <toolbar>
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onClick="GetMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onclick="GetMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onClick="NewMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onclick="NewMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onClick="ReplyMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onclick="ReplyMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onClick="ForwardMessage()">
+	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onclick="ForwardMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onClick="DeleteMessage()">
+	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="DeleteMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onClick=""OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
+	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onclick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
+	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="window.frames[0].home()"/>
 
     </toolbar>
 	</toolbox>
