@@ -104,6 +104,8 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD Enable( PRBool bState);
    NS_IMETHOD SetFocus();
    NS_IMETHOD IsVisible( PRBool &aState);
+   NS_IMETHOD PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
+
    NS_IMETHOD CaptureMouse(PRBool aCapture);
 
    NS_IMETHOD ModalEventFilter( PRBool aRealEvent, void *aEvent,
@@ -134,8 +136,8 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
    NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-   NS_IMETHOD              Paint( nsIRenderingContext& aRenderingContext,
-                                  const nsRect& aDirtyRect);
+   NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
+   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
 
 #if 0 // Handled by XP code now
    // Tooltips
@@ -270,7 +272,7 @@ protected:
 
    PRBool  ConvertStatus( nsEventStatus aStatus);
    void    InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint *pt = 0);
-   PRBool  DispatchEventInternal( struct nsGUIEvent *event);
+   PRBool  DispatchWindowEvent( struct nsGUIEvent *event);
    PRBool  DispatchStandardEvent( PRUint32 aMsg, PRUint8 aStructType = NS_GUI_EVENT);
    virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);

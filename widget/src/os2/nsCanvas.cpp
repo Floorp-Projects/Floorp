@@ -144,7 +144,7 @@ PRBool nsCanvas::OnPaint()
          event.rect = &rect;
          event.eventStructType = NS_PAINT_EVENT;
          event.renderingContext = GetRenderingContext();
-         rc = DispatchEventInternal( &event);
+         rc = DispatchWindowEvent( &event);
    
          NS_RELEASE( event.renderingContext);
       }
@@ -168,7 +168,7 @@ PRBool nsCanvas::OnPaint()
          event.rect = &rect;
          event.eventStructType = NS_PAINT_EVENT;
          event.renderingContext = GetRenderingContext();
-         rc = DispatchEventInternal( &event);
+         rc = DispatchWindowEvent( &event);
    
          NS_RELEASE( event.renderingContext);
       }
