@@ -30,6 +30,11 @@
 #include "vr_stubs.h"
 
 #ifdef XP_MAC
+#ifndef theRegistry
+#define	theRegistry	33	/* Duplicated from uprefd.h.  I know this is a bad thing to do but you */
+						/* don't even want to know what including that would do since it's a */
+						/* header for a C++ file */
+#endif /* theRegistry */						
 #include <Folders.h>
 #include <Script.h>
 #include <stdlib.h>
@@ -135,12 +140,15 @@ extern XP_File VR_StubOpen (const char *mode)
     Handle	thePath;
     int     bCreate = 0;
 	Ptr		finalPath;
+	Str255	registryName;
 	
 	err = FindFolder(kOnSystemDisk,'pref', false, &foundVRefNum, &foundDirID);
 
 	if (!err) {
+	
+		GetIndString(registryName, 300, theRegistry);
 
-		err = FSMakeFSSpec(foundVRefNum, foundDirID, "\pNetscape Registry", &regSpec);
+		err = FSMakeFSSpec(foundVRefNum, foundDirID, registryName, &regSpec);
 
 		if (err == -43) { /* if file doesn't exist */
 			err = FSpCreate(&regSpec, '    ', '    ', smSystemScript);
