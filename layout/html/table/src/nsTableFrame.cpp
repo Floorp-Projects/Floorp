@@ -795,11 +795,13 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresCont
   if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aMaxElementSize)
-      printf("Reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+      printf("Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+              status==frComplete ? "Complete" : "Not Complete",
               aDesiredSize.width, aDesiredSize.height, 
               aMaxElementSize->width, aMaxElementSize->height);
     else
-      printf("Reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+      printf("Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+              status==frComplete ? "Complete" : "Not Complete",
               aDesiredSize.width, aDesiredSize.height);
   }
 
