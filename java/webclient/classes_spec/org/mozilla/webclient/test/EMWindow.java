@@ -50,7 +50,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.2 2000/04/06 17:33:29 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.3 2000/04/12 18:06:21 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -76,7 +76,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         private MenuBar             menuBar;
 
   private EmbeddedMozilla creator;
-
+  private boolean viewMode = true;
 
   public static void main(String [] arg)
     {
@@ -102,6 +102,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		MenuItem closeItem = new MenuItem("Close");
 		MenuItem findItem = new MenuItem("Find");
 		MenuItem findNextItem = new MenuItem("Find Next");
+		MenuItem sourceItem = new MenuItem("View Page Source");
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
 		menuBar.add(searchMenu);
@@ -113,6 +114,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		findItem.addActionListener(this);
 		searchMenu.add(findNextItem);
 		findNextItem.addActionListener(this);
+		viewMenu.add(sourceItem);
+		sourceItem.addActionListener(this);
 
 		// Create the URL field
 		urlField = new TextField("", 30);
@@ -301,7 +304,7 @@ public void delete()
 				if (null == findDialog) {
 				  Frame f = new Frame();
 			       	  f.setSize(350,150);
-				  findDialog = new FindDialog(f, this, 
+				  findDialog = new FindDialog(this, this, 
 							      "Find in Page", "Find  ", 
 							      "", 20, false);
 				  findDialog.setModal(false);
@@ -311,6 +314,10 @@ public void delete()
 	      }
 	      else if (command.equals("Find Next")) {
 		currentPage.findNextInPage(false);
+	      }
+	      else if (command.equals("View Page Source")) {
+		currentPage.getSourceBytes(viewMode);
+		viewMode = !viewMode;
 	      }
 	    }
 	
