@@ -1600,7 +1600,8 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 
 			if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
 				PromptForPassword(getter_Copies(password), aMsgWindow);
-			rv = m_logonRedirector->Logon(userName, password, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
+			if (password)
+				rv = m_logonRedirector->Logon(userName, password, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
 		}
 	}
 

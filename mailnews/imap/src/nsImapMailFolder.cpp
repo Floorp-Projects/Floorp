@@ -2800,6 +2800,14 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
     {
 		nsCOMPtr<nsIMsgDBHdr> dbHdr;
 		nsresult rv;
+		PRBool containsKey;
+
+		rv = mDatabase->ContainsKey(msgKey , &containsKey);
+		// if we don't have the header, don't diddle the flags.
+		// GetMsgHdrForKey will create the header if it doesn't exist.
+		if (!NS_SUCCEEDED(rv) || !containsKey)
+			return rv;
+
 		rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(dbHdr));
 
 		if(NS_SUCCEEDED(rv) && dbHdr)

@@ -6062,16 +6062,7 @@ PRBool nsImapProtocol::TryToLogon()
   }
       
   nsCOMPtr<nsIMsgWindow> aMsgWindow;
-  if (!password || !*password)
-  {
-      rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
-      if (NS_FAILED(rv)) return rv;
-  }
 
-  if (userName && (!password || !*password) && m_imapServerSink)
-  {
-      m_imapServerSink->PromptForPassword(&password, aMsgWindow);
-  }
   do
   {
     if (userName && (!password || !*password) && m_imapServerSink)
