@@ -17,6 +17,7 @@
  */
 
 #include "dom_priv.h"
+#include "prlong.h"
 
 /*
  * DOM CharacterData, Text and Comment implementations.
