@@ -3344,6 +3344,20 @@ GlobalWindowImpl::Close()
     }
   }
 
+  // Ask the content viewer whether the toplevel window can close.
+  // If the content viewer returns false, it is responsible for calling
+  // Close() as soon as it is possible for the window to close.
+  // This allows us to not close the window while printing is happening.
+
+  nsCOMPtr<nsIContentViewer> cv;
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+    PRBool canClose;
+    cv->RequestWindowClose(&canClose);
+    if (!canClose)
+      return NS_OK;
+  }
+
   // Fire a DOM event notifying listeners that this window is about to
   // be closed. The tab UI code may choose to cancel the default
   // action for this event, if so, we won't actually close the window

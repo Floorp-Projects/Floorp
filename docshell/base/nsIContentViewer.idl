@@ -59,4 +59,12 @@ interface nsIContentViewer : nsISupports
   attribute boolean enableRendering;
 
   attribute boolean sticky;
+
+  /*
+   * This is called when the DOM window wants to be closed.  Returns true
+   * if the window can close immediately.  Otherwise, returns false and will
+   * close the DOM window as soon as practical.
+   */
+
+  boolean requestWindowClose();
 };
