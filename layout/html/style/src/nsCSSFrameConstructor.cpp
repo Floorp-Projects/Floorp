@@ -6386,7 +6386,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     // Add the placeholder frame to the flow
     frameItems.AddChild(placeholderFrame);
-  } else if (nsnull != newFrame) {
+  } else if (nsnull != newFrame && !pseudoParent) {
     // Add the frame we just created to the flowed list
     frameItems.AddChild(newFrame);
     if (newBlock) {
