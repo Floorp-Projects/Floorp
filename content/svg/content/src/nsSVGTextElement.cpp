@@ -338,7 +338,7 @@ void nsSVGTextElement::ParentChainChanged()
   // x:
   {
     nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
-    mX->GetBaseVal(getter_AddRefs(dom_lengthlist));
+    mX->GetAnimVal(getter_AddRefs(dom_lengthlist));
     nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
     NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
     
@@ -348,7 +348,7 @@ void nsSVGTextElement::ParentChainChanged()
   // y:
   {
     nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
-    mY->GetBaseVal(getter_AddRefs(dom_lengthlist));
+    mY->GetAnimVal(getter_AddRefs(dom_lengthlist));
     nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
     NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
     

@@ -205,7 +205,7 @@ void nsSVGCircleElement::ParentChainChanged()
   // cx:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mCx->GetBaseVal(getter_AddRefs(dom_length));
+    mCx->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -215,7 +215,7 @@ void nsSVGCircleElement::ParentChainChanged()
   // cy:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mCy->GetBaseVal(getter_AddRefs(dom_length));
+    mCy->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -225,7 +225,7 @@ void nsSVGCircleElement::ParentChainChanged()
   // r:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mR->GetBaseVal(getter_AddRefs(dom_length));
+    mR->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 

@@ -251,7 +251,7 @@ void nsSVGUseElement::ParentChainChanged()
   // x:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX->GetBaseVal(getter_AddRefs(dom_length));
+    mX->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
     
@@ -261,7 +261,7 @@ void nsSVGUseElement::ParentChainChanged()
   // y:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY->GetBaseVal(getter_AddRefs(dom_length));
+    mY->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
     
@@ -271,7 +271,7 @@ void nsSVGUseElement::ParentChainChanged()
   // width:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mWidth->GetBaseVal(getter_AddRefs(dom_length));
+    mWidth->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
     
@@ -281,7 +281,7 @@ void nsSVGUseElement::ParentChainChanged()
   // height:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mHeight->GetBaseVal(getter_AddRefs(dom_length));
+    mHeight->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
     
@@ -465,7 +465,7 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
 {
 #ifdef DEBUG_tor
   nsAutoString href;
-  mHref->GetBaseVal(href);
+  mHref->GetAnimVal(href);
   fprintf(stderr, "<svg:use> reclone of \"%s\"\n", ToNewCString(href));
 #endif
 
@@ -603,7 +603,7 @@ nsSVGUseElement::LookupHref(nsIDOMSVGElement **aResult)
 
   nsresult rv;
   nsAutoString href;
-  mHref->GetBaseVal(href);
+  mHref->GetAnimVal(href);
   if (href.IsEmpty())
     return NS_OK;
 

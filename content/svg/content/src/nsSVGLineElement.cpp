@@ -234,7 +234,7 @@ void nsSVGLineElement::ParentChainChanged()
   // x1:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX1->GetBaseVal(getter_AddRefs(dom_length));
+    mX1->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -244,7 +244,7 @@ void nsSVGLineElement::ParentChainChanged()
   // y1:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY1->GetBaseVal(getter_AddRefs(dom_length));
+    mY1->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -254,7 +254,7 @@ void nsSVGLineElement::ParentChainChanged()
   // x2:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX2->GetBaseVal(getter_AddRefs(dom_length));
+    mX2->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -264,7 +264,7 @@ void nsSVGLineElement::ParentChainChanged()
   // y2:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY2->GetBaseVal(getter_AddRefs(dom_length));
+    mY2->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 

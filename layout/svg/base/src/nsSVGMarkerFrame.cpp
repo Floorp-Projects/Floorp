@@ -175,7 +175,7 @@ nsresult nsSVGMarkerFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     marker->GetRefX(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mRefX));
+    length->GetAnimVal(getter_AddRefs(mRefX));
     NS_ASSERTION(mRefX, "no RefX");
     if (!mRefX) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRefX);
@@ -186,7 +186,7 @@ nsresult nsSVGMarkerFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     marker->GetRefY(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mRefY));
+    length->GetAnimVal(getter_AddRefs(mRefY));
     NS_ASSERTION(mRefY, "no RefY");
     if (!mRefY) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRefY);
@@ -197,7 +197,7 @@ nsresult nsSVGMarkerFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     marker->GetMarkerWidth(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mMarkerWidth));
+    length->GetAnimVal(getter_AddRefs(mMarkerWidth));
     NS_ASSERTION(mMarkerWidth, "no markerWidth");
     if (!mMarkerWidth) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mMarkerWidth);
@@ -208,7 +208,7 @@ nsresult nsSVGMarkerFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     marker->GetMarkerHeight(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mMarkerHeight));
+    length->GetAnimVal(getter_AddRefs(mMarkerHeight));
     NS_ASSERTION(mMarkerHeight, "no markerHeight");
     if (!mMarkerHeight) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mMarkerHeight);
@@ -219,7 +219,7 @@ nsresult nsSVGMarkerFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedAngle> angle;
     marker->GetOrientAngle(getter_AddRefs(angle));
-    angle->GetBaseVal(getter_AddRefs(mOrientAngle));
+    angle->GetAnimVal(getter_AddRefs(mOrientAngle));
     NS_ASSERTION(mOrientAngle, "no orientAngle");
     if (!mOrientAngle) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mOrientAngle);
@@ -233,7 +233,7 @@ nsresult nsSVGMarkerFrame::Init()
     box->GetViewBox(getter_AddRefs(rect));
 
     if (rect) {
-      rect->GetBaseVal(getter_AddRefs(mViewBox));
+      rect->GetAnimVal(getter_AddRefs(mViewBox));
       NS_ASSERTION(mRefY, "no viewBox");
       if (!mRefY) return NS_ERROR_FAILURE;
       nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRefY);

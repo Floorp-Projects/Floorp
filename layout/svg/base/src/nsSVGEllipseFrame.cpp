@@ -116,7 +116,7 @@ nsresult nsSVGEllipseFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     ellipse->GetCx(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mCx));
+    length->GetAnimVal(getter_AddRefs(mCx));
     NS_ASSERTION(mCx, "no cx");
     if (!mCx) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCx);
@@ -127,7 +127,7 @@ nsresult nsSVGEllipseFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     ellipse->GetCy(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mCy));
+    length->GetAnimVal(getter_AddRefs(mCy));
     NS_ASSERTION(mCy, "no cy");
     if (!mCy) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCy);
@@ -138,7 +138,7 @@ nsresult nsSVGEllipseFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     ellipse->GetRx(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mRx));
+    length->GetAnimVal(getter_AddRefs(mRx));
     NS_ASSERTION(mRx, "no rx");
     if (!mRx) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRx);
@@ -149,7 +149,7 @@ nsresult nsSVGEllipseFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     ellipse->GetRy(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mRy));
+    length->GetAnimVal(getter_AddRefs(mRy));
     NS_ASSERTION(mRy, "no ry");
     if (!mRy) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRy);

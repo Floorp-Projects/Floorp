@@ -171,7 +171,7 @@ nsresult nsSVGImageFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetX(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mX));
+    length->GetAnimVal(getter_AddRefs(mX));
     NS_ASSERTION(mX, "no x");
     if (!mX) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
@@ -182,7 +182,7 @@ nsresult nsSVGImageFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetY(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mY));
+    length->GetAnimVal(getter_AddRefs(mY));
     NS_ASSERTION(mY, "no y");
     if (!mY) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
@@ -193,7 +193,7 @@ nsresult nsSVGImageFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetWidth(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mWidth));
+    length->GetAnimVal(getter_AddRefs(mWidth));
     NS_ASSERTION(mWidth, "no width");
     if (!mWidth) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
@@ -204,7 +204,7 @@ nsresult nsSVGImageFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetHeight(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mHeight));
+    length->GetAnimVal(getter_AddRefs(mHeight));
     NS_ASSERTION(mHeight, "no height");
     if (!mHeight) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
@@ -215,7 +215,7 @@ nsresult nsSVGImageFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
     Rect->GetPreserveAspectRatio(getter_AddRefs(ratio));
-    ratio->GetBaseVal(getter_AddRefs(mPreserveAspectRatio));
+    ratio->GetAnimVal(getter_AddRefs(mPreserveAspectRatio));
     NS_ASSERTION(mHeight, "no preserveAspectRatio");
     if (!mPreserveAspectRatio) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mPreserveAspectRatio);
