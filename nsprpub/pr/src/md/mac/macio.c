@@ -409,11 +409,11 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
            err = PR_FILE_EXISTS_ERROR;
            goto ErrorExit;
        }
-       if (err != noErr)
+       
+       if ((err != noErr) && (err != dupFNErr))
           goto ErrorExit;
 	}
  
-open:
     err = PBHOpenDFSync(&hpb);
 
 	if (err != noErr)
