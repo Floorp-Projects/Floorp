@@ -33,44 +33,46 @@
  */
 
 /*
-	This is the JavaScript error message file.
-
-	The format for each JS error message is:
-
-MSG_DEF(<SYMBOLIC_NAME>, <ERROR_NUMBER>, <ARGUMENT_COUNT>, <EXCEPTION_NAME>,
-	<FORMAT_STRING>)
-
-	where ;
-	<SYMBOLIC_NAME> is a legal C identifer that will be used in the
-	JS engine source.
-
-	<ERROR_NUMBER> is an unique integral value identifying this error.
-
-	<ARGUMENT_COUNT> is an integer literal specifying the total number of
-	replaceable arguments in the following format string.
-
-	<EXCEPTION_NAME> is an exception index from the enum in jsexn.c;
-	JSEXN_NONE for none.  The given exception index will be raised by the
-	engine when the corresponding error occurs.
-
-	<FORMAT_STRING> is a string literal, optionally containing sequences
-	{X} where X  is an integer representing the argument number that will
-	be replaced with a string value when the error is reported.
-
-	e.g.
-
-	MSG_DEF(JSMSG_NOT_A_SUBSPECIES, 73, JSEXN_NONE, 2,
-		"{0} is not a member of the {1} family")
-
-	can be used :
-
-	JS_ReportErrorNumber(JSMSG_NOT_A_SUBSPECIES, "Rhino", "Monkey");
-
-	to report :
-
-	"Rhino is not a member of the Monkey family"
-
-*/
+ * This is the JavaScript error message file.
+ *
+ * The format for each JS error message is:
+ *
+ * MSG_DEF(<SYMBOLIC_NAME>, <ERROR_NUMBER>, <ARGUMENT_COUNT>, <EXCEPTION_NAME>,
+ *         <FORMAT_STRING>)
+ *
+ * where ;
+ * <SYMBOLIC_NAME> is a legal C identifer that will be used in the
+ * JS engine source.
+ *
+ * <ERROR_NUMBER> is an unique integral value identifying this error.
+ *
+ * <ARGUMENT_COUNT> is an integer literal specifying the total number of
+ * replaceable arguments in the following format string.
+ *
+ * <EXCEPTION_NAME> is an exception index from the enum in jsexn.c;
+ * JSEXN_NONE for none.  The given exception index will be raised by the
+ * engine when the corresponding error occurs.
+ *
+ * <FORMAT_STRING> is a string literal, optionally containing sequences
+ * {X} where X  is an integer representing the argument number that will
+ * be replaced with a string value when the error is reported.
+ *
+ * e.g.
+ *
+ * MSG_DEF(JSMSG_NOT_A_SUBSPECIES, 73, JSEXN_NONE, 2,
+ *         "{0} is not a member of the {1} family")
+ *
+ * can be used:
+ *
+ * JS_ReportErrorNumber(JSMSG_NOT_A_SUBSPECIES, "Rhino", "Monkey");
+ *
+ * to report:
+ *
+ * "Rhino is not a member of the Monkey family"
+ *
+ * Before adding a new MSG_DEF at the end, look for JSMSG_UNUSED<n> free
+ * index placeholders in the middle of the list.
+ */
 
 MSG_DEF(JSMSG_NOT_AN_ERROR,             0, 0, JSEXN_NONE, "<Error #0 is reserved>")
 MSG_DEF(JSMSG_NOT_DEFINED,              1, 1, JSEXN_REFERENCEERR, "{0} is not defined")
@@ -83,7 +85,7 @@ MSG_DEF(JSMSG_CANT_UNLOCK,              7, 0, JSEXN_NONE, "can't unlock memory")
 MSG_DEF(JSMSG_INCOMPATIBLE_PROTO,       8, 3, JSEXN_TYPEERR, "{0}.prototype.{1} called on incompatible {2}")
 MSG_DEF(JSMSG_NO_CONSTRUCTOR,           9, 1, JSEXN_NONE, "{0} has no constructor")
 MSG_DEF(JSMSG_CANT_ALIAS,              10, 3, JSEXN_NONE, "can't alias {0} to {1} in class {2}")
-MSG_DEF(JSMSG_NO_PROTO,                11, 1, JSEXN_INTERNALERR, "sorry, Array.prototype.{0} is not yet implemented")
+MSG_DEF(JSMSG_UNUSED11,                11, 0, JSEXN_NONE, "<Error #11 is currently unused>")
 MSG_DEF(JSMSG_BAD_SORT_ARG,            12, 0, JSEXN_TYPEERR, "invalid Array.prototype.sort argument")
 MSG_DEF(JSMSG_BAD_ATOMIC_NUMBER,       13, 1, JSEXN_INTERNALERR, "internal error: no index for atom {0}")
 MSG_DEF(JSMSG_TOO_MANY_LITERALS,       14, 0, JSEXN_INTERNALERR, "too many literals")
@@ -134,7 +136,7 @@ MSG_DEF(JSMSG_BAD_FLAG,                58, 1, JSEXN_SYNTAXERR, "invalid regular 
 MSG_DEF(JSMSG_NO_INPUT,                59, 3, JSEXN_SYNTAXERR, "no input for /{0}/{1}{2}")
 MSG_DEF(JSMSG_CANT_OPEN,               60, 2, JSEXN_NONE, "can't open {0}: {1}")
 MSG_DEF(JSMSG_BAD_STRING_MASK,         61, 1, JSEXN_ERR, "invalid string escape mask {0}")
-MSG_DEF(JSMSG_NO_STRING_PROTO,         62, 1, JSEXN_INTERNALERR, "sorry, String.prototype.{0} is not yet implemented")
+MSG_DEF(JSMSG_UNUSED62,                62, 0, JSEXN_NONE, "<Error #62 is currently unused>")
 MSG_DEF(JSMSG_END_OF_DATA,             63, 0, JSEXN_NONE, "unexpected end of data")
 MSG_DEF(JSMSG_SEEK_BEYOND_START,       64, 0, JSEXN_NONE, "illegal seek beyond start")
 MSG_DEF(JSMSG_SEEK_BEYOND_END,         65, 0, JSEXN_NONE, "illegal seek beyond end")

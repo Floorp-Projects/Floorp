@@ -1274,7 +1274,6 @@ js_Interpret(JSContext *cx, jsval *result)
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
     JSObject *withobj, *origobj, *propobj;
-    JSIdArray *ida;
     jsval iter_state;
     JSProperty *prop;
     JSScopeProperty *sprop;
@@ -1286,6 +1285,9 @@ js_Interpret(JSContext *cx, jsval *result)
     JSType type;
 #ifdef DEBUG
     FILE *tracefp;
+#endif
+#if JS_HAS_EXPORT_IMPORT
+    JSIdArray *ida;
 #endif
 #if JS_HAS_SWITCH_STATEMENT
     jsint low, high, off, npairs;
