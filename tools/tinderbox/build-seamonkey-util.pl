@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.265 $ ';
+$::UtilsVersion = '$Revision: 1.266 $ ';
 
 package TinderUtils;
 
@@ -1109,7 +1109,12 @@ sub get_profile_dir {
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
     } elsif ($Settings::OS eq "Darwin") {
-        $profile_dir = "$ENV{HOME}/Library/Application Support/$Settings::ProductName/Profiles/$Settings::MozProfileName";
+        # This is ifdef'd in nsXREDirProvider.cpp
+        if ($Settings::ProductName eq 'Thunderbird') {
+            $profile_dir = "$ENV{HOME}/Library/Thunderbird/Profiles/$Settings::MozProfileName";
+        } else {
+            $profile_dir = "$ENV{HOME}/Library/Application Support/$Settings::ProductName/Profiles/$Settings::MozProfileName";
+        }
         if ($Settings::VendorName) {
           ($profile_dir) = <"$profile_dir*">;
         }
