@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+
+<?xml-stylesheet href="chrome://messenger/skin/searchDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook
+/abResultsPaneOverlay.dtd">
+%abResultsPaneOverlayDTD;
+<!ENTITY % SearchDialogDTD SYSTEM "chrome://messenger/locale/SearchDialog.dtd">
+%SearchDialogDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        onload="searchOnLoad();"
+        onunload="searchOnUnload();"
+        onclose="onSearchStop();"
+        windowtype="mailnews:absearch"
+        title="&abSearchDialogTitle.label;"
+        width="640" height="470"
+        persist="screenX screenY width height">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+    <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  </stringbundleset>
+
+  <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/ABSearchDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+
+  <broadcaster id="Communicator:WorkMode"/>
+
+  <dummy class="usesMailWidgets"/>
+    
+    <vbox flex="1">
+      <vbox>
+        <hbox align="center">
+          <label value="&abSearchHeading.label;" accesskey="&abSearchHeading.accesskey;"/>
+          <menulist id="abPopup">
+            <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
+                       datasources="rdf:addressdirectory"
+                       sortActive="true"
+                       sortDirection="ascending"
+                       sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+              <template>
+                <rule nc:IsMailList="false">
+                  <menuitem uri="..."
+                            oncommand="onChooseDirectory(event.target)"
+                            label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                            value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+                </rule>
+              </template>
+            </menupopup>
+          </menulist>
+          <spacer flex="10"/>
+          <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);" default="true" accesskey="&searchButton.accesskey;"/>
+        </hbox>
+        <hbox align="center">
+          <spacer flex="1"/>
+          <button label="&resetButton.label;" oncommand="onAbSearchReset(event);" accesskey="&resetButton.accesskey;"/>
+        </hbox>
+      </vbox>
+
+      <hbox flex="1">
+        <vbox id="searchTermListBox" flex="1"/>
+      </hbox>
+    </vbox>
+
+    <splitter id="gray_horizontal_splitter" collapse="after" persist="state">
+      <grippy/>
+    </splitter>
+
+    <vbox flex="1">
+      <vbox id="searchResultListBox" flex="1" >
+       <tree id="abResultsTree" flex="1" persist="height" context="threadPaneContext"/>
+      </vbox>
+      <hbox align="start">
+        <button label="&propertiesButton.label;" id="propertiesButton" oncommand="onProperties()" accesskey="&propertiesButton.accesskey;" disabled="true"/>
+        <button label="&composeButton.label;" id="composeButton" oncommand="onCompose()" accesskey="&composeButton.accesskey;" disabled="true"/>
+        <spacer flex="1" />
+      </hbox>      
+    </vbox>
+
+    <statusbar class="chromeclass-status" id="status-bar"/>
+
+</window>

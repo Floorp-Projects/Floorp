@@ -1,4 +1,3 @@
-
 <!-- for SearchDialog.xul -->
 <!ENTITY searchHeading.label         "Search for messages in:">
 <!ENTITY searchHeading.accesskey     "h">
@@ -8,8 +7,6 @@
 <!ENTITY searchButton.accesskey      "S">
 <!ENTITY resetButton.label           "Clear">
 <!ENTITY resetButton.accesskey       "C">
-<!ENTITY helpButton.label            "Help">
-<!ENTITY helpButton.accesskey        "l">
 <!ENTITY optionsButton.label         "Options">
 <!ENTITY closeButton.label           "Close">
 <!ENTITY openButton.label            "Open">
@@ -36,3 +33,38 @@
 <!ENTITY composeButton.accesskey     "W">
 <!ENTITY abSearchDialogTitle.label   "Advanced Address Book Search">
 
+<!-- Thread Pane -->
+<!ENTITY threadColumn.label "Thread">
+<!ENTITY senderColumn.label "Sender">
+<!ENTITY subjectColumn.label "Subject">
+<!ENTITY dateColumn.label "Date">
+<!ENTITY priorityColumn.label "Priority">
+<!ENTITY labelColumn.label "Label">
+<!ENTITY statusColumn.label "Status">
+<!ENTITY sizeColumn.label "Size">
+<!ENTITY junkStatusColumn.label "Junk Status">
+<!ENTITY linesColumn.label "Lines">
+<!ENTITY unreadColumn.label "Unread">
+<!ENTITY totalColumn.label "Total">
+<!ENTITY readColumn.label "Read">
+<!ENTITY flagColumn.label "Flag">
+<!ENTITY locationColumn.label "Location">
+<!ENTITY idColumn.label "Order Received">
+
+<!-- Thread Pane Tooltips -->
+<!ENTITY columnChooser.tooltip "Click to select columns to display">
+<!ENTITY threadColumn.tooltip "Click to display message threads"> 
+<!ENTITY senderColumn.tooltip "Click to sort by sender">
+<!ENTITY subjectColumn.tooltip "Click to sort by subject">
+<!ENTITY dateColumn.tooltip "Click to sort by date">
+<!ENTITY priorityColumn.tooltip "Click to sort by priority">
+<!ENTITY labelColumn.tooltip "Click to sort by label">
+<!ENTITY statusColumn.tooltip "Click to sort by status">
+<!ENTITY sizeColumn.tooltip "Click to sort by size">
+<!ENTITY junkStatusColumn.tooltip "Click to sort by junk status">
+<!ENTITY unreadColumn.tooltip "Number of unread messages in thread">
+<!ENTITY totalColumn.tooltip "Total number of messages in thread">
+<!ENTITY readColumn.tooltip "Click to sort by read">
+<!ENTITY flagColumn.tooltip "Click to sort by flag">
+<!ENTITY locationColumn.tooltip "Click to sort by location">
+<!ENTITY idColumn.tooltip "Click to sort by order received">

@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -22,8 +22,6 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
-<?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
@@ -71,6 +69,8 @@
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
+<!-- move needed functions into a single js file -->
+<script type="application/x-javascript" src="chrome://messenger/content/threadPane.js"/>
 
 <commandset id="mailCommands">
   <commandset id="mailFileMenuItems"/>
@@ -144,7 +144,94 @@
       <sidebarheader id="folderPaneHeader" align="center">
         <label id="folderpane-title" value="&folderPaneHeader.label;"/>
       </sidebarheader>
-      <tree id="folderTree" flex="1" style="min-width: 100px;" context="folderPaneContext" persist="collapsed width height"/>
+      <tree id="folderTree" class="plain focusring" flex="1" seltype="single" style="min-width: 100px;"
+            context="folderPaneContext"
+            persist="collapsed width height"
+            disableKeyNavigation="true"
+            datasources="rdf:null"
+            hidecolumnpicker="true"
+            statedatasource="rdf:mailnewsfolders"
+            flags="dont-build-content"
+            ondraggesture="BeginDragFolderTree(event);"
+            onselect="FolderPaneSelectionChange();">
+        <template>
+          <rule>
+            <conditions>
+              <treeitem uri="?container"/>
+              <member container="?container" child="?member" />
+            </conditions>
+
+            <bindings>
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                       object="?folderTreeName" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                       object="?folderTreeNameSort" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
+                       object="?folderTreeSimpleName" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                       object="?specialFolder" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#BiffState"
+                       object="?biffState" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#IsServer"
+                       object="?isServer" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#NewMessages"
+                       object="?newMessages" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#HasUnreadMessages"
+                       object="?hasUnreadMessages" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+                       object="?subfoldersHaveUnreadMessages" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                       object="?isSecure" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#ServerType"
+                       object="?serverType" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#RedirectorType"
+                       object="?redirectorType" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#NoSelect"
+                       object="?noSelect" />
+              <binding subject="?member"
+                       predicate="http://home.netscape.com/NC-rdf#ImapShared"
+                       object="?imapShared" />
+            </bindings>
+
+            <action>
+              <treechildren>
+                <treeitem uri="?member">
+                  <treerow>
+                    <treecell id="folderNameCell"
+                              label="?folderTreeName"
+                              properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType redirectorType-?redirectorType noSelect-?noSelect imapShared-?imapShared"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </action>
+          </rule>
+        </template>
+        <treecols>
+          <treecol id="folderNameCol"
+                   flex="5"
+                   crop="center"
+                   persist="width"
+                   hideheader="true"
+                   ignoreincolumnpicker="true"
+                   primary="true"
+                   sort="?folderTreeNameSort"
+                   sortActive="true"
+                   sortDirection="ascending"/>
+        </treecols>
+      </tree>
     </vbox>
       
     <splitter id="gray_vertical_splitter" collapse="before" persist="state"/>
@@ -155,7 +242,65 @@
         <iframe name="accountCentralPane" flex="1" src="about:blank"/>
       </vbox>
       <hbox id="searchBox"/>
-      <tree id="threadTree" flex="2" persist="height" context="threadPaneContext"/>
+        <tree id="threadTree" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring"
+                     disableKeyNavigation="true"
+                     persist="height"
+                     style="height:0px" 
+                     context="threadPaneContext"
+                     onkeypress="ThreadPaneKeyPress(event);"
+                     onselect="ThreadPaneSelectionChanged();">
+          <treecols pickertooltiptext="&columnChooser.tooltip;">
+            <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true"
+                     class="treecol-image threadColumnHeader" currentView="unthreaded"
+                    display="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
+                     label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true"
+                     class="treecol-image junkStatusHeader"
+                     display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="senderOrRecipientCol" persist="hidden ordinal width" flex="4"
+                    label="&senderColumn.label;" tooltiptext="&senderColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="unreadButtonColHeader" persist="hidden ordinal" fixed="true" cycler="true"
+                    class="treecol-image readColumnHeader"
+                    display="&readColumn.label;" tooltiptext="&readColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="dateCol" persist="hidden ordinal width" flex="2"
+                    label="&dateColumn.label;" tooltiptext="&dateColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="statusCol" persist="hidden ordinal width" flex="1" hidden="true"
+                    label="&statusColumn.label;" tooltiptext="&statusColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="sizeCol" persist="hidden ordinal width" flex="1" hidden="true"
+                    label="&sizeColumn.label;" tooltiptext="&sizeColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="flaggedCol" persist="hidden ordinal" fixed="true" cycler="true" hidden="true"
+                    class="treecol-image flagColumnHeader"
+                    display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="labelCol" persist="hidden ordinal width" flex="1" hidden="true"
+                    label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="priorityCol" persist="hidden ordinal width" flex="1"
+                    label="&priorityColumn.label;" tooltiptext="&priorityColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="unreadCol" persist="hidden ordinal width" flex="1" hidden="true"
+                    label="&unreadColumn.label;" tooltiptext="&unreadColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="totalCol" persist="hidden ordinal width" flex="1" hidden="true"
+                    label="&totalColumn.label;" tooltiptext="&totalColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="locationCol" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true"
+                    label="&locationColumn.label;" tooltiptext="&locationColumn.tooltip;"/>
+           <splitter class="tree-splitter"/>
+           <treecol id="idCol" persist="hidden ordinal width" flex="1" hidden="true"
+                    label="&idColumn.label;" tooltiptext="&idColumn.tooltip;"/>
+          </treecols>
+        <treechildren ondraggesture="BeginDragThreadPane(event);"/>
+      </tree>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 

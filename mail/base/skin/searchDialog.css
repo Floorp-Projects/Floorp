@@ -1,4 +1,5 @@
 /*
+
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -18,144 +19,42 @@
 # Rights Reserved.
 #
 # Contributor(s):
+
 */
 
-/* ===== mailWindow1.css ================================================
-  == Styles for the main Mail window in the default layout scheme.
+/* ===== searchDialog.css ===============================================
+  == Styles for the Mail Search dialog.
   ======================================================================= */
 
 @import url("chrome://messenger/skin/");
-@import url("chrome://messenger/skin/primaryToolbar.css");
-@import url("chrome://messenger/skin/folderMenus.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: Folder Pane ::::: */
+/* ::::: box sizes ::::: */
 
-treechildren:-moz-tree-image(folderNameCol) {
-  margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
+#searchTermTree {
+  min-height: 50px;
 }
 
-treechildren:-moz-tree-image(folderNameCol, newMessages-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-new-closed.gif");
+#searchTermListBox {
+  height: 100px;
 }
 
-/* ..... Inbox ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Inbox) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.gif");
+#searchResultListBox {
+  margin: 5px;
+  height: 100px;
 }
 
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-inbox-new.gif");
+menulist {
+  min-width: 15em;
 }
 
-/* ..... Sent ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Sent) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-sent.gif");
+menulist > menupopup > menuitem {
+  padding-right: 2px;
 }
 
-/* ..... Unsent ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Unsent Messages) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-outbox.gif");
-}
-
-/* ..... Drafts ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Drafts) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-draft.gif");
-}
-
-/* ..... Templates ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Templates) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
-}
-
-/* ..... Junk ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Junk) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
-}
-
-/* ..... Trash ..... */
-
-treechildren:-moz-tree-image(folderNameCol, specialFolder-Trash) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
-}
-
-treechildren:-moz-tree-image(folderNameCol, isServer-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-mail.gif");
-}
-
-treechildren:-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-mail-new.gif");
-}
-
-treechildren:-moz-tree-cell-text(folderNameCol, newMessages-true),
-treechildren:-moz-tree-cell-text(folderNameCol, specialFolder-Inbox, newMessages-true) {
-  font-weight: bold;
-}
-
-treechildren:-moz-tree-image(folderNameCol, imapShared-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-share.gif");
-}
-
-
-/* ..... Server Folders ..... */
-
-treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
-}
-
-treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
-}
-
-treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
-  list-style-image: url("chrome://messenger/skin/icons/server-local.gif");
-}
-
-/* ..... News Folders ..... */
-
-treechildren:-moz-tree-image(folderNameCol, serverType-nntp) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
-}
-
-treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-nntp) {
-  list-style-image: url("chrome://messenger/skin/icons/server-news.gif");
-}
-
-treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
-}
-
-/* ::::: All Servers ::::: */
-
-treechildren:-moz-tree-cell-text(closed, subfoldersHaveUnreadMessages-true) {
-  font-weight: bold;
-}
-
-treechildren:-moz-tree-cell-text(folderNameCol, isServer-true),
-treechildren:-moz-tree-cell-text(hasUnreadMessages-true) {
-  font-weight: bold;
-}
-
-treechildren:-moz-tree-cell-text(folderNameCol, noSelect-true) {
-  color: gray;
-  font-style: italic;
-}
-
-.tree-folder-checkbox {
-  list-style-image: none;
-}
-
-#folderNameCol [sortDirection="ascending"],
-#folderNameCol [sortDirection="descending"] {
-  list-style-image: none;
+textbox {
+  margin: 1px 4px;
 }
 
 /* ::::: thread decoration ::::: */
@@ -398,7 +297,6 @@ treechildren:-moz-tree-row(lc-000000, selected) {
   background-color: #000000;
 }
 
-
 treechildren:-moz-tree-cell-text(lc-FFCCCC) {
   color: #FFCCCC
 }
@@ -448,7 +346,6 @@ treechildren:-moz-tree-row(lc-330000, selected) {
   background-color: #330000;
 }
 
-
 treechildren:-moz-tree-cell-text(lc-FFCC99) {
   color: #FFCC99
 }
@@ -497,7 +394,6 @@ treechildren:-moz-tree-cell-text(lc-663300) {
 treechildren:-moz-tree-row(lc-663300, selected) {
   background-color: #663300;
 }
-
 
 treechildren:-moz-tree-cell-text(lc-FFFF99) {
   color: #FFFF99
@@ -598,7 +494,6 @@ treechildren:-moz-tree-row(lc-333300, selected) {
   background-color: #333300;
 }
 
-
 treechildren:-moz-tree-cell-text(lc-99FF99) {
   color: #99FF99
 }
@@ -647,7 +542,6 @@ treechildren:-moz-tree-cell-text(lc-003300) {
 treechildren:-moz-tree-row(lc-003300, selected) {
   background-color: #003300;
 }
-
 
 treechildren:-moz-tree-cell-text(lc-99FFFF) {
   color: #99FFFF
@@ -698,7 +592,6 @@ treechildren:-moz-tree-row(lc-003333, selected) {
   background-color: #003333;
 }
 
-
 treechildren:-moz-tree-cell-text(lc-CCFFFF) {
   color: #CCFFFF
 }
@@ -747,7 +640,6 @@ treechildren:-moz-tree-cell-text(lc-000066) {
 treechildren:-moz-tree-row(lc-000066, selected) {
   background-color: #000066;
 }
-
 
 treechildren:-moz-tree-cell-text(lc-CCCCFF) {
   color: #CCCCFF
@@ -798,7 +690,6 @@ treechildren:-moz-tree-row(lc-330099, selected) {
   background-color: #330099;
 }
 
-
 treechildren:-moz-tree-cell-text(lc-FFCCFF) {
   color: #FFCCFF
 }
@@ -848,98 +739,9 @@ treechildren:-moz-tree-row(lc-330033, selected) {
   background-color: #330033;
 }
 
-
 treechildren:-moz-tree-cell-text(lc-white, selected) {
   color: #FFFFFF
 }
 treechildren:-moz-tree-cell-text(lc-black, selected) {
   color: #000000
-}
-
-/* :::::
-   :: Make sure the min height is small so we can
-   :: resize the pane vertically -EDV
-   ::::: */
-
-#messagepanebox {
-  min-height: 10px;
-  height: 0px;
-}
-
-/* ::::: border adjustments for focus ring and joined splitters ::::: */
-
-/* ..... splitter adjustments ..... */
-
-#gray_vertical_splitter {
-  border-right: none;
-  border-bottom: none;
-  border-left: none;
-  min-width: 5px;
-}
-
-#threadpane-splitter {
-  border: none;
-  min-height: 5px;
-}
-
-#threadpane-splitter[state="collapsed"] {
-  border-bottom: 2px solid;
-}
-
-/* ..... tree adjustments ..... */
- 
-#folderTree {
-  border-right: 1px solid;
-  -moz-border-right-colors: ThreeDShadow;
-  min-width: 1px;
-}
-
-#threadTree {
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  min-width: 1px;
-}
-
-#threadTree,
-#accountCentralBox,
-#searchBox {
-  border-left: 2px solid;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-}
-
-#searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-/* we could set this height to 32 pixels to make it the same height as the search bar
-   but I think it makes the folder Pane header look too big.... use 28px for now 
-
-#folderPaneHeader {
-  height: 32px;
-}
-
-*/
-
-
-/* ..... message pane adjustments ..... */
-
-#messagepanebox {
- border-top: 2px solid;
- border-left: 2px solid;
- -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
- -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-}
-
-#msgHeaderView {
-  border-left: none !important;
-}
-
-#messagepane {
-  border: 1px solid -moz-Field;
-  border-right: none;
-}
-
-#messagepanebox[focusring="true"] > #messagepane {
-  border-color: #000000;
 }

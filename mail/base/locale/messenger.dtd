@@ -72,6 +72,8 @@
 <!ENTITY unsubscribeNewsgroupCmd.accesskey "n">
 <!ENTITY selectMenu.label "Select">
 <!ENTITY selectMenu.accesskey "S">
+<!ENTITY all.label "All">
+<!ENTITY all.accesskey "A">
 <!ENTITY selectThreadCmd.label "Thread">
 <!ENTITY selectThreadCmd.accesskey "T">
 <!ENTITY selectThreadCmd.key "a">
@@ -368,10 +370,40 @@
 <!ENTITY openMessageWindowCmd.accesskey "O">
 <!ENTITY openMessageWindowCmd.key "o">
 
-<!-- Folder Pane -->
-<!ENTITY folderPaneHeader.label "Folders">
+<!-- Tools Menu -->
+<!ENTITY tasksMenu.label "Tools">
+<!ENTITY tasksMenu.accesskey "T">
+<!ENTITY messengerCmd.label "Mail &amp; Newsgroups">
+<!ENTITY messengerCmd.accesskey "m">
+<!ENTITY messengerCmd.commandkey "1">
+<!ENTITY addressBookCmd.label "Address Book">  
+<!ENTITY addressBookCmd.accesskey "a">
+<!ENTITY addressBookCmd.commandkey "2">
+<!ENTITY searchMailCmd.label "Search Messages...">
+<!ENTITY searchMailCmd.accesskey "e">
+<!ENTITY searchMailCmd.key "f">
+<!ENTITY searchAddressesCmd.label "Search Addresses...">
+<!ENTITY searchAddressesCmd.accesskey "S">
+<!ENTITY junkMailCmd.label "Junk Mail Controls...">
+<!ENTITY junkMailCmd.accesskey "J">
+<!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
+<!ENTITY runJunkControls.accesskey "u">
+<!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
+<!ENTITY deleteJunk.accesskey "e">
+<!ENTITY javaScriptConsoleCmd.label "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey "S">
 
-<!-- Toolbar items -->
+<!-- Help Menu -->
+<!ENTITY helpMenu.label "Help">
+<!ENTITY helpMenu.accesskey "H"> 
+<!ENTITY releaseCmd.label "Release Notes">
+<!ENTITY releaseCmd.accesskey "R"> 
+<!ENTITY hintsAndTips.label "&brandShortName; Help">
+<!ENTITY hintsAndTips.accesskey "h"> 
+<!ENTITY aboutCmd.label "About &brandShortName;">
+<!ENTITY aboutCmd.accesskey "A">
+
+<!-- Mail Toolbar -->
 <!ENTITY getMsgButton.label "Get Mail">
 <!ENTITY newMsgButton.label "Write">
 <!ENTITY replyButton.label "Reply">
@@ -387,7 +419,7 @@
 <!ENTITY notJunkButton.label "Not Junk">
 <!ENTITY addressBookButton.label "Address Book">
 
-<!--Tooltips-->
+<!-- Mail Toolbar Tooltips-->
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY mailToolbar.tooltip "Mail Toolbar">
 <!ENTITY advancedButton.tooltip "Advanced message search">
@@ -408,10 +440,84 @@
 <!ENTITY notJunkButton.tooltip "Mark the selected messages as not junk">
 <!ENTITY addressBookButton.tooltip "Go to the address book">
 
-<!-- Statusbar -->
-<!ENTITY  statusText.label "Done">
-<!ENTITY  unreadCountText.label "Unread: ">
-<!ENTITY  totalCountText.label " Total: ">
+<!-- Folder Pane -->
+<!ENTITY folderPaneHeader.label "Folders">
+
+<!-- Folder Pane Context Menu -->
+<!ENTITY folderContextGetMessages.label "Get Messages for Account">
+<!ENTITY folderContextGetMessages.accesskey "G">
+<!ENTITY folderContextOpenNewWindow.label "Open in New Mail Window">
+<!ENTITY folderContextOpenNewWindow.accesskey "W">
+<!ENTITY folderContextRename.label "Rename">
+<!ENTITY folderContextRename.accesskey "R">
+<!ENTITY folderContextRemove.label "Delete">
+<!ENTITY folderContextRemove.accesskey "D">
+<!ENTITY folderContextCompact.label "Compact This Folder">
+<!ENTITY folderContextCompact.accesskey "F">
+<!ENTITY folderContextEmptyTrash.label "Empty Trash">
+<!ENTITY folderContextEmptyTrash.accesskey "y">
+<!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
+<!ENTITY folderContextSendUnsentMessages.accesskey "d">
+<!ENTITY folderContextUnsubscribe.label "Unsubscribe">
+<!ENTITY folderContextUnsubscribe.accesskey "U">
+<!ENTITY folderContextMarkNewsgroupRead.label "Mark Newsgroup Read">
+<!ENTITY folderContextMarkNewsgroupRead.accesskey "k">
+<!ENTITY folderContextNew.label "New Subfolder...">
+<!ENTITY folderContextNew.accesskey "N">
+<!ENTITY folderContextSubscribe.label "Subscribe...">
+<!ENTITY folderContextSubscribe.accesskey "b">
+<!ENTITY folderContextSearchMessages.label "Search Messages...">
+<!ENTITY folderContextSearchMessages.accesskey "S">
+<!ENTITY folderContextProperties.label "Properties...">
+<!ENTITY folderContextProperties.accesskey "P">
+<!ENTITY folderContextCopyLocation.label "Copy Folder Location">
+<!ENTITY folderContextCopyLocation.accesskey "C">
+
+<!-- Search Bar -->
+<!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
+<!ENTITY SearchSubjectOrSender.accesskey "S">
+<!ENTITY SearchNameOrEmail.label "Name or Email contains:">
+<!ENTITY SearchNameOrEmail.accesskey "N">
+<!ENTITY advancedButton.label "Advanced...">
+<!ENTITY advancedButton.accesskey "A">
+<!ENTITY clearButton.label "Clear">
+<!ENTITY clearButton.accesskey "C">
+
+<!-- Thread Pane -->
+<!ENTITY threadColumn.label "Thread">
+<!ENTITY senderColumn.label "Sender">
+<!ENTITY subjectColumn.label "Subject">
+<!ENTITY dateColumn.label "Date">
+<!ENTITY priorityColumn.label "Priority">
+<!ENTITY labelColumn.label "Label">
+<!ENTITY statusColumn.label "Status">
+<!ENTITY sizeColumn.label "Size">
+<!ENTITY junkStatusColumn.label "Junk Status">
+<!ENTITY linesColumn.label "Lines">
+<!ENTITY unreadColumn.label "Unread">
+<!ENTITY totalColumn.label "Total">
+<!ENTITY readColumn.label "Read">
+<!ENTITY flagColumn.label "Flag">
+<!ENTITY locationColumn.label "Location">
+<!ENTITY idColumn.label "Order Received">
+
+<!-- Thread Pane Tooltips -->
+<!ENTITY columnChooser.tooltip "Click to select columns to display">
+<!ENTITY threadColumn.tooltip "Click to display message threads"> 
+<!ENTITY senderColumn.tooltip "Click to sort by sender">
+<!ENTITY subjectColumn.tooltip "Click to sort by subject">
+<!ENTITY dateColumn.tooltip "Click to sort by date">
+<!ENTITY priorityColumn.tooltip "Click to sort by priority">
+<!ENTITY labelColumn.tooltip "Click to sort by label">
+<!ENTITY statusColumn.tooltip "Click to sort by status">
+<!ENTITY sizeColumn.tooltip "Click to sort by size">
+<!ENTITY junkStatusColumn.tooltip "Click to sort by junk status">
+<!ENTITY unreadColumn.tooltip "Number of unread messages in thread">
+<!ENTITY totalColumn.tooltip "Total number of messages in thread">
+<!ENTITY readColumn.tooltip "Click to sort by read">
+<!ENTITY flagColumn.tooltip "Click to sort by flag">
+<!ENTITY locationColumn.tooltip "Click to sort by location">
+<!ENTITY idColumn.tooltip "Click to sort by order received">
 
 <!-- Thread Pane Context Menu -->
 <!ENTITY contextOpenNewWindow.label "Open Message in New Window">
@@ -444,36 +550,12 @@
 <!ENTITY contextAddAllToAddressBook.label "Add All To Address Book">
 <!ENTITY contextAddAllToAddressBook.accesskey "A">
 
-<!-- Folder Pane Context Menu -->
-<!ENTITY folderContextGetMessages.label "Get Messages for Account">
-<!ENTITY folderContextGetMessages.accesskey "G">
-<!ENTITY folderContextOpenNewWindow.label "Open in New Mail Window">
-<!ENTITY folderContextOpenNewWindow.accesskey "W">
-<!ENTITY folderContextRename.label "Rename">
-<!ENTITY folderContextRename.accesskey "R">
-<!ENTITY folderContextRemove.label "Delete">
-<!ENTITY folderContextRemove.accesskey "D">
-<!ENTITY folderContextCompact.label "Compact This Folder">
-<!ENTITY folderContextCompact.accesskey "F">
-<!ENTITY folderContextEmptyTrash.label "Empty Trash">
-<!ENTITY folderContextEmptyTrash.accesskey "y">
-<!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
-<!ENTITY folderContextSendUnsentMessages.accesskey "d">
-<!ENTITY folderContextUnsubscribe.label "Unsubscribe">
-<!ENTITY folderContextUnsubscribe.accesskey "U">
-<!ENTITY folderContextMarkNewsgroupRead.label "Mark Newsgroup Read">
-<!ENTITY folderContextMarkNewsgroupRead.accesskey "k">
-<!ENTITY folderContextNew.label "New Subfolder...">
-<!ENTITY folderContextNew.accesskey "N">
-<!ENTITY folderContextSubscribe.label "Subscribe...">
-<!ENTITY folderContextSubscribe.accesskey "b">
-<!ENTITY folderContextSearchMessages.label "Search Messages...">
-<!ENTITY folderContextSearchMessages.accesskey "S">
-<!ENTITY folderContextProperties.label "Properties...">
-<!ENTITY folderContextProperties.accesskey "P">
-<!ENTITY folderContextCopyLocation.label "Copy Folder Location">
-<!ENTITY folderContextCopyLocation.accesskey "C">
-<!-- Message Header View Popup -->
+<!-- Junk Bar -->
+<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
+<!ENTITY notJunkButton.label "This is Not Junk">
+<!ENTITY junkInfoButton.label "?">
+
+<!-- Message Header Context Menu -->
 <!ENTITY AddToAddressBook.label "Add to Address Book...">
 <!ENTITY AddToAddressBook.accesskey "B">
 <!ENTITY SendMailTo.label "Compose Mail To">
@@ -485,76 +567,7 @@
 <!ENTITY BlockAddress.label "Block Address">
 <!ENTITY BlockAddress.accesskey "A">
 
-<!---SearchBar-->
-<!-- also used by addressbook -->
-<!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
-<!ENTITY SearchSubjectOrSender.accesskey "S">
-<!ENTITY SearchNameOrEmail.label "Name or Email contains:">
-<!ENTITY SearchNameOrEmail.accesskey "N">
-<!ENTITY advancedButton.label "Advanced...">
-<!ENTITY advancedButton.accesskey "A">
-
-<!ENTITY clearButton.label "Clear">
-<!ENTITY clearButton.accesskey "C">
-
-<!ENTITY all.label "All">
-<!ENTITY all.accesskey "A">
-
-<!ENTITY searchAddressesCmd.label "Search Addresses...">
-<!ENTITY searchAddressesCmd.accesskey "S">
-
-<!ENTITY junkMailCmd.label "Junk Mail Controls...">
-<!ENTITY junkMailCmd.accesskey "J">
-
-<!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
-<!ENTITY runJunkControls.accesskey "u">
-
-<!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
-<!ENTITY deleteJunk.accesskey "e">
-
-<!-- junk bar -->
-<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
-<!ENTITY notJunkButton.label "This is Not Junk">
-<!ENTITY junkInfoButton.label "?">
-
-<!--- Tools Menu Bar-->
-<!-- LOCALIZATION NOTE (messengerCmd.label): DONT_TRANSLATE -->
-<!ENTITY messengerCmd.label					"Mail &amp; Newsgroups">
-<!ENTITY messengerCmd.accesskey				"m">
-<!ENTITY messengerCmd.commandkey			"1">
-<!ENTITY addressBookCmd.label				"Address Book">  
-<!ENTITY addressBookCmd.accesskey			"a">
-<!ENTITY addressBookCmd.commandkey			"2">
-
-<!ENTITY taskMessenger.tooltip  "Mail &amp; Newsgroups">
-<!ENTITY taskAddressBook.tooltip  "Address Book">
-
-<!-- searchAddressesCmd is also used by addressbook -->
-<!ENTITY searchAddressesCmd.label                       "Search Addresses...">
-<!ENTITY searchAddressesCmd.accesskey                   "A">
-
-<!ENTITY searchMailCmd.label "Search Messages...">
-<!ENTITY searchMailCmd.accesskey "e">
-<!ENTITY searchMailCmd.key "f">
-
-<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey				"S">
-
-<!-- Tasks Menu -->
-
-<!ENTITY tasksMenu.label "Tools">
-<!ENTITY tasksMenu.accesskey "T"> 
-
-<!-- Help Menu -->
-<!ENTITY helpMenu.label "Help">
-<!ENTITY helpMenu.accesskey "H"> 
-<!ENTITY releaseCmd.label "Release Notes">
-<!ENTITY releaseCmd.accesskey "R"> 
-<!ENTITY hintsAndTips.label "&brandShortName; Help">
-<!ENTITY hintsAndTips.accesskey "h"> 
-<!ENTITY aboutCmd.label         "About &brandShortName;">
-<!ENTITY aboutCmd.accesskey       "A">
-
-
-
-
+<!-- Statusbar -->
+<!ENTITY statusText.label "Done">
+<!ENTITY unreadCountText.label "Unread: ">
+<!ENTITY totalCountText.label " Total: ">
