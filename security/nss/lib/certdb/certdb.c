@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.10 2001/04/11 22:28:09 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.11 2001/04/24 21:27:40 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1545,9 +1545,24 @@ CERT_MakeCANickname(CERTCertificate *cert)
 	}
 
 	org = CERT_GetOrgName(&cert->issuer);
-	if ( org == NULL ) {
+	if (org == NULL) {
+	    org = CERT_GetDomainComponentName(&cert->issuer);
+	    if (org == NULL) {
+		if (firstname) {
+		    org = firstname;
+		    firstname = NULL;
+		} else {
+		    org = PORT_Strdup("Unknown CA");
+		}
+	    }
+	}
+
+	/* can only fail if PORT_Strdup fails, in which case
+	 * we're having memory problems. */
+	if (org == NULL) {
 	    goto loser;
 	}
+
     
 	count = 1;
 	while ( 1 ) {
