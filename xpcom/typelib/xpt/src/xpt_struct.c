@@ -67,16 +67,6 @@ DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td);
 static PRBool
 DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd);
 
-
-#define CURS_POOL_OFFSET_RAW(cursor)                                          \
-  ((cursor)->pool == XPT_HEADER                                               \
-   ? (cursor)->offset                                                         \
-   : (XPT_ASSERT((cursor)->state->data_offset),                               \
-      (cursor)->offset + (cursor)->state->data_offset))
-
-#define CURS_POOL_OFFSET(cursor)                                              \
-  (CURS_POOL_OFFSET_RAW(cursor) - 1)
-
 XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfHeader(XPTHeader *header)
 {
