@@ -571,13 +571,11 @@ readDir : function (dirPath) {
   var files     = file.directoryEntries;
   var listings  = new Array();
 
-  i=0;
   while(files.hasMoreElements()){
-  listings[i]   = files.getNext().QueryInterface(Components.interfaces.nsILocalFile).path;
-  i++;
+  listings.push(files.getNext().QueryInterface(Components.interfaces.nsILocalFile).path);
   }
 
-  return eval(listings.toSource());
+  return listings;
 
 },
 
