@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.10 1999/09/25 19:59:42 kipp%netscape.com Exp $
+ * $Id: if.h,v 3.11 1999/10/19 21:48:03 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -207,7 +207,7 @@ struct il_container_struct {
     IL_Pixmap *image;           /* Destination image pixmap structure. */
     IL_Pixmap *mask;            /* Destination mask pixmap structure. */
 
-    intn type;
+    char* type;                 /* mimetype string ptn 10.13.99*/
     void *ds;                   /* decoder's private data */
 
     il_converter converter;
@@ -364,32 +364,21 @@ extern PRBool il_image_stopped(il_container *ic);
 extern ilINetReader *IL_NewNetReader(il_container *ic);
 extern il_container *IL_GetNetReaderContainer(ilINetReader *reader);
 
-#ifndef M12N_NEW_DEPENDENCIES   /* XXXM12N */
+
 extern int IL_StreamWriteReady(il_container *ic);
 extern int IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len);
 extern int IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len);
 extern void IL_StreamAbort(il_container *ic, int status);
 extern void IL_StreamComplete(il_container *ic, PRBool is_multipart);
 extern void IL_NetRequestDone(il_container *ic, ilIURL *urls, int status);
-extern PRBool IL_StreamCreated(il_container *ic, ilIURL *urls, int type);
-#else
-extern jint
-il_write_ready(NET_StreamClass *stream, jint op, struct JMCException* *exceptionThrown);
-extern jint
-il_first_write(NET_StreamClass *stream, jint op, jbyte* str, jsize len,
-               struct JMCException* *exceptionThrown);
-extern void
-il_abort(NET_StreamClass *stream, jint op, jint status,
-         struct JMCException* *exceptionThrown);
-extern void
-il_stream_complete(NET_StreamClass *stream, jint op,
-                   struct JMCException* *exceptionThrown);
-#endif /* M12N_NEW_DEPENDENCIES */
+extern PRBool IL_StreamCreated(il_container *ic, ilIURL *urls, char* type);
 
+#if 0
 extern int  il_xbm_init(il_container *ic);
 extern int  il_xbm_write(il_container *, const uint8 *, int32);
 extern void il_xbm_complete(il_container *ic);
 extern void il_xbm_abort(il_container *ic);
+#endif
 
 /* Allocate and initialize the destination image's transparent_pixel with
    the Image Library's preferred transparency color i.e. the background color

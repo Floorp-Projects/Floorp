@@ -41,7 +41,7 @@ public:
 
   NS_IMETHOD NetRequestDone(ilIURL *urls, int status);
   
-  virtual PRBool StreamCreated(ilIURL *urls, int type);
+  virtual PRBool StreamCreated(ilIURL *urls, char* type);
   
   virtual PRBool IsMulti();
 
@@ -133,7 +133,7 @@ NetReaderImpl::NetRequestDone(ilIURL *urls, int status)
 }
   
 PRBool 
-NetReaderImpl::StreamCreated(ilIURL *urls, int type)
+NetReaderImpl::StreamCreated(ilIURL *urls, char* type)
 {
     if (ilContainer != NULL) {
         return IL_StreamCreated(ilContainer, urls, type);

@@ -24,8 +24,8 @@
 
 #include "if.h"                 /* Image library internal declarations */
 #include "il.h"                 /* Image library external API */
-#include "il_strm.h"            /* For image types. */
-#include "prmem.h"
+
+#include "nsCRT.h"
 
 #include "nsVoidArray.h"        
 #include "nsITimer.h"
@@ -971,8 +971,8 @@ il_emit_row(
             drow_start * mask_header->widthBytes;
 #endif
 
-         /* We know this mask is prescaled: */
-         if (ic->type == IL_ART){
+         /* We know this mask is prescaled: */     
+        if (nsCRT::strncasecmp(ic->type, "image/art",9)==0){
               /* No scaling needed*/
               if (len == column_count)
                  XP_MEMCPY(maskp, cbuf, mask_header->widthBytes);
@@ -1178,16 +1178,20 @@ il_emit_row(
     dup = row_count - 1;
     offset = dcolumn_start * (img_color_space->pixmap_depth / 8);
 
+
 #ifndef M12N                    /* Clean this up */
     if (ic->image->pixmap_depth == 1)
         do_dither = TRUE;
     else
         do_dither = ic->converter && (row_count <= 4) &&
-            ((ic->dither_mode == IL_Dither) || (ic->type == IL_JPEG));
+            ((ic->dither_mode == IL_Dither) ||
+             (nsCRT::strncasecmp(ic->type, "image/jpeg",10)==0);
 #else
     do_dither = (ic->dither_mode == IL_Dither);
-    if ((ic->type == IL_GIF)||(ic->type == IL_PNG) && (!ic->converter || (row_count > 4)))
-        do_dither = FALSE;
+    if ((nsCRT::strncasecmp(ic->type, "image/gif",9)==0)||
+        (nsCRT::strncasecmp(ic->type, "image/png",9)==0) &&
+        (!ic->converter || (row_count > 4)))
+              do_dither = FALSE;
    
 #endif /* M12N */   
 

@@ -28,12 +28,14 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
+#include "prprf.h"
+
 #include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "il_strm.h"
+//#include "il_strm.h"
 #include "merrors.h"
 
 #include "nsNeckoUtil.h"
@@ -163,13 +165,32 @@ ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
     return NS_ERROR_ABORT;
   }
 
-  ilINetReader *reader = mURL->GetReader();
-  if (reader->StreamCreated(mURL, IL_UNKNOWN) != PR_TRUE) {
+  ilINetReader *reader = mURL->GetReader(); //ptn test: nsCOMPtr??
+
+  nsresult rv = NS_OK;
+  char* aContentType = NULL;
+  rv = channel->GetContentType(&aContentType); //nsCRT alloc's str
+  if (NS_FAILED(rv)) {
+      if(aContentType){
+          nsCRT::free(aContentType);
+      }
+      aContentType = nsCRT::strdup("unknown");        
+  }
+  if(nsCRT::strlen(aContentType) > 50){
+      //somethings wrong. mimetype string shouldn't be this big.
+      //protect us from the user.
+      nsCRT::free(aContentType);
+      aContentType = nsCRT::strdup("unknown"); 
+  }
+
+  if (reader->StreamCreated(mURL, aContentType) != PR_TRUE) {
     mStatus = MK_IMAGE_LOSSAGE;
     reader->StreamAbort(mStatus);
     NS_RELEASE(reader);
+    nsCRT::free(aContentType);
     return NS_ERROR_ABORT;
   }
+  nsCRT::free(aContentType);
   NS_RELEASE(reader);
     
   return NS_OK;
@@ -192,7 +213,7 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
     NS_RELEASE(reader);
     return NS_ERROR_ABORT;
   }
-  
+
   nsresult err = 0;
   PRUint32 nb;
 
@@ -234,7 +255,7 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
     bytes_read += nb;
     if (mFirstRead == PR_TRUE) {
             
-      err = reader->FirstWrite((const unsigned char *)mBuffer, nb);
+      err = reader->FirstWrite((const unsigned char *)mBuffer, nb );
       mFirstRead = PR_FALSE; //? move after err chk?
       /* 
        * If FirstWrite(...) fails then the image type
@@ -253,7 +274,7 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
     if(NS_FAILED(err)){
       mStatus = MK_IMAGE_LOSSAGE;
       mInterrupted = PR_TRUE;
-	    NS_RELEASE(reader);
+	  NS_RELEASE(reader);
       return NS_ERROR_ABORT;
     }
   } while(bytes_read < length);
@@ -276,7 +297,6 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
   } else {
     NS_IF_RELEASE(mStream);
   }
-
   NS_RELEASE(reader);
   return NS_OK;
 }

@@ -30,8 +30,9 @@
 #include "xpcompat.h"
 
 #include "prtypes.h"
+#include "prprf.h"
 
-#include "il_strm.h"
+//#include "il_strm.h"
 
 
 PR_BEGIN_EXTERN_C
@@ -75,7 +76,7 @@ NS_IMETHODIMP ImgDCallbk::ImgDCBResetPalette()
    if( ilContainer != NULL ) {
        il_reset_palette(ilContainer);
   }
-  return NS_OK;
+  return 0;
 }
 
 
@@ -197,24 +198,14 @@ ImgDCallbk :: ImgDCBClearTimeout(void *timer_id)
 static void
 il_description_notify(il_container *ic)
 {
-    char buf[36], buf2[12];
+    char buf[36];
     IL_MessageData message_data;
     IL_ImageReq *image_req;
     NI_PixmapHeader *img_header = &ic->image->header;
     
     XP_BZERO(&message_data, sizeof(IL_MessageData));
 
-    switch (ic->type) {
-        /* XXX - This needs to be fixed for Image Plugins. */
-    case IL_GIF : PL_strcpy(buf2, "GIF"); break;
-    case IL_XBM : PL_strcpy(buf2, "XBM"); break;
-    case IL_JPEG : PL_strcpy(buf2, "JPEG"); break;
-    case IL_PNG : PL_strcpy(buf2, "PNG"); break;
-    case IL_ART : PL_strcpy(buf2, "ART"); break;
-
-    default : PL_strcpy(buf2, "");
-    }
-    XP_SPRINTF(buf, XP_GetString(XP_MSG_IMAGE_PIXELS), buf2,
+    XP_SPRINTF(buf, XP_GetString(XP_MSG_IMAGE_PIXELS), ic->type,
                img_header->width, img_header->height);
 
 	PR_ASSERT(ic->clients);
@@ -379,9 +370,9 @@ il_progress_notify(il_container *ic)
         /* Could be zero if before il_size() is called. */
         if (img_header->height == 0)
             return;
-
+        int ret;
         /* Interlaced GIFs are weird */
-        if (ic->type == IL_GIF) {
+        if (ret= nsCRT::strncasecmp(ic->type, "image/gif", 9) == 0) {
             percent_done = il_compute_percentage_complete(row, ic);
         }
         else
@@ -427,8 +418,8 @@ il_cache_return_notify(IL_ImageReq *image_req)
     PR_ASSERT(ic->state >= IC_SIZED);
 
     /* First notify observers of the image dimensions. */
-    message_data.width = ic->dest_width;   /* Note: these are stored as */
-    message_data.height = ic->dest_height; /* uint16s. */
+    message_data.width = (unsigned short) ic->dest_width;   /* Note: these are stored as */
+    message_data.height = (unsigned short) ic->dest_height; /* uint16s. */
     XP_NotifyObservers(image_req->obs_list, IL_DIMENSIONS, &message_data);
     message_data.width = message_data.height = 0;
 
@@ -864,14 +855,15 @@ IL_StreamWriteReady(il_container *ic)
 }
 
 /* Given the first few bytes of a stream, identify the image format */
-static int
-il_type(int suspected_type, const char *buf, int32 len)
+bool
+sniffout_mimetype(const char *buf, int32 len, char* aContentType)
 {
 	int i;
 
-	if (len >= 4 && !strncmp(buf, "GIF8", 4)) 
+    if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4)) 
 	{
-		return IL_GIF;
+        PR_snprintf(aContentType, 10,"%s", "image/gif");
+		return TRUE;
 	}
 
   	/* for PNG */
@@ -880,7 +872,8 @@ il_type(int suspected_type, const char *buf, int32 len)
 					 (unsigned char)buf[2]==0x4E &&
 					 (unsigned char)buf[3]==0x47))
 	{ 
-		return IL_PNG;
+        PR_snprintf(aContentType, 10,"%s","image/png");
+		return TRUE;
 	}
 
 
@@ -895,8 +888,9 @@ il_type(int suspected_type, const char *buf, int32 len)
 	   ((unsigned char)buf[1])==0xD8 &&
 	   ((unsigned char)buf[2])==0xFF)
 	{
-		return IL_JPEG;
-	}
+                PR_snprintf(aContentType, 11,"%s", "image/jpeg");
+		return TRUE;
+    }
 
   /* ART begins with JG (4A 47). Major version offset 2.
      Minor version offset 3. Offset 4 must be NULL.
@@ -906,7 +900,8 @@ il_type(int suspected_type, const char *buf, int32 len)
      ((unsigned char) buf[1])==0x47 &&
      ((unsigned char) buf[4])==0x00 )
   {
-      return IL_ART;
+        PR_snprintf(aContentType, 10,"%s", "image/art");
+		return TRUE;
   }
 
 
@@ -914,34 +909,43 @@ il_type(int suspected_type, const char *buf, int32 len)
 	if (len >= 8 && !strncmp(buf, "#define ", 8) ) 
 	{
         /* Don't contradict the given type, since this ID isn't definitive */
-        if ((suspected_type == IL_UNKNOWN) || (suspected_type == IL_XBM))
-            return IL_XBM;
+        PR_snprintf(aContentType, 8,"%s", "unknown");
+		return TRUE;
 	}
 
-	if (len < 35) 
+	if (len < 12) 
 	{
 		ILTRACE(1,("il: too few bytes to determine type"));
-		return suspected_type;
+        PR_snprintf(aContentType, 8,"%s", "unknown");
+		return FALSE;
 	}
 
 	/* all the servers return different formats so root around */
 	for (i=0; i<28; i++)
 	{
-		if (!strncmp(&buf[i], "Not Fou", 7))
-			return IL_NOTFOUND;
+        if (!strncmp(&buf[i], "Not Fou", 7)){
+             PR_snprintf(aContentType, 8,"%s", "unknown");
+			return FALSE;
+        }
 	}
-	
-	return suspected_type;
+
+    //just in case
+    PR_snprintf(aContentType, 8,"%s", "unknown");
+	return FALSE;
 }
 
 /*
  *	determine what kind of image data we are dealing with
  */
+
+
 IL_IMPLEMENT(int)
 IL_Type(const char *buf, int32 len)
 {
-    return il_type(IL_UNKNOWN, buf, len);
+    char aContent[200];
+    return sniffout_mimetype(buf, len, aContent);
 }
+
 
 int
 IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
@@ -984,13 +988,14 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
 	PR_ASSERT(ic);
 	PR_ASSERT(ic->image);
-
+    
     /* If URL redirection occurs, the url stored in the
     image container is the redirect url not the image file url.
     If the image is animated, the imglib will never match the
     file name in the cache unless you update ic->url_address.
     ic->fetch_url keeps the actual url for you.
      */	
+
 
     FREE_IF_NOT_NULL(ic->fetch_url);
 
@@ -1010,47 +1015,55 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 		ic->fetch_url = NULL;
     }
  
-    /* Figure out the image type, possibly overriding the given MIME type */
-    ic->type = il_type(ic->type, (const char*) str, len);
-
-
 	/* Grab the URL's expiration date */
 
 	if (ic->url)
 	  ic->expires = ic->url->GetExpires();
 
 
-  nsIImgDecoder *imgdec;	
-
-  char imgtype[150];
+  nsIImgDecoder *imgdec ;	
   char imgtypestr[200];
 
-  switch (ic->type) {
-    case IL_GIF : PL_strcpy(imgtype, "gif"); break;
-    case IL_XBM : PL_strcpy(imgtype, "xbm"); break;
-    case IL_JPEG : PL_strcpy(imgtype, "jpeg"); break;
-    case IL_PNG : PL_strcpy(imgtype, "png"); break;
-	case IL_ART : PL_strcpy(imgtype, "art"); break;
-    default : PL_strcpy(imgtype, "");
-    }
-
-  sprintf(imgtypestr, "component://netscape/image/decoder&type=image/%s"
-            , imgtype );
-
+  PR_snprintf(imgtypestr, sizeof(imgtypestr), "component://netscape/image/decoder&type=%s"
+            , ic->type );
+  
   static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
   rv = nsComponentManager::CreateInstance(imgtypestr, NULL,    
-                                                kIImgDecoderIID, // XXX was previously kImgDecoderIID
-                                                (void **)&imgdec);
+                                          kIImgDecoderIID, 
+                                          (void **)&imgdec);
 
-  if (NS_FAILED(rv))
-    return MK_IMAGE_LOSSAGE;
+  /* If no mimetype to decoder mapping, try to sniff out
+  the mime-type */
+  if (NS_FAILED(rv)){
+      char contenttype[50];
+      if(sniffout_mimetype((const char*) str, len, contenttype)){
+
+        /* try again with the guessed mimetype */
+        PR_snprintf(imgtypestr, sizeof(imgtypestr), "component://netscape/image/decoder&type=%s"
+            , contenttype );
+  
+        rv = nsComponentManager::CreateInstance(imgtypestr, NULL,    
+                                kIImgDecoderIID, (void **)&imgdec);  
+      }
+      if (NS_FAILED(rv))
+          /* we did our best. Gotta give up. */
+          return MK_IMAGE_LOSSAGE; 
+      
+      /*we found it*/
+      nsCRT::free(ic->type);
+      ic->type = NULL;
+      ic->type = nsCRT::strdup(contenttype);
+
+  }
   
   imgdec->SetContainer(ic);
   ic->imgdec = imgdec;
   
   rv = imgdec->ImgDInit();
-  if(NS_FAILED(rv))
-  {
+
+  if(NS_FAILED(rv)){
+     NS_RELEASE(ic->imgdec);
+     ic->imgdec = nsnull;
     ILTRACE(0,("il: image init failed"));
     return MK_OUT_OF_MEMORY;
   }
@@ -1103,7 +1116,9 @@ il_bad_container(il_container *ic)
       IL_ImageReq *image_req;
 
       ILTRACE(4,("il: bad container, sending icon"));
-      if (ic->type == IL_NOTFOUND) {
+      if((ic->type)&&
+         ((nsCRT::strlen(ic->type) < 8) ||
+         (nsCRT::strncmp(ic->type, "unknown", 7)==0))) {
           ic->state = IC_MISSING;
           for (image_req = ic->clients; image_req; image_req = image_req->next)
               il_icon_notify(image_req, IL_IMAGE_NOT_FOUND, IL_ERROR_NO_DATA);
@@ -1235,7 +1250,10 @@ IL_StreamComplete(il_container *ic, PRBool is_multipart)
 #endif /* DEBUG */
 
 	PR_ASSERT(ic);
-
+    if(ic->type){
+        nsCRT::free(ic->type);
+        ic->type = NULL;
+    }
 #ifdef DEBUG
 	cur_time = PR_Now();
 	LL_SUB(cur_time, cur_time, ic->start_time);
@@ -1549,6 +1567,11 @@ IL_StreamAbort(il_container *ic, int status)
 
     /* Abort the image. */
     il_image_abort(ic);
+    if(ic->type){
+        nsCRT::free(ic->type);
+        ic->type = NULL;
+    }
+
 
 	if(ic->state >= IC_SIZED || (ic->state == IC_ABORT_PENDING)){
 		if (status == MK_INTERRUPTED){
@@ -1581,7 +1604,7 @@ IL_StreamAbort(il_container *ic, int status)
 PRBool
 IL_StreamCreated(il_container *ic,
 				 ilIURL *url,
-				 int type)
+				 char* type)
 {
 	PR_ASSERT(ic);
 
@@ -1592,14 +1615,14 @@ IL_StreamCreated(il_container *ic,
 	if (ic->state == IC_ABORT_PENDING)
 		return PR_FALSE;
 	
-	ic->type = (int)type;
+    ic->type = nsCRT::strdup(type); //mime string
 	ic->content_length = url->GetContentLength();
 #ifdef NECKO
     char* addr = url->GetAddress();
-	ILTRACE(4,("il: new stream, type %d, %s", ic->type, addr));
+	ILTRACE(4,("il: new stream, type %s, %s", ic->type, addr));
     nsCRT::free(addr);
 #else
-    ILTRACE(4,("il: new stream, type %d, %s", ic->type, 
+    ILTRACE(4,("il: new stream, type %s, %s", ic->type, 
  			   url->GetAddress()));
 #endif
 	ic->state = IC_STREAM;
