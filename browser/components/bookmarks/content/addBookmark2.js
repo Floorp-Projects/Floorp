@@ -90,6 +90,7 @@ function Startup()
   gName.select();
   gName.focus();
   onFieldInput();
+  gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
 } 
 
 function onFieldInput()
