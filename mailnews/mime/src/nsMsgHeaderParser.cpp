@@ -967,16 +967,16 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 static int
 msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
 {
-    int quotable_count = 0, in_quote = 0;
-    int unquotable_count = 0;
-    PRInt32 new_length, full_length = length;
-    char *in, *out, *orig_out, *atsign = NULL, *orig_address = address;
-	PRBool user_quote = PR_FALSE;
-	PRBool quote_all = PR_FALSE;
+  int quotable_count = 0, in_quote = 0;
+  int unquotable_count = 0;
+  PRInt32 new_length, full_length = length;
+  char *in, *out, *orig_out, *atsign = NULL, *orig_address = address;
+  PRBool user_quote = PR_FALSE;
+  PRBool quote_all = PR_FALSE;
 
-    /* If the entire address is quoted, fall out now. */
-    if (address[0] == '\"' && address[length - 1] == '\"')
-	    return length;
+  /* If the entire address is quoted, fall out now. */
+  if (address[0] == '\"' && address[length - 1] == '\"')
+     return length;
 
 	/* Check to see if there is a routing prefix.  If there is one, we can
 	 * skip quoting it because by definition it can't need to be quoted.
@@ -1083,7 +1083,7 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
     /* Add 2 to the length for the quotes, plus one for each character
      * which will need a backslash, plus one for a null terminator.
      */
-    new_length = length + unquotable_count + 3;
+    new_length = length + quotable_count + unquotable_count + 3;
 
     in = address;
     out = orig_out = (char *)PR_Malloc(new_length);
@@ -1134,11 +1134,11 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
 		*out++ = '\"';
 	*out++ = 0;
 
-	NS_ASSERTION(new_length == (out - orig_out), "");
+	NS_ASSERTION(new_length >= (out - orig_out), "");
 	nsCRT::memcpy(address, orig_out, new_length);
 	PR_FREEIF(orig_out); /* make sure we release the string we allocated */
 
-    return full_length + unquotable_count + 2;
+  return full_length + unquotable_count + 2;
 }
 
 /* msg_unquote_phrase_or_addr
