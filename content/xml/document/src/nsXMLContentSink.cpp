@@ -402,6 +402,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   if (!mXSLTransformMediator || NS_FAILED(rv)) {
     StartLayout();
 
+#if 0 /* Disable until this works for XML */
     //  Scroll to Anchor only if the document was *not* loaded through history means. 
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
     if (docShell) {
@@ -411,6 +412,9 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
         ScrollToRef();
       }
     }
+#else
+    ScrollToRef();
+#endif
 
     mDocument->EndLoad();
   }
