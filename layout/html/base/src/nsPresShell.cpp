@@ -6150,6 +6150,12 @@ PresShell::HandleEvent(nsIView         *aView,
       return HandleEventInternal(aEvent, aView,
                                  NS_EVENT_FLAG_INIT, aEventStatus);
     }
+    else if (NS_IS_KEY_EVENT(aEvent)) {
+      // Keypress events in new blank tabs should not be completely thrown away.
+      // Retarget them -- the parent chrome shell might make use of them.
+      return RetargetEventToParent(aView, aEvent, aEventStatus, aForceHandle,
+                                   aHandled, mCurrentEventContent);
+    }
 
     aHandled = PR_FALSE;
   }
