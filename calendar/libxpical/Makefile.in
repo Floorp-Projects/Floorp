@@ -49,6 +49,8 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= oeICalModule
 REQUIRES	= xpcom \
+		  appshell \
+		  string \
 		  $(NULL)
 
 XPIDLSRCS = oeIICal.idl
@@ -57,6 +59,7 @@ CPPSRCS		= \
 		oeICalEventImpl.cpp \
 		oeICalFactory.cpp \
 		oeICalImpl.cpp \
+		oeICalStartupHandler.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lical -licalss

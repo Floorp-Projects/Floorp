@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * OEone Corporation.
+ * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,39 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "oeICalImpl.h"
-#include "oeICalEventImpl.h"
 #include "oeICalStartupHandler.h"
 
-#include "nsIGenericFactory.h"
+NS_IMPL_ISUPPORTS1(oeICalStartupHandler, nsICmdLineHandler);
 
-
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalEventImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalStartupHandler);
-
-static nsModuleComponentInfo pModuleInfo[] =
+oeICalStartupHandler::oeICalStartupHandler()
 {
-  { "ICal Service",
-    OE_ICAL_CID,
-    OE_ICAL_CONTRACTID,
-    oeICalImplConstructor,
-  },
-  { "ICal Event",
-    OE_ICALEVENT_CID,
-    OE_ICALEVENT_CONTRACTID,
-    oeICalEventImplConstructor,
-  },
-  {
-    "Calendar Startup Handler",
-    OE_ICALSTARTUPHANDLER_CID,
-    OE_ICALSTARTUPHANDLER_CONTRACTID,
-    oeICalStartupHandlerConstructor,
-    oeICalStartupHandler::RegisterProc,
-    oeICalStartupHandler::UnregisterProc
-  }
-};
+  NS_INIT_ISUPPORTS();
+}
 
-NS_IMPL_NSGETMODULE(oeICalModule, pModuleInfo)
+oeICalStartupHandler::~oeICalStartupHandler()
+{
+}
+
+CMDLINEHANDLER_IMPL(oeICalStartupHandler, "-calendar", "general.startup.calendar",
+                    "chrome://calendar/content", 
+                    "Start with calendar", OE_ICALSTARTUPHANDLER_CONTRACTID,
+                    "Calendar cmd line handler", PR_FALSE, "", PR_TRUE);
 

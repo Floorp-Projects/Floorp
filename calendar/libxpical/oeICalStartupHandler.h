@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * OEone Corporation.
+ * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,39 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "oeICalImpl.h"
-#include "oeICalEventImpl.h"
-#include "oeICalStartupHandler.h"
+#ifndef __oeICalStartupHandler_h_
+#define __oeICalStartupHandler_h_
 
-#include "nsIGenericFactory.h"
+#include "nsICmdLineHandler.h"
 
+#define OE_ICALSTARTUPHANDLER_CID \
+{ 0x58623304, 0x1dd2, 0x11b2, \
+  { 0x8c, 0x3f, 0xe2, 0x88, 0xb2, 0x02, 0x2c, 0xc0 } }
 
+#define OE_ICALSTARTUPHANDLER_CONTRACTID "@mozilla.org/commandlinehandler/general-startup;1?type=calendar"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalEventImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalStartupHandler);
+class oeICalStartupHandler : public nsICmdLineHandler {
 
-static nsModuleComponentInfo pModuleInfo[] =
-{
-  { "ICal Service",
-    OE_ICAL_CID,
-    OE_ICAL_CONTRACTID,
-    oeICalImplConstructor,
-  },
-  { "ICal Event",
-    OE_ICALEVENT_CID,
-    OE_ICALEVENT_CONTRACTID,
-    oeICalEventImplConstructor,
-  },
-  {
-    "Calendar Startup Handler",
-    OE_ICALSTARTUPHANDLER_CID,
-    OE_ICALSTARTUPHANDLER_CONTRACTID,
-    oeICalStartupHandlerConstructor,
-    oeICalStartupHandler::RegisterProc,
-    oeICalStartupHandler::UnregisterProc
-  }
+public:
+  oeICalStartupHandler();
+  virtual ~oeICalStartupHandler();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICMDLINEHANDLER
+  CMDLINEHANDLER_REGISTERPROC_DECLS
 };
 
-NS_IMPL_NSGETMODULE(oeICalModule, pModuleInfo)
+#endif
 
