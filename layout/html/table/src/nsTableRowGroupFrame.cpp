@@ -1824,10 +1824,24 @@ nsTableRowGroupFrame::FindLineAt(nscoord aY, PRInt32* aLineNumberResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+#ifdef IBMBIDI
+NS_IMETHODIMP
+nsTableRowGroupFrame::CheckLineOrder(PRInt32                  aLine,
+                                     PRBool                   *aIsReordered,
+                                     nsIFrame                 **aFirstVisual,
+                                     nsIFrame                 **aLastVisual)
+{
+  *aIsReordered = PR_FALSE;
+  return NS_OK;
+}
+#endif // IBMBIDI
   
 NS_IMETHODIMP
-nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aFrameFound,
-                         PRBool* aXIsBeforeFirstFrame, PRBool* aXIsAfterLastFrame)
+nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX,
+#ifdef IBMBIDI
+                                  PRBool aCouldBeReordered,
+#endif // IBMBIDI
+                                  nsIFrame** aFrameFound, PRBool* aXIsBeforeFirstFrame, PRBool* aXIsAfterLastFrame)
 {
   PRInt32 cellCount = 0;
   CellData* cellData;
