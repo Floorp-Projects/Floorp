@@ -99,9 +99,12 @@
 -->
 	<menubar>
 		<menu id="fileMenu" value="&fileMenu.label;">
+		  <menupopup>
 			<menu value="&newMenu.label;">
+				<menupopup>
 				<menuitem value="&newNavCmd.label;" onaction="NewBrowserWindow();"/>
 				<menuitem value="&newMessageCmd.label;" onaction="AbNewMessage();"/>
+				</menupopup>
 			</menu>
 			<menuitem value="&newCardCmd.label;" onaction="AbNewCardDialog()"/>
 			<menuitem value="&newListCmd.label;" onaction="AbNewList()"/>
@@ -117,9 +120,11 @@
 			<menuitem value="&printAddressBook.label;" onaction="AbPrintAddressBook()"/>
 			<menuseparator/>
 			<menuitem value="&closeCmd.label;" onaction="AbClose()"/>
+			</menupopup>
 		</menu>
 		
 		<menu value="&editMenu.label;">
+		  <menupopup>
 			<menuitem value="&undoCmd.label;" onaction="AbEditUndo()"/>
 			<menuitem value="&redoCmd.label;" onaction="AbEditRedo()"/>
 			<menuseparator/>
@@ -135,15 +140,20 @@
 			<menuitem value="&abPropsCmd.label;" onaction="EditCard();"/>
 			<menuseparator/>
 			<menuitem value="&prefsCmd.label;" onaction="MsgPreferences();"/>
+		  </menupopup>
 		</menu>
 	    
 		<menu value="&viewMenu.label;">
+		    <menupopup>
 			<menu value="&showMenu.label;">
+				<menupopup>
 				<menuitem value="&showAbToolbarCmd.label;" onaction="AbShowToolbar()"/>
 				<menuitem value="&showCardPane.label;" onaction="AbShowCardPane()"/>
 				<menuitem value="&showTaskbar.label;" onaction="AbShowTaskbar()"/>
+				</menupopup>
 			</menu>
 			<menu value="&sortMenu.label;">
+			    <menupopup>
 				<menuitem value="&sortByNameCmd.label;" onaction="AbSortByName()"/>
 				<menuitem value="&sortByEmailCmd.label;" onaction="AbSortByEmail()"/>
 				<menuitem value="&sortByOrganizationCmd.label;" onaction="AbSortByOrganization()"/>
@@ -153,7 +163,9 @@
 				<menuseparator/>
 				<menuitem value="&sortAscendingCmd.label;" onaction="AbSortAscending()"/>
 				<menuitem value="&sortDescendingCmd.label;" onaction="AbSortDescending()"/>
+				</menupopup>
 			</menu>
+		  </menupopup>
 		</menu>
 	    
 		<menu id="tasksMenu"/>
