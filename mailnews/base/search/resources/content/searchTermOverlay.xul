@@ -22,7 +22,68 @@
  Alec Flett <alecf@netscape.com>
 -->
 
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/searchTermOverlay.dtd" >
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="chrome://messenger/content/searchTermOverlay.js"/>
 
+  <titledbox orient="vertical" id="searchTermListBox">
+    <title>
+      <text value="&conditions.label;"/>
+    </title>
+    <text value="&conditionDesc.label;"/>
+    <radiogroup id="booleanAndGroup" oncommand="booleanChanged(event);">
+      <radio group="booleanAndGroup" data="and" value="&matchAll.label;"/>
+      <radio group="booleanAndGroup" data="or" value="&matchAny.label;"/>
+    </radiogroup>
+
+    <spring class="spacer"/>
+    <box style="min-height:200px">
+    <searchterms id="searchterms"/>
+    <tree class="inset" flex="1" id="searchTermTree">
+      <treecol width="1*"/>
+      <treecol width="4*"/>
+      <treecol width="0*"/>
+      <treecol width="4*"/>
+      <treecol width="0*"/>
+      <treecol width="4*"/>
+      <treecol width="0*"/>
+        
+      <treechildren id="searchTermList">
+
+<!-- this is what the treerows will look like:
+        <treeitem id="searchListItem">
+          <treerow>
+            <treecell id="preSearchAttr"/>
+            <treecell allowevents="true">
+              <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
+            </treecell>
+            <treecell id="preSearchOp"/>
+            <treecell allowevents="true">
+              <searchoperator id="searchOp" flex="1"/>
+            </treecell>
+            <treecell id="preSearchValue"/>
+            <treecell allowevents="true" >
+              <searchvalue id="searchValue" flex="1"/>
+            </treecell>
+            <treecell id="postSearchValue"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell value="the.."/>
+            <treecell value="contains.."/>
+            <treecell value="text here"/>
+          </treerow>
+        </treeitem>
+-->
+       </treechildren>
+      
+    </tree>
+  </box>
+  <box>
+    <button value="&more.label;" onclick="onMore(event);"/>
+    <button value="&less.label;" onclick="onLess(event);"/>
+  </box>
+  </titledbox>
 </overlay>

@@ -23,7 +23,6 @@
 
 // the actual filter that we're editing
 var gFilter;
-var gSearchScope;
 
 // cache the key elements we need
 var gFilterNameElement;
@@ -31,16 +30,9 @@ var gActionElement;
 var gActionTargetElement;
 
 
-// search stuff (move to overlay)
-var gTotalSearchTerms=0;
-var gSearchRowContainer;
-var gSearchTermContainer;
-var gSearchRemovedTerms = new Array;
-
 var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
-var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
 function filterEditorOnLoad()
 {
@@ -71,32 +63,6 @@ function onOk()
     // are displayed in the filter dialog, like the filter name
     window.arguments[0].refresh = true;
     window.close();
-}
-
-// move to overlay
-// set scope on all visible searhattribute tags
-function setSearchScope(scope) {
-    gSearchScope = scope;
-    var searchTermElements = gSearchTermContainer.childNodes;
-    if (!searchTermElements) return;
-    for (var i=0; i<searchTermElements.length; i++) {
-        searchTermElements[i].searchattribute.searchScope = scope;
-    }
-}
-
-function booleanChanged(event) {
-    // when boolean changes, we have to update all the attributes on the
-    // filter terms
-
-    var newBoolValue =
-        (event.target.getAttribute("data") == "and") ? true : false;
-    searchTermElements = gSearchTermContainer.childNodes;
-    if (!searchTermElements) return;
-    for (var i=0; i<searchTermElements.length; i++) {
-        var searchTerm = searchTermElements[i];
-        searchTerm.booleanAnd = newBoolValue;
-    }
-    dump("Boolean is now " + event.target.data + "\n");
 }
 
 function getScopeFromFilterList(filterList)
@@ -142,159 +108,8 @@ function initializeDialog(filter)
     initializeSearchRows(scope, filter.searchTerms)
 }
 
-function initializeSearchWidgets() {
-    gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
-    gSearchRowContainer = document.getElementById("searchTermList");
-    gSearchTermContainer = document.getElementById("searchterms");
-}
-
-function initializeBooleanWidgets() {
-
-    var booleanAnd = true;
-    // get the boolean value from the first term
-    var firstTerm = gSearchTermContainer.firstChild;
-    if (firstTerm)
-        booleanAnd = firstTerm.booleanAnd;
-
-    // target radio items have data="and" or data="or"
-    targetValue = "or";
-    if (booleanAnd) targetValue = "and";
-    
-    targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("data", targetValue)[0];
-    
-    gSearchBooleanRadiogroup.selectedItem = targetElement;
-}
 
 // move to overlay
-function initializeSearchRows(scope, searchTerms)
-{
-    gTotalSearchTerms = searchTerms.Count();
-    for (var i=0; i<gTotalSearchTerms; i++) {
-        var searchTerm = searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
-        createSearchRow(i, scope, searchTerm);
-    }
-    initializeBooleanWidgets();
-}
-
-// move to overlay
-function createSearchRow(index, scope, searchTerm)
-{
-    var searchAttr = document.createElement("searchattribute");
-    var searchOp = document.createElement("searchoperator");
-    var searchVal = document.createElement("searchvalue");
-
-    // now set up ids:
-    searchAttr.id = "searchAttr" + index;
-    searchOp.id  = "searchOp" + index;
-    searchVal.id = "searchVal" + index;
-
-    searchAttr.setAttribute("for", searchOp.id + "," + searchVal.id);
-
-    var rowdata = new Array(null, searchAttr,
-                            null, searchOp,
-                            null, searchVal,
-                            null);
-    var searchrow = constructRow(rowdata);
-
-    searchrow.id = "searchRow" + index;
-
-    // should this be done with XBL or just straight JS?
-    // probably straight JS but I don't know how that's done.
-    var searchTermElement = document.createElement("searchterm");
-    searchTermElement.id = "searchTerm" + index;
-    gSearchTermContainer.appendChild(searchTermElement);
-    searchTermElement = document.getElementById(searchTermElement.id);
-    
-    searchTermElement.searchattribute = searchAttr;
-    searchTermElement.searchoperator = searchOp;
-    searchTermElement.searchvalue = searchVal;
-
-    // and/or string handling:
-    // this is scary - basically we want to take every other
-    // treecell, (note the i+=2) which will be a text label,
-    // and set the searchTermElement's
-    // booleanNodes to that
-    var stringNodes = new Array;
-    var treecells = searchrow.firstChild.childNodes;
-    var j=0;
-    for (var i=0; i<treecells.length; i+=2) {
-        stringNodes[j++] = treecells[i];
-    }
-    searchTermElement.booleanNodes = stringNodes;
-    
-    gSearchRowContainer.appendChild(searchrow);
-
-    searchTermElement.searchScope = scope;
-    if (searchTerm)
-        searchTermElement.searchTerm = searchTerm;
-    else
-        searchTermElement.booleanAnd = getBooleanAnd();
-
-}
-
-// creates a <treerow> using the array treeCellChildren as 
-// the children of each treecell
-function constructRow(treeCellChildren)
-{
-    var treeitem = document.createElement("treeitem");
-    var row = document.createElement("treerow");
-    for (var i = 0; i<treeCellChildren.length; i++) {
-      var treecell = document.createElement("treecell");
-      
-      // it's ok to have empty cells
-      if (treeCellChildren[i]) {
-          treecell.setAttribute("allowevents", "true");
-          treeCellChildren[i].setAttribute("flex", "1");
-          treecell.appendChild(treeCellChildren[i]);
-      }
-      row.appendChild(treecell);
-    }
-    treeitem.appendChild(row);
-    return treeitem;
-}
-
-function removeSearchRow(index)
-{
-    dump("removing search term " + index + "\n");
-    var searchTermElement = document.getElementById("searchTerm" + index);
-    if (!searchTermElement) {
-        dump("removeSearchRow: couldn't find search term " + index + "\n");
-        return;
-    }
-
-    // need to remove row from tree, so walk upwards from the
-    // searchattribute to find the first <treeitem>
-    var treeItemRow = searchTermElement.searchattribute;
-    while (treeItemRow) {
-        if (treeItemRow.tagName == "treeitem") break;
-        treeItemRow = treeItemRow.parentNode;
-    }
-
-    if (!treeItemRow) {
-        dump("Error: couldn't find parent treeitem!\n");
-        return;
-    }
-
-
-    if (searchTermElement.searchTerm) {
-        dump("That was a real row! queuing " + searchTermElement.searchTerm + " for disposal\n");
-        gSearchRemovedTerms[gSearchRemovedTerms.length] = searchTermElement.searchTerm;
-    } else {
-        dump("That wasn't real. ignoring \n");
-    }
-    
-    treeItemRow.parentNode.removeChild(treeItemRow);
-    searchTermElement.parentNode.removeChild(searchTermElement);
-}
-
-function getBooleanAnd()
-{
-    if (gSearchBooleanRadiogroup.selectedItem)
-        return (booleanAndElement.selectedItem.getAttribute("data") == "and") ? true : false;
-
-    // default to false
-    return false;
-}
 
 function saveFilter() {
 
@@ -322,48 +137,3 @@ function saveFilter() {
         gFilterList.insertFilterAt(0, gFilter);
 }
 
-// move to overlay 
-function saveSearchTerms(searchTerms, termOwner)
-{
-    var searchTermElements =
-        gSearchTermContainer.childNodes;
-    
-    for (var i = 0; i<searchTermElements.length; i++) {
-        try {
-            dump("Saving search element " + i + "\n");
-            var searchTerm = searchTermElements[i].searchTerm;
-            if (searchTerm)
-                searchTermElements[i].save();
-            else {
-                // need to create a new searchTerm, and somehow save it to that
-                dump("Need to create searchterm " + i + "\n");
-                searchTerm = termOwner.createTerm();
-                searchTermElements[i].saveTo(searchTerm);
-                termOwner.appendTerm(searchTerm);
-            }
-        } catch (ex) {
-
-            dump("** Error: " + ex + "\n");
-        }
-    }
-
-    // now remove the queued elements
-    for (var i=0; i<gSearchRemovedTerms.length; i++) {
-        // this is so nasty, we have to iterate through
-        // because GetIndexOf is acting funny
-        var searchTermSupports =
-            gSearchRemovedTerms[i].QueryInterface(Components.interfaces.nsISupports);
-        searchTerms.RemoveElement(searchTermSupports);
-    }
-
-}
-
-function onMore(event)
-{
-    createSearchRow(gTotalSearchTerms++, gSearchScope, null);
-}
-
-function onLess(event)
-{
-    removeSearchRow(--gTotalSearchTerms);
-}

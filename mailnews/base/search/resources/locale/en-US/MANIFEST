@@ -5,3 +5,4 @@ SearchOptions.dtd
 search-attributes.properties
 search-operators.properties
 search.properties
+searchTermOverlay.dtd

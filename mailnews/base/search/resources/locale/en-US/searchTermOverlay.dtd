@@ -1,0 +1,6 @@
+<!ENTITY more.label "More">
+<!ENTITY less.label "Fewer">
+<!ENTITY conditions.label "Conditions">
+<!ENTITY conditionDesc.label "When new messages arrive in my Inbox, watch for messages that:">
+<!ENTITY matchAll.label "Match ALL of the following conditions">
+<!ENTITY matchAny.label "Match at least ONE of the following conditions">

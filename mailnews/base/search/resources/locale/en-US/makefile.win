@@ -32,6 +32,7 @@ CHROME_L10N = \
 	.\search-attributes.properties \
 	.\search-operators.properties \
 	.\search.properties \
+	.\searchTermOverlay.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
