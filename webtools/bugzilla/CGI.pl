@@ -1073,7 +1073,13 @@ Actions:
     $html .=
         qq{ <BR> <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
 
-    $html .= " | <a href='reports.cgi'>Reports</a></TD>\n";
+    $html .= " | <a href='reports.cgi'>Reports</a>"; 
+    if ($loggedin) {
+        if ($::anyvotesallowed) {
+            $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>";
+        }
+    } 
+    $html .= "</TD>\n";
     if ($loggedin) {
     	#a little mandatory SQL, used later on
         SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
@@ -1107,9 +1113,6 @@ Actions:
         $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
         if (!defined $::anyvotesallowed) {
             GetVersionTable();
-        }
-        if ($::anyvotesallowed) {
-            $html .= qq{ <BR> <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
         }
         $html .= "</TR><TR>";
         $html .= "<TD>Preset Queries: </TD>";
