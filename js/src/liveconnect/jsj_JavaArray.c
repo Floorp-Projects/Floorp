@@ -428,7 +428,8 @@ JSObjectOps JavaArray_ops = {
     NULL,                       /* setParent */
     NULL,                       /* mark */
     NULL,                       /* clear */
-    0,0                         /* spare */
+    NULL,                       /* getRequiredSlot */
+    NULL                        /* setRequiredSlot */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -460,8 +461,10 @@ extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 JSBool
 jsj_init_JavaArray(JSContext *cx, JSObject *global_obj)
 {
-    JavaArray_ops.newObjectMap = jsj_wrapper_newObjectMap;
+    JavaArray_ops.newObjectMap = js_ObjectOps.newObjectMap;
     JavaArray_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+    JavaArray_ops.getRequiredSlot = js_ObjectOps.getRequiredSlot;
+    JavaArray_ops.setRequiredSlot = js_ObjectOps.setRequiredSlot;
 
     if (!JS_InitClass(cx, global_obj, 
         0, &JavaArray_class, 0, 0,
