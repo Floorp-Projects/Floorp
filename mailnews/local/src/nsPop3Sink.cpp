@@ -154,17 +154,17 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
 
     PRBool isLocked;
     nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIPop3Sink*, this));
-	m_folder->GetLocked(&isLocked);
-	if(!isLocked)
+    m_folder->GetLocked(&isLocked);
+    if(!isLocked)
       m_folder->AcquireSemaphore(supports);
-	else
+    else
       return NS_MSG_FOLDER_BUSY;
 
     if (uidlDownload)
     {
       nsCOMPtr<nsIFileSpec> path;
       m_folder->GetPath(getter_AddRefs(path));
-	    path->GetFileSpec(&fileSpec);
+      path->GetFileSpec(&fileSpec);
     }
     else
     {
@@ -204,8 +204,8 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
 
     if (NS_FAILED(rv))
     {
-		  NS_IF_RELEASE(m_newMailParser);
-		  rv = NS_OK;
+      NS_IF_RELEASE(m_newMailParser);
+      rv = NS_OK;
     }
     else
     {

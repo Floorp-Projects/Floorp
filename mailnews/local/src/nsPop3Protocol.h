@@ -218,7 +218,7 @@ typedef struct _Pop3ConData {
                                  * called
                                  */
     PRBool only_check_for_new_mail;
-	nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
+    nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
     
     void *msg_closure;
     
@@ -256,6 +256,7 @@ typedef struct _Pop3ConData {
     PRInt32 pop3_size;
     PRBool dot_fix;
     PRBool assumed_end;
+    PRInt32 logonFailureCount;
 } Pop3ConData;
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -270,53 +271,53 @@ typedef struct _Pop3ConData {
 class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer
 {
 public:
-    nsPop3Protocol(nsIURI* aURL);  
-    virtual ~nsPop3Protocol();
-    
-	nsresult Initialize(nsIURI * aURL);
-    virtual nsresult LoadUrl(nsIURI *aURL, nsISupports * aConsumer = nsnull);
+  nsPop3Protocol(nsIURI* aURL);  
+  virtual ~nsPop3Protocol();
+  
+  nsresult Initialize(nsIURI * aURL);
+  virtual nsresult LoadUrl(nsIURI *aURL, nsISupports * aConsumer = nsnull);
 
-    const char* GetUsername() { return m_username.get(); };
-    void SetUsername(const char* name);
+  const char* GetUsername() { return m_username.get(); };
+  void SetUsername(const char* name);
 
-    nsresult GetPassword(char ** aPassword, PRBool *okayValue);
+  nsresult GetPassword(char ** aPassword, PRBool *okayValue);
 
-	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus);
+  NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus);
   NS_IMETHOD Cancel(nsresult status);
 	// for nsMsgLineBuffer
-    virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
+  virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 private:
   nsCString m_ApopTimestamp;
   nsCOMPtr<nsIMsgStringService> mStringService;
 
   nsCString m_username;
-	nsCString m_senderInfo;
-	nsCString m_commandResponse;
-	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
+  nsCString m_senderInfo;
+  nsCString m_commandResponse;
+  nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 
-	// progress state information
-	void UpdateProgressPercent (PRUint32 totalDone, PRUint32 total);
-	void UpdateStatus(PRInt32 aStatusID);
-	void UpdateStatusWithString(const PRUnichar * aString);
+  // progress state information
+  void UpdateProgressPercent (PRUint32 totalDone, PRUint32 total);
+  void UpdateStatus(PRInt32 aStatusID);
+  void UpdateStatusWithString(const PRUnichar * aString);
 
-	PRInt32	m_bytesInMsgReceived; 
+  PRInt32	m_bytesInMsgReceived; 
   PRInt32	m_totalFolderSize;    
   PRInt32	m_totalDownloadSize; /* Number of bytes we're going to
                                     download.  Might be much less
                                     than the total_folder_size. */
-	PRInt32 m_totalBytesReceived; // total # bytes received for the connection
+  PRInt32 m_totalBytesReceived; // total # bytes received for the connection
 
-	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
-									      PRUint32 sourceOffset, PRUint32 length);
-	virtual nsresult CloseSocket();
-	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
+  virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
+									PRUint32 sourceOffset, PRUint32 length);
+  virtual nsresult CloseSocket();
+  virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
 
   nsCOMPtr<nsIURI> m_url;
   nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
   nsCOMPtr<nsIPop3IncomingServer> m_pop3Server;
 	
-	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
+  nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
   Pop3ConData* m_pop3ConData;
   void FreeMsgInfo();
   void Abort();
@@ -327,49 +328,49 @@ private:
   void ClearCapFlag(PRUint32 flag);
   PRBool TestCapFlag(PRUint32 flag);
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-	// Begin Pop3 protocol state handlers
-	//////////////////////////////////////////////////////////////////////////////////////////
-    PRInt32 WaitForStartOfConnectionResponse(nsIInputStream* inputStream, 
-                                             PRUint32 length);
-    PRInt32 WaitForResponse(nsIInputStream* inputStream, 
-                            PRUint32 length);
-    PRInt32 Error(PRInt32 err_code);
-    PRInt32 SendAuth();
-    PRInt32 AuthResponse(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 SendCapa();
-    PRInt32 CapaResponse(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 ProcessAuth();
-    PRInt32 AuthFallback();
-    PRInt32 AuthLogin();
-    PRInt32 AuthLoginResponse();
-    PRInt32 SendUsername();
-    PRInt32 SendPassword();
-    PRInt32 SendStatOrGurl(PRBool sendStat);
-    PRInt32 SendStat();
-    PRInt32 GetStat();
-    PRInt32 SendGurl();
-    PRInt32 GurlResponse();
-    PRInt32 SendList();
-    PRInt32 GetList(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 SendFakeUidlTop();
-    PRInt32 StartUseTopForFakeUidl();
-    PRInt32 GetFakeUidlTop(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 SendXtndXlstMsgid();
-    PRInt32 GetXtndXlstMsgid(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 SendUidlList();
-    PRInt32 GetUidlList(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 GetMsg();
-    PRInt32 SendTop();
-    PRInt32 SendXsender();
-    PRInt32 XsenderResponse();
-    PRInt32 SendRetr();
+  //////////////////////////////////////////////////////////////////////////////////////////
+      // Begin Pop3 protocol state handlers
+      //////////////////////////////////////////////////////////////////////////////////////////
+  PRInt32 WaitForStartOfConnectionResponse(nsIInputStream* inputStream, 
+                                           PRUint32 length);
+  PRInt32 WaitForResponse(nsIInputStream* inputStream, 
+                          PRUint32 length);
+  PRInt32 Error(PRInt32 err_code);
+  PRInt32 SendAuth();
+  PRInt32 AuthResponse(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 SendCapa();
+  PRInt32 CapaResponse(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 ProcessAuth();
+  PRInt32 AuthFallback();
+  PRInt32 AuthLogin();
+  PRInt32 AuthLoginResponse();
+  PRInt32 SendUsername();
+  PRInt32 SendPassword();
+  PRInt32 SendStatOrGurl(PRBool sendStat);
+  PRInt32 SendStat();
+  PRInt32 GetStat();
+  PRInt32 SendGurl();
+  PRInt32 GurlResponse();
+  PRInt32 SendList();
+  PRInt32 GetList(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 SendFakeUidlTop();
+  PRInt32 StartUseTopForFakeUidl();
+  PRInt32 GetFakeUidlTop(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 SendXtndXlstMsgid();
+  PRInt32 GetXtndXlstMsgid(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 SendUidlList();
+  PRInt32 GetUidlList(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 GetMsg();
+  PRInt32 SendTop();
+  PRInt32 SendXsender();
+  PRInt32 XsenderResponse();
+  PRInt32 SendRetr();
 
-    PRInt32 RetrResponse(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 TopResponse(nsIInputStream* inputStream, PRUint32 length);
-    PRInt32 SendDele();
-    PRInt32 DeleResponse();
-    PRInt32 CommitState(PRBool remove_last_entry);
+  PRInt32 RetrResponse(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 TopResponse(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 SendDele();
+  PRInt32 DeleResponse();
+  PRInt32 CommitState(PRBool remove_last_entry);
 };
 
 #endif /* nsPop3Protocol_h__ */

@@ -72,10 +72,10 @@ nsresult nsPop3URL::SetPop3Sink(nsIPop3Sink* aPop3Sink)
 nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink)
 {
     if (aPop3Sink)
-	{
+    {
         *aPop3Sink = m_pop3Sink;
-		NS_IF_ADDREF(*aPop3Sink);
-	}
+        NS_IF_ADDREF(*aPop3Sink);
+    }
     return NS_OK;
 }
 

@@ -211,55 +211,55 @@ nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 
 NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
-	nsresult rv;
-	PRBool exists;
-	if (!path) return NS_ERROR_NULL_POINTER;
-
+  nsresult rv;
+  PRBool exists;
+  if (!path) return NS_ERROR_NULL_POINTER;
+  
   rv = path->AppendRelativeUnixPath("Inbox");
-	if (NS_FAILED(rv)) return rv;
-	rv = path->Exists(&exists);
-	if (!exists) {
-		rv = path->Touch();
-		if (NS_FAILED(rv)) return rv;
-	}
-	
-	rv = path->SetLeafName("Trash");
-	if (NS_FAILED(rv)) return rv;
-	rv = path->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) {
-		rv = path->Touch();
-		if (NS_FAILED(rv)) return rv;
-	}
-
-	rv = path->SetLeafName("Sent");
-	if (NS_FAILED(rv)) return rv;
-	rv = path->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) {
-		rv = path->Touch();
-		if (NS_FAILED(rv)) return rv;
-	}
-	
-	rv = path->SetLeafName("Drafts");
-	if (NS_FAILED(rv)) return rv;
-	rv = path->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) {
-		rv = path->Touch();
-		if (NS_FAILED(rv)) return rv;
-	}
-	
-	rv = path->SetLeafName("Templates");
-	if (NS_FAILED(rv)) return rv;
-	rv = path->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) {
-		rv = path->Touch();
-		if (NS_FAILED(rv)) return rv;
-	}
-	
-	return NS_OK;
+  if (NS_FAILED(rv)) return rv;
+  rv = path->Exists(&exists);
+  if (!exists) {
+    rv = path->Touch();
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  rv = path->SetLeafName("Trash");
+  if (NS_FAILED(rv)) return rv;
+  rv = path->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists) {
+    rv = path->Touch();
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  rv = path->SetLeafName("Sent");
+  if (NS_FAILED(rv)) return rv;
+  rv = path->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists) {
+    rv = path->Touch();
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  rv = path->SetLeafName("Drafts");
+  if (NS_FAILED(rv)) return rv;
+  rv = path->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists) {
+    rv = path->Touch();
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  rv = path->SetLeafName("Templates");
+  if (NS_FAILED(rv)) return rv;
+  rv = path->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists) {
+    rv = path->Touch();
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *inbox, nsIURI **aResult)
