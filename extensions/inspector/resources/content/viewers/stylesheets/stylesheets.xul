@@ -23,6 +23,7 @@
       <splitter class="tree-splitter"/>
       <treecol id="olcRules" label="&styleRules.label;" persist="width,hidden,ordinal" style="width: 4em"/>
     </treecols>
-    <treechildren id="olbStyleSheets"/>
+    <treechildren id="olbStyleSheets"
+                  alternatingbackground="true"/>
   </tree>
 </page>
