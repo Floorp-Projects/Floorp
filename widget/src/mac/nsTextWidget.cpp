@@ -348,16 +348,19 @@ char					*str;
   thetext = WEGetText(mTE_Data);
   len = WEGetTextLength(mTE_Data);
   
-  HLock(thetext);
-  str = new char[len];
+  //HLock(thetext);
+  str = new char[len+1];
+
   for(i=0;i<len;i++)
   	str[i] = (*thetext)[i];
-  HUnlock(thetext);	
+  str[len] = 0;
+  //HUnlock(thetext);	
   
   aTextBuffer.SetLength(0);
   aTextBuffer.Append(str);
-	delete str;
 	aSize = aTextBuffer.Length();
+	
+	delete [] str;
 	return NS_OK;
 }
 
