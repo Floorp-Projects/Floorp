@@ -40,6 +40,8 @@
 
 #include "gfxIImageFrame.h"
 
+#include "nsWeakReference.h"
+
 #define NS_IMGCONTAINER_CID \
 { /* 5e04ec5e-1dd2-11b2-8fda-c4db5fb666e0 */         \
      0x5e04ec5e,                                     \
@@ -73,8 +75,7 @@ private:
   PRBool   mDoneDecoding;
   PRBool   mAnimating;
   
-  imgIContainerObserver *mObserver; // WEAK
-
+  nsWeakPtr mObserver;
 
   // GIF specific bits
   nsCOMPtr<nsITimer> mTimer;
