@@ -46,6 +46,8 @@
 #include "nsMimeTypeArray.h"
 #include "nsNetUtil.h"
 #include "nsPluginArray.h"
+#include "nsIPluginHost.h"
+#include "nsRDFCID.h"
 #include "nsContentCID.h"
 
 // Interfaces Needed
@@ -4223,11 +4225,14 @@ NS_IMETHODIMP NavigatorImpl::GetPlugins(nsIDOMPluginArray **aPlugins)
 {
   if (!mPlugins) {
     mPlugins = new PluginArrayImpl(this, mDocShell);
-    NS_IF_ADDREF(mPlugins);
+    if (!mPlugins)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(mPlugins);
   }
 
   *aPlugins = mPlugins;
-  NS_IF_ADDREF(mPlugins);
+  NS_ADDREF(mPlugins);
 
   return NS_OK;
 }
@@ -4258,13 +4263,46 @@ NS_IMETHODIMP NavigatorImpl::JavaEnabled(PRBool *aReturn)
   *aReturn = PR_FALSE;
 
   // determine whether user has enabled java.
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || prefs == nsnull)
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  if (NS_FAILED(rv))
     return rv;
 
   // if pref doesn't exist, map result to false.
-  if (prefs->GetBoolPref("security.enable_java", aReturn) != NS_OK)
+  if (NS_FAILED(prefs->GetBoolPref("security.enable_java", aReturn))) {
     *aReturn = PR_FALSE;
+    return NS_OK;
+  }
+
+  // if Java is not enabled, result is false and return reight away
+  if (!*aReturn)
+    return NS_OK;
+
+  if (!mPlugins) {
+    nsCOMPtr<nsIDOMPluginArray> pluginArray;
+    rv = GetPlugins(getter_AddRefs(pluginArray));
+    if (NS_FAILED(rv))
+      return rv;
+
+    // now it is garanteed that mPlugins is not null;
+  }
+
+  nsCOMPtr<nsIPluginHost> pluginHost;
+
+  rv = mPlugins->GetPluginHost(getter_AddRefs(pluginHost));
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (pluginHost) {
+    nsresult plhrv = pluginHost->IsPluginEnabledForType("application/x-java-vm");
+
+    if (NS_SUCCEEDED(plhrv)) {
+      *aReturn = PR_TRUE;
+    }
+
+    else {
+      *aReturn = PR_FALSE;
+    }
+  }
 
   return rv;
 }
