@@ -242,8 +242,13 @@ function selectTreeFolder()
   gSelectedFolder = resource;
   var menuitem = document.getElementById(gSelectedFolder.Value);
   gMenulist.selectedItem = menuitem;
-  if (!menuitem)
-    gMenulist.label = BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name");
+  if (!menuitem) {
+    gMenulist.removeItemAt(gMenulist.firstChild.childNodes.length-1);
+    var newItem = gMenulist.appendItem(BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name"), gSelectedFolder.Value);
+    newItem.setAttribute("class", "menuitem-iconic folder-icon");
+    newItem.setAttribute("id", gSelectedFolder.Value);
+    gMenulist.selectedItem = newItem;
+  }
 }
 
 function selectFolder(aFolder)
