@@ -55,17 +55,19 @@ sub setup_vars {
 
     my $truncate_lib_path = 1;
     my $pathsep = ":";
+    my $exe_suffix = "";
     if( $osname =~ /HP/ ) {
         $ld_lib_path = "SHLIB_PATH";
-    } elsif( $osname =~ /windows/i ) {
+    } elsif( $osname =~ /win/i ) {
         $ld_lib_path = "PATH";
         $truncate_lib_path = 0;
         $pathsep = ";";
+        $exe_suffix = ".exe";
     } else {
         $ld_lib_path = "LD_LIBRARY_PATH";
     }
 
-    my $dbg_suffix = "_DBG";
+    my $dbg_suffix = "_dbg";
     $ENV{BUILD_OPT} and $dbg_suffix = "";
 
     $ENV{CLASSPATH}  = "";
@@ -86,8 +88,9 @@ sub setup_vars {
         my $nspr_rel_dir = shift @$argv or usage();
 
         $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$dbg_suffix.jar";
-        $ENV{$ld_lib_path} .=
-            "$jss_rel_dir/lib$pathsep$nss_rel_dir/lib$pathsep$nspr_rel_dir/lib";
+        $ENV{$ld_lib_path} =
+            "$jss_rel_dir/lib$pathsep$nss_rel_dir/lib$pathsep$nspr_rel_dir/lib"
+            . $pathsep . $ENV{$ld_lib_path};
         $nss_lib_dir = "$nss_rel_dir/lib";
     } else {
         usage();
@@ -98,11 +101,11 @@ sub setup_vars {
         exit(1);
     }
 
-    $java = "$ENV{JAVA_HOME}/jre/bin/java";
+    $java = "$ENV{JAVA_HOME}/jre/bin/java$exe_suffix";
 
     print "*****ENVIRONMENT*****\n";
     print "java=$java\n";
-    print "LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}\n";
+    print "$ld_lib_path=$ENV{$ld_lib_path}\n";
     print "CLASSPATH=$ENV{CLASSPATH}\n";
 }
 
