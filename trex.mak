@@ -43,7 +43,7 @@ MMAKE=$(MOZ_SRC)\$(MOZ_TOP)\config\w95make.exe
 GMAKE=gmake
 GMAKEFILE=Makefile
 
-CVTREX = $(CVSROOT:pub=src)
+CVTREX = :pserver:$(USERNAME)@cvsserver:/m/src
 CVST=cvs -q -d $(CVTREX) co -P
 
 ######################################################################
