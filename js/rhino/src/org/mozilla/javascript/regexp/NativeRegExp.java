@@ -201,7 +201,12 @@ public class NativeRegExp extends IdScriptable implements Function {
     {
         StringBuffer buf = new StringBuffer();
         buf.append('/');
-        buf.append(re.source);
+        if (re.source.length != 0) {
+            buf.append(re.source);
+        } else {
+            // See bugzilla 226045
+            buf.append("(?:)");
+        }
         buf.append('/');
         if ((re.flags & JSREG_GLOB) != 0)
             buf.append('g');
