@@ -345,11 +345,6 @@ NS_METHOD MRJPlugin::GetValue(nsPluginVariable variable, void *value)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD MRJPlugin::SetValue(nsPluginVariable variable, void *value)
-{
-	return NS_ERROR_FAILURE;
-}
-
 MRJSession* MRJPlugin::getSession()
 {
 	StartupJVM();
@@ -372,36 +367,9 @@ NS_METHOD MRJPlugin::StartupJVM()
 		// start a session with MRJ.
 		mSession = new MRJSession();
 
-#if 0
-		// Apply the initialization args.
-		if (initArgs != NULL && initArgs->version >= nsJVMInitArgs_Version) {
-			const char* classPathAdditions = initArgs->classpathAdditions;
-			if (classPathAdditions != NULL) {
-				// what format will this be in? UNIX paths, separated by ':' characters.
-				char* paths = new char[1 + strlen(classPathAdditions)];
-				if (paths != NULL) {
-					strcpy(paths, classPathAdditions);
-					char* path = strtok(paths, ":");
-					while (path != NULL) {
-						static char urlPrefix[] = { "file://" };
-						char* fileURL = new char[sizeof(urlPrefix) + strlen(path)];
-						if (fileURL != NULL) {
-							strcat(strcpy(fileURL, urlPrefix), path);
-							mSession->addURLToClassPath(fileURL);
-							delete[] fileURL;
-						}
-						path = strtok(NULL, ":");
-					}
-					delete[] paths;
-				}
-			}
-		}
-#endif
-
 		// Add "MRJPlugin.jar" to the class path.
 		FSSpec jarFileSpec = { thePluginSpec.vRefNum, thePluginSpec.parID, "\pMRJPlugin.jar" };
 		mSession->addToClassPath(jarFileSpec);
-		
 		mSession->open();
 
 		if (mSession->getStatus() != noErr) {
@@ -422,19 +390,6 @@ NS_METHOD MRJPlugin::StartupJVM()
 #endif
 
 		mIsEnabled = true;
-	}
-	return NS_OK;
-}
-
-NS_METHOD MRJPlugin::ShutdownJVM(PRBool fullShutdown)
-{
-	if (fullShutdown) {
-        nsresult rv = ShutdownLiveConnectSupport();
-	
-		if (mSession != NULL) {
-			delete mSession;
-			mSession = NULL;
-		}
 	}
 	return NS_OK;
 }
@@ -463,44 +418,6 @@ NS_METHOD MRJPlugin::GetJavaWrapper(JNIEnv* env, jint jsobj, jobject *jobj)
 	return NS_OK;
 }
 
-NS_METHOD MRJPlugin::UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD MRJPlugin::GetJavaVM(JavaVM* *result)
-{
-	*result = NULL;
-	if (StartupJVM() == NS_OK) {
-		*result = mSession->getJavaVM();
-		return NS_OK;
-	}
-	return NS_ERROR_FAILURE;
-}
-
-nsrefcnt MRJPlugin::GetJNIEnv(JNIEnv* *result)
-{
-	JNIEnv* env = NULL;
-	if (StartupJVM() == NS_OK) {
-#if 1
-		env = mSession->getCurrentEnv();
-#else
-		JDK1_1AttachArgs args;
-		JavaVM* vm = mSession->getJavaVM();
-		jint result = vm->AttachCurrentThread(&env, &args);
-		if (result != 0)
-			env = NULL;
-#endif
-	}
-	*result = env;
-	return 1;
-}
-
-nsrefcnt MRJPlugin::ReleaseJNIEnv(JNIEnv* env)
-{
-	return 0;
-}
-
 NS_METHOD MRJPlugin::CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv)
 {
 	*outSecureEnv = NULL;
@@ -511,6 +428,11 @@ NS_METHOD MRJPlugin::CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureE
 		rv = CSecureEnv::Create(this, proxyEnv, kISecureEnvIID, (void**)outSecureEnv);
 	}
 	return rv;
+}
+
+NS_METHOD MRJPlugin::UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD MRJPlugin::SpendTime(PRUint32 timeMillis)
