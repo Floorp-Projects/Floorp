@@ -51,9 +51,9 @@ nsMemCache::~nsMemCache()
     nsresult rv;
 
     rv = RemoveAll();
-    NS_ASSERTION(NS_SUCCEEDED(rv) && (mNumEntries == 0),
-                 "Failure to shut down memory cache. "
-                 "Somewhere, someone is holding references to at least one cache record");
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv) && (mNumEntries == 0),
+                     "Failure to shut down memory cache cleanly. "
+                     "Somewhere, someone is holding references to at least one cache record");
     delete mHashTable;
 }
 
