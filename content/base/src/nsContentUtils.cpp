@@ -36,7 +36,7 @@
 
 /* A namespace class for static layout utilities. */
 
-#include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAString.h"
 #include "nsPrintfCString.h"
@@ -170,69 +170,6 @@ nsContentUtils::GetParserServiceWeakRef()
   }
 
   return sParserService;
-}
-
-// static
-nsIScriptGlobalObject *
-nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
-{
-  if (!sXPConnect) {
-    return nsnull;
-  }
-
-  JSObject* parent;
-  JSObject* glob = aObj; // starting point for search
-
-  if (!glob)
-    return nsnull;
-
-  while (nsnull != (parent = JS_GetParent(aContext, glob))) {
-    glob = parent;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native;
-
-  sXPConnect->GetWrappedNativeOfJSObject(aContext, glob,
-                                         getter_AddRefs(wrapped_native));
-  NS_ENSURE_TRUE(wrapped_native, nsnull);
-
-  nsCOMPtr<nsISupports> native;
-  wrapped_native->GetNative(getter_AddRefs(native));
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
-
-  // This will return a pointer to something that's about to be
-  // released, but that's ok here.
-  return sgo;
-}
-
-//static
-nsIScriptContext *
-nsContentUtils::GetStaticScriptContext(JSContext* aContext,
-                                       JSObject* aObj)
-{
-  nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aContext, aObj);
-  if (!nativeGlobal)
-    return nsnull;
-  return nativeGlobal->GetContext();
-}
-
-//static
-nsIScriptGlobalObject *
-nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext)
-{
-  nsIScriptContext *scriptCX = GetDynamicScriptContext(aContext);
-  if (!scriptCX) {
-    return nsnull;
-  }
-  return scriptCX->GetGlobalObject();
-}
-
-//static
-nsIScriptContext *
-nsContentUtils::GetDynamicScriptContext(JSContext *aContext)
-{
-  return GetScriptContextFromJSContext(aContext);
 }
 
 template <class OutputIterator>
@@ -867,7 +804,7 @@ nsContentUtils::GetDocShellFromCaller()
   sThreadJSContextStack->Peek(&cx);
 
   if (cx) {
-    nsIScriptGlobalObject *sgo = GetDynamicScriptGlobal(cx);
+    nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
 
     if (sgo) {
       return sgo->GetDocShell();
@@ -890,7 +827,7 @@ nsContentUtils::GetDocumentFromCaller()
   nsCOMPtr<nsIDOMDocument> doc;
 
   if (cx) {
-    nsIScriptGlobalObject *sgo = GetDynamicScriptGlobal(cx);
+    nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
 
     nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(sgo));
     if (win) {

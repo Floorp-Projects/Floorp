@@ -46,7 +46,6 @@
 #include "nsCOMArray.h"
 #include "nsIStatefulFrame.h"
 
-class nsIScriptGlobalObject;
 class nsIXPConnect;
 class nsIContent;
 class nsIDocument;
@@ -174,18 +173,6 @@ public:
    * @see nsIDOM3Node
    */
   static PRUint16 ReverseDocumentPosition(PRUint16 aDocumentPosition);
-
-  // These are copied from nsJSUtils.h
-
-  static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
-                                                      JSObject* aObj);
-
-  static nsIScriptContext *GetStaticScriptContext(JSContext* aContext,
-                                                  JSObject* aObj);
-
-  static nsIScriptGlobalObject *GetDynamicScriptGlobal(JSContext *aContext);
-
-  static nsIScriptContext *GetDynamicScriptContext(JSContext *aContext);
 
   static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAString& aSource, 
                                                  PRUint32 aSrcOffset, 

@@ -89,6 +89,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 #include "nsIDOMEventGroup.h"
 #include "nsContentCID.h"
 
@@ -1128,7 +1129,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
     }
 
-    context = nsContentUtils::GetDynamicScriptContext(cx);
+    context = nsJSUtils::GetDynamicScriptContext(cx);
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
   }
 

@@ -117,6 +117,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIPref.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsICharsetResolver.h"
@@ -998,7 +999,7 @@ nsHTMLDocument::EndLoad()
       stack->Peek(&cx);
 
       if (cx) {
-        nsIScriptContext *scx = nsContentUtils::GetDynamicScriptContext(cx);
+        nsIScriptContext *scx = nsJSUtils::GetDynamicScriptContext(cx);
 
         if (scx) {
           // The load of the document was terminated while we're

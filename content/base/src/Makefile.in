@@ -134,6 +134,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../html/content/src \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../layout/html/base/src \
+		-I$(srcdir)/../../../dom/src/base \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
