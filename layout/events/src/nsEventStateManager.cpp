@@ -857,7 +857,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(mPresContext, aEvent, getter_AddRefs(newFocus));
           const nsStyleUserInterface* ui;
-          mCurrentTarget->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));;
+          mCurrentTarget->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
           suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
         }
 
@@ -865,7 +865,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         // Look for the nearest enclosing focusable frame.
         while (currFrame) {
           const nsStyleUserInterface* ui;
-          currFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));;
+          currFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
           if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
               (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
             currFrame->GetContent(getter_AddRefs(newFocus));
@@ -2001,7 +2001,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
     currentFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
 
     const nsStyleUserInterface* ui;
-    currentFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));;
+    currentFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
     
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
 
@@ -2325,6 +2325,15 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   const PRInt32 maxNotify = 5;
   nsIContent  *notifyContent[maxNotify] = {nsnull, nsnull, nsnull, nsnull, nsnull};
 
+  // check to see that this state is allowed by style. Check dragover too?
+  if (mCurrentTarget && (aState == NS_EVENT_STATE_ACTIVE || aState == NS_EVENT_STATE_HOVER))
+  {
+    const nsStyleUserInterface* ui;
+    mCurrentTarget->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+    if (ui->mUserInput == NS_STYLE_USER_INPUT_NONE)
+      return NS_OK;
+  }
+  
   if ((aState & NS_EVENT_STATE_DRAGOVER) && (aContent != mDragOverContent)) {
     //transferring ref to notifyContent from mDragOverContent
     notifyContent[4] = mDragOverContent; // notify dragover first, since more common case

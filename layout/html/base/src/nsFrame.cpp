@@ -603,7 +603,7 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
     if (NS_SUCCEEDED(result) && (selType != nsISelectionController::SELECTION_OFF)) {
       // Check whether style allows selection.
       PRBool selectable;
-      IsSelectable(selectable);
+      IsSelectable(&selectable, nsnull);
       if (!selectable) {
         selType = nsISelectionController::SELECTION_OFF;
         isOkToTurnOn = PR_FALSE;
@@ -651,7 +651,9 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer)
 {
-  nsCOMPtr<nsIDocument> doc;
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
+    return NS_OK;
+  
   nsresult result; 
   nsCOMPtr<nsIPresShell> shell;
   result = aPresContext->GetShell(getter_AddRefs(shell));
@@ -664,9 +666,6 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     return result;
   if (!displaySelection)
     return NS_OK;
-  if (mContent) {
-    result = mContent->GetDocument(*getter_AddRefs(doc));
-  }
 
 //check frame selection state
   PRBool isSelected;
@@ -696,14 +695,12 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_SUCCEEDED(result) && newContent){
     result = newContent->IndexOf(mContent, offset);
     if (NS_FAILED(result)) 
-    {
       return result;
-    }
   }
 
   SelectionDetails *details;
-  if (NS_SUCCEEDED(result) && shell){
-
+  if (NS_SUCCEEDED(result) && shell)
+  {
     nsCOMPtr<nsIFrameSelection> frameSelection;
     if (NS_SUCCEEDED(result) && selCon)
     {
@@ -716,6 +713,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
                             1, &details, PR_FALSE);//look up to see what selection(s) are on this frame
     }
   }
+  
   if (details)
   {
     nsRect rect;
@@ -726,9 +724,9 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     rect.y++;
     aRenderingContext.SetColor(NS_RGB(0,0,255));
     nsRect drawrect(1, 1, rect.width, rect.height);
-    aRenderingContext.DrawRect(drawrect );
+    aRenderingContext.DrawRect(drawrect);
     SelectionDetails *deletingDetails = details;
-    while((deletingDetails = details->mNext) != nsnull) { 
+    while ((deletingDetails = details->mNext) != nsnull) {
       delete details;
       details = deletingDetails;
     }
@@ -906,27 +904,75 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
   return NS_OK;
 }
 
+/*
 NS_IMETHODIMP
-nsFrame::IsSelectable(PRBool& aSelectable) const
+nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame* *foundFrame)
 {
-  aSelectable = PR_TRUE; // defaults to true
+  nsIFrame* thisFrame = this;
+  
+  while (thisFrame)
+  {
+	  const nsStyleUserInterface* userinterface;
+	  thisFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+  
+    if (userinterface->mUserSelect == aSelectionStyle)
+    {
+      *foundFrame = thisFrame;
+      return NS_OK;
+    }
+  
+    thisFrame->GetParent(&thisFrame);
+  }
+  
+  *foundFrame = nsnull;
+  return NS_OK;
+}
+*/
+
+NS_IMETHODIMP
+nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
+{
+  if (!aSelectable) return NS_ERROR_NULL_POINTER;
+  // we'll allow aSelectStyle to be NULL and just not return info.
+  
+  nsresult result     = NS_OK;
+  PRBool  selectable  = PR_TRUE; // defaults to true
+  PRUint8 selectStyle = NS_STYLE_USER_SELECT_AUTO;
+  nsIFrame* frame     = (nsIFrame*)this;
 
   // Checks style to see if we can be selected.
   // Like 'visibility', we must check all the parents: if a parent
   // is not selectable, none of its children is selectable.
-  const nsStyleUserInterface* userinterface;
-  nsresult result = NS_OK;
-  nsIFrame* frame = (nsIFrame*)this;
-  while (frame && NS_SUCCEEDED(result)) {
+  while (frame && NS_SUCCEEDED(result))
+  {
+    const nsStyleUserInterface* userinterface;
     frame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-    if (userinterface) {
+    if (userinterface)
+    {
       if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-        aSelectable = PR_FALSE;
-        break;
+        selectable = PR_FALSE;
+        break; // if a frame is not selectable, stop looking
+      } else 
+      {        // otherwise return the first style which is not 'auto'
+        if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
+          selectStyle = userinterface->mUserSelect;
+        }
       }
     }
     result = frame->GetParent(&frame);
   }
+
+  if (selectable) {
+    if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
+      selectStyle = NS_STYLE_USER_SELECT_TEXT;
+    }
+  } else {
+    selectStyle = NS_STYLE_USER_SELECT_NONE;
+  }
+
+  *aSelectable  = selectable;
+  if (aSelectStyle) *aSelectStyle = selectStyle;
+
   return NS_OK;
 }
 
@@ -943,20 +989,27 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
-
   // check whether style allows selection
-  // if not dont tell selection the mouse event even occured.
+  // if not, don't tell selection the mouse event even occured.
+  nsresult rv;
   
-  PRBool selectable;
-  IsSelectable(selectable);
+  PRBool  selectable;
+  PRUint8 selectStyle;
+  rv = IsSelectable(&selectable, &selectStyle);
+  if (NS_FAILED(rv)) return rv;
+
+  // check for select: none
   if (!selectable)
     return NS_OK;
+
+  // When implementing NS_STYLE_USER_SELECT_ELEMENT, NS_STYLE_USER_SELECT_ELEMENTS and
+  // NS_STYLE_USER_SELECT_TOGGLE, need to change this logic
+  PRBool useFrameSelection = (selectStyle == NS_STYLE_USER_SELECT_TEXT);
 
   if (!IsMouseCaptured(aPresContext))
     CaptureMouse(aPresContext, PR_TRUE);
 
   PRInt16 displayresult = nsISelectionController::SELECTION_OFF;
-  nsresult rv;
   nsCOMPtr<nsISelectionController> selCon;
   rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
   //get the selection controller
@@ -969,7 +1022,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
   //get the frame selection from sel controller
 
-  nsCOMPtr<nsIFrameSelection> frameselection;
   nsCOMPtr<nsIPresShell> shell;
   rv = aPresContext->GetShell(getter_AddRefs(shell));
 
@@ -982,7 +1034,11 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   // nsFrameState  state;
   // GetFrameState(&state);
   // if (state & NS_FRAME_INDEPENDENT_SELECTION) 
-  frameselection = do_QueryInterface(selCon); //this MAY implement
+  nsCOMPtr<nsIFrameSelection> frameselection;
+
+  if (useFrameSelection)
+    frameselection = do_QueryInterface(selCon); //this MAY implement
+
   if (!frameselection)//if we must get it from the pres shell's
     rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
 
@@ -1002,6 +1058,19 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   PRBool  beginFrameContent = PR_FALSE;
 
   rv = GetContentAndOffsetsFromPoint(aPresContext, aEvent->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+  // do we have CSS that changes selection behaviour?
+  {
+    PRBool    changeSelection;
+    nsCOMPtr<nsIContent>  selectContent;
+    PRInt32   newStart, newEnd;
+    if (NS_SUCCEEDED(frameselection->AdjustOffsetsFromStyle(this, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
+      && changeSelection)
+    {
+      content = selectContent;
+      startOffset = newStart;
+      endOffset = newEnd;
+    }
+  }
 
   if (NS_FAILED(rv))
     return rv;
@@ -1117,14 +1186,13 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     selectPara = PR_TRUE;
   else if (me->clickCount == 3)
   {
-    nsCOMPtr<nsIPref> mPrefs;
+    nsCOMPtr<nsIPref> prefsService;
     rv = nsServiceManager::GetService(kPrefCID,
                                       NS_GET_IID(nsIPref),
-                                      (nsISupports**)&mPrefs);
+                                      (nsISupports**)&prefsService);
 
-    if (NS_SUCCEEDED(rv) && mPrefs)
-      mPrefs->GetBoolPref("browser.triple_click_selects_paragraph",
-                          &selectPara);
+    if (NS_SUCCEEDED(rv) && prefsService)
+      prefsService->GetBoolPref("browser.triple_click_selects_paragraph", &selectPara);
   }
   else
     return NS_OK;
@@ -1169,14 +1237,6 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (!shell || !selcon)
     return NS_ERROR_NOT_INITIALIZED;
 
-#ifdef USE_RENDERING_CONTEXT
-  // Why do we need to create a rendering context that we never use?
-  nsCOMPtr<nsIRenderingContext> acx;
-  rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
-  if (NS_FAILED(rv))
-    return rv;
-#endif /* USE_RENDERING_CONTEXT */
-
   nsCOMPtr<nsIFocusTracker> tracker;
   tracker = do_QueryInterface(shell, &rv);
   if (NS_FAILED(rv) || !tracker)
@@ -1212,10 +1272,10 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (NS_FAILED(rv))
     return rv;
 
-  endNode = do_QueryInterface(endpos.mResultContent,&rv);
+  endNode = do_QueryInterface(endpos.mResultContent, &rv);
   if (NS_FAILED(rv))
     return rv;
-  startNode = do_QueryInterface(startpos.mResultContent,&rv);
+  startNode = do_QueryInterface(startpos.mResultContent, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1237,8 +1297,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)
 {
-  PRBool selectable;
-  IsSelectable(selectable);
+  PRBool  selectable;
+  IsSelectable(&selectable, nsnull);
   if (!selectable)
     return NS_OK;
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
@@ -1360,6 +1420,20 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
 
         result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
         if (NS_FAILED(result)) return result;
+
+      // do we have CSS that changes selection behaviour?
+      {
+        PRBool    changeSelection;
+        nsCOMPtr<nsIContent>  selectContent;
+        PRInt32   newStart, newEnd;
+        if (NS_SUCCEEDED(frameselection->AdjustOffsetsFromStyle(this, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
+          && changeSelection)
+        {
+          content = selectContent;
+          startOffset = newStart;
+          endOffset = newEnd;
+        }
+      }
 
         result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
         if (NS_FAILED(result)) return result;
@@ -1566,6 +1640,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
+
   nsRect thisRect;
   result = GetRect(thisRect);
   if (NS_FAILED(result))
@@ -1597,8 +1672,6 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   }
   return result;
 }
-
-
 
 NS_IMETHODIMP
 nsFrame::GetCursor(nsIPresContext* aPresContext,
@@ -2163,6 +2236,8 @@ nsFrame::XMLQuote(nsString& aString)
 PRBool
 nsFrame::ParentDisablesSelection() const
 {
+/*
+  // should never be called now
   nsIFrame* parent;
   GetParent(&parent);
   if (parent) {
@@ -2171,6 +2246,7 @@ nsFrame::ParentDisablesSelection() const
     return (selectable ? PR_FALSE : PR_TRUE);
   }
   return PR_FALSE;
+*/
 /*
   PRBool selected;
   if (NS_FAILED(GetSelected(&selected)))
@@ -2184,6 +2260,8 @@ nsFrame::ParentDisablesSelection() const
     return ((nsFrame *)target)->ParentDisablesSelection();
   return PR_FALSE; //default this does not happen
   */
+  
+  return PR_FALSE;
 }
 
 
@@ -2330,13 +2408,16 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread)
 {
+/*
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
+*/
+
   // check whether style allows selection
-  PRBool selectable;
-  IsSelectable(selectable);
+  PRBool  selectable;
+  IsSelectable(&selectable, nsnull);
   if (!selectable)
     return NS_OK;
 
@@ -2631,9 +2712,10 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                                           getter_AddRefs(aPos->mResultContent), aPos->mContentOffset,
                                           aPos->mContentOffsetEnd, aPos->mPreferLeft);
 			  PRBool selectable;
-			  resultFrame->IsSelectable(selectable);
+        resultFrame->IsSelectable(&selectable, nsnull);
 			  if (!selectable)
           return NS_ERROR_FAILURE;//cant go to unselectable frame
+        
         if (NS_SUCCEEDED(result))
         {
           found = PR_TRUE;
@@ -2927,8 +3009,9 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               (aPos->mDirection == eDirPrevious && newOffset >= aPos->mStartOffset))
           {
             result = GetFrameFromDirection(aPresContext, aPos);
-					  PRBool selectable;
-					  aPos->mResultFrame->IsSelectable(selectable);
+					  PRBool selectable = PR_FALSE;
+					  if (aPos->mResultFrame)
+  					  aPos->mResultFrame->IsSelectable(&selectable, nsnull);
             if (NS_FAILED(result) || !aPos->mResultFrame || !selectable)
             {
               return result?result:NS_ERROR_FAILURE;
@@ -3240,7 +3323,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   //for speed reasons
   nsIFrame *newFrame = (nsIFrame *)isupports;
   PRBool selectable;
-  newFrame->IsSelectable(selectable);
+  newFrame->IsSelectable(&selectable, nsnull);
   if (!selectable)
     return NS_ERROR_FAILURE;
   if (aPos->mDirection == eDirNext)
