@@ -40,6 +40,7 @@
 
 class nsIEventListenerManager;
 class nsIDOMDocument;
+class nsIDocument;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIBrowserWindow;
@@ -226,6 +227,8 @@ protected:
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
   
+  nsIDocument* mChromeDocument;
+
   nsTimeoutImpl *mTimeouts;
   nsTimeoutImpl **mTimeoutInsertionPoint;
   nsTimeoutImpl *mRunningTimeout;

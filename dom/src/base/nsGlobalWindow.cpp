@@ -116,6 +116,8 @@ GlobalWindowImpl::GlobalWindowImpl()
   mListenerManager = nsnull;
 
   mFirstDocumentLoad = PR_TRUE;
+
+  mChromeDocument = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -278,6 +280,27 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
   }
   if (nsnull != mFrames) {
     mFrames->SetWebShell(aWebShell);
+  }
+
+  // Get our enclosing chrome shell and retrieve its global window impl, so that we can
+  // do some forwarding to the chrome document.
+  nsCOMPtr<nsIWebShell> chromeShell;
+  mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
+  if (chromeShell) {
+    // Convert the chrome shell to a DOM window.
+    nsCOMPtr<nsIScriptContextOwner> contextOwner = do_QueryInterface(chromeShell);
+    if (contextOwner) {
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+      if (NS_OK == contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) {
+        nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(globalObject);
+        if (chromeWindow) {
+          nsCOMPtr<nsIDOMDocument> chromeDoc;
+          chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
+          nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
+          mChromeDocument = realDoc.get(); // Don't addref it
+        }
+      }
+    }
   }
 }
 
@@ -2005,9 +2028,10 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Capturing stage
-  /*if (mEventCapturer) {
-    mEventCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
-  }*/
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && mChromeDocument) {
+    // Check chrome document capture here
+    mChromeDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+  }
 
   //Local handling stage
   if (nsnull != mListenerManager) {
@@ -2015,7 +2039,10 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Bubbling stage
-  /*Up to frames?*/
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mChromeDocument) {
+    // Bubble to a chrome document if it exists
+    mChromeDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+  }
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
