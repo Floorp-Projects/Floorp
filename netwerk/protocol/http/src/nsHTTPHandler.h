@@ -45,6 +45,7 @@
 #include "nsIPref.h"
 #include "prtime.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
 
 //Forward decl.
 class nsHashtable;
@@ -77,7 +78,7 @@ typedef struct  BrokenServersTable_s
 class   nsHTTPPipelinedRequest;
 class   nsIHTTPChannel;
 
-class nsHTTPHandler : public nsIHTTPProtocolHandler
+class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
