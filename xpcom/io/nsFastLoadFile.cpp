@@ -56,6 +56,7 @@
 #include "nsBinaryStream.h"
 #include "nsFastLoadFile.h"
 #include "nsInt64.h"
+
 #ifdef DEBUG_brendan
 # define METERING
 # define DEBUG_MUX
@@ -963,9 +964,10 @@ nsFastLoadFileReader::Open()
     rv = seekable->Tell(&fileSize);
     if (NS_FAILED(rv))
         return rv;
-    nsInt64 fileSize64(fileSize);
+
+    nsInt64 fileSize64 = fileSize;
     const nsInt64 maxUint32 = PR_UINT32_MAX;
-    NS_ASSERTION(maxUint32 > fileSize64, "fileSize must fit in 32 bits");
+    NS_ASSERTION(fileSize64 <= maxUint32, "fileSize must fit in 32 bits");
     if ((PRUint32) fileSize64 != mHeader.mFileSize)
         return NS_ERROR_UNEXPECTED;
 
