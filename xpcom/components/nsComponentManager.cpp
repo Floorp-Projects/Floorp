@@ -841,7 +841,7 @@ nsresult nsComponentManagerImpl::Init(void)
         return NS_ERROR_FAILURE;
     }
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
            ("nsComponentManager: Initialized."));
 
     return NS_OK;
@@ -862,7 +862,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     mShuttingDown = NS_SHUTDOWN_INPROGRESS;
 
     // Shutdown the component manager
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning Shutdown."));
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Beginning Shutdown."));
 
     PRInt32 i;
 
@@ -870,7 +870,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     if (mRegistryDirty) {
         nsresult rv = WritePersistentRegistry();
         if (NS_FAILED(rv)) {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Could not write out perisistant registry."));
+            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, ("nsComponentManager: Could not write out perisistant registry."));
 #ifdef DEBUG
             printf("Could not write out perisistant registry!\n");
 #endif     
@@ -914,14 +914,14 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
     mShuttingDown = NS_SHUTDOWN_COMPLETE;
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Shutdown complete."));
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Shutdown complete."));
 
     return NS_OK;
 }
 
 nsComponentManagerImpl::~nsComponentManagerImpl()
 {
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning destruction."));
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Beginning destruction."));
 
     if (mShuttingDown != NS_SHUTDOWN_COMPLETE)
         Shutdown();
@@ -929,7 +929,7 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     if (mMon) {
         nsAutoMonitor::DestroyMonitor(mMon);
     }
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Destroyed."));
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS8(nsComponentManagerImpl, 
@@ -1729,7 +1729,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
     nsCOMPtr<nsIFactory> factory;
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_DEBUG))
     {
         char *buf = aClass.ToString();
         PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
@@ -1762,7 +1762,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
     nsCOMPtr<nsIFactory> factory;
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_DEBUG))
     {
         PR_LogPrint("nsComponentManager: GetClassObject(%s)", contractID);
     }
@@ -1806,11 +1806,11 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
         rv = NS_OK;
     }
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) {
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING)) {
         char *buf = 0;
         if (NS_SUCCEEDED(rv))
             buf = aClass->ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: ContractIDToClassID(%s)->%s", aContractID,
                 NS_SUCCEEDED(rv) ? buf : "[FAILED]"));
         if (buf)
@@ -1837,7 +1837,7 @@ nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
 
     nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING))
     {
         char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
@@ -1938,10 +1938,10 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     }
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING)) 
     {
         char *buf = aClass.ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: CreateInstance(%s) %s", buf,
                 NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
         if (buf)
@@ -2012,7 +2012,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
         rv = NS_ERROR_FACTORY_NOT_REGISTERED;
     }
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("nsComponentManager: CreateInstanceByContractID(%s) %s", aContractID,
             NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
 
@@ -2653,10 +2653,10 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
 {
     nsAutoMonitor mon(mMon);
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING))
     {
         char *buf = aClass.ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: RegisterFactory(%s, %s)", buf,
                 (aContractID ? aContractID : "(null)")));
         if (buf)
@@ -2817,10 +2817,10 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     const char *contractID = (aContractID && *aContractID) ? aContractID : nsnull;
     const char *className = (aClassName && *aClassName) ? aClassName : nsnull;
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING))
     {
         char *buf = aClass.ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: RegisterComponentCommon(%s, %s, %s, %s)",
                 buf,
                 contractID ? contractID : "(null)",
@@ -3029,10 +3029,10 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
                                           nsIFactory *aFactory)
 {
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING)) 
     {
         char *buf = aClass.ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: UnregisterFactory(%s)", buf));
         if (buf)
             PR_Free(buf);
@@ -3066,10 +3066,10 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *registryName)
 {
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING)) 
     {
         char *buf = aClass.ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsComponentManager: UnregisterComponent(%s)", buf));
         if (buf)
             PR_Free(buf);
@@ -3122,7 +3122,7 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
 
     nsAutoMonitor mon(mMon);
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, 
            ("nsComponentManager: Unloading Libraries."));
 
     // UnloadAll the loaders

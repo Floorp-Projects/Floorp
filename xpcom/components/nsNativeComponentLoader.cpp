@@ -110,7 +110,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 #endif
         if (!dll->Load()) {
 
-            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsNativeComponentLoader: load FAILED"));
         
             char errorMsg[1024] = "<unknown; can't get error from NSPR>";
@@ -132,7 +132,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
     
     rv = GetFactoryFromModule(dll, aCID, _retval);
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+    PR_LOG(nsComponentManagerLog, NS_SUCCEEDED(rv) ? PR_LOG_DEBUG : PR_LOG_ERROR,
            ("nsNativeComponentLoader: Factory creation %s for %s",
             (NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"),
             aLocation));
@@ -326,7 +326,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
         nsXPIDLCString displayPath;
         dll->GetDisplayPath(displayPath);
 
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, 
                ("nsNativeComponentLoader: NOT ready for unload %s", displayPath.get()));
 #endif
         rv = NS_ERROR_FAILURE;
@@ -519,7 +519,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
     nsXPIDLCString displayPath;
     dll->GetDisplayPath(displayPath);
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
            ("nsNativeComponentLoader: %s(%s) Load FAILED with error:%s", 
             aCallerName,
             displayPath.get(), 
@@ -616,7 +616,7 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     nsXPIDLCString displayPath;
     dll->GetDisplayPath(displayPath);
 
-    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+    PR_LOG(nsComponentManagerLog, NS_SUCCEEDED(rv) ? PR_LOG_DEBUG : PR_LOG_ERROR,
            ("nsNativeComponentLoader: AutoUnregistration for %s %s.",
             (NS_FAILED(rv) ? "FAILED" : "succeeded"), displayPath.get()));
 #endif
@@ -751,7 +751,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             dll->GetDisplayPath(displayPath);
             
             // Dll hasn't changed. Skip.
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+            PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, 
                    ("nsNativeComponentLoader: + nsDll not changed \"%s\". Skipping...",
                     displayPath.get()));
 #endif
@@ -810,7 +810,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
                 nsXPIDLCString displayPath;
                 dll->GetDisplayPath(displayPath);
                 
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                        ("nsNativeComponentLoader: *** Dll already loaded. "
                         "Cannot unload either. Hence cannot re-register "
                         "\"%s\". Skipping...", displayPath.get()));
@@ -824,7 +824,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 #ifdef PR_LOGGING
                 nsXPIDLCString displayPath;
                 dll->GetDisplayPath(displayPath);
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, 
                        ("nsNativeComponentLoader: + Unloading \"%s\". (no CanUnloadProc).",
                         displayPath.get()));
 #endif
@@ -841,7 +841,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 #ifdef PR_LOGGING
             nsXPIDLCString displayPath;
             dll->GetDisplayPath(displayPath);
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("nsNativeComponentLoader: Dll still loaded. Cannot re-register "
                     "\"%s\". Skipping...", displayPath.get()));
 #endif
@@ -890,7 +890,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         nsXPIDLCString displayPath;
         dll->GetDisplayPath(displayPath);
 
-        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                ("nsNativeComponentLoader: Autoregistration Passed for "
                 "\"%s\".", displayPath.get()));
 #endif
