@@ -19,7 +19,6 @@
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
-#include "nsFontMetricsMac.h"
 
 NS_IMPL_ADDREF(ChildWindow)
 NS_IMPL_RELEASE(ChildWindow)
@@ -567,14 +566,11 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 		mTempRenderingContext->Init(mContext, this);
 	}
 
-	// set the widget font
+	// set the widget font. nsMacControl implements SetFont, which is where
+	// the font should get set.
 	if (mFontMetrics)
 	{
-		nsFont* font;
-		mFontMetrics->GetFont(font);
-		nsFontMetricsMac::SetFont(*font, mContext);
-
-		mTempRenderingContext->SetFont(mFontMetrics);	// just in case, set the rendering context font too
+		mTempRenderingContext->SetFont(mFontMetrics);
 	}
 
 	// set the widget background and foreground colors
