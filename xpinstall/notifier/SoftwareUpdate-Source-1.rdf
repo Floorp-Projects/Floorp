@@ -3,6 +3,9 @@
 
   <RDF:Bag ID="NC:SoftwareUpdateRoot">
     <RDF:li>
+       <RDF:Bag ID="NC:NewSoftwareToday" NC:title="New Software">
+
+    <RDF:li>
         <RDF:Description ID="AimUpdate344">
          <NC:type resource="http://home.netscape.com/NC-rdf#SoftwarePackage" />
          <NC:title>AOL AIM</NC:title>
@@ -23,5 +26,8 @@
          <NC:url>http://home.netscape.com/index.html</NC:url>
        </RDF:Description>
     </RDF:li>
+
+       </RDF:Bag>
+     </RDF:li>
   </RDF:Bag>
 </RDF:RDF>
