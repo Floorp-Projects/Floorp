@@ -570,6 +570,7 @@ xpfe/components/bookmarks/src/Makefile
 xpfe/components/bookmarks/resources/Makefile
 xpfe/components/directory/Makefile
 xpfe/components/timebomb/Makefile
+xpfe/components/timebomb/tools/Makefile
 xpfe/components/timebomb/resources/Makefile
 xpfe/components/timebomb/resources/content/Makefile
 xpfe/components/timebomb/resources/locale/Makefile
