@@ -83,7 +83,7 @@ public:
     NS_IMETHOD LockFactory(PRBool aLock);
 
     nsAllocatorFactory(void);
-    ~nsAllocatorFactory(void);
+    virtual ~nsAllocatorFactory(void);
 
     NS_DECL_ISUPPORTS
 };
