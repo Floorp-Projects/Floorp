@@ -17,6 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Robert Churchill <rjc@netscape.com>
+ *   David Hyatt <hyatt@netscape.com>
+ *   Chris Waterson <waterson@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
@@ -28,13 +33,13 @@
 
   TO DO
 
-  1) Get a real namespace for XUL. This should go in a 
-     header file somewhere.
+  . make asynchronous notifications work
+  . fix tree folder open-close-open
+  . extended template syntax
 
-  2) I really _really_ need to figure out how to factor the logic in
-     OnAssert, OnUnassert, OnMove, and OnChange. These all mostly
-     kinda do the same sort of thing. It atrocious how much code is
-     cut-n-pasted.
+  To turn on logging for this module, set:
+
+    NSPR_LOG_MODULES nsRDFGenericBuilder:5
 
  */
 
@@ -74,6 +79,7 @@
 #include "nsIXULContent.h"
 #include "nsIXULContentUtils.h"
 #include "nsRDFSort.h"
+#include "nsRuleNetwork.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -106,6 +112,1028 @@ static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 //----------------------------------------------------------------------
 
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+
+#ifdef DEBUG
+
+static nsISupports*
+value_to_isupports(const nsIID& aIID, const Value& aValue)
+{
+    nsresult rv;
+    nsISupports* isupports = NS_STATIC_CAST(nsISupports*, aValue);
+    if (isupports) {
+        nsISupports* dummy;
+        rv = isupports->QueryInterface(aIID, (void**) &dummy);
+        if (NS_SUCCEEDED(rv)) {
+            NS_RELEASE(dummy);
+        }
+        else {
+            NS_ERROR("value does not support expected interface");
+        }
+    }
+    return isupports;
+}
+
+#define VALUE_TO_ISUPPORTS(type, v) NS_STATIC_CAST(type*, value_to_isupports(NS_GET_IID(type), (v)))
+
+#else
+#define VALUE_TO_ISUPPORTS(type, v) NS_STATIC_CAST(type*, NS_STATIC_CAST(nsISupports*, (v)))
+#endif
+
+#define VALUE_TO_IRDFRESOURCE(v) VALUE_TO_ISUPPORTS(nsIRDFResource, (v))
+#define VALUE_TO_IRDFNODE(v)     VALUE_TO_ISUPPORTS(nsIRDFNode, (v))
+#define VALUE_TO_ICONTENT(v)     VALUE_TO_ISUPPORTS(nsIContent, (v))
+
+//----------------------------------------------------------------------
+
+static PRBool
+IsElementContainedBy(nsIContent* aElement, nsIContent* aContainer)
+{
+    // Make sure that we're actually creating content for the tree
+    // content model that we've been assigned to deal with.
+
+    // Walk up the parent chain from us to the root and
+    // see what we find.
+    if (aElement == aContainer)
+        return PR_TRUE;
+
+    // walk up the tree until you find rootAtom
+    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
+    nsCOMPtr<nsIContent> parent;
+    element->GetParent(*getter_AddRefs(parent));
+    element = parent;
+    
+    while (element) {
+        if (element.get() == aContainer)
+            return PR_TRUE;
+
+        element->GetParent(*getter_AddRefs(parent));
+        element = parent;
+    }
+    
+    return PR_FALSE;
+}
+
+//----------------------------------------------------------------------
+
+class PropertySet
+{
+public:
+    PropertySet()
+        : mProperties(nsnull),
+          mCount(0),
+          mCapacity(0) {}
+    
+    ~PropertySet();
+
+    nsresult Clear();
+    nsresult Add(nsIRDFResource* aProperty);
+
+    PRBool Contains(nsIRDFResource* aProperty) const;
+
+protected:
+    nsIRDFResource** mProperties;
+    PRInt32 mCount;
+    PRInt32 mCapacity;
+
+public:
+    class ConstIterator {
+    protected:
+        nsIRDFResource** mCurrent;
+
+    public:
+        ConstIterator(const ConstIterator& aConstIterator)
+            : mCurrent(aConstIterator.mCurrent) {}
+
+        ConstIterator& operator=(const ConstIterator& aConstIterator) {
+            mCurrent = aConstIterator.mCurrent;
+            return *this; }
+
+        ConstIterator& operator++() {
+            ++mCurrent;
+            return *this; }
+
+        ConstIterator operator++(int) {
+            ConstIterator result(*this);
+            ++mCurrent;
+            return result; }
+
+        /*const*/ nsIRDFResource* operator*() const {
+            return *mCurrent; }
+
+        /*const*/ nsIRDFResource* operator->() const {
+            return *mCurrent; }
+
+        PRBool operator==(const ConstIterator& aConstIterator) const {
+            return mCurrent == aConstIterator.mCurrent; }
+
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
+            return mCurrent != aConstIterator.mCurrent; }
+
+    protected:
+        ConstIterator(nsIRDFResource** aProperty) : mCurrent(aProperty) {}
+        friend class PropertySet;
+    };
+
+    ConstIterator First() const { return ConstIterator(mProperties); }
+    ConstIterator Last() const { return ConstIterator(mProperties + mCount); }
+};
+
+
+PropertySet::~PropertySet()
+{
+    Clear();
+    delete[] mProperties;
+}
+
+nsresult
+PropertySet::Clear()
+{
+    while (--mCount >= 0) {
+        NS_RELEASE(mProperties[mCount]);
+    }
+    mCount = 0;
+    return NS_OK;
+}
+
+nsresult
+PropertySet::Add(nsIRDFResource* aProperty)
+{
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    if (Contains(aProperty))
+        return NS_OK;
+
+    if (mCount >= mCapacity) {
+        PRInt32 capacity = mCapacity + 4;
+        nsIRDFResource** properties = new nsIRDFResource*[capacity];
+        if (! properties)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        for (PRInt32 i = mCount - 1; i >= 0; --i)
+            properties[i] = mProperties[i];
+
+        delete[] mProperties;
+
+        mProperties = properties;
+        mCapacity = capacity;
+    }
+
+    mProperties[mCount++] = aProperty;
+    NS_ADDREF(aProperty);
+    return NS_OK;
+}
+
+PRBool
+PropertySet::Contains(nsIRDFResource* aProperty) const
+{
+    for (PRInt32 i = mCount - 1; i >= 0; --i) {
+        if (mProperties[i] == aProperty)
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+//----------------------------------------------------------------------
+//
+// Rule
+//
+
+class Rule
+{
+public:
+    Rule(nsIContent* aContent,
+         PRInt32 aContainerVariable,
+         PRInt32 aMemberVariable,
+         PRInt32 aPriority)
+        : mContent(aContent),
+          mContainerVariable(aContainerVariable),
+          mMemberVariable(aMemberVariable),
+          mPriority(aPriority) {}
+
+    nsresult GetContent(nsIContent** aResult) const;
+    PRInt32 GetContainerVariable() const { return mContainerVariable; }
+    PRInt32 GetMemberVariable() const { return mMemberVariable; }
+    PRInt32 GetPriority() const { return mPriority; }
+
+protected:
+    nsCOMPtr<nsIContent> mContent;
+    PRInt32 mContainerVariable;
+    PRInt32 mMemberVariable;
+    PRInt32 mPriority;
+};
+
+
+nsresult
+Rule::GetContent(nsIContent** aResult) const
+{
+    *aResult = mContent.get();
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+/**
+ * A set of <rule, instantiation> tuples.
+ */
+class MatchSet
+{
+public:
+    /**
+     * A single <rule, instantiation> tuple.
+     */
+    class Match {
+    public:
+        Match() {}
+        Match(const Rule* aRule, const Instantiation& aInstantiation)
+            : mRule(aRule), mInstantiation(aInstantiation) {}
+
+        Match(const Match& aMatch)
+            : mRule(aMatch.mRule), mInstantiation(aMatch.mInstantiation) {}
+
+        Match& operator=(const Match& aMatch) {
+            mRule = aMatch.mRule;
+            mInstantiation = aMatch.mInstantiation;
+            return *this; }
+
+        PRBool operator==(const Match& aMatch) const {
+            return mRule == aMatch.mRule && mInstantiation == aMatch.mInstantiation; }
+
+        PRBool operator!=(const Match& aMatch) const {
+            return !(*this == aMatch); }
+
+        const Rule*   mRule;
+        Instantiation mInstantiation;
+    };
+
+    MatchSet();
+    ~MatchSet();
+
+private:
+    MatchSet(const MatchSet& aMatchSet); // XXX not to be implemented
+    void operator=(const MatchSet& aMatchSet); // XXX not to be implemented
+
+protected:
+    struct MatchList {
+        Match mMatch;
+        MatchList* mNext;
+        MatchList* mPrev;
+    };
+
+    MatchList mHead;
+
+    // XXXwaterson Lazily create this if we pass a size threshold.
+    PLHashTable* mMatches;
+    PRInt32 mCount;
+
+    static PLHashNumber HashMatch(const void* aMatch) {
+        const Match* match = NS_STATIC_CAST(const Match*, aMatch);
+        return Instantiation::Hash(&match->mInstantiation) ^ (PLHashNumber(match->mRule) >> 2); }
+
+    static PRIntn CompareMatches(const void* aLeft, const void* aRight) {
+        const Match* left  = NS_STATIC_CAST(const Match*, aLeft);
+        const Match* right = NS_STATIC_CAST(const Match*, aRight);
+        return *left == *right; }
+
+public:
+    class Iterator;
+
+    class ConstIterator {
+    protected:
+        friend class Iterator; // XXXwaterson so broken.
+        MatchList* mCurrent;
+
+    public:
+        ConstIterator(MatchList* aCurrent) : mCurrent(aCurrent) {}
+
+        ConstIterator(const ConstIterator& aConstIterator)
+            : mCurrent(aConstIterator.mCurrent) {}
+
+        ConstIterator& operator=(const ConstIterator& aConstIterator) {
+            mCurrent = aConstIterator.mCurrent;
+            return *this; }
+
+        ConstIterator& operator++() {
+            mCurrent = mCurrent->mNext;
+            return *this; }
+
+        ConstIterator operator++(int) {
+            ConstIterator result(*this);
+            mCurrent = mCurrent->mNext;
+            return result; }
+
+        ConstIterator& operator--() {
+            mCurrent = mCurrent->mPrev;
+            return *this; }
+
+        ConstIterator operator--(int) {
+            ConstIterator result(*this);
+            mCurrent = mCurrent->mPrev;
+            return result; }
+
+        const Match& operator*() const {
+            return mCurrent->mMatch; }
+
+        const Match* operator->() const {
+            return &mCurrent->mMatch; }
+
+        PRBool operator==(const ConstIterator& aConstIterator) const {
+            return mCurrent == aConstIterator.mCurrent; }
+
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
+            return mCurrent != aConstIterator.mCurrent; }
+    };
+
+    ConstIterator First() const { return ConstIterator(mHead.mNext); }
+    ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(MatchList*, &mHead)); }
+
+    class Iterator : public ConstIterator {
+    public:
+        Iterator(MatchList* aCurrent) : ConstIterator(aCurrent) {}
+
+        Iterator& operator++() {
+            mCurrent = mCurrent->mNext;
+            return *this; }
+
+        Iterator operator++(int) {
+            Iterator result(*this);
+            mCurrent = mCurrent->mNext;
+            return result; }
+
+        Iterator& operator--() {
+            mCurrent = mCurrent->mPrev;
+            return *this; }
+
+        Iterator operator--(int) {
+            Iterator result(*this);
+            mCurrent = mCurrent->mPrev;
+            return result; }
+
+        Match& operator*() const {
+            return mCurrent->mMatch; }
+
+        Match* operator->() const {
+            return &mCurrent->mMatch; }
+
+        PRBool operator==(const ConstIterator& aConstIterator) const {
+            return mCurrent == aConstIterator.mCurrent; }
+
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
+            return mCurrent != aConstIterator.mCurrent; }
+
+        friend class MatchSet;
+    };
+
+    Iterator First() { return Iterator(mHead.mNext); }
+    Iterator Last() { return Iterator(&mHead); }
+
+    PRBool Empty() const { return First() == Last(); }
+
+    PRBool Contains(const Rule* aRule, const Instantiation& aInstantiation) const;
+
+    nsresult FindMatchWithHighestPriority(const Match** aMatch) const;
+
+    Iterator Insert(Iterator aIterator, const Match& aMatch);
+
+    Iterator Add(const Match& aMatch) {
+        return Insert(Last(), aMatch); }
+
+    Iterator Add(const Rule* aRule, const Instantiation& aInstantiation) {
+        return Add(Match(aRule, aInstantiation)); }
+
+    void Clear();
+    Iterator Erase(Iterator aIterator);
+};
+
+
+
+MatchSet::MatchSet()
+    : mMatches(nsnull), mCount(0)
+{
+    mHead.mNext = mHead.mPrev = &mHead;
+
+    // XXXwaterson create this lazily if we exceed a threshold?
+    mMatches = PL_NewHashTable(16,
+                               HashMatch,
+                               CompareMatches,
+                               PL_CompareValues,
+                               nsnull /* XXXwaterson use an arena */,
+                               nsnull);
+}
+
+#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
+MatchSet::MatchSet(const MatchSet& aMatchSet) {}
+void MatchSet::operator=(const MatchSet& aMatchSet) {}
+#endif
+
+MatchSet::~MatchSet()
+{
+    // XXXwaterson if it's worth it, do a hand rolled cleanup routine
+    // that avoids de-hashing n' stuff.
+    Clear();
+
+    if (mMatches)
+        PL_HashTableDestroy(mMatches);
+}
+
+
+MatchSet::Iterator
+MatchSet::Insert(Iterator aIterator, const Match& aMatch)
+{
+    MatchList* newelement = new MatchList();
+    if (newelement) {
+        newelement->mMatch = aMatch;
+
+        aIterator.mCurrent->mPrev->mNext = newelement;
+
+        newelement->mNext = aIterator.mCurrent;
+        newelement->mPrev = aIterator.mCurrent->mPrev;
+
+        aIterator.mCurrent->mPrev = newelement;
+
+        if (mMatches)
+            PL_HashTableAdd(mMatches, &*aIterator, &*aIterator);
+    }
+    return aIterator;
+}
+
+void
+MatchSet::Clear()
+{
+    Iterator match = First();
+    while (match != Last())
+        Erase(match++);
+}
+
+
+PRBool
+MatchSet::Contains(const Rule* aRule, const Instantiation& aInstantiation) const
+{
+    Match match(aRule, aInstantiation);
+    return PL_HashTableLookup(mMatches, &match) != nsnull;
+}
+
+nsresult
+MatchSet::FindMatchWithHighestPriority(const Match** aMatch) const
+{
+    // Find the rule with the "highest priority"; i.e., the rule with
+    // the lowest value for GetPriority().
+    const Match* result = nsnull;
+    PRInt32 max = ~(1 << 31); // XXXwaterson portable?
+    for (ConstIterator match = First(); match != Last(); ++match) {
+        PRInt32 priority = match->mRule->GetPriority();
+        if (priority < max) {
+            result = &*match;
+            max = priority;
+        }
+    }
+    *aMatch = result;
+    return NS_OK;
+}
+
+MatchSet::Iterator
+MatchSet::Erase(Iterator aIterator)
+{
+    Iterator result = aIterator;
+
+    if (mMatches)
+        PL_HashTableRemove(mMatches, &*aIterator);
+
+    ++result;
+    aIterator.mCurrent->mNext->mPrev = aIterator.mCurrent->mPrev;
+    aIterator.mCurrent->mPrev->mNext = aIterator.mCurrent->mNext;
+
+    delete aIterator.mCurrent;
+    return result;
+}
+
+//----------------------------------------------------------------------
+
+class Key { // XXXwaterson this needs a better name
+public:
+    Key() {}
+
+    Key(const Instantiation& aInstantiation, const Rule* aRule);
+
+    Key(const Key& aKey)
+        : mContainerVariable(aKey.mContainerVariable),
+          mContainerValue(aKey.mContainerValue),
+          mMemberVariable(aKey.mMemberVariable),
+          mMemberValue(aKey.mMemberValue) {}
+
+    Key& operator=(const Key& aKey) {
+        mContainerVariable = aKey.mContainerVariable;
+        mContainerValue    = aKey.mContainerValue;
+        mMemberVariable    = aKey.mMemberVariable;
+        mMemberValue       = aKey.mMemberValue;
+        return *this; }
+
+    PRBool operator==(const Key& aKey) const {
+        return Equals(aKey); }
+
+    PRBool operator!=(const Key& aKey) const {
+        return !Equals(aKey); }
+
+    PRInt32     mContainerVariable;
+    Value       mContainerValue;
+    PRInt32     mMemberVariable;
+    Value       mMemberValue;
+
+    PLHashNumber Hash() const {
+        PLHashNumber temp1;
+        temp1 = mContainerValue.Hash();
+        temp1 &= 0xffff;
+        temp1 |= PLHashNumber(mContainerVariable) << 16;
+        PLHashNumber temp2;
+        temp2 = mMemberValue.Hash();
+        temp2 &= 0xffff;
+        temp2 |= PLHashNumber(mMemberVariable) << 16;
+        return temp1 ^ temp2; }
+
+protected:
+    PRBool Equals(const Key& aKey) const {
+        return mContainerVariable == aKey.mContainerVariable &&
+            mContainerValue == aKey.mContainerValue &&
+            mMemberVariable == aKey.mMemberVariable &&
+            mMemberValue == aKey.mMemberValue; }
+};
+
+
+Key::Key(const Instantiation& aInstantiation, const Rule* aRule)
+{
+    PRBool hasbinding;
+
+    mContainerVariable = aRule->GetContainerVariable();
+    hasbinding = aInstantiation.mBindings.GetBindingFor(mContainerVariable, &mContainerValue);
+    NS_ASSERTION(hasbinding, "no binding for container variable");
+
+    mMemberVariable = aRule->GetMemberVariable();
+    hasbinding = aInstantiation.mBindings.GetBindingFor(mMemberVariable, &mMemberValue);
+    NS_ASSERTION(hasbinding, "no binding for member variable");
+}
+
+
+//----------------------------------------------------------------------
+
+class KeySet {
+public:
+    KeySet() : mKeys(nsnull), mCount(0), mCapacity(0) {}
+    ~KeySet();
+
+    class ConstIterator {
+    protected:
+        Key* mCurrent;
+
+    public:
+        ConstIterator(const ConstIterator& aConstIterator)
+            : mCurrent(aConstIterator.mCurrent) {}
+
+        ConstIterator& operator=(const ConstIterator& aConstIterator) {
+            mCurrent = aConstIterator.mCurrent;
+            return *this; }
+
+        ConstIterator& operator++() {
+            ++mCurrent;
+            return *this; }
+
+        ConstIterator operator++(int) {
+            ConstIterator result(*this);
+            ++mCurrent;
+            return result; }
+
+        const Key& operator*() const {
+            return *mCurrent; }
+
+        const Key* operator->() const {
+            return mCurrent; }
+
+        PRBool operator==(const ConstIterator& aConstIterator) const {
+            return mCurrent == aConstIterator.mCurrent; }
+
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
+            return mCurrent != aConstIterator.mCurrent; }
+
+    protected:
+        ConstIterator(Key* aKey) : mCurrent(aKey) {}
+        friend class KeySet;
+    };
+
+    ConstIterator First() const { return ConstIterator(mKeys); }
+    ConstIterator Last() const { return ConstIterator(mKeys + mCount); }
+
+    PRBool Contains(const Key& aKey);
+    nsresult Add(const Key& aKey);
+
+protected:
+    Key* mKeys;
+    PRInt32 mCount;
+    PRInt32 mCapacity;
+};
+
+KeySet::~KeySet()
+{
+    delete[] mKeys;
+}
+
+PRBool
+KeySet::Contains(const Key& aKey)
+{
+    for (PRInt32 i = mCount - 1; i >= 0; --i) {
+        if (mKeys[i] == aKey)
+            return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+nsresult
+KeySet::Add(const Key& aKey)
+{
+    if (Contains(aKey))
+        return NS_OK;
+
+    if (mCount >= mCapacity) {
+        PRInt32 capacity = mCapacity + 4;
+        Key* keys = new Key[capacity];
+        if (! keys)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        for (PRInt32 i = mCount - 1; i >= 0; --i)
+            keys[i] = mKeys[i];
+
+        delete[] mKeys;
+
+        mKeys     = keys;
+        mCapacity = capacity;
+    }
+
+    mKeys[mCount++] = aKey;
+    return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
+
+/**
+ * Maintains the set of active instantiations.
+ */
+class ConflictSet
+{
+public:
+    ConflictSet();
+    ~ConflictSet();
+
+    nsresult Add(const Instantiation& aInstantiation, const Rule* aRule);
+
+    void GetMatches(const Key& aKey, const MatchSet** aMatchSet) const;
+
+    void GetMatches(PRInt32 aVariable,
+                    const Value& aValue,
+                    const MatchSet** aMatchSet) const;
+
+    void Remove(const MemoryElement& aInstantiation,
+                MatchSet& aNewMatches,
+                MatchSet& aRetractedMatches);
+
+    void Clear();
+
+protected:
+    // "Clusters" of matched rules for the same <content, member> pair
+    PLHashTable* mMatches;
+
+    static PLHashNumber HashKey(const void* aKey);
+    static PRIntn CompareKeys(const void* aLeft, const void* aRight);
+    static PRIntn RemoveMatch(PLHashEntry* he, PRIntn i, void* arg);
+
+    // Maps an Instantiation::Binding to a MatchSet
+    PLHashTable* mBindings;
+
+    static PLHashNumber HashMemoryElement(const void* aBinding);
+    static PRIntn CompareMemoryElements(const void* aLeft, const void* aRight);
+    static PRIntn RemoveMemoryElement(PLHashEntry* he, PRIntn i, void* arg);
+};
+
+ConflictSet::ConflictSet()
+    : mMatches(nsnull), mBindings(nsnull)
+{
+    mMatches = PL_NewHashTable(16 /* XXXwaterson we need a way to give a hint? */,
+                               HashKey,
+                               CompareKeys,
+                               PL_CompareValues,
+                               nsnull /* XXXwaterson use an arena */,
+                               nsnull);
+
+    mBindings = PL_NewHashTable(16, /* XXXwaterson need hint */
+                                HashMemoryElement,
+                                CompareMemoryElements,
+                                PL_CompareValues,
+                                nsnull /* XXXwaterson use an arena */,
+                                nsnull);
+}
+
+ConflictSet::~ConflictSet()
+{
+    Clear();
+}
+
+nsresult
+ConflictSet::Add(const Instantiation& aInstantiation, const Rule* aRule)
+{
+    // add the match to a table indexed by instantiation key
+    {
+        Key key(aInstantiation, aRule);
+
+        PLHashNumber hash = key.Hash();
+        PLHashEntry** hep = PL_HashTableRawLookup(mMatches, hash, &key);
+
+        MatchSet* set;
+
+        if (hep && *hep) {
+            set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+        }
+        else {
+            Key* newkey = new Key(key);
+            if (! newkey)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            set = new MatchSet();
+            if (! set)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            PL_HashTableRawAdd(mMatches, hep, hash, newkey, set);
+        }
+
+        if (! set->Contains(aRule, aInstantiation)) {
+            set->Add(aRule, aInstantiation);
+        }
+    }
+
+
+    // Add the match to a table indexed by binding
+    {
+        MemoryElementSet::ConstIterator last = aInstantiation.mSupport.Last();
+        for (MemoryElementSet::ConstIterator element = aInstantiation.mSupport.First(); element != last; ++element) {
+            PLHashNumber hash = element->Hash();
+            PLHashEntry** hep = PL_HashTableRawLookup(mBindings, hash, &*element);
+
+            MatchSet* set;
+
+            if (hep && *hep) {
+                set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+            }
+            else {
+                MemoryElement* keyelement = element->Clone();
+                if (! keyelement)
+                    return NS_ERROR_OUT_OF_MEMORY;
+
+                set = new MatchSet();
+                if (! set)
+                    return NS_ERROR_OUT_OF_MEMORY;
+
+                PL_HashTableRawAdd(mBindings, hep, hash, keyelement, set);
+            }
+
+            if (! set->Contains(aRule, aInstantiation)) {
+                set->Add(aRule, aInstantiation);
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
+
+void
+ConflictSet::GetMatches(const Key& aKey, const MatchSet** aMatchSet) const
+{
+    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mMatches, &aKey));
+}
+
+
+void
+ConflictSet::GetMatches(PRInt32 aVariable,
+                        const Value& aValue,
+                        const MatchSet** aMatchSet) const
+{
+    Binding binding(aVariable, aValue);
+    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mBindings, &binding));
+}
+
+
+void
+ConflictSet::Remove(const MemoryElement& aMemoryElement,
+                    MatchSet& aNewMatches,
+                    MatchSet& aRetractedMatches)
+{
+    {
+        // First, use the memory-element-to-instantiations map to
+        // figure out what instantiations will be affected.
+        PLHashEntry** hep = PL_HashTableRawLookup(mBindings, aMemoryElement.Hash(), &aMemoryElement);
+
+        if (!hep || !*hep)
+            return;
+
+        // 'set' gets the set of all instantiations containing the first binding.
+        MatchSet* set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+
+        // We'll iterate through these instantiations, only paying
+        // attention to instantiations that strictly contain the
+        // instantiation we're to remove.
+        for (MatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
+            // Note the retraction
+            aRetractedMatches.Add(*match);
+        }
+
+        // We'll eagerly remove it from the table.
+        MemoryElement* key =
+            NS_STATIC_CAST(MemoryElement*,
+                           NS_CONST_CAST(void*, (*hep)->key));
+
+        delete key;
+        delete set;
+
+        PL_HashTableRawRemove(mBindings, hep, *hep);
+    }
+
+    MatchSet::ConstIterator lastretraction = aRetractedMatches.Last();
+    for (MatchSet::ConstIterator retraction = aRetractedMatches.First(); retraction != lastretraction; ++retraction) {
+        Key key(retraction->mInstantiation, retraction->mRule);
+        PLHashEntry** hep = PL_HashTableRawLookup(mMatches, key.Hash(), &key);
+
+        NS_ASSERTION(hep && *hep, "mMatches corrupted");
+        if (!hep || !*hep)
+            continue;
+
+        MatchSet* set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+
+        for (MatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
+            if (match->mRule == retraction->mRule) {
+                set->Erase(match--);
+
+                // See if we've revealed another rule that's applicable
+                const MatchSet::Match* newmatch;
+                set->FindMatchWithHighestPriority(&newmatch);
+
+                if (newmatch)
+                    aNewMatches.Add(*newmatch);
+
+                break;
+            }
+        }
+
+        if (set->Empty()) {
+            Key* hashkey = NS_STATIC_CAST(Key*, NS_CONST_CAST(void*, (*hep)->key));
+            delete hashkey;
+            delete set;
+
+            PL_HashTableRawRemove(mMatches, hep, *hep);
+        }
+    }
+}
+
+
+PRIntn
+ConflictSet::RemoveMemoryElement(PLHashEntry* he, PRIntn, void*)
+{
+    MemoryElement* element =
+        NS_STATIC_CAST(MemoryElement*, NS_CONST_CAST(void*, he->key));
+
+    delete element;
+
+    MatchSet* matches =
+        NS_STATIC_CAST(MatchSet*, he->value);
+
+    delete matches;
+
+    return HT_ENUMERATE_REMOVE;
+}
+
+
+PRIntn
+ConflictSet::RemoveMatch(PLHashEntry* he, PRIntn, void*)
+{
+    Key* key = NS_STATIC_CAST(Key*, NS_CONST_CAST(void*, he->key));
+
+    delete key;
+
+    MatchSet* matches =
+        NS_STATIC_CAST(MatchSet*, he->value);
+
+    delete matches;
+
+    return HT_ENUMERATE_REMOVE;
+}
+
+void
+ConflictSet::Clear()
+{
+    PL_HashTableEnumerateEntries(mBindings, RemoveMemoryElement, nsnull);
+    PL_HashTableEnumerateEntries(mMatches, RemoveMatch, nsnull);
+}
+
+PLHashNumber
+ConflictSet::HashKey(const void* aKey)
+{
+    const Key* key = NS_STATIC_CAST(const Key*, aKey);
+    return key->Hash();
+}
+
+PRIntn
+ConflictSet::CompareKeys(const void* aLeft, const void* aRight)
+{
+    const Key* left  = NS_STATIC_CAST(const Key*, aLeft);
+    const Key* right = NS_STATIC_CAST(const Key*, aRight);
+    return *left == *right;
+}
+
+PLHashNumber
+ConflictSet::HashMemoryElement(const void* aMemoryElement)
+{
+    const MemoryElement* element =
+        NS_STATIC_CAST(const MemoryElement*, aMemoryElement);
+
+    return element->Hash();
+}
+
+PRIntn
+ConflictSet::CompareMemoryElements(const void* aLeft, const void* aRight)
+{
+    const MemoryElement* left =
+        NS_STATIC_CAST(const MemoryElement*, aLeft);
+
+    const MemoryElement* right =
+        NS_STATIC_CAST(const MemoryElement*, aRight);
+
+    return *left == *right;
+}
+
+//----------------------------------------------------------------------
+
+/**
+ * A leaf-level node in the rule network. If any instantiations propogate
+ * to this node, then we know we've matched a rule.
+ */
+class InstantiationNode : public ReteNode
+{
+public:
+    InstantiationNode(Rule* aRule, ConflictSet* aConflictSet)
+        : mRule(aRule), mConflictSet(aConflictSet) {}
+        
+    // "downward" propogations
+    virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
+
+protected:
+    Rule*        mRule;
+    ConflictSet* mConflictSet;
+};
+
+
+nsresult
+InstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
+{
+    // If we get here, we've matched the rule associated with this
+    // node. Add it to the conflict set, and the set of new <content,
+    // member> pairs.
+    KeySet* keyset = NS_STATIC_CAST(KeySet*, aClosure);
+
+    InstantiationSet::ConstIterator last = aInstantiations.Last();
+    for (InstantiationSet::ConstIterator inst = aInstantiations.First(); inst != last; ++inst) {
+        mConflictSet->Add(*inst, mRule);
+        keyset->Add(Key(*inst, mRule));
+    }
+    
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+/**
+ * An abstract base class for all of the RDF-related tests. This interface
+ * allows us to iterate over all of the RDF tests to find the one in the
+ * network that is apropos for a newly-added assertion.
+ */
+class RDFTestNode : public TestNode
+{
+public:
+    RDFTestNode(InnerNode* aParent)
+        : TestNode(aParent) {}
+
+    virtual PRBool CanPropogate(nsIRDFResource* aSource,
+                                nsIRDFResource* aProperty,
+                                nsIRDFNode* aTarget,
+                                Instantiation& aInitialBindings) const = 0;
+
+    virtual void Retract(ConflictSet& aConflictSet,
+                         nsIRDFResource* aSource,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aTarget,
+                         MatchSet& aFirings,
+                         MatchSet& aRetractions) const = 0;
+};
+
 
 //----------------------------------------------------------------------
 //
@@ -156,20 +1184,16 @@ public:
 
     // Implementation methods
     nsresult
-    FindTemplate(nsIContent* aElement,
-                 nsIRDFResource* aProperty,
-                 nsIRDFResource* aChild,
-                 nsIContent **theTemplate);
+    InitializeRuleNetwork(InnerNode** aChildNode);
 
     nsresult
-    IsTemplateRuleMatch(nsIContent* aElement,
-                        nsIRDFResource* aProperty,
-                        nsIRDFResource* aChild,
-                        nsIContent *aRule,
-                        PRBool *isMatch);
+    ComputeContainmentProperties();
 
     nsresult
-    TagMatches(nsIContent* aElement, nsString& aTag, PRBool* aResult);
+    CompileRules();
+
+    nsresult
+    CompileRule(nsIContent* aRule, PRInt32 aPriorty, InnerNode* aParentNode);
 
     PRBool
     IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
@@ -191,28 +1215,39 @@ public:
     nsresult
     AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDFResource* aResource, nsIContent* aRealNode);
 
-    nsresult
-    CreateWidgetItem(nsIContent* aElement,
-                     nsIRDFResource* aProperty,
-                     nsIRDFResource* aChild,
-                     PRBool aNotify,
-                     nsIContent** aContainer,
-                     PRInt32* aNewIndexInContainer);
+    enum UpdateAction { eSet, eClear };
 
-    enum eUpdateAction { eSet, eClear };
+    nsresult
+    SynchronizeAll(nsIRDFResource* aSource,
+                   nsIRDFResource* aProperty,
+                   nsIRDFNode* aTarget,
+                   UpdateAction aAction);
 
     nsresult
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
                              nsIContent* aRealNode,
-                             eUpdateAction aAction,
+                             UpdateAction aAction,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aValue);
 
     nsresult
-    RemoveWidgetItem(nsIContent* aElement,
-                     nsIRDFResource* aProperty,
-                     nsIRDFResource* aValue,
-                     PRBool aNotify);
+    Propogate(nsIRDFResource* aSource,
+              nsIRDFResource* aProperty,
+              nsIRDFNode* aTarget,
+              KeySet& aNewKeys);
+
+    nsresult
+    FireNewlyMatchedRules(const KeySet& aNewKeys);
+
+    nsresult
+    Retract(nsIRDFResource* aSource,
+            nsIRDFResource* aProperty,
+            nsIRDFNode* aTarget);
+
+    nsresult
+    RemoveMember(nsIContent* aContainerElement,
+                 nsIRDFResource* aMember,
+                 PRBool aNotify);
 
     nsresult
     CreateTemplateAndContainerContents(nsIContent* aElement,
@@ -257,23 +1292,11 @@ public:
     PRBool
     IsElementInWidget(nsIContent* aElement);
    
-    nsresult
-    GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
-
     nsresult RemoveGeneratedContent(nsIContent* aElement);
 
     // XXX. Urg. Hack until layout can batch reflows. See bug 10818.
     PRBool
     IsTreeWidgetItem(nsIContent* aElement);
-
-    PRBool
-    IsReflowScheduled();
-
-    nsresult
-    ScheduleReflow();
-
-    static void
-    ForceTreeReflow(nsITimer* aTimer, void* aClosure);
 
     static void
     GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
@@ -295,16 +1318,15 @@ public:
 #ifdef PR_LOGGING
     nsresult
     Log(const char* aOperation,
-        nsIContent* aElement, 
         nsIRDFResource* aSource,
         nsIRDFResource* aProperty,
         nsIRDFNode* aTarget);
 
-#define LOG(_op, _ele, _src, _prop, _targ) \
-    Log(_op, _ele, _src, _prop, _targ)
+#define LOG(_op, _src, _prop, _targ) \
+    Log(_op, _src, _prop, _targ)
 
 #else
-#define LOG(_op, _ele, _src, _prop, _targ)
+#define LOG(_op, _src, _prop, _targ)
 #endif
 
 protected:
@@ -321,10 +1343,19 @@ protected:
 
 	nsRDFSortState			sortState;
 
+    // For the rule network
+    PropertySet   mContainmentProperties;
+    PRBool        mRulesCompiled;
+    nsRuleNetwork mRules;
+    PRInt32       mContentVar;
+    PRInt32       mContainerVar;
+    PRInt32       mMemberVar;
+    ConflictSet   mConflictSet;
+    NodeSet       mRDFTests;
+
     // pseudo-constants
     static nsrefcnt gRefCnt;
     static nsIRDFService*         gRDFService;
-    static nsIRDFContainerUtils*  gRDFContainerUtils;
     static nsINameSpaceManager*   gNameSpaceManager;
     static nsIElementFactory*     gHTMLElementFactory;
     static nsIElementFactory*  gXMLElementFactory;
@@ -370,6 +1401,60 @@ protected:
 
     static nsString    trueStr;
     static nsString    falseStr;
+
+
+    class ContentIdTestNode : public TestNode
+    {
+    public:
+        ContentIdTestNode(InnerNode* aParent,
+                          nsIXULDocument* aDocument,
+                          nsIContent* aRoot,
+                          PRInt32 aContentVariable,
+                          PRInt32 aIdVariable)
+            : TestNode(aParent),
+              mDocument(aDocument),
+              mRoot(aRoot),
+              mContentVariable(aContentVariable),
+              mIdVariable(aIdVariable) {}
+
+        virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+
+        virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+
+        class Element : public MemoryElement {
+        public:
+            Element(nsIContent* aContent, nsIRDFResource* aID)
+                : mContent(aContent), mID(aID) {}
+
+            virtual const char* Type() const {
+                return "RDFGenericBuilderImpl::ContentIdTestNode::Element"; }
+
+            virtual PLHashNumber Hash() const {
+                return PLHashNumber(mContent.get()) >> 2; }
+
+            virtual PRBool Equals(const MemoryElement& aElement) const {
+                if (aElement.Type() == Type()) {
+                    const Element& element = NS_STATIC_CAST(const Element&, aElement);
+                    return mContent == element.mContent;
+                }
+                return PR_FALSE; }
+
+        virtual MemoryElement* Clone() const {
+            return new Element(mContent, mID); }
+
+        protected:
+            nsCOMPtr<nsIContent> mContent;
+            nsCOMPtr<nsIRDFResource> mID;
+        };
+
+    protected:
+        nsCOMPtr<nsIXULDocument> mDocument;
+        nsCOMPtr<nsIContent> mRoot;
+        PRInt32 mContentVariable;
+        PRInt32 mIdVariable;
+    };
+
+    friend class ContentIdTestNode;
 };
 
 //----------------------------------------------------------------------
@@ -409,7 +1494,6 @@ PRInt32  RDFGenericBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
 
 nsIRDFService*  RDFGenericBuilderImpl::gRDFService;
-nsIRDFContainerUtils* RDFGenericBuilderImpl::gRDFContainerUtils;
 nsINameSpaceManager* RDFGenericBuilderImpl::gNameSpaceManager;
 nsIElementFactory* RDFGenericBuilderImpl::gHTMLElementFactory;
 nsIElementFactory* RDFGenericBuilderImpl::gXMLElementFactory;
@@ -422,6 +1506,1033 @@ nsIRDFResource* RDFGenericBuilderImpl::kNC_Folder;
 nsIRDFResource* RDFGenericBuilderImpl::kRDF_child;
 nsIRDFResource* RDFGenericBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFGenericBuilderImpl::kXUL_element;
+
+static nsIRDFContainerUtils*  gRDFContainerUtils;
+
+//----------------------------------------------------------------------
+
+class RDFPropertyTestNode : public RDFTestNode
+{
+public:
+    // Both source and target unbound (?source ^property ?target)
+    RDFPropertyTestNode(InnerNode* aParent,
+                        nsIRDFDataSource* aDataSource,
+                        PRInt32 aSourceVariable,
+                        nsIRDFResource* aProperty,
+                        PRInt32 aTargetVariable)
+        : RDFTestNode(aParent),
+          mDataSource(aDataSource),
+          mSourceVariable(aSourceVariable),
+          mSource(nsnull),
+          mProperty(aProperty),
+          mTargetVariable(aTargetVariable),
+          mTarget(nsnull) {}
+
+    // Source bound, target unbound (source ^property ?target)
+    RDFPropertyTestNode(InnerNode* aParent,
+                        nsIRDFDataSource* aDataSource,
+                        nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        PRInt32 aTargetVariable)
+        : RDFTestNode(aParent),
+          mDataSource(aDataSource),
+          mSourceVariable(0),
+          mSource(aSource),
+          mProperty(aProperty),
+          mTargetVariable(aTargetVariable),
+          mTarget(nsnull) {}
+
+    // Source unbound, target bound (?source ^property target)
+    RDFPropertyTestNode(InnerNode* aParent,
+                        nsIRDFDataSource* aDataSource,
+                        PRInt32 aSourceVariable,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aTarget)
+        : RDFTestNode(aParent),
+          mDataSource(aDataSource),
+          mSourceVariable(aSourceVariable),
+          mSource(nsnull),
+          mProperty(aProperty),
+          mTargetVariable(0),
+          mTarget(aTarget) {}
+
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+
+    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+
+    virtual PRBool
+    CanPropogate(nsIRDFResource* aSource,
+                 nsIRDFResource* aProperty,
+                 nsIRDFNode* aTarget,
+                 Instantiation& aInitialBindings) const;
+
+    virtual void
+    Retract(ConflictSet& aConflictSet,
+            nsIRDFResource* aSource,
+            nsIRDFResource* aProperty,
+            nsIRDFNode* aTarget,
+            MatchSet& aFirings,
+            MatchSet& aRetractions) const;
+
+
+    class Element : public MemoryElement {
+    public:
+        Element(nsIRDFResource* aSource,
+                nsIRDFResource* aProperty,
+                nsIRDFNode* aTarget)
+            : mSource(aSource),
+              mProperty(aProperty),
+              mTarget(aTarget) {}
+
+        virtual const char* Type() const {
+            return "RDFPropertyTestNode::Element"; }
+
+        virtual PLHashNumber Hash() const {
+            return PLHashNumber(mSource.get()) ^
+                (PLHashNumber(mProperty.get()) >> 4) ^
+                (PLHashNumber(mTarget.get()) >> 12); }
+
+        virtual PRBool Equals(const MemoryElement& aElement) const {
+            if (aElement.Type() == Type()) {
+                const Element& element = NS_STATIC_CAST(const Element&, aElement);
+                return mSource == element.mSource
+                    && mProperty == element.mProperty
+                    && mTarget == element.mTarget;
+            }
+            return PR_FALSE; }
+
+        virtual MemoryElement* Clone() const {
+            return new Element(mSource, mProperty, mTarget); }
+
+    protected:
+        nsCOMPtr<nsIRDFResource> mSource;
+        nsCOMPtr<nsIRDFResource> mProperty;
+        nsCOMPtr<nsIRDFNode> mTarget;
+    };
+
+protected:
+    nsCOMPtr<nsIRDFDataSource> mDataSource;
+    PRInt32                  mSourceVariable;
+    nsCOMPtr<nsIRDFResource> mSource;
+    nsCOMPtr<nsIRDFResource> mProperty;
+    PRInt32                  mTargetVariable;
+    nsCOMPtr<nsIRDFNode>     mTarget;
+};
+
+
+nsresult
+RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+{
+    nsresult rv;
+
+    InstantiationSet::Iterator last = aInstantiations.Last();
+    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
+        PRBool hasSourceBinding;
+        Value sourceValue;
+
+        if (mSource) {
+            hasSourceBinding = PR_TRUE;
+            sourceValue = mSource;
+        }
+        else {
+            hasSourceBinding = inst->mBindings.GetBindingFor(mSourceVariable, &sourceValue);
+        }
+
+        PRBool hasTargetBinding;
+        Value targetValue;
+
+        if (mTarget) {
+            hasTargetBinding = PR_TRUE;
+            targetValue = mTarget;
+        }
+        else {
+            hasTargetBinding = inst->mBindings.GetBindingFor(mTargetVariable, &targetValue);
+        }
+
+        if (hasSourceBinding && hasTargetBinding) {
+            // it's a consistency check. see if we have a binding that is consistent
+            PRBool hasAssertion;
+            rv = mDataSource->HasAssertion(VALUE_TO_IRDFRESOURCE(sourceValue),
+                                           mProperty,
+                                           VALUE_TO_IRDFNODE(targetValue),
+                                           PR_TRUE,
+                                           &hasAssertion);
+            if (NS_FAILED(rv)) return rv;
+
+            if (hasAssertion) {
+                // it's consistent.
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(sourceValue),
+                                                       mProperty,
+                                                       VALUE_TO_IRDFNODE(targetValue)));
+            }
+            else {
+                // it's inconsistent. remove it.
+                aInstantiations.Erase(inst--);
+            }
+        }
+        else if ((hasSourceBinding && ! hasTargetBinding) ||
+                 (! hasSourceBinding && hasTargetBinding)) {
+            // it's an open ended query on the source or
+            // target. figure out what matches and add as a
+            // cross-product.
+            nsCOMPtr<nsISimpleEnumerator> results;
+            if (hasSourceBinding) {
+                rv = mDataSource->GetTargets(VALUE_TO_IRDFRESOURCE(sourceValue),
+                                             mProperty,
+                                             PR_TRUE,
+                                             getter_AddRefs(results));
+            }
+            else {
+                rv = mDataSource->GetSources(mProperty,
+                                             VALUE_TO_IRDFNODE(targetValue),
+                                             PR_TRUE,
+                                             getter_AddRefs(results));
+                if (NS_FAILED(rv)) return rv;
+            }
+
+            while (1) {
+                PRBool hasMore;
+                rv = results->HasMoreElements(&hasMore);
+                if (NS_FAILED(rv)) return rv;
+
+                if (! hasMore)
+                    break;
+
+                nsCOMPtr<nsISupports> isupports;
+                rv = results->GetNext(getter_AddRefs(isupports));
+                if (NS_FAILED(rv)) return rv;
+
+                PRInt32 variable;
+                Value value;
+
+                if (hasSourceBinding) {
+                    variable = mTargetVariable;
+
+                    nsCOMPtr<nsIRDFNode> target = do_QueryInterface(isupports);
+                    NS_ASSERTION(target != nsnull, "target is not an nsIRDFNode");
+                    if (! target) continue;
+
+                    value = target.get();
+                }
+                else {
+                    variable = mSourceVariable;
+
+                    nsCOMPtr<nsIRDFResource> source = do_QueryInterface(isupports);
+                    NS_ASSERTION(source != nsnull, "source is not an nsIRDFResource");
+                    if (! source) continue;
+
+                    value = source.get();
+                }
+
+                // Copy the original instantiation, and add it to the
+                // instantiation set with the new binding that we've
+                // introduced. Ownership will be transferred to the
+                Instantiation newinst = *inst;
+                newinst.AddBinding(variable, value);
+                newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(sourceValue),
+                                                         mProperty,
+                                                         VALUE_TO_IRDFRESOURCE(targetValue)));
+                aInstantiations.Insert(inst, newinst);
+            }
+
+            // finally, remove the "under specified" instantiation.
+            aInstantiations.Erase(inst--);
+        }
+        else {
+            // Neither source nor target binding!
+            NS_ERROR("can't do open ended queries like that!");
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFPropertyTestNode::GetAncestorVariables(VariableSet& aVariables) const
+{
+    nsresult rv;
+
+    if (mSourceVariable) {
+        rv = aVariables.Add(mSourceVariable);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mTargetVariable) {
+        rv = aVariables.Add(mTargetVariable);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return TestNode::GetAncestorVariables(aVariables);
+}
+
+PRBool
+RDFPropertyTestNode::CanPropogate(nsIRDFResource* aSource,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFNode* aTarget,
+                                  Instantiation& aInitialBindings) const
+{
+    if ((mProperty.get() != aProperty) ||
+        (mSource && mSource.get() != aSource) ||
+        (mTarget && mTarget.get() != aTarget)) {
+        return PR_FALSE;
+    }
+
+    if (mSourceVariable) {
+        aInitialBindings.AddBinding(mSourceVariable, Value(aSource));
+    }
+
+    if (mTargetVariable) {
+        aInitialBindings.AddBinding(mTargetVariable, Value(aTarget));
+    }
+
+    return PR_TRUE;
+}
+
+void
+RDFPropertyTestNode::Retract(ConflictSet& aConflictSet,
+                             nsIRDFResource* aSource,
+                             nsIRDFResource* aProperty,
+                             nsIRDFNode* aTarget,
+                             MatchSet& aFirings,
+                             MatchSet& aRetractions) const
+{
+    if (aProperty == mProperty) {
+        aConflictSet.Remove(Element(aSource, aProperty, aTarget), aFirings, aRetractions);
+    }
+}
+
+
+//----------------------------------------------------------------------
+
+class RDFContainerMemberTestNode : public RDFTestNode
+{
+public:
+    RDFContainerMemberTestNode(InnerNode* aParent,
+                               nsIRDFDataSource* aDataSource,
+                               const PropertySet& aMembershipProperties,
+                               PRInt32 aContainerVariable,
+                               PRInt32 aMemberVariable)
+        : RDFTestNode(aParent),
+          mDataSource(aDataSource),
+          mMembershipProperties(aMembershipProperties),
+          mContainerVariable(aContainerVariable),
+          mMemberVariable(aMemberVariable) {}
+
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+
+    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+
+    virtual PRBool
+    CanPropogate(nsIRDFResource* aSource,
+                 nsIRDFResource* aProperty,
+                 nsIRDFNode* aTarget,
+                 Instantiation& aInitialBindings) const;
+
+    virtual void
+    Retract(ConflictSet& aConflictSet,
+            nsIRDFResource* aSource,
+            nsIRDFResource* aProperty,
+            nsIRDFNode* aTarget,
+            MatchSet& aFirings,
+            MatchSet& aRetractions) const;
+
+    class Element : public MemoryElement {
+    public:
+        Element(nsIRDFResource* aContainer,
+                nsIRDFNode* aMember)
+            : mContainer(aContainer),
+              mMember(aMember) {}
+
+        virtual const char* Type() const {
+            return "RDFContainerMemberTestNode::Element"; }
+
+        virtual PLHashNumber Hash() const {
+            return PLHashNumber(mContainer.get()) ^
+                (PLHashNumber(mMember.get()) >> 12); }
+
+        virtual PRBool Equals(const MemoryElement& aElement) const {
+            if (aElement.Type() == Type()) {
+                const Element& element = NS_STATIC_CAST(const Element&, aElement);
+                return mContainer == element.mContainer && mMember == element.mMember;
+            }
+            return PR_FALSE; }
+
+        virtual MemoryElement* Clone() const {
+            return new Element(mContainer, mMember); }
+
+    protected:
+        nsCOMPtr<nsIRDFResource> mContainer;
+        nsCOMPtr<nsIRDFNode> mMember;
+    };
+
+protected:
+    nsCOMPtr<nsIRDFDataSource> mDataSource;
+    const PropertySet& mMembershipProperties;
+    PRInt32 mContainerVariable;
+    PRInt32 mMemberVariable;
+};
+
+nsresult
+RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+{
+    // XXX Uh, factor me, please!
+    nsresult rv;
+
+    InstantiationSet::Iterator last = aInstantiations.Last();
+    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
+        PRBool hasContainerBinding;
+        Value containerValue;
+        hasContainerBinding = inst->mBindings.GetBindingFor(mContainerVariable, &containerValue);
+
+        nsCOMPtr<nsIRDFContainer> rdfcontainer;
+
+        if (hasContainerBinding) {
+            // If we have a container binding, then see if the
+            // container is an RDF container (bag, seq, alt), and if
+            // so, wrap it.
+            PRBool isRDFContainer;
+            rv = gRDFContainerUtils->IsContainer(mDataSource,
+                                                 VALUE_TO_IRDFRESOURCE(containerValue),
+                                                 &isRDFContainer);
+            if (NS_FAILED(rv)) return rv;
+
+            if (isRDFContainer) {
+                rv = NS_NewRDFContainer(getter_AddRefs(rdfcontainer));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = rdfcontainer->Init(mDataSource, VALUE_TO_IRDFRESOURCE(containerValue));
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+
+        PRBool hasMemberBinding;
+        Value memberValue;
+        hasMemberBinding = inst->mBindings.GetBindingFor(mMemberVariable, &memberValue);
+
+        if (hasContainerBinding && hasMemberBinding) {
+            // it's a consistency check. see if we have a binding that is consistent
+            PRBool isconsistent = PR_FALSE;
+
+            if (rdfcontainer) {
+                // RDF containers are easy. Just use the container API.
+                PRInt32 index;
+                rv = rdfcontainer->IndexOf(VALUE_TO_IRDFRESOURCE(memberValue), &index);
+                if (NS_FAILED(rv)) return rv;
+
+                if (index >= 0)
+                    isconsistent = PR_TRUE;
+            }
+
+            // XXXwaterson oof. if we *are* an RDF container, why do
+            // we still need to grovel through all the containment
+            // properties if the thing we're looking for wasn't there?
+
+            if (! isconsistent) {
+                // Othewise, we'll need to grovel through the
+                // membership properties to see if we have an
+                // assertion that indicates membership.
+                for (PropertySet::ConstIterator property = mMembershipProperties.First();
+                     property != mMembershipProperties.Last();
+                     ++property) {
+                    PRBool hasAssertion;
+                    rv = mDataSource->HasAssertion(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                   *property,
+                                                   VALUE_TO_IRDFNODE(memberValue),
+                                                   PR_TRUE,
+                                                   &hasAssertion);
+                    if (NS_FAILED(rv)) return rv;
+
+                    if (hasAssertion) {
+                        // it's consistent. leave it in the set and we'll
+                        // run it up to our parent.
+                        isconsistent = PR_TRUE;
+                        break;
+                    }
+                }
+            }
+
+            if (isconsistent) {
+                // Add a memory element to our set-of-support.
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                       VALUE_TO_IRDFNODE(memberValue)));
+            }
+            else {
+                // it's inconsistent. remove it.
+                aInstantiations.Erase(inst--);
+            }
+
+            // We're done, go on to the next instantiation
+            continue;
+        }
+
+        if (hasContainerBinding && rdfcontainer) {
+            // We've got a container binding, and the container is
+            // bound to an RDF container. Add each member as a new
+            // instantiation.
+            nsCOMPtr<nsISimpleEnumerator> elements;
+            rv = rdfcontainer->GetElements(getter_AddRefs(elements));
+            if (NS_FAILED(rv)) return rv;
+
+            while (1) {
+                PRBool hasmore;
+                rv = elements->HasMoreElements(&hasmore);
+                if (NS_FAILED(rv)) return rv;
+
+                if (! hasmore)
+                    break;
+
+                nsCOMPtr<nsISupports> isupports;
+                rv = elements->GetNext(getter_AddRefs(isupports));
+                if (NS_FAILED(rv)) return rv;
+
+                nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
+                if (! node)
+                    return NS_ERROR_UNEXPECTED;
+
+                Instantiation newinst = *inst;
+                newinst.AddBinding(mMemberVariable, Value(node.get()));
+                newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                         node));
+                aInstantiations.Insert(inst, newinst);
+            }
+        }
+
+        if (hasMemberBinding) {
+            // Oh, this is so nasty. If we have a member binding, then
+            // grovel through each one of our inbound arcs to see if
+            // any of them are ordinal properties (like an RDF
+            // container might have). If so, walk it backwards to get
+            // the container we're in.
+            nsCOMPtr<nsISimpleEnumerator> arcsin;
+            rv = mDataSource->ArcLabelsIn(VALUE_TO_IRDFNODE(memberValue), getter_AddRefs(arcsin));
+            if (NS_FAILED(rv)) return rv;
+
+            while (1) {
+                nsCOMPtr<nsIRDFResource> property;
+
+                {
+                    PRBool hasmore;
+                    rv = arcsin->HasMoreElements(&hasmore);
+                    if (NS_FAILED(rv)) return rv;
+
+                    if (! hasmore)
+                        break;
+
+                    nsCOMPtr<nsISupports> isupports;
+                    rv = arcsin->GetNext(getter_AddRefs(isupports));
+                    if (NS_FAILED(rv)) return rv;
+
+                    property = do_QueryInterface(isupports);
+                    if (! property)
+                        return NS_ERROR_UNEXPECTED;
+                }
+
+                // Ordinal properties automagically indicate container
+                // membership as far as we're concerned. Note that
+                // we're *only* concerned with ordinal properties
+                // here: the next block will worry about the other
+                // membership properties.
+                PRBool isordinal;
+                rv = gRDFContainerUtils->IsOrdinalProperty(property, &isordinal);
+                if (NS_FAILED(rv)) return rv;
+
+                if (isordinal) {
+                    // If we get here, we've found a property that
+                    // indicates container membership leading *into* a
+                    // member node. Find all the people that point to
+                    // it, and call them containers.
+                    nsCOMPtr<nsISimpleEnumerator> sources;
+                    rv = mDataSource->GetSources(property, VALUE_TO_IRDFNODE(memberValue), PR_TRUE,
+                                                 getter_AddRefs(sources));
+                    if (NS_FAILED(rv)) return rv;
+
+                    while (1) {
+                        PRBool hasmore;
+                        rv = sources->HasMoreElements(&hasmore);
+                        if (NS_FAILED(rv)) return rv;
+
+                        if (! hasmore)
+                            break;
+
+                        nsCOMPtr<nsISupports> isupports;
+                        rv = sources->GetNext(getter_AddRefs(isupports));
+                        if (NS_FAILED(rv)) return rv;
+
+                        nsCOMPtr<nsIRDFResource> source = do_QueryInterface(isupports);
+                        if (! source)
+                            return NS_ERROR_UNEXPECTED;
+
+                        // Add a new instantiation
+                        Instantiation newinst = *inst;
+                        newinst.AddBinding(mContainerVariable, Value(source.get()));
+                        newinst.AddSupportingElement(new Element(source, VALUE_TO_IRDFNODE(memberValue)));
+                        aInstantiations.Insert(inst, newinst);
+                    }
+                }
+            }
+        }
+
+        if ((hasContainerBinding && ! hasMemberBinding) ||
+            (! hasContainerBinding && hasMemberBinding)) {
+            // it's an open ended query on the container or member. go
+            // through our containment properties to see if anything
+            // applies.
+            for (PropertySet::ConstIterator property = mMembershipProperties.First();
+                 property != mMembershipProperties.Last();
+                 ++property) {
+                nsCOMPtr<nsISimpleEnumerator> results;
+                if (hasContainerBinding) {
+                    rv = mDataSource->GetTargets(VALUE_TO_IRDFRESOURCE(containerValue), *property, PR_TRUE,
+                                                 getter_AddRefs(results));
+                }
+                else {
+                    rv = mDataSource->GetSources(*property, VALUE_TO_IRDFNODE(memberValue), PR_TRUE,
+                                                 getter_AddRefs(results));
+                }
+                if (NS_FAILED(rv)) return rv;
+
+                while (1) {
+                    PRBool hasmore;
+                    rv = results->HasMoreElements(&hasmore);
+                    if (NS_FAILED(rv)) return rv;
+
+                    if (! hasmore)
+                        break;
+
+                    nsCOMPtr<nsISupports> isupports;
+                    rv = results->GetNext(getter_AddRefs(isupports));
+                    if (NS_FAILED(rv)) return rv;
+
+                    PRInt32 variable;
+                    Value value;
+
+                    if (hasContainerBinding) {
+                        variable = mMemberVariable;
+
+                        nsCOMPtr<nsIRDFNode> member = do_QueryInterface(isupports);
+                        NS_ASSERTION(member != nsnull, "member is not an nsIRDFNode");
+                        if (! member) continue;
+
+                        value = member.get();
+                    }
+                    else {
+                        variable = mContainerVariable;
+
+                        nsCOMPtr<nsIRDFResource> container = do_QueryInterface(isupports);
+                        NS_ASSERTION(container != nsnull, "container is not an nsIRDFResource");
+                        if (! container) continue;
+
+                        value = container.get();
+                    }
+
+                    // Copy the original instantiation, and add it to the
+                    // instantiation set with the new binding that we've
+                    // introduced. Ownership will be transferred to the
+                    Instantiation newinst = *inst;
+                    newinst.AddBinding(variable, value);
+                    if (hasContainerBinding) {
+                        newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                                 VALUE_TO_IRDFNODE(value)));
+                    }
+                    else {
+                        newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(value),
+                                                                 VALUE_TO_IRDFNODE(memberValue)));
+                    }
+                    aInstantiations.Insert(inst, newinst);
+                }
+            }
+        }
+
+        if (! hasContainerBinding && ! hasMemberBinding) {
+            // Neither container nor member binding!
+            NS_ERROR("can't do open ended queries like that!");
+            return NS_ERROR_UNEXPECTED;
+        }
+
+        // finally, remove the "under specified" instantiation.
+        aInstantiations.Erase(inst--);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+RDFContainerMemberTestNode::GetAncestorVariables(VariableSet& aVariables) const
+{
+    nsresult rv;
+
+    rv = aVariables.Add(mContainerVariable);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aVariables.Add(mMemberVariable);
+    if (NS_FAILED(rv)) return rv;
+
+    return TestNode::GetAncestorVariables(aVariables);
+}
+
+
+PRBool
+RDFContainerMemberTestNode::CanPropogate(nsIRDFResource* aSource,
+                                         nsIRDFResource* aProperty,
+                                         nsIRDFNode* aTarget,
+                                         Instantiation& aInitialBindings) const
+{
+    nsresult rv;
+
+    PRBool canpropogate = PR_FALSE;
+
+    // We can certainly propogate ordinal properties
+    rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &canpropogate);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    if (! canpropogate) {
+        canpropogate = mMembershipProperties.Contains(aProperty);
+    }
+
+    if (canpropogate) {
+        aInitialBindings.AddBinding(mContainerVariable, Value(aSource));
+        aInitialBindings.AddBinding(mMemberVariable, Value(aTarget));
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+void
+RDFContainerMemberTestNode::Retract(ConflictSet& aConflictSet,
+                                    nsIRDFResource* aSource,
+                                    nsIRDFResource* aProperty,
+                                    nsIRDFNode* aTarget,
+                                    MatchSet& aFirings,
+                                    MatchSet& aRetractions) const
+{
+    PRBool canretract = PR_FALSE;
+
+    // We can certainly retract ordinal properties
+    nsresult rv;
+    rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &canretract);
+    if (NS_FAILED(rv)) return;
+
+    if (! canretract) {
+        canretract = mMembershipProperties.Contains(aProperty);
+    }
+
+    if (canretract) {
+        aConflictSet.Remove(Element(aSource, aTarget), aFirings, aRetractions);
+    }
+}
+
+//----------------------------------------------------------------------
+
+class RDFContainerInstanceTestNode : public RDFTestNode
+{
+public:
+    enum Test { eFalse, eTrue, eDontCare };
+
+    RDFContainerInstanceTestNode(InnerNode* aParent,
+                                 nsIRDFDataSource* aDataSource,
+                                 const PropertySet& aMembershipProperties,
+                                 PRInt32 aContainerVariable,
+                                 Test aContainer,
+                                 Test aEmpty)
+        : RDFTestNode(aParent),
+          mDataSource(aDataSource),
+          mMembershipProperties(aMembershipProperties),
+          mContainerVariable(aContainerVariable),
+          mContainer(aContainer),
+          mEmpty(aEmpty) {}
+
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+
+    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+
+    virtual PRBool
+    CanPropogate(nsIRDFResource* aSource,
+                 nsIRDFResource* aProperty,
+                 nsIRDFNode* aTarget,
+                 Instantiation& aInitialBindings) const;
+
+    virtual void
+    Retract(ConflictSet& aConflictSet,
+            nsIRDFResource* aSource,
+            nsIRDFResource* aProperty,
+            nsIRDFNode* aTarget,
+            MatchSet& aFirings,
+            MatchSet& aRetractions) const;
+
+
+    class Element : public MemoryElement {
+    public:
+        Element(nsIRDFResource* aContainer,
+                Test aContainerTest,
+                Test aEmptyTest)
+            : mContainer(aContainer),
+              mContainerTest(aContainerTest),
+              mEmptyTest(aEmptyTest) {}
+
+        virtual const char* Type() const {
+            return "RDFContainerInstanceTestNode::Element"; }
+
+        virtual PLHashNumber Hash() const {
+            return (PLHashNumber(mContainer.get()) >> 4) ^
+                PLHashNumber(mContainerTest) ^
+                (PLHashNumber(mEmptyTest) << 4); }
+
+        virtual PRBool Equals(const MemoryElement& aElement) const {
+            if (aElement.Type() == Type()) {
+                const Element& element = NS_STATIC_CAST(const Element&, aElement);
+                return mContainer == element.mContainer
+                    && mContainerTest == element.mContainerTest
+                    && mEmptyTest == element.mEmptyTest;
+            }
+            return PR_FALSE; }
+
+        virtual MemoryElement* Clone() const {
+            return new Element(mContainer, mContainerTest, mEmptyTest); }
+
+    protected:
+        nsCOMPtr<nsIRDFResource> mContainer;
+        Test mContainerTest;
+        Test mEmptyTest;
+    };
+
+protected:
+    nsCOMPtr<nsIRDFDataSource> mDataSource;
+    const PropertySet& mMembershipProperties;
+    PRInt32 mContainerVariable;
+    Test mContainer;
+    Test mEmpty;
+};
+
+nsresult
+RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+{
+    nsresult rv;
+
+    InstantiationSet::Iterator last = aInstantiations.Last();
+    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
+        Value value;
+        if (! inst->mBindings.GetBindingFor(mContainerVariable, &value)) {
+            NS_ERROR("can't do unbounded container testing");
+            return NS_ERROR_UNEXPECTED;
+        }
+
+        nsCOMPtr<nsIRDFContainer> rdfcontainer;
+
+        PRBool isRDFContainer;
+        rv = gRDFContainerUtils->IsContainer(mDataSource, VALUE_TO_IRDFRESOURCE(value), &isRDFContainer);
+        if (NS_FAILED(rv)) return rv;
+
+        // If they've asked us to test for emptiness, do that first
+        // because it doesn't require us to create any enumerators.
+        if (mEmpty != eDontCare) {
+            Test empty;
+
+            if (isRDFContainer) {
+                // It's an RDF container. Use the container utilities
+                // to deduce what's in it.
+                rv = NS_NewRDFContainer(getter_AddRefs(rdfcontainer));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = rdfcontainer->Init(mDataSource, VALUE_TO_IRDFRESOURCE(value));
+                if (NS_FAILED(rv)) return rv;
+
+                PRInt32 count;
+                rv = rdfcontainer->GetCount(&count);
+                if (NS_FAILED(rv)) return rv;
+
+                empty = (count == 0) ? eTrue : eFalse;
+            }
+            else {
+                empty = eTrue;
+
+                for (PropertySet::ConstIterator property = mMembershipProperties.First();
+                     property != mMembershipProperties.Last();
+                     ++property) {
+                    nsCOMPtr<nsIRDFNode> target;
+                    rv = mDataSource->GetTarget(VALUE_TO_IRDFRESOURCE(value), *property, PR_TRUE, getter_AddRefs(target));
+                    if (NS_FAILED(rv)) return rv;
+
+                    if (target != nsnull) {
+                        // bingo. we found one.
+                        empty = eFalse;
+                        break;
+                    }
+                }
+            }
+
+            if (empty == mEmpty) {
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(value),
+                                                       mContainer, mEmpty));
+            }
+            else {
+                aInstantiations.Erase(inst--);
+            }
+        }
+        else if (mContainer != eDontCare) {
+            // We didn't care about emptiness, only containerhood.
+            Test container;
+
+            if (isRDFContainer) {
+                // Wow, this is easy.
+                container = eTrue;
+            }
+            else {
+                // Okay, suckage. We need to look at all of the arcs
+                // leading out of the thing, and see if any of them
+                // are properties that are deemed as denoting
+                // containerhood.
+                container = eFalse;
+
+                nsCOMPtr<nsISimpleEnumerator> arcsout;
+                rv = mDataSource->ArcLabelsOut(VALUE_TO_IRDFRESOURCE(value), getter_AddRefs(arcsout));
+                if (NS_FAILED(rv)) return rv;
+
+                while (1) {
+                    PRBool hasmore;
+                    rv = arcsout->HasMoreElements(&hasmore);
+                    if (NS_FAILED(rv)) return rv;
+
+                    if (! hasmore)
+                        break;
+
+                    nsCOMPtr<nsISupports> isupports;
+                    rv = arcsout->GetNext(getter_AddRefs(isupports));
+                    if (NS_FAILED(rv)) return rv;
+
+                    nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+                    NS_ASSERTION(property != nsnull, "not a property");
+                    if (! property)
+                        return NS_ERROR_UNEXPECTED;
+
+                    if (mMembershipProperties.Contains(property)) {
+                        container = eTrue;
+                        break;
+                    }
+                }
+            }
+
+            if (container == mContainer) {
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(value),
+                                                       mContainer, mEmpty));
+            }
+            else {
+                aInstantiations.Erase(inst--);
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+RDFContainerInstanceTestNode::GetAncestorVariables(VariableSet& aVariables) const
+{
+    nsresult rv;
+
+    rv = aVariables.Add(mContainerVariable);
+    if (NS_FAILED(rv)) return rv;
+
+    return TestNode::GetAncestorVariables(aVariables);
+}
+
+PRBool
+RDFContainerInstanceTestNode::CanPropogate(nsIRDFResource* aSource,
+                                           nsIRDFResource* aProperty,
+                                           nsIRDFNode* aTarget,
+                                           Instantiation& aInitialBindings) const
+{
+    nsresult rv;
+
+    PRBool canpropogate = PR_FALSE;
+
+    // We can certainly propogate ordinal properties
+    rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &canpropogate);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    if (! canpropogate) {
+        canpropogate = mMembershipProperties.Contains(aProperty);
+    }
+
+    if (canpropogate) {
+        aInitialBindings.AddBinding(mContainerVariable, Value(aSource));
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+void
+RDFContainerInstanceTestNode::Retract(ConflictSet& aConflictSet,
+                                      nsIRDFResource* aSource,
+                                      nsIRDFResource* aProperty,
+                                      nsIRDFNode* aTarget,
+                                      MatchSet& aFirings,
+                                      MatchSet& aRetractions) const
+{
+    // XXXwaterson oof. complicated. figure this out.
+    if (0) {
+        aConflictSet.Remove(Element(aSource, mContainer, mEmpty), aFirings, aRetractions);
+    }
+}
+
+//----------------------------------------------------------------------
+
+class ContentTagTestNode : public TestNode
+{
+public:
+    ContentTagTestNode(InnerNode* aParent,
+                       PRInt32 aContentVariable,
+                       nsIAtom* aTag)
+        : TestNode(aParent),
+          mContentVariable(aContentVariable),
+          mTag(aTag) {}
+
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+
+    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+
+protected:
+    PRInt32 mContentVariable;
+    nsCOMPtr<nsIAtom> mTag;
+};
+
+nsresult
+ContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+    if (NS_FAILED(rv)) return rv;
+
+    InstantiationSet::Iterator last = aInstantiations.Last();
+    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
+        Value value;
+        if (! inst->mBindings.GetBindingFor(mContentVariable, &value)) {
+            NS_ERROR("cannot handle open-ended tag name query");
+            return NS_ERROR_UNEXPECTED;
+        }
+
+        nsCOMPtr<nsIAtom> tag;
+        rv = VALUE_TO_ICONTENT(value)->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        if (tag != mTag) {
+            aInstantiations.Erase(inst--);
+        }
+    }
+    
+    return NS_OK;
+}
+
+nsresult
+ContentTagTestNode::GetAncestorVariables(VariableSet& aVariables) const
+{
+    return NS_OK;
+}
 
 
 //----------------------------------------------------------------------
@@ -451,18 +2562,14 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
     : mDocument(nsnull),
       mDB(nsnull),
       mRoot(nsnull),
-      mTimer(nsnull)
+      mTimer(nsnull),
+      mRulesCompiled(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
 
 RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 {
-#ifdef DEBUG_REFS
-  --gInstanceCount;
-  fprintf(stdout, "%d - RDF: RDFGenericBuilderImpl\n", gInstanceCount);
-#endif
-
     // NS_IF_RELEASE(mDocument) not refcounted
 
     --gRefCnt;
@@ -815,21 +2922,8 @@ RDFGenericBuilderImpl::CloseContainer(nsIContent* aElement)
         // taking up space. Unfortunately, the tree widget currently
         // _relies_ on this behavior and will break if we don't do it
         // :-(.
-
-        // Find the <treechildren> beneath the <treeitem>...
-        nsCOMPtr<nsIContent> insertionpoint;
-        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(insertionpoint));
+        rv = RemoveGeneratedContent(aElement);
         if (NS_FAILED(rv)) return rv;
-
-        if (insertionpoint) {
-            // ...and blow away all the generated content.
-            PRInt32 count;
-            rv = insertionpoint->ChildCount(count);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = RemoveGeneratedContent(insertionpoint);
-            if (NS_FAILED(rv)) return rv;
-        }
 
         // Force the XUL element to remember that it needs to re-generate
         // its kids next time around.
@@ -923,6 +3017,141 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
 // nsIRDFObserver interface
 //
 
+nsresult
+RDFGenericBuilderImpl::Propogate(nsIRDFResource* aSource,
+                                 nsIRDFResource* aProperty,
+                                 nsIRDFNode* aTarget,
+                                 KeySet& aNewKeys)
+{
+    // Find the "dominating" tests that could be used to propogate the
+    // assertion we've just received. (Test A "dominates" test B if A
+    // is an ancestor of B in the rule network).
+    nsresult rv;
+
+    // XXXwaterson naive: O(n^2).
+    NodeSet::Iterator last = mRDFTests.Last();
+    for (NodeSet::Iterator i = mRDFTests.First(); i != last; ++i) {
+        RDFTestNode* rdftestnode = NS_STATIC_CAST(RDFTestNode*, *i);
+
+        Instantiation seed;
+        if (rdftestnode->CanPropogate(aSource, aProperty, aTarget, seed)) {
+            PRBool isdominated = PR_FALSE;
+
+            for (NodeSet::ConstIterator j = mRDFTests.First(); j != last; ++j) {
+                // we can't be dominated by ourself
+                if (j == i)
+                    continue;
+
+                if (rdftestnode->HasAncestor(*j)) {
+                    isdominated = PR_TRUE;
+                    break;
+                }
+            }
+
+            if (! isdominated) {
+                InstantiationSet instantiations;
+                instantiations.Append(seed);
+
+                rv = rdftestnode->Constrain(instantiations);
+                if (NS_FAILED(rv)) return rv;
+
+                if (! instantiations.Empty()) {
+                    rv = rdftestnode->Propogate(instantiations, &aNewKeys);
+                    if (NS_FAILED(rv)) return rv;
+                }
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFGenericBuilderImpl::FireNewlyMatchedRules(const KeySet& aNewKeys)
+{
+    // Iterate through newly added keys to determine which rules fired.
+    //
+    // XXXwaterson Unfortunately, this could also lead to retractions;
+    // e.g., (contaner ?a ^empty false) could become "unmatched". How
+    // to track those?
+    nsresult rv;
+
+    KeySet::ConstIterator last = aNewKeys.Last();
+    for (KeySet::ConstIterator key = aNewKeys.First(); key != last; ++key) {
+        const MatchSet* matches;
+        mConflictSet.GetMatches(*key, &matches);
+
+        NS_ASSERTION(matches != nsnull, "no matched rules for new key");
+        if (! matches)
+            continue;
+
+        const MatchSet::Match* bestmatch;
+        rv = matches->FindMatchWithHighestPriority(&bestmatch);
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(bestmatch != nsnull, "no matches in match set");
+        if (! bestmatch)
+            continue;
+
+        // XXXwaterson fix me!
+        const MatchSet::Match* lastmatch = nsnull;
+        if (bestmatch != lastmatch) {
+            Value value;
+            nsIContent* content;
+            PRBool hasbinding;
+
+            if (lastmatch) do {
+                // we had content built by a different rule that's now
+                // been superceded. Remove the old content.
+                hasbinding = lastmatch->mInstantiation.mBindings.GetBindingFor(mContentVar, &value);
+                NS_ASSERTION(hasbinding, "no content binding");
+                if (! hasbinding) break;
+
+                content = VALUE_TO_ICONTENT(value);
+
+                nsCOMPtr<nsIContent> parent;
+                rv = content->GetParent(*getter_AddRefs(parent));
+                if (NS_FAILED(rv)) return rv;
+
+                NS_ASSERTION(parent != nsnull, "no parent");
+                if (! parent) break;
+
+                PRInt32 pos;
+                rv = parent->IndexOf(content, pos);
+                if (NS_FAILED(rv)) return rv;
+
+                NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
+                if (pos < 0) break;
+
+                rv = parent->RemoveChildAt(pos, PR_TRUE);
+                if (NS_FAILED(rv)) return rv;
+            } while (0);
+
+            // Get the content node to which we were bound
+            hasbinding = bestmatch->mInstantiation.mBindings.GetBindingFor(mContentVar, &value);
+
+            NS_ASSERTION(hasbinding, "no content binding");
+            if (! hasbinding)
+                continue;
+
+            content = VALUE_TO_ICONTENT(value);
+
+            nsCOMPtr<nsIContent> tmpl;
+            bestmatch->mRule->GetContent(getter_AddRefs(tmpl));
+
+            rv = BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
+                                          VALUE_TO_IRDFRESOURCE(key->mMemberValue),
+                                          PR_TRUE, nsnull, nsnull);
+
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP
 RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
@@ -936,116 +3165,65 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
     nsresult rv;
 
 	if (mCache)
-	{
-		mCache->Assert(aSource, aProperty, aTarget, PR_TRUE /* XXX should be value passed in */);
-	}
-
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
-    if (NS_FAILED(rv)) return rv;
-
-    // Find all the elements in the content model that correspond to
-    // aSource: for each, we'll try to build XUL children if
-    // appropriate.
-    rv = GetElementsForResource(aSource, elements);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 cnt;
-    rv = elements->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
-        nsISupports* isupports = elements->ElementAt(i);
-        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
-        NS_IF_RELEASE(isupports);
-
-        // XXX somehow figure out if building XUL kids on this
-        // particular element makes any sense whatsoever.
-
-        // We'll start by making sure that the element at least has
-        // the same parent has the content model builder's root
-        if (!IsElementInWidget(element))
-            continue;
-
-        LOG("assert", element, aSource, aProperty, aTarget);
-
-        nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget);
-        if (resource && IsContainmentProperty(element, aProperty)) {
-            // Okay, the target  _is_ a resource, and the property is
-            // a containment property. So this'll be a new item in the widget
-            // control.
-
-            // But if the contents of aElement _haven't_ yet been
-            // generated, then just ignore the assertion. We do this
-            // because we know that _eventually_ the contents will be
-            // generated (via CreateContents()) when somebody asks for
-            // them later.
-            PRBool contentsGenerated;
-            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(element);
-            if (xulcontent) {
-                rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
-                if (NS_FAILED(rv)) return rv;
-            }
-            else {
-                // HTML is always generated
-                contentsGenerated = PR_TRUE;
-            }
-
-            if (! contentsGenerated)
-            { 
-                // Update the "empty" attribute
-                rv = SetEmpty(element, PR_FALSE);
-                return NS_OK;
-            }
-
-            // Okay, it's a "live" element, so go ahead and append the new
-            // child to this node.
-            rv = CreateWidgetItem(element, aProperty, resource, PR_TRUE,
-                                  nsnull /* don't care */,
-                                  nsnull /* don't care */);
-
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
-            if (NS_FAILED(rv)) return rv;
-
-            // Update the "empty" attribute
-            rv = SetEmpty(element, PR_FALSE);
-            if(NS_FAILED(rv)) return rv;
+        {
+            mCache->Assert(aSource, aProperty, aTarget, PR_TRUE /* XXX should be value passed in */);
         }
-        else {
-            // Either the target of the assertion is not a resource,
-            // or the object is a resource and the predicate is not a
-            // containment property. So this won't be a new item in
-            // the widget. See if we can use it to set a some
-            // substructure on the current element.
-            nsAutoString templateID;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       kTemplateAtom,
-                                       templateID);
-            if (NS_FAILED(rv)) return rv;
 
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                nsCOMPtr<nsIDOMXULDocument>    xulDoc;
-                xulDoc = do_QueryInterface(mDocument);
-                if (! xulDoc)
-                    return NS_ERROR_UNEXPECTED;
+    LOG("onassert", aSource, aProperty, aTarget);
 
-                nsCOMPtr<nsIDOMElement>    domElement;
-                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
-                if (NS_FAILED(rv)) return rv;
+    KeySet newkeys;
+    rv = Propogate(aSource, aProperty, aTarget, newkeys);
+    if (NS_FAILED(rv)) return rv;
 
-                nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
-                if (! templateNode)
-                    return NS_ERROR_UNEXPECTED;
+    rv = FireNewlyMatchedRules(newkeys);
+    if (NS_FAILED(rv)) return rv;
 
-                // this node was created by a XUL template, so update it accordingly
-                rv = SynchronizeUsingTemplate(templateNode, element, eSet, aProperty, aTarget);
-                if (NS_FAILED(rv)) return rv;
+    rv = SynchronizeAll(aSource, aProperty, aTarget, eSet);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFGenericBuilderImpl::Retract(nsIRDFResource* aSource,
+                               nsIRDFResource* aProperty,
+                               nsIRDFNode* aTarget)
+{
+    // Retract any currently active rules that will no longer be
+    // matched.
+    NodeSet::ConstIterator lastnode = mRDFTests.Last();
+    for (NodeSet::ConstIterator node = mRDFTests.First(); node != lastnode; ++node) {
+        const RDFTestNode* rdftestnode = NS_STATIC_CAST(const RDFTestNode*, *node);
+
+        MatchSet firings;
+        MatchSet retractions;
+        rdftestnode->Retract(mConflictSet, aSource, aProperty, aTarget, firings, retractions);
+
+        {
+            MatchSet::ConstIterator last = retractions.Last();
+            for (MatchSet::ConstIterator match = retractions.First(); match != last; ++match) {
+                Value member;
+                match->mInstantiation.mBindings.GetBindingFor(match->mRule->GetMemberVariable(), &member);
+
+                Value content;
+                match->mInstantiation.mBindings.GetBindingFor(mContentVar, &content);
+
+                RemoveMember(VALUE_TO_ICONTENT(content),
+                             VALUE_TO_IRDFRESOURCE(member),
+                             PR_TRUE);
+            }
+        }
+
+        // Now fire any newly revealed rules
+        {
+            MatchSet::ConstIterator last = firings.Last();
+            for (MatchSet::ConstIterator match = firings.First(); match != last; ++match) {
+                // XXXwaterson yo. write me.
             }
         }
     }
+
     return NS_OK;
 }
 
@@ -1066,115 +3244,14 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
 		mCache->Unassert(aSource, aProperty, aTarget);
 	}
 
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
+    LOG("onunassert", aSource, aProperty, aTarget);
+
+    rv = Retract(aSource, aProperty, aTarget);
     if (NS_FAILED(rv)) return rv;
 
-    // Find all the elements in the content model that correspond to
-    // aSource: for each, we'll try to build XUL children if
-    // appropriate.
-    rv = GetElementsForResource(aSource, elements);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
+    rv = SynchronizeAll(aSource, aProperty, aTarget, eClear);
     if (NS_FAILED(rv)) return rv;
-
-    PRUint32 cnt;
-    rv = elements->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = cnt - 1; i >= 0; --i) {
-        nsISupports* isupports = elements->ElementAt(i);
-        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
-        NS_IF_RELEASE(isupports);
-        
-        // XXX somehow figure out if building XUL kids on this
-        // particular element makes any sense whatsoever.
-
-        // We'll start by making sure that the element at least has
-        // the same parent has the content model builder's root
-        if (!IsElementInWidget(element))
-            continue;
-        
-        LOG("unassert", element, aSource, aProperty, aTarget);
-
-        nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget);
-        if (resource && IsContainmentProperty(element, aProperty)) {
-            // Okay, the object _is_ a resource, and the predicate is
-            // a containment property. So we'll need to remove this
-            // item from the widget.
-
-            // But if the contents of aElement _haven't_ yet been
-            // generated, then just ignore the unassertion: nothing is
-            // in the content model to remove.
-            PRBool contentsGenerated;
-            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(element);
-            if (xulcontent) {
-                rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
-                if (NS_FAILED(rv)) return rv;
-            }
-            else {
-                // HTML is always generated
-                contentsGenerated = PR_TRUE;
-            }
-
-            if (! contentsGenerated)
-                return NS_OK;
-
-            // Okay, it's a "live" element, so go ahead and remove the
-            // child from this node.
-            rv = RemoveWidgetItem(element, aProperty, resource, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
-            if (NS_FAILED(rv)) return rv;
-
-            PRInt32    numKids;
-            rv = element->ChildCount(numKids);
-            if (NS_FAILED(rv)) return rv;
-
-            if (numKids == 0) {
-                nsAutoString empty;
-                rv = element->GetAttribute(kNameSpaceID_None, kEmptyAtom, empty);
-                if (NS_FAILED(rv)) return rv;
-
-                if ((rv != NS_CONTENT_ATTR_HAS_VALUE) && (! empty.Equals(trueStr))) {
-                    rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, trueStr, PR_TRUE);
-                    if (NS_FAILED(rv)) return rv;
-                }
-            }
-            
-        }
-        else {
-            // Either the target of the assertion is not a resource,
-            // or the target is a resource and the property is not a
-            // containment property. So this won't be an item in the
-            // widget. See if we need to tear down some substructure
-            // on the current element.
-            nsAutoString templateID;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       kTemplateAtom,
-                                       templateID);
-            if (NS_FAILED(rv)) return rv;
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                nsCOMPtr<nsIDOMXULDocument>    xulDoc;
-                xulDoc = do_QueryInterface(mDocument);
-                if (! xulDoc)
-                    return NS_ERROR_UNEXPECTED;
-
-                nsCOMPtr<nsIDOMElement>    domElement;
-                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
-                if (NS_FAILED(rv)) return rv;
-
-                nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
-                if (! templateNode)
-                    return NS_ERROR_UNEXPECTED;
-
-                // this node was created by a XUL template, so update it accordingly
-                rv = SynchronizeUsingTemplate(templateNode, element, eClear, aProperty, aTarget);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-    }
+    
     return NS_OK;
 }
 
@@ -1190,8 +3267,6 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
     if (! mDocument)
         return NS_OK;
 
-    nsresult rv;
-
 	if (mCache)
 	{
 		if (aOldTarget)
@@ -1206,112 +3281,12 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
 		}
 	}
 
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
+    nsresult rv;
+
+
+    rv = SynchronizeAll(aSource, aProperty, aNewTarget, eSet);
     if (NS_FAILED(rv)) return rv;
 
-    // Find all the elements in the content model that correspond to
-    // aSource: for each, we'll try to build XUL children if
-    // appropriate.
-    rv = GetElementsForResource(aSource, elements);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 cnt;
-    rv = elements->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = cnt - 1; i >= 0; --i) {
-        nsISupports* isupports = elements->ElementAt(i);
-        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
-        NS_IF_RELEASE(isupports);
-        
-        // XXX somehow figure out if building XUL kids on this
-        // particular element makes any sense whatsoever.
-
-        // We'll start by making sure that the element at least has
-        // the same parent has the content model builder's root
-        if (!IsElementInWidget(element))
-            continue;
-
-        LOG("change", element, aSource, aProperty, aNewTarget);
-        
-        nsCOMPtr<nsIRDFResource> oldresource = do_QueryInterface(aOldTarget);
-        if (oldresource && IsContainmentProperty(element, aProperty)) {
-            // Okay, the object _is_ a resource, and the predicate is
-            // a containment property. So we'll need to remove the old
-            // item from the widget, and then add the new one.
-
-            // But if the contents of aElement _haven't_ yet been
-            // generated, then just ignore: nothing is in the content
-            // model to remove.
-            PRBool contentsGenerated;
-            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(element);
-            if (xulcontent) {
-                rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
-                if (NS_FAILED(rv)) return rv;
-            }
-            else {
-                // HTML is always generated
-                contentsGenerated = PR_TRUE;
-            }
-
-            if (! contentsGenerated)
-                return NS_OK;
-
-            // Okay, it's a "live" element, so go ahead and remove the
-            // child from this node.
-            rv = RemoveWidgetItem(element, aProperty, oldresource, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIRDFResource> newresource = do_QueryInterface(aNewTarget);
-
-            // XXX Tough. We don't handle the case where they've
-            // changed a resource to a literal. But this is
-            // bizarre anyway.
-            if (! newresource)
-                return NS_OK;
-
-            rv = CreateWidgetItem(element, aProperty, newresource, PR_TRUE,
-                                  nsnull /* don't care */,
-                                  nsnull /* don't care */);
-            if (NS_FAILED(rv)) return rv;
-        }
-        else {
-            // Either the target of the assertion is not a resource,
-            // or the target is a resource and the property is not a
-            // containment property. So this won't be an item in the
-            // widget. See if we need to tear down some substructure
-            // on the current element.
-            nsAutoString templateID;
-            rv = element->GetAttribute(kNameSpaceID_None,
-                                       kTemplateAtom,
-                                       templateID);
-            if (NS_FAILED(rv)) return rv;
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                nsCOMPtr<nsIDOMXULDocument>    xulDoc;
-                xulDoc = do_QueryInterface(mDocument);
-                if (! xulDoc)
-                    return NS_ERROR_UNEXPECTED;
-
-                nsCOMPtr<nsIDOMElement>    domElement;
-                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
-                if (NS_FAILED(rv)) return rv;
-
-                nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
-                if (! templateNode)
-                    return NS_ERROR_UNEXPECTED;
-
-                // this node was created by a XUL template, so update it accordingly
-                rv = SynchronizeUsingTemplate(templateNode, element, eSet, aProperty, aNewTarget);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-    }
     return NS_OK;
 }
 
@@ -1337,309 +3312,6 @@ RDFGenericBuilderImpl::OnMove(nsIRDFResource* aOldSource,
 //
 // Implementation methods
 //
-
-nsresult
-RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
-                                           nsIRDFResource *aProperty,
-                                           nsIRDFResource* aChild,
-                                           nsIContent *aRule,
-                                           PRBool *aIsMatch)
-{
-    nsresult rv;
-
-    PRInt32    count;
-    rv = aRule->GetAttributeCount(count);
-    if (NS_FAILED(rv)) return(rv);
-
-    for (PRInt32 loop=0; loop<count; loop++) {
-        PRInt32 attrNameSpaceID;
-        nsCOMPtr<nsIAtom> attr;
-        rv = aRule->GetAttributeNameAt(loop, attrNameSpaceID, *getter_AddRefs(attr));
-        if (NS_FAILED(rv)) return rv;
-
-        // Note: some attributes must be skipped on XUL template rule subtree
-
-        // never compare against rdf:property attribute
-        if ((attr.get() == kPropertyAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
-            continue;
-        // never compare against rdf:instanceOf attribute
-        else if ((attr.get() == kInstanceOfAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
-            continue;
-        // never compare against {}:id attribute
-        else if ((attr.get() == kIdAtom) && (attrNameSpaceID == kNameSpaceID_None))
-            continue;
-        // never compare against {}:xulcontentsgenerated attribute
-        else if ((attr.get() == kXULContentsGeneratedAtom) && (attrNameSpaceID == kNameSpaceID_None))
-            continue;
-
-        nsAutoString value;
-        rv = aRule->GetAttribute(attrNameSpaceID, attr, value);
-        if (NS_FAILED(rv)) return rv;
-
-        if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kParentAtom)) {
-            PRBool match;
-            rv = TagMatches(aElement, value, &match);
-            if (NS_FAILED(rv)) return rv;
-
-            if (! match) {
-                *aIsMatch = PR_FALSE;
-                return NS_OK;
-            }
-        }
-        else if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsContainerAtom)) {
-            // check and see if aChild is a container
-            PRBool isContainer = IsContainer(aRule, aChild);
-            if (isContainer && (!value.Equals(trueStr))) {
-                *aIsMatch = PR_FALSE;
-                return NS_OK;
-            }
-            else if (!isContainer && (!value.Equals(falseStr))) {
-                *aIsMatch = PR_FALSE;
-                return NS_OK;
-            }
-        }
-        else if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsEmptyAtom)) {
-            PRBool isEmpty = IsEmpty(aRule, aChild);
-            if (isEmpty && (!value.Equals(trueStr))) {
-                *aIsMatch = PR_FALSE;
-                return NS_OK;
-            }
-            else if (!isEmpty && (!value.Equals(falseStr))) {
-                *aIsMatch = PR_FALSE;
-                return NS_OK;
-            }
-        }
-        else {
-            nsCOMPtr<nsIRDFResource> property;
-            rv = gXULUtils->GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIRDFNode> target;
-            rv = mDB->GetTarget(aChild, property, PR_TRUE, getter_AddRefs(target));
-            if (NS_FAILED(rv)) return rv;
-
-            PRUnichar buf[128];
-            nsAutoString targetStr(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
-            rv = gXULUtils->GetTextForNode(target, targetStr);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get text for target");
-            if (NS_FAILED(rv)) return rv;
-
-            if (!value.Equals(targetStr)) {
-                *aIsMatch = PR_FALSE;
-                return NS_OK;
-            }
-        }
-    }
-
-    *aIsMatch = PR_TRUE;
-    return NS_OK;
-}
-
-
-nsresult
-RDFGenericBuilderImpl::TagMatches(nsIContent* aElement, nsString& aTag, PRBool* aMatch)
-{
-    // See if the tag string 'aTag' matches the tag of the
-    // element. Does the necessary magic to make sure namespaces are
-    // equivalent. Note that this may mangle 'aTag' if it needs to
-    // strip out the namespace prefix.
-    nsresult rv;
-
-    // Pessimist!
-    *aMatch = PR_FALSE;
-
-    // Deal with namespaces
-    PRInt32 indx;
-    if ((indx = aTag.FindChar(':')) != -1) {
-        nsAutoString nsprefixstr;
-        aTag.Left(nsprefixstr, indx - 1);
-
-        nsCOMPtr<nsIAtom> nsprefix = dont_AddRef(NS_NewAtom(nsprefixstr));
-        if (! nsprefix)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        // Walk up from aElement until we find an XML content node so
-        // we can figure out what namespace this prefix is supposed to
-        // represent.
-        nsCOMPtr<nsIContent> element = dont_QueryInterface(aElement);
-        while (element) {
-            nsCOMPtr<nsIXMLContent> xml = do_QueryInterface(element);
-            if (xml) {
-                nsCOMPtr<nsINameSpace> ns;
-                rv = xml->GetContainingNameSpace(*getter_AddRefs(ns));
-                if (NS_FAILED(rv)) return PR_FALSE;
-
-                PRInt32 targetNameSpaceID;
-                rv = ns->FindNameSpaceID(nsprefix, targetNameSpaceID);
-                if (NS_FAILED(rv)) {
-                    // Not a match.
-                    return NS_OK;
-                }
-
-                PRInt32 elementNameSpaceID;
-                rv = aElement->GetNameSpaceID(elementNameSpaceID);
-                if (NS_FAILED(rv)) return rv;
-
-                if (elementNameSpaceID != targetNameSpaceID) {
-                    // Not a match.
-                    return NS_OK;
-                }
-
-                // Ok, it _is_ a match. Now we have to compare the tags...
-                break;
-            }
-
-            nsCOMPtr<nsIContent> parent;
-            rv = element->GetParent(*getter_AddRefs(parent));
-            if (NS_FAILED(rv)) return rv;
-
-            element = parent;
-        }
-
-        // strip namespace from tag
-        aTag.Cut(0, indx);
-    }
-
-    nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(*getter_AddRefs(tag));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element tag");
-    if (NS_FAILED(rv)) return rv;
-
-    nsAutoString tagStr;
-    rv = tag->ToString(tagStr);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to convert tag atom to string");
-    if (NS_FAILED(rv)) return rv;
-
-    *aMatch = tagStr.Equals(aTag);
-    return NS_OK;
-}
-
-
-
-nsresult
-RDFGenericBuilderImpl::FindTemplate(nsIContent* aElement,
-                                    nsIRDFResource *aProperty,
-                                    nsIRDFResource* aChild,
-                                    nsIContent **aTemplate)
-{
-    nsresult rv;
-
-    // First, check and see if the root has a template attribute. This
-    // allows a template to be specified "out of line"; e.g.,
-    //
-    //   <window>
-    //     <foo template="MyTemplate">...</foo>
-    //     <template id="MyTemplate">...</template>
-    //   </window>
-    //
-
-    nsAutoString templateID;
-    rv = mRoot->GetAttribute(kNameSpaceID_None, kTemplateAtom, templateID);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIContent> tmpl;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        nsCOMPtr<nsIDOMXULDocument>    xulDoc;
-        xulDoc = do_QueryInterface(mDocument);
-        if (! xulDoc)
-            return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsIDOMElement>    domElement;
-        rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-        if (NS_FAILED(rv)) return rv;
-
-        tmpl = do_QueryInterface(domElement);
-    }
-
-    // If root node has no template attribute, then look for a child
-    // node which is a template tag
-    if (! tmpl) {
-        PRInt32    count;
-        rv = mRoot->ChildCount(count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < count; i++) {
-            nsCOMPtr<nsIContent> child;
-            rv = mRoot->ChildAt(i, *getter_AddRefs(child));
-            if (NS_FAILED(rv)) return rv;
-
-            PRInt32 nameSpaceID;
-            rv = child->GetNameSpaceID(nameSpaceID);
-            if (NS_FAILED(rv)) return rv;
-
-            if (nameSpaceID != kNameSpaceID_XUL)
-                continue;
-
-            nsCOMPtr<nsIAtom> tag;
-            rv = child->GetTag(*getter_AddRefs(tag));
-            if (NS_FAILED(rv)) return rv;
-
-            if (tag.get() != kTemplateAtom)
-                continue;
-
-            tmpl = child;
-            break;
-        }
-    }
-
-    // Found a template; check against any (optional) rules...
-    if (tmpl) {
-        PRInt32    count;
-        rv = tmpl->ChildCount(count);
-        if (NS_FAILED(rv)) return rv;
-
-        PRInt32 nrules = 0;
-
-        for (PRInt32 i = 0; i < count; i++) {
-            nsCOMPtr<nsIContent> rule;
-            rv = tmpl->ChildAt(i, *getter_AddRefs(rule));
-            if (NS_FAILED(rv)) return rv;
-
-            PRInt32    nameSpaceID;
-            rv = rule->GetNameSpaceID(nameSpaceID);
-            if (NS_FAILED(rv)) return rv;
-
-            if (nameSpaceID != kNameSpaceID_XUL)
-                continue;
-
-            nsCOMPtr<nsIAtom> tag;
-            rv = rule->GetTag(*getter_AddRefs(tag));
-            if (NS_FAILED(rv)) return rv;
-
-            if (tag.get() == kRuleAtom) {
-                ++nrules;
-
-                PRBool match;
-                rv = IsTemplateRuleMatch(aElement, aProperty, aChild, rule, &match);
-                if (NS_FAILED(rv)) return rv;
-
-                if (match) {
-                    // found a matching rule, use it as the template
-                    *aTemplate = rule;
-                    NS_ADDREF(*aTemplate);
-                    return NS_OK;
-                }
-            }
-        }
-
-        if (nrules == 0) {
-            // if no rules are specified in the template, then the
-            // contents of the <template> tag are the one-and-only
-            // template.
-            *aTemplate = tmpl;
-            NS_ADDREF(*aTemplate);
-            return NS_OK;
-        }
-    }
-
-    // If we get here, either there was no <template> tag, or there
-    // were <rule> tags beneath the <template> tag that didn't match.
-    *aTemplate = nsnull;
-    return NS_OK;
-}
-
-
 
 PRBool
 RDFGenericBuilderImpl::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
@@ -2202,39 +3874,77 @@ RDFGenericBuilderImpl::AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDF
 }
 
 nsresult
-RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
-                                        nsIRDFResource *aProperty,
-                                        nsIRDFResource *aChild,
-                                        PRBool aNotify,
-                                        nsIContent** aContainer,
-                                        PRInt32* aNewIndexInContainer)
+RDFGenericBuilderImpl::SynchronizeAll(nsIRDFResource* aSource,
+                                      nsIRDFResource* aProperty,
+                                      nsIRDFNode* aTarget,
+                                      UpdateAction aAction)
 {
+    // Find all the elements in the content model that correspond to
+    // aSource: for each, we'll try to build XUL children if
+    // appropriate.
     nsresult rv;
 
-    // Find the template appropriate for the current context
-    nsCOMPtr<nsIContent> tmpl;
-    rv = FindTemplate(aElement, aProperty, aChild, getter_AddRefs(tmpl));
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
     if (NS_FAILED(rv)) return rv;
 
-    if (! tmpl) {
-        // No template. Just bail.
-        return NS_OK;
+    rv = GetElementsForResource(aSource, elements);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 cnt;
+    rv = elements->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
+        nsISupports* isupports = elements->ElementAt(i);
+        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
+        NS_IF_RELEASE(isupports);
+
+        // XXX somehow figure out if building XUL kids on this
+        // particular element makes any sense whatsoever.
+
+        // We'll start by making sure that the element at least has
+        // the same parent has the content model builder's root
+        if (!IsElementInWidget(element))
+            continue;
+
+        nsAutoString templateID;
+        rv = element->GetAttribute(kNameSpaceID_None,
+                                   kTemplateAtom,
+                                   templateID);
+        if (NS_FAILED(rv)) return rv;
+
+        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+            continue;
+
+        nsCOMPtr<nsIDOMXULDocument>    xulDoc;
+        xulDoc = do_QueryInterface(mDocument);
+        if (! xulDoc)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIDOMElement>    domElement;
+        rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
+        if (! templateNode)
+            return NS_ERROR_UNEXPECTED;
+
+        // this node was created by a XUL template, so update it accordingly
+        rv = SynchronizeUsingTemplate(templateNode, element, aAction, aProperty, aTarget);
+        if (NS_FAILED(rv)) return rv;
     }
 
-    // ...and build content with it.
-    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE, aChild,
-                                  aNotify, aContainer, aNewIndexInContainer);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to build content from template");
-    return rv;
+    return NS_OK;
 }
-
-
 
 nsresult
 RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                                 nsIContent* aRealElement,
-                                                eUpdateAction aAction,
+                                                UpdateAction aAction,
                                                 nsIRDFResource* aProperty,
                                                 nsIRDFNode* aValue)
 {
@@ -2342,21 +4052,20 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 
 
 nsresult
-RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
-                                        nsIRDFResource* aProperty,
-                                        nsIRDFResource* aValue,
-                                        PRBool aNotify)
+RDFGenericBuilderImpl::RemoveMember(nsIContent* aContainerElement,
+                                    nsIRDFResource* aMember,
+                                    PRBool aNotify)
 {
     // This works as follows. It finds all of the elements in the
-    // document that correspond to aValue. Any that are contained
-    // within aElement are removed from their direct parent.
+    // document that correspond to aMember. Any that are contained
+    // within aContainerElement are removed from their direct parent.
     nsresult rv;
 
     nsCOMPtr<nsISupportsArray> elements;
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
     if (NS_FAILED(rv)) return rv;
 
-    rv = GetElementsForResource(aValue, elements);
+    rv = GetElementsForResource(aMember, elements);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 cnt;
@@ -2368,7 +4077,7 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
         nsCOMPtr<nsIContent> child( do_QueryInterface(isupports) );
         NS_IF_RELEASE(isupports);
 
-        if (! gXULUtils->IsContainedBy(child, aElement))
+        if (! gXULUtils->IsContainedBy(child, aContainerElement))
             continue;
 
         nsCOMPtr<nsIContent> parent;
@@ -2383,6 +4092,11 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
         if (pos < 0) continue;
 
         rv = parent->RemoveChildAt(pos, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+
+        // Set its document to null so that it'll get knocked out of
+        // the XUL doc's resource-to-element map.
+        rv = child->SetDocument(nsnull, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
 #ifdef PR_LOGGING
@@ -2404,11 +4118,11 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
             if (NS_FAILED(rv)) return rv;
 
             const char* resourceCStr;
-            rv = aValue->GetValueConst(&resourceCStr);
+            rv = aMember->GetValueConst(&resourceCStr);
             if (NS_FAILED(rv)) return rv;
             
             PR_LOG(gLog, PR_LOG_ALWAYS,
-                   ("rdfgeneric[%p] remove-widget-item %s->%s [%s]",
+                   ("rdfgeneric[%p] remove-member %s->%s [%s]",
                     this,
                     (const char*) nsCAutoString(parentTagStr),
                     (const char*) nsCAutoString(childTagStr),
@@ -2430,6 +4144,11 @@ RDFGenericBuilderImpl::CreateTemplateAndContainerContents(nsIContent* aElement,
     // and 2) recursive subcontent (if the current element refers to a
     // container resource in the RDF graph).
     nsresult rv;
+
+    if (! mRulesCompiled) {
+        rv = CompileRules();
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // If we're asked to return the first generated child, then
     // initialize to "none".
@@ -2511,63 +4230,44 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement,
         // (/me crosses fingers...)
     }
 
-    // XXX Eventually, we may want to factor this into one method that
-    // handles RDF containers (RDF:Bag, et al.) and another that
-    // handles multi-attributes. For performance...
+    // Seed the rule network with bindings for the content and
+    // container variables
+    //
+    // XXXwaterson could this code be shared with
+    // RDFGenericBuilderImpl::Propogate()?
+    Instantiation seed;
+    seed.AddBinding(mContentVar, Value(aElement));
+    seed.AddBinding(mContainerVar, Value(aResource));
 
-    // Create a cursor that'll enumerate all of the outbound arcs
-    nsCOMPtr<nsISimpleEnumerator> properties;
-    rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties));
+    InstantiationSet instantiations;
+    instantiations.Append(seed);
+
+    // Propogate the bindings through the network
+    KeySet newkeys;
+    rv = mRules.GetRoot()->Propogate(instantiations, &newkeys);
     if (NS_FAILED(rv)) return rv;
 
-    while (1) {
-        PRBool hasMore;
-        rv = properties->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
+    // Iterate through newly added keys to determine which rules fired
+    KeySet::ConstIterator last = newkeys.Last();
+    for (KeySet::ConstIterator key = newkeys.First(); key != last; ++key) {
+        const MatchSet* matches;
+        mConflictSet.GetMatches(*key, &matches);
 
-        if (! hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = properties->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-
-        // If it's not a containment property, then it doesn't specify an
-        // object that is member of the current container element;
-        // rather, it specifies a "simple" property of the container
-        // element. Skip it.
-        if (! IsContainmentProperty(aElement, property))
+        if (! matches)
             continue;
 
-        // Create a second cursor that'll enumerate all of the values
-        // for all of the arcs.
-        nsCOMPtr<nsISimpleEnumerator> targets;
-        rv = mDB->GetTargets(aResource, property, PR_TRUE, getter_AddRefs(targets));
+        const MatchSet::Match* match;
+        matches->FindMatchWithHighestPriority(&match);
+
+        // Grab the template node
+        nsCOMPtr<nsIContent> tmpl;
+        match->mRule->GetContent(getter_AddRefs(tmpl));
+
+        rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE,
+                                      VALUE_TO_IRDFRESOURCE(key->mMemberValue),
+                                      aNotify, aContainer, aNewIndexInContainer);
+
         if (NS_FAILED(rv)) return rv;
-
-        while (1) {
-            PRBool hasMoreElements;
-            rv = targets->HasMoreElements(&hasMoreElements);
-            if (NS_FAILED(rv)) return rv;
-
-            if (! hasMoreElements)
-                break;
-
-            nsCOMPtr<nsISupports> isupportsNext;
-            rv = targets->GetNext(getter_AddRefs(isupportsNext));
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIRDFResource> target = do_QueryInterface(isupportsNext);
-            NS_ASSERTION(target != nsnull, "not a resource");
-            if (! target)
-                continue;
-
-            rv = CreateWidgetItem(aElement, property, target, aNotify, aContainer, aNewIndexInContainer);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create item");
-            if (NS_FAILED(rv)) return rv;
-        }
     }
 
     return NS_OK;
@@ -2706,36 +4406,10 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
     if (rv == NS_CONTENT_ATTR_HAS_VALUE)
     {
         if (containment.Find(propertyURI) >= 0)
-            return(PR_TRUE);
-        else    return(PR_FALSE);
+            return PR_TRUE;
+        else    return PR_FALSE;
     }
-/*
-    // Walk up the content tree looking for the "containment"
-    // attribute, so we can determine if the specified property
-    // actually defines containment.
-    nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
-    while (element) {
-        // Is this the "containment" property?
-        rv = element->GetAttribute(kNameSpaceID_None, kContainmentAtom, containment);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get attribute value");
-        if (NS_FAILED(rv)) return PR_FALSE;
 
-        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            // Okay we've found the locally-scoped tree properties,
-            // a whitespace-separated list of property URIs. So we
-            // definitively know whether this is a tree property or
-            // not.
-            if (containment.Find(propertyURI) >= 0)
-                return PR_TRUE;
-            else
-                return PR_FALSE;
-        }
-
-        nsCOMPtr<nsIContent> parent;
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-*/
     // If we get here, we didn't find any tree property: so now
     // defaults start to kick in.
 
@@ -2759,7 +4433,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
     const char        *propertyURI;
 
     rv = aProperty->GetValueConst(&propertyURI);
-    if (NS_FAILED(rv)) return(PR_FALSE);
+    if (NS_FAILED(rv)) return PR_FALSE;
 
     PRUnichar		buffer[256];
     nsAutoString	uri(CBufDescriptor(buffer, PR_TRUE, sizeof(buffer) / sizeof(PRUnichar), 0));
@@ -2768,53 +4442,19 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
     // rjc: Optimization: 99% of trees that use "ignore='...'" put the
     // attribute on the root of the tree, so check that first
     rv = mRoot->GetNameSpaceID(nameSpaceID);
-    if (NS_FAILED(rv)) return(PR_FALSE);
+    if (NS_FAILED(rv)) return PR_FALSE;
         // Never ever ask an HTML element about non-HTML attributes
         if (nameSpaceID != kNameSpaceID_HTML)
         {
             rv = mRoot->GetAttribute(kNameSpaceID_None, kIgnoreAtom, uri);
-            if (NS_FAILED(rv)) return(PR_FALSE);
+            if (NS_FAILED(rv)) return PR_FALSE;
             if (rv == NS_CONTENT_ATTR_HAS_VALUE)
             {
-        if (uri.Find(propertyURI) >= 0)
-            return(PR_TRUE);
-        else    return(PR_FALSE);
-            }
-        }
-/*
-    // Walk up the content tree looking for the "rdf:ignore"
-    // attribute, so we can determine if the specified property should
-    // be ignored.
-    nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
-    while (element) {
-        rv = element->GetNameSpaceID(nameSpaceID);
-        if (NS_FAILED(rv)) return(PR_FALSE);
-
-        // Never ever ask an HTML element about non-HTML attributes
-        if (nameSpaceID != kNameSpaceID_HTML) {
-            rv = element->GetAttribute(kNameSpaceID_None, kIgnoreAtom, uri);
-            if (NS_FAILED(rv)) return(PR_FALSE);
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                // Okay, we've found the locally-scoped ignore
-                // properties, which is a whitespace-separated list of
-                // property URIs. So we definitively know whether this
-                // property should be ignored or not.
-                if (uri.Find(propertyURI) >= 0)
-                    return(PR_TRUE);
-                else
-                    return(PR_FALSE);
+                return uri.Find(propertyURI) >= 0 ? PR_TRUE : PR_FALSE;
             }
         }
 
-        nsCOMPtr<nsIContent> parent;
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-*/
-    // Walked _all_ the way to the top and couldn't find anything to
-    // ignore.
-    return(PR_FALSE);
+    return PR_FALSE;
 }
 
 PRBool
@@ -2915,106 +4555,59 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
 
     nsCOMPtr<nsIAtom> tag;
     rv = aElement->GetTag(*getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return(PR_FALSE);
+    if (NS_FAILED(rv)) return PR_FALSE;
 
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
     if ((aElement == mRoot.get()) && (tag.get() != kMenuAtom))
-      return(PR_TRUE);
+      return PR_TRUE;
 
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, value);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get open attribute");
-    if (NS_FAILED(rv)) return(PR_FALSE);
+    if (NS_FAILED(rv)) return PR_FALSE;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         if (value.Equals(trueStr))
-            return(PR_TRUE);
+            return PR_TRUE;
     }
 
-    return(PR_FALSE);
+    
+    return PR_FALSE;
 }
 
 
 PRBool
 RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
 {
-    // Make sure that we're actually creating content for the tree
-    // content model that we've been assigned to deal with.
-
-    // Walk up the parent chain from us to the root and
-    // see what we find.
-    if (aElement == mRoot.get())
-      return PR_TRUE;
-
-    // walk up the tree until you find rootAtom
-    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
-    nsCOMPtr<nsIContent> parent;
-    element->GetParent(*getter_AddRefs(parent));
-    element = parent;
-    
-    while (element) {
-        
-        if (element.get() == mRoot.get())
-          return PR_TRUE;
-
-        // up to the parent...
-//        nsCOMPtr<nsIContent> parent;
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-    
-    return PR_FALSE;
+    return IsElementContainedBy(aElement, mRoot);
 }
-
-nsresult
-RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource)
-{
-    // Given an nsIDOMNode that presumably has been created as a proxy
-    // for an RDF resource, pull the RDF resource information out of
-    // it.
-
-    nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
-    if (! element)
-        return NS_ERROR_UNEXPECTED;
-
-    return gXULUtils->GetElementRefResource(element, aResource);
-}
-
 
 nsresult
 RDFGenericBuilderImpl::RemoveGeneratedContent(nsIContent* aElement)
 {
     // Remove all the content beneath aElement that has been generated
     // from a template. We can identify this content because it'll
-    // have a "template" attribute on it.
+    // be in the conflict set.
+    nsCOMPtr<nsIRDFResource> resource;
+    gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
 
-    nsresult rv;
+    ContentIdTestNode::Element element(aElement, resource);
 
-    PRInt32 count;
-    rv = aElement->ChildCount(count);
-    if (NS_FAILED(rv)) return rv;
+    MatchSet firings, retractions;
+    mConflictSet.Remove(element, firings, retractions);
 
-    while (--count >= 0) {
-        nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(count, *getter_AddRefs(child));
-        if (NS_FAILED(rv)) return rv;
+    MatchSet::ConstIterator last = retractions.Last();
+    for (MatchSet::ConstIterator match = retractions.First(); match != last; ++match) {
+        Value member;
+        match->mInstantiation.mBindings.GetBindingFor(match->mRule->GetMemberVariable(), &member);
 
-        nsAutoString tmplID;
-        rv = child->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
-        if (NS_FAILED(rv)) return rv;
+        Value content;
+        match->mInstantiation.mBindings.GetBindingFor(mContentVar, &content);
 
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-            continue;
-
-        // It's a generated element. Remove it, and set its document
-        // to null so that it'll get knocked out of the XUL doc's
-        // resource-to-element map.
-        rv = aElement->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
-
-        rv = child->SetDocument(nsnull, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        RemoveMember(VALUE_TO_ICONTENT(content),
+                     VALUE_TO_IRDFRESOURCE(member),
+                     PR_TRUE);
     }
 
     return NS_OK;
@@ -3048,65 +4641,6 @@ RDFGenericBuilderImpl::IsTreeWidgetItem(nsIContent* aElement)
     }
 
 }
-
-PRBool
-RDFGenericBuilderImpl::IsReflowScheduled()
-{
-    return (mTimer != nsnull);
-}
-
-
-
-nsresult
-RDFGenericBuilderImpl::ScheduleReflow()
-{
-    NS_PRECONDITION(mTimer == nsnull, "reflow scheduled");
-    if (mTimer)
-        return NS_ERROR_UNEXPECTED;
-
-    nsresult rv;
-
-    rv = NS_NewTimer(getter_AddRefs(mTimer));
-    if (NS_FAILED(rv)) return rv;
-
-    mTimer->Init(RDFGenericBuilderImpl::ForceTreeReflow, this, 100);
-    NS_ADDREF(this); // the timer will hold a reference to the builder
-    
-    return NS_OK;
-}
-
-
-void
-RDFGenericBuilderImpl::ForceTreeReflow(nsITimer* aTimer, void* aClosure)
-{
-    // XXX Any lifetime issues we need to deal with here???
-    RDFGenericBuilderImpl* builder = NS_STATIC_CAST(RDFGenericBuilderImpl*, aClosure);
-
-    nsresult rv;
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(builder->mDocument);
-
-    // If we've been removed from the document, then this will have
-    // been nulled out.
-    if (! doc) return;
-
-    // XXX What if kTreeChildrenAtom & kNameSpaceXUL are clobbered b/c
-    // the generic builder has been destroyed?
-    nsCOMPtr<nsIContent> treechildren;
-    rv = gXULUtils->FindChildByTag(builder->mRoot,
-                                   kNameSpaceID_XUL,
-                                   kTreeChildrenAtom,
-                                   getter_AddRefs(treechildren));
-
-    if (NS_FAILED(rv)) return; // couldn't find
-
-    rv = doc->ContentAppended(treechildren, 0);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to notify content appended");
-
-    builder->mTimer = nsnull;
-    NS_RELEASE(builder);
-}
-
 
 nsresult
 RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase)
@@ -3294,7 +4828,6 @@ RDFGenericBuilderImpl::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory
 #ifdef PR_LOGGING
 nsresult
 RDFGenericBuilderImpl::Log(const char* aOperation,
-                           nsIContent* aElement, 
                            nsIRDFResource* aSource,
                            nsIRDFResource* aProperty,
                            nsIRDFNode* aTarget)
@@ -3321,20 +4854,503 @@ RDFGenericBuilderImpl::Log(const char* aOperation,
                ("                       --[%s]-->[%s]",
                 propertyStr,
                 (const char*) nsCAutoString(targetStr)));
-
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagname;
-        rv = tag->ToString(tagname);
-        if (NS_FAILED(rv)) return rv;
-
-        PR_LOG(gLog, PR_LOG_DEBUG,
-               ("               %s(%p)",
-                (const char*) nsCAutoString(tagname),
-                aElement));
     }
     return NS_OK;
 }
 #endif
+
+//----------------------------------------------------------------------
+
+nsresult
+RDFGenericBuilderImpl::ContentIdTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+    if (NS_FAILED(rv)) return rv;
+
+    InstantiationSet::Iterator last = aInstantiations.Last();
+    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
+        Value contentValue;
+        PRBool hasContentBinding = inst->mBindings.GetBindingFor(mContentVariable, &contentValue);
+
+        Value idValue;
+        PRBool hasIdBinding = inst->mBindings.GetBindingFor(mIdVariable, &idValue);
+
+        if (hasContentBinding && hasIdBinding) {
+            // both are bound, consistency check
+            nsCOMPtr<nsIRDFResource> resource;
+            gXULUtils->GetElementRefResource(VALUE_TO_ICONTENT(contentValue), getter_AddRefs(resource));
+            
+            if (resource.get() == VALUE_TO_IRDFRESOURCE(idValue)) {
+                inst->AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue), resource));
+            }
+            else {
+                aInstantiations.Erase(inst--);
+            }
+        }
+        else if (hasContentBinding) {
+            // the content node is bound, get its id
+            nsAutoString id;
+            rv = VALUE_TO_ICONTENT(contentValue)->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+            if (NS_FAILED(rv)) return rv;
+
+            if (id.Length()) {
+                nsCOMPtr<nsIRDFResource> resource;
+                rv = gRDFService->GetUnicodeResource(id.GetUnicode(), getter_AddRefs(resource));
+                if (NS_FAILED(rv)) return rv;
+
+                Instantiation newinst = *inst;
+                newinst.AddBinding(mIdVariable, Value(resource.get()));
+                newinst.AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue), resource));
+                aInstantiations.Insert(inst, newinst);
+            }
+            else {
+                aInstantiations.Erase(inst--);
+            }
+        }
+        else if (hasIdBinding) {
+            // the 'id' is bound, find elements in the content tree that match
+            const char* uri;
+            rv = VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&uri);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = mDocument->GetElementsForID(nsAutoString(uri), elements);
+            if (NS_FAILED(rv)) return rv;
+
+            PRUint32 count;
+            rv = elements->Count(&count);
+            if (NS_FAILED(rv)) return rv;
+
+            for (PRInt32 j = PRInt32(count) - 1; j >= 0; --j) {
+                nsISupports* isupports = elements->ElementAt(j);
+                nsCOMPtr<nsIContent> element = do_QueryInterface(isupports);
+                NS_IF_RELEASE(isupports);
+
+                if (IsElementContainedBy(element, mRoot)) {
+                    Instantiation newinst = *inst;
+                    newinst.AddBinding(mContentVariable, Value(element.get()));
+                    newinst.AddSupportingElement(new Element(element, VALUE_TO_IRDFRESOURCE(idValue)));
+                    aInstantiations.Insert(inst, newinst);
+                }
+            }
+
+            aInstantiations.Erase(inst--);
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+RDFGenericBuilderImpl::ContentIdTestNode::GetAncestorVariables(VariableSet& aVariables) const
+{
+    nsresult rv;
+
+    rv = aVariables.Add(mContentVariable);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aVariables.Add(mIdVariable);
+    if (NS_FAILED(rv)) return rv;
+
+    return TestNode::GetAncestorVariables(aVariables);
+}
+
+//----------------------------------------------------------------------
+
+
+nsresult
+RDFGenericBuilderImpl::ComputeContainmentProperties()
+{
+    // The 'containment' attribute on the root node is a
+    // whitespace-separated list that tells us which properties we
+    // should use to test for containment.
+    nsresult rv;
+
+    mContainmentProperties.Clear();
+
+    nsAutoString containment;
+    rv = mRoot->GetAttribute(kNameSpaceID_None, kContainmentAtom, containment);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 len = containment.Length();
+    PRUint32 offset = 0;
+    while (offset < len) {
+        while (offset < len && nsCRT::IsAsciiSpace(containment[offset]))
+            ++offset;
+
+        if (offset >= len)
+            break;
+
+        PRUint32 end = offset;
+        while (end < len && !nsCRT::IsAsciiSpace(containment[end]))
+            ++end;
+
+        nsAutoString propertyStr;
+        containment.Mid(propertyStr, offset, end - offset);
+
+        nsCOMPtr<nsIRDFResource> property;
+        rv = gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mContainmentProperties.Add(property);
+        if (NS_FAILED(rv)) return rv;
+
+        offset = end;
+    }
+
+#if defined(TREE_PROPERTY_HACK)
+    if (!len || 1 /*XXX*/) {
+        // Some ever-present membership tests.
+        mContainmentProperties.Add(kNC_child);
+        mContainmentProperties.Add(kNC_Folder);
+        mContainmentProperties.Add(kRDF_child);
+    }
+#endif
+
+    return NS_OK;
+}
+
+nsresult
+RDFGenericBuilderImpl::InitializeRuleNetwork(InnerNode** aChildNode)
+{
+    // The rule network will start off looking something like this:
+    //
+    //   (root)-->(content ^id ?a)-->(?a ^member ?b)
+    //
+
+    nsresult rv;
+
+    rv = mRules.Clear();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mRDFTests.Clear();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = ComputeContainmentProperties();
+    if (NS_FAILED(rv)) return rv;
+
+    // Create (content ?content ^id ?container)
+    mRules.CreateVariable(&mContentVar);
+    mRules.CreateVariable(&mContainerVar);
+    mRules.CreateVariable(&mMemberVar);
+
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+    if (! xuldoc)
+        return NS_ERROR_UNEXPECTED;
+
+    ContentIdTestNode* idnode =
+        new ContentIdTestNode(mRules.GetRoot(),
+                              xuldoc,
+                              mRoot,
+                              mContentVar,
+                              mContainerVar);
+
+    if (! idnode)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mRules.GetRoot()->AddChild(idnode);
+    mRules.AddNode(idnode);
+
+    // Create (?container ^member ?member)
+    RDFContainerMemberTestNode* membernode =
+        new RDFContainerMemberTestNode(idnode,
+                                       mDB,
+                                       mContainmentProperties,
+                                       mContainerVar,
+                                       mMemberVar);
+
+    if (! membernode)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    idnode->AddChild(membernode);
+    mRules.AddNode(membernode);
+
+    mRDFTests.Add(membernode);
+
+    *aChildNode = membernode;
+    return NS_OK;
+}
+
+
+
+nsresult
+RDFGenericBuilderImpl::CompileRules()
+{
+    NS_PRECONDITION(mRoot != nsnull, "not initialized");
+    if (! mRoot)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+
+    mRulesCompiled = PR_FALSE; // in case an error occurs
+
+    InnerNode* childnode;
+    rv = InitializeRuleNetwork(&childnode);
+    if (NS_FAILED(rv)) return rv;
+
+    // First, check and see if the root has a template attribute. This
+    // allows a template to be specified "out of line"; e.g.,
+    //
+    //   <window>
+    //     <foo template="MyTemplate">...</foo>
+    //     <template id="MyTemplate">...</template>
+    //   </window>
+    //
+
+    nsAutoString templateID;
+    rv = mRoot->GetAttribute(kNameSpaceID_None, kTemplateAtom, templateID);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIContent> tmpl;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        nsCOMPtr<nsIDOMXULDocument>    xulDoc;
+        xulDoc = do_QueryInterface(mDocument);
+        if (! xulDoc)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIDOMElement>    domElement;
+        rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+        if (NS_FAILED(rv)) return rv;
+
+        tmpl = do_QueryInterface(domElement);
+    }
+
+    // If root node has no template attribute, then look for a child
+    // node which is a template tag
+    if (! tmpl) {
+        PRInt32    count;
+        rv = mRoot->ChildCount(count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = 0; i < count; i++) {
+            nsCOMPtr<nsIContent> child;
+            rv = mRoot->ChildAt(i, *getter_AddRefs(child));
+            if (NS_FAILED(rv)) return rv;
+
+            PRInt32 nameSpaceID;
+            rv = child->GetNameSpaceID(nameSpaceID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (nameSpaceID != kNameSpaceID_XUL)
+                continue;
+
+            nsCOMPtr<nsIAtom> tag;
+            rv = child->GetTag(*getter_AddRefs(tag));
+            if (NS_FAILED(rv)) return rv;
+
+            if (tag.get() != kTemplateAtom)
+                continue;
+
+            tmpl = child;
+            break;
+        }
+    }
+
+    // Found a template; check against any (optional) rules...
+    if (tmpl) {
+        PRInt32    count;
+        rv = tmpl->ChildCount(count);
+        if (NS_FAILED(rv)) return rv;
+
+        PRInt32 nrules = 0;
+
+        for (PRInt32 i = 0; i < count; i++) {
+            nsCOMPtr<nsIContent> rule;
+            rv = tmpl->ChildAt(i, *getter_AddRefs(rule));
+            if (NS_FAILED(rv)) return rv;
+
+            PRInt32    nameSpaceID;
+            rv = rule->GetNameSpaceID(nameSpaceID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (nameSpaceID != kNameSpaceID_XUL)
+                continue;
+
+            nsCOMPtr<nsIAtom> tag;
+            rv = rule->GetTag(*getter_AddRefs(tag));
+            if (NS_FAILED(rv)) return rv;
+
+            if (tag.get() == kRuleAtom) {
+                ++nrules;
+
+                rv = CompileRule(rule, nrules, childnode);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+
+        if (nrules == 0) {
+            // if no rules are specified in the template, then the
+            // contents of the <template> tag are the one-and-only
+            // template.
+            rv = CompileRule(tmpl, 1, childnode);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    // XXXwaterson post-process the rule network to optimize
+
+    mRulesCompiled = PR_TRUE;
+    return NS_OK;
+}
+
+
+
+nsresult
+RDFGenericBuilderImpl::CompileRule(nsIContent* aRule, PRInt32 aPriority, InnerNode* aParentNode)
+{
+    nsresult rv;
+
+    PRBool hasContainerTest = PR_FALSE;
+
+    PRInt32 count;
+    aRule->GetAttributeCount(count);
+
+    // Add constraints for the LHS
+    for (PRInt32 i = 0; i < count; ++i) {
+        PRInt32 attrNameSpaceID;
+        nsCOMPtr<nsIAtom> attr;
+        rv = aRule->GetAttributeNameAt(i, attrNameSpaceID, *getter_AddRefs(attr));
+        if (NS_FAILED(rv)) return rv;
+
+        // Note: some attributes must be skipped on XUL template rule subtree
+
+        // never compare against rdf:property attribute
+        if ((attr.get() == kPropertyAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
+            continue;
+        // never compare against rdf:instanceOf attribute
+        else if ((attr.get() == kInstanceOfAtom) && (attrNameSpaceID == kNameSpaceID_RDF))
+            continue;
+        // never compare against {}:id attribute
+        else if ((attr.get() == kIdAtom) && (attrNameSpaceID == kNameSpaceID_None))
+            continue;
+        // never compare against {}:xulcontentsgenerated attribute
+        else if ((attr.get() == kXULContentsGeneratedAtom) && (attrNameSpaceID == kNameSpaceID_None))
+            continue;
+
+        nsAutoString value;
+        rv = aRule->GetAttribute(attrNameSpaceID, attr, value);
+        if (NS_FAILED(rv)) return rv;
+
+        TestNode* testnode = nsnull;
+
+        if ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kParentAtom)) {
+            // The "parent" test.
+            //
+            // XXXwaterson this is wrong: we can't add this below the
+            // the previous node, because it'll cause an unconstrained
+            // search if we ever came "up" through this path. Need a
+            // JoinNode in here somewhere.
+            nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(value));
+
+            testnode = new ContentTagTestNode(aParentNode, mContentVar, tag);
+            if (! testnode)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+        else if (((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsContainerAtom)) ||
+                 ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == kIsEmptyAtom))) {
+            // Tests about containerhood and emptiness. These can be
+            // globbed together, mostly. Check to see if we've already
+            // added a container test: we only need one.
+            if (hasContainerTest)
+                continue;
+
+            RDFContainerInstanceTestNode::Test iscontainer =
+                RDFContainerInstanceTestNode::eDontCare;
+
+            rv = aRule->GetAttribute(kNameSpaceID_None, kIsContainerAtom, value);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                if (value.Equals("true")) {
+                    iscontainer = RDFContainerInstanceTestNode::eTrue;
+                }
+                else if (value.Equals("false")) {
+                    iscontainer = RDFContainerInstanceTestNode::eFalse;
+                }
+            }
+
+            RDFContainerInstanceTestNode::Test isempty =
+                RDFContainerInstanceTestNode::eDontCare;
+
+            rv = aRule->GetAttribute(kNameSpaceID_None, kIsEmptyAtom, value);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                if (value.Equals("true")) {
+                    isempty = RDFContainerInstanceTestNode::eTrue;
+                }
+                else if (value.Equals("false")) {
+                    isempty = RDFContainerInstanceTestNode::eFalse;
+                }
+            }
+
+            testnode = new RDFContainerInstanceTestNode(aParentNode,
+                                                        mDB,
+                                                        mContainmentProperties,
+                                                        mMemberVar,
+                                                        iscontainer,
+                                                        isempty);
+
+            if (! testnode)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            mRDFTests.Add(testnode);
+        }
+        else {
+            // It's a simple RDF test
+            nsCOMPtr<nsIRDFResource> property;
+            rv = gXULUtils->GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
+            if (NS_FAILED(rv)) return rv;
+
+            // XXXwaterson this is so manky
+            nsCOMPtr<nsIRDFNode> target;
+            if (value.FindChar(':') != -1) { // XXXwaterson WRONG WRONG WRONG!
+                nsCOMPtr<nsIRDFResource> resource;
+                rv = gRDFService->GetUnicodeResource(value.GetUnicode(), getter_AddRefs(resource));
+                if (NS_FAILED(rv)) return rv;
+
+                target = do_QueryInterface(resource);
+            }
+            else {
+                nsCOMPtr<nsIRDFLiteral> literal;
+                rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(literal));
+                if (NS_FAILED(rv)) return rv;
+
+                target = do_QueryInterface(literal);
+            }
+
+            testnode = new RDFPropertyTestNode(aParentNode, mDB, mMemberVar, property, target);
+            if (! testnode)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            mRDFTests.Add(testnode);
+        }
+
+        aParentNode->AddChild(testnode);
+        mRules.AddNode(testnode);
+        aParentNode = testnode;
+    }
+
+    // XXXwaterson Add unbounds for the RHS? The problem with doing
+    // this is that it will require variables to have values, which
+    // isn't the current semantics of the <rule> tag.
+
+    Rule* rule = new Rule(aRule, mContainerVar, mMemberVar, aPriority);
+    if (! rule)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // The InstantiationNode owns the rule now.
+    InstantiationNode* instnode =
+        new InstantiationNode(rule, &mConflictSet);
+
+    if (! instnode)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    aParentNode->AddChild(instnode);
+    mRules.AddNode(instnode);
+    
+    return NS_OK;
+}
