@@ -2967,7 +2967,7 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
       } 
       else {
         charToConvert[0] = LOBYTE(mbcsCharCode);
-        if (::IsDBCSLeadByte(charToConvert[0])) {
+        if (::IsDBCSLeadByteEx(gCurrentKeyboardCP, charToConvert[0])) {
           mLeadByte = charToConvert[0];
           return TRUE;
         }
