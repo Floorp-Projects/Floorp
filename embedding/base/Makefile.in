@@ -62,6 +62,10 @@ ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= nsEmbedWin32.cpp
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS		+= nsEmbedOS2.cpp
+endif
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
