@@ -322,8 +322,8 @@ function sov_rowprops (row, properties)
         properties.AppendElement(this.atomCurrent);
 }
 
-BasicOView.prototype.getCellProperties =
-function bov_cellprops (row, colID, properties)
+console._stackOutlinerView.getCellProperties =
+function sov_cellprops (row, colID, properties)
 {
     if (row == this.currentFrame && colID == "current-frame")
         properties.AppendElement(this.atomCurrent);
