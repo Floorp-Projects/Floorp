@@ -74,7 +74,8 @@ public:
           nsStretchMetrics&    aDesiredStretchSize);
 
   // helper method to lookup the operator dictionary and initialize our member data
-  void InitData();
+  void 
+  InitData(nsIPresContext* aPresContext);
 
 protected:
   nsMathMLmoFrame();
@@ -82,10 +83,12 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  nsMathMLChar    mMathMLChar; // Here is the MathChar that will deal with the operator.
+  nsMathMLChar    mMathMLChar; // Here is the MathMLChar that will deal with the operator.
   nsOperatorFlags mFlags;
   float           mLeftSpace;
   float           mRightSpace;
+  float           mMinSize;
+  float           mMaxSize;
 };
 
 #endif /* nsMathMLmoFrame_h___ */

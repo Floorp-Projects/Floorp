@@ -77,19 +77,16 @@ nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = nsMathMLContainerFrame::Init
     (aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mSubScriptShiftFactor = 0.0;
+  mSubScriptShift = 0;
   mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
 
-  // check for subscriptshift attribute in ex units
+  // check if the subscriptshift attribute is there
   nsAutoString value;
-  mUserSetFlag = PR_FALSE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute
-      (kNameSpaceID_None, nsMathMLAtoms::subscriptshift_, value)) {
-    PRInt32 aErrorCode;
-    float aUserValue = value.ToFloat(&aErrorCode);
-    if (NS_SUCCEEDED(aErrorCode)) {
-      mUserSetFlag = PR_TRUE;
-      mSubScriptShiftFactor = aUserValue;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::subscriptshift_, value)) {
+    nsCSSValue cssValue;
+    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+      mSubScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
 
@@ -173,13 +170,9 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   nscoord aSubScriptShift, dummy;
   // get aSubScriptShift default from font
   GetSubScriptShifts (fm, aSubScriptShift, dummy);
-  if (mUserSetFlag) {
-    // the user has set the subscriptshift attribute
-    aSubScriptShift = NSToCoordRound(mSubScriptShiftFactor * xHeight);
-//XXX shouldn't this be 
-//    aSubScriptShift = 
-//      PR_MAX(aSubScriptShift, NSToCoordRound(mSubScriptShiftFactor * xHeight));
-  }
+
+  aSubScriptShift = 
+    PR_MAX(aSubScriptShift, mSubScriptShift);
 
   // get actual subscriptshift to be used
   // Rule 18b, App. G, TeXbook

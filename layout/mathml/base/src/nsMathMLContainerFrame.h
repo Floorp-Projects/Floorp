@@ -35,6 +35,8 @@
 #include "nsIMathMLFrame.h"
 #include "nsMathMLParts.h"
 
+#include "nsCSSValue.h"
+
 /*
  * Base class for MathML container frames. It acts like an inferred 
  * mrow. By default, this frame uses its Reflow() method to lay its 
@@ -256,6 +258,27 @@ public:
                                  nsHTMLReflowMetrics& aReflowMetrics,
                                  nsBoundingMetrics&   aBoundingMetrics);
 
+  // helper to check if a content has an attribute. If content is nsnull or if
+  // the attribute is not there, check if the attribute is on the mstyle frame.
+  // @return NS_CONTENT_ATTR_HAS_VALUE  --if attribute is there
+  //         NS_CONTENT_ATTR_NOT_THERE  --if attribute is not there
+  static nsresult
+  GetAttribute(nsIContent* aContent,
+               nsIFrame*   aMathMLmstyleFrame,          
+               nsIAtom*    aAttributeAtom,
+               nsString&   aValue);
+
+  // utilities to parse and retrieve numeric values in CSS units
+  // All values are stored in twips.
+  static PRBool
+  ParseNumericValue(const nsString& aString,
+                    nsCSSValue&     aCSSValue);
+
+  static nscoord 
+  CalcLength(nsIPresContext*   aPresContext,
+             nsIStyleContext*  aStyleContext,
+             const nsCSSValue& aValue);
+
   // helper methods for getting sup/subdrop's from a child
   static void 
     GetSubDropFromChild (nsIPresContext* aPresContext,
@@ -309,23 +332,6 @@ public:
     }
 
   // these are TeX specific params not found in ordinary fonts
-#if 0
-  static void
-    GetSubDrop (nsIFontMetrics *fm, nscoord& aSubDrop)
-    {
-      nscoord xHeight;
-      fm->GetXHeight (xHeight);
-      aSubDrop = NSToCoordRound(0.3f * xHeight);
-    }
-
-  static void
-    GetSupDrop (nsIFontMetrics *fm, nscoord& aSupDrop)
-    {
-      nscoord xHeight;
-      fm->GetXHeight (xHeight);
-      aSupDrop = NSToCoordRound(0.3f * xHeight);
-    }
-#endif
 
   static void
   GetSubDrop (nsIFontMetrics *fm, nscoord& aSubDrop)
