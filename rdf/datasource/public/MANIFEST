@@ -5,5 +5,5 @@ nsIRDFFileSystem.h
 nsIRDFFind.h
 nsIRDFFTP.h
 nsIRelatedLinksDataSource.h
-nsIXULContent.h
+nsIXULContentSink.h
 
