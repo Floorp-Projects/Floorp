@@ -280,7 +280,7 @@ PRInt16			red,green,blue,*cur16;
         } 
       }
    
-   
+  #if 0 
     // after we are finished converting the image, build a new color map   
     mColorMap = new nsColorMap;
 
@@ -290,6 +290,7 @@ PRInt16			red,green,blue,*cur16;
       mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
       memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
       }
+#endif
     }
  
 
@@ -325,12 +326,14 @@ PRInt16			red,green,blue,*cur16;
         } 
       }
    
+#if 0
     if (mColorMap != nsnull)
       {
       mColorMap->NumColors = mNumPalleteColors;
       mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
       memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
       }
+#endif
     }
 
 }
