@@ -1441,10 +1441,10 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 			PD_PUTS(out_buf);
 		}
 	  }
-
+#ifndef MODULAR_NETLIB
     PR_snprintf(out_buf, sizeof(out_buf), "<PRE>"CRLF);
 	PD_PUTS(out_buf); /* output the line */
-
+#endif
 	if(NET_HTTPIndexParserGetTextMessage(obj->parse_data))
 	  {
 		char *msg;
@@ -1528,7 +1528,11 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 				PR_snprintf(out_buf, 
 							sizeof(out_buf), 
 							"<IMG ALIGN=absbottom "
+#ifndef MODULAR_NETLIB
 							"BORDER=0 SRC=\"internal-gopher-menu\">");
+#else
+							"BORDER=0 SRC=\"resource:/res/network/gopher-menu.gif\">");
+#endif
 			  }
             else if(cinfo && cinfo->icon)
               {
@@ -1541,7 +1545,11 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
                 PR_snprintf(out_buf, 
 							sizeof(out_buf), 
 							"<IMG ALIGN=absbottom BORDER=0 "
+#ifndef MODULAR_NETLIB
 						   	"SRC=\"internal-gopher-unknown\">");
+#else
+						   	"SRC=\"resource:/res/network/gopher-unknown.gif\">");
+#endif
 		      }
 
        		PD_PUTS(out_buf); /* output the line */
@@ -1638,6 +1646,9 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 cleanup:
 	NET_HTTPIndexParserFree(obj->parse_data);
 	PR_FREEIF(path);
+#ifdef MODULAR_NETLIB
+	(stream->complete)(stream);
+#endif
 }
 
 PRIVATE void net_IdxConvAbort(NET_StreamClass *stream, int32 status)
