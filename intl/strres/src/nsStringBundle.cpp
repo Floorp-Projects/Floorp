@@ -254,7 +254,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kStringBundleServiceCID, path);
+  rv = compMgr->UnregisterComponent(kStringBundleServiceCID, path);
   if (NS_FAILED(rv)) goto done;
 
   done:

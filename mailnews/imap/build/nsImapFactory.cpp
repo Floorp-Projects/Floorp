@@ -272,25 +272,25 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
                              (nsISupports**)&compMgr);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = compMgr->UnregisterFactory(kCImapUrl, path);
+	rv = compMgr->UnregisterComponent(kCImapUrl, path);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->UnregisterFactory(kCImapProtocol, path);
+	rv = compMgr->UnregisterComponent(kCImapProtocol, path);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->UnregisterFactory(kCImapHostSessionList, path);
+	rv = compMgr->UnregisterComponent(kCImapHostSessionList, path);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->UnregisterFactory(kCImapIncomingServer, path);
+	rv = compMgr->UnregisterComponent(kCImapIncomingServer, path);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->UnregisterFactory(kCImapService, path);
+	rv = compMgr->UnregisterComponent(kCImapService, path);
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kCImapMessageResource, path);
 	if (NS_FAILED(rv)) goto done;
 
-	rv = compMgr->UnregisterFactory(kCImapResource, path);
+	rv = compMgr->UnregisterComponent(kCImapResource, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:

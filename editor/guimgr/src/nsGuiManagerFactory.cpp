@@ -158,7 +158,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsComponentManager::UnregisterFactory(kIGuiManagerFactoryIID, path);
+  rv = nsComponentManager::UnregisterComponent(kIGuiManagerFactoryIID, path);
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;

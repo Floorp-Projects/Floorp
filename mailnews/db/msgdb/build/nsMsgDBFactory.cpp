@@ -216,13 +216,13 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kCMailDB, path);
+  rv = compMgr->UnregisterComponent(kCMailDB, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCImapDB, path);
+  rv = compMgr->UnregisterComponent(kCImapDB, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCNewsDB, path);
+  rv = compMgr->UnregisterComponent(kCNewsDB, path);
   if (NS_FAILED(rv)) goto done;
 
   done:

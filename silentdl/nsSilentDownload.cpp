@@ -1032,25 +1032,9 @@ nsSilentDownloadManagerFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr
 }
 
 
+NS_IMPL_ADDREF(nsSilentDownloadManagerFactory)
+NS_IMPL_RELEASE(nsSilentDownloadManagerFactory)
 
-NS_IMETHODIMP
-nsSilentDownloadManagerFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP
-nsSilentDownloadManagerFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsSilentDownloadManagerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -1134,25 +1118,9 @@ nsSilentDownloadTaskFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 }
 
 
+NS_IMPL_ADDREF(nsSilentDownloadTaskFactory)
+NS_IMPL_RELEASE(nsSilentDownloadTaskFactory)
 
-NS_IMETHODIMP
-nsSilentDownloadTaskFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP
-nsSilentDownloadTaskFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
 
 NS_IMETHODIMP
 nsSilentDownloadTaskFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -1483,9 +1451,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
     printf("*** SilentDownload is being unregistered\n");
 #endif
     
-    rv = compMgr->UnregisterFactory(kSilentDownloadCID, path);
+    rv = compMgr->UnregisterComponent(kSilentDownloadCID, path);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterFactory(kSilentDownloadTaskCID, path);
+    rv = compMgr->UnregisterComponent(kSilentDownloadTaskCID, path);
 
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);

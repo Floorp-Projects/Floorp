@@ -326,19 +326,19 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kMailboxUrlCID, path);
+  rv = compMgr->UnregisterComponent(kMailboxUrlCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kMailboxServiceCID, path);
+  rv = compMgr->UnregisterComponent(kMailboxServiceCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kPop3UrlCID, path);
+  rv = compMgr->UnregisterComponent(kPop3UrlCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kPop3ServiceCID, path);
+  rv = compMgr->UnregisterComponent(kPop3ServiceCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kMailboxParserCID, path);
+  rv = compMgr->UnregisterComponent(kMailboxParserCID, path);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kLocalMailFolderResourceCID, path);

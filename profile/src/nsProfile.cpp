@@ -756,7 +756,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kProfileCID, path);
+  rv = compMgr->UnregisterComponent(kProfileCID, path);
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;

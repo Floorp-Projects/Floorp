@@ -395,9 +395,9 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** XPInstall is being unregistered\n");
 
-    nsRepository::UnregisterFactory(kSoftwareUpdate_CID, path);
-    nsRepository::UnregisterFactory(kInstallTrigger_CID, path);
-    nsRepository::UnregisterFactory(kInstallVersion_CID, path);
+    nsRepository::UnregisterComponent(kSoftwareUpdate_CID, path);
+    nsRepository::UnregisterComponent(kInstallTrigger_CID, path);
+    nsRepository::UnregisterComponent(kInstallVersion_CID, path);
 
     return NS_OK;
 }

@@ -171,19 +171,19 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kUnicodeDecodeHelperCID, path);
+  rv = compMgr->UnregisterComponent(kUnicodeDecodeHelperCID, path);
   if(NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kUnicodeEncodeHelperCID, path);
+  rv = compMgr->UnregisterComponent(kUnicodeEncodeHelperCID, path);
   if(NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCharsetAliasCID, path);
+  rv = compMgr->UnregisterComponent(kCharsetAliasCID, path);
   if(NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCharsetConverterManagerCID, path);
+  rv = compMgr->UnregisterComponent(kCharsetConverterManagerCID, path);
   if(NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kPlatformCharsetCID, path);
+  rv = compMgr->UnregisterComponent(kPlatformCharsetCID, path);
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);

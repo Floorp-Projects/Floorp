@@ -186,16 +186,16 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kLocaleFactoryCID, path);
+  rv = compMgr->UnregisterComponent(kLocaleFactoryCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCollationFactoryCID, path);
+  rv = compMgr->UnregisterComponent(kCollationFactoryCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCollationCID, path);
+  rv = compMgr->UnregisterComponent(kCollationCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kDateTimeFormatCID, path);
+  rv = compMgr->UnregisterComponent(kDateTimeFormatCID, path);
   if (NS_FAILED(rv)) goto done;
 
   done:

@@ -279,11 +279,11 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kIEditFactoryIID, path);
+  rv = compMgr->UnregisterComponent(kIEditFactoryIID, path);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterFactory(kITextEditFactoryIID, path);
+  rv = compMgr->UnregisterComponent(kITextEditFactoryIID, path);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterFactory(kIHTMLEditFactoryIID, path);
+  rv = compMgr->UnregisterComponent(kIHTMLEditFactoryIID, path);
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
