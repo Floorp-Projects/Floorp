@@ -787,6 +787,8 @@ NS_IMETHODIMP nsEditor::Cut()
   return res;
 }
 
+extern "C" NS_EXPORT nsISelectionMgr* GetSelectionMgr();
+
 NS_IMETHODIMP nsEditor::Copy()
 {
   //printf("nsEditor::Copy\n");
@@ -797,13 +799,7 @@ NS_IMETHODIMP nsEditor::Copy()
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=3509.
   // In the meantime, so I'm not blocked on writing the rest of the code,
   // nsSelectionMgr uses the egregious hack of a global variable:
-#define EXTERNAL_SELECTION_MGR 1
-#ifdef EXTERNAL_SELECTION_MGR
-  extern nsISelectionMgr* theSelectionMgr;
-  nsISelectionMgr* selectionMgr = theSelectionMgr;
-#else /* EXTERNAL_SELECTION_MGR */
-  nsISelectionMgr* selectionMgr = 0;
-#endif /* EXTERNAL_SELECTION_MGR */
+  nsISelectionMgr* selectionMgr = GetSelectionMgr();
   if (!selectionMgr)
   {
     printf("Can't get selection mgr!\n");
@@ -824,12 +820,7 @@ NS_IMETHODIMP nsEditor::Paste()
   // See http://bugzilla.mozilla.org/show_bug.cgi?id=3509.
   // In the meantime, so I'm not blocked on writing the rest of the code,
   // nsSelectionMgr uses the egregious hack of a global variable:
-#ifdef EXTERNAL_SELECTION_MGR
-  extern nsISelectionMgr* theSelectionMgr;
-  nsISelectionMgr* selectionMgr = theSelectionMgr;
-#else /* EXTERNAL_SELECTION_MGR */
-  nsISelectionMgr* selectionMgr = 0;
-#endif /* EXTERNAL_SELECTION_MGR */
+  nsISelectionMgr* selectionMgr = GetSelectionMgr();
   if (!selectionMgr)
   {
     printf("Can't get selection mgr!\n");
