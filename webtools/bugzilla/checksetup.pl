@@ -148,7 +148,7 @@ unless (eval "require Mysql") {
     die "Please install the Mysql database driver. You can do this by running (as root)\n\n",
         "       perl -MCPAN -eshell\n",
         "       install Msql-Mysql\n\n",
-        "Be sure to enable the Mysql emulation!";
+        "Be sure to enable the Mysql emulation!\n";
 }
 
 unless (eval "require Date::Parse") {
