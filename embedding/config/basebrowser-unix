@@ -24,24 +24,58 @@ libplds4.so
 libmozjs.so
 
 ; 
-; NGLayout Web Widget Control:
+; XPCOM:
+; 
+libxpcom.so 
+components/xpcom_base.xpt
+components/xpcom_components.xpt
+components/xpcom_ds.xpt
+components/xpcom_io.xpt
+components/xpcom_threads.xpt
+components/xpcom_xpti.xpt
+
+; xpconnect
+components/libxpconnect.so
+components/xpconnect.xpt
+
+; 
+; XP widgets/graphics
 ; 
 
 libgkgfx.so 
 libgtksuperwin.so 
 libgtkembedmoz.so 
+components/libtimer_gtk.so
+components/libgfx_gtk.so                     
+components/gfx.xpt 
+components/libgfx2.so
+components/gfx2.xpt
+components/libwidget_gtk.so
+components/widget.xpt
 
+; layout
+libmoz_art_lgpl.so
+components/libgkcontent.so
+res/dtd/*
+components/libgklayout.so                   
+components/libhtmlpars.so                 
+components/libgkview.so                   
+components/layout_base.xpt              
+components/layout_xul.xpt               
+components/content_base.xpt
 
-; 
-; DOM:
-; 
-components/libjsdom.so 
-
-
-; 
-; XPCOM:
-; 
-libxpcom.so 
+; Imaging:
+libmozjpeg.so
+libmozz.so
+components/libnsgif.so                    
+components/libnsjpg.so                    
+components/libnspng.so
+components/libimglib2.so
+components/imglib2.xpt
+components/libimggif.so
+components/libimgjpeg.so
+components/libimgpng.so
+components/libimgppm.so
 
 
 
@@ -59,36 +93,18 @@ components/appshell.xpt
 components/libcaps.so
 components/caps.xpt                     
 
-; chrome
-components/libchrome.so                   
-components/chrome.xpt                   
-
 ; cookies
 components/libcookie.so                   
 
 ; docshell
+; embedding glue:
+; appshell, docshell, uriloader, chrome, components
 components/libdocshell.so                 
-components/docshell.xpt            
-
-; dom
-components/dom.xpt                      
-components/dom_base.xpt
-components/dom_core.xpt
-components/dom_css.xpt
-components/dom_events.xpt
-components/dom_html.xpt
-components/dom_range.xpt
-components/dom_stylesheets.xpt
-components/dom_traversal.xpt
-components/dom_views.xpt
-components/dom_xbl.xpt
-components/dom_xul.xpt
-
-; editor
-components/libeditor.so                   
-components/editor.xpt
-
-; embedding                   
+components/docshell.xpt
+components/liburiloader.so
+components/uriloader.xpt
+components/libchrome.so                   
+components/chrome.xpt                   
 components/libmozbrwsr.so                 
 components/libwebbrwsr.so  ; wtf!  it is needed?!
 components/mozbrwsr.xpt                 
@@ -96,111 +112,25 @@ components/webBrowser_core.xpt
 components/libembedcomponents.so
 components/windowwatcher.xpt
 
-; find functionality
-components/libtxtsvc.so
-components/txtsvc.xpt
-
-; gfx
-components/libtimer_gtk.so
-components/libgfx_gtk.so                     
-components/gfx.xpt 
-
-; gfx2
-components/libgfx2.so
-components/gfx2.xpt
-
 ; jar
 components/libjar50.so
 components/jar.xpt
 
-; javascript
-components/libjsurl.so
-components/jsurl.xpt
-
-; layout
-libmoz_art_lgpl.so
-components/libgkcontent.so
-res/dtd/*
-components/libgklayout.so                   
-components/libhtmlpars.so                 
-components/libgkview.so                   
-components/layout_base.xpt              
-components/layout_xul.xpt               
-components/content_base.xpt
-
-; netwerk
-
-libmozz.so
-components/libnecko.so                    
-components/necko.xpt                    
-components/libnecko2.so                   
-components/necko_about.xpt              
-components/necko_cache.xpt              
-components/necko_data.xpt               
-components/necko_dns.xpt                
-components/necko_ftp.xpt                
-components/necko_http.xpt               
-components/necko_jar.xpt                
-components/necko_res.xpt                
-components/necko_strconv.xpt            
-
-; imagelib
-libmozjpeg.so
-components/libnsgif.so                    
-components/libnsjpg.so                    
-components/libnspng.so
-components/libimglib2.so
-components/imglib2.xpt
-components/libimggif.so
-components/libimgjpeg.so
-components/libimgpng.so
-components/libimgppm.so
-
 ; prefs
-components/pref.xpt                     
+components/pref.xnpt                     
 components/libpref.so
 
 ; profile
 components/libprofile.so                  
 components/profile.xpt
 
-; wallet
-; Optional - only if you need password persistence
-components/libwallet.so
-components/wallet.xpt                  
-
-; download progress
-; Optional - you can implement your own download progress dialog
-;   then this is no longer required
-;components/nsProgressDialog.js
-;components/nsHelperAppDlg.js
-;components/nsDownloadProgressListener.js
-;components/downloadmanager.xpt
-
-; psm2
-; Optional - only if you need PSM2 support
-components/libpipboot.so
-components/pipboot.xpt
-components/libpipnss.so
-components/pipnss.xpt
-chrome/pipnss.jar
-components/libpippki.so
-components/pippki.xpt
-chrome/pippki.jar
-defaults/pref/security-prefs.js
-libnss3.so
-libsmime3.so
-libsoftokn3.so
-libssl3.so
-libnssckbi.so
+; session history
+components/libshistory.so
+components/shistory.xpt
 
 ; rdf
 components/librdf.so
 components/rdf.xpt
-
-; session history
-components/libshistory.so
-components/shistory.xpt
 
 ; required l10n libraries
 
@@ -222,6 +152,92 @@ components/libchardet.so
 ; components/libucvtw2.so for traditional chinese
 ; components/libucvibm.so for ibm
 
+; required i18n libs
+components/libstrres.so
+
+; 
+; DOM:
+; 
+components/libjsdom.so 
+components/dom.xpt                      
+components/dom_base.xpt
+components/dom_core.xpt
+components/dom_css.xpt
+components/dom_events.xpt
+components/dom_html.xpt
+components/dom_range.xpt
+components/dom_stylesheets.xpt
+components/dom_traversal.xpt
+components/dom_views.xpt
+components/dom_xbl.xpt
+components/dom_xul.xpt
+
+; "javascript:" URLs
+components/libjsurl.so
+components/jsurl.xpt
+
+; editor
+components/libeditor.so                   
+components/editor.xpt
+
+; find functionality
+; Optional - only if your code uses nsIWebBrowserFind
+components/libtxtsvc.so
+components/txtsvc.xpt
+
+; netwerk
+components/libnecko.so                    
+components/necko.xpt                    
+components/necko_about.xpt              
+components/necko_data.xpt               
+components/necko_dns.xpt                
+components/necko_http.xpt               
+components/necko_jar.xpt                
+components/necko_res.xpt                
+components/necko_strconv.xpt
+
+; cache
+components/libnkcache.so
+components/necko_cache.xpt
+
+; optional for FTP support
+components/libnecko2.so                   
+components/necko_ftp.xpt                
+
+; plugins
+; Optional - only if you need plugin support
+components/libgkplugin.so
+components/plugin.xpt
+
+; wallet
+; Optional - only if you need password persistence
+components/libwallet.so
+components/wallet.xpt                  
+
+; download progress
+; Optional - you can implement your own download progress dialog
+;   then this is no longer required
+;components/nsProgressDialog.js
+;components/nsHelperAppDlg.js
+;components/nsDownloadProgressListener.js
+
+; psm2
+; Optional - only if you need HTTPS support
+components/libpipboot.so
+components/pipboot.xpt
+components/libpipnss.so
+components/pipnss.xpt
+chrome/pipnss.jar
+components/libpippki.so
+components/pippki.xpt
+chrome/pippki.jar
+defaults/pref/security-prefs.js
+libnss3.so
+libsmime3.so
+libsoftokn3.so
+libssl3.so
+libnssckbi.so
+
 
 res/language.properties
 res/langGroups.properties
@@ -230,37 +246,16 @@ res/charsetalias.properties
 res/unixcharset.properties
 ; res/strres.properties 
 
-; required i18n libs
-components/libstrres.so
-
 ; required prefs files
 defaults/pref/all.js
 defaults/pref/unix.js
 
-; uriloader
-components/liburiloader.so
-components/uriloader.xpt
-
-; widget
-components/libwidget_gtk.so
-components/widget.xpt
-
-; xpconnect
-components/libxpconnect.so
-components/xpconnect.xpt
-
-; xpcom
-components/xpcom_base.xpt
-components/xpcom_components.xpt
-components/xpcom_ds.xpt
-components/xpcom_io.xpt
-components/xpcom_threads.xpt
-components/xpcom_xpti.xpt
 
 ;
 ; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
 ; 
 chrome/embed.jar
+
 ; 
 ; res:
 ; 

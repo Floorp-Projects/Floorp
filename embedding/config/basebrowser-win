@@ -36,22 +36,45 @@ plds4.dll
 js3250.dll     
 
 ; 
-; NGLayout Web Widget Control:
+; XPCOM:
+; 
+xpcom.dll
+mozreg.dll
+components\xpcom_base.xpt
+components\xpcom_components.xpt
+components\xpcom_ds.xpt
+components\xpcom_eventloop_windows.xpt
+components\xpcom_eventloop_xp.xpt
+components\xpcom_io.xpt
+components\xpcom_nativeapp.xpt
+components\xpcom_thread.xpt
+components\xpcom_xpti.xpt
+
+; xpconnect
+components\xpc3250.dll
+components\xpconnect.xpt
+
+; 
+; XP widgets/graphics
 ; 
 gkgfx.dll
 components\gkgfxwin.dll      
 components\gkwidget.dll   
+components\widget.xpt
+components\gfx.xpt                      
+components\gkview.dll                   
+components\gfx2.dll
+components\gfx2.xpt
 
-; 
-; DOM:
-; 
-components\jsdom.dll   
+; layout
+moz_art_lgpl.dll
+components\gkcontent.dll
+components\gklayout.dll                   
+components\gkparser.dll                 
+components\layout_base.xpt              
+components\layout_xul.xpt               
+components\content_base.xpt
 
-; 
-; XPCOM:
-; 
-xpcom.dll
-mozreg.dll     
 ; 
 ; Imaging:
 ; 
@@ -59,6 +82,13 @@ img3250.dll
 jpeg3250.dll
 zlib.dll
 components\nspng.dll
+components\nsgif.dll                    
+components\nsjpg.dll                    
+components\imglib2.dll
+components\imggif.dll
+components\imgjpeg.dll
+components\imgpng.dll
+components\imgppm.dll
 
 ; 
 ; Components: (need to trim fat)
@@ -69,97 +99,27 @@ components\nspng.dll
 components\accessibility.dll              
 components\accessibility.xpt                 
 
-; appshell 
-components\appshell.dll                 
-components\appshell.xpt                 
-
-; caps
+; caps (JavaScript security)
 components\caps.dll                     
 components\caps.xpt                     
-
-; chrome
-components\chrome.dll                   
-components\chrome.xpt                   
 
 ; cookies
 components\cookie.dll                   
 
-; docshell
+; embedding glue:
+; appshell, docshell, uriloader, chrome, components
+components\appshell.dll                 
+components\appshell.xpt                 
 components\docshell.dll                 
 components\docshell_base.xpt            
-
-; dom
-components\dom.xpt                      
-components\dom_base.xpt
-components\dom_core.xpt
-components\dom_css.xpt
-components\dom_events.xpt
-components\dom_html.xpt
-components\dom_range.xpt
-components\dom_stylesheets.xpt
-components\dom_traversal.xpt
-components\dom_views.xpt
-components\dom_xbl.xpt
-components\dom_xul.xpt
-
-; editor
-components\editor.dll                   
-components\editor.xpt
-
-; embedding              
+components\urildr.dll
+components\uriloader.xpt
+components\chrome.dll                   
+components\chrome.xpt                   
 components\webbrwsr.dll              
 components\webBrowser_core.xpt
 components\embedcomponents.dll
 components\windowwatcher.xpt
-
-; find functionality
-; Optional - only if your code uses nsIWebBrowserFind
-components\txtsvc.dll
-components\txtsvc.xpt
-
-; gfx
-components\gfx.xpt                      
-
-; javascript
-components\jsurl.dll
-components\jsurl.xpt
-
-; layout
-moz_art_lgpl.dll
-components\gkcontent.dll
-components\gklayout.dll                   
-components\gkparser.dll                 
-components\gkview.dll                   
-components\layout_base.xpt              
-components\layout_xul.xpt               
-components\content_base.xpt
-
-; netwerk
-
-components\necko.dll                    
-components\necko.xpt                    
-components\necko2.dll                   
-components\necko_about.xpt              
-components\necko_cache.xpt              
-components\necko_data.xpt               
-components\necko_dns.xpt                
-components\necko_ftp.xpt                
-components\necko_http.xpt               
-components\necko_jar.xpt                
-components\necko_res.xpt                
-components\necko_strconv.xpt            
-components\nkcache.dll
-
-; imagelib
-components\nsgif.dll                    
-components\nsjpg.dll                    
-components\imglib2.dll
-components\imggif.dll
-components\imgjpeg.dll
-components\imgpng.dll
-components\imgppm.dll
-components\gfx2.dll
-components\gfx2.xpt
 
 ; jar
 components\jar50.dll
@@ -169,53 +129,19 @@ components\jar.xpt
 components\pref.xpt                     
 components\xppref32.dll
 
-; plugins
-; Optional - only if you need plugin support
-components\gkplugin.dll
-components\plugin.xpt
-plugins\npnul32.dll
-
 ; profile
 components\profile.dll                  
 components\profile.xpt
-
-; wallet
-; Optional - only if you need password persistence
-components\wallet.dll
-components\wallet.xpt                  
-
-; download progress
-; Optional - you can implement your own download progress dialog
-;   then this is no longer required
-;components\nsProgressDialog.js
-;components\nsHelperAppDlg.js
-;components\nsDownloadProgressListener.js
-;components\downloadmanager.xpt
-
-; psm2
-; Optional - only if you need PSM2 support
-components\pipboot.dll
-components\pipboot.xpt
-components\pipnss.dll
-components\pipnss.xpt
-components\pippki.dll
-components\pippki.xpt
-nss3.dll
-smime3.dll
-softokn3.dll
-ssl3.dll
-nssckbi.dll
-
-; rdf
-components\rdf.dll
-components\rdf.xpt
 
 ; session history
 components\shistory.dll
 components\shistory.xpt
 
-; required l10n libraries
+; rdf
+components\rdf.dll
+components\rdf.xpt
 
+; required l10n libraries
 components\intl.xpt
 components\locale.xpt
 components\ucharuti.dll
@@ -237,30 +163,87 @@ components\chardet.dll
 ; required i18n libs
 components\strres.dll
 
-; uriloader
-components\urildr.dll
-components\uriloader.xpt
+; dom
+components\jsdom.dll   
+components\dom.xpt                      
+components\dom_base.xpt
+components\dom_core.xpt
+components\dom_css.xpt
+components\dom_events.xpt
+components\dom_html.xpt
+components\dom_range.xpt
+components\dom_stylesheets.xpt
+components\dom_traversal.xpt
+components\dom_views.xpt
+components\dom_xbl.xpt
+components\dom_xul.xpt
 
-; widget
-components\widget.xpt
+; "javascript:" URLs
+components\jsurl.dll
+components\jsurl.xpt
 
-; xpconnect
-components\xpc3250.dll
-components\xpconnect.xpt
+; editor
+components\editor.dll                   
+components\editor.xpt
 
-; xpcom
-components\xpcom_base.xpt
-components\xpcom_components.xpt
-components\xpcom_ds.xpt
-components\xpcom_eventloop_windows.xpt
-components\xpcom_eventloop_xp.xpt
-components\xpcom_io.xpt
-components\xpcom_nativeapp.xpt
-components\xpcom_thread.xpt
-components\xpcom_xpti.xpt
+; find functionality
+; Optional - only if your code uses nsIWebBrowserFind
+components\txtsvc.dll
+components\txtsvc.xpt
+
+; netwerk
+components\necko.dll                    
+components\necko.xpt                    
+components\necko_about.xpt              
+components\necko_data.xpt               
+components\necko_dns.xpt                
+components\necko_http.xpt               
+components\necko_jar.xpt                
+components\necko_res.xpt                
+components\necko_strconv.xpt
+
+; cache
+components\nkcache.dll
+components\necko_cache.xpt              
+
+; optional for FTP support
+components\necko2.dll
+components\necko_ftp.xpt
+
+; plugins
+; Optional - only if you need plugin support
+components\gkplugin.dll
+components\plugin.xpt
+plugins\npnul32.dll
+
+; wallet
+; Optional - only if you need password persistence
+components\wallet.dll
+components\wallet.xpt                  
+
+; download progress
+; Optional - you can implement your own download progress dialog
+;   then this is no longer required
+;components\nsProgressDialog.js
+;components\nsHelperAppDlg.js
+;components\nsDownloadProgressListener.js
+
+; psm2
+; Optional - only if you need HTTPS support
+components\pipboot.dll
+components\pipboot.xpt
+components\pipnss.dll
+components\pipnss.xpt
+components\pippki.dll
+components\pippki.xpt
+nss3.dll
+smime3.dll
+softokn3.dll
+ssl3.dll
+nssckbi.dll
 
 ;
-; MathML
+; MathML, optional for MathML charset conversion
 ;
 components\ucvmath.dll
 
