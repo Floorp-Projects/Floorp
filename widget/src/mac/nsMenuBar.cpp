@@ -370,11 +370,9 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
   // set this as a nsMenuListener on aParentWindow
   aParentWindow->AddMenuListener((nsIMenuListener *)this);
   
-  PRInt32 count;
-  mMenuBarContent->ChildCount(count);
-  for ( int i = 0; i < count; ++i ) { 
-    nsCOMPtr<nsIContent> menu;
-    mMenuBarContent->ChildAt ( i, *getter_AddRefs(menu) );
+  PRUint32 count = mMenuBarContent->GetChildCount();
+  for ( PRUint32 i = 0; i < count; ++i ) { 
+    nsIContent *menu = mMenuBarContent->GetChildAt(i);
     if ( menu ) {
       nsCOMPtr<nsIAtom> tag;
       menu->GetTag ( *getter_AddRefs(tag) );
