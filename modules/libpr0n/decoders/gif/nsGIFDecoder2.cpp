@@ -127,7 +127,7 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
 {
   mObserver = do_QueryInterface(aLoad);
 
-  mImageContainer = do_CreateInstance("@mozilla.org/image/container;1");
+  mImageContainer = do_CreateInstance("@mozilla.org/image/container;1?type=image/gif");
   aLoad->SetImage(mImageContainer);
   
   /* do gif init stuff */
