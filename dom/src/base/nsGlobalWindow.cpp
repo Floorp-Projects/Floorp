@@ -1167,23 +1167,11 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
     nsIWebShell *rootWebShell;
     ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
     if (nsnull != rootWebShell) {
-      nsIWebShellContainer *rootContainer;
-      ret = rootWebShell->GetContainer(rootContainer);
-      if (nsnull != rootContainer) {
-#ifdef NECKO
-        nsIPrompt *prompter;
-        if (NS_OK == (ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter))) {
-          ret = prompter->Confirm(str.GetUnicode(), aReturn);
-          NS_RELEASE(prompter);
-        }
-#else
-        nsINetSupport *support;
-        if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
-          *aReturn = support->Confirm(str);
-          NS_RELEASE(support);
-        }
-#endif
-        NS_RELEASE(rootContainer);
+      nsIPrompt *prompter;
+      ret = rootWebShell->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter);
+      if (NS_SUCCEEDED(ret)) {
+        ret = prompter->Confirm(str.GetUnicode(), aReturn);
+        NS_RELEASE(prompter);
       }
       NS_RELEASE(rootWebShell);
     }
