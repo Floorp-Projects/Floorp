@@ -295,11 +295,11 @@ typedef enum JSSrcNoteType {
 
 /*
  * Offset fields follow certain notes and are frequency-encoded: an offset in
- * [0,127] consumes one byte, an offset in [128,32767] takes two, and the high
- * bit of the first byte is set.
+ * [0,0x7f] consumes one byte, an offset in [0x80,0x7fffff] takes three, and
+ * the high bit of the first byte is set.
  */
-#define SN_2BYTE_OFFSET_FLAG    0x80
-#define SN_2BYTE_OFFSET_MASK    0x7f
+#define SN_3BYTE_OFFSET_FLAG    0x80
+#define SN_3BYTE_OFFSET_MASK    0x7f
 
 extern JS_FRIEND_DATA(const char *) js_SrcNoteName[];
 extern JS_FRIEND_DATA(uint8) js_SrcNoteArity[];
