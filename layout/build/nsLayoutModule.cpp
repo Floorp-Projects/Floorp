@@ -767,11 +767,6 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateDOMEventGroup },
 
-  { "XPointer Result",
-    NS_XPOINTERRESULT_CID,
-    nsnull,
-    CreateXPointerResult },
-
   { "Document Viewer",
     NS_DOCUMENT_VIEWER_CID,
     nsnull,
