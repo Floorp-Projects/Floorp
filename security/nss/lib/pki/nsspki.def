@@ -157,7 +157,7 @@ NSSTrustDomain_LoadModule;
 ;NSSTrustDomain_ImportEncodedPrivateKey;
 ;NSSTrustDomain_ImportEncodedPublicKey;
 ;NSSTrustDomain_FindBestCertificateByNickname;
-;NSSTrustDomain_FindCertificatesByNickname
+NSSTrustDomain_FindCertificatesByNickname
 ;NSSTrustDomain_FindCertificateByIssuerAndSerialNumber;
 ;NSSTrustDomain_FindBestCertificateBySubject;
 ;NSSTrustDomain_FindCertificatesBySubject;
