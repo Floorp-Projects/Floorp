@@ -98,17 +98,8 @@ nsPop3Sink::SetMailAccountURL(char* urlString)
     if (urlString)
     {
         PR_FREEIF(m_accountUrl);
-#ifdef DEBUG
-        printf("Mail account URL: %s\n", urlString);
-#endif 
         m_accountUrl = PL_strdup(urlString);
     }
-#ifdef DEBUG
-    else
-    {
-        printf("Null mail account URL.\n");
-    }
-#endif 
 
     return NS_OK;
 }
