@@ -1492,7 +1492,7 @@ ifndef MOZ_AUTO_DEPS
 define MAKE_DEPS_NOAUTO
 	set -e ; \
 	touch $@ && \
-	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$@ $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
+	$(MKDEPEND) -w1024 -o'.$(OBJ_SUFFIX)' -f$@ $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $@ $@.old && cat $@.old | sed "s|^$(<D)/||g" > $@ && rm -f $@.old
 endef
 
