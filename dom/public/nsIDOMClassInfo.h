@@ -41,7 +41,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_Screen_id,
 
   // Core classes
-  eDOMClassInfo_Document_id,
+  eDOMClassInfo_XMLDocument_id,
   eDOMClassInfo_DocumentType_id,
   eDOMClassInfo_DOMImplementation_id,
   eDOMClassInfo_DocumentFragment_id,
