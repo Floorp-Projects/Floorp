@@ -15,8 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*
- * mkgeturl.c
+/* mkgeturl.c
  *  This file implements the main calling api for netlib.
  *    Includes NET_InitNetlib, NET_Shutdown, NET_GetURL, and NET_ProcessNet
  *
@@ -1848,11 +1847,7 @@ NET_GetURL (URL_Struct *URL_s,
 	TRACEMSG(("Entering NET_GetURL"));
 	LIBNET_LOCK();
 
-#if !defined(NSPR20_DISABLED) && defined(XP_UNIX)
-	/* temporarily use busy poll to ease transition */
-	NET_SetCallNetlibAllTheTime(window_id, "mkgeturl");
-#endif
-	
+
 #ifdef XP_WIN
 	/* this runs a timer to periodically call the netlib
 	 * so that we still get events even when OnIdle is never
@@ -2236,7 +2231,7 @@ NET_GetURL (URL_Struct *URL_s,
 		  }
 		      }
 
-		    if(!continue_loading_url)
+            if(!continue_loading_url)
 		      {
 			    /* abort url
 		 */
@@ -2696,6 +2691,17 @@ NET_GetURL (URL_Struct *URL_s,
 	/* add it to the processing list now
 	 */
     XP_ListAddObjectToEnd(net_EntryList, this_entry);
+
+    /* Set the timer to call NET_ProcessNet after we
+     * have submitted a network request.
+     * BUG #123826
+     */
+#if !defined(NSPR20_DISABLED) && defined(XP_UNIX)
+	/* temporarily use busy poll to ease transition */
+	NET_SetCallNetlibAllTheTime(window_id, "mkgeturl");
+#endif
+
+
 
 	/* this will protect against multiple posts unknown to the
 	 * user
