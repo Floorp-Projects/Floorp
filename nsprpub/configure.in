@@ -650,6 +650,7 @@ case "$target" in
     ;;
 
 *-freebsd*)
+    AC_DEFINE(XP_UNIX)
     AC_DEFINE(FREEBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
     CFLAGS="$CFLAGS $(DSO_CFLAGS) -ansi -Wall -pipe"
