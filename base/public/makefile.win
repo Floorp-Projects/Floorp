@@ -20,13 +20,14 @@ IGNORE_MANIFEST=1
 
 DEFINES = -D_IMPL_NS_BASE
 
-EXPORTS =		\
-    nsIProperties.h	\
-    nsISizeOfHandler.h	\
-	nsEscape.h   \
-	nsFileSpec.h \
-	nsFileStream.h \
-    $(NULL)
+EXPORTS =                       \
+        nsAutoLock.h            \
+        nsIProperties.h         \
+        nsISizeOfHandler.h      \
+        nsEscape.h              \
+        nsFileSpec.h            \
+        nsFileStream.h          \
+        $(NULL)
 
 MODULE = raptor 
 

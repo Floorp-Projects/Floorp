@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -D_IMPL_NS_BASE
 
 EXPORTS =		\
+    nsAutoLock.h	\
     nsIProperties.h	\
     nsISizeOfHandler.h	\
     nsEscape.h          \
