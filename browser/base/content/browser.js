@@ -2841,10 +2841,6 @@ nsBrowserStatusHandler.prototype =
   {
     this.overLink = link;
     this.updateStatusField();
-    if (link)
-      this.statusTextField.setAttribute('crop', 'center');
-    else
-      this.statusTextField.setAttribute('crop', 'end');
   },
 
   updateStatusField : function()
