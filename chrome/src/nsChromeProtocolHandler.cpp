@@ -55,7 +55,7 @@ class nsCachedChromeChannel : public nsIChannel,
                               public nsITimerCallback
 {
 protected:
-    nsCachedChromeChannel(nsIURI* aURI);
+    nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup);
     virtual ~nsCachedChromeChannel();
 
     nsCOMPtr<nsIURI>            mURI;
@@ -65,7 +65,7 @@ protected:
 
 public:
     static nsresult
-    Create(nsIURI* aURI, nsIChannel** aResult);
+    Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel** aResult);
 	
     NS_DECL_ISUPPORTS
 
@@ -87,13 +87,13 @@ NS_IMPL_RELEASE(nsCachedChromeChannel);
 NS_IMPL_QUERY_INTERFACE3(nsCachedChromeChannel, nsIRequest, nsIChannel, nsITimerCallback);
 
 nsresult
-nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
+nsCachedChromeChannel::Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel** aResult)
 {
     NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    nsCachedChromeChannel* channel = new nsCachedChromeChannel(aURI);
+    nsCachedChromeChannel* channel = new nsCachedChromeChannel(aURI, aLoadGroup);
     if (! channel)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -103,8 +103,8 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 }
 
 
-nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
-    : mURI(aURI)
+nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup)
+    : mURI(aURI), mLoadGroup(aLoadGroup)
 {
     NS_INIT_REFCNT();
 }
@@ -269,19 +269,7 @@ nsCachedChromeChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsCachedChromeChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-    nsresult rv;
-
-    if (mLoadGroup) {
-        rv = mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
-
     mLoadGroup = aLoadGroup;
-
-    if (mLoadGroup) {
-        rv = mLoadGroup->AddChannel(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
     return NS_OK;
 }
 
@@ -437,10 +425,8 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
     if (proto) {
         // ...in which case, we'll create a dummy stream that'll just
         // load the thing.
-        rv = nsCachedChromeChannel::Create(aURI, getter_AddRefs(result));
+        rv = nsCachedChromeChannel::Create(aURI, aLoadGroup, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
-
-        result->SetLoadGroup(aLoadGroup);
     }
     else {
         // Miss. Resolve the chrome URL using the registry and do a
