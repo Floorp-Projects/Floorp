@@ -1606,7 +1606,12 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
   // Subtract one from our maxpos if we're a fixed row height.
   PRInt32 rowSize = treeFrame->GetFixedRowSize();
   if (rowSize != -1) {
-    rowCount--;
+    nsCOMPtr<nsIContent> treeContent;
+    treeFrame->GetContent(getter_AddRefs(treeContent));
+    nsAutoString blankRow;
+    treeContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::blankrow, blankRow);
+    if (!blankRow.EqualsWithConversion("true"))
+      rowCount--;
   }
 
   nsAutoString maxpos;

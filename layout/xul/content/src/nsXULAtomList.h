@@ -166,3 +166,5 @@ XUL_ATOM(menubutton, "menubutton")
 XUL_ATOM(textfield, "textfield")
 XUL_ATOM(textarea, "textarea")
 XUL_ATOM(listbox, "listbox")
+
+XUL_ATOM(blankrow, "blankrow")
