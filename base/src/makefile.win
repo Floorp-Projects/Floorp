@@ -73,10 +73,10 @@ EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
 
 MODULE=raptor 
 
-REQUIRES=xpcom netlib raptor 
+REQUIRES=xpcom netlib raptor uconv
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\raptor
+    -I$(PUBLIC)\raptor -I$(PUBLIC)\uconv
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorbase
