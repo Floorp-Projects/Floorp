@@ -115,15 +115,9 @@
 
     <separator class="thin" />
 
-<<<<<<< pref-appearance.xul
-    <menulist id="languageList" class="small-margin"
-              pref="true" preftype="localizedstring" 
-              prefstring="general.useragent.locale" prefattribute="value" 
-=======
     <menulist id="languageList"
               preftype="localizedstring" 
               prefstring="general.useragent.locale" 
->>>>>>> 1.45
               wsm_attributes="value"
               datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
               sortResource="http://www.mozilla.org/rdf/chrome#name"
