@@ -2,10 +2,10 @@
 
 #include "nscore.h"
 #include "prlong.h"
+#include "prtime.h"
 #include <iostream.h>
 #include <string>
 #include <iomanip>
-#include <sys/time.h>
 
 #ifdef XP_MAC
 #include "Profiler.h"
@@ -74,9 +74,15 @@ class TestTimer
 
      ~TestTimer()
         {
-	  PRTime stopTime = PR_Now();
-	  PRTime totalTime = stopTime - mStartTime;
+          PRTime stopTime = PR_Now();
+	        PRTime totalTime = stopTime - mStartTime;
+#ifdef HAVE_LONG_LONG
           cout << setw(10) << totalTime << " µs : ";
+#else
+          if ( totalTime.hi )
+            cout << "*";
+          cout << setw(10) << totalTime.lo << "µs : ";
+#endif
         }
 
     private:
