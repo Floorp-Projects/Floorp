@@ -53,3 +53,4 @@
 #define MOZILLA_CLIENT
 #define NETSCAPE /* Needed by zlib */
 #define MOCHA /* Required by mkautocnf.c in modular netlib */
+#define MOZ_NGLAYOUT
