@@ -282,7 +282,8 @@ char* nsInstallPatch::toString()
 {
 	char* buffer = new char[1024];
 
-	// FIX!  sprintf( buffer, nsInstallResources::GetPatchFileString(), mPatchedFile->GetCString());
+    if (mTargetFile != nsnull) 
+        sprintf( buffer, nsInstallResources::GetPatchFileString(), mTargetFile->GetCString()); 
 
 	return buffer;
 }
