@@ -144,7 +144,12 @@ XFE_ToolbarButton::configure()
 		Pixmap pixmap;
 		Pixmap pixmapMask;
 
-		getPixmapsForEntry(&pixmap,&pixmapMask,NULL,NULL);
+		XFE_RDFUtils::getPixmapsForEntry(m_widget,
+										 getHtResource(),
+										 &pixmap,
+										 &pixmapMask,
+										 NULL,
+										 NULL);
 
         XtVaSetValues(m_widget,
                       XmNpixmap,		pixmap,
@@ -306,101 +311,7 @@ XFE_ToolbarButton::styleToLayout(int32 button_style)
 	return button_layout;
 }
 //////////////////////////////////////////////////////////////////////////
-void
-XFE_ToolbarButton::getPixmapsForEntry(Pixmap *    pixmapOut,
-									  Pixmap *    maskOut,
-									  Pixmap *    armedPixmapOut,
-									  Pixmap *    armedMaskOut)
-{
-    IconGroup *		ig = NULL;
-	HT_Resource		entry = getHtResource();
 
-    // Right now the only way an entry can be NULL is for the 
-    // bookmarkMoreButton which kinda looks and acts like a folder so
-    // we use folder pixmaps for it
-    if (!entry)
-    {
-        ig = &BM_Folder_group;
-    }
-    else
-    {
-#ifdef NOT_YET
-        if (hasCustomIcon(entry)) {} /*else {*/
-#endif /*NOT_YET*/
-        if (XFE_RDFUtils::ht_IsFECommand(entry))
-        {
-            const char* url = HT_GetNodeURL(entry);
-            
-            ig = IconGroup_findGroupForName(url + 8);
-        } 
-        else
-        {
-            if (HT_IsContainer(entry))
-            {
-                XP_Bool is_menu = False;//(entry == getMenuFolder());
-                XP_Bool is_add  = False;//(entry == getAddFolder());
-
-            
-                if (is_add && is_menu)     ig = &BM_NewAndMenuFolder_group;
-                else if (is_add)           ig = &BM_NewFolder_group;
-                else if (is_menu)          ig = &BM_MenuFolder_group;
-                else                       ig = &BM_Folder_group;
-            }
-            else
-            {
-                int url_type = NET_URL_Type(HT_GetNodeURL(entry));
-                
-                if (url_type == IMAP_TYPE_URL || url_type == MAILBOX_TYPE_URL)
-                    ig = &BM_MailBookmark_group;
-                else if (url_type == NEWS_TYPE_URL)
-                    ig = &BM_NewsBookmark_group;
-                else
-                    ig = &BM_Bookmark_group;
-            }
-        }
-    }
-
-    Pixmap pixmap          = XmUNSPECIFIED_PIXMAP;
-    Pixmap mask            = XmUNSPECIFIED_PIXMAP;
-    Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
-    Pixmap armedMask       = XmUNSPECIFIED_PIXMAP;
-
-    if (ig)
-    {
-		Widget ancestor_shell = getAncestorFrame()->getBaseWidget();
-
-        IconGroup_createAllIcons(ig, 
-                                 ancestor_shell,
-                                 XfeForeground(ancestor_shell),
-                                 XfeBackground(ancestor_shell));
-        
-        pixmap        = ig->pixmap_icon.pixmap;
-        mask          = ig->pixmap_icon.mask;
-        armedPixmap   = ig->pixmap_mo_icon.pixmap;
-        armedMask     = ig->pixmap_mo_icon.mask;
-    }
-
-    if (pixmapOut)
-    {
-        *pixmapOut = pixmap;
-    }
-
-    if (maskOut)
-    {
-        *maskOut = mask;
-    }
-
-    if (armedPixmapOut)
-    {
-        *armedPixmapOut = armedPixmap;
-    }
-
-    if (armedMaskOut)
-    {
-        *armedMaskOut = armedMask;
-    }
-
-}
 
 //////////////////////////////////////////////////////////////////////////
 //

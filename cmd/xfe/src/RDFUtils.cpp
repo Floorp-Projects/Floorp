@@ -27,6 +27,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RDFUtils.h"
+
+#include "IconGroup.h"
+
 #include "xp_str.h"
 #include "xpassert.h"
 
@@ -415,6 +418,114 @@ XFE_RDFUtils::setItemLabelString(MWContext *	context,
         XtVaSetValues(item,XmNlabelString,xmname,NULL);
 		
         XmStringFree(xmname);
+    }
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Pixmap hackery
+//
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_RDFUtils::getPixmapsForEntry(Widget			item,
+								 HT_Resource	entry,
+								 Pixmap *		pixmapOut,
+								 Pixmap *		maskOut,
+								 Pixmap *		armedPixmapOut,
+								 Pixmap *		armedMaskOut)
+{
+	XP_ASSERT( entry != NULL );
+	XP_ASSERT( XfeIsAlive(item) );
+
+    IconGroup *		ig = NULL;
+
+    // Right now the only way an entry can be NULL is for the 
+    // bookmarkMoreButton which kinda looks and acts like a folder so
+    // we use folder pixmaps for it
+    if (!entry)
+    {
+        ig = &BM_Folder_group;
+    }
+    else
+    {
+#ifdef NOT_YET
+        if (hasCustomIcon(entry)) {} /*else {*/
+#endif /*NOT_YET*/
+        if (XFE_RDFUtils::ht_IsFECommand(entry))
+        {
+            const char* url = HT_GetNodeURL(entry);
+            
+            ig = IconGroup_findGroupForName(url + 8);
+        } 
+        else
+        {
+            if (HT_IsContainer(entry))
+            {
+                XP_Bool is_menu = False;//(entry == getMenuFolder());
+                XP_Bool is_add  = False;//(entry == getAddFolder());
+
+            
+                if (is_add && is_menu)     ig = &BM_NewAndMenuFolder_group;
+                else if (is_add)           ig = &BM_NewFolder_group;
+                else if (is_menu)          ig = &BM_MenuFolder_group;
+                else                       ig = &BM_Folder_group;
+            }
+            else
+            {
+                int url_type = NET_URL_Type(HT_GetNodeURL(entry));
+                
+                if (url_type == IMAP_TYPE_URL || url_type == MAILBOX_TYPE_URL)
+                    ig = &BM_MailBookmark_group;
+                else if (url_type == NEWS_TYPE_URL)
+                    ig = &BM_NewsBookmark_group;
+                else
+                    ig = &BM_Bookmark_group;
+            }
+        }
+    }
+
+    Pixmap pixmap          = XmUNSPECIFIED_PIXMAP;
+    Pixmap mask            = XmUNSPECIFIED_PIXMAP;
+    Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
+    Pixmap armedMask       = XmUNSPECIFIED_PIXMAP;
+
+    if (ig)
+    {
+		Widget shell_for_colormap = 
+			XfeAncestorFindByClass(item,shellWidgetClass,XfeFIND_ANY);
+
+		XP_ASSERT( XfeIsAlive(shell_for_colormap) );
+
+        IconGroup_createAllIcons(ig, 
+                                 shell_for_colormap,
+                                 XfeForeground(item),
+                                 XfeBackground(item));
+        
+        pixmap        = ig->pixmap_icon.pixmap;
+        mask          = ig->pixmap_icon.mask;
+        armedPixmap   = ig->pixmap_mo_icon.pixmap;
+        armedMask     = ig->pixmap_mo_icon.mask;
+    }
+
+    if (pixmapOut)
+    {
+        *pixmapOut = pixmap;
+    }
+
+    if (maskOut)
+    {
+        *maskOut = mask;
+    }
+
+    if (armedPixmapOut)
+    {
+        *armedPixmapOut = armedPixmap;
+    }
+
+    if (armedMaskOut)
+    {
+        *armedMaskOut = armedMask;
     }
 }
 //////////////////////////////////////////////////////////////////////////

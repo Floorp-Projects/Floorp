@@ -37,6 +37,7 @@
 #include <Xfe/ToolTip.h>
 
 #include "ToolbarButton.h"
+#include "ToolbarCascade.h"
 #include "ToolbarSeparator.h"
 #include "ToolbarUrlBar.h"
 
@@ -287,8 +288,15 @@ XFE_RDFToolbar::addItem(HT_Resource node)
     // Headers
     if (HT_IsContainer(node))
     {
-		// To be replace with an XFE_ToolbarItem soon.
-        createCascade(_toolbar, node);
+#if 1
+		createCascade(_toolbar, node);
+#else
+		item = new XFE_ToolbarCascade(_frame,
+									  _toolbar,
+									  node,
+									  "toolbarCascade");
+#endif
+
     }
     // Separators
     else if (HT_IsSeparator(node))
@@ -390,7 +398,13 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 		Pixmap pixmap;
 		Pixmap pixmapMask;
 
-		getPixmapsForEntry(entry,&pixmap,&pixmapMask,NULL,NULL);
+		XFE_RDFUtils::getPixmapsForEntry(item,
+										 entry,
+										 &pixmap,
+										 &pixmapMask,
+										 NULL,
+										 NULL);
+
         XtVaSetValues(item,
                       XmNpixmap,		pixmap,
                       XmNpixmapMask,	pixmapMask,
@@ -436,9 +450,12 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 		Arg			av[4];
 		Cardinal	ac = 0;
 
-		getPixmapsForEntry(entry,&pixmap,&pixmapMask,
-						   &armedPixmap,&armedPixmapMask);
-
+		XFE_RDFUtils::getPixmapsForEntry(item,
+										 entry,
+										 &pixmap,
+										 &pixmapMask,
+										 &armedPixmap,
+										 &armedPixmapMask);
 
 		XtSetArg(av[ac],XmNpixmap,			pixmap); ac++;
 		XtSetArg(av[ac],XmNpixmapMask,		pixmapMask); ac++;

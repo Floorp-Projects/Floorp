@@ -107,6 +107,19 @@ public:
 	static void		setItemLabelString		(MWContext *	context,
 											 Widget			item,
 											 HT_Resource	entry);
+
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Pixmap hackery                                                   //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static void		getPixmapsForEntry		(Widget			item,
+											 HT_Resource	entry,
+											 Pixmap *		pixmapOut,
+											 Pixmap *		maskOut,
+											 Pixmap *		armedPixmapOut,
+											 Pixmap *		armedMaskOut);
 };
 
 #endif // _xfe_rdf_utils_h_

@@ -89,12 +89,6 @@ public:
                                           HT_Event whatHappened);
 protected:
 
-    void getPixmapsForEntry(HT_Resource   entry,
-                            Pixmap *      pixmap,
-                            Pixmap *      mask,
-                            Pixmap *      armedPixmap,
-                            Pixmap *      armedMask);
-
 #if 0
     /* static */ Pixmap bookmarkPixmapFromEntry(HT_Resourceentry);
     /* static */ Pixmap bookmarkMaskFromEntry(HT_Resourceentry);

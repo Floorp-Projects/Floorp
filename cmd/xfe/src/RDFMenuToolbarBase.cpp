@@ -298,98 +298,7 @@ XFE_RDFMenuToolbarBase::pane_mapping_eh(Widget        submenu,
 
     *cont = True;
 }
-void
-XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
-                                     Pixmap *    pixmapOut,
-                                     Pixmap *    maskOut,
-                                     Pixmap *    armedPixmapOut,
-                                     Pixmap *    armedMaskOut)
-{
-    IconGroup * ig = NULL;
 
-    // Right now the only way an entry can be NULL is for the 
-    // bookmarkMoreButton which kinda looks and acts like a folder so
-    // we use folder pixmaps for it
-    if (!entry)
-    {
-        ig = &BM_Folder_group;
-    }
-    else
-    {
-#ifdef NOT_YET
-        if (hasCustomIcon(entry)) {} /*else {*/
-#endif /*NOT_YET*/
-        if (XFE_RDFUtils::ht_IsFECommand(entry))
-        {
-            const char* url = HT_GetNodeURL(entry);
-            
-            ig = IconGroup_findGroupForName(url + 8);
-        } 
-        else
-        {
-            if (HT_IsContainer(entry))
-            {
-                XP_Bool is_menu = (entry == getMenuFolder());
-                XP_Bool is_add  = (entry == getAddFolder());
-            
-                if (is_add && is_menu)     ig = &BM_NewAndMenuFolder_group;
-                else if (is_add)           ig = &BM_NewFolder_group;
-                else if (is_menu)          ig = &BM_MenuFolder_group;
-                else                       ig = &BM_Folder_group;
-            }
-            else
-            {
-                int url_type = NET_URL_Type(HT_GetNodeURL(entry));
-                
-                if (url_type == IMAP_TYPE_URL || url_type == MAILBOX_TYPE_URL)
-                    ig = &BM_MailBookmark_group;
-                else if (url_type == NEWS_TYPE_URL)
-                    ig = &BM_NewsBookmark_group;
-                else
-                    ig = &BM_Bookmark_group;
-            }
-        }
-    }
-
-    Pixmap pixmap          = XmUNSPECIFIED_PIXMAP;
-    Pixmap mask            = XmUNSPECIFIED_PIXMAP;
-    Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
-    Pixmap armedMask       = XmUNSPECIFIED_PIXMAP;
-
-    if (ig)
-    {
-        IconGroup_createAllIcons(ig, 
-                                 _frame->getBaseWidget(),
-                                 XfeForeground(_frame->getBaseWidget()),
-                                 XfeBackground(_frame->getBaseWidget()));
-        
-        pixmap        = ig->pixmap_icon.pixmap;
-        mask          = ig->pixmap_icon.mask;
-        armedPixmap   = ig->pixmap_mo_icon.pixmap;
-        armedMask     = ig->pixmap_mo_icon.mask;
-    }
-
-    if (pixmapOut)
-    {
-        *pixmapOut = pixmap;
-    }
-
-    if (maskOut)
-    {
-        *maskOut = mask;
-    }
-
-    if (armedPixmapOut)
-    {
-        *armedPixmapOut = armedPixmap;
-    }
-
-    if (armedMaskOut)
-    {
-        *armedMaskOut = armedMask;
-    }
-
-}
 #if 0
 //////////////////////////////////////////////////////////////////////////
 HT_Resource
@@ -891,7 +800,12 @@ XFE_RDFMenuToolbarBase::configureXfeBmButton(Widget item,HT_Resource entry)
         Pixmap pixmap;
         Pixmap mask;
 
-        getPixmapsForEntry(entry,&pixmap,&mask,NULL,NULL);
+		XFE_RDFUtils::getPixmapsForEntry(item,
+										 entry,
+										 &pixmap,
+										 &mask,
+										 NULL,
+										 NULL);
 
         XtVaSetValues(item,
                       XmNlabelPixmap,        pixmap,
@@ -922,7 +836,12 @@ XFE_RDFMenuToolbarBase::configureXfeBmCascade(Widget item,HT_Resource entry)
         Pixmap armedPixmap;
         Pixmap armedMask;
         
-        getPixmapsForEntry(entry,&pixmap,&mask,&armedPixmap,&armedMask);
+		XFE_RDFUtils::getPixmapsForEntry(item,
+										 entry,
+										 &pixmap,
+										 &mask,
+										 &armedPixmap,
+										 &armedMask);
         
         Arg         av[4];
         Cardinal    ac = 0;

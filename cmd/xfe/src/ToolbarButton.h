@@ -90,11 +90,6 @@ protected:
 	int32			getButtonStyle		();
 	unsigned char	styleToLayout		(int32 button_style);
 
-	void			getPixmapsForEntry	(Pixmap *    pixmapOut,
-										 Pixmap *    maskOut,
-										 Pixmap *    armedPixmapOut,
-										 Pixmap *    armedMaskOut);
-
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
 	// Button callback interface                                        //
