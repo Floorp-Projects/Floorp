@@ -46,8 +46,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #if defined(XP_MAC)
 #include "pprthred.h"
 
-static pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-
 #if TARGET_CARBON
 
 #define nsDNS_NOTIFIER_ROUTINE	nsDnsServiceNotifierRoutineUPP
