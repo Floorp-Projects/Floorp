@@ -150,6 +150,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	splitter.css \
 	tabcontrol.css \
 	loading.gif \
+	globalBindings.xml \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

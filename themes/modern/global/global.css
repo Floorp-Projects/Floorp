@@ -120,10 +120,29 @@
  */
   #status-bar 
     {
-      border-top          : 1px solid #003366;
-  	  background-color    : #CCCCCC;
-  	  user-focus          : ignore;
+      border-top          : 1px solid #999999;
+      background-color    : #CCCCCC;
+      user-focus          : ignore;
       overflow            : hidden
+    }
+
+  statusbar
+    {
+      /*behavior            : url("chrome://global/skin/globalBindings.xml#status-bar");*/
+    }
+
+  .statusbar-left
+    {
+      width               : 8px;
+      list-style-image    : url("chrome://global/skin/gray-bottomleft.gif");
+      background-position : bottom left;
+    }
+
+  .statusbar-right
+    {
+      width               : 8px;
+      list-style-image    : url("chrome://global/skin/gray-bottomright.gif");
+      background-position : bottom right;
     }
 
 /**
@@ -150,12 +169,16 @@
       visibility: collapse;
   }
 
+  .progress-text 
+    {
+      font-weight         : normal !important;
+    }
+  
   progressmeter 
     {
       min-width           : 100px;
       margin              : 0px 4px 0px 4px;
       border              : 1px inset #CCCCCC;
-      max-height          : 1.5em;
     }
 
   progressmeter > .progressmeter-internal-box 
@@ -175,6 +198,29 @@
 	    background-color    : #999999;
     }
 
+  .progressmeter-statusbar 
+    {
+      border              : 1px solid #999999;
+      margin              : 1px 4px 1px 4px;
+    }
+
+  .progressmeter-statusbar > .progressmeter-internal-box
+    {
+      border              : none;
+      padding             : 1px;
+    }
+    
+  .progressmeter-progressbar[statusbar="true"] > .progress-bar
+    {
+      background-color    : #999999;
+      border-right        : none;
+    }
+   
+  .progressmeter-progressbar[statusbar="true"] > .progress-remainder
+    {
+      background-color    : #CCCCCC;
+    }
+    
 /** XUL <scrollbar> element **/
   scrollbar 
     { 

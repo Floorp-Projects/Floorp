@@ -117,7 +117,7 @@
     border: 0px !important;
     padding-left: 4px;
 }
-.sidebarheader-main > text {
+.sidebarheader-main > .sidebar-header-text {
     font-weight: bold;
     margin: 2px;
 }
