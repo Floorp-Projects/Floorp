@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.7 $ 
-# $Date: 2002/02/25 19:30:14 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/05/02 01:39:47 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -67,16 +67,24 @@ $VERSION = '#tinder_version#';
 # tuned version can take up 50% (as shown by perl -d:DProf ) of the
 # execution time.
 
-%LINE_TYPE2COLOR = (
-                    'error' => "navy",
-                    'warning' => "maroon",
-                    'info' => "black",
-                   );
+%ERRORTYPE = (
+               'error' => {
+                            'html_color'=> "navy",
+                            'handler'=> \&main::null,
+                          },              
+               'warning' => {
+                             'html_color'=> "maroon",
+                             'handler'=> \&main::null,
+                             },
+               'info' => {
+                          'html_color'=> "black",
+                          'handler'=> \&main::null,
+                          },
+               );
 
 # This block adjusts how we format the error logs, perhaps it belongs
 # in another file and not the error_parse file.  Processmail is a
 # candidate.
-
 {
 
 # window of context arround error message,  for summary log
@@ -93,6 +101,27 @@ $LINENO_COLUMN = 6;
 
 }
 
+sub type2color {
+    my ($type) = @_;
+    $out = $ERRORTYPE{$type}{'html_color'};
+    return $out;
+}
+
+# run the handler associated with the status given as input.
+
+sub run_status_handler {
+  my (%args) = @_;
+
+  my ($line_type) = $args{'line_type'};
+
+  # run status dependent hook.
+  &{$ERRORTYPE{$line_type}{'handler'}}(%args);
+
+  # notice handlers never return any values.
+
+  return ;
+}
+
 
 package Error_Parse::unix;
 
@@ -100,7 +129,7 @@ package Error_Parse::unix;
 sub line_type {
   my ($line) = @_;
 
-  $error = (
+  my $error = (
 
             ($line =~ /\sORA-\d/)		||		# Oracle
             ($line =~ /\bNo such file or directory\b/)	||
@@ -112,6 +141,7 @@ sub line_type {
             ($line =~ /\b[Cc]an not\b/)		||		# javac error
             ($line =~ /\b\[javac\]\b/)		||		# javac error
             # Remember: some source files are called $prefix/error.suffix
+            ($line =~ /\bDied\b/)		||		# Perl error
             ($line =~ /\b(?<!\/)[Ee]rror(?!\.)\b/)||		# C make error
             ($line =~ /\b[Ff]atal\b/)		||		# link error
             ($line =~ /\b[Ee]xception\b/)	||		# javac error
@@ -123,8 +153,6 @@ sub line_type {
             ($line =~ /Unknown host /)		||		# cvs error
             ($line =~ /\: cannot find module/)	||		# cvs error
             ($line =~ /\^C /)			||		# cvs merge conflict
-            ($line =~ /Couldn\'t find project file /)	 ||	# CW project error
-            ($line =~ /Creating new precompiled header/) ||	# Wastes time.
             ($line =~ /No such file or directory/)	 ||	# cpp error
             ($line =~ /jmake.MakerFailedException:/) ||         # Java error
             0);
@@ -133,7 +161,7 @@ sub line_type {
     return('error');
   }
   
-  $warning = (
+  my $warning = (
 
               ($line =~ m/^[-._\/A-Za-z0-9]+\.[A-Za-z0-9]+\:[0-9]+\:/) ||
               ($line =~ m/^\"[-._\/A-Za-z0-9]+\.[A-Za-z0-9]+\"\, line [0-9]+\:/) ||
@@ -142,6 +170,23 @@ sub line_type {
               ($line =~ m/not implemented:/) ||
 
               0);
+
+  if ($warning) {
+      my  $ignore = (
+
+                     # note that the word inline was followed by a
+                     # quote mark which emacs thought was a bit funny
+                     # so I removed it.
+
+                     ($line =~ m/warning: ANSI does not permit the keyword `inline/) ||
+                     ($line =~ m/warning: operator new should throw an exception, not return NULL/) ||
+                     ($line =~ m/zip warning: .* not found or empty/) ||
+                     0);
+      
+      if ($ignore) {
+          undefine $warning;
+      }
+  }
 
   if ($warning) {
     return('warning');
@@ -174,7 +219,7 @@ package Error_Parse::windows;
 sub line_type {
   my ($line) = @_;
 
-  $error = (
+  my  $error = (
 
             ($line =~ /\b[Ee]rror\b/)		||		# C make error
             ($line =~ /\b[Ff]atal\b/)		||		# link error
@@ -188,6 +233,7 @@ sub line_type {
             ($line =~ /Couldn\'t find project file /) ||	# CW project error
             ($line =~ /Creating new precompiled header/) ||	# Wastes time.
             ($line =~ /No such file or directory/) ||		# cpp error
+            ($line =~ /jmake.MakerFailedException:/) ||         # Java error
 
     0);
 
@@ -195,7 +241,7 @@ sub line_type {
     return('error');
   }
   
-  $warning = (
+  my  $warning = (
               ($line =~ m/^[-._\/A-Za-z0-9]+\.[A-Za-z0-9]+\:[0-9]+\:/) ||
               ($line =~ m/^\"[-._\/A-Za-z0-9]+\.[A-Za-z0-9]+\"\, line [0-9]+\:/) ||
               ($line =~ m/\bwarning\b/) ||
@@ -243,12 +289,13 @@ package Error_Parse::mac;
 sub line_type {
   my ($line) = @_;
 
-  $error = (
+  my  $error = (
             ($line =~ /\b[Ee]rror\b/)		||		# C make error
             ($line =~ /\b[Ff]atal\b/)		||		# link error
             ($line =~ /\b[Aa]ssertion\b/)	||		# test error
             ($line =~ /\b[Aa]borted\b/)		||		# cvs error
             ($line =~ /\b[Ff]ailed\b/)		||		# java nmake
+            ($line =~ /\bDied\b/)		||		# Perl error
 
             ($line =~ /Unknown host /)		||		# cvs error
             ($line =~ /\: cannot find module/)	||		# cvs error
@@ -260,12 +307,23 @@ sub line_type {
   ($error) && 
     return('error');
   
-  $warning = (
+  my $warning = (
               ($line =~ m/^[-._\/A-Za-z0-9]+\.[A-Za-z0-9]+\:[0-9]+\:/) ||
               ($line =~ m/^\"[-._\/A-Za-z0-9]+\.[A-Za-z0-9]+\"\, line [0-9]+\:/) ||
               ($line =~ m/warning/i) ||
               ($line =~ m/not implemented:/i) ||
               0);
+
+  if ($warning) {
+      my  $ignore = (
+
+                     ($line =~ m/Warning : cannot find matching deallocation function for/) ||
+                     0);
+      
+      if ($ignore) {
+          undefine $warning;
+      }
+  }
 
   ($warning) &&
     return('warning');
