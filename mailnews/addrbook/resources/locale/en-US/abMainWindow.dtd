@@ -51,9 +51,6 @@ Rights Reserved.
 <!ENTITY editCardCmd.label					"Edit Card...">
 <!-- LOCALIZATION NOTE (editCardCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY editCardCmd.accesskey				"e">  
-<!ENTITY htmlDomainCmd.label				".HTML Domains...">
-<!-- LOCALIZATION NOTE (htmlDomainCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY htmlDomainCmd.accesskey			"h">  
 
 <!-- View Menu -->
 <!ENTITY showAbToolbarCmd.label				"Show Address Book Toolbar">  

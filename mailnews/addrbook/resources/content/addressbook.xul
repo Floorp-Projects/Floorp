@@ -141,10 +141,6 @@ Rights Reserved.
 			<menuitem value="&editCardCmd.label;"
 			          accesskey="&editCardCmd.accesskey;"
 			          oncommand="AbEditCard();"/>
-			<menuitem value="&htmlDomainCmd.label;"
-			          accesskey="&htmlDomainCmd.accesskey;"
-			          disabled="true"
-			          oncommand="AbHTMLDomain();"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://addressbook/content/pref-addressing.xul')"/>
 		  </menupopup>
