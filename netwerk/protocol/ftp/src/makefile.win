@@ -17,6 +17,12 @@ MODULE = netwerk
 
 DEPTH = ..\..\..\..
 
+// temporary, until we land:
+!ifndef NECKO
+include <$(DEPTH)/config/config.mak>
+PUBLIC = $(DEPTH)\netwerk\dist\include
+!endif
+
 MAKE_OBJ_TYPE=DLL
 DLLNAME=ftpprotocol
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -37,10 +43,8 @@ LLIBS=                                \
         $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  
 
-LINCS =                     \
-        -I$(PUBLIC)\xpcom   \
-        -I$(PUBLIC)\raptor  \
-        -I$(PUBLIC)\netwerk \
+INCS = $(INCS)                  \
+        -I$(DEPTH)\dist\include \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
