@@ -25,11 +25,37 @@ use strict;
 
 require "CGI.pl";
 
+ConnectToDatabase();
+
 confirm_login();
+
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# Build a list of bug IDs for which votes have been submitted.  Votes
+# are submitted in form fields in which the field names are the bug 
+# IDs and the field values are the number of votes.
+my @buglist = grep {/^[1-9][0-9]*$/} keys(%::FORM);
+
+# Call ValidateBugID on each bug ID to make sure it is a positive
+# integer representing an existing bug that the user is authorized 
+# to access, and make sure the number of votes submitted is also
+# a non-negative integer (a series of digits not preceded by a
+# minus sign).
+foreach my $id (@buglist) {
+  ValidateBugID($id);
+  ($::FORM{$id} =~ /^\d+$/)
+    || DisplayError("Only use non-negative numbers for your bug votes.")
+    && exit;
+}
+
+######################################################################
+# End Data/Security Validation
+######################################################################
 
 print "Content-type: text/html\n\n";
 
-ConnectToDatabase();
 GetVersionTable();
 
 my $who = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
@@ -43,60 +69,50 @@ if ( (! defined $who) || (!$who) ) {
     exit();
 }
 
-my @buglist = grep {/^\d+$/} keys(%::FORM);
+# If the user is voting for bugs, make sure they aren't overstuffing
+# the ballot box.
+if (scalar(@buglist)) {
+    SendSQL("SELECT bugs.bug_id, bugs.product, products.maxvotesperbug " .
+            "FROM bugs, products " .
+            "WHERE products.product = bugs.product ".
+            " AND bugs.bug_id IN (" . join(", ", @buglist) . ")");
 
-if (0 == @buglist) {
-    PutHeader("Oops?");
-    print "Something got confused.  Please click <b>Back</b> and try again.";
-    PutFooter();
-    exit();
-}
+    my %prodcount;
 
-foreach my $id (@buglist) {
-    $::FORM{$id} = trim($::FORM{$id});
-    if ($::FORM{$id} !~ /\d+/ || $::FORM{$id} < 0) {
-        PutHeader("Numbers only, please");
-        print "Only use numeric values for your bug votes.\n";
-        print "Please click <b>Back</b> and try again.<hr>\n";
-        PutFooter();
-        exit();
+    while (MoreSQLData()) {
+        my ($id, $prod, $max) = (FetchSQLData());
+        if (!defined $prodcount{$prod}) {
+            $prodcount{$prod} = 0;
+        }
+        $prodcount{$prod} += $::FORM{$id};
+        if ($::FORM{$id} > $max) {
+            PutHeader("Don't overstuff!", "Illegal vote");
+            print "You may only use at most $max votes for a single bug in the\n";
+            print "<tt>$prod</tt> product, but you are using $::FORM{$id}.\n";
+            print "<P>Please click <b>Back</b> and try again.<hr>\n";
+            PutFooter();
+            exit();
+        }
+    }
+
+    foreach my $prod (keys(%prodcount)) {
+        if ($prodcount{$prod} > $::prodmaxvotes{$prod}) {
+            PutHeader("Don't overstuff!", "Illegal vote");
+            print "You may only use $::prodmaxvotes{$prod} votes for bugs in the\n";
+            print "<tt>$prod</tt> product, but you are using $prodcount{$prod}.\n";
+            print "<P>Please click <b>Back</b> and try again.<hr>\n";
+            PutFooter();
+            exit();
+        }
     }
 }
 
-SendSQL("SELECT bugs.bug_id, bugs.product, products.maxvotesperbug " .
-        "FROM bugs, products " .
-        "WHERE products.product = bugs.product ".
-        " AND bugs.bug_id IN (" . join(", ", @buglist) . ")");
-
-my %prodcount;
-
-while (MoreSQLData()) {
-    my ($id, $prod, $max) = (FetchSQLData());
-    if (!defined $prodcount{$prod}) {
-        $prodcount{$prod} = 0;
-    }
-    $prodcount{$prod} += $::FORM{$id};
-    if ($::FORM{$id} > $max) {
-        PutHeader("Don't overstuff!", "Illegal vote");
-        print "You may only use at most $max votes for a single bug in the\n";
-        print "<tt>$prod</tt> product, but you are using $::FORM{$id}.\n";
-        print "<P>Please click <b>Back</b> and try again.<hr>\n";
-        PutFooter();
-        exit();
-    }
-}
-
-foreach my $prod (keys(%prodcount)) {
-    if ($prodcount{$prod} > $::prodmaxvotes{$prod}) {
-        PutHeader("Don't overstuff!", "Illegal vote");
-        print "You may only use $::prodmaxvotes{$prod} votes for bugs in the\n";
-        print "<tt>$prod</tt> product, but you are using $prodcount{$prod}.\n";
-        print "<P>Please click <b>Back</b> and try again.<hr>\n";
-        PutFooter();
-        exit();
-    }
-}
-
+# Update the user's votes in the database.  If the user did not submit 
+# any votes, they may be using a form with checkboxes to remove all their
+# votes (checkboxes are not submitted along with other form data when
+# they are not checked, and Bugzilla uses them to represent single votes
+# for products that only allow one vote per bug).  In that case, we still
+# need to clear the user's votes from the database.
 my %affected;
 SendSQL("lock tables bugs write, votes write");
 SendSQL("select bug_id from votes where who = $who");
