@@ -2608,13 +2608,16 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #endif
 
       // Post-process the "line"
-      nsSize maxElementSize(brc.GetMaxElementSize());
-      if ((0 != aState.mBand.GetFloaterCount()) &&
-          (NS_FRAME_SPLITTABLE_NON_RECTANGULAR != splitType)) {
-        // Add in floater impacts to the lines max-element-size, but
-        // only if the block element isn't one of us (otherwise the
-        // floater impacts will be counted twice).
-        ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
+      nsSize maxElementSize(0, 0);
+      if (aState.mComputeMaxElementSize) {
+        maxElementSize = brc.GetMaxElementSize();
+        if ((0 != aState.mBand.GetFloaterCount()) &&
+            (NS_FRAME_SPLITTABLE_NON_RECTANGULAR != splitType)) {
+          // Add in floater impacts to the lines max-element-size, but
+          // only if the block element isn't one of us (otherwise the
+          // floater impacts will be counted twice).
+          ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
+        }
       }
       PostPlaceLine(aState, aLine, maxElementSize);
 
@@ -3223,9 +3226,11 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   aState.mY = newY;
-  if (0 != aState.mBand.GetFloaterCount()) {
-    // Add in floater impacts to the lines max-element-size
-    ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
+  if (aState.mComputeMaxElementSize) {
+    if (0 != aState.mBand.GetFloaterCount()) {
+      // Add in floater impacts to the lines max-element-size
+      ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
+    }
   }
   PostPlaceLine(aState, aLine, maxElementSize);
 
@@ -4701,6 +4706,13 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
+  // If overflow is hidden then set the clip rect so that children
+  // don't leak out of us
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PushState();
+    SetClipRect(aRenderingContext);
+  }
+
   // Only paint the border and background if we're visible
   if (disp->mVisible && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
       (0 != mRect.width) && (0 != mRect.height)) {
@@ -4717,15 +4729,6 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, mStyleContext,
                                 skipSides);
-  }
-
-  // If overflow is hidden then set the clip rect so that children
-  // don't leak out of us
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    PRBool clipState;
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  nsClipCombine_kIntersect, clipState);
   }
 
   // Child elements have the opportunity to override the visibility
