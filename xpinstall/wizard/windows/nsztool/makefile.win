@@ -22,11 +22,10 @@
 DEPTH=..\..\..\..
 
 MAKE_OBJ_TYPE   = EXE
-USE_STATIC_LIBS = 1
+USE_NON_MT_LIBS = 1
 
 MODULE          = nsztool
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
-#RESFILE         = $(MODULE).res
 
 OBJS =                          \
     .\$(OBJDIR)\nsztool.obj     \
@@ -45,7 +44,9 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
+    $(DIST)\install\$(MODULE).exe -g $(DIST)\install\nszip.exe $(DIST)\install\nsinstall.exe
 
 clobber_all::
     $(RM) $(DIST)\install\$(MODULE).exe
+    $(RM) $(DIST)\install\nszip.exe
 
