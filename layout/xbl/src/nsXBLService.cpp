@@ -343,3 +343,4 @@ NS_NewXBLService(nsIXBLService** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
