@@ -68,6 +68,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIFrame.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
 #include "nsIChannel.h"
@@ -349,7 +350,7 @@ public:
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
 
-  nsString*           mRef;
+  nsCString           mRef;
   nsScrollPreference  mOriginalScrollPreference;
 
   nsString            mBaseHREF;
@@ -2216,9 +2217,6 @@ HTMLContentSink::~HTMLContentSink()
   if (nsnull != mTitle) {
     delete mTitle;
   }
-  if (nsnull != mRef) {
-    delete mRef;
-  }
 }
 
 NS_IMPL_ISUPPORTS7(HTMLContentSink, 
@@ -3510,9 +3508,11 @@ HTMLContentSink::StartLayout()
     NS_RELEASE(url);
   }
   if (rv == NS_OK) {
-    mRef = new nsString;
-    mRef->AssignWithConversion(ref);
-    nsCRT::free(ref);
+    if (ref)
+    {
+      mRef.Assign(ref);
+      nsCRT::free(ref);
+    }
   }
 
   if ((nsnull != ref) || mFrameset) {
@@ -3546,18 +3546,79 @@ HTMLContentSink::StartLayout()
   }
 }
 
+// Convert the ref from document charset to unicode.
+static nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocCharset, nsString& aRefInUnicode)
+{
+  nsresult rv;
+  
+  nsCOMPtr <nsIAtom> docCharsetAtom;
+  nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = ccm2->GetCharsetAtom(aDocCharset.GetUnicode(), getter_AddRefs(docCharsetAtom));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIUnicodeDecoder> decoder;
+      rv = ccm2->GetUnicodeDecoder(docCharsetAtom, getter_AddRefs(decoder));
+      if (NS_SUCCEEDED(rv))
+      {
+        PRInt32 srcLen = aRefInDocCharset.Length();
+        PRInt32 dstLen;
+        rv = decoder->GetMaxLength(aRefInDocCharset, srcLen, &dstLen);
+        if (NS_SUCCEEDED(rv))
+        {
+          PRUnichar *ustr = (PRUnichar *) nsMemory::Alloc((dstLen+1) * sizeof(PRUnichar));
+          if (ustr)
+          {
+            rv = decoder->Convert(aRefInDocCharset, &srcLen, ustr, &dstLen);
+            if (NS_SUCCEEDED(rv))
+            {
+              ustr[dstLen] = 0;
+              aRefInUnicode.Assign(ustr);
+            }
+            nsMemory::Free(ustr);
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
 void
 HTMLContentSink::ScrollToRef()
 {
-  if (mRef && mRef->Length() > 0)
+  if (!mRef.IsEmpty())
   {
+    nsresult rv = NS_ERROR_FAILURE;
+    // We assume that the bytes are in UTF-8, as it says in the spec:
+    // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+    nsAutoString ref = NS_ConvertUTF8toUCS2(mRef);
+
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
       nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
       if (shell) {
         // Scroll to the anchor
         shell->FlushPendingNotifications();
-        shell->GoToAnchor(*mRef);
+        // Check an empty string which might be caused by the UTF-8 conversion
+        if (!ref.IsEmpty())
+          rv = shell->GoToAnchor(ref);
+        else
+          rv = NS_ERROR_FAILURE;
+
+        // If UTF-8 URL failed then try to assume the string as a document's charset.
+        if (NS_FAILED(rv))
+        {
+          nsAutoString docCharset;
+          rv = mDocument->GetDocumentCharacterSet(docCharset);
+          if (NS_SUCCEEDED(rv))
+          {
+            rv = CharsetConvRef(docCharset, mRef, ref);
+            if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
+              rv = shell->GoToAnchor(ref);
+          }
+        }
       }
     }
   }
