@@ -1317,6 +1317,13 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
     else { // we dont realign vertical but we need to update the overflow area
       nsIFrame* cellKidFrame = cellFrame->GetFirstChild(nsnull);
       if (cellKidFrame) {
+        // XXX This is bogus. The code above changes the cell width
+        // and height but leaves the overflow area alone. How can that
+        // be right?
+
+        // Make sure the overflow area includes the width and height, in any case.
+        cellMet.mOverflowArea.UnionRect(cellMet.mOverflowArea,
+                                        nsRect(0, 0, cellMet.width, cellMet.height));
         cellFrame->ConsiderChildOverflow(aPresContext, cellMet.mOverflowArea, cellKidFrame);
         cellFrame->FinishAndStoreOverflow(&cellMet);
         if (cellFrame->HasView()) {
