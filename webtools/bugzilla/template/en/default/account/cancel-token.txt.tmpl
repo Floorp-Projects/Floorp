@@ -22,9 +22,10 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-From: bugzilla-admin-daemon
+From: [% Param('mailfrom') %]
 To: [% emailaddress %]
 Subject: [% PROCESS subject %]
+X-B[%#%]ugzilla-Type: admin
 
 A request was cancelled from [% remoteaddress %].
 

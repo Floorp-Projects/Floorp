@@ -27,12 +27,13 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% expiration_ts = token_ts + (max_token_age * 86400) %]
-From: bugzilla-admin-daemon
+From: [% Param('mailfrom') %]
 To: [% emailaddress %]
 Subject: [% terms.Bugzilla %] Change Email Address Request
 Importance: High
 X-MSMail-Priority: High
 X-Priority: 1
+X-B[%#%]ugzilla-Type: admin
 
 [%+ terms.Bugzilla %] has received a request to change the email address
 for your account to [%+ newemailaddress %].

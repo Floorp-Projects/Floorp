@@ -308,6 +308,14 @@ sub find_languages {
   },
 
   {
+   name => 'mailfrom',
+   desc => 'The email address of the Bugzilla mail daemon.  Some email systems ' .
+           'require this to be a valid email address.',
+   type => 't',
+   default => 'bugzilla-daemon'
+  },
+
+  {
    name => 'urlbase',
    desc => 'The URL that is the common initial leading part of all Bugzilla ' .
            'URLs.',
@@ -718,9 +726,10 @@ sub find_languages {
            'password.  %<i>anythingelse</i>% gets replaced by the ' .
            'definition of that parameter (as defined on this page).',
    type => 'l',
-   default => 'From: bugzilla-daemon
+   default => 'From: %mailfrom%
 To: %mailaddress%
 Subject: Your Bugzilla password.
+X-Bugzilla-Type: admin
 
 To use the wonders of Bugzilla, you can use the following:
 
@@ -753,11 +762,12 @@ To use the wonders of Bugzilla, you can use the following:
            'replaced by the definition of that parameter (as defined on ' .
            'this page).',
    type => 'l',
-   default => 'From: bugzilla-daemon
+   default => 'From: %mailfrom%
 To: %to%
 Subject: [Bug %bugid%] %neworchanged%%summary%
 %threadingmarker%
 X-Bugzilla-Reason: %reasonsheader%
+X-Bugzilla-Type: newchanged
 
 %urlbase%show_bug.cgi?id=%bugid%
 
@@ -789,9 +799,10 @@ Configure bugmail: %urlbase%userprefs.cgi?tab=email
            'address, so that if the mail bounces, a real person can know '.
            'that there are bugs assigned to an invalid address.',
    type => 'l',
-   default => 'From: %maintainer%
+   default => 'From: %mailfrom%
 To: %email%
 Subject: Your Bugzilla buglist needs attention.
+X-Bugzilla-Type: whine
 
 [This e-mail has been automatically generated.]
 
@@ -1032,9 +1043,10 @@ You will get this message once a day until you\'ve dealt with these bugs!
            'compatibility. %<i>anythingelse</i>% gets replaced by the ' .
            'definition of that parameter (as defined on this page).',
    type => 'l',
-   default => 'From: bugzilla-daemon
+   default => 'From: %mailfrom%
 To: %to%
 Subject: [Bug %bugid%] Some or all of your votes have been removed.
+X-Bugzilla-Type: voteremoved
 
 Some or all of your votes have been removed from bug %bugid%.
 
