@@ -70,6 +70,11 @@ sub login {
     if ($userid) {
         $user = new Bugzilla::User($userid);
 
+        # Redirect to SSL if required
+        if (Param('sslbase') ne '' and Param('ssl') ne 'never') {
+            Bugzilla->cgi->require_https(Param('sslbase'));
+        }
+
         $user->set_flags('can_logout' => $class->can_logout);
 
         # Compat stuff

@@ -135,6 +135,12 @@ sub login {
     # No login details were given, but we require a login if the
     # page does
     if ($authres == AUTH_NODATA && $type == LOGIN_REQUIRED) {
+
+        # Redirect to SSL if required
+        if (Param('sslbase') ne '' and Param('ssl') ne 'never') {
+            $cgi->require_https(Param('sslbase'));
+        }
+    
         # Throw up the login page
 
         print Bugzilla->cgi->header();

@@ -50,11 +50,35 @@
 use strict;
 use vars qw(@param_list);
 use File::Spec; # for find_languages
+use Socket;
 
 use Bugzilla::Config qw(:DEFAULT $templatedir $webdotdir);
+use Bugzilla::Util;
 
 # Checking functions for the various values
 # Some generic checking functions are included in Bugzilla::Config
+
+sub check_sslbase {
+    my $url = shift;
+    if ($url ne '') {
+        if ($url !~ m#^https://([^/]+).*/$#) {
+            return "must be a legal URL, that starts with https and ends with a slash.";
+        }
+        my $host = $1;
+        if ($host =~ /:\d+$/) {
+            return "must not contain a port.";
+        }
+        local *SOCK;
+        my $proto = getprotobyname('tcp');
+        socket(SOCK, PF_INET, SOCK_STREAM, $proto);
+        my $sin = sockaddr_in(443, inet_aton($host));
+        if (!connect(SOCK, $sin)) {
+            return "Failed to connect to " . html_quote($host) . 
+                   ":443, unable to enable SSL.";
+        }
+    }
+    return "";
+}
 
 sub check_priority {
     my ($value) = (@_);
@@ -290,6 +314,24 @@ sub find_languages {
    type => 't',
    default => 'http://you-havent-visited-editparams.cgi-yet/',
    checker => \&check_urlbase
+  },
+
+  {
+   name => 'sslbase',
+   desc => 'The URL that is the common initial leading part of all HTTPS ' .
+           '(SSL) Bugzilla URLs.',
+   type => 't',
+   default => '',
+   checker => \&check_sslbase
+  },
+
+  {
+   name => 'ssl',
+   desc => 'Controls when Bugzilla should enforce sessions to use HTTPS by ' .
+           'using <tt>sslbase</tt>.',
+   type => 's',
+   choices => ['never', 'authenticated sessions', 'always'],
+   default => 'never'
   },
 
   {
