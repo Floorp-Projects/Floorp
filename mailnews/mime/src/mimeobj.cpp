@@ -208,7 +208,7 @@ MimeObject_parse_begin (MimeObject *obj)
     {
       const char *delEnd = PL_strcasestr(delParts + 1, "&");
       if (!delEnd)
-        delEnd = delParts + strlen(delParts) - 1;
+        delEnd = delParts + strlen(delParts);
       nsCAutoString partsToDel(Substring(delParts + 5, delEnd)); 
       obj->options->state->partsToStrip.ParseString(partsToDel.get(), ",");
     }
