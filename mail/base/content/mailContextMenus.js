@@ -265,6 +265,8 @@ function fillFolderPaneContextMenu()
     return false;
   var numSelected = endIndex.value - startIndex.value + 1;
   var folderResource = GetFolderResource(folderTree, startIndex.value);
+  var folder = GetMsgFolderFromUri(folderResource.Value, false);
+  var isVirtualFolder = folder ? folder.flags & MSG_FOLDER_FLAG_VIRTUAL : false;
 
   var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer") == 'true';
   var serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
@@ -285,7 +287,7 @@ function fillFolderPaneContextMenu()
   SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupCompactMenuItem(folderResource, numSelected);
 
-  ShowMenuItem("folderPaneContext-copy-location", !isServer);
+  ShowMenuItem("folderPaneContext-copy-location", !isServer && !isVirtualFolder);
   ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
   EnableMenuItem("folderPaneContext-emptyTrash", true);
 
@@ -299,8 +301,8 @@ function fillFolderPaneContextMenu()
 
   SetupNewMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
 
-  ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder);
-  EnableMenuItem("folderPaneContext-subscribe", true);
+  ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder && !isVirtualFolder);
+  EnableMenuItem("folderPaneContext-subscribe", !isVirtualFolder);
 
   // XXX: Hack for RSS servers...
   ShowMenuItem("folderPaneContext-rssSubscribe", (numSelected <= 1) && (serverType == "rss"));
@@ -316,11 +318,11 @@ function fillFolderPaneContextMenu()
 
 // End of News folder context menu =======================================
 
-  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && isMailFolder);
-  EnableMenuItem("folderPaneContext-markMailFolderAllRead", true);
+  ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && isMailFolder && !isVirtualFolder);
+  EnableMenuItem("folderPaneContext-markMailFolderAllRead", !isVirtualFolder);
 
-  ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
-  EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled());
+  ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1) && !isVirtualFolder);
+  EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled() && !isVirtualFolder);
 
   return(true);
 }
@@ -366,9 +368,9 @@ function SetupCompactMenuItem(folderResource, numSelected)
 {
   var folderTree = GetFolderTree();
   var canCompact = GetFolderAttribute(folderTree, folderResource, "CanCompact") == "true";
-  ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact);
   var folder = GetMsgFolderFromResource(folderResource);
-  EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder"));
+  ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact && (!folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
+  EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder") && (!folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
 
   if(canCompact)
   {
