@@ -23,7 +23,7 @@
 #include "nsVoidArray.h"
 #include "nsTextReflow.h"
 
-struct nsBlockReflowState;
+class nsBlockReflowState;
 class nsInlineReflow;
 class nsPlaceholderFrame;
 struct nsStyleDisplay;
@@ -53,7 +53,7 @@ public:
     mBRFrame = nsnull;
     mPlacedFrames.Clear();
     ForgetWordFrames();
-    mFirstLetterStyleOK = 0 == mLineNumber;
+    mFirstLetterStyleOK = PR_FALSE;
   }
 
   // Add to the placed-frame count
