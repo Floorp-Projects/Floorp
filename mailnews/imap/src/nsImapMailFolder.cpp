@@ -76,12 +76,10 @@ nsImapMailFolder::nsImapMailFolder() :
     //our rdf:mailnews datasource. 
     //In reality anyone should be able to listen to folder changes. 
     
-    nsIRDFService* rdfService = nsnull;
     nsIRDFDataSource* datasource = nsnull;
 	m_tempMessageFile = nsnull;
-    nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                               nsIRDFService::GetIID(),
-                                               (nsISupports**) &rdfService);
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
     if(NS_SUCCEEDED(rv))
     {
         rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource);
@@ -97,24 +95,16 @@ nsImapMailFolder::nsImapMailFolder() :
             }
             NS_RELEASE(datasource);
         }
-        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
     }
 
     // Get current thread envent queue
-    nsIEventQueueService* pEventQService;
     m_eventQueue = nsnull;
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      nsIEventQueueService::GetIID(),
-                                      (nsISupports**)&pEventQService);
+	
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             &m_eventQueue);
-    if (pEventQService)
-        nsServiceManager::ReleaseService(kEventQueueServiceCID,
-                                         pEventQService);
-
 	m_msgParser = nsnull;
-//  NS_INIT_REFCNT(); done by superclass
 }
 
 nsImapMailFolder::~nsImapMailFolder()
@@ -236,10 +226,7 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	nsIRDFService* rdf;
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-                                    nsIRDFService::GetIID(),
-                                    (nsISupports**)&rdf);
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
 	if(NS_FAILED(rv))
 		return rv;
@@ -272,8 +259,6 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
     folder->SetDepth(mDepth+1);
 	*child = folder;
 	NS_ADDREF(*child);
-    (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
 	return rv;
 }
 
@@ -310,7 +295,10 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         rv = GetPathName(path);
         if (NS_FAILED(rv)) return rv;
 
-        rv = AddDirectorySeparator(path);
+		// host directory does not need .sbd tacked on
+		if (mDepth > 0)
+			rv = AddDirectorySeparator(path);
+
         if(NS_FAILED(rv)) return rv;
         
         // we have to treat the root folder specially, because it's name
@@ -438,38 +426,27 @@ nsImapMailFolder::FindAndSelectFolder(nsISupports* aElement,
     char *folderName = nsnull;
     PRUint32 depth = 0;
     aImapMailFolder->GetDepth(&depth);
+
     // Get current thread envent queue
-    nsIEventQueueService* pEventQService;
     PLEventQueue* eventQueue = nsnull;
 
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      nsIEventQueueService::GetIID(),
-                                      (nsISupports**)&pEventQService);
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
                                             &eventQueue);
-    if (pEventQService)
-        nsServiceManager::ReleaseService(kEventQueueServiceCID,
-                                         pEventQService);
 
     rv = aImapMailFolder->GetName(&folderName);
     if (folderName && *folderName && PL_strcasecmp(folderName, target) == 0 &&
         depth == 1)
     {
-        nsIImapService* imapService = nsnull;
         nsCOMPtr<nsIUrlListener>aUrlListener(do_QueryInterface(aElement, &rv));
-
-        rv = nsServiceManager::GetService(kCImapService,
-                                          nsIImapService::GetIID(),
-                                          (nsISupports **) &imapService);
+	
+		NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
         if (NS_SUCCEEDED(rv) && imapService)
-        {
             rv = imapService->SelectFolder(eventQueue,
                                            aImapMailFolder, aUrlListener,
                                            nsnull);
-        }
-        if (imapService)
-            nsServiceManager::ReleaseService(kCImapService, imapService);
 
         keepGoing = PR_FALSE;
     }
@@ -479,28 +456,35 @@ nsImapMailFolder::FindAndSelectFolder(nsISupports* aElement,
 
 NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 {
+	PRBool selectFolder = PR_FALSE;
     nsresult rv;
 	if (result)
 		*result = nsnull;
 
-    nsIImapService* imapService = nsnull;
+	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
 
-    rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(),
-                                      (nsISupports **) &imapService);
-    if (NS_FAILED(rv))
-    {
-        if (imapService)
-            nsServiceManager::ReleaseService(kCImapService, imapService);
-        return rv;
-    }
+	if (NS_FAILED(rv)) return rv;
+
+    char *folderName = nsnull;
+    rv = GetName(&folderName);
+	if (folderName && !PL_strcasecmp(folderName, "INBOX"))
+		selectFolder = PR_TRUE;
+
+    delete [] folderName;
 
     if (mDepth == 0)
     {
         if (!m_haveDiscoverAllFolders)
         {
-            rv = imapService->DiscoverAllFolders(m_eventQueue, this, this,
-                                                 nsnull);
+            nsIMsgFolder* child = nsnull;
+            rv = AddSubfolder("INBOX", &child);
+            
+            if (NS_FAILED(rv)) return rv;
+
+            rv = imapService->SelectFolder(m_eventQueue, child, this,
+                                           nsnull);
             m_haveDiscoverAllFolders = PR_TRUE;
+            NS_IF_RELEASE(child);
 #if 0
             mSubFolders->EnumerateForwards(FindAndSelectFolder, 
                                            (void*) "Inbox");
@@ -508,9 +492,13 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
         }
         rv = NS_ERROR_NULL_POINTER;
     }
-    else
+    if (selectFolder)
     {
         rv = GetDatabase();
+
+
+		if (NS_SUCCEEDED(rv))
+			rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
 
         if(NS_SUCCEEDED(rv))
         {
@@ -528,11 +516,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
             return rv;
     }
 
-    if (NS_SUCCEEDED(rv))
-        rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
-
     m_urlRunning = PR_TRUE;
-    nsServiceManager::ReleaseService(kCImapService, imapService);
 	return rv;
 }
 
@@ -765,16 +749,13 @@ NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 size)
 NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
-    nsIMsgMailSession *session = nsnull;
     NS_PRECONDITION (userName, "Oops ... null userName pointer");
     if (!userName)
         return rv;
     else
         *userName = nsnull;
-
-    rv = nsServiceManager::GetService(kMsgMailSessionCID,
-                                      nsIMsgMailSession::GetIID(),
-                                      (nsISupports **)&session);
+	
+	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
     
     if (NS_SUCCEEDED(rv) && session) 
     {
@@ -786,16 +767,12 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
       NS_IF_RELEASE (server);
     }
 
-    if (session)
-        nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
-
     return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
-    nsIMsgMailSession *session = nsnull;
 
     NS_PRECONDITION (hostName, "Oops ... null userName pointer");
     if (!hostName)
@@ -803,9 +780,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
     else
         *hostName = nsnull;
 
-    rv = nsServiceManager::GetService(kMsgMailSessionCID,
-                                      nsIMsgMailSession::GetIID(),
-                                      (nsISupports **)&session);
+	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
     
     if (NS_SUCCEEDED(rv) && session) 
     {
@@ -816,9 +791,6 @@ NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
           rv = server->GetHostName(hostName);
       NS_IF_RELEASE (server);
     }
-
-    if (session)
-        nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
 
     return rv;
 }
@@ -903,10 +875,48 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
     }
     if (!found)
     {
+		nsresult rv = NS_OK;
         nsIMsgFolder *child = nsnull;
         nsAutoString folderName = aSpec->allocatedPathName;
-        rv = AddSubfolder(folderName, &child);
-        NS_IF_RELEASE(child);
+	    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+
+		if(NS_FAILED(rv))
+			return rv;
+
+		nsAutoString uri;
+		uri.Append(kImapRootURI);
+		uri.Append('/');
+
+		uri.Append(aSpec->hostName);
+
+		PRInt32 leafPos = folderName.RFind("/", PR_TRUE);
+		if (leafPos > 0)
+		{
+			uri.Append('/');
+			nsAutoString parentName(folderName);
+			parentName.Truncate(leafPos);
+			uri.Append(parentName);
+		}
+
+		char* uriStr = uri.ToNewCString();
+		if (uriStr == nsnull) 
+			return NS_ERROR_OUT_OF_MEMORY;
+		nsIRDFResource* res;
+		rv = rdf->GetResource(uriStr, &res);
+		delete[] uriStr;
+		if (NS_FAILED(rv))
+			return rv;
+		// OK, this is purely temporary - we either need getParent, or
+		// AddSubFolder should be an nsIMsgFolder interface...
+		nsIMsgFolder *folder;
+		if(NS_SUCCEEDED(res->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		{
+			nsImapMailFolder *imapParent = nsnull;
+			imapParent = NS_STATIC_CAST(nsImapMailFolder*, folder);
+			rv = imapParent->AddSubfolder(folderName, &child);
+			NS_IF_RELEASE(child);
+			NS_IF_RELEASE(folder);
+		}
     }
     aEnumerator->Release();
 	return NS_OK;
@@ -1173,17 +1183,17 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
     // is the msg key. Setting this will set the msg key for the new header.
 
 	PRInt32 len = nsCRT::strlen(str);
-    char *currentEOL  = PL_strstr(str, LINEBREAK);
+    char *currentEOL  = PL_strstr(str, MSG_LINEBREAK);
     const char *currentLine = str;
     while (currentLine < (str + len))
     {
         if (currentEOL)
         {
             m_msgParser->ParseFolderLine(currentLine, 
-                                         (currentEOL + LINEBREAK_LEN) -
+                                         (currentEOL + MSG_LINEBREAK_LEN) -
                                          currentLine);
-            currentLine = currentEOL + LINEBREAK_LEN;
-            currentEOL  = PL_strstr(currentLine, LINEBREAK);
+            currentLine = currentEOL + MSG_LINEBREAK_LEN;
+            currentEOL  = PL_strstr(currentLine, MSG_LINEBREAK);
         }
         else
         {
