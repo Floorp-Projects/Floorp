@@ -909,6 +909,7 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
   
   *aResult = mFilterList;
   NS_IF_ADDREF(*aResult);
+  return NS_OK;
     
 }    
 
