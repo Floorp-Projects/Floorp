@@ -30,6 +30,15 @@
       <property name="outlinerBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
                 readonly="true"/>
+      <property name="view"
+                onget="return this.outlinerBoxObject.view;"
+                onset="return this.outlinerBoxObject.view=val;"/>
+      <property name="contentView"
+                onget="return this.view.QueryInterface(Components.interfaces.nsIOutlinerContentView);"
+                readonly="true"/>
+      <property name="builderView"
+                onget="return this.view.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);"
+                readonly="true"/>
       <property name="currentIndex"
                 onget="return this.outlinerBoxObject.selection.currentIndex;"
                 onset="return this.outlinerBoxObject.selection.currentIndex=val;"/>
