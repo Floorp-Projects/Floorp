@@ -2068,13 +2068,22 @@ PRBool nsString::IsSpace(PRUnichar aChar) {
 PRBool nsString::IsASCII(const PRUnichar* aBuffer) {
 
   if(!aBuffer) {
-    aBuffer=mUStr;
-    if(eOneByte==mCharSize)
+    if(eOneByte==mCharSize) {
+        char* aByte = mStr;
+        while(*aByte) {
+          if(*aByte & 0x80) { // don't use (*aByte > 0x7F) since char is signed
+            return PR_FALSE;        
+          }
+          aByte++;
+        }
       return PR_TRUE;
+    } else {
+      aBuffer=mUStr; // let the following code handle it
+    }
   }
   if(aBuffer) {
     while(*aBuffer) {
-      if(*aBuffer>255){
+      if(*aBuffer>0x007F){
         return PR_FALSE;        
       }
       aBuffer++;
