@@ -370,6 +370,18 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
     /**
+     * Use this id you want to stop the building content model
+     * --------------[ Sets DTD to STOP mode ]----------------
+     * It's recommended to use this method in accordance with
+     * the parser's terminate() method.
+     *
+     * @update	harishd 07/22/99
+     * @param 
+     * @return
+     */
+    virtual nsresult  Terminate(void) { return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; }
+
+    /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,
      * become useful.
      */
@@ -520,6 +532,7 @@ protected:
     PRBool              mHasOpenBody;
     PRBool              mHadFrameset;
     PRBool              mHadBody;
+    PRBool              mDTDState;
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;

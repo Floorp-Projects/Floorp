@@ -339,6 +339,18 @@ class CRtfDTD : public nsIDTD {
     virtual nsITokenRecycler* GetTokenRecycler(void);
 
     /**
+     * Use this id you want to stop the building content model
+     * --------------[ Sets DTD to STOP mode ]----------------
+     * It's recommended to use this method in accordance with
+     * the parser's terminate() method.
+     *
+     * @update	harishd 07/22/99
+     * @param 
+     * @return
+     */
+    virtual nsresult  Terminate(void);
+
+    /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,
      * become useful.
      */

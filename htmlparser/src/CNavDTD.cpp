@@ -347,6 +347,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mComputedCRC32=0;
   mExpectedCRC32=0;
   mSaveBadTokens = PR_FALSE;
+  mDTDState=NS_OK;
 //  DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
 #ifdef  RICKG_DEBUG
   nsHTMLElement::DebugDumpContainment("c:/temp/rules.new","ElementTable Rules");
@@ -542,11 +543,17 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
       NS_ADDREF(mSink);
       gRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
       while(NS_SUCCEEDED(result)){
-        CToken* theToken=mTokenizer->PopToken();
-        if(theToken) { 
-          result=HandleToken(theToken,aParser);
+        if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+          CToken* theToken=mTokenizer->PopToken();
+          if(theToken) { 
+            result=HandleToken(theToken,aParser);
+          }
+          else break;
         }
-        else break;
+        else {
+          result=mDTDState;
+          break;
+        }
       }//while
       mTokenizer=oldTokenizer;
       NS_IF_RELEASE(mSink);
@@ -636,6 +643,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
   }
   return result;
 }
+
 /**
  *  This big dispatch method is used to route token handler calls to the right place.
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 

@@ -1557,6 +1557,21 @@ nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
 }
 
 /**
+ * Use this id you want to stop the building content model
+ * --------------[ Sets DTD to STOP mode ]----------------
+ * It's recommended to use this method in accordance with
+ * the parser's terminate() method.
+ *
+ * @update	harishd 07/22/99
+ * @param 
+ * @return
+ */
+nsresult  nsXIFDTD::Terminate(void)
+{
+  return NS_ERROR_HTMLPARSER_STOPPARSING;
+}
+
+/**
  * Retrieve the attributes for this node, and add then into
  * the node.
  *
