@@ -85,5 +85,7 @@ NS_MSG_BASE PRBool IsAFromSpaceLine(char *start, const char *end);
 
 NS_MSG_BASE nsresult CreateServicesForPasswordManager();
 
+NS_MSG_BASE nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult);
+
 #endif
 

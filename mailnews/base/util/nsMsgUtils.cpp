@@ -621,3 +621,21 @@ nsresult CreateServicesForPasswordManager()
   }
   return NS_OK;
 }
+
+nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aHdr);
+  NS_ENSURE_ARG_POINTER(aResult);
+  PRUint32 length = strlen(aHdr);
+  for(PRUint32 i=0; i<length; i++)
+  {
+    char c = aHdr[i];
+    if ( c < '!' || c == ':' || c > '~') 
+    {
+      *aResult = PR_FALSE;
+      return NS_OK;
+    }
+  }
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
