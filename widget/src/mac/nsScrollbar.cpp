@@ -123,8 +123,19 @@ void nsScrollbar::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+WindowPtr		theWindow;
+nsWindow		*theNsWindow=nsnull;
 
-	NS_ERROR("This Widget must not use this Create method");
+	if(0!=aParent)
+		{
+		theWindow = (GrafPtr)aParent;
+		theNsWindow = (nsWindow*)(((WindowPeek)theWindow)->refCon);	
+		}
+		
+	if(nsnull!=theNsWindow)
+		Create(theNsWindow, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+
+	//NS_ERROR("This Widget must not use this Create method");
 
 }
 
@@ -198,7 +209,7 @@ PRBool 	result;
 			if(mWidgetArmed)
 				{
 				
-				/*this->SetPosition();*/NS_ERROR("Get mouse loc and set position");
+				//this->SetPosition();
 				this->DrawWidget();
 				}
 			break;
