@@ -363,6 +363,13 @@ NS_IMETHODIMP
 nsFTPDirListingConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
                                 nsresult status, const PRUnichar *errorMsg) {
     // we don't care about stop. move along...
+    nsCOMPtr<nsILoadGroup> loadgroup;
+    nsresult rv = mPartChannel->GetLoadGroup(getter_AddRefs(loadgroup));
+    if (NS_FAILED(rv)) return rv;
+
+    if (loadgroup)
+        (void)loadgroup->RemoveChannel(mPartChannel, nsnull, nsnull, nsnull);
+
     return mFinalListener->OnStopRequest(mPartChannel, ctxt, status, errorMsg);
 }
 
