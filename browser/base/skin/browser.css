@@ -780,7 +780,13 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
   background-color: transparent;
   list-style-image: url("chrome://browser/skin/throbber-stopped.gif");
 }
-
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://browser/skin/throbber.gif");
+}
+
+toolbar[iconsize="small"] #navigator-throbber {
+  list-style-image: url("chrome://browser/skin/throbber-small-stopped.gif");
+}
+toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
+  list-style-image: url("chrome://browser/skin/throbber-small.gif");
 }
