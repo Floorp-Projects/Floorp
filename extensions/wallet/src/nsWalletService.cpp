@@ -91,27 +91,6 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
     return NS_OK;
 }
 
-#ifdef junk
-NS_IMETHODIMP
-nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
-    ::SI_DisplaySignonInfoAsHTML();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWalletlibService::SI_RememberSignonData
-        (char* URLName, LO_FormSubmitData *submit) {
-    ::SI_RememberSignonData(URLName, submit);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWalletlibService::SI_RestoreSignonData
-        (char* URLName, char* name, char** value) {
-    ::SI_RestoreSignonData(URLName, name, value);
-    return NS_OK;
-}
-#endif
 
 /* call to create the wallet object */
 
