@@ -289,7 +289,8 @@
     <handlers>
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
-      <handler type="mousedown" shift="false" control="false">
+      <handler type="mousedown" shift="false" control="false"
+           meta="false" alt="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            var isSelected = event.target.parentNode.parentNode.getAttribute("selected");
@@ -303,7 +304,8 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler type="click" shift="false" control="false">
+      <handler type="click" shift="false" control="false" meta="false"
+           alt="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            var selectedItems = parentNode.selectedItems;
@@ -318,7 +320,8 @@
       ]]>
       </handler>
 
-      <handler type="click" shift="false" control="true">
+      <!-- For discontinuous selection of items -->
+      <handler type="click" shift="false" control="true" alt="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            parentNode.toggleItemSelection(event.target.parentNode.parentNode);
@@ -327,7 +330,18 @@
       ]]>
       </handler>
 
-      <handler type="click" shift="true" control="false">
+      <!-- Same as above, but this one is for the Mac Command key -->
+      <handler type="click" shift="false" meta="true">
+      <![CDATA[
+         if (event.target.localName == 'treecell') {
+           parentNode.toggleItemSelection(event.target.parentNode.parentNode);
+           parentNode.currentItem = event.target.parentNode.parentNode;
+         }
+      ]]>
+      </handler>
+
+      <!-- For continuous selection of items -->
+      <handler type="click" shift="true" control="false" meta="false">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            parentNode.selectItemRange(null, event.target.parentNode.parentNode);
@@ -335,7 +349,9 @@
           }
       ]]>
       </handler>
-      <handler type="click" shift="false" control="false" clickcount="2">
+
+      <!-- double-click -->
+      <handler type="click" shift="false" control="false" meta="false" clickcount="2">
       <![CDATA[
          if (event.target.localName == 'treecell') {
            var n = event.target.parentNode.parentNode;
@@ -343,7 +359,9 @@
          }
       ]]>
       </handler>
-      <handler type="click" shift="false" control="false">
+
+      <!-- normal, single click -->
+      <handler type="click" shift="false" control="false" meta="false">
       <![CDATA[
          if (event.target.getAttribute('twisty') == 'true') {
            var n = event.target.parentNode.parentNode.parentNode;
