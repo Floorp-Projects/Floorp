@@ -48,7 +48,7 @@
 
 <box autostretch="never">
   <text value="&lookInMenuList.label;"/>
-  <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);">
+  <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="left">
     <menupopup id="lookInMenu"/>
   </menulist>
   <button value=".." onclick="goUp();"/>
