@@ -305,7 +305,8 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
   nscoord textHeight = (2 * aDesiredSize.height) / 3;
 
   // Center the child and add back in the border and badding
-  nsRect rect = nsRect(((desiredSize.width - textWidth)/2)+ aReflowState.mComputedBorderPadding.left, 
+  // our inner area frame is already doing centering so we only need to center vertically.
+  nsRect rect = nsRect(aReflowState.mComputedBorderPadding.left, 
                        ((desiredSize.height - textHeight)/2) + aReflowState.mComputedBorderPadding.top, 
                        desiredSize.width, 
                        desiredSize.height);
