@@ -34,7 +34,7 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** --> 
-<!-- Version 0.1 -->
+<!-- Version 0.2 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
   <xsl:output method="xml"/>
@@ -49,7 +49,7 @@
     <version><xsl:value-of select="iCalendar/vcalendar/version" /></version>
     <prodid><xsl:value-of select="iCalendar/vcalendar/prodid" /></prodid>
   </Vcalendar>
-  <xsl:apply-templates select="iCalendar/vcalendar/vtodo" /></rdf:RDF>
+  <xsl:apply-templates select="iCalendar/vcalendar/vtodo | iCalendar/vcalendar/vevent" /></rdf:RDF>
 </xsl:template>
 
 <xsl:template match="vtodo">
@@ -67,6 +67,23 @@
   <dtstamp><xsl:value-of select="dtstamp" /></dtstamp>
   <due><xsl:value-of select="due" /></due>
 </Vtodo>
+</xsl:template>
+
+<xsl:template match="vevent">
+<Vevent>
+  <uid><xsl:value-of select="uid" /></uid>
+  <summary><xsl:value-of select="summary" /></summary>
+  <description><xsl:value-of select="description" /></description>
+  <categories><xsl:value-of select="categories" /></categories>
+  <status><xsl:value-of select="status" /></status>
+  <class rdf:resource='http://www.w3.org/2000/10/swap/pim/ical#private'/>
+<!-- ??? -->
+  <dtstart rdf:parseType='Resource'>
+    <value><xsl:value-of select="dtstart" /></value>
+  </dtstart>
+  <dtstamp><xsl:value-of select="dtstamp" /></dtstamp>
+  <due><xsl:value-of select="due" /></due>
+</Vevent>
 </xsl:template>
 
 </xsl:stylesheet>

@@ -34,7 +34,7 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<!-- xcs2csv.xsl Version 1.0 -->
+<!-- xml2xcs.xsl Version 1.0.1 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="1.0">
   <xsl:output method="xml"/>
@@ -59,6 +59,7 @@
 <xsl:template match="component[translate(@name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='vevent']">
   <vevent>
     <xsl:apply-templates select="property" />
+    <xsl:apply-templates select="component" />
   </vevent>
 </xsl:template>
 
@@ -73,6 +74,13 @@
   <vjournal>
     <xsl:apply-templates select="property" />
   </vjournal>
+</xsl:template>
+
+
+<xsl:template match="component[translate(@name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='valarm']">
+  <valarm>
+    <xsl:apply-templates select="property" />
+  </valarm>
 </xsl:template>
 
 <xsl:template match="property">
