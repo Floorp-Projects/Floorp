@@ -23,6 +23,7 @@
 #include "nsDrawingSurfaceMac.h"
 #include <QDOffscreen.h>
 #include "nsCRT.h"
+#include <ATSUnicode.h>
 
 class nsIFontMetrics;
 class nsIDeviceContext;
@@ -142,7 +143,20 @@ protected:
   				{
 					::SetPort(mOldPort);
   				}
-
+          
+  NS_IMETHOD qdGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
+                      PRInt32 *aFontID);
+  NS_IMETHOD qdDrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
+                        PRInt32 aFontID,
+                        const nscoord* aSpacing);
+  NS_IMETHOD atsuiGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
+                      PRInt32 *aFontID);
+  NS_IMETHOD atsuiDrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
+                        PRInt32 aFontID,
+                        const nscoord* aSpacing);
+                        
+  ATSUTextLayout atsuiGetTextLayout();
+                      
 	
 protected:
 	float             		mP2T; 				// Pixel to Twip conversion factor
@@ -164,6 +178,10 @@ protected:
 	GraphicState *			mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 
 	nsVoidArray *			mGSStack;			// GraphicStates stack, used for PushState/PopState
+	static PRBool			gATSUI;
+	static PRBool			gATSUI_Init;
+	PRInt8					mChanges;
+	ATSUTextLayout			mLastTextLayout;
 };
 
 #endif /* nsRenderingContextMac_h___ */
