@@ -32,10 +32,7 @@ nsHTMLImageLoader::nsHTMLImageLoader()
     mCallBack(nsnull),
     mClosure(nsnull),
     mImageLoader(nsnull),
-    mLoadImageFailed(PR_FALSE),
-    mHaveIntrinsicImageSize(PR_FALSE),
-    mNeedIntrinsicImageSize(PR_FALSE),
-    mHaveComputedSize(PR_FALSE),
+    mAllFlags(0),
     mIntrinsicImageSize(0, 0),
     mComputedImageSize(0, 0)
 {
@@ -76,7 +73,7 @@ void
 nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
 {
   mURLSpec = aNewSpec;
-  if (mBaseURL) {
+  if (mBaseURL && !aNewSpec.Equals("")) {
     nsString empty;
     nsresult rv = NS_MakeAbsoluteURL(mBaseURL, empty, mURLSpec, mURL);
     if (NS_FAILED(rv)) {
@@ -122,20 +119,28 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
 {
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, aFrame);
-  printf(": update: status=%x [loader=%p]\n", aStatus, mImageLoader);
+  printf(": update: status=%x [loader=%p] callBack=%p squelch=%s\n",
+         aStatus, mImageLoader, mCallBack,
+         mFlags.mSquelchCallback ? "yes" : "no");
 #endif
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     if (mImageLoader) {
       mImageLoader->GetSize(mIntrinsicImageSize);
-      if (mNeedIntrinsicImageSize) {
-        mHaveIntrinsicImageSize = PR_TRUE;
+      if (mFlags.mNeedIntrinsicImageSize) {
+        mFlags.mHaveIntrinsicImageSize = PR_TRUE;
       }
+    }
+    if ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE == aStatus) &&
+        !mFlags.mNeedSizeNotification) {
+      return;
     }
   }
 
   // Pass on update to the user of this object if they want it
   if (mCallBack) {
-    (*mCallBack)(aPresContext, this, aFrame, mClosure, aStatus);
+    if (!mFlags.mSquelchCallback) {
+      (*mCallBack)(aPresContext, this, aFrame, mClosure, aStatus);
+    }
   }
 }
 
@@ -146,16 +151,21 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
     // We were not initialized!
     return NS_ERROR_NULL_POINTER;
   }
+  if (mURL.Equals("")) {
+    return NS_OK;
+  }
 
   // This is kind of sick, but its possible that we will get a
   // notification *before* we have setup mImageLoader. To get around
   // this, we let the pres-context store into mImageLoader and sort
   // things after it returns.
   nsIFrameImageLoader* oldLoader = mImageLoader;
+  nsSize* sizeToLoadWidth = nsnull;
+  if (!mFlags.mAutoImageSize && !mFlags.mNeedIntrinsicImageSize) {
+    sizeToLoadWidth = &mComputedImageSize;
+  }
   nsresult rv = aPresContext->StartLoadImage(mURL, nsnull,
-                                             (mNeedIntrinsicImageSize
-                                              ? nsnull
-                                              : &mComputedImageSize),
+                                             sizeToLoadWidth,
                                              mFrame, ImageLoadCB, (void*)this,
                                              &mImageLoader);
 #ifdef NOISY_IMAGE_LOADING
@@ -163,7 +173,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
   printf(": loading image '");
   fputs(mURL, stdout);
   printf("' @ ");
-  if (mNeedIntrinsicImageSize) {
+  if (mFlags.mNeedIntrinsicImageSize) {
     printf("intrinsic size ");
   }
   printf("%d,%d; oldLoader=%p newLoader=%p\n",
@@ -194,7 +204,7 @@ nsHTMLImageLoader::UpdateURLSpec(nsIPresContext* aPresContext,
   StartLoadImage(aPresContext);
 }
 
-void
+PRBool
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsHTMLReflowState* aReflowState,
                                   nsHTMLReflowMetrics& aDesiredSize)
@@ -219,81 +229,115 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
 
-  PRBool haveComputedSize = PR_FALSE;
-  PRBool needIntrinsicImageSize = PR_FALSE;
-  nscoord newWidth, newHeight;
-  if (fixedContentWidth) {
-    if (fixedContentHeight) {
-      newWidth = widthConstraint;
-      newHeight = heightConstraint;
-      haveComputedSize = PR_TRUE;
-    }
-    else {
-      // We have a width, and an auto height. Compute height from
-      // width once we have the intrinsic image size.
-      newWidth = widthConstraint;
-      if (mHaveIntrinsicImageSize) {
-        float width = mIntrinsicImageSize.width
-          ? mIntrinsicImageSize.width
-          : mIntrinsicImageSize.height;         // avoid divide by zero
-        float height = mIntrinsicImageSize.height;
-        newHeight = (nscoord)
-          NSToIntRound(widthConstraint * height / width);
+  for (;;) {
+    PRBool haveComputedSize = PR_FALSE;
+    PRBool needIntrinsicImageSize = PR_FALSE;
+    nscoord newWidth, newHeight;
+    mFlags.mAutoImageSize = PR_FALSE;
+    mFlags.mNeedSizeNotification = PR_FALSE;
+    if (fixedContentWidth) {
+      if (fixedContentHeight) {
+        newWidth = widthConstraint;
+        newHeight = heightConstraint;
         haveComputedSize = PR_TRUE;
       }
       else {
-        newHeight = 1;
-        needIntrinsicImageSize = PR_TRUE;
+        // We have a width, and an auto height. Compute height from
+        // width once we have the intrinsic image size.
+        newWidth = widthConstraint;
+        if (mFlags.mHaveIntrinsicImageSize) {
+          float width = mIntrinsicImageSize.width
+            ? mIntrinsicImageSize.width
+            : mIntrinsicImageSize.height;         // avoid divide by zero
+          float height = mIntrinsicImageSize.height;
+          newHeight = (nscoord)
+            NSToIntRound(widthConstraint * height / width);
+          haveComputedSize = PR_TRUE;
+        }
+        else {
+          newHeight = 1;
+          needIntrinsicImageSize = PR_TRUE;
+          mFlags.mNeedSizeNotification = PR_TRUE;
+        }
       }
     }
-  }
-  else if (fixedContentHeight) {
-    // We have a height, and an auto width. Compute width from height
-    // once we have the intrinsic image size.
-    newHeight = heightConstraint;
-    if (mHaveIntrinsicImageSize) {
-      float width = mIntrinsicImageSize.width;
-      float height = mIntrinsicImageSize.height
-        ? mIntrinsicImageSize.height
-        : mIntrinsicImageSize.width;            // avoid divide by zero
-      newWidth = (nscoord)
-        NSToIntRound(heightConstraint * width / height);
-      haveComputedSize = PR_TRUE;
+    else if (fixedContentHeight) {
+      // We have a height, and an auto width. Compute width from height
+      // once we have the intrinsic image size.
+      newHeight = heightConstraint;
+      if (mFlags.mHaveIntrinsicImageSize) {
+        float width = mIntrinsicImageSize.width;
+        float height = mIntrinsicImageSize.height
+          ? mIntrinsicImageSize.height
+          : mIntrinsicImageSize.width;            // avoid divide by zero
+        newWidth = (nscoord)
+          NSToIntRound(heightConstraint * width / height);
+        haveComputedSize = PR_TRUE;
+      }
+      else {
+        newWidth = 1;
+        needIntrinsicImageSize = PR_TRUE;
+        mFlags.mNeedSizeNotification = PR_TRUE;
+      }
     }
     else {
-      newWidth = 1;
-      needIntrinsicImageSize = PR_TRUE;
+      mFlags.mAutoImageSize = PR_TRUE;
+      if (mFlags.mHaveIntrinsicImageSize) {
+        newWidth = mIntrinsicImageSize.width;
+        newHeight = mIntrinsicImageSize.height;
+        haveComputedSize = PR_TRUE;
+      }
+      else {
+        newWidth = 1;
+        newHeight = 1;
+        needIntrinsicImageSize = PR_TRUE;
+        mFlags.mNeedSizeNotification = PR_TRUE;
+      }
     }
-  }
-  else {
-    if (mHaveIntrinsicImageSize) {
-      newWidth = mIntrinsicImageSize.width;
-      newHeight = mIntrinsicImageSize.height;
-      haveComputedSize = PR_TRUE;
-    }
-    else {
-      newWidth = 1;
-      newHeight = 1;
-      needIntrinsicImageSize = PR_TRUE;
-    }
-  }
-  mNeedIntrinsicImageSize = needIntrinsicImageSize;
-  mHaveComputedSize = haveComputedSize;
-  mComputedImageSize.width = newWidth;
-  mComputedImageSize.height = newHeight;
+    mFlags.mNeedIntrinsicImageSize = needIntrinsicImageSize;
+    mFlags.mHaveComputedSize = haveComputedSize;
+    mComputedImageSize.width = newWidth;
+    mComputedImageSize.height = newHeight;
 #ifdef NOISY_IMAGE_LOADING
-  nsFrame::ListTag(stdout, mFrame);
-  printf(": %s%scomputedSize=%d,%d\n",
-         mNeedIntrinsicImageSize ? "need-instrinsic-size " : "",
-         mHaveComputedSize ? "have-computed-size " : "",
-         mComputedImageSize.width, mComputedImageSize.height);
+    nsFrame::ListTag(stdout, mFrame);
+    printf(": %s%scomputedSize=%d,%d\n",
+           mFlags.mNeedIntrinsicImageSize ? "need-instrinsic-size " : "",
+           mFlags.mHaveComputedSize ? "have-computed-size " : "",
+           mComputedImageSize.width, mComputedImageSize.height);
 #endif
 
-  // Load the image at the desired size
-  StartLoadImage(aPresContext);
+    // Load the image at the desired size
+    if ((0 != newWidth) && (0 != newHeight)) {
+      // Make sure we squelch a callback to the client of this image
+      // loader during a start-load-image. Its possible the image we
+      // want is ready to go and will therefore fire a notification
+      // during the StartLoadImage call. Since this routine is already
+      // returning size information there is no point in passing on the
+      // callbacks to the client.
+      mFlags.mSquelchCallback = PR_TRUE;
+      StartLoadImage(aPresContext);
+      mFlags.mSquelchCallback = PR_FALSE;
+
+      // See if we just got the intrinsic size
+      if (mFlags.mNeedIntrinsicImageSize && mFlags.mHaveIntrinsicImageSize) {
+        // We just learned our intrinisic size. Start over from the top...
+#ifdef NOISY_IMAGE_LOADING
+        printf("  *** size arrived during StartLoadImage, looping...\n");
+#endif
+        continue;
+      }
+    }
+    break;
+  }
 
   aDesiredSize.width = mComputedImageSize.width;
   aDesiredSize.height = mComputedImageSize.height;
+
+  if ((mFlags.mNeedIntrinsicImageSize && !mFlags.mHaveIntrinsicImageSize) ||
+      mFlags.mNeedSizeNotification) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 PRBool
@@ -306,9 +350,10 @@ nsHTMLImageLoader::GetLoadImageFailed() const
     PRUint32  loadStatus;
     mImageLoader->GetImageLoadStatus(&loadStatus);
     result = 0 != (loadStatus & NS_IMAGE_LOAD_STATUS_ERROR);
+    return result;
   }
 
-  result |= PRBool(mLoadImageFailed);
+  result = mFlags.mLoadImageFailed ? PR_TRUE : PR_FALSE;
   return result;
 }
 

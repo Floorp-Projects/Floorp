@@ -90,7 +90,7 @@ protected:
 
   void DamageRepairFrames(const nsRect* aDamageRect);
 
-  void NotifyFrames();
+  void NotifyFrames(PRBool aIsSizeUpdate);
 
   nsIPresContext* mPresContext;
   nsIImageRequest* mImageRequest;
@@ -114,6 +114,7 @@ protected:
     nsIFrame* mFrame;
     nsIFrameImageLoaderCB mCallBack;
     void* mClosure;
+    PRBool mNeedSizeUpdate;
   };
   PerFrameData* mFrames;
 
