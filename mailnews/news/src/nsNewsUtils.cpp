@@ -40,13 +40,23 @@ nsGetNewsRoot(nsFileSpec &result)
 
   if (gNewsRoot == nsnull) {
     NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
-    
+
+    nsCOMPtr<nsIMsgAccountManager> accountManager;
+    rv = session->GetAccountManager(getter_AddRefs(accountManager));
+                                    
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      rv = session->GetCurrentServer(getter_AddRefs(server));
+      nsCOMPtr<nsISupportsArray> servers;
+      rv = accountManager->FindServersByHostname("news.mozilla.org",
+                                            nsINntpIncomingServer::GetIID(),
+                                            getter_AddRefs(servers));
       
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv) && servers->Count() > 0) {
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        server = do_QueryInterface(servers->ElementAt(0));
+        
+        if (server)
           rv = server->GetLocalPath(&gNewsRoot);
+      }
     }
   } /* if (gNewsRoot == nsnull) .. */
   
@@ -66,7 +76,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     return NS_ERROR_FAILURE;
 
   if ((PL_strcmp(rootURI, kNewsRootURI) == 0) || 
-           (PL_strcmp(rootURI, kNewsMessageRootURI) == 0)) {
+      (PL_strcmp(rootURI, kNewsMessageRootURI) == 0)) {
     rv = nsGetNewsRoot(pathResult);
 	}
   else {
