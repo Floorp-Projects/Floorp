@@ -47,11 +47,14 @@
     <label value="&fileTypes.label;"/>
     <vbox flex="1">
       <hbox flex="1">
-        <listbox id="appList" flex="1"
-              sortResource="http://home.netscape.com/NC-rdf#value"
-              sortDirection="ascending"
+        <tree id="appList" flex="1" seltype="single" hidecolumnpicker="true"
               datasources="rdf:null" ref="urn:mimetypes"
+              flags="dont-build-content"
               onselect="selectApplication();">
+          <treecols>
+            <treecol sort="?value" sortActive="true" sortDirection="ascending"
+                     flex="1" hideheader="true"/>
+          </treecols>
           <template>
             <rule>
               <conditions>
@@ -68,11 +71,17 @@
                         predicate="http://home.netscape.com/NC-rdf#editable"/>
               </conditions>
               <action> 
-                <listitem uri="?type" label="?value"/>
+                <treechildren>
+                  <treeitem uri="?type">
+                    <treerow>
+                      <treecell label="?value"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
               </action>
             </rule>        
           </template>
-        </listbox>
+        </tree>
         <vbox>
           <button id="newTypeButton" 
                   label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;"

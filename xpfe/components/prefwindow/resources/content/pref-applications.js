@@ -18,7 +18,6 @@
  * Contributor(s):
  */
 
-var gNewTypeRV    = null;
 var gUpdateTypeRV = null;
 var gList   = null;
 var gDS     = null;
@@ -35,16 +34,12 @@ function newType()
 {
   var handlerOverride = new HandlerOverride();
   window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
-  if (gNewTypeRV) {
-    gList.builder.rebuild();
-    gNewTypeRV = null;
-  }
 }
 
 function removeType()
 {
   // Only prompt if setting is "useHelperApp".
-  var uri = gList.selectedItems[0].id;
+  var uri = gList.view.getResourceAtIndex(gList.currentIndex).Value;
   var handlerOverride = new HandlerOverride(uri);
   if ( !handlerOverride.useSystemDefault && !handlerOverride.saveToDisk ) {
     var titleMsg = gPrefApplicationsBundle.getString("removeHandlerTitle");
@@ -57,14 +52,13 @@ function removeType()
     }
   }
   removeOverride(handlerOverride.mimeType);
-  gList.builder.rebuild();
   selectApplication();
 }
 
 function editType()
 {
-  if (gList.selectedItems && gList.selectedItems[0]) {
-    var uri = gList.selectedItems[0].id;
+  if (gList.currentIndex >= 0) {
+    var uri = gList.view.getResourceAtIndex(gList.currentIndex).Value;
     var handlerOverride = new HandlerOverride(uri);
     window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
     selectApplication();
@@ -197,8 +191,8 @@ function Startup()
 
 function selectApplication()
 {
-  if (gList.selectedItems && gList.selectedItems.length && gList.selectedItems[0]) {
-    var uri = gList.selectedItems[0].id;
+  if (gList.currentIndex >= 0) {
+    var uri = gList.view.getResourceAtIndex(gList.currentIndex).Value;
     var handlerOverride = new HandlerOverride(uri);
     gExtensionField.setAttribute("value", handlerOverride.extensions);
     gMIMEDescField.setAttribute("value", handlerOverride.description);
