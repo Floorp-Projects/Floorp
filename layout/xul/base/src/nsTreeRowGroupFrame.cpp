@@ -47,6 +47,8 @@
 #include "nsIDOMDragListener.h"
 #include "nsTreeItemDragCapturer.h"
 #include "nsLayoutAtoms.h"
+#include "nsIViewManager.h"
+#include "nsIView.h"
 
 // I added the following function to improve keeping the frame 
 // chains in synch with the table. repackage as appropriate - karnaze
@@ -1621,6 +1623,50 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
     mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, content,
                                                &aResult, PR_FALSE, PR_TRUE, nsnull);
 
+  }
+}
+
+void
+nsTreeRowGroupFrame::CollapseScrollbar(PRBool hide, nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  nsIFrame* frame = aFrame;
+  if (frame == nsnull)
+    frame = mScrollbar;
+
+  if (frame == nsnull)
+    return;
+
+  // shrink the view
+  nsIView* view = nsnull;
+  frame->GetView(aPresContext, &view);
+
+  // if we find a view stop right here. All views under it
+  // will be clipped.
+  if (view) {
+     nsViewVisibility v;
+     view->GetVisibility(v);
+     nsCOMPtr<nsIWidget> widget;
+     view->GetWidget(*getter_AddRefs(widget));
+     if (hide) {
+         view->SetVisibility(nsViewVisibility_kHide);
+     } else {
+         view->SetVisibility(nsViewVisibility_kShow);
+     }
+     if (widget) {
+
+       return;
+     }
+  }
+
+  // collapse the child
+  nsIFrame* child = nsnull;
+  frame->FirstChild(nsnull, &child);
+
+  while (nsnull != child) 
+  {
+     CollapseScrollbar(hide, aPresContext, child);
+     nsresult rv = child->GetNextSibling(&child);
+     NS_ASSERTION(rv == NS_OK,"failed to get next child");
   }
 }
 

@@ -50,6 +50,7 @@ public:
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
   
   void CreateScrollbar(nsIPresContext* aPresContext);
+  void CollapseScrollbar(PRBool aHide, nsIPresContext* aPresContext, nsIFrame* aCurrentFrame);
 
   NS_IMETHOD  TreeAppendFrames(nsIFrame*       aFrameList);
 
