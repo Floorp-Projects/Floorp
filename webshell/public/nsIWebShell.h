@@ -26,6 +26,7 @@
 #include "nsILoadAttribs.h"
 #include "nsIScrollableView.h"
 #include "nsIParser.h" // for nsCharsetSource only
+#include "nsISessionHistory.h"
 
 
 class nsIDOMElement;
@@ -410,6 +411,31 @@ public:
     * Finds text in content
    */
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
+
+  /**
+   * Return the URL of the current WebShell.
+   */
+  NS_IMETHOD GetURL(const PRUnichar** aURL) = 0;
+
+  /**
+   * Set the URL of the current WebShell.
+   */
+  NS_IMETHOD SetURL(const PRUnichar* aURL) = 0;
+
+  /**
+   * Return the handle to SessionHistory
+   */
+  NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult) = 0;
+
+  /**
+   * Set a handle to SessionHistory
+   */
+  NS_IMETHOD SetSessionHistory(nsISessionHistory * aSHist) = 0;
+
+  /* Set & Get Session History details */
+  NS_IMETHOD SetIsInSHist(PRBool aIsFrame)       = 0;
+  NS_IMETHOD GetIsInSHist(PRBool& aIsFrame)      = 0;
+
 };
 
 extern "C" NS_WEB nsresult
