@@ -65,7 +65,7 @@ related to ICAL_MALFORMEDDATA_ERROR and parsing .ics zoneinfo files */
  CREATOR: eric 02 June 2000
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -245,7 +245,7 @@ void  icaltime_adjust(struct icaltimetype *tt, int days, int hours,
  CREATOR: eric 26 Jan 2001
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -304,7 +304,7 @@ struct icaldurationtype  icaltime_subtract(struct icaltimetype t1,
  CREATOR: eric 26 Jan 2001
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -836,7 +836,7 @@ int icalrecur_expand_recurrence(char* rule, time_t start,
   CREATOR: eric 20 March 1999
 
 
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
 
   
@@ -1155,7 +1155,7 @@ void icalvalue_set_action(icalvalue* value, enum icalproperty_action v);
   CREATOR: eric 20 March 1999
 
 
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
 
   
@@ -1462,7 +1462,7 @@ void icalparameter_set_dir(icalparameter* value, const char* v);
   CREATOR: eric 20 March 1999
 
 
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
 
   
@@ -1539,7 +1539,7 @@ const char* icalvalue_kind_to_string(icalvalue_kind kind);
   CREATOR: eric 20 March 1999
 
 
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
 
   
@@ -1606,7 +1606,7 @@ icalparameter_kind icalparameter_string_to_kind(const char* string);
   FILE: icalderivedproperties.{c,h}
   CREATOR: eric 09 May 1999
   
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
  ======================================================================*/
@@ -2013,7 +2013,7 @@ const char* icalproperty_get_xlicmimeoptinfo(icalproperty* prop);icalproperty* i
   CREATOR: eric 20 March 1999
 
 
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
 
   
@@ -2281,7 +2281,7 @@ void pvl_apply(pvl_list l,pvl_applyf f, void *v);
  CREATOR: Damon Chaplin 07 March 2001
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Ximian, Inc.
@@ -2605,7 +2605,7 @@ icalcomponent* icalcomponent_new_xdaylight();
  CREATOR: Damon Chaplin 15 March 2001
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -2726,6 +2726,15 @@ void	    icaltimezone_array_append_from_vtimezone (icalarray	    *timezones,
 void	    icaltimezone_array_free		(icalarray	*timezones);
 
 
+/*
+ *  Handling the default location the timezone files
+ */
+
+/* Set the directory to look for the zonefiles */
+void set_zone_directory(char *path);
+
+/* Free memory dedicated to the zonefile directory */
+void free_zone_directory();
 
 /*
  * Debugging Output.
@@ -2743,7 +2752,7 @@ int	icaltimezone_dump_changes		(icaltimezone	*zone,
   FILE: icalparser.h
   CREATOR: eric 20 April 1999
   
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -2834,7 +2843,7 @@ char* string_line_generator(char *out, size_t buf_size, void *d);
  CREATOR: eric 30 June 1999
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  This program is free software; you can redistribute it and/or modify
@@ -2916,7 +2925,7 @@ char* icalmemory_strdup(const char *s);
   FILE: icalerror.h
   CREATOR: eric 09 May 1999
   
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -3072,7 +3081,7 @@ void icalerror_restore(const char* error, icalerrorstate es);
   FILE: icalrestriction.h
   CREATOR: eric 24 April 1999
   
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -3133,7 +3142,7 @@ int icalrestriction_check(icalcomponent* comp);
   FILE: sspm.h Mime Parser
   CREATOR: eric 25 June 2000
   
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -3277,7 +3286,7 @@ int sspm_write_mime(struct sspm_part *parts,size_t num_parts,
  CREATOR: eric 26 July 2000
 
 
- $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+ $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -3319,7 +3328,7 @@ char* icalmime_as_mime_string(char* component);
   
   DESCRIPTION:
   
-  $Id: ical.h,v 1.1 2001/12/21 19:21:39 mikep%oeone.com Exp $
+  $Id: ical.h,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
   $Locker:  $
 
   (C) COPYRIGHT 1999 Eric Busboom 

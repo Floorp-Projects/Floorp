@@ -4,7 +4,7 @@
   FILE: icalderivedproperty.c
   CREATOR: eric 15 Feb 2001
   
-  $Id: icalderivedproperty.c,v 1.1 2001/12/21 19:21:40 mikep%oeone.com Exp $
+  $Id: icalderivedproperty.c,v 1.2 2002/04/23 19:36:20 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -303,7 +303,7 @@ static struct icalproperty_map property_map[] = {
 {ICAL_UID_PROPERTY,"UID",ICAL_TEXT_VALUE},
 {ICAL_URL_PROPERTY,"URL",ICAL_URI_VALUE},
 {ICAL_VERSION_PROPERTY,"VERSION",ICAL_TEXT_VALUE},
-{ICAL_X_PROPERTY,"X",ICAL_TEXT_VALUE},
+{ICAL_X_PROPERTY,"X",ICAL_X_VALUE},
 {ICAL_XLICCLASS_PROPERTY,"X-LIC-CLASS",ICAL_XLICCLASS_VALUE},
 {ICAL_XLICCLUSTERCOUNT_PROPERTY,"X-LIC-CLUSTERCOUNT",ICAL_STRING_VALUE},
 {ICAL_XLICERROR_PROPERTY,"X-LIC-ERROR",ICAL_TEXT_VALUE},
@@ -833,6 +833,14 @@ icalproperty* icalproperty_vanew_exdate(struct icaltimetype v, ...){
    va_end(args);
    return (icalproperty*)impl;
 }
+
+/* EXDATE */
+icalproperty* icalproperty_new_exdate(struct icaltimetype v) {
+   struct icalproperty_impl *impl = icalproperty_new_impl(ICAL_EXDATE_PROPERTY);   
+   icalproperty_set_exdate((icalproperty*)impl,v);
+   return (icalproperty*)impl;
+}
+
 void icalproperty_set_exdate(icalproperty* prop, struct icaltimetype v){
     icalvalue *value;
     
@@ -842,6 +850,10 @@ void icalproperty_set_exdate(icalproperty* prop, struct icaltimetype v){
     else
         value = icalvalue_new_datetime(v);
     icalproperty_set_value(prop,value);
+}
+struct icaltimetype icalproperty_get_exdate(icalproperty* prop){
+    icalerror_check_arg( (prop!=0),"prop");
+    return icalvalue_get_datetime(icalproperty_get_value(prop));
 }
 icalproperty* icalproperty_vanew_exrule(struct icalrecurrencetype v, ...){
    va_list args;
@@ -1853,11 +1865,11 @@ void icalproperty_set_x(icalproperty* prop, const char* v){
     icalerror_check_arg_rv( (v!=0),"v");
 
     icalerror_check_arg_rv( (prop!=0),"prop");
-    icalproperty_set_value(prop,icalvalue_new_text(v));
+    icalproperty_set_value(prop,icalvalue_new_x(v));
 }
 const char* icalproperty_get_x(icalproperty* prop){
     icalerror_check_arg( (prop!=0),"prop");
-    return icalvalue_get_text(icalproperty_get_value(prop));
+    return icalvalue_get_x(icalproperty_get_value(prop));
 }
 icalproperty* icalproperty_vanew_xlicclass(enum icalproperty_xlicclass v, ...){
    va_list args;
