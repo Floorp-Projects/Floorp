@@ -22,6 +22,10 @@
 #include "nsISupportsArray.h"
 #include "nsRepository.h"
 #include "nsIURL.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
+#include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -30,13 +34,15 @@
 #include "nsWidgetsCID.h"
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellCID,         NS_APPSHELL_CID);
+static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /* Define Interface IDs */
 
-static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kIAppShellIID,        NS_IAPPSHELL_IID);
+static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
 
 
 
@@ -50,7 +56,8 @@ public:
   NS_IMETHOD Initialize(void);
   NS_IMETHOD Run(void);
   NS_IMETHOD Shutdown(void);
-  NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, nsIWidget*& aResult);
+  NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
+                                  nsIWidget*& aResult);
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow);
 
 
@@ -89,6 +96,16 @@ nsAppShellService::Initialize(void)
 {
   nsresult rv;
 
+  // Create the Event Queue for the UI thread...
+  nsIEventQueueService* mEventQService;
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&mEventQService);
+  if (NS_OK == rv) {
+    // XXX: What if this fails?
+    rv = mEventQService->CreateThreadEventQueue();
+  }
+
   rv = NS_NewISupportsArray(&mWindowList);
   if (NS_FAILED(rv)) {
     goto done;
@@ -122,9 +139,15 @@ nsAppShellService::Shutdown(void)
 
 /*
  * Create a new top level window and display the given URL within it...
+ *
+ * XXX:
+ * Currently, the IID of the Controller object for the URL is provided as an
+ * argument.  In the future, this argument will be specified by the XUL document
+ * itself.
  */
 NS_IMETHODIMP
-nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsIWidget*& aResult)
+nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
+                                        nsIWidget*& aResult)
 {
   nsresult rv;
   nsWebShellWindow* window;
@@ -133,7 +156,7 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsIWidget*& aResult)
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(mAppShell, aUrl);
+    rv = window->Initialize(mAppShell, aUrl, aControllerIID);
     if (NS_SUCCEEDED(rv)) {
       mWindowList->AppendElement(window);
       aResult = window->GetWidget();
@@ -187,92 +210,20 @@ NS_EXPORT nsresult NS_NewAppShellService(nsIAppShellService** aResult)
   return NS_OK;
 }
 
-
-
 //----------------------------------------------------------------------
 
-// Factory code for creating nsAppShellService's
+// Entry point to create nsAppShellService factory instances...
 
-class nsAppShellServiceFactory : public nsIFactory
-{
-public:
-  nsAppShellServiceFactory();
-  NS_DECL_ISUPPORTS
-
-  // nsIFactory methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-  virtual ~nsAppShellServiceFactory();
-};
-
-
-nsAppShellServiceFactory::nsAppShellServiceFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-nsAppShellServiceFactory::~nsAppShellServiceFactory()
-{
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-
-NS_IMPL_ISUPPORTS(nsAppShellServiceFactory, kIFactoryIID);
-
-
-nsresult
-nsAppShellServiceFactory::CreateInstance(nsISupports *aOuter,
-                                  const nsIID &aIID,
-                                  void **aResult)
-{
-  nsresult rv;
-  nsAppShellService* inst;
-
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-  NS_NEWXPCOM(inst, nsAppShellService);
-  if (inst == NULL) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-nsresult
-nsAppShellServiceFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
-  return NS_OK;
-}
-
-extern "C" NS_APPSHELL nsresult
-NS_NewAppShellServiceFactory(nsIFactory** aFactory)
+nsresult NS_NewAppShellServiceFactory(nsIFactory** aResult)
 {
   nsresult rv = NS_OK;
-  nsIFactory* inst = new nsAppShellServiceFactory();
+  nsIFactory* inst = new nsFactory<nsAppShellService>();
   if (nsnull == inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
   else {
     NS_ADDREF(inst);
   }
-  *aFactory = inst;
+  *aResult = inst;
   return rv;
 }
