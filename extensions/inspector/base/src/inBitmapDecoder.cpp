@@ -52,7 +52,7 @@ inBitmapDecoder::~inBitmapDecoder()
 
 NS_IMETHODIMP inBitmapDecoder::Init(imgILoad *aLoad)
 {
-  mObserver = do_QueryInterface(aRequest);
+  mObserver = do_QueryInterface(aLoad);
 
   mImage = do_CreateInstance("@mozilla.org/image/container;1"); 
   if (!mImage) return NS_ERROR_FAILURE;
