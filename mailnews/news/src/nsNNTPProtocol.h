@@ -183,7 +183,7 @@ public:
   char * m_ProxyServer;		/* proxy server hostname */
   
   NS_IMETHOD Cancel(nsresult status);  // handle stop button
-  NS_IMETHOD GetContentType(char * *aContentType);
+  NS_IMETHOD GetContentType(nsACString &aContentType);
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt);
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 

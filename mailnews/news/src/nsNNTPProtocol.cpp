@@ -5491,27 +5491,25 @@ nsNNTPProtocol::SetProgressStatus(const PRUnichar *aMessage)
   return rv;
 }
 
-NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
+NS_IMETHODIMP nsNNTPProtocol::GetContentType(nsACString &aContentType)
 {	
-  if (!aContentType) return NS_ERROR_NULL_POINTER;
 
   // if we've been set with a content type, then return it....
   // this happens when we go through libmime now as it sets our new content type
   if (!m_ContentType.IsEmpty())
   {
-    *aContentType = ToNewCString(m_ContentType);
+    aContentType = m_ContentType;
     return NS_OK;
   }
 
   // otherwise do what we did before...  
 
   if (m_typeWanted == GROUP_WANTED)  
-    *aContentType = nsCRT::strdup("x-application-newsgroup");
+    aContentType = NS_LITERAL_CSTRING("x-application-newsgroup");
   else if (m_typeWanted == IDS_WANTED)
-    *aContentType = nsCRT::strdup("x-application-newsgroup-listids");
+    aContentType = NS_LITERAL_CSTRING("x-application-newsgroup-listids");
   else 
-    *aContentType = nsCRT::strdup("message/rfc822");
-  if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+    aContentType = NS_LITERAL_CSTRING("message/rfc822");
   return NS_OK;
 }
 
