@@ -31,6 +31,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIRenderingContextOS2.h"
 #include "nsIDeviceContext.h"
+#include "nsIScreenManager.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
@@ -61,6 +62,9 @@
 #ifdef DEBUG_sobotka
 static int WINDOWCOUNT = 0;
 #endif
+
+#define kWindowPositionSlop 20
+static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 // HWNDs are mapped to nsWindow objects using a custom presentation parameter,
 // which is registered in nsModule -- thanks to Cindy Ross for explaining how
@@ -146,6 +150,8 @@ nsWindow::nsWindow() : nsBaseWidget()
     mOS2Toolkit         = nsnull;
     mMenuBar            = nsnull;
 //    mActiveMenu        = nsnull;
+
+  mIsTopWidgetWindow = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -680,6 +686,12 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
 {
    mWindowState = nsWindowState_eInCreate;
 
+  if( aInitData && (aInitData->mWindowType == eWindowType_dialog ||
+                    aInitData->mWindowType == eWindowType_toplevel))
+    mIsTopWidgetWindow = PR_TRUE;
+  else
+    mIsTopWidgetWindow = PR_FALSE;
+
    if( aInitData != nsnull) {
      SetWindowType(aInitData->mWindowType);
      SetBorderStyle(aInitData->mBorderStyle);
@@ -964,6 +976,13 @@ NS_METHOD nsWindow::Destroy()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
+    if (mIsTopWidgetWindow) {
+       // Must use a flag instead of mWindowType to tell if the window is the 
+       // owned by the topmost widget, because a child window can be embedded inside
+       // a HWND which is not associated with a nsIWidget.
+      return nsnull;
+    }
+
    nsWindow *widget = nsnull;
    if( nsnull != mParent)
    {
@@ -1163,7 +1182,62 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
                                       PRInt32 *aX, PRInt32 *aY)
 {
+  if (!mIsTopWidgetWindow) // only a problem for top-level windows
     return NS_OK;
+
+  PRBool doConstrain = PR_FALSE; // whether we have enough info to do anything
+
+  /* get our playing field. use the current screen, or failing that
+    for any reason, use device caps for the default screen. */
+  RECTL screenRect;
+
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+  if (screenmgr) {
+    nsCOMPtr<nsIScreen> screen;
+    PRInt32 left, top, width, height;
+
+    // zero size rects confuse the screen manager
+    width = mBounds.width > 0 ? mBounds.width : 1;
+    height = mBounds.height > 0 ? mBounds.height : 1;
+    screenmgr->ScreenForRect(*aX, *aY, width, height,
+                            getter_AddRefs(screen));
+    if (screen) {
+      screen->GetAvailRect(&left, &top, &width, &height);
+      screenRect.xLeft = left;
+      screenRect.xRight = left+width;
+      screenRect.yTop = top;
+      screenRect.yBottom = top+height;
+      doConstrain = PR_TRUE;
+    }
+  }
+
+  if (doConstrain) {
+    if (aAllowSlop) {
+      if (*aX < screenRect.xLeft - mBounds.width + kWindowPositionSlop)
+        *aX = screenRect.xLeft - mBounds.width + kWindowPositionSlop;
+      else if (*aX >= screenRect.xRight - kWindowPositionSlop)
+        *aX = screenRect.xRight - kWindowPositionSlop;
+  
+      if (*aY < screenRect.yTop - mBounds.height + kWindowPositionSlop)
+        *aY = screenRect.yTop - mBounds.height + kWindowPositionSlop;
+      else if (*aY >= screenRect.yBottom - kWindowPositionSlop)
+        *aY = screenRect.yBottom - kWindowPositionSlop;
+  
+    } else {
+  
+      if (*aX < screenRect.xLeft)
+        *aX = screenRect.xLeft;
+      else if (*aX >= screenRect.xRight - mBounds.width)
+        *aX = screenRect.xRight - mBounds.width;
+  
+      if (*aY < screenRect.yTop)
+        *aY = screenRect.yTop;
+      else if (*aY >= screenRect.yBottom - mBounds.height)
+        *aY = screenRect.yBottom - mBounds.height;
+    }
+  }
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
