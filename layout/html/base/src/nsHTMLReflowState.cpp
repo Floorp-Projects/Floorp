@@ -1972,6 +1972,7 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
         }
 
         AdjustComputedWidth(PR_FALSE);
+        CalculateBlockSideMargins(cbrs->mComputedWidth, mComputedWidth);
       }
     }
   } else {
