@@ -948,11 +948,11 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       // Estimate out length and allocate the buffer based on a worst-case estimate, then do
       // the conversion.
       PRUnichar *castedData = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
-      encoder->GetMaxLength(castedData, dataLength, &platformLen);
+      encoder->GetMaxLength(castedData, dataLength/2, &platformLen);
       if ( platformLen ) {
         platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
         if ( platformText ) {
-          PRInt32 len = (PRInt32)dataLength;
+          PRInt32 len = (PRInt32)dataLength/2;
           rv = encoder->Convert(castedData, &len, platformText, &platformLen);
           (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
         }
