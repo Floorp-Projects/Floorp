@@ -171,8 +171,10 @@ nsresult nsXBLEventHandler::KeyUp(nsIDOMEvent* aKeyEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aKeyEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
+    mProtoHandler->KeyEventMatched(key, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("keyup"), aKeyEvent);
@@ -185,8 +187,10 @@ nsresult nsXBLEventHandler::KeyDown(nsIDOMEvent* aKeyEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aKeyEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
+    mProtoHandler->KeyEventMatched(key, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("keydown"), aKeyEvent);
@@ -199,8 +203,10 @@ nsresult nsXBLEventHandler::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aKeyEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
+    mProtoHandler->KeyEventMatched(key, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("keypress"), aKeyEvent);
@@ -213,8 +219,10 @@ nsresult nsXBLEventHandler::MouseDown(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aMouseEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+    mProtoHandler->MouseEventMatched(mouse, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("mousedown"), aMouseEvent);
@@ -227,8 +235,10 @@ nsresult nsXBLEventHandler::MouseUp(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aMouseEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+    mProtoHandler->MouseEventMatched(mouse, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("mouseup"), aMouseEvent);
@@ -241,8 +251,10 @@ nsresult nsXBLEventHandler::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aMouseEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+    mProtoHandler->MouseEventMatched(mouse, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("click"), aMouseEvent);
@@ -255,8 +267,10 @@ nsresult nsXBLEventHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aMouseEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+    mProtoHandler->MouseEventMatched(mouse, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("dblclick"), aMouseEvent);
@@ -269,8 +283,10 @@ nsresult nsXBLEventHandler::MouseOver(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aMouseEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+    mProtoHandler->MouseEventMatched(mouse, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("mouseover"), aMouseEvent);
@@ -283,8 +299,10 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler)
-    mProtoHandler->EventMatched(aMouseEvent, &matched);
+  if (mProtoHandler) {
+    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+    mProtoHandler->MouseEventMatched(mouse, &matched);
+  }
 
   if (matched)
     ExecuteHandler(NS_LITERAL_STRING("mouseout"), aMouseEvent);

@@ -107,22 +107,6 @@ nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
 NS_IMPL_ISUPPORTS1(nsXBLPrototypeHandler, nsIXBLPrototypeHandler)
 
 NS_IMETHODIMP
-nsXBLPrototypeHandler::EventMatched(nsIDOMEvent* aEvent, PRBool* aResult)
-{
-  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
-  if (mouse)
-    *aResult = MouseEventMatched(mouse);
-  else {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
-    if (key)
-      *aResult = KeyEventMatched(key);
-    else *aResult = PR_TRUE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXBLPrototypeHandler::GetHandlerElement(nsIContent** aResult)
 {
   *aResult = mHandlerElement;
@@ -172,14 +156,18 @@ nsXBLPrototypeHandler::InitAccessKey()
 }
 
 
-PRBool 
-nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
+NS_IMETHODIMP
+nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent, PRBool* aResult)
 {
-  if (!mHandlerElement)
-    return PR_FALSE;
+  *aResult = PR_TRUE;
+
+  if (!mHandlerElement) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
 
   if (mDetail == 0 && mDetail2 == 0 && mKeyMask == 0)
-    return PR_TRUE; // No filters set up. It's generic.
+    return NS_OK; // No filters set up. It's generic.
 
   // Get the keycode and charcode of the key event.
   PRUint32 keyCode, charCode;
@@ -188,33 +176,47 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 
   PRBool keyMatched = (mDetail == (mDetail2 ? charCode : keyCode));
 
-  if (!keyMatched)
-    return PR_FALSE;
+  if (!keyMatched) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
 
   // Now check modifier keys
-  return ModifiersMatchMask(aKeyEvent);
+  PRBool result = ModifiersMatchMask(aKeyEvent);
+  *aResult = result;
+  return NS_OK;
 }
 
-PRBool 
-nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
+NS_IMETHODIMP
+nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent, PRBool* aResult)
 {
-  if (!mHandlerElement)
-    return PR_FALSE;
+  *aResult = PR_TRUE;
+
+  if (!mHandlerElement) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
 
   if (mDetail == 0 && mDetail2 == 0 && mKeyMask == 0)
-    return PR_TRUE; // No filters set up. It's generic.
+    return NS_OK; // No filters set up. It's generic.
 
   unsigned short button;
   aMouseEvent->GetButton(&button);
-  if (mDetail != 0 && (button != mDetail))
-    return PR_FALSE;
+  if (mDetail != 0 && (button != mDetail)) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
 
   PRInt32 clickcount;
   aMouseEvent->GetDetail(&clickcount);
-  if (mDetail2 != 0 && (clickcount != mDetail2))
-    return PR_FALSE;
+  if (mDetail2 != 0 && (clickcount != mDetail2)) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
   
-  return ModifiersMatchMask(aMouseEvent);
+  PRBool result = ModifiersMatchMask(aMouseEvent);
+  *aResult = result;
+  return NS_OK;
 }
 
 enum {

@@ -32,7 +32,8 @@
 #define nsIXBLPrototypeHandler_h__
 
 class nsIContent;
-class nsIDOMEvent;
+class nsIDOMMouseEvent;
+class nsIDOMKeyEvent;
 
 // {921812E7-A044-4bd8-B49E-69BB0A607202}
 #define NS_IXBLPROTOTYPEHANDLER_IID \
@@ -43,7 +44,9 @@ class nsIXBLPrototypeHandler : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXBLPROTOTYPEHANDLER_IID; return iid; }
 
-  NS_IMETHOD EventMatched(nsIDOMEvent* aEvent, PRBool* aResult) = 0;
+  NS_IMETHOD MouseEventMatched(nsIDOMMouseEvent* aEvent, PRBool* aResult) = 0;
+  NS_IMETHOD KeyEventMatched(nsIDOMKeyEvent* aEvent, PRBool* aResult) = 0;
+
   NS_IMETHOD GetHandlerElement(nsIContent** aResult) = 0;
 
   NS_IMETHOD GetNextHandler(nsIXBLPrototypeHandler** aResult) = 0;

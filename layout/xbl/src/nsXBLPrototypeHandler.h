@@ -44,7 +44,9 @@ public:
   
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD EventMatched(nsIDOMEvent* aEvent, PRBool* aResult);
+  NS_IMETHOD MouseEventMatched(nsIDOMMouseEvent* aEvent, PRBool* aResult);
+  NS_IMETHOD KeyEventMatched(nsIDOMKeyEvent* aEvent, PRBool* aResult);
+
   NS_IMETHOD GetHandlerElement(nsIContent** aResult);
 
   NS_IMETHOD GetNextHandler(nsIXBLPrototypeHandler** aResult);
