@@ -31,7 +31,7 @@
 #define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
-#define DO_DRAGGING
+//#define DO_DRAGGING
 #endif
 
 #include "nsHTMLContainerFrame.h"

@@ -3522,9 +3522,11 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
       //        absPixelRect.x, absPixelRect.y, absPixelRect.width, absPixelRect.height, isInside, mIsDragScrollingDown);
 
       if (!isInside) {
+#ifdef DO_DRAGGING
         StopAutoScrollTimer();
         nsPoint pnt(scrX, scrY);
         StartAutoScrollTimer(mPresContext, this, pnt, 30);
+#endif
       } else {
         // get the currently moused over item
         PRInt32 oldIndex;
