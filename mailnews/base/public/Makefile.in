@@ -52,17 +52,8 @@ EXPORTS =				\
 		nsIMsg.h \
 		nsIMsgMailNewsUrl.h	\
 		nsIUrlListenerManager.h \
-		nsIMsgGroupRecord.h	\
-		nsIMsgSignature.h	\
-		nsIMsgVCard.h		\
-		nsIMsgAccount.h			\
-		nsIMsgAccountManager.h	\
-		nsIMsgIdentity.h		\
-		nsIMsgIncomingServer.h	\
 		nsICopyMessageListener.h \
 		nsIMessageView.h	\
-		nsIMsgThread.h		\
-		nsIMsgMessageService.h \
 		nsIMessage.h		\
 		$(NULL)
 
