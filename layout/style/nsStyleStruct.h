@@ -204,7 +204,6 @@ struct nsStyleBackground : public nsStyleStruct {
   PRBool HasFixedBackground() const;
 };
 
-#define BORDER_COLOR_DEFINED      0x80  
 #define BORDER_COLOR_TRANSPARENT  0x40
 #define BORDER_COLOR_FOREGROUND   0x20
 #define BORDER_COLOR_SPECIAL      0x60 // TRANSPARENT | FOREGROUND 
@@ -410,7 +409,6 @@ struct nsStyleBorder: public nsStyleStruct {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
     mBorderColor[aSide] = aColor; 
     mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
-    mBorderStyle[aSide] |= BORDER_COLOR_DEFINED; 
   }
 
   void GetCompositeColors(PRInt32 aIndex, nsBorderColors** aColors) const
@@ -434,21 +432,20 @@ struct nsStyleBorder: public nsStyleStruct {
       last->mNext = colorEntry;
     }
     mBorderStyle[aIndex] &= ~BORDER_COLOR_SPECIAL;
-    mBorderStyle[aIndex] |= BORDER_COLOR_DEFINED;
   }
 
   void SetBorderTransparent(PRUint8 aSide)
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
     mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
-    mBorderStyle[aSide] |= (BORDER_COLOR_DEFINED | BORDER_COLOR_TRANSPARENT); 
+    mBorderStyle[aSide] |= BORDER_COLOR_TRANSPARENT; 
   }
 
   void SetBorderToForeground(PRUint8 aSide)
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
     mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
-    mBorderStyle[aSide] |= (BORDER_COLOR_DEFINED | BORDER_COLOR_FOREGROUND); 
+    mBorderStyle[aSide] |= BORDER_COLOR_FOREGROUND; 
   }
 
   void UnsetBorderColor(PRUint8 aSide)
@@ -567,12 +564,11 @@ struct nsStyleOutline: public nsStyleStruct {
   {
     mOutlineColor = aColor;
     mOutlineStyle &= ~BORDER_COLOR_SPECIAL;
-    mOutlineStyle |= BORDER_COLOR_DEFINED;
   }
 
   void SetOutlineInvert(void)
   {
-    mOutlineStyle |= (BORDER_COLOR_DEFINED | BORDER_COLOR_SPECIAL);
+    mOutlineStyle |= BORDER_COLOR_SPECIAL;
   }
 
   PRBool  GetOutlineInvert(void) const
