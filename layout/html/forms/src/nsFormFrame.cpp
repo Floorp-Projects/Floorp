@@ -770,16 +770,18 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   nsIDocument* doc = nsnull;
   mContent->GetDocument(doc);
 
-  while (doc && !docURL) {
+  const char* spec;
+  while (doc) {
     docURL = doc->GetDocumentURL();
-    if (!docURL) {
-      doc = GetParentHTMLFrameDocument(doc);
-      if (!doc) break;
+    if (nsnull != docURL) {
+      (void)docURL->GetSpec(&spec);
+      if (PL_strcmp(spec, "about:blank")) {
+        break;
+      }
     }
+    doc = GetParentHTMLFrameDocument(doc);
   }
   if (nsnull != docURL) {
-    const char* spec;
-    (void)docURL->GetSpec(&spec);
     URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
     PL_strcpy(URLName, spec);
     NS_IF_RELEASE(docURL);
