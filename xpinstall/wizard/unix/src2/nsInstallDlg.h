@@ -89,8 +89,6 @@ private:
     static void     ShowProxySettings(GtkWidget *aWidget, gpointer aData);
     static void     PSDlgOK    (GtkWidget *aWidget, gpointer aData);
     static void     PSDlgCancel(GtkWidget *aWidget, gpointer aData);
-    static void     ShowCompleteDlg();
-    static void     CompleteOK(GtkWidget *aWidget, gpointer aData);
     static void     RunApps();
     static void     FreeRunAppList();
     int             AppendRunApp(nsRunApp *aNewRunApp);

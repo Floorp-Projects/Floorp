@@ -66,7 +66,6 @@ static int              bDownload = FALSE;
 static struct timeval   sDLStartTime;
 static int              bDLPause = FALSE;
 static int              bDLCancel = FALSE;
-static int              bComplete = FALSE;
 static int              bInstallClicked = FALSE;
 
 nsInstallDlg::nsInstallDlg() :
@@ -600,11 +599,6 @@ nsInstallDlg::PerformInstall()
         engine->DeleteXPIs(bCus, comps);
     }
 
-    if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
-    {
-        ShowCompleteDlg();
-    }
-
     // run all specified applications after installation
     if (sRunAppList)
     {
@@ -864,49 +858,6 @@ nsInstallDlg::ClearRateLabel()
     gtk_label_set_text(GTK_LABEL(sRateLabel), "");
     gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE); 
     XI_GTK_UPDATE_UI();
-}
-
-void
-nsInstallDlg::ShowCompleteDlg()
-{
-    DUMP("ShowCompleteDlg");
-
-    GtkWidget *completeDlg, *label, *okButton, *packer;
-
-    // throw up completion notification
-    completeDlg = gtk_dialog_new();
-    label = gtk_label_new(gCtx->Res("COMPLETED"));
-    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-    packer = gtk_packer_new();
-
-    gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
-    gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
-                            GTK_ANCHOR_CENTER, GTK_FILL_X);
-    gtk_window_set_modal(GTK_WINDOW(completeDlg), TRUE);
-    gtk_window_set_title(GTK_WINDOW(completeDlg), gCtx->opt->mTitle);
-    gtk_window_set_position(GTK_WINDOW(completeDlg), GTK_WIN_POS_CENTER);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(completeDlg)->vbox), packer);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(completeDlg)->action_area),
-                      okButton);
-    gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
-                       GTK_SIGNAL_FUNC(CompleteOK), completeDlg);
-    GTK_WIDGET_SET_FLAGS (okButton, GTK_CAN_DEFAULT);
-    gtk_widget_grab_default(okButton);
-    gtk_widget_show_all(completeDlg);
-
-    gtk_main();
-}
-
-void
-nsInstallDlg::CompleteOK(GtkWidget *aWidget, gpointer aData)
-{
-    GtkWidget *dlg = (GtkWidget *) aData;
-
-    if (dlg)
-        gtk_widget_destroy(dlg);
-
-    gtk_main_quit();
-    bComplete = TRUE;
 }
 
 void
