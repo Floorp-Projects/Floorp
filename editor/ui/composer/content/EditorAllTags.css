@@ -63,7 +63,7 @@ acronym {
 }
 
 address {
-  min-height: 44px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-adr.gif);
   background-repeat: no-repeat; 
@@ -71,7 +71,7 @@ address {
 }
 
 applet {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 47px; 
   background-image: url(chrome://editor/content/images/tag-app.gif);
   background-repeat: no-repeat; 
@@ -79,7 +79,7 @@ applet {
 }
 
 area {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 39px; 
   background-image: url(chrome://editor/content/images/tag-ara.gif);
   background-repeat: no-repeat; 
@@ -151,7 +151,7 @@ button {
 }
 
 caption {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 55px; 
   background-image: url(chrome://editor/content/images/tag-cpt.gif);
   background-repeat: no-repeat; 
@@ -159,7 +159,7 @@ caption {
 }
 
 center {
-  min-height: 44px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ctr.gif);
   background-repeat: no-repeat; 
@@ -199,7 +199,7 @@ colgroup {
 }
 
 dd {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 23px; 
   background-image: url(chrome://editor/content/images/tag-dd.gif);
   background-repeat: no-repeat; 
@@ -231,7 +231,7 @@ dir {
 }
 
 div {
-  min-height: 24px; margin-left: 2px; margin-top: 2px;
+  min-height: 24px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-div.gif);
@@ -246,7 +246,7 @@ input div {
 }
 
 dl {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-dl.gif);
   background-repeat: no-repeat; 
@@ -254,7 +254,7 @@ dl {
 }
 
 dt {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 23px; 
   background-image: url(chrome://editor/content/images/tag-dt.gif);
   background-repeat: no-repeat; 
@@ -270,7 +270,7 @@ em {
 }
 
 fieldset {
-  min-height: 44px; margin-left: 2px; margin-top: 2px;
+  min-height: 44px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-fld.gif);
   background-repeat: no-repeat; 
@@ -286,7 +286,7 @@ font {
 }
 
 form {
-  min-height: 36px; margin-left: 2px; margin-top: 2px;
+  min-height: 36px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-for.gif);
   background-repeat: no-repeat; 
@@ -310,7 +310,7 @@ frameset {
 }
 
 h1 {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h1.gif);
   background-repeat: no-repeat; 
@@ -318,7 +318,7 @@ h1 {
 }
 
 h2 {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h2.gif);
   background-repeat: no-repeat; 
@@ -326,7 +326,7 @@ h2 {
 }
 
 h3 {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h3.gif);
   background-repeat: no-repeat; 
@@ -334,7 +334,7 @@ h3 {
 }
 
 h4 {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h4.gif);
   background-repeat: no-repeat; 
@@ -342,7 +342,7 @@ h4 {
 }
 
 h5 {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h5.gif);
   background-repeat: no-repeat; 
@@ -350,7 +350,7 @@ h5 {
 }
 
 h6 {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-h6.gif);
   background-repeat: no-repeat; 
@@ -358,7 +358,7 @@ h6 {
 }
 
 hr {
-  min-height: 20px; margin-left: 2px; margin-top: 2px;
+  min-height: 20px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-hr.gif);
   background-repeat: no-repeat; 
@@ -430,7 +430,7 @@ label {
 }
 
 legend {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 49px; 
   background-image: url(chrome://editor/content/images/tag-lgn.gif);
   background-repeat: no-repeat; 
@@ -438,7 +438,7 @@ legend {
 }
 
 li {
-  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-top: 2px;
   padding-left: 23px; 
   background-image: url(chrome://editor/content/images/tag-li.gif);
   background-repeat: no-repeat; 
@@ -494,7 +494,7 @@ object {
 }
 
 ol {
-  min-height: 38px; margin-left: 2px;
+  min-height: 38px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ol.gif);
   background-repeat: no-repeat; 
@@ -518,7 +518,7 @@ option {
 }
 
 p {
-  min-height: 38px; margin-left: 2px; margin-top: 2px;
+  min-height: 38px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-p.gif);
   background-repeat: no-repeat; 
@@ -542,7 +542,7 @@ plaintext {
 }
 
 pre {
-  min-height: 24px; margin-left: 2px; margin-top: 2px;
+  min-height: 24px; margin-top: 2px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-pre.gif);
   background-repeat: no-repeat; 
@@ -643,7 +643,7 @@ sup {
 */
 
 table {
-  min-height: 40px; margin-left: 2px;
+  min-height: 40px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-tbl.gif);
   background-repeat: no-repeat; 
@@ -724,7 +724,7 @@ u {
 }
 
 ul {
-  min-height: 20px; margin-left: 2px;
+  min-height: 20px;
   padding-left: 17px; 
   background-image: url(chrome://editor/content/images/tag-ul.gif);
   background-repeat: no-repeat; 
