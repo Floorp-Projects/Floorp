@@ -79,7 +79,7 @@
             <button id="renbutton" label="&renameButton.label;" oncommand="RenameProfile();"/>
             <button id="delbutton" label="&deleteButton.label;" oncommand="ConfirmDelete();"/>
           </vbox>
-          <spring flex="2"/>
+          <spacer flex="2"/>
         </hbox>
       </vbox>
     </deck>  
@@ -110,7 +110,7 @@
   <hbox class="selection">
     <separator class="thin" orient="vertical"/>
     <button id="manage" label="&manage.label;" oncommand="SwitchProfileManagerMode();"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <hbox id="okCancelButtons"/>
     <separator class="thin" orient="vertical"/>
   </hbox>

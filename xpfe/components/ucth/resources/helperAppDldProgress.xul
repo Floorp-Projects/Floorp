@@ -126,7 +126,7 @@ Contributor(s):
         <button class="dialog" id="pause"  label="&pauseButtonText;"  oncommand="doPauseButton()"/>
         <button class="dialog" id="resume" label="&resumeButtonText;" oncommand="doPauseButton()"/>
       </deck>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <button class="dialog" id="open" label="&open.label;" disabled="true" oncommand="doOpen()"/>
       <button class="dialog" id="openFolder" label="&openFolder.label;" disabled="true" oncommand="doOpenFolder()"/>      
     </hbox>

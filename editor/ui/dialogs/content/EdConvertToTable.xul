@@ -44,7 +44,7 @@
   <!--- Element-specific methods -->
   <script type="application/x-javascript" src="chrome://editor/content/EdConvertToTable.js"/>
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet"/>
   <html flex="1">&instructions.label;</html>
@@ -61,7 +61,7 @@
       <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>
     </hbox>
   </radiogroup> 
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <checkbox id="DeleteSepCharacter" label="&deleteCharCheck.label;" checked="true" persist="checked"/>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->

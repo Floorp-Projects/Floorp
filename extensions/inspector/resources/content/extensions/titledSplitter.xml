@@ -9,12 +9,12 @@
   <binding id="titledSplitter" extends="chrome://global/content/bindings/splitter.xml#splitter">
     <content>
       <xul:box class="titledsplitter-container" orient="vertical" flex="1">
-        <xul:spring class="titledsplitter-dragbar"/>
+        <xul:spacer class="titledsplitter-dragbar"/>
         <xul:box class="titledsplitter-titlebox" flex="1" onmousedown="event.stopPropagation()">
           <xul:box autostretch="never">
             <xul:text class="titledsplitter-text" inherits="value=label"/>
           </xul:box>
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:button class="titledsplitter-closebutton" autostretch="never"
                    onclick="this.parentNode.parentNode.parentNode.close();">
             <xul:image class="titledsplitter-closeimage"/>

@@ -68,7 +68,7 @@
 
     <treechildren open="true" flex="1"/>
   </tree>
-  <spring flex="100%" orient="horizontal" />
+  <spacer flex="100%" orient="horizontal" />
 
 <!--
 This extra "status" bar is necessary because the bottom right corner of the window on MacOS is

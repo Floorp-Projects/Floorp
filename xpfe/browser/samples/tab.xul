@@ -16,21 +16,21 @@ xmlns:html="http://www.w3.org/1999/xhtml"
       <tab label="native"/>
       <tab label="iframe"/>
       <tab label="dialog"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
      </tabs>
    
     <tabpanels flex="100%" style="border: 2px outset gray">
 
        <!-- tab 1 -->
        <hbox>
-         <spring flex="100%"/> 
+         <spacer flex="100%"/> 
          <vbox> 
-          <spring flex="100%"/> 
+          <spacer flex="100%"/> 
                 <button class="push" label="centered"/>
           <!--html:button>This is a test</html:button-->
-          <spring flex="100%"/> 
+          <spacer flex="100%"/> 
          </vbox> 
-         <spring flex="100%"/> 
+         <spacer flex="100%"/> 
       </hbox> 
 
       <!-- tab2 -->
@@ -57,7 +57,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
           <button src="resource:/res/toolbar/home.gif" align="bottom" label="Home"/>
           <button src="resource:/res/toolbar/print.gif" align="bottom" label="Print"/> 
         
-                  <spring flex="100%"/>
+                  <spacer flex="100%"/>
 
             <button src="resource:/res/throbber/anims00.gif"/>
     
@@ -89,7 +89,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
         <vbox flex="100%">
           <hbox style="margin: 10px; margin-top: 0; margin-bottom: 0; background-color: #8080c0; color: white">
              <html:div><html:B>Navigator</html:B></html:div>
-               <spring flex="100%"/>
+               <spacer flex="100%"/>
              <html:div>Specify you preferences for browsing the web</html:div>
           </hbox>
 
@@ -106,9 +106,9 @@ xmlns:html="http://www.w3.org/1999/xhtml"
               <html:input type="text" flex="100%"/>
              </hbox>
                <hbox>
-              <spring flex="100%"/>
+              <spacer flex="100%"/>
               <html:input disabled="true" type="button" value="Use current page"/>
-              <spring style="width:10px"/>
+              <spacer style="width:10px"/>
               <html:input type="button" value="Browse"/>
              </hbox>
           </vbox>
@@ -117,27 +117,27 @@ xmlns:html="http://www.w3.org/1999/xhtml"
              <html:div>History is a list a pages you have previously visited.</html:div>
                <hbox>
                <html:div>Pages in history expire in: <html:input type="text" value="9"/> days. </html:div>
-               <spring flex="100%"/>
+               <spacer flex="100%"/>
                <html:input type="button" value="Clear History"/>
              </hbox>
             <hbox>
                <html:div>Clear the list of sites on the location bar.</html:div>
-               <spring flex="100%"/>
+               <spacer flex="100%"/>
                <html:input type="button" value="Clear Location Bar"/>
              </hbox>
           </vbox>
 
-          <spring flex="100%"/>
+          <spacer flex="100%"/>
 
         </vbox>
         
       </hbox>
         <hbox style="margin: 5px;">
-           <spring flex="100%"/>
+           <spacer flex="100%"/>
            <html:input type="button" value="Ok"/>
-           <spring style="width:10px"/>
+           <spacer style="width:10px"/>
            <html:input type="button" value="Cancel"/>
-           <spring style="width:10px"/>
+           <spacer style="width:10px"/>
            <html:input type="button" value="Help"/>
          </hbox>
     </vbox>

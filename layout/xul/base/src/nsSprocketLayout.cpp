@@ -1115,9 +1115,9 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
   //nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   PRInt32 sizeRemaining            = aGivenSize;
-  PRInt32 springConstantsRemaining = 0;
+  PRInt32 spacerConstantsRemaining = 0;
 
-   // ----- calculate the springs constants and the size remaining -----
+   // ----- calculate the spacers constants and the size remaining -----
 
   if (!aComputedBoxSizes)
       aComputedBoxSizes = new (aState) nsComputedBoxSize();
@@ -1153,7 +1153,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
             validCount++;
           }
 
-          springConstantsRemaining += boxSizes->flex;
+          spacerConstantsRemaining += boxSizes->flex;
           sizeRemaining -= boxSizes->pref;
       }
 
@@ -1184,7 +1184,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
       while (boxSizes) { 
 
-        // ignore collapsed springs
+        // ignore collapsed spacers
 
    //    if (!boxSizes->collapsed) {
       
@@ -1200,19 +1200,19 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
           // ----- look at our min and max limits make sure we aren't too small or too big -----
           if (!computedBoxSizes->valid) {
-            PRInt32 newSize = pref + sizeRemaining*flex/springConstantsRemaining; //NSToCoordRound(float((sizeRemaining*flex)/springConstantsRemaining));
+            PRInt32 newSize = pref + sizeRemaining*flex/spacerConstantsRemaining; //NSToCoordRound(float((sizeRemaining*flex)/spacerConstantsRemaining));
 
             if (newSize<=min) {
               computedBoxSizes->size = min;
               computedBoxSizes->valid = PR_TRUE;
-              springConstantsRemaining -= flex;
+              spacerConstantsRemaining -= flex;
               sizeRemaining += pref;
               sizeRemaining -= min;
               limit = PR_TRUE;
             } else if (newSize>=max) {
               computedBoxSizes->size = max;
               computedBoxSizes->valid = PR_TRUE;
-              springConstantsRemaining -= flex;
+              spacerConstantsRemaining -= flex;
               sizeRemaining += pref;
               sizeRemaining -= max;
               limit = PR_TRUE;
@@ -1226,14 +1226,14 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
   }          
 
   // ---- once we have removed and min and max issues just stretch us out in the remaining space
-  // ---- or shrink us. Depends on the size remaining and the spring constants
+  // ---- or shrink us. Depends on the size remaining and the spacer constants
   aGivenSize = 0;
   boxSizes = aBoxSizes;
   computedBoxSizes = aComputedBoxSizes;
 
   while (boxSizes) { 
 
-    // ignore collapsed springs
+    // ignore collapsed spacers
   //  if (!(boxSizes && boxSizes->collapsed)) {
     
       nscoord pref = 0;
@@ -1242,7 +1242,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
       flex = boxSizes->flex;
 
       if (!computedBoxSizes->valid) {
-        computedBoxSizes->size = pref + flex*sizeRemaining/springConstantsRemaining; //NSToCoordFloor(float((flex*sizeRemaining)/springConstantsRemaining));
+        computedBoxSizes->size = pref + flex*sizeRemaining/spacerConstantsRemaining; //NSToCoordFloor(float((flex*sizeRemaining)/spacerConstantsRemaining));
         computedBoxSizes->valid = PR_TRUE;
       }
 

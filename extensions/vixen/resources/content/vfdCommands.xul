@@ -82,8 +82,8 @@
              oncommand="nsVFD.insertBoxElement('grid-row');"/>
     <command id="cmd_insert_grid_col"
              oncommand="nsVFD.insertBoxElement('grid-col');"/>
-    <command id="cmd_insert_spring"
-             oncommand="nsVFD.insertBoxElement('spring');"/>
+    <command id="cmd_insert_spacer"
+             oncommand="nsVFD.insertBoxElement('spacer');"/>
     <command id="cmd_insert_splitter"
              oncommand="nsVFD.insertBoxElement('splitter');"/>
 

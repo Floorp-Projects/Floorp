@@ -114,7 +114,7 @@
       <vbox align="center">
         <hbox flex="1">
           <checkbox label="Checkbox 1" id="checkbox1"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button label="Test Property APIs" oncommand="testProperty('checkbox1');"/>
         </hbox>
         <checkbox label="Checkbox 2" disabled="true" checked="true"/>
@@ -124,7 +124,7 @@
       <radiogroup id="group" orient="vertical">
         <hbox>
           <radio group="group" label="Radio 1" id="radio1"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button label="Test Property APIs" oncommand="testProperty('radio1');"/>
         </hbox>
         <radio group="group" label="Radio 2"/>
@@ -147,19 +147,19 @@
   <hbox>
     <vbox>
       <text class="label" value="Foo Label 6:"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </vbox>
     <textbox id="textarea" rows="3" multiline="true" value="Regular multiline textbox"/>
     <vbox>
       <button label="Test Property APIs" oncommand="testProperty('textarea');"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </vbox>
   </hbox>
   
   <hbox>
     <vbox>
       <text class="label" value="Foo Label 6:"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </vbox>
     <textbox rows="3" multiline="true" disabled="true" value="Disabled multiline textbox"/>
   </hbox>

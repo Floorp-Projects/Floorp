@@ -51,10 +51,10 @@
       <textbox id="editorAuthor" flex="1"
                  pref="true" preftype="string" prefstring="editor.author"
                  prefattribute="value"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </hbox>
   </vbox>
-  <spring class="smallspacer"/>
+  <spacer class="smallspacer"/>
   <groupbox orient="vertical" autostretch="never">
     <caption label="&pageColorHeader;"/> 
     <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
@@ -79,9 +79,9 @@
             <stack>
               <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="textCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="textCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
             <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
@@ -91,9 +91,9 @@
             <stack>
               <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="linkCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="linkCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
             <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
@@ -103,9 +103,9 @@
             <stack>
               <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="activeCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="activeCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
             <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
@@ -115,9 +115,9 @@
             <stack>
               <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="visitedCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="visitedCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
               <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
             </stack>
@@ -127,9 +127,9 @@
             <stack>
               <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="backgroundCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="backgroundCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
             <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value" wsm_attributes="value"/>
@@ -137,19 +137,19 @@
         </rows>
       </grid>
       <vbox id="ColorPreview" flex="1">
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="NormalText"      value="&normalText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="LinkText"        value="&linkText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="ActiveLinkText"  value="&activeLinkText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="VisitedLinkText" value="&visitedLinkText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </vbox>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </hbox>
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
     <text class="label small-margin" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <hbox valign="middle" autostretch="never">
       <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1">

@@ -26,7 +26,7 @@
   <html>
     This outliner contains 5,000,000 rows.  Can you believe it?
   </html>
-  <spring style="height: 16px"/>
+  <spacer style="height: 16px"/>
 
   <outliner id="out" flex="1">
     <outlinercol id="Col1" label="Col1" flex="1"/>

@@ -41,25 +41,25 @@
   <script type="application/x-javascript" src="chrome://editor/content/EditConflict.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
   
   <text class="label" value ="&conflictWarning.label;"/>
-  <spring class="bigspacer"/>
+  <spacer class="bigspacer"/>
   <text class="label" value ="&conflictResolve.label;"/>
-  <spring class="bigspacer"/>
+  <spacer class="bigspacer"/>
   <hbox flex="1">
-    <spring class="bigspacer"/>
+    <spacer class="bigspacer"/>
     <button class="dialog" label="&keepCurrentPageButton.label;"
             flex="1" oncommand="KeepCurrentPage()"/>
-    <spring class="bigspacer"/>
+    <spacer class="bigspacer"/>
   </hbox>
   <hbox flex="1">
-    <spring class="bigspacer"/>
+    <spacer class="bigspacer"/>
     <button class="dialog" label="&useOtherPageButton.label;"
             flex="1" oncommand="UseOtherPage()"/>
-    <spring class="bigspacer"/>
+    <spacer class="bigspacer"/>
   </hbox>
 
 </window>

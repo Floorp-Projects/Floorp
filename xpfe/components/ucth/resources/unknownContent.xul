@@ -38,7 +38,7 @@
     
   <hbox align="center">
     <button class="dialog" id="dialog.more" label="&dialogMore.label;" oncommand="more()"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <hbox id="okCancelButtons"/>
   </hbox>
 

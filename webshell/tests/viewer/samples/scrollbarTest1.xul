@@ -11,7 +11,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
     <!-- scroll bar -->
 	<scrollbar orient="vertical"/>
 
-    <spring style="width: 10px"/>
+    <spacer style="width: 10px"/>
 
     <!-- scroll bar with NeXt button order-->
 	<scrollbar orient="vertical">
@@ -20,7 +20,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 		<scrollbarbutton class="increment"/>
 	</scrollbar>
 
-    <spring style="width: 10px"/>
+    <spacer style="width: 10px"/>
 
     <!-- fixed thumb and different increments -->
     <scrollbar orient="vertical" curpos="50" pageIncrement="20" increment="5" flex="100%">
@@ -31,7 +31,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 		<scrollbarbutton class="increment"/>
 	</scrollbar>
 
-    <spring style="width: 10px"/>
+    <spacer style="width: 10px"/>
 
    <!-- scrollbar with table in it -->
    <scrollbar orient="vertical" curpos="50" pageIncrement="20" increment="5" >

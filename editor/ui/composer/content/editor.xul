@@ -163,7 +163,7 @@
     <!-- help menu filled from globalOverlay -->
     <menu id="menu_Help"/>
 
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </menubar>
 
   <!-- toolbar filled out from editorOverlay -->
@@ -181,7 +181,7 @@
     <button id="tableButton"/>
     <button id="linkButton"/>
     <button id="namedAnchorButton"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <hbox id="throbber-box" autostretch="never">
       <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
         <observes element="Editor:Throbber" attribute="busy"/>
@@ -226,7 +226,7 @@
     </menu -->
 
 
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </toolbar>
 </toolbox>
 

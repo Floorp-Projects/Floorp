@@ -44,17 +44,17 @@
     <vbox id="mainBox">
         <hbox id="interiorTitleBox" autostretch="never">
             <text class="headline" id="interiorTitle" value="&progress.label;"/>
-            <spring flex="100%"/>
+            <spacer flex="100%"/>
             <image src="chrome://global/skin/animthrob_single.gif" />
         </hbox>
 
-        <spring class="vertical-small-spacer"/>
+        <spacer class="vertical-small-spacer"/>
         <separator class="groove" flex="100%"/>            
-        <spring class="vertical-small-spacer"/>
+        <spacer class="vertical-small-spacer"/>
 
         <text class="label" id="componentList" value="&downloadBeforeUpdate.text;"/>
-        <spring class="vertical-small-spacer"/>
-        <spring class="vertical-small-spacer"/>            
+        <spacer class="vertical-small-spacer"/>
+        <spacer class="vertical-small-spacer"/>            
 
         <vbox id="treebox">  
                 <tree id="modulesTree" class="inset">
@@ -75,7 +75,7 @@
                 </tree>
         </vbox>
     
-        <spring class="vertical-small-spacer"/>
+        <spacer class="vertical-small-spacer"/>
 
         <vbox id="statusMessages">
             <textbox id="dialog.uiPackageName" readonly="" />

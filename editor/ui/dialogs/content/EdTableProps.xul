@@ -43,7 +43,7 @@
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
 
@@ -70,7 +70,7 @@
               </row>
             </rows>
           </grid>
-          <spring class="bigspacer"/>
+          <spacer class="bigspacer"/>
           <grid>
             <columns><column/><column/><column flex="1"/></columns>
             <rows>
@@ -114,7 +114,7 @@
               <menuitem label="&AlignRight.label;"  value="right"/>
             </menupopup>
           </menulist>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
           <text class="label" value="&tableCaption.label;"/>
           <menulist id="TableCaptionList">
             <menupopup>
@@ -130,21 +130,21 @@
           <stack>
             <button class="dialog color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');"/>
             <hbox autostretch="never" valign="middle" mousethrough="always">
-              <spring flex="1"/>
-              <spring id="tableBackgroundCW" class="color-well"/>
-              <spring flex="1"/>
+              <spacer flex="1"/>
+              <spacer id="tableBackgroundCW" class="color-well"/>
+              <spacer flex="1"/>
             </hbox>
           </stack>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
           <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
         </hbox>
         <separator class="groove"/>
         <hbox flex="1" autostretch="never">
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
           <button class="dialog" id="AdvancedEditButton"/>
         </hbox>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </vbox><!-- Table Panel -->
 
       <!-- CELL PANEL -->
@@ -165,7 +165,7 @@
               <button id="NextButton"     class="dialog align-right" label="&cellSelectNext.label;"     oncommand="MoveSelection(1)" flex="1"/>
             </hbox>
           </vbox>
-          <spring class="bigspacer"/>
+          <spacer class="bigspacer"/>
           <vbox flex="1">
             <text class="label" value="&applyBeforeChange1.label;"/>
             <text class="label" value="&applyBeforeChange2.label;"/>
@@ -191,7 +191,7 @@
                 </row>
               </rows>
             </grid>
-            <spring class="bigspacer"/>
+            <spacer class="bigspacer"/>
           </groupbox>
           <!-- Alignment -->
           <groupbox><caption label="&cellContentAlignment.label;"/>
@@ -223,7 +223,7 @@
             </grid>
           </groupbox>
         </hbox>
-        <spring class="spacer"/>
+        <spacer class="spacer"/>
         <hbox valign="middle" autostretch="never">
           <checkbox id="CellStyleCheckbox" label="&cellStyle.label;"/>
           <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
@@ -232,7 +232,7 @@
               <menuitem label="&cellHeader.label;" value="th"/>
             </menupopup>
           </menulist>
-          <spring class="bigspacer"/>
+          <spacer class="bigspacer"/>
           <checkbox id="TextWrapCheckbox" label="&cellTextWrap.label;"/>
           <menulist id="TextWrapList" oncommand="SetCheckbox('TextWrapCheckbox');">
             <menupopup>
@@ -247,12 +247,12 @@
           <stack>
             <button class="dialog color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');" flex="1"/>
             <hbox autostretch="never" valign="middle" mousethrough="always">
-              <spring flex="1"/>
-              <spring id="cellBackgroundCW" class="color-well"/>
-              <spring flex="1"/>
+              <spacer flex="1"/>
+              <spacer id="cellBackgroundCW" class="color-well"/>
+              <spacer flex="1"/>
             </hbox>
           </stack>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
           <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
         </hbox>
         <separator class="groove"/>
@@ -261,14 +261,14 @@
           <!-- From EdDialogOvlerlay.xul -->
           <button class="dialog" id="AdvancedEditButton2"/>
         </hbox>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </vbox><!-- Cell Panel -->
 
     </tabpanels> 
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
     <!-- from EdDialogOverlay -->
     <hbox>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <hbox id="okCancelHelpButtonsRight"/> 
     </hbox>
   </tabbox>

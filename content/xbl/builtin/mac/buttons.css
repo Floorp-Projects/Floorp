@@ -42,11 +42,11 @@ input[type="submit"],input[type="reset"] {
   -moz-user-focus   : none;
 }
 
-.button-top-spring {
+.button-top-spacer {
 	height				    : 2px;
 }
 
-.button-bottom-spring {
+.button-bottom-spacer {
 	height				    : 3px;
 }
 

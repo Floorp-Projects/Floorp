@@ -53,7 +53,7 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 </tabbox>
 
 <hbox style="margin-top: 1em;">
-  <spring flex="100%"/>
+  <spacer flex="100%"/>
   <button id="ok" label="&okButton.label;" default="true" onclick="doOKButton()"/>
 </hbox>
 

@@ -41,7 +41,7 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <broadcaster id="args" value=""/>
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <keyset id="dialogKeys"/>
   <hbox id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
@@ -64,7 +64,7 @@
     <radio id="WebPalette" label="&webPalette.label;" oncommand="ChangePalette('web')"/>
   </hbox>
 -->
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <vbox flex="1">
     <stack valign="middle" autostretch="never">
       <button id="LastPickedButton" class="dialog" label="&lastPickedColor.label;" 
@@ -72,13 +72,13 @@
         oncommand="SelectLastPickedColor();"/>
       <hbox style="margin-left: 5px"  mousethrough="always">
         <vbox autostretch="never">
-          <spring flex="1"/>
-          <spring id="LastPickedColor"
+          <spacer flex="1"/>
+          <spacer id="LastPickedColor"
                       LastTextColor="" LastBackgroundColor=""
                       persist="LastTextColor LastBackgroundColor"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </vbox>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </hbox>
     </stack>
     <text class="label" value="&setColor1.label;"/>
@@ -86,9 +86,9 @@
     <text class="label" value="&setColorExample.label;"/>
     <hbox valign="middle" autostretch="never" flex="1=">
       <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch()"/>
-      <spring flex="1"/>
-      <spring id="ColorPickerSwatch"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
+      <spacer id="ColorPickerSwatch"/>
+      <spacer flex="1"/>
       <button id="DefaultColorButton" class="dialog" label="&default.label;" 
         style="margin-right:0px;" oncommand="RemoveColor()"/>
     </hbox>

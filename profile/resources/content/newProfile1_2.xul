@@ -59,11 +59,11 @@
   <separator/>
 
   <hbox autostretch="never">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button label="&langSelection.label;" oncommand="showLangDialog();"/>
   </hbox>
 
-  <spring flex="1"/>
+  <spacer flex="1"/>
 
   <html id="finishtext">&pnl2.finish.text;</html> 
 

@@ -28,7 +28,7 @@
   <hbox>
     <vbox>
       <image class="message-icon"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </vbox>
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">

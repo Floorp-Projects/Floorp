@@ -103,7 +103,7 @@
         </hbox>
         <separator class="thin"/>
         <hbox class="box-padded">
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <groupbox orient="vertical">
             <caption class="label" label="&checkforupdates.legend.label;"/>
             <grid flex="1">
@@ -209,7 +209,7 @@
             </grid>
             <separator class="thin"/>
           </groupbox>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </hbox>
       </vbox>
           
@@ -222,7 +222,7 @@
         </hbox>
         <separator class="thin"/>
         <hbox class="box-padded">
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <groupbox>
             <caption label="&notifications.legend.label;" />
             <vbox align="start">
@@ -232,7 +232,7 @@
               <checkbox id="playSound" label="&notification.sound.label;" />
             </vbox>
           </groupbox>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </hbox>
       </vbox>
     </tabpanels>

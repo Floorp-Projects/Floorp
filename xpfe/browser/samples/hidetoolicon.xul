@@ -30,7 +30,7 @@
 		<toolbar>
 			<html:input type="BUTTON" value="Button 1" id="ButtonOne"/>
 			<html:input type="BUTTON" value="Button 2" id="ButtonTwo"/>
-			<spring flex="1"/>
+			<spacer flex="1"/>
 		</toolbar>
 	</toolbox>
 

@@ -32,7 +32,7 @@ Contributor(s): ______________________________________. -->
     <groupbox orient="vertical">
       <caption label="&fontScaling;"/>
       <html:div>&fontScalingIntro;</html:div>
-      <spring style="height: 10px;"/>
+      <spacer style="height: 10px;"/>
       <html:div>
         <html:label for="browserScreenResolution">&resolution;</html:label>
         <html:input type="text" id="browserScreenResolution" pref="true" preftype="int"

@@ -2061,7 +2061,7 @@ nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
 #if 0
 // XXX move this over to the scriptable helper...
 static PRBool CanHaveBinding(nsIAtom* aTag) {
-  // The layout atoms (the boxes, stacks, and springs) are dodgy here.
+  // The layout atoms (the boxes, stacks, and spacers) are dodgy here.
   // Technically they could have bindings, but this will only apply
   // for display: none elts anyway, so we're getting into a real edge
   // case.

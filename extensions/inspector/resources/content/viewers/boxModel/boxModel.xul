@@ -77,7 +77,7 @@
         <button label="Capture" command="cmdCapture"/>
         <button label="Pick Color..." command="cmdOpenColorPicker"/>
         <button label="Save As..." command="cmdSaveImage"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         
         <checkbox id="cbxShowOutlines" label="Show Boxes" command="cmdToggleOutlines"/>
         <checkbox id="cbxFillOutlines" label="Fill Boxes" command="cmdToggleFill"/>

@@ -71,9 +71,9 @@
         
       </row>
       <row>
-        <spring/>
+        <spacer/>
         <hbox>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button label="&browse.label;" accesskey="&browse.accesskey;" 
                   oncommand="chooseApp();"/>
         </hbox>

@@ -82,10 +82,10 @@
     <content>
       <xul:stack class="grabber-stack" flex="1">
         <xul:box class="grabber-base">
-          <xul:spring class="track-left" flex="1"/>
-          <xul:spring class="track-center"/>
-          <xul:spring class="track-right" flex="1"/>
-          <xul:spring class="grabber-right" inherits="state"/>
+          <xul:spacer class="track-left" flex="1"/>
+          <xul:spacer class="track-center"/>
+          <xul:spacer class="track-right" flex="1"/>
+          <xul:spacer class="grabber-right" inherits="state"/>
         </xul:box>
         <xul:box class="grabber-container">
           <xul:box class="grabber-box-1" flex="1">
@@ -98,10 +98,10 @@
   
   <binding id="grabber-track" extends="xul:box">
     <content>
-      <xul:spring class="track-left" flex="1"/>
-      <xul:spring class="track-center" inherits="state"/>
-      <xul:spring class="track-right" flex="1"/>
-      <xul:spring class="grabber-right" inherits="state"/>
+      <xul:spacer class="track-left" flex="1"/>
+      <xul:spacer class="track-center" inherits="state"/>
+      <xul:spacer class="track-right" flex="1"/>
+      <xul:spacer class="grabber-right" inherits="state"/>
     </content>
   </binding>
   

@@ -34,7 +34,7 @@ Contributor(s): ______________________________________. -->
     <menu label="New" accesskey="n" key="newKey">
       <button class="menu-left"/> 
       <html:div><html:u>N</html:u>ew </html:div> 
-        <spring flex="100%"/> 
+        <spacer flex="100%"/> 
         <html:div>Ctrl+N</html:div>
       <button class="menu-right"/> 
       <menupopup>
@@ -45,34 +45,34 @@ Contributor(s): ______________________________________. -->
       <menuitem>
       <button class="menu-left"/> 
       <html:div><html:u>O</html:u>pen...</html:div> 
-        <spring flex="100%"/> 
+        <spacer flex="100%"/> 
         <html:div>Ctrl+O</html:div>
           <button class="menu-right"/>
       </menuitem> 
       <menuitem>
           <button class="menu-left"/> 
         <html:div><html:u>C</html:u>lose</html:div>
-        <spring flex="100%"/>
+        <spacer flex="100%"/>
         <button class="menu-right"/>
       </menuitem> 
       <menuseparator/>
       <menuitem disabled="true"> 
           <button class="menu-left"/> 
         <html:div><html:u>S</html:u>ave</html:div>
-          <spring flex="100%"/> 
+          <spacer flex="100%"/> 
           <html:div>Ctrl+S</html:div>
         <button class="menu-right"/>  
       </menuitem> 
       <menuitem> 
           <button class="menu-left"/> 
         <html:div>S<html:u>a</html:u>ve as...</html:div>
-        <spring flex="100%"/>
+        <spacer flex="100%"/>
         <button class="menu-right"/>  
       </menuitem> 
       <menuitem>
           <button class="menu-left"/> 
         <html:div><html:u>Q</html:u>uit</html:div>
-        <spring flex="100%"/> 
+        <spacer flex="100%"/> 
           <html:div>Ctrl+Q</html:div>
         <button class="menu-right"/>  
       </menuitem> 
@@ -127,7 +127,7 @@ Contributor(s): ______________________________________. -->
       <menuitem><html:div>Sample Item</html:div></menuitem>
     </menupopup>
     </menu>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     </menubar>
   </toolbox>
 

@@ -10,7 +10,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
    <scrollbar orient="vertical"/>
    <vbox flex="100%">
 	   <scrollbar orient="horizontal"/>
-	   <spring flex="100%" style="background-color: white"/>
+	   <spacer flex="100%" style="background-color: white"/>
 	   <scrollbar orient="horizontal"/>      
    </vbox>
    <scrollbar orient="vertical"/>

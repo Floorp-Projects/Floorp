@@ -59,7 +59,7 @@
   <box>
     <box orient="vertical">
       <image class="question-icon"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </box>
     <separator orient="vertical" class="thin"/>
     <box orient="vertical" flex="1">
@@ -80,7 +80,7 @@
             <menuitem data="2" id="editWindow" value="&editNewWindow.label;"/>
           </menupopup>
         </menulist>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </box>
     </box>
   </box> 

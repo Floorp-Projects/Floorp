@@ -782,7 +782,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
       }
   }
                              
-  // ok now reflow the child into the springs calculated space
+  // ok now reflow the child into the spacers calculated space
   if (needsReflow) {
 
     nsMargin border(0,0,0,0);

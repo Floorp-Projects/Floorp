@@ -67,7 +67,7 @@
 <!-- HTML formatting on output -->
   <groupbox orient="vertical">
     <caption label="&savingFiles.title;"/>
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
     <radiogroup orient="vertical" autostretch="never"
       id            = "preserveFormatting"
       pref          = "true"

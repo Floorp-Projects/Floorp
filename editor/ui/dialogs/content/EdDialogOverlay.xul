@@ -31,7 +31,7 @@
 <vbox id="AdvancedEdit"  flex="1">
   <hbox flex="1" style="margin-top: 0.2em" autostretch="never">
     <!-- This will right-align the button -->
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button class="dialog" id="AdvancedEditButton1" oncommand="onAdvancedEdit()" label="&AdvancedEditButton.label;"
             tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
   </hbox>

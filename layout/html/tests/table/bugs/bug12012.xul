@@ -263,7 +263,7 @@
 
 	<html:script src="bug12012.js" />
 
-	<spring flex="1"/>
+	<spacer flex="1"/>
 	<vbox> <!-- fill all horizontal space -->
 		<hbox flex="1" id="main"> <!-- fill all vertical space -->
 
@@ -455,7 +455,7 @@
 		</hbox>
 
 		<hbox id="tabs">
-			<spring flex="1"/>
+			<spacer flex="1"/>
 			<html:table>
 				<html:tr id="tabsTR">
 					<html:td class="tab" onclick="if (this.className != 'tab disable') { divActive(0); ResetAddForm() }"> <!-- XXX need to reset due to bug 9136 -->
@@ -472,8 +472,8 @@
 					</html:td>
 				</html:tr>
 			</html:table>
-			<spring flex="1"/>
+			<spacer flex="1"/>
 		</hbox> <!-- id="tabs" -->
 	</vbox>
-	<spring flex="1"/>
+	<spacer flex="1"/>
 </window>

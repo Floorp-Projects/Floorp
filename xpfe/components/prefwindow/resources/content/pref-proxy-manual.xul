@@ -52,7 +52,7 @@
 		</html:div>
 		<html:input name="ftpproxy" type="text" id="networkProxyHTTP"
                 pref="true" preftype="string" prefstring="network.proxy.http" size="30"/>
-		<spring flex="100%"/>
+		<spacer flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
@@ -65,7 +65,7 @@
 		</html:div>
 		<html:input name="gopherproxy" type="text" id="networkProxyGopher"
                 pref="true" preftype="string" prefstring="network.proxy.gopher" size="30"/>
-		<spring flex="100%"/>
+		<spacer flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
@@ -78,7 +78,7 @@
 		</html:div>
 		<html:input name="httpproxy" type="text" id="networkProxyHTTP"
                 pref="true" preftype="string" prefstring="network.proxy.http" size="30"/>
-		<spring flex="100%"/>
+		<spacer flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
@@ -91,7 +91,7 @@
 		</html:div>
 		<html:input name="waisproxy" type="text" id="networkProxyWAIS"
                 pref="true" preftype="string" prefstring="network.proxy.wais" size="30"/>
-		<spring flex="100%"/>
+		<spacer flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
@@ -116,7 +116,7 @@
 		</html:div>
 		<html:input name="sockshost" type="text" id="networkSocksHost"
                 pref="true" preftype="string" prefstring="network.socks.host" size="30"/>
-		<spring flex="100%"/>
+		<spacer flex="100%"/>
 		<html:div>
 		&port.label;
 		</html:div>
