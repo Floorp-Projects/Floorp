@@ -47,8 +47,10 @@
 #import "BookmarkManager.h"
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
+#import "BookmarkToolbar.h"
 #import "BookmarkImportDlgController.h"
 #import "KindaSmartFolderManager.h"
+#import "BrowserWindowController.h"
 #import "MainController.h" 
 
 @interface BookmarkManager (Private)
@@ -145,6 +147,9 @@ static unsigned gFirstUserCollection = 0;
     // setup special folders
     [self setupSmartCollections];
     mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
+    // at some point, f'd up setting the bookmark toolbar folder special flag.
+    // this'll handle that little boo-boo for the time being
+    [[self toolbarFolder] setIsToolbar:YES];
     // don't do this until after we've read in the bookmarks
     mUndoManager = [[NSUndoManager alloc] init];
     // Generic notifications for Bookmark Client
@@ -178,9 +183,17 @@ static unsigned gFirstUserCollection = 0;
   // check update status of 1 bookmark every 2 minutes.
   mUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeToCheckAnotherBookmark target:self selector:@selector(checkForUpdates:) userInfo:nil repeats:YES];
   [mSmartFolderManager postStartupInitialization:self];
-  [[[self toolbarFolder] objectAtIndex:0] itemUpdatedNote];//makes sure we have toolbar on 1st window
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL])
-    [mRootBookmarks refreshIcon];
+  // make sure bookmark toolbar was built (only a concern on startup from apple event)
+  [[[[[NSApp delegate] getFrontmostBrowserWindow] windowController] bookmarkToolbar] buildButtonList];
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL]) {
+    [[self toolbarFolder] refreshIcon];
+    [[self bookmarkMenuFolder] performSelector:@selector(refreshIcon) withObject:nil afterDelay:3.0];
+    [[self rendezvousFolder] performSelector:@selector(refreshIcon) withObject:nil afterDelay:10.0];
+    [[self addressBookFolder] performSelector:@selector(refreshIcon) withObject:nil afterDelay:12.0];
+    unsigned count = [mRootBookmarks count];
+    for (unsigned i = gFirstUserCollection;i<count;i++)
+      [[mRootBookmarks objectAtIndex:i] performSelector:@selector(refreshIcon) withObject:nil afterDelay:i];
+  }
 }
 
 - (void)shutdown;

@@ -528,7 +528,7 @@ const long kMinSearchPaneHeight = 80;
   NSString *searchString = [mSearchField stringValue];
   if ([searchString length] > 0) {
     [self setSearchResultArray:[[BookmarkManager sharedBookmarkManager] searchBookmarksForString:searchString]];
-  // display if it's hidden
+    // display if it's hidden
     NSArray *subviews = [mItemSearchSplit subviews];
     NSRect bookmarkFrame = [[subviews objectAtIndex:0] frame];
     NSRect searchFrame = [[subviews objectAtIndex:1] frame];
