@@ -37,6 +37,8 @@
 
 #include "xpcprivate.h"
 
+extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
+
 /***************************************************************************/
 
 AutoPushJSContext::AutoPushJSContext(JSContext *cx, nsXPConnect* xpc /*= nsnull*/)
@@ -856,8 +858,8 @@ static JSObjectOps WrappedNative_ops = {
     nsnull,                     /* construct    */
     nsnull,                     /* xdrObject    */
     WrappedNative_HasInstance,  /* hasInstance  */
-    nsnull,                     /* setProto */
-    nsnull,                     /* setParent */
+    nsnull,                     /* filled in at runtime! - setProto */
+    nsnull,                     /* filled in at runtime! - setParent */
     nsnull,                     /* filled in at runtime! - mark */
     nsnull,                     /* filled in at runtime! - clear */
     0,0                         /* spare */
@@ -885,8 +887,8 @@ static JSObjectOps WrappedNativeWithCall_ops = {
     WrappedNative_Construct,    /* construct    */
     nsnull,                     /* xdrObject    */
     WrappedNative_HasInstance,  /* hasInstance  */
-    nsnull,                     /* setProto */
-    nsnull,                     /* setParent */
+    nsnull,                     /* filled in at runtime! - setProto */
+    nsnull,                     /* filled in at runtime! - setParent */
     nsnull,                     /* filled in at runtime! - mark */
     nsnull,                     /* filled in at runtime! - clear */
     0,0                         /* spare */
@@ -945,11 +947,15 @@ JSBool xpc_InitWrappedNativeJSOps()
     {
         WrappedNative_ops.newObjectMap     = js_ObjectOps.newObjectMap;
         WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+        WrappedNative_ops.setProto         = js_ObjectOps.setProto;
+        WrappedNative_ops.setParent        = js_ObjectOps.setParent;
         WrappedNative_ops.mark             = js_ObjectOps.mark;
         WrappedNative_ops.clear            = js_ObjectOps.clear;
 
         WrappedNativeWithCall_ops.newObjectMap     = js_ObjectOps.newObjectMap;
         WrappedNativeWithCall_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+        WrappedNativeWithCall_ops.setProto         = js_ObjectOps.setProto;
+        WrappedNativeWithCall_ops.setParent        = js_ObjectOps.setParent;
         WrappedNativeWithCall_ops.mark             = js_ObjectOps.mark;
         WrappedNativeWithCall_ops.clear            = js_ObjectOps.clear;
     }
