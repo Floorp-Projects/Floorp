@@ -34,7 +34,6 @@
 #include "COtherDTD.h"
 #include "COtherDTD.h"
 #include "nsViewSourceHTML.h"
-#include "nsHTMLContentSinkStream.h"
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
 #include "nsXMLTokenizer.h"
@@ -156,7 +155,6 @@ static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID, NS_CTRANSITIONAL_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
-static NS_DEFINE_CID(kHTMLContentSinkStreamCID, NS_HTMLCONTENTSINKSTREAM_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
@@ -166,7 +164,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLContentSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
 static nsModuleComponentInfo gComponents[] = {
@@ -178,8 +175,6 @@ static nsModuleComponentInfo gComponents[] = {
   { "Transitional DTD", NS_CTRANSITIONAL_DTD_CID, NULL,
     CTransitionalDTDConstructor },
   { "ViewSource DTD", NS_VIEWSOURCE_DTD_CID, NULL, CViewSourceHTMLConstructor },
-  { "HTML Content Sink Stream", NS_HTMLCONTENTSINKSTREAM_CID, NULL,
-    nsHTMLContentSinkStreamConstructor },
   { "ParserService", NS_PARSERSERVICE_CID, NULL, nsParserServiceConstructor }
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))

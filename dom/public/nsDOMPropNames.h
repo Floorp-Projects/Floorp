@@ -832,7 +832,6 @@
     "nsrange.createcontextualfragment", \
     "nsrange.intersectsnode", \
     "nsrange.ispointinrange", \
-    "nsrange.isvalidfragment", \
     "nsrange.nsdetach", \
     "nsuievent.cancelbubble", \
     "nsuievent.getpreventdefault", \

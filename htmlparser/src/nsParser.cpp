@@ -37,7 +37,6 @@
 #include "nshtmlpars.h"
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" 
-#include "nsHTMLContentSinkStream.h" //this is here so we can get a null sink, which really should be gotten from nsICOntentSink.h
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
@@ -1735,62 +1734,6 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
   NS_RELEASE(me); 
   return result; 
 }  
-
-
-/**
- *  Call this method to test whether a given fragment is valid within a given context-stack.
- *  @update  gess 04/01/99
- *  @param   aSourceBuffer contains the content blob you're trying to insert
- *  @param   aInsertPos tells us where in the context stack you're trying to do the insertion
- *  @param   aMimeType tells us what kind of stuff you're inserting
- *  @return  TRUE if valid, otherwise FALSE
- */
-PRBool nsParser::IsValidFragment(const nsAReadableString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
-
-  /************************************************************************************
-    This method works like this:
-      1. Convert aStack to a markup string
-      2. Append a "sentinel" tag to markup string so we know where new content is inserted
-      3. Append new context to markup stack
-      4. Call the normal parse() methods for a string, using an HTMLContentSink.
-         The output of this call is stored in an outputstring
-      5. Scan the output string looking for markup inside our sentinel. If non-empty
-         then we have to assume that the fragment is valid (at least in part)
-   ************************************************************************************/
-
-  nsAutoString  theContext;
-  PRUint32 theCount=aStack.GetSize();
-  PRUint32 theIndex=0;
-  while(theIndex++<theCount){
-    theContext.AppendWithConversion("<");
-    theContext.Append(aStack.TagAt(theCount-theIndex));
-    theContext.AppendWithConversion(">");
-  }
-  theContext.AppendWithConversion("<endnote>");       //XXXHack! I'll make this better later.
-  nsAutoString theBuffer(theContext);
-  theBuffer.Append(aSourceBuffer);
-  
-  PRBool result=PR_FALSE;
-  if(theBuffer.Length()){
-    //now it's time to try to build the model from this fragment
-
-    nsString theOutput;
-    nsIHTMLContentSink*  theSink=0;
-    nsresult theResult=NS_New_HTML_ContentSinkStream(&theSink,&theOutput,0);
-    SetContentSink(theSink);
-    theResult=Parse(theBuffer,(void*)&theBuffer,aMimeType,PR_FALSE,PR_TRUE);
-    theOutput.StripWhitespace();
-    if(NS_OK==theResult){
-      theOutput.Cut(0,theContext.Length());
-      PRInt32 aPos=theOutput.RFind("</endnote>");
-      if(-1<aPos)
-        theOutput.Truncate(aPos);
-      result=PRBool(0<theOutput.Length());
-    }
-  }
-  return result;
-}
-
 
 /**
  *

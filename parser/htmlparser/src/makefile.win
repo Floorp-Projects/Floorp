@@ -49,7 +49,6 @@ CPPSRCS=					\
 	nsScanner.cpp				\
 	nsToken.cpp				\
 	nsTokenHandler.cpp			\
-	nsHTMLContentSinkStream.cpp		\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
@@ -77,7 +76,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsScanner.obj		\
 	.\$(OBJDIR)\nsToken.obj			\
 	.\$(OBJDIR)\nsTokenHandler.obj		\
-	.\$(OBJDIR)\nsHTMLContentSinkStream.obj	\
 	.\$(OBJDIR)\nsValidDTD.obj		\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsViewSourceHTML.obj		\
@@ -92,7 +90,6 @@ EXPORTS=					\
 	nsIContentSink.h			\
 	nsIHTMLContentSink.h			\
 	nsILoggingSink.h			\
-	nsHTMLContentSinkStream.h		\
 	nsIHTMLFragmentContentSink.h		\
 	nsHTMLEntities.h			\
 	nsHTMLEntityList.h			\
