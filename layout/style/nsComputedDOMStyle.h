@@ -128,6 +128,10 @@ private:
                              nsIFrame *aFrame,
                              nsIDOMCSSValue** aValue);
 
+  nsresult GetOutlineRadiusFor(PRUint8 aSide,
+                              nsIFrame *aFrame,
+                              nsIDOMCSSValue** aValue);
+
   nsresult GetMarginWidthFor(PRUint8 aSide,
                              nsIFrame *aFrame,
                              nsIDOMCSSValue** aValue);
@@ -233,6 +237,10 @@ private:
   nsresult GetOutlineWidth(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineStyle(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineColor(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetOutlineRadiusBottomLeft(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetOutlineRadiusBottomRight(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetOutlineRadiusTopLeft(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetOutlineRadiusTopRight(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   /*Marker Properties */
   nsresult GetMarkerOffset(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
