@@ -733,6 +733,11 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                           redrawAfterReflow, 
                           aMoveFrame);
 
+  // If the NS_REFLOW_CALC_MAX_WIDTH flag is set on the nsHTMLReflowMetrics,
+  // then we need to do a reflow so that aDesiredSize.mMaximumWidth will be set
+  // correctly.
+  needsReflow = needsReflow || (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH);
+  
   if (redrawNow)
      Redraw(aState);
 

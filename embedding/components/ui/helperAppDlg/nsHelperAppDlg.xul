@@ -73,14 +73,11 @@
         
         <radiogroup id="mode" oncommand="dialog.toggleChoice()" align="stretch">
             <hbox>
-	        <!-- XXX Wallpaper over incremental reflow bug in XUL by giving
-                         ourselves more space... In fact, all this business
-                         with the hboxes is wallpaper. -->
                 <radio id="useSystemDefault"
-                       flex="7"
+                       flex="1"
                        label="&useSystemDefault.noDesc.label;"
                        accesskey="&useSystemDefault.accesskey;"/>
-                <spacer flex="3"/>
+                <spacer flex="1"/>
             </hbox>
             <hbox align="center">
                 <radio id="openUsing"
