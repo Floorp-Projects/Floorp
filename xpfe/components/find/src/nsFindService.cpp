@@ -138,24 +138,3 @@ NS_IMETHODIMP nsFindService::SetMatchCase(PRBool aMatchCase)
     return NS_OK;
 }
 
-
-nsFindService*   nsFindService::gFindService;
-
-nsFindService*
-nsFindService::GetSingleton()
-{
-  if (!gFindService) {
-    gFindService = new nsFindService();
-    if (gFindService)
-      NS_ADDREF(gFindService);
-  }
-  NS_IF_ADDREF(gFindService);
-  return gFindService;
-}
-
-void
-nsFindService::FreeSingleton()
-{
-    NS_IF_RELEASE(gFindService);
-}
-
