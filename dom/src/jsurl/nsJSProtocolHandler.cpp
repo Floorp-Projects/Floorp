@@ -45,7 +45,7 @@
 #include "nsXPIDLString.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIWindowMediator.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
@@ -183,7 +183,7 @@ nsEvaluateStringProxy::BringUpConsole()
     if (NS_FAILED(rv)) return rv;
 
     // Next, find out whether there's a console already open.
-    nsCOMPtr<nsIDOMWindow> console;
+    nsCOMPtr<nsIDOMWindowInternal> console;
     rv = windowMediator->GetMostRecentWindow(NS_LITERAL_STRING("global:console"),
                                              getter_AddRefs(console));
     if (NS_FAILED(rv)) return rv;
@@ -214,7 +214,7 @@ nsEvaluateStringProxy::BringUpConsole()
         if (NS_FAILED(rv)) return rv;
 
         // Finally, QI global to nsIDOMWindow and open the console.
-        nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global, &rv);
+        nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(global, &rv);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
         JSContext *cx = (JSContext*) scriptContext->GetNativeContext();

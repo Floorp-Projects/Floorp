@@ -44,7 +44,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIWalletService.h"
 #include "nsIWindowMediator.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIClipboard.h"
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -219,7 +219,7 @@ static nsresult OpenWindow( const char*urlstr, const PRUnichar *args )
   nsresult rv;
   nsCOMPtr<nsIAppShellService> appShellService = do_GetService(kAppShellServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMWindow> hiddenWindow;
+      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
       JSContext *jsContext;
       rv = appShellService->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
                                                          &jsContext);
@@ -234,7 +234,7 @@ static nsresult OpenWindow( const char*urlstr, const PRUnichar *args )
                                         args );
 
         if( argv ) {
-          nsCOMPtr<nsIDOMWindow> newWindow;
+          nsCOMPtr<nsIDOMWindowInternal> newWindow;
           rv = hiddenWindow->OpenDialog( jsContext,
                                          argv,
                                          4,
@@ -919,7 +919,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   }
 
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
-  //      if the profile manager ever switches to using nsIDOMWindow stuff, this might have to change
+  //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
   appShell->CreateHiddenWindow();
 
 	// Enumerate AppShellComponenets

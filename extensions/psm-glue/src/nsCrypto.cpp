@@ -28,7 +28,7 @@
 #include "nsPSMComponent.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIThreadManager.h"
@@ -1134,7 +1134,7 @@ nsCrypto::SignText(JSContext *cx, jsval *argv, PRUint32 argc,
 void
 alertUser(char *message)
 {
-  nsCOMPtr<nsIDOMWindow> hiddenWindow;
+  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
   JSContext *jsContext;
   nsresult rv;
 
@@ -1417,7 +1417,7 @@ nsPkcs11::GetScriptObject(nsIScriptContext *aContext,
 PRBool
 confirm_user(char *message)
 {
-  nsCOMPtr<nsIDOMWindow> hiddenWindow;
+  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
   JSContext *jsContext;
   PRBool confirmation = PR_FALSE;
   nsresult rv;

@@ -76,7 +76,7 @@ public:
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
 public:
-    static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindow** aWindow);
+    static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindowInternal** aWindow);
 
 protected:
     void* mScriptObject;       // ????
@@ -85,7 +85,7 @@ protected:
     // waiting to happen! If somebody deletes the node, then asks us
     // for the focus, we'll get killed!
     nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
-    nsCOMPtr<nsIDOMWindow> mCurrentWindow; // [OWNER]
+    nsCOMPtr<nsIDOMWindowInternal> mCurrentWindow; // [OWNER]
 
     PRBool mSuppressFocus;
     PRBool mSuppressFocusScroll;

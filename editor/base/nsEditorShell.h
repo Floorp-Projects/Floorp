@@ -53,7 +53,7 @@
 
 class nsIDocShell;
 class nsIScriptContext;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsIURI;
@@ -137,7 +137,7 @@ class nsEditorShell :   public nsIEditorShell,
                                      const nsString *aYesString, const nsString *aNoString);
 
     // this returns an AddReffed nsIScriptContext. You must relase it.
-    nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
+    nsIScriptContext*  GetScriptContext(nsIDOMWindowInternal * aWin);
 
     // Get a string from the string bundle file
     void            GetBundleString(const nsString& name, nsString &outString);
@@ -197,8 +197,8 @@ class nsEditorShell :   public nsIEditorShell,
     //  so we need to track it separately
     PRBool  mHTMLSourceMode;
     
-    nsIDOMWindow            *mWebShellWindow;        // weak reference
-    //nsIDOMWindow            *mContentWindow;        // weak reference
+    nsIDOMWindowInternal            *mWebShellWindow;        // weak reference
+    //nsIDOMWindowInternal            *mContentWindow;        // weak reference
     nsWeakPtr                mContentWindow;        // weak reference
 
     nsEditorParserObserver  *mParserObserver;       // we hold the owning ref to this.

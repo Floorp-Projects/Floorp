@@ -42,7 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
 #include "nsIDocShell.h"
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsAddressBook::PrintAddressbook()
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindow *aWin)
+NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindowInternal *aWin)
 {
    NS_PRECONDITION(aWin != nsnull, "null ptr");
    if (!aWin)

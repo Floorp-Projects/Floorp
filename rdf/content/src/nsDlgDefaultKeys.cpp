@@ -29,7 +29,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
 #include "nsINSEvent.h"
 #include "nsIPresContext.h"

@@ -30,7 +30,7 @@
 #include "nsIScrollableView.h"
 
 class nsIDOMElement;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIFactory;
 //class nsIPostData;
 class nsIStreamObserver;

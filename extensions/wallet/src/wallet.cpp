@@ -686,7 +686,7 @@ Wallet_Localize(char* genericString) {
 /**********************/
 
 PUBLIC PRBool
-Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
+Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 {
   PRBool retval = PR_TRUE; /* default value */
 
@@ -704,7 +704,7 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
 }
 
 PUBLIC PRBool
-Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
+Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   nsresult res;  
   nsCOMPtr<nsIPrompt> dialog; 
   window->GetPrompter(getter_AddRefs(dialog)); 
@@ -744,7 +744,7 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
 }
 
 PUBLIC PRInt32
-Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
+Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 {
   nsresult res;  
   nsCOMPtr<nsIPrompt> dialog; 
@@ -789,7 +789,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
 }
 
 PRIVATE void
-wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
+wallet_Alert(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 {
   nsresult res;
   nsCOMPtr<nsIPrompt> dialog; 
@@ -819,7 +819,7 @@ wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
 PUBLIC PRBool
 Wallet_CheckConfirmYN
     (PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue,
-     nsIDOMWindow* window) {
+     nsIDOMWindowInternal* window) {
   nsresult res;
   nsCOMPtr<nsIPrompt> dialog; 
   window->GetPrompter(getter_AddRefs(dialog)); 
@@ -1931,7 +1931,7 @@ wallet_ReadFromURLFieldToSchemaFile
 /*********************************************************************/
 
 PUBLIC void
-Wallet_GiveCaveat(nsIDOMWindow* window, nsIPrompt* dialog) {
+Wallet_GiveCaveat(nsIDOMWindowInternal* window, nsIPrompt* dialog) {
   /* test for first capturing of data ever and give caveat if so */
   if (!SI_GetBoolPref(pref_Caveat, PR_FALSE)) {
     SI_SetBoolPref(pref_Caveat, PR_TRUE);
@@ -2648,7 +2648,7 @@ Wallet_SignonViewerReturn(const nsString& results)
  * see if user wants to capture data on current page
  */
 PRIVATE PRBool
-wallet_OKToCapture(char* urlName, nsIDOMWindow* window) {
+wallet_OKToCapture(char* urlName, nsIDOMWindowInternal* window) {
   nsAutoString url; url.AssignWithConversion(urlName);
 
   /* exit if pref is not set */
@@ -3010,7 +3010,7 @@ if (!changingPassword) {
   SI_SetBoolPref(pref_Crypto, SI_GetBoolPref(pref_Crypto, PR_TRUE));
 
 //  message = Wallet_Localize("Converted");
-//  wallet_Alert(message, (nsIDOMWindow *)window);
+//  wallet_Alert(message, (nsIDOMWindowInternal *)window);
 //  Recycle(message);
   level--;
   return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
@@ -3020,16 +3020,16 @@ fail:
 
   /* alert the user to the failure */
   message = Wallet_Localize("NotConverted");
-  wallet_Alert(message, (nsIDOMWindow *)window);
+  wallet_Alert(message, (nsIDOMWindowInternal *)window);
   Recycle(message);
   level--;
   return 1;
 }
 
 PUBLIC void
-WLLT_InitReencryptCallback(nsIDOMWindow* window) {
+WLLT_InitReencryptCallback(nsIDOMWindowInternal* window) {
   static PRBool registered = PR_FALSE;
-  static nsIDOMWindow* lastWindow;
+  static nsIDOMWindowInternal* lastWindow;
   if (registered) {
     SI_UnregisterCallback(pref_Crypto, wallet_ReencryptAll, lastWindow);
   }
@@ -3169,7 +3169,7 @@ WLLT_PrefillReturn(const nsString& results)
  * get the form elements on the current page and prefill them if possible
  */
 PUBLIC nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win)
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
 {
   nsAutoString urlName;
 
@@ -3332,7 +3332,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win)
 }
 
 PUBLIC void
-WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) {
+WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* status) {
 
   /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
@@ -3447,7 +3447,7 @@ public:
 };
 
 PUBLIC void
-WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
+WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
   nsCOMPtr<nsIDOMHTMLFormElement> currentFormNode(do_QueryInterface(currentForm));
 

@@ -70,7 +70,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIBaseWindow.h"
 #include "nsICommonDialogs.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIWindowMediator.h"
 
 #if defined (XP_UNIX)
@@ -1605,7 +1605,7 @@ nsProfile::ShowProfileWizard(void)
 {
     nsresult rv = NS_OK;
     PRBool hasParentWindow = PR_FALSE;
-    nsCOMPtr<nsIDOMWindow> PMDOMWindow;
+    nsCOMPtr<nsIDOMWindowInternal> PMDOMWindow;
 
     // Get the window mediator
     NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -1680,7 +1680,7 @@ nsProfile::ShowProfileWizard(void)
 
         if (argv)
         {
-            nsCOMPtr<nsIDOMWindow> newWindow;
+            nsCOMPtr<nsIDOMWindowInternal> newWindow;
             rv = PMDOMWindow->OpenDialog(jsContext,
                                          argv,
                                          4,

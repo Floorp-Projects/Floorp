@@ -374,7 +374,7 @@ nsMsgCompose::QuotingToFollow(void)
   return mQuotingToFollow;
 }
 
-nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
+nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
                                   const PRUnichar *originalMsgURI,
                                   MSG_ComposeType type,
                                   MSG_ComposeFormat format,
@@ -925,7 +925,7 @@ nsresult nsMsgCompose::SetBodyModified(PRBool modified)
 	return rv; 	
 }
 
-nsresult nsMsgCompose::GetDomWindow(nsIDOMWindow * *aDomWindow)
+nsresult nsMsgCompose::GetDomWindow(nsIDOMWindowInternal * *aDomWindow)
 {
 	*aDomWindow = m_window;
 	return NS_OK;

@@ -28,7 +28,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsTransactionManagerCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDocumentLoader.h"
@@ -301,7 +301,7 @@ NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const PRUnichar * aMailCharacterS
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
 {
 	if (!aWindow)
 		return NS_ERROR_NULL_POINTER;

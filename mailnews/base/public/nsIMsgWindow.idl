@@ -27,7 +27,7 @@
 
 interface nsITransactionManager;
 interface nsIDocShell;
-interface nsIDOMWindow;
+interface nsIDOMWindowInternal;
 interface nsIMsgHeaderSink;
 interface nsIPrompt;
 /*
@@ -47,7 +47,7 @@ interface nsIMsgWindow : nsISupports {
     readonly attribute nsIPrompt promptDialog;
   attribute wstring mailCharacterSet;
 	
-	void SetDOMWindow(in nsIDOMWindow window);
+	void SetDOMWindow(in nsIDOMWindowInternal window);
 	void StopUrls();
 
 	void SelectFolder(in string folderUri);

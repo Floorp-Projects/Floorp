@@ -28,7 +28,7 @@
 
 
 %{ C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIEditorShell.h"
 %}
 
@@ -119,7 +119,7 @@ interface nsIMsgComposeStateListener : nsISupports
 interface nsIMsgCompose : nsISupports {
 
 	/* ... */
-	void Initialize(in nsIDOMWindow aWindow, in wstring originalMsgURI,
+	void Initialize(in nsIDOMWindowInternal aWindow, in wstring originalMsgURI,
                     in MSG_ComposeType type, in MSG_ComposeFormat format,
                     in nsIMsgCompFields compFields,
                     in nsIMsgIdentity identity); 
@@ -180,7 +180,7 @@ interface nsIMsgCompose : nsISupports {
 	attribute nsIEditorShell editor;
 
 	/* ... */
-    readonly attribute nsIDOMWindow domWindow;
+    readonly attribute nsIDOMWindowInternal domWindow;
 
 	/* ... */
     readonly attribute nsIMsgCompFields compFields;

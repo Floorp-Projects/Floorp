@@ -31,7 +31,7 @@
 #include "nsIMsgFolder.idl"
 
 %{C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 %}
 
 interface nsITransactionManager;
@@ -46,7 +46,7 @@ interface nsIMessenger : nsISupports {
 
     readonly attribute nsITransactionManager transactionManager;
 
-    void SetWindow(in nsIDOMWindow ptr, in nsIMsgWindow msgWindow);
+    void SetWindow(in nsIDOMWindowInternal ptr, in nsIMsgWindow msgWindow);
     void DoPrint();
     void DoPrintPreview();
     void DeleteMessages(in nsIRDFCompositeDataSource database,

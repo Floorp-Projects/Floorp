@@ -32,7 +32,7 @@ class nsISimpleEnumerator;
 class nsSupportsHashtable;
 class nsIRDFContainer;
 class nsIRDFContainerUtils;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIDocument;
 
 #include "nsIRDFCompositeDataSource.h"
@@ -83,7 +83,7 @@ private:
   NS_IMETHOD GetProfileRoot(nsCString& aFileURL);
   NS_IMETHOD GetInstallRoot(nsCString& aFileURL);
 
-  NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
+  NS_IMETHOD RefreshWindow(nsIDOMWindowInternal* aWindow);
 
   NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
                         const nsCString& aType,

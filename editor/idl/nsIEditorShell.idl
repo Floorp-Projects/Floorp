@@ -29,7 +29,7 @@
 
 %{C++
 
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIDOMDocument;
 class nsIDOMSelection;
 class nsIDOMElement;
@@ -47,8 +47,8 @@ interface nsIEditorShell : nsISupports
   readonly attribute nsIDOMSelection   editorSelection;
   readonly attribute nsISelectionController   selectionController;
   
-           attribute nsIDOMWindow      webShellWindow;
-           attribute nsIDOMWindow      contentWindow;
+           attribute nsIDOMWindowInternal      webShellWindow;
+           attribute nsIDOMWindowInternal      contentWindow;
            attribute wstring           editorType;
            
   [noscript] readonly attribute nsIEditor         editor;
@@ -132,7 +132,7 @@ interface nsIEditorShell : nsISupports
                            in wstring yesButtonText, in wstring noButtonText);
                         
   /* check a particular window's URL to see if it matches the given URL */
-  boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindow inCheckWindow); 
+  boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindowInternal inCheckWindow); 
 
   /* Commands */
   /** 
@@ -595,7 +595,7 @@ interface nsIEditorShell : nsISupports
   void DumpContentTree();
 
   /* Utility */
-  wstring GetLocalFileURL(in nsIDOMWindow parent, in wstring filterType);
+  wstring GetLocalFileURL(in nsIDOMWindowInternal parent, in wstring filterType);
 
   /**
    * Tests if a node is a BLOCK element according the the HTML 4.0 DTD

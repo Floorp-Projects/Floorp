@@ -29,15 +29,15 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 %{C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 %}
 
 [scriptable, uuid(BBB67DF0-214B-11d3-ABAA-0080C787AD96)]
 interface nsICookieViewer : nsISupports
 {
-    void SetValue(in string aValue, in nsIDOMWindow win);
+    void SetValue(in string aValue, in nsIDOMWindowInternal win);
     void BlockImage(in string imageURL);
-    void AddPermission(in nsIDOMWindow win, in PRBool permission, in PRInt32 type);
+    void AddPermission(in nsIDOMWindowInternal win, in PRBool permission, in PRInt32 type);
     string GetCookieValue();
     string GetPermissionValue(in PRInt32 type);
 

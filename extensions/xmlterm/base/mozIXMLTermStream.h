@@ -55,7 +55,7 @@ class mozIXMLTermStream : public nsIInputStream
    * @param maxResizeHeight maximum resize height (0=> do not resize)
    * @return NS_OK on success
    */
-  NS_IMETHOD Open(nsIDOMWindow* aDOMWindow,
+  NS_IMETHOD Open(nsIDOMWindowInternal* aDOMWindow,
                   const char* frameName,
                   const char* contentURL,
                   const char* contentType,

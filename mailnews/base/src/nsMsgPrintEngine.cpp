@@ -181,7 +181,7 @@ nsMsgPrintEngine::OnEndURLLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel,
 }
 
 NS_IMETHODIMP    
-nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
+nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
 {
 	if (!aWin)
   {

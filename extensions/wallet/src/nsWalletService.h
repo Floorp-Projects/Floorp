@@ -30,7 +30,7 @@
 #include "nsWeakReference.h"
 #include "nsIPasswordSink.h"
 #include "nsIPrompt.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIURI.h"
 
 class nsWalletlibService : public nsIWalletService,
@@ -51,7 +51,7 @@ public:
   nsWalletlibService();
 
   // NS_DECL_NSIFORMSUBMITOBSERVER
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL);
+  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL);
   
 protected:
   virtual ~nsWalletlibService();

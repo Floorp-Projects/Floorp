@@ -37,7 +37,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
 #include "nsIChromeEventHandler.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
@@ -174,6 +174,13 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
       NS_SUCCEEDED(EnsureScriptEnvironment()))
    {
       *aSink = mScriptGlobal;
+   }
+   else if(aIID.Equals(NS_GET_IID(nsIDOMWindowInternal)) &&
+      NS_SUCCEEDED(EnsureScriptEnvironment()))
+   {
+      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindowInternal),
+         aSink), NS_ERROR_FAILURE);
+      return NS_OK;
    }
    else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
       NS_SUCCEEDED(EnsureScriptEnvironment()))
@@ -3055,7 +3062,7 @@ NS_IMETHODIMP nsDocShell::GetCurrentDocumentOwner(nsISupports** aOwner)
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
         rv = GetSameTypeParent(getter_AddRefs(parentItem));
         if (NS_FAILED(rv) || !parentItem) return rv;
-        nsCOMPtr<nsIDOMWindow> parentWindow(do_GetInterface(parentItem));
+        nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_GetInterface(parentItem));
         if (!parentWindow) return NS_OK;
         nsCOMPtr<nsIDOMDocument> parentDomDoc;
         rv = parentWindow->GetDocument(getter_AddRefs(parentDomDoc));

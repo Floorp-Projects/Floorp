@@ -51,7 +51,7 @@
 #include "nsIStatefulFrame.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIFilePicker.h"
 #include "nsIDOMMouseEvent.h"
 
@@ -251,7 +251,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
   nsresult result;
 
-  // Get parent nsIDOMWindow object.
+  // Get parent nsIDOMWindowInternal object.
   nsCOMPtr<nsIContent> content;
   result = GetContent(getter_AddRefs(content));
   if (!content)
@@ -267,7 +267,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!scriptGlobalObject)
     return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> parentWindow = do_QueryInterface(scriptGlobalObject);
+  nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_QueryInterface(scriptGlobalObject);
   if (!parentWindow)
     return NS_ERROR_FAILURE;
 

@@ -47,7 +47,7 @@ interface nsIAbSync : nsISupports {
    * Send the protocol request and get a transaction ID in return that
    * will be sent along with all sync listener operations
    */
-  void    PerformAbSync(in nsIDOMWindow aDOMWindow, out PRInt32 aTransactionID);
+  void    PerformAbSync(in nsIDOMWindowInternal aDOMWindow, out PRInt32 aTransactionID);
   void    CancelAbSync();
   void    SetAbSyncUser(in string aUser);
 };

@@ -270,7 +270,7 @@ protected:
 
 	nsCOMPtr<nsIFileSpec>	mBaseFileSpec;
 
-    nsIDOMWindow *mParentWindow;
+    nsIDOMWindowInternal *mParentWindow;
 
 }; // class nsFileSpecWithUIImpl
 

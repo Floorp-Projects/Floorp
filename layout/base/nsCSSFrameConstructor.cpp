@@ -80,7 +80,7 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULCommandDispatcher.h"

@@ -43,28 +43,28 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
     /**
      * Puts up an alert dialog with an OK button.
      */
-    void Alert(in nsIDOMWindow inParent, in wstring inDialogTitle, in wstring inMsg);
+    void Alert(in nsIDOMWindowInternal inParent, in wstring inDialogTitle, in wstring inMsg);
 
     /**
      * Puts up a dialog with OK button, and
      * a message with a single checkbox.
      * @return the value of the checkbox.
      */
-    void AlertCheck(in nsIDOMWindow inParent, in wstring inDialogTitle, in wstring inMsg,
+    void AlertCheck(in nsIDOMWindowInternal inParent, in wstring inDialogTitle, in wstring inMsg,
                          in wstring inCheckMsg, inout boolean outCheckValue);
 
     /**
      * Puts up a dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean Confirm(in nsIDOMWindow inParent, in wstring inDialogTitle, in wstring inMsg);
+    boolean Confirm(in nsIDOMWindowInternal inParent, in wstring inDialogTitle, in wstring inMsg);
 
     /**
      * Puts up a dialog with OK and Cancel buttons, and
      * a message with a single checkbox.
      * @return true for OK, false for Cancel
      */
-    boolean ConfirmCheck(in nsIDOMWindow inParent, in wstring inDialogTitle, in wstring inMsg,
+    boolean ConfirmCheck(in nsIDOMWindowInternal inParent, in wstring inDialogTitle, in wstring inMsg,
                          in wstring inCheckMsg,
                          inout boolean outCheckValue);
 
@@ -72,7 +72,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
      * Puts up a text input dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean Prompt(in nsIDOMWindow inParent,in wstring inDialogTitle, in wstring inMsg,
+    boolean Prompt(in nsIDOMWindowInternal inParent,in wstring inDialogTitle, in wstring inMsg,
                    in wstring inDefaultText, 
                    out wstring result);
 
@@ -80,7 +80,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
      * Puts up a username/password dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean PromptUsernameAndPassword(in nsIDOMWindow inParent,
+    boolean PromptUsernameAndPassword(in nsIDOMWindowInternal inParent,
     								  in wstring inDialogTitle,
     								  in wstring inMsg,
                                       out wstring outUser, 
@@ -90,7 +90,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
      * Puts up a password dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean PromptPassword( in nsIDOMWindow inParent,
+    boolean PromptPassword( in nsIDOMWindowInternal inParent,
     						in wstring inDialogTitle,
     						in wstring inMsg, 
                            out wstring outPassword);
@@ -98,7 +98,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
      	Puts up a dialog box which has a list box of strings. return true/false for OK/Cancel
      */                      
                            
-    boolean Select( in nsIDOMWindow inParent,
+    boolean Select( in nsIDOMWindowInternal inParent,
     				in wstring inDialogTitle,
     				in wstring inMsg,
     				 in  PRUint32 inCount,
@@ -109,7 +109,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
      * Put up a universal dialog
      */
     void UniversalDialog
-      (in nsIDOMWindow inParent,
+      (in nsIDOMWindowInternal inParent,
       in wstring inTitleMessage,
       in wstring inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
       in wstring inMsg, /* main message for dialog */
@@ -132,7 +132,7 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
    /*
    	Core Dialog function
    */
-   void DoDialog(in nsIDOMWindow inParent, in nsIDialogParamBlock ioParamBlock, in string inChromeURL );
+   void DoDialog(in nsIDOMWindowInternal inParent, in nsIDialogParamBlock ioParamBlock, in string inChromeURL );
 };
 
 %{C++

@@ -31,7 +31,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 
 #include "nsIClipboard.h"
@@ -57,7 +57,7 @@ nsBaseComposerCommand::GetInterfaceNode(const PRUnichar* nodeID, nsIEditorShell*
   *outNode = nsnull;
   NS_ASSERTION(editorShell, "Should have an editorShell here");
 
-  nsCOMPtr<nsIDOMWindow> webshellWindow;
+  nsCOMPtr<nsIDOMWindowInternal> webshellWindow;
   editorShell->GetWebShellWindow(getter_AddRefs(webshellWindow));  
   if (!webshellWindow) return NS_ERROR_FAILURE;
   
@@ -946,7 +946,7 @@ nsRemoveStylesCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon
     if (NS_FAILED(rv)) return rv;
     
     // now get all the style buttons to update
-    nsCOMPtr<nsIDOMWindow> contentWindow;
+    nsCOMPtr<nsIDOMWindowInternal> contentWindow;
     editorShell->GetContentWindow(getter_AddRefs(contentWindow));
     if (contentWindow)
       contentWindow->UpdateCommands(NS_ConvertASCIItoUCS2("style"));

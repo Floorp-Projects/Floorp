@@ -164,7 +164,7 @@ private:
   nsresult        CleanServerTable(nsVoidArray *aArray);
   PRUnichar       *GetString(const PRUnichar *aStringName);
   nsresult        DisplayErrorMessage(const PRUnichar * msg);
-  nsresult        SetDOMWindow(nsIDOMWindow *aWindow);
+  nsresult        SetDOMWindow(nsIDOMWindowInternal *aWindow);
 
   nsCOMPtr<nsIAbSyncPostEngine>   mPostEngine;
   nsString                        mPostString;

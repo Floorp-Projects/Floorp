@@ -29,13 +29,13 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 %{C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 %}
 
 [scriptable, uuid(C425FAE0-20F0-11d3-ABAA-0080C787AD96)]
 interface nsISignonViewer : nsISupports
 {
-    void SetValue(in wstring aValue, in nsIDOMWindow win);
+    void SetValue(in wstring aValue, in nsIDOMWindowInternal win);
     wstring GetSignonValue();
     wstring GetRejectValue();
     wstring GetNopreviewValue();

@@ -50,7 +50,7 @@
 
 class nsIDocShell;
 class nsIScriptContext;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIDOMNode;
 class nsIURI;
 class nsIWebShellWindow;
@@ -94,7 +94,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
   public:
     nsIDocShell* GetContentAreaDocShell();
-    nsIDOMWindow* GetContentWindow();
+    nsIDOMWindowInternal* GetContentWindow();
     nsIDocumentLoader* GetContentAreaDocLoader();
     void ReinitializeContentVariables();
 
@@ -118,7 +118,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsIWebShellWindow  *mWebShellWin;								// weak reference
     nsIDocShell *       mDocShell;									// weak reference
-    nsIDOMWindow*       mDOMWindow;                         // weak reference
+    nsIDOMWindowInternal*       mDOMWindow;                         // weak reference
 
     nsCOMPtr<nsIUrlbarHistory> mUrlbarHistory;                  //We own this
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own

@@ -39,7 +39,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "jsapi.h"
 
 #include "nsAEEventHandling.h"
@@ -301,7 +301,7 @@ nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
     NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
     if (NS_SUCCEEDED(rv))
     {
-    	nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    	nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
 	    JSContext *jsContext;
     	rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
                                                            &jsContext );
@@ -317,7 +317,7 @@ nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
         		                            url );
 		    if(argv)
 		    {
-			    nsCOMPtr<nsIDOMWindow> newWindow;
+			    nsCOMPtr<nsIDOMWindowInternal> newWindow;
 			    rv = hiddenWindow->OpenDialog( jsContext,
 			                                   argv,
 			                                   4,

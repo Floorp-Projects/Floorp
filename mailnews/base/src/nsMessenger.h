@@ -62,7 +62,7 @@ private:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
   /* rhp - need this to drive message display */
-  nsIDOMWindow              *mWindow;
+  nsIDOMWindowInternal              *mWindow;
   nsCOMPtr<nsIMsgWindow>    mMsgWindow;
   nsCOMPtr<nsIDocShell>     mDocShell;
 

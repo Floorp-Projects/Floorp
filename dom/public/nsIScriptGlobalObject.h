@@ -32,7 +32,7 @@ class nsIDOMDocument;
 class nsIDOMEvent;
 class nsIPresContext;
 class nsIDocShell;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIScriptGlobalObjectOwner;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
@@ -53,7 +53,7 @@ public:
   NS_IMETHOD       SetNewDocument(nsIDOMDocument *aDocument)=0;
   NS_IMETHOD       SetDocShell(nsIDocShell *aDocShell)=0;
   NS_IMETHOD       GetDocShell(nsIDocShell **aDocShell)=0;
-  NS_IMETHOD       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
+  NS_IMETHOD       SetOpenerWindow(nsIDOMWindowInternal *aOpener)=0;
 
     /**
    * Let the script global object know who its owner is.

@@ -26,7 +26,7 @@
 #include "stdio.h"
 #include "nsIWalletService.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
@@ -66,7 +66,7 @@ WalletEditorImpl::GetValue(PRUnichar** aValue)
 }
 
 NS_IMETHODIMP
-WalletEditorImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
+WalletEditorImpl::SetValue(const PRUnichar* aValue, nsIDOMWindowInternal* win)
 {
   /* process the value */
   NS_PRECONDITION(aValue != nsnull, "null ptr");

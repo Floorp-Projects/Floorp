@@ -47,18 +47,18 @@ interface nsIBrowserInstance : nsISupports {
 	void updateGoMenu(in nsIDOMNode goMenu);
     
     // Wallet (should reside elsewhere, somehow).
-    boolean walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);
+    boolean walletPreview(in nsIDOMWindowInternal win, in nsIDOMWindowInternal form);
  
     boolean walletChangePassword();
-    boolean walletQuickFillin(in nsIDOMWindow win);
-    PRUint32 walletRequestToCapture(in nsIDOMWindow win);
+    boolean walletQuickFillin(in nsIDOMWindowInternal win);
+    PRUint32 walletRequestToCapture(in nsIDOMWindowInternal win);
     
     
     // Infrastructure.
     void init();
-    void setContentWindow( in nsIDOMWindow aWindow );
+    void setContentWindow( in nsIDOMWindowInternal aWindow );
 	 void getContentDocShell(out nsIDocShell aDocShell);
-    void setWebShellWindow( in nsIDOMWindow aWindow );
+    void setWebShellWindow( in nsIDOMWindowInternal aWindow );
     void setTextZoom( in float aTextZoom );
     void SetDocumentCharset(in wstring charset);
     wstring GetDocumentCharset();

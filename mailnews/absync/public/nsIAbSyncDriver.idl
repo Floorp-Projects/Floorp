@@ -27,7 +27,7 @@
 [scriptable, uuid(91FDFEE1-EFBC-11d3-8F97-000073757374)]
 interface nsIAbSyncDriver : nsIAbSyncListener
 {
-    void KickIt(in nsIMsgStatusFeedback aStatus, in nsIDOMWindow aDOMWindow);
+    void KickIt(in nsIMsgStatusFeedback aStatus, in nsIDOMWindowInternal aDOMWindow);
     void CancelIt();
 };
 

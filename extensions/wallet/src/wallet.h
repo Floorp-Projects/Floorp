@@ -61,10 +61,10 @@ extern void
 WLLT_PrefillReturn(const nsString& results);
 
 extern void
-WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow * win, PRUint32* status);
+WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal * win, PRUint32* status);
 
 extern nsresult
-WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win);
+WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win);
 
 extern void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList);
@@ -76,7 +76,7 @@ extern void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList);
 
 extern void
-WLLT_OnSubmit(nsIContent* formNode, nsIDOMWindow* window);
+WLLT_OnSubmit(nsIContent* formNode, nsIDOMWindowInternal* window);
 
 extern void
 WLLT_FetchFromNetCenter();
@@ -85,7 +85,7 @@ extern void
 WLLT_ExpirePassword(PRBool* status);
 
 extern void
-WLLT_InitReencryptCallback(nsIDOMWindow* window);
+WLLT_InitReencryptCallback(nsIDOMWindowInternal* window);
 
 extern nsresult
 Wallet_Encrypt(const nsString& text, nsString& crypt);
@@ -99,11 +99,11 @@ extern PRUnichar * Wallet_Localize(char * genericString);
 
 extern char* Wallet_RandomName(char* suffix);
 
-extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window);
+extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window);
 
-extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window);
+extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window);
 
-extern void Wallet_GiveCaveat(nsIDOMWindow* window, nsIPrompt* dialog);
+extern void Wallet_GiveCaveat(nsIDOMWindowInternal* window, nsIPrompt* dialog);
 
 extern nsresult
 Wallet_Encrypt2(const nsString& text, nsString& crypt);

@@ -29,7 +29,7 @@
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMElement.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgFolderDataSource.h"
@@ -99,7 +99,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 		{
 			nsCOMPtr<nsISupports> nextWindow = nsnull;
 			windowEnumerator->GetNext(getter_AddRefs(nextWindow));
-			nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(nextWindow));
+			nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(nextWindow));
 			NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
 			nsCOMPtr<nsIDOMDocument> domDocument;

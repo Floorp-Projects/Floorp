@@ -37,7 +37,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWidget.h"
@@ -72,7 +72,7 @@ protected:
    NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
 
-   NS_IMETHOD GetWindowDOMWindow(nsIDOMWindow** aDOMWindow);
+   NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);
    NS_IMETHOD GetWindowDOMElement(nsIDOMElement** aDOMElement);
    NS_IMETHOD GetDOMElementById(char* aID, nsIDOMElement** aDOMElement);
    NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
@@ -99,7 +99,7 @@ protected:
    nsContentTreeOwner*     mPrimaryContentTreeOwner;
    nsCOMPtr<nsIWidget>     mWindow;
    nsCOMPtr<nsIDocShell>   mDocShell;
-   nsCOMPtr<nsIDOMWindow>  mDOMWindow;
+   nsCOMPtr<nsIDOMWindowInternal>  mDOMWindow;
    nsCOMPtr<nsIWeakReference> mParentWindow;
    nsVoidArray             mContentShells;
    PRBool                  mContinueModalLoop;

@@ -77,7 +77,7 @@ public:
 													PRInt32 aXPos, PRInt32 aYPos,
 													const nsString& aPopupType, const nsString& anAnchorAlignment,
 													const nsString& aPopupAlignment,
-													nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
+													nsIDOMWindowInternal* aWindow, nsIDOMWindowInternal** outPopup);
 	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 

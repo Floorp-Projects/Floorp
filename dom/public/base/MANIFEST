@@ -21,6 +21,7 @@
 #
 
 nsIDOMWindow.h
+nsIDOMWindowInternal.h
 nsIDOMLocation.h
 nsIDOMNSLocation.h
 nsIDOMNavigator.h

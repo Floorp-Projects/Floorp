@@ -105,7 +105,7 @@ typedef unsigned long HMTX;
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsEscape.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
@@ -363,6 +363,13 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
       *aInstancePtr = mScriptGlobal;
       NS_ADDREF((nsISupports*)*aInstancePtr);
+      return NS_OK;
+      }
+   else if(aIID.Equals(NS_GET_IID(nsIDOMWindowInternal)))
+      {
+      NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindowInternal),
+         aInstancePtr), NS_ERROR_FAILURE);
       return NS_OK;
       }
    else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)))

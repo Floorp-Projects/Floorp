@@ -40,7 +40,7 @@ interface nsIUrlWidget : nsISupports {
 	| Set the currently displayed url to a hidden edit control.		|
 	| Created the edit control, if not already created.				|
 	--------------------------------------------------------------*/
-    void SetURLToHiddenControl( in string aURL, in nsIDOMWindow parent );
+    void SetURLToHiddenControl( in string aURL, in nsIDOMWindowInternal parent );
 };
 
 //Used in navigator.js to instantiate and call this class.

@@ -32,7 +32,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIPref.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "nsIURI.h"
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
 
 // Utility function to open a messenger window and pass an argument string to it.
 static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
-    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
     JSContext *jsContext;
     nsresult rv;
     NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
@@ -117,7 +117,7 @@ static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
                                             "chrome,dialog=no,all",
                                             args );
             if ( argv ) {
-                nsCOMPtr<nsIDOMWindow> newWindow;
+                nsCOMPtr<nsIDOMWindowInternal> newWindow;
                 rv = hiddenWindow->OpenDialog( jsContext,
                                                argv,
                                                4,

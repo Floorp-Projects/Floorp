@@ -24,7 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsHistory.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"

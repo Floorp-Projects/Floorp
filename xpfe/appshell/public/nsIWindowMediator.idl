@@ -56,15 +56,15 @@ interface nsIWindowMediator: nsIRDFDataSource
 		Returns the window of type inType ( if null return any window type ) which has the most recent
 		time stamp
 	*/
-	nsIDOMWindow getMostRecentWindow( in wstring inType );
+	nsIDOMWindowInternal getMostRecentWindow( in wstring inType );
 	
 	/*
 		Get window given an RDF resource.
 	*/
-	nsIDOMWindow getWindowForResource( in wstring inResource );
+	nsIDOMWindowInternal getWindowForResource( in wstring inResource );
 	
 	/* */
-	nsIDOMWindow convertISupportsToDOMWindow( in nsISupports inWindow );
+	nsIDOMWindowInternal convertISupportsToDOMWindow( in nsISupports inWindow );
 	
 	/* Add the webshellwindow to the list */
 	[noscript] void registerWindow( in nsIXULWindow inWindow);

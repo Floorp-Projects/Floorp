@@ -27,7 +27,7 @@
 
 %{C++
 class nsILineTerm;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 %}
 
 [scriptable, uuid(0eb82b30-43a2-11d3-8e76-006008948af5)]
@@ -43,7 +43,7 @@ interface mozIXMLTermShell : nsISupports
    * @param args argument string to be passed to XMLterm
    *             (at the moment this just contains any initial input data)
    */
-  void Init(in nsIDOMWindow aContentWin, in wstring URL, in wstring args);
+  void Init(in nsIDOMWindowInternal aContentWin, in wstring URL, in wstring args);
 
   /** Closes XMLterm, freeing resources
    * @param aCookie document.cookie string for authentication

@@ -24,7 +24,7 @@
 #define _nsMsgStatusFeedback_h
 
 #include "nsIWebProgressListener.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -46,7 +46,7 @@ public:
   NS_DECL_NSIPROGRESSEVENTSINK
 
 protected:
-	nsIDOMWindow			*mWindow;
+	nsIDOMWindowInternal			*mWindow;
 	PRBool					m_meteorsSpinning;
 	PRInt32					m_lastPercent;
 	PRInt64					m_lastProgressTime;

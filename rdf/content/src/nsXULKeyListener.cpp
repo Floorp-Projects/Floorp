@@ -33,7 +33,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
 #include "nsINSEvent.h"
@@ -623,7 +623,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
   mDOMDocument->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
  
-  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
   commandDispatcher->GetFocusedWindow(getter_AddRefs(domWindow));
   piWindow = do_QueryInterface(domWindow);
 
@@ -640,7 +640,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   if (!handled) {
     while (piWindow && !handled) {
       // See if we have a XUL document. Give it a crack.
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(piWindow);
+      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(piWindow);
       nsCOMPtr<nsIDOMDocument> windowDoc;
       domWindow->GetDocument(getter_AddRefs(windowDoc));
       nsCOMPtr<nsIDOMXULDocument> xulWindowDoc = do_QueryInterface(windowDoc);

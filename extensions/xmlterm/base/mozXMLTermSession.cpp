@@ -1361,7 +1361,7 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
     if (NS_FAILED(result) || !docShell)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMWindow> outerDOMWindow;
+    nsCOMPtr<nsIDOMWindowInternal> outerDOMWindow;
     result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell,
                                               getter_AddRefs(outerDOMWindow));
 
@@ -2877,7 +2877,7 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
   if (NS_FAILED(result) || !docShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
   result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell,
                                            getter_AddRefs(domWindow));
 

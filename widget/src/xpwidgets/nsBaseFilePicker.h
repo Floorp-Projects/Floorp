@@ -34,7 +34,7 @@ public:
   nsBaseFilePicker(); 
   virtual ~nsBaseFilePicker();
 
-  NS_IMETHOD Init(nsIDOMWindow *aParent,
+  NS_IMETHOD Init(nsIDOMWindowInternal *aParent,
                   const PRUnichar *aTitle,
                   PRInt16 aMode);
 
@@ -46,7 +46,7 @@ protected:
 
 private:
 
-  NS_IMETHOD DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **aResult);
+  NS_IMETHOD DOMWindowToWidget(nsIDOMWindowInternal *dw, nsIWidget **aResult);
 };
 
 #endif // nsBaseFilePicker_h__

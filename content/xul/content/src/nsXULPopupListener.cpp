@@ -42,7 +42,7 @@
 #include "nsRDFCID.h"
 
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -645,7 +645,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   if (global) {
     if (NS_OK == global->GetContext(getter_AddRefs(context))) {
       // Get the DOM window
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
         // Find out if we're anchored.
         nsAutoString anchorAlignment; anchorAlignment.AssignWithConversion("none");

@@ -23,7 +23,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -54,7 +54,7 @@ nsBaseFilePicker::~nsBaseFilePicker()
 }
 
 /* XXX aaaarrrrrrgh! */
-NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **aResult)
+NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindowInternal *dw, nsIWidget **aResult)
 {
   nsresult rv = NS_ERROR_FAILURE;
   *aResult = nsnull;
@@ -96,7 +96,7 @@ NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
+NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindowInternal *aParent,
                                      const PRUnichar *aTitle,
                                      PRInt16 aMode)
 {

@@ -106,7 +106,7 @@ class nsMsgCompose : public nsIMsgCompose
 
 	nsMsgComposeSendListener      *m_sendListener;
 	nsIEditorShell                *m_editor;
-	nsIDOMWindow                  *m_window;
+	nsIDOMWindowInternal                  *m_window;
   nsCOMPtr<nsIBaseWindow>        m_baseWindow;
 	nsMsgCompFields               *m_compFields;
 	nsCOMPtr<nsIMsgIdentity>      m_identity;

@@ -39,7 +39,7 @@
 #include "nsWidgetsCID.h"
 #include "nsMenuFrame.h"
 #include "nsIPopupSetFrame.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMScreen.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPresShell.h"
@@ -561,7 +561,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // Compute info about the screen dimensions. Because of multiple monitor systems,
   // the left or top sides of the screen may be in negative space (main monitor is on the
   // right, etc). We need to be sure to do the right thing.
-  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
+  nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(scriptGlobalObject));
   nsCOMPtr<nsIDOMScreen> screen;
   window->GetScreen(getter_AddRefs(screen));
   PRInt32 screenWidth = 0, screenHeight = 0;

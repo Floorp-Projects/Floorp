@@ -26,7 +26,7 @@
 #include "stdio.h"
 #include "nsIWalletService.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsWalletPreview.h"
@@ -88,7 +88,7 @@ static void DOMWindowToTreeOwner(
 }
 
 NS_IMETHODIMP
-WalletPreviewImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
+WalletPreviewImpl::SetValue(const PRUnichar* aValue, nsIDOMWindowInternal* win)
 {
   /* close the window */
   if (!win) {

@@ -26,7 +26,7 @@
 #include "stdio.h"
 #include "nsICookieService.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCookieViewer.h"
@@ -88,7 +88,7 @@ CookieViewerImpl::GetPermissionValue(PRInt32 type, char** aValue)
 }
 
 NS_IMETHODIMP
-CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
+CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindowInternal* win)
 {
   /* process the value */
   NS_PRECONDITION(aValue != nsnull, "null ptr");
@@ -121,7 +121,7 @@ CookieViewerImpl::BlockImage(const char* imageURL)
 }
 
 NS_IMETHODIMP
-CookieViewerImpl::AddPermission(nsIDOMWindow* aWin, PRBool permission, PRInt32 type)
+CookieViewerImpl::AddPermission(nsIDOMWindowInternal* aWin, PRBool permission, PRInt32 type)
 {
   nsresult rv;
 

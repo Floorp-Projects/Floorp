@@ -38,7 +38,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsICSSLoader.h"
@@ -618,7 +618,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   {
     if(!mContentWindow)
       return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
       cwP->Focus();
 
@@ -639,7 +639,7 @@ nsresult nsEditorShell::GetDocumentEventReceiver(nsIDOMEventReceiver **aEventRec
 
   if(!mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
   if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     cwP->GetDocument(getter_AddRefs(domDoc));
   //mContentWindow->GetDocument(getter_AddRefs(domDoc));
@@ -663,7 +663,7 @@ nsresult nsEditorShell::GetDocumentEventReceiver(nsIDOMEventReceiver **aEventRec
 
 
 NS_IMETHODIMP    
-nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
+nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (!aWin)
@@ -690,7 +690,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
   nsCOMPtr<nsIControllers> controllers;      
   if(!mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
   if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     cwP->GetControllers(getter_AddRefs(controllers));
   //rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
@@ -729,13 +729,13 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
 
 
 NS_IMETHODIMP    
-nsEditorShell::GetContentWindow(nsIDOMWindow * *aContentWindow)
+nsEditorShell::GetContentWindow(nsIDOMWindowInternal * *aContentWindow)
 {
   NS_ENSURE_ARG_POINTER(aContentWindow);
 
   if(!mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
   if (!cwP) 
     return NS_ERROR_NOT_INITIALIZED;
   
@@ -745,7 +745,7 @@ nsEditorShell::GetContentWindow(nsIDOMWindow * *aContentWindow)
 
 
 NS_IMETHODIMP    
-nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
+nsEditorShell::SetWebShellWindow(nsIDOMWindowInternal* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (!aWin)
@@ -784,7 +784,7 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::GetWebShellWindow(nsIDOMWindow * *aWebShellWindow)
+nsEditorShell::GetWebShellWindow(nsIDOMWindowInternal * *aWebShellWindow)
 {
   NS_ENSURE_ARG_POINTER(aWebShellWindow);
   NS_IF_ADDREF(*aWebShellWindow = mWebShellWindow);
@@ -1603,7 +1603,7 @@ nsEditorShell::TransferDocumentStateListeners()
 }
 
 NS_IMETHODIMP
-nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWindow* inCheckWindow, PRBool *aDidFind)
+nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWindowInternal* inCheckWindow, PRBool *aDidFind)
 {
   if (!inCheckWindow) return NS_ERROR_NULL_POINTER;
   *aDidFind = PR_FALSE;
@@ -1615,7 +1615,7 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   nsFileURL    fileURL(fileURLString);
   nsFileSpec   fileSpec(fileURL);
 
-  nsCOMPtr<nsIDOMWindow> contentWindow;
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
   inCheckWindow->Get_content(getter_AddRefs(contentWindow));
   if (contentWindow)
   {
@@ -1701,7 +1701,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               PRBool retVal = PR_FALSE;
               if(!mContentWindow)
                 return NS_ERROR_NOT_INITIALIZED;
-              nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+              nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
               if (!cwP) return NS_ERROR_NOT_INITIALIZED;
 
               res = dialog->Prompt(cwP, captionStr.GetUnicode(), msgStr1.GetUnicode(),
@@ -1854,7 +1854,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               fileWidget->SetDefaultString(fileName);
 
             nsFileDlgResults dialogResult;
-            // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
+            // 1ST PARAM SHOULD BE nsIDOMWindowInternal*, not nsIWidget*
             dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
             delete [] titles;
             delete [] filters;
@@ -1945,7 +1945,7 @@ nsEditorShell::Print()
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType, PRUnichar **_retval)
+nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *filterType, PRUnichar **_retval)
 {
   nsAutoString FilterType(filterType);
   PRBool htmlFilter = FilterType.EqualsIgnoreCase("html");
@@ -2895,7 +2895,7 @@ nsEditorShell::DoFind(PRBool aFindNext)
   {
     if(!mContentWindow)
       return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     rv = findComponent->CreateContext(cwP, nsnull, getter_AddRefs(mSearchContext));
   }
@@ -3038,7 +3038,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
       PRInt32 buttonPressed = 0; 
       if(!mContentWindow)
         return result;
-      nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+      nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
       if (!cwP) return result;
       rv = dialog->DoDialog( cwP, block, "chrome://global/content/commonDialog.xul" ); 
       block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed ); 
@@ -3063,7 +3063,7 @@ nsEditorShell::Confirm(const nsString& aTitle, const nsString& aQuestion)
   {
     if(!mContentWindow)
       return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     rv = dialog->Confirm(cwP, aTitle.GetUnicode(), aQuestion.GetUnicode(), &result);
   }
@@ -3082,7 +3082,7 @@ nsEditorShell::AlertWithTitle(const PRUnichar *aTitle, const PRUnichar *aMsg)
   {
     if(!mContentWindow)
       return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     rv = dialog->Alert(cwP, aTitle, aMsg);
   }
@@ -3099,7 +3099,7 @@ nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
   {
     if(!mContentWindow)
       return;
-    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return;
     rv = dialog->Alert(cwP, aTitle.GetUnicode(), aMsg.GetUnicode());
   }
@@ -5256,7 +5256,7 @@ nsEditorShell::DoControllerCommand(nsString& aCommand)
   if(!mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
+  nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
   if (!cwP) return NS_ERROR_NOT_INITIALIZED;
   nsresult rv = cwP->GetControllers(getter_AddRefs(controllers));      
   if (NS_FAILED(rv)) return rv;

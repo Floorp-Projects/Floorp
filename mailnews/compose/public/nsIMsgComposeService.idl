@@ -29,7 +29,7 @@
 interface nsIURI;
 
 %{ C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 %}
 
 [scriptable, uuid(B004F4AE-1AC2-11d3-A715-0060B0EB39B5)]
@@ -56,7 +56,7 @@ interface nsIMsgComposeService : nsISupports {
 										in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
 
 	/* ... */
-	nsIMsgCompose InitCompose(in nsIDOMWindow aWindow,
+	nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow,
                               in wstring originalMsgURI,
                               in long type, in long format,
                               in long compFieldsAddr,

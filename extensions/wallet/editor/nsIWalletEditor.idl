@@ -29,13 +29,13 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 %{C++
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 %}
 
 [scriptable, uuid(0A904580-1C88-11d3-ABA9-0080C787AD96)]
 interface nsIWalletEditor : nsISupports
 {
-    void SetValue(in wstring aValue, in nsIDOMWindow win);
+    void SetValue(in wstring aValue, in nsIDOMWindowInternal win);
     wstring GetValue();
 };
 

@@ -32,7 +32,7 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIURI.h"
 
 class nsString;
@@ -55,7 +55,7 @@ public:
    *                        will be loaded in (form could have target attribute set)
    *   @param actionURL- URL to which the form will be submitted.
    */
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL) = 0;
+  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL) = 0;
 
 
 };

@@ -179,7 +179,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
 }
 
 /* void KickIt (); */
-NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindow *aDocShell)
+NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindowInternal *aDocShell)
 {
   nsresult rv = NS_OK;
   PRInt32  stateVar;

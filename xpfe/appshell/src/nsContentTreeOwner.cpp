@@ -31,7 +31,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPrompt.h"
 #include "nsIWindowMediator.h"
@@ -200,7 +200,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 
 NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
 {
-   nsCOMPtr<nsIDOMWindow> domWindow;
+   nsCOMPtr<nsIDOMWindowInternal> domWindow;
    mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
    nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
    if(!piDOMWindow)

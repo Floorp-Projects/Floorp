@@ -58,7 +58,7 @@ nsMsgComposeService::~nsMsgComposeService()
 
 // Utility function to open a message compose window and pass an argument string to it.
 static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
-    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
     JSContext *jsContext;
     nsresult rv;
     NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
@@ -76,7 +76,7 @@ static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
                                             "chrome,dialog=no,all",
                                             args );
             if ( argv ) {
-                nsCOMPtr<nsIDOMWindow> newWindow;
+                nsCOMPtr<nsIDOMWindowInternal> newWindow;
                 rv = hiddenWindow->OpenDialog( jsContext,
                                                argv,
                                                4,
@@ -305,7 +305,7 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 	return rv;
 }
 
-nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow,
+nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
                                           const PRUnichar *originalMsgURI,
                                           PRInt32 type,
                                           PRInt32 format,

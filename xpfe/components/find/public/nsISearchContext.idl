@@ -48,6 +48,6 @@ interface nsISearchContext : nsISupports {
     attribute boolean searchBackwards;
     attribute boolean caseSensitive;
     attribute boolean wrapSearch;
-    readonly attribute nsIDOMWindow targetWindow;
-    attribute nsIDOMWindow findDialog;
+    readonly attribute nsIDOMWindowInternal targetWindow;
+    attribute nsIDOMWindowInternal findDialog;
 };

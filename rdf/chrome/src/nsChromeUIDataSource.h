@@ -29,7 +29,7 @@ class nsICSSLoader;
 class nsISimpleEnumerator;
 class nsSupportsHashtable;
 class nsIRDFContainer;
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 class nsIDocument;
 
 #include "nsIRDFDataSource.h"

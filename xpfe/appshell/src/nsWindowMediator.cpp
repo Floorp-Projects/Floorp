@@ -27,7 +27,7 @@
 #include "nsVoidArray.h"
 #include "rdf.h"
 #include "nsIBaseWindow.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -64,7 +64,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
 static	nsIRDFService* gRDFService = nsnull;
 
 static nsresult GetDOMWindow( nsIXULWindow* inWindow,
-                  nsCOMPtr< nsIDOMWindow>& outDOMWindow );
+                  nsCOMPtr< nsIDOMWindowInternal>& outDOMWindow );
 static nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell);
 static void GetAttribute( nsIXULWindow* inWindow,
               const nsAutoString& inAttribute, nsAutoString& outValue );
@@ -90,7 +90,7 @@ nsresult NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
     return rv;
 }
 
-nsresult GetDOMWindow( nsIXULWindow* inWindow, nsCOMPtr< nsIDOMWindow>& outDOMWindow )
+nsresult GetDOMWindow( nsIXULWindow* inWindow, nsCOMPtr< nsIDOMWindowInternal>& outDOMWindow )
 {
 	nsCOMPtr<nsIDocShell> docShell;
 
@@ -317,7 +317,7 @@ NS_IMETHODIMP nsWindowEnumerator::GetNext(nsISupports **retval)
     if(mEnumXULWindow)
       CallQueryInterface(mCurrentPosition->mWindow, retval);
     else {
-      nsCOMPtr<nsIDOMWindow> domWindow;
+      nsCOMPtr<nsIDOMWindowInternal> domWindow;
       GetDOMWindow(mCurrentPosition->mWindow, domWindow);
       CallQueryInterface(domWindow, retval);
     }
@@ -532,7 +532,7 @@ PRInt32 nsWindowMediator::RemoveEnumerator( nsWindowEnumerator* inEnumerator)
 	Returns the window of type inType ( if null return any window type ) which has the most recent
 	time stamp
 */
-NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, nsIDOMWindow** outWindow ) {
+NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, nsIDOMWindowInternal** outWindow ) {
 
   *outWindow = NULL;
   PRInt32 lastTimeStamp = -1;
@@ -560,7 +560,7 @@ NS_IMETHODIMP nsWindowMediator::GetMostRecentWindow( const PRUnichar* inType, ns
   }
 
   if (mostRecentWindow) {
-    nsCOMPtr <nsIDOMWindow> DOMWindow;
+    nsCOMPtr <nsIDOMWindowInternal> DOMWindow;
     if( NS_SUCCEEDED ( GetDOMWindow( mostRecentWindow, DOMWindow  ) ) ) {	
       *outWindow = DOMWindow;
       (*outWindow)->AddRef();
@@ -863,7 +863,7 @@ NS_IMETHODIMP nsWindowMediator::SetZPosition(
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResource, nsIDOMWindow** outWindow )
+NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResource, nsIDOMWindowInternal** outWindow )
 {
 	if ( outWindow == NULL )
 		return NS_ERROR_INVALID_ARG;
@@ -885,7 +885,7 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 
 		if ( NS_SUCCEEDED( info->mRDFID->EqualsString( resourceString, &isMatch) ) && isMatch ) 
 		{
-			nsCOMPtr <nsIDOMWindow> DOMWindow;
+			nsCOMPtr <nsIDOMWindowInternal> DOMWindow;
 			if( NS_SUCCEEDED ( GetDOMWindow( info->mWindow, DOMWindow  ) ) )
 			{	
 				*outWindow = DOMWindow;
@@ -905,9 +905,9 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsWindowMediator::ConvertISupportsToDOMWindow( nsISupports* inInterface, nsIDOMWindow** outWindow )
+NS_IMETHODIMP nsWindowMediator::ConvertISupportsToDOMWindow( nsISupports* inInterface, nsIDOMWindowInternal** outWindow )
 {
-   return inInterface->QueryInterface(NS_GET_IID(nsIDOMWindow)  , (void**) outWindow );
+   return inInterface->QueryInterface(NS_GET_IID(nsIDOMWindowInternal)  , (void**) outWindow );
 } 
 
 

@@ -24,7 +24,7 @@
 
 #include "nsIAppShellComponentImpl.h"
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
 #include "nsIObserver.h"
@@ -101,7 +101,7 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
 
     if ( parent && observer ) {
     // Open the dialog from C++.
-    nsCOMPtr<nsIDOMWindow> parentWindow = do_QueryInterface( parent, &rv );
+    nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_QueryInterface( parent, &rv );
 
     if ( NS_SUCCEEDED( rv ) ) {
         // Get JS context from parent window.
@@ -139,7 +139,7 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
                                                             "chrome",
                                                             arg );
                             if ( argv ) {
-                                nsIDOMWindow *newWindow;
+                                nsIDOMWindowInternal *newWindow;
                                 rv = parentWindow->OpenDialog( jsContext, argv, 4, &newWindow );
                                 if ( NS_SUCCEEDED( rv ) ) {
                                     newWindow->Release();

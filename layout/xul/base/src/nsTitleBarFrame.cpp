@@ -34,7 +34,7 @@
 
 #include "nsIWidget.h"
 #include "nsIPresContext.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIViewManager.h"
 
@@ -161,7 +161,7 @@ nsTitleBarFrame::HandleEvent(nsIPresContext* aPresContext,
 			   presShell->GetDocument(getter_AddRefs(document));
 			   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
 			   document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-			   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
+			   nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(scriptGlobalObject));
 
 
 

@@ -20,7 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsCommonDialogs.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptGlobalObject.h"
@@ -47,7 +47,7 @@ nsCommonDialogs::~nsCommonDialogs()
 {
 }
 
-NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle, const PRUnichar *inMsg)
+NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindowInternal *inParent,  const PRUnichar *inWindowTitle, const PRUnichar *inMsg)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -75,7 +75,7 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *i
 
 
 
-NS_IMETHODIMP nsCommonDialogs::AlertCheck(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle,const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue)
+NS_IMETHODIMP nsCommonDialogs::AlertCheck(nsIDOMWindowInternal *inParent,  const PRUnichar *inWindowTitle,const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -106,7 +106,7 @@ NS_IMETHODIMP nsCommonDialogs::AlertCheck(nsIDOMWindow *inParent,  const PRUnich
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindowInternal *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -135,7 +135,7 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle,const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindowInternal *inParent,  const PRUnichar *inWindowTitle,const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -174,7 +174,7 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUni
    a few bytes of memory
 */
 NS_IMETHODIMP nsCommonDialogs::UniversalDialog
-	(nsIDOMWindow *inParent,
+	(nsIDOMWindowInternal *inParent,
 	const PRUnichar *inTitleMessage,
 	const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
 	const PRUnichar *inMsg, /* main message for dialog */
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsCommonDialogs::UniversalDialog
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, const PRUnichar *inDefaultText, PRUnichar **result, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindowInternal *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, const PRUnichar *inDefaultText, PRUnichar **result, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -311,7 +311,7 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRUnichar **outUser, PRUnichar **outPassword, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindowInternal *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRUnichar **outUser, PRUnichar **outPassword, PRBool *_retval)
 {
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -346,7 +346,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	return rv;
 }
 
-NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRUnichar **outPassword, PRBool *_retval)
+NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindowInternal *inParent,  const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRUnichar **outPassword, PRBool *_retval)
 {	
 	nsresult rv;
 	nsIDialogParamBlock* block = NULL;
@@ -379,7 +379,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 
 
 
-nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
+nsresult nsCommonDialogs::Select(nsIDOMWindowInternal *inParent, const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
 {	
 	nsresult rv;
 	const PRInt32 eSelection = 2 ;
@@ -422,7 +422,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
 }
 
 
- NS_IMETHODIMP nsCommonDialogs::DoDialog(nsIDOMWindow* inParent, nsIDialogParamBlock *ioParamBlock, const char *inChromeURL)
+ NS_IMETHODIMP nsCommonDialogs::DoDialog(nsIDOMWindowInternal* inParent, nsIDialogParamBlock *ioParamBlock, const char *inChromeURL)
  {
   nsresult rv = NS_OK;
 
@@ -449,7 +449,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
                                                     (nsISupports*)ioParamBlock
                                                   );
                     if ( argv ) {
-                        nsCOMPtr<nsIDOMWindow> newWindow;
+                        nsCOMPtr<nsIDOMWindowInternal> newWindow;
                         rv = inParent->OpenDialog( jsContext, argv, 4, getter_AddRefs(newWindow) );
                         JS_PopArguments( jsContext, stackPtr );
                     }

@@ -466,8 +466,8 @@ NS_METHOD QMozillaContainer::CreatePopup( nsIDOMElement* aElement,
 																					const nsString& aPopupType, 
 																					const nsString& anAnchorAlignment,
 																					const nsString& aPopupAlignment,
-																					nsIDOMWindow* aWindow, 
-																					nsIDOMWindow** outPopup)
+																					nsIDOMWindowInternal* aWindow, 
+																					nsIDOMWindowInternal** outPopup)
 {
 	return NS_OK;
 }

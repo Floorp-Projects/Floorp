@@ -1,16 +1,30 @@
+
 interface Window {
 /* IID: { 0xa6cf906b, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+       readonly attribute  Document document;
+       readonly attribute  Window parent;
+       readonly replaceable attribute  Window top;
+       readonly attribute  BarProp scrollbars;
+       readonly attribute  WindowCollection frames;
+       attribute  wstring name;
+       readonly attribute  long scrollX;
+       readonly attribute  long scrollY;
+       void  scrollTo(in long xScroll, in long yScroll);
+       void  scrollBy(in long xScrollDif, in long yScrollDif);
+       Selection getSelection();
+};
+
+interface WindowInternal : Window {
+/* IID: { 0x9c911860, 0x7dd9, 0x11d4, \
+  { 0x9a, 0x83, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } } */
         
-        readonly attribute  Window window;
-        readonly attribute  Window self;
-        readonly attribute  Document document;
+        readonly attribute  WindowInternal window;
+        readonly attribute  WindowInternal self;
         readonly attribute  Navigator navigator;
         readonly attribute  Screen screen;
         readonly attribute  History history;
-        readonly attribute  Window parent;
-        readonly replaceable attribute  Window top;
-        readonly replaceable attribute  Window _content;
+        readonly replaceable attribute  WindowInternal _content;
         readonly replaceable attribute  xpidl nsISidebar sidebar;
         readonly replaceable attribute  xpidl nsIPrompt prompter;
 
@@ -19,17 +33,14 @@ interface Window {
         readonly replaceable attribute  BarProp locationbar;
         readonly replaceable attribute  BarProp personalbar;
         readonly attribute  BarProp statusbar;
-        readonly attribute  BarProp scrollbars;
         readonly attribute  BarProp directories;
         readonly attribute  boolean closed;
-        readonly attribute  WindowCollection frames;
         readonly attribute  Crypto crypto;
         readonly attribute  Pkcs11 pkcs11;
         readonly replaceable attribute  xpidl nsIControllers controllers;
-                 attribute  Window opener;
+                 attribute  WindowInternal opener;
                  attribute  wstring status;
                  attribute  wstring defaultStatus;
-                 attribute  wstring name;
 		 attribute  jsval location;
 		 attribute  DOMString title;
                  attribute  long innerWidth;
@@ -40,8 +51,6 @@ interface Window {
                  attribute  long screenY;
                  attribute  long pageXOffset;
                  attribute  long pageYOffset;
-        readonly attribute  long scrollX;
-        readonly attribute  long scrollY;
 		readonly attribute  unsigned long length;
 
         void  dump(in wstring str);
@@ -66,8 +75,6 @@ interface Window {
         void  sizeToContent();
         void  GetAttention();
 				void  scroll(in long xScroll, in long yScroll);
-        void  scrollTo(in long xScroll, in long yScroll);
-        void  scrollBy(in long xScrollDif, in long yScrollDif);
 
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);
@@ -81,8 +88,8 @@ interface Window {
         void disableExternalCapture();
         void setCursor(in DOMString cursor);
 
-        Window open(/* ... */);
-        Window openDialog(/* ... */);
+        WindowInternal open(/* ... */);
+        WindowInternal openDialog(/* ... */);
         noscript void  close();
         void  close(/* ... */);
 
@@ -90,7 +97,6 @@ interface Window {
 
 		DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
-        Selection getSelection();
 
 };
 

@@ -505,7 +505,7 @@ NS_METHOD
 nsGtkMozRemoteHelper::OpenURLDialog  (void)
 {
   nsresult rv;
-  nsCOMPtr<nsIDOMWindow> lastWindow;
+  nsCOMPtr<nsIDOMWindowInternal> lastWindow;
   nsString name;
   nsString url;
   
@@ -547,7 +547,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
 
   if (aNewWindow)
   {
-    nsCOMPtr<nsIDOMWindow> parentWindow;
+    nsCOMPtr<nsIDOMWindowInternal> parentWindow;
     rv = GetHiddenWindow(getter_AddRefs(parentWindow));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
@@ -560,8 +560,8 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
   }
   else
   {
-    nsCOMPtr<nsIDOMWindow>          lastUsedWindow;
-    nsCOMPtr<nsIDOMWindow>          innerWindow;
+    nsCOMPtr<nsIDOMWindowInternal>          lastUsedWindow;
+    nsCOMPtr<nsIDOMWindowInternal>          innerWindow;
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     nsCOMPtr<nsIDocShell>           docShell;
     nsCOMPtr<nsIURI>                uri;
@@ -713,7 +713,7 @@ nsGtkMozRemoteHelper::AddBookmark    (const char *aURL, const char *aTitle)
 }
 
 NS_METHOD
-nsGtkMozRemoteHelper::GetHiddenWindow (nsIDOMWindow **_retval)
+nsGtkMozRemoteHelper::GetHiddenWindow (nsIDOMWindowInternal **_retval)
 {
   nsresult rv;
   NS_WITH_PROXIED_SERVICE(nsIAppShellService, appShell,
@@ -731,20 +731,20 @@ nsGtkMozRemoteHelper::GetHiddenWindow (nsIDOMWindow **_retval)
   if(NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
+  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(docShell));
   *_retval = domWindow;
   NS_IF_ADDREF(*_retval);
 
   return NS_OK;
 }
 
-NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindow **_retval)
+NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindowInternal **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsresult rv;
   nsString browserString;
-  nsCOMPtr<nsIDOMWindow> outerWindow;
+  nsCOMPtr<nsIDOMWindowInternal> outerWindow;
   browserString.AssignWithConversion("navigator:browser");
   
   // get the window mediator service
@@ -761,7 +761,7 @@ NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindow **_retval)
   return NS_OK;
 }
 
-NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWindow *aParent,
+NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWindowInternal *aParent,
 					       const char *aWindowFeatures,
 					       const PRUnichar *aName, const PRUnichar *aURL)
 {
@@ -769,7 +769,7 @@ NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWin
   NS_ENSURE_ARG_POINTER(aWindowFeatures);
   NS_ENSURE_ARG_POINTER(aParent);
 
-  nsCOMPtr<nsIDOMWindow> returnedWindow;
+  nsCOMPtr<nsIDOMWindowInternal> returnedWindow;
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObj = do_QueryInterface(aParent);
   JSContext *jsContext = nsnull;
 

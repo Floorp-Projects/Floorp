@@ -90,7 +90,7 @@
 #include "nsIDOMRange.h" //for selection settting helper func
 #include "nsRange.h" //for selection settting helper func (i cant believe this is exported!?)
 #include "nsIScriptGlobalObject.h" //needed for notify selection changed to update the menus ect.
-#include "nsIDOMWindow.h" //needed for notify selection changed to update the menus ect.
+#include "nsIDOMWindowInternal.h" //needed for notify selection changed to update the menus ect.
 #include "nsITextContent.h" //needed to create initial text control content
 
 #include "nsITransactionManager.h"
@@ -518,7 +518,7 @@ nsresult nsTextInputListener::UpdateTextInputCommands(const nsString& commandsTo
   if (NS_FAILED(rv) || !scriptGlobalObject ) 
     return rv?rv:NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
+  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
   if (NS_FAILED(rv) || !domWindow ) 
     return rv?rv:NS_ERROR_FAILURE;
 

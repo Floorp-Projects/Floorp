@@ -32,7 +32,7 @@
 #include "nsIDOMXULElement.h"
 %}
 
-interface nsIDOMWindow;
+interface nsIDOMWindowInternal;
 interface nsIFileSpec;
 
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
@@ -43,7 +43,7 @@ interface nsIAddressBook : nsISupports {
     void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsISupportsArray parentDir, in nsIDOMNodeList node);
     void printCard();
     void printAddressbook();
-    void setDocShellWindow(in nsIDOMWindow win);
+    void setDocShellWindow(in nsIDOMWindowInternal win);
 	void importAddressBook();
     void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating);
     void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);

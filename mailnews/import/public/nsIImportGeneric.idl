@@ -28,7 +28,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface nsIDOMWindowInternal;
 interface nsISupportsWString;
 
 [scriptable, uuid(9b5c20c0-2348-11d3-a206-00a0cc26da63)]

@@ -45,6 +45,7 @@
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMHistory.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMEventListener.h"
@@ -72,6 +73,7 @@ static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
+static NS_DEFINE_IID(kIWindowInternalIID, NS_IDOMWINDOWINTERNAL_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -88,46 +90,46 @@ static NS_DEFINE_IID(kIWindowEventOwnerIID, NS_IDOMWINDOWEVENTOWNER_IID);
 // Window property ids
 //
 enum Window_slots {
-  WINDOW_WINDOW = -1,
-  WINDOW_SELF = -2,
-  WINDOW_DOCUMENT = -3,
-  WINDOW_NAVIGATOR = -4,
-  WINDOW_SCREEN = -5,
-  WINDOW_HISTORY = -6,
-  WINDOW_PARENT = -7,
-  WINDOW_TOP = -8,
-  WINDOW__CONTENT = -9,
-  WINDOW_SIDEBAR = -10,
-  WINDOW_PROMPTER = -11,
-  WINDOW_MENUBAR = -12,
-  WINDOW_TOOLBAR = -13,
-  WINDOW_LOCATIONBAR = -14,
-  WINDOW_PERSONALBAR = -15,
-  WINDOW_STATUSBAR = -16,
-  WINDOW_SCROLLBARS = -17,
-  WINDOW_DIRECTORIES = -18,
-  WINDOW_CLOSED = -19,
-  WINDOW_FRAMES = -20,
-  WINDOW_CRYPTO = -21,
-  WINDOW_PKCS11 = -22,
-  WINDOW_CONTROLLERS = -23,
-  WINDOW_OPENER = -24,
-  WINDOW_STATUS = -25,
-  WINDOW_DEFAULTSTATUS = -26,
-  WINDOW_NAME = -27,
-  WINDOW_LOCATION = -28,
-  WINDOW_TITLE = -29,
-  WINDOW_INNERWIDTH = -30,
-  WINDOW_INNERHEIGHT = -31,
-  WINDOW_OUTERWIDTH = -32,
-  WINDOW_OUTERHEIGHT = -33,
-  WINDOW_SCREENX = -34,
-  WINDOW_SCREENY = -35,
-  WINDOW_PAGEXOFFSET = -36,
-  WINDOW_PAGEYOFFSET = -37,
-  WINDOW_SCROLLX = -38,
-  WINDOW_SCROLLY = -39,
-  WINDOW_LENGTH = -40,
+  WINDOW_DOCUMENT = -1,
+  WINDOW_PARENT = -2,
+  WINDOW_TOP = -3,
+  WINDOW_SCROLLBARS = -4,
+  WINDOW_FRAMES = -5,
+  WINDOW_NAME = -6,
+  WINDOW_SCROLLX = -7,
+  WINDOW_SCROLLY = -8,
+  WINDOWINTERNAL_WINDOW = -9,
+  WINDOWINTERNAL_SELF = -10,
+  WINDOWINTERNAL_NAVIGATOR = -11,
+  WINDOWINTERNAL_SCREEN = -12,
+  WINDOWINTERNAL_HISTORY = -13,
+  WINDOWINTERNAL__CONTENT = -14,
+  WINDOWINTERNAL_SIDEBAR = -15,
+  WINDOWINTERNAL_PROMPTER = -16,
+  WINDOWINTERNAL_MENUBAR = -17,
+  WINDOWINTERNAL_TOOLBAR = -18,
+  WINDOWINTERNAL_LOCATIONBAR = -19,
+  WINDOWINTERNAL_PERSONALBAR = -20,
+  WINDOWINTERNAL_STATUSBAR = -21,
+  WINDOWINTERNAL_DIRECTORIES = -22,
+  WINDOWINTERNAL_CLOSED = -23,
+  WINDOWINTERNAL_CRYPTO = -24,
+  WINDOWINTERNAL_PKCS11 = -25,
+  WINDOWINTERNAL_CONTROLLERS = -26,
+  WINDOWINTERNAL_OPENER = -27,
+  WINDOWINTERNAL_STATUS = -28,
+  WINDOWINTERNAL_DEFAULTSTATUS = -29,
+  WINDOWINTERNAL_LOCATION = -30,
+  WINDOWINTERNAL_TITLE = -31,
+  WINDOWINTERNAL_INNERWIDTH = -32,
+  WINDOWINTERNAL_INNERHEIGHT = -33,
+  WINDOWINTERNAL_OUTERWIDTH = -34,
+  WINDOWINTERNAL_OUTERHEIGHT = -35,
+  WINDOWINTERNAL_SCREENX = -36,
+  WINDOWINTERNAL_SCREENY = -37,
+  WINDOWINTERNAL_PAGEXOFFSET = -38,
+  WINDOWINTERNAL_PAGEYOFFSET = -39,
+  WINDOWINTERNAL_LENGTH = -40,
   WINDOWEVENTOWNER_ONMOUSEDOWN = -41,
   WINDOWEVENTOWNER_ONMOUSEUP = -42,
   WINDOWEVENTOWNER_ONCLICK = -43,
@@ -176,77 +178,12 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case WINDOW_WINDOW:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_WINDOW, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
-          rv = a->GetWindow(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_SELF:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SELF, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
-          rv = a->GetSelf(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
       case WINDOW_DOCUMENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DOCUMENT, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsIDOMDocument* prop;
           rv = a->GetDocument(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_NAVIGATOR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_NAVIGATOR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMNavigator* prop;
-          rv = a->GetNavigator(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_SCREEN:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREEN, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMScreen* prop;
-          rv = a->GetScreen(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_HISTORY:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_HISTORY, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMHistory* prop;
-          rv = a->GetHistory(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -267,19 +204,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_STATUSBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUSBAR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetStatusbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
       case WINDOW_SCROLLBARS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBARS, PR_FALSE);
@@ -289,31 +213,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_DIRECTORIES:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DIRECTORIES, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetDirectories(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_CLOSED:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLOSED, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          rv = a->GetClosed(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = BOOLEAN_TO_JSVAL(prop);
           }
         }
         break;
@@ -331,69 +230,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_CRYPTO:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CRYPTO, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMCrypto* prop;
-          rv = a->GetCrypto(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_PKCS11:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PKCS11, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMPkcs11* prop;
-          rv = a->GetPkcs11(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_OPENER:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENER, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
-          rv = a->GetOpener(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_STATUS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetStatus(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_DEFAULTSTATUS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DEFAULTSTATUS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetDefaultStatus(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
       case WINDOW_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_NAME, PR_FALSE);
@@ -402,122 +238,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetName(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_LOCATION:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATION, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          rv = a->GetLocation(vp);
-        }
-        break;
-      }
-      case WINDOW_TITLE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetTitle(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_INNERWIDTH:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetInnerWidth(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_INNERHEIGHT:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERHEIGHT, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetInnerHeight(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_OUTERWIDTH:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERWIDTH, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetOuterWidth(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_OUTERHEIGHT:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERHEIGHT, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetOuterHeight(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_SCREENX:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENX, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetScreenX(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_SCREENY:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENY, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetScreenY(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_PAGEXOFFSET:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEXOFFSET, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetPageXOffset(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case WINDOW_PAGEYOFFSET:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEYOFFSET, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          rv = a->GetPageYOffset(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
           }
         }
         break;
@@ -546,14 +266,464 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_LENGTH:
+      case WINDOWINTERNAL_WINDOW:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LENGTH, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_WINDOW, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetWindow(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_SELF:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SELF, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetSelf(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_NAVIGATOR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_NAVIGATOR, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNavigator* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetNavigator(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_SCREEN:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SCREEN, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMScreen* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetScreen(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_HISTORY:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_HISTORY, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHistory* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetHistory(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_STATUSBAR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STATUSBAR, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetStatusbar(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_DIRECTORIES:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DIRECTORIES, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetDirectories(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_CLOSED:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CLOSED, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetClosed(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_CRYPTO:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CRYPTO, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMCrypto* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetCrypto(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_PKCS11:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PKCS11, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMPkcs11* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetPkcs11(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_OPENER:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OPENER, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetOpener(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_STATUS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STATUS, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetStatus(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_DEFAULTSTATUS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DEFAULTSTATUS, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetDefaultStatus(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_LOCATION:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LOCATION, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetLocation(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_TITLE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_TITLE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetTitle(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_INNERWIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_INNERWIDTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetInnerWidth(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_INNERHEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_INNERHEIGHT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetInnerHeight(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_OUTERWIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OUTERWIDTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetOuterWidth(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_OUTERHEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OUTERHEIGHT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetOuterHeight(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_SCREENX:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SCREENX, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetScreenX(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_SCREENY:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SCREENY, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetScreenY(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_PAGEXOFFSET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PAGEXOFFSET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetPageXOffset(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_PAGEYOFFSET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PAGEYOFFSET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetPageYOffset(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWINTERNAL_LENGTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LENGTH, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           PRUint32 prop;
-          rv = a->GetLength(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetLength(&prop);
+            if(NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -986,47 +1156,6 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case WINDOW_OPENER:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENER, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMWindow* prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIWindowIID, NS_ConvertASCIItoUCS2("Window"),
-                                                  cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
-            break;
-          }
-      
-          rv = a->SetOpener(prop);
-          NS_IF_RELEASE(prop);
-        }
-        break;
-      }
-      case WINDOW_STATUS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUS, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetStatus(prop);
-          
-        }
-        break;
-      }
-      case WINDOW_DEFAULTSTATUS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DEFAULTSTATUS, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetDefaultStatus(prop);
-          
-        }
-        break;
-      }
       case WINDOW_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_NAME, PR_TRUE);
@@ -1039,33 +1168,114 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_LOCATION:
+      case WINDOWINTERNAL_OPENER:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATION, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OPENER, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
-          jsval prop;
-         prop = *vp;
+          nsIDOMWindowInternal* prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                  kIWindowInternalIID, NS_ConvertASCIItoUCS2("WindowInternal"),
+                                                  cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+            break;
+          }
       
-          rv = a->SetLocation(prop);
-          
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetOpener(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             NS_IF_RELEASE(prop);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          NS_IF_RELEASE(prop);
         }
         break;
       }
-      case WINDOW_TITLE:
+      case WINDOWINTERNAL_STATUS:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STATUS, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
           nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-          rv = a->SetTitle(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetStatus(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_INNERWIDTH:
+      case WINDOWINTERNAL_DEFAULTSTATUS:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DEFAULTSTATUS, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetDefaultStatus(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWINTERNAL_LOCATION:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LOCATION, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetLocation(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWINTERNAL_TITLE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_TITLE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetTitle(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWINTERNAL_INNERWIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_INNERWIDTH, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1077,14 +1287,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetInnerWidth(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetInnerWidth(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_INNERHEIGHT:
+      case WINDOWINTERNAL_INNERHEIGHT:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERHEIGHT, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_INNERHEIGHT, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1096,14 +1314,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetInnerHeight(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetInnerHeight(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_OUTERWIDTH:
+      case WINDOWINTERNAL_OUTERWIDTH:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERWIDTH, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OUTERWIDTH, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1115,14 +1341,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetOuterWidth(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetOuterWidth(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_OUTERHEIGHT:
+      case WINDOWINTERNAL_OUTERHEIGHT:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERHEIGHT, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OUTERHEIGHT, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1134,14 +1368,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetOuterHeight(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetOuterHeight(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_SCREENX:
+      case WINDOWINTERNAL_SCREENX:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENX, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SCREENX, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1153,14 +1395,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetScreenX(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetScreenX(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_SCREENY:
+      case WINDOWINTERNAL_SCREENY:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENY, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SCREENY, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1172,14 +1422,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetScreenY(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetScreenY(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_PAGEXOFFSET:
+      case WINDOWINTERNAL_PAGEXOFFSET:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEXOFFSET, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PAGEXOFFSET, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1191,14 +1449,22 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetPageXOffset(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetPageXOffset(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
       }
-      case WINDOW_PAGEYOFFSET:
+      case WINDOWINTERNAL_PAGEYOFFSET:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEYOFFSET, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PAGEYOFFSET, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           PRInt32 prop;
           int32 temp;
@@ -1210,7 +1476,15 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           }
       
-          rv = a->SetPageYOffset(prop);
+          nsIDOMWindowInternal *b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            b->SetPageYOffset(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
           
         }
         break;
@@ -1788,9 +2062,9 @@ WindowtopSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // _content Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-Window_contentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternal_contentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1801,16 +2075,23 @@ Window_contentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW__CONTENT, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL__CONTENT, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
-          nsIDOMWindow* prop;
-          rv = a->Get_content(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->Get_content(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -1821,9 +2102,9 @@ Window_contentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // _content Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-Window_contentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternal_contentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1834,7 +2115,7 @@ Window_contentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW__CONTENT, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL__CONTENT, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -1849,9 +2130,9 @@ Window_contentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // sidebar Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowsidebarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalsidebarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1862,16 +2143,23 @@ WindowsidebarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SIDEBAR, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsISidebar* prop;
-          rv = a->GetSidebar(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetSidebar(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsISidebar), cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -1882,9 +2170,9 @@ WindowsidebarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // sidebar Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1895,7 +2183,7 @@ WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SIDEBAR, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -1910,9 +2198,9 @@ WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // prompter Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowprompterGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalprompterGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1923,16 +2211,23 @@ WindowprompterGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPTER, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PROMPTER, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIPrompt* prop;
-          rv = a->GetPrompter(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetPrompter(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIPrompt), cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -1943,9 +2238,9 @@ WindowprompterGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // prompter Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowprompterSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalprompterSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1956,7 +2251,7 @@ WindowprompterSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPTER, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PROMPTER, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -1971,9 +2266,9 @@ WindowprompterSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // menubar Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowmenubarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalmenubarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -1984,16 +2279,23 @@ WindowmenubarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_MENUBAR, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIDOMBarProp* prop;
-          rv = a->GetMenubar(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetMenubar(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -2004,9 +2306,9 @@ WindowmenubarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // menubar Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowmenubarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalmenubarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2017,7 +2319,7 @@ WindowmenubarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_MENUBAR, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -2032,9 +2334,9 @@ WindowmenubarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // toolbar Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowtoolbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternaltoolbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2045,16 +2347,23 @@ WindowtoolbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_TOOLBAR, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIDOMBarProp* prop;
-          rv = a->GetToolbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetToolbar(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -2065,9 +2374,9 @@ WindowtoolbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // toolbar Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowtoolbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternaltoolbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2078,7 +2387,7 @@ WindowtoolbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_TOOLBAR, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -2093,9 +2402,9 @@ WindowtoolbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // locationbar Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowlocationbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternallocationbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2106,16 +2415,23 @@ WindowlocationbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LOCATIONBAR, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIDOMBarProp* prop;
-          rv = a->GetLocationbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetLocationbar(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -2126,9 +2442,9 @@ WindowlocationbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // locationbar Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowlocationbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternallocationbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2139,7 +2455,7 @@ WindowlocationbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_LOCATIONBAR, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -2154,9 +2470,9 @@ WindowlocationbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // personalbar Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowpersonalbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalpersonalbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2167,16 +2483,23 @@ WindowpersonalbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PERSONALBAR, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIDOMBarProp* prop;
-          rv = a->GetPersonalbar(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetPersonalbar(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -2187,9 +2510,9 @@ WindowpersonalbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // personalbar Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowpersonalbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalpersonalbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2200,7 +2523,7 @@ WindowpersonalbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PERSONALBAR, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -2215,9 +2538,9 @@ WindowpersonalbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // controllers Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowcontrollersGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalcontrollersGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2228,16 +2551,23 @@ WindowcontrollersGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CONTROLLERS, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIControllers* prop;
-          rv = a->GetControllers(&prop);
-          if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetControllers(&prop);
+            if(NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
 
   return PR_TRUE;
@@ -2248,9 +2578,9 @@ WindowcontrollersGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // controllers Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowInternalcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2261,7 +2591,7 @@ WindowcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CONTROLLERS, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
@@ -2299,704 +2629,6 @@ PR_STATIC_CALLBACK(JSBool)
 ResolveWindow(JSContext *cx, JSObject *obj, jsval id)
 {
   return nsJSUtils::nsGlobalResolve(cx, obj, id);
-}
-
-
-//
-// Native method Dump
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsAutoString b0;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DUMP, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    result = nativeThis->Dump(b0);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Alert
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ALERT, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Alert(cx, argv+0, argc-0);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Confirm
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRBool nativeRet;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONFIRM, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Confirm(cx, argv+0, argc-0, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Prompt
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  jsval nativeRet;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Prompt(cx, argv+0, argc-0, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = nativeRet;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Focus
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FOCUS, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Focus();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Blur
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_BLUR, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Blur();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Back
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_BACK, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Back();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Forward
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FORWARD, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Forward();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Home
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_HOME, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Home();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Stop
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STOP, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Stop();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Print
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PRINT, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Print();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method MoveTo
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 b0;
-  PRInt32 b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MOVETO, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->MoveTo(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method MoveBy
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 b0;
-  PRInt32 b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MOVEBY, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->MoveBy(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method ResizeTo
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 b0;
-  PRInt32 b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RESIZETO, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->ResizeTo(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method ResizeBy
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 b0;
-  PRInt32 b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RESIZEBY, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->ResizeBy(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method SizeToContent
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIZETOCONTENT, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->SizeToContent();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetAttention
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowGetAttention(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETATTENTION, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->GetAttention();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Scroll
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowScroll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 b0;
-  PRInt32 b1;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLL, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 2) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->Scroll(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
 }
 
 
@@ -3095,14 +2727,14 @@ WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
 
 //
-// Native method ClearTimeout
+// Native method GetSelection
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
-  PRInt32 b0;
+  nsIDOMSelection* nativeRet;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -3113,7 +2745,836 @@ WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLEARTIMEOUT, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETSELECTION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->GetSelection(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Dump
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DUMP, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->Dump(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Alert
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_ALERT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Alert(cx, argv+0, argc-0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Confirm
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRBool nativeRet;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CONFIRM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Confirm(cx, argv+0, argc-0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Prompt
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  jsval nativeRet;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PROMPT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Prompt(cx, argv+0, argc-0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = nativeRet;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Focus
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_FOCUS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Focus();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Blur
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_BLUR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Blur();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Back
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_BACK, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Back();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Forward
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_FORWARD, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Forward();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Home
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_HOME, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Home();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Stop
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STOP, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Stop();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Print
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_PRINT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Print();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method MoveTo
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_MOVETO, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->MoveTo(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method MoveBy
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_MOVEBY, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->MoveBy(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ResizeTo
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_RESIZETO, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->ResizeTo(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ResizeBy
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_RESIZEBY, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->ResizeBy(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SizeToContent
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SIZETOCONTENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->SizeToContent();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetAttention
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalGetAttention(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_GETATTENTION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->GetAttention();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Scroll
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalScroll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SCROLL, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->Scroll(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ClearTimeout
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CLEARTIMEOUT, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3141,13 +3602,18 @@ WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 // Native method ClearInterval
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   PRInt32 b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3156,7 +3622,7 @@ WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLEARINTERVAL, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CLEARINTERVAL, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3184,13 +3650,18 @@ WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 // Native method SetTimeout
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   PRInt32 nativeRet;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3199,7 +3670,7 @@ WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETTIMEOUT, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SETTIMEOUT, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3220,13 +3691,18 @@ WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 // Native method SetInterval
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   PRInt32 nativeRet;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3235,7 +3711,7 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETINTERVAL, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SETINTERVAL, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3256,13 +3732,18 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 // Native method CaptureEvents
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   PRInt32 b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3271,7 +3752,7 @@ WindowCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CAPTUREEVENTS, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CAPTUREEVENTS, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3299,13 +3780,18 @@ WindowCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 // Native method ReleaseEvents
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   PRInt32 b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3314,7 +3800,7 @@ WindowReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RELEASEEVENTS, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_RELEASEEVENTS, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3342,13 +3828,18 @@ WindowReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 // Native method RouteEvent
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   nsCOMPtr<nsIDOMEvent> b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3357,7 +3848,7 @@ WindowRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ROUTEEVENT, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_ROUTEEVENT, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3389,12 +3880,17 @@ WindowRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 // Native method EnableExternalCapture
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowEnableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalEnableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3403,7 +3899,7 @@ WindowEnableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ENABLEEXTERNALCAPTURE, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_ENABLEEXTERNALCAPTURE, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3424,12 +3920,17 @@ WindowEnableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 // Native method DisableExternalCapture
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3438,7 +3939,7 @@ WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DISABLEEXTERNALCAPTURE, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DISABLEEXTERNALCAPTURE, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3459,13 +3960,18 @@ WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 // Native method SetCursor
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowSetCursor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalSetCursor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   nsAutoString b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3474,7 +3980,7 @@ WindowSetCursor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETCURSOR, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SETCURSOR, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3500,13 +4006,18 @@ WindowSetCursor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 // Native method Open
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
-  nsIDOMWindow* nativeRet;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMWindowInternal* nativeRet;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3515,7 +4026,7 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPEN, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OPEN, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3536,13 +4047,18 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Native method OpenDialog
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
-  nsIDOMWindow* nativeRet;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMWindowInternal* nativeRet;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3551,7 +4067,7 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENDIALOG, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_OPENDIALOG, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3572,12 +4088,17 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 // Native method Close
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3586,7 +4107,7 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLOSE, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_CLOSE, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3607,13 +4128,18 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Native method UpdateCommands
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   nsAutoString b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3622,7 +4148,7 @@ WindowUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UPDATECOMMANDS, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_UPDATECOMMANDS, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3648,14 +4174,19 @@ WindowUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 // Native method Escape
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowEscape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalEscape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   nsAutoString nativeRet;
   nsAutoString b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3664,7 +4195,7 @@ WindowEscape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ESCAPE, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_ESCAPE, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3690,14 +4221,19 @@ WindowEscape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Native method Unescape
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+WindowInternalUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
   nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
   nsAutoString nativeRet;
   nsAutoString b0;
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
+  if (!nativeThis) {
     return JS_TRUE;
   }
 
@@ -3706,7 +4242,7 @@ WindowUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UNESCAPE, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_UNESCAPE, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -3722,42 +4258,6 @@ WindowUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetSelection
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsIDOMSelection* nativeRet;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETSELECTION, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->GetSelection(&nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
   }
 
   return JS_TRUE;
@@ -4010,46 +4510,46 @@ JSClass WindowClass = {
 //
 static JSPropertySpec WindowProperties[] =
 {
-  {"window",    WINDOW_WINDOW,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"self",    WINDOW_SELF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"screen",    WINDOW_SCREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE, WindowtopGetter, WindowtopSetter},
-  {"_content",    WINDOW__CONTENT,    JSPROP_ENUMERATE, Window_contentGetter, Window_contentSetter},
-  {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE, WindowsidebarGetter, WindowsidebarSetter},
-  {"prompter",    WINDOW_PROMPTER,    JSPROP_ENUMERATE, WindowprompterGetter, WindowprompterSetter},
-  {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE, WindowmenubarGetter, WindowmenubarSetter},
-  {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE, WindowtoolbarGetter, WindowtoolbarSetter},
-  {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE, WindowlocationbarGetter, WindowlocationbarSetter},
-  {"personalbar",    WINDOW_PERSONALBAR,    JSPROP_ENUMERATE, WindowpersonalbarGetter, WindowpersonalbarSetter},
-  {"statusbar",    WINDOW_STATUSBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"scrollbars",    WINDOW_SCROLLBARS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"directories",    WINDOW_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"crypto",    WINDOW_CRYPTO,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"pkcs11",    WINDOW_PKCS11,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"controllers",    WINDOW_CONTROLLERS,    JSPROP_ENUMERATE, WindowcontrollersGetter, WindowcontrollersSetter},
-  {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE},
-  {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
-  {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
-  {"location",    WINDOW_LOCATION,    JSPROP_ENUMERATE},
-  {"title",    WINDOW_TITLE,    JSPROP_ENUMERATE},
-  {"innerWidth",    WINDOW_INNERWIDTH,    JSPROP_ENUMERATE},
-  {"innerHeight",    WINDOW_INNERHEIGHT,    JSPROP_ENUMERATE},
-  {"outerWidth",    WINDOW_OUTERWIDTH,    JSPROP_ENUMERATE},
-  {"outerHeight",    WINDOW_OUTERHEIGHT,    JSPROP_ENUMERATE},
-  {"screenX",    WINDOW_SCREENX,    JSPROP_ENUMERATE},
-  {"screenY",    WINDOW_SCREENY,    JSPROP_ENUMERATE},
-  {"pageXOffset",    WINDOW_PAGEXOFFSET,    JSPROP_ENUMERATE},
-  {"pageYOffset",    WINDOW_PAGEYOFFSET,    JSPROP_ENUMERATE},
   {"scrollX",    WINDOW_SCROLLX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"scrollY",    WINDOW_SCROLLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"length",    WINDOW_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"window",    WINDOWINTERNAL_WINDOW,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"self",    WINDOWINTERNAL_SELF,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"navigator",    WINDOWINTERNAL_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"screen",    WINDOWINTERNAL_SCREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"history",    WINDOWINTERNAL_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"_content",    WINDOWINTERNAL__CONTENT,    JSPROP_ENUMERATE, WindowInternal_contentGetter, WindowInternal_contentSetter},
+  {"sidebar",    WINDOWINTERNAL_SIDEBAR,    JSPROP_ENUMERATE, WindowInternalsidebarGetter, WindowInternalsidebarSetter},
+  {"prompter",    WINDOWINTERNAL_PROMPTER,    JSPROP_ENUMERATE, WindowInternalprompterGetter, WindowInternalprompterSetter},
+  {"menubar",    WINDOWINTERNAL_MENUBAR,    JSPROP_ENUMERATE, WindowInternalmenubarGetter, WindowInternalmenubarSetter},
+  {"toolbar",    WINDOWINTERNAL_TOOLBAR,    JSPROP_ENUMERATE, WindowInternaltoolbarGetter, WindowInternaltoolbarSetter},
+  {"locationbar",    WINDOWINTERNAL_LOCATIONBAR,    JSPROP_ENUMERATE, WindowInternallocationbarGetter, WindowInternallocationbarSetter},
+  {"personalbar",    WINDOWINTERNAL_PERSONALBAR,    JSPROP_ENUMERATE, WindowInternalpersonalbarGetter, WindowInternalpersonalbarSetter},
+  {"statusbar",    WINDOWINTERNAL_STATUSBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"directories",    WINDOWINTERNAL_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"closed",    WINDOWINTERNAL_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"crypto",    WINDOWINTERNAL_CRYPTO,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pkcs11",    WINDOWINTERNAL_PKCS11,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controllers",    WINDOWINTERNAL_CONTROLLERS,    JSPROP_ENUMERATE, WindowInternalcontrollersGetter, WindowInternalcontrollersSetter},
+  {"opener",    WINDOWINTERNAL_OPENER,    JSPROP_ENUMERATE},
+  {"status",    WINDOWINTERNAL_STATUS,    JSPROP_ENUMERATE},
+  {"defaultStatus",    WINDOWINTERNAL_DEFAULTSTATUS,    JSPROP_ENUMERATE},
+  {"location",    WINDOWINTERNAL_LOCATION,    JSPROP_ENUMERATE},
+  {"title",    WINDOWINTERNAL_TITLE,    JSPROP_ENUMERATE},
+  {"innerWidth",    WINDOWINTERNAL_INNERWIDTH,    JSPROP_ENUMERATE},
+  {"innerHeight",    WINDOWINTERNAL_INNERHEIGHT,    JSPROP_ENUMERATE},
+  {"outerWidth",    WINDOWINTERNAL_OUTERWIDTH,    JSPROP_ENUMERATE},
+  {"outerHeight",    WINDOWINTERNAL_OUTERHEIGHT,    JSPROP_ENUMERATE},
+  {"screenX",    WINDOWINTERNAL_SCREENX,    JSPROP_ENUMERATE},
+  {"screenY",    WINDOWINTERNAL_SCREENY,    JSPROP_ENUMERATE},
+  {"pageXOffset",    WINDOWINTERNAL_PAGEXOFFSET,    JSPROP_ENUMERATE},
+  {"pageYOffset",    WINDOWINTERNAL_PAGEYOFFSET,    JSPROP_ENUMERATE},
+  {"length",    WINDOWINTERNAL_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"onmousedown",    WINDOWEVENTOWNER_ONMOUSEDOWN,    JSPROP_ENUMERATE},
   {"onmouseup",    WINDOWEVENTOWNER_ONMOUSEUP,    JSPROP_ENUMERATE},
   {"onclick",    WINDOWEVENTOWNER_ONCLICK,    JSPROP_ENUMERATE},
@@ -4084,43 +4584,43 @@ static JSPropertySpec WindowProperties[] =
 //
 static JSFunctionSpec WindowMethods[] = 
 {
-  {"dump",          WindowDump,     1},
-  {"alert",          WindowAlert,     0},
-  {"confirm",          WindowConfirm,     0},
-  {"prompt",          WindowPrompt,     0},
-  {"focus",          WindowFocus,     0},
-  {"blur",          WindowBlur,     0},
-  {"back",          WindowBack,     0},
-  {"forward",          WindowForward,     0},
-  {"home",          WindowHome,     0},
-  {"stop",          WindowStop,     0},
-  {"print",          WindowPrint,     0},
-  {"moveTo",          WindowMoveTo,     2},
-  {"moveBy",          WindowMoveBy,     2},
-  {"resizeTo",          WindowResizeTo,     2},
-  {"resizeBy",          WindowResizeBy,     2},
-  {"sizeToContent",          WindowSizeToContent,     0},
-  {"GetAttention",          WindowGetAttention,     0},
-  {"scroll",          WindowScroll,     2},
   {"scrollTo",          WindowScrollTo,     2},
   {"scrollBy",          WindowScrollBy,     2},
-  {"clearTimeout",          WindowClearTimeout,     1},
-  {"clearInterval",          WindowClearInterval,     1},
-  {"setTimeout",          WindowSetTimeout,     0},
-  {"setInterval",          WindowSetInterval,     0},
-  {"captureEvents",          WindowCaptureEvents,     1},
-  {"releaseEvents",          WindowReleaseEvents,     1},
-  {"routeEvent",          WindowRouteEvent,     1},
-  {"enableExternalCapture",          WindowEnableExternalCapture,     0},
-  {"disableExternalCapture",          WindowDisableExternalCapture,     0},
-  {"setCursor",          WindowSetCursor,     1},
-  {"open",          WindowOpen,     0},
-  {"openDialog",          WindowOpenDialog,     0},
-  {"close",          WindowClose,     0},
-  {"updateCommands",          WindowUpdateCommands,     1},
-  {"escape",          WindowEscape,     1},
-  {"unescape",          WindowUnescape,     1},
   {"getSelection",          WindowGetSelection,     0},
+  {"dump",          WindowInternalDump,     1},
+  {"alert",          WindowInternalAlert,     0},
+  {"confirm",          WindowInternalConfirm,     0},
+  {"prompt",          WindowInternalPrompt,     0},
+  {"focus",          WindowInternalFocus,     0},
+  {"blur",          WindowInternalBlur,     0},
+  {"back",          WindowInternalBack,     0},
+  {"forward",          WindowInternalForward,     0},
+  {"home",          WindowInternalHome,     0},
+  {"stop",          WindowInternalStop,     0},
+  {"print",          WindowInternalPrint,     0},
+  {"moveTo",          WindowInternalMoveTo,     2},
+  {"moveBy",          WindowInternalMoveBy,     2},
+  {"resizeTo",          WindowInternalResizeTo,     2},
+  {"resizeBy",          WindowInternalResizeBy,     2},
+  {"sizeToContent",          WindowInternalSizeToContent,     0},
+  {"GetAttention",          WindowInternalGetAttention,     0},
+  {"scroll",          WindowInternalScroll,     2},
+  {"clearTimeout",          WindowInternalClearTimeout,     1},
+  {"clearInterval",          WindowInternalClearInterval,     1},
+  {"setTimeout",          WindowInternalSetTimeout,     0},
+  {"setInterval",          WindowInternalSetInterval,     0},
+  {"captureEvents",          WindowInternalCaptureEvents,     1},
+  {"releaseEvents",          WindowInternalReleaseEvents,     1},
+  {"routeEvent",          WindowInternalRouteEvent,     1},
+  {"enableExternalCapture",          WindowInternalEnableExternalCapture,     0},
+  {"disableExternalCapture",          WindowInternalDisableExternalCapture,     0},
+  {"setCursor",          WindowInternalSetCursor,     1},
+  {"open",          WindowInternalOpen,     0},
+  {"openDialog",          WindowInternalOpenDialog,     0},
+  {"close",          WindowInternalClose,     0},
+  {"updateCommands",          WindowInternalUpdateCommands,     1},
+  {"escape",          WindowInternalEscape,     1},
+  {"unescape",          WindowInternalUnescape,     1},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {"dispatchEvent",          EventTargetDispatchEvent,     1},

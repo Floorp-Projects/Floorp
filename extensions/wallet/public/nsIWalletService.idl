@@ -52,12 +52,12 @@ interface nsIWalletService : nsISupports {
   [noscript]void WALLET_PostEdit(in nsAutoString walletList);
   boolean WALLET_ChangePassword();
   void WALLET_DeleteAll();
-  PRUint32 WALLET_RequestToCapture(in nsIPresShell shell, in nsIDOMWindow win);
-  boolean WALLET_Prefill(in nsIPresShell shell, in boolean quick, in nsIDOMWindow win);
+  PRUint32 WALLET_RequestToCapture(in nsIPresShell shell, in nsIDOMWindowInternal win);
+  boolean WALLET_Prefill(in nsIPresShell shell, in boolean quick, in nsIDOMWindowInternal win);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
   boolean WALLET_ExpirePassword();
-  void WALLET_InitReencryptCallback(in nsIDOMWindow win);
+  void WALLET_InitReencryptCallback(in nsIDOMWindowInternal win);
 
   void SI_RemoveUser(in string key, in wstring userName);
   void SI_StorePassword(in string key, in wstring userName, in wstring pwd);

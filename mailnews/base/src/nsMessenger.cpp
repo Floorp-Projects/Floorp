@@ -54,7 +54,7 @@
 #include "nsIContentViewer.h" 
 
 /* for access to docshell */
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -268,7 +268,7 @@ nsMessenger::~nsMessenger()
 NS_IMPL_ISUPPORTS(nsMessenger, NS_GET_IID(nsIMessenger))
 
 NS_IMETHODIMP    
-nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
+nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 {
 	if(!aWin)
 	{
@@ -369,11 +369,11 @@ nsMessenger::InitializeSearch( nsIFindComponent *finder )
         nsCOMPtr<nsIInterfaceRequestor> docShellIR = do_QueryInterface(mDocShell);
         if (!docShellIR) return NS_ERROR_FAILURE;
         
-        nsCOMPtr<nsIDOMWindow> domWindow;
-        docShellIR->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+        nsCOMPtr<nsIDOMWindowInternal> domWindow;
+        docShellIR->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(domWindow));
         if (!domWindow) return NS_ERROR_FAILURE;
         
-        // we need to get the nsIDOMWindow for mWebShell
+        // we need to get the nsIDOMWindowInternal for mWebShell
         // Create the search context for this browser window.
         rv = finder->CreateContext(domWindow, nsnull, getter_AddRefs(mSearchContext));
     }

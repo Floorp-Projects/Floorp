@@ -347,12 +347,12 @@ SI_InitSignonFileName() {
  ***********/
 
 PRIVATE PRBool
-si_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
+si_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   return Wallet_ConfirmYN(szMessage, window);
 }
 
 PRIVATE PRInt32
-si_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window) {
+si_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   return Wallet_3ButtonConfirm(szMessage, window);
 }
 
@@ -1846,7 +1846,7 @@ si_SaveSignonDataLocked() {
 
 /* Ask user if it is ok to save the signon data */
 PRIVATE PRBool
-si_OkToSave(const char *passwordRealm, const nsString& userName, nsIDOMWindow* window) {
+si_OkToSave(const char *passwordRealm, const nsString& userName, nsIDOMWindowInternal* window) {
 
   /* if url/user already exists, then it is safe to save it again */
   if (si_CheckForUser(passwordRealm, userName)) {
@@ -1892,7 +1892,7 @@ si_OkToSave(const char *passwordRealm, const nsString& userName, nsIDOMWindow* w
 PRIVATE void
 si_RememberSignonData
     (nsIPrompt* dialog, const char* passwordRealm, nsVoidArray * signonData,
-     nsIDOMWindow* window)
+     nsIDOMWindowInternal* window)
 {
   int passwordCount = 0;
   int pswd[3];
@@ -2006,7 +2006,7 @@ si_RememberSignonData
 PUBLIC void
 SINGSIGN_RememberSignonData 
     (nsIPrompt* dialog, const char* passwordRealm, nsVoidArray * signonData,
-     nsIDOMWindow* window)
+     nsIDOMWindowInternal* window)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);

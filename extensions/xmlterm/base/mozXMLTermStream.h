@@ -46,7 +46,7 @@ class mozXMLTermStream : public mozIXMLTermStream
   // mozIXMLTermStream interface
 
   // Open stream in specified frame, or in current frame if frameName is null
-  NS_IMETHOD Open(nsIDOMWindow* aDOMWindow,
+  NS_IMETHOD Open(nsIDOMWindowInternal* aDOMWindow,
                   const char* frameName,
                   const char* contentURL,
                   const char* contentType,
@@ -73,7 +73,7 @@ class mozXMLTermStream : public mozIXMLTermStream
   PRInt32 mMaxResizeHeight;
 
   /** DOM window in which to display stream */
-  nsCOMPtr<nsIDOMWindow> mDOMWindow;
+  nsCOMPtr<nsIDOMWindowInternal> mDOMWindow;
 
   /** Frame element in which to display stream */
   nsCOMPtr<nsIDOMElement> mDOMIFrameElement;

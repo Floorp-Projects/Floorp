@@ -1,6 +1,6 @@
 // Test06.cpp
 
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIWebShellWindow);
 
 
 void // nsresult
-Test06_raw( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
+Test06_raw( nsIDOMWindowInternal* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m388, w214
 	{
 //		if ( !aDOMWindow )
@@ -78,7 +78,7 @@ Test06_raw( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 
 
 void // nsresult
-Test06_raw_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
+Test06_raw_optimized( nsIDOMWindowInternal* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m332, w191
 	{
 //		if ( !aDOMWindow )
@@ -119,7 +119,7 @@ Test06_raw_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWin
 	}
 
 void
-Test06_nsCOMPtr_as_found( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebShellWindow )
+Test06_nsCOMPtr_as_found( nsIDOMWindowInternal* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebShellWindow )
 		// m344, w181/201
 	{
 //		if ( !aDOMWindow )
@@ -143,7 +143,7 @@ Test06_nsCOMPtr_as_found( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>*
 	}
 
 void // nsresult
-Test06_nsCOMPtr00( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
+Test06_nsCOMPtr00( nsIDOMWindowInternal* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m328, w191/199
 	{
 //		if ( !aDOMWindow )
@@ -176,7 +176,7 @@ Test06_nsCOMPtr00( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 	}
 
 void // nsresult
-Test06_nsCOMPtr_optimized( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebShellWindow )
+Test06_nsCOMPtr_optimized( nsIDOMWindowInternal* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebShellWindow )
 		// m300, w176/182
 	{
 //		if ( !aDOMWindow )
@@ -205,7 +205,7 @@ Test06_nsCOMPtr_optimized( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>
 	}
 
 void // nsresult
-Test06_nsCOMPtr02( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
+Test06_nsCOMPtr02( nsIDOMWindowInternal* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m320, w187/184
 	{
 //		if ( !aDOMWindow )
@@ -242,7 +242,7 @@ Test06_nsCOMPtr02( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 	}
 
 void // nsresult
-Test06_nsCOMPtr03( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebShellWindow )
+Test06_nsCOMPtr03( nsIDOMWindowInternal* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebShellWindow )
 		// m332, w189/188
 	{
 //		if ( !aDOMWindow )
@@ -277,7 +277,7 @@ Test06_nsCOMPtr03( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebSh
 	}
 
 void // nsresult
-Test06_nsIPtr( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
+Test06_nsIPtr( nsIDOMWindowInternal* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m564, w220
 	{
 //		if ( !aDOMWindow )
@@ -307,7 +307,7 @@ Test06_nsIPtr( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 	}
 
 void // nsresult
-Test06_nsIPtr_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
+Test06_nsIPtr_optimized( nsIDOMWindowInternal* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 		// m400, w137
 	{
 //		if ( !aDOMWindow )

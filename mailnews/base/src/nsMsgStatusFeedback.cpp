@@ -25,7 +25,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIWebProgress.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 
 #include "nsMsgStatusFeedback.h"
@@ -266,7 +266,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::CloseWindow()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindow *aWindow)
+NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindowInternal *aWindow)
 {
 
   if (aWindow)

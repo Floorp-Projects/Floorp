@@ -27,7 +27,7 @@
 #include "stdio.h"
 #include "nsIWalletService.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsSignonViewer.h"
@@ -120,7 +120,7 @@ SignonViewerImpl::GetNocaptureValue(PRUnichar** aValue)
 }
 
 NS_IMETHODIMP
-SignonViewerImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
+SignonViewerImpl::SetValue(const PRUnichar* aValue, nsIDOMWindowInternal* win)
 {
   /* process the value */
   NS_PRECONDITION(aValue != nsnull, "null ptr");

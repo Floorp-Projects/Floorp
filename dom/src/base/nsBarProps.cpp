@@ -25,7 +25,7 @@
 #include "nscore.h"
 #include "nsBarProps.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 
 //
@@ -57,7 +57,7 @@ NS_IMETHODIMP BarPropImpl::GetScriptObject(nsIScriptContext *aContext,
       {
       nsCOMPtr<nsIScriptGlobalObject> global;
       global = aContext->GetGlobalObject();
-      nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global));
+      nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(global));
       NS_ENSURE_SUCCESS(NS_NewScriptBarProp(aContext, 
          NS_STATIC_CAST(nsIDOMBarProp*, this), domWindow, &mScriptObject),
          NS_ERROR_FAILURE);

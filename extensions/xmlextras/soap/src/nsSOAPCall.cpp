@@ -48,7 +48,7 @@ class nsScriptResponseListener : public nsISOAPResponseListener
 {
 public:
   nsScriptResponseListener(JSObject* aScopeObj, JSObject* aFunctionObj);
-  ~nsScriptResponseListener();
+  virtual ~nsScriptResponseListener();
   
   NS_DECL_ISUPPORTS
 

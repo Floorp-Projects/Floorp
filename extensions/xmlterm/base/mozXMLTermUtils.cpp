@@ -53,7 +53,7 @@
  */
 NS_EXPORT nsresult
 mozXMLTermUtils::ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
-                                    nsIDOMWindow** aDOMWindow)
+                                    nsIDOMWindowInternal** aDOMWindow)
 {
   XMLT_LOG(mozXMLTermUtils::ConvertDocShellToDOMWindow,30,("\n"));
 
@@ -64,7 +64,7 @@ mozXMLTermUtils::ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aDocShell));
 
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObject));
+  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(scriptGlobalObject));
   if (!domWindow)
     return NS_ERROR_FAILURE;
 
@@ -81,7 +81,7 @@ mozXMLTermUtils::ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
  * @return NS_OK on success
  */
 NS_EXPORT nsresult
-mozXMLTermUtils::ConvertDOMWindowToDocShell(nsIDOMWindow* aDOMWindow,
+mozXMLTermUtils::ConvertDOMWindowToDocShell(nsIDOMWindowInternal* aDOMWindow,
                                              nsIDocShell** aDocShell)
 {
   XMLT_LOG(mozXMLTermUtils::ConvertDOMWindowToDocShell,30,("\n"));
@@ -106,9 +106,9 @@ mozXMLTermUtils::ConvertDOMWindowToDocShell(nsIDOMWindow* aDOMWindow,
  * @return NS_OK on success
  */
 NS_EXPORT nsresult
-mozXMLTermUtils::GetInnerDOMWindow(nsIDOMWindow* outerDOMWindow,
+mozXMLTermUtils::GetInnerDOMWindow(nsIDOMWindowInternal* outerDOMWindow,
                                     const nsString& innerFrameName,
-                                    nsIDOMWindow** innerDOMWindow)
+                                    nsIDOMWindowInternal** innerDOMWindow)
 {
   nsresult result;
 

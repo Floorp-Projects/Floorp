@@ -67,7 +67,7 @@ protected:
   PRUnichar   *GetString(const PRUnichar *aStringName);
 
   nsCOMPtr<nsIDocShell>       mDocShell;
-  nsCOMPtr<nsIDOMWindow>      mWindow;
+  nsCOMPtr<nsIDOMWindowInternal>      mWindow;
   PRInt32                     mURICount;
   nsStringArray               mURIArray;
   PRInt32                     mCurrentlyPrintingURI;

@@ -138,18 +138,18 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  nsIDOMWindow getHiddenDOMWindow();
+  nsIDOMWindowInternal getHiddenDOMWindow();
 
 
   /**
-   * Return the (singleton) application hidden window as an nsIDOMWindow,
+   * Return the (singleton) application hidden window as an nsIDOMWindowInternal,
    * and, the corresponding JavaScript context pointer.  This is useful
    * if you'd like to subsequently call OpenDialog on the hidden window.
-   * @aHiddenDOMWindow the hidden window QI'd to type nsIDOMWindow
+   * @aHiddenDOMWindow the hidden window QI'd to type nsIDOMWindowInternal
    * @aJSContext       the corresponding JavaScript context
    */
   [noscript]
-  void GetHiddenWindowAndJSContext(out nsIDOMWindow aHiddenDOMWindow,
+  void GetHiddenWindowAndJSContext(out nsIDOMWindowInternal aHiddenDOMWindow,
                                    out JSContext aJSContext);
 
   /**

@@ -26,7 +26,7 @@
 #include "nsIAppShellComponentImpl.h"
 
 #include "nsString.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
@@ -83,7 +83,7 @@ public:
 NS_IMETHODIMP
 nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                        const char *aContentType,
-                                                       nsIDOMWindow *aWindow ) {
+                                                       nsIDOMWindowInternal *aWindow ) {
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsISupports> channel;
@@ -141,7 +141,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                     aContentType,
                                                     (const char*)contentDisp.GetBuffer() );
                     if ( argv ) {
-                        nsCOMPtr<nsIDOMWindow> newWindow;
+                        nsCOMPtr<nsIDOMWindowInternal> newWindow;
                         rv = aWindow->OpenDialog( jsContext, argv, 6, getter_AddRefs( newWindow ) );
                         if ( NS_FAILED( rv ) ) {
                             DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialog failed, rv=0x%08X\n",
@@ -183,7 +183,7 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
     nsresult rv = NS_ERROR_FAILURE;
 
     // Get parent window (from context).
-    nsCOMPtr<nsIDOMWindow> parent( do_GetInterface( aContext ) );
+    nsCOMPtr<nsIDOMWindowInternal> parent( do_GetInterface( aContext ) );
     if ( parent ) {
         // Get JS context from parent window.
         nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parent, &rv );
@@ -206,7 +206,7 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
                                                     (nsISupports*)aLauncher );
                     if ( argv ) {
                         // Open the dialog.
-                        nsCOMPtr<nsIDOMWindow> dialog;
+                        nsCOMPtr<nsIDOMWindowInternal> dialog;
                         rv = parent->OpenDialog( jsContext, argv, 6, getter_AddRefs( dialog ) );
                         // Pop arguments.
                         JS_PopArguments( jsContext, stackPtr );

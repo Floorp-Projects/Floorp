@@ -30,7 +30,7 @@
 #include "nsIObserver.h"
 
 // For opening dialog.
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
 
@@ -78,9 +78,9 @@ nsStreamXferOp::~nsStreamXferOp() {
 #endif
 }
 
-// Invoke nsIDOMWindow::OpenDialog, passing this object as argument.
+// Invoke nsIDOMWindowInternal::OpenDialog, passing this object as argument.
 NS_IMETHODIMP
-nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
+nsStreamXferOp::OpenDialog( nsIDOMWindowInternal *parent ) {
     nsresult rv = NS_OK;
     // Get JS context from parent window.
     nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parent, &rv );
@@ -100,10 +100,10 @@ nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
                                                 (const nsIID*)(&NS_GET_IID(nsIStreamTransferOperation)),
                                                 (nsISupports*)(nsIStreamTransferOperation*)this );
                 if ( argv ) {
-                    nsCOMPtr<nsIDOMWindow> newWindow;
+                    nsCOMPtr<nsIDOMWindowInternal> newWindow;
                     rv = parent->OpenDialog( jsContext, argv, 4, getter_AddRefs( newWindow ) );
                     if ( NS_FAILED( rv ) ) {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: nsIDOMWindow::OpenDialog failed, rv=0x%08X\n",
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d: nsIDOMWindowInternal::OpenDialog failed, rv=0x%08X\n",
                                       (char*)__FILE__, (int)__LINE__, (int)rv );
                     }
                     JS_PopArguments( jsContext, stackPtr );

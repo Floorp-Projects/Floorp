@@ -32,7 +32,7 @@
 
 #include "nsCOMPtr.h"
 
-class nsIDOMWindow;
+class nsIDOMWindowInternal;
 
 // Define USE_ASYNC_READ in order to implement stream transfer using AsyncRead
 // (and synchronous file writes) versus AsyncWrite.
@@ -60,7 +60,7 @@ public:
     virtual ~nsStreamXferOp();
 
     // Implementation.
-    NS_IMETHOD OpenDialog( nsIDOMWindow *parent );
+    NS_IMETHOD OpenDialog( nsIDOMWindowInternal *parent );
     NS_IMETHOD OnError( int operation, nsresult rv );
 
     // Declare inherited interfaces.

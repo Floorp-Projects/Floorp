@@ -39,7 +39,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
@@ -89,12 +89,12 @@ NS_IMETHODIMP nsWalletlibService::WALLET_DeleteAll() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) {
+NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* status) {
   ::WLLT_RequestToCapture(shell, win, status);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindow* win, PRBool* status) {
+NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win, PRBool* status) {
   return ::WLLT_Prefill(shell, quick, win);
 }
 
@@ -113,7 +113,7 @@ NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(PRBool* status){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_InitReencryptCallback(nsIDOMWindow* window){
+NS_IMETHODIMP nsWalletlibService::WALLET_InitReencryptCallback(nsIDOMWindowInternal* window){
   /* register callback to be used when encryption pref changes */
   ::WLLT_InitReencryptCallback(window);
   return NS_OK;
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar*, const 
 }
 
 #define CRLF "\015\012"   
-NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL)
+NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL)
 {
   if (!formNode) {
     return NS_ERROR_FAILURE;

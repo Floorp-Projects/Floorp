@@ -36,7 +36,7 @@
 #include "nsIScrollableView.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDOMAbstractView.h"
 #include "prmem.h"
 #include "nsLayoutAtoms.h"
@@ -296,8 +296,8 @@ nsDOMEvent::GetView(nsIDOMAbstractView** aView)
   nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
   NS_ENSURE_TRUE(ifrq, NS_OK);
 
-  nsCOMPtr<nsIDOMWindow> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
   NS_ENSURE_TRUE(window, NS_OK);
 
   window->QueryInterface(NS_GET_IID(nsIDOMAbstractView), (void **)aView);

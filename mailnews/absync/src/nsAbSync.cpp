@@ -319,7 +319,7 @@ nsAbSync::DisplayErrorMessage(const PRUnichar * msg)
 }
 
 nsresult
-nsAbSync::SetDOMWindow(nsIDOMWindow *aWindow)
+nsAbSync::SetDOMWindow(nsIDOMWindowInternal *aWindow)
 {
 	if (!aWindow)
 		return NS_ERROR_NULL_POINTER;
@@ -581,7 +581,7 @@ NS_IMETHODIMP nsAbSync::CancelAbSync()
 }
 
 /* void PerformAbSync (out PRInt32 aTransactionID); */
-NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindow *aDOMWindow, PRInt32 *aTransactionID)
+NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindowInternal *aDOMWindow, PRInt32 *aTransactionID)
 {
   nsresult      rv;
   char          *protocolRequest = nsnull;

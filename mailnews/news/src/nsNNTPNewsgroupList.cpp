@@ -37,7 +37,7 @@
 #include "nsINewsDatabase.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "jsapi.h"	// for JS_PushArguments and JS_PopArguments
 
 #include "nsXPIDLString.h"
@@ -242,7 +242,7 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock 
 	globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
 	NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
-	nsCOMPtr<nsIDOMWindow> parentWindow(do_QueryInterface(globalObject));
+	nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(globalObject));
 	NS_ENSURE_TRUE(parentWindow, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIScriptContext> context;
@@ -264,7 +264,7 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock 
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMWindow> dialogWindow;
+    nsCOMPtr<nsIDOMWindowInternal> dialogWindow;
     rv = parentWindow->OpenDialog(jsContext,
                                   argv,
                                   4,
