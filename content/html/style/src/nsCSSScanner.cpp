@@ -43,10 +43,6 @@
 #include "nsString.h"
 #include "nsCRT.h"
 
-#ifdef NS_DEBUG
-static char* kNullPointer = "null pointer";
-#endif
-
 // for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -205,7 +201,7 @@ nsCSSScanner::~nsCSSScanner()
 
 void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
 {
-  NS_PRECONDITION(nsnull != aInput, kNullPointer);
+  NS_PRECONDITION(nsnull != aInput, "Null input stream pointer");
   Close();
   mInput = aInput;
   NS_IF_ADDREF(aInput);

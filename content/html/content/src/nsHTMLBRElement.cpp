@@ -156,7 +156,7 @@ nsHTMLBRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLBRElement, Clear, clear)
 
-static nsHTMLValue::EnumTable kClearTable[] = {
+static const nsHTMLValue::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
   { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },

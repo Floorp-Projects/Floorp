@@ -614,13 +614,13 @@ nsHTMLFormElement::Reset()
   return rv;
 }
 
-static nsHTMLValue::EnumTable kFormMethodTable[] = {
+static const nsHTMLValue::EnumTable kFormMethodTable[] = {
   { "get", NS_FORM_METHOD_GET },
   { "post", NS_FORM_METHOD_POST },
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kFormEnctypeTable[] = {
+static const nsHTMLValue::EnumTable kFormEnctypeTable[] = {
   { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
   { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
   { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },

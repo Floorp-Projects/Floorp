@@ -1801,7 +1801,7 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
 // nsIHTMLContent
 
-static nsHTMLValue::EnumTable kInputTypeTable[] = {
+static const nsHTMLValue::EnumTable kInputTypeTable[] = {
   { "browse", NS_FORM_BROWSE }, // XXX not valid html, but it is convenient
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
@@ -1822,7 +1822,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    nsHTMLValue::EnumTable *table = kInputTypeTable;
+    const nsHTMLValue::EnumTable *table = kInputTypeTable;
     nsAutoString valueStr(aValue);
     while (nsnull != table->tag) { 
       if (valueStr.EqualsIgnoreCase(table->tag)) {

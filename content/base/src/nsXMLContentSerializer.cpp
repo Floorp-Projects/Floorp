@@ -648,7 +648,7 @@ nsXMLContentSerializer::AppendToString(const PRUnichar aChar,
   aOutputStr.Append(aChar);
 }
 
-static PRUint16 kGTVal = 62;
+static const PRUint16 kGTVal = 62;
 static const char* kEntities[] = {
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",

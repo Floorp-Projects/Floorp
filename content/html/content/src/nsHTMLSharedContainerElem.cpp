@@ -233,7 +233,7 @@ nsHTMLValue::EnumTable kOldListTypeTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kCaptionAlignTable[] = {
+static const nsHTMLValue::EnumTable kCaptionAlignTable[] = {
   { "left",  NS_SIDE_LEFT },
   { "right", NS_SIDE_RIGHT },
   { "top",   NS_SIDE_TOP},

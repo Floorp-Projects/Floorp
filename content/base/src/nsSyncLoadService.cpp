@@ -66,7 +66,7 @@
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
 
-static const char* kLoadAsData = "loadAsData";
+static const char kLoadAsData[] = "loadAsData";
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

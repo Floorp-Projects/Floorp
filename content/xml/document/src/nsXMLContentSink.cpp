@@ -110,10 +110,10 @@
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
 
-static char kNameSpaceSeparator = ':';
+static const char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
 
-static const char* kLoadAsData = "loadAsData";
+static const char kLoadAsData[] = "loadAsData";
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 

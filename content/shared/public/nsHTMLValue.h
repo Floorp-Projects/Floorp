@@ -261,7 +261,7 @@ public:
    * @return whether the enum value was found or not
    */
   PRBool ParseEnumValue(const nsAString& aValue,
-                        EnumTable* aTable,
+                        const EnumTable* aTable,
                         PRBool aCaseSensitive = PR_FALSE);
 
   /**
@@ -272,7 +272,7 @@ public:
    * @param aResult the string the value maps to [OUT]
    * @return whether the enum value was found or not
    */
-  PRBool EnumValueToString(EnumTable* aTable,
+  PRBool EnumValueToString(const EnumTable* aTable,
                            nsAString& aResult) const;
 
   /**

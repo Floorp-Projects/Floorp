@@ -933,7 +933,7 @@ nsHTMLTableElement::DeleteRow(PRInt32 aValue)
   return parent->RemoveChild(row, getter_AddRefs(deleted_row));
 }
 
-static nsHTMLValue::EnumTable kFrameTable[] = {
+static const nsHTMLValue::EnumTable kFrameTable[] = {
   { "void",   NS_STYLE_TABLE_FRAME_NONE },
   { "above",  NS_STYLE_TABLE_FRAME_ABOVE },
   { "below",  NS_STYLE_TABLE_FRAME_BELOW },
@@ -946,7 +946,7 @@ static nsHTMLValue::EnumTable kFrameTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kRulesTable[] = {
+static const nsHTMLValue::EnumTable kRulesTable[] = {
   { "none",   NS_STYLE_TABLE_RULES_NONE },
   { "groups", NS_STYLE_TABLE_RULES_GROUPS },
   { "rows",   NS_STYLE_TABLE_RULES_ROWS },
@@ -955,7 +955,7 @@ static nsHTMLValue::EnumTable kRulesTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kLayoutTable[] = {
+static const nsHTMLValue::EnumTable kLayoutTable[] = {
   { "auto",   NS_STYLE_TABLE_LAYOUT_AUTO },
   { "fixed",  NS_STYLE_TABLE_LAYOUT_FIXED },
   { 0 }
