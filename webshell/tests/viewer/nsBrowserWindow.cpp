@@ -405,7 +405,7 @@ static void BuildFileURL(const PRUnichar * aFileName, nsString & aFileURL)
   nsAutoString fileName(aFileName);
   char * str = fileName.ToNewCString();
   BuildFileURL(str, aFileURL);
-  delete str;
+  delete[] str;
 }
 
 
@@ -1771,7 +1771,7 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
       PRUnichar* str;
       aURL->ToString(&str);
       url = str;
-      delete str;
+      delete[] str;
     }
     url.Append(": progress ");
     url.Append(aProgress, 10);
@@ -1805,7 +1805,7 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
       PRUnichar* str;
       aURL->ToString(&str);
       url = str;
-      delete str;
+      delete[] str;
     }
     url.Append(": start");
     PRUint32 size;
@@ -1825,7 +1825,7 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
       PRUnichar* str;
       aURL->ToString(&str);
       url = str;
-      delete str;
+      delete[] str;
     }
     url.Append(": stop");
     PRUint32 size;
