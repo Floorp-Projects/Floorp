@@ -91,6 +91,49 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 #include "nsILocaleService.h"
 #include "nsLocaleCID.h"
 
+//
+//
+//
+nsresult
+getCountry(PRUnichar *lc_name_unichar, PRUnichar **aCountry)
+{
+
+  nsresult        result = NS_OK;
+  nsAutoString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
+
+  nsAutoString	  lc_name;
+  lc_name.Assign(lc_name_unichar);
+  // nsMemory::Free(lc_name_unichar);
+
+  PRInt32   dash = lc_name.FindCharInSet("-");
+  if (dash > 0) {
+    /* 
+     */
+    nsAutoString lang;
+    nsAutoString country;
+    PRInt32 count = 0;
+    count = lc_name.Left(lang, dash);
+    count = lc_name.Right(country, (lc_name.Length()-dash-1));
+    *aCountry = ToNewUnicode(country);
+  }
+  else
+    result = NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult
+getUILangCountry(PRUnichar** aUILang, PRUnichar** aCountry)
+{
+	nsresult	 result;
+	// get a locale service 
+	nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &result);
+	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale service failed");
+
+  result = localeService->GetLocaleComponentForUserAgent(aUILang);
+  result = getCountry(*aUILang, aCountry);
+  return result;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -145,6 +188,16 @@ main(int argc, char *argv[])
     return 1;
   }
 
+  PRUnichar *uiLang = nsnull;
+  PRUnichar *country = nsnull;
+  ret = getUILangCountry(&uiLang, &country);
+#if DEBUG_tao
+  nsAutoString uaStr(uiLang); // testing only
+  nsAutoString countryStr(country); // testing only
+  cout << "\n uaStr=" << ToNewCString(uaStr) 
+       << ", country=" << ToNewCString(countryStr) 
+       << "\n" << endl;
+#endif
 
   nsIStringBundle* bundle = nsnull;
 
