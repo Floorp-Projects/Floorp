@@ -215,7 +215,9 @@ private:
     // Remove redundant PUSH/POP_CLIP pairs.
     void OptimizeDisplayListClipping(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex,
                                      PRBool& aAnyRendered);
+#ifdef NS_DEBUG
 	void ShowDisplayList(PRInt32 flatlen);
+#endif
 	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin);
 
     void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
