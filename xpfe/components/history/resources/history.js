@@ -95,7 +95,7 @@ var historyDNDObserver = {
     var flavourList = { };
     flavourList["text/unicode"] = { width: 2, data: uri };
     flavourList["text/html"] = { width: 2, data: htmlString };
-    flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + title };
+    flavourList["text/x-moz-url"] = { width: 2, data: escape(uri) + " " + title };
     return flavourList;
   },
 
