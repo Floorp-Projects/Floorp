@@ -45,7 +45,7 @@ nsWinCharset::nsWinCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  nsAutoString propertyURL("resource://res/wincharset.properties");
+  nsAutoString propertyURL("resource:/res/wincharset.properties");
 
   nsURLProperties *info = new nsURLProperties( propertyURL );
 

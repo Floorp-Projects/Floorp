@@ -1803,7 +1803,7 @@ nsBrowserAppCore::DoDialog()
   window = nsnull;
 
   nsCOMPtr<nsIURI> urlObj;
-  char * urlstr = "resource://res/samples/Password.html";
+  char * urlstr = "resource:/res/samples/Password.html";
 #ifndef NECKO
   rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else

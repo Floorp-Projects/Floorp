@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome:/global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="resource:/res/xpinstall/xpistatus.css" type="text/css"?> 
 
 <!DOCTYPE window

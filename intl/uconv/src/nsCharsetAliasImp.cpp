@@ -62,7 +62,7 @@ nsCharsetAlias2::nsCharsetAlias2()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  nsAutoString propertyURL("resource://res/charsetalias.properties");
+  nsAutoString propertyURL("resource:/res/charsetalias.properties");
   mDelegate = new nsURLProperties( propertyURL );
 }
 //--------------------------------------------------------------

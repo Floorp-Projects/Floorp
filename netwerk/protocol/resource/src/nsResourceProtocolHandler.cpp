@@ -144,7 +144,7 @@ nsResourceProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 /*
- * Rewrite "resource://" URLs into file: URLs with the path of the 
+ * Rewrite "resource:/" URLs into file: URLs with the path of the 
  * executable prepended to the file path...
  */
 static char *

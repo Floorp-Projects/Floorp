@@ -19,7 +19,7 @@ var currProfile = "";
 function CreateProfile()
 {
 	// Need to call CreateNewProfile xuls
-	// var win = window.openDialog('resource://res/profile/cpwManager.xul', 'Creator', 'chrome');
+	// var win = window.openDialog('resource:/res/profile/cpwManager.xul', 'Creator', 'chrome');
 	dump("\ngot here\n");
 	//this.location.replace(this.location);
 	this.location.replace("resource:/res/profile/cpwManager.xul");

@@ -18,13 +18,13 @@
 
     // show a nonmodal dialog, sending parameters as part of the URL
     function MakeURLDialog() {
-      var newWin = window.open("resource://res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "New", "chrome");
+      var newWin = window.open("resource:/res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "New", "chrome");
       return newWin;
     }
 
     // show a nonmodal dialog, sending parameters as part of the function call
     function MakeParamDialog() {
-      var newWin = window.openDialog("resource://res/samples/dexparamdialog.xul",
+      var newWin = window.openDialog("resource:/res/samples/dexparamdialog.xul",
         "New", "chrome", {remind:true, prompt:"Give me your money and convertible bonds"});
       return newWin;
     }
@@ -33,7 +33,7 @@
     function ModalDialog() {
       var toolkitCore = GetToolkitCore();
       if (toolkitCore)
-        toolkitCore.ShowModalDialog("resource://res/samples/dexparamdialog.xul",
+        toolkitCore.ShowModalDialog("resource:/res/samples/dexparamdialog.xul",
             window);
     }
 

@@ -45,7 +45,7 @@
 		dump("Inside the Exit Wizard function...\n");
 		parent.frames[0].commit();
 		parent.Finish();
-		parent.location.replace("resource://res/profile/preg.html");
+		parent.location.replace("resource:/res/profile/preg.html");
 
 		//var toolkitCore = XPAppCoresManager.Find("toolkitCore");
 		//if (!toolkitCore) {
