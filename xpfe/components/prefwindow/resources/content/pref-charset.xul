@@ -1,0 +1,195 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.1 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+
+
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-charset.dtd" >
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="main-box"
+  title="&charset.customize.title.label;"
+  class="dialog"
+  windowtype="sidebar:customize"
+  onload="Init();"
+  align="vertical"
+  persist="width height"
+  width="500" height="320"> 
+
+  <html:script language="javascript" src="pref-charset.js"/>
+
+    <!-- horz 1 -->
+	<box class="header" align="horizontal">  
+		<titledbutton class="left-header-text" value="&charset.customize.left.header;"/>
+		<spring class="header-spring" flex="1"/>
+		<titledbutton class="right-header-text" value="&charset.customize.right.header;"/>
+	</box>
+	<!-- horz1 -->
+
+
+  <!-- The two-pane -->
+  <!-- horz 2 -->
+  <box align="horizontal" flex="1">
+
+
+    <!-- Spacing between the left window border and first list box -->
+    <spring style="width:2em"/>
+
+    <!-- All of the panels that are available -->
+	<!-- vert 1 -->
+	<box align="vertical" flex="1">
+
+	  <html:div class="vertical-gap">
+	      &charset.customize.additional.label;
+      </html:div>
+
+	  <!-- horz 2a -->
+      <box align="horizontal" class="box-group" flex="1">
+
+	  <!-- Hidden text for our save confirm popup -->
+	  <box align="horizontal" style="max-width: 0px; max-height: 0px">
+  		<titledbutton  
+			id="confirm_text"
+			style="max-width: 0px; max-height: 0px" 
+			class="left-header-text"
+			value="&charset.customize.save.popup;" />
+	  </box>
+
+	  <!-- Available Charsets Tree -->
+      <tree id="available_charsets" flex="1"
+		onclick="SelectAvailableCharset();"
+        datasources="rdf:null"
+        indent="false"
+        multiple="true"
+        style="height:0px">
+         <!-- We explicitly create a 'treechildren' so we can refer
+              to it from the script -->
+        <treechildren id="available_charsets_root">
+	     </treechildren>
+        </tree> 
+
+		</box>
+		<!-- horz 2a -->
+
+	  <!-- Add Charset Button -->
+	  <!-- horz 3 -->
+      <box align="horizontal" class="button-group">
+        <titledbutton 
+		  id="add_button" 
+		  onclick="AddAvailableCharset();"
+          class="dialog push"
+          value="&charset.customize.add.label;"
+          disabled="true"/>
+      </box>
+	  <!-- horz 3 -->
+
+    </box> 
+	<!-- vert 1 -->
+    
+    <!-- Spacing between the left and right halves of the dialog -->
+
+    <spring style="width:2em"/>
+
+    <!-- The charsets that the user currently has chosen -->
+    <!-- vert 2 -->
+	<box align="vertical" flex="1">
+
+		<html:div class="vertical-gap">
+			&charset.customize.current.label;
+		</html:div>
+
+      <!-- ??? <spring class="vgap"/> ???? -->
+	
+	  <!-- horz 4 -->
+      <box align="horizontal" class="box-group" flex="1">
+
+		<!-- Active Charsets Tree -->
+        <tree id="active_charsets" flex="1"
+		  onclick="SelectActiveCharset();"
+          datasources="rdf:null"
+	      indent="false"
+          multiple="true"
+          style="height:0px">
+         <!-- We explicitly create a 'treechildren' so we can refer
+              to it from the script -->
+         <treechildren id="active_charsets_root">
+	     </treechildren>
+       </tree>
+
+      </box>
+	  <!-- koriz 4 -->
+
+      <!-- The Remove Charset Button -->
+	  <!-- horz 5 -->
+      <box align="horizontal" class="button-group">
+        <titledbutton id="remove_button" onclick="RemoveActiveCharset();"
+          class="dialog push" disabled="true"
+          value="&charset.customize.remove.label;" />
+      </box>
+	  <!-- horz 5 -->
+
+    </box> 
+	<!-- vert 2 -->
+       <!-- Spacing between the right selector and "Reorder" -->
+       <spring style="width:8px"/>
+
+        <!-- The Reorder Button -->
+
+		<!-- vert 3 -->
+        <box align="vertical">
+          <spring flex="50%"/>
+          <titledbutton onclick="MoveUp();" id="up" class="borderless up" />
+          <html:div>
+          &charset.customize.reorder.label;
+          </html:div>
+          <titledbutton onclick="MoveDown();" id="down"
+            class="borderless down" />
+          <spring flex="50%"/>
+        </box>
+		<!-- vert 3 -->
+
+
+  </box>
+  <!-- horz 2 -->	
+
+  <html:div>
+    <html:hr />
+  </html:div>
+
+  <!-- The 'Save' and 'Cancel' buttons -->
+  <!-- horz 6 -->
+  <box align="horizontal">
+    <spring flex="48%"/>
+    <titledbutton onclick="window.close()"
+       class="dialog push"
+       value="&charset.customize.cancel.label;" />
+    <spring flex="4%"/>
+    <titledbutton id="save_button" onclick="Save();"
+       class="dialog push"
+       value="&charset.customize.save.label;"
+       disabled="true"/>
+    <spring flex="48%"/>
+  </box>
+  <!-- horz 6 -->
+  
+</window>
+

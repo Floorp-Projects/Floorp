@@ -34,6 +34,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-cache.dtd \
 		$(srcdir)/pref-colors.dtd \
 		$(srcdir)/pref-themes.dtd \
+		$(srcdir)/pref-charset.dtd \
 		$(srcdir)/pref-composer.dtd \
 		$(srcdir)/pref-cookies.dtd \
 		$(srcdir)/pref-debug.dtd \
