@@ -258,6 +258,7 @@ private:
 
 	// variables for ReadNewsRC
 	PRInt32   m_newsRCListIndex;
+	PRInt32   m_RCIndexToResumeAfterAuthRequest;
 	PRInt32   m_newsRCListCount;
 
 	// variable for ReadNewsList
@@ -423,6 +424,9 @@ private:
 
   nsresult SetCurrentGroup(); /* sets m_currentGroup.  should be called after doing a successful GROUP command */
   nsresult CleanupNewsgroupList(); /* cleans up m_newsgroupList, and set it to null */
+
+  void    GotAuthorizationRequest(); /* called when we got an authorization request, which potentially disrupted something */
+  PRInt32 GetNextGroupNeedingCounts( nsISupports** pNextGroup, PRInt32* returnStatus );
 
     // cache related helper methods
   void FinishMemCacheEntry(PRBool valid); // either mark it valid, or doom it
