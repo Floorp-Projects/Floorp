@@ -1022,6 +1022,26 @@ sub BuildClientDist()
     #LDAP
     if ($main::options{ldap})
     {
+        # Create the ldap-standard.h file from the template
+        #
+        my($template) = ":mozilla:directory:c-sdk:ldap:include:ldap-standard-tmpl.h";
+        my($template_modtime) = GetFileModDate($template);
+        my($header) = ":mozilla:directory:c-sdk:ldap:include:ldap-standard.h";
+        my($header_modtime) = (-e $header ? GetFileModDate($header) : 0);
+        if ($template_modtime > $header_modtime) {
+            open(STDIN, "<$template");
+            open(STDOUT, ">$header");
+            @ARGV = ("LDAP_VENDOR_NAME=mozilla.org", "LDAP_VENDOR_VERSION=500");
+            do ":mozilla:directory:c-sdk:ldap:build:replace.pl";
+            if ($@) {
+                close(STDOUT);
+                close(STDIN);
+                die "Error: can't create ldap-standard.h from ldap-standard-tmpl.h";
+            }
+            close(STDOUT);
+            close(STDIN);
+        }
+
         InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",      		"$distdirectory:directory:");
         InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST",       		"$distdirectory:directory:");
         InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST_IDL",   		"$distdirectory:idl:");
