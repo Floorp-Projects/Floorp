@@ -45,6 +45,7 @@ interface nsIMsgWindow : nsISupports {
 	attribute nsIMsgFolder openFolder;
 	attribute nsIDocShell rootDocShell;
     readonly attribute nsIPrompt promptDialog;
+  attribute wstring mailCharacterSet;
 	
 	void SetDOMWindow(in nsIDOMWindow window);
 	void StopUrls();

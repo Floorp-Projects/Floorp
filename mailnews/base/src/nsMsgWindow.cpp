@@ -39,6 +39,8 @@
 #include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrompt.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 
 // XXX Remove
 #include "nsIWebShell.h"
@@ -227,6 +229,37 @@ NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
     mRootDocShell = aDocShell;
     mRootDocShell->SetParentURIContentListener(this);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::GetMailCharacterSet(PRUnichar * *aMailCharacterSet)
+{
+  if(!aMailCharacterSet)
+    return NS_ERROR_NULL_POINTER;
+
+  *aMailCharacterSet = mMailCharacterSet.ToNewUnicode();
+  if (!(*aMailCharacterSet))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const PRUnichar * aMailCharacterSet)
+{
+  mMailCharacterSet.Assign(aMailCharacterSet);
+
+  // Convert to a canonical charset name instead of using the charset name from the message header as is.
+  // This is needed for charset menu item to have a check mark correctly.
+  nsresult rv;
+  nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) 
+  {
+    nsCOMPtr <nsIAtom> charsetAtom;
+    rv = ccm2->GetCharsetAtom(mMailCharacterSet.GetUnicode(), getter_AddRefs(charsetAtom));
+    if (NS_SUCCEEDED(rv)) 
+      rv = charsetAtom->ToString(mMailCharacterSet);
+  }
+
   return NS_OK;
 }
 

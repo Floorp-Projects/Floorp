@@ -57,6 +57,8 @@ protected:
   // let's not make this a strong ref - we don't own it.
   nsIDocShell *mRootDocShell;
   nsIDocShell *mMessageWindowDocShell;
+
+  nsString mMailCharacterSet;
 };
 
 #endif
