@@ -56,6 +56,8 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 -include config.mk
 
+CPORLN = ln -s
+
 ifdef USE_64
 	DEFINES += -DNSS_USE_64
 endif
@@ -69,6 +71,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+CPORLN = cp
 ifneq ($(OS_TARGET),WIN16)
     ASFILES  = mpi_x86.asm
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
@@ -101,22 +104,26 @@ endif
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
+MKSHLIB += +k +vshlibunsats -u FREEBL_GetVector +e FREEBL_GetVector
+ifndef FREEBL_EXTENDED_BUILD
 ifdef USE_PURE_32
 # build for DA1.1 (HP PA 1.1) pure 32 bit model
     DEFINES  += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
 else
 ifdef USE_64
 # this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 32-bit digits 
-    MPI_SRCS += montmulf.c
-    DEFINES  += -DMP_USING_MONT_MULF -DMP_USE_UINT_DIGIT
-    DEFINES  += -DMP_USE_LONG_LONG_MULTIPLY -DMP_NO_MP_WORD
+    MPI_SRCS += mpi_hp.c 
+    ASFILES  += hpma512.s hppa20.s 
+    DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 else
 # this builds for DA2.0 (HP PA 2.0 Narrow) hybrid model 
 # (the 32-bit ABI with 64-bit registers) using 32-bit digits
-    MPI_SRCS += montmulf.c
-    DEFINES  += -DMP_USING_MONT_MULF -DMP_USE_UINT_DIGIT
-    DEFINES  += -DMP_USE_LONG_LONG_MULTIPLY -DMP_NO_MP_WORD
-    OS_CFLAGS += -Aa +e +DA2.0 +DS2.0
+    MPI_SRCS += mpi_hp.c 
+    ASFILES  += hpma512.s hppa20.s 
+    DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
+# This is done in coreconf by defining USE_LONG_LONGS
+#   OS_CFLAGS += -Aa +e +DA2.0 +DS2.0
+endif
 endif
 endif
 endif
@@ -125,7 +132,9 @@ endif
 ifeq ($(OS_TARGET),SunOS)
 ifeq ($(CPU_ARCH),sparc)
 ifndef NS_USE_GCC
+ifndef USE_PURE_32
     OS_CFLAGS += -xchip=ultra2
+endif
 endif
 ifeq ($(OS_RELEASE),5.5.1)
     SYSV_SPARC = 1
@@ -141,6 +150,7 @@ ifeq ($(OS_RELEASE),5.8)
 endif
 ifeq ($(SYSV_SPARC),1)
 SOLARIS_AS = /usr/ccs/bin/as
+MKSHLIB += -B symbolic -z defs -z now -z text -M mapfile.Solaris
 ifdef USE_PURE_32
 # this builds for Sparc v8 pure 32-bit architecture
     DEFINES += -DMP_USE_LONG_LONG_MULTIPLY -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
@@ -203,34 +213,37 @@ endif
 endif
 
 mp%.h : mpi/mp%.h
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 mp%.c : mpi/mp%.c
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 mp%.S : mpi/mp%.S
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 mp%.s : mpi/mp%.s
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 mp%.asm : mpi/mp%.asm
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 logtab.h : mpi/logtab.h
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 primes.c : mpi/primes.c
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 vis%.il : mpi/vis%.il
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 vis%.h : mpi/vis%.h
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
 
 mont% : mpi/mont%
-	cd mpi; cp $@ ..
+	-$(CPORLN) $< .
+
+hp%.s : mpi/hp%.s
+	-$(CPORLN) $< .
 
 .PRECIOUS : $(MPI_SRCS) $(MPI_HDRS) $(ASFILES)
 
@@ -272,4 +285,35 @@ endif
 
 ifeq ($(OS_ARCH), HP-UX)
 $(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
+endif
+
+$(OBJDIR)/ldvector.o $(OBJDIR)/loader.o : loader.h
+
+ifdef FREEBL_EXTENDED_BUILD
+
+PURE32DIR = $(OS_ARCH)pure32
+ALL_TRASH += $(PURE32DIR)
+
+FILES2LN = \
+ $(ALL_HDRS) \
+ $(ALL_CSRCS) \
+ $(wildcard *.tab) \
+ $(wildcard mapfile.*) \
+ Makefile manifest.mn config.mk 
+
+LINKEDFILES = $(addprefix $(PURE32DIR)/, $(FILES2LN))
+
+$(PURE32DIR):
+	-mkdir $(PURE32DIR)
+	-ln -s ../mpi $(PURE32DIR)
+
+$(LINKEDFILES) : $(PURE32DIR)/% : % 
+	ln -s ../$* $(PURE32DIR)
+
+libs:: 
+	$(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_HYBRID=1 libs
+
+libs:: $(PURE32DIR) $(LINKEDFILES)
+	cd $(PURE32DIR) && $(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_PURE_32=1 libs
+
 endif
