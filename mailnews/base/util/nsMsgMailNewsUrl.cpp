@@ -622,6 +622,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const nsACString &relativePath, nsACStri
     if (NS_SUCCEEDED(rv) && !scheme.IsEmpty())
     {
       result = relativePath;
+      rv = NS_OK;
     }
     else
     {
@@ -630,7 +631,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const nsACString &relativePath, nsACStri
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(nsACString &aDirectory)

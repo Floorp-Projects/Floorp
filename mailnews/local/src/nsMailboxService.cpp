@@ -471,11 +471,8 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
     if (FindInReadable(NS_LITERAL_CSTRING("?uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)) ||
         FindInReadable(NS_LITERAL_CSTRING("&uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)))
   {
-    nsCOMPtr<nsIPop3Service> pop3Service = 
+    nsCOMPtr<nsIProtocolHandler> handler = 
              do_GetService(kCPop3ServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIProtocolHandler> handler = do_QueryInterface(pop3Service,
-                                                             &rv);
     if (NS_SUCCEEDED(rv))
         rv = handler->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
   }
@@ -488,7 +485,9 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
       if (aBaseURI) 
       {
         nsCAutoString newSpec;
-        aBaseURI->Resolve(aSpec, newSpec);
+        rv = aBaseURI->Resolve(aSpec, newSpec);
+        if (NS_FAILED(rv))
+          return rv;
         aMsgUri->SetSpec(newSpec);
       } 
       else 
