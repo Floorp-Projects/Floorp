@@ -26,7 +26,7 @@
  */
 
 #if defined(CookieManagement)
-#define TRUST_LABELS 1
+/* #define TRUST_LABELS */
 #endif
 
 #define alphabetize 1
@@ -3757,7 +3757,263 @@ NET_AskForProxyAuth(MWContext * context,
 
 
 #if defined(CookieManagement)
+
+#ifdef HTMLDialogs
 #include "htmldlgs.h"
+#else
+#define XP_DIALOG_CANCEL_BUTTON		(1<<0)
+#define XP_DIALOG_OK_BUTTON             (1<<2)
+#define XP_STRINGS_CHUNKSIZE 512
+typedef struct _XPDialogState XPDialogState;
+typedef struct _XPDialogInfo XPDialogInfo;
+typedef struct _XPDialogStrings XPDialogStrings;
+typedef PRBool (* XP_HTMLDialogHandler)(XPDialogState *state, char **argv,
+                                        int argc, unsigned int button);
+struct _XPDialogState {
+    PRArenaPool *arena;
+    void *window;
+    void *proto_win;
+    XPDialogInfo *dialogInfo;
+    void *arg;
+    void (* deleteCallback)(void *arg);
+    void *cbarg;
+    PRBool deleted;
+};
+struct _XPDialogInfo {
+    unsigned int buttonFlags;
+    XP_HTMLDialogHandler handler;
+    int width;
+    int height;
+};
+struct _XPDialogStrings
+{
+    PRArenaPool *arena;
+    int basestringnum;
+    int nargs;
+    char **args;
+    char *contents;
+};
+
+#define COOKIE_FILE "C:/PROGRA~1/NETSCAPE/USERS/morse/cookies.txt"
+time_t CookieTime() {
+    struct stat stats;
+    stat(COOKIE_FILE, &stats);
+    return stats.st_mtime;
+}
+
+XPDialogState *
+XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
+		     int titlenum, XPDialogStrings *strings,
+		     int handlestring, void *arg)
+{
+    int i;
+    time_t oldCookieTime;
+
+    /* write out html dialog to /htmldlgs.htm */
+    XP_File f = fopen("/htmldlgs.htm","w");
+    for (i=0; i<strings->nargs; i++) {
+        if (strings->args[i]) {
+            fprintf(f, "%s", (char *)(strings->args[i]));
+        }
+    }
+    fclose(f);
+    fflush(f);
+
+    /* write out dialog info to /index.htm */
+    f = fopen("/index.htm","w");
+    fprintf(f, "<HTML> \n");
+    fprintf(f, "  <BODY \n");
+    fprintf(f, "    onload=\"msgWindow=window.open(\n");
+    fprintf(f, "      'htmldlgs.htm', \n");
+    fprintf(f, "      'window2', \n");
+    fprintf(f, "      'resizable=no, titlebar=no, width=%d, height=%d')\">\n",
+        dialogInfo->width, dialogInfo->height);
+    fprintf(f, "  </BODY> \n");
+    fprintf(f, "</HTML> \n");
+    fclose(f);
+    fflush(f);
+
+    /* obtain timestamp of cookies file */
+    oldCookieTime = CookieTime();
+
+    /* bring up a browser on /index.htm */
+    WinExec("C:\\PROGRA~1\\NETSCAPE\\COMM32\\PROGRAM\\netscape.exe y:\\index.htm",SW_SHOW);
+
+    /* wait for timestamp on cookies file to change */
+    while (oldCookieTime == CookieTime()) {
+    }
+
+    /* call the htmldlgs done routine */
+    {
+        struct stat stats;
+        long fileLength;
+        XP_File f;
+        char* readBuf;
+        char* argv[] = {NULL, NULL, NULL, NULL};
+        char* button = NULL;
+        char* cookie;
+        char* separator;
+
+        /* read in the cookies file */
+        stat(COOKIE_FILE, &stats);
+        fileLength = stats.st_size;
+        readBuf = (char *) malloc(fileLength * sizeof(char));
+        f = fopen(COOKIE_FILE, "r");
+        fread(readBuf, sizeof(char), fileLength, f);
+
+        /* find the htmldlgs cookie (it is preceded by "htmldlgs" tab "|" ) */
+        cookie = PL_strstr(readBuf, "htmldlgs\t|"); /* get to htmldlgs tab | */
+        cookie = cookie + PL_strlen("htmldlgs\t|"); /* get passed htmldlgs tab | */
+
+        /* button name is first item in cookie (up to next |) */
+        separator = strchr(cookie, '|');
+        *separator = '\0';
+        StrAllocCopy(button, cookie);
+        cookie = separator+1;
+        *separator = '|';
+
+        /* goneC value is next item in cookie (up to next |) */
+        separator = strchr(cookie, '|');
+        *separator = '\0';
+        StrAllocCopy(argv[0], "goneC");
+        StrAllocCopy(argv[1], cookie);
+        cookie = separator+1;
+        *separator = '|';
+
+        /* goneP value is next item in cookie (up to next |) */
+        separator = strchr(cookie, '|');
+        *separator = '\0';
+        StrAllocCopy(argv[2], "goneP");
+        StrAllocCopy(argv[3], cookie);
+        cookie = separator+1;
+        *separator = '|';
+
+        if (!PORT_Strcmp(button,"OK")) {
+          (dialogInfo->handler)(NULL, argv, 4, XP_DIALOG_OK_BUTTON);
+        } else {
+          (dialogInfo->handler)(NULL, argv, 4, XP_DIALOG_CANCEL_BUTTON);
+        }
+        XP_FREE(button);
+        XP_FREE(argv[0]);
+        XP_FREE(argv[1]);
+        XP_FREE(argv[2]);
+        XP_FREE(argv[3]);
+        XP_FREE(readBuf);
+    }
+
+    return NULL;
+}
+
+XPDialogStrings *
+XP_GetDialogStrings(int stringnum)
+{
+    XPDialogStrings *header = NULL;
+    PRArenaPool *arena = NULL;
+    char *dst, *src;
+    int n, size, len, done = 0;
+    
+    /* get a new arena */
+    arena = PORT_NewArena(XP_STRINGS_CHUNKSIZE);
+    if ( arena == NULL ) {
+	return(NULL);
+    }
+
+    /* allocate the header structure */
+    header = (XPDialogStrings *)PORT_ArenaAlloc(arena, sizeof(XPDialogStrings));
+    if ( header == NULL ) {
+	goto loser;
+    }
+
+    /* init the header */
+    header->arena = arena;
+    header->basestringnum = stringnum;
+
+    src = XP_GetString(stringnum);
+    len = PORT_Strlen(src);
+    size = len + 1;
+    dst = header->contents =
+	(char *)PORT_ArenaAlloc(arena, sizeof(char) * size);
+    if (dst == NULL)
+	goto loser;
+    
+    while (!done) {		/* Concatenate pieces to form message */
+	PORT_Memcpy(dst, src, len+1);
+	done = 1;
+	if (XP_STRSTR(src, "%-cont-%")) { /* Continuation */
+	    src = XP_GetString(++stringnum);
+	    len = PORT_Strlen(src);
+	    header->contents =
+		(char *)PORT_ArenaGrow(arena,
+				     header->contents, size, size + len);
+	    if (header->contents == NULL)
+		goto loser;
+	    dst = header->contents + size - 1;
+	    size += len;
+	    done = 0;
+	}
+    }
+
+    /* At this point we should have the complete message in
+       header->contents, including like %-cont-%, which will be
+       ignored later. */
+
+    /* Count the arguments in the message */
+    header->nargs = -1;		/* Support %0% as lowest token */
+    src = header->contents;
+    while ((src = PORT_Strchr(src, '%'))) {
+	src++;
+	n = (int)XP_STRTOUL(src, &dst, 10);
+	if (dst == src)	{	/* Integer not found... */
+	    src = PORT_Strchr(src, '%') + 1; /* so skip this %..% */
+	    PORT_Assert(NULL != src-1); /* Unclosed %..% ? */
+	    continue;
+	}
+	
+	if (header->nargs < n)
+	    header->nargs = n;
+	src = dst + 1;
+    }
+
+    if (++(header->nargs) > 0)  /* Allocate space for arguments */
+	header->args = (char **)PORT_ArenaZAlloc(arena, sizeof(char *) *
+					      header->nargs);
+
+    return(header);
+    
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return(NULL);
+}
+
+
+
+void
+XP_SetDialogString(XPDialogStrings *strings, int argNum, char *string)
+{
+    /* make sure we are doing it right */
+    PORT_Assert(argNum < strings->nargs);
+    PORT_Assert(argNum >= 0);
+    PORT_Assert(strings->args[argNum] == NULL);
+    
+    /* set the string */
+    strings->args[argNum] = string;
+    
+    return;
+}
+
+char *
+XP_FindValueInArgs(const char *name, char **av, int ac)
+{
+    for( ;ac > 0; ac -= 2, av += 2 ) {
+	if ( PORT_Strcmp(name, av[0]) == 0 ) {
+	    return(av[1]);
+	}
+    }
+    return(0);
+}
+
+#endif
+
 extern int XP_CERT_PAGE_STRINGS;
 extern int SA_REMOVE_BUTTON_LABEL;
 
@@ -5174,6 +5430,15 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 "    }\n"
 "\n"
 "    function clicker(but,win){\n"
+#ifndef HTMLDialogs 
+"      var goneC = top.frames[button_frame].document.buttons.goneC;\n"
+"      var goneP = top.frames[button_frame].document.buttons.goneP;\n"
+"      var expires = new Date();\n"
+"      expires.setTime(expires.getTime() + 1000*60*60*24*365);\n"
+"      document.cookie = \"htmldlgs=|\" + but.value +\n"
+"        \"|\" + goneC.value + \"|\" + goneP.value + \"|\" +\n"
+"        \"; expires=\" + expires.toGMTString();\n"
+#endif
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.value = but.value;\n"
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.name = 'button';\n"
 "      top.frames[button_frame].document.buttons.submit();\n"
