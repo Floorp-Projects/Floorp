@@ -177,7 +177,7 @@ then
 else
 	Wait ${OSDIR}/SVbuild.InProgress.1 0 	#Wait for the build to finish...
 fi
-
+find_nt_masterbuild
 Debug "Dist $DIST"
 run_all
 BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
