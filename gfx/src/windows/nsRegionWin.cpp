@@ -17,6 +17,7 @@
  */
 
 #include "nsRegionWin.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
@@ -168,6 +169,53 @@ PRBool nsRegionWin :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt
 
 PRBool nsRegionWin :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 {
+	LPRGNDATA pRgnData;
+	LPRECT pRects;
+	DWORD dwCount, dwResult;
+	unsigned int num_rects;
+	nsRect rect;
+
+  // code lifted from old winfe. MMP
+
+	NS_ASSERTION(!(nsnull == func), "no callback");
+
+	/* Get the size of the region data */
+	dwCount = GetRegionData(mRegion, 0, NULL);
+
+	NS_ASSERTION(!(dwCount == 0), "bad region");
+
+	if (dwCount == 0)
+	  return PR_FALSE;
+
+	pRgnData = (LPRGNDATA)PR_Malloc(dwCount);
+
+	NS_ASSERTION(!(nsnull == pRgnData), "failed allocation");
+
+	if (pRgnData == NULL)
+	  return PR_FALSE;
+
+	dwResult = GetRegionData(mRegion, dwCount, pRgnData);
+
+	NS_ASSERTION(!(dwResult == 0), "get data failed");
+
+	if (dwResult == 0) {
+		PR_Free(pRgnData);
+		return PR_FALSE;
+	}
+  
+	for (pRects = (LPRECT)pRgnData->Buffer, num_rects = 0; 
+		 num_rects < pRgnData->rdh.nCount; 
+		 num_rects++, pRects++)
+  {
+		rect.x = pRects->left;
+		rect.y = pRects->top;
+		rect.width = pRects->right - rect.x;
+		rect.height = pRects->bottom - rect.y;
+		(*func)(closure, rect);
+	}
+
+	PR_Free(pRgnData);
+
   return PR_FALSE;
 }
 
