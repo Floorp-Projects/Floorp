@@ -211,7 +211,7 @@ SampleImpl::GetValue(char** aValue)
 }
 
 NS_IMETHODIMP
-SampleImpl::SetValue(char* aValue)
+SampleImpl::SetValue(const char* aValue)
 {
     NS_PRECONDITION(aValue != nsnull, "null ptr");
     if (! aValue)
@@ -222,9 +222,9 @@ SampleImpl::SetValue(char* aValue)
     }
 
     /**
-     * Another buffer passing convention is that buffer's passed INTO your
+     * Another buffer passing convention is that buffers passed INTO your
      * object ARE NOT YOURS.  Keep your hands off them, unless they are
-     * declared "in out".  If you want to keep the value for posterity,
+     * declared "inout".  If you want to keep the value for posterity,
      * you will have to make a copy of it.
      */
     mValue = PL_strdup(aValue);

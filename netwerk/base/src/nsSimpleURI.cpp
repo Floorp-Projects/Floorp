@@ -84,7 +84,7 @@ nsSimpleURI::GetSpec(char* *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetSpec(char* aSpec)
+nsSimpleURI::SetSpec(const char* aSpec)
 {
     nsAutoString spec(aSpec);
     PRUint32 pos = spec.Find(":");
@@ -118,7 +118,7 @@ nsSimpleURI::GetScheme(char* *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetScheme(char* scheme)
+nsSimpleURI::SetScheme(const char* scheme)
 {
     if (mScheme) nsCRT::free(mScheme);
     mScheme = nsCRT::strdup(scheme);
@@ -132,7 +132,7 @@ nsSimpleURI::GetPreHost(char* *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPreHost(char* preHost)
+nsSimpleURI::SetPreHost(const char* preHost)
 {
     return NS_ERROR_FAILURE;
 }
@@ -144,7 +144,7 @@ nsSimpleURI::GetHost(char* *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetHost(char* host)
+nsSimpleURI::SetHost(const char* host)
 {
     return NS_ERROR_FAILURE;
 }
@@ -169,7 +169,7 @@ nsSimpleURI::GetPath(char* *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPath(char* path)
+nsSimpleURI::SetPath(const char* path)
 {
     if (mPath) nsCRT::free(mPath);
     mPath = nsCRT::strdup(path);

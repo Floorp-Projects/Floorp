@@ -51,25 +51,25 @@ class nsFileSpecWithUIImpl
 
 	NS_IMETHOD GetURLString(char * *aURLString)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetURLString(aURLString) : NS_ERROR_NOT_INITIALIZED; }
-	NS_IMETHOD SetURLString(char * aURLString)
+	NS_IMETHOD SetURLString(const char * aURLString)
 		{ return mBaseFileSpec ? mBaseFileSpec->SetURLString(aURLString) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* attribute string UnixStyleFilePath; */
 	NS_IMETHOD GetUnixStyleFilePath(char * *aUnixStyleFilePath)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetUnixStyleFilePath(aUnixStyleFilePath) : NS_ERROR_NOT_INITIALIZED; }
-	NS_IMETHOD SetUnixStyleFilePath(char * aUnixStyleFilePath)
+	NS_IMETHOD SetUnixStyleFilePath(const char * aUnixStyleFilePath)
 		{ return mBaseFileSpec ? mBaseFileSpec->SetUnixStyleFilePath(aUnixStyleFilePath) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* attribute string PersistentDescriptorString; */
 	NS_IMETHOD GetPersistentDescriptorString(char * *aPersistentDescriptorString)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetPersistentDescriptorString(aPersistentDescriptorString) : NS_ERROR_NOT_INITIALIZED; }
-	NS_IMETHOD SetPersistentDescriptorString(char * aPersistentDescriptorString)
+	NS_IMETHOD SetPersistentDescriptorString(const char * aPersistentDescriptorString)
 		{ return mBaseFileSpec ? mBaseFileSpec->SetPersistentDescriptorString(aPersistentDescriptorString) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* attribute string NativePath; */
 	NS_IMETHOD GetNativePath(char * *aNativePath)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetNativePath(aNativePath) : NS_ERROR_NOT_INITIALIZED; }
-	NS_IMETHOD SetNativePath(char * aNativePath)
+	NS_IMETHOD SetNativePath(const char * aNativePath)
 		{ return mBaseFileSpec ? mBaseFileSpec->SetNativePath(aNativePath) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute string NSPRPath; */
@@ -91,7 +91,7 @@ class nsFileSpecWithUIImpl
 	/* attribute string LeafName; */
 	NS_IMETHOD GetLeafName(char * *aLeafName)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetLeafName(aLeafName) : NS_ERROR_NOT_INITIALIZED; }
-	NS_IMETHOD SetLeafName(char * aLeafName)
+	NS_IMETHOD SetLeafName(const char * aLeafName)
 		{ return mBaseFileSpec ? mBaseFileSpec->SetLeafName(aLeafName) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute nsIFileSpec Parent; */
@@ -202,7 +202,7 @@ class nsFileSpecWithUIImpl
 
 	NS_IMETHOD GetFileContents(char** _retval)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetFileContents(_retval) : NS_ERROR_NOT_INITIALIZED; }
-	NS_IMETHOD SetFileContents(char* s)
+	NS_IMETHOD SetFileContents(const char* s)
 		{ return mBaseFileSpec ? mBaseFileSpec->SetFileContents(s) : NS_ERROR_NOT_INITIALIZED; }
 
 	NS_IMETHOD GetFileSpec(nsFileSpec *_retval)

@@ -163,7 +163,7 @@ NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsTestXPCFoo::SetFoo(char * aFoo)
+NS_IMETHODIMP nsTestXPCFoo::SetFoo(const char * aFoo)
 {
     printf("nsTestXPCFoo::Set called ");
     if(mFoo)

@@ -58,7 +58,7 @@ nsMIMEInfoImpl::GetFileExtensions(char * *aFileExtensions) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::SetFileExtensions(char * aFileExtensions) {
+nsMIMEInfoImpl::SetFileExtensions(const char * aFileExtensions) {
     mFileExtensions.SetString(aFileExtensions);
     return NS_OK;
 }
@@ -75,7 +75,7 @@ nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::SetMIMEType(char * aMIMEType) {
+nsMIMEInfoImpl::SetMIMEType(const char * aMIMEType) {
     NS_RELEASE(mMIMEType);
     mMIMEType = NS_NewAtom(aMIMEType);
     if (!mMIMEType) return NS_ERROR_OUT_OF_MEMORY;
@@ -92,7 +92,7 @@ nsMIMEInfoImpl::GetDescription(PRUnichar * *aDescription) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::SetDescription(PRUnichar * aDescription) {
+nsMIMEInfoImpl::SetDescription(const PRUnichar * aDescription) {
     mDescription.SetString(aDescription);
     return NS_OK;
 }

@@ -314,7 +314,7 @@ nsIOService::GetLanguage(PRUnichar* *aLanguage)
 }
 
 NS_IMETHODIMP
-nsIOService::SetLanguage(PRUnichar* aLanguage)
+nsIOService::SetLanguage(const PRUnichar* aLanguage)
 {
     nsCString lang(aLanguage);
     mAppLanguage->SetString(lang);
