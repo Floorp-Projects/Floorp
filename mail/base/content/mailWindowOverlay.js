@@ -709,9 +709,12 @@ function GetInboxFolder(server)
 
 function GetMessagesForInboxOnServer(server)
 {
-  dump ("GetMessagesForInboxOnServer uri = " + server.serverURI + "\n");
   var inboxFolder = GetInboxFolder(server);
-  if (!inboxFolder) return;
+
+  // if the server doesn't support an inbox it could be an RSS server or some other server type..
+  // just use the root folder and the server implementation can figure out what to do.
+  if (!inboxFolder)
+    inboxFolder = server.rootFolder;    
 
   var folders = new Array(1);
   folders[0] = inboxFolder;
