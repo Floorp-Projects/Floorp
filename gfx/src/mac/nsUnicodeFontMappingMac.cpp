@@ -58,33 +58,6 @@ static UnicodeToTextInfo gConverters[32] = {
        nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull
 };
 //------------------------------------------------------------------------
-static UnicodeToTextInfo
-GetConverterByScript(ScriptCode sc)
-{
-  // because the Mac QuickDraw BIDI support are quite different from other platform
-  // we try not to use them and use the XP BIDI feature
-  // those text will be drawn by ATSUI intead one character at a time
-  if ((sc == smArabic) || (sc == smHebrew))
-     return nsnull;
-  NS_PRECONDITION(sc < 32, "illegal script id");
-  if(sc >= 32)
-    return nsnull;
-  if (gConverters[sc] != nsnull) {
-    return gConverters[sc];
-  }
-  OSStatus err = noErr;
-    
-  //
-  TextEncoding scriptEncoding;
-  err = ::UpgradeScriptInfoToTextEncoding(sc, kTextLanguageDontCare, kTextRegionDontCare, nsnull, &scriptEncoding);
-  if ( noErr == err ) 
- 	  err = ::CreateUnicodeToTextInfoByEncoding(scriptEncoding, &gConverters[sc] );
-
-  if (noErr != err) 
-    gConverters[sc] = nsnull;
-  return gConverters[sc];
-}
-
 
 class nsUnicodeFontMappingEntry
 {
@@ -122,18 +95,7 @@ public:
             }
             return PR_FALSE;
         }
-
-        UnicodeToTextInfo converter = GetConverterByScript(mScript);
-        if(converter)
-        {
-            OSStatus err = ::ConvertFromUnicodeToText(converter, 2 * aStringLength,
-                (ConstUniCharArrayPtr) aString,
-                opts, 0, NULL, 0, NULL,
-                aBufferLength, &oBytesRead, &oActualLength,
-                (LogicalAddress) aBuffer);
-    
-            return (oActualLength > 0 ? PR_TRUE : PR_FALSE);
-        }
+        
         return PR_FALSE;
     }
 
@@ -298,21 +260,20 @@ void nsUnicodeFontMappingMac::InitByFontFamily(nsFont* aFont, nsIDeviceContext *
 
 void nsUnicodeFontMappingMac::processOneLangRegion(const char* aLanguage, const char* aRegion )
 {
-	if(gUtil->ScriptEnabled(smTradChinese) &&
-	   ((! nsCRT::strcmp(aLanguage,"zh")) &&
-	    ((! nsCRT::strcmp(aRegion,"TW")) || (! nsCRT::strcmp(aRegion,"HK"))))) 
+	if ((! nsCRT::strcmp(aLanguage,"zh")) &&
+	    ((! nsCRT::strcmp(aRegion,"TW")) || (! nsCRT::strcmp(aRegion,"HK"))))
 	{
 		FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
 	} 
-	else if(gUtil->ScriptEnabled(smSimpChinese) && (! nsCRT::strcmp(aLanguage,"zh"))) 
+	else if(! nsCRT::strcmp(aLanguage,"zh"))
 	{
 		FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
 	} 
-	else if(gUtil->ScriptEnabled(smKorean) && (! nsCRT::strcmp(aLanguage,"ko"))) 
+	else if(! nsCRT::strcmp(aLanguage,"ko"))
 	{
 		FillVarBlockToScript(smKorean, mPrivBlockToScript);
 	}
-	else if(gUtil->ScriptEnabled(smJapanese) && (! nsCRT::strcmp(aLanguage,"ja"))) 
+	else if(! nsCRT::strcmp(aLanguage,"ja"))
 	{
 		FillVarBlockToScript(smJapanese, mPrivBlockToScript);
 	}
@@ -407,25 +368,26 @@ void nsUnicodeFontMappingMac::InitByLANG(const nsString& aLANG)
 //--------------------------------------------------------------------------
 void nsUnicodeFontMappingMac::InitByLangGroup(const nsString& aLangGroup)
 {
-	// do not countinue if there are no difference to look at the document Charset
+	// do not continue if there are no difference to look at the document Charset
 	if( ScriptMapInitComplete() )
 		return;
-	if(gUtil->ScriptEnabled(smRoman) && aLangGroup.LowerCaseEqualsLiteral("x-western"))
-  	{
+	if(aLangGroup.LowerCaseEqualsLiteral("x-western"))
+ 	{
 		FillVarBlockToScript(smRoman, mPrivBlockToScript);		
-  	} else if(gUtil->ScriptEnabled(smSimpChinese) && aLangGroup.LowerCaseEqualsLiteral("zh-cn"))
-  	{
+ 	} else if(aLangGroup.LowerCaseEqualsLiteral("zh-cn"))
+ 	{
 		FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
-  	} else if(gUtil->ScriptEnabled(smKorean) && aLangGroup.LowerCaseEqualsLiteral("ko"))
-  	{
+ 	} else if(aLangGroup.LowerCaseEqualsLiteral("ko"))
+ 	{
 		FillVarBlockToScript(smKorean, mPrivBlockToScript);
-  	} else if((gUtil->ScriptEnabled(smTradChinese)) && ((aLangGroup.LowerCaseEqualsLiteral("zh-tw")) || (aLangGroup.LowerCaseEqualsLiteral("zh-hk"))))
-  	{
+ 	} else if(aLangGroup.LowerCaseEqualsLiteral("zh-tw") ||
+              aLangGroup.LowerCaseEqualsLiteral("zh-hk"))
+ 	{
 		FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
-  	} else if(gUtil->ScriptEnabled(smJapanese) && aLangGroup.LowerCaseEqualsLiteral("ja"))
-  	{
+ 	} else if(aLangGroup.LowerCaseEqualsLiteral("ja"))
+ 	{
 		FillVarBlockToScript(smJapanese, mPrivBlockToScript);
-  	}
+ 	}
 }
 //--------------------------------------------------------------------------
 
