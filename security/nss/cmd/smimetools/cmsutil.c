@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.41 2003/04/01 19:13:50 bishakhabanerjee%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.42 2003/10/25 14:05:08 wchang0222%aol.com Exp $
  */
 
 #include "nspr.h"
@@ -1035,7 +1035,6 @@ main(int argc, char **argv)
        case 'H':
            if (mode != SIGN) {
                fprintf(stderr,
-                       "%s: option -n only supported with option -D.\n",
                        "%s: option -H only supported with option -S.\n",
                        progName);
                Usage(progName);
