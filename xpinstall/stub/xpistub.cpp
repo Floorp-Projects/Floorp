@@ -213,7 +213,7 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
     nsFileURL               URL(file);
     nsString                URLstr(URL.GetURLString());
 
-    gInstallStatus = -201; // nsInstall::UNEXPECTED_ERROR
+    gInstallStatus = -322; // nsInstall::UNEXPECTED_ERROR
 
     NS_NewFileSpecWithSpec( file, getter_AddRefs(iFile) );
 

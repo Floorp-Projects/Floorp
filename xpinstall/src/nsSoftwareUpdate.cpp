@@ -94,10 +94,9 @@ nsSoftwareUpdate *
 nsSoftwareUpdate::GetInstance()
 {
     if (mInstance == nsnull) 
-    {
         mInstance = new nsSoftwareUpdate();
-        NS_IF_ADDREF(mInstance);
-    }
+
+    NS_IF_ADDREF(mInstance);
     return mInstance;
 }
 
@@ -145,6 +144,8 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
     NR_ShutdownRegistry();
 
     NS_IF_RELEASE( mProgramDir );
+
+    mInstance = nsnull;
 }
 
 
@@ -222,7 +223,7 @@ nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService 
 NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
-    NS_IF_RELEASE(mInstance);
+    // nothing to do here. Should we UnregisterService?
     return NS_OK;
 }
 
@@ -456,27 +457,7 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 // Functions used to create new instances of a given object by the
 // generic factory.
 
-static NS_METHOD      
-CreateNewSoftwareUpdate(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{                                                                  
-    if (!aResult) {                                                
-        return NS_ERROR_INVALID_POINTER;                           
-    }                                                              
-    if (aOuter) {                                                  
-        *aResult = nsnull;                                         
-        return NS_ERROR_NO_AGGREGATION;                              
-    }                                                                
-    nsSoftwareUpdate* inst = nsSoftwareUpdate::GetInstance();
-    if (inst == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsresult rv = inst->QueryInterface(aIID, aResult);                        
-    if (NS_FAILED(rv)) {                                             
-        *aResult = nsnull;                                           
-    }                                                                
-    return rv;                                                       
-}
-
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoftwareUpdate,nsSoftwareUpdate::GetInstance);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallTrigger);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion);
 //----------------------------------------------------------------------
@@ -489,7 +470,7 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
                         const char *registryLocation,
                         const char *componentType)
 {
-	// get the registry
+    // get the registry
     nsIRegistry* registry;
     nsresult rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
                                                NS_GET_IID(nsIRegistry),
@@ -512,8 +493,8 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
                                    &key );
         nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
     }
-	return rv;
 
+    return rv;
 }
 
 
@@ -521,23 +502,23 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
 static nsModuleComponentInfo components[] = 
 {
     { "SoftwareUpdate Component", 
-	   NS_SoftwareUpdate_CID,
+       NS_SoftwareUpdate_CID,
        NS_IXPINSTALLCOMPONENT_PROGID,
-	   CreateNewSoftwareUpdate,
-	   RegisterSoftwareUpdate
-	},
-	   
+       nsSoftwareUpdateConstructor,
+       RegisterSoftwareUpdate
+    },
+   
     { "InstallTrigger Component", 
-	   NS_SoftwareUpdateInstallTrigger_CID,
+       NS_SoftwareUpdateInstallTrigger_CID,
        NS_INSTALLTRIGGERCOMPONENT_PROGID, 
-	   nsInstallTriggerConstructor
-	},
+       nsInstallTriggerConstructor
+    },
     
-	{ "InstallVersion Component", 
-	   NS_SoftwareUpdateInstallVersion_CID,
+    { "InstallVersion Component", 
+       NS_SoftwareUpdateInstallVersion_CID,
        NS_INSTALLVERSIONCOMPONENT_PROGID,
-	   nsInstallVersionConstructor 
-	},
+       nsInstallVersionConstructor 
+    },
 };
 
 
