@@ -132,7 +132,21 @@ function refreshFilterList() {
     var tree = document.getElementById("filterTree");
     if (!tree) return;
 
+    var selection;
+    
+    var selectedItems = tree.selectedItems;
+    if (selectedItems && selectedItems.length >0)
+        selection = tree.selectedItems[0].id;
+
+    tree.clearItemSelection();
+    tree.clearCellSelection();
     tree.setAttribute("ref", tree.getAttribute("ref"));
+
+    if (selection) {
+        var newItem = document.getElementById(selection);
+        tree.selectItem(newItem);
+        tree.ensureElementIsVisible(newItem);
+    }
 }
 
 function updateButtons()
