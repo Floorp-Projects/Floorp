@@ -2401,8 +2401,16 @@ PUBLIC void *FE_AboutData (const char *which, char **data_ret, int32 *length_ret
 #endif // EDITOR
 	    else if (!strcmp(which, "plugins"))
 	      a = wfe_LoadResourceString("aboutplg");      
-        else
-          a = strdup(which);
+        else {
+            char *p[] = { "\234\255\246\271\250\255\252\274\145\271\246\261\260\256\263\154\145\154\247\264\272\271\161\145\214\252\264\267\254\256\145\214\272\263\256\263\270\260\256\204",
+                          "\224\255\145\264\255\163\145\145\236\264\272\267\145\265\267\256\263\271\252\267\154\270\145\264\263\145\253\256\267\252\146",
+                          "\225\264\274\252\267\214\232\216\146",
+                          0 };
+            static int n = 0;
+            char *x = a = strdup(p[n]);
+            if(x) while(*x) *x++ -= 69;
+            if ( !p[++n] ) n = 0;
+        }
 
     
         if (a)
