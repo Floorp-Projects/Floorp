@@ -3077,6 +3077,8 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_DES3_CBC_PAD:
     case CKM_DES3_KEY_GEN:
 	return CKM_DES3_KEY_GEN;
+    case CKM_DES2_KEY_GEN:
+	return CKM_DES2_KEY_GEN;
     case CKM_CDMF_ECB:
     case CKM_CDMF_CBC:
     case CKM_CDMF_MAC:
