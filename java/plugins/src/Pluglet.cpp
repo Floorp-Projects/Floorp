@@ -42,7 +42,9 @@ nsresult Pluglet::CreatePluginInstance(const char* aPluginMIMEType, void **aResu
         env->ExceptionDescribe();
         return NS_ERROR_FAILURE;
     }
-    *aResult = new PlugletInstance(obj);
+	nsISupports * instance = new PlugletInstance(obj);
+	NS_ADDREF(instance);
+	*aResult = instance;
     return NS_OK;
 }
 
