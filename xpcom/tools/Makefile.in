@@ -23,8 +23,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = registry
 
-ifdef BUILD_XPIDL 
+#ifdef BUILD_XPIDL 
 DIRS += xpidl 
-endif 
+#endif 
 
 include $(topsrcdir)/config/rules.mk

@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef BUILD_XPIDL
+ifdef USE_XPIDL
 IDLSRCS =	\
 	nsIDOMBaseAppCore.idl	\
 	nsIDOMWindow.idl	\
