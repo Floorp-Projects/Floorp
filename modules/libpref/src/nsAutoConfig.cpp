@@ -280,7 +280,7 @@ NS_IMETHODIMP nsAutoConfig::DownloadAutoCfg()
     
     // open a channel for the url
     
-    rv = NS_OpenURI(getter_AddRefs(channel),url, nsnull, nsnull);
+    rv = NS_OpenURI(getter_AddRefs(channel),url, nsnull, nsnull, nsnull, nsIRequest::INHIBIT_PERSISTENT_CACHING | nsIRequest::LOAD_BYPASS_CACHE);
     if(NS_FAILED(rv)) return rv;
     
     rv = channel->AsyncOpen(this, nsnull); 
