@@ -305,7 +305,7 @@ Source:</TH><TD>";
                     $name =~ s/%$//;
                     $name =~ s:/$::;
                     $name =~ s:^mozilla/::;
-                    push @filelist, "<A href='http://cvs-mirror.mozilla.org/webtools/lxr/source/$name'>$name</a>";
+                    push @filelist, "<A href='http://lxr.mozilla.org/mozilla/source/$name'>$name</a>";
                 }
                 print OWNERS join(', ', @filelist);
                 print OWNERS "</TD></TR>
