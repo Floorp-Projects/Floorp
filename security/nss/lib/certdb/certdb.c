@@ -37,7 +37,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.68 2004/05/11 02:43:09 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.69 2004/05/17 20:08:36 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -2046,14 +2046,12 @@ CERT_DecodeTrustString(CERTCertTrust *trust, char *trusts)
 	      *pflags = *pflags | CERTDB_USER;
 	      break;
 
-#ifdef DEBUG_NSSTEAM_ONLY
 	  case 'i':
 	      *pflags = *pflags | CERTDB_INVISIBLE_CA;
 	      break;
 	  case 'g':
 	      *pflags = *pflags | CERTDB_GOVT_APPROVED_CA;
 	      break;
-#endif /* DEBUG_NSSTEAM_ONLY */
 
 	  case ',':
 	      if ( pflags == &trust->sslFlags ) {

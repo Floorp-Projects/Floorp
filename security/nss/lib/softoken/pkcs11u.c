@@ -1065,6 +1065,7 @@ pk11_FindTrustAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_TRUST_SERVER_AUTH:
     case CKA_TRUST_EMAIL_PROTECTION:
     case CKA_TRUST_CODE_SIGNING:
+    case CKA_TRUST_STEP_UP_APPROVED:
 	break;
     default:
 	return NULL;
@@ -1112,6 +1113,12 @@ trust:
 	    return (PK11Attribute *)&pk11_StaticValidPeerAttr;
 	}
 	return (PK11Attribute *)&pk11_StaticMustVerifyAttr;
+    case CKA_TRUST_STEP_UP_APPROVED:
+	if (trust->trust->sslFlags & CERTDB_GOVT_APPROVED_CA) {
+	    return (PK11Attribute *)&pk11_StaticTrueAttr;
+	} else {
+	    return (PK11Attribute *)&pk11_StaticFalseAttr;
+	}
     default:
 	break;
     }

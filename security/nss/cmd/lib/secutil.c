@@ -2879,11 +2879,9 @@ printFlags(FILE *out, unsigned int flags, int level)
     if ( flags & CERTDB_TRUSTED_CLIENT_CA ) {
 	SECU_Indent(out, level); fprintf(out, "Trusted Client CA\n");
     }
-#ifdef DEBUG
     if ( flags & CERTDB_GOVT_APPROVED_CA ) {
 	SECU_Indent(out, level); fprintf(out, "Step-up\n");
     }
-#endif /* DEBUG */
 }
 
 void

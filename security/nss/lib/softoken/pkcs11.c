@@ -788,6 +788,7 @@ pk11_handleTrustObject(PK11Session *session,PK11Object *object)
         CK_TRUST clientTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
         CK_TRUST emailTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
         CK_TRUST signTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
+	CK_BBOOL stepUp;
  	NSSLOWCERTCertTrust dbTrust = { 0 };
 	SECStatus rv;
 
@@ -844,6 +845,14 @@ pk11_handleTrustObject(PK11Session *session,PK11Object *object)
 	    }
 	    pk11_FreeAttribute(trust);
 	}
+	stepUp = CK_FALSE;
+	trust = pk11_FindAttribute(object,CKA_TRUST_STEP_UP_APPROVED);
+	if (trust) {
+	    if (trust->attrib.ulValueLen == sizeof(CK_BBOOL)) {
+		stepUp = *(CK_BBOOL*)trust->attrib.pValue;
+	    }
+	    pk11_FreeAttribute(trust);
+	}
 
 	/* preserve certain old fields */
 	if (cert->trust) {
@@ -859,6 +868,9 @@ pk11_handleTrustObject(PK11Session *session,PK11Object *object)
 	dbTrust.sslFlags |= pk11_MapTrust(clientTrust,PR_TRUE);
 	dbTrust.emailFlags |= pk11_MapTrust(emailTrust,PR_FALSE);
 	dbTrust.objectSigningFlags |= pk11_MapTrust(signTrust,PR_FALSE);
+	if (stepUp) {
+	    dbTrust.sslFlags |= CERTDB_GOVT_APPROVED_CA;
+	}
 
 	rv = nsslowcert_ChangeCertTrust(slot->certDB,cert,&dbTrust);
 	object->handle=pk11_mkHandle(slot,&cert->certKey,PK11_TOKEN_TYPE_TRUST);

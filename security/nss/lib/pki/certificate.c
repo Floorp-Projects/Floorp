@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.51 $ $Date: 2004/04/25 15:03:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.52 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -1030,6 +1030,8 @@ nssTrust_Create (
     nssCryptokiObject *instance;
     nssTrustLevel serverAuth, clientAuth, codeSigning, emailProtection;
     SECStatus rv; /* Should be stan flavor */
+    PRBool stepUp;
+
     lastTrustOrder = 1<<16; /* just make it big */
     PR_ASSERT(object->instances != NULL && object->numInstances > 0);
     rvt = nss_ZNEW(object->arena, NSSTrust);
@@ -1055,7 +1057,8 @@ nssTrust_Create (
 	                                        &serverAuth,
 	                                        &clientAuth,
 	                                        &codeSigning,
-	                                        &emailProtection);
+	                                        &emailProtection,
+	                                        &stepUp);
 	if (status != PR_SUCCESS) {
 	    PZ_Unlock(object->lock);
 	    return (NSSTrust *)NULL;
@@ -1084,6 +1087,7 @@ nssTrust_Create (
 	{
 	    rvt->codeSigning = codeSigning;
 	}
+	rvt->stepUpApproved = stepUp;
 	lastTrustOrder = myTrustOrder;
     }
     PZ_Unlock(object->lock);

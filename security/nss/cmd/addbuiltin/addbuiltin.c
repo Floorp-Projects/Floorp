@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.7 2004/04/25 15:02:38 gerv%gerv.net Exp $
+ * $Id: addbuiltin.c,v 1.8 2004/05/17 20:08:34 ian.mcgreer%sun.com Exp $
  */
 
 #include "nss.h"
@@ -157,6 +157,9 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     printf("CKA_TRUST_KEY_AGREEMENT CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
     printf("CKA_TRUST_KEY_CERT_SIGN CK_TRUST CKT_NETSCAPE_TRUSTED_DELEGATOR\n");
 #endif
+    printf("CKA_TRUST_STEP_UP_APPROVED CK_BBOOL %s\n",
+                trust->sslFlags & CERTDB_GOVT_APPROVED_CA ? 
+                "CK_TRUE" : "CK_FALSE");
 
 
     PORT_Free(sdder->data);
@@ -197,7 +200,7 @@ printheader() {
      "# may use your version of this file under either the MPL or the\n"
      "# GPL.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.7 $ $Date: 2004/04/25 15:02:38 $ $Name:  $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.8 $ $Date: 2004/05/17 20:08:34 $ $Name:  $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"

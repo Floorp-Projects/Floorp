@@ -38,7 +38,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.14 $ $Date: 2004/04/25 15:03:14 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.15 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -133,6 +133,7 @@ struct NSSTrustStr
     nssTrustLevel clientAuth;
     nssTrustLevel emailProtection;
     nssTrustLevel codeSigning;
+    PRBool stepUpApproved;
 };
 
 struct nssSMIMEProfileStr
