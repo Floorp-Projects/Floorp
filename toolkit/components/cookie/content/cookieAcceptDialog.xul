@@ -73,9 +73,6 @@
         <hbox pack="start">
           <button id="disclosureButton" dlgtype="disclosure" class="dialog-button" 
                   oncommand="showhideinfo();"/>
-          <spacer flex="2"/>
-          <button dlgtype="accept" class="dialog-button" label="&button.yes.label;"/>
-          <button dlgtype="cancel" class="dialog-button" label="&button.no.label;"/>
         </hbox>
       </vbox>
 
