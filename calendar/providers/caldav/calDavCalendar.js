@@ -193,7 +193,8 @@ calDavCalendar.prototype = {
         newItem.setProperty("locationURI", itemUri.spec);
         newItem.makeImmutable();
 
-        //dump("icalString = " + newItem.icalString + "\n");
+        dump("icalString = " + newItem.icalString + "\n");
+
         // XXX use if not exists
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -429,7 +430,7 @@ calDavCalendar.prototype = {
 
                 // cause returned data to be parsed into the event item
                 // XXX try-catch
-                //dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
+                dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
                 item.icalString = 
                     responseElement..C::["calendar-query-result"]; 
 
@@ -448,11 +449,16 @@ calDavCalendar.prototype = {
                         item = makeOccurrence(item, item.startDate, item.endDate);
                         items = [ item ];
                     }
+                    rv = Components.results.NS_OK;
                 } else if (item.QueryInterface(calIEvent)) {
                     iid = calIEvent;
-                    rv = Components.results.NS_OK
+                    rv = Components.results.NS_OK;
+                    items = [ item ];
                 } else if (item.QueryInterface(calITodo)) {
+                    dump ("QI to TODO succeeded\n");
                     iid = calITodo;
+                    rv = Components.results.NS_OK;
+                    items = [ item ];
                 } else {
                     errString = "Can't deduce item type based on query";
                     rv = Components.results.NS_ERROR_FAILURE;
@@ -466,7 +472,6 @@ calDavCalendar.prototype = {
 
             // XXX  handle aCount
             dump("errString = " + errString + "\n");
-            dump("items = " + items + "\n");
             if (items) {
                 aListener.onGetResult(this, rv, iid, null, items ? items.length : 0,
                                       errString ? errString : items);
@@ -524,6 +529,23 @@ calDavCalendar.prototype = {
         if (!aListener)
             return;
 
+        filterTypes = 0;
+        if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO ) {
+            filterTypes++;
+            dump("getItems called with TODO filter\n");
+        }
+        if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT ) {
+            filterTypes++;
+        }
+        if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_JOURNAL ) {
+            filterTypes++;
+        }
+        if ( filterTypes > 1 ) {
+            dump("Multiple simultaneous filter types not supported by " + 
+                 "this provider.\n");
+            throw Components.results.NS_ERROR_FAILURE;
+        }
+
         // this is our basic report xml
         // XXX get rid of vevent filter?
         var C = new Namespace("urn:ietf:params:xml:ns:caldav")
@@ -532,10 +554,33 @@ calDavCalendar.prototype = {
                          <calendar-query-result/>
                          <filter>
                            <icalcomp-filter name="VCALENDAR">
-                             <icalcomp-filter name="VEVENT"/>
+                             <icalcomp-filter/>
                            </icalcomp-filter>
                          </filter>
                        </calendar-query>;
+
+        switch (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL) {
+        case calICalendar.ITEM_FILTER_TYPE_EVENT:
+            queryXml[0].C::filter.C::["icalcomp-filter"]
+                .C::["icalcomp-filter"].@name="VEVENT";
+            break;
+
+        case calICalendar.ITEM_FILTER_TYPE_TODO:
+            queryXml[0].C::filter.C::["icalcomp-filter"]
+                .C::["icalcomp-filter"].@name="VTODO";
+            break;
+
+        case calICalendar.ITEM_FILTER_TYPE_JOURNAL:
+            break;
+            queryXml[0].C::filter.C::["icalcomp-filter"]
+                .C::["icalcomp-filter"].@name="VJOURNAL";
+
+        default:
+            dump("No item types specified\n");
+            // XXX should we just quietly call back the completion method?
+            throw NS_ERROR_FAILURE;
+
+        }
 
         // if a time range has been specified, do the appropriate restriction.
         // XXX express "end of time" in caldav by leaving off "start", "end"
