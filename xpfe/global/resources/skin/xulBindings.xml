@@ -230,8 +230,8 @@
       </xul:box>
     </content>
     <handlers>
-      <handler type="focus" value="var v = this.anonymousContent[0]; this.setAttribute('focussed','true'); v.firstChild.focus();"/>
-      <handler type="blur" value="var v = this.anonymousContent[0]; this.removeAttribute('focussed'); v.firstChild.blur();"/>
+      <handler type="focus" value="var v = this.anonymousContent[0]; this.setAttribute('focused','true'); v.firstChild.focus();"/>
+      <handler type="blur" value="var v = this.anonymousContent[0]; this.removeAttribute('focused'); v.firstChild.blur();"/>
     </handlers>    
   </binding>
 
