@@ -45,6 +45,8 @@
 #include "nsCOMPtr.h"
 #include "plevent.h"
 
+#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
+
 struct PRLock;
 class MemoryFlusher;
 

@@ -189,7 +189,7 @@ MemoryFlusher::Run()
 #endif
 
         if (isLowMemory) {
-            mMemoryImpl->FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_LOW_MEMORY).get(), PR_FALSE);
+            mMemoryImpl->FlushMemory(NS_LITERAL_STRING("low-memory").get(), PR_FALSE);
         }
     }
 
@@ -320,7 +320,7 @@ nsMemoryImpl::Alloc(PRSize size)
     void* result = MALLOC1(size);
     if (! result) {
         // Request an asynchronous flush
-        FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_ALLOC_FAILURE).get(), PR_FALSE);
+        FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), PR_FALSE);
     }
     return result;
 }
@@ -331,7 +331,7 @@ nsMemoryImpl::Realloc(void * ptr, PRSize size)
     void* result = REALLOC1(ptr, size);
     if (! result) {
         // Request an asynchronous flush
-        FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_ALLOC_FAILURE).get(), PR_FALSE);
+        FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), PR_FALSE);
     }
     return result;
 }
@@ -345,7 +345,7 @@ nsMemoryImpl::Free(void * ptr)
 NS_IMETHODIMP
 nsMemoryImpl::HeapMinimize(PRBool aImmediate)
 {
-    return FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_HEAP_MINIMIZE).get(), aImmediate);
+    return FlushMemory(NS_LITERAL_STRING("heap-minimize").get(), aImmediate);
 }
 
 NS_IMETHODIMP
@@ -457,7 +457,7 @@ nsMemoryImpl::RunFlushers(nsMemoryImpl* aSelf, const PRUnichar* aReason)
 {
     nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
     if (os) {
-        os->NotifyObservers(aSelf, NS_MEMORY_PRESSURE_TOPIC, aReason);
+        os->NotifyObservers(aSelf, "memory-pressure", aReason);
     }
 
     {

@@ -904,7 +904,7 @@ nsXBLService::AttachGlobalDragHandler(nsIDOMEventReceiver* aReceiver)
 NS_IMETHODIMP
 nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
 {
-  if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0)
+  if (nsCRT::strcmp(aTopic, "memory-pressure") == 0)
     FlushMemory();
 
   return NS_OK;
@@ -1506,7 +1506,7 @@ NS_NewXBLService(nsIXBLService** aResult)
   // so it can flush the LRU list in low-memory situations.
   nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
   if (os)
-    os->AddObserver(result, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);
+    os->AddObserver(result, "memory-pressure", PR_TRUE);
 
   return NS_OK;
 }

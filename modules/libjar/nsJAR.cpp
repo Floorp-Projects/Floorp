@@ -1146,7 +1146,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))   
   {
-    rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);
+    rv = os->AddObserver(this, "memory-pressure", PR_TRUE);
   }
 // ignore failure of the observer registration.
 
@@ -1359,7 +1359,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
                           const char *aTopic, 
                           const PRUnichar *aSomeData)
 {
-  if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0) {
+  if (nsCRT::strcmp(aTopic, "memory-pressure") == 0) {
     nsAutoLock lock(mLock);
     while (PR_TRUE) {
       nsHashKey* flushable = nsnull;
