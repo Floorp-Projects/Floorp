@@ -3135,8 +3135,9 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       // lets see if we should expunge during a full sync of flags.
       if (!DeathSignalReceived()) // only expunge if not reading messages manually and before fetching new
       {
-        // ### TODO read gExpungeThreshhold from prefs.
-        if ((m_flagState->GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  && GetDeleteIsMoveToTrash() )
+        // ### TODO read gExpungeThreshhold from prefs. Don't do expunge when we are lite selecting folder because we could be doing undo
+        if ((m_flagState->GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  
+                 && GetDeleteIsMoveToTrash() && m_imapAction != nsIImapUrl::nsImapLiteSelectFolder)
           Expunge();  // might be expensive, test for user cancel
       }
 
