@@ -238,6 +238,21 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
     }
   }
 
+  if (mIsALinkCached) {
+    // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
+    PRUint32 role;
+    GetAccRole(&role);
+    if (role != ROLE_LINK) {
+      nsCOMPtr<nsIAccessible> parentAccessible;
+      GetAccParent(getter_AddRefs(parentAccessible));
+      if (parentAccessible) {
+        PRUint32 orState = 0;
+        parentAccessible->GetAccState(&orState);
+        *_retval |= orState;
+      }
+    }
+
+  }
   // Focused? Do we implement that here or up the chain?
   return NS_OK;
 }
