@@ -1394,6 +1394,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresShell*        aPresShell,
                   : (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == styleDisplay->mDisplay);
   if (!contentDisplayIsGroup) {
     NS_ASSERTION(aToDo, "null nsTableList when constructing from below");
+		if (!aToDo)
+			return NS_ERROR_NULL_POINTER;
   }
 
   nsCOMPtr<nsIStyleContext> parentStyleContext;
