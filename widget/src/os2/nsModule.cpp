@@ -116,9 +116,6 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    //                 Both combobox and (atm) nsBrowserWindow depend on this.
    lHtEntryfield = 26;
 
-   hptrFrameIcon = 0;
-   idSelect = 0;
-
    // Work out if the system is DBCS
    COUNTRYCODE cc = { 0 };
    DosQueryDBCSEnv( CCHMAXPATH, &cc, buffer);
@@ -164,25 +161,11 @@ nsWidgetModuleData::~nsWidgetModuleData()
      WinDestroyPointer(hptrArray[i]);
    }
 
-   if( hptrFrameIcon)
-      WinDestroyPointer( hptrFrameIcon);
-#if 0
-   delete mWindows;
-#endif
-
    // finally shut down the appshell.  No more PM.
    // (hope that gfxos2 has gone first!)
    // don't do this if appshell is nsnull for embedding
    if (appshell != nsnull)
      NS_IF_RELEASE(appshell);
-}
-
-HPOINTER nsWidgetModuleData::GetFrameIcon()
-{
-   if( !hptrFrameIcon)
-      hptrFrameIcon = WinLoadPointer( HWND_DESKTOP,
-                                      gModuleHandle, ID_ICO_FRAME);
-   return hptrFrameIcon;
 }
 
 int nsWidgetModuleData::CreateUcsConverter()
