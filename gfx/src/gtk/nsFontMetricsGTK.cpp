@@ -737,6 +737,11 @@ struct nsFontStretch
   nsFontGTK*         mSizes;
   PRUint16           mSizesAlloc;
   PRUint16           mSizesCount;
+
+  char*              mScalable;
+  nsFontGTK*         mScaledFonts;
+  PRUint16           mScaledFontsAlloc;
+  PRUint16           mScaledFontsCount;
 };
 
 struct nsFontWeight
@@ -1372,6 +1377,49 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     }
   }
 
+  if (aStretch->mScalable) {
+    double ratio = (s->mActualSize / ((double) desiredSize));
+    if ((ratio > 1.2) || (ratio < 0.8)) {
+      begin = aStretch->mScaledFonts;
+      end = &aStretch->mScaledFonts[aStretch->mScaledFontsCount];
+      for (s = begin; s < end; s++) {
+        if (s->mSize == desiredSize) {
+	  break;
+	}
+      }
+      if (s == end) {
+        if (aStretch->mScaledFontsCount == aStretch->mScaledFontsAlloc) {
+          int newSize = 2 *
+	    (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
+          nsFontGTK* newPointer = new nsFontGTK[newSize];
+          if (newPointer) {
+            for (int i = aStretch->mScaledFontsAlloc - 1; i >= 0; i--) {
+              newPointer[i] = aStretch->mScaledFonts[i];
+            }
+            aStretch->mScaledFontsAlloc = newSize;
+            delete [] aStretch->mScaledFonts;
+            aStretch->mScaledFonts = newPointer;
+          }
+          else {
+            return;
+          }
+	}
+	s = &aStretch->mScaledFonts[aStretch->mScaledFontsCount++];
+	s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
+	if (!s->mName) {
+	  return;
+	}
+	s->mSize = desiredSize;
+	s->mBaselineAdjust = 0;
+	s->mCharSetInfo = aCharSet->mInfo;
+	s->LoadFont(aCharSet, m);
+	if (!s->mFont) {
+	  return;
+	}
+      }
+    }
+  }
+
   if (m->mLoadedFontsCount == m->mLoadedFontsAlloc) {
     int newSize;
     if (m->mLoadedFontsAlloc) {
@@ -1739,6 +1787,7 @@ GetFontNames(char* aPattern)
       continue;
     }
     char* p = name + 1;
+    int scalable = 0;
 
 #ifdef FIND_FIELD
 #undef FIND_FIELD
@@ -1775,31 +1824,16 @@ GetFontNames(char* aPattern)
     FIND_FIELD(weightName);
     FIND_FIELD(slant);
     FIND_FIELD(setWidth);
-    SKIP_FIELD(addStyle);
+    FIND_FIELD(addStyle);
     FIND_FIELD(pixelSize);
-    // XXX Correct font scaling: Specify the point size you want, and the
-    // X and Y resolution from the X server. Then put '*' for the pixel size
-    // and average width.
     if (pixelSize[0] == '0') {
-      continue; // skip scalable fonts for now
+      scalable = 1;
     }
-    FIND_FIELD(pointSize);
-    if (pointSize[0] == '0') {
-      continue; // skip scalable fonts for now
-    }
-    FIND_FIELD(resolutionX);
-    if (resolutionX[0] == '0') {
-      continue; // skip scalable fonts for now
-    }
-    FIND_FIELD(resolutionY);
-    if (resolutionY[0] == '0') {
-      continue; // skip scalable fonts for now
-    }
-    SKIP_FIELD(spacing);
-    FIND_FIELD(averageWidth);
-    if (averageWidth[0] == '0') {
-      continue; // skip scalable fonts for now
-    }
+    SKIP_FIELD(pointSize);
+    SKIP_FIELD(resolutionX);
+    SKIP_FIELD(resolutionY);
+    FIND_FIELD(spacing);
+    SKIP_FIELD(averageWidth);
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
       continue;
@@ -1911,6 +1945,13 @@ GetFontNames(char* aPattern)
         continue;
       }
       weight->mStretches[stretchIndex] = stretch;
+    }
+    if (scalable) {
+      if (!stretch->mScalable) {
+        stretch->mScalable = PR_smprintf("%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s",
+          name, weightName, slant, setWidth, addStyle, spacing, charSetName);
+      }
+      continue;
     }
   
     int pixels = atoi(pixelSize);
