@@ -433,7 +433,15 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
 
             APPEND_CHAR_TO_STACK('(');
             for (i = 0; i < fp->argc; i++) {
-                argsrc = js_ValueToSource(cx, fp->argv[i]);
+                /* Avoid toSource() and function decompilation bloat for now. */
+                v = fp->argv[i];
+                if (JSVAL_IS_FUNCTION(cx, v)) {
+                    argsrc = JS_GetFunctionId(JS_ValueToFunction(cx, v));
+                    if (!argsrc)
+                        argsrc = js_ValueToSource(cx, v);
+                } else {
+                    argsrc = js_ValueToString(cx, v);
+                }
                 if (!argsrc) {
                     ok = JS_FALSE;
                     goto done;
@@ -941,6 +949,15 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
     }
 
+    /*
+     * Set the generated Exception object early, so it won't be GC'd by a last
+     * ditch attempt to collect garbage, or a GC that otherwise nests or races
+     * under any of the following calls.  If one of the following calls fails,
+     * it will overwrite this exception object with one of its own (except in
+     * case of OOM errors, of course).
+     */
+    JS_SetPendingException(cx, OBJECT_TO_JSVAL(errObject));
+
     messageStr = JS_NewStringCopyZ(cx, message);
     if (!messageStr) {
         ok = JS_FALSE;
@@ -974,9 +991,6 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
     }
     OBJ_SET_SLOT(cx, errObject, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(privateData));
-
-    /* Set the generated Exception object as the current exception. */
-    JS_SetPendingException(cx, OBJECT_TO_JSVAL(errObject));
 
     /* Flag the error report passed in to indicate an exception was raised. */
     reportp->flags |= JSREPORT_EXCEPTION;
