@@ -50,6 +50,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsURLProperties.h"
+#include "nsITimelineService.h"
 //==============================================================
 class nsCharsetAlias2 : public nsICharsetAlias
 {
@@ -90,20 +91,33 @@ nsCharsetAlias2::~nsCharsetAlias2()
 //--------------------------------------------------------------
 NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& oResult)
 {
+   if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
+   NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
+
    nsAutoString aKey(aAlias);
    ToLowerCase(aKey);
    oResult.Truncate();
+
+   //delay loading charsetalias.properties by resolving most freq. aliases
    if(!mDelegate) {
      if(aKey.Equals(NS_LITERAL_STRING("utf-8"))) {
        oResult = NS_LITERAL_STRING("UTF-8");
+       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
        return NS_OK;
      } 
      if(aKey.Equals(NS_LITERAL_STRING("iso-8859-1"))) {
        oResult = NS_LITERAL_STRING("ISO-8859-1");
+       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
        return NS_OK;
      } 
+     if(aKey.Equals(NS_LITERAL_STRING("x-sjis")) ||
+        aKey.Equals(NS_LITERAL_STRING("shift_jis"))) {
+       oResult = NS_LITERAL_STRING("Shift_JIS");
+       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
+       return NS_OK;
+     } 
+     //load charsetalias.properties string bundle with all remaining aliases
      nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/charsetalias.properties");
-     
      // we may need to protect the following section with a lock so we won't call the 
      // 'new nsURLProperties' from two different threads
      mDelegate = new nsURLProperties( propertyURL );
@@ -111,6 +125,10 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& 
      if(nsnull == mDelegate)
        return NS_ERROR_OUT_OF_MEMORY;
    }
+
+   NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
+   NS_TIMELINE_MARK_TIMER("nsCharsetAlias2:GetPreferred");
+
    return mDelegate->Get(aKey, oResult);
 }
 //--------------------------------------------------------------
