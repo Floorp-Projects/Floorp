@@ -133,7 +133,7 @@ SpacerFrame::InlineReflow(nsLineLayout&        aLineLayout,
     NS_RELEASE(hc);
   }
 
-  float p2t = aLineLayout.mPresContext->GetPixelsToTwips();
+  float p2t = aLineLayout.mPresContext.GetPixelsToTwips();
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {

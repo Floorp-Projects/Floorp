@@ -1387,7 +1387,7 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   const PRUnichar* cpStart = cp;
   mContentOffset = aStartingOffset;
 
-  nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
+  nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(aFont.mFont);
   PRInt32 spaceWidth;
   fm->GetWidth(' ', spaceWidth);
   PRBool wrapping = PR_TRUE;
@@ -1562,7 +1562,7 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
   const PRUnichar* end = cp + textLength - aStartingOffset;
 
   mFlags |= TEXT_IS_PRE;
-  nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
+  nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(aFont.mFont);
   PRInt32 width = 0;
   PRBool hasMultibyte = PR_FALSE;
   PRUint16 tabs = 0;

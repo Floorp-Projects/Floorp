@@ -84,7 +84,7 @@ nsPlaceholderFrame::InlineReflow(nsLineLayout&        aLineLayout,
                                  nsReflowMetrics&     aDesiredSize,
                                  const nsReflowState& aReflowState)
 {
-  nsIPresContext& presContext = *aLineLayout.mPresContext;
+  nsIPresContext& presContext = aLineLayout.mPresContext;
 
   // Get the floater container in which we're inserted
   nsIFrame*             containingBlock;
