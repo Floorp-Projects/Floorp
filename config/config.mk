@@ -551,11 +551,8 @@ endif
 
 
 #
-# Platform dependent switching off of NSPR, JAVA
+# Platform dependent switching off of JAVA
 #
-ifndef NO_NSPR
-DEFINES		+= -DNSPR
-endif
 
 ifndef MOZ_JAVA
 ifndef USE_AUTOCONF
