@@ -82,7 +82,7 @@ enum nsReflowReason {
  */
 struct nsReflowState {
   nsReflowReason   reason;         // the reason for the reflow
-  // nsReflowCommand& reflowCommand;  // only used for incremental changes
+  nsReflowCommand* reflowCommand;  // only used for incremental changes
   nsSize           maxSize;        // the available space in which to reflow
 };
 
