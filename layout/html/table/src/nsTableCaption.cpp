@@ -147,7 +147,7 @@ nsTableCaption::CreateFrame(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
 
   nsIFrame* frame;
-  nsresult rv = nsBodyFrame::NewFrame(&frame, this, aParentFrame);
+  nsresult rv = NS_NewBodyFrame(this, aParentFrame, frame);
   if (NS_OK != rv) {
     return rv;
   }
