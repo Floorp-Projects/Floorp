@@ -51,6 +51,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
 #include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -824,7 +825,8 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
           else {
             mCurrentURL = *url;
             mStartLoad = PR_Now();
-            webShell->LoadURL(url->GetUnicode());
+            nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webShell));
+            webNav->LoadURI(url->GetUnicode());
           }
           NS_RELEASE(webShell);
 
@@ -1059,10 +1061,11 @@ nsWebCrawler::GoToQueuedURL(const nsString& aURL)
 {
   nsIWebShell* webShell;
   mBrowser->GetWebShell(webShell);
-  if (webShell) {
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webShell));
+  if (webNav) {
     mCurrentURL = aURL;
     mStartLoad = PR_Now();
-    webShell->LoadURL(aURL.GetUnicode());
+    webNav->LoadURI(aURL.GetUnicode());
     NS_RELEASE(webShell);
   }
   mQueuedLoadURLs--;
