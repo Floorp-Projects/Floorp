@@ -23,8 +23,6 @@ require 'globals.pl';
 require 'lloydcgi.pl';
 require 'header.pl';
 
-#use Benchmark;
-#$t0 = new Benchmark;
 
 $|=1;
 
@@ -144,32 +142,36 @@ close(NOTES);
 #
 # Print the summery fisrt
 #
-$log_ln = 0;
-$next_err = 0;
-@summary_output = ();
-@log_output = ();
-open( BUILD_IN, "$gzip -d -c $tree/$logfile|" ) or die "Unable to open $tree/$logfile\n";
-while( $line = <BUILD_IN> ){
-    &parse_line( $line );
-}
-close( BUILD_IN );
-push @log_errors, 9999999;        
-
-
 print "
 <H2>Build Error Summary</H2>
 <p> Click error to take you to the error in the log.
 <PRE>
 ";
-foreach (@summary_output) {
-  print;
+$log_ln = 0;
+open( BUILD_IN, "$gzip -d -c $tree/$logfile|" );
+while( $line = <BUILD_IN> ){
+    &output_summary_line( $line );
 }
+close( BUILD_IN );
+push @log_errors, 9999999;        
+
 print "</PRE>\n";
 
+#
+# reset the error counter
+#
+$next_err = 0;
+
+ 
 print "<H2>Build Error Log</H2>\n<pre>";
-foreach (@log_output) {
-  print;
+$log_ln = 0;
+open( BUILD_IN, "$gzip -d -c $tree/$logfile|" );
+while( $line = <BUILD_IN> ){
+    &output_log_line( $line );
 }
+close( BUILD_IN );
+
+
 print
 "</PRE>
 
@@ -180,16 +182,39 @@ print
 <br>
 ";
 
-#$t1 = new Benchmark;
-#print "Total time ".timestr(timediff($t1,$t0))."\n";
+
+sub output_summary_line {
+    local( $line ) = @_;
+    local( $has_error );
+
+    $has_error = &has_error( $line );
+
+    $line =~ s/&/&amp;/g;
+    $line =~ s/</&lt;/g;
+
+    if( $has_error ){
+        push @log_errors, $log_ln + $LINES_AFTER_ERROR;        
+        if( ! $last_was_error ) {
+            print "<a href=\"#err$next_err\">$line</a>";
+            $next_err++;
+        }
+        $last_was_error = 1;
+    }
+    else {
+        $last_was_error = 0;
+    }
+
+    $log_ln++;
+}
 
 
-sub parse_line {
-    my( $line ) = @_;
-    my( $has_error, $dur, $dur_min,$dur_sec, $dur_str, $logline );
 
-    $has_error = &has_error;
-    $has_warning = &has_warning;
+sub output_log_line {
+    local( $line, $bSummary ) = @_;
+    local( $has_error, $dur, $dur_min,$dur_sec, $dur_str, $logline );
+
+    $has_error = &has_error( $line );
+    $has_warning = &has_warning( $line );
 
     $line =~ s/&/&amp;/g;
     $line =~ s/</&lt;/g;
@@ -204,19 +229,8 @@ sub parse_line {
         $line =~ s@$q@<a href=../bonsai/$cvsblame?file=$error_file_ref&rev=$cvs_branch&mark=$error_line#$goto_line $source_target>$error_file</a>@
     }
 
+
     if( $has_error ){
-        #
-        # Make Summary line
-        # 
-        push @log_errors, $log_ln + $LINES_AFTER_ERROR;        
-        if( ! $last_was_error ) {
-            push @summary_output, "<a href=\"#err$next_err\">$line</a>";
-        }
-
-        #
-        # Make log line
-        # 
-
         if( ! $last_was_error ) {
             $logline .= "<a name=\"err$next_err\"></a>";
             $next_err++;
@@ -238,16 +252,15 @@ sub parse_line {
         $logline .= "     $line";
         $last_was_error = 0;
     }
-    $log_ln++;
 
     &push_log_line( $logline );
 }
 
 
 sub push_log_line {
-    my( $ln ) = @_;
+    local( $ln ) = @_;
     if( $fulltext ){
-        push @log_output, $ln;
+        print $ln;
         return;
     }
 
@@ -257,11 +270,10 @@ sub push_log_line {
     
     if( $log_ln >= $log_errors[$cur_error] - $LINES_BEFORE_ERROR ){
         if( $log_skip != 0 ){
-            push @log_output,
-	      "\n<i><font size=+1> Skipping $log_skip Lines...</i></font>\n\n";
+            print "\n<i><font size=+1> Skipping $log_skip Lines...</i></font>\n\n";
             $log_skip = 0;
         }
-        push @log_output, $ln;
+        print $ln;
     }
     else {
         $log_skip++;
