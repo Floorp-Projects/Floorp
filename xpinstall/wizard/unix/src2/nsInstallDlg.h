@@ -27,6 +27,7 @@
 
 #include "nsXInstallerDlg.h"
 #include "XIErrors.h"
+#include "nsRunApp.h"
 
 class nsInstallDlg : public nsXInstallerDlg
 {
@@ -69,6 +70,9 @@ private:
     static void     *WorkDammitWork(void *arg); // install start
     static void     ShowCompleteDlg();
     static void     CompleteOK(GtkWidget *aWidget, gpointer aData);
+    static void     RunApps();
+    static void     FreeRunAppList();
+    int             AppendRunApp(nsRunApp *aNewRunApp);
 
     char            *mMsg0;
 };
