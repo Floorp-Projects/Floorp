@@ -342,9 +342,15 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
+ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
+endif
 else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin
+endif
 endif
 endif
 ifdef PROGRAM
@@ -369,9 +375,15 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
+ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
+endif
 else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin
+endif
 endif
 endif
 	+$(LOOP_OVER_DIRS)
@@ -585,11 +597,24 @@ endif
 ifneq ($(OS_ARCH),OS2)
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
+ifneq ($(OS_ARCH), OpenVMS)
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
 ifdef MOZ_STRIP_NOT_EXPORTED
 ifdef INHIBIT_STRIP_NOT_EXPORTED
 	objcopy -R ".exports" $@
 endif
+endif
+else
+	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
+	@if test ! -f $(OBJDIR)/VMSuni.opt; then \
+	    echo "Creating universal symbol option file $(OBJDIR)/VMSuni.opt"; \
+	    for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done; \
+	    create_opt_uni $(OBJS) $(SUB_LOBJS); \
+	    mv VMSuni.opt $(OBJDIR); \
+	fi
+	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OBJDIR)/VMSuni.opt;
+	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
 endif
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
