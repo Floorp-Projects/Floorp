@@ -9,6 +9,7 @@ typemap
 Entry.pm
 Conn.pm
 LDIF.pm
+Utils.pm
 README
 MPL-1.0.txt
 test_api/search.pl
