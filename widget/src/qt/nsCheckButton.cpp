@@ -110,12 +110,14 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// Set this button label
+// Set this Checkbox state
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::SetState()\n"));
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsCheckButton::SetState() %p:%d\n", this, aState));
     ((QCheckBox *)mWidget)->setChecked(aState);
 
     return NS_OK;
@@ -123,13 +125,15 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 
 //-------------------------------------------------------------------------
 //
-// Set this button label
+// Get this Checkbox state
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::GetState()\n"));
     aState = ((QCheckBox *)mWidget)->isChecked();
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsCheckButton::GetState() %p:%d\n", this, aState));
 
     return NS_OK;
 }
