@@ -160,9 +160,7 @@ interface nsIProtocolHandler : nsISupports
 /**
  * Protocol handlers are registered with XPCOM under the following CONTRACTID prefix:
  */
-#define NS_NETWORK_PROTOCOL_CONTRACTID               "@mozilla.org/network/protocol;1"
-#define NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX        NS_NETWORK_PROTOCOL_CONTRACTID "?name="
-#define NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH (sizeof(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX)-1)
+#define NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "@mozilla.org/network/protocol;1?name="
 /**
  * For example, "@mozilla.org/network/protocol;1?name=http"
  */
