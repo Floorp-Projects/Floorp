@@ -251,9 +251,17 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
 
     JS_ACQUIRE_LOCK(rt->setSlotLock);
     while (rt->setSlotBusy) {
-        jsrefcount saveDepth = JS_SuspendRequest(cx);
-        JS_WAIT_CONDVAR(rt->setSlotDone, JS_NO_TIMEOUT);
+        jsrefcount saveDepth;
+
+        /* Take pains to avoid nesting rt->gcLock inside rt->setSlotLock! */
+        JS_RELEASE_LOCK(rt->setSlotLock);
+        saveDepth = JS_SuspendRequest(cx);
+        JS_ACQUIRE_LOCK(rt->setSlotLock);
+        if (rt->setSlotBusy)
+            JS_WAIT_CONDVAR(rt->setSlotDone, JS_NO_TIMEOUT);
+        JS_RELEASE_LOCK(rt->setSlotLock);
         JS_ResumeRequest(cx, saveDepth);
+        JS_ACQUIRE_LOCK(rt->setSlotLock);
     }
     rt->setSlotBusy = JS_TRUE;
     JS_RELEASE_LOCK(rt->setSlotLock);
