@@ -215,7 +215,7 @@
 <box id="sidebar-parent" flex="1">
   <!-- From sidebarOverlay.xul -->
   <box id="sidebar-box" class="chromeclass-extrachrome" hidden="true"/>
-  <splitter id="sidebar-splitter" class="chromeclass-extrachrome"/>
+  <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
 
   <box id="appcontent" orient="vertical" flex="1">
     <deck id="ContentWindowDeck" index="0" flex="1">
