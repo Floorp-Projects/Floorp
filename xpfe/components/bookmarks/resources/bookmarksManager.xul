@@ -159,6 +159,9 @@
                         observes="cmd_bm_newseparator"/>
             </menupopup>
           </menu>
+          <menuitem label="&menuitem.open.label;"
+                    accesskey="&menuitem.open.accesskey;"
+                    oncommand="OpenBookmarksFile();"/>
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
@@ -238,9 +241,6 @@
           <menuitem command="cmd_bm_find" key="bm_key_find"
                     label="&menuitem.find.label;"
                     accesskey="&menuitem.find.accesskey;"/>
-          <menuitem label="&menuitem.open.label;"
-                    accesskey="&menuitem.open.accesskey;"
-                    oncommand="OpenBookmarksFile();"/>
           <menuitem label="&menuitem.import.label;"
                     accesskey="&menuitem.import.accesskey;"
                     observes="cmd_bm_import"/>
