@@ -1144,9 +1144,9 @@ endif
 #                  This will notify the chrome registry of a new installation.
 ifneq ($(MOZ_ENABLE_JAR_PACKAGING),)
 
-JAR_MANIFEST := jar.mn
+JAR_MANIFEST := $(srcdir)/jar.mn
 install::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(DEPTH)/../mozilla/config/make-jars.pl -c -d $(DIST)/bin/chrome < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 ifneq ($(CHROME_TYPE),)
 install:: $(addprefix bogus/, $(CHROME_TYPE))

@@ -80,6 +80,7 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
+PERL_VERSION=5.005
 
 dnl Set various checks
 dnl ========================================================
@@ -93,6 +94,7 @@ dnl  overridden by each platform.
 dnl ========================================================
 USE_PTHREADS=
 _PTHREAD_LDFLAGS=""
+MOZ_DISABLE_JAR_PACKAGING=
 
 dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
@@ -289,13 +291,25 @@ AC_PROG_LN_S
 AC_PROG_AWK
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
 AC_PATH_PROGS(PERL, perl5 perl )
-if test -z "PERL"; then
+if test -z "$PERL"; then
     AC_MSG_ERROR([perl not found in \$PATH])
+fi
+AC_MSG_CHECKING([for required perl version])
+_perl_version=`$PERL -V:apiversion`
+if test `echo $_perl_version | grep -c $PERL_VERSION` = 1; then
+    AC_MSG_WARN([Perl 5.005 or higher is required. Disabling jar packaging])
+    MOZ_DISABLE_JAR_PACKAGING=1
+else
+    AC_MSG_RESULT([Found 5.005 api])
 fi
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
-AC_PATH_PROG(ZIP, zip, :)
+AC_PATH_PROGS(ZIP, zip)
+if test -z "$ZIP"; then
+    AC_MSG_ERROR([zip not found in \$PATH. Disabling jar packaging])
+    MOZ_DISABLE_JAR_PACKAGING=1
+fi
 AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
 
 dnl Be sure the make we use is GNU make.
@@ -3832,6 +3846,7 @@ AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
 
 AC_SUBST(MOZ_DISABLE_DTD_DEBUG)
+AC_SUBST(MOZ_DISABLE_JAR_PACKAGING)
 
 AC_SUBST(WRAP_MALLOC_CFLAGS)
 AC_SUBST(WRAP_MALLOC_LIB)
