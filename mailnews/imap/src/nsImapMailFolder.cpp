@@ -2200,7 +2200,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
       {
         nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(inbox, &rv);
         if (imapFolder)
-          imapFolder->SetPerformingBiff(PR_TRUE);
+          imapFolder->SetPerformingBiff(performingBiff);
 
         inbox->SetGettingNewMessages(PR_TRUE);
         rv = inbox->UpdateFolder(aWindow);
