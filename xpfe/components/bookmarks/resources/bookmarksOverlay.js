@@ -765,11 +765,22 @@ var BookmarksUtils = {
     return krAnonymous;
   },
 
-  addBookmarkToWindow: function (aWindow)
+  addBookmarkForBrowser: function (aDocShell)
   {
-    var url = aWindow.location.href;
-    var title = aWindow.document.title || url;
-    var docCharset = aWindow.document.characterSet;
+    // Bug 52536: We obtain the URL and title from the nsIWebNavigation 
+    //            associated with a <browser/> rather than from a DOMWindow.
+    //            This is because when a full page plugin is loaded, there is
+    //            no DOMWindow (?) but information about the loaded document
+    //            may still be obtained from the webNavigation. 
+    var url = aDocShell.currentURI.spec;
+    var title, docCharset = null;
+    try {
+      title = aDocShell.document.title || url;
+      docCharset = aDocShell.document.characterSet;
+    }
+    catch (e) {
+      title = url;
+    }
     this.addBookmark(url, title, docCharset);
   },
   
