@@ -80,6 +80,7 @@ CPPSRCS		= \
 		nsSVGClassValue.cpp \
 		nsSVGCoordCtxProvider.cpp \
 		nsSVGDefsElement.cpp \
+		nsSVGDescElement.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
@@ -96,6 +97,7 @@ CPPSRCS		= \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
 		nsSVGMatrix.cpp \
+		nsSVGMetadataElement.cpp \
 		nsSVGNumber.cpp \
 		nsSVGNumberList.cpp \
 		nsSVGPathDataParser.cpp \
@@ -118,6 +120,7 @@ CPPSRCS		= \
 		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \
+		nsSVGTitleElement.cpp \
 		nsSVGTransform.cpp \
 		nsSVGTransformList.cpp \
 		nsSVGUseElement.cpp \
