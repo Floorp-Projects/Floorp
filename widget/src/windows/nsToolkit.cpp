@@ -26,6 +26,7 @@ HINSTANCE nsToolkit::mDllInstance = 0;
 
 nsWindow     *MouseTrailer::mHoldMouse;
 MouseTrailer *MouseTrailer::theMouseTrailer;
+PRBool        MouseTrailer::gIgnoreNextCycle(PR_FALSE);
 
 //
 // Dll entry point. Keep the dll instance
@@ -276,8 +277,8 @@ void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin) {
 //-------------------------------------------------------------------------
 MouseTrailer::MouseTrailer()
 {
-    mTimerId = 0;
-    mHoldMouse = NULL;
+  mTimerId         = 0;
+  mHoldMouse       = NULL;
 }
 
 
@@ -329,8 +330,10 @@ void MouseTrailer::DestroyTimer()
 void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD time)
 {
     if (MouseTrailer::mHoldMouse && ::IsWindow(MouseTrailer::mHoldMouse->GetWindowHandle())) {
-    
-
+      if (gIgnoreNextCycle) {
+        gIgnoreNextCycle = PR_FALSE;
+      }
+      else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
         mp.x = LOWORD(pos);
@@ -349,6 +352,7 @@ void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD tim
             MouseTrailer::theMouseTrailer->DestroyTimer();
             MouseTrailer::mHoldMouse = NULL;
         }
+      }
     } else {
       MouseTrailer::theMouseTrailer->DestroyTimer();
       MouseTrailer::mHoldMouse = NULL;

@@ -67,7 +67,10 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test5.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test6.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test7.html $(DIST)\bin\res\samples
-    $(MAKE_INSTALL) samples\test8.html $(DIST)\bin\res\samples
+  $(MAKE_INSTALL) samples\test8.html $(DIST)\bin\res\samples
+  $(MAKE_INSTALL) samples\test8siz.html $(DIST)\bin\res\samples
+  $(MAKE_INSTALL) samples\test8sca.html $(DIST)\bin\res\samples
+  $(MAKE_INSTALL) samples\test8tab.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\raptor.jpg $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\Anieyes.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\gear1.gif $(DIST)\bin\res\samples

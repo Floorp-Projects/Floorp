@@ -34,7 +34,8 @@
 
 BOOL nsWindow::sIsRegistered = FALSE;
 
-nsWindow * mCurrentWindow = NULL;
+nsWindow* nsWindow::gCurrentWindow = nsnull;
+
 // Global variable 
 //     g_hinst - handle of the application instance 
 extern HINSTANCE g_hinst; 
@@ -242,25 +243,34 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //
 //-------------------------------------------------------------------------
 
-void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType)
+void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
     event.widgetSupports = mOuter;
-    
-    // get the message position in client coordinates and in twips
-    DWORD pos = ::GetMessagePos();
-    POINT cpos;
 
-    cpos.x = LOWORD(pos);
-    cpos.y = HIWORD(pos);
+    if (nsnull == aPoint) {     // use the point from the event
+      // get the message position in client coordinates and in twips
+      DWORD pos = ::GetMessagePos();
+      POINT cpos;
 
-    ::ScreenToClient(mWnd, &cpos);
+      cpos.x = LOWORD(pos);
+      cpos.y = HIWORD(pos);
 
-    event.point.x = cpos.x;
-    event.point.y = cpos.y;
+      ::ScreenToClient(mWnd, &cpos);
+
+      event.point.x = cpos.x;
+      event.point.y = cpos.y;
+    }
+    else {                      // use the point override if provided
+      event.point.x = aPoint->x;
+      event.point.y = aPoint->y;
+    }
 
     event.time = ::GetMessageTime();
     event.message = aEventType;  
+
+    mLastPoint.x = event.point.x;
+    mLastPoint.y = event.point.y;
 }
 
 //-------------------------------------------------------------------------
@@ -357,6 +367,8 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mIsDestroying = PR_FALSE;
     mTooltip       = NULL;
     mDeferredPositioner = NULL;
+    mLastPoint.x   = 0;
+    mLastPoint.y   = 0;
 }
 
 
@@ -368,6 +380,9 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
 nsWindow::~nsWindow()
 {
     mIsDestroying = PR_TRUE;
+    if (gCurrentWindow == this) {
+      gCurrentWindow = nsnull;
+    }
     Destroy();
 }
 
@@ -1282,11 +1297,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_MOVE: // Window moved 
           {
-            nsGUIEvent event;
-            InitEvent(event, NS_MOVE);
-            event.point.x = (int)LOWORD(lParam); // horizontal position in screen coordinates
-            event.point.y = (int)HIWORD(lParam); // vertical position in screen coordinates
-            result = DispatchEvent(&event);
+            PRInt32 x = (PRInt32)LOWORD(lParam); // horizontal position in screen coordinates 
+            PRInt32 y = (PRInt32)HIWORD(lParam); // vertical position in screen coordinates 
+            result = OnMove(x, y); 
           }
           break;
 
@@ -1596,6 +1609,19 @@ void nsWindow::OnDestroy()
     DispatchStandardEvent(NS_DESTROY);
 }
 
+//-------------------------------------------------------------------------
+//
+// Move
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
+{            
+  nsGUIEvent event;
+  InitEvent(event, NS_MOVE);
+  event.point.x = aX;
+  event.point.y = aY;
+  return DispatchEvent(&event);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1668,7 +1694,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
+PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 {
   PRBool result = PR_FALSE;
 
@@ -1677,7 +1703,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
   }
 
   nsMouseEvent event;
-  InitEvent(event, aEventType);
+  InitEvent(event, aEventType, aPoint);
 
   event.isShift   = GetKeyState(VK_LSHIFT) < 0   || GetKeyState(VK_RSHIFT) < 0;
   event.isControl = GetKeyState(VK_LCONTROL) < 0 || GetKeyState(VK_RCONTROL) < 0;
@@ -1687,6 +1713,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
 
   // call the event callback 
   if (nsnull != mEventCallback) {
+//printf(" %d %d %d (%d,%d) \n", event.widget, event.widgetSupports, 
+//       event.message, event.point.x, event.point.y);
 
     result = DispatchEvent(&event);
 
@@ -1702,20 +1730,23 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
       rect.x = 0;
       rect.y = 0;
       //printf("Rect[%d, %d, %d, %d]  Point[%d,%d]\n", rect.x, rect.y, rect.width, rect.height, event.position.x, event.position.y);
-      //printf("mCurrentWindow 0x%X\n", mCurrentWindow);
+      //printf("gCurrentWindow 0x%X\n", gCurrentWindow);
 
       if (rect.Contains(event.point.x, event.point.y)) {
-        if (mCurrentWindow == NULL || mCurrentWindow != this) {
-          if ((nsnull != mCurrentWindow) && (!mCurrentWindow->mIsDestroying)) {
-            mCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT);
+        if (gCurrentWindow == NULL || gCurrentWindow != this) {
+          if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
+            MouseTrailer::IgnoreNextCycle();
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, gCurrentWindow->GetLastPoint());
           }
-          mCurrentWindow = this;
-          mCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
+          gCurrentWindow = this;
+          if (!mIsDestroying) {
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
+          }
         }
       } 
     } else if (aEventType == NS_MOUSE_EXIT) {
-      if (mCurrentWindow == this) {
-        mCurrentWindow = nsnull;
+      if (gCurrentWindow == this) {
+        gCurrentWindow = nsnull;
       }
     }
 
@@ -1729,9 +1760,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
         nsRect rect;
         GetBounds(rect);
         if (rect.Contains(event.point.x, event.point.y)) {
-          if (mCurrentWindow == NULL || mCurrentWindow != this) {
+          if (gCurrentWindow == NULL || gCurrentWindow != this) {
             printf("Mouse enter");
-            mCurrentWindow = this;
+            gCurrentWindow = this;
           }
         } else {
           printf("Mouse exit");

@@ -39,6 +39,8 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 //
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
+//printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
+//       aEvent->message, aEvent->point.x, aEvent->point.y);
   nsIView *view;
   nsEventStatus  result = nsEventStatus_eIgnore; 
 
@@ -124,7 +126,9 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
         aEvent->point.x = NS_TO_INT_ROUND(aEvent->point.x * cx->GetPixelsToTwips());
         aEvent->point.y = NS_TO_INT_ROUND(aEvent->point.y * cx->GetPixelsToTwips());
 
-        result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | NS_VIEW_FLAG_CHECK_PARENT);
+        result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
+                                           NS_VIEW_FLAG_CHECK_PARENT |
+                                           NS_VIEW_FLAG_CHECK_SIBLINGS);
 
         aEvent->point.x = NS_TO_INT_ROUND(aEvent->point.x * cx->GetTwipsToPixels());
         aEvent->point.y = NS_TO_INT_ROUND(aEvent->point.y * cx->GetTwipsToPixels());
@@ -464,6 +468,8 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 
 
 nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
 {
+//printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
+//       event->message, event->point.x, event->point.y);
   nsIScrollbar  *scroll;
   nsEventStatus retval = nsEventStatus_eIgnore;
 
@@ -477,7 +483,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
     if (NS_OK == mWindow->QueryInterface(kscroller, (void **)&scroll))
     {
       if (nsnull != mParent)
-        retval = mParent->HandleEvent(event, 0);
+        retval = mParent->HandleEvent(event, NS_VIEW_FLAG_CHECK_SIBLINGS);
 
       NS_RELEASE(scroll);
     }
@@ -547,7 +553,8 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
   //we only go from the next sibling since this is a z-ordered
   //list
 
-  if (retval == nsEventStatus_eIgnore)
+  if ((aEventFlags & NS_VIEW_FLAG_CHECK_SIBLINGS) &&
+      (retval == nsEventStatus_eIgnore))
   {
     nsIView *pNext = GetNextSibling();
 
@@ -565,15 +572,15 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
   //no-one has a clue what to do with this... so ask the
   //parents. kind of mimics life, huh?
 
-  if ((aEventFlags & NS_VIEW_FLAG_CHECK_PARENT) && (retval == PR_FALSE))
+  if ((aEventFlags & NS_VIEW_FLAG_CHECK_PARENT) && (retval == nsEventStatus_eIgnore))
   {
     nsIView *pParent = GetParent();
 
     while (pParent)
     {
-      retval = pParent->HandleEvent(event, 0);
+      retval = pParent->HandleEvent(event, NS_VIEW_FLAG_CHECK_SIBLINGS);
 
-      if (retval != PR_FALSE)
+      if (retval == nsEventStatus_eIgnore)
         break;
 
       pParent = pParent->GetParent();

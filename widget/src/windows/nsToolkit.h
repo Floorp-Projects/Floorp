@@ -95,6 +95,7 @@ public:
     static  MouseTrailer * GetMouseTrailer(DWORD aThreadID);
     static  nsWindow     * GetMouseTrailerWindow();
     static  void           SetMouseTrailerWindow(nsWindow * aNSWin);
+    static  void           IgnoreNextCycle() { gIgnoreNextCycle = PR_TRUE; } 
 
 private:
       /// Global nsToolkit Instance
@@ -128,7 +129,8 @@ private:
       /// last window
     static nsWindow* mHoldMouse;
       /// timer ID
-    UINT mTimerId;
+    UINT   mTimerId;
+    static PRBool gIgnoreNextCycle;
     //@}
 
 };
