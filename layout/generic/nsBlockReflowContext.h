@@ -60,13 +60,13 @@ public:
                        PRBool aComputeMaximumWidth);
   ~nsBlockReflowContext() { }
 
-  nsresult ReflowBlock(nsIFrame* aFrame,
-                       const nsRect& aSpace,
-                       PRBool aApplyTopMargin,
+  nsresult ReflowBlock(const nsRect&       aSpace,
+                       PRBool              aApplyTopMargin,
                        nsCollapsingMargin& aPrevBottomMargin,
-                       PRBool aIsAdjacentWithTop,
-                       nsMargin& aComputedOffsets,
-                       nsReflowStatus& aReflowStatus);
+                       PRBool              aIsAdjacentWithTop,
+                       nsMargin&           aComputedOffsets,
+                       nsHTMLReflowState&  aReflowState,
+                       nsReflowStatus&     aReflowStatus);
 
   PRBool PlaceBlock(const nsHTMLReflowState& aReflowState,
                     PRBool                   aForceFit,
@@ -112,16 +112,6 @@ public:
 protected:
   nsStyleUnit GetRealMarginLeftUnit();
   nsStyleUnit GetRealMarginRightUnit();
-
-  nsresult DoReflowBlock(nsHTMLReflowState &aReflowState,
-                         nsReflowReason aReason,
-                         nsIFrame* aFrame,
-                         const nsRect& aSpace,
-                         PRBool aApplyTopMargin,
-                         nsCollapsingMargin& aPrevBottomMargin,
-                         PRBool aIsAdjacentWithTop,
-                         nsMargin& aComputedOffsets,
-                         nsReflowStatus& aReflowStatus);
 
   nsIPresContext* mPresContext;
   const nsHTMLReflowState& mOuterReflowState;

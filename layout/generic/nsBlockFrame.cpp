@@ -3303,10 +3303,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // Reflow the block into the available space
   nsReflowStatus frameReflowStatus=NS_FRAME_COMPLETE;
   nsMargin computedOffsets;
-  rv = brc.ReflowBlock(frame, availSpace,
-                       applyTopMargin, aState.mPrevBottomMargin,
-                       aState.IsAdjacentWithTop(),
-                       computedOffsets, frameReflowStatus);
+  // construct the html reflow state for the block. ReflowBlock 
+  // will initialize it and set its reason.
+  nsHTMLReflowState blockHtmlRS(aState.mPresContext, aState.mReflowState, frame, 
+                                nsSize(availSpace.width, availSpace.height), 
+                                aState.mReflowState.reason, PR_FALSE);
+  rv = brc.ReflowBlock(availSpace, applyTopMargin, aState.mPrevBottomMargin,
+                       aState.IsAdjacentWithTop(), computedOffsets, 
+                       blockHtmlRS, frameReflowStatus);
 
   if (brc.BlockShouldInvalidateItself() && !mRect.IsEmpty()) {
     Invalidate(aState.mPresContext, mRect);
@@ -3339,7 +3343,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
     nsCollapsingMargin collapsedBottomMargin;
     nsRect combinedArea(0,0,0,0);
-    *aKeepReflowGoing = brc.PlaceBlock(aState.mReflowState, isAdjacentWithTop, computedOffsets,
+    *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, isAdjacentWithTop, computedOffsets,
                                        collapsedBottomMargin, aLine->mBounds, combinedArea);
     aLine->SetCarriedOutBottomMargin(collapsedBottomMargin);
 
@@ -5394,6 +5398,11 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                     aState.BorderPadding().top,
                     availWidth, availHeight);
 
+  // construct the html reflow state for the floater. ReflowBlock will 
+  // initialize it and set its reason.
+  nsHTMLReflowState floaterRS(aState.mPresContext, aState.mReflowState, floater, 
+                              nsSize(availSpace.width, availSpace.height), 
+                              aState.mReflowState.reason, PR_FALSE);
   // Setup a block reflow state to reflow the floater.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
                            computeMaxElementSize,
@@ -5403,9 +5412,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
 
   nsCollapsingMargin margin;
-  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, margin,
-                                isAdjacentWithTop,
-                                aComputedOffsetsResult, aReflowStatus);
+  nsresult rv = brc.ReflowBlock(availSpace, PR_TRUE, margin, isAdjacentWithTop, 
+                                aComputedOffsetsResult, floaterRS, aReflowStatus);
   // An incomplete reflow status means we should split the floater 
   // if the height is constrained (bug 145305). 
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && (NS_UNCONSTRAINEDSIZE == availHeight)) 
@@ -5419,9 +5427,13 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
       // maxElementSize.
       availSpace.width = maxElementWidth;
       nsCollapsingMargin marginMES;
-      rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, marginMES,
-                           isAdjacentWithTop,
-                           aComputedOffsetsResult, aReflowStatus);
+      // construct the html reflow state for the floater. 
+      // ReflowBlock will initialize it and set its reason.
+      nsHTMLReflowState redoFloaterRS(aState.mPresContext, aState.mReflowState, floater, 
+                                      nsSize(availSpace.width, availSpace.height), 
+                                      aState.mReflowState.reason, PR_FALSE);
+      rv = brc.ReflowBlock(availSpace, PR_TRUE, marginMES, isAdjacentWithTop, 
+                           aComputedOffsetsResult, redoFloaterRS, aReflowStatus);
     }
   }
 
@@ -5462,7 +5474,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                                                &metrics.mOverflowArea,
                                                NS_FRAME_NO_MOVE_VIEW);
   }
-  floater->DidReflow(aState.mPresContext, &aState.mReflowState, NS_FRAME_REFLOW_FINISHED);
+  // Pass floaterRS so the frame hierarchy can be used (redoFloaterRS has the same hierarchy)  
+  floater->DidReflow(aState.mPresContext, &floaterRS, NS_FRAME_REFLOW_FINISHED);
 
   // If we computed it, then stash away the max-element-size for later
   if (computeMaxElementSize) {
