@@ -19,36 +19,43 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Chris Saari <saari@netscape.com>
  */
 
-#include "gfxImageContainer.h"
+#include "gfxIImageContainer.h"
 
-#include "nsPIImageContainerGtk.h"
+#include "gfxIImageContainerObserver.h"
+
+#include "nsSize.h"
+
+#include "nsSupportsArray.h"
 
 #include "nsCOMPtr.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
-#define NS_IMAGECONTAINER_CID \
-{ /* 5e04ec5e-1dd2-11b2-8fda-c4db5fb666e0 */         \
-     0x5e04ec5e,                                     \
-     0x1dd2,                                         \
-     0x11b2,                                         \
-    {0x8f, 0xda, 0xc4, 0xdb, 0x5f, 0xb6, 0x66, 0xe0} \
-}
-
-class nsImageContainer : public gfxImageContainer,
-                         public nsPIImageContainerGtk
+class gfxImageContainer : public gfxIImageContainer,
+                          public nsITimerCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSPIIMAGECONTAINERGTK
+  NS_DECL_ISUPPORTS
+  NS_DECL_GFXIIMAGECONTAINER
 
-  /* overwrite this method */
-  NS_IMETHOD GetPreferredAlphaChannelFormat(gfx_format *aFormat);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
-  nsImageContainer();
-  virtual ~nsImageContainer();
+  gfxImageContainer();
+  virtual ~gfxImageContainer();
 
 private:
   /* additional members */
+  nsSupportsArray mFrames;
+  nsSize mSize;
+  PRUint32 mCurrentFrame;
+  PRUint32 mCurrentAnimationFrame;
+  PRBool   mCurrentFrameIsFinishedDecoding;
+  PRBool   mDoneDecoding;
+  
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<gfxIImageContainerObserver> mObserver;
 };
 

@@ -46,7 +46,7 @@ CSRCS		= \
 		XIE.c \
 		$(NULL)
 
-#SHARED_LIBRARY_LIBS = $(DIST)/lib/libgfx_base.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libgfx_base.a
 
 include $(topsrcdir)/config/rules.mk
 
@@ -58,6 +58,11 @@ CFLAGS		+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
 		$(NSPR_LIBS)	\
 		-lxpcom		\
+		$(NULL)
+
+INCLUDES	+= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
 		$(NULL)
 
 ifeq ($(OS_ARCH), Linux)

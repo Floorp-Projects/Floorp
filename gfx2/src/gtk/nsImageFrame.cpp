@@ -159,12 +159,11 @@ NS_IMETHODIMP nsImageFrame::GetHeight(nscoord *aHeight)
 /* readonly attribute nsRect rect; */
 NS_IMETHODIMP nsImageFrame::GetRect(nsRect **aRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-//  *aRect = mRect;
+  *aRect = &mRect;
+
   return NS_OK;
 }
 
@@ -181,11 +180,13 @@ NS_IMETHODIMP nsImageFrame::GetFormat(gfx_format *aFormat)
 /* attribute long timeout; */
 NS_IMETHODIMP nsImageFrame::GetTimeout(PRInt32 *aTimeout)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *aTimeout = mTimeout;
+  return NS_OK;
 }
 NS_IMETHODIMP nsImageFrame::SetTimeout(PRInt32 aTimeout)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  mTimeout = aTimeout;
+  return NS_OK;
 }
 
 /* readonly attribute unsigned long imageBytesPerRow; */
