@@ -160,12 +160,6 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
   * 
   *
   */
-NS_IMETHODIMP nsBaseClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
-{
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsBaseClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 aWhichClipboard, PRBool * outResult ) 
 {

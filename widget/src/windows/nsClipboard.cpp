@@ -870,7 +870,7 @@ nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 a
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,
-                     PRUnichar *aData)
+                     const PRUnichar *aData)
 {
   // This will be called on shutdown.
   ::OleFlushClipboard();
