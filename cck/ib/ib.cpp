@@ -172,7 +172,9 @@ int UnHash(CString HashedFile, CString ClearTextFile)
 // Encrypt a file to another file.
 int Hash(CString ClearTextFile, CString HashedFile)
 {
-	CString command = quotes + rootPath + "make_cfg.exe" + quotes + " -Y -input " + ClearTextFile + " -output " + HashedFile;
+	CString command = quotes + rootPath + "make_cfg.exe" + quotes + 
+		" -Y -input " + quotes + ClearTextFile + quotes +" -output " + 
+		quotes + HashedFile + quotes;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 
 	return TRUE;
@@ -666,6 +668,11 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	}
 	else
 	{
+		CString dirPlainTextPrefs = PlainTextPrefsFile.Left(PlainTextPrefsFile.Find('/'));
+		if (GetFileAttributes(dirPlainTextPrefs) == -1)
+		// directory does not exist
+			_mkdir(dirPlainTextPrefs);
+
 		// Create a plain text prefs with only a comment.
 		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NCADM */\n");
 	}
