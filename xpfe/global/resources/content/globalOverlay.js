@@ -39,7 +39,7 @@ function goQuitApplication()
         return false;
     }
   };
-  if (!nativeAppSupport.isServerMode)
+  if (!nativeAppSupport || !nativeAppSupport.isServerMode)
     appShell.Quit();
   return true;
 }
