@@ -60,6 +60,8 @@ protected:
 
 	nsMsgSearchScopeTermArray m_scopeList;
 	nsCOMPtr <nsISupportsArray> m_termList;
+  nsCOMPtr <nsISupportsArray> m_listenerList;
+
 	nsMsgResultArray m_resultList;
 
 	void DestroyTermList ();

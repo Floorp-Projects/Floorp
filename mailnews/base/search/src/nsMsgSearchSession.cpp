@@ -30,6 +30,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgSearchNotify.h"
 
 NS_IMPL_ISUPPORTS2(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener)
 
@@ -86,6 +87,26 @@ nsMsgSearchSession::CreateSearchTerm(nsIMsgSearchTerm **aResult)
     *aResult = NS_STATIC_CAST(nsIMsgSearchTerm*,term);
     NS_ADDREF(*aResult);
     return NS_OK;
+}
+
+/* void RegisterListener (in nsIMsgSearchNotify listener); */
+NS_IMETHODIMP nsMsgSearchSession::RegisterListener(nsIMsgSearchNotify *listener)
+{
+  nsresult ret = NS_OK;
+  if (!m_listenerList)
+    ret = NS_NewISupportsArray(getter_AddRefs(m_listenerList));
+
+  if (NS_SUCCEEDED(ret) && m_listenerList)
+    m_listenerList->AppendElement(listener);
+  return ret;
+}
+
+/* void UnregisterListener (in nsIMsgSearchNotify listener); */
+NS_IMETHODIMP nsMsgSearchSession::UnregisterListener(nsIMsgSearchNotify *listener)
+{
+  if (m_listenerList)
+    m_listenerList->RemoveElement(listener);
+  return NS_OK;
 }
 
 /* readonly attribute long numSearchTerms; */
@@ -478,6 +499,24 @@ NS_IMETHODIMP nsMsgSearchSession::GetRunningAdapter (nsIMsgSearchAdapter **aSear
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgHdr *header)
+{
+  if (m_listenerList)
+  {
+    PRUint32 count;
+    m_listenerList->Count(&count);
+    for (PRUint32 i = 0; i < count; i++)
+    {
+      nsCOMPtr<nsIMsgSearchNotify> pListener;
+      m_listenerList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchNotify),
+                               (void **)getter_AddRefs(pListener));
+      if (pListener)
+        pListener->OnSearchHit(header);
+
+    }
+  }
+	return NS_OK;
+}
 
 
 NS_IMETHODIMP nsMsgSearchSession::AddResultElement (nsMsgResultElement *element)

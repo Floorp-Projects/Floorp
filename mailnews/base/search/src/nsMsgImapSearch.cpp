@@ -159,7 +159,10 @@ NS_IMETHODIMP nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         nsCOMPtr<nsIMsgSearchSession> searchSession;
         m_scope->GetSearchSession(getter_AddRefs(searchSession));
         if (searchSession)
+        {
           searchSession->AddResultElement(newResult);
+          searchSession->AddSearchHit(pHeaders);
+        }
         //XXXX alecf do not checkin without fixing!        m_scope->m_searchSession->AddResultElement (newResult);
     }
     return err;

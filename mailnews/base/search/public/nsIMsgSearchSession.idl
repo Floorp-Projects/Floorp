@@ -27,6 +27,8 @@
 interface nsMsgResultElement;
 interface nsIMsgSearchAdapter;
 interface nsIMsgSearchTerm;
+interface nsIMsgSearchNotify;
+interface nsIMsgHdr;
 
 //////////////////////////////////////////////////////////////////////////////
 // The Msg Search Session is an interface designed to make constructing
@@ -46,6 +48,9 @@ interface nsIMsgSearchSession :  nsISupports {
 	void AddSearchTermArray (in nsISupportsArray searchTerms);
 
 	void CreateSearchTerm (out nsIMsgSearchTerm searchTerm);
+
+	void RegisterListener (in nsIMsgSearchNotify listener);
+	void UnregisterListener (in nsIMsgSearchNotify listener);
 
     readonly attribute unsigned long numSearchTerms;
 
@@ -92,6 +97,8 @@ interface nsIMsgSearchSession :  nsISupports {
                                               in voidPtr param);
 
 	[noscript] void AddResultElement(in nsMsgResultElement element);
+
+	void AddSearchHit(in nsIMsgHdr header);
 
     readonly attribute long numResults;
     

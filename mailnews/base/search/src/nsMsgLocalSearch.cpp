@@ -818,7 +818,10 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         nsCOMPtr<nsIMsgSearchSession> searchSession;
         m_scope->GetSearchSession(getter_AddRefs(searchSession));
         if (searchSession)
+        {
           searchSession->AddResultElement(newResult);
+          searchSession->AddSearchHit(pHeaders);
+        }
     }
     return err;
 }
