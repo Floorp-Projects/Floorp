@@ -92,11 +92,11 @@ public:
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;
 
   //be sure to Relase() after you are done with the Get()
-  virtual nsIFontCache * GetFontCache() = 0;
-  virtual void FlushFontCache() = 0;
+  NS_IMETHOD  GetFontCache(nsIFontCache *&aCache) = 0;
+  NS_IMETHOD  FlushFontCache() = 0;
 
   // Get the font metrics for a given font.
-  virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont) = 0;
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics) = 0;
 
   //get and set the document zoom value used for display-time
   //scaling. default is 1.0 (no zoom)
@@ -116,7 +116,7 @@ public:
   //XXX the return from this really needs to be ref counted somehow. MMP
   NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable) = 0;
 
-  virtual nsNativeWidget GetNativeWidget(void) = 0;
+  NS_IMETHOD  GetNativeWidget(nsNativeWidget& aNativeWidget) = 0;
 
   //load the specified icon. this is a blocking call that does not return
   //until the icon is loaded.

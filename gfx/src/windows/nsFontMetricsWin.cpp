@@ -198,7 +198,9 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
 //fprintf(stderr, "fFontHandle=%x\n", fFontHandle);
 
   // Find font metrics and character widths
-  HWND win = (HWND)aContext->GetNativeWidget();
+  nsNativeWidget  widget;
+  aContext->GetNativeWidget(widget);
+  HWND win = (HWND)widget;
   HDC dc = ::GetDC(win);
   HFONT oldfont = ::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
@@ -270,7 +272,9 @@ nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString&
   //  return width;
   //}
   // Find font metrics and character widths
-  HWND win = (HWND)aContext->GetNativeWidget();
+  nsNativeWidget  widget;
+  aContext->GetNativeWidget(widget);
+  HWND win = (HWND)widget;
   HDC  hdc = ::GetDC(win);
   HFONT oldfont = ::SelectObject(hdc, (HGDIOBJ) mFontHandle);
 

@@ -154,20 +154,26 @@ NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aCo
   return (aContext->Init(this, aWin));
 }
 
-nsIFontCache* DeviceContextImpl::GetFontCache()
+NS_IMETHODIMP DeviceContextImpl::GetFontCache(nsIFontCache*& aCache)
 {
+  nsresult  rv;
+
   if (nsnull == mFontCache) {
-    if (NS_OK != CreateFontCache()) {
-      return nsnull;
+    rv = CreateFontCache();
+    if (NS_FAILED(rv)) {
+      aCache = nsnull;
+      return rv;
     }
   }
   NS_ADDREF(mFontCache);
-  return mFontCache;
+  aCache = mFontCache;
+  return NS_OK;
 }
 
-void DeviceContextImpl::FlushFontCache()
+NS_IMETHODIMP DeviceContextImpl::FlushFontCache()
 {
   NS_IF_RELEASE(mFontCache);
+  return NS_OK;
 }
 
 nsresult DeviceContextImpl::CreateFontCache()
@@ -180,14 +186,17 @@ nsresult DeviceContextImpl::CreateFontCache()
   return NS_OK;
 }
 
-nsIFontMetrics* DeviceContextImpl::GetMetricsFor(const nsFont& aFont)
+NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics)
 {
   if (nsnull == mFontCache) {
-    if (NS_OK != CreateFontCache()) {
-      return nsnull;
+    nsresult  rv = CreateFontCache();
+    if (NS_FAILED(rv)) {
+      aMetrics = nsnull;
+      return rv;
     }
   }
-  return mFontCache->GetMetricsFor(aFont);
+  aMetrics = mFontCache->GetMetricsFor(aFont);
+  return NS_OK;
 }
 
 NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
@@ -239,9 +248,10 @@ void DeviceContextImpl :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, f
     aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
 }
 
-nsNativeWidget DeviceContextImpl :: GetNativeWidget(void)
+NS_IMETHODIMP DeviceContextImpl :: GetNativeWidget(nsNativeWidget &aNativeWidget)
 {
-  return mWidget;
+  aNativeWidget = mWidget;
+  return NS_OK;
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)

@@ -459,7 +459,7 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 	mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
   mP2T = mContext->GetDevUnitsToAppUnits();
-  mFontCache = mContext->GetFontCache();
+  mContext->GetFontCache(mFontCache);
 
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
