@@ -179,7 +179,7 @@ public class NativeObject extends ScriptableObject {
     {
         if (args.length != 0)
             if (args[0] instanceof Scriptable)
-                if (thisObj == (Scriptable)args[0].getPrototype())
+                if (thisObj == ((Scriptable)args[0]).getPrototype())
             return Boolean.TRUE;
         return Boolean.FALSE;
     }
