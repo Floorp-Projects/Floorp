@@ -39,7 +39,6 @@
 var gBookmarkTree;
 var gOK;
 var gUrls;
-var gTimer;
 
 function Startup()
 {
@@ -49,6 +48,12 @@ function Startup()
   gBookmarkTree = document.getElementById("bookmarks-view");  
   gBookmarkTree.treeBoxObject.selection.select(0);
   gBookmarkTree.tree.focus();
+}
+
+function onDblClick()
+{
+  if (!gOK.disabled)
+    document.documentElement.acceptDialog();
 }
 
 function updateOK()
