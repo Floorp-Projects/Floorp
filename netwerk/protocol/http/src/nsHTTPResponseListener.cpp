@@ -57,9 +57,9 @@ static const int kMAX_HEADER_SIZE = 60000;
 
 
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
+    mResponse(nsnull),
     mFirstLineParsed(PR_FALSE),
     mHeadersDone(PR_FALSE),
-    mResponse(nsnull),
     mBytesReceived(0)
 {
     NS_INIT_REFCNT();
