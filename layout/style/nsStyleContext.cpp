@@ -468,7 +468,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // We begin by examining those style structs that are capable of
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
-  // Visibility, Quotes
+  // Visibility, Outline, TableBorder, Quotes
   DO_STRUCT_DIFFERENCE(Display);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
@@ -476,6 +476,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(UserInterface);
   DO_STRUCT_DIFFERENCE(Visibility);
   DO_STRUCT_DIFFERENCE(Outline);
+  DO_STRUCT_DIFFERENCE(TableBorder);
 #ifdef MOZ_SVG
   DO_STRUCT_DIFFERENCE(SVG);
 #endif
@@ -489,7 +490,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
       
   // The following structs cause (as their maximal difference) a reflow
   // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
-  // Position, Text, TextReset, Table, TableBorder
+  // Position, Text, TextReset, Table,
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
@@ -499,15 +500,13 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Text);
   DO_STRUCT_DIFFERENCE(TextReset);
   DO_STRUCT_DIFFERENCE(Table);
-  DO_STRUCT_DIFFERENCE(TableBorder);
 
   // At this point, we know that the worst kind of damage we could do is
   // a re-render (i.e., a VISUAL change).
   maxHint = NS_STYLE_HINT_VISUAL;
 
   // The following structs cause (as their maximal difference) a
-  // re-render to occur.  VISUAL Structs: Color, Background, Outline,
-  // UIReset
+  // re-render to occur.  VISUAL Structs: Color, Background, UIReset
   DO_STRUCT_DIFFERENCE(Color);
   DO_STRUCT_DIFFERENCE(Background);
   DO_STRUCT_DIFFERENCE(UIReset);
