@@ -126,7 +126,7 @@ static LONG   gLastButtonDown = 0;
 ////////////////////////////////////////////////////
 
 static PRBool gGlobalsInitialized = PR_FALSE;
-static HPOINTER gPtrArray[17];
+static HPOINTER gPtrArray[IDC_COUNT];
 static PRBool gIsTrackPoint = PR_FALSE;
 static PRBool gIsDBCS = PR_FALSE;
 
@@ -188,7 +188,7 @@ nsWindow::nsWindow() : nsBaseWidget()
       gGlobalsInitialized = PR_TRUE;
       HMODULE hModResources = NULLHANDLE;
       DosQueryModFromEIP(&hModResources, NULL, 0, NULL, NULL, (ULONG) &gGlobalsInitialized);
-      for (int i=0;i<=16;i++ ) {
+      for (int i = 0; i < IDC_COUNT; i++) {
         gPtrArray[i] = ::WinLoadPointer(HWND_DESKTOP, hModResources, IDC_BASE+i);
       }
 
@@ -250,7 +250,7 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
-  for (int i=0;i<=16;i++ ) {
+  for (int i = 0; i < IDC_COUNT; i++) {
     WinDestroyPointer(gPtrArray[i]);
   }
 }
@@ -1745,7 +1745,11 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     break;
 
   case eCursor_zoom_in:
+    newPointer = gPtrArray[IDC_ZOOMIN-IDC_BASE];
+    break;
+
   case eCursor_zoom_out:
+    newPointer = gPtrArray[IDC_ZOOMOUT-IDC_BASE];
     break;
 
   default:

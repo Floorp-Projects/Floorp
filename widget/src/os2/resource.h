@@ -36,13 +36,13 @@
 #define IDC_CELL                        4111
 #define IDC_COPY                        4112
 #define IDC_ALIAS                       4113
+#define IDC_ZOOMIN                      4114
+#define IDC_ZOOMOUT                     4115
 
-#define IDC_ARROWWAIT                   4114
-#define IDC_CROSS                       4115
-#define IDC_HELP                        4116
+/* OS/2 specific */
+#define IDC_ARROWWAIT                   4116
+#define IDC_CROSS                       4117
+#define IDC_HELP                        4118
 
-// OS2TODO HCT temporary bug fix
+#define IDC_COUNT IDC_HELP-IDC_BASE+1
 
-#ifndef FCF_CLOSEBUTTON // defined in the Merlin toolkit
-#define FCF_CLOSEBUTTON 0x04000000L
-#endif

@@ -22,7 +22,6 @@
 #include <os2.h>
 #include "resource.h"
 
-/* pointers */
 POINTER IDC_SELECTANCHOR   res\select.ptr
 POINTER IDC_ARROWNORTH     res\arrow_north.ptr
 POINTER IDC_ARROWNORTHPLUS res\arrow_north_plus.ptr
@@ -32,11 +31,14 @@ POINTER IDC_ARROWWEST      res\arrow_west.ptr
 POINTER IDC_ARROWWESTPLUS  res\arrow_west_plus.ptr
 POINTER IDC_ARROWEAST      res\arrow_east.ptr
 POINTER IDC_ARROWEASTPLUS  res\arrow_east_plus.ptr
-POINTER IDC_COPY           res\copy.ptr
-POINTER IDC_ALIAS          res\aliasb.ptr
-POINTER IDC_CELL           res\cell.ptr
 POINTER IDC_GRAB           res\grab.ptr
 POINTER IDC_GRABBING       res\grabbing.ptr
+POINTER IDC_CELL           res\cell.ptr
+POINTER IDC_COPY           res\copy.ptr
+POINTER IDC_ALIAS          res\aliasb.ptr
+POINTER IDC_ZOOMIN         res\zoom_in.ptr
+POINTER IDC_ZOOMOUT        res\zoom_out.ptr
+
 POINTER IDC_ARROWWAIT      res\arrow_wait.ptr
 POINTER IDC_CROSS          res\crosshair.ptr
 POINTER IDC_HELP           res\help.ptr
