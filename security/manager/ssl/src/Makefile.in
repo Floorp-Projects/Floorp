@@ -51,16 +51,12 @@ META_COMPONENT	= crypto
 EXPORTS = 			\
 	$(NULL)
 
-libs::
-	$(INSTALL) $(srcdir)/nssifail.txt $(DIST)/bin/res
-
 CPPSRCS = 				\
 	nsNSSCallbacks.cpp		\
 	nsNSSComponent.cpp		\
 	nsNSSIOLayer.cpp		\
 	nsNSSModule.cpp			\
 	nsSSLSocketProvider.cpp		\
-	nsSecureBrowserUIImpl.cpp	\
 	nsTLSSocketProvider.cpp		\
 	nsSDR.cpp			\
 	nsPK11TokenDB.cpp		\
@@ -98,6 +94,7 @@ REQUIRES	= nspr \
 		  xpconnect \
 		  jar \
 		  unicharutil \
+                  pipboot \
 		  $(NULL)
 
 EXTRA_LIBS = $(NSS_LIBS)

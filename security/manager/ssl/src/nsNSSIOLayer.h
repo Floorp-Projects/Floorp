@@ -33,6 +33,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
 #include "nsISSLStatus.h"
+#include "nsISSLStatusProvider.h"
 #include "nsXPIDLString.h"
 
 class nsIChannel;

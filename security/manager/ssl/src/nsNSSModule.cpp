@@ -27,7 +27,6 @@
 #include "nsIGenericFactory.h"
 
 #include "nsNSSComponent.h"
-#include "nsSecureBrowserUIImpl.h"
 #include "nsSSLSocketProvider.h"
 #include "nsTLSSocketProvider.h"
 #include "nsKeygenHandler.h"
@@ -46,24 +45,114 @@
 #include "nsCMS.h"
 #include "nsCertPicker.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSSLSocketProvider)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTLSSocketProvider)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPK11TokenDB)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPKCS11ModuleDB)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PSMContentListener, init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSCertificateDB)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertOutliner)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCrypto)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPkcs11)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSSecureMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSDecoder)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSEncoder)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCMSMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHash)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertPicker)
+// We must ensure that the nsNSSComponent has been loaded before
+// creating any other components.
+static void EnsureNSSInitialized(PRBool triggeredByNSSComponent)
+{
+  static PRBool haveLoaded = PR_FALSE;
+  if (haveLoaded)
+    return;
+
+  haveLoaded = PR_TRUE;
+  
+  if (triggeredByNSSComponent) {
+    // Me must prevent a recursion, as nsNSSComponent creates
+    // additional instances
+    return;
+  }
+  
+  nsCOMPtr<nsISupports> nssComponent 
+    = do_GetService(PSM_COMPONENT_CONTRACTID);
+}
+
+// These two macros are ripped off from nsIGenericFactory.h and slightly
+// modified.
+#define NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(triggeredByNSSComponent,           \
+                                                      _InstanceClass)         \
+static NS_IMETHODIMP                                                          \
+_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
+                            void **aResult)                                   \
+{                                                                             \
+    nsresult rv;                                                              \
+    _InstanceClass * inst;                                                    \
+                                                                              \
+    EnsureNSSInitialized(triggeredByNSSComponent);                            \
+                                                                              \
+    *aResult = NULL;                                                          \
+    if (NULL != aOuter) {                                                     \
+        rv = NS_ERROR_NO_AGGREGATION;                                         \
+        return rv;                                                            \
+    }                                                                         \
+                                                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
+    if (NULL == inst) {                                                       \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
+        return rv;                                                            \
+    }                                                                         \
+    NS_ADDREF(inst);                                                          \
+    rv = inst->QueryInterface(aIID, aResult);                                 \
+    NS_RELEASE(inst);                                                         \
+                                                                              \
+    return rv;                                                                \
+}                                                                             \
+
+ 
+#define NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(triggeredByNSSComponent,      \
+                                                _InstanceClass, _InitMethod)  \
+static NS_IMETHODIMP                                                          \
+_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
+                            void **aResult)                                   \
+{                                                                             \
+    nsresult rv;                                                              \
+    _InstanceClass * inst;                                                    \
+                                                                              \
+    EnsureNSSInitialized(triggeredByNSSComponent);                            \
+                                                                              \
+    *aResult = NULL;                                                          \
+    if (NULL != aOuter) {                                                     \
+        rv = NS_ERROR_NO_AGGREGATION;                                         \
+        return rv;                                                            \
+    }                                                                         \
+                                                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
+    if (NULL == inst) {                                                       \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
+        return rv;                                                            \
+    }                                                                         \
+    NS_ADDREF(inst);                                                          \
+    rv = inst->_InitMethod();                                                 \
+    if(NS_SUCCEEDED(rv)) {                                                    \
+        rv = inst->QueryInterface(aIID, aResult);                             \
+    }                                                                         \
+    NS_RELEASE(inst);                                                         \
+                                                                              \
+    return rv;                                                                \
+}                                                                             \
+
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_TRUE, nsNSSComponent, Init)
+
+// Use the special factory constructor for everything this module implements,
+// because all code could potentially require the NSS library.
+// Our factory constructor takes an additional boolean parameter.
+// Only for the nsNSSComponent, set this to PR_TRUE.
+// All other classes must have this set to PR_FALSE.
+
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsSSLSocketProvider)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsTLSSocketProvider)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsSecretDecoderRing)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPK11TokenDB)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPKCS11ModuleDB)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, PSMContentListener, init)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertificateDB)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertOutliner)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCrypto)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPkcs11)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSSecureMessage)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSDecoder)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSEncoder)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSMessage)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsHash)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertPicker)
 
 static nsModuleComponentInfo components[] =
 {
@@ -72,13 +161,6 @@ static nsModuleComponentInfo components[] =
     NS_NSSCOMPONENT_CID,
     PSM_COMPONENT_CONTRACTID,
     nsNSSComponentConstructor
-  },
-  
-  {
-    NS_SECURE_BROWSER_UI_CLASSNAME,
-    NS_SECURE_BROWSER_UI_CID,
-    NS_SECURE_BROWSER_UI_CONTRACTID,
-    nsSecureBrowserUIImplConstructor
   },
   
   {
@@ -107,13 +189,6 @@ static nsModuleComponentInfo components[] =
     NS_SDR_CID,
     NS_SDR_CONTRACTID,
     nsSecretDecoderRingConstructor
-  },
-
-  {
-    "Entropy Collector",
-    NS_NSSCOMPONENT_CID,
-    NS_ENTROPYCOLLECTOR_CONTRACTID,
-    nsNSSComponentConstructor
   },
 
   {

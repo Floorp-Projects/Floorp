@@ -38,12 +38,6 @@ MODULE = pippki
 DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-DLLNAME       = pippki
-PDBFILE       = $(DLLNAME).pdb
-MAPFILE       = $(DLLNAME).map
-DLL           = .\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
-
 include <$(DEPTH)/config/config.mak>
 
 XPIDL_INCLUDES=-I$(DEPTH)\dist\idl

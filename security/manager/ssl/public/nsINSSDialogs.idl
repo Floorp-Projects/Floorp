@@ -80,45 +80,6 @@ interface nsINSSDialogs : nsISupports
 
 
 /**
- * nsISecurityWarningDialogs - functions that
- *   display warnings for transitions between secure
- *   and insecure pages, posts to insecure servers etc.
- */
-[scriptable, uuid(1c399d06-1dd2-11b2-bc58-c87cbcacdb78)]
-interface nsISecurityWarningDialogs : nsISupports
-{
-  /**
-   * alertEnteringSecure
-   */
-  void alertEnteringSecure(in nsIInterfaceRequestor ctx);
-
-  /**
-   * alertEnteringWeak
-   */
-  void alertEnteringWeak(in nsIInterfaceRequestor ctx);
-
-  /**
-   * alertLeavingSecure
-   */
-  void alertLeavingSecure(in nsIInterfaceRequestor ctx);
-
-  /**
-   * alertMixedMode
-   */
-  void alertMixedMode(in nsIInterfaceRequestor ctx);
-
-  /**
-   * confirmPostToInsecure
-   */
-  boolean confirmPostToInsecure(in nsIInterfaceRequestor ctx);
-
-  /**
-   * confirmPostToInsecureFromSecure
-   */
-  boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
-};
-
-/**
  * nsICertificateDialogs
  * Provides UI for certificate-related dialogs.
  */

@@ -68,6 +68,7 @@ REQUIRES	= \
 		layout_xul \
 		gfx \
 		unicharutil \
+                pipboot \
 		$(NULL)
 
 include <$(DEPTH)/config/config.mak>
@@ -134,5 +135,4 @@ include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
     $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
-    $(MAKE_INSTALL) nssifail.txt $(DIST)\bin\res
 

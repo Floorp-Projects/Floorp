@@ -100,7 +100,6 @@ nsNSS_SSLGetClientAuthData(void *arg, PRFileDesc *socket,
 						   CERTDistNames *caNames,
 						   CERTCertificate **pRetCert,
 						   SECKEYPrivateKey **pRetKey);
-static nsISecurityManagerComponent* gNSSService = nsnull;
 static PRBool firstTime = PR_TRUE;
 static PRDescIdentity nsSSLIOLayerIdentity;
 static PRIOMethods nsSSLIOLayerMethods;
@@ -358,7 +357,7 @@ nsresult nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
   return NS_OK;
 }
 
-nsresult nsNSSSocketInfo::GetSSLStatus(nsISSLStatus** _result)
+nsresult nsNSSSocketInfo::GetSSLStatus(nsISupports** _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
 
@@ -790,11 +789,12 @@ nsresult InitNSSMethods()
   nsSSLIOLayerMethods.write = nsSSLIOLayerWrite;
   nsSSLIOLayerMethods.read = nsSSLIOLayerRead;
   
+  /* Make sure NSS has been loaded. 
+   * We rely on the NSS component to keep itself loaded 
+   * until the application shuts down.
+   */
   nsresult rv;
-  /* This performs NSS initialization for us */
-  rv = nsServiceManager::GetService(PSM_COMPONENT_CONTRACTID,
-                                    NS_GET_IID(nsISecurityManagerComponent),
-                                    (nsISupports**)&gNSSService);
+  nsCOMPtr<nsISupports> loader = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
   return rv;
 }
 

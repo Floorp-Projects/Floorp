@@ -405,7 +405,6 @@ sub ProcessJarManifests()
     if ($main::options{psm}) {
     	CreateJarFromManifest(":mozilla:security:manager:ssl:resources:jar.mn", $chrome_dir, \%jars);
     	CreateJarFromManifest(":mozilla:security:manager:pki:resources:jar.mn", $chrome_dir, \%jars);
-    	InstallFromManifest(":mozilla:security:manager:ssl:src:MANIFEST_NSSIFAIL", "$resource_dir");
     }
     # bad jar.mn files
 #    CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);

@@ -85,7 +85,6 @@
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
-#include "nsIEntropyCollector.h"
 
 // for X remote support
 #ifdef MOZ_ENABLE_XREMOTE
@@ -1022,35 +1021,6 @@ static nsresult VerifyInstallation(int argc, char **argv)
   return NS_OK;
 }
 
-static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIEntropyCollector> enCol =
-    do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &rv);
-
-  if (rv == NS_ERROR_ABORT) {
-    // In case the security component can not do its internal initialization,
-    // we must warn the user and exit.
-
-    const char panicMsg[] = "Could not initialize the browser's security component. "
-                     "The most likely cause is problems with files in your "
-                     "browser's profile directory. Please check that this "
-                     "directory has no read/write restrictions and your "
-                     "hard disk is not full or close to full.";
-
-    const char panicMessageFilename[] = "nssifail.txt";
-
-    ShowOSAlertFromFile(argc, argv, panicMessageFilename, panicMsg);
-
-    return rv;
-  }
-
-  // Any other return code means: Security component could initialize NSS fine,
-  // or, security components are not available.
-  return NS_OK;
-}
-
 #ifdef DEBUG_warren
 #ifdef XP_PC
 #define _CRTDBG_MAP_ALLOC
@@ -1247,9 +1217,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("InitializeProfileService");
   rv = InitializeProfileService(cmdLineArgs);
   NS_TIMELINE_LEAVE("InitializeProfileService");
-  if (NS_FAILED(rv)) return rv;
-
-  rv = VerifyPsmAbsentOrSane(argc, argv);
   if (NS_FAILED(rv)) return rv;
 
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.

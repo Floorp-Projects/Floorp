@@ -286,8 +286,8 @@ MOZ_META_COMPONENTS_mail +=  nsSMIMEModule
 MOZ_META_COMPONENTS_mail_comps += smimestb
 endif
 
-MOZ_META_COMPONENTS_crypto = PKI NSS
-MOZ_META_COMPONENTS_crypto_comps = pippki pipnss
+MOZ_META_COMPONENTS_crypto = BOOT PKI NSS
+MOZ_META_COMPONENTS_crypto_comps = pipboot pippki pipnss
 
 #
 # Build using PIC by default
