@@ -46,15 +46,29 @@
         PR_ASSERT(res);                 \
     }
 
-typedef struct {
+struct recentlyUsedObject {
     PRCList link;
     nsCacheObject* cacheObject;
-} recentlyUsedObject;
+};
+
+/* Find pointer to recentlyUsedObject struct 
+ * from the list linkaged embedded in it 
+ */
+#define OBJECT_PTR(_link) \
+    ((recentlyUsedObject*) ((char*) (_link) - offsetof(recentlyUsedObject,link)))
 
 //File static list of recently used cache objects
 static PRCList g_RecentlyUsedList;
+
 static char* g_FullFilename=0;
-const static PRUint16 MAX_FILENAME_LEN = 512;
+const static int MAX_FILENAME_LEN = 512;
+
+// Every time we cleanup we cleanup to 75% of the max available size. 
+// This should ideally change to a more const number than a percentage. 
+// Since someone may have a bigger cache size, so we don't really want to 
+// be cleaning up 5 megs if some one has a 20 megs cache size.
+// I will revisit this issue once the basic architecture is up and running. 
+#define CLEANUP_FACTOR 0.75
 
 char* FullFilename(const char* i_Filename);
 //
@@ -64,7 +78,6 @@ nsDiskModule::nsDiskModule(const PRUint32 size):
     nsCacheModule(size),
     m_pDB(0)
 {
-    /* initialize the list recently used urls*/
     PR_INIT_CLIST(&g_RecentlyUsedList);
 }
 
@@ -76,15 +89,24 @@ nsDiskModule::~nsDiskModule()
         (*m_pDB->close)(m_pDB);
         m_pDB = 0;
     }
+
+    /* Clean up the recently used list */
     recentlyUsedObject* obj;
     while (!PR_CLIST_IS_EMPTY(&g_RecentlyUsedList)) 
     {
         obj = (recentlyUsedObject*) PR_LIST_HEAD(&g_RecentlyUsedList);
-        PR_FREEIF(obj->cacheObject);
+        if (obj->cacheObject)
+            delete obj->cacheObject;
         PR_REMOVE_LINK(&obj->link);
-        PR_DELETE(obj);
     }
+
     PR_ASSERT(PR_CLIST_IS_EMPTY(&g_RecentlyUsedList));
+
+    if (g_FullFilename)
+    {
+        delete[] g_FullFilename;
+        g_FullFilename = 0;
+    }
 }
 
 PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
@@ -119,6 +141,8 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
         {
 //            if (m_Sync == EVERYTIME)
                 status = (*m_pDB->sync)(m_pDB, 0);
+                m_Entries++;
+                m_SizeInUse += io_pObject->Size();
         }
         PR_Free(key);
         PR_Free(data);
@@ -129,8 +153,6 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
 
 PRBool nsDiskModule::Contains(nsCacheObject* io_pObject) const
 {
-    //return Contains(io_oObject->Address());
-
     ENSURE_INIT;
 
     if (!m_pDB || !io_pObject)
@@ -139,7 +161,8 @@ PRBool nsDiskModule::Contains(nsCacheObject* io_pObject) const
     nsCacheObject* pTemp = GetObject(io_pObject->Address());
     if (pTemp)
     {
-        io_pObject = pTemp;  /*bug */
+        PR_ASSERT(io_pObject == pTemp); 
+        // until I do a copyFrom function
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -167,6 +190,9 @@ PRBool nsDiskModule::Contains(const char* i_url) const
 void nsDiskModule::GarbageCollect(void)
 {
     MonitorLocker ml(this);
+    ReduceSizeTo((PRUint32)(CLEANUP_FACTOR*m_Size));
+    // TODO
+    // if the recentlyusedlist has grown too big, trim some objects from there as well
 }
 
 nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
@@ -181,11 +207,27 @@ nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
 nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
 {
     ENSURE_INIT;
+    MonitorLocker ml((nsDiskModule*)this);
 
     if (!m_pDB || !i_url || !*i_url)
         return 0;
 
-    //TODO check from recently used list. 
+    /* Check amongst recently used objects */
+    recentlyUsedObject* obj;
+    PRCList* list = &g_RecentlyUsedList;
+    if (!PR_CLIST_IS_EMPTY(&g_RecentlyUsedList)) 
+    {
+        list = g_RecentlyUsedList.next;
+        nsCacheObject* pObj;
+        while (list != &g_RecentlyUsedList)
+        {
+            obj = OBJECT_PTR(list);
+            pObj = obj->cacheObject;
+            if (0 == PL_strcasecmp(i_url, pObj->Address())) //todo also validate
+                return pObj;
+            list = list->next;
+        }
+    }
 
     DBT key, data;
 
@@ -196,8 +238,9 @@ nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
     {
         nsCacheObject* pTemp = new nsCacheObject();
         pTemp->Info(data.data);
-        recentlyUsedObject* pNode = PR_NEW(recentlyUsedObject);
+        recentlyUsedObject* pNode = PR_NEWZAP(recentlyUsedObject);
         PR_APPEND_LINK(&pNode->link, &g_RecentlyUsedList);
+        pNode->cacheObject = pTemp;
         return pTemp;
     }
 
@@ -283,20 +326,87 @@ PRBool nsDiskModule::InitDB(void)
 
 PRBool nsDiskModule::ReduceSizeTo(const PRUint32 i_NewSize)
 {
-    //TODO
-    return PR_TRUE;
+    return PR_FALSE; //TODO Fix this. 
+    PRInt32 needToFree = m_SizeInUse - i_NewSize;
+    if (needToFree > 0)
+    {
+        PRUint32 avg = AverageSize();
+        if (avg==0)
+            return PR_FALSE; 
+        
+        PRUint32 nObjectsToFree = needToFree/AverageSize();
+        if (nObjectsToFree < 1)
+            nObjectsToFree = 1;
+
+        //TODO
+        
+        /*
+        DBT key, data;
+
+        key.data = (void*) i_url;
+        key.size = PL_strlen(i_url);
+
+        if (0 == (*m_pDB->get)(m_pDB, &key, &data, 0))
+        {
+            nsCacheObject* pTemp = new nsCacheObject();
+            pTemp->Info(data.data);
+            recentlyUsedObject* pNode = PR_NEWZAP(recentlyUsedObject);
+            PR_APPEND_LINK(&pNode->link, &g_RecentlyUsedList);
+            pNode->cacheObject = pTemp;
+            return pTemp;
+        }
+        */
+
+        return PR_TRUE;
+    }
+    
+    return PR_FALSE;
 }
 
 PRBool nsDiskModule::Remove(const char* i_url)
 {
     ENSURE_INIT;
-    //TODO
-    // Also remove the file corresponding to this item. 
+    nsCacheObject* pObject = GetObject(i_url);
+    if (pObject)
+    {
+        return Remove(pObject);
+    }
     return PR_FALSE;
 }
 
+PRBool nsDiskModule::Remove(nsCacheObject* pObject)
+{
+    MonitorLocker ml(this);
+
+    if (!pObject)
+        return PR_FALSE;
+    //PR_ASSERT(Contains(pObject);
+
+    //Remove it from the index
+    DBT key;
+    key.data = (void*) pObject->Address();
+    key.size = PL_strlen(pObject->Address());
+    if (0 == (*m_pDB->del)(m_pDB, &key, 0))
+    {
+        --m_Entries;
+        m_SizeInUse -= pObject->Size();
+    }
+    //Remove it from the recently used list
+    //TODO till done I am not removing it from here 
+
+    //Remove it from the disk
+    
+    //Remove file FullFilename(pObject->Filename());
+
+    //Finally delete it 
+    //delete pObject; //Currently recentlyused will delete these. 
+    //pObject = 0;
+    return PR_TRUE;
+
+}
 PRBool nsDiskModule::Remove(const PRUint32 i_index)
 {
+    //This will probably go away. 
     ENSURE_INIT;
     //TODO
     // Also remove the file corresponding to this item. 
@@ -316,7 +426,7 @@ void nsDiskModule::SetSize(const PRUint32 i_Size)
     m_Size = i_Size;
     if (m_Size >0)
     {
-        ReduceSizeTo(m_Size);
+        ReduceSizeTo((PRUint32)(CLEANUP_FACTOR*m_Size));
     }
     else
     {
@@ -329,6 +439,7 @@ char* FullFilename(const char* i_Filename)
     if (0 == g_FullFilename)
     {
         g_FullFilename = new char[MAX_FILENAME_LEN];
+        *g_FullFilename = '\0';
         if (0 == g_FullFilename)
             return 0;
     }
