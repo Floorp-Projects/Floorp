@@ -749,8 +749,8 @@ nsresult nsParser::CreateCompatibleDTDForDocType(nsIDTD** aDTD, nsString* aDocTy
  *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
  *  @return  NS_OK if succeeded else ERROR.
  */
-nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType=nsnull, 
-                                        eParseMode aParseMode=eParseMode_unknown)
+nsresult nsParser::CreateCompatibleDTDForMimeType(nsIDTD** aDTD,const nsString* aMimeType, 
+                                        eParseMode aParseMode)
 {
   nsresult result=NS_OK;
   const nsCID*   theDTDClassID=0;
@@ -795,7 +795,7 @@ nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType
  *  @param   aCommand    -- A command for which a DTD is to be selected.
  *  @return  NS_OK if succeeded else ERROR.
  */
-nsresult CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand=eViewNormal)
+nsresult nsParser::CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand)
 {
   nsresult result=NS_OK;
   const nsCID*   theDTDClassID=0;
