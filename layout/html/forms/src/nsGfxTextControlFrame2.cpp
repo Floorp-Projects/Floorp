@@ -73,7 +73,7 @@
 
 #include "nsBoxLayoutState.h"
 #include "nsINameSpaceManager.h"
-
+#include "nsLayoutAtoms.h" //getframetype
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -89,6 +89,120 @@ static void RemoveNewlines(nsString &aString)
   aString.StripChars(badChars);
 }
 
+
+//listen for the return key. kinda lame.
+class nsTextAreaKeyListener : public nsIDOMKeyListener, public nsSupportsWeakReference
+{
+public:
+  /** the default constructor
+   */
+  nsTextAreaKeyListener();
+  /** the default destructor. virtual due to the possibility of derivation.
+   */
+  virtual ~nsTextAreaKeyListener();
+
+  /** SetEditor gives an address to the editor that will be accessed
+   *  @param aEditor the editor this listener calls for editing operations
+   */
+  void SetFrame(nsGfxTextControlFrame2 *aFrame){mFrame = aFrame;}
+
+/*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+/*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
+  see the nsIDOMKeyListener interface implementation for details
+  */
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+/*END interfaces from nsIDOMKeyListener*/
+
+protected:
+  nsGfxTextControlFrame2* mFrame;  // weak reference
+};
+
+
+/*
+ * nsTextEditorKeyListener implementation
+ */
+
+NS_IMPL_ADDREF(nsTextAreaKeyListener)
+
+NS_IMPL_RELEASE(nsTextAreaKeyListener)
+
+
+nsTextAreaKeyListener::nsTextAreaKeyListener()
+{
+  NS_INIT_REFCNT();
+}
+
+
+
+nsTextAreaKeyListener::~nsTextAreaKeyListener() 
+{
+}
+
+
+NS_IMPL_QUERY_INTERFACE3(nsTextAreaKeyListener, nsIDOMEventListener, nsIDOMKeyListener, nsISupportsWeakReference)
+
+
+nsresult
+nsTextAreaKeyListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+// individual key handlers return NS_OK to indicate NOT consumed
+// by default, an error is returned indicating event is consumed
+// joki is fixing this interface.
+nsresult
+nsTextAreaKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
+{
+  return NS_OK;
+}
+
+
+nsresult
+nsTextAreaKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
+{
+  return NS_OK;
+}
+
+
+nsresult
+nsTextAreaKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+  if (!mFrame)
+    return NS_OK;
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) 
+  {
+    //non-key event passed to keydown.  bad things.
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
+  if(privateEvent) 
+  {
+    PRBool dispatchStopped;
+    privateEvent->IsDispatchStopped(&dispatchStopped);
+    if(dispatchStopped)
+      return NS_OK;
+  }
+  PRUint32     keyCode;
+  PRUint32 flags;
+  keyEvent->GetKeyCode(&keyCode);
+  if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
+      || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
+  {
+    mFrame->SubmitAttempt();
+  }
+  return NS_OK;
+}
+
+//END KEYLISTENER
 
 
 
@@ -572,6 +686,15 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
   }
   return nsBoxFrame::Destroy(aPresContext);
 }
+
+NS_IMETHODIMP 
+nsGfxTextControlFrame2::GetFrameType(nsIAtom** aType) const 
+{ 
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer"); 
+  *aType = nsLayoutAtoms::textInputFrame; 
+  NS_ADDREF(*aType); 
+  return NS_OK; 
+} 
 
 // XXX: wouldn't it be nice to get this from the style context!
 PRBool nsGfxTextControlFrame2::IsSingleLineTextControl() const

@@ -126,6 +126,8 @@ public:
 
 //==== END NSIGFXTEXTCONTROLFRAME2
 //==== OVERLOAD of nsIFrame
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
   /** handler for attribute changes to mContent */
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
