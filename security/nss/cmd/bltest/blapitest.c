@@ -417,10 +417,9 @@ typedef enum {
     bltestDSA,		  /* . (Public Key Sig.)   */
     bltestMD2,		  /* Hash algorithms	   */
     bltestMD5,		  /* .			   */
-    bltestSHA1		  /* .			   */
+    bltestSHA1,           /* .			   */
+    NUMMODES
 } bltestCipherMode;
-
-#define NUMMODES 16
 
 static char *mode_strings[] =
 {
@@ -1078,7 +1077,9 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     if (!cipherInfo->cx && dsap->key.buf.len > 0) {
 	cipherInfo->cx = dsakey_from_filedata(&dsap->key.buf);
     }
-    if (!encrypt) {
+    if (encrypt) {
+	cipherInfo->cipher.pubkeyCipher = DSA_SignDigest;
+    } else {
 	/* Have to convert private key to public key.  Memory
 	 * is freed with private key's arena  */
 	DSAPublicKey *pubkey;
@@ -1093,6 +1094,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	pubkey->params.base.data = key->params.base.data;
 	pubkey->publicValue.len = key->publicValue.len;
 	pubkey->publicValue.data = key->publicValue.data;
+	cipherInfo->cipher.pubkeyCipher = DSA_VerifyDigest;
     }
     return SECSuccess;
 }
@@ -1321,21 +1323,21 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
 			  MD2_LENGTH);
 	cipherInfo->cipher.hashCipher = (restart) ? md2_restart : md2_HashBuf;
-	return (cipherInfo->cx != NULL) ? SECSuccess : SECFailure;
+	return SECSuccess;
 	break;
     case bltestMD5:
 	restart = cipherInfo->params.hash.restart;
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
 			  MD5_LENGTH);
 	cipherInfo->cipher.hashCipher = (restart) ? md5_restart : MD5_HashBuf;
-	return (cipherInfo->cx != NULL) ? SECSuccess : SECFailure;
+	return SECSuccess;
 	break;
     case bltestSHA1:
 	restart = cipherInfo->params.hash.restart;
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
 			  SHA1_LENGTH);
 	cipherInfo->cipher.hashCipher = (restart) ? sha1_restart : SHA1_HashBuf;
-	return (cipherInfo->cx != NULL) ? SECSuccess : SECFailure;
+	return SECSuccess;
 	break;
     default:
 	return SECFailure;
@@ -1719,6 +1721,7 @@ verify_self_test(bltestIO *result, bltestIO *cmp, bltestCipherMode mode,
 		printf("Verification self-test for %s failed!\n", modestr);
 	    }
 	}
+	return sigstatus;
     } else if (is_hashCipher(mode)) {
 	if (res == 0) {
 	    printf("Hash self-test for %s passed.\n", modestr);
@@ -1804,6 +1807,8 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    ** Align the input buffer (plaintext) according to request
 	    ** then perform operation and compare to ciphertext
 	    */
+	    /* XXX for now */
+	    rv = SECSuccess;
 	    if (encrypt) {
 		bltestCopyIO(arena, &cipherInfo.input, &pt);
 		misalignBuffer(arena, &cipherInfo.input, inoff);
@@ -1818,11 +1823,11 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 		if (is_hashCipher(mode))
 		    continue;
 		/*if (rv) return rv;*/
-		/* XXX for now */
-		rv = SECSuccess;
 	    }
 	    if (!decrypt)
 		continue;
+	    /* XXX for now */
+	    rv = SECSuccess;
 	    /* Reverse Operation (Decrypt/Verify)
 	    ** Align the input buffer (ciphertext) according to request
 	    ** then perform operation and compare to plaintext
@@ -1841,11 +1846,9 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    rv |= verify_self_test(&cipherInfo.output, 
 	                           &pt, mode, PR_FALSE, srv);
 	    /*if (rv) return rv;*/
-	    /* XXX for now */
-	    rv = SECSuccess;
 	}
     }
-    return SECSuccess;
+    return rv;
 }
 
 SECStatus
@@ -2269,7 +2272,7 @@ int main(int argc, char **argv)
 	PR_Close(outfile);
     PORT_FreeArena(cipherInfo.arena, PR_TRUE);
 
-    NSS_Shutdown();
+    /*NSS_Shutdown();*/
 
     return SECSuccess;
 }
