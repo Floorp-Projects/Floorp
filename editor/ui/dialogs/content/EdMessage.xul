@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 <!-- dialog containing a control requiring initial setup -->
 <window title="Netscape" class="dialog"
@@ -10,9 +10,9 @@
     align="vertical">
                                   
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
   </html:script>
-  <html:script language="JavaScript" src="chrome://editordlgs/content/EdMessage.js">
+  <html:script language="JavaScript" src="chrome://editor/content/EdMessage.js">
   </html:script>
 
   <broadcaster id="args" value=""/>

@@ -368,19 +368,25 @@ function EditorInsertText(textToInsert)
 
 function EditorInsertHTML()
 {
-  window.openDialog("chrome://editordlgs/content/EdInsSrc.xul",
-                    "InsSrcDlg", "chrome", "");
+  window.openDialog("chrome://editor/content/EdInsSrc.xul","InsSrcDlg", "chrome", "");
 }
 
 function EditorInsertLink()
 {
-  window.openDialog("chrome://editordlgs/content/EdLinkProps.xul", "LinkDlg", "chrome", "");
+  window.openDialog("chrome://editor/content/EdLinkProps.xul","LinkDlg", "chrome", "");
   contentWindow.focus();
 }
 
 function EditorInsertImage()
 {
-  window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", "");
+  window.openDialog("chrome://editor/content/EdImageProps.xul","ImageDlg", "chrome", "");
+  contentWindow.focus();
+}
+
+function EditorInsertTable()
+{
+  dump("Insert Table Dialog starting.\n");
+  window.openDialog("chrome://editor/content/EdInsertTable.xul", "TableDlg", "chrome", "");
   contentWindow.focus();
 }
 
@@ -395,7 +401,7 @@ function EditorInsertHLine()
 
   if (hLine) {
     // We only open the dialog for an existing HRule
-    window.openDialog("chrome://editordlgs/content/EdHLineProps.xul", "dlg", "chrome", "");
+    window.openDialog("chrome://editor/content/EdHLineProps.xul", "HLineDlg", "chrome", "");
   } else {
     hLine = editorShell.CreateElementWithDefaults(tagName);
     if (hLine) {
@@ -407,7 +413,7 @@ function EditorInsertHLine()
 
 function EditorInsertNamedAnchor()
 {
-  window.openDialog("chrome://editordlgs/content/EdNamedAnchorProps.xul", "dlg", "chrome", "");
+  window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "NamedAnchorDlg", "chrome", "");
   contentWindow.focus();
 }
 
@@ -422,20 +428,6 @@ function EditorInsertList(listType)
 {
   dump("Inserting list\n");
   editorShell.InsertList(listType);
-  contentWindow.focus();
-}
-
-function EditorInsertImage()
-{
-  dump("Image Properties Dialog starting.\n");
-  window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", "");
-  contentWindow.focus();
-}
-
-function EditorInsertTable()
-{
-  dump("Insert Table Dialog starting.\n");
-  window.openDialog("chrome://editordlgs/content/EdInsertTable.xul", "dlg", "chrome", "");
   contentWindow.focus();
 }
 
@@ -490,7 +482,7 @@ function CheckSpelling()
       dump("We found a MISSPELLED WORD\n");
       // Set spellChecker variable on window
       window.spellChecker = spellChecker;
-      window.openDialog("chrome://editordlgs/content/EdSpellCheck.xul", "SpellDlg", "chrome", "", firstMisspelledWord);
+      window.openDialog("chrome://editor/content/EdSpellCheck.xul", "SpellDlg", "chrome", "", firstMisspelledWord);
     }
   }
   contentWindow.focus();

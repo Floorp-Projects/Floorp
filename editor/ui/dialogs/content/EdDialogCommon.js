@@ -93,7 +93,7 @@ function ValidateNumberString(value, minValue, maxValue)
   }
   message = "The number you entered ("+number+") is outside of allowed range.\nPlease enter a number between "+minValue+" and "+maxValue;
   ShowInputErrorMessage(message);
-  window.openDialog("chrome://editordlgs/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
+  window.openDialog("chrome://editor/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
 
   // Return an empty string to indicate error
   return "";
@@ -102,7 +102,7 @@ function ValidateNumberString(value, minValue, maxValue)
 function ShowInputErrorMessage(message)
 {
   // This is NOT MODAL as of 7/16/99!
-  window.openDialog("chrome://editordlgs/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
+  window.openDialog("chrome://editor/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
 }
 
 function TrimStringLeft(string)
