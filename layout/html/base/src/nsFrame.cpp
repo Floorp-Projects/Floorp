@@ -1257,7 +1257,6 @@ nsFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
-  mSelected = PR_FALSE;
   return NS_OK;
 }
 
@@ -1773,8 +1772,13 @@ nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset
     *aActualSelected = this;
     return SetSelected(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw);
   }
+  *aActualSelected = nsnull;
+  if (aBeginContentOffset) 
+    SetSelected(PR_FALSE, 0, 0, aForceRedraw); //if all children are not selected, then neither is this
   while (child && NS_SUCCEEDED(result)){
     result |= child->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw , aActualSelected);
+    if (NS_SUCCEEDED(result) && aActualSelected)
+      return result; //done.
     result |= child->GetNextSibling(child);
   }
   return result;
