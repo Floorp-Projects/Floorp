@@ -209,7 +209,7 @@ var DocumentReloadListener =
     var charset = gEditor.documentCharacterSet;
 
     // unregister the listener to prevent multiple callbacks
-    editorShell.UnregisterDocumentStateListener( DocumentReloadListener );
+    gEditor.removeDocumentStateListener( DocumentReloadListener );
 
     // update the META charset with the current presentation charset
     gEditor.documentCharacterSet = charset;
@@ -239,7 +239,7 @@ var MessageComposeDocumentStateListener =
 
   NotifyDocumentWillBeDestroyed: function()
   {
-    // note that the editorshell seems to be gone at this point 
+    // note that the editor seems to be gone at this point 
     // so we don't have a way to remove the click listener.
     // hopefully it is being cleaned up with all listeners
   },
@@ -270,6 +270,9 @@ function DoAllQueryInterfaceOnEditor()
   } catch(e) {}
   try {
     gEditor.QueryInterface(Components.interfaces.nsITableEditor);
+  } catch(e) {}
+  try {
+    gEditor.QueryInterface(Components.interfaces.nsIEditorStyleSheets);
   } catch(e) {}
 }
 
@@ -309,7 +312,7 @@ var DocumentStateListener =
       addEditorClickEventListener();
   },
 
-    // note that the editorshell seems to be gone at this point 
+    // note that the editor seems to be gone at this point 
     // so we don't have a way to remove the click listener.
     // hopefully it is being cleaned up with all listeners
   NotifyDocumentWillBeDestroyed: function() {},
@@ -352,16 +355,13 @@ function EditorStartup(editorType, editorElement)
   }
 
   // store the editor shell in the window, so that child windows can get to it.
+  // XXX This needs to go, but first, all the dialogs need to be changed
+  // not to require it.
   editorShell = editorElement.editorShell;        // this pattern exposes a JS/XBL bug that causes leaks
   editorShell.editorType = editorType;
 
   editorShell.webShellWindow = window;
   editorShell.contentWindow = window._content;
-
-  // add a listener to be called when document is really done loading.
-  // We don't have an editor yet, so we can't call
-  // gEditor.AddDocumentStateListener. Where can we hang it?
-  editorShell.RegisterDocumentStateListener( DocumentStateListener );
 
   // set up our global prefs object
   GetPrefsService();
@@ -395,38 +395,46 @@ function EditorSharedStartup()
   // Just for convenience
   gContentWindow = window._content;
 
-  // set up JS-implemented commands for Text or HTML editing
   switch (editorShell.editorType)
   {
       case "html":
       case "htmlmail":
         gIsHTMLEditor = true;
-
-        SetupHTMLEditorCommands();
-        editorShell.contentsMIMEType = "text/html";
-        if (editorShell.editorType == "htmlmail")
-          editorShell.RegisterDocumentStateListener( MessageComposeDocumentStateListener );
-        else
-          // add a listener to be called when document is really done loading
-          editorShell.RegisterDocumentStateListener( DocumentStateListener );
         break;
 
       case "text":
-        // add listener when document is done loading (for toolbar setup)
-        editorShell.RegisterDocumentStateListener( DocumentStateListener );
-        // continue below
-
       case "textmail":
-        SetupTextEditorCommands();
-        editorShell.contentsMIMEType = "text/plain";
+        gIsHTMLEditor = false;
         break;
 
       default:
         dump("INVALID EDITOR TYPE: " + editorShell.editorType + "\n");
-        SetupTextEditorCommands();
-        editorShell.contentsMIMEType = "text/plain";
+        gIsHTMLEditor = false;
         break;
   }
+
+  // Set up the mime type and register the commands.
+  // We don't have an editor yet -- in fact, this is the listener which
+  // will tell us when it's time to create the editor.
+  // So we can't use gEditor.AddDocumentStateListener here.
+  if (gIsHTMLEditor)
+  {
+    editorShell.contentsMIMEType = "text/html";
+    SetupHTMLEditorCommands();
+  }
+  else
+  {
+    editorShell.contentsMIMEType = "text/plain";
+    SetupTextEditorCommands();
+  }
+
+  // add a listener to be called when document is really done loading
+  if (editorShell.editorType == "htmlmail"
+      || editorShell.editorType == "textmail")
+    editorShell.RegisterDocumentStateListener( MessageComposeDocumentStateListener );
+  else
+    editorShell.RegisterDocumentStateListener( DocumentStateListener );
+
   var isMac = (GetOS() == gMac);
 
   // Set platform-specific hints for how to select cells
@@ -1532,7 +1540,7 @@ function SetEditMode(mode)
         // We are comming from edit source mode,
         //   so transfer that back into the document
         source = gSourceContentWindow.value;
-        editorShell.RebuildDocumentFromSource(source);
+        gEditor.rebuildDocumentFromSource(source);
 
         // Get the text for the <title> from the newly-parsed document
         // (must do this for proper conversion of "escaped" characters)
@@ -1745,6 +1753,7 @@ function EditorToggleParagraphMarks()
     //  so if "checked" is true now, it was just switched to that mode
     var checked = menuItem.getAttribute("checked");
     try {
+      // XXX There's no non-editorshell equivalent yet for this:
       editorShell.DisplayParagraphMarks(checked == "true");
     }
     catch(e) { return; }

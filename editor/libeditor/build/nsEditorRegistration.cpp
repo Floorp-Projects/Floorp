@@ -46,13 +46,6 @@
 
 #include "nsEditorController.h" //CID
 
-#undef DO_COMPOSER_TOO   // Remove these clauses when we know they're working
-#ifdef DO_COMPOSER_TOO
-#include "nsComposerController.h" //CID
-#include "nsEditorShell.h"		// for the CID
-#endif /* DO_COMPOSER_TOO */
-
-
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
 //
@@ -62,10 +55,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
-#ifdef DO_COMPOSER_TOO
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
-#endif /* DO_COMPOSER_TOO */
 
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
@@ -102,15 +91,6 @@ static const nsModuleComponentInfo components[] = {
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "@mozilla.org/editor/editorcontroller;1",
       nsEditorControllerConstructor, },
-#ifdef DO_COMPOSER_TOO
-    { "Composer Controller", NS_COMPOSERCONTROLLER_CID,
-      "@mozilla.org/editor/composercontroller;1",
-      nsComposerControllerConstructor, },
-    { "Editor Shell Component", NS_EDITORSHELL_CID,
-      "@mozilla.org/editor/editorshell;1", nsEditorShellConstructor, },
-    { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
-      "@mozilla.org/editor/editorspellcheck;1", nsEditorShellConstructor, },
-#endif /* DO_COMPOSER_TOO */
 };
 
 ////////////////////////////////////////////////////////////////////////
