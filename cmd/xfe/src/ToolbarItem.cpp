@@ -97,7 +97,7 @@ XFE_ToolbarItem::getHtResource()
 /* virtual */ void
 XFE_ToolbarItem::setBaseWidget(Widget w)
 {
-	printf("XFE_ToolbarItem::setBaseWidget(%s)\n",XtName(w));
+//	printf("XFE_ToolbarItem::setBaseWidget(%s)\n",XtName(w));
 
 	XP_ASSERT( XfeIsAlive(w) );
 
@@ -113,6 +113,12 @@ XFE_ToolbarItem::setBaseWidget(Widget w)
 
 	// Add tooltip support
 	addToolTipSupport();
+
+	// Configure the item
+    configure();
+
+    // Install destroy handler (magic garbage collection for the item)
+    installDestroyHandler();
 }
 //////////////////////////////////////////////////////////////////////////
 

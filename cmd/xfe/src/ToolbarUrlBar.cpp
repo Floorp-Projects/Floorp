@@ -66,11 +66,21 @@ XFE_ToolbarUrlBar::~XFE_ToolbarUrlBar()
 /* virtual */ void
 XFE_ToolbarUrlBar::initialize()
 {
-    Widget uw = createBaseWidget(getParent(),getName());
+    Widget urlbar = createBaseWidget(getParent(),getName());
 
-	setBaseWidget(uw);
+	setBaseWidget(urlbar);
+}
+//////////////////////////////////////////////////////////////////////////
 
-    installDestroyHandler();
+//////////////////////////////////////////////////////////////////////////
+//
+// Configure
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarUrlBar::configure()
+{
+	XP_ASSERT( isAlive() );
 
 	createProxyIcon(m_widget,"proxyIcon");
 }
@@ -112,25 +122,25 @@ XFE_ToolbarUrlBar::createBaseWidget(Widget			parent,
 	XP_ASSERT( XfeIsAlive(parent) );
 	XP_ASSERT( name != NULL );
 	
-	Widget url_bar;
+	Widget urlbar;
 	
-	url_bar = XtVaCreateWidget(name,
-							   xfeFancyBoxWidgetClass,
-							   parent,
-							   XmNforceDimensionToMax,	False,
-							   XmNcomboBoxType,			XmCOMBO_BOX_EDITABLE,
-							   XmNwidth,				400,
-							   XmNusePreferredWidth,	False,
+	urlbar = XtVaCreateWidget(name,
+							  xfeFancyBoxWidgetClass,
+							  parent,
+							  XmNforceDimensionToMax,	False,
+							  XmNcomboBoxType,			XmCOMBO_BOX_EDITABLE,
+							  XmNwidth,					400,
+							  XmNusePreferredWidth,		False,
 // 							   XmNtraversalOn,			False,
 // 							   XmNhighlightThickness,	0,
-							   NULL);
+							  NULL);
 
-    XtAddCallback(url_bar,
+    XtAddCallback(urlbar,
 				  XmNtextActivateCallback,
 				  XFE_ToolbarUrlBar::textActivateCB,
 				  (XtPointer) this);
 	
-	return url_bar;
+	return urlbar;
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -235,9 +245,9 @@ XFE_ToolbarUrlBar::createProxyIcon(Widget			parent,
 //
 //////////////////////////////////////////////////////////////////////////
 /* static */ void
-XFE_ToolbarUrlBar::textActivateCB(Widget		w,
+XFE_ToolbarUrlBar::textActivateCB(Widget		/* w */,
 								  XtPointer		clientData,
-								  XtPointer		callData)
+								  XtPointer		/* callData */)
 {
 	XFE_ToolbarUrlBar *			urlbar = (XFE_ToolbarUrlBar*) clientData;
 

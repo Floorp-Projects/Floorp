@@ -36,8 +36,9 @@ class XFE_ToolbarCascade : public XFE_ToolbarButton
 {
 public:
 
-    XFE_ToolbarCascade(XFE_Frame *		frame,
+	XFE_ToolbarCascade(XFE_Frame *		frame,
 					  Widget			parent,
+                      HT_Resource		htResource,
 					  const String		name);
 
     virtual ~XFE_ToolbarCascade();

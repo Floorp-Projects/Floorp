@@ -88,6 +88,13 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
+	// Configure                                                        //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	virtual void	configure			();
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
 	// ToolTip interface                                                //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
@@ -100,6 +107,26 @@ protected:
  	virtual void	docStringSet		(XmString		string);
 
  	virtual void	docStringClear		(XmString		string);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Style and layout interface                                       //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	int32			getButtonStyle		();
+	unsigned char	styleToLayout		(int32 button_style);
+
+	void			getPixmapsForEntry	(Pixmap *    pixmapOut,
+										 Pixmap *    maskOut,
+										 Pixmap *    armedPixmapOut,
+										 Pixmap *    armedMaskOut);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Button callback interface                                        //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	virtual void	activate			();
 
 private:
 

@@ -61,6 +61,12 @@ public:
 	//                                                                  //
 	// Initialize                                                       //
 	//                                                                  //
+	// This method should be called by the item creator to initialize   //
+	// the item.  This is needed for abstract methods to be properly    //
+	// called.  The alternative is to call initialize directlry from    //
+	// the XFE_ToolbarItem ctor - but it does not work because abstract //
+	// methods might not have been properly set up by then.             //
+	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
  	virtual void	initialize			() = 0;	
 
@@ -80,6 +86,17 @@ protected:
 	//////////////////////////////////////////////////////////////////////
 	virtual Widget	createBaseWidget	(Widget			parent,
 										 const String	name) = 0;
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Configure                                                        //
+	//                                                                  //
+	// This method is called as soon as the base widget has been set    //
+	// so that sub classes can configure the item according to their    //
+	// needs.                                                           //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+ 	virtual void	configure			() = 0;	
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
