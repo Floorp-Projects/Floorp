@@ -299,7 +299,7 @@
         </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" value="&openFileCmd.label;"/>
-      <menu accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="BuildRecentMenu()">
+      <menu accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="BuildRecentMenu(false)">
         <!-- Items appended at runtime -->
         <menupopup id="menupopup_RecentFiles"/>
       </menu>

@@ -59,8 +59,8 @@
         <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
                     pref="true" preftype="bool" prefstring="editor.use_custom_colors"
                     prefattribute="data">
-          <radio group="useCustomColors" data="0" value="&useNavigator.label;" accesskey="&useNavigator.accesskey;" oncommand="useNavigatorColors();"/>
-          <radio group="useCustomColors" data="1" value="&useCustomColors.label;" accesskey="&useCustomColors.accesskey;" oncommand="useCustomColors()"/>
+          <radio group="useCustomColors" data="false" value="&useNavigator.label;" accesskey="&useNavigator.accesskey;" oncommand="useNavigatorColors();"/>
+          <radio group="useCustomColors" data="true" value="&useCustomColors.label;" accesskey="&useCustomColors.accesskey;" oncommand="useCustomColors()"/>
         </radiogroup>
        <grid class="indent">
           <columns>
