@@ -63,9 +63,6 @@ interface calIDateTime : nsISupports
   // year/etc.
   attribute PRTime nativeTime;
 
-  // also implemented is a jsTime attribute,
-  // for getting/setting a javascript Date object
-
   // Year, fully exploded (e.g. "1989", "2004")
   attribute short year;
 
@@ -87,6 +84,9 @@ interface calIDateTime : nsISupports
   // whether this thing indicates a time in UTC, or in the local time
   // zone
   attribute PRBool isUtc;
+
+  // if true, this calIDateTime represents a date (whole day), not a specific second
+  attribute PRBool isDate;
 
   // an associated timezone that's the preferred way of representing
   // this object.  If this is null/empty, then there is no preferred

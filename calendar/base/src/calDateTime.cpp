@@ -129,6 +129,7 @@ CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Hour)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Minute)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Second)
 CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsUtc)
+CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsDate)
 
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Weekday)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Yearday)
@@ -174,7 +175,6 @@ NS_IMETHODIMP
 calDateTime::AddDuration(calIDateTime *aDuration)
 {
     NS_ENSURE_ARG_POINTER(aDuration);
-    nsresult rv;
 
     PRInt16 y, mo, d, h, m, s;
     aDuration->GetYear(&y);
@@ -296,10 +296,8 @@ calDateTime::ToIcalTime(icaltimetype *icalt)
     icalt->minute = mMinute;
     icalt->second = mSecond;
 
-    if (mIsUtc)
-        icalt->is_utc = 1;
-    else
-        icalt->is_utc = 0;
+    icalt->is_utc = mIsUtc ? 1 : 0;
+    icalt->is_date = mIsDate ? 1 : 0;
 }
 
 void
@@ -312,10 +310,8 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     mMinute = icalt->minute;
     mSecond = icalt->second;
 
-    if (icalt->is_utc)
-        mIsUtc = PR_TRUE;
-    else
-        mIsUtc = PR_FALSE;
+    mIsUtc = icalt->is_utc ? PR_TRUE : PR_FALSE;
+    mIsDate = icalt->is_date ? PR_TRUE : PR_FALSE;
 
     // reconstruct nativetime
     time_t tt = icaltime_as_timet(*icalt);

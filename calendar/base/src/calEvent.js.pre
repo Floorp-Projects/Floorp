@@ -64,9 +64,9 @@ calEvent.prototype = {
     },
 
     initEvent: function () {
-        this.mStartDate = createCalDateTime();
-        this.mEndDate = createCalDateTime();
-        this.mStampDate = createCalDateTime();
+        this.mStartDate = new CalDateTime();
+        this.mEndDate = new CalDateTime();
+        this.mStampDate = new CalDateTime();
     },
 
     clone: function () {
@@ -88,7 +88,7 @@ calEvent.prototype = {
     },
 
     get duration() {
-        var dur = createCalDateTime();
+        var dur = new CalDateTime();
         dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, null);
         return dur;
     },
@@ -100,7 +100,25 @@ calEvent.prototype = {
 
     MEMBER_ATTR(mStartDate, null, startDate),
     MEMBER_ATTR(mEndDate, null, endDate),
-    MEMBER_ATTR(mStampDate, null, stampDate)
+    MEMBER_ATTR(mStampDate, null, stampDate),
+    MEMBER_ATTR(mIsAllDay, false, isAllDay),
 
 #undef MEMBER_ATTR
+
+    set icalString(value) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        var ical = icalFromString(value);
+        var event = ical.getFirstSubcomponent(Components.interfaces.calIIcalComponent.VEVENT_COMPONENT);
+        if (!event)
+            // throw Components.results.NS_ERROR_CALENDAR_WRONG_COMPONENT_TYPE;
+            throw Components.results.NS_ERROR_INVALID_ARG;
+
+        this.setItemBaseFromICS(event);
+        var propmap = [["mStartDate", "startTime"],
+                       ["mEndDate", "endTime"],
+                       ["mStampDate", "stampDate"]];
+        this.mapPropsFromICS(event, propmap);
+        this.mIsAllDay = this.mStartDate.isDate;
+    },
 };

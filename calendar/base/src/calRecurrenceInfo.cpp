@@ -358,7 +358,7 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
     if (!recur_iter)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    int count = 0;
+    PRUint32 count = 0;
 
     struct icaltimetype next = icalrecur_iterator_next(recur_iter);
     while (!icaltime_is_null_time(next)) {

@@ -34,9 +34,9 @@ calItemBase.prototype = {
 
 
     initItemBase: function () {
-        this.mCreationDate = createCalDateTime();
-        this.mAlarmTime = createCalDateTime();
-        this.mLastModifiedTime = createCalDateTime();
+        this.mCreationDate = new CalDateTime();
+        this.mAlarmTime = new CalDateTime();
+        this.mLastModifiedTime = new CalDateTime();
 
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
@@ -152,14 +152,47 @@ calItemBase.prototype = {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
         this.mAttendees.push(attendee);
+    },
+
+
+    get icalString() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+    set icalString() {
+        throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+
+    mapPropsFromICS: function(icalcomp, propmap) {
+        for (var i = 0; i < propmap.length; i++) {
+            var prop = propmap[i];
+            this[prop[0]] = icalcomp[prop[1]];
+        }
+    },
+
+    setItemBaseFromICS: function (icalcomp) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        var propmap = [["mCreationDate", "createdTime"],
+                       ["mLastModifiedTime", "lastModified"],
+                       ["mGeneration", "version"],
+                       ["mId", "uid"],
+                       ["mTitle", "summary"],
+                       ["mPriority", "priority"],
+                       ["mMethod", "method"],
+                       ["mStatus", "status"]];
+        this.mapPropsFromICS(icalcomp, propmap);
+        if (icalcomp.icalClass == Components.interfaces.calIICSService.VISIBILITY_PUBLIC)
+            this.mIsPrivate = false;
+        else
+            this.mIsPrivate = true;
     }
 };
 
 function calItemOccurrence () {
     this.wrappedJSObject = this;
 
-    this.occurrenceStartDate = createCalDateTime();
-    this.occurrenceEndDate = createCalDateTime();
+    this.occurrenceStartDate = new CalDateTime();
+    this.occurrenceEndDate = new CalDateTime();
 }
 
 calItemOccurrence.prototype = {
@@ -196,43 +229,18 @@ calItemOccurrence.prototype = {
         return null;
     },
 
-
-    get icalString() {
-        throw Components.results.NS_NOT_IMPLEMENTED;
-    },
-    set icalString() {
-        throw Components.results.NS_NOT_IMPLEMENTED;
-    },
-    setItemBaseFromICS: function (icalcomp) {
-        if (this.mImmutable)
-            throw Components.results.NS_ERROR_FAILURE;
-        var propmap = [["mCreationDate", "createdTime"],
-                       ["mLastModifiedTime", "lastModified"],
-                       ["mGeneration", "version"],
-                       ["mId", "uid"],
-                       ["mTitle", "summary"],
-                       ["mPriority", "priority"],
-                       ["mMethod", "method"],
-                       ["mStatus", "status"]];
-        for (var i = 0; i < propmap.length; i++) {
-            var prop = propmap[i];
-            this[prop[0]] = icalcomp[prop[1]];
-        }
-
-        if (icalcomp.icalClass == Components.interfaces.calIICSService.VISIBILITY_PUBLIC)
-            this.mIsPrivate = false;
-        else
-            this.mIsPrivate = true;
-    }
 };
 
 
 
 
 
-function createCalDateTime() {
-    const kCdtClass = Components.classes["@mozilla.org/calendar/datetime;1"];
-    const kCdtInterface = Components.interfaces.calIDateTime;
+const CalDateTime =
+    new Components.Constructor("@mozilla.org/calendar/datetime;1",
+                               Components.interfaces.calIDateTime);
 
-    return kCdtClass.createInstance(kCdtInterface);
+function icalFromString(str) {
+    const icssvc = Components.classes["@mozilla.org/calendar/ics-service;1"].
+        getService(Components.interfaces.calIICSService);
+    return icssvc.parseICS(str);
 }

@@ -19,9 +19,9 @@ calEvent.prototype = {
     },
 
     initEvent: function () {
-        this.mStartDate = createCalDateTime();
-        this.mEndDate = createCalDateTime();
-        this.mStampDate = createCalDateTime();
+        this.mStartDate = new CalDateTime();
+        this.mEndDate = new CalDateTime();
+        this.mStampDate = new CalDateTime();
     },
 
     clone: function () {
@@ -43,7 +43,7 @@ calEvent.prototype = {
     },
 
     get duration() {
-        var dur = createCalDateTime();
+        var dur = new CalDateTime();
         dur.setTimeInTimezone (this.mEndDate.nativeTime - this.mStartDate.nativeTime, null);
         return dur;
     },
@@ -55,7 +55,25 @@ calEvent.prototype = {
 
     mStartDate: null, get startDate() { return this.mStartDate; }, set startDate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStartDate = v; },
     mEndDate: null, get endDate() { return this.mEndDate; }, set endDate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mEndDate = v; },
-    mStampDate: null, get stampDate() { return this.mStampDate; }, set stampDate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStampDate = v; }
+    mStampDate: null, get stampDate() { return this.mStampDate; }, set stampDate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStampDate = v; },
+    mIsAllDay: false, get isAllDay() { return this.mIsAllDay; }, set isAllDay(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mIsAllDay = v; },
 
 
+
+    set icalString(value) {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+        var ical = icalFromString(value);
+        var event = ical.getFirstSubcomponent(Components.interfaces.calIIcalComponent.VEVENT_COMPONENT);
+        if (!event)
+
+            throw Components.results.NS_ERROR_INVALID_ARG;
+
+        this.setItemBaseFromICS(event);
+        var propmap = [["mStartDate", "startTime"],
+                       ["mEndDate", "endTime"],
+                       ["mStampDate", "stampDate"]];
+        this.mapPropsFromICS(event, propmap);
+        this.mIsAllDay = this.mStartDate.isDate;
+    },
 };
