@@ -25,7 +25,7 @@ CSRCS = db.c	   \
 	nsres.c	   \
 	$(NULL)
 
-LIBRARY_NAME = dbm
+LIBRARY_NAME = mozdbm
 
 include $(topsrcdir)/config/rules.mk
 
