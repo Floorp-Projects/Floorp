@@ -32,6 +32,7 @@ EXPORTS		= \
 		nsIFormControl.h \
 		nsIForm.h \
 		nsILink.h \
+		nsIBodySuper.h \
 		nsISelectElement.h \
 		nsIScriptElement.h \
 		$(NULL)

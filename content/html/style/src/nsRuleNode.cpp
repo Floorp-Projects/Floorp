@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 
 #include "nsRuleNode.h"
@@ -899,6 +900,8 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID& aSID, nsIStyleContext* aContext,
     // branch that they never need to examine their rules for this particular struct type
     // ever again.
     PropagateInheritBit(bit, ruleNode);
+    if (eStyleStruct_Background == aSID && aRuleData->mPostResolveCallback)
+      (*aRuleData->mPostResolveCallback) ((nsStyleStruct *)startStruct, aRuleData);
     return startStruct;
   }
   else if (!startStruct && ((!isReset && (detail == eRuleNone || detail == eRulePartialInherited)) 
