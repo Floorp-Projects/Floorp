@@ -141,10 +141,6 @@
 #define CS_CNS11643_16 (MULTIBYTE         |  82) /*   338 */
 #define CS_VIET_VISCII (SINGLEBYTE        |  83) /*   83 Vietnamese VISCII */
 #define CS_VIET_VIQR   (                     84) /*   84 Vietnamese VIQR */
-/* Temporary keep this untill we clean up CS_VISCII and CS_VIQR */
-#define CS_VISCII      CS_VIET_VISCII
-#define CS_VIQR        CS_VIET_VIQR
-
 #define CS_KOI8_U      (SINGLEBYTE        |  85) /*   85 */
 #define CS_ISO_IR_111  (SINGLEBYTE        |  86) /*   86 */
 #define CS_8859_6_I    (                     87) /*   87 */
