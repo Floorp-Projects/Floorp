@@ -138,10 +138,14 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
 //
 // Like a protocol registry entry, but for the shell\open\ddeexec subkey.
 //
-// set/reset handle setting/resetting various ddeexec sub-entries, also.
+// We no longer wire in DDE into the registry so we don't set the
+// application name or topic.  We do *reset* them (to clean up previous
+// installations).
+//
+// Reset handle setting/resetting various ddeexec sub-entries, also.
 struct DDERegistryEntry : public SavedRegistryEntry {
     DDERegistryEntry( const char *protocol )
-        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", "-url \"%1\"" ),
+        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", "" ),
           app( HKEY_LOCAL_MACHINE, "", "", "Mozilla" ),
           topic( HKEY_LOCAL_MACHINE, "", "", "WWW_OpenURL" ) {
         // Derive keyName from protocol.
@@ -153,13 +157,7 @@ struct DDERegistryEntry : public SavedRegistryEntry {
         app.keyName += "\\Application";
         topic.keyName = keyName;
         topic.keyName += "\\Topic";
-        // Use -chrome for some protocols, though.
-        nsCAutoString strProtocol( protocol );
-        if ( strProtocol.Equals( "chrome" ) || strProtocol.Equals( "MozillaXUL" ) ) {
-            setting = "-chrome \"%1\"";
-        }
     }
-    nsresult set();
     nsresult reset();                                     
     SavedRegistryEntry app, topic;
 };
@@ -290,18 +288,6 @@ nsresult ProtocolRegistryEntry::set() {
     return rv;
 }
 
-// Set ddexec values:
-//    .../ddeexec         -url "%1" / -chrome "%1"
-//          /Application  Mozilla
-//          /Topic        WWW_OpenURL
-nsresult DDERegistryEntry::set() {
-    // Root (parameter to load url or chrome)
-    nsresult rv = SavedRegistryEntry::set();
-    rv = app.set();
-    rv = topic.set();
-    return rv;
-}
-
 // Not being a "saved" entry, we can't restore, so just delete it.
 nsresult RegistryEntry::reset() {
     HKEY key;
@@ -353,6 +339,9 @@ nsresult ProtocolRegistryEntry::reset() {
 }
 
 // Reset the main (ddeexec) value but also the Application and Topic.
+// We reset the app/topic even though we no longer set them.  This
+// handles cases where the user installed a prior version, and then
+// upgraded.
 nsresult DDERegistryEntry::reset() {
     nsresult rv = SavedRegistryEntry::reset();
     rv = app.reset();
