@@ -343,9 +343,9 @@ var messageHeaderSink = {
         // we don't have to worry about looking for: Cc and CC, etc.
         var lowerCaseHeaderName = header.headerName.toLowerCase();
 
-        // if we have an x-mailer string, put it in the user-agent slot which we know how to handle
+        // if we have an x-mailer or x-mimeole string, put it in the user-agent slot which we know how to handle
         // already. 
-        if (lowerCaseHeaderName == "x-mailer")
+        if (lowerCaseHeaderName == "x-mailer" || lowerCaseHeaderName == "x-mimeole")
           lowerCaseHeaderName = "user-agent";   
         
         // according to RFC 2822, certain headers
