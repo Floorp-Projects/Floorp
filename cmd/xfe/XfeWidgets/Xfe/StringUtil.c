@@ -72,33 +72,33 @@ XfeFastAccessLabelString(Widget w)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ XmString
-XfeXmStringCopy(Widget w,XmString xm_string,String fallback)
+XfeXmStringCopy(Widget w,XmString xmstr,String fallback)
 {
-    XmString new_xm_string;
+    XmString new_xmstr;
     
     /* Make sure the string is setup properly */
-    if (!xm_string)
+    if (!xmstr)
     {
 		/* If no xmstring is given, create using the fallback cstring */
-		new_xm_string = XmStringCreateLocalized(fallback);
+		new_xmstr = XmStringCreateLocalized(fallback);
     }
     else
     {
 		/* Otherwise make a carbon copy - no check done to verify xmstring */
-		new_xm_string = XmStringCopy(xm_string);
+		new_xmstr = XmStringCopy(xmstr);
     }
     
-    return new_xm_string;
+    return new_xmstr;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ String
-XfeXmStringGetPSZ(XmString xm_string,char * tag)
+XfeXmStringGetPSZ(XmString xmstr,char * tag)
 {
 	String		psz_string = NULL;
 
-	if (xm_string)
+	if (xmstr)
 	{
-		XmStringGetLtoR(xm_string,tag,&psz_string);
+		XmStringGetLtoR(xmstr,tag,&psz_string);
 	}	
 	
 	return psz_string;
@@ -107,18 +107,18 @@ XfeXmStringGetPSZ(XmString xm_string,char * tag)
 /*extern*/ void
 XfeSetXmStringPSZ(Widget w,String name,char * tag,char * value)
 {
-	XmString xm_string;
+	XmString xmstr;
 
 	assert( w != NULL );
 	assert( name != NULL );
 
-	xm_string = XmStringCreateLtoR(value,tag);
+	xmstr = XmStringCreateLtoR(value,tag);
 
-    XfeSetValue(w,name,xm_string);
+    XfeSetValue(w,name,xmstr);
 
-	if (xm_string)
+	if (xmstr)
 	{
-		XmStringFree(xm_string);
+		XmStringFree(xmstr);
 	}
 }
 /*----------------------------------------------------------------------*/
