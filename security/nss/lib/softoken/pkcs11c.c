@@ -472,10 +472,10 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	break;
     case CKM_RC2_CBC_PAD:
 	context->doPad = PR_TRUE;
-	context->blockSize = 8;
 	/* fall thru */
     case CKM_RC2_ECB:
     case CKM_RC2_CBC:
+	context->blockSize = 8;
 	if (key_type != CKK_RC2) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
@@ -516,9 +516,7 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    break;
 	}
 	rc5_param = (CK_RC5_CBC_PARAMS *)pMechanism->pParameter;
-	if (context->doPad) {
-	   context->blockSize = rc5_param->ulWordsize*2;
-	}
+	context->blockSize = rc5_param->ulWordsize*2;
 	rc5Key.data = (unsigned char*)att->attrib.pValue;
 	rc5Key.len = att->attrib.ulValueLen;
 	context->cipherInfo = RC5_CreateContext(&rc5Key,rc5_param->ulRounds,
@@ -556,7 +554,6 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	break;
     case CKM_CDMF_CBC_PAD:
 	context->doPad = PR_TRUE;
-	context->blockSize = 8;
 	/* fall thru */
     case CKM_CDMF_ECB:
     case CKM_CDMF_CBC:
@@ -577,7 +574,6 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	goto finish_des;
     case CKM_DES_CBC_PAD:
 	context->doPad = PR_TRUE;
-	context->blockSize = 8;
 	/* fall thru */
     case CKM_DES_CBC:
 	if (key_type != CKK_DES) {
@@ -595,7 +591,6 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	goto finish_des;
     case CKM_DES3_CBC_PAD:
 	context->doPad = PR_TRUE;
-	context->blockSize = 8;
 	/* fall thru */
     case CKM_DES3_CBC:
 	if ((key_type != CKK_DES2) && (key_type != CKK_DES3)) {
@@ -604,6 +599,7 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	}
 	t = NSS_DES_EDE3_CBC;
 finish_des:
+	context->blockSize = 8;
 	att = pk11_FindAttribute(key,CKA_VALUE);
 	if (att == NULL) {
 	    crv = CKR_KEY_HANDLE_INVALID;
@@ -630,10 +626,10 @@ finish_des:
 
     case CKM_AES_CBC_PAD:
 	context->doPad = PR_TRUE;
-	context->blockSize = 16;
 	/* fall thru */
     case CKM_AES_ECB:
     case CKM_AES_CBC:
+	context->blockSize = 16;
 	if (key_type != CKK_AES) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
@@ -735,7 +731,6 @@ CK_RV NSC_EncryptUpdate(CK_SESSION_HANDLE hSession,
 	    return CKR_OK;
 	}
     }
-	
 
 
     /* do it: NOTE: this assumes buf size in is >= buf size out! */
@@ -765,7 +760,7 @@ CK_RV NSC_EncryptFinal(CK_SESSION_HANDLE hSession,
     *pulLastEncryptedPartLen = 0;
     if (!pLastEncryptedPart) {
 	/* caller is checking the amount of remaining data */
-	if (context->blockSize > 0) {
+	if (context->blockSize > 0 && context->doPad) {
 	    *pulLastEncryptedPartLen = context->blockSize;
 	    contextFinished = PR_FALSE; /* still have padding to go */
 	}
@@ -796,8 +791,8 @@ finish:
 
 /* NSC_Encrypt encrypts single-part data. */
 CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
-    		CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData,
-					 CK_ULONG_PTR pulEncryptedDataLen)
+    		   CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData,
+		   CK_ULONG_PTR pulEncryptedDataLen)
 {
     PK11Session *session;
     PK11SessionContext *context;
@@ -806,6 +801,11 @@ CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
     CK_RV crv;
     CK_RV crv2;
     SECStatus rv = SECSuccess;
+    SECItem   pText;
+
+    pText.type = siBuffer;
+    pText.data = pData;
+    pText.len  = ulDataLen;
 
     /* make sure we're legal */
     crv = pk11_GetContext(hSession,&context,PK11_ENCRYPT,PR_FALSE,&session);
@@ -817,32 +817,56 @@ CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
     }
 
     if (context->doPad) {
-	CK_ULONG finalLen;
-	/* padding is fairly complicated, have the update and final 
-	 * code deal with it */
-        pk11_FreeSession(session);
-	crv = NSC_EncryptUpdate(hSession,pData,ulDataLen,pEncryptedData,
-							pulEncryptedDataLen);
-	if (crv != CKR_OK) *pulEncryptedDataLen = 0;
-	maxoutlen -= *pulEncryptedDataLen;
-	pEncryptedData += *pulEncryptedDataLen;
-	finalLen = maxoutlen;
-	crv2 = NSC_EncryptFinal(hSession, pEncryptedData, &finalLen);
-	if (crv2 == CKR_OK) { *pulEncryptedDataLen += finalLen; }
-	return crv == CKR_OK ? crv2 :crv;
+	if (context->multi) {
+	    CK_ULONG finalLen;
+	    /* padding is fairly complicated, have the update and final 
+	     * code deal with it */
+	    pk11_FreeSession(session);
+	    crv = NSC_EncryptUpdate(hSession, pData, ulDataLen, pEncryptedData, 
+	                            pulEncryptedDataLen);
+	    if (crv != CKR_OK) 
+	    	*pulEncryptedDataLen = 0;
+	    maxoutlen      -= *pulEncryptedDataLen;
+	    pEncryptedData += *pulEncryptedDataLen;
+	    finalLen = maxoutlen;
+	    crv2 = NSC_EncryptFinal(hSession, pEncryptedData, &finalLen);
+	    if (crv2 == CKR_OK) 
+	    	*pulEncryptedDataLen += finalLen;
+	    return crv == CKR_OK ? crv2 : crv;
+	}
+	/* doPad without multi means that padding must be done on the first
+	** and only update.  There will be no final.
+	*/
+	PORT_Assert(context->blockSize > 1);
+	if (context->blockSize > 1) {
+	    CK_ULONG remainder = ulDataLen % context->blockSize;
+	    CK_ULONG padding   = context->blockSize - remainder;
+	    pText.len += padding;
+	    pText.data = PORT_ZAlloc(pText.len);
+	    if (pText.data) {
+		memcpy(pText.data, pData, ulDataLen);
+		memset(pText.data + ulDataLen, padding, padding);
+	    } else {
+		crv = CKR_HOST_MEMORY;
+		goto fail;
+	    }
+	}
     }
-	
 
     /* do it: NOTE: this assumes buf size is big enough. */
     rv = (*context->update)(context->cipherInfo, pEncryptedData, 
-					&outlen, maxoutlen, pData, ulDataLen);
+			    &outlen, maxoutlen, pText.data, pText.len);
+    crv = (rv == SECSuccess) ? CKR_OK : CKR_DEVICE_ERROR;
     *pulEncryptedDataLen = (CK_ULONG) outlen;
+    if (pText.data != pData)
+    	PORT_ZFree(pText.data, pText.len);
+fail:
     pk11_SetContextByType(session, PK11_ENCRYPT, NULL);
     pk11_FreeContext(context);
 finish:
     pk11_FreeSession(session);
 
-    return (rv == SECSuccess) ? CKR_OK : CKR_DEVICE_ERROR;
+    return crv;
 }
 
 
@@ -974,30 +998,41 @@ CK_RV NSC_Decrypt(CK_SESSION_HANDLE hSession,
 	goto finish;
     }
 
-    if (context->doPad) {
+    if (context->doPad && context->multi) {
 	CK_ULONG finalLen;
 	/* padding is fairly complicated, have the update and final 
 	 * code deal with it */
-        pk11_FreeSession(session);
+	pk11_FreeSession(session);
 	crv = NSC_DecryptUpdate(hSession,pEncryptedData,ulEncryptedDataLen,
 							pData, pulDataLen);
-	if (crv != CKR_OK) *pulDataLen = 0;
+	if (crv != CKR_OK) 
+	    *pulDataLen = 0;
 	maxoutlen -= *pulDataLen;
-	pData += *pulDataLen;
+	pData     += *pulDataLen;
 	finalLen = maxoutlen;
 	crv2 = NSC_DecryptFinal(hSession, pData, &finalLen);
-	if (crv2 == CKR_OK) { *pulDataLen += finalLen; }
-	return crv == CKR_OK ? crv2 :crv;
+	if (crv2 == CKR_OK) 
+	    *pulDataLen += finalLen;
+	return crv == CKR_OK ? crv2 : crv;
     }
 
     rv = (*context->update)(context->cipherInfo, pData, &outlen, maxoutlen, 
 					pEncryptedData, ulEncryptedDataLen);
+    /* XXX need to do MUCH better error mapping than this. */
+    crv = (rv == SECSuccess)  ? CKR_OK : CKR_DEVICE_ERROR;
+    if (rv == SECSuccess && context->doPad) {
+    	CK_ULONG padding = pData[outlen - 1];
+	if (padding > context->blockSize || !padding) {
+	    crv = CKR_ENCRYPTED_DATA_INVALID;
+	} else
+	    outlen -= padding;
+    }
     *pulDataLen = (CK_ULONG) outlen;
     pk11_SetContextByType(session, PK11_DECRYPT, NULL);
     pk11_FreeContext(context);
 finish:
     pk11_FreeSession(session);
-    return (rv == SECSuccess)  ? CKR_OK : CKR_DEVICE_ERROR;
+    return crv;
 }
 
 
@@ -1933,10 +1968,10 @@ pk11_MACUpdate(CK_SESSION_HANDLE hSession,CK_BYTE_PTR pPart,
     /* save the residual */
     context->padDataLength = ulPartLen % context->blockSize;
     if (context->padDataLength) {
-	    PORT_Memcpy(context->padBuf,
-			&pPart[ulPartLen-context->padDataLength],
-							context->padDataLength);
-	    ulPartLen -= context->padDataLength;
+	PORT_Memcpy(context->padBuf,
+		    &pPart[ulPartLen-context->padDataLength],
+		    context->padDataLength);
+	ulPartLen -= context->padDataLength;
     }
 
     /* if we've exhausted our new buffer, we're done */
@@ -3423,7 +3458,13 @@ loser:
     
 /* it doesn't matter yet, since we colapse error conditions in the
  * level above, but we really should map those few key error differences */
-CK_RV pk11_mapWrap(CK_RV crv) { return crv; }
+CK_RV pk11_mapWrap(CK_RV crv) 
+{ 
+    switch (crv) {
+    case CKR_ENCRYPTED_DATA_INVALID:  crv = CKR_WRAPPED_KEY_INVALID; break;
+    }
+    return crv; 
+}
 
 /* NSC_WrapKey wraps (i.e., encrypts) a key. */
 CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
@@ -3449,6 +3490,10 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 
     switch(key->objclass) {
 	case CKO_SECRET_KEY:
+	  {
+	    PK11SessionContext *context = NULL;
+	    SECItem pText;
+
 	    attribute = pk11_FindAttribute(key,CKA_VALUE);
 
 	    if (attribute == NULL) {
@@ -3461,11 +3506,42 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 		pk11_FreeAttribute(attribute);
 		break;
 	    }
-	    crv = NSC_Encrypt(hSession, (CK_BYTE_PTR)attribute->attrib.pValue, 
-		    attribute->attrib.ulValueLen,pWrappedKey,pulWrappedKeyLen);
 
+	    pText.type = siBuffer;
+	    pText.data = (unsigned char *)attribute->attrib.pValue;
+	    pText.len  = attribute->attrib.ulValueLen;
+
+	    /* Find out if this is a block cipher. */
+	    crv = pk11_GetContext(hSession,&context,PK11_ENCRYPT,PR_FALSE,NULL);
+	    if (crv != CKR_OK || !context) 
+	        break;
+	    if (context->blockSize > 1) {
+		unsigned int remainder = pText.len % context->blockSize;
+	        if (!context->doPad && remainder) {
+		    /* When wrapping secret keys with unpadded block ciphers, 
+		    ** the keys are zero padded, if necessary, to fill out 
+		    ** a full block.
+		    */
+		    pText.len += context->blockSize - remainder;
+		    pText.data = PORT_ZAlloc(pText.len);
+		    if (pText.data)
+			memcpy(pText.data, attribute->attrib.pValue,
+			                   attribute->attrib.ulValueLen);
+		    else {
+			crv = CKR_HOST_MEMORY;
+			break;
+		    }
+		}
+	    }
+
+	    crv = NSC_Encrypt(hSession, (CK_BYTE_PTR)pText.data, 
+		              pText.len, pWrappedKey, pulWrappedKeyLen);
+
+	    if (pText.data != (unsigned char *)attribute->attrib.pValue) 
+	    	PORT_ZFree(pText.data, pText.len);
 	    pk11_FreeAttribute(attribute);
 	    break;
+	  }
 
 	case CKO_PRIVATE_KEY:
 	    {
