@@ -434,7 +434,8 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
             SetContentLength(length);
         }
     }
-	else if (nsHTTPAtoms::Transfer_Encoding == aHeader && !PL_strcmp (aValue, "chunked"))
+	else if (nsHTTPAtoms::Transfer_Encoding == aHeader && 
+                !PL_strcmp(aValue, "chunked"))
 			mChunkedResponse = PR_TRUE;
 
     //
@@ -581,8 +582,9 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
     PRUint32 now = convertPRTimeToSeconds(PR_Now());
     PRUint32 currentAge;
 
-    // Sometimes current time appears to be before the time that the document was
-    // sent due to clock skew between the client and the server, so sanity check it
+    // Sometimes current time appears to be before the time that the 
+    // document was sent due to clock skew between the client and the 
+    // server, so sanity check it
     if (now > date)
         currentAge = now - date;
     else
@@ -590,8 +592,8 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
 
     // Compute document freshness and compare to minimum permitted
     if (maxAgeIsPresent) {
-        // The Max-Age directive takes priority over Expires, so if max-age is present
-        // in a response, the calculation is simply: 
+        // The Max-Age directive takes priority over Expires, so if 
+        // max-age is present in a response, the calculation is simply: 
         if (currentAge < maxAge)
             return PR_FALSE;
     } else {
@@ -599,19 +601,21 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
         // Get the value of the 'Expires:' header
         PRUint32 expires;
         PRBool expiresHeaderIsPresent;
-        rv = ParseDateHeader(nsHTTPAtoms::Expires, &expires, &expiresHeaderIsPresent);
+        rv = ParseDateHeader(nsHTTPAtoms::Expires, &expires, 
+                &expiresHeaderIsPresent);
         if (NS_FAILED(rv)) return PR_TRUE; // Corrupted or malformed headers ?
 
         if (expiresHeaderIsPresent) {
-            // Otherwise, if Expires is present in the response, the calculation is: 
+            // Otherwise, if Expires is present in the response, 
+            // the calculation is: 
             if (currentAge < expires - date)
                 return PR_FALSE;
         }
     }
 
-    // At this point, there are no protocol-defined means to determine whether or
-    // not the HTTP response can be considered stale.  Hence, we resort to a heuristic
-    // approach.
+    // At this point, there are no protocol-defined means to determine 
+    // whether or not the HTTP response can be considered stale.  Hence, 
+    // we resort to a heuristic approach.
 
     // Check if the document's age is older than a specified fraction of time
     if (aUseHeuristicExpiration) {
@@ -628,12 +632,14 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
             return PR_TRUE;
 
         if (lastModified > date) {
-            // Weird: document's last-modified date is after it was sent from the server
+            // Weird: document's last-modified date is after it was sent 
+            // from the server
             return PR_TRUE;
         }
 
         PRUint32 heuristicThresholdAge;
-        heuristicThresholdAge = (PRUint32)((date - lastModified) * HEURISTIC_STALENESS_FACTOR);
+        heuristicThresholdAge = 
+            (PRUint32)((date - lastModified) * HEURISTIC_STALENESS_FACTOR);
         
         if (currentAge < heuristicThresholdAge)
             return PR_FALSE;
@@ -674,7 +680,8 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
         versionString = "?.?";
 
     char *statusLine;
-    statusLine = PR_smprintf("HTTP/%s %3d %s", versionString, mStatus, (char*)mStatusString);
+    statusLine = PR_smprintf("HTTP/%s %3d %s", versionString, mStatus, 
+            (char*)mStatusString);
     if (!statusLine)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -753,7 +760,8 @@ nsresult nsHTTPResponse::ParseHeaders(nsCString& aAllHeaders)
         endLineOffset = aAllHeaders.Find("\r", PR_FALSE, beginLineOffset);
         if (endLineOffset == kNotFound)
             return NS_OK;
-        aAllHeaders.Mid(lineBuffer, beginLineOffset, endLineOffset - beginLineOffset);
+        aAllHeaders.Mid(lineBuffer, beginLineOffset, 
+                endLineOffset - beginLineOffset);
         if (beginLineOffset == 0)
             rv = ParseStatusLine(lineBuffer);
         else

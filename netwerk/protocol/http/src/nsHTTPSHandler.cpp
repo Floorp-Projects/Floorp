@@ -55,15 +55,18 @@ nsHTTPSHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-nsresult nsHTTPSHandler::CreateTransport(const char* host, PRInt32 port, const char* printHost,
-                                         PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize,
-                                         nsIChannel** o_pTrans)
+nsresult nsHTTPSHandler::CreateTransport(const char* host, PRInt32 port, 
+        const char* printHost,
+        PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize,
+        nsIChannel** o_pTrans)
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    NS_WITH_SERVICE(nsISocketTransportService, sts, 
+            kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return rv = sts->CreateTransportOfType("ssl", host, port, printHost, bufferSegmentSize, bufferMaxSize, o_pTrans);
+    return rv = sts->CreateTransportOfType("ssl", host, port, 
+            printHost, bufferSegmentSize, bufferMaxSize, o_pTrans);
 }
 
