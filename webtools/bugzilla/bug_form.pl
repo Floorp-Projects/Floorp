@@ -260,7 +260,7 @@ sub show_bug {
     my $movers = Param("movers");
     $user{'canmove'} = Param("move-enabled") 
                        && (defined $::COOKIE{"Bugzilla_login"}) 
-                       && ($::COOKIE{"Bugzilla_login"} =~ /\Q$movers\E/);
+                       && ($::COOKIE{"Bugzilla_login"} =~ /$movers/);
 
     # User permissions
 
