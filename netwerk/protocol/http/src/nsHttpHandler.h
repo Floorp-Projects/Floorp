@@ -28,7 +28,6 @@
 #include "nsIHttpProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIIOService.h"
-#include "nsIPref.h"
 #include "nsIObserver.h"
 #include "nsIProxyObjectManager.h"
 #include "nsINetModuleMgr.h"
@@ -37,6 +36,7 @@
 #include "nsICacheSession.h"
 #include "nsIEventQueueService.h"
 #include "nsIMIMEService.h"
+#include "nsIPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -196,7 +196,7 @@ private:
 
     // cached services
     nsCOMPtr<nsIIOService>              mIOService;
-    nsCOMPtr<nsIPref>                   mPrefs;
+    nsCOMPtr<nsIPrefBranch>             mPrefs;
     nsCOMPtr<nsIProxyObjectManager>     mProxyMgr;
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;
     nsCOMPtr<nsINetModuleMgr>           mNetModuleMgr;
