@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-  mDecSize           = 43;
+  mDecSize           = 44;
   mDecArray          = new ConverterInfo [mDecSize];
 
   mDecArray[0].mCID  = &kISO88591ToUnicodeCID;
@@ -67,8 +67,9 @@
   mDecArray[41].mCID  = &kKOI8UToUnicodeCID;
   
   mDecArray[42].mCID  = &kMUTF7ToUnicodeCID;
+  mDecArray[43].mCID  = &kUTF7ToUnicodeCID;
 
-  mEncSize           = 43;
+  mEncSize           = 44;
   mEncArray          = new ConverterInfo [mEncSize];
 
   mEncArray[0].mCID  = &kUnicodeToISO88591CID;
@@ -118,3 +119,4 @@
   mEncArray[41].mCID  = &kUnicodeToKOI8UCID;
 
   mEncArray[42].mCID  = &kUnicodeToMUTF7CID;
+  mEncArray[43].mCID  = &kUnicodeToUTF7CID;
