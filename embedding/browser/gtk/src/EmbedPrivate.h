@@ -118,8 +118,8 @@ class EmbedPrivate {
   void AttachListeners(void);
   void DetachListeners(void);
   
-  static nsresult StartupProfile(void);
-
+  static nsresult StartupProfile (void);
+  static void     ShutdownProfile(void);
 };
 
 #endif /* __EmbedPrivate_h */
