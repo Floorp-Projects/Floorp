@@ -291,16 +291,16 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   // release our parent
   NS_IF_RELEASE(mParent);
 
-  // make sure no callbacks happen
-  mEventCallback = nsnull;
-
   // destroy our native windows
   DestroyNative();
 
   // make sure to call the OnDestroy if it hasn't been called yet
   if (mOnDestroyCalled == PR_FALSE)
     OnDestroy();
-  
+
+  // make sure no callbacks happen
+  mEventCallback = nsnull;
+
   return NS_OK;
 }
 
@@ -347,9 +347,7 @@ nsWidget::SuppressModality(PRBool aSuppress)
 void
 nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
 {
-  if (aGtkWidget == mWidget) {
-    mWidget = nsnull;
-  }
+  OnDestroy();
 }
 
 //-------------------------------------------------------------------------
