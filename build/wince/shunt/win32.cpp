@@ -396,11 +396,10 @@ MOZCE_SHUNT_API int mozce_EnumFontFamiliesEx(HDC inDC, LPLOGFONT inLogfont, FONT
 MOZCE_SHUNT_API int mozce_GetMapMode(HDC inDC)
 {
 #ifdef DEBUG
-    printf("-- mozce_GetMapMode called\n");
+    printf("mozce_GetMapMode called\n");
 #endif
 
-    int retval = -1; //MM_TEXT;
-
+    int retval = MM_TEXT;
     return retval;
 }
 
@@ -1004,6 +1003,11 @@ MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE
     return MsgWaitForMultipleObjects(nCount, (HANDLE*) pHandles, bWaitAll, dwMilliseconds, dwWakeMask);
 }
 
+MOZCE_SHUNT_API LONG mozce_GetMessageTime(void)
+{
+  // Close enough guess?
+  return GetTickCount();
+}
 
 #if 0
 {
