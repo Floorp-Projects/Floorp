@@ -375,6 +375,51 @@ loser:
     return rv;
 }
 
+SECStatus
+CERT_MergeExtensions(void *exthandle, CERTCertExtension **extensions)
+{
+    CERTCertExtension *ext;
+    SECStatus rv = SECSuccess;
+    SECOidTag tag;
+    extNode *node;
+    extRec *handle = exthandle;
+    PRBool critical;
+    
+    if (!exthandle || !extensions) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    while ((ext = *extensions++) != NULL) {
+        tag = SECOID_FindOIDTag(&ext->id);
+        for (node=handle->head; node != NULL; node=node->next) {
+            if (tag == 0) {
+                if (SECITEM_ItemsAreEqual(&ext->id, &node->ext->id))
+                    break;
+            }
+            else {
+                if (SECOID_FindOIDTag(&node->ext->id) == tag) {
+                    break;
+                }
+            }
+        }
+        if (node == NULL) {
+            PRBool critical = (ext->critical.len != 0 &&
+                            ext->critical.data[ext->critical.len - 1] != 0);
+            if (critical && tag == SEC_OID_UNKNOWN) {
+               PORT_SetError(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
+               rv = SECFailure;
+               break;
+            }
+            /* add to list */
+            rv = CERT_AddExtensionByOID (exthandle, &ext->id, &ext->value,
+                                         critical, PR_TRUE);
+            if (rv != SECSuccess)
+                break;
+        }
+    }
+    return rv;
+}
+
 /*
  * get the value of the Netscape Certificate Type Extension
  */

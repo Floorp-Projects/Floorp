@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.52 2005/03/08 07:08:43 julien.pierre.bugs%sun.com Exp $
+ * $Id: cert.h,v 1.53 2005/03/09 23:02:47 neil.williams%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -249,6 +249,26 @@ CERT_CreateCertificateRequest (CERTName *name, CERTSubjectPublicKeyInfo *spki,
 **	"freeit" if PR_TRUE then free the object as well as its sub-objects
 */
 extern void CERT_DestroyCertificateRequest(CERTCertificateRequest *r);
+
+/*
+** Start adding extensions to a certificate request.
+*/
+void *
+CERT_StartCertificateRequestAttributes(CERTCertificateRequest *req);
+
+/*
+** Reformat the certifcate extension list into a CertificateRequest
+** attribute list.
+*/
+SECStatus
+CERT_FinishCertificateRequestAttributes(CERTCertificateRequest *req);
+
+/*
+** Extract the Extension Requests from a DER CertRequest attribute list.
+*/
+SECStatus
+CERT_GetCertificateRequestExtensions(CERTCertificateRequest *req,
+                                     CERTCertExtension ***exts);
 
 /*
 ** Extract a public key object from a certificate
@@ -823,6 +843,13 @@ CERT_EncodeAltNameExtension(PRArenaPool *arena,  CERTGeneralName  *value, SECIte
 */
 extern SECStatus CERT_FinishExtensions(void *exthandle);
 
+/*
+** Merge an external list of extensions into a cert's extension list, adding one
+** only when its OID matches none of the cert's existing extensions. Call this
+** immediately before calling CERT_FinishExtensions().
+*/
+SECStatus
+CERT_MergeExtensions(void *exthandle, CERTCertExtension **exts);
 
 /* If the extension is found, return its criticality and value.
 ** This allocate storage for the returning extension value.
