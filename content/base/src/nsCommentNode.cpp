@@ -405,7 +405,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   if (sel != nsnull && document->IsInSelection(sel,content))
   {
     nsIEnumerator *enumerator;
-    if (NS_SUCCEEDED(sel->QueryInterface(kIEnumeratorIID, (void **)&enumerator))) {
+    if (NS_SUCCEEDED(sel->GetEnumerator(&enumerator))) {
       for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
