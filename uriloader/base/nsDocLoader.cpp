@@ -872,6 +872,15 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
   nsURLLoadType loadType;
   nsDocumentBindInfo* loader = nsnull;
 
+#ifdef DEBUG
+  char buffer[256];
+
+  aURLSpec.ToCString(buffer, sizeof(buffer));
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader - LoadDocument(...) called for %s.", 
+          buffer));
+#endif /* DEBUG */
+
   /* Check for initial error conditions... */
   if (nsnull == aContainer) {
       rv = NS_ERROR_NULL_POINTER;
@@ -933,6 +942,9 @@ done:
 NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
 {
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader - Stop() called\n"));
+
   m_LoadingDocsList->EnumerateForwards(nsDocLoaderImpl::StopBindInfoEnumerator, nsnull);
 
   /* 
@@ -1066,6 +1078,16 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
   nsresult rv;
   nsDocumentBindInfo* loader = nsnull;
   nsURLLoadType loadType = nsURLLoadNormal;
+
+#ifdef DEBUG
+  const char* buffer;
+
+  aUrl->GetSpec(&buffer);
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader - OpenStream(...) called for %s.", 
+          buffer));
+#endif /* DEBUG */
+
 
   NS_NEWXPCOM(loader, nsDocumentBindInfo);
   if (nsnull == loader) {
