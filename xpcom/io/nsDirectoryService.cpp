@@ -75,10 +75,11 @@
 #endif 
 
 // define home directory
+// For Windows platform, We are choosing Appdata folder as HOME
 #ifdef XP_OS2
 #define HOME_DIR NS_OS2_DIR
 #elif defined (XP_PC)
-#define HOME_DIR NS_WIN_HOME_DIR
+#define HOME_DIR NS_WIN_APPDATA_DIR
 #elif defined (XP_MAC)
 #define HOME_DIR NS_MAC_HOME_DIR
 #elif defined (XP_UNIX)
