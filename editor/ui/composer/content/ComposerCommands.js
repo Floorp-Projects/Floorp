@@ -2242,6 +2242,7 @@ var nsObjectPropertiesCommand =
         case 'ol':
         case 'ul':
         case 'dl':
+        case 'li':
           goDoCommand("cmd_listProperties");
           break;
         case 'a':
