@@ -156,7 +156,7 @@ HTMLTagEntry gHTMLTagTable[] =
   {"MATH",        eHTMLTag_math},
   {"MENU",        eHTMLTag_menu},         {"META",      eHTMLTag_meta},         
 
-  {"NEWLINE",     eHTMLTag_newline},       
+  {"NEWLINE",     eHTMLTag_newline},      {"NOBR",      eHTMLTag_nobr},       
 
   {"NOEMBED",     eHTMLTag_noembed},      {"NOFRAMES",  eHTMLTag_noframes},     
   {"NOLAYER",     eHTMLTag_nolayer},      {"NOSCRIPT",  eHTMLTag_noscript},
