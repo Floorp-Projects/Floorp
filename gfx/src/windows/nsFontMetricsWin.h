@@ -339,7 +339,6 @@ protected:
   nsresult RealizeFont();
   void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight,
                    PRBool aSizeOnly=PR_FALSE);
-  static PLHashTable* InitializeFamilyNames(void);
 
   nsDeviceContextWin *mDeviceContext;
 
