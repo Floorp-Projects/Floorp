@@ -1015,6 +1015,13 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
 
 PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 
+  /* treat zero-length crypt string as a special case */
+  if (crypt[0] == '\0') {
+    text = (char *)PR_Malloc(1);
+    text[0] = '\0';
+    return NS_OK;
+  }
+
   /* use SecretDecoderRing if crypt doesn't starts with prefix */
   if (crypt[0] != PREFIX[0]) {
     nsresult rv = wallet_CryptSetup();
@@ -1688,6 +1695,12 @@ wallet_ReadFromFile
       /* unexpected end of file reached */
       break;
     }
+    if (item2.Length()==0) {
+      /* the value must have been deleted */
+      nsVoidArray* dummy = NULL;
+      wallet_WriteToList(item1, item2, dummy, list, PR_FALSE, placement);
+      continue;
+    }
 
     nsAutoString item3;
     if (NS_FAILED(wallet_GetLine(strm, item3))) {
@@ -1900,11 +1913,27 @@ PRInt32 FieldToValue(
       if (index > 0) {
         index = 0;
       }
-      if (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list, PR_FALSE)) {
+      PRInt32 index4 = 0;
+      while (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list, PR_FALSE, index4)) {
         /* concatenation rules exist, generate value as a concatenation */
         wallet_Sublist * ptr1;
         value.SetLength(0);
         nsAutoString value2;
+
+        if (dummy2.Length() > 0) {
+          PRInt32 index5 = 0;
+          for (PRInt32 j=0; j>index; j -= 2) {
+            if (!wallet_ReadFromList
+               (dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
+              break;
+            }
+          }
+          if (wallet_ReadFromList
+              (dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
+            value += value2;
+          }
+        }
+
         PRInt32 count = LIST_COUNT(itemList2);
         for (PRInt32 i=0; i<count; i++) {
           ptr1 = NS_STATIC_CAST(wallet_Sublist*, itemList2->ElementAt(i));
@@ -1930,9 +1959,12 @@ PRInt32 FieldToValue(
             value += value2;
           }
         }
-        index -= 2;
         itemList = nsnull;
         if (value.Length()>0) {
+          index -= 2;
+          if (index == -(2*count)) {
+            index = -1;
+          }
           return 0;
         }
       }
