@@ -21,3 +21,8 @@
 <!ENTITY enableTurboCheck.accesskey   "t">
 
 <!ENTITY perfdescription.label        "If you check this item, part of &brandShortName; will stay in memory when not in use, allowing it to start up faster.">
+
+<!ENTITY jvm.configuration            "Select Java version (change requires restart)">
+<!ENTITY jvm.name                     "Version">
+<!ENTITY jvm.home                     "Path">
+
