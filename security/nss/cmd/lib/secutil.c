@@ -2928,13 +2928,6 @@ loser:
 }
 
 
-#ifdef AIX
-int _OS_SELECT (int nfds, void *readfds, void *writefds,
-               void *exceptfds, struct timeval *timeout) {
-   return select (nfds,readfds,writefds,exceptfds,timeout);
-}
-#endif 
-
 SECItem *
 SECU_GetPBEPassword(void *arg)
 {
