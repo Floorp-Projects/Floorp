@@ -108,7 +108,11 @@ if(-d "$DEPTH\\stage")
 # pkgcp.pl will get very unhappy
 
 mkdir("$DEPTH\\stage", 775);
+
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $DEPTH\\stage -f $inConfigFiles\\packages-static -o dos -v");
+
+# Consolidate the xpt files
+system("perl $cwdPackager\\xptlink.pl --source \"$cwdDistWin\" --destination \"$DEPTH\\stage\" -o dos --verbose");
 
 if(system("perl makeall.pl $ver -config $inConfigFiles -stagePath $DEPTH\\stage $cwdDistWin\\install -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
