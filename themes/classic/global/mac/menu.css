@@ -12,40 +12,46 @@ menubar > toolbargrippy
 menu, menuitem  
   {
     color                 : #000000;
-	  vertical-align        : middle;
+	vertical-align        : middle;
   }
 
 menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
   {
-	  color                 : #999999;
+	color                 : #777777;
   }
 
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup 
   {
     background-color      : #DDDDDD;
-    border-left           : 1px solid #FFFFFF;
-    border-top            : 1px solid #FFFFFF;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
+    border-left           : thin solid white;
+    border-top            : thin solid white;
+    border-right          : 3px ridge black;
+    border-bottom         : 3px ridge black;
   }
 
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
+  	font				  : 9pt charcoal;
     max-width             : 250px;
     min-width             : 125px;
-    margin-left           : 0px;
-    margin-right          : 0px;
-    margin-top            : 0px;
-    margin-bottom         : 0px;
+    padding 			  : 0px;
   }
+
+/* Don't display grayed items in the contextual popup menus */
+popup > menuitem[disabled="true"], popup > menu[disabled="true"] 
+  {
+  	display				  : none;
+  }
+
 
 menuseparator 
   {
-    border-bottom         : 1px solid #336699; 
+  	border-top			  : 1px solid #888888;
+    border-bottom         : 1px solid white; 
     margin                : 2px 0px 2px 0px;
   }
 
@@ -54,12 +60,6 @@ menubar > menu
     border                : 1px solid #FFFFFF;
     padding               : 2px 3px 2px 3px;
     margin                : 2px 0px 2px 0px;
-  }
-
-menupopup > menu, menupopup > menuitem,
-popup > menu, popup > menuitem
-  {
-    padding               : 2px;
   }
 
 menubar > menu[menuactive="true"] 
@@ -82,8 +82,8 @@ menupopup > menuitem[menuactive="true"],
 popup > menu[menuactive="true"],
 popup > menuitem[menuactive="true"]
   {
-    background-color      : #336699;
-    color                 : #FFFFFF;
+    background-color      : #333399;   /* Would bE GREAT IF HAD ACCESS TO MAC SYSTEM COLORS */
+  	color				  : white;
   }
 
 
@@ -92,7 +92,7 @@ popup > menuitem[menuactive="true"]
  **/
 .menu-right 
   {
-    margin                : 0px 0px 0px 6px;
+    margin                : 0px 3px 0px 6px;
     width                 : 8px;
     text-align            : center;
     list-style-image      : url("chrome://global/skin/menu-arrow.gif");
@@ -101,7 +101,7 @@ popup > menuitem[menuactive="true"]
 .menu-iconic-left 
   {
     color                 : inherit;
-    margin                : 0px 2px 0px 0px;
+    margin                : 0px 4px 0px 18px;
     width                 : 13px;
     text-align            : center;
     list-style-image      : inherit;
@@ -121,13 +121,19 @@ popup > menuitem[menuactive="true"]
 
 .menu-text 
   {
-    padding-left          : 15px;
+    padding-left          : 18px;
   }
 
 .menu-accel 
   {
     margin-left           : 4px;
     padding-right         : 14px;
+  }
+
+menuitem > .menu-accel
+  {
+  	margin : 0px;
+  	padding-right : 9px;
   }
 
 .menu-iconic-accel 
@@ -144,16 +150,19 @@ popup > menuitem[menuactive="true"]
 menuitem[checked="true"] 
   {
     list-style-image      : url("chrome://global/skin/menu-check.gif");
+    margin-right		  : 3px;
   }
 
 menuitem[checked="true"][disabled="true"] 
   {
     list-style-image      : url("chrome://global/skin/menu-check-disabled.gif");
+    margin-right		  : 3px;
   }
 
 menuitem[checked="true"][menuactive="true"] 
   {
     list-style-image      : url("chrome://global/skin/menu-check-hover.gif");
+    margin-right		  : 3px;
   }
 
 .menu-right[disabled="true"] 
@@ -200,7 +209,7 @@ autorepeatbutton {
 }
 
 autorepeatbutton:hover {
-  background-color      : #336699;
+  background-color      : #333399;
 }
 
   

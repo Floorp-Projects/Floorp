@@ -6,8 +6,8 @@
     {
       padding             : 0px;
       border              : 1px solid #000000;
-      background-color    : #CCCCCC;
-      -moz-border-radius  : 3px 2px 2px 3px;
+      background-color    : #DDDDDD;
+      -moz-border-radius  : 4px 4px 4px 4px;
       margin              : 1px 5px 2px 5px;
     }
 
@@ -24,66 +24,52 @@
   
   menulist[disabled="true"]
     {
-      border              : 1px solid #999999;
-      color               : #999999;
+      border              : 1px solid #888888;
+      color               : #777777;
     }
     
 /* icon display frame */
   menulist > .menu-icon 
     {
-      border-left         : 1px outset #CCCCCC;
-      border-top          : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      padding             : 2px 0px 2px 0px;
+      border			  : none;
+      padding             : none;
     }  
 
   menulist[open="true"] > .menu-icon 
     {
-      border-left         : 1px inset #CCCCCC;
-      border-top          : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      padding             : 3px 0px 1px 0px;
+	  border			  : none;
+      padding             : none;
     }
-  
+    
 /* text display frame */
   menulist > .menu-text 
     {
-      padding             : 2px 4px 2px 4px;
-      border-top          : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      margin-right        : 0px;
+      padding             : 0px 4px 0px 4px;
+      margin	          : 0px;
+      border-top		  : 1px solid #FFFFFF;
+      border-bottom		  : 1px solid #AAAAAA;
+      border-left		  : 1px solid #FFFFFF;
+      border-right		  : 1px solid #AAAAAA;
+      -moz-border-radius  : 3px 2px 2px 2px;  /* Three pixels may be rounding error? */
     }
     
-  menulist[open="true"] > .menu-text 
-    {
-      border-top          : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      padding             : 3px 4px 1px 4px;
-    }
-
 /* drop marker display frame */
   menulist > .menu-dropmarker 
     {
-      border-top          : 1px outset #CCCCCC;
-      border-right        : 1px outset #CCCCCC;
-      border-bottom       : 1px outset #CCCCCC;
-      border-left         : none;
-      list-style-image    : url("chrome://global/skin/scroll-down.gif");
-      padding             : 2px;
+      border			  : none;
+      list-style-image    : url("chrome://global/skin/menulist-scroll.gif");
+      padding             : 0px;
     }
   
   menulist[disabled="true"] > .menu-dropmarker
     {
-      list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
+      list-style-image    : url("chrome://global/skin/menulist-scroll-disabled.gif");
     }
 
   menulist[open="true"] > .menu-dropmarker 
     {
-      border-top          : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px solid #CCCCCC;
-      border-left         : 1px solid #CCCCCC;
-      padding             : 3px 2px 1px 2px;
+      padding             : 0px;
+      list-style-image	  : url("chrome://global/skin/menulist-scroll-active.gif");
     }
 
 /** rules for EDITABLE menulists (aka 'comboboxes'). 
@@ -131,25 +117,23 @@
 /* rules for popups and separators associated with menulists */
   menulist > menupopup 
     {
-      border-left         : 1px solid #000000;
-      border-right        : 1px solid #000000;
-      border-bottom       : 1px solid #000000;
-      border-top          : 0px;
-      min-width           : 0px;
-      padding             : 0px;
+      border-left           : thin solid white;
+      border-top            : thin solid white;
+      border-right          : 3px ridge black;
+      border-bottom         : 3px ridge black;
+      background-color	    : #DDDDDD;
     }
     
   menulist > menupopup > .internal-box
     {
-      border-left         : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-      border-top          : 0px;
+      border: none;
     }
     
   menulist > menupopup > menuseparator 
     {
-      border-bottom       : 2px groove #CCCCCC;
+      border-top			  : 1px solid #888888;
+   	  border-bottom           : 1px solid white; 
+      margin                  : 2px 0px 2px 0px;
     }
 
 
@@ -162,7 +146,9 @@
 
   menulist > menupopup > menuitem > .menu-left 
     {
-      width               : 13px;
+      margin : 0px;
+      padding : 0px;
+      width               : 0px;
     }
 
   menulist > menupopup > menuitem[selected="true"] > .menu-left

@@ -7,7 +7,7 @@
 /* outer frame */
   textfield
     {
-      border              : 1px inset #CCCCCC;
+      border              : 1px inset #DDDDDD;
       font                : inherit;
       color               : #000000;
       padding             : 0px;
@@ -19,7 +19,7 @@
     
   textfield[readonly="true"]
     {
-      background-color    : #CCCCCC;
+      background-color    : #FFFFFF;
     }
   
   textfield[focused="true"]

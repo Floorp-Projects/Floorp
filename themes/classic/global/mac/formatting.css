@@ -2,7 +2,7 @@
 
 .color-dialog
   {
-    background-color      : #CCCCCC;
+    background-color      : #DDDDDD;
     color                 : #000000;
   }
   
@@ -15,34 +15,34 @@
 /* inset areas */
 .inset
   {
-    border                : 1px inset #CCCCCC;
+    border                : 1px inset #DDDDDD;
     margin                : 0px 5px 5px 5px;
   }
   
 /* formatting */
 .groove-top
   {
-    border-top            : 2px groove #CCCCCC;  
+    border-top            : 2px groove #DDDDDD;  
   }
   
 .groove-right
   {
-    border-right          : 2px groove #CCCCCC;
+    border-right          : 2px groove #DDDDDD;
   }
   
 .groove-left
   {
-    border-left           : 2px groove #CCCCCC;
+    border-left           : 2px groove #DDDDDD;
   }
   
 .groove-bottom
   {
-    border-bottom         : 2px groove #CCCCCC;
+    border-bottom         : 2px groove #DDDDDD;
   }
   
 .outset
   {
-    border                : 1px outset #CCCCCC;
+    border                : 1px outset #DDDDDD;
   }  
   
 /** separator rules **/
@@ -72,7 +72,7 @@
   separator.groove,
   separator.groove[orient="horizontal"] 
     {
-      border-top: 2px groove #CCCCCC;
+      border-top: 2px groove #DDDDDD;
       height: 0px;
       margin-top: 0.4em;
       margin-bottom: 0.4em;
@@ -80,7 +80,7 @@
   
   separator.groove[orient="vertical"] 
     {
-      border-left: 2px groove #CCCCCC;
+      border-left: 2px groove #DDDDDD;
       margin-left: 0.4em;
       margin-right: 0.4em;
     }
@@ -88,13 +88,13 @@
 /* groove separators (0 padding, for dividing effects) */  
   separator.groove-thin 
     {
-      border-top: 2px groove #CCCCCC;
+      border-top: 2px groove #DDDDDD;
       height: 0px;
     }
   
   separator[orient="vertical"].groove-thin 
     {
-      border-left: 2px groove #CCCCCC;
+      border-left: 2px groove #DDDDDD;
     }
 
 /** text formatting rules **/
@@ -106,7 +106,7 @@
     
   text[disabled="true"] 
     {
-      color                 : #999999;
+      color                 : #7F7F7F;
     }    
     
   html
@@ -127,7 +127,7 @@
 
   .icon-dropmarker
     {
-      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+      list-style-image    : url("chrome://global/skin/dropmarker-down-on.gif");
     }
     
   .box-padded

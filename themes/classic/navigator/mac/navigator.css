@@ -149,12 +149,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
 	  margin                : 0px 4px 0px 0px;
 	  width                 : 10px; 
-	  list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+	  list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
   } 
 
 #action-popup 
   {
-    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
 	  margin                : 0px; 
 	  -moz-border-radius    : 4px;
   }

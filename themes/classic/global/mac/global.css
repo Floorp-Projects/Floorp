@@ -54,6 +54,7 @@
     { 
       background-color    : #DDDDDD;
       padding             : 0px;
+      font				  : 8pt geneva;
     }
   
   window[wait-cursor] 
@@ -165,7 +166,7 @@
 /* progress indicators */
   .progress-bar 
     {
-	    background-color    : #6699cc;
+	  background-color    : #6699cc;
       border-right        : 1px outset #6699cc;
     }
   

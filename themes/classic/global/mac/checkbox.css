@@ -6,53 +6,50 @@
   checkbox 
     {
       margin: 3px 5px 3px 5px;
+      user-focus: ignore;
     }
 
 /* checkmark outer frame */
   checkbox > .internal-box > .checkmark-box 
     {
-      border: 1px solid #000000;
-      -moz-border-radius: 3px 2px 2px 3px;
-      background-color: #CCCCCC;
       margin-top: 2px;
-      margin-right: 4px;
+      margin-right: 2px;
     }
 
   checkbox[disabled="true"] > .internal-box > .checkmark-box,
   checkbox[disabled="true"]:hover > .internal-box > .checkmark-box 
     {
-      border: 1px solid #999999;
     }
     
 /* checkmark inner frame */
   checkbox > .internal-box > .checkmark-box > .checkbox-check 
     {
-      border: 1px outset #CCCCCC;
-      width: 10px;
-      height: 10px;
-      list-style-image: none;
+      list-style-image: url(chrome://global/skin/check-cb-uncheck.gif);
     }
   
   checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check 
     {
-      list-style-image: url(chrome://global/skin/check-check.gif);
+      list-style-image: url(chrome://global/skin/check-cb-check.gif);
     }
     
   checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
     {
-      list-style-image: url(chrome://global/skin/check-check-disabled.gif);
+      list-style-image: url(chrome://global/skin/check-cb-check-disable.gif);
     }  
 
   checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check 
     {
-      border: 1px inset #CCCCCC;
+      list-style-image: url(chrome://global/skin/check-cb-uncheck-active.gif);  
     }
   
-  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-  checkbox[disabled="true"]:active > .internal-box > .checkmark-box > .checkbox-check 
+  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
     {
-      border: 1px outset #CCCCCC;
-      -moz-border-radius: 0px;
+  	  list-style-image: url(chrome://global/skin/check-cb-uncheck-disable.gif);  
+    }
+
+  checkbox[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check 
+    {
+      list-style-image: url(chrome://global/skin/check-cb-check-active.gif);
     }
 
   checkbox > .internal-box > .checkbox-icon 
@@ -63,17 +60,11 @@
 /* checkmark label/icon frame */
   checkbox[value] > .internal-box > html
     {
-      margin: 0px 0px 0px 4px;
-      padding: 1px;
+      margin: 0px 0px 2px 0px;
+      padding: 2px 0px 0px 0px;   /* 7pt: 2px 0px 0px 1px */
     }
 
   checkbox[disabled="true"][value] > .internal-box > html 
     {
-      color: #999999;
-    }
-    
-  checkbox:focus > .internal-box > html 
-    {
-      border              : 1px dotted black;
-      padding             : 0px;
+      color: #7F7F7F;
     }

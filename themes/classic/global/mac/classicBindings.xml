@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<bindings id="buttonBindings"
+<bindings id="classicBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -54,9 +54,15 @@
     </content>
   </binding>
 
-  <binding id="thumb" extends="xul:box">
+<binding id="thumb" extends="xul:button">
     <content>
-      <xul:box class="thumb-box" autostretch="never" orient="vertical" flex="1">
+      <xul:box class="thumb-border" orient="vertical" flex="1">
+        <xul:spring flex="1"/>
+        <xul:box>
+            <xul:spring flex="1"/>
+		    <xul:image inherits="src"/>
+		    <xul:spring flex="1"/>
+	    </xul:box>
         <xul:spring flex="1"/>
       </xul:box>
     </content>
@@ -64,11 +70,15 @@
 
   <binding id="scrollbar">
     <content>
-      <xul:scrollbarbutton type="decrement" inherits="align:sborient"/>
+      <xul:scrollbarbutton type="decrement" inherits="align:sborient">
+          <xul:image inherits="src"/>
+	  </xul:scrollbarbutton>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
-	      <xul:thumb inherits="align,src" flex="1"/>
+	        <xul:thumb inherits="align,src" flex="1"/>
       </xul:slider>
-      <xul:scrollbarbutton type="increment" inherits="align:sborient"/>
+      <xul:scrollbarbutton type="increment" inherits="align:sborient">
+      	  <xul:image inherits="src"/>
+	  </xul:scrollbarbutton>
     </content>
   </binding>
   

@@ -6,7 +6,8 @@
  *  is required.
  **/
 tree {
-  background-color: white;
+  background-color: #EEEEEE;
+  color: black;
   border: none;
   border-spacing: 0px;
 }
@@ -16,16 +17,19 @@ tree {
  *  inset borders, and default dialog spacing.
  **/
 tree.inset {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  border-left: 1px solid #000000;
   margin: 1px 5px 2px 5px;
 }
 
+treeitem > treerow {
+	border-bottom : 1px solid #FFFFFF;
+}
+
 treeitem[selected="true"] > treerow { 
-	color: white;
-	background-color: #336699;
+	color: #000000;
+	background-color: Highlight;
 }
 
 treecell { 
@@ -76,7 +80,7 @@ treecell.propertylist {
 }
 
 .tree-cell-twisty {
- list-style-image: url("chrome://global/skin/closedtwisty.gif");
+ list-style-image: url("chrome://global/skin/twisty-closed.gif");
  user-focus:ignore;
  padding-right: 2px;
 }
@@ -90,7 +94,7 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 }
 
 treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/closedtwisty-selected.gif");
+  list-style-image: url("chrome://global/skin/twisty-closed-active.gif");
 }
 
 .tree-cell-twisty:hover {
@@ -99,6 +103,7 @@ treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
 
 .tree-cell-twisty:active {
  text-decoration: none;
+ list-style-image: url("chrome://global/skin/twisty-closed-active.gif");
 }
 
 .tree-cell-twisty[disabled="true"] {
@@ -106,11 +111,11 @@ treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
 }
 
 treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
- list-style-image: url("chrome://global/skin/opentwisty.gif");
+ list-style-image: url("chrome://global/skin/twisty-open.gif");
 }
 
 treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/opentwisty-selected.gif");
+  list-style-image: url("chrome://global/skin/twisty-open-active.gif");
 }
 
 

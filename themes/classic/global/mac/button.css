@@ -10,20 +10,20 @@
       behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
       border-left         : 1px solid #DDDDDD;
       border-top          : 1px solid #DDDDDD;
-      border-right        : 1px solid black;
-      border-bottom       : 1px solid black;
+      border-right        : 1px solid #000000;
+      border-bottom       : 1px solid #000000;
       margin              : 1px 5px 2px 5px;
       background-color    : #DDDDDD;
       min-width           : 8em;
-      font                : Geneva 7pt;
+      font                : Geneva 8pt;
       color               : black;
       -moz-border-radius  : 3px 2px 2px 3px;
     }
   
   .button-box-1  
     {
-      border-left         : 1px solid white;
-      border-top          : 1px solid white;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
       border-right        : 1px solid #9D9D9D;
       border-bottom       : 1px solid #9D9D9D;
     }
@@ -35,7 +35,7 @@
     
   button:hover:active 
     {
-      border              : 1px solid black;
+      border              : 1px solid #000000;
     }
 
   button:hover:active > .button-box-1
@@ -78,7 +78,7 @@
 
   button:focus > .button-box-1 > .button-box-2 > .button-box-text
     {
-      border              : 1px dotted black;
+      border              : 1px dotted #000000;
     }    
     
 /** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
@@ -88,16 +88,16 @@
 /* outer frame */  
   button[default], button:focus
     {
-      border              : 1px solid black;
+      border              : 1px solid #000000;
     }
 
   button[default] > .button-box-1,
   button:focus > .button-box-1
     {
-      border-left         : 1px solid white;
-      border-top          : 1px solid white;
-      border-right        : 1px solid black;
-      border-bottom       : 1px solid black;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #000000;
+      border-bottom       : 1px solid #000000;
     }
 
   button[default] > .button-box-1 > .button-box-2,

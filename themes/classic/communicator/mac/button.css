@@ -154,12 +154,22 @@
       padding             : none;
       margin              : 1px 5px 3px 1px;
       background-color    : inherit;
-      list-style-image    : url("chrome://global/skin/closedtwisty.gif");
+      list-style-image    : url("chrome://global/skin/twisty-closed.gif");
     }
-    
+  
+  button.expander:hover:active
+    {
+  	  list-style-image    : url("chrome://global/skin/twisty-closed-active.gif");
+    }
+  
   button[open="true"].expander 
     {
-      list-style-image    : url("chrome://global/skin/opentwisty.gif");
+      list-style-image    : url("chrome://global/skin/twisty-open.gif");
+    }
+    
+  button.expander[open="true"]:hover:active
+    {
+  	  list-style-image    : url("chrome://global/skin/twisty-open-active.gif");
     }
     
 /* internal frame */
