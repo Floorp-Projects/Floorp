@@ -68,7 +68,13 @@ var FolderPaneController =
 					goSetMenuValue(command, 'valueFolder');
 				var folderTree = GetFolderTree();
 				if ( folderTree && folderTree.selectedItems )
-					return true;
+                {
+                    var specialFolder = folderTree.selectedItems[0].getAttribute('SpecialFolder');
+                    if (specialFolder == "Inbox" || specialFolder == "Trash")
+                       return false;
+                    else
+					   return true;
+                }
 				else
 					return false;
 			
@@ -462,21 +468,26 @@ function MsgDeleteFolder()
 	var folderList = tree.selectedItems;
 	var i;
 	var folder, parent;
+    var specialFolder;
 	for(i = 0; i < folderList.length; i++)
 	{
 		folder = folderList[i];
 	    folderuri = folder.getAttribute('id');
-		dump(folderuri);
-		parent = folder.parentNode.parentNode;	
-	    var parenturi = parent.getAttribute('id');
-		if(parenturi)
-			dump(parenturi);
-		else
-			dump("No parenturi");
-		dump("folder = " + folder.nodeName + "\n"); 
-		dump("parent = " + parent.nodeName + "\n"); 
-		messenger.DeleteFolders(tree.database,
-                                parent.resource, folder.resource);
+        specialFolder = folder.getAttribute('SpecialFolder');
+        if (specialFolder != "Inbox" && specialFolder != "Trash")
+        {
+            dump(folderuri);
+            parent = folder.parentNode.parentNode;	
+            var parenturi = parent.getAttribute('id');
+            if(parenturi)
+                dump(parenturi);
+            else
+                dump("No parenturi");
+            dump("folder = " + folder.nodeName + "\n"); 
+            dump("parent = " + parent.nodeName + "\n"); 
+            messenger.DeleteFolders(tree.database,
+                                    parent.resource, folder.resource);
+        }
 	}
 
 
