@@ -859,8 +859,6 @@ static const nsModuleComponentInfo components[] =
     DECODER_NAME_BASE "us-ascii" , NS_ASCIITOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "us-ascii",
     nsAsciiToUnicodeConstructor ,
-    // global converter registration
-    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     DECODER_NAME_BASE "x-u-escaped" , NS_UESCAPETOUNICODE_CID, 
@@ -1538,8 +1536,6 @@ static const nsModuleComponentInfo components[] =
     DECODER_NAME_BASE "Shift_JIS" , NS_SJISTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "Shift_JIS",
     nsShiftJISToUnicodeConstructor ,
-    // global converter registration
-    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     DECODER_NAME_BASE "EUC-JP" , NS_EUCJPTOUNICODE_CID, 
