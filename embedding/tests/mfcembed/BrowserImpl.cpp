@@ -218,7 +218,22 @@ NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->SetBrowserFrameSize(aCX, aCY);
+    HWND w = m_pBrowserFrameGlue->GetBrowserFrameNativeWnd();
+
+    CRect rcNewFrame(CPoint(0, 0), CSize(aCX, aCY));
+    CRect rcFrame;
+    CRect rcClient;
+
+    // Adjust for 3D edge on client area
+    AdjustWindowRectEx(&rcNewFrame, WS_VISIBLE, FALSE, WS_EX_CLIENTEDGE);
+
+    GetClientRect(w, &rcClient);
+    GetWindowRect(w, &rcFrame);
+
+    rcNewFrame.right += rcFrame.Width() - rcClient.Width();
+    rcNewFrame.bottom += rcFrame.Height() - rcClient.Height();
+
+	m_pBrowserFrameGlue->SetBrowserFrameSize(rcNewFrame.Width(), rcNewFrame.Height());
 
 	return NS_OK;
 }
