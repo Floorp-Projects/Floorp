@@ -27,7 +27,7 @@ LIBRARY_NAME = raptorwebwidget
 
 MODULE=raptor
 
-REQUIRES=xpcom raptor dom js plugin java netlib pref jsurl
+REQUIRES=xpcom raptor dom js plugin java netlib pref jsurl editor
 
 ifneq ($(OS_TARGET),Rhapsody)
 EXTRA_DSO_LDOPTS += -lm
