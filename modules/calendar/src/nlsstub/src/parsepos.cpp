@@ -16,34 +16,27 @@
  * Reserved.
  */
 
-#ifndef ptypes_h__
-#define ptypes_h__
+#include "parsepos.h"
 
-#include "nspr.h"
+ParsePosition::ParsePosition()
+{
+}
 
-typedef double Date;
-
-#define ZERO_ERROR 0
-
-typedef PRInt32   ErrorCode;
-typedef PRInt8    t_int8;
-typedef PRInt32   t_int32;
-typedef PRBool    t_bool;
-typedef PRInt32   TextOffset;
-
-#ifdef _IMPL_NS_NLS
-#define NS_NLS NS_EXPORT
-#else
-#define NS_NLS NS_IMPORT
-#endif
+ParsePosition::~ParsePosition()
+{
+}
 
 
-#define SUCCESS(x) ((x)<=ZERO_ERROR)
-#define FAILURE(x) ((x)>ZERO_ERROR)
+ParsePosition::ParsePosition(TextOffset aIndex)
+{
+}
 
-#define kMillisPerSecond (PR_INT32(1000))
-#define kMillisPerMinute (PR_INT32(60) * kMillisPerSecond)
-#define kMillisPerHour   (PR_INT32(60) * kMillisPerMinute)
-#define kMillisPerDay    (PR_INT32(24) * kMillisPerHour)
+ParsePosition::ParsePosition(const ParsePosition& aParsePosition)
+{
+}
 
-#endif
+PRBool ParsePosition::operator==(const ParsePosition& aParsePosition) const
+{
+  return (PR_TRUE);
+}
+
