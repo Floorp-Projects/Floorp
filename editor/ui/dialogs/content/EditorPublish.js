@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Charley Manske (cmanske@netscape.com)
+ *   Ryan Cassin (rcassin@supernova.org)
  */
 
 var gPublishPanel = 0;
@@ -144,7 +146,8 @@ function Startup()
         if (publishData)
         {
           filename = publishData.filename;
-          gDialog.SiteNameInput.value    = publishData.siteName;
+          // With new remote sites, Site Name is: host (scheme)
+          gDialog.SiteNameInput.value    = GetHost(docUrl) + " (" + GetScheme(docUrl) + ")";
           gDialog.PublishUrlInput.value  = publishData.publishUrl;
           gDialog.BrowseUrlInput.value   = publishData.browseUrl;
           gDialog.UsernameInput.value    = publishData.username;
