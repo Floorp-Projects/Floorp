@@ -36,6 +36,21 @@
 #define DOT_LENGTH  1           //square
 #define DASH_LENGTH 3           //3 times longer than dot
 
+
+/** The following classes are used by CSSRendering for the rounded rect implementation */
+#define MAXPATHSIZE 12
+#define MAXPOLYPATHSIZE 1000
+
+enum ePathTypes{
+  eOutside =0,
+  eInside,
+  eCalc,
+  eCalcRev
+};
+
+static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,float aFrac=0);
+
+
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
 // This services fieldset legends and only works for coords defining horizontal lines.
 void nsCSSRendering::DrawLine (nsIRenderingContext& aContext, 
@@ -1359,11 +1374,32 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   PRIntn    cnt;
   nsMargin  border;
   const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+  PRInt16       theRadius;
+  nsStyleCoord  borderRadius;
 
   aBorderStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
+    return;
+  }
+
+    // get the radius for our border
+  borderRadius = aBorderStyle.mBorderRadius;
+  theRadius = 0;
+  switch (borderRadius.GetUnit() ) {
+    case eStyleUnit_Inherit:
+      break;
+    case eStyleUnit_Percent:
+      break;
+    case eStyleUnit_Coord:
+      theRadius = borderRadius.GetCoordValue();
+      break;
+  }
+
+  // rounded version of the border
+  if (theRadius > 0){
+    PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,theRadius,aGap);
     return;
   }
 
@@ -1843,4 +1879,574 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       aRenderingContext.FillRect(aBorderArea);
     }
   }
+}
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsCSSRendering.h
+ *	@update 3/26/99 dwc
+ */
+void
+nsCSSRendering::PaintRoundedBackground(nsIPresContext& aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                nsIFrame* aForFrame,
+                                const nsRect& aDirtyRect,
+                                const nsRect& aBorderArea,
+                                const nsStyleColor& aColor,
+                                const nsStyleSpacing& aSpacing,
+                                nscoord aDX,
+                                nscoord aDY,
+                                PRInt16 aTheRadius)
+{
+RoundedRect   outerPath;
+QBCurve       cr1,cr2,cr3,cr4;
+QBCurve       UL,UR,LL,LR;
+PRInt16       out_rad;
+PRInt32       curIndex;
+nsPoint       anc1,con,anc2;
+nsPoint       thePath[MAXPATHSIZE];
+nsPoint       polyPath[MAXPOLYPATHSIZE];
+PRInt16       np;
+nsMargin      border;
+nsStyleCoord  borderRadius;
+
+  out_rad = aTheRadius;
+
+  aRenderingContext.SetColor(aColor.mBackgroundColor);
+
+  if(out_rad>(aBorderArea.width>>1))
+    out_rad = aBorderArea.width>>1;
+
+  if(out_rad>(aBorderArea.height>>1))
+    out_rad = aBorderArea.height>>1;
+
+  // set the rounded rect up, and let'er rip
+  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,out_rad);
+  outerPath.GetRoundedBorders(UL,UR,LL,LR);
+
+  // BUILD THE ENTIRE OUTSIDE PATH
+  // TOP LINE ----------------------------------------------------------------
+  UL.MidPointDivide(&cr1,&cr2);
+  UR.MidPointDivide(&cr3,&cr4);
+  np=0;
+  thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
+  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+  thePath[np++].MoveTo(cr3.mAnc1.x, cr3.mAnc1.y);
+  thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
+  thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
+
+  polyPath[0].x = thePath[0].x;
+  polyPath[0].y = thePath[0].y;
+  curIndex = 1;
+  GetPath(thePath,polyPath,&curIndex,eOutside);
+
+  // RIGHT LINE ----------------------------------------------------------------
+  LR.MidPointDivide(&cr2,&cr3);
+  np=0;
+  thePath[np++].MoveTo(cr4.mAnc1.x,cr4.mAnc1.y);
+  thePath[np++].MoveTo(cr4.mCon.x, cr4.mCon.y);
+  thePath[np++].MoveTo(cr4.mAnc2.x, cr4.mAnc2.y);
+  thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
+  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+  GetPath(thePath,polyPath,&curIndex,eOutside);
+
+  // BOTTOM LINE ----------------------------------------------------------------
+  LL.MidPointDivide(&cr2,&cr4);
+  np=0;
+  thePath[np++].MoveTo(cr3.mAnc1.x,cr3.mAnc1.y);
+  thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
+  thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
+  thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
+  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+  GetPath(thePath,polyPath,&curIndex,eOutside);
+
+  // LEFT LINE ----------------------------------------------------------------
+  np=0;
+  thePath[np++].MoveTo(cr4.mAnc1.x,cr4.mAnc1.y);
+  thePath[np++].MoveTo(cr4.mCon.x, cr4.mCon.y);
+  thePath[np++].MoveTo(cr4.mAnc2.x, cr4.mAnc2.y);
+  thePath[np++].MoveTo(cr1.mAnc1.x, cr1.mAnc1.y);
+  thePath[np++].MoveTo(cr1.mCon.x, cr1.mCon.y);
+  thePath[np++].MoveTo(cr1.mAnc2.x, cr1.mAnc2.y);
+  GetPath(thePath,polyPath,&curIndex,eOutside);
+
+  //aRenderingContext.FillPolygon(polyPath,curIndex);   put back
+}
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsCSSRendering.h
+ *	@update 3/26/99 dwc
+ */
+void 
+nsCSSRendering::PaintRoundedBorder(nsIPresContext& aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 nsIFrame* aForFrame,
+                                 const nsRect& aDirtyRect,
+                                 const nsRect& aBorderArea,
+                                 const nsStyleSpacing& aBorderStyle,
+                                 nsIStyleContext* aStyleContext,
+                                 PRIntn aSkipSides,
+                                 PRInt16 aBorderRadius,
+                                 nsRect* aGap)
+{
+RoundedRect   outerPath;
+QBCurve       UL,LL,UR,LR;
+QBCurve       IUL,ILL,IUR,ILR;
+QBCurve       cr1,cr2,cr3,cr4;
+QBCurve       Icr1,Icr2,Icr3,Icr4;
+PRInt16       out_rad;
+nsPoint       anc1,con,anc2;
+nsPoint       thePath[MAXPATHSIZE];
+PRInt16       np;
+nsMargin      border;
+nscoord       twipsPerPixel;
+float         p2t;
+
+  aBorderStyle.CalcBorderFor(aForFrame, border);
+  if ((0 == border.left) && (0 == border.right) &&
+      (0 == border.top) && (0 == border.bottom)) {
+    return;
+  }
+
+  // needed for our border thickness
+  aPresContext.GetPixelsToTwips(&p2t);
+  twipsPerPixel = (nscoord) p2t;
+
+  // Base our thickness check on the segment being less than a pixel and 1/2
+  twipsPerPixel += twipsPerPixel >> 2;
+
+  out_rad = aBorderRadius;
+
+  if(out_rad>(aBorderArea.width>>1))
+    out_rad = aBorderArea.width>>1;
+
+  if(out_rad>(aBorderArea.height>>1))
+    out_rad = aBorderArea.height>>1;
+
+  // set the rounded rect up, and let'er rip
+  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,out_rad);
+  outerPath.GetRoundedBorders(UL,UR,LL,LR);
+  outerPath.CalcInsetCurves(IUL,IUR,ILL,ILR,border);
+
+  // TOP LINE -- construct and divide the curves first, then put together our top and bottom paths
+  if(0==border.top)
+    return;
+  // construct and divide the curves needed
+  UL.MidPointDivide(&cr1,&cr2);
+  UR.MidPointDivide(&cr3,&cr4);
+  IUL.MidPointDivide(&Icr1,&Icr2);
+  IUR.MidPointDivide(&Icr3,&Icr4);
+
+  // the outer part of the path
+  np=0;
+  thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
+  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+  thePath[np++].MoveTo(cr3.mAnc1.x, cr3.mAnc1.y);
+  thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
+  thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
+ 
+  thePath[np++].MoveTo(Icr3.mAnc2.x,Icr3.mAnc2.y);
+  thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
+  thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
+  thePath[np++].MoveTo(Icr2.mAnc2.x, Icr2.mAnc2.y);
+  thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
+  thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
+
+  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_TOP,border,twipsPerPixel);
+
+  // RIGHT  LINE ----------------------------------------------------------------
+  if(0==border.right)
+    return;
+  LR.MidPointDivide(&cr2,&cr3);
+  ILR.MidPointDivide(&Icr2,&Icr3);
+  np=0;
+  thePath[np++].MoveTo(cr4.mAnc1.x,cr4.mAnc1.y);
+  thePath[np++].MoveTo(cr4.mCon.x, cr4.mCon.y);
+  thePath[np++].MoveTo(cr4.mAnc2.x,cr4.mAnc2.y);
+  thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
+  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+  thePath[np++].MoveTo(cr2.mAnc2.x,cr2.mAnc2.y);
+
+  thePath[np++].MoveTo(Icr2.mAnc2.x,Icr2.mAnc2.y);
+  thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
+  thePath[np++].MoveTo(Icr2.mAnc1.x,Icr2.mAnc1.y);
+  thePath[np++].MoveTo(Icr4.mAnc2.x,Icr4.mAnc2.y);
+  thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
+  thePath[np++].MoveTo(Icr4.mAnc1.x,Icr4.mAnc1.y);
+
+  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_RIGHT,border,twipsPerPixel);
+
+  // bottom line ----------------------------------------------------------------
+  if(0==border.bottom)
+    return;
+  LL.MidPointDivide(&cr2,&cr4);
+  ILL.MidPointDivide(&Icr2,&Icr4);
+  np=0;
+  thePath[np++].MoveTo(cr3.mAnc1.x,cr3.mAnc1.y);
+  thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
+  thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
+  thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
+  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+
+  thePath[np++].MoveTo(Icr2.mAnc2.x,Icr2.mAnc2.y);
+  thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
+  thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
+  thePath[np++].MoveTo(Icr3.mAnc2.x, Icr3.mAnc2.y);
+  thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
+  thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
+  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_BOTTOM,border,twipsPerPixel);
+
+  // left line ----------------------------------------------------------------
+  if(0==border.left)
+    return;
+  np=0;
+  thePath[np++].MoveTo(cr4.mAnc1.x,cr4.mAnc1.y);
+  thePath[np++].MoveTo(cr4.mCon.x, cr4.mCon.y);
+  thePath[np++].MoveTo(cr4.mAnc2.x, cr4.mAnc2.y);
+  thePath[np++].MoveTo(cr1.mAnc1.x, cr1.mAnc1.y);
+  thePath[np++].MoveTo(cr1.mCon.x, cr1.mCon.y);
+  thePath[np++].MoveTo(cr1.mAnc2.x, cr1.mAnc2.y);
+
+
+  thePath[np++].MoveTo(Icr1.mAnc2.x,Icr1.mAnc2.y);
+  thePath[np++].MoveTo(Icr1.mCon.x, Icr1.mCon.y);
+  thePath[np++].MoveTo(Icr1.mAnc1.x, Icr1.mAnc1.y);
+  thePath[np++].MoveTo(Icr4.mAnc2.x, Icr4.mAnc2.y);
+  thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
+  thePath[np++].MoveTo(Icr4.mAnc1.x, Icr4.mAnc1.y);
+
+  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_LEFT,border,twipsPerPixel);
+}
+
+static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32   curIndex);
+
+/** ---------------------------------------------------
+ *  Process the passed in path so it can be rendered with CSS borderStyle information
+ *	@update 3/26/99 dwc
+ */
+void 
+nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,
+                        const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
+                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel)
+{
+QBCurve   thecurve,cr1,cr2,cr3,cr4;
+nscolor   sideColor;
+nsPoint   thePath[MAXPATHSIZE];
+nsPoint   polypath[MAXPOLYPATHSIZE];
+PRInt32   curIndex;
+PRInt8    border_Style;
+
+  // set the style information
+  aBorderStyle.GetBorderColor(aSide,sideColor);
+  aRenderingContext.SetColor ( sideColor );
+
+  // if the border is thin, just draw it 
+  if (aBorThick.top<aTwipsPerPixel) {
+    // NOTHING FANCY JUST DRAW OUR OUTSIDE BORDER
+    thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
+    thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
+    aRenderingContext.DrawLine(aPoints[2].x,aPoints[2].y,aPoints[3].x,aPoints[3].y);
+    thecurve.SetPoints(aPoints[3].x,aPoints[3].y,aPoints[4].x,aPoints[4].y,aPoints[5].x,aPoints[5].y);
+    thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
+  } else {
+    
+    border_Style = aBorderStyle.GetBorderStyle(aSide);
+    switch (border_Style){
+      case NS_STYLE_BORDER_STYLE_OUTSET:
+      case NS_STYLE_BORDER_STYLE_INSET:
+        {
+        const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+        aBorderStyle.GetBorderColor(aSide,sideColor);
+        aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
+        }
+      case NS_STYLE_BORDER_STYLE_SOLID:
+        polypath[0].x = aPoints[0].x;
+        polypath[0].y = aPoints[0].y;
+        curIndex = 1;
+        GetPath(aPoints,polypath,&curIndex,eOutside);
+        polypath[curIndex].x = aPoints[6].x;
+        polypath[curIndex].y = aPoints[6].y;
+        curIndex++;
+        GetPath(aPoints,polypath,&curIndex,eInside);
+        polypath[curIndex].x = aPoints[0].x;
+        polypath[curIndex].y = aPoints[0].y;
+        curIndex++;
+        //aRenderingContext.FillPolygon(polypath,curIndex);    put back
+        sideColor = NS_RGB(0,255,0);
+        aRenderingContext.SetColor ( sideColor );
+        AntiAliasPoly(aRenderingContext,polypath,curIndex);
+
+       break;
+      case NS_STYLE_BORDER_STYLE_DOUBLE:
+        polypath[0].x = aPoints[0].x;
+        polypath[0].y = aPoints[0].y;
+        curIndex = 1;
+        GetPath(aPoints,polypath,&curIndex,eOutside);
+        aRenderingContext.DrawPolyline(polypath,curIndex);
+        polypath[0].x = aPoints[6].x;
+        polypath[0].y = aPoints[6].y;
+        curIndex = 1;
+        GetPath(aPoints,polypath,&curIndex,eInside);
+        aRenderingContext.DrawPolyline(polypath,curIndex);
+        break;
+      case NS_STYLE_BORDER_STYLE_NONE:
+      case NS_STYLE_BORDER_STYLE_BLANK:
+        break;
+      case NS_STYLE_BORDER_STYLE_DOTTED:
+      case NS_STYLE_BORDER_STYLE_DASHED:
+        break;
+      case NS_STYLE_BORDER_STYLE_RIDGE:
+      case NS_STYLE_BORDER_STYLE_GROOVE:
+        {
+        const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+        aBorderStyle.GetBorderColor(aSide,sideColor);
+        aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
+
+
+        polypath[0].x = aPoints[0].x;
+        polypath[0].y = aPoints[0].y;
+        curIndex = 1;
+        GetPath(aPoints,polypath,&curIndex,eOutside);
+        polypath[curIndex].x = (aPoints[5].x + aPoints[6].x)>>1;
+        polypath[curIndex].y = (aPoints[5].y + aPoints[6].y)>>1;
+        curIndex++;
+        GetPath(aPoints,polypath,&curIndex,eCalcRev,.5);
+        polypath[curIndex].x = aPoints[0].x;
+        polypath[curIndex].y = aPoints[0].y;
+        curIndex++;
+        aRenderingContext.FillPolygon(polypath,curIndex);
+
+        aRenderingContext.SetColor ( MakeBevelColor (aSide, 
+                                                ((border_Style == NS_STYLE_BORDER_STYLE_RIDGE) ?
+                                                NS_STYLE_BORDER_STYLE_GROOVE :
+                                                NS_STYLE_BORDER_STYLE_RIDGE), 
+                                                bgColor->mBackgroundColor,sideColor, PR_TRUE));
+       
+        polypath[0].x = (aPoints[0].x + aPoints[11].x)>>1;
+        polypath[0].y = (aPoints[0].y + aPoints[11].y)>>1;
+        curIndex = 1;
+        GetPath(aPoints,polypath,&curIndex,eCalc,.5);
+        polypath[curIndex].x = aPoints[6].x ;
+        polypath[curIndex].y = aPoints[6].y;
+        curIndex++;
+        GetPath(aPoints,polypath,&curIndex,eInside);
+        polypath[curIndex].x = aPoints[0].x;
+        polypath[curIndex].y = aPoints[0].y;
+        curIndex++;
+        aRenderingContext.FillPolygon(polypath,curIndex);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+/** ---------------------------------------------------
+ *  AntiAlias the polygon
+ *	@update 4/13/99 dwc
+ */
+static void
+AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32   aCurIndex)
+{
+PRInt32 i;
+
+  for(i=1;i<aCurIndex;i++) {
+    aRenderingContext.DrawLine(aPoints[i-1].x,aPoints[i-1].y,aPoints[i].x,aPoints[i].y);
+  }
+}
+
+
+/** ---------------------------------------------------
+ *  Inset the rounded rect in x and y
+ *	@update 4/13/99 dwc
+ */
+void 
+RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder)
+{
+PRInt32   nLeft,nTop,nRight,nBottom;
+
+  nLeft = mOuterLeft+aBorder.left;
+  nTop = mOuterTop+aBorder.top;
+  nRight = mOuterRight-aBorder.right;
+  nBottom = mOuterBottom-aBorder.bottom;
+
+  // set the passed in curves to the rounded borders of the rectangle
+  aULCurve.SetPoints(nLeft,mInnerTop,nLeft,nTop,mInnerLeft,nTop);
+  aURCurve.SetPoints(mInnerRight,nTop,nRight,nTop,nRight,mInnerTop);
+  aLRCurve.SetPoints(nRight,mInnerBottom,nRight,nBottom,mInnerRight,nBottom);
+  aLLCurve.SetPoints(mInnerLeft,nBottom,nLeft,nBottom,nLeft,mInnerBottom);
+
+}
+
+/** ---------------------------------------------------
+ *  Set the Rounded rects coordinates
+ *	@update 4/13/99 dwc
+ */
+void 
+RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius)
+{
+
+  // important coordinates that the path hits
+  mOuterLeft = aLeft;
+  mOuterRight = aLeft + aWidth;
+  mOuterTop = aTop;
+  mOuterBottom = aTop+aHeight;
+  mInnerLeft = mOuterLeft + aRadius;
+  mInnerRight = mOuterRight - aRadius;
+  mInnerTop = mOuterTop + aRadius;
+  mInnerBottom = mOuterBottom - aRadius;
+
+}
+
+/** ---------------------------------------------------
+ *  Set the Rounded rects coordinates
+ *	@update 4/13/99 dwc
+ */
+void 
+RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve)
+{
+
+  // set the passed in curves to the rounded borders of the rectangle
+  aULCurve.SetPoints(mOuterLeft,mInnerTop,mOuterLeft,mOuterTop,mInnerLeft,mOuterTop);
+  aURCurve.SetPoints(mInnerRight,mOuterTop,mOuterRight,mOuterTop,mOuterRight,mInnerTop);
+  aLRCurve.SetPoints(mOuterRight,mInnerBottom,mOuterRight,mOuterBottom,mInnerRight,mOuterBottom);
+  aLLCurve.SetPoints(mInnerLeft,mOuterBottom,mOuterLeft,mOuterBottom,mOuterLeft,mInnerBottom);
+}
+
+/** ---------------------------------------------------
+ *  Given a qbezier path, convert it into a polygon path
+ *	@update 3/26/99 dwc
+ */
+static void 
+GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,float aFrac)
+{
+QBCurve thecurve;
+
+  switch (aPathType) {
+    case eOutside:
+      thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      aPolyPath[*aCurIndex].x = aPoints[3].x;
+      aPolyPath[*aCurIndex].y = aPoints[3].y;
+      (*aCurIndex)++;
+      thecurve.SetPoints(aPoints[3].x,aPoints[3].y,aPoints[4].x,aPoints[4].y,aPoints[5].x,aPoints[5].y);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      break;
+    case eInside:
+      thecurve.SetPoints(aPoints[6].x,aPoints[6].y,aPoints[7].x,aPoints[7].y,aPoints[8].x,aPoints[8].y);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      aPolyPath[*aCurIndex].x = aPoints[9].x;
+      aPolyPath[*aCurIndex].y = aPoints[9].y;
+      (*aCurIndex)++;
+      thecurve.SetPoints(aPoints[9].x,aPoints[9].y,aPoints[10].x,aPoints[10].y,aPoints[11].x,aPoints[11].y);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+     break;
+    case eCalc:
+      thecurve.SetPoints( (aPoints[0].x+aPoints[11].x)>>1,(aPoints[0].y+aPoints[11].y)>>1,
+                          (aPoints[1].x+aPoints[10].x)>>1,(aPoints[1].y+aPoints[10].y)>>1,
+                          (aPoints[2].x+aPoints[9].x)>>1,(aPoints[2].y+aPoints[9].y)>>1);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      aPolyPath[*aCurIndex].x = (aPoints[3].x+aPoints[8].x)>>1;
+      aPolyPath[*aCurIndex].y = (aPoints[3].y+aPoints[8].y)>>1;
+      (*aCurIndex)++;
+      thecurve.SetPoints( (aPoints[3].x+aPoints[8].x)>>1,(aPoints[3].y+aPoints[8].y)>>1,
+                          (aPoints[4].x+aPoints[7].x)>>1,(aPoints[4].y+aPoints[7].y)>>1,
+                          (aPoints[5].x+aPoints[6].x)>>1,(aPoints[5].y+aPoints[6].y)>>1);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      break;
+    case eCalcRev:
+      thecurve.SetPoints( (aPoints[5].x+aPoints[6].x)>>1,(aPoints[5].y+aPoints[6].y)>>1,
+                          (aPoints[4].x+aPoints[7].x)>>1,(aPoints[4].y+aPoints[7].y)>>1,
+                          (aPoints[3].x+aPoints[8].x)>>1,(aPoints[3].y+aPoints[8].y)>>1);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      aPolyPath[*aCurIndex].x = (aPoints[2].x+aPoints[9].x)>>1;
+      aPolyPath[*aCurIndex].y = (aPoints[2].y+aPoints[9].y)>>1;
+      (*aCurIndex)++;
+      thecurve.SetPoints( (aPoints[2].x+aPoints[9].x)>>1,(aPoints[2].y+aPoints[9].y)>>1,
+                          (aPoints[1].x+aPoints[10].x)>>1,(aPoints[1].y+aPoints[10].y)>>1,
+                          (aPoints[0].x+aPoints[11].x)>>1,(aPoints[0].y+aPoints[11].y)>>1);
+      thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      break;
+  } 
+}
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
+ *  else it is so small that it can be approximated by 2 lineto calls
+ *  @param aRenderingContext -- The RenderingContext to use to draw with
+ *  @param aPointArray[] -- A list of points we can put line calls into instead of drawing.  If null, lines are drawn
+ *  @param aCurInex -- a pointer to an Integer that tells were to put the points into the array, incremented when finished
+ *	@update 3/26/99 dwc
+ */
+void 
+QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
+{
+QBCurve		curve1,curve2;
+PRInt16		fx,fy,smag;
+
+  // divide the curve into 2 pieces
+	MidPointDivide(&curve1,&curve2);
+	
+	fx = (PRInt16)abs(curve1.mAnc2.x - this->mCon.x);
+	fy = (PRInt16)abs(curve1.mAnc2.y - this->mCon.y);
+
+	smag = fx+fy-(PR_MIN(fx,fy)>>1);
+  //smag = fx*fx + fy*fy;
+ 
+	if (smag>2){
+		// split the curve again
+    curve1.SubDivide(aRenderingContext,aPointArray,aCurIndex);
+    curve2.SubDivide(aRenderingContext,aPointArray,aCurIndex);
+	}else{
+    if(aPointArray ) {
+      // save the points for further processing
+      aPointArray[*aCurIndex].x = curve1.mAnc2.x;
+      aPointArray[*aCurIndex].y = curve1.mAnc2.y;
+      (*aCurIndex)++;
+      aPointArray[*aCurIndex].x = curve2.mAnc2.x;
+      aPointArray[*aCurIndex].y = curve2.mAnc2.y;
+      (*aCurIndex)++;
+    }else{
+		  // draw the curve 
+      aRenderingContext->DrawLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
+      aRenderingContext->DrawLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
+    }
+	}
+}
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic Bezier curve at the mid-point
+ *	@update 3/26/99 dwc
+ *  @param aCurve1 -- Curve 1 as a result of the division
+ *  @param aCurve2 -- Curve 2 as a result of the division
+ */
+void 
+QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
+{
+nsPoint	a1,control1,control2;
+
+  // do the math (averages inline)
+  control1.x = (PRInt32)((mAnc1.x + mCon.x)>>1);
+	control1.y = (PRInt32)((mAnc1.y + mCon.y)>>1);
+
+  control2.x = (PRInt32)((mAnc2.x + mCon.x)>>1);
+	control2.y = (PRInt32)((mAnc2.y + mCon.y)>>1);
+
+  a1.x = (PRInt32)((control1.x + control2.x)>>1);
+	a1.y = (PRInt32)((control1.y + control2.y)>>1);
+
+  // put the math into our 2 new curves
+  A->mAnc1 = this->mAnc1;
+  A->mCon = control1;
+  A->mAnc2 = a1;
+  B->mAnc1 = a1;
+  B->mCon = control2;
+  B->mAnc2 = this->mAnc2;
 }
