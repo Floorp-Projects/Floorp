@@ -33,6 +33,7 @@ CPPSRCS= \
 	nsWebShellWindow.cpp	\
 	nsAppShellFactory.cpp	\
 	nsCommandLineService.cpp \
+	nsFileLocations.cpp     \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

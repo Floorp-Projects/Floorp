@@ -30,6 +30,7 @@ EXPORTS =                         \
 	nsICmdLineService.h	  \
 	nsIWidgetController.h     \
 	nsIXULWindowCallbacks.h   \
+	nsFileLocations.h         \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
