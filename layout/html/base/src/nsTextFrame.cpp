@@ -966,11 +966,14 @@ nsContinuingTextFrame::Destroy(nsIPresContext* aPresContext)
 nsIFrame*
 nsContinuingTextFrame::GetFirstInFlow() const
 {
-  nsContinuingTextFrame* firstInFlow = (nsContinuingTextFrame*)this;
-  while (firstInFlow->mPrevInFlow)  {
-    firstInFlow = (nsContinuingTextFrame*)firstInFlow->mPrevInFlow;
-  }
-  NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
+  // Can't cast to |nsContinuingTextFrame*| because the first one isn't.
+  nsIFrame *firstInFlow,
+           *previous = NS_CONST_CAST(nsIFrame*,
+                                     NS_STATIC_CAST(const nsIFrame*, this));
+  do {
+    firstInFlow = previous;
+    firstInFlow->GetPrevInFlow(&previous);
+  } while (previous);
   return firstInFlow;
 }
 
