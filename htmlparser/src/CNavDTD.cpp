@@ -1163,7 +1163,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
         if(0!=strchr(listtags,aChild)) {
           //This code was added to enforce the rule that listitems autoclose prior listitems. 
           //Stylistic tags (including <A>) that get in the way are simply out of luck.
-          result=false;
+          result=PR_FALSE;
         }
         else result=PRBool(0!=strchr(gTagSet1,aChild));
       }
