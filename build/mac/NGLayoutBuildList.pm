@@ -1236,11 +1236,36 @@ sub BuildMailNewsProjects()
 
 sub BuildAppRunner()
 {
-	unless( $main::build{xpapp} ) { return; }
+	unless( $main::build{apprunner} ) { return; }
 	_assertRightDirectory();
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",			"apprunner$D", "apprunner.toc", 0, 0, 1);
+	
+	# copy command line documents into the Apprunner folder and set correctly the signature
+	my($dist_dir) = _getDistDirectory();
+	my($cmd_file_path) = ":mozilla:xpfe:bootstrap:";
+	my($cmd_file) = "";
+
+	$cmd_file = "Mozilla Addressbook";
+	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
+	$cmd_file = "Mozilla Editor";
+	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
+	$cmd_file = "Mozilla Message Compose";
+	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
+	$cmd_file = "Mozilla Messenger";
+	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+
+	$cmd_file = "Mozilla Preference";
+	copy( $cmd_file_path . $cmd_file, $dist_dir . $cmd_file );
+	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 }
 
 #//--------------------------------------------------------------------------------------------------
