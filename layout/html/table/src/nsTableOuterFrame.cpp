@@ -1542,12 +1542,19 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
   rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
   nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
+  nsRect* overflowStorage = nsnull;
+  nsRect  overflow;
+  if (oldOverflowArea) {
+    overflow = *oldOverflowArea;
+    overflowStorage = &overflow;
+  }
+
   UpdateReflowMetrics(aPresContext, captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
   PRBool innerMoved = (innerOrigin.x != prevInnerRect.x) || (innerOrigin.y != prevInnerRect.y);
   InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE,
-                   oldOverflowArea);
+                   overflowStorage);
   return rv;
 }
 
@@ -1595,7 +1602,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
     nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
     PRBool innerMoved = (innerRect.x != innerOrigin.x) ||
                          (innerRect.y != innerOrigin.y);
-	nsSize desSize = nsSize(aDesiredSize.width,
+    nsSize desSize = nsSize(aDesiredSize.width,
                      aDesiredSize.height);
     InvalidateDamage(aPresContext, (PRUint8) NO_SIDE, desSize, innerMoved, PR_FALSE,
                      oldOverflowArea);
@@ -1758,12 +1765,19 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
     aOuterMet.mMaxElementWidth = innerMet.mMaxElementWidth;
   }
   nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
+  nsRect* overflowStorage = nsnull;
+  nsRect  overflow;
+  if (oldOverflowArea) {
+    overflow = *oldOverflowArea;
+    overflowStorage = &overflow;
+  }
+  
   UpdateReflowMetrics(aPresContext, captionSide, aOuterMet, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
   nsSize desSize(aOuterMet.width, aOuterMet.height);
   InvalidateDamage(aPresContext, captionSide, desSize,
                    (innerSize.width != priorInnerSize.width), captionMoved,
-                   oldOverflowArea);
+                   overflowStorage);
 
   return rv;
 }
@@ -1842,12 +1856,18 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
                          captionOrigin.x, captionOrigin.y, 0);
 
   nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
+  nsRect* overflowStorage = nsnull;
+  nsRect  overflow;
+  if (oldOverflowArea) {
+    overflow = *oldOverflowArea;
+    overflowStorage = &overflow;
+  }
   UpdateReflowMetrics(aPresContext, captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto, aOuterRS.availableWidth);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
   PRBool innerMoved = innerOrigin != prevInnerOrigin;
   InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE,
-                   oldOverflowArea);
+                   overflowStorage);
 
   return rv;
 }
