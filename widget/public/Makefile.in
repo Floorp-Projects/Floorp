@@ -77,7 +77,6 @@ XPIDLSRCS	= \
 		nsIBaseWindow.idl \
 		nsIBidiKeyboard.idl \
 		nsIXRemoteClient.idl \
-		nsIEventSink.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
