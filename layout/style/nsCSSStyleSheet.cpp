@@ -28,6 +28,7 @@
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -548,8 +549,8 @@ public:
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const;
-  NS_IMETHOD AppendMedium(const nsString& aMedium);
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
+  NS_IMETHOD AppendMedium(nsIAtom* aMedium);
 
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -625,7 +626,7 @@ protected:
 
   nsIURLPtr             mURL;
   nsString              mTitle;
-  nsVoidArray           mMedia;
+  nsISupportsArray*     mMedia;
   nsICSSStyleSheetPtr   mFirstChild;
   nsISupportsArrayPtr   mOrderedRules;
   nsISupportsArrayPtr   mWeightedRules;
@@ -681,7 +682,7 @@ static PRInt32 gInstanceCount;
 
 CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
   : nsICSSStyleSheet(),
-    mURL(nsnull), mTitle(), mMedia(),
+    mURL(nsnull), mTitle(), mMedia(nsnull),
     mFirstChild(nsnull), 
     mOrderedRules(nsnull), mWeightedRules(nsnull), 
     mNext(nsnull),
@@ -719,11 +720,7 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   --gInstanceCount;
   fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
 #endif
-  PRInt32 count = mMedia.Count();
-  while (0 < count) {
-    nsString* medium = (nsString*)mMedia.ElementAt(--count);
-    delete medium;
-  }
+  NS_IF_RELEASE(mMedia);
   if (mFirstChild.IsNotNull()) {
     nsICSSStyleSheet* child = mFirstChild;
     while (nsnull != child) {
@@ -953,9 +950,30 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
+  nsIAtom* presMedium = nsnull;
+  aPresContext->GetMedium(presMedium);
   nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
-    matchCount += child->RulesMatching(aPresContext, aContent, aParentContext, aResults);
+    PRBool mediumOK = PR_FALSE;
+    PRInt32 mediumCount;
+    child->GetMediumCount(mediumCount);
+    if (0 < mediumCount) {
+      PRInt32 index = 0;
+      nsIAtom* medium;
+      while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
+        child->GetMediumAt(index++, medium);
+        if ((medium == nsLayoutAtoms::all) || (medium == presMedium)) {
+          mediumOK = PR_TRUE;
+        }
+        NS_RELEASE(medium);
+      }
+    }
+    else {
+      mediumOK = PR_TRUE;
+    }
+    if (mediumOK) {
+      matchCount += child->RulesMatching(aPresContext, aContent, aParentContext, aResults);
+    }
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
@@ -998,6 +1016,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_IF_RELEASE(idAtom);
     NS_IF_RELEASE(classAtom);
   }
+  NS_IF_RELEASE(presMedium);
   return matchCount;
 }
 
@@ -1078,10 +1097,31 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
+  nsIAtom* presMedium = nsnull;
+  aPresContext->GetMedium(presMedium);
   nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
-    matchCount += child->RulesMatching(aPresContext, aParentContent, aPseudoTag, 
-                                       aParentContext, aResults);
+    PRBool mediumOK = PR_FALSE;
+    PRInt32 mediumCount;
+    child->GetMediumCount(mediumCount);
+    if (0 < mediumCount) {
+      PRInt32 index = 0;
+      nsIAtom* medium;
+      while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
+        child->GetMediumAt(index++, medium);
+        if ((medium == nsLayoutAtoms::all) || (medium == presMedium)) {
+          mediumOK = PR_TRUE;
+        }
+        NS_RELEASE(medium);
+      }
+    }
+    else {
+      mediumOK = PR_TRUE;
+    }
+    if (mediumOK) {
+      matchCount += child->RulesMatching(aPresContext, aParentContent, aPseudoTag, 
+                                         aParentContext, aResults);
+    }
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
@@ -1107,6 +1147,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     NS_RELEASE(list2);
 #endif
   }
+  NS_IF_RELEASE(presMedium);
   return matchCount;
 }
 
@@ -1144,28 +1185,36 @@ CSSStyleSheetImpl::GetType(nsString& aType) const
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
 {
-  aCount = mMedia.Count();
+  aCount = ((nsnull != mMedia) ? mMedia->Count() : 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsString& aMedium) const
+CSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
 {
-  nsString* medium = (nsString*)mMedia.ElementAt(aIndex);
+  nsIAtom* medium = nsnull;
+  if (nsnull != mMedia) {
+    medium = (nsIAtom*)mMedia->ElementAt(aIndex);
+  }
   if (nsnull != medium) {
-    aMedium = *medium;
+    aMedium = medium;
     return NS_OK;
   }
-  aMedium.Truncate();
+  aMedium = nsnull;
   return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::AppendMedium(const nsString& aMedium)
+CSSStyleSheetImpl::AppendMedium(nsIAtom* aMedium)
 {
-  nsString* medium = new nsString(aMedium);
-  mMedia.AppendElement(medium);
-  return NS_OK;
+  nsresult result = NS_OK;
+  if (nsnull == mMedia) {
+    result = NS_NewISupportsArray(&mMedia);
+  }
+  if (NS_SUCCEEDED(result) && (nsnull != mMedia)) {
+    mMedia->AppendElement(aMedium);
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1513,13 +1562,17 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::GetMedia(nsString& aMedia)
 {
   aMedia.Truncate();
-  PRInt32 count = mMedia.Count();
-  PRInt32 index = 0;
-  while (index < count) {
-    nsString* medium = (nsString*)mMedia.ElementAt(index++);
-    aMedia.Append(*medium);
-    if (index < count) {
-      aMedia.Append(", ");
+  if (nsnull != mMedia) {
+    PRInt32 count = mMedia->Count();
+    PRInt32 index = 0;
+    nsAutoString buffer;
+    while (index < count) {
+      nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
+      medium->ToString(buffer);
+      aMedia.Append(buffer);
+      if (index < count) {
+        aMedia.Append(", ");
+      }
     }
   }
   return NS_OK;
