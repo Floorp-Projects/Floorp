@@ -799,4 +799,9 @@ NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
   return NS_OK;
 }
 
+NS_METHOD nsBaseWidget::EnableFileDrop(PRBool aEnable)
+{
+  return NS_OK;
+}
+
 
