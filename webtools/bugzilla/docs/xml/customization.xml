@@ -541,7 +541,7 @@
       allowed to do what. The relevant function is called 
       <filename>CheckCanChangeField()</filename>,
       and is found in <filename>process_bug.cgi</filename> in your 
-      Bugzilla directory. If you open that file and grep for 
+      Bugzilla directory. If you open that file and search for 
       "sub CheckCanChangeField", you'll find it.
     </para>
     
