@@ -145,10 +145,11 @@
 
 (defun depict-nonterminal-argument-symbol (markup-stream argument)
   (depict-char-style (markup-stream ':nonterminal-argument)
-    (depict markup-stream
-            (if (member argument *special-nonterminal-arguments*)
-              argument
-              (symbol-upper-mixed-case-name argument)))))
+    (let ((argument (symbol-abbreviation argument)))
+      (depict markup-stream
+              (if (member argument *special-nonterminal-arguments*)
+                argument
+                (symbol-upper-mixed-case-name argument))))))
 
 (defun depict-nonterminal-argument (markup-stream argument)
   (depict-char-style (markup-stream ':nonterminal)

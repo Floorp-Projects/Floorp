@@ -70,6 +70,7 @@
 (define-html 'link 1 0 0 1 :self-closing t)
 (define-html 'ol 1 1 1 2 :indent 2)
 (define-html 'p 1 0 0 2)
+(define-html 'script 0 0 0 0)
 (define-html 'span 0 0 0 0)
 (define-html 'strong 0 0 0 0)
 (define-html 'sub 0 0 0 0)
@@ -217,6 +218,16 @@
         (incf *current-html-pos* (length html-string))))))
 
 
+; Return true if the value string contains a character that would require an attribute to be quoted.
+; For convenience, this returns true if value contains a period, even though strictly speaking periods do
+; not force quoting.
+(defun attribute-value-needs-quotes (value)
+  (dotimes (i (length value) nil)
+    (let ((ch (char value i)))
+      (unless (or (char<= #\0 ch #\9) (char<= #\A ch #\Z) (char<= #\a ch #\z) (char= ch #\-))
+        (return t)))))
+
+
 ; Emit the html tag with the given tag-symbol (name), attributes, and contents.
 (defun write-html-tag (stream tag-symbol attributes contents)
   (let ((element (assert-non-null (get tag-symbol 'html-element))))
@@ -229,7 +240,7 @@
           (write-html-source stream 'space)
           (write-html-string stream (string-downcase (symbol-name name)))
           (when value
-            (write-html-string stream (format nil "=\"~A\"" value)))))
+            (write-html-string stream (format nil (if (attribute-value-needs-quotes value) "=\"~A\"" "=~A") value)))))
       (write-html-string stream ">")
       (emit-html-newlines-and-indent stream (html-element-newlines-begin element))
       (dolist (html-source contents)
@@ -323,28 +334,28 @@
     (:tab3 nbsp nbsp nbsp)
     
     ;Symbols (-10 suffix means 10-point, etc.)
-    ((:bullet 1) #x2022)
+    ((:bullet 1) (:script "document.write(U_bull)"))                    ;#x2022
     ((:minus 1) "-")
-    ((:not-equal 1) #x2260)
-    ((:less-or-equal 1) #x2264)
-    ((:greater-or-equal 1) #x2265)
-    ((:infinity 1) #x221E)
+    ((:not-equal 1) (:script "document.write(U_ne)"))                   ;#x2260
+    ((:less-or-equal 1) (:script "document.write(U_le)"))               ;#x2264
+    ((:greater-or-equal 1) (:script "document.write(U_ge)"))            ;#x2265
+    ((:infinity 1) (:script "document.write(U_infin)"))                 ;#x221E
     ((:left-single-quote 1) #x2018)
     ((:right-single-quote 1) #x2019)
     ((:left-double-quote 1) #x201C)
     ((:right-double-quote 1) #x201D)
     ((:left-angle-quote 1) #x00AB)
     ((:right-angle-quote 1) #x00BB)
-    ((:bottom-10 1) (:symbol #\x5E)) ;#x22A5
-    ((:up-arrow-10 1) (:symbol #\xAD)) ;#x2191
-    ((:function-arrow-10 2) (:symbol #\xAE)) ;#x2192
-    ((:cartesian-product-10 2) #x00D7)
-    ((:identical-10 2) (:symbol #\xBA)) ;#x2261
-    ((:member-10 2) (:symbol #\xCE)) ;#x2208
-    ((:derives-10 2) (:symbol #\xDE)) ;#x21D2
-    ((:left-triangle-bracket-10 1) (:symbol #\xE1)) ;#x2329
-    ((:right-triangle-bracket-10 1) (:symbol #\xF1)) ;#x232A
-    ((:big-plus-10 2) (:symbol #\xA8)) ;#x271A
+    ((:bottom-10 1) (:script "document.write(U_perp)"))                 ;#x22A5
+    ((:up-arrow-10 1) (:script "document.write(U_uarr)"))               ;#x2191
+    ((:function-arrow-10 2) (:script "document.write(U_rarr)"))         ;#x2192
+    ((:cartesian-product-10 2) (:script "document.write(U_times)"))     ;#x00D7
+    ((:identical-10 2) (:script "document.write(U_equiv)"))             ;#x2261
+    ((:member-10 2) (:script "document.write(U_isin)"))                 ;#x2208
+    ((:derives-10 2) (:script "document.write(U_rArr)"))                ;#x21D2
+    ((:left-triangle-bracket-10 1) (:script "document.write(U_lang)"))  ;#x2329
+    ((:right-triangle-bracket-10 1) (:script "document.write(U_rang)")) ;#x232A
+    ((:big-plus-10 2) (:script "document.write(U_oplus)"))              ;#x2295
     
     ((:alpha 1) (:symbol "a"))
     ((:beta 1) (:symbol "b"))
@@ -386,6 +397,7 @@
     (:semantics-next (:nest :nowrap (p (class "semantics-next"))))
     
     ;Inline Styles
+    (:script (script (type "text/javascript")))
     (:symbol (span (class "symbol")))
     (:character-literal code)
     (:character-literal-control (span (class "control")))
@@ -468,7 +480,8 @@
     (depict-block-style (html-stream 'head)
       (depict-block-style (html-stream 'title)
         (markup-stream-append1 html-stream title))
-      (markup-stream-append1 html-stream '((link (rel "stylesheet") (href "styles.css")))))
+      (markup-stream-append1 html-stream '((link (rel "stylesheet") (href "styles.css"))))
+      (markup-stream-append1 html-stream '((script (type "text/javascript") (language "JavaScript1.2") (src "unicodeCompatibility.js")))))
     (depict-block-style (html-stream 'body)
       (funcall emitter html-stream))
     html-stream))
