@@ -848,7 +848,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
   if (NS_FAILED(rv))
     return rv;
 
-  // string names are in unicdoe
+  // string names are in unicode
   nsAutoString stringId;
   stringId.AssignWithConversion(aPrefName);
 
@@ -972,10 +972,7 @@ NS_IMETHODIMP nsPrefBranch::SecurityClearUserPref(const char *pref_name)
 //----------------------------------------------------------------------------
 
 nsPrefLocalizedString::nsPrefLocalizedString()
-: mUnicodeString(nsnull)
 {
-  nsresult rv;
-  mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 }
 
 nsPrefLocalizedString::~nsPrefLocalizedString()
