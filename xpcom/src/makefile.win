@@ -44,7 +44,6 @@ CPPSRCS =			\
 	nsDebug.cpp		\
 	nsHashtable.cpp		\
 	nsID.cpp		\
-	nsMalloc.cpp    	\
 	nsRepository.cpp	\
 	nsServiceManager.cpp	\
 	nsSupportsArray.cpp	\
@@ -55,7 +54,6 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsDebug.obj			\
 	.\$(OBJDIR)\nsHashtable.obj		\
 	.\$(OBJDIR)\nsID.obj			\
-	.\$(OBJDIR)\nsMalloc.obj		\
 	.\$(OBJDIR)\nsRepository.obj		\
 	.\$(OBJDIR)\nsServiceManager.obj	\
 	.\$(OBJDIR)\nsSupportsArray.obj		\
@@ -76,8 +74,6 @@ EXPORTS = \
 	nsISupportsArray.h	\
 	nsRepository.h		\
 	nsIEnumerator.h		\
-	nsIMalloc.h		\
-	nsMalloc.h		\
 	nsTraceRefcnt.h		\
 	nsVector.h		\
 	$(NULL)			

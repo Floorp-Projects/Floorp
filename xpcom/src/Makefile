@@ -25,7 +25,6 @@ CPPSRCS		= nsDebug.cpp \
 		  nsServiceManager.cpp \
 		  nsSupportsArray.cpp \
 		  nsRepository.cpp \
-		  nsMalloc.cpp \
 		  nsTraceRefcnt.cpp \
 		  $(NULL)
 
@@ -42,8 +41,6 @@ EXPORTS		= nsCom.h \
 		  nsISupportsArray.h \
 		  nsRepository.h \
 		  nsIEnumerator.h \
-		  nsIMalloc.h \
-		  nsMalloc.h \
 		  nsTraceRefcnt.h \
 		  nsVector.h \
 		  $(NULL)
