@@ -308,7 +308,7 @@ nsComponentsDlg::Show()
         GdkPixmap *checked = NULL;
         GdkBitmap *un_mask = NULL;
         GdkPixmap *unchecked = NULL;
-        gchar *dummy = "";
+        gchar *dummy[2] = { " ", " " };
         nsComponent *currComp = sCustomST->GetComponents()->GetHead();
         GtkWidget *descLongTable = NULL;
         GtkWidget *frame = NULL;
@@ -327,7 +327,7 @@ nsComponentsDlg::Show()
         // determine number of rows we'll need
         numRows = sCustomST->GetComponents()->GetLengthVisible();
         for (i = 0; i < numRows; i++)
-            gtk_clist_append(GTK_CLIST(list), &dummy);
+            gtk_clist_append(GTK_CLIST(list), dummy);
     
         style = gtk_widget_get_style(gCtx->window);
         checked = gdk_pixmap_create_from_xpm_d(gCtx->window->window, &ch_mask, 
