@@ -458,7 +458,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 	if(NS_FAILED(rv))
 		return rv;
 
-    nsAutoString leafName = folderName;
+    nsAutoString leafName (folderName, eOneByte);
     nsString folderNameStr;
     nsString parentName = leafName;
     PRInt32 folderStart = leafName.Find('/');
@@ -467,7 +467,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
         nsCOMPtr<nsIRDFResource> res;
         nsCOMPtr<nsIMsgFolder> parentFolder;
-        nsAutoString uri (mURI);
+        nsAutoString uri ((const char *) mURI, eOneByte);
         parentName.Right(leafName, leafName.Length() - folderStart - 1);
         parentName.Truncate(folderStart);
         path += parentName;
@@ -475,13 +475,12 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
         if (NS_FAILED(rv)) return rv;
         uri.Append('/');
         uri.Append(parentName);
-        rv = rdf->GetResource((const char *) nsAutoCString(uri),
+        rv = rdf->GetResource(uri.GetBuffer(),
                               getter_AddRefs(res));
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) return rv;
-        return parentFolder->CreateSubfolder((const char*)
-                                             nsAutoCString(leafName));
+        return parentFolder->CreateSubfolder(leafName.GetBuffer());
     }
     
     folderNameStr = leafName;
@@ -598,7 +597,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
 	nsImapURI2Name(kImapRootURI, mURI, folderName);
 	*name = folderName.ToNewCString();
     
-    return NS_OK;
+    return result;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetPrettyName(char ** prettyName)
@@ -984,7 +983,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
         m_haveDiscoverAllFolders = PR_TRUE;
 
     nsAutoString folderName = aSpec->allocatedPathName;
-    nsAutoString uri;
+    nsAutoString uri ((const char *)"", eOneByte);
     uri.Append(kImapRootURI);
     uri.Append('/');
     
@@ -1002,7 +1001,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 #endif 
     
 	nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource((const char *) nsAutoCString(uri), getter_AddRefs(res));
+    rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
     if (NS_FAILED(rv))
         return rv;
     // OK, this is purely temporary - we either need getParent, or
