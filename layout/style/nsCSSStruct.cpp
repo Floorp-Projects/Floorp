@@ -3007,7 +3007,7 @@ CSSDeclarationImpl::GetStyleImpact(PRInt32* aHint) const
   if (nsnull == aHint) {
     return NS_ERROR_NULL_POINTER;
   }
-  PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
+  PRInt32 hint = NS_STYLE_HINT_NONE;
   if (nsnull != mOrder) {
     PRInt32 count = mOrder->Count();
     PRInt32 index;
