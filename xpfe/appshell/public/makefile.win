@@ -28,6 +28,7 @@ EXPORTS =                         \
         nsICmdLineService.h	  \
         nsIWidgetController.h     \
         nsIXULWindowCallbacks.h   \
+        nsFileLocations.h         \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

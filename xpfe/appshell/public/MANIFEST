@@ -7,3 +7,4 @@ nsIAppShellService.h
 nsICmdLineService.h
 nsIWebShellWindow.h
 nsIWidgetController.h
+nsFileLocations.h

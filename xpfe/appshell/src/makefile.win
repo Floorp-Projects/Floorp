@@ -27,6 +27,7 @@ CPPSRCS=                                \
  nsWebShellWindow.cpp                   \
  nsAppShellFactory.cpp                  \
  nsCommandLineService.cpp               \
+ nsFileLocations.cpp                    \
  $(NULL)
 
 CPP_OBJS=                               \
@@ -35,6 +36,7 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \
  .\$(OBJDIR)\nsCommandLineService.obj   \
+ .\$(OBJDIR)\nsFileLocations.obj        \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
