@@ -169,7 +169,12 @@ typedef PRUint32 nsSplittableType;
  */
 typedef PRUint32 nsFrameState;
 
-#define NS_FRAME_IN_REFLOW 0x00000001
+#define NS_FRAME_IN_REFLOW    0x00000001
+
+// This bit is set when a frame is created. After it has been reflowed
+// once (during the DidReflow with a finished state) the bit is
+// cleared.
+#define NS_FRAME_FIRST_REFLOW 0x00000002
 
 //----------------------------------------------------------------------
 
