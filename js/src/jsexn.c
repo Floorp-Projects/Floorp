@@ -114,7 +114,7 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
             JS_free(cx, (void *)report->ucmessage);
         if (report->messageArgs) {
             args = report->messageArgs;
-            while (*args != NULL)
+            while (*args)
                 JS_free(cx, (void *)*args++);
             JS_free(cx, (void *)report->messageArgs);
         }
@@ -146,7 +146,7 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
     memset(newReport, 0, sizeof (JSErrorReport));
     newPrivate->errorReport = newReport;
 
-    if (report->filename != NULL) {
+    if (report->filename) {
         newReport->filename = JS_strdup(cx, report->filename);
         if (!newReport->filename)
             goto error;
@@ -167,7 +167,7 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
      * But we do need to copy uclinebuf, uctokenptr, because they're
      * pointers into internal tokenstream structs, and may go away.
      */
-    if (report->uclinebuf != NULL) {
+    if (report->uclinebuf) {
         capacity = js_strlen(report->uclinebuf) + 1;
         newReport->uclinebuf =
             (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
@@ -180,7 +180,7 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
         newReport->uclinebuf = newReport->uctokenptr = NULL;
     }
 
-    if (report->ucmessage != NULL) {
+    if (report->ucmessage) {
         capacity = js_strlen(report->ucmessage) + 1;
         newReport->ucmessage = (const jschar *)
             JS_malloc(cx, capacity * sizeof(jschar));
@@ -189,14 +189,14 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
         js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, capacity);
 
         if (report->messageArgs) {
-            for (i = 0; report->messageArgs[i] != NULL; i++)
+            for (i = 0; report->messageArgs[i]; i++)
                 continue;
             JS_ASSERT(i);
             newReport->messageArgs =
                 (const jschar **)JS_malloc(cx, (i + 1) * sizeof(jschar *));
             if (!newReport->messageArgs)
                 goto error;
-            for (i = 0; report->messageArgs[i] != NULL; i++) {
+            for (i = 0; report->messageArgs[i]; i++) {
                 capacity = js_strlen(report->messageArgs[i]) + 1;
                 newReport->messageArgs[i] =
                     (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
@@ -1035,6 +1035,7 @@ js_ReportUncaughtException(JSContext *cx)
     jsval exn;
     JSErrorReport *reportp, report;
     const char *bytes;
+    JSBool ok;
 
     if (!JS_IsExceptionPending(cx))
         return JS_TRUE;
@@ -1062,25 +1063,30 @@ js_ReportUncaughtException(JSContext *cx)
 
     str = js_ValueToString(cx, exn);
     bytes = str ? js_GetStringBytes(str) : "null";
+    ok = JS_TRUE;
 
     if (!reportp && exnObject) {
         jsval v;
         const char *filename;
         int32 lineno;
 
-        if (!JS_GetProperty(cx, exnObject, js_message_str, &v))
-            return JS_FALSE;
+        ok = JS_GetProperty(cx, exnObject, js_message_str, &v);
+        if (!ok)
+            goto out;
         bytes = JSVAL_IS_STRING(v) ? JS_GetStringBytes(JSVAL_TO_STRING(v)) : "";
 
-        if (!JS_GetProperty(cx, exnObject, js_filename_str, &v))
-            return JS_FALSE;
+        ok = JS_GetProperty(cx, exnObject, js_filename_str, &v);
+        if (!ok)
+            goto out;
         filename = JSVAL_IS_STRING(v) ? JS_GetStringBytes(JSVAL_TO_STRING(v))
                                       : "";
 
-        if (!JS_GetProperty(cx, exnObject, js_lineno_str, &v))
-            return JS_FALSE;
-        if (!js_ValueToInt32 (cx, v, &lineno))
-            return JS_FALSE;
+        ok = JS_GetProperty(cx, exnObject, js_lineno_str, &v);
+        if (!ok)
+            goto out;
+        ok = js_ValueToInt32 (cx, v, &lineno);
+        if (!ok)
+            goto out;
 
         reportp = &report;
         memset(&report, 0, sizeof report);
@@ -1097,10 +1103,11 @@ js_ReportUncaughtException(JSContext *cx)
         js_ReportErrorAgain(cx, bytes, reportp);
     }
 
-    if (exnObject != NULL)
-        js_RemoveRoot(cx->runtime, &exnObject);
     JS_ClearPendingException(cx);
-    return JS_TRUE;
+out:
+    if (exnObject)
+        js_RemoveRoot(cx->runtime, &exnObject);
+    return ok;
 }
 
 #endif /* JS_HAS_EXCEPTIONS */
