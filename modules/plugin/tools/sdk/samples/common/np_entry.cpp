@@ -207,18 +207,14 @@ short gResFile; // Refnum of the plugin's resource file
 
 NPError Private_Initialize(void)
 {
-  EnterCodeResource();
   NPError rv = NS_PluginInitialize();
-  ExitCodeResource();
   return rv;
 }
 
 void Private_Shutdown(void)
 {
-  EnterCodeResource();
   NS_PluginShutdown();
   __destroy_global_chain();
-  ExitCodeResource();
 }
 
 void SetUpQD(void);
@@ -297,7 +293,6 @@ RoutineDescriptor mainRD = BUILD_ROUTINE_DESCRIPTOR(uppNPP_MainEntryProcInfo, ma
 
 NPError main(NPNetscapeFuncs* aNPNFuncs, NPPluginFuncs* aNPPFuncs, NPP_ShutdownUPP* aUnloadUpp)
 {
-  EnterCodeResource();
   NPError rv = NPERR_NO_ERROR;
 
   if (aUnloadUpp == NULL)
@@ -316,7 +311,6 @@ NPError main(NPNetscapeFuncs* aNPNFuncs, NPPluginFuncs* aNPPFuncs, NPP_ShutdownU
   SetUpQD();
   rv = Private_Initialize();
 	
-  ExitCodeResource();
   return rv;
 }
 #endif //XP_MAC
