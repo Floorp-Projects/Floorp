@@ -7,7 +7,6 @@ nsICmdLineService.idl
 nsICommonDialogs.idl
 nsIDialogParamBlock.idl
 nsIFileLocator.idl
-nsISessionHistory.idl
 nsIWindowMediator.idl
 nsIXULWindow.idl
 nsIUserInfo.idl
