@@ -108,12 +108,19 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   NS_IF_RELEASE(mCurrentTargetContent);
 
   nsFrameState state;
+
+  NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null.  this should not happen.  see bug #13007");
+  if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
+
   mCurrentTarget->GetFrameState(&state);
   state |= NS_FRAME_EXTERNAL_REFERENCE;
   mCurrentTarget->SetFrameState(state);
 
   aStatus = nsEventStatus_eIgnore;
   
+  NS_ASSERTION(aEvent, "aEvent is null.  this should never happen");
+  if (!aEvent) return NS_ERROR_NULL_POINTER;
+
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     BeginTrackingDragGesture ( aEvent, aTargetFrame );
