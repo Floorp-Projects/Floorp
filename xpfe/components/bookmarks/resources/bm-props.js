@@ -42,37 +42,17 @@ var gFields;
 // that they are associated with.
 var gProperties;
 
-var Bookmarks;
+// All the bookmarks datasource
+var gBookmarks;
+
+// The ID of the current shown bookmark
 var gBookmarkID;
 
-function showDescription()
+function Init()
 {
   initServices();
   initBMService();
 
-  gBookmarkID = window.arguments[0];
-  var resource = RDF.GetResource(gBookmarkID);
-
-  // Check the description
-  var primaryType = BookmarksUtils.resolveType(resource);
-  var description = BookmarksUtils.getLocaleString("description_"+primaryType);
-  
-  var newBookmarkFolder = BookmarksUtils.getNewBookmarkFolder();
-  var newSearchFolder   = BookmarksUtils.getNewSearchFolder();
-
-  if (resource == newBookmarkFolder && resource == newSearchFolder)
-    description = description+" "+BookmarksUtils.getLocaleString("description_NewBookmarkAndSearchFolder")
-  else if (resource == newBookmarkFolder )
-    description = description+" "+BookmarksUtils.getLocaleString("description_NewBookmarkFolder")
-  else if (resource == newSearchFolder)
-    description = description+" "+BookmarksUtils.getLocaleString("description_NewSearchFolder");
-
-  var textNode = document.createTextNode(description);
-  document.getElementById("bookmarkDescription").appendChild(textNode);
-}
-
-function Init()
-{
   // This is the set of fields that are visible in the window.
   gFields     = ["name", "url", "shortcut", "description"];
 
@@ -83,17 +63,18 @@ function Init()
                  NC_NS + "ShortcutURL",
                  NC_NS + "Description"];
 
-  Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+  gBookmarks = RDF.GetDataSource("rdf:bookmarks");
+  gBookmarkID = window.arguments[0];
 
-  var x;
+  var i;
   var resource = RDF.GetResource(gBookmarkID);
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 
-  for (var i = 0; i < gFields.length; ++i) {
+  for (i = 0; i < gFields.length; ++i) {
     var field = document.getElementById(gFields[i]);
 
-    var value = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
+    var value = gBookmarks.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
 
     if (value)
       value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -108,81 +89,8 @@ function Init()
   title = title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
   propsWindow.setAttribute("title", title);
 
-  // check bookmark schedule
-  var scheduleArc = RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule");
-  value = Bookmarks.GetTarget(resource, scheduleArc, true);
-
-  if (value) {
-    value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-
-    if (value) {
-      var values = value.split("|");
-      if (values.length == 4) {
-        // get day range
-        var days = values[0];
-        var dayNode = document.getElementById("dayRange");
-        var dayItems = dayNode.childNodes[0].childNodes;
-        for (x=0; x < dayItems.length; ++x) {
-          if (dayItems[x].getAttribute("value") == days) {
-            dayNode.selectedItem = dayItems[x];
-            break;
-          }
-        }
-
-        // get hour range
-        var hours = values[1].split("-");
-        var startHour = "";
-        var endHour = "";
-
-        if (hours.length == 2) {
-          startHour = hours[0];
-          endHour = hours[1];
-        }
-
-        // set start hour
-        var startHourNode = document.getElementById("startHourRange");
-        var startHourItems = startHourNode.childNodes[0].childNodes;
-        for (x=0; x < startHourItems.length; ++x) {
-          if (startHourItems[x].getAttribute("value") == startHour) {
-            startHourNode.selectedItem = startHourItems[x];
-            break;
-          }
-        }
-
-        // set end hour
-        var endHourNode = document.getElementById("endHourRange");
-        var endHourItems = endHourNode.childNodes[0].childNodes;
-        for (x=0; x < endHourItems.length; ++x) {
-          if (endHourItems[x].getAttribute("value") == endHour) {
-            endHourNode.selectedItem = endHourItems[x];
-            break;
-          }
-        }
-
-        // get duration
-        var duration = values[2];
-        var durationNode = document.getElementById("duration");
-        durationNode.value = duration;
-
-        // get notification method
-        var method = values[3];
-        if (method.indexOf("icon") >= 0)
-          document.getElementById("bookmarkIcon").checked = true;
-
-        if (method.indexOf("sound") >= 0)
-          document.getElementById("playSound").checked = true;
-
-        if (method.indexOf("alert") >= 0)
-          document.getElementById("showAlert").checked = true;
-
-        if (method.indexOf("open") >= 0)
-          document.getElementById("openWindow").checked = true;
-      }
-    }
-  }
-
   // if its a container, disable some things
-  var isContainerFlag = RDFCU.IsContainer(Bookmarks, resource);
+  var isContainerFlag = RDFCU.IsContainer(gBookmarks, resource);
   if (!isContainerFlag) {
     // XXX To do: the "RDFCU.IsContainer" call above only works for RDF sequences;
     //            if its not a RDF sequence, we should to more checking to see if
@@ -202,7 +110,7 @@ function Init()
   }
 
   var showScheduling = false;
-  var url = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
+  var url = gBookmarks.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
   if (url) {
     url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     if (url.substr(0, 7).toLowerCase() == "http://" ||
@@ -213,15 +121,86 @@ function Init()
 
   if (!showScheduling) {
     // only allow scheduling of http/https URLs
-    document.getElementById("ScheduleTab").setAttribute("hidden", "true");
-    document.getElementById("NotifyTab").setAttribute("hidden", "true");
+    document.getElementById("scheduling").setAttribute("hidden", "true");
+  } else {
+    // check bookmark schedule
+    var scheduleArc = RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule");
+    value = gBookmarks.GetTarget(resource, scheduleArc, true);
+  
+    if (value) {
+      value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  
+      if (value) {
+        var values = value.split("|");
+        if (values.length == 4) {
+          // get day range
+          var days = values[0];
+          var dayNode = document.getElementById("dayRange");
+          var dayItems = dayNode.childNodes[0].childNodes;
+          for (i=0; i < dayItems.length; ++i) {
+            if (dayItems[i].getAttribute("value") == days) {
+              dayNode.selectedItem = dayItems[i];
+              break;
+            }
+          }
+          // Set up the enabled of controls on the scheduling panels
+          dayRangeChange(dayNode);
+  
+          // get hour range
+          var hours = values[1].split("-");
+          var startHour = "";
+          var endHour = "";
+  
+          if (hours.length == 2) {
+            startHour = hours[0];
+            endHour = hours[1];
+          }
+  
+          // set start hour
+          var startHourNode = document.getElementById("startHourRange");
+          var startHourItems = startHourNode.childNodes[0].childNodes;
+          for (i=0; i < startHourItems.length; ++i) {
+            if (startHourItems[i].getAttribute("value") == startHour) {
+              startHourNode.selectedItem = startHourItems[i];
+              break;
+            }
+          }
+  
+          // set end hour
+          var endHourNode = document.getElementById("endHourRange");
+          var endHourItems = endHourNode.childNodes[0].childNodes;
+          for (i=0; i < endHourItems.length; ++i) {
+            if (endHourItems[i].getAttribute("value") == endHour) {
+              endHourNode.selectedItem = endHourItems[i];
+              break;
+            }
+          }
+  
+          // get duration
+          var duration = values[2];
+          var durationNode = document.getElementById("duration");
+          durationNode.value = duration;
+  
+          // get notification method
+          var method = values[3];
+          if (method.indexOf("icon") >= 0)
+            document.getElementById("bookmarkIcon").checked = true;
+  
+          if (method.indexOf("sound") >= 0)
+            document.getElementById("playSound").checked = true;
+  
+          if (method.indexOf("alert") >= 0)
+            document.getElementById("showAlert").checked = true;
+  
+          if (method.indexOf("open") >= 0)
+            document.getElementById("openWindow").checked = true;
+        }
+      }
+    }
   }
 
   sizeToContent();
   
-  // Set up the enabled of controls on the scheduling panels
-  dayRangeChange(document.getElementById("dayRange"));
-
   // set initial focus
   nameNode.focus();
   nameNode.select();
@@ -243,7 +222,7 @@ function Commit()
       // Get the new value as a literal, using 'null' if the value is empty.
       var newvalue = field.value;
 
-      var oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
+      var oldvalue = gBookmarks.GetTarget(RDF.GetResource(gBookmarkID),
                                          RDF.GetResource(gProperties[i]),
                                          true);
 
@@ -272,10 +251,11 @@ function Commit()
 
   // Update bookmark schedule if necessary;
   // if the tab was removed, just skip it
-  var scheduleTab = document.getElementById("ScheduleTab");
-  if (scheduleTab) {
+  var scheduling = document.getElementById("scheduling");
+  var schedulingHidden = scheduling.getAttribute("hidden");
+  if (schedulingHidden != "true") {
     var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-    oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
+    oldvalue = gBookmarks.GetTarget(RDF.GetResource(gBookmarkID),
                                    RDF.GetResource(scheduleRes), true);
     newvalue = "";
     var dayRangeNode = document.getElementById("dayRange");
@@ -328,7 +308,7 @@ function Commit()
   }
 
   if (changed) {
-    var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    var remote = gBookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     if (remote)
       remote.Flush();
   }
@@ -344,18 +324,18 @@ function updateAttribute(prop, oldvalue, newvalue)
   if (prop && (oldvalue || newvalue) && oldvalue != newvalue) {
 
     if (oldvalue && !newvalue) {
-      Bookmarks.Unassert(RDF.GetResource(gBookmarkID),
+      gBookmarks.Unassert(RDF.GetResource(gBookmarkID),
                          RDF.GetResource(prop),
                          oldvalue);
     }
     else if (!oldvalue && newvalue) {
-      Bookmarks.Assert(RDF.GetResource(gBookmarkID),
+      gBookmarks.Assert(RDF.GetResource(gBookmarkID),
                        RDF.GetResource(prop),
                        newvalue,
                        true);
     }
     else /* if (oldvalue && newvalue) */ {
-      Bookmarks.Change(RDF.GetResource(gBookmarkID),
+      gBookmarks.Change(RDF.GetResource(gBookmarkID),
                        RDF.GetResource(prop),
                        oldvalue,
                        newvalue);

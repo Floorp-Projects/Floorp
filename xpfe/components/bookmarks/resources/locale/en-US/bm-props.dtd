@@ -23,30 +23,27 @@
 
 <!ENTITY bookmarks.windowtitle.label  "Properties for &quot;**bm_title**&quot;">
 
-<!ENTITY generalInfo.label            "Info">
-<!ENTITY generalInfo.accesskey        "i">
-
-<!ENTITY schedule.label               "Schedule">
-<!ENTITY schedule.accesskey           "s">
-<!ENTITY schedule.description         "&brandShortName; can check this site for updates and notify you when one occurs. Use these settings to customize the schedule for this Bookmark.">
-<!ENTITY notification.label           "Notify">
-<!ENTITY notification.accesskey       "n">
-<!-- ICK. fix me -->
-<!ENTITY notification.description     "&brandShortName; will notify you when this site changes. Use these settings to customize notification.">
-
-<!ENTITY bookmarks.information.label  "Information:">
+<!ENTITY generalInfo.label            "General">
 <!ENTITY bookmarks.name.label         "Name:">
+<!ENTITY bookmarks.name.accesskey     "N">
 <!ENTITY bookmarks.location.label     "Location:">
+<!ENTITY bookmarks.location.accesskey "L">
 <!ENTITY bookmarks.shortcut.label     "Keyword:">
+<!ENTITY bookmarks.shortcut.accesskey "K">
 <!ENTITY bookmarks.description.label  "Description:">
+<!ENTITY bookmarks.description.accesskey "D">
 
-<!ENTITY checkforupdates.legend.label "Check this location for updates:">
+<!ENTITY checkforupdates.legend.label "Check this location for updates">
 <!ENTITY when.label                   "When:">
+<!ENTITY when.accesskey               "W">
 <!ENTITY from.label                   "from:">
+<!ENTITY from.accesskey               "f">
 <!ENTITY to.label                     "to: ">
+<!ENTITY to.accesskey                 "t">
 <!ENTITY every.label                  "every">
+<!ENTITY every.accesskey              "e">
 <!ENTITY minutes.label                "minute(s)">
-<!ENTITY notifications.legend.label   "Notification:">
+<!ENTITY notifications.legend.label   "Notification">
 
 <!ENTITY checknever.label             "Never">
 <!ENTITY checkeveryday.label          "Every day">
@@ -86,6 +83,10 @@
 <!ENTITY PMeleven.label               "11 PM">
 
 <!ENTITY notification.icon.label      "Change the bookmark's icon">
+<!ENTITY notification.icon.accesskey  "C">
 <!ENTITY notification.sound.label     "Play a sound">
+<!ENTITY notification.sound.accesskey "P">
 <!ENTITY notification.alert.label     "Display an alert">
+<!ENTITY notification.alert.accesskey "r">
 <!ENTITY notification.window.label    "Open web page in a new window">
+<!ENTITY notification.window.accesskey "O">
