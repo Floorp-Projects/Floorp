@@ -47,6 +47,8 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMLocation.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserPersist.h"
@@ -62,6 +64,7 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIMacTextInputEventSink.h"
 #include "nsCRT.h"
+#include "nsNetUtil.h"
 
 // Local
 #include "ApplIDs.h"
@@ -83,6 +86,7 @@
 
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 
+const nsCString CBrowserShell::kEmptyCString;
 nsCOMPtr<nsIDragHelperService> CBrowserShell::sDragHelper;
 
 //*****************************************************************************
@@ -593,16 +597,38 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
             {               
                 // Get the URL from the link
                 ThrowIfNil_(mContextMenuDOMNode);
-                nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(mContextMenuDOMNode, &rv));
+                nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(mContextMenuDOMNode));
+                // If that failed and, if the context of a click was in an image, find the parent
+                // node of the image which CAN be QI'd to an nsIDOMHTMLAnchorElement.
+                if (!linkElement && (mContextMenuContext & nsIContextMenuListener::CONTEXT_IMAGE))
+                {
+                    nsCOMPtr<nsIDOMNode> curr;
+                    mContextMenuDOMNode->GetParentNode(getter_AddRefs(curr));
+                    while (curr)
+                    {
+                        nsCOMPtr<nsIDOMElement> content = do_QueryInterface(curr);
+                        if (!content)
+                            break;
+                        linkElement = do_QueryInterface(content);
+                        if (linkElement)
+                            break;
+
+                        nsCOMPtr<nsIDOMNode> temp = curr;
+                        temp->GetParentNode(getter_AddRefs(curr));
+                    }
+                }
+                ThrowIfNil_(linkElement);
+                
+                nsAutoString temp;
+                rv = linkElement->GetHref(temp);
                 ThrowIfError_(rv);
                 
-                nsAutoString href;
-                rv = linkElement->GetHref(href);
-                ThrowIfError_(rv);
-                
-                nsCAutoString urlSpec;
-                CopyUCS2toASCII(href, urlSpec);
-                PostOpenURLEvent(urlSpec);
+                nsCAutoString urlSpec = NS_ConvertUCS2toUTF8(temp);
+                nsCAutoString referrer;
+                rv = GetFocusedWindowURL(temp);
+                if (NS_SUCCEEDED(rv))
+                    referrer = NS_ConvertUCS2toUTF8(temp);
+                PostOpenURLEvent(urlSpec, referrer);
             }
             break;
             
@@ -647,7 +673,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 rv = GetCurrentURL(currentURL);
                 ThrowIfError_(rv);
                 currentURL.Insert("view-source:", 0);
-                PostOpenURLEvent(currentURL);
+                PostOpenURLEvent(currentURL, nsCString());
             }
             break;
 
@@ -880,6 +906,30 @@ NS_METHOD CBrowserShell::GetContentViewer(nsIContentViewer** aViewer)
     return ourDocShell->GetContentViewer(aViewer);
 }
 
+NS_METHOD CBrowserShell::GetFocusedWindowURL(nsAString& outURL)
+{
+    nsCOMPtr<nsIWebBrowserFocus> wbf(do_GetInterface(mWebBrowser));
+    if (!wbf)
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    wbf->GetFocusedWindow(getter_AddRefs(domWindow));
+    if (!domWindow)
+        mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (!domWindow)
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    domWindow->GetDocument(getter_AddRefs(domDocument));
+    if (!domDocument)
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+    if (!nsDoc)
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMLocation> location;
+    nsDoc->GetLocation(getter_AddRefs(location));
+    if (!location)
+        return NS_ERROR_FAILURE;
+    return location->GetHref(outURL);
+}
 
 NS_METHOD CBrowserShell::GetPrintSettings(nsIPrintSettings** aSettings)
 {
@@ -973,13 +1023,16 @@ NS_METHOD CBrowserShell::Reload()
 //*****************************************************************************
 
 
-NS_METHOD CBrowserShell::LoadURL(const nsACString& urlText)
-{
-    nsAutoString unicodeURL;
-    CopyASCIItoUCS2(urlText, unicodeURL);
-    return mWebBrowserAsWebNav->LoadURI(unicodeURL.get(),
+NS_METHOD CBrowserShell::LoadURL(const nsACString& urlText, const nsACString& referrer)
+{    
+    nsCOMPtr<nsIURI> referrerURI;
+    if (referrer.Length()) {
+        nsresult rv = NS_NewURI(getter_AddRefs(referrerURI), referrer);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to make URI for referrer.");
+    }
+    return mWebBrowserAsWebNav->LoadURI(NS_ConvertUTF8toUCS2(urlText).get(),
                                         nsIWebNavigation::LOAD_FLAGS_NONE,
-                                        nsnull,
+                                        referrerURI,
                                         nsnull,
                                         nsnull);
 }
@@ -1444,7 +1497,7 @@ Boolean CBrowserShell::HasFormElements()
     return false;
 }
 
-void CBrowserShell::PostOpenURLEvent(const nsACString& url)
+void CBrowserShell::PostOpenURLEvent(const nsACString& url, const nsACString& referrer)
 {    
     // Send an AppleEvent to ourselves to open a new window with the given URL
     
@@ -1480,6 +1533,15 @@ void CBrowserShell::PostOpenURLEvent(const nsACString& url)
     if (err) {
         ::AEDisposeDesc(&getURLEvent);
         Throw_(err);
+    }
+    if (referrer.Length() != 0) {
+        const nsPromiseFlatCString& flatReferrer = PromiseFlatCString(referrer);  
+        StAEDescriptor referrerDesc(typeChar, flatReferrer.get(), flatReferrer.Length());
+        err = ::AEPutParamDesc(&getURLEvent, keyGetURLReferrer, referrerDesc);
+        if (err) {
+            ::AEDisposeDesc(&getURLEvent);
+            Throw_(err);
+        }
     }
     UAppleEventsMgr::SendAppleEvent(getURLEvent);
 }

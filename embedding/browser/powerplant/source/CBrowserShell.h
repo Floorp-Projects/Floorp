@@ -66,7 +66,7 @@ private:
 public:
     enum { class_ID = FOUR_CHAR_CODE('BroS') };
     enum { paneID_MainBrowser = 'WebS' };
- 
+    static const nsCString      kEmptyCString;
 
                                 CBrowserShell();
                                 CBrowserShell(const SPaneInfo   &inPaneInfo,
@@ -110,8 +110,7 @@ public:
     // LPeriodical
     virtual void                SpendTime(const EventRecord&        inMacEvent);
     
-    // Handle Text Input Event 
-    // hiliteRng should be a 
+        // Text Input Event Handling
     virtual OSStatus HandleUpdateActiveInputArea(const nsAString& text, 
                                                  PRInt16 script,  PRInt16 language, 
                                                  PRInt32 fixLen, const TextRangeArray * hiliteRng);
@@ -122,14 +121,12 @@ public:
     virtual OSStatus HandlePosToOffset(PRInt16 currentPointX, PRInt16 currentPointY, 
                                        PRInt32 *offset, PRInt16 *regionClass);
     
-    
-    
     // CBrowserShell
         
         // Called by the window creator after parameterized contructor. Not used
         // when we're created from a 'PPob' resource. In that case, attachments can be
         // added with Constructor.
-    virtual void                AddAttachments();
+    virtual void            AddAttachments();
     
     NS_METHOD               GetWebBrowser(nsIWebBrowser** aBrowser);
     NS_METHOD               SetWebBrowser(nsIWebBrowser* aBrowser);
@@ -140,6 +137,8 @@ public:
     NS_METHOD               GetContentViewer(nsIContentViewer** aViewer);
     
     NS_METHOD               GetPrintSettings(nsIPrintSettings** aSettings);
+
+    NS_METHOD               GetFocusedWindowURL(nsAString& outURL);
     
     Boolean                 IsBusy();
     Boolean                 CanGoBack();
@@ -149,8 +148,9 @@ public:
     NS_METHOD               Forward();
     NS_METHOD               Stop();
     NS_METHOD               Reload();
-                            
-    NS_METHOD               LoadURL(const nsACString& urlText);
+    
+        // String params are UTF-8 encoded.                        
+    NS_METHOD               LoadURL(const nsACString& urlText, const nsACString& referrer = kEmptyCString);
     NS_METHOD               GetCurrentURL(nsACString& urlText);
 
         // Puts up a Save As dialog and saves current URI and all images, etc.
@@ -175,7 +175,7 @@ public:
 protected:
 
     // LDropArea
-	  virtual void            InsideDropArea( DragReference inDragRef );
+    virtual void            InsideDropArea( DragReference inDragRef );
     virtual Boolean         PointInDropArea( Point inGlobalPt) ;
     virtual Boolean         DragIsAcceptable( DragReference inDragRef );
     virtual void            EnterDropArea( DragReference inDragRef, Boolean inDragHasLeftSender);
@@ -208,7 +208,7 @@ protected:
    
    Boolean                  HasFormElements();
 
-   virtual void             PostOpenURLEvent(const nsACString& url);
+   virtual void             PostOpenURLEvent(const nsACString& url, const nsACString& referrer);
     
 protected:   
     UInt32                          mChromeFlags;

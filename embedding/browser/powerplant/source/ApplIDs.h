@@ -164,4 +164,13 @@ enum {
     cmd_Logout                  = 'LOut'
 };
 
+//*****************************************************************************
+//***    Apple Events
+//*****************************************************************************
+
+enum {
+    // A key that we use internally with kAEGetURL
+    keyGetURLReferrer           = 'refe'
+};
+
 #endif // __ApplIDs__

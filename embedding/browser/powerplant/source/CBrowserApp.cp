@@ -89,54 +89,54 @@
 static const char* kProgramName = "PPEmbed";
 
 // ===========================================================================
-//		¥ Main Program
+//      ¥ Main Program
 // ===========================================================================
 
 int main()
 {
-								
-	SetDebugThrow_(PP_PowerPlant::debugAction_Alert);	// Set Debugging options
-	SetDebugSignal_(PP_PowerPlant::debugAction_Alert);
+                                
+    SetDebugThrow_(PP_PowerPlant::debugAction_Alert);   // Set Debugging options
+    SetDebugSignal_(PP_PowerPlant::debugAction_Alert);
 
-	PP_PowerPlant::InitializeHeap(3);		// Initialize Memory Manager
-											// Parameter is number of Master Pointer
-											// blocks to allocate
-	
+    PP_PowerPlant::InitializeHeap(3);       // Initialize Memory Manager
+                                            // Parameter is number of Master Pointer
+                                            // blocks to allocate
+    
 
 #if __PowerPlant__ >= 0x02100000
-	PP_PowerPlant::UQDGlobals::InitializeToolbox();
+    PP_PowerPlant::UQDGlobals::InitializeToolbox();
 #else
-	PP_PowerPlant::UQDGlobals::InitializeToolbox(&qd);
+    PP_PowerPlant::UQDGlobals::InitializeToolbox(&qd);
 #endif
     
 #if DEBUG
-	::InitializeSIOUX(false);
+    ::InitializeSIOUX(false);
 #endif
 
-#if !TARGET_CARBON		
-	::InitTSMAwareApplication();
+#if !TARGET_CARBON      
+    ::InitTSMAwareApplication();
 #endif
-	
-	new PP_PowerPlant::LGrowZone(20000);	// Install a GrowZone function to catch low memory situations.
+    
+    new PP_PowerPlant::LGrowZone(20000);    // Install a GrowZone function to catch low memory situations.
 
-	{
-		CBrowserApp	theApp;			// create instance of your application
-	
-		theApp.Run();
-	}
+    {
+        CBrowserApp theApp;         // create instance of your application
+    
+        theApp.Run();
+    }
 
-#if !TARGET_CARBON	
-	::CloseTSMAwareApplication();
+#if !TARGET_CARBON  
+    ::CloseTSMAwareApplication();
 #endif
-	
-	return 0;
+    
+    return 0;
 }
 
 
 // ---------------------------------------------------------------------------
-//		¥ CBrowserApp
+//      ¥ CBrowserApp
 // ---------------------------------------------------------------------------
-//	Constructor
+//  Constructor
 
 CBrowserApp::CBrowserApp()
 {
@@ -149,34 +149,34 @@ CBrowserApp::CBrowserApp()
   InstallCarbonEventHandlers();
 #endif
 
-	if ( PP_PowerPlant::UEnvironment::HasFeature( PP_PowerPlant::env_HasAppearance ) ) {
-		::RegisterAppearanceClient();
-	}
+    if ( PP_PowerPlant::UEnvironment::HasFeature( PP_PowerPlant::env_HasAppearance ) ) {
+        ::RegisterAppearanceClient();
+    }
 
-	RegisterClass_(PP_PowerPlant::LWindow);	// You must register each kind of
-	RegisterClass_(PP_PowerPlant::LCaption);	// PowerPlant classes that you use in your PPob resource.
-	RegisterClass_(PP_PowerPlant::LTabGroupView);
+    RegisterClass_(PP_PowerPlant::LWindow); // You must register each kind of
+    RegisterClass_(PP_PowerPlant::LCaption);    // PowerPlant classes that you use in your PPob resource.
+    RegisterClass_(PP_PowerPlant::LTabGroupView);
     RegisterClass_(PP_PowerPlant::LIconControl);
     RegisterClass_(PP_PowerPlant::LView);
-	RegisterClass_(PP_PowerPlant::LDialogBox);
-	
-	// Register the Appearance Manager/GA classes
-	PP_PowerPlant::UControlRegistry::RegisterClasses();
-	
-	// QuickTime is used by CThrobber
-	UQuickTime::Initialize();
-	
-	// Register classes used by embedding
-	RegisterClass_(CBrowserShell);
-	RegisterClass_(CBrowserWindow);
-	RegisterClass_(CUrlField);
-	RegisterClass_(CThrobber);
-	RegisterClass_(CIconServicesIcon);
+    RegisterClass_(PP_PowerPlant::LDialogBox);
+    
+    // Register the Appearance Manager/GA classes
+    PP_PowerPlant::UControlRegistry::RegisterClasses();
+    
+    // QuickTime is used by CThrobber
+    UQuickTime::Initialize();
+    
+    // Register classes used by embedding
+    RegisterClass_(CBrowserShell);
+    RegisterClass_(CBrowserWindow);
+    RegisterClass_(CUrlField);
+    RegisterClass_(CThrobber);
+    RegisterClass_(CIconServicesIcon);
 
-#ifdef USE_PROFILES	
-	RegisterClass_(LScroller);
-	RegisterClass_(LTextTableView);
-	RegisterClass_(LColorEraseAttachment);
+#ifdef USE_PROFILES 
+    RegisterClass_(LScroller);
+    RegisterClass_(LTextTableView);
+    RegisterClass_(LColorEraseAttachment);
 #endif
 
    // Contexual Menu Support
@@ -222,9 +222,9 @@ CBrowserApp::CBrowserApp()
 
 
 // ---------------------------------------------------------------------------
-//		¥ ~CBrowserApp
+//      ¥ ~CBrowserApp
 // ---------------------------------------------------------------------------
-//	Destructor
+//  Destructor
 //
 
 CBrowserApp::~CBrowserApp()
@@ -238,10 +238,10 @@ CBrowserApp::~CBrowserApp()
 }
 
 // ---------------------------------------------------------------------------
-//		¥ StartUp
+//      ¥ StartUp
 // ---------------------------------------------------------------------------
-//	This method lets you do something when the application starts up
-//	without a document. For example, you could issue your own new command.
+//  This method lets you do something when the application starts up
+//  without a document. For example, you could issue your own new command.
 
 void
 CBrowserApp::StartUp()
@@ -285,7 +285,7 @@ CBrowserApp::StartUp()
 #endif
 
 
-	ObeyCommand(PP_PowerPlant::cmd_New, nil);	// EXAMPLE, create a new window
+    ObeyCommand(PP_PowerPlant::cmd_New, nil);   // EXAMPLE, create a new window
 }
 
 nsresult
@@ -327,7 +327,7 @@ CBrowserApp::OverrideComponents()
 
 
 // ---------------------------------------------------------------------------
-//		¥ MakeMenuBar
+//      ¥ MakeMenuBar
 // ---------------------------------------------------------------------------
 
 void
@@ -344,7 +344,7 @@ CBrowserApp::MakeMenuBar()
 }
 
 // ---------------------------------------------------------------------------
-//	¥ AdjustCursor												      [public]
+//  ¥ AdjustCursor                                                    [public]
 // ---------------------------------------------------------------------------
 
 void CBrowserApp::AdjustCursor(const EventRecord& inMacEvent)
@@ -353,105 +353,103 @@ void CBrowserApp::AdjustCursor(const EventRecord& inMacEvent)
   // msg_AdjustCursor. CEmbedEventAttachment needs this.
   
   if (ExecuteAttachments(msg_AdjustCursor, (void*) &inMacEvent))
-	  LEventDispatcher::AdjustCursor(inMacEvent);
+      LEventDispatcher::AdjustCursor(inMacEvent);
 }
 
 
 // ---------------------------------------------------------------------------
-//	¥ HandleAppleEvent												  [public]
+//  ¥ HandleAppleEvent                                                [public]
 // ---------------------------------------------------------------------------
 
-void CBrowserApp::HandleAppleEvent(const AppleEvent&	inAppleEvent,
-                                   AppleEvent&			outAEReply,
-                                   AEDesc&				outResult,
-                                   long				    inAENumber)
+void CBrowserApp::HandleAppleEvent(const AppleEvent&    inAppleEvent,
+                                   AppleEvent&          outAEReply,
+                                   AEDesc&              outResult,
+                                   long                 inAENumber)
 {
-	switch (inAENumber) {
-	
-		case 5000:
-		    {
-		        OSErr err;
-		        
-        		StAEDescriptor urlDesc;
-			    err = ::AEGetParamDesc(&inAppleEvent, keyDirectObject, typeWildCard, urlDesc);
-			    ThrowIfOSErr_(err);
-			    AEDesc finalDesc;
-			    
-			    StAEDescriptor coerceDesc;
-			    if (urlDesc.DescriptorType() != typeChar) {
-			        err = ::AECoerceDesc(urlDesc, typeChar, coerceDesc);
-			        ThrowIfOSErr_(err);
-			        finalDesc = coerceDesc;
-			    }
-			    else
-			        finalDesc = urlDesc;
-			        
-			    Size dataSize = ::AEGetDescDataSize(&finalDesc);
-			    StPointerBlock dataPtr(dataSize);
-			    err = ::AEGetDescData(&finalDesc, dataPtr.Get(), dataSize);
-			    ThrowIfOSErr_(err);
-			    			    
-		        PRUint32 chromeFlags;
-			    
-			    // If the URL begins with "view-source:", go with less chrome
-			    nsDependentCString dataAsStr(dataPtr.Get(), dataSize);
-                nsReadingIterator<char> start, end;
-                dataAsStr.BeginReading(start);
-                dataAsStr.EndReading(end);
-                FindInReadable(NS_LITERAL_CSTRING("view-source:"), start, end);
-                if ((start != end) && !start.size_backward()) 
+    switch (inAENumber) {
+    
+        case 5000:
+            {
+                OSErr err;
+                
+                StAEDescriptor urlDesc;
+                err = ::AEGetParamDesc(&inAppleEvent, keyDirectObject, typeChar, urlDesc);
+                ThrowIfOSErr_(err);
+                    
+                Size dataSize = ::AEGetDescDataSize(urlDesc);
+                StPointerBlock urlPtr(dataSize);
+                err = ::AEGetDescData(urlDesc, urlPtr.Get(), dataSize);
+                ThrowIfOSErr_(err);
+
+                const nsACString& urlAsStr = Substring(urlPtr.Get(), urlPtr.Get() + dataSize);
+                
+                // If the URL begins with "view-source:", go with less chrome
+                PRUint32 chromeFlags;
+                NS_NAMED_LITERAL_CSTRING(kViewSourceProto, "view-source:");
+                if (Substring(urlAsStr, 0, kViewSourceProto.Length()).Equals(kViewSourceProto))
                     chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_CLOSE +
                                   nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
                 else
                     chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
-			    
-       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(chromeFlags, PR_TRUE, -1, -1);
-       			ThrowIfNil_(theWindow);
-       			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
-       			ThrowIfNil_(theBrowser);
-                theBrowser->LoadURL(dataAsStr);
-       			       			
-       			theWindow->Show();
-			}
-		    break;
-			
-		default:
-		    LApplication::HandleAppleEvent(inAppleEvent, outAEReply, outResult, inAENumber);
+                                                
+                // See if we have a referrer
+                nsCAutoString referrerAsStr;
+                StAEDescriptor referrerDesc;
+                err = ::AEGetParamDesc(&inAppleEvent, keyGetURLReferrer, typeChar, referrerDesc);
+                if (err == noErr) {
+                    dataSize = ::AEGetDescDataSize(referrerDesc);
+                    StPointerBlock referrerPtr(dataSize);
+                    err = ::AEGetDescData(referrerDesc, referrerPtr.Get(), dataSize);
+                    ThrowIfOSErr_(err);
+                    referrerAsStr = Substring(referrerPtr.Get(), referrerPtr.Get() + dataSize);
+                }           
+                LWindow *theWindow = CWindowCreator::CreateWindowInternal(chromeFlags, PR_TRUE, -1, -1);
+                ThrowIfNil_(theWindow);
+                CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
+                ThrowIfNil_(theBrowser);
+                theBrowser->LoadURL(urlAsStr, referrerAsStr);
+                                
+                theWindow->Show();
+            }
+            break;
+            
+        default:
+            LApplication::HandleAppleEvent(inAppleEvent, outAEReply, outResult, inAENumber);
     }
 }
 
 
 // ---------------------------------------------------------------------------
-//		¥ ObeyCommand
+//      ¥ ObeyCommand
 // ---------------------------------------------------------------------------
-//	This method lets the application respond to commands like Menu commands
+//  This method lets the application respond to commands like Menu commands
 
 Boolean
 CBrowserApp::ObeyCommand(
-	PP_PowerPlant::CommandT	inCommand,
-	void					*ioParam)
+    PP_PowerPlant::CommandT inCommand,
+    void                    *ioParam)
 {
-	Boolean		cmdHandled = true;
+    Boolean     cmdHandled = true;
 
-	switch (inCommand) {
-	
-		case PP_PowerPlant::cmd_About:
+    switch (inCommand) {
+    
+        case PP_PowerPlant::cmd_About:
       break;
-      	
-		case PP_PowerPlant::cmd_New:
-			{			
-       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, PR_TRUE, -1, -1);
-       			ThrowIfNil_(theWindow);
-       			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
-       			ThrowIfNil_(theBrowser);
+        
+        case PP_PowerPlant::cmd_New:
+            {           
+                LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, PR_TRUE, -1, -1);
+                ThrowIfNil_(theWindow);
+                CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
+                ThrowIfNil_(theBrowser);
                 // Just for demo sake, load a URL
                 theBrowser->LoadURL(nsDependentCString("http://www.mozilla.org"));
-   			    theWindow->Show();
-			}
-			break;
+                theWindow->Show();
+            }
+            break;
 
-		case PP_PowerPlant::cmd_Open:
-		case cmd_OpenDirectory:
+        case PP_PowerPlant::cmd_Open:
+        case cmd_OpenDirectory:
             {
                 FSSpec fileSpec;
                 if (SelectFileObject(inCommand, fileSpec))
@@ -466,15 +464,15 @@ CBrowserApp::ObeyCommand(
                     rv = NS_GetURLSpecFromFile(macFile, urlSpec);
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
                                             
-           			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, PR_TRUE, -1, -1);
-           			ThrowIfNil_(theWindow);
-           			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
-           			ThrowIfNil_(theBrowser);
+                    LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, PR_TRUE, -1, -1);
+                    ThrowIfNil_(theWindow);
+                    CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
+                    ThrowIfNil_(theBrowser);
                     theBrowser->LoadURL(urlSpec);
-           			theWindow->Show();
-           		}
-			}
-			break;
+                    theWindow->Show();
+                }
+            }
+            break;
 
         case PP_PowerPlant::cmd_Preferences:
         {
@@ -508,74 +506,74 @@ CBrowserApp::ObeyCommand(
         }
         break;
 
-		// Any that you don't handle, such as cmd_About and cmd_Quit,
-		// will be passed up to LApplication
-		default:
-			cmdHandled = PP_PowerPlant::LApplication::ObeyCommand(inCommand, ioParam);
-			break;
-	}
-	
-	return cmdHandled;
+        // Any that you don't handle, such as cmd_About and cmd_Quit,
+        // will be passed up to LApplication
+        default:
+            cmdHandled = PP_PowerPlant::LApplication::ObeyCommand(inCommand, ioParam);
+            break;
+    }
+    
+    return cmdHandled;
 }
 
 // ---------------------------------------------------------------------------
-//		¥ FindCommandStatus
+//      ¥ FindCommandStatus
 // ---------------------------------------------------------------------------
-//	This function enables menu commands.
+//  This function enables menu commands.
 //
 
 void
 CBrowserApp::FindCommandStatus(
-	PP_PowerPlant::CommandT	inCommand,
-	Boolean					&outEnabled,
-	Boolean					&outUsesMark,
-	UInt16	                &outMark,
-	Str255					outName)
+    PP_PowerPlant::CommandT inCommand,
+    Boolean                 &outEnabled,
+    Boolean                 &outUsesMark,
+    UInt16                  &outMark,
+    Str255                  outName)
 {
 
-	switch (inCommand) {
-	
-		case PP_PowerPlant::cmd_About:
-			outEnabled = false;
+    switch (inCommand) {
+    
+        case PP_PowerPlant::cmd_About:
+            outEnabled = false;
       break;
       
-		case PP_PowerPlant::cmd_New:
-			outEnabled = true;
-			break;
+        case PP_PowerPlant::cmd_New:
+            outEnabled = true;
+            break;
 
-		case PP_PowerPlant::cmd_Open:
-		case cmd_OpenDirectory:
-			outEnabled = true;
-			break;
+        case PP_PowerPlant::cmd_Open:
+        case cmd_OpenDirectory:
+            outEnabled = true;
+            break;
 
-		case PP_PowerPlant::cmd_Preferences:
-			outEnabled = true;
-			break;		
+        case PP_PowerPlant::cmd_Preferences:
+            outEnabled = true;
+            break;      
 
-		// Any that you don't handle, such as cmd_About and cmd_Quit,
-		// will be passed up to LApplication
-		default:
-			PP_PowerPlant::LApplication::FindCommandStatus(inCommand, outEnabled,
-												outUsesMark, outMark, outName);
-			break;
-	}
+        // Any that you don't handle, such as cmd_About and cmd_Quit,
+        // will be passed up to LApplication
+        default:
+            PP_PowerPlant::LApplication::FindCommandStatus(inCommand, outEnabled,
+                                                outUsesMark, outMark, outName);
+            break;
+    }
 }
 
 
 Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
-{	    
+{       
    // IMPORTANT: This is one unfortunate thing about Powerplant - Windows don't
    // get destroyed until the destructor of LCommander. We need to delete
    // all of the CBrowserWindows though before we terminate embedding.
     
- 	TArrayIterator<LCommander*> iterator(mSubCommanders, LArrayIterator::from_End);
- 	LCommander*		theSub;
- 	while (iterator.Previous(theSub)) {
- 	    if (dynamic_cast<CBrowserWindow*>(theSub)) {
- 		    mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
- 		    delete theSub;
- 		}
- 	}
+    TArrayIterator<LCommander*> iterator(mSubCommanders, LArrayIterator::from_End);
+    LCommander*     theSub;
+    while (iterator.Previous(theSub)) {
+        if (dynamic_cast<CBrowserWindow*>(theSub)) {
+            mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
+            delete theSub;
+        }
+    }
     
    return true;
 }
@@ -646,54 +644,54 @@ nsresult CBrowserApp::InitializePrefs()
     nsresult rv;
     nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
-        return rv;	  
+        return rv;    
 
-	// We are using the default prefs from mozilla. If you were
-	// disributing your own, this would be done simply by editing
-	// the default pref files.
-	nsCOMPtr<nsIPrefBranch> branch;
-	rv = prefs->GetBranch(nsnull, getter_AddRefs(branch));
+    // We are using the default prefs from mozilla. If you were
+    // disributing your own, this would be done simply by editing
+    // the default pref files.
+    nsCOMPtr<nsIPrefBranch> branch;
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(branch));
     if (NS_FAILED(rv))
-        return rv;	  
+        return rv;    
 
     const char kVariableFontSizePref[] = "font.size.variable.x-western";
     const char kFixedFontSizePref[] = "font.size.fixed.x-western";
     
     PRInt32 intValue;
-	rv = branch->GetIntPref(kVariableFontSizePref, &intValue);
-	if (NS_FAILED(rv))
+    rv = branch->GetIntPref(kVariableFontSizePref, &intValue);
+    if (NS_FAILED(rv))
         branch->SetIntPref(kVariableFontSizePref, 14);
         
     rv = branch->GetIntPref(kFixedFontSizePref, &intValue);    
-	if (NS_FAILED(rv))
+    if (NS_FAILED(rv))
         branch->SetIntPref(kFixedFontSizePref, 13);
-		
+        
     return NS_OK;
 }
 
-Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
+Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT   inCommand,
                                       FSSpec& outSpec)
 {
-	UNavServicesDialogs::LFileChooser	chooser;
-	
-	NavDialogOptions *theDialogOptions = chooser.GetDialogOptions();
-	if (theDialogOptions) {
-		theDialogOptions->dialogOptionFlags |= kNavSelectAllReadableItem;
-	}
+    UNavServicesDialogs::LFileChooser   chooser;
+    
+    NavDialogOptions *theDialogOptions = chooser.GetDialogOptions();
+    if (theDialogOptions) {
+        theDialogOptions->dialogOptionFlags |= kNavSelectAllReadableItem;
+    }
 
     Boolean     result;
-	SInt32      dirID;
-	
-	if (inCommand == cmd_OpenDirectory)
-	{
-	    result = chooser.AskChooseFolder(outSpec, dirID);
-	}
-	else
-	{
-	    result = chooser.AskOpenFile(LFileTypeList(fileTypes_All));
-	    if (result)
-	        chooser.GetFileSpec(1, outSpec);
-	}
+    SInt32      dirID;
+    
+    if (inCommand == cmd_OpenDirectory)
+    {
+        result = chooser.AskChooseFolder(outSpec, dirID);
+    }
+    else
+    {
+        result = chooser.AskOpenFile(LFileTypeList(fileTypes_All));
+        if (result)
+            chooser.GetFileSpec(1, outSpec);
+    }
     return result;
 }
 
@@ -732,14 +730,14 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const char *aTopic, co
         // on each. Either way, we have to stop all network activity on this phase.
         
         TArrayIterator<LCommander*> iterator(mSubCommanders, LArrayIterator::from_End);
-        LCommander*		theSub;
+        LCommander*     theSub;
         while (iterator.Previous(theSub)) {
             CBrowserWindow *browserWindow = dynamic_cast<CBrowserWindow*>(theSub);
             if (browserWindow) {
                 //browserWindow->Stop();
-        	    mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
-        	    delete browserWindow;
-        	}
+                mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
+                delete browserWindow;
+            }
         }
     }
     else if (!nsCRT::strcmp(aTopic, "profile-after-change"))
