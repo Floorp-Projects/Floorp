@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
  *
  *
  * This Original Code has been modified by IBM Corporation.
@@ -45,10 +45,9 @@
 #include "prlog.h"
 #include "nsIPref.h"
 #include "nsNetUtil.h"
-
-// For proxification of FTP URLs
-#include "nsIHttpProtocolHandler.h"
 #include "nsIErrorService.h" 
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
 
 #if defined(PR_LOGGING)
 //
@@ -66,31 +65,39 @@ PRLogModuleInfo* gFTPLog = nsnull;
 
 #endif /* PR_LOGGING */
 
+#define IDLE_TIMEOUT_PREF "network.ftp.idleConnectionTimeout"
+
 static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,       NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
-nsSupportsHashtable* nsFtpProtocolHandler::mRootConnectionList = nsnull;
+nsVoidArray* nsFtpProtocolHandler::mRootConnectionList = nsnull;
+PRInt32 nsFtpProtocolHandler::mIdleTimeout = -1;
 ////////////////////////////////////////////////////////////////////////////////
 nsFtpProtocolHandler::nsFtpProtocolHandler() {
-        NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
-     if (mRootConnectionList) {
+    if (mRootConnectionList) {
+        PRInt32 i;
+        for (i=0;i<mRootConnectionList->Count();++i)
+            delete (timerStruct*)mRootConnectionList->ElementAt(i);
         NS_DELETEXPCOM(mRootConnectionList);
         mRootConnectionList = nsnull;
     }
+    mIdleTimeout = -1;
     mIOSvc = 0;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpProtocolHandler,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsFtpProtocolHandler,
                               nsIProtocolHandler,
-                              nsIProxiedProtocolHandler);
+                              nsIProxiedProtocolHandler,
+                              nsIObserver,
+                              nsISupportsWeakReference);
 
 nsresult
 nsFtpProtocolHandler::Init() {
@@ -103,9 +110,9 @@ nsFtpProtocolHandler::Init() {
     mIOSvc = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    mRootConnectionList = new nsSupportsHashtable(16, PR_TRUE);  /* xxx what should be the size of this hashtable?? */
+    mRootConnectionList = new nsVoidArray(8);
     if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
-    NS_LOG_NEW_XPCOM(mRootConnectionList, "nsSupportsHashtable", sizeof(nsSupportsHashtable), __FILE__, __LINE__);
+    NS_LOG_NEW_XPCOM(mRootConnectionList, "nsVoidArray", sizeof(nsVoidArray), __FILE__, __LINE__);
 
     // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
@@ -115,7 +122,24 @@ nsFtpProtocolHandler::Init() {
         rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_END_FTP_TRANSACTION, "EndFTPTransaction");
         if (NS_FAILED(rv)) return rv;
     }
-    return rv;
+
+    if (mIdleTimeout == -1) {
+        nsCOMPtr<nsIPrefService> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIPrefBranch> branch;
+        // I have to get the root pref branch because of bug 107617
+        rv = prefSrv->GetBranch(nsnull, getter_AddRefs(branch));
+        if (NS_FAILED(rv)) return rv;
+        rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &mIdleTimeout);
+        if (NS_FAILED(rv))
+            mIdleTimeout = 5*60; // 5 minute default
+        prefSrv->GetBranch(nsnull, getter_AddRefs(branch));
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(branch);
+        rv = pbi->AddObserver(IDLE_TIMEOUT_PREF, this, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    return NS_OK;
 }
 
 
@@ -208,6 +232,23 @@ nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retva
 }
 
 // connection cache methods
+
+void
+nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure)
+{
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Timeout reached for %0x\n", aClosure));
+
+    NS_ASSERTION(mRootConnectionList, "Timeout called without a connection list!");
+    
+    PRBool found = mRootConnectionList->RemoveElement(aClosure);
+    NS_ASSERTION(found, "Timeout without entry!");
+    if (!found)
+        return;
+
+    timerStruct* s = (timerStruct*)aClosure;
+    delete s;
+}
+
 nsresult
 nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
     NS_ASSERTION(_retval, "null pointer");
@@ -221,23 +262,33 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
     nsXPIDLCString spec;
     aKey->GetPrePath(getter_Copies(spec));
     
-    nsCStringKey stringKey(spec);
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Removing connection for %s\b", spec.get()));
+   
+    timerStruct* ts = nsnull;
+    PRInt32 i;
+    PRBool found = PR_FALSE;
     
-    // Do not have to addRef since there is only one connection (with this key)
-    // in this hash table at any time and that one has been addRef'ed
-    // by the Put().  If we change connection caching, we will have 
-    // to re-address this.
-    if (mRootConnectionList)
-        mRootConnectionList->Remove(&stringKey, (nsISupports**)_retval);
+    for (i=0;i<mRootConnectionList->Count();++i) {
+        ts = (timerStruct*)mRootConnectionList->ElementAt(i);
+        if (!nsCRT::strcmp(spec.get(), ts->key)) {
+            found = PR_TRUE;
+            mRootConnectionList->RemoveElementAt(i);
+            break;
+        }
+    }
 
-    if (*_retval)
-        return NS_OK;
+    if (!found)
+        return NS_ERROR_FAILURE;
 
-    return NS_ERROR_FAILURE;
+    NS_ADDREF(*_retval = ts->conn);
+    delete ts;
+
+    return NS_OK;
 }
 
 nsresult
-nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn) {
+nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn)
+{
     NS_ASSERTION(aConn, "null pointer");
     NS_ASSERTION(aKey, "null pointer");
     
@@ -246,14 +297,63 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn) {
 
     nsXPIDLCString spec;
     aKey->GetPrePath(getter_Copies(spec));
-    nsCStringKey stringKey(spec);
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Inserting connection for %s\b", spec.get()));
+
+    if (!mRootConnectionList)
+        return NS_ERROR_FAILURE;
     
-    if (mRootConnectionList)
-    {
-        mRootConnectionList->Put(&stringKey, aConn);
-        return NS_OK;
-    }        
-    return NS_ERROR_FAILURE;    
+    nsresult rv;
+    nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    timerStruct* ts = new timerStruct();
+    if (!ts)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = timer->Init(nsFtpProtocolHandler::Timeout,
+                     ts,
+                     mIdleTimeout*1000,
+                     NS_PRIORITY_LOW);
+    if (NS_FAILED(rv)) {
+        delete ts;
+        return rv;
+    }
+    
+    ts->key = nsCRT::strdup(spec.get());
+    if (!ts->key) {
+        delete ts;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    ts->conn = aConn;
+    ts->timer = timer;
+
+    mRootConnectionList->AppendElement(ts);
+    
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIObserver
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::Observe(nsISupports* aSubject,
+                              const char* aTopic,
+                              const PRUnichar* aData)
+{
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::Observe\n"));
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
+    NS_ASSERTION(branch, "Didn't get a prefBranch in Observe");
+    if (!branch)
+        return NS_ERROR_UNEXPECTED;
+
+    NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
+                 "Wrong aTopic passed to Observer");
+
+    PRInt32 timeout;
+    nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &timeout);
+    if (NS_SUCCEEDED(rv))
+        mIdleTimeout = timeout;
+
+    return NS_OK;
+}

@@ -27,6 +27,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  nkcache \
 		  necko \
+		  timer \
 		  $(NULL)
 
 DEPTH = ..\..\..\..

@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  nkcache \
+		  timer \
 		  $(NULL)
 
 CPPSRCS		= nsNetModule2.cpp
