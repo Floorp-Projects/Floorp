@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -35,46 +35,37 @@
 import org.mozilla.javascript.*;
 
 /**
- * RunScript3: Example of using JavaScript objects
- * 
- * Collects its arguments from the command line, executes the 
- * script, and then ...
+ * RunScript4: Execute scripts in an environment that includes the
+ *             example Counter class.
  * 
  * @author Norris Boyd
  */
-public class RunScript3 {
+public class RunScript4 {
     public static void main(String args[]) 
-        throws JavaScriptException 
+        throws Exception 
     {
         Context cx = Context.enter();
         Scriptable scope = cx.initStandardObjects(null);
+
+        // Use the Counter class to define a Counter constructor
+        // and prototype in JavaScript.
+        ScriptableObject.defineClass(scope, Counter.class);
+
+        // Create an instance of Counter and assign it to
+        // the top-level variable "myCounter". This is
+        // equivalent to the JavaScript code 
+        //    myCounter = new Counter(7);
+        Object[] arg = { new Integer(7) };
+        Scriptable myCounter = cx.newObject(scope, "Counter", arg);
+        scope.put("myCounter", scope, myCounter);
         
-        // Collect the arguments into a single string.
         String s = "";
         for (int i=0; i < args.length; i++)
             s += args[i];
-        
-        // Now evaluate the string we've colected. We'll ignore the result.
-        cx.evaluateString(scope, s, "<cmd>", 1, null);
-
-        // Print the value of variable "x"
-        Object x = scope.get("x", scope);
-        if (x == Scriptable.NOT_FOUND)
-            System.out.println("x is not defined.");
-        else
-            System.out.println("x = " + Context.toString(x));
-
-        // Call function "f('my arg')" and print its result.
-        Object f = scope.get("f", scope);
-        if (!(f instanceof Function))
-            System.out.println("f is undefined or not a function.");
-        else {
-            Object functionArgs[] = { "my arg" };
-            Object result = ((Function) f).call(cx, scope, scope, functionArgs);
-            System.out.println("f('my args') = " + Context.toString(result));
-        }
-        
+        Object result = cx.evaluateString(scope, s, "<cmd>", 1, null);
+        System.err.println(cx.toString(result));
         Context.exit();
     }
+
 }
 
