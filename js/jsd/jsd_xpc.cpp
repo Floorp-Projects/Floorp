@@ -2169,18 +2169,20 @@ NS_IMETHODIMP
 jsdValue::GetProperties (jsdIProperty ***propArray, PRUint32 *length)
 {
     ASSERT_VALID_EPHEMERAL;
-    if (!JSD_IsValueObject(mCx, mValue)) {
-        *length = 0;
+    PRUint32 prop_count = JSD_IsValueObject(mCx, mValue)
+        ? JSD_GetCountOfProperties (mCx, mValue)
+        : 0;
+    if (!prop_count) {
+        if (length)
+            *length = 0;
         *propArray = 0;
         return NS_OK;
     }
 
-    jsdIProperty **pa_temp;
-    PRUint32 prop_count = JSD_GetCountOfProperties (mCx, mValue);
-    
-    pa_temp = NS_STATIC_CAST(jsdIProperty **,
-                             nsMemory::Alloc(sizeof (jsdIProperty *) * 
-                                             prop_count));
+    jsdIProperty **pa_temp =
+        NS_STATIC_CAST(jsdIProperty **,
+                       nsMemory::Alloc(sizeof (jsdIProperty *) * 
+                                       prop_count));
 
     PRUint32     i    = 0;
     JSDProperty *iter = NULL;
