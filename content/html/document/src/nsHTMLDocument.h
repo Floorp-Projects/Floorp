@@ -291,6 +291,7 @@ protected:
 
   static nsrefcnt gRefCntRDFService;
   static nsIRDFService* gRDF;
+  static PRUint32 gWyciwygSessionCnt;
 
   static PRBool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                PRInt32& aCharsetSource,
@@ -321,7 +322,6 @@ protected:
 
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;
-  PRUint32 mWyciwygSessionCnt;
 
   // Load flags of the document's channel
   PRUint32 mLoadFlags;

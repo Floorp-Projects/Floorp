@@ -169,6 +169,7 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 nsIRDFService* nsHTMLDocument::gRDF;
 nsrefcnt       nsHTMLDocument::gRefCntRDFService = 0;
+PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
 
 static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
@@ -3948,7 +3949,7 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 
   // Generate the wyciwyg url
   url = NS_LITERAL_CSTRING("wyciwyg://")
-      + nsPrintfCString("%d", mWyciwygSessionCnt++)
+      + nsPrintfCString("%d", gWyciwygSessionCnt++)
       + NS_LITERAL_CSTRING("/")
       + originalSpec;
 
