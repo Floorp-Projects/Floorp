@@ -68,7 +68,7 @@ WIDTH="600" HEIGHT="58" VSPACE="0" HSPACE="0"></TD></TR></TABLE>
 
 <h3 align=center>
 Development Monitoring System <br>
-rewrite by <a href="mailto:kestes@reefedge.com">Ken Estes</a></h3>
+rewrite by <a href="mailto:kestes@walrus.com">Ken Estes</a></h3>
 
     <p>This document describes a rewrite of the original <a href="http://www.mozilla.org/tinderbox.html">Tinderbox 1.0</a> development tool.
 
@@ -143,16 +143,25 @@ rewrite by <a href="mailto:kestes@reefedge.com">Ken Estes</a></h3>
       closed and see of any checkin policies have been violated.
 
 
-      <p><li> Tinderbox box will soon display the trouble tickets which
+      <p><li> Tinderbox box will displays the trouble tickets which
       were closed.  Since the changes in the code were likely made to
       fix bugs, it is convenient to have the current changes to the
-      bug tracking system displayed on the Tinderbox pages.
+      bug tracking system displayed on the Tinderbox pages.  This
+      allows for cross correlation between version control changes,
+      changes in the state of trouble tickets and the current state of
+      the build and test suites.
 
 
-      <p><li> Since the Tinderbox web pages are a centralized place for
-      Project information there is a "Message of the Day" for
-      managment messages and a "Notice Board" where developers can
-      post information of interest the project.  Typically the notice
+      <p><li> Since the Tinderbox web pages are a centralized place
+      for Project information there is a "Message of the Day" for
+      managment messages, "Tree State" for current checkin policy and
+      a "Notice Board" where developers can post information of
+      interest the project.  Managment can set the "Tree State" to
+      notify the developers what type of checkin dicipline is expected
+      for version control use. Since many modern version control
+      systems do not have a project state to enforce checkin disipline
+      this can be the only mechanism for developers to learn what is
+      expected of them at the current time.  Typically the notice
       board is used to announce when a developer makes major changes
       to the source code or to confirm that a recent build failure is
       being fixed or backed out.
@@ -251,7 +260,7 @@ the ability to check in.
 <FONT SIZE="-1">
 Copyright &copy; 1998-2001 The Mozilla Organization.
 <BR>
-Last modified September 14,  2000.
+Last modified December 21,  2001.
 <BR>
 <A HREF="http://www.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla-org/html/projects/tinderbox/index.html&amp;rev=&amp;root=/cvsroot/">Document History</A>.
 </FONT>
