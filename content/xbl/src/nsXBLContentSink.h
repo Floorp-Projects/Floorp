@@ -41,7 +41,6 @@
 
 #include "nsXMLContentSink.h"
 #include "nsXBLDocumentInfo.h"
-#include "nsIXBLPrototypeBinding.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLProtoImpl.h"
 #include "nsICSSParser.h"
@@ -73,6 +72,7 @@ class nsXBLProtoImplMember;
 class nsXBLProtoImplProperty;
 class nsXBLProtoImplMethod;
 class nsXBLProtoImplField;
+class nsXBLPrototypeBinding;
 
 // The XBL content sink overrides the XML content sink to
 // builds its own lightweight data structures for the <resources>,
@@ -144,7 +144,7 @@ protected:
 
   nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
 
-  nsCOMPtr<nsIXBLPrototypeBinding> mBinding;
+  nsXBLPrototypeBinding* mBinding;
   nsXBLPrototypeHandler* mHandler; // current handler, owned by its PrototypeBinding
   nsXBLProtoImpl* mImplementation;
   nsXBLProtoImplMember* mImplMember;

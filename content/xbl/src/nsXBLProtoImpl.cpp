@@ -47,7 +47,7 @@
 #include "nsIXBLDocumentInfo.h"
 
 nsresult
-nsXBLProtoImpl::InstallImplementation(nsIXBLPrototypeBinding* aBinding, nsIContent* aBoundElement)
+nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement)
 {
   // This function is called to install a concrete implementation on a bound element using
   // this prototype implementation as a guide.  The prototype implementation is compiled lazily,
@@ -88,7 +88,7 @@ nsXBLProtoImpl::InstallImplementation(nsIXBLPrototypeBinding* aBinding, nsIConte
 }
 
 nsresult 
-nsXBLProtoImpl::InitTargetObjects(nsIXBLPrototypeBinding* aBinding,
+nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   nsIScriptContext* aContext, 
                                   nsIContent* aBoundElement, 
                                   void** aScriptObject, 
@@ -137,13 +137,12 @@ nsXBLProtoImpl::InitTargetObjects(nsIXBLPrototypeBinding* aBinding,
 }
 
 nsresult
-nsXBLProtoImpl::CompilePrototypeMembers(nsIXBLPrototypeBinding* aBinding)
+nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
 {
   // We want to pre-compile our implementation's members against a "prototype context". Then when we actually 
   // bind the prototype to a real xbl instance, we'll clone the pre-compiled JS into the real instance's 
   // context.
-  nsCOMPtr<nsIXBLDocumentInfo> docInfo;
-  aBinding->GetXBLDocumentInfo(nsnull, getter_AddRefs(docInfo));
+  nsCOMPtr<nsIXBLDocumentInfo> docInfo = aBinding->GetXBLDocumentInfo(nsnull);
   if (!docInfo)
     return NS_ERROR_FAILURE;
 

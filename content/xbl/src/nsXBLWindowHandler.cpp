@@ -52,7 +52,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsXBLPrototypeHandler.h"
-#include "nsIXBLPrototypeBinding.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIContent.h"
@@ -148,14 +148,14 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
                                  const nsACString& aRef,
                                  nsXBLPrototypeHandler** aResult)
 {
-  nsCOMPtr<nsIXBLPrototypeBinding> binding;
-  aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
+  nsXBLPrototypeBinding* binding;
+  aInfo->GetPrototypeBinding(aRef, &binding);
   
   NS_ASSERTION(binding, "No binding found for the XBL window key handler.");
   if (!binding)
     return;
 
-  binding->GetPrototypeHandlers(aResult);
+  *aResult = binding->GetPrototypeHandlers();
 } // GetHandlers
 
 void

@@ -75,6 +75,10 @@ nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEven
 
 nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 {
+  // If mElement is non-null, we created a prototype handler.
+  if (mElement)
+    delete mHandler;
+
   gRefCnt--;
   if (gRefCnt == 0) {
     NS_RELEASE(kKeyUpAtom);

@@ -58,10 +58,12 @@
 #include "nsINameSpaceManager.h"
 #include "nsIFrameManager.h"
 #include "nsStyleContext.h"
+#include "nsXBLPrototypeBinding.h"
 
 NS_IMPL_ISUPPORTS1(nsXBLResourceLoader, nsICSSLoaderObserver)
 
-nsXBLResourceLoader::nsXBLResourceLoader(nsIXBLPrototypeBinding* aBinding, nsXBLPrototypeResources* aResources)
+nsXBLResourceLoader::nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
+                                         nsXBLPrototypeResources* aResources)
 :mBinding(aBinding),
  mResources(aResources),
  mResourceList(nsnull),
@@ -95,8 +97,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
   nsCOMPtr<imgILoader> il;
   nsCOMPtr<nsICSSLoader> cssLoader;
 
-  nsCOMPtr<nsIXBLDocumentInfo> info;
-  mBinding->GetXBLDocumentInfo(nsnull, getter_AddRefs(info));
+  nsCOMPtr<nsIXBLDocumentInfo> info = mBinding->GetXBLDocumentInfo(nsnull);
   if (!info) {
     mInLoadResourcesFunc = PR_FALSE;
     return;

@@ -41,9 +41,9 @@
 #define nsXBLProtoImpl_h__
 
 #include "nsMemory.h"
-#include "nsIXBLPrototypeBinding.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLProtoImplMember.h"
+#include "nsXBLPrototypeBinding.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImpl)
 
@@ -68,11 +68,11 @@ public:
     delete mDestructor;
   };
   
-  nsresult InstallImplementation(nsIXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
-  nsresult InitTargetObjects(nsIXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
+  nsresult InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
+  nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
                              nsIContent* aBoundElement, 
                              void** aScriptObject, void** aTargetClassObject);
-  nsresult CompilePrototypeMembers(nsIXBLPrototypeBinding* aBinding);
+  nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; };
 
@@ -88,7 +88,7 @@ public:
 };
 
 static nsresult
-NS_NewXBLProtoImpl(nsIXBLPrototypeBinding* aBinding, 
+NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding, 
                    const PRUnichar* aClassName, 
                    nsXBLProtoImpl** aResult) {
   nsXBLProtoImpl* impl = new nsXBLProtoImpl();

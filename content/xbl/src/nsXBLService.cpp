@@ -71,7 +71,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsXBLContentSink.h"
 #include "nsIXBLBinding.h"
-#include "nsIXBLPrototypeBinding.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsXBLAtoms.h"
 #include "nsXULAtoms.h"
@@ -855,19 +855,17 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   PRBool allowScripts;
   docInfo->GetScriptAccess(&allowScripts);
 
-  nsCOMPtr<nsIXBLPrototypeBinding> protoBinding;
-  docInfo->GetPrototypeBinding(ref, getter_AddRefs(protoBinding));
+  nsXBLPrototypeBinding* protoBinding;
+  docInfo->GetPrototypeBinding(ref, &protoBinding);
 
   NS_ASSERTION(protoBinding, "Unable to locate an XBL binding.");
   if (!protoBinding)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> child;
-  protoBinding->GetBindingElement(getter_AddRefs(child));
+  nsCOMPtr<nsIContent> child = protoBinding->GetBindingElement();
 
   // Our prototype binding must have all its resources loaded.
-  PRBool ready;
-  protoBinding->LoadResources(&ready);
+  PRBool ready = protoBinding->LoadResources();
   if (!ready) {
     // Add our bound element to the protos list of elts that should
     // be notified when the stylesheets and scripts finish loading.
@@ -877,10 +875,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
 
   // If our prototype already has a base, then don't check for an "extends" attribute.
   nsCOMPtr<nsIXBLBinding> baseBinding;
-  nsCOMPtr<nsIXBLPrototypeBinding> baseProto;
-  PRBool hasBase;
-  protoBinding->HasBasePrototype(&hasBase);
-  protoBinding->GetBasePrototype(getter_AddRefs(baseProto));
+  PRBool hasBase = protoBinding->HasBasePrototype();
+  nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
     nsCAutoString url;
     baseProto->GetBindingURI(url);
@@ -960,7 +956,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
           return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
         if (!aPeekOnly) {
           // Make sure to set the base prototype.
-          baseBinding->GetPrototypeBinding(getter_AddRefs(baseProto));
+          baseBinding->GetPrototypeBinding(&baseProto);
           protoBinding->SetBasePrototype(baseProto);
           child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::extends, PR_FALSE);
           child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::display, PR_FALSE);

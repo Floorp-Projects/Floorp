@@ -54,6 +54,7 @@
 #include "nsXBLProtoImplProperty.h"
 #include "nsXBLProtoImplMethod.h"
 #include "nsXBLProtoImplField.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
@@ -81,6 +82,7 @@ nsXBLContentSink::nsXBLContentSink()
     mSecondaryState(eXBL_None),
     mDocInfo(nsnull),
     mIsChromeOrResource(PR_FALSE),
+    mBinding(nsnull),
     mHandler(nsnull),
     mImplementation(nsnull),
     mImplMember(nsnull),
@@ -135,9 +137,9 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
       // be special functions on the class instead.
       nsXBLPrototypeHandler* handler;
       if (mSecondaryState == eXBL_InConstructor)
-        mBinding->GetConstructor(&handler);
+        handler = mBinding->GetConstructor();
       else
-        mBinding->GetDestructor(&handler);
+        handler = mBinding->GetDestructor();
 
       // Get the text and add it to the constructor/destructor.
       handler->AppendHandlerText(text);
@@ -431,7 +433,7 @@ nsXBLContentSink::ConstructBinding()
   nsCAutoString cid; cid.AssignWithConversion(id);
 
   if (!cid.IsEmpty()) {
-    NS_NewXBLPrototypeBinding(cid, binding, mDocInfo, getter_AddRefs(mBinding));
+    mBinding = new nsXBLPrototypeBinding(cid, mDocInfo, binding);
     mDocInfo->SetPrototypeBinding(cid, mBinding);
     binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
   }
