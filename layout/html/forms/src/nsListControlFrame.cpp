@@ -1680,22 +1680,6 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (nsFormControlHelper::GetDisabled(mContent))
     return NS_OK;
 
-  switch (aEvent->message) {
-    case NS_KEY_PRESS:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-#ifdef DEBUG_rodsXXX
-        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        printf("---> %d %c\n", keyEvent->keyCode, keyEvent->keyCode);
-#endif
-        //if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-        //  MouseClicked(aPresContext);
-        //}
-      }
-      break;
-    default:
-      break;
-  }
-
   return nsScrollFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
@@ -3506,11 +3490,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
       
-      if (charcode == ' ') {
-        newIndex = mEndSelectionIndex;
-        break;
-      }
-      if (isControl) {
+      if (isControl && charcode != ' ') {
         return NS_OK;
       }
 
@@ -3519,13 +3499,11 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         // Backspace key will delete the last char in the string
         if (keycode == NS_VK_BACK && !GetIncrementalString().IsEmpty()) {
           GetIncrementalString().Truncate(GetIncrementalString().Length() - 1);
-	  aKeyEvent->PreventDefault();
+          aKeyEvent->PreventDefault();
         }
         return NS_OK;
       }
       
-      PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charcode));
-
       DOMTimeStamp keyTime;
       aKeyEvent->GetTimeStamp(&keyTime);
 
@@ -3535,16 +3513,29 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       // keystroke.  Otherwise, Truncate the string if it's been a long time
       // since our last keypress.
       if (keyTime - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
+        // If this is ' ' and we are at the beginning of the string, treat it as
+        // "select this option" (bug 191543)
+        if (charcode == ' ') {
+          newIndex = mEndSelectionIndex;
+          break;
+        }
         GetIncrementalString().Truncate();
       }
       gLastKeyTime = keyTime;
 
       // Append this keystroke to the search string. 
-      // Exception: If the user types the same key repeatedly, we'll cycle
-      // through all options beginning with that char, rather than appending it.
-      if (!(GetIncrementalString().Length() == 1 &&
-            GetIncrementalString().First() == uniChar)) {
-        GetIncrementalString().Append(uniChar);
+      PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charcode));
+      GetIncrementalString().Append(uniChar);
+
+      // See bug 188199, if all letters in incremental string are same, just try to match the first one
+      nsAutoString incrementalString(GetIncrementalString());
+      PRUint32 charIndex = 1, stringLength = incrementalString.Length();
+      while (charIndex < stringLength && incrementalString[charIndex] == incrementalString[charIndex - 1]) {
+        charIndex++;
+      }
+      if (charIndex == stringLength) {
+        incrementalString.Truncate(1);
+        stringLength = 1;
       }
 
       // Determine where we're going to start reading the string
@@ -3557,7 +3548,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       GetSelectedIndex(&startIndex);
       if (startIndex == kNothingSelected) {
         startIndex = 0;
-      } else if (GetIncrementalString().Length() == 1) {
+      } else if (stringLength == 1) {
         startIndex++;
       }
 
@@ -3568,7 +3559,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         if (optionElement) {
           nsAutoString text;
           if (NS_OK == optionElement->GetText(text)) {
-            if (Substring(text, 0, GetIncrementalString().Length()).Equals(GetIncrementalString(), 
+            if (Substring(text, 0, stringLength).Equals(incrementalString, 
               nsCaseInsensitiveStringComparator())) {
               PRBool wasChanged = PerformSelection(index, isShift, isControl);
               if (wasChanged) {
