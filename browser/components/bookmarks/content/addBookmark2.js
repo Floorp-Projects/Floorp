@@ -129,6 +129,11 @@ function onOK()
   target    = BookmarksUtils.getSelectionFromResource(rFolder);
   target    = BookmarksUtils.getTargetFromSelection(target);
   BookmarksUtils.insertSelection("newbookmark", selection, target);
+  // in insertSelection, the ds flush is delayed. It will never be performed,
+  // since this dialog is destroyed before.
+  // We have to flush manually
+  var remoteDS = BMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  remoteDS.Flush();
 }
 
 function getNormalizedURL(url)
