@@ -288,9 +288,6 @@ nsXMLElement::SetAttr(nsINodeInfo *aNodeInfo,
       //       we do not need to check other attributes. If there
       //       is no href attribute, then this link is simply
       //       untraversible [XLink 3.2].
-      // XXX If a parent of this element is already a simple link, then this
-      //     must not create a link of its own, this is just a normal element
-      //     inside the parent simple XLink element [XLink 3.2].
       mIsLink = PR_TRUE;
     } else {
       mIsLink = PR_FALSE;

@@ -403,9 +403,15 @@ struct nsCatalogEntry {
   const char* mLocalDTD;
 };
 
+// The order of this table is guestimated to be in the optimum order
 static const nsCatalogEntry kCatalogTable[] = {
- {"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd"},
- {"-//W3C//DTD SVG 20001102//EN", "svg.dtd"},
+ {"-//W3C//DTD XHTML 1.0 Transitional//EN",    "xhtml11.dtd" },
+ {"-//W3C//DTD XHTML 1.1//EN",                 "xhtml11.dtd" },
+ {"-//W3C//DTD XHTML 1.0 Strict//EN",          "xhtml11.dtd" },
+ {"-//W3C//DTD XHTML 1.0 Frameset//EN",        "xhtml11.dtd" },
+ {"-//W3C//DTD XHTML Basic 1.0//EN",           "xhtml11.dtd" },
+ {"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd"  },
+ {"-//W3C//DTD SVG 20001102//EN",              "svg.dtd"     },
  {nsnull, nsnull}
 };
 
