@@ -18,7 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert Churchill  <rjc@netscape.com>
+ *   Chris Waterson    <waterson@netscape.com>
+ *   Pierre Phaneuf    <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -2333,7 +2335,8 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			}
 			NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new time");
 
-			mDirty = PR_TRUE;
+			// don't mark dirty [i.e. don't force a flush()]
+			// mDirty = PR_TRUE;
 		}
 		else
 		{
@@ -2659,7 +2662,8 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 					NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to Unassert changed status");
 				}
 
-				mDirty = PR_TRUE;
+				// don't mark dirty [i.e. don't force a flush()]
+				// mDirty = PR_TRUE;
 			}
 		}
 	}
@@ -3761,7 +3765,7 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 {
 	nsresult rv;
 
-	nsFileSpec bookmarksFile;
+	nsFileSpec	bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
 
 	// Oh well, couldn't get the bookmarks file. Guess there
@@ -3769,8 +3773,13 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 	if (NS_FAILED(rv))
 	    return NS_OK;
 
+	// Write out bookmarks to a temp file, then shuffle files around
+	// to help prevent data loss if we crash, for example
+	nsFileSpec	bookmarksTempFile = bookmarksFile;
+	bookmarksTempFile.MakeUnique();
+
 	rv = NS_ERROR_FAILURE;
-	nsOutputFileStream	strm(bookmarksFile);
+	nsOutputFileStream	strm(bookmarksTempFile);
 	if (strm.is_open())
 	{
 		strm << "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n";
@@ -3786,6 +3795,23 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 		
 		rv = WriteBookmarksContainer(ds, strm, root, 0);
 		mDirty = PR_FALSE;
+
+		// remove the current bookmark file, and then move the new/temp
+		// bookmark file into its place
+		char	*bookmarksLeaf = bookmarksFile.GetLeafName();
+		if (bookmarksLeaf)
+		{
+			if (bookmarksFile.Exists())
+			{
+				bookmarksFile.Delete(PR_FALSE);
+			}
+			bookmarksTempFile.Rename(bookmarksLeaf);
+			nsCRT::free(bookmarksLeaf);
+		}
+
+#ifdef	DEBUG
+		printf("Bookmarks.html was written out to disk.\n");
+#endif
 	}
 	return(rv);
 }
