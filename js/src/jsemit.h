@@ -88,9 +88,10 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint32          tryCount;       /* total count of try statements parsed */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSAtomList      decls;          /* function, const, and var declarations */
+    JSParseNode     *nodeList;      /* list of recyclable parse-node structs */
 };
 
-#define TCF_TOP_LEVEL       0x01    /* at TL of program or function body */
+#define TCF_COMPILING       0x01    /* generating bytecode; this tc is a cg */
 #define TCF_IN_FUNCTION     0x02    /* parsing inside function body */
 #define TCF_RETURN_EXPR     0x04    /* function has 'return expr;' */
 #define TCF_RETURN_VOID     0x08    /* function has 'return;' */
@@ -100,13 +101,14 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_FLAGS       0x60    /* flags to propagate from FunctionBody */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
-    ((tc)->flags = TCF_TOP_LEVEL, (tc)->tryCount = 0, (tc)->topStmt = NULL,   \
-     ATOM_LIST_INIT(&(tc)->decls))
+    ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL,               \
+     ATOM_LIST_INIT(&(tc)->decls), (tc)->nodeList = NULL)
 
-#define TREE_CONTEXT_FREE(tc)                                                 \
+#define TREE_CONTEXT_FINISH(tc)                                               \
     ((void)0)
 
 struct JSCodeGenerator {
+    JSTreeContext   treeContext;    /* base state: statement info stack, etc. */
     void            *codeMark;      /* low watermark in cx->codePool */
     void            *noteMark;      /* low watermark in cx->notePool */
     void            *tempMark;      /* low watermark in cx->tempPool */
@@ -119,12 +121,12 @@ struct JSCodeGenerator {
     uintN           firstLine;      /* first line, for js_NewScriptFromCG */
     uintN           currentLine;    /* line number for tree-based srcnote gen */
     JSPrincipals    *principals;    /* principals for constant folding eval */
-    JSTreeContext   treeContext;    /* for break/continue code generation */
     JSAtomList      atomList;       /* literals indexed for mapping */
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
     jssrcnote       *notes;         /* source notes, see below */
     uintN           noteCount;      /* number of source notes so far */
+    uintN           noteMask;       /* growth increment for notes */
     ptrdiff_t       lastNoteOffset; /* code offset for last source note */
     JSTryNote       *tryBase;       /* first exception handling note */
     JSTryNote       *tryNext;       /* next available note */

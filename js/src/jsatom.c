@@ -816,7 +816,7 @@ JS_FRIEND_API(void)
 js_FreeAtomMap(JSContext *cx, JSAtomMap *map)
 {
     if (map->vector) {
-	free(map->vector);
+	JS_free(cx, map->vector);
 	map->vector = NULL;
     }
     map->length = 0;
