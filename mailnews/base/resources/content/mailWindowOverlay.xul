@@ -52,6 +52,24 @@ Rights Reserved.
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 </stringbundleset>
  
+<!-- Performance optimization...we include utilityOverlay.xul which defines some command sets
+     which are updated based on events like focus and select. We have our own custom events
+     which we use to optmize when we do command updating. To avoid unnecessary command updating,
+     we are going to override the events the global edit menu items and select edit menu items
+     are updated on with events of our own controlling. 
+ -->
+
+<commandset id="globalEditMenuItems"
+            commandupdater="true"
+            events="create-menu-edit"
+            oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+<commandset id="selectEditMenuItems"
+            commandupdater="true"
+            events="create-menu-edit"
+            oncommandupdate="goUpdateSelectEditMenuItems()"/>
+
+<!-- End command set merging -->
+
 <commandset id="mailFileMenuItems"
             commandupdater="true"
             events="create-menu-file"
