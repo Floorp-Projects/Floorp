@@ -81,8 +81,6 @@ static const char *c_szDefaultPage   = "resource:/res/MozillaControl.html";
 // Registry keys and values
 
 static const TCHAR *c_szIEHelperObjectKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
-static const TCHAR *c_szMozillaControlKey = _T("Software\\Mozilla\\");
-static const TCHAR *c_szMozillaBinDirPathValue = _T("BinDirectoryPath");
 
 // Some recent SDKs define these IOleCommandTarget groups, so they're
 // postfixed with _Moz to prevent linker errors.
@@ -131,15 +129,9 @@ CMozillaBrowser::CMozillaBrowser()
  	// the IHTMLDocument, lazy allocation.
  	mIERootDocument = NULL;
 
-	// Open registry keys
-	mSystemRegKey.Create(HKEY_LOCAL_MACHINE, c_szMozillaControlKey);
-	mUserRegKey.Create(HKEY_CURRENT_USER, c_szMozillaControlKey);
-
     // Browser helpers
     mBrowserHelperList = NULL;
     mBrowserHelperListCount = 0;
-
-	CheckBinDirPath();//szBinDirPath, dwBinDirPath);
 
 	// Initialise the web shell
 	Initialize();
@@ -155,10 +147,6 @@ CMozillaBrowser::~CMozillaBrowser()
 	
 	// Close the web shell
 	Terminate();
-
-	// Close registry keys
-	mSystemRegKey.Close();
-	mUserRegKey.Close();
 }
 
 
@@ -845,12 +833,21 @@ BOOL CMozillaBrowser::IsValid()
 // Initialises the web shell engine
 HRESULT CMozillaBrowser::Initialize()
 {
-	TCHAR szBinDirPath[MAX_PATH];
-	DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
+    // Extract the bin directory path from the control's filename
 
-	// Get the bin directory path
-	memset(szBinDirPath, 0, sizeof(szBinDirPath));
-	mSystemRegKey.QueryValue(szBinDirPath, c_szMozillaBinDirPathValue, &dwBinDirPath);
+    TCHAR szMozCtlPath[MAX_PATH];
+    memset(szMozCtlPath, 0, sizeof(szMozCtlPath));
+    GetModuleFileName(_Module.m_hInst, szMozCtlPath, sizeof(szMozCtlPath) / sizeof(szMozCtlPath[0]));
+
+    TCHAR szTmpDrive[_MAX_DRIVE];
+    TCHAR szTmpDir[_MAX_DIR];
+    TCHAR szTmpFname[_MAX_FNAME];
+    TCHAR szTmpExt[_MAX_EXT];
+	TCHAR szBinDirPath[MAX_PATH];
+
+    _tsplitpath(szMozCtlPath, szTmpDrive, szTmpDir, szTmpFname, szTmpExt);
+    memset(szBinDirPath, 0, sizeof(szBinDirPath));
+    _tmakepath(szBinDirPath, szTmpDrive, szTmpDir, NULL, NULL);
 
 #ifdef HACK_NON_REENTRANCY
     // Attempt to open a named event for this process. If it's not there we
@@ -915,88 +912,6 @@ HRESULT CMozillaBrowser::Terminate()
 #ifdef HACK_NON_REENTRANCY
     }
 #endif
-
-	return S_OK;
-}
-
-
-// Shows a dialog that the user can pick the bin directory from
-HRESULT CMozillaBrowser::CheckBinDirPath()
-{
-	TCHAR szBinDirPath[MAX_PATH+1];
-	DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
-
-	// Get the bin directory path
-	memset(szBinDirPath, 0, sizeof(szBinDirPath));
-	if (mSystemRegKey.QueryValue(szBinDirPath, c_szMozillaBinDirPathValue, &dwBinDirPath) == ERROR_SUCCESS)
-	{
-		// Bin directory is already set
-		return S_OK;
-	}
-
-	// Find out if the user wants to find the directory
-	TCHAR szMsg[1024];
-	::LoadString(_Module.m_hInstResource, IDS_LOCATEMOZILLA, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-	TCHAR szMsgTitle[1024];
-	::LoadString(_Module.m_hInstResource, IDS_LOCATEMOZILLATITLE, szMsgTitle, sizeof(szMsgTitle) / sizeof(szMsgTitle[0]));
-
-	UINT nAnswer = ::MessageBox(NULL,
-		szMsg,
-		szMsgTitle, MB_ICONQUESTION | MB_YESNO);
-	
-	if (nAnswer == IDNO)
-	{
-		return S_FALSE;
-	}
-
-	// Show a folder picker for the user to choose the bin directory
-	TCHAR szNewBinDirPath[MAX_PATH+1];
-	memset(szNewBinDirPath, 0, sizeof(szNewBinDirPath));
-
-	BROWSEINFO bi;
-	memset(&bi, 0, sizeof(bi));
-	bi.hwndOwner = m_hWnd;
-	bi.pidlRoot = NULL;
-	bi.pszDisplayName = szNewBinDirPath;
-	bi.lpszTitle = _T("Pick where the Mozilla bin directory is located, e.g. (c:\\mozilla\\bin)");
-	LPITEMIDLIST pItemList = SHBrowseForFolder(&bi);
-	if (pItemList == NULL)
-	{
-		return S_FALSE;
-	}
-
-	// Get the path from the user selection
-	IMalloc *pShellAllocator = NULL;
-	SHGetMalloc(&pShellAllocator);
-	if (pShellAllocator)
-	{
-		char szPath[MAX_PATH + 1];
-
-		if (SHGetPathFromIDList(pItemList, szPath))
-		{
-			// Chop off the end path seperator
-			int nPathSize = strlen(szPath);
-			if (nPathSize > 0)
-			{
-				if (szPath[nPathSize - 1] == '\\')
-				{
-					szPath[nPathSize - 1] = '\0';
-				}
-			}
-
-			// Form the file pattern
-			USES_CONVERSION;
-			_tcscpy(szNewBinDirPath, A2T(szPath));
-		}
-		pShellAllocator->Free(pItemList);
-		pShellAllocator->Release();
-	}
-
-	// TODO check if the chosen folder looks like the Mozilla bin directory, e.g.
-	// by looking for component.reg
-
-	// Set the value and copy it
-	mSystemRegKey.SetValue(szNewBinDirPath, c_szMozillaBinDirPathValue);
 
 	return S_OK;
 }

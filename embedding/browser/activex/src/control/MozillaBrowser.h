@@ -349,10 +349,6 @@ protected:
 	nsIPref             *   mPrefs;
 	nsIEditor			*	mEditor;
 
-	// System registry key for various control settings
-	CRegKey                 mSystemRegKey;
-	// User registry key for various control settings
-	CRegKey                 mUserRegKey;
 	// Flag to indicate if browser is created or not
 	BOOL                    mValidBrowserFlag;
 	// Indicates the browser is busy doing something
@@ -378,7 +374,6 @@ protected:
 	virtual HRESULT Terminate();
 	virtual HRESULT CreateBrowser();
 	virtual HRESULT DestroyBrowser();
-	virtual HRESULT CheckBinDirPath();
     virtual HRESULT SetStartupErrorMessage(UINT nStringID);
 	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
