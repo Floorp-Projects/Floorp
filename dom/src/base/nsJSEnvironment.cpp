@@ -95,10 +95,7 @@ NS_ScriptErrorReporter(JSContext *cx,
       // or could just expose setCategory and twiddle it later.
       const char *category = "XUL/Content JavaScript";
 
-      if (errorObject == nsnull) {
-        return;
-      }
-      else {
+      if (errorObject != nsnull) {
         nsresult rv = NS_ERROR_FAILURE;
         if (report) {
           nsAutoString fileUni;
