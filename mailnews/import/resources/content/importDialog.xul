@@ -53,8 +53,10 @@ Rights Reserved.
 		
 		<box id="import-module-tree-box" orient="vertical">
 			<tree id="moduleList" flex="1" onselect="ImportSelectionChanged()">
-				<treecol style="width:100%"/>
-				<treechildren id="bucketBody"/>
+                                <treecolgroup>
+				  <treecol flex="1"/>
+                                </treecolgroup>
+				<treechildren id="bucketBody" flex="1"/>
 			</tree>
 		</box>
 		

@@ -53,9 +53,11 @@ Rights Reserved.
 			</rule>
 		</template>
 
-		<treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
+                <treecolgroup>
+		  <treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName" flex="1"/>
+                </treecolgroup>
 
-		<treechildren id="dirTreeBody">
+		<treechildren id="dirTreeBody" flex="1">
 		</treechildren>
 	</tree>
 

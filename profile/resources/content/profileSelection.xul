@@ -86,13 +86,15 @@
       <tree id="profiles" class="inset" flex="1"
             onclick="HandleClickEvent( event );"
             onkeypress="HandleKeyEvent( event );">
-        <treecol/>
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
         <treehead>
           <treerow>
             <treecell class="treecell-header outset" value="&availprofiles.label;"/>
           </treerow>
         </treehead>
-        <treechildren id="profilekids"/>
+        <treechildren id="profilekids" flex="1"/>
       </tree>    
       <box autostretch="never">
         <checkbox id="offlineState" value="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 

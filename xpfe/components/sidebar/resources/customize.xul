@@ -89,8 +89,10 @@
             </action>
           </rule>
         </template>
-        <treecol />
-        <treechildren onclick="ClickOnOtherPanels(event, event.target.parentNode.parentNode)"/>
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren onclick="ClickOnOtherPanels(event, event.target.parentNode.parentNode)" flex="1"/>
       </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
@@ -142,10 +144,12 @@
             </action>
           </rule>
         </template>
-        <treecol />
+        <treecols>
+          <treecol flex="1"/>
+        </treecols>
          <!-- We explicitly create a 'treechildren' so we can refer
               to it from the script -->
-        <treechildren id="current-panels-root"/> 
+        <treechildren id="current-panels-root" flex="1"/> 
       </tree>
       <box class="button-group">
         <button class="dialog" id="customize-button"

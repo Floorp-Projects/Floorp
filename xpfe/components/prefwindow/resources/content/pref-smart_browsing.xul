@@ -165,8 +165,10 @@
       <rows>
         <row>
           <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)">
-            <treecol/>   
-            <treechildren id="disabledKids"/>
+            <treecolgroup>
+              <treecol flex="1"/>   
+            </treecolgroup>
+            <treechildren id="disabledKids" flex="1"/>
           </tree>
           <box autostretch="never" valign="top">
             <button class="dialog" id="removeDomain" value="&removeDomain.label;" accesskey="&removeDomain.accesskey;"

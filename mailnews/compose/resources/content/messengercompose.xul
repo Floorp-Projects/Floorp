@@ -467,9 +467,11 @@ END of Deprecated -->
 					<tree id="attachmentBucket" flex="100%" style="width:0px"
 						onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
 						onchange="contentChanged=true;">
-						<treecol style="width:100%"/>
+                                                <treecolgroup>
+						<treecol flex="1"/>
+                                                </treecolgroup>
 
-						<treechildren id="bucketBody">
+						<treechildren id="bucketBody" flex="1">
 						</treechildren>
 					</tree>
 				</box>

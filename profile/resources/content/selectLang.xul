@@ -28,7 +28,7 @@
       </treecolgroup>
       
       <template>
-        <treechildren>
+        <treechildren flex="1">
           <treeitem id="treechildren">
             <treerow>
               <treecell uri="..."

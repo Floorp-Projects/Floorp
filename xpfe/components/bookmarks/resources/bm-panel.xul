@@ -88,7 +88,7 @@
 
   <treecolgroup id="theColumns">
       <treecol id="NameColumn" sortSeparators="true"
-      	rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+      	rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
   </treecolgroup>
 
   <treehead>
@@ -98,5 +98,7 @@
     </treerow>
   </treehead>
 
-    </tree>
+  <treechildren flex="1"/>
+
+  </tree>
 </window>
