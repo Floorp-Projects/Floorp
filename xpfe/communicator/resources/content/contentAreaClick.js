@@ -184,8 +184,8 @@
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
-            getBrowser() && getBrowser().localName == "tabbrowser") {
+          if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
+              ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
             
             theTab = getBrowser().addTab(href, getReferrer(document)); // open link in new tab
             loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
