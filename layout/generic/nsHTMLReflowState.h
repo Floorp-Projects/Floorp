@@ -237,6 +237,13 @@ struct nsHTMLReflowState {
   // a frame (e.g. nsTableFrame) which initiates a special reflow for percent height calculations 
   nsIFrame* mPercentHeightReflowInitiator;
 
+  // CSS margin collapsing sometimes requires us to reflow
+  // optimistically assuming that margins collapse to see if clearance
+  // is required. When we discover that clearance is required, we
+  // store the frame in which clearance was discovered to the location
+  // requested here.
+  nsIFrame** mDiscoveredClearance;
+
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
   PRInt16 mReflowDepth;
@@ -249,6 +256,7 @@ struct nsHTMLReflowState {
     PRUint16 mIsTopOfPage:1;         // is the current context at the top of a page?
     PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
     PRUint16 mVisualBidiFormControl:1; // Keep track of descendants of form controls on Visual Bidi pages
+    PRUint16 mHasClearance:1;        // Block has clearance
   } mFlags;
 
 #ifdef IBMBIDI

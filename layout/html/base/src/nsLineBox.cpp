@@ -181,13 +181,14 @@ BreakTypeToString(PRUint8 aBreakType)
 char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
-  PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,%s[0x%x]",
+  PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]",
               IsBlock() ? "block" : "inline",
               IsDirty() ? "dirty" : "clean",
               IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
               IsImpactedByFloat() ? "impacted" : "not impacted",
               IsLineWrapped() ? "wrapped" : "not wrapped",
-              BreakTypeToString(GetBreakType()),
+              BreakTypeToString(GetBreakTypeBefore()),
+              BreakTypeToString(GetBreakTypeAfter()),
               mAllFlags);
   return aBuf;
 }
@@ -604,7 +605,7 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
     flags |= NS_LINE_FLAG_IS_BLOCK;
   }
   else {
-    if (line->HasBreak())
+    if (line->HasBreakAfter())
       flags |= NS_LINE_FLAG_ENDS_IN_BREAK;
   }
   *aLineFlags = flags;

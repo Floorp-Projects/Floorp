@@ -1080,6 +1080,22 @@ nsSpaceManager::PopState()
   }
 }
 
+void
+nsSpaceManager::DiscardState()
+{
+  NS_ASSERTION(mSavedStates, "Invalid call to DiscardState()!");
+
+  if (!mSavedStates) {
+    return;
+  }
+
+  SpaceManagerState *state = mSavedStates;
+  mSavedStates = mSavedStates->mNext;
+  if(state != &mAutoState) {
+    delete state;
+  }
+}
+
 nscoord
 nsSpaceManager::GetLowestRegionTop()
 {

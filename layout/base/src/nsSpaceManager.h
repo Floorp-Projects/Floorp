@@ -312,6 +312,12 @@ public:
   void PopState();
 
   /**
+   * Pops the state off the stack without restoring it. Useful for speculative
+   * reflow where we're not sure if we're going to keep the result.
+   */
+  void DiscardState();
+
+  /**
    * Get the top of the last region placed into the space manager, to
    * enforce the rule that a float can't be above an earlier float.
    * Returns the minimum nscoord value if there are no regions.

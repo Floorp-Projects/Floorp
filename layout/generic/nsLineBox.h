@@ -246,6 +246,17 @@ public:
     return mFlags.mPreviousMarginDirty;
   }
 
+  // mHasClearance bit
+  void SetHasClearance() {
+    mFlags.mHasClearance = 1;
+  }
+  void ClearHasClearance() {
+    mFlags.mHasClearance = 0;
+  }
+  PRBool HasClearance() const {
+    return mFlags.mHasClearance;
+  }
+
   // mImpactedByFloat bit
   void SetLineIsImpactedByFloat(PRBool aValue) {
     NS_ASSERTION((PR_FALSE==aValue || PR_TRUE==aValue), "somebody is playing fast and loose with bools and bits!");
@@ -300,20 +311,37 @@ public:
   }
 
   // mBreakType value
-  PRBool HasBreak() const {
-    return NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
+  // Break information is applied *before* the line if the line is a block,
+  // or *after* the line if the line is an inline. Confusing, I know, but
+  // using different names should help.
+  PRBool HasBreakBefore() const {
+    return IsBlock() && NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
   }
-  PRBool HasFloatBreak() const {
-    return NS_STYLE_CLEAR_LEFT == mFlags.mBreakType ||
-      NS_STYLE_CLEAR_RIGHT == mFlags.mBreakType ||
-      NS_STYLE_CLEAR_LEFT_AND_RIGHT == mFlags.mBreakType;
-  }
-  void SetBreakType(PRUint8 aBreakType) {
-    NS_WARN_IF_FALSE(aBreakType <= LINE_MAX_BREAK_TYPE, "bad break type");
+  void SetBreakTypeBefore(PRUint8 aBreakType) {
+    NS_ASSERTION(IsBlock(), "Only blocks have break-before");
+    NS_ASSERTION(aBreakType <= NS_STYLE_CLEAR_LEFT_AND_RIGHT,
+                 "Only float break types are allowed before a line");
     mFlags.mBreakType = aBreakType;
   }
-  PRUint8 GetBreakType() const {
-    return mFlags.mBreakType;
+  PRUint8 GetBreakTypeBefore() const {
+    return IsBlock() ? mFlags.mBreakType : NS_STYLE_CLEAR_NONE;
+  }
+
+  PRBool HasBreakAfter() const {
+    return !IsBlock() && NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
+  }
+  void SetBreakTypeAfter(PRUint8 aBreakType) {
+    NS_ASSERTION(!IsBlock(), "Only inlines have break-after");
+    NS_ASSERTION(aBreakType <= LINE_MAX_BREAK_TYPE, "bad break type");
+    mFlags.mBreakType = aBreakType;
+  }
+  PRBool HasFloatBreakAfter() const {
+    return !IsBlock() && (NS_STYLE_CLEAR_LEFT == mFlags.mBreakType ||
+                          NS_STYLE_CLEAR_RIGHT == mFlags.mBreakType ||
+                          NS_STYLE_CLEAR_LEFT_AND_RIGHT == mFlags.mBreakType);
+  }
+  PRUint8 GetBreakTypeAfter() const {
+    return !IsBlock() ? mFlags.mBreakType : NS_STYLE_CLEAR_NONE;
   }
 
   // mCarriedOutBottomMargin value
@@ -427,6 +455,7 @@ public:
   struct FlagBits {
     PRUint32 mDirty : 1;
     PRUint32 mPreviousMarginDirty : 1;
+    PRUint32 mHasClearance : 1;
     PRUint32 mBlock : 1;
     PRUint32 mImpactedByFloat : 1;
     PRUint32 mHasPercentageChild : 1;
@@ -436,7 +465,7 @@ public:
     PRUint32 mEmptyCacheState: 1;
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 19;
+    PRUint32 mChildCount : 18;
   };
 
   struct ExtraData {
