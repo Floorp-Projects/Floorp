@@ -26,6 +26,17 @@
 !if !defined(CONFIG_OBJ_INC)
 CONFIG_OBJ_INC=1
 
+#// objs must be rebuilt if any of the makefiles change, otherwise compiler
+#// settings and the like will be missed.
+#// -- the two space definition worries me, fragile! --
+!if "$(OBJS)" != "  "
+$(OBJS): makefile.win \
+         $(DEPTH)\config\rules.mak \
+         $(DEPTH)\config\config.mak \
+         $(DEPTH)\config\win32 \
+         $(DEPTH)\config\obj.inc
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Rules for compiling 16/32 bit object files from either c or c++ source
