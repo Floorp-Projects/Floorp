@@ -205,8 +205,7 @@ function nsButtonPrefListener()
 {
   try {
     var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    if (pbi)
-      pbi.addObserver(this.domain, this, false);
+    pbi.addObserver(this.domain, this, false);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
   }
@@ -280,8 +279,6 @@ function Startup()
     // Get the preferences service
     var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefService);
-    if (!prefService)
-      throw "couldn't create a preferences service";
     pref = prefService.getBranch(null);
 
     webNavigation = getWebNavigation();
@@ -457,9 +454,8 @@ function Shutdown()
 
   // unregister us as a pref listener
   var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  if (pbi)
-    pbi.removeObserver(window.buttonPrefListener.domain,
-                       window.buttonPrefListener);
+  pbi.removeObserver(window.buttonPrefListener.domain,
+                     window.buttonPrefListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -632,7 +628,7 @@ function readRDFString(aDS,aRes,aProp)
 
 function ensureDefaultEnginePrefs(aRDF,aDS) 
 {
-  var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
   var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
   var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
@@ -651,7 +647,7 @@ function ensureSearchPref()
 {
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
   var ds = rdf.GetDataSource("rdf:internetsearch");
-  var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
   try {
     defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
@@ -666,7 +662,7 @@ function getSearchUrl(attr)
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
   var ds = rdf.GetDataSource("rdf:internetsearch"); 
   var kNC_Root = rdf.GetResource("NC:SearchEngineRoot");
-  var mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   var defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
   var engineRes = rdf.GetResource(defaultEngine);
   var prop = "http://home.netscape.com/NC-rdf#" + attr;
@@ -1372,7 +1368,7 @@ function applyTheme(themeName)
   catch(e) {
   }
 
-
+  var str;
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
     var title = gNavigatorBundle.getString("oldthemetitle");
@@ -1386,9 +1382,11 @@ function applyTheme(themeName)
 
       chromeRegistry.uninstallSkin( themeName.getAttribute("name"), true );
       // XXX - this sucks and should only be temporary.
+      str = Components.classes["@mozilla.org/supports-wstring;1"]
+                      .createInstance(Components.interfaces.nsISupportsWString);
+      str.data = true;
       pref.setComplexValue("general.skins.removelist." + themeName.getAttribute("name"),
-                           Components.interfaces.nsISupportsWString,
-                           true);
+                           Components.interfaces.nsISupportsWString, str);
       
       if (inUse)
         chromeRegistry.refreshSkins();
@@ -1400,9 +1398,11 @@ function applyTheme(themeName)
   // XXX XXX BAD BAD BAD BAD !! XXX XXX
   // we STILL haven't fixed editor skin switch problems
   // hacking around it yet again
+  str = Components.classes["@mozilla.org/supports-wstring;1"]
+                  .createInstance(Components.interfaces.nsISupportsWString);
+  str.data = themeName.getAttribute("name");
   pref.setComplexValue("general.skins.selectedSkin",
-                       Components.interfaces.nsISupportsWString,
-                       themeName.getAttribute("name"));
+                       Components.interfaces.nsISupportsWString, str);
 
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   observerService.notifyObservers(null, "skin-selected", null);
