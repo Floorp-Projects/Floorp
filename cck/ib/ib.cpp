@@ -884,12 +884,12 @@ void LinuxInvisible()
 
 void AddThirdParty()
 {
-	CString tpCompPath1 = GetGlobal("CustomComponent1");
-	CString tpCompPath2 = GetGlobal("CustomComponent137");
-	CString tpComp1		= GetGlobal("CustomComponent2");
-	CString tpComp2		= GetGlobal("CustomComponent23");
-	CString tpCompSize1	= GetGlobal("ComponentSize");
-	CString tpCompSize2	= GetGlobal("ModuleSize");
+	CString tpCompPath1 = GetGlobal("CustomComponentPath1");
+	CString tpCompPath2 = GetGlobal("CustomComponentPath2");
+	CString tpComp1		= GetGlobal("CustomComponentDesc1");
+	CString tpComp2		= GetGlobal("CustomComponentDesc2");
+	CString tpCompSize1	= GetGlobal("CustomComponentSize1");
+	CString tpCompSize2	= GetGlobal("CustomComponentSize2");
 	CString componentName;
 	CString cName;
 	CString compSDesc	= "Description Short=";
