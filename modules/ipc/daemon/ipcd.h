@@ -40,10 +40,13 @@
 
 #include "ipcModule.h"
 
+#define IPC_EXPORT extern "C" NS_EXPORT
+#define IPC_IMPORT extern "C" NS_IMPORT
+
 #ifdef IPC_DAEMON
-#define IPC_METHOD _declspec(dllexport)
+#define IPC_API IPC_EXPORT
 #else
-#define IPC_METHOD _declspec(dllimport)
+#define IPC_API IPC_IMPORT
 #endif
 
 class ipcClient;
@@ -53,8 +56,6 @@ class ipcMessage;
 // IPC daemon API
 //-----------------------------------------------------------------------------
 
-extern "C" {
-
 //
 // IPC_DispatchMsg
 //
@@ -63,7 +64,7 @@ extern "C" {
 //   msg    - the message received.  this function does not modify |msg|,
 //            and ownership stays with the caller.
 //
-int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
+IPC_API int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
 
 //
 // IPC_SendMsg
@@ -77,34 +78,32 @@ int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
 // return:
 //   0        - on success
 //
-IPC_METHOD int IPC_SendMsg(ipcClient *client, ipcMessage *msg);
+IPC_API int IPC_SendMsg(ipcClient *client, ipcMessage *msg);
 
 //
 // returns the client ID dynamically generated for the given client.
 //
-int IPC_GetClientID(ipcClient *client);
+IPC_API int IPC_GetClientID(ipcClient *client);
 
 //
 // returns the client name (NULL if the client did not specify a name).
 //
-const char *IPC_GetClientName(ipcClient *client);
+IPC_API const char *IPC_GetClientName(ipcClient *client);
 
 //
 // client lookup functions
 //
-ipcClient *IPC_GetClientByID(int clientID);
-ipcClient *IPC_GetClientByName(const char *clientName);
+IPC_API ipcClient *IPC_GetClientByID(int clientID);
+IPC_API ipcClient *IPC_GetClientByName(const char *clientName);
 
 //
 // return array of all clients, length equal to |count|.
 //
-ipcClient *IPC_GetClients(int *count);
+IPC_API ipcClient *IPC_GetClients(int *count);
 
 //
 // returns the ipcModule object registered under the given module ID.
 //
-ipcModule *IPC_GetModuleByID(const nsID &moduleID);
-
-} // extern "C"
+IPC_API ipcModule *IPC_GetModuleByID(const nsID &moduleID);
 
 #endif // !IPCD_H__
