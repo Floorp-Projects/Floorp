@@ -27,6 +27,7 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
+#include "nsMessenger.h"
 #include "nsMsgGroupRecord.h"
 
 #include "nsMsgAppCore.h"

@@ -21,7 +21,6 @@
 #define __nsMessenger_h
 
 #include "nscore.h"
-#include "nsIMessenger.h"
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
 
@@ -37,8 +36,6 @@
 
 
 NS_BEGIN_EXTERN_C
-
-nsresult NS_NewMessenger(const nsIID &aIID, void **inst);
 
 nsresult NS_NewMessengerBootstrap(const nsIID &aIID, void ** inst);
 

@@ -24,7 +24,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
-#include "nsMessenger.h"
 
 
 /* hack the AppCore stuff here */

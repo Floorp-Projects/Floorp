@@ -17,6 +17,8 @@
  */
 
 #include "nsMessenger.h"
+#include "nsIAppShellService.h"
+#include "nsIServiceManager.h"
 #include "nsMessengerNameSet.h"
 #include "nsIScriptNameSetRegistry.h"
 
@@ -121,26 +123,5 @@ NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot)
 
   
   return bootstrap->QueryInterface(aIID, msgboot);
-}
-
-// nsMessenger implementation
-
-class nsMessenger : public nsIMessenger {
-
-public:
-    NS_DECL_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::GetIID())
-
-
-nsresult
-NS_NewMessenger(const nsIID &aIID, void **msg)
-{
-  if (!msg) return NS_ERROR_NULL_POINTER;
-  nsMessenger *messenger = 
-  new nsMessenger();
-  if (!messenger) return NS_ERROR_OUT_OF_MEMORY;
-  return messenger->QueryInterface(aIID, msg);
 }
 
