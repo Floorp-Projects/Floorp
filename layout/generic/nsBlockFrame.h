@@ -301,7 +301,8 @@ protected:
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
 
-  nsLineBox* FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult);
+  nsLineBox* FindLineFor(nsIFrame* aFrame, nsLineBox** aPrevLineResult,
+                         PRBool* aIsFloaterResult);
 
   void PropogateReflowDamage(nsBlockReflowState& aState,
                              nsLineBox* aLine,
