@@ -280,9 +280,9 @@ nsresult OpenWebPage(const char *url)
     // with an extra reference so that it can released correctly during
     // destruction (via Win32UI::Destroy)
 
-    nsIWebBrowserChrome *chrome = nsnull;
+    nsCOMPtr<nsIWebBrowserChrome> chrome;
     rv = AppCallbacks::CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL,
-           nsnull, &chrome);
+           nsnull, getter_AddRefs(chrome));
     if (NS_SUCCEEDED(rv))
     {
         WebBrowserChromeUI::ShowWindow(chrome, PR_TRUE);
@@ -1275,7 +1275,12 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
   if (!chrome)
     return NS_ERROR_FAILURE;
 
+  // the interface to return and one addref, which we assume will be
+  // immediately released
   CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
+  // now an extra addref; the window owns itself (to be released by
+  // WebBrowserChromeUI::Destroy)
+  NS_ADDREF(*aNewWindow);
 
   chrome->SetChromeFlags(aChromeFlags);
   chrome->SetParent(aParent);
