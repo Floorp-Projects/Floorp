@@ -60,33 +60,7 @@
       color                 : graytext;
     }
     
-  /* 2) menubutton gets black border */
-  .menubutton-dual.toolbar[buttonover="true"]
-    {
-      border                : 1px solid threeddarkshadow;
-    }
-    
-  .menubutton-dual.toolbar[buttonover="true"][disabled="true"]
-    {
-      border                : 1px solid transparent;
-    }
-    
-  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button,
-  .menubutton-dual.toolbar[disabled="true"][buttonover="true"] > .menubutton-dual-ex-button
-    {
-      border                : 1px solid transparent;
-    }
-
-  /* 3) dropmarker gets outset border */
-  .menubutton-dual.toolbar[buttonover="true"] > .menubutton-dual-dropmarker-box
-    {
-      border-left           : 1px solid threedhighlight;
-      border-top            : 1px solid threedhighlight;
-      border-right          : 1px solid threedshadow;
-      border-bottom         : 1px solid threedshadow;
-    }    
-    
-  .menubutton-dual.toolbar[buttonover="true"][disabled="true"] > .menubutton-dual-dropmarker-box
+  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button
     {
       border                : 1px solid transparent;
     }
@@ -96,34 +70,18 @@
   /* 1). button gets inset border */
   .menubutton-dual-ex-button:hover:active
     {
-      border-left           : 1px solid threedshadow;
-      border-top            : 1px solid threedshadow;
-      border-right          : 1px solid threedhighlight;
-      border-bottom         : 1px solid threedhighlight;
+      border-left           : 1px solid threedshadow !important;
+      border-top            : 1px solid threedshadow !important;
+      border-right          : 1px solid threedhighlight !important;
+      border-bottom         : 1px solid threedhighlight !important;
       padding               : 3px 6px 1px 7px;
-      color                 : #000080;
+      color                 : #000080 !important;
     }
     
   .menubutton-dual-ex-button[disabled="true"]:hover:active
     {
-      border                : 1px solid transparent;
+      border                : 1px solid transparent !important;
       padding               : 2px 7px 2px 6px;
-    }
-    
-  /* 2). dropmarker gets inset border */
-  .menubutton-dual.toolbar[buttondown="true"] > .menubutton-dual-dropmarker-box
-    {
-      border-left           : 1px solid threedshadow;
-      border-top            : 1px solid threedshadow;
-      border-right          : 1px solid threedhighlight;
-      border-bottom         : 1px solid threedhighlight;
-      padding               : 2px 0px 0px 0px;
-    }    
-    
-  .menubutton-dual.toolbar[buttondown="true"][disabled="true"] > .menubutton-dual-dropmarker-box
-    {
-      border                : 1px solid transparent;
-      padding               : 0px
     }
     
 /* ACTION: mouse over the menu */
@@ -190,108 +148,6 @@
       border-bottom         : 1px solid threedhighlight;
       padding               : 2px 0px 0px 0px;
     }
-
-/*
-.menubutton-dual.toolbar.top
-  {
-    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-top");
-  }
-
-.menubutton-dual.toolbar.top > .menubutton-internal-box > .menubutton-dual-button
-  {
-    -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbarbutton-top");
-    background-color      : none;
-    min-width             : 47px;
-    margin                : 0px;
-    border                : 1px solid transparent;
-    -moz-user-focus       : ignore;
-    padding               : 2px 3px 2px 3px;
-    text-align            : center;
-  }  
-  
-.menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-button,
-.menubutton-dual.toolbar > .menubutton-internal-box > .menubutton-dual-button:hover
-  {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-    color                 : #0000FF;
-  }  
-  
-.menubutton-dual.toolbar > .menubutton-internal-box > .menubutton-dual-button:hover:active
-  {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-bottom         : 1px solid threedhighlight;
-    border-right          : 1px solid threedhighlight;
-    padding               : 3px 2px 1px 4px;
-  }  
-  
-.menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-button[disabled="true"],
-.menubutton-dual.toolbar:hover[disabled="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
-.menubutton-dual.toolbar:hover:active[disabled="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
-.menubutton-dual.toolbar[open="true"][disabled="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
-.menubutton-dual-button:hover[disabled="true"] + .menubutton-dual-dropmarker-box,
-.menubutton-dual-button:hover:active[disabled="true"] + .menubutton-dual-dropmarker-box  
-  {
-    border                : 1px solid transparent;
-    color                 : graytext;
-  } 
-  
-.menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-dropmarker-box
-  {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-  }  
-  
-.menubutton-dual.toolbar:hover:active > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
-.menubutton-dual.toolbar[open="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box
-  {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-bottom         : 1px solid threedhighlight;
-    border-right          : 1px solid threedhighlight;
-    padding               : 1px 1px 0px 3px;
-  }  
-
-.menubutton-dual.toolbar > .menubutton-internal-box > .menubutton-dual-button:hover + .menubutton-dual-dropmarker-box
-  {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-  }
-  
-.menubutton-dual-button:hover:active + .menubutton-dual-dropmarker-box  
-  {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-bottom         : 1px solid threedhighlight;
-    border-right          : 1px solid threedhighlight;
-    padding               : 1px 1px 0px 3px;
-  }
-
-.menubutton-dual-dropmarker-box
-  {
-    border                : 1px solid transparent;
-    padding               : 0px 2px 0px 2px;
-  }
-  
-.menubutton-dropmarker
-  {
-    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif");
-  }
-  
-.menubutton-dropmarker[disabled="true"]
-  {
-    list-style-image      : url("chrome://global/skin/dropmarker-down-disabled.gif");
-  }  
-  
-
-*/
 
 /** menubuttons on generic grey toolbars
  *  class="button-toolbar"

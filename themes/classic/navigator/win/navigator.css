@@ -93,15 +93,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button[disabled="true"]:hover,
 #back-button[disabled="true"]:hover:active,
 #back-button[disabled="true"] > .menubutton-dual-ex-button:hover,
-#back-button[disabled="true"] > .menubutton-dual-ex-button:hover:active,
-#back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
-#back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
+#back-button[disabled="true"] > .menubutton-dual-ex-button:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
   }
 
 #back-button:hover,
-#back-button > .classic-simplebutton-box > .classic-simplebutton:hover,
 #back-button > .menubutton-dual-ex-button:hover,
 #back-button[open="true"] > .menubutton-dual-ex-button
   {
@@ -109,8 +106,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #back-button:hover:active,
-#back-button > .menubutton-dual-ex-button:hover:active,
-#back-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
+#back-button > .menubutton-dual-ex-button:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
@@ -124,15 +120,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #forward-button[disabled="true"]:hover,
 #forward-button[disabled="true"]:hover:active,
 #forward-button[disabled="true"] > .menubutton-dual-ex-button:hover,
-#forward-button[disabled="true"] > .menubutton-dual-ex-button:hover:active,
-#forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
-#forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
+#forward-button[disabled="true"] > .menubutton-dual-ex-button:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
   }
 
 #forward-button:hover,
-#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover,
 #forward-button > .menubutton-dual-ex-button:hover,
 #forward-button[open="true"] > .menubutton-dual-ex-button
   {
@@ -140,8 +133,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #forward-button:hover:active,
-#forward-button > .menubutton-dual-ex-button:hover:active,
-#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
+#forward-button > .menubutton-dual-ex-button:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
   }
@@ -258,18 +250,23 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #print-button[disabled="true"],
-#print-button[disabled="true"][buttonover="true"],
-#print-button[disabled="true"][buttondown="true"]
+#print-button[disabled="true"]:hover,
+#print-button[disabled="true"]:hover:active,
+#print-button[disabled="true"] > .menubutton-dual-ex-button:hover,
+#print-button[disabled="true"] > .menubutton-dual-ex-button:hover:active
   {
     list-style-image      : url("chrome://global/skin/print-disabled.gif");
   }
 
-#print-button[buttonover="true"]
+#print-button:hover,
+#print-button > .menubutton-dual-ex-button:hover,
+#print-button[open="true"] > .menubutton-dual-ex-button
   {
     list-style-image      : url("chrome://global/skin/print-hover.gif");
   }
 
-#print-button[buttondown="true"]
+#print-button:hover:active,
+#print-button > .menubutton-dual-ex-button:hover:active
   {
     list-style-image      : url("chrome://global/skin/print-hover-active.gif");
   }
