@@ -23,6 +23,7 @@ VPATH		= @srcdir@
 CHROME_DIR          = related
 CHROME_CONTENT_DIR  = content/default
 CHROME_SKIN_DIR     = skin/default
+CHROME_SOURCE_DIR   = $(srcdir)
 
 CHROME_CONTENT = \
 	related-panel.xul \
