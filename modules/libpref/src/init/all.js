@@ -331,14 +331,12 @@ pref("browser.use_document_fonts",              1); // 0 = never, 1 = quick, 2 =
 
 // -- folders (Mac: these are binary aliases.)
 localDefPref("browser.download_directory",      "");
-localDefPref("browser.cache.directory",         "");
 localDefPref("mail.signature_file",             "");
 localDefPref("mail.directory",                  "");
 localDefPref("mail.cc_file",                    "");
 localDefPref("news.cc_file",                    "");
 
 pref("news.fancy_listing",      true);      // obsolete
-localDefPref("browser.cache.wfe.directory", null);
 pref("browser.wfe.show_value", 1);
 pref("browser.blink_allowed", true);
 pref("images.dither", "auto");
