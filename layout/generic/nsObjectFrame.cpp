@@ -60,7 +60,7 @@
 //~~~ For image mime types
 #include "net.h"
 
-class nsObjectFrame;
+#include "nsObjectFrame.h"
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
@@ -175,97 +175,6 @@ private:
   nsIPluginHost     *mPluginHost;
 };
 
-#define nsObjectFrameSuper nsHTMLContainerFrame
-
-class nsObjectFrame : public nsObjectFrameSuper {
-public:
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
-                  nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                       nsDidReflowStatus aStatus);
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus);
-
-  NS_IMETHOD Scrolled(nsIView *aView);
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
-#endif
-
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-
-  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent);
-  //local methods
-  nsresult CreateWidget(nsIPresContext* aPresContext,
-                        nscoord aWidth,
-                        nscoord aHeight,
-                        PRBool aViewOnly);
-  nsresult GetFullURL(nsIURI*& aFullURL);
-
-  nsresult GetPluginInstance(nsIPluginInstance*& aPluginInstance);
-  
-  void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
-
-protected:
-  virtual ~nsObjectFrame();
-
-  virtual PRIntn GetSkipSides() const;
-
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
-
-
-  nsresult SetFullURL(nsIURI* aURL);
-
-  nsresult InstantiateWidget(nsIPresContext*          aPresContext,
-							nsHTMLReflowMetrics&     aMetrics,
-							const nsHTMLReflowState& aReflowState,
-							nsCID aWidgetCID);
-
-  nsresult InstantiatePlugin(nsIPresContext*          aPresContext,
-							nsHTMLReflowMetrics&     aMetrics,
-							const nsHTMLReflowState& aReflowState,
-							nsIPluginHost* aPluginHost, 
-							const char* aMimetype,
-							nsIURI* aURL);
-  //~~~
-  nsresult ReinstantiatePlugin(nsIPresContext* aPresContext, 
-                               nsHTMLReflowMetrics& aMetrics, 
-                               const nsHTMLReflowState& aReflowState);
-
-  nsresult HandleImage(nsIPresContext*          aPresContext,
-					   nsHTMLReflowMetrics&     aMetrics,
-					   const nsHTMLReflowState& aReflowState,
-					   nsReflowStatus&          aStatus,
-					   nsIFrame* child);
- 
-  nsresult GetBaseURL(nsIURI* &aURL);
-
-private:
-  nsPluginInstanceOwner *mInstanceOwner;
-  nsIURI                *mFullURL;
-  nsIFrame              *mFirstChild;
-  nsIWidget				      *mWidget;
-};
 
 nsObjectFrame::~nsObjectFrame()
 {
