@@ -142,13 +142,10 @@ Contributor(s): ______________________________________. -->
 			<menu id="menu_New">
 				<menupopup id="menu_NewPopup">
 					<!-- From globalOverlay.xul -->
-					<menuitem id="menu_newEditor"          observes="cmd_newEditor"/>
-					<menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
-					<menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>
-					<menuseparator/>
 					<menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
 					<menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
 					<menuitem id="menu_newCard"      observes="cmd_newCard"/>
+					<menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
 				</menupopup>
 			</menu>
 	      <menuitem accesskey="&openCmd.accesskey;" key="openBrowserKb" observes="Browser:Open"/>

@@ -7,8 +7,8 @@
 <!ENTITY fileMenu.accesskey				"f">
 <!ENTITY newMenu.label						"New">
 <!ENTITY newMenu.accesskey					"e">
-<!ENTITY newBlankPageCmd.label "Edit Blank Page">
-<!ENTITY newBlankPageCmd.accesskey "b" >
+<!ENTITY newBlankPageCmd.label "Blank Page to Edit">
+<!ENTITY newBlankPageCmd.accesskey "e" >
 <!ENTITY newBlankPageCmd.key "n" >
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromTemplateCmd.accesskey "t">
