@@ -95,8 +95,10 @@ protected:
   nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame,
                            PRBool aFlushNotifications = PR_TRUE);
 
-  // Get the select content element that contains this option
-  nsresult GetSelect(nsIDOMHTMLSelectElement *&aSelectElement);
+  // Get the select content element that contains this option, this
+  // intentionally does not return nsresult, all we care about is if
+  // there's a select associated with this option or not.
+  void GetSelect(nsIDOMHTMLSelectElement *&aSelectElement);
 };
 
 nsresult
@@ -193,6 +195,9 @@ nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
+  NS_ENSURE_ARG_POINTER(aForm);
+  *aForm = nsnull;
+
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
   GetSelect(*getter_AddRefs(selectElement));
 
@@ -270,7 +275,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
     // Note: The select content obj maintains all the PresState
     // so defer to it to get the answer
     nsCOMPtr<nsIDOMNode> parentNode;
-    result = NS_ERROR_FAILURE;
+    result = NS_OK;
 
     GetParentNode(getter_AddRefs(parentNode));
 
@@ -597,7 +602,9 @@ nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
 {
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
 
-  nsresult res = GetSelect(*getter_AddRefs(selectElement));
+  nsresult res = NS_ERROR_FAILURE; // This should be NS_OK;
+
+  GetSelect(*getter_AddRefs(selectElement));
 
   if (selectElement) {
     nsCOMPtr<nsIHTMLContent> selectContent(do_QueryInterface(selectElement));
@@ -613,7 +620,7 @@ nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
 }
 
 // Get the select content element that contains this option
-nsresult
+void
 nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement)
 {
   aSelectElement = nsnull;
@@ -621,11 +628,10 @@ nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement)
   // Get the containing element (Either a select or an optGroup)
   nsCOMPtr<nsIDOMNode> parentNode;
 
-  nsresult res = NS_ERROR_FAILURE;
-
   GetParentNode(getter_AddRefs(parentNode));
 
   if (parentNode) {
+    nsresult res;
     res = parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                      (void**)&aSelectElement);
 
@@ -647,13 +653,11 @@ nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement)
       }
 
       if (parentNode) {
-        res = parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                         (void**)&aSelectElement);
+        parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
+                                   (void**)&aSelectElement);
       }
     }
   }
-
-  return res;
 }
 
 NS_IMETHODIMP    

@@ -77,7 +77,9 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsresult GetRow(nsIDOMHTMLTableRowElement** aRow);
+  // This does not retunr a nsresult since all we care about is if we
+  // found the row element that this cell is in or not.
+  void GetRow(nsIDOMHTMLTableRowElement** aRow);
 
   PRInt32 mColIndex;
 };
@@ -171,14 +173,18 @@ NS_METHOD nsHTMLTableCellElement::SetColIndex (PRInt32 aColIndex)
 }
 
 // protected method
-nsresult
+void
 nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
 {
-  nsIDOMNode *rowNode;
-  GetParentNode(&rowNode); 
-  nsresult result = rowNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableRowElement), (void**)aRow);
-  NS_RELEASE(rowNode);
-  return result;
+  *aRow = nsnull;
+
+  nsCOMPtr<nsIDOMNode> rowNode;
+  GetParentNode(getter_AddRefs(rowNode));
+
+  if (rowNode) {
+    rowNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableRowElement),
+                            (void**)aRow);
+  }
 }
 
 NS_IMETHODIMP
@@ -190,9 +196,17 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 
   GetRow(getter_AddRefs(row));
 
+  if (!row) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMHTMLCollection> cells;
 
   row->GetCells(getter_AddRefs(cells));
+
+  if (!cells) {
+    return NS_OK;
+  }
 
   PRUint32 numCells;
   cells->GetLength(&numCells);
@@ -227,9 +241,17 @@ nsHTMLTableCellElement::SetCellIndex(PRInt32 aCellIndex)
 
   GetRow(getter_AddRefs(row));
 
+  if (!row) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMHTMLCollection> cells;
 
   row->GetCells(getter_AddRefs(cells));
+
+  if (!cells) {
+    return NS_OK;
+  }
 
   PRUint32 numCellsU;
   cells->GetLength(&numCellsU);
