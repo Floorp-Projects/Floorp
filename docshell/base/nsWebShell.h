@@ -115,15 +115,6 @@ public:
 
     // NS_IMETHOD SetURL(const PRUnichar* aURL);
 
-    nsresult OnLinkClickSyncInternal(nsIContent* aContent, nsLinkVerb aVerb,
-                                     nsIURI* aURI,
-                                     const PRUnichar* aTargetSpec,
-                                     nsIInputStream* aPostDataStream,
-                                     nsIInputStream* aHeadersDataStream,
-                                     nsIDocShell** aDocShell,
-                                     nsIRequest** aRequest,
-                                     nsISupports *aOwner);
-
 protected:
     // void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
     void InitFrameData();
