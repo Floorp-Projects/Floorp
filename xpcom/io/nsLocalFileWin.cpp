@@ -1525,7 +1525,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     // cannot use nsCString::RFindChar() due to 0x5c problem
     PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.GetBuffer(), '\\')
                      - (const unsigned char *) parentPath.GetBuffer());
-    if (offset == -1)
+    if (offset < 0)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     parentPath.Truncate(offset);
