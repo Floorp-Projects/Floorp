@@ -53,8 +53,6 @@
 /*********************
  * Java JNI globals
  *********************/
-extern jclass intClass;
-extern jclass intArrayClass;
 extern jclass stringClass;
 extern jclass nsISupportsClass;
 extern jclass xpcomExceptionClass;
