@@ -1447,6 +1447,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 		else
 		{
 			nsCOMPtr<nsIRDFResource>	attribAtomResource;
+
 			if (NS_FAILED(rv = GetResource(attribNameSpaceID, attribAtom, getter_AddRefs(attribAtomResource))))
 			{
 				*matchingRuleFound = PR_FALSE;
@@ -2539,8 +2540,10 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
 			emptyVal = "false";
 		}
 		aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
+		if(emptyVal.Equals("false"))
+	        return PR_TRUE;
 	}
-        return PR_TRUE;
+        return PR_FALSE;
     }
 
     return PR_FALSE;
