@@ -38,6 +38,9 @@ EXPORTS =					\
 	nsweb.h					\
 	nsIDocStreamLoaderFactory.h		\
   nsIUrlDispatcher.h    \
+ifdef NECKO
+    nsIRefreshURI.h                 \
+endif
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
