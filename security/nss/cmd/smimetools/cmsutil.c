@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.20 2000/12/14 23:59:33 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.21 2000/12/21 22:14:02 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1141,6 +1141,9 @@ main(int argc, char **argv)
 	      
 	}
     }
+
+    if (mode == UNKNOWN)
+	Usage(progName);
 
     if (mode != CERTSONLY)
 	SECU_FileToItem(&input, inFile);
