@@ -263,12 +263,12 @@ nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopu
     nsCOMPtr<nsIDocument> targetDocument;
     targetAsContent->GetDocument(*getter_AddRefs(targetDocument));
     nsCOMPtr<nsIPresShell> shell = targetDocument->GetShellAt(0);
-    nsCOMPtr<nsIViewManager> viewManager;
-    shell->GetViewManager(getter_AddRefs(viewManager));
-    nsIView* rootView;
-    viewManager->GetRootView(rootView);
-    nscoord wOffsetX, wOffsetY;
-    rootView->GetOffsetFromWidget(&wOffsetX, &wOffsetY, *getter_AddRefs(targetDocumentWidget));
+    nsCOMPtr<nsIViewManager> viewManagerTarget;
+    shell->GetViewManager(getter_AddRefs(viewManagerTarget));
+    nsIView* rootViewTarget;
+    viewManagerTarget->GetRootView(rootViewTarget);
+    nscoord unusedX, unusedY;
+    rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
   }
 
   // the offset we need is the difference between the upper left corner of the two widgets. Use
@@ -467,6 +467,12 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // finally move and resize it
   viewManager->MoveViewTo(view, xpos, ypos); 
   viewManager->ResizeView(view, mRect.width, mRect.height);
+  
+  // just before we show it, make sure it's been reflowed. if not, we get weird 
+  // redraw problems because of async layout
+  nsCOMPtr<nsIPresShell> myShell;
+  mPresContext->GetShell(getter_AddRefs(myShell));
+  myShell->ProcessReflowCommands ( PR_FALSE );
   
   nsAutoString shouldDisplay;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
