@@ -24,7 +24,7 @@ BODY {
   background: white;
   cursor: arrow;
   display: block;
-  line-height: 1.0;
+  line-height: normal;
 //XXX not yet...  margin: 8px;
   padding: 8px;
   overflow: auto;
