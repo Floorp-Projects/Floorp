@@ -108,3 +108,27 @@ sub setDBIDatabaseSettings {
         $configuration->propertySet("$prefix.$property", $database->propertyGet($property));
     }
 }
+
+# this takes an object supporting the dataSource.configuration.client
+# service and retrieves its settings.
+sub getSettings {
+    my $self = shift;
+    my($app, $object, $prefix) = @_;
+    my $configuration = $self->database($app);
+    foreach my $property ($object->settings) {
+        my $value = $configuration->propertyGet("$prefix.$property");
+        $self->assert($value, 1, "The configuration is missing a valid value for '$prefix.$property'");
+        $object->propertySet($property, $value);
+    }
+}
+
+# this takes an object supporting the dataSource.configuration.client
+# service and saves its settings.
+sub setSettings {
+    my $self = shift;
+    my($app, $object, $prefix) = @_;
+    my $configuration = $self->database($app);
+    foreach my $property ($object->settings) {
+        $configuration->propertySet("$prefix.$property", $object->propertyGet($property));
+    }
+}
