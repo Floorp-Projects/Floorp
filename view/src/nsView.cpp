@@ -93,12 +93,19 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
         //see if the paint region is greater than .75 the area of our root view.
         //if so, enable double buffered painting.
 
+        view->GetBounds(vrect);
+
+        PRBool db = PR_FALSE;
+
+        if ((((float)trect.width * trect.height) / ((float)vrect.width * vrect.height)) >  0.75f)
+           db = PR_TRUE;
+
 //printf("damage repair...\n");
 
         vm->UpdateView(view, trect,
                        NS_VMREFRESH_SCREEN_RECT |
                        NS_VMREFRESH_IMMEDIATE |
-                       NS_VMREFRESH_DOUBLE_BUFFER);
+                       ((db == PR_TRUE) ? NS_VMREFRESH_DOUBLE_BUFFER : 0));
 
         NS_RELEASE(dx);
         NS_RELEASE(px);
