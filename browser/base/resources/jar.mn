@@ -1,6 +1,5 @@
 browser.jar:
         content/browser/contents.rdf                 (content/contents.rdf)
-        content/browser/browser-2.js                 (content/browser-2.js)
         content/browser/pageInfo.js                  (content/pageInfo.js)
         content/browser/pageInfo.xul                 (content/pageInfo.xul)
         content/browser/browser.xul                  (content/browser.xul)
