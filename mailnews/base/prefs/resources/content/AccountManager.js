@@ -135,24 +135,28 @@ function sortAccountList(accounttree)
 
 function selectServer(server, selectPage)
 {
-  var selectedItem;
+  var selectedServer, selectedItem;
 
-  if (server) {
-    selectedItem = document.getElementById(server.serverURI);
-    if (selectedItem && selectPage) 
-      selectedItem = findSelectPage(selectedItem, selectPage);
-  }
+  if (server)
+    selectedServer = document.getElementById(server.serverURI);
+  if (!selectedServer)
+    selectedServer = getFirstAccount();
 
+  if (server && selectedServer && selectPage)
+    selectedItem = findSelectPage(selectedServer, selectPage);
   if (!selectedItem)
-    selectedItem = getFirstAccount();
+    selectedItem = selectedServer;
 
   var index = accounttree.contentView.getIndexOfItem(selectedItem);
   accounttree.treeBoxObject.selection.select(index);
 
-  var result = getServerIdAndPageIdFromTree(accounttree);
-  if (result) {
-    updateButtons(accounttree,result.serverId);
-  }
+  var lastItem = selectedServer.lastChild.lastChild;
+  if (lastItem.localName == "treeitem")
+    index = accounttree.contentView.getIndexOfItem(lastItem);
+
+  accounttree.treeBoxObject.ensureRowIsVisible(index);
+
+  updateButtons(accounttree, selectedServer.id);
 }
 
 function findSelectPage(selectServer, selectPage)
