@@ -97,6 +97,8 @@ public:
                            PRInt32              aId,
                            nsIImage*&           aImage);
 
+  NS_IMETHOD CheckFontExistence(const char * aFontName);
+
 protected:
   ~nsDeviceContextUnix();
   nsresult CreateFontCache();

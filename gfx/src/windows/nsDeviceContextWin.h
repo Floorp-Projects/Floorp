@@ -36,6 +36,8 @@ public:
   //in the device context for re-use.
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
+  NS_IMETHOD CheckFontExistence(const char * aFontName);
+
 protected:
   virtual ~nsDeviceContextWin();
 
