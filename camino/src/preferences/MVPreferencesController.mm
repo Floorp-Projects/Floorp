@@ -368,7 +368,8 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   label = [[[cache objectForKey:@"MVPreferencePanePaletteLabel"] retain] autorelease];
   if ( ! label ) {
     NSDictionary *info = [bundle infoDictionary];
-    label = NSLocalizedStringFromTableInBundle( @"NSPrefPaneIconLabel", @"InfoPlist", bundle, nil );
+    label = NSLocalizedStringFromTableInBundle(@"PreferencePanelLabel", nil, bundle, nil);
+    if ( [label isEqualToString:@"PreferencePanelLabel"] ) label = NSLocalizedStringFromTableInBundle( @"NSPrefPaneIconLabel", @"InfoPlist", bundle, nil );
     if ( [label isEqualToString:@"NSPrefPaneIconLabel"] ) label = [info objectForKey:@"NSPrefPaneIconLabel"];
     if ( ! label ) label = NSLocalizedStringFromTableInBundle( @"CFBundleName", @"InfoPlist", bundle, nil );
     if ( [label isEqualToString:@"CFBundleName"] ) label = [info objectForKey:@"CFBundleName"];
@@ -387,7 +388,8 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   label = [[[cache objectForKey:@"MVPreferencePaneLabel"] retain] autorelease];
   if ( ! label ) {
     NSDictionary *info = [bundle infoDictionary];
-    label = NSLocalizedStringFromTableInBundle( @"CFBundleName", @"InfoPlist", bundle, nil );
+    label = NSLocalizedStringFromTableInBundle(@"PreferencePanelLabel", nil, bundle, nil);
+    if ( [label isEqualToString:@"PreferencePanelLabel"] ) label = NSLocalizedStringFromTableInBundle( @"CFBundleName", @"InfoPlist", bundle, nil );
     if ( [label isEqualToString:@"CFBundleName"] ) label = [info objectForKey:@"CFBundleName"];
     if ( ! label ) label = [bundle bundleIdentifier];
     if ( ! cache ) [paneInfo setObject:[NSMutableDictionary dictionary] forKey:[bundle bundleIdentifier]];
