@@ -1528,7 +1528,8 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
   nsresult rv = NS_ERROR_FAILURE;
 
   if (!GlobalPrinters::GetInstance()->PrintersAreAllocated()) {
-    return rv;
+    rv = GlobalPrinters::GetInstance()->EnumeratePrinterList();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   HANDLE hPrinter = NULL;
@@ -1794,7 +1795,7 @@ nsPrinterEnumeratorWin::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult
   PRInt32 count      = 0;
   PRInt32 printerInx = 0;
   while( count < numItems ) {
-    LPTSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx);
+    LPTSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx++);
     nsString newName; 
     newName.AssignWithConversion(name);
     PRUnichar *str = ToNewUnicode(newName);

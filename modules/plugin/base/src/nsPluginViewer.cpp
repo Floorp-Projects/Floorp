@@ -843,18 +843,6 @@ PluginViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetting
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute nsIPrintSettings globalPrintSettingsValues; */
-NS_IMETHODIMP 
-PluginViewerImpl::GetGlobalPrintSettingsValues(nsIPrintSettings * *aGlobalPrintSettingsValues)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-PluginViewerImpl::SetGlobalPrintSettingsValues(nsIPrintSettings * aGlobalPrintSettingsValues)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 /* void printPreview (in nsIPrintSettings aThePrintSettings); */
 NS_IMETHODIMP 
 PluginViewerImpl::PrintPreview(nsIPrintSettings *aThePrintSettings)
@@ -888,6 +876,20 @@ NS_IMETHODIMP
 PluginViewerImpl::Cancel()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void initPrintSettingsFromPrefs (in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags); */
+NS_IMETHODIMP 
+PluginViewerImpl::InitPrintSettingsFromPrefs(nsIPrintSettings *aPrintSettings, PRBool aUsePrinterNamePrefix, PRUint32 aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void savePrintSettingsToPrefs (in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags); */
+NS_IMETHODIMP 
+PluginViewerImpl::SavePrintSettingsToPrefs(nsIPrintSettings *aPrintSettings, PRBool aUsePrinterNamePrefix, PRUint32 aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void enumerateDocumentNames (out PRUint32 aCount, [array, size_is (aCount), retval] out wstring aResult); */
