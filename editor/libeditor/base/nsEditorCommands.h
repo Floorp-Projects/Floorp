@@ -87,6 +87,9 @@ NS_DECL_EDITOR_COMMAND(nsSelectAllCommand)
 
 NS_DECL_EDITOR_COMMAND(nsSelectionMoveCommands)
 
+// Insert content commands
+NS_DECL_EDITOR_COMMAND(nsInsertPlaintextCommand)
+NS_DECL_EDITOR_COMMAND(nsPasteQuotationCommand)
 
 
 #if 0
