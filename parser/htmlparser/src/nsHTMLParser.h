@@ -111,10 +111,12 @@ friend class CTokenHandler;
      * Cause parser to parse input from given URL in given mode
      * @update	gess5/11/98
      * @param   aURL is a descriptor for source document
-     * @param   aMode is the desired parser mode (Nav, other, etc.)
+     * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_TRUE);
+    virtual PRInt32 Parse(nsIURL* aURL,
+                          nsIStreamListener* aListener,
+                          PRBool aIncremental=PR_TRUE);
 
     /**
      * Cause parser to parse input from given file in given mode
@@ -503,6 +505,7 @@ protected:
     // And now, some data members...
     //*********************************************
 
+    nsIStreamListener*  mListener;
     nsIHTMLContentSink* mSink;
     CTokenizer*         mTokenizer;
 

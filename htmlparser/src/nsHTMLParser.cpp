@@ -70,7 +70,7 @@ NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(kIParserIID, (void **) aInstancePtrResult);
 }
 
 
@@ -150,6 +150,7 @@ void nsHTMLParser::InitializeDefaultTokenHandlers() {
  */
 nsHTMLParser::nsHTMLParser() {
   NS_INIT_REFCNT();
+  mListener = nsnull;
   mTransferBuffer=0;
   mSink=0;
   mContextStackPos=0;
@@ -180,6 +181,7 @@ nsHTMLParser::~nsHTMLParser() {
      PL_strfree(gURLRef);
      gURLRef = 0;
   }
+  NS_IF_RELEASE(mListener);
   if(mTransferBuffer)
     delete [] mTransferBuffer;
   mTransferBuffer=0;
@@ -647,13 +649,19 @@ PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsHTMLParser::Parse(nsIURL* aURL,PRBool aIncremental ){
+PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
+                            nsIStreamListener* aListener,
+                            PRBool aIncremental) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
 
   if(rickGDebug)
     return Parse("c:/temp/temp.html",PR_TRUE);
+
+  NS_IF_RELEASE(mListener);
+  mListener = aListener;
+  NS_IF_ADDREF(aListener);
 
   mIncremental=aIncremental;
   mParseMode=DetermineParseMode();   
@@ -687,7 +695,7 @@ PRInt32 nsHTMLParser::Parse(nsIURL* aURL,PRBool aIncremental ){
         status=ResumeParse();
         DidBuildModel(status);
       }
-    }//if
+    }
   }
   return status;
 }
@@ -1619,8 +1627,14 @@ nsresult nsHTMLParser::GetBindInfo(void){
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg){
+nsresult
+nsHTMLParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                         const char *aMsg)
+{
   nsresult result=0;
+  if (nsnull != mListener) {
+    mListener->OnProgress(aProgress, aProgressMax, aMsg);
+  }
   return result;
 }
 
@@ -1632,6 +1646,9 @@ nsresult nsHTMLParser::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const c
  *  @return  
  */
 nsresult nsHTMLParser::OnStartBinding(void){
+  if (nsnull != mListener) {
+    mListener->OnStartBinding();
+  }
   nsresult result=WillBuildModel();
   if(!mTransferBuffer) {
     mTransferBuffer=new char[gTransferBufferSize+1];
@@ -1648,6 +1665,9 @@ nsresult nsHTMLParser::OnStartBinding(void){
  *  @return  error code (usually 0)
  */
 nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
+  if (nsnull != mListener) {
+    mListener->OnDataAvailable(pIStream, length);
+  }
 
   int len=0;
   int offset=0;
@@ -1691,6 +1711,9 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
  *  @return  
  */
 nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const char *msg){
+  if (nsnull != mListener) {
+    mListener->OnStopBinding(status, msg);
+  }
   nsresult result=DidBuildModel(status);
   return result;
 }

@@ -15,16 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-
-/**
- * MODULE NOTES:
- * @update  gess 4/1/98
- * 
- * This file declarse the parser interface.
- *
- */
-
 #ifndef NS_IPARSER___
 #define NS_IPARSER___
 
@@ -40,6 +30,7 @@
 
 
 class nsIContentSink;
+class nsIStreamListener;
 class nsString;
 
 /**
@@ -49,23 +40,25 @@ class nsString;
  *  @update  gess 3/25/98
  */
 class nsIParser : public nsISupports {
-            
   public:
 
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
-    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_TRUE)=0;
+    virtual PRInt32 Parse(nsIURL* aURL,
+                          nsIStreamListener* aListener,
+                          PRBool aIncremental=PR_TRUE) = 0;
+
     virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental)=0;
+
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
 
     virtual PRInt32 ResumeParse(void)=0;
+
     virtual PRInt32 GetStack(PRInt32* aStackPtr)=0;
+
     virtual PRBool  HasOpenContainer(PRInt32 aContainer) const=0;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult);
 
 #endif 
-
-
-
