@@ -3253,39 +3253,49 @@ PresShell::HandlePostedReflowCallbacks()
 void
 PresShell::HandlePostedDOMEvents()
 {
-   nsDOMEventRequest* node = mFirstDOMEventRequest;
-   while(node)
+   while(mFirstDOMEventRequest)
    {
+      /* pull the node from the event request list. Be prepared for reentrant access to the list
+         from within HandleDOMEvent and its callees! */
+      nsDOMEventRequest* node = mFirstDOMEventRequest;
       nsEventStatus status = nsEventStatus_eIgnore;
+
+      mFirstDOMEventRequest = node->next;
+      if (nsnull == mFirstDOMEventRequest) {
+        mLastDOMEventRequest = nsnull;
+      }
+
       node->content->HandleDOMEvent(mPresContext, node->event, nsnull, NS_EVENT_FLAG_INIT, &status);   
       NS_RELEASE(node->content);
       delete node->event;
-      nsDOMEventRequest* toFree = node;
-      node = node->next;
-      FreeFrame(sizeof(nsDOMEventRequest), toFree);
+      node->nsDOMEventRequest::~nsDOMEventRequest(); // doesn't do anything, but just in case
+      FreeFrame(sizeof(nsDOMEventRequest), node);
    }
-
-   mFirstDOMEventRequest = mLastDOMEventRequest = nsnull;
 }
 
 void
 PresShell::HandlePostedAttributeChanges()
 {
-   nsAttributeChangeRequest* node = mFirstAttributeRequest;
-   while(node)
+   while(mFirstAttributeRequest)
    {
+      /* pull the node from the request list. Be prepared for reentrant access to the list
+         from within SetAttribute/UnsetAttribute and its callees! */
+      nsAttributeChangeRequest* node = mFirstAttributeRequest;
+
+      mFirstAttributeRequest = node->next;
+      if (nsnull == mFirstAttributeRequest) {
+        mLastAttributeRequest = nsnull;
+      }
+
       if (node->type == eChangeType_Set)
          node->content->SetAttribute(node->nameSpaceID, node->name, node->value, node->notify);   
       else
          node->content->UnsetAttribute(node->nameSpaceID, node->name, node->notify);   
 
       NS_RELEASE(node->content);
-      nsAttributeChangeRequest* toFree = node;
-      node = node->next;
-      FreeFrame(sizeof(nsAttributeChangeRequest), toFree);
+      node->nsAttributeChangeRequest::~nsAttributeChangeRequest();
+      FreeFrame(sizeof(nsAttributeChangeRequest), node);
    }
-
-   mFirstAttributeRequest = mLastAttributeRequest = nsnull;
 }
 
 NS_IMETHODIMP 
