@@ -22,19 +22,20 @@
  */
 
 
+#include "nsCache.h"
 #include "nsCacheService.h"
+#include "nsCacheRequest.h"
 #include "nsCacheEntry.h"
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheDevice.h"
-#include "nsCacheRequest.h"
-#include "nsMemoryCacheDevice.h"
 #include "nsDiskCacheDevice.h"
+#include "nsMemoryCacheDevice.h"
+#include "nsICacheVisitor.h"
+
 #include "nsAutoLock.h"
-#include "nsVoidArray.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsProxiedService.h"
-#include "nsICacheVisitor.h"
 #include "nsIObserverService.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -362,6 +363,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
                                 nsICacheListener *         listener,
                                 nsICacheEntryDescriptor ** result)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
     if (result)
         *result = nsnull;
 
@@ -401,9 +403,12 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         if (entry)  entry->MarkInitialized();
     }
 
-    if (entry)  ++mCacheHits;
-    else        ++mCacheMisses;
-
+    if (entry) {
+        ++mCacheHits;
+        entry->IncrementFetchCount();
+    } else {
+        ++mCacheMisses;
+    }
     if (!entry && !(request->AccessRequested() & nsICache::ACCESS_WRITE)) {
         // this is a READ-ONLY request
         rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
@@ -413,7 +418,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     if (entry &&
         ((request->AccessRequested() == nsICache::ACCESS_WRITE) ||
          (entry->mExpirationTime &&
-          entry->mExpirationTime < ConvertPRTimeToSeconds(PR_Now()) &&
+          entry->mExpirationTime < SecondsFromPRTime(PR_Now()) &&
           request->WillDoomEntriesIfExpired())))
     {
         // this is FORCE-WRITE request or the entry has expired
@@ -497,6 +502,8 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 nsresult
 nsCacheService::ValidateEntry(nsCacheEntry * entry)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
+
     nsAutoLock lock(mCacheServiceLock);
     nsCacheDevice * device = EnsureEntryHasDevice(entry);
     if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
@@ -513,6 +520,7 @@ nsCacheService::ValidateEntry(nsCacheEntry * entry)
 nsresult
 nsCacheService::DoomEntry(nsCacheEntry * entry)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
     nsAutoLock lock(mCacheServiceLock);
     return DoomEntry_Locked(entry);
 }
@@ -521,6 +529,7 @@ nsCacheService::DoomEntry(nsCacheEntry * entry)
 nsresult
 nsCacheService::DoomEntry_Locked(nsCacheEntry * entry)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
     if (entry->IsDoomed())  return NS_OK;
 
     nsresult  rv = NS_OK;
@@ -550,9 +559,12 @@ nsCacheService::DoomEntry_Locked(nsCacheEntry * entry)
 }
 
 
+
+
 nsresult
 nsCacheService::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
     nsAutoLock lock(mCacheServiceLock);
 
     nsCacheDevice * device = EnsureEntryHasDevice(entry);
@@ -567,6 +579,7 @@ nsCacheService::GetTransportForEntry(nsCacheEntry *     entry,
                                      nsCacheAccessMode  mode,
                                      nsITransport    ** result)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
     nsAutoLock lock(mCacheServiceLock);
 
     nsCacheDevice * device = EnsureEntryHasDevice(entry);
@@ -579,6 +592,8 @@ nsCacheService::GetTransportForEntry(nsCacheEntry *     entry,
 void
 nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
 {
+    NS_ASSERTION(this != nsnull, "CloseDescriptor called with no cache service!");
+    if (this == nsnull)  return;
     nsAutoLock lock(mCacheServiceLock);
 
     // ask entry to remove descriptor
@@ -602,6 +617,7 @@ nsresult
 nsCacheService::GetFileForEntry(nsCacheEntry *         entry,
                                 nsIFile **             result)
 {
+    if (this == nsnull)  return NS_ERROR_NOT_AVAILABLE;
     nsAutoLock lock(mCacheServiceLock);
     nsCacheDevice * device = EnsureEntryHasDevice(entry);
     if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
@@ -777,30 +793,3 @@ NS_IMETHODIMP nsCacheService::Observe(nsISupports *aSubject, const PRUnichar *aT
     return Shutdown();
 }
 
-
-/**
- * Cache Service Utility Functions
- */
-
-// time conversion utils from nsCachedNetData.cpp
-// Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-PRUint32
-ConvertPRTimeToSeconds(PRTime time64)
-{
-    double fpTime;
-    LL_L2D(fpTime, time64);
-    return (PRUint32)(fpTime * 1e-6 + 0.5);
-}
-
-
-// Convert unix-style time_t, i.e. seconds since the epoch, to PRTime
-PRTime
-ConvertSecondsToPRTime(PRUint32 seconds)
-{
-    PRInt64 t64;
-    LL_I2L(t64, seconds);
-    PRInt64 mil;
-    LL_I2L(mil, 1000000);
-    LL_MUL(t64, t64, mil);
-    return t64;
-}

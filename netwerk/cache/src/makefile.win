@@ -36,6 +36,7 @@ EXPORTS = \
 		$(NULL)
 
 CPP_OBJS = \
+	.\$(OBJDIR)\nsCache.obj                         \
 	.\$(OBJDIR)\nsCacheEntry.obj			\
 	.\$(OBJDIR)\nsCacheEntryDescriptor.obj          \
 	.\$(OBJDIR)\nsCacheMetaData.obj			\
@@ -43,6 +44,7 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsCacheService.obj			\
 	.\$(OBJDIR)\nsCacheSession.obj			\
 	.\$(OBJDIR)\nsDiskCacheDevice.obj		\
+	.\$(OBJDIR)\nsDiskCacheEntry.obj		\
 	.\$(OBJDIR)\nsMemoryCacheDevice.obj		\
 	$(NULL)
 

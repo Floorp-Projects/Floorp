@@ -29,11 +29,7 @@
 #include "nsCacheRequest.h"
 #include "nsError.h"
 #include "nsICacheService.h"
-
-
-// XXX find better place to put this
-          // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-PRUint32  ConvertPRTimeToSeconds(PRTime time64);
+#include "nsCache.h"
 
 
 nsCacheEntry::nsCacheEntry(nsCString *          key,
@@ -54,19 +50,10 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
 
-    mLastFetched = ConvertPRTimeToSeconds(PR_Now());
+    mLastFetched = SecondsFromPRTime(PR_Now());
     
     if (streamBased) MarkStreamBased();
-
-    if ((storagePolicy == nsICache::STORE_IN_MEMORY) ||
-        (storagePolicy == nsICache::STORE_ANYWHERE)) {
-        MarkAllowedInMemory();
-    }
-    
-    if ((storagePolicy == nsICache::STORE_ON_DISK) ||
-        (storagePolicy == nsICache::STORE_ANYWHERE)) {
-        MarkAllowedOnDisk();
-    }
+    SetStoragePolicy(storagePolicy);
 }
 
 
@@ -81,7 +68,7 @@ void
 nsCacheEntry::SetDataSize( PRUint32   size)
 {
     mDataSize = size;
-    mLastModified = ConvertPRTimeToSeconds(PR_Now());
+    mLastModified = SecondsFromPRTime(PR_Now());
     MarkEntryDirty();
 }
 
@@ -117,7 +104,7 @@ nsCacheEntry::GetData(nsISupports **result)
 nsresult
 nsCacheEntry::SetData(nsISupports * data)
 {
-    mLastModified = ConvertPRTimeToSeconds(PR_Now());
+    mLastModified = SecondsFromPRTime(PR_Now());
     mData = data;
     return NS_OK;
 }
@@ -145,9 +132,9 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
     if (NS_FAILED(rv))
         return rv;
 
-    mMetaSize = mMetaData->Size();                    // calc new meta data size
-    mLastModified = ConvertPRTimeToSeconds(PR_Now()); // time stamp the entry
-    MarkMetaDataDirty();                              // mark it dirty
+    mMetaSize = mMetaData->Size();                // calc new meta data size
+    mLastModified = SecondsFromPRTime(PR_Now());  // time stamp the entry
+    MarkMetaDataDirty();                          // mark it dirty
     return rv;
 }
 
@@ -303,13 +290,117 @@ nsCacheEntry::DetachDescriptors(void)
         (nsCacheEntryDescriptor *)PR_LIST_HEAD(&mDescriptorQ);
 
     while (descriptor != &mDescriptorQ) {
-        nsCacheEntryDescriptor * next =
+        nsCacheEntryDescriptor * nextDescriptor =
             (nsCacheEntryDescriptor *)PR_NEXT_LINK(descriptor);
         
         descriptor->ClearCacheEntry();
         PR_REMOVE_AND_INIT_LINK(descriptor);
-        descriptor = next;
+        descriptor = nextDescriptor;
     }
+}
+
+
+/******************************************************************************
+ * nsCacheEntryInfo - for implementing about:cache
+ *****************************************************************************/
+
+NS_IMPL_ISUPPORTS1(nsCacheEntryInfo, nsICacheEntryInfo);
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetClientID(char ** clientID)
+{
+    NS_ENSURE_ARG_POINTER(clientID);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    return ClientIDFromCacheKey(*mCacheEntry->Key(), clientID);
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetKey(char ** key)
+{
+    NS_ENSURE_ARG_POINTER(key);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    return ClientKeyFromCacheKey(*mCacheEntry->Key(), key);
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetFetchCount(PRInt32 * fetchCount)
+{
+    NS_ENSURE_ARG_POINTER(fetchCount);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *fetchCount = mCacheEntry->FetchCount();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetLastFetched(PRUint32 * lastFetched)
+{
+    NS_ENSURE_ARG_POINTER(lastFetched);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *lastFetched = mCacheEntry->LastFetched();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetLastModified(PRUint32 * lastModified)
+{
+    NS_ENSURE_ARG_POINTER(lastModified);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *lastModified = mCacheEntry->LastModified();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetLastValidated(PRUint32 * lastValidated)
+{
+    NS_ENSURE_ARG_POINTER(lastValidated);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *lastValidated = mCacheEntry->LastValidated();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetExpirationTime(PRUint32 * expirationTime)
+{
+    NS_ENSURE_ARG_POINTER(expirationTime);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *expirationTime = mCacheEntry->ExpirationTime();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::GetDataSize(PRUint32 * dataSize)
+{
+    NS_ENSURE_ARG_POINTER(dataSize);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *dataSize = mCacheEntry->DataSize();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryInfo::IsStreamBased(PRBool * result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    
+    *result = mCacheEntry->IsStreamData();
+    return NS_OK;
 }
 
 

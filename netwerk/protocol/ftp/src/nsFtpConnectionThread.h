@@ -44,7 +44,7 @@
 
 #include "nsFtpControlConnection.h"
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
@@ -217,7 +217,7 @@ private:
     PRPackedBool            mControlReadContinue;
     PRPackedBool            mControlReadBrokenLine;
     nsCAutoString           mControlReadCarryOverBuf;
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     nsCOMPtr<nsICacheSession>         mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     PRPackedBool                      mReadingFromCache;

@@ -30,6 +30,9 @@
 #include "nsIOutputStream.h"
 #include "nsITransport.h"
 
+/******************************************************************************
+* nsCacheEntryDescriptor
+*******************************************************************************/
 class nsCacheEntryDescriptor :
     public PRCList,
     public nsICacheEntryDescriptor
@@ -59,14 +62,14 @@ public:
 
 private:
 
-     /**
+     /*************************************************************************
       * transport wrapper class - 
       *
-      * we want the transport wrapper to have the same lifetime as the descriptor,
-      * but since they each need to reference the other, we have the descriptor
-      * include the transport wrapper as a member, rather than just pointing to it,
-      * which avoids circular AddRefs.
-      */
+      * we want the transport wrapper to have the same lifetime as the
+      * descriptor, but since they each need to reference the other, we have the
+      * descriptor include the transport wrapper as a member, rather than just
+      * pointing to it, which avoids circular AddRefs.
+      *************************************************************************/
      class nsTransportWrapper : public nsITransport
      {
      public:
@@ -83,13 +86,13 @@ private:
      friend class nsTransportWrapper;
 
 
-     /**
+     /*************************************************************************
       * output stream wrapper class -
       *
-      * The output stream wrapper references the descriptor, but the descriptor doesn't
-      * need any references to the stream wrapper, so we don't need the same kind of
-      * tricks that we're using for the transport wrapper.
-      */
+      * The output stream wrapper references the descriptor, but the descriptor
+      * doesn't need any references to the stream wrapper, so we don't need the
+      * same kind of tricks that we're using for the transport wrapper.
+      *************************************************************************/
      class nsOutputStreamWrapper : public nsIOutputStream {
      private:
          nsCacheEntryDescriptor *  mDescriptor;
@@ -147,11 +150,10 @@ private:
      friend class nsOutputStreamWrapper;
 
 
+
      static nsresult NewOutputStreamWrapper(nsIOutputStream **       result,
                                             nsCacheEntryDescriptor * descriptor,
                                             nsIOutputStream *        output);
-
-
  private:
      /**
       * nsCacheEntryDescriptor data members

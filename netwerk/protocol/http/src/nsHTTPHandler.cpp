@@ -611,10 +611,10 @@ nsHTTPHandler::nsHTTPHandler():
     mPipelineFirstRequest(PR_FALSE),
     mPipelineMaxRequests(DEFAULT_PIPELINE_MAX_REQUESTS),
     mReferrerLevel(0),
+    mScheme(nsnull),
     mRequestTimeout(DEFAULT_HTTP_REQUEST_TIMEOUT),
     mConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT),
-    mProxySSLConnectAllowed(PR_FALSE),
-    mScheme(nsnull)
+    mProxySSLConnectAllowed(PR_FALSE)
 {
     NS_INIT_REFCNT();
     SetAcceptEncodings(DEFAULT_ACCEPT_ENCODINGS);

@@ -22,6 +22,7 @@
  */
 
 #include "nsICache.h"
+#include "nsCache.h"
 #include "nsCacheService.h"
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
@@ -71,7 +72,10 @@ nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGr
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetClientID(char ** result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(result);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    return ClientIDFromCacheKey(*(mCacheEntry->Key()), result);
 }
 
 
@@ -81,6 +85,9 @@ nsCacheEntryDescriptor::GetKey(char ** result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
+    return ClientKeyFromCacheKey(*(mCacheEntry->Key()), result);
+
+#if 0
     nsCString * key;
     nsresult    rv = NS_OK;
 
@@ -102,6 +109,7 @@ nsCacheEntryDescriptor::GetKey(char ** result)
         rv = NS_ERROR_UNEXPECTED;
     }
     return rv;
+#endif
 }
 
 
@@ -267,7 +275,7 @@ nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mCacheEntry->StoragePolicy();
 }
 
 
@@ -275,8 +283,10 @@ NS_IMETHODIMP
 nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    // XXX validate policy against session?
+    mCacheEntry->SetStoragePolicy(policy);
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 
@@ -363,11 +373,14 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
 
     // XXX not thread safe    
     nsresult rv = mCacheEntry->GetMetaDataElement(nsLiteralCString(key), &value);
-    if (NS_SUCCEEDED(rv) && (value)) {
-        *result = ToNewCString(*value);
-        if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    return rv;
+    if (NS_FAILED(rv)) return rv;
+
+    if (!value) return NS_ERROR_NOT_AVAILABLE;
+
+    *result = ToNewCString(*value);
+    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
 }
 
 

@@ -34,6 +34,9 @@ class nsCacheEntry;
 class nsICacheVisitor;
 class nsITransport;
 
+/******************************************************************************
+* nsCacheDevice
+*******************************************************************************/
 class nsCacheDevice {
 public:
     virtual ~nsCacheDevice() {}

@@ -25,11 +25,12 @@
 #define _nsDiskCacheDevice_h_
 
 #include "nsCacheDevice.h"
+#include "nsDiskCacheEntry.h"
+
 #include "nsILocalFile.h"
-#include "nsCacheEntry.h"
 #include "nsIObserver.h"
 
-class DiskCacheEntry;
+class nsDiskCacheEntry;
 class nsISupportsArray;
 
 class nsDiskCacheDevice : public nsCacheDevice {
@@ -66,29 +67,32 @@ public:
     PRUint32                getCacheCapacity();
     PRUint32                getCacheSize();
 
-private:
     nsresult getFileForKey(const char* key, PRBool meta, PRUint32 generation, nsIFile ** result);
-    nsresult getFileForDiskCacheEntry(DiskCacheEntry * diskEntry, PRBool meta, nsIFile ** result);
+    nsresult getFileForDiskCacheEntry(nsDiskCacheEntry * diskEntry, PRBool meta, nsIFile ** result);
     static nsresult getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result);
 
     nsresult visitEntries(nsICacheVisitor * visitory);
-    nsresult updateDiskCacheEntry(nsCacheEntry * entry);
-    nsresult readDiskCacheEntry(nsCString * key, nsCacheEntry ** entry);
+    
+    nsresult readDiskCacheEntry(const char * key, nsDiskCacheEntry ** diskEntry);
 
-    nsresult checkForCollision(nsCacheEntry * entry, nsCacheEntry ** collidingEntry);
-
-    nsresult deleteDiskCacheEntry(DiskCacheEntry * diskEntry);
-    nsresult scavengeDiskCacheEntries(DiskCacheEntry * diskEntry);
+    nsresult updateDiskCacheEntries();
+    nsresult updateDiskCacheEntry(nsDiskCacheEntry * diskEntry);
+    nsresult deleteDiskCacheEntry(nsDiskCacheEntry * diskEntry);
+    
+    nsresult scavengeDiskCacheEntries(nsDiskCacheEntry * diskEntry);
 
     nsresult scanDiskCacheEntries(nsISupportsArray ** result);
     nsresult evictDiskCacheEntries();
+    
+    nsresult writeCacheInfo();
+    nsresult readCacheInfo();
 
 private:
-    nsCOMPtr<nsIObserver>   mPrefsObserver;
-    nsCOMPtr<nsILocalFile>  mCacheDirectory;
-    nsCacheEntryHashTable   mBoundEntries;
-    PRUint32                mCacheCapacity;
-    PRUint32                mCacheSize;
+    nsCOMPtr<nsIObserver>       mPrefsObserver;
+    nsCOMPtr<nsILocalFile>      mCacheDirectory;
+    nsDiskCacheEntryHashTable   mBoundEntries;
+    PRUint32                    mCacheCapacity;
+    PRUint32                    mCacheSize;
 };
 
 #endif // _nsDiskCacheDevice_h_

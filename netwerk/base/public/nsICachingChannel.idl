@@ -38,7 +38,7 @@ interface nsICachingChannel : nsISupports
 {
     /**
      * Set/get the cache token... uniquely identifies the data in the cache.
-     * Holding a reference to this cookie prevents the cached data from being
+     * Holding a reference to this token prevents the cached data from being
      * removed.  A cache token retrieved from a particular instance of 
      * nsICachingChannel could be set on another instance of nsICachingChannel
      * provided the underlying implementations are compatible.  The implemen-
@@ -50,6 +50,13 @@ interface nsICachingChannel : nsISupports
      * cache entry is needed.
      */
     attribute nsISupports cacheToken;
+
+    /**
+     * Set/get the cache key... uniquely identifies the data in the cache.
+     * Holding a reference to this key DOES NOT prevent the cached data from
+     * being removed.  It is otherwise similar to the cacheToken.
+     */
+    attribute nsISupports cacheKey;
 
     /**
      * Specifies whether or not the data should be cached to a file.  This

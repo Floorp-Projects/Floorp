@@ -31,6 +31,9 @@
 
 class nsMemoryCacheDeviceInfo;
 
+/******************************************************************************
+ * nsMemoryCacheDevice
+ ******************************************************************************/
 class nsMemoryCacheDevice : public nsCacheDevice
 {
 public:
@@ -80,6 +83,25 @@ private:
 };
 
 
+/******************************************************************************
+ * nsMemoryCacheDeviceInfo - used to call nsIVisitor for about:cache
+ ******************************************************************************/
+class nsMemoryCacheDeviceInfo : public nsICacheDeviceInfo {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICACHEDEVICEINFO
+
+    nsMemoryCacheDeviceInfo(nsMemoryCacheDevice* device)
+        :   mDevice(device)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    virtual ~nsMemoryCacheDeviceInfo() {}
+    
+private:
+    nsMemoryCacheDevice* mDevice;
+};
 
 
 #endif // _nsMemoryCacheDevice_h_
