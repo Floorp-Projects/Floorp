@@ -1203,6 +1203,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   if (aTextNode) {
     nodeAsText = do_QueryInterface(aTextNode);
     offset = 0;
+    result = NS_OK;
   }
   else
   {
