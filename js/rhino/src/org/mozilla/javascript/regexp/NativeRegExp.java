@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * Brendan Eich
  * Matthias Radestock
  *
@@ -459,7 +460,6 @@ System.out.println();
         return true;
     }
 
-
 /*
  *  altern:     item                    An alternative is one or more items,
  *              item altern             concatenated together.
@@ -470,9 +470,9 @@ System.out.println();
         RENode tailTerm = null;
         char[] source = state.cpbegin;
         while (true) {
-            if ((state.cp == state.cpend)
-                    || (source[state.cp] == ')')
-                    || (source[state.cp] == '|')) {
+            if (state.cp == state.cpend || source[state.cp] == '|'
+                || (state.parenNesting != 0 && source[state.cp] == ')'))
+            {
                 if (headTerm == null) {
                     state.result = new RENode(REOP_EMPTY);
                 }
@@ -943,50 +943,46 @@ System.out.println();
                 reportError("msg.trail.backslash", "");
                 return false;
             }
-        case '(':
+        case '(': {
+            RENode result = null;
+            termStart = state.cp;
+            if (state.cp + 1 < state.cpend && src[state.cp] == '?'
+                && ((c = src[state.cp + 1]) == '=' || c == '!' || c == ':'))
             {
-                RENode result = null;
-                termStart = state.cp;
-                if ((state.cp < state.cpend)
-                        && (src[state.cp] == '?')
-                        && ( (src[state.cp + 1] == '=')
-                                || (src[state.cp + 1] == '!')
-                                || (src[state.cp + 1] == ':') )) {
-                    ++state.cp;
-                    switch (src[state.cp++]) {
-                    case '=':
-                        result = new RENode(REOP_ASSERT);
-                        /* ASSERT, <next>, ... ASSERTTEST */
-                        state.progLength += 4;
-                        break;
-                    case '!':
-                        result = new RENode(REOP_ASSERT_NOT);
-                        /* ASSERTNOT, <next>, ... ASSERTNOTTEST */
-                        state.progLength += 4;
-                        break;
-                    }
+                state.cp += 2;
+                if (c == '=') {
+                    result = new RENode(REOP_ASSERT);
+                    /* ASSERT, <next>, ... ASSERTTEST */
+                    state.progLength += 4;
+                } else if (c == '!') {
+                    result = new RENode(REOP_ASSERT_NOT);
+                    /* ASSERTNOT, <next>, ... ASSERTNOTTEST */
+                    state.progLength += 4;
                 }
-                else {
-                    result = new RENode(REOP_LPAREN);
-                    /* LPAREN, <index>, ... RPAREN, <index> */
-                    state.progLength += 6;
-                    result.parenIndex = state.parenCount++;
-                }
-                if (!parseDisjunction(state))
-                    return false;
-                if ((state.cp == state.cpend)
-                        || (src[state.cp] != ')')) {
-                    reportError("msg.unterm.paren", "");
-                    return false;
-                }
-                else
-                    ++state.cp;
-                if (result != null) {
-                    result.kid = state.result;
-                    state.result = result;
-                }
-                break;
+            } else {
+                result = new RENode(REOP_LPAREN);
+                /* LPAREN, <index>, ... RPAREN, <index> */
+                state.progLength += 6;
+                result.parenIndex = state.parenCount++;
             }
+            ++state.parenNesting;
+            if (!parseDisjunction(state))
+                return false;
+            if (state.cp == state.cpend || src[state.cp] != ')') {
+                reportError("msg.unterm.paren", "");
+                return false;
+            }
+            ++state.cp;
+            --state.parenNesting;
+            if (result != null) {
+                result.kid = state.result;
+                state.result = result;
+            }
+            break;
+        }
+        case ')':
+          reportError("msg.re.unmatched.right.paren", "");
+          return false;
         case '[':
             state.result = new RENode(REOP_CLASS);
             termStart = state.cp;
@@ -2903,6 +2899,7 @@ class CompilerState {
     int         cp;
     int         flags;
     int         parenCount;
+    int         parenNesting;
     int         classCount;   /* number of [] encountered */
     int         progLength;   /* estimated bytecode length */
     RENode      result;
