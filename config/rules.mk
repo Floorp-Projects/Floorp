@@ -1146,7 +1146,7 @@ ifneq ($(MOZ_ENABLE_JAR_PACKAGING),)
 
 JAR_MANIFEST := $(srcdir)/jar.mn
 install::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars-unix.pl -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 ifneq ($(CHROME_TYPE),)
 install:: $(addprefix bogus/, $(CHROME_TYPE))
