@@ -21,7 +21,6 @@
 
 #include "nsTextEditRules.h"
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
 
 class nsHTMLEditRules : public nsTextEditRules
 {
@@ -39,7 +38,14 @@ public:
   {
     kInsertBreak = 3000
   };
+  
 protected:
+
+  enum IterDirection
+  {
+    kIterForward,
+    kIterBackward
+  };
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
@@ -57,12 +63,21 @@ protected:
   nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
 
   // helper methods
-  PRBool IsBlockNode(nsCOMPtr <nsIContent> aContent);
-  nsCOMPtr<nsIContent> GetBlockNodeParent(nsCOMPtr<nsIContent> aContent);
-  nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
-  nsresult IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult);
-  nsresult IsNextCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, PRInt32 aOffset, PRBool *aResult);
-  nsresult IsPrevCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, PRInt32 aOffset, PRBool *aResult);
+  static nsresult GetTabAsNBSPs(nsString *outString);
+  static nsresult GetTabAsNBSPsAndSpace(nsString *outString);
+  static PRBool IsInlineNode(nsIDOMNode *aNode);
+  static PRBool IsBlockNode(nsIDOMNode *aNode);
+  static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
+  static PRBool HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
+  static PRBool IsTextNode(nsIDOMNode *aNode);
+  static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
+  static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
+  
+  nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
+  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
+  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
+
 
   // data
   static nsIAtom *sAAtom;

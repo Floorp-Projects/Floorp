@@ -18,20 +18,31 @@
 
 #include "nsHTMLEditRules.h"
 #include "nsEditor.h"
+#include "nsTextEditor.h"
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
+#include "nsIContent.h"
+#include "nsIContentIterator.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
+#include "nsIStyleContext.h"
+#include "nsIPresShell.h"
+#include "nsLayoutCID.h"
+
+class nsIFrame;
 
 const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const static char* kMOZEditorBogusNodeValue="TRUE";
+const unsigned char nbsp = nbsp;
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
+static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 
 nsIAtom *nsHTMLEditRules::sAAtom;
 nsIAtom *nsHTMLEditRules::sAddressAtom;
@@ -61,7 +72,7 @@ nsIAtom *nsHTMLEditRules::sUAtom;
 nsIAtom *nsHTMLEditRules::sVarAtom;
 nsIAtom *nsHTMLEditRules::sWbrAtom;
 
-PRInt32 nsHTMLEditRules::sInstanceCount;
+PRInt32 nsHTMLEditRules::sInstanceCount = 0;
 
 /********************************************************
  *  Constructor/Destructor 
@@ -69,8 +80,11 @@ PRInt32 nsHTMLEditRules::sInstanceCount;
 
 nsHTMLEditRules::nsHTMLEditRules()
 {
+  // XXX: this sux. We are dependant on layout's private conception of tag atom names.
+  
   if (sInstanceCount <= 0)
   {
+    // inline tags
     sAAtom = NS_NewAtom("a");
     sAddressAtom = NS_NewAtom("address");
     sBigAtom = NS_NewAtom("big");
@@ -349,44 +363,60 @@ nsHTMLEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
  *  helper methods 
  ********************************************************/
  
+///////////////////////////////////////////////////////////////////////////
+// IsBlockNode: true if this node is an html block node
+//                    
 PRBool
-nsHTMLEditRules::IsBlockNode(nsCOMPtr <nsIContent> aContent)
+nsHTMLEditRules::IsBlockNode(nsIDOMNode *aNode)
 {
   nsIAtom* atom = nsnull;
   PRBool result;
   
-  aContent->GetTag(atom);
+  if (!aNode) 
+  {
+    NS_NOTREACHED("null node passed to IsBlockNode()");
+    return PR_FALSE;
+  }
+  
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  if (!content) 
+  {
+    NS_NOTREACHED("could not get content node in IsBlockNode()");
+    return PR_FALSE;
+  }
+  
+  content->GetTag(atom);
 
   if (!atom)
     return PR_TRUE;
 
   if (sAAtom != atom &&
-          sAddressAtom != atom &&
-          sBigAtom != atom &&
-          sBlinkAtom != atom &&
-          sBAtom != atom &&
-          sCiteAtom != atom &&
-          sCodeAtom != atom &&
-          sDfnAtom != atom &&
-          sEmAtom != atom &&
-          sFontAtom != atom &&
-          sIAtom != atom &&
-          sKbdAtom != atom &&
-          sKeygenAtom != atom &&
-          sNobrAtom != atom &&
-          sSAtom != atom &&
-          sSampAtom != atom &&
-          sSmallAtom != atom &&
-          sSpacerAtom != atom &&
-          sSpanAtom != atom &&
-          sStrikeAtom != atom &&
-          sStrongAtom != atom &&
-          sSubAtom != atom &&
-          sSupAtom != atom &&
-          sTtAtom != atom &&
-          sUAtom != atom &&
-          sVarAtom != atom &&
-          sWbrAtom != atom)
+      sAddressAtom != atom &&
+      sBigAtom != atom &&
+      sBlinkAtom != atom &&
+      sBAtom != atom &&
+      sCiteAtom != atom &&
+      sCodeAtom != atom &&
+      sDfnAtom != atom &&
+      sEmAtom != atom &&
+      sFontAtom != atom &&
+      sIAtom != atom &&
+      sKbdAtom != atom &&
+      sKeygenAtom != atom &&
+      sNobrAtom != atom &&
+      sSAtom != atom &&
+      sSampAtom != atom &&
+      sSmallAtom != atom &&
+      sSpacerAtom != atom &&
+      sSpanAtom != atom &&
+      sStrikeAtom != atom &&
+      sStrongAtom != atom &&
+      sSubAtom != atom &&
+      sSupAtom != atom &&
+      sTtAtom != atom &&
+      sUAtom != atom &&
+      sVarAtom != atom &&
+      sWbrAtom != atom)
    {
      result = PR_TRUE;
    }
@@ -398,25 +428,152 @@ nsHTMLEditRules::IsBlockNode(nsCOMPtr <nsIContent> aContent)
    return result;
 }
 
-nsCOMPtr<nsIContent>
-nsHTMLEditRules::GetBlockNodeParent(nsCOMPtr<nsIContent> aContent)
+
+///////////////////////////////////////////////////////////////////////////
+// IsInlineNode: true if this node is an html inline node
+//                    
+PRBool
+nsHTMLEditRules::IsInlineNode(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIContent> p;
+  return !IsBlockNode(aNode);
+}
 
-  if (NS_FAILED(aContent->GetParent(*getter_AddRefs(p))))  // no parent, ran off top of tree
-    return aContent;
+///////////////////////////////////////////////////////////////////////////
+// GetBlockNodeParent: returns enclosing block level ancestor, if any
+//                     else returns the node itself
+nsCOMPtr<nsIDOMNode>
+nsHTMLEditRules::GetBlockNodeParent(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> tmp = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMNode> p;
 
-  nsCOMPtr<nsIContent> tmp;
+  if (NS_FAILED(aNode->GetParentNode(getter_AddRefs(p))))  // no parent, ran off top of tree
+    return tmp;
 
   while (p && !IsBlockNode(p))
   {
-    if (NS_FAILED(p->GetParent(*getter_AddRefs(tmp)))) // no parent, ran off top of tree
+    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp)))) // no parent, ran off top of tree
       return p;
 
     p = tmp;
   }
   return p;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// HasSameBlockNodeParent: true if nodes have same block level ancestor
+//               
+PRBool
+nsHTMLEditRules::HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
+{
+  if (!aNode1 || !aNode2)
+  {
+    NS_NOTREACHED("null node passed to HasSameBlockNodeParent()");
+    return PR_FALSE;
+  }
+  
+  if (aNode1 == aNode2)
+    return PR_TRUE;
+    
+  nsCOMPtr<nsIDOMNode> p1 = GetBlockNodeParent(aNode1);
+  nsCOMPtr<nsIDOMNode> p2 = GetBlockNodeParent(aNode2);
+
+  return (p1 == p2);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsTextOrElementNode: true if node of dom type element or text
+//               
+PRBool
+nsHTMLEditRules::IsTextOrElementNode(nsIDOMNode *aNode)
+{
+  if (!aNode)
+  {
+    NS_NOTREACHED("null node passed to IsTextOrElementNode()");
+    return PR_FALSE;
+  }
+  
+  PRUint16 nodeType;
+  aNode->GetNodeType(&nodeType);
+  if ((nodeType == nsIDOMNode::ELEMENT_NODE) || (nodeType == nsIDOMNode::TEXT_NODE))
+    return PR_TRUE;
+    
+  return PR_FALSE;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsTextNode: true if node of dom type text
+//               
+PRBool
+nsHTMLEditRules::IsTextNode(nsIDOMNode *aNode)
+{
+  if (!aNode)
+  {
+    NS_NOTREACHED("null node passed to IsTextNode()");
+    return PR_FALSE;
+  }
+  
+  PRUint16 nodeType;
+  aNode->GetNodeType(&nodeType);
+  if (nodeType == nsIDOMNode::TEXT_NODE)
+    return PR_TRUE;
+    
+  return PR_FALSE;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// NextNodeInBlock: gets the next/prev node in the block, if any.  Next node
+//                  must be an element or text node, others are ignored
+nsCOMPtr<nsIDOMNode>
+nsHTMLEditRules::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
+{
+  nsCOMPtr<nsIDOMNode> nullNode;
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIContent> blockContent;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMNode> blockParent;
+  
+  if (!aNode)  return nullNode;
+
+  nsCOMPtr<nsIContentIterator> iter;
+  if (NS_FAILED(nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                        nsIContentIterator::GetIID(), 
+                                        getter_AddRefs(iter))))
+    return nullNode;
+
+  // much gnashing of teeth as we twit back and forth between content and domnode types
+  content = do_QueryInterface(aNode);
+  blockParent = GetBlockNodeParent(aNode);
+  if (!blockParent) return nullNode;
+  blockContent = do_QueryInterface(blockParent);
+  if (!blockContent) return nullNode;
+  
+  if (NS_FAILED(iter->Init(blockContent)))  return nullNode;
+  if (NS_FAILED(iter->PositionAt(content)))  return nullNode;
+  
+  while (NS_COMFALSE == iter->IsDone())
+  {
+  	if (NS_FAILED(iter->CurrentNode(getter_AddRefs(content)))) return nullNode;
+    // ignore nodes that aren't elements or text, or that are the block parent 
+    node = do_QueryInterface(content);
+    if (node && IsTextOrElementNode(node) && (node != blockParent))
+      return node;
+    
+    if (aDir == kIterForward)
+      iter->Next();
+    else
+      iter->Prev();
+  }
+  
+  return nullNode;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // GetStartNode: returns whatever the start parent is of the first range
@@ -457,13 +614,33 @@ nsHTMLEditRules::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
 // IsPreformatted: checks the style info for the node for the preformatted
 //                 text style.
 nsresult 
-nsHTMLEditRules::IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult)
+nsHTMLEditRules::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 {
-  // XXX not yet impl
-  if (!aResult) 
-    return NS_ERROR_NULL_POINTER;
-    
-  *aResult = PR_TRUE;
+  nsIPresShell* shell = nsnull;
+  nsresult result;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  nsIFrame *frame;
+  nsCOMPtr<nsIStyleContext> styleContext;
+  const nsStyleText* styleText;
+  PRBool bPreformatted;
+  
+  if (!aResult || !content) return NS_ERROR_NULL_POINTER;
+  
+  result = mEditor->GetPresShell(&shell);
+  if (NS_FAILED(result)) return result;
+  
+  result = shell->GetPrimaryFrameFor(content, &frame);
+  if (NS_FAILED(result)) return result;
+  
+  result = shell->GetStyleContextFor(frame, getter_AddRefs(styleContext));
+  if (NS_FAILED(result)) return result;
+
+  styleText = (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
+
+  bPreformatted = (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
+    (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace);
+
+  *aResult = bPreformatted;
   return NS_OK;
 }
 
@@ -472,15 +649,54 @@ nsHTMLEditRules::IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult)
 // IsNextCharWhitespace: checks the adjacent content in the same block
 //                       to see if following selection is whitespace
 nsresult 
-nsHTMLEditRules::IsNextCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, 
+nsHTMLEditRules::IsNextCharWhitespace(nsIDOMNode *aParentNode, 
                                       PRInt32 aOffset,
                                       PRBool *aResult)
 {
-  // XXX not yet impl
-  if (!aResult) 
-    return NS_ERROR_NULL_POINTER;
-    
-  *aResult = PR_TRUE;
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  *aResult = PR_FALSE;
+  
+  nsString tempString;
+  PRUint32 strLength;
+  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aParentNode);
+  if (textNode)
+  {
+    textNode->GetLength(&strLength);
+    if (aOffset < strLength)
+    {
+      // easy case: next char is in same node
+      textNode->SubstringData(aOffset,aOffset+1,tempString);
+      *aResult = nsString::IsSpace(tempString.First());
+      return NS_OK;
+    }
+  }
+  
+  // harder case: next char in next node.
+  nsCOMPtr<nsIDOMNode> node = NextNodeInBlock(aParentNode, kIterForward);
+  while (node) 
+  {
+    if (!IsInlineNode(node))  // skip over bold, italic, link, ect nodes
+    {
+      if (IsTextNode(node))
+      {
+        textNode = do_QueryInterface(node);
+        textNode->GetLength(&strLength);
+        if (strLength)
+        {
+          textNode->SubstringData(0,1,tempString);
+          *aResult = nsString::IsSpace(tempString.First());
+          return NS_OK;
+        }
+        // else it's an empty text node, skip it.
+      }
+      else  // node is an image or some other thingy that doesn't count as whitespace
+      {
+        break;
+      }
+    }
+    node = NextNodeInBlock(aParentNode, kIterForward);
+  }
+  
   return NS_OK;
 }
 
@@ -489,15 +705,81 @@ nsHTMLEditRules::IsNextCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode,
 // IsPrevCharWhitespace: checks the adjacent content in the same block
 //                       to see if following selection is whitespace
 nsresult 
-nsHTMLEditRules::IsPrevCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, 
+nsHTMLEditRules::IsPrevCharWhitespace(nsIDOMNode *aParentNode, 
                                       PRInt32 aOffset,
                                       PRBool *aResult)
 {
-  // XXX not yet impl
-  if (!aResult) 
-    return NS_ERROR_NULL_POINTER;
-    
-  *aResult = PR_TRUE;
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  *aResult = PR_FALSE;
+  
+  nsString tempString;
+  PRUint32 strLength;
+  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aParentNode);
+  if (textNode)
+  {
+    if (aOffset > 0)
+    {
+      // easy case: prev char is in same node
+      textNode->SubstringData(aOffset-1,aOffset,tempString);
+      *aResult = nsString::IsSpace(tempString.First());
+      return NS_OK;
+    }
+  }
+  
+  // harder case: prev char in next node
+  nsCOMPtr<nsIDOMNode> node = NextNodeInBlock(aParentNode, kIterBackward);
+  while (node) 
+  {
+    if (!IsInlineNode(node))  // skip over bold, italic, link, ect nodes
+    {
+      if (IsTextNode(node))
+      {
+        textNode = do_QueryInterface(node);
+        textNode->GetLength(&strLength);
+        if (strLength)
+        {
+          textNode->SubstringData(strLength-1,strLength,tempString);
+          *aResult = nsString::IsSpace(tempString.First());
+          return NS_OK;
+        }
+        // else it's an empty text node, skip it.
+      }
+      else  // node is an image or some other thingy that doesn't count as whitespace
+      {
+        break;
+      }
+    }
+    // otherwise we found a node we want to skip, keep going
+    node = NextNodeInBlock(aParentNode, kIterBackward);
+  }
+  
+  return NS_OK;
+  
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetTabAsNBSPs: stuff the right number of nbsp's into outString
+//                       
+nsresult
+nsHTMLEditRules::GetTabAsNBSPs(nsString *outString)
+{
+  if (!outString) return NS_ERROR_NULL_POINTER;
+  // XXX - this should get the right number from prefs
+  *outString += nbsp; *outString += nbsp; *outString += nbsp; *outString += nbsp; 
+  return NS_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetTabAsNBSPsAndSpace: stuff the right number of nbsp's followed by a 
+//                        space into outString
+nsresult
+nsHTMLEditRules::GetTabAsNBSPsAndSpace(nsString *outString)
+{
+  if (!outString) return NS_ERROR_NULL_POINTER;
+  // XXX - this should get the right number from prefs
+  *outString += nbsp; *outString += nbsp; *outString += nbsp; *outString += ' '; 
   return NS_OK;
 }
 
@@ -516,35 +798,57 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
                            PlaceholderTxn **aTxn,
                            nsString *outString)
 {
-  nsCOMPtr<nsIDOMNode> theNode;
-  PRBool isPRE;
+  nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offset;
+  PRBool isPRE;
+  PRBool isNextWhiteSpace;
+  PRBool isPrevWhiteSpace;
   
-  nsresult result = GetStartNodeAndOffset(aSelection, &theNode, &offset);
-  if (NS_FAILED(result))
-    return result;
+  nsresult result = GetStartNodeAndOffset(aSelection, &parentNode, &offset);
+  if (NS_FAILED(result)) return result;
   
-  if (!theNode)
-    return NS_ERROR_FAILURE;
+  if (!parentNode) return NS_ERROR_FAILURE;
     
-  result = IsPreformatted(theNode,&isPRE);
-  if (NS_FAILED(result))
-    return result;
+  result = IsPreformatted(parentNode,&isPRE);
+  if (NS_FAILED(result)) return result;
     
   if (isPRE)
   {
-    outString += '\t';
-    // we're done - let everything fall through to the InsertText code 
-    // in nsTextEditor which will insert the tab as is.
+    *outString += '\t';
+    return NS_OK;
   }
-  else
+
+  result = IsNextCharWhitespace(parentNode, offset, &isNextWhiteSpace);
+  if (NS_FAILED(result)) return result;
+  
+  result = IsPrevCharWhitespace(parentNode, offset, &isPrevWhiteSpace);
+  if (NS_FAILED(result)) return result;
+
+  if (isPrevWhiteSpace)
   {
-    // XXX fix me
-    *outString += 160;
-    *outString += 160;
-    *outString += 160;
-    *outString += 160;
+    // prev character is a whitespace; Need to
+    // insert nbsp's BEFORE the space
+    
+    // XXX for now put tab in wrong place
+    if (isNextWhiteSpace)
+    {
+      GetTabAsNBSPs(outString);
+      return NS_OK;
+    }
+    GetTabAsNBSPsAndSpace(outString);
+    return NS_OK;
   }
+  
+  if (isNextWhiteSpace)
+  {
+    // character after us is ws.  insert nbsps
+    GetTabAsNBSPs(outString);
+    return NS_OK;
+  }
+  
+  // else we are in middle of a word; use n-1 nbsp's plus a space
+  GetTabAsNBSPsAndSpace(outString);
+  
   return NS_OK;
 }
 
@@ -560,41 +864,52 @@ nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection,
 {
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offset;
-  PRBool isWhiteSpace;
+  PRBool isPRE;
+  PRBool isNextWhiteSpace;
+  PRBool isPrevWhiteSpace;
   
   nsresult result = GetStartNodeAndOffset(aSelection, &parentNode, &offset);
-  if (NS_FAILED(result))
-    return result;
+  if (NS_FAILED(result)) return result;
 
-  if (!parentNode)  
-    return NS_ERROR_FAILURE;
+  if (!parentNode) return NS_ERROR_FAILURE;
   
-  result = IsNextCharWhitespace(parentNode, offset, &isWhiteSpace);
-  if (NS_FAILED(result))
-    return result;
+  result = IsPreformatted(parentNode,&isPRE);
+  if (NS_FAILED(result)) return result;
   
-  if (isWhiteSpace)
+  if (isPRE)
   {
-    // next character after us is a whitespace, so we need to insert nbsp
-    *outString += 160;
+    *outString += " ";
     return NS_OK;
   }
   
-  result = IsPrevCharWhitespace(parentNode, offset, &isWhiteSpace);
-  if (NS_FAILED(result))
-    return result;
+  result = IsNextCharWhitespace(parentNode, offset, &isNextWhiteSpace);
+  if (NS_FAILED(result)) return result;
   
-  if (isWhiteSpace)
+  result = IsPrevCharWhitespace(parentNode, offset, &isPrevWhiteSpace);
+  if (NS_FAILED(result)) return result;
+  
+  if (isPrevWhiteSpace)
   {
-    // character after us is non-ws, but char before is ws.  Need to
+    // prev character is a whitespace; Need to
     // insert nbsp BEFORE the space
     
-    // XXX fornow just nbsp
-    
-    *outString += 160;
+    // XXX for now put in wrong place
+    if (isNextWhiteSpace)
+    {
+      *outString += nbsp;
+      return NS_OK;
+    }
+    *outString += nbsp;
     return NS_OK;
   }
   
+  if (isNextWhiteSpace)
+  {
+    // character after us is ws.  insert nbsp
+    *outString += nbsp;
+    return NS_OK;
+  }
+    
   // else just a space
   *outString += " ";
   
