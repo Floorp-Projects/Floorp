@@ -38,10 +38,15 @@ public:
   nsImage();
   virtual ~nsImage();
 
-  /* additional members */
-
 private:
+  /* additional members */
+  PRUint32 mBytesPerRow;
   nsSize2 mSize;
   gfx_format mFormat;
+
+  PRUint32 mBitsLength;
+
+  gfx_depth mDepth;
+  PRUint8 *mBits;
 };
 

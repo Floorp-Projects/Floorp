@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Copyright (C) 2000-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
@@ -23,9 +23,12 @@
 
 #include "nsImage.h"
 
+#include "nsUnitConverters.h"
+
 NS_IMPL_ISUPPORTS1(nsImage, nsIImage)
 
-nsImage::nsImage()
+nsImage::nsImage() :
+  mBits(nsnull)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -34,14 +37,48 @@ nsImage::nsImage()
 nsImage::~nsImage()
 {
   /* destructor code */
+  delete[] mBits;
+  mBits = nsnull;
 }
 
 /* void init (in gfx_dimension aWidth, in gfx_dimension aHeight, in gfx_format aFormat); */
 NS_IMETHODIMP nsImage::Init(gfx_dimension aWidth, gfx_dimension aHeight, gfx_format aFormat)
 {
+  if (aWidth <= 0 || aHeight <= 0) {
+    printf("error - negative image size\n");
+    return NS_ERROR_FAILURE;
+  }
+
   mSize.SizeTo(aWidth, aHeight);
   mFormat = aFormat;
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  switch (aFormat) {
+  case nsIGFXFormat::RGB:
+  case nsIGFXFormat::RGB_A1:
+  case nsIGFXFormat::RGB_A8:
+    mDepth = 24;
+    break;
+  case nsIGFXFormat::RGBA:
+    mDepth = 32;
+    break;
+  default:
+    printf("unsupposed gfx_format\n");
+    break;
+  }
+
+  PRInt32 ceilWidth(GFXCoordToIntCeil(mSize.width));
+
+  mBytesPerRow = (ceilWidth * mDepth) >> 5;
+
+  if ((ceilWidth * mDepth) & 0x1F)
+    mBytesPerRow++;
+  mBytesPerRow <<= 2;
+
+  mBitsLength = mBytesPerRow * GFXCoordToIntCeil(mSize.height);
+
+  mBits = new PRUint8[mBitsLength];
+
+  return NS_OK;
 }
 
 /* void initFromDrawable (in nsIDrawable aDrawable, in gfx_coord aX, in gfx_coord aY, in gfx_dimension aWidth, in gfx_dimension aHeight); */
@@ -53,6 +90,9 @@ NS_IMETHODIMP nsImage::InitFromDrawable(nsIDrawable *aDrawable, gfx_coord aX, gf
 /* readonly attribute gfx_dimension width; */
 NS_IMETHODIMP nsImage::GetWidth(gfx_dimension *aWidth)
 {
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
   *aWidth = mSize.width;
   return NS_OK;
 }
@@ -60,6 +100,9 @@ NS_IMETHODIMP nsImage::GetWidth(gfx_dimension *aWidth)
 /* readonly attribute gfx_dimension height; */
 NS_IMETHODIMP nsImage::GetHeight(gfx_dimension *aHeight)
 {
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
   *aHeight = mSize.height;
   return NS_OK;
 }
@@ -67,6 +110,9 @@ NS_IMETHODIMP nsImage::GetHeight(gfx_dimension *aHeight)
 /* readonly attribute gfx_format format; */
 NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
 {
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
   *aFormat = mFormat;
   return NS_OK;
 }
@@ -74,23 +120,44 @@ NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
 /* readonly attribute unsigned long bytesPerRow; */
 NS_IMETHODIMP nsImage::GetBytesPerRow(PRUint32 *aBytesPerRow)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBytesPerRow = mBytesPerRow;
+  return NS_OK;
 }
 
 /* readonly attribute unsigned long bitsLength; */
 NS_IMETHODIMP nsImage::GetBitsLength(PRUint32 *aBitsLength)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBitsLength = mBitsLength;
+  return NS_OK;
 }
 
 /* readonly attribute PRUint8 bits; */
 NS_IMETHODIMP nsImage::GetBits(PRUint8 *aBits)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aBits = mBits;
+  return NS_OK;
 }
 
 /* void setBits ([array, size_is (length), const] in PRUint8 data, in unsigned long length, in long offset); */
 NS_IMETHODIMP nsImage::SetBits(const PRUint8 *data, PRUint32 length, PRInt32 offset)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mBits)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  PRUint32 i;
+  PRInt32 off;
+  // XXX i could unroll this loop a bit :-)
+  for (i=0, off = offset; i <= length; ++i, ++offset) {
+    mBits[off] = data[i];
+  }
+  return NS_OK;
 }
