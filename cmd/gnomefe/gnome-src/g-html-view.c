@@ -1240,10 +1240,20 @@ moz_html_view_display_cell(MozHTMLView *view,
   fe_Drawable *fe_drawable = view->drawable;
   GdkGC *gc = gdk_gc_new((GdkWindow*)fe_drawable->drawable);
   GdkColor color;
-  int32 cell_x, cell_y;
+  int32 cell_x, cell_y, border_width;
 
   cell_x = cell->x + cell->x_offset - view->doc_x + fe_drawable->x_origin;  
   cell_y = cell->y + cell->y_offset - view->doc_y + fe_drawable->y_origin;
+  border_width = cell->border_width;
+  if (!view)
+    return;
+
+  if ((cell_x > 0 && cell_x > view->sw_width) ||
+      (cell_y > 0 && cell_y > view->sw_height) ||
+      (cell_x + cell->width < 0) ||
+      (cell_y + cell->line_height < 0)||
+      (cell->border_width < 1))
+    return;
 
   gdk_color_black(gtk_widget_get_colormap(MOZ_VIEW(view)->subview_parent),
 		  &color);
