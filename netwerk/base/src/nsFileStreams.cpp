@@ -203,28 +203,17 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(fileIn);
     rv = fileIn->Init(mFile, mIOFlags, mPerm);
-    if (NS_FAILED(rv)) {
-#if DEBUG
-        char* filePath = nsnull;
-        mFile->GetPath(&filePath);
-        if (filePath)
-        {
-            printf("Opening %s failed\n", filePath);
-            nsAllocator::Free(filePath);
-        }
-#endif        
-        return rv;
-    }
-        
+    if (NS_SUCCEEDED(rv)) {
 #ifdef NO_BUFFERING
-    *aInputStream = fileIn;
-    NS_ADDREF(*aInputStream);
+        *aInputStream = fileIn;
+        NS_ADDREF(*aInputStream);
 #else
-    rv = NS_NewBufferedInputStream(aInputStream,
-                                   fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE);
+        rv = NS_NewBufferedInputStream(aInputStream,
+                                       fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE);
 #endif
+    }
+    NS_RELEASE(fileIn);
 
-    // printf("opening %s for reading\n", mSpec);
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
            ("nsFileIO: opening local file %s for input (%x)",
             mSpec, rv));
@@ -246,21 +235,18 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(fileOut);
     rv = fileOut->Init(mFile, mIOFlags, mPerm);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIOutputStream> bufStr;
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIOutputStream> bufStr;
 #ifdef NO_BUFFERING
-    bufStr = fileOut;
+        *aOutputStream = fileOut;
+        NS_ADDREF(*aOutputStream);
 #else
-    rv = NS_NewBufferedOutputStream(getter_AddRefs(bufStr),
-                                    fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE);
-    if (NS_FAILED(rv)) return rv;
+        rv = NS_NewBufferedOutputStream(aOutputStream,
+                                        fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE);
 #endif
+    }
+    NS_RELEASE(fileOut);
 
-    *aOutputStream = bufStr;
-    NS_ADDREF(*aOutputStream);
-
-    // printf("opening %s for writing\n", mSpec);
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
            ("nsFileIO: opening local file %s for output (%x)",
             mSpec, rv));
