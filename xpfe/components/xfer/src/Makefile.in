@@ -32,11 +32,10 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		-L$(DIST)/bin \
-		-L$(DIST)/lib \
 		-lxpcom \
 		-lmozjs \
-		-lneckoutil_s \
 		$(NSPR_LIBS) \
 		$(NULL)
 

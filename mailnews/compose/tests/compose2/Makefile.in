@@ -27,21 +27,9 @@ PROGRAM		= msgcomposetest2
 CPPSRCS		= test2.cpp
 
 LIBS		= \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
-		-lpwcac \
 		-lmozjs \
 		-lraptorgfx \
 		$(NULL)

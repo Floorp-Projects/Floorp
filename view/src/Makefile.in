@@ -34,9 +34,9 @@ CPPSRCS		= \
 
 REQUIRES	= raptor xpcom
 
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/lib \
-		$(MOZ_TIMER_LIBS) \
+EXTRA_DSO_LDOPTS =\
+				$(MOZ_TIMER_LIBS) \
+				$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

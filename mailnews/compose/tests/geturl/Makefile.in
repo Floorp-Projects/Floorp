@@ -28,22 +28,7 @@ CPPSRCS		= \
 		geturl.cpp \
 		nsURLFetcher.cpp \
 		$(NULL)
-
-LIBS		= \
-		-lraptorplugin \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lhttpurl \
-		-lremoturl \
-		-lsockstuburl \
-		-lmimetype \
-		-lnetcache \
-		-lnetcnvts \
-		-lnetlib \
-		-lnetwork \
-		-lpwcac \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		$(NSPR_LIBS) \

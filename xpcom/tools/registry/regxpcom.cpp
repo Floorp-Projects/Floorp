@@ -128,18 +128,3 @@ int main(int argc, char *argv[])
 
     return ret;
 }
-
-#ifdef XP_UNIX
-/* The timer code doesn't get linked in. Some components link with libraries
- * in bin/ directory that assume that app that they are used in has libtimer_s.a
- * So ensure libtimer_s.a gets linked in.
- */
-#include "nsITimer.h"
-
-void dummy()
-{
-  nsITimer *timer;
-  (void) NS_NewTimer(&timer);
-  NS_IF_RELEASE(timer);
-}
-#endif /* XP_UNIX */

@@ -27,8 +27,7 @@ PROGRAM		= testimap
 
 CPPSRCS		= imapProtocolTest.cpp
 
-LIBS		= \
-		-L$(DIST)/lib \
+LIBS =	\
 		-L$(DIST)/bin \
 		-lxpcom \
 		-lmozjs \

@@ -29,14 +29,14 @@ CPPSRCS		= TestSpaceManager.cpp
 LOCAL_INCLUDES	= -I$(srcdir)/../src
 
 LIBS		+= \
-		 $(DIST)/lib/libraptorlayout_s.a \
-		-lraptorgfx \
-		-lmozjs \
-		$(MOZ_TIMER_LIBS) \
-		-lxpcom \
-		$(NSPR_LIBS) \
-		$(TK_LIBS) \
-		$(NULL)
+			$(DIST)/lib/libraptorlayout_s.a \
+			-lraptorgfx \
+			-lmozjs \
+			$(MOZ_TIMER_LIBS) \
+			-lxpcom \
+			$(NSPR_LIBS) \
+			$(TK_LIBS) \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -30,14 +30,10 @@ CPPSRCS = \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
-	-L$(DIST)/bin	\
-	-lxpcom		\
-	-L$(DIST)/lib	\
-	-lneckoutil_s	\
-	$(NSPR_LIBS)	\
+	$(MOZ_NECKO_UTIL_LIBS) \
+	-L$(DIST)/bin \
+	-lxpcom \
+	$(NSPR_LIBS) \
 	$(NULL)
-
-
-include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk

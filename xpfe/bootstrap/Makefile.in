@@ -38,16 +38,22 @@ ifdef MOZ_OJI
 OJI_LIBS	= -ljsj
 endif
 
+
+
 XP_DIST_LIBS	= \
 		-lraptorgfx \
-		$(MOZ_TIMER_LIBS) \
 		-lmozjs \
 		-lxpcom \
-		-lneckoutil_s \
 		$(OJI_LIBS) \
 		$(NULL)
 
+XP_NS_UNDERBAR_CRAP = \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_TIMER_LIBS) \
+		$(NULL)
+
 XP_LIBS		= \
+		$(XP_NS_UNDERBAR_CRAP) \
 		$(XP_DIST_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
@@ -64,6 +70,8 @@ LIBS		= $(XP_LIBS)
 
 # cls/shaver are responsible for this amazingness
 EXTRA_DEPS	= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
+
+EXTRA_DEPS += $(XP_NS_UNDERBAR_CRAP)
 
 include $(topsrcdir)/config/rules.mk
 

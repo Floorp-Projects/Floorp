@@ -25,24 +25,12 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= mimetest
 CPPSRCS		= mimetest.cpp
 
-LIBS		= \
-		-lraptorplugin \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lhttpurl \
-		-lremoturl \
-		-lsockstuburl \
-		-lmimetype \
-		-lnetcache \
-		-lnetcnvts \
-		-lnetlib \
-		-lnetwork \
-		-lpwcac \
-		$(MOZ_TIMER_LIBS) \
+LIBS	= \
+		-L$(DIST)/bin \
 		-lmozjs \
 		-lxpcom \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

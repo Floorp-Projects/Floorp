@@ -26,16 +26,15 @@ MODULE		= raptor
 LIBRARY_NAME	= raptorwebwidget
 
 CPPSRCS		= \
-    		dlldeps.cpp \
-		nsDLLFactory.cpp \
-		nsDocLoader.cpp \
-		nsThrobber.cpp \
-		nsWebShell.cpp \
-		$(NULL)
+			dlldeps.cpp \
+			nsDLLFactory.cpp \
+			nsDocLoader.cpp \
+			nsThrobber.cpp \
+			nsWebShell.cpp \
+			$(NULL)
 
 EXTRA_DSO_LDOPTS =\
-		-L$(DIST)/lib \
-		-lneckoutil_s \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		-ljsdom \

@@ -27,24 +27,12 @@ PROGRAM		= sendlatertest
 CPPSRCS		= test.cpp
 
 LIBS		= \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
+		-lraptorgfx \
 		-lxpcom \
-		-lpwcac \
 		-lmozjs \
 		$(NSPR_LIBS) \
-		-lraptorgfx \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

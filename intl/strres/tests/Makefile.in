@@ -37,7 +37,7 @@ EXPORT_RESOURCE	= \
 LIBS		= \
 		-lmozjs \
 		-lxpcom \
-		-lneckoutil_s \
+		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

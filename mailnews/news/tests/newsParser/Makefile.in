@@ -26,24 +26,12 @@ PROGRAM		= newsParserTest
 CPPSRCS		= newsParserTest.cpp
 
 LIBS		= \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
-		-lpwcac \
+		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_TIMER_LIBS) \
+		$(DIST)/lib/libmsgnews_s.a \
 		-lmozjs \
 		-lraptorgfx \
-		$(DIST)/lib/libmsgnews_s.a \
 		-lmsgbaseutil \
-		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)
