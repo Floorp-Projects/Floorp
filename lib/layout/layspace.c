@@ -337,6 +337,7 @@ static void lo_LayoutBlockSpacer(MWContext *context, lo_DocState *state, LO_Spac
 		}
 		else
 		{
+			val = spacer->height;
 			val = state->win_height * val / 100;
 			if (val < 1)
 			{
