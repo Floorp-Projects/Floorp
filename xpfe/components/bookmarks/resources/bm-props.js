@@ -228,6 +228,13 @@ function Init()
 	}
 
 	window.sizeToContent();
+
+	// set initial focus
+	var nameNode = document.getElementById("name");
+	if (nameNode)
+	{
+		nameNode.focus();
+	}
 }
 
 

@@ -63,10 +63,11 @@
 		</menu>
 	</menubar>
 
-	<box align="horizontal">
+	<titledbox orient="horizontal">
 	<spring align="horizontal" flex="100%" />
 	<box align="vertical">
 		<box align="horizontal">
+			<spring align="horizontal" flex="100%" />
 			<text value="&search1.label;" />
 			<menulist id="datasource">
 				<menupopup id="datasourcePopup">
@@ -75,9 +76,11 @@
 				</menupopup>
 			</menulist>
 			<text value="&search2.label;" />
+			<spring align="horizontal" flex="100%" />
 		</box>
 
 		<box align="horizontal">
+			<spring align="horizontal" flex="100%" />
 			<menulist id="match">
 				<menupopup id="matchPopup">
 					<menuitem data="http://home.netscape.com/NC-rdf#Name" value="&name.label;" />
@@ -97,16 +100,19 @@
 				</menupopup>
 			</menulist>
 
-			<html:input id="findtext" type="text" width="20" onkeyup="if (event.which == 13) { doFind(); }" />
-			<titledbutton value="&search.button.label;" onclick="return doFind();" class="dialog toolbar-non-iconic" />
+			<textfield id="findtext" type="text" style="width:10em;" onkeyup="if (event.which == 13) { doFind(); }" />
+			<box autostretch="never">
+				<titledbutton value="&search.button.label;" onclick="return doFind();" class="dialog toolbar-non-iconic" />
+			</box>
+			<spring align="horizontal" flex="100%" />
 		</box>
 	</box>
 	<spring align="horizontal" flex="100%" />
-	</box>
+	</titledbox>
 
-	<spring align="vertical" style="height:10;" />
+	<box height="10" />
 
-	<tree id="findresultstree" ref="" flex="100%" style="height:0px" 
+	<tree id="findresultstree" ref="" flex="100%" style="height:0px"
 		datasources="rdf:bookmarks rdf:history rdf:localsearch"
 		onclick="return OpenURL(event, event.target.parentNode.parentNode);">
 

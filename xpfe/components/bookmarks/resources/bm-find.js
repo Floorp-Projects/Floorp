@@ -40,6 +40,13 @@ function doLoad()
 	{
 		searchButton.setAttribute("disabled", "true");
 	}
+
+	// set initial focus
+	var findtext = document.getElementById("findtext");
+	if (findtext)
+	{
+		findtext.focus();
+	}
 }
 
 

@@ -51,22 +51,22 @@
 
 		<box id="nameBox" align="vertical">
 			<text value="&bookmarks.name.label;" />
-			<html:input id="name" />
+			<textfield id="name" />
 		</box>
 
 		<box id="locationBox" align="vertical">
 			<text value="&bookmarks.location.label;" />
-			<html:input id="url" />
+			<textfield id="url" />
 		</box>
 
 		<box id="shortcutBox" align="vertical">
 			<text value="&bookmarks.shortcut.label;" />
-			<html:input id="shortcut" />
+			<textfield id="shortcut" />
 		</box>
 
 		<box id="descriptionBox" align="vertical">
 			<text value="&bookmarks.description.label;" />
-			<html:textarea id="description" />
+			<textfield multiline="true" id="description" />
 		</box>
 	</titledbox>
 
@@ -157,7 +157,7 @@
 		<box align="horizontal">
 			<spring align="horizontal" flex="1" />
 			<text value="&every.label;" />
-			<html:input id="duration" size="4" value="60" />
+			<textfield id="duration" style="width:4em;" value="60" />
 			<text value="&minutes.label;" />
 		</box>
 
