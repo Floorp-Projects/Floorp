@@ -1776,6 +1776,9 @@ function Save()
 function SaveAsFile(saveAs)
 {
   dump("SaveAsFile from XUL\n");
+  var subject = document.getElementById('msgSubject').value; 
+  GetCurrentEditor().setDocumentTitle(subject); 
+
   if (gMsgCompose.bodyConvertible() == nsIMsgCompConvertible.Plain)
     SaveDocument(saveAs, false, "text/plain");
   else
