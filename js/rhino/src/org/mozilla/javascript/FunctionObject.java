@@ -195,53 +195,16 @@ public class FunctionObject extends NativeFunction {
     }
 
     /**
-     * Override ScriptableObject's has, get, and set in order to define
-     * the "length" property of the function. <p>
-     *
-     * We could also have defined the property using ScriptableObject's
-     * defineProperty method, but that would have consumed a slot in every
-     * FunctionObject. Most FunctionObjects typically don't have any
-     * properties anyway, so having the "length" property would cause us
-     * to allocate an array of slots. <p>
-     *
-     * In particular, this method will return true for 
-     * <code>name.equals("length")</code>
-     * and will delegate to the superclass for all other
-     * values of <code>name</code>.
-     */
-    public boolean has(String name, Scriptable start) {
-        return name.equals("length") || super.has(name, start);
-    }
-
-    /**
-     * Override ScriptableObject's has, get, and set in order to define
-     * the "length" property of the function. <p>
-     *
-     * In particular, this method will return the value defined by
-     * the method used to construct the object (number of parameters
-     * of the method, or 1 if the method is a "varargs" form), unless
-     * setLength has been called with a new value.
+     * Return the value defined by  the method used to construct the object
+     * (number of parameters of the method, or 1 if the method is a "varargs"
+     * form), unless setLength has been called with a new value.
+     * Overrides getLength in BaseFunction.
      *
      * @see org.mozilla.javascript.FunctionObject#setLength
+     * @see org.mozilla.javascript.BaseFunction#getLength
      */
-    public Object get(String name, Scriptable start) {
-        if (name.equals("length"))
-            return new Integer(lengthPropertyValue);
-        return super.get(name, start);
-    }
-
-    /**
-     * Override ScriptableObject's has, get, and set in order to define
-     * the "length" property of the function. <p>
-     *
-     * In particular, this method will ignore all attempts to set the
-     * "length" property and forward all other requests to ScriptableObject.
-     *
-     * @see org.mozilla.javascript.FunctionObject#setLength
-     */
-    public void put(String name, Scriptable start, Object value) {
-        if (!name.equals("length"))
-            super.put(name, start, value);
+    public int getLength() {
+        return lengthPropertyValue;
     }
 
     /**
@@ -369,12 +332,13 @@ public class FunctionObject extends NativeFunction {
     public void addAsConstructor(Scriptable scope, Scriptable prototype) {
         setParentScope(scope);
         setPrototype(getFunctionPrototype(scope));
+        setImmunePrototypeProperty(prototype);
+
         prototype.setParentScope(this);
+        
         final int attr = ScriptableObject.DONTENUM  |
                          ScriptableObject.PERMANENT |
                          ScriptableObject.READONLY;
-        defineProperty("prototype", prototype, attr);
-
         defineProperty(prototype, "constructor", this, attr);
 
         String name = prototype.getClassName();

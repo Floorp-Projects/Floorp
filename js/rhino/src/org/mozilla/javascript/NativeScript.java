@@ -134,10 +134,6 @@ public class NativeScript extends NativeFunction implements Script {
         return cx.decompileScript(thisScript, scope, 0);
     }
     
-    public String jsGet_name() {
-        return getFunctionName();
-    }
-
     /*
      * Override method in NativeFunction to avoid ever returning "anonymous"
      */

@@ -169,7 +169,7 @@ public class BaseFunction extends IdScriptable implements Function {
         if (prototypeFlag) {
             switch (methodId) {
                 case Id_constructor:
-                    return jsConstructor(cx, args, f);
+                    return jsConstructor(cx, scope, args);
 
                 case Id_toString:
                     return jsFunction_toString(cx, thisObj, args);
@@ -322,8 +322,8 @@ public class BaseFunction extends IdScriptable implements Function {
         return null;
     }
         
-    private static Object jsConstructor(Context cx, Object[] args,
-                                        Function ctorObj)
+    private static Object jsConstructor(Context cx, Scriptable scope, 
+                                        Object[] args)
     {
         int arglen = args.length;
         StringBuffer funArgs = new StringBuffer();
@@ -347,9 +347,6 @@ public class BaseFunction extends IdScriptable implements Function {
             linep[0] = 1;
         }
         Object securityDomain = cx.getSecurityDomainForStackDepth(4);
-        Scriptable scope = cx.ctorScope;
-        if (scope == null)
-            scope = ctorObj;
         Scriptable global = ScriptableObject.getTopLevelScope(scope);
         
         // Compile the function with opt level of -1 to force interpreter

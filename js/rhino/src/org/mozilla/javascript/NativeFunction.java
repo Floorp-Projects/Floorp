@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Igor Bukanov
  * Roger Lawrence
  * Mike McCabe
  *
@@ -44,117 +45,7 @@ import java.util.Hashtable;
  * See ECMA 15.3.
  * @author Norris Boyd
  */
-public class NativeFunction extends ScriptableObject implements Function {
-
-    public static void finishInit(Scriptable scope, FunctionObject ctor,
-                                  Scriptable proto)
-    {
-        // Fix up bootstrapping problem: the prototype of the Function
-        // constructor was set to null because Function.prototype
-        // was not yet defined.
-        ctor.setPrototype(proto);
-
-        ((NativeFunction) proto).functionName = "";
-    }
-
-    public String getClassName() {
-        return "Function";
-    }
-
-    public boolean has(String s, Scriptable start) {
-        return s.equals("prototype") || s.equals("arguments") || 
-               super.has(s, start);
-    }
-
-    public Object get(String s, Scriptable start) {
-        Object result = super.get(s, start);
-        if (result != NOT_FOUND)
-            return result;
-        if (s.equals("prototype")) {
-            NativeObject obj = new NativeObject();
-            final int attr = ScriptableObject.DONTENUM |
-                             ScriptableObject.READONLY |
-                             ScriptableObject.PERMANENT;
-            obj.defineProperty("constructor", this, attr);
-            // put the prototype property into the object now, then in the
-            // wacky case of a user defining a function Object(), we don't
-            // get an infinite loop trying to find the prototype.
-            put(s, this, obj);
-            Scriptable proto = getObjectPrototype(this);            
-            if (proto != obj) // not the one we just made, it must remain grounded
-                obj.setPrototype(proto);
-            return obj;
-        }
-        if (s.equals("arguments")) {
-            // <Function name>.arguments is deprecated, so we use a slow
-            // way of getting it that doesn't add to the invocation cost.
-            // TODO: add warning, error based on version
-            NativeCall activation = getActivation(Context.getContext());
-            return activation == null 
-                   ? null 
-                   : activation.get("arguments", activation);
-        }
-        return NOT_FOUND;
-    }
-
-    /**
-     * Implements the instanceof operator for JavaScript Function objects.
-     * <p>
-     * <code>
-     * foo = new Foo();<br>
-     * foo instanceof Foo;  // true<br>
-     * </code>
-     *
-     * @param instance The value that appeared on the LHS of the instanceof
-     *              operator
-     * @return true if the "prototype" property of "this" appears in
-     *              value's prototype chain
-     *
-     */
-    public boolean hasInstance(Scriptable instance) {
-        Object protoProp = ScriptableObject.getProperty(this, "prototype");
-        if (protoProp instanceof Scriptable && protoProp != Undefined.instance) {
-            return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
-        }
-        throw NativeGlobal.typeError1
-            ("msg.instanceof.bad.prototype", functionName, instance);
-    }
-
-    /**
-     * Should be overridden.
-     */
-    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args)
-        throws JavaScriptException
-    {
-        return Undefined.instance;
-    }
-
-    protected Scriptable getClassPrototype() {
-        Object protoVal = get("prototype", this);
-        if (protoVal == null 
-                    || !(protoVal instanceof Scriptable)
-                    || (protoVal == Undefined.instance))
-            protoVal = getClassPrototype(this, "Object");
-        return (Scriptable) protoVal;
-    }
-
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
-    {
-        Scriptable newInstance = new NativeObject();
-
-        newInstance.setPrototype(getClassPrototype());
-        newInstance.setParentScope(getParentScope());
-
-        Object val = call(cx, scope, newInstance, args);
-        if (val != null && val != Undefined.instance &&
-            val instanceof Scriptable)
-        {
-            return (Scriptable) val;
-        }
-        return newInstance;
-    }
+public class NativeFunction extends BaseFunction {
 
     private boolean nextIs(int i, int token) {
         if (i + 1 < source.length())
@@ -186,7 +77,7 @@ public class NativeFunction extends ScriptableObject implements Function {
      * between function header and function body that rhino
      * decompilation does not.
      *
-     * @param cx Cuirrent context
+     * @param cx Current context
      *
      * @param indent How much to indent the decompiled result
      *
@@ -842,125 +733,7 @@ public class NativeFunction extends ScriptableObject implements Function {
             result.append('\n');
     }
 
-    public static Object jsFunction_toString(Context cx, Scriptable thisObj,
-                                             Object[] args, Function funObj)
-    {
-        int indent = ScriptRuntime.toInt32(args, 0);
-        Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        if (val instanceof NativeFunction) {
-            NativeFunction funVal = (NativeFunction)val;
-            return funVal.decompile(cx, indent, false);
-        }
-        else if (val instanceof IdFunction) {
-            IdFunction funVal = (IdFunction)val;
-            return funVal.decompile(cx, indent, false);
-        }
-        throw NativeGlobal.typeError1
-            ("msg.incompat.call", "toString", thisObj);
-    }
-
-    public static Object jsConstructor(Context cx, Object[] args,
-                                       Function ctorObj, boolean inNewExpr)
-    {
-        int arglen = args.length;
-        StringBuffer funArgs = new StringBuffer();
-
-        /* Collect the arguments into a string.  */
-
-        int i;
-        for (i = 0; i < arglen - 1; i++) {
-            if (i > 0)
-                funArgs.append(",");
-            funArgs.append(ScriptRuntime.toString(args[i]));
-        }
-        String funBody = arglen == 0 ? "" : ScriptRuntime.toString(args[i]);
-
-        String source = "function (" + funArgs.toString() + ") {" +
-                        funBody + "}";
-        int[] linep = { 0 };
-        String filename = Context.getSourcePositionFromStack(linep);
-        if (filename == null) {
-            filename = "<eval'ed string>";
-            linep[0] = 1;
-        }
-        Object securityDomain = cx.getSecurityDomainForStackDepth(4);
-        Scriptable scope = cx.ctorScope;
-        if (scope == null)
-            scope = ctorObj;
-        Scriptable global = ScriptableObject.getTopLevelScope(scope);
-        
-        // Compile the function with opt level of -1 to force interpreter
-        // mode.
-        int oldOptLevel = cx.getOptimizationLevel();
-        cx.setOptimizationLevel(-1);
-        NativeFunction fn = (NativeFunction) cx.compileFunction(
-                                                global, source,
-                                                filename, linep[0], 
-                                                securityDomain);
-        cx.setOptimizationLevel(oldOptLevel);
-
-        fn.functionName = "anonymous";
-        fn.setPrototype(getFunctionPrototype(global));
-        fn.setParentScope(global);
-
-        return fn;
-    }
-
-    /**
-     * Function.prototype.apply
-     *
-     * A proposed ECMA extension for round 2.
-     */
-    public static Object jsFunction_apply(Context cx, Scriptable thisObj,
-                                          Object[] args, Function funObj)
-        throws JavaScriptException
-    {
-        if (args.length != 2)
-            return jsFunction_call(cx, thisObj, args, funObj);
-        Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        Scriptable newThis = args[0] == null
-                             ? ScriptableObject.getTopLevelScope(thisObj)
-                             : ScriptRuntime.toObject(funObj, args[0]);
-        Object[] newArgs;
-        if (args.length > 1) {
-            if ((args[1] instanceof NativeArray) 
-                    || (args[1] instanceof Arguments))
-                newArgs = cx.getElements((Scriptable) args[1]);
-            else
-                throw NativeGlobal.typeError0("msg.arg.isnt.array", thisObj);            
-        }
-        else
-            newArgs = new Object[0];
-        return ScriptRuntime.call(cx, val, newThis, newArgs, newThis);
-    }
-
-    /**
-     * Function.prototype.call
-     *
-     * A proposed ECMA extension for round 2.
-     */
-    public static Object jsFunction_call(Context cx, Scriptable thisObj,
-                                         Object[] args, Function funObj)
-        throws JavaScriptException
-    {
-        Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        if (args.length == 0) {
-            Scriptable s = ScriptRuntime.toObject(funObj, val);
-            Scriptable scope = s.getParentScope();
-            return ScriptRuntime.call(cx, val, scope, ScriptRuntime.emptyArgs, 
-                                      scope);
-        } else {
-            Scriptable newThis = args[0] == null
-                                 ? ScriptableObject.getTopLevelScope(thisObj)
-                                 : ScriptRuntime.toObject(funObj, args[0]);
-
-            Object[] newArgs = new Object[args.length - 1];
-            System.arraycopy(args, 1, newArgs, 0, newArgs.length);
-            return ScriptRuntime.call(cx, val, newThis, newArgs, newThis);
-        }
-    }
-
-    public int jsGet_length() {
+    public int getLength() {
         Context cx = Context.getContext();
         if (cx != null && cx.getLanguageVersion() != Context.VERSION_1_2)
             return argCount;
@@ -970,7 +743,7 @@ public class NativeFunction extends ScriptableObject implements Function {
         return activation.getOriginalArguments().length;
     }
 
-    public int jsGet_arity() {
+    public int getArity() {
         return argCount;
     }
 
@@ -985,21 +758,6 @@ public class NativeFunction extends ScriptableObject implements Function {
         return functionName;
     }
 
-    public String jsGet_name() {
-        return getFunctionName();
-    }
-
-    private NativeCall getActivation(Context cx) {
-        NativeCall activation = cx.currentActivation;
-        while (activation != null) {
-            if (activation.getFunctionObject() == this) 
-                return activation;
-            activation = activation.caller;
-        }
-        return null;
-    }
-        
-    protected String functionName;
     /**
      * The "argsNames" array has the following information:
      * argNames[0] through argNames[argCount - 1]: the names of the parameters

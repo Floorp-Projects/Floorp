@@ -634,33 +634,13 @@ public class Context {
         if (scope == null)
             scope = new NativeObject();
 
-        try {
-            ScriptableObject.defineClass(scope, NativeFunction.class, sealed);
-        }
-        catch (IllegalAccessException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InstantiationException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (ClassDefinitionException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (PropertyException e) {
-            throw WrappedException.wrapException(e);
-        }
-
+        BaseFunction.init(this, scope, sealed);
         NativeObject.init(this, scope, sealed);
 
-        Scriptable objectProto = ScriptableObject.
-                                  getObjectPrototype(scope);
+        Scriptable objectProto = ScriptableObject.getObjectPrototype(scope);
 
         // Function.prototype.__proto__ should be Object.prototype
-        Scriptable functionProto = ScriptableObject.
-                                    getFunctionPrototype(scope);
+        Scriptable functionProto = ScriptableObject.getFunctionPrototype(scope);
         functionProto.setPrototype(objectProto);
 
         // Set the prototype of the object passed in if need be
@@ -933,10 +913,8 @@ public class Context {
      * @return a string representing the function source
      */
     public String decompileFunction(Function fun, int indent) {
-        if (fun instanceof NativeFunction)
-            return ((NativeFunction)fun).decompile(this, indent, false);
-        else if (fun instanceof IdFunction)
-            return ((IdFunction)fun).decompile(this, indent, false);
+        if (fun instanceof BaseFunction)
+            return ((BaseFunction)fun).decompile(this, indent, false);
         else
             return "function " + fun.getClassName() +
                    "() {\n\t[native code]\n}\n";
@@ -956,10 +934,8 @@ public class Context {
      * @return a string representing the function body source.
      */
     public String decompileFunctionBody(Function fun, int indent) {
-        if (fun instanceof NativeFunction)
-            return ((NativeFunction)fun).decompile(this, indent, true);
-        else if (fun instanceof IdFunction)
-            return ((IdFunction)fun).decompile(this, indent, true);
+        if (fun instanceof BaseFunction)
+            return ((BaseFunction)fun).decompile(this, indent, true);
         else
             // not sure what the right response here is.  JSRef currently
             // dumps core.
