@@ -97,7 +97,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsStreamListenerEvent : public PLEvent 
+class nsStreamListenerEvent
 {
 public:
     nsStreamListenerEvent(nsAsyncStreamObserver* listener,
@@ -115,13 +115,14 @@ protected:
     nsAsyncStreamObserver*      mListener;
     nsIChannel*                 mChannel;
     nsISupports*                mContext;
+    PLEvent *                   mEvent;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
                                              nsIChannel* channel, nsISupports* context)
-    : mListener(listener), mChannel(channel), mContext(context)
+    : mListener(listener), mChannel(channel), mContext(context), mEvent(nsnull)
 {
     NS_IF_ADDREF(mListener);
     NS_IF_ADDREF(mChannel);
@@ -133,13 +134,20 @@ nsStreamListenerEvent::~nsStreamListenerEvent()
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mContext);
+
+    if (nsnull != mEvent)
+    {
+        delete mEvent;
+        mEvent = nsnull;
+    }
 }
 
 void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
 {
-    // WARNING: This is a dangerous cast since it must adjust the pointer 
-    // to compensate for the vtable...
-    nsStreamListenerEvent *ev = (nsStreamListenerEvent*)aEvent;
+    nsStreamListenerEvent * ev = 
+        (nsStreamListenerEvent *) PL_GetEventOwner(aEvent);
+
+    NS_ASSERTION(nsnull != ev,"null event.");
 
     nsresult rv = ev->HandleEvent();
     ev->mListener->SetStatus(rv);
@@ -147,9 +155,10 @@ void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
 
 void PR_CALLBACK nsStreamListenerEvent::DestroyPLEvent(PLEvent* aEvent)
 {
-    // WARNING: This is a dangerous cast since it must adjust the pointer 
-    // to compensate for the vtable...
-    nsStreamListenerEvent *ev = (nsStreamListenerEvent*)aEvent;
+    nsStreamListenerEvent * ev = 
+        (nsStreamListenerEvent *) PL_GetEventOwner(aEvent);
+
+    NS_ASSERTION(nsnull != ev,"null event.");
 
     delete ev;
 }
@@ -159,11 +168,16 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 {
     NS_PRECONDITION(nsnull != aEventQueue, "nsIEventQueue for thread is null");
 
-    PL_InitEvent(this, nsnull,
+    NS_PRECONDITION(nsnull == mEvent, "Init plevent only once.");
+    
+    mEvent = new PLEvent;
+    
+    PL_InitEvent(mEvent, 
+                 this,
                  (PLHandleEventProc)  nsStreamListenerEvent::HandlePLEvent,
                  (PLDestroyEventProc) nsStreamListenerEvent::DestroyPLEvent);
 
-    PRStatus status = aEventQueue->PostEvent(this);
+    PRStatus status = aEventQueue->PostEvent(mEvent);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 
