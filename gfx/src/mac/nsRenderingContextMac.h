@@ -21,9 +21,8 @@
 
 #include "nsIRenderingContext.h"
 #include "nsDrawingSurfaceMac.h"
+#include "nsATSUIUtils.h"
 #include <QDOffscreen.h>
-#include "nsCRT.h"
-#include <ATSUnicode.h>
 
 class nsIFontMetrics;
 class nsIDeviceContext;
@@ -124,11 +123,7 @@ public:
   nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);
 
 protected:
-#ifdef OLDDRAWINGSURFACE
-	void		SelectDrawingSurface(DrawingSurface* aSurface);
-#else
 	void		SelectDrawingSurface(nsDrawingSurfaceMac* aSurface);
-#endif
 
 	GrafPtr		mOldPort;
 
@@ -143,45 +138,30 @@ protected:
   				{
 					::SetPort(mOldPort);
   				}
-          
-  NS_IMETHOD qdGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
-                      PRInt32 *aFontID);
-  NS_IMETHOD qdDrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
-                        PRInt32 aFontID,
-                        const nscoord* aSpacing);
-  NS_IMETHOD atsuiGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
-                      PRInt32 *aFontID);
-  NS_IMETHOD atsuiDrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
-                        PRInt32 aFontID,
-                        const nscoord* aSpacing);
-                        
-  ATSUTextLayout atsuiGetTextLayout();
-                      
-	
+
+
+typedef enum {
+  kFontChanged	= (1 << 0),
+  kColorChanged	= (1 << 1)
+} styleChanges;
+
+
 protected:
 	float             		mP2T; 				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
-#ifdef OLDDRAWINGSURFACE
-	DrawingSurface*			mOriginalSurface;
-	DrawingSurface*			mFrontSurface;
-
-	DrawingSurface*			mCurrentSurface;	// pointer to the current surface
-#else
 	nsDrawingSurfaceMac*			mOriginalSurface;
 	nsDrawingSurfaceMac*			mFrontSurface;
 
 	nsDrawingSurfaceMac*			mCurrentSurface;	// pointer to the current surface
-#endif
 
-	GrafPtr					mPort;				// current grafPort - shortcut for mCurrentSurface->GetPort()
-	GraphicState *			mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
+	GrafPtr						mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
+	GraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 
-	nsVoidArray *			mGSStack;			// GraphicStates stack, used for PushState/PopState
-	static PRBool			gATSUI;
-	static PRBool			gATSUI_Init;
-	PRInt8					mChanges;
-	ATSUTextLayout			mLastTextLayout;
+	nsVoidArray *			mGSStack;		// GraphicStates stack, used for PushState/PopState
+	PRInt8						mChanges;
+	nsATSUIToolkit		mATSUIToolkit;
 };
+
 
 #endif /* nsRenderingContextMac_h___ */
