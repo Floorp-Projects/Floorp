@@ -85,7 +85,6 @@ interface nsILDAPMessage : nsISupports
     /**
      * wrapper for ldap_get_values()
      * 
-     * XXXdmose - values must be freed with ldap_value_free
      *
      * @param attr      The attribute whose values are to be returned
      * @param count     Number of values in the outbound array.
@@ -94,6 +93,7 @@ interface nsILDAPMessage : nsISupports
      * @exception NS_ERROR_UNEXPECTED           Bug or memory corruption
      * @exception NS_ERROR_LDAP_DECODING_ERROR  Attribute not found or other 
      *                                          decoding error.
+     * @exception NS_ERROR_OUT_OF_MEMORY
      */
     void getValues(in string attr, out unsigned long count, 
                    [retval, array, size_is(count)] out string values);

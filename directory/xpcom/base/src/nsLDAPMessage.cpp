@@ -441,14 +441,29 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
 
     // count the values
     //
-    PRUint32 i;
-    for ( i=0 ; values[i] != NULL; i++ ) {
-    }
-    
-    // nsMemory::Alloc(sizeof(char *));
+    PRUint32 numVals = ldap_count_values(values);
 
-    *aCount = i + 1;    // include the NULL-terminator in our count
-    *aValues = values;
+    // create an array of the appropriate size
+    //
+    *aValues = NS_STATIC_CAST(char **, 
+                              nsMemory::Alloc(numVals * sizeof(char *)));
+    if (!*aValues) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // clone the array (except for the trailing NULL entry) using the 
+    // shared allocator for XPCOM correctness
+    //
+    PRUint32 i;
+    for ( i = 0 ; i < numVals ; i++ ) {
+        (*aValues)[i] = nsCRT::strdup(values[i]);
+        if ((*aValues)[i] == nsnull ) {
+            NSLDAP_FREE_XPIDL_ARRAY(i, aValues, nsMemory::Free);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    *aCount = numVals;
     return NS_OK;
 }
 

@@ -995,14 +995,14 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 
         // print all values of this attribute
         //
-        for ( PRUint32 j=0 ; vals[j] != NULL; ++j ) {
+        for ( PRUint32 j=0 ; j < valueCount; j++ ) {
             entry.Append(attrs[i]);
             entry.Append(": ");
             entry.Append(vals[j]);
             entry.Append("\n");
         }
+        NSLDAP_FREE_XPIDL_ARRAY(valueCount, vals, nsMemory::Free);
 
-        ldap_value_free(vals);
     }
     NSLDAP_FREE_XPIDL_ARRAY(attrCount, attrs, nsMemory::Free);
 
