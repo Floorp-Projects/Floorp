@@ -30,7 +30,6 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
 
 <window id="signonviewer"
-        width="470" height="440"
         title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
