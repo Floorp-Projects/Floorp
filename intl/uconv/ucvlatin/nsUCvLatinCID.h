@@ -21,6 +21,11 @@
 #define nsUCvLatinCID_h___
 
 #include "nsISupports.h"
+// Class ID for our Latin1ToUnicode charset converter
+// {A3254CB0-8E20-11d2-8A98-00600811A836}
+NS_DECLARE_ID(kLatin1ToUnicodeCID,
+  0xa3254cb0, 0x8e20, 0x11d2, 0x8a, 0x98, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
 
 // Class ID for our ISO88597ToUnicode charset converter
 // {AF7A9951-AA48-11d2-B3AE-00805F8A6670}
