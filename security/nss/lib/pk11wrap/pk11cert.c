@@ -1736,6 +1736,7 @@ done:
      * CERTCertificate, and finish
      */
     nssPKIObject_AddInstance(&c->object, certobj);
+    nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
     (void)STAN_ForceCERTCertificateUpdate(c);
     SECITEM_FreeItem(keyID,PR_TRUE);
     return SECSuccess;

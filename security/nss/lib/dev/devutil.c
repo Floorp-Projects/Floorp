@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.8 $ $Date: 2002/04/19 19:30:09 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.9 $ $Date: 2002/04/22 14:14:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1238,6 +1238,7 @@ make_object_and_attr
 	goto loser;
     }
     for (i=0; i<otlen; i++) {
+	oa->attributes[i].type = ot[i].type;
 	oa->attributes[i].pValue = nss_ZAlloc(arena, ot[i].ulValueLen);
 	if (!oa->attributes[i].pValue) {
 	    goto loser;

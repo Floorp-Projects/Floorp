@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.15 $ $Date: 2002/04/19 16:14:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.16 $ $Date: 2002/04/22 14:14:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -1029,8 +1029,7 @@ nssToken_ImportTrust
     /* import the trust object onto the token */
     object = import_object(tok, sessionOpt, trust_tmpl, tsize);
     if (object && tok->cache) {
-	nssTokenObjectCache_ImportObject(tok->cache, object,
-	                                 CKO_CERTIFICATE,
+	nssTokenObjectCache_ImportObject(tok->cache, object, tobjc,
 	                                 trust_tmpl, tsize);
     }
     return object;
@@ -1167,8 +1166,7 @@ nssToken_ImportCRL
     /* import the crl object onto the token */
     object = import_object(token, sessionOpt, crl_tmpl, crlsize);
     if (object && token->cache) {
-	nssTokenObjectCache_ImportObject(token->cache, object,
-	                                 CKO_CERTIFICATE,
+	nssTokenObjectCache_ImportObject(token->cache, object, crlobjc,
 	                                 crl_tmpl, crlsize);
     }
     return object;

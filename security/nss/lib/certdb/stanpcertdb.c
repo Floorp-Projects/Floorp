@@ -174,6 +174,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 	return SECFailure;
     }
     nssPKIObject_AddInstance(&c->object, permInstance);
+    nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
     /* reset the CERTCertificate fields */
     cert->nssCertificate = NULL;
     cert = STAN_GetCERTCertificate(c); /* will return same pointer */
