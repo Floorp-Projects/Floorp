@@ -101,7 +101,7 @@ sub run_shell_command {
 
   print "cmd = $shell_command\n";
 
-  open CMD, "$shell_command 2>&1|" or die "open: $!";
+  open CMD, "$shell_command 2>&1|" or die "command failed: $!";
 
   while(<CMD>) {
 
