@@ -46,7 +46,7 @@
 #include "nsSelectionRange.h"
 
 #define CALC_DEBUG 0
-#define DO_SELECTION 0
+//#define DO_SELECTION 0
 
 
 
