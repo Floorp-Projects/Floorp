@@ -885,6 +885,10 @@ nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **d
 NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
 {
   nsresult rv = NS_OK;
+
+  if (!IsValidIndex(aRow))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+
   nsMsgKey key = m_keys.GetAt(aRow);
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   if (key == m_cachedMsgKey)
@@ -3848,7 +3852,7 @@ nsresult nsMsgDBView::FindPrevFlagged(nsMsgViewIndex startIndex, nsMsgViewIndex 
 
 PRBool nsMsgDBView::IsValidIndex(nsMsgViewIndex index)
 {
-    return (index < (nsMsgViewIndex) m_keys.GetSize());
+    return ((index >=0) && (index < (nsMsgViewIndex) m_keys.GetSize()));
 }
 
 nsresult nsMsgDBView::OrExtraFlag(nsMsgViewIndex index, PRUint32 orflag)
