@@ -58,7 +58,7 @@ sub parse_params {
 		  -values=>['/usr']);
   }
   if ($query->param('nspr_option') eq 'tip') {
-    $query->param(-name=>'MOZ_WITH_NSPR',
+    $query->param(-name=>'--with-nspr',
 		  -values=>['@OBJDIR@/nspr']);
   }
   if ($query->param('debug_option') eq 'userdefined') {
@@ -103,7 +103,7 @@ sub print_script_preview {
     Configurator Script Preview</b></font>
     </td></tr><tr></tr><tr><td>
     Check the script to make sure your options are correct. When you are done,
-    save this script to <code><b>\$HOME/.mozmyconfig.sh</b></code>.*
+    save this script to <code><b>\$HOME/.mozconfig.sh</b></code>.*
     </td></tr></table>
 
     <table cellpadding=0 cellspacing=1><tr><td>
@@ -112,7 +112,7 @@ sub print_script_preview {
 
     <table cellspacing=2 cellpading=0 border=0><tr><td>
 	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
-    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="500" border=0><tr><td>
+    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="600" border=0><tr><td>
     <pre>);
 
   &print_script;
@@ -145,13 +145,11 @@ Steps to run the viewer,
 </td></tr><tr><td>&nbsp;</td></tr><tr><td colspan=3>
 * The build searches for this script in the following places,
 </td></tr><tr><td></td><td></td><td>
-   If <code>\$MOZ_MYCONFIG</code> is set, use that file,
+   If <code>\$MOZCONFIG</code> is set, use that file,
 </td></tr><tr><td></td><td></td><td>
-   else try <code>&lt;objdir&gt;/myconfig.sh</code>
+   else try <code>&lt;topsrcdir&gt/mozconfig.sh</code>
 </td></tr><tr><td></td><td></td><td>
-   else try <code>&lt;topsrcdir&gt/myconfig.sh</code>
-</td></tr><tr><td></td><td></td><td>
-   else try <code>\$HOME/.mozmyconfig.sh</code>
+   else try <code>\$HOME/.mozconfig.sh</code>
 </td></tr></table>
 <hr>
            Send questions or comments to 
@@ -171,7 +169,9 @@ sub print_script {
   print "\n";
 
   print "# Options for client.mk.\n";
-  print "# (client.mk also understands some 'configure' options.)\n";
+  print "# Note: client.mk also uses the following 'ac_add_options',\n";
+  print "#          --with-nspr=blah\n";
+  print "#          --with-pthreads\n";
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
       next if $query->param($param) eq '';
@@ -249,6 +249,19 @@ sub print_configure_form {
     -->
     </td></tr>
 
+    <!-- NSPR -->
+    <tr bgcolor="$chrome_color"><td>
+    <font face="Helvetica,Arial"><b>NSPR to use:</b></font><br>
+    </td></tr><tr><td>
+    <input type="radio" name="nspr_option" value="tip" checked>
+    Build nspr from the tip (installs in <code>\@OBJDIR\@/nspr</code>)<br>
+    <input type="radio" name="nspr_option" value="userdefined">
+    NSPR is installed in
+    <input type="text" name="nspr_dir"> (omit trailing '<code>/lib</code>')<br>
+    <input type="radio" name="nspr_option" value="rpm">
+    NSPR is installed in /usr/lib (NSPR RPM installation)
+    </td></tr>
+
     <!-- Threads -->
     <tr bgcolor="$chrome_color"><td>
     <font face="Helvetica,Arial"><b>Threads:</b></font><br>
@@ -264,19 +277,6 @@ sub print_configure_form {
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     (Sets <code>USE_PTHREADS=1</code> for nspr, 
     and <code>--with-pthreads</code> for mozilla client.)
-    </td></tr>
-
-    <!-- NSPR -->
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>NSPR to use:</b></font><br>
-    </td></tr><tr><td>
-    <input type="radio" name="nspr_option" value="tip" checked>
-    Build nspr from the tip (installs in <code>\@OBJDIR\@/nspr</code>)<br>
-    <input type="radio" name="nspr_option" value="userdefined">
-    NSPR is installed in
-    <input type="text" name="nspr_dir"> (omit trailing '<code>/lib</code>')<br>
-    <input type="radio" name="nspr_option" value="rpm">
-    NSPR is installed in /usr/lib (NSPR RPM installation)
     </td></tr>
 
     <!-- Debug -->
