@@ -39,6 +39,11 @@ typedef struct ipng_str {
     png_structp pngs_p;
     png_infop info_p;
     jmp_buf jmpbuf;		/* use ours, not libpng's, for consistency */
+    uint32 width;
+    uint32 height;
+    int channels;               /* color channels (3 or 4) */
+    uint8 *rgbrow;              /* RGB row buffer (3*width bytes) */
+    uint8 *alpharow;            /* alpha row buffer (width bytes) */
 
     /* One scanline's worth of post-processed sample data */
 

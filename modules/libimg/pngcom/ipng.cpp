@@ -30,7 +30,7 @@
 #define MINIMUM_DELAY_TIME 10
 
 
-static void png_set_dims(il_container *, png_structp);
+static void il_png_delay_time_callback(void *closure);
 static void info_callback(png_structp png_ptr, png_infop info);
 static void row_callback(png_structp png_ptr, png_bytep new_row,
                          png_uint_32 row_num, int pass);
@@ -71,8 +71,6 @@ int
 il_png_write(il_container *ic, const unsigned char *buf, int32 len)
 {
     ipng_structp ipng_p;
-    png_structp png_ptr;
-    png_infop info_ptr;
   
    
     PR_ASSERT(ic != NULL);
@@ -81,27 +79,35 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
     if (ipng_p->state == PNG_ERROR)
         return -1;
 
-    if(ipng_p->state == PNG_INIT ){
+    if (ipng_p->state == PNG_INIT) {
+        png_structp png_ptr;
+        png_infop info_ptr;
+
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, ipng_p,
           il_png_error_handler, NULL);
-    	ipng_p->pngs_p = png_ptr;
-        /* Allocate/initialize the memory for image information.  REQUIRED. */
-	    info_ptr = png_create_info_struct(png_ptr);
-        ipng_p->info_p = info_ptr;
-	    if (info_ptr == NULL){
-		    png_destroy_read_struct(&png_ptr, NULL, NULL);
+        if (png_ptr == NULL) {
+            ipng_p->pngs_p = NULL;
+            ipng_p->info_p = NULL;
             ipng_p->state = PNG_ERROR;
-		    return -1;
-	    }
-        png_set_progressive_read_fn(png_ptr, (void *)buf,
-        info_callback, row_callback, end_callback); 
+            return -1;
+        }
+
+        info_ptr = png_create_info_struct(png_ptr);
+        if (info_ptr == NULL) {
+            png_destroy_read_struct(&png_ptr, NULL, NULL);
+            ipng_p->pngs_p = NULL;
+            ipng_p->info_p = NULL;
+            ipng_p->state = PNG_ERROR;
+            return -1;
+        }
+
+        ipng_p->pngs_p = png_ptr;
+        ipng_p->info_p = info_ptr;
+
+        /* use ic as libpng "progressive pointer" (retrieve in callbacks) */
+        png_set_progressive_read_fn(png_ptr, (void *)ic, info_callback,
+          row_callback, end_callback);
     }
-	else{
-        png_ptr = ipng_p->pngs_p;
-        info_ptr = ipng_p->info_p;
-    }
-    /* note addition of ic to png structure.... */
-    png_ptr->io_ptr = ic;
 
     if (setjmp(ipng_p->jmpbuf)) {
         png_destroy_read_struct(&ipng_p->pngs_p, &ipng_p->info_p, NULL);
@@ -109,59 +115,21 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
         return -1;
     }
 
-    png_process_data( png_ptr, info_ptr, (unsigned char *)buf, len );
+    png_process_data(ipng_p->pngs_p, ipng_p->info_p, (unsigned char *)buf, len);
     ipng_p->state = PNG_CONTINUE;
           
     return 0;
 }
 
+
 static void
-png_set_dims( il_container *ic, png_structp png_ptr)
-{    
-    int status;
-
-    NI_PixmapHeader *img_hdr = &ic->image->header;                  
-    NI_PixmapHeader *src_hdr = ic->src_header;
-
-    src_hdr->width = img_hdr->width = png_ptr->width;
-    src_hdr->height = img_hdr->height = png_ptr->height;
-#if 1
-    if((png_ptr->num_trans)||(png_ptr->color_type  & PNG_COLOR_MASK_ALPHA))
-    {
-      ic->image->header.alpha_bits = 1;
-      ic->image->header.alpha_shift = 0;
-      ic->image->header.is_interleaved_alpha = TRUE;
-    }
-#else 
-    if(png_ptr->num_trans){
-      ic->image->header.alpha_bits = 1;
-      ic->image->header.alpha_shift = 0;
-      ic->image->header.is_interleaved_alpha = TRUE;
-    }
-    if(png_ptr->color_type  & PNG_COLOR_MASK_ALPHA){
-      ic->image->header.alpha_bits = 8;
-      ic->image->header.alpha_shift = 0;
-      ic->image->header.is_interleaved_alpha = TRUE;
-    }
-
-#endif
-    status = ic->imgdcb->ImgDCBImageSize();
-
-    /*Note: all png's are decoded to RGB or RGBa and
-    converted by imglib to appropriate pixdepth*/
-
-    ic->imgdcb->ImgDCBSetupColorspaceConverter();
-    
-    return;
-}
-
-
-void
-png_delay_time_callback(void *closure)
+il_png_delay_time_callback(void *closure)
 {
     ipng_struct *ipng_p = (ipng_struct *)closure;
 
     PR_ASSERT(ipng_p->state == PNG_DELAY);
+
+    ipng_p->delay_timeout = NULL;
 
     if (ipng_p->ic->state == IC_ABORT_PENDING)
         return;                                        
@@ -177,15 +145,14 @@ int
 il_png_complete(il_container *ic)
 {
 #ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
-	ipng_structp ipng_p;
-
-	ipng_p = (ipng_structp)ic->ds;
+	ipng_structp ipng_p = (ipng_structp)ic->ds;
 
 	il_png_abort(ic);
 #endif
    
-	/* notify observers that the current frame has completed. */
-                 
+    /* notify observers that the current frame has completed. */
+
+/*  ic->imgdcb->ImgDCBHaveImageAll();  GRR: what about this? (from jpeg.cpp) */
     ic->imgdcb->ImgDCBHaveImageFrame();
 
 #ifndef WE_DONT_HAVE_SUBSEQUENT_IMAGES
@@ -195,7 +162,7 @@ il_png_complete(il_container *ic)
 		ipng_p->delay_time = MINIMUM_DELAY_TIME ;
 	if (ipng_p->delay_time){
 			ipng_p->delay_timeout =
-			ic->imgdcb->ImgDCBSetTimeout(png_delay_time_callback, ipng_p, ipng_p->delay_time);
+			ic->imgdcb->ImgDCBSetTimeout(il_png_delay_time_callback, ipng_p, ipng_p->delay_time);
 
 			/* Essentially, tell the decoder state machine to wait
 			forever.  The delay_time callback routine will wake up the
@@ -215,6 +182,12 @@ il_png_abort(il_container *ic)
     if (ic->ds) {
         ipng_structp ipng_p = (ipng_structp)ic->ds;
 
+        PR_FREEIF(ipng_p->rgbrow);
+        PR_FREEIF(ipng_p->alpharow);
+
+        ipng_p->rgbrow = NULL;
+        ipng_p->alpharow = NULL;
+
 #ifdef WE_DONT_HAVE_SUBSEQUENT_IMAGES
         PR_FREEIF(ipng_p);
         ic->ds = NULL;
@@ -231,51 +204,138 @@ il_png_abort(il_container *ic)
   ---------------------------------------------------------------------------*/
 
 static void
-info_callback(png_structp png_ptr, png_infop info)
+info_callback(png_structp png_ptr, png_infop info_ptr)
 {
-/* do any setup here, including setting any of the transformations
- * mentioned in the Reading PNG files section.  For now, you _must_
- * call either png_start_read_image() or png_read_update_info()
- * after all the transformations are set (even if you don't set
- * any).  You may start getting rows before png_process_data()
- * returns, so this is your last chance to prepare for that.
- */
-    int number_passes;
-    double screen_gamma;
+/*  int number_passes;   NOT USED  */
+    png_uint_32 width, height;
+    int bit_depth, color_type, interlace_type, compression_type, filter_type;
+    int channels;
+    double LUT_exponent, CRT_exponent = 2.2, display_exponent, gamma;
 
-    /*always decode to 24 bit*/
-    if(png_ptr->color_type == PNG_COLOR_TYPE_PALETTE && png_ptr->bit_depth <= 8)
-       png_set_expand(png_ptr);
+    il_container *ic;
+    ipng_structp ipng_p;
+    NI_PixmapHeader *img_hdr;
+    NI_PixmapHeader *src_hdr;
 
-    if(png_ptr->color_type == PNG_COLOR_TYPE_GRAY && png_ptr->bit_depth <= 8){
-       png_set_gray_to_rgb(png_ptr);
-       png_set_expand(png_ptr);
+
+    /* always decode to 24-bit RGB or 32-bit RGBA (this may look familiar
+     * to O'Reilly fans--wink wink, noodge noodge ;-) ) */
+
+    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+      &interlace_type, &compression_type, &filter_type);
+
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_expand(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+        png_set_expand(png_ptr);
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+        png_set_expand(png_ptr);
+    if (bit_depth == 16)
+        png_set_strip_16(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY ||
+        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+        png_set_gray_to_rgb(png_ptr);
+
+
+    /* set up gamma correction for Mac, Unix and (Win32 and everything else)
+     * using educated guesses for display-system exponents; do preferences
+     * later */
+
+#if defined(XP_MAC)
+    LUT_exponent = 1.8 / 2.61;
+#elif defined(XP_UNIX)
+# if defined(__sgi)
+    LUT_exponent = 1.0 / 1.7;   /* typical default for SGI console */
+# elif defined(NeXT)
+    LUT_exponent = 1.0 / 2.2;   /* typical default for NeXT cube */
+# else
+    LUT_exponent = 1.0;         /* default for most other Unix workstations */
+# endif
+#else
+    LUT_exponent = 1.0;         /* virtually all PCs and most other systems */
+#endif
+
+    /* (alternatively, could check for SCREEN_GAMMA environment variable) */
+    display_exponent = LUT_exponent * CRT_exponent;
+
+    if (png_get_gAMA(png_ptr, info_ptr, &gamma))
+        png_set_gamma(png_ptr, display_exponent, gamma);
+    else
+        png_set_gamma(png_ptr, display_exponent, 0.45455);
+
+
+    /* let libpng expand interlaced images */
+
+    if (interlace_type == PNG_INTERLACE_ADAM7)
+        /* number_passes = */ png_set_interlace_handling(png_ptr);
+
+
+    /* now all of those things we set above are used to update various struct
+     * members and whatnot, after which we can get channels, rowbytes, etc. */
+
+    png_read_update_info(png_ptr, info_ptr);
+    channels = png_get_channels(png_ptr, info_ptr);
+    PR_ASSERT(channels == 3 || channels == 4);
+
+
+    /* set the ic values */
+
+    ic = (il_container *)png_get_progressive_ptr(png_ptr);
+    PR_ASSERT(ic != NULL);
+
+
+    /*---------------------------------------------------------------*/
+    /* copy PNG info into imagelib structs (formerly png_set_dims()) */
+    /*---------------------------------------------------------------*/
+
+    ipng_p = (ipng_structp)ic->ds;
+    img_hdr = &ic->image->header;
+    src_hdr = ic->src_header;
+
+    ipng_p->width  = src_hdr->width  = img_hdr->width  = width;
+    ipng_p->height = src_hdr->height = img_hdr->height = height;
+    ipng_p->channels = channels;
+
+    PR_ASSERT(ipng_p->rgbrow == NULL);
+    PR_ASSERT(ipng_p->alpharow == NULL);
+
+#define CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
+
+#ifdef CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
+    ipng_p->rgbrow = (uint8 *)PR_MALLOC(4*width);
+#else
+    ipng_p->rgbrow = (uint8 *)PR_MALLOC(3*width);
+#endif
+    if (!ipng_p->rgbrow) {
+        ILTRACE(0, ("il:png: MEM row"));
+        ipng_p->state = PNG_ERROR;
+        return;
     }
 
-    if(png_get_valid(png_ptr, info, PNG_INFO_tRNS))    
-       png_set_expand(png_ptr);
-
-
-    /* implement scr gamma for mac & unix. (do preferences later.) */
-#ifdef XP_MAC
-    screen_gamma = 1.7;  /*Mac : 1.7 */
-#else
-    screen_gamma = 2.2;  /*good for PC.*/
+    if (channels > 3) {
+#ifndef CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
+        ipng_p->alpharow = (uint8 *)PR_MALLOC(width);
+        if (!ipng_p->alpharow) {
+            ILTRACE(0, ("il:png: MEM row"));
+            PR_FREEIF(ipng_p->rgbrow);
+            ipng_p->rgbrow = NULL;
+            ipng_p->state = PNG_ERROR;
+            return;
+        }
 #endif
-/*
-    if (png_get_gAMA(png_ptr, info, (double *)&png_ptr->gamma))
-      png_set_gamma(png_ptr, screen_gamma, png_ptr->gamma);
-    else
-      png_set_gamma(png_ptr, screen_gamma, 0.45);
-*/
-    if(png_ptr->interlaced == PNG_INTERLACE_ADAM7)
-        number_passes = png_set_interlace_handling(png_ptr);
+        ic->image->header.alpha_bits = 1;   /* or 8 */
+        ic->image->header.alpha_shift = 0;
+        ic->image->header.is_interleaved_alpha = TRUE;
+    }
 
-    png_read_update_info(png_ptr, info);
+    ic->imgdcb->ImgDCBImageSize();
 
-    /* Set the ic values */
-    png_set_dims((il_container *)png_ptr->io_ptr, png_ptr);
+    /* Note: all PNGs are decoded to RGB or RGBA and
+       converted by imglib to appropriate pixel depth */
 
+    ic->imgdcb->ImgDCBSetupColorspaceConverter();
+    
+    return;
 }
 
 
@@ -284,7 +344,9 @@ static void
 row_callback(png_structp png_ptr, png_bytep new_row,
              png_uint_32 row_num, int pass)
 {
-/* this function is called for every row in the image.  If the
+/* libpng comments:
+ *
+ * this function is called for every row in the image.  If the
  * image is interlacing, and you turned on the interlace handler,
  * this function will be called for every row in every pass.
  * Some of these rows will not be changed from the previous pass.
@@ -299,33 +361,56 @@ row_callback(png_structp png_ptr, png_bytep new_row,
  * just return) and for non-interlaced images (it just does the
  * memcpy for you) if it will make the code easier.  Thus, you
  * can just do this for all cases:
- */
-    il_container *ic = (il_container *)png_ptr->io_ptr;  
-
-	if(new_row){
-
-  		ic->imgdcb->ImgDCBHaveRow( 0,  new_row, 0, png_ptr->width, 
-        row_num, 1, ilErase /* ilOverlay */, png_ptr->pass );
-    
-		/*	il_flush_image_data(png_ptr->io_ptr); */
-	}
-
-
-/* where old_row is what was displayed for previous rows.  Note
+ *
+ *    png_progressive_combine_row(png_ptr, old_row, new_row);
+ *
+ * where old_row is what was displayed for previous rows.  Note
  * that the first pass (pass == 0 really) will completely cover
  * the old row, so the rows do not have to be initialized.  After
  * the first pass (and only for interlaced images), you will have
  * to pass the current row, and the function will combine the
  * old row and the new row.
  */
+    il_container *ic = (il_container *)png_get_progressive_ptr(png_ptr);
+    ipng_structp ipng_p = (ipng_structp)ic->ds;
+
+    PR_ASSERT(ipng_p);
+    if (new_row) {
+        /* first we copy the row data to a different buffer so that
+         * il_emit_row() in scale.cpp doesn't mess up libpng's row buffer
+         */
+        if (ipng_p->channels < 4) {                            /* RGB */
+            memcpy(ipng_p->rgbrow, new_row, 3*ipng_p->width);
+        } else {                                               /* RGBA */
+#ifdef CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
+            memcpy(ipng_p->rgbrow, new_row, 4*ipng_p->width);
+#else
+            uint32 i = ipng_p->width;
+            uint8 *rgb = ipng_p->rgbrow;
+            uint8 *a = ipng_p->alpharow;
+            png_byte *src = new_row;
+
+            while (i--) {
+                *rgb++ = *src++;
+                *rgb++ = *src++;
+                *rgb++ = *src++;
+                *a++ = *src++;
+            }
+#endif
+        }
+        ic->imgdcb->ImgDCBHaveRow(0, ipng_p->rgbrow, 0, ipng_p->width,
+          row_num, 1, ilErase /* ilOverlay */, pass);
+    }
 }
 
 
 
 static void
-end_callback(png_structp png_ptr, png_infop info)
+end_callback(png_structp png_ptr, png_infop info_ptr)
 {
-/* this function is called when the whole image has been read,
+/* libpng comments:
+ *
+ * this function is called when the whole image has been read,
  * including any chunks after the image (up to and including
  * the IEND).  You will usually have the same info chunk as you
  * had in the header, although some data may have been added
@@ -334,9 +419,9 @@ end_callback(png_structp png_ptr, png_infop info)
  * Most people won't do much here, perhaps setting a flag that
  * marks the image as finished.
  */
-      il_container *ic = (il_container *)png_ptr->io_ptr;
+    il_container *ic = (il_container *)png_get_progressive_ptr(png_ptr);
         
-      ic->imgdcb->ImgDCBFlushImage();
+    ic->imgdcb->ImgDCBFlushImage();
 }
 
 
