@@ -498,9 +498,8 @@ nsMessengerWinIntegration::SetupInbox()
     rv = identity->GetEmail(&mEmail);
     NS_ENSURE_SUCCESS(rv,rv);
     
-    nsCOMPtr<nsIFolder> rootFolder;
-    rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+    rv = server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
     NS_ENSURE_SUCCESS(rv,rv);
  
     if (!rootMsgFolder)

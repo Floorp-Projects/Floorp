@@ -595,7 +595,7 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 {
 	dump("finding folders on server = " + server.hostName + "\n");
 
-	var rootFolder = server.RootFolder;
+	var rootFolder = server.rootFolder;
 
 	// we need to do this or it is possible that the server's draft,
     // stationery fcc folder will not be in rdf
