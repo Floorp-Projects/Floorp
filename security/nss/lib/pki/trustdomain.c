@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.36 $ $Date: 2002/02/28 22:55:30 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.37 $ $Date: 2002/03/14 17:39:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -508,7 +508,8 @@ static PRBool cert_token_not_present(NSSCertificate *c)
 {
     nssListIterator *instances;
     nssCryptokiInstance *instance;
-    PRBool freeIt = PR_TRUE;
+    PRBool freeIt = PR_FALSE;
+    PRBool notPresent = PR_TRUE;
     instances = nssList_CreateIterator(c->object.instanceList);
     for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
          instance != (nssCryptokiInstance *)NULL;
@@ -517,17 +518,18 @@ static PRBool cert_token_not_present(NSSCertificate *c)
 	if (!nssToken_IsPresent(instance->token)) {
 	    nssToken_DestroyCertList(instance->token, PR_TRUE);
 	    nssList_Remove(c->object.instanceList, instance);
+	    freeIt = PR_TRUE;
 	} else {
-	    freeIt = PR_FALSE;
+	    notPresent = PR_FALSE;
 	}
     }
     nssListIterator_Finish(instances);
     nssListIterator_Destroy(instances);
-    if (!freeIt) {
+    if (freeIt) {
 	nssListIterator_Destroy(c->object.instances);
 	c->object.instances = nssList_CreateIterator(c->object.instanceList);
     }
-    return freeIt;
+    return notPresent;
 }
 
 NSS_IMPLEMENT NSSCertificate *
