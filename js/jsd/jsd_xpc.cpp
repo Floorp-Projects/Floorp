@@ -1219,6 +1219,33 @@ jsdScript::GetFunctionName(char **_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::GetFunctionObject(jsdIValue **_rval)
+{
+    JSFunction *fun = JSD_GetJSFunction(mCx, mScript);
+    if (!fun)
+        return NS_ERROR_NOT_AVAILABLE;
+    
+    JSObject *obj = JS_GetFunctionObject(fun);
+    if (!obj)
+        return NS_ERROR_FAILURE;
+
+    JSDContext *cx;
+    gJsds->GetJSDContext (&cx);
+
+    JSDValue *jsdv = JSD_NewValue(cx, OBJECT_TO_JSVAL(obj));
+    if (!jsdv)
+        return NS_ERROR_FAILURE;
+
+    *_rval = jsdValue::FromPtr(cx, jsdv);
+    if (!*_rval) {
+        JSD_DropValue(cx, jsdv);
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdScript::GetFunctionSource(nsAString & aFunctionSource)
 {
     ASSERT_VALID_EPHEMERAL;
