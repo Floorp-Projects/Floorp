@@ -2929,26 +2929,26 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       scrollableFrame = GetRootScrollableFrame(aPresContext, rootFrame);
     }
 
-    NS_ASSERTION(scrollableFrame, "no scrollable frame");
+    if (scrollableFrame) {
+      // Now, account for scrollbars, if we have any.
+      PRBool verticalVisible;
+      PRBool horizontalVisible;
+      scrollableFrame->GetScrollbarVisibility(aPresContext, &verticalVisible,
+                                              &horizontalVisible);
 
-    // Now, account for scrollbars, if we have any.
-    PRBool verticalVisible;
-    PRBool horizontalVisible;
-    scrollableFrame->GetScrollbarVisibility(aPresContext, &verticalVisible,
-                                            &horizontalVisible);
-
-    if (verticalVisible || horizontalVisible) {
-      nscoord verticalWidth;
-      nscoord horizontalHeight;
-      scrollableFrame->GetScrollbarSizes(aPresContext, &verticalWidth,
-                                         &horizontalHeight);
-      if (verticalVisible) {
-        // Assumes vertical scrollbars are on the right.
-        viewportArea.width -= verticalWidth;
-      }
-      if (horizontalVisible) {
-        // Assumes horizontal scrollbars are on the bottom.
-        viewportArea.height -= horizontalHeight;
+      if (verticalVisible || horizontalVisible) {
+        nscoord verticalWidth;
+        nscoord horizontalHeight;
+        scrollableFrame->GetScrollbarSizes(aPresContext, &verticalWidth,
+                                           &horizontalHeight);
+        if (verticalVisible) {
+          // Assumes vertical scrollbars are on the right.
+          viewportArea.width -= verticalWidth;
+        }
+        if (horizontalVisible) {
+          // Assumes horizontal scrollbars are on the bottom.
+          viewportArea.height -= horizontalHeight;
+        }
       }
     }
 
