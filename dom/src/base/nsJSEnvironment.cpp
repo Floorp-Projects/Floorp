@@ -1447,12 +1447,14 @@ const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1
 static int globalCount;
 static PRThread *gDOMThread;
 
+static JSGCCallback gOldJSGCCallback;
+
 static JSBool PR_CALLBACK
 DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
   if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
     return JS_FALSE;
-  return JS_TRUE;
+  return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 }
 
 nsJSEnvironment::nsJSEnvironment()
@@ -1483,7 +1485,9 @@ nsJSEnvironment::nsJSEnvironment()
     return;                     // XXX swallow error! need Init()?
 
   gDOMThread = PR_GetCurrentThread();
-  ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
+  
+  NS_ASSERTION(!gOldJSGCCallback, "nsJSEnvironment created more than once");
+  gOldJSGCCallback = ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
 
   // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
   NS_WITH_SERVICE(nsILiveConnectManager, manager,
