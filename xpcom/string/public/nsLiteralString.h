@@ -107,7 +107,7 @@ literal_string( const nsACString::char_type* aPtr, PRUint32 aLength )
 #define NS_LITERAL_STRING_INIT(n,s)               NS_MULTILINE_LITERAL_STRING_INIT(n, NS_LL(s))
 #define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n, NS_LL(s))
 
-#define NS_LITERAL_CSTRING(s)                     NS_STATIC_CAST(const nsAFlatCString&, nsDependentCString(s, PRUint32(sizeof(s)-1)))
+#define NS_LITERAL_CSTRING(s)                     NS_STATIC_CAST(const nsDependentCString&, nsDependentCString(s, PRUint32(sizeof(s)-1)))
 #define NS_LITERAL_CSTRING_INIT(n,s)              n(s, PRUint32(sizeof(s)-1))
 #define NS_NAMED_LITERAL_CSTRING(n,s)             const nsDependentCString n(s, PRUint32(sizeof(s)-1))
 
