@@ -465,7 +465,8 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
 NS_IMETHODIMP
 nsStreamConverterService::Convert(nsIInputStream *aFromStream,
                                   const PRUnichar *aFromType, 
-                                  const PRUnichar *aToType, 
+                                  const PRUnichar *aToType,
+                                  nsISupports *aContext,
                                   nsIInputStream **_retval) {
     if (!aFromStream || !aFromType || !aToType || !_retval) return NS_ERROR_NULL_POINTER;
     nsresult rv;
@@ -546,7 +547,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
             PRUnichar *fromUni = fromStr.ToNewUnicode();
             PRUnichar *toUni   = toStr.ToNewUnicode();
-            rv = conv->Convert(dataToConvert, fromUni, toUni, nsnull, &convertedData);
+            rv = conv->Convert(dataToConvert, fromUni, toUni, aContext, &convertedData);
             nsAllocator::Free(fromUni);
             nsAllocator::Free(toUni);
             NS_RELEASE(conv);
@@ -570,7 +571,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
-        rv = conv->Convert(aFromStream, aFromType, aToType, nsnull, _retval);
+        rv = conv->Convert(aFromStream, aFromType, aToType, aContext, _retval);
         NS_RELEASE(conv);
     }
     
@@ -581,7 +582,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 NS_IMETHODIMP
 nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType, 
                                            const PRUnichar *aToType, 
-                                           nsIStreamListener *aListener, 
+                                           nsIStreamListener *aListener,
+                                           nsISupports *aContext,
                                            nsIStreamListener **_retval) {
     if (!aFromType || !aToType || !aListener || !_retval) return NS_ERROR_NULL_POINTER;
 
@@ -642,7 +644,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             PRUnichar *fromStrUni = fromStr.ToNewUnicode();
             PRUnichar *toStrUni   = toStr.ToNewUnicode();
 
-            rv = conv->AsyncConvertData(fromStrUni, toStrUni, forwardListener, nsnull);
+            rv = conv->AsyncConvertData(fromStrUni, toStrUni, forwardListener, aContext);
             nsAllocator::Free(fromStrUni);
             nsAllocator::Free(toStrUni);
             if (NS_FAILED(rv)) return rv;
@@ -676,8 +678,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
 
-        // XXX we should pass some context through
-        rv = conv->AsyncConvertData(aFromType, aToType, aListener, nsnull);
+        rv = conv->AsyncConvertData(aFromType, aToType, aListener, aContext);
         NS_RELEASE(conv);
     }
     

@@ -26,6 +26,8 @@
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+#include "nspr.h"
+
 
 #define ASYNC_TEST // undefine this if you want to test sycnronous conversion.
 
@@ -289,7 +291,7 @@ main(int argc, char* argv[])
     // unconverted data of fromType, and the final listener in the chain (in this case
     // the dataReceiver.
     nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(from, to, dataReceiver, &converterListener);
+    rv = StreamConvService->AsyncConvertData(from, to, dataReceiver, nsnull, &converterListener);
     if (NS_FAILED(rv)) return rv;
 
     // at this point we have a stream listener to push data to, and the one
@@ -328,7 +330,7 @@ main(int argc, char* argv[])
 
 #else
     // SYNCRONOUS conversion
-    rv = StreamConvService->Convert(inputData, from, to, &convertedData);
+    rv = StreamConvService->Convert(inputData, from, to, nsnull, &convertedData);
 #endif
 
     NS_RELEASE(convFactSup);

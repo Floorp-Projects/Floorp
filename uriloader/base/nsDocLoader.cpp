@@ -2413,6 +2413,7 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
     nsIStreamListener *converterListener = nsnull;
     rv = StreamConvService->AsyncConvertData(from.GetUnicode(), 
                                              to.GetUnicode(), mNextListener,
+                                             nsnull, /* some nsISupports context */
                                              &converterListener);
     mNextListener = converterListener;
   }

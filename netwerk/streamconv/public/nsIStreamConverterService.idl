@@ -26,10 +26,12 @@ interface nsIStreamConverterService : nsISupports {
 
     nsIInputStream Convert(in nsIInputStream aFromStream,
 						   in wstring aFromType,
-						   in wstring aToType);
+						   in wstring aToType,
+                           in nsISupports aContext);
 
     nsIStreamListener AsyncConvertData(in wstring aFromType, 
                                        in wstring aToType, 
-                                       in nsIStreamListener aListener);
+                                       in nsIStreamListener aListener,
+                                       in nsISupports aContext);
 
 };
