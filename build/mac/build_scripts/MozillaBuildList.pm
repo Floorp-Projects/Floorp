@@ -778,10 +778,6 @@ sub BuildClientDist()
     #UCONV
     InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",                    "$distdirectory:idl:");
     InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",                     "$distdirectory:uconv:");
-    if ($main::options{mathml})
-    {
-        InstallFromManifest(":mozilla:intl:uconv:ucvmath:MANIFEST",                "$distdirectory:uconv:");
-    }
 
     #UNICHARUTIL
     InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",               "$distdirectory:unicharutil");
@@ -1201,11 +1197,6 @@ sub BuildClientDist()
     {
         InstallFromManifest(":mozilla:js:jsd:idl:MANIFEST_IDL", "$distdirectory:idl:");
         InstallFromManifest(":mozilla:js:jsd:MANIFEST", "$distdirectory:jsdebug:");
-    }
-
-    # libart
-    if ($main::options{libart_lgpl}) {
-        InstallFromManifest(":mozilla:modules:libart_lgpl:MANIFEST",               "$distdirectory:include:");
     }
 
     print("--- Client Dist export complete ----\n");
