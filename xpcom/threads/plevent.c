@@ -99,10 +99,8 @@
 #define WIN9X_PAINT_STARVATION_LIMIT 3000
 
 #define TIMER_ID 0
-static HHOOK    _md_MouseMsgFilterHook = NULL;
-static PRBool   _md_MovingWindow       = PR_FALSE;
-static PRInt32  _md_WindowCount        = 0;
-static PRBool   _md_FavorPerformance   = PR_FALSE;
+/* If _md_PerformanceSetting <=0 then no event starvation otherwise events will be starved */
+static PRInt32  _md_PerformanceSetting = 0;
 static PRUint32 _md_StarvationDelay    = 0;
 static PRUint32 _md_SwitchTime         = 0;
 #endif
@@ -721,12 +719,23 @@ PR_IMPLEMENT(void)
 PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation, PRUint32 starvationDelay) 
 {
 #if defined(_WIN32)
-    _md_FavorPerformance = favorPerformanceOverEventStarvation;
-    _md_StarvationDelay = starvationDelay;
 
-    if (! favorPerformanceOverEventStarvation) {
-      _md_SwitchTime = PR_IntervalToMilliseconds(PR_IntervalNow()); 
+    _md_StarvationDelay = starvationDelay; 
+
+    if (favorPerformanceOverEventStarvation) {
+      _md_PerformanceSetting++;
+      return;
     }
+   
+    _md_PerformanceSetting--;
+
+    if (_md_PerformanceSetting == 0) {
+      /* Switched from allowing event starvation to no event starvation so grab
+         the current time to determine when to actually switch to using timers
+         instead of posted WM_APP messages. */
+      _md_SwitchTime = PR_IntervalToMilliseconds(PR_IntervalNow());
+    }
+   
 #endif
 }
 
@@ -890,11 +899,6 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
     }
     RemoveProp(self->eventReceiverWindow, _md_GetEventQueuePropName());
     DestroyWindow(self->eventReceiverWindow);
-    _md_WindowCount--;
-    if ((_md_WindowCount <= 0) && (_md_MouseMsgFilterHook != NULL)) {
-      UnhookWindowsHookEx(_md_MouseMsgFilterHook);
-      _md_MouseMsgFilterHook = NULL;
-    }
 #elif defined(XP_OS2)
     WinDestroyWindow(self->eventReceiverWindow);
 #endif
@@ -1048,14 +1052,16 @@ _pl_NativeNotify(PLEventQueue* self)
 
     PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow()); 
 
-    if (_md_MovingWindow || 
-       (! _md_FavorPerformance) && 
+    /* Since calls to set the _md_PerformanceSetting can be nested
+     * only performance setting values <= 0 will potentially trigger
+     * the use of a timer.
+     */
+    if ((_md_PerformanceSetting <= 0) && 
         ((now - _md_SwitchTime) > _md_StarvationDelay)) {
       SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
       self->timerSet = PR_TRUE;
       _md_WasInputPending = PR_FALSE; 
       _md_WasPaintPending = PR_FALSE; 
-
       return PR_SUCCESS;
     }
 
@@ -1360,29 +1366,6 @@ static PRStatus InitEventLib( void )
 
 #if defined(_WIN32) 
 
-/* Detect when the user is moving a top-level window */
-
-LRESULT CALLBACK _md_DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
-{
-    /* This msg filter is required to determine when the user has
-     * clicked in the window title bar and is moving the window. 
-     * This is necessary because there aren't any pending
-     * input events reported while Windows spins the modal message loop
-     * used when moving a top-level window.
-     */
-
-    CWPSTRUCT* sysMsg = (CWPSTRUCT*)lParam;
-    if (sysMsg) {
-      if (sysMsg->message == WM_ENTERSIZEMOVE) {
-        _md_MovingWindow = PR_TRUE;   
-      } else if (sysMsg->message == WM_EXITSIZEMOVE) {
-        _md_MovingWindow = PR_FALSE;
-      }
-    }
-
-    return CallNextHookEx(_md_MouseMsgFilterHook, code, wParam, lParam);
-}
-
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
@@ -1430,15 +1413,6 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
      */
     SetProp(eventQueue->eventReceiverWindow,
             _md_GetEventQueuePropName(), (HANDLE)eventQueue);
-
-    /* Setup a message hook to detect when the user is moving 
-     * a top level window 
-     */
-    _md_WindowCount++;
-    if (_md_MouseMsgFilterHook == NULL) {
-      _md_MouseMsgFilterHook = SetWindowsHookEx(WH_CALLWNDPROC, _md_DetectWindowMove, 
-                                                NULL, GetCurrentThreadId());
-    }
 
     return;    
 } /* end _md_CreateEventQueue() */

@@ -74,6 +74,8 @@ class nsToolkit : public nsIToolkit
             PRThread*       GetGuiThread(void)       { return mGuiThread;   }
             HWND            GetDispatchWindow(void)  { return mDispatchWnd; }
             void            CreateInternalWindow(PRThread *aThread);
+            // Return whether the user is currently moving any application window
+            PRBool          UserIsMovingWindow(void);
             nsIEventQueue*  GetEventQueue(void);
 
 private:

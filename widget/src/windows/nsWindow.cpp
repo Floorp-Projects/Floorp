@@ -51,6 +51,7 @@
 #endif
 
 #include "nsWindow.h"
+#include "plevent.h"
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h" 
@@ -185,6 +186,7 @@ UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
 UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
+
 #ifdef ACCESSIBILITY
 BOOL nsWindow::gIsAccessibilityOn = FALSE;
 #endif
@@ -221,6 +223,11 @@ static POINT gLastMouseMovePoint;
 static LONG  gLastMouseDownTime = 0L;
 static LONG  gLastClickCount    = 0L;
 ////////////////////////////////////////////////////
+
+// The last user input event time in milliseconds. If there are any pending
+// native toolkit input events it returns the current time. The value is
+// compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
+static PRUint32 gLastInputEventTime = 0;
 
 #if 0
 static PRBool is_vk_down(int vk)
@@ -3608,6 +3615,8 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
 
 void nsWindow::DispatchPendingEvents()
 {
+  gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+
   // Need to flush all pending PL_Events before
   // painting to prevent reflow events from being starved. 
   // Note: Unfortunately, The flushing of PL_Events can not done by 
@@ -6809,6 +6818,26 @@ nsWindow::GetAttention() {
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::GetLastInputEventTime(PRUint32& aTime)
+{
+   WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
+
+   // If there is pending input or the user is currently
+   // moving the window then return the current time.
+   // Note: When the user is moving the window WIN32 spins 
+   // a separate event loop and input events are not 
+   // reported to the application.
+   nsToolkit* toolkit = (nsToolkit *)mToolkit;
+   if (qstatus || (toolkit && toolkit->UserIsMovingWindow())) {
+     gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+   } 
+
+   aTime = gLastInputEventTime;
+
+   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
