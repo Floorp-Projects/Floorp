@@ -21,7 +21,7 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.7 1999/09/09 16:08:54 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.8 1999/09/09 16:11:14 dmose%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -132,7 +132,7 @@ if (!param()) {
 	print "months";
 	print p();
 
-	print "mozilla.org counts as ";
+	print "mozilla.org is considered part of Netscape? ";
 	print radio_group(-name=>"mozillaOrgAsNscp",
 			  "-values"=>["yes","no"],
 			  -default=>"no");
