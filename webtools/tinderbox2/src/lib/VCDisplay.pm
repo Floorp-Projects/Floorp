@@ -8,8 +8,8 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2003/01/19 17:24:03 $ 
+# $Revision: 1.9 $ 
+# $Date: 2003/04/20 20:18:11 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 
@@ -86,8 +86,6 @@ $DEBUG = 1;
 #	     'maxdate' => The most recent time which should be considered
 #	     'who' => The VC name of the individual who checked in the change
 #	     'linktxt' => The text to display on the link to the query
-#	     'alt_linktxt' => Alternative text to display if there is no web 
-#				 access to the VC system
 #	     );
     
 
