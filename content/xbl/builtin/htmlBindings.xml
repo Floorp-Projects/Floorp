@@ -15,16 +15,19 @@ Can't yet put script tags in XBL (hyatt has the bug)
     <handlers>
     
       <handler event="draggesture">
-        dump("GESTURE\n");
+<!--
          nsDragAndDrop.startDrag(event, contentAreaDNDObserver);
+-->
       </handler>
       <handler event="dragover">
-        dump("OVER\n");
+<!--
          nsDragAndDrop.dragOver(event, contentAreaDNDObserver);
+-->
       </handler>
       <handler event="dragdrop">
-        dump("DROP\n");
+<!--
          nsDragAndDrop.drop(event, contentAreaDNDObserver);
+-->
       </handler>
       
       <handler event="keypress" key=" ">
