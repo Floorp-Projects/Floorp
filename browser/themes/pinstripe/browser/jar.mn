@@ -18,6 +18,9 @@ classic.jar:
   skin/classic/browser/Search-bar.png
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
+  skin/classic/browser/Secure-urlbar.png
+  skin/classic/browser/Secure-urlbar-broken.png
+  skin/classic/browser/Secure-background.gif
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/bookmarks/addBookmark.css            (bookmarks/addBookmark.css)

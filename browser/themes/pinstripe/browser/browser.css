@@ -574,7 +574,34 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   font: icon !important;
 }
 
+#urlbar[level="high"] > .autocomplete-textbox-container,
+#urlbar[level="low"] > .autocomplete-textbox-container,
+#urlbar[level="broken"] > .autocomplete-textbox-container
+ {
+  margin: -2px;
+  padding: 2px;
+  background: url("chrome://browser/skin/Secure-background.gif") #FFFED8 repeat-x;
+  color: black !important;
+}
 
+#urlbar[level="high"] > .autocomplete-history-dropmarker,
+#urlbar[level="low"] > .autocomplete-history-dropmarker,
+#urlbar[level="broken"] > .autocomplete-history-dropmarker
+ {
+  margin: -2px;
+  padding: 2px 6px;
+  background: url("chrome://browser/skin/Secure-background.gif") #FFFED8 repeat-x;
+}
+
+#urlbar[level="high"] > .autocomplete-textbox-container > .info-icon {
+  list-style-image: url("chrome://browser/skin/Secure-urlbar.png");
+}
+#urlbar[level="low"] > .autocomplete-textbox-container > .info-icon {
+  list-style-image: url("chrome://browser/skin/Secure-urlbar.png");
+}
+#urlbar[level="broken"] > .autocomplete-textbox-container > .info-icon {
+  list-style-image: url("chrome://browser/skin/Secure-urlbar-broken.png");
+}
 
 /* ::::: page proxy icon ::::: */
 
