@@ -50,8 +50,8 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #ifdef STREAM_CONVERTER_HACK
+#include "nsIStreamConverter.h"
 #include "nsIAllocator.h"
-static NS_DEFINE_CID(kStreamConverterCID,    NS_STREAM_CONVERTER_CID);
 #endif
 
 #if defined(PR_LOGGING)
@@ -384,12 +384,10 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 	// code which if we are rfc-822 will cause us to literally insert a converter between
 	// the file channel stream of incoming data and the consumer at the other end of the
 	// AsyncRead call...
-
+    mRealListener = listener;
 #ifdef STREAM_CONVERTER_HACK
 	nsXPIDLCString aContentType;
 
-
-    mRealListener = listener;
 
 	rv = GetContentType(getter_Copies(aContentType));
 	if (NS_SUCCEEDED(rv) && PL_strcasecmp("message/rfc822", aContentType) == 0)
@@ -404,13 +402,17 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 		// (4) set mListener to be the stream converter's listener.
 
 		// (0) create a stream converter
-		nsCOMPtr<nsIStreamConverter2> mimeParser;
+		nsCOMPtr<nsIStreamConverter> mimeParser;
 		// mscott - we could generalize this hack to work with other stream converters by simply
 		// using the content type of the file to generate a progid for a stream converter and use
 		// that instead of a class id...
+
+		nsIComponentManager *comMgr;
+		rv = NS_GetGlobalComponentManager(&comMgr);
+
 		if (!mStreamConverter)
-			rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-													NULL, nsCOMTypeInfo<nsIStreamConverter2>::GetIID(), 
+			rv = comMgr->CreateInstance(NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul", 
+													NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
 													(void **) getter_AddRefs(mStreamConverter)); 
 		if (NS_FAILED(rv)) return rv;
 
@@ -423,9 +425,8 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 		mListener = mStreamConverter;
 		NS_IF_ADDREF(mListener); // mListener is NOT a com ptr...
 
-		// now set the output stream correctly
-		mStreamConverter->Init(mURI, proxiedConsumerListener, this);
-		mStreamConverter->GetContentType(getter_Copies(mStreamConverterOutType));
+		mStreamConverter->AsyncConvertData(nsnull, nsnull, proxiedConsumerListener, (nsIChannel *) this);
+		mStreamConverterOutType = "text/xul";
 	}
 	else
 		rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
@@ -528,7 +529,7 @@ nsFileChannel::GetContentType(char * *aContentType)
 	// the stream converter out type...
 	if (mStreamConverter) 
 	{
-		*aContentType = (char *) nsAllocator::Clone(mStreamConverterOutType, nsCRT::strlen(mStreamConverterOutType) + 1);
+		*aContentType = mStreamConverterOutType.ToNewCString();
 		return rv;
 	}
 #endif
