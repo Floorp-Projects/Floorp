@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.15 2003/03/18 03:24:59 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.16 2003/05/30 23:31:19 wtc%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -939,23 +939,6 @@ PQG_VerifyParams(const PQGParams *params, const PQGVerify *vfy,
       return SECFailure;
   return (vector->p_PQG_VerifyParams)(params, vfy, result);
 }
-#if 0
-void 
-PQG_DestroyParams(PQGParams *params)
-{
-  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-      return;
-  (vector->p_PQG_DestroyParams)( params);
-}
-
-void 
-PQG_DestroyVerify(PQGVerify *vfy)
-{
-  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-      return;
-  (vector->p_PQG_DestroyVerify)( vfy);
-}
-#endif
 
 void 
 BL_Cleanup(void)

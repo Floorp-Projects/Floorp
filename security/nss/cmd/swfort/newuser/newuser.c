@@ -46,7 +46,6 @@
 #include "nss.h"
 #include "swforti.h"
 #include "secutil.h"
-#include "secrng.h"
 
 #ifndef O_BINARY
 #define O_BINARY 0

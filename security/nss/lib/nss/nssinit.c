@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.63 2003/05/30 17:25:13 kirk.erickson%sun.com Exp $
+ # $Id: nssinit.c,v 1.64 2003/05/30 23:31:22 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -47,7 +47,6 @@
 #include "secmod.h"
 #include "secoid.h"
 #include "nss.h"
-#include "secrng.h"
 #include "pk11func.h"
 #include "secerr.h"
 #include "nssbase.h"

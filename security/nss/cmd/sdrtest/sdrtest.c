@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.10 2003/04/01 22:03:07 wtc%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.11 2003/05/30 23:31:05 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -46,7 +46,6 @@
 
 #include "plgetopt.h"
 #include "pk11sdr.h"
-#include "secrng.h"
 
 #define DEFAULT_VALUE "Test"
 

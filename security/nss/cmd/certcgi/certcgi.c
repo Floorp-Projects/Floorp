@@ -49,7 +49,6 @@
 #include "secutil.h"
 #include "pk11pqg.h"
 #include "certxutl.h"
-#include "secrng.h"	/* for RNG_ */
 #include "nss.h"
 
 

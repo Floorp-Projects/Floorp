@@ -41,7 +41,6 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <assert.h>
-#include "blapi.h"
 #include "secrng.h"
 
 size_t RNG_FileUpdate(const char *fileName, size_t limit);
