@@ -429,17 +429,13 @@ il_png_error_handler(png_structp png_ptr, png_const_charp msg)
      * been defined.  Adapted from readpng2_error_handler() in "PNG: The
      * Definitive Guide" (O'Reilly, 1999). */
 
-#ifdef DEBUG
     fprintf(stderr, "nspng libpng error: %s\n", msg);
     fflush(stderr);
-#endif
 
     ipng_p = (ipng_structp)png_get_error_ptr(png_ptr);
     if (ipng_p == NULL) {            /* we are completely hosed now */
-#ifdef DEBUG
         fprintf(stderr, "nspng severe error:  jmpbuf not recoverable.\n");
         fflush(stderr);
-#endif
         PR_ASSERT(ipng_p != NULL);   /* instead of exit(99); */
     }
 
