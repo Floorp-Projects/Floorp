@@ -48,7 +48,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 //NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 
 static NS_DEFINE_CID(kAbSync, NS_ABSYNC_SERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsAbSyncDriver::nsAbSyncDriver()
 {
@@ -247,7 +246,7 @@ nsAbSyncDriver::GetString(const PRUnichar *aStringName)
 		static const char propertyURL[] = AB_STRING_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
-		         do_GetService(kStringBundleServiceCID, &res); 
+		         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));
