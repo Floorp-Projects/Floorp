@@ -676,6 +676,16 @@ void CWizardUI::CreateControls()
 				((CButton*)curWidget->control)->SetCheck(0);
 			}
 		}
+		else if (widgetType == "RadioButton1") {
+			curWidget->control = new CButton;
+			rv = ((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTORADIOBUTTON | WS_TABSTOP, tmpRect, this, ID);
+			((CButton*)curWidget->control)->SetCheck(atoi(curWidget->value));
+		}
+		else if (widgetType == "RadioButton2") {
+			curWidget->control = new CButton;
+			rv = ((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTORADIOBUTTON | WS_TABSTOP, tmpRect, this, ID);
+			((CButton*)curWidget->control)->SetCheck(atoi(curWidget->value));
+		}
 		else if (widgetType == "CheckBox") {
 			curWidget->control = new CButton;
 			rv = ((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTOCHECKBOX | WS_TABSTOP, tmpRect, this, ID);
@@ -884,6 +894,28 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 		setBack.SetAt(setBack.GetLength()-1, '\0');
 
 		rWidget->items = setBack;
+	}
+	else if (widgetType == "RadioButton1") {
+		int state = ((CButton*)curWidget->control)->GetState() & 0x0003;
+		if (state == 2) 
+			state = 0;
+
+		char temp[MIN_SIZE];
+
+		itoa(state, temp, 10);
+
+		rv = CString(temp);
+	}
+	else if (widgetType == "RadioButton2") {
+		int state = ((CButton*)curWidget->control)->GetState() & 0x0003;
+		if (state == 2) 
+			state = 0;
+
+		char temp[MIN_SIZE];
+
+		itoa(state, temp, 10);
+
+		rv = CString(temp);
 	}
 	else if (widgetType == "EditBox") {
 		char myLine[MAX_SIZE];
