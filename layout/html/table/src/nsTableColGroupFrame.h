@@ -70,26 +70,51 @@ public:
   friend nsresult 
   NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
+  /** sets defaults for the colgroup.
+    * @see nsIFrame::Init
+    */
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
+  /** Initialize the colgroup frame with a set of children.
+    * @see nsIFrame::SetInitialChildList
+    */
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  /** A colgroup can be caused by three things:
+    * 1)	An element with table-column-group display
+    * 2)	An element with a table-column display without a
+	   *    table-column-group parent
+    * 3)	Cells that are not in a column (and hence get an anonymous
+	   *    column and colgroup).
+    * @return colgroup type
+    */
   nsTableColGroupType GetColType() const;
 
+  /** Set the colgroup type based on the creation cause
+    * @param aType - the reason why this colgroup is needed
+    */
   void SetColType(nsTableColGroupType aType);
-
+  
+  /** Real in this context are colgroups that come from an element
+    * with table-column-group display or wrap around columns that
+    * come from an element with table-column display. Colgroups
+    * that are the result of wrapping cells in an anonymous
+    * column and colgroup are not considered real here.
+    * @param aTableFrame - the table parent of the colgroups
+    * @param aLastColgroup - the last real colgroup
+    * @return  is false if there is a non real colgroup at the end
+    */
   static PRBool GetLastRealColGroup(nsTableFrame* aTableFrame, 
                                     nsIFrame**    aLastColGroup);
 
-  static nsTableColGroupFrame* FindParentForAppendedCol(nsTableFrame*  aTableFrame, 
-                                                        nsTableColType aColType);
-
+  /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
+    */
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
@@ -104,13 +129,21 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  void RemoveChild(nsIPresContext&  aPresContext, 
-                   nsTableColFrame& aLastChild,
-                   PRBool           aResetColIndices);  
-  
-  void RemoveChildrenAtEnd(nsIPresContext& aPresContext,
-                           PRInt32         aNumChildrenToRemove);
+  /** remove the column aChild from the column group, if requested renumber
+    * the subsequent columns in this column group and all following column
+    * groups. see also ResetColIndices for this
+    * @param aPresContext - the presentation context
+    * @param aChild       - the column frame that needs to be removed
+    * @param aResetSubsequentColIndices - if true the columns that follow
+    *                                     after aChild will be reenumerated
+    */
+  void RemoveChild(nsIPresContext&  aPresContext,
+                   nsTableColFrame& aChild,
+                   PRBool           aResetSubsequentColIndices);
 
+  /** @see nsIFrame::Paint
+    * all the table painting is done in nsTablePainter.cpp
+    */
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
@@ -120,6 +153,8 @@ public:
   // column groups don't paint their own background -- the cells do
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
+  /** @see nsIFrame::GetFrameForPoint
+    */
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
@@ -142,12 +177,28 @@ public:
    * @see nsLayoutAtoms::tableColGroupFrame
    */
   virtual nsIAtom* GetType() const;
-  
-  NS_IMETHOD AddColsToTable(nsIPresContext&  aPresContext,
-                            PRInt32          aFirstColIndex,
-                            PRBool           aResetSubsequentColIndices,
-                            nsIFrame*        aFirstFrame,
-                            nsIFrame*        aLastFrame = nsnull);
+
+  /** Add column frames to the table storages: colframe cache and cellmap
+    * this doesn't change the mFrames of the colgroup frame.
+    * @param aPresContext - the presentation context
+    * @param aFirstColIndex - the index at which aFirstFrame should be inserted
+    *                         into the colframe cache.
+    * @param aResetSubsequentColIndices - the indices of the col frames
+    *                                     after the insertion might need
+    *                                     an update
+    * @param aFirstFrame - first frame that needs to be added to the table,
+    *                      the frame should have a correctly set sibling
+    * @param aLastFrame  - last frame that needs to be added. It can be either
+    *                      null or should be in the sibling chain of
+    *                      aFirstFrame
+    * @result            - if there is no table frame or the table frame is not
+    *                      the first in flow it will return an error
+    */
+  nsresult AddColsToTable(nsIPresContext&  aPresContext,
+                          PRInt32          aFirstColIndex,
+                          PRBool           aResetSubsequentColIndices,
+                          nsIFrame*        aFirstFrame,
+                          nsIFrame*        aLastFrame = nsnull);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -159,27 +210,38 @@ public:
     */
   virtual PRInt32 GetColCount() const;
 
-  virtual nsTableColFrame * GetFirstColumn();
-
-  virtual nsTableColFrame * GetNextColumn(nsIFrame *aChildFrame);
-
-  virtual nsTableColFrame * GetColumnAt(PRInt32 aColIndex);
-
-  virtual PRInt32 GetStartColumnIndex();
-  
-  /** sets mStartColIndex to aIndex.
-    * @return the col count
-    * has the side effect of setting all child COL indexes
+  /** first column on the child list */
+  nsTableColFrame * GetFirstColumn();
+  /** next sibling to aChildFrame that is a column frame, first column frame
+    * in the column group if aChildFrame is null
     */
-  virtual PRInt32 SetStartColumnIndex(PRInt32 aIndex);
+  nsTableColFrame * GetNextColumn(nsIFrame *aChildFrame);
+
+  /** @return - the position of the first column in this colgroup in the table
+    * colframe cache.
+    */
+  PRInt32 GetStartColumnIndex();
+  
+  /** set the position of the first column in this colgroup in the table
+    * colframe cache.
+    */
+  void SetStartColumnIndex(PRInt32 aIndex);
 
   /** helper method to get the span attribute for this colgroup */
   PRInt32 GetSpan();
 
-  void DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame);
-
+  /** provide access to the mFrames list
+    */
   nsFrameList& GetChildList();
 
+  /** set the column index for all frames starting at aStartColFrame, it
+    * will also reset the column indices in all subsequent colgroups
+    * @param aFirstColGroup - start the reset operation inside this colgroup
+    * @param aFirstColIndex - first column that is reset should get this index
+    * @param aStartColFrame - if specified the reset starts with this column
+    *                         inside the colgroup; if not specified, the reset
+    *                         starts with the first column
+    */
   static void ResetColIndices(nsIFrame*       aFirstColGroup,
                               PRInt32         aFirstColIndex,
                               nsIFrame*       aStartColFrame = nsnull);
@@ -251,6 +313,11 @@ inline nsTableColGroupFrame::nsTableColGroupFrame()
 inline PRInt32 nsTableColGroupFrame::GetStartColumnIndex()
 {  
   return mStartColIndex;
+}
+
+inline void nsTableColGroupFrame::SetStartColumnIndex (PRInt32 aIndex)
+{
+  mStartColIndex = aIndex;
 }
 
 inline PRInt32 nsTableColGroupFrame::GetColCount() const
