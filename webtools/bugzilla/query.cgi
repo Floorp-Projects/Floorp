@@ -234,11 +234,9 @@ if {[info exists COOKIE(Bugzilla_login)]} {
     if {[cequal $COOKIE(Bugzilla_login) [Param maintainer]]} {
         puts "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>"
     }
-    puts "
-<a href=relogin.cgi>Log in as someone besides <b>$COOKIE(Bugzilla_login)</b></a><br>
-<a href=changepassword.cgi>Change my password.</a><br>"
+    puts "<a href=relogin.cgi>Log in as someone besides <b>$COOKIE(Bugzilla_login)</b></a><br>"
 }
-
+puts "<a href=changepassword.cgi>Change your password.</a><br>"
 puts "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>"
 
 }]} {

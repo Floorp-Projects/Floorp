@@ -66,7 +66,11 @@ Please click <b>Back</b> and try again."
 
 puts "Content-type: text/html\n"
 
-SendSQL "update profiles set password='$pwd' where login_name='[SqlQuote $COOKIE(Bugzilla_login)]'"
+SendSQL "select encrypt('$pwd')"
+set encrypted [lindex [FetchSQLData] 0]
+
+SendSQL "update profiles set password='$pwd',cryptpassword='$encrypted' where login_name='[SqlQuote $COOKIE(Bugzilla_login)]'"
+SendSQL "update logincookies set cryptpassword = '$encrypted' where cookie = $COOKIE(Bugzilla_logincookie)"
 
 puts "<H1>OK, done.</H1>
 Your new password has been set.

@@ -171,7 +171,7 @@ proc make_options { src default {isregexp 0} } {
 
 
 proc PasswordForLogin {login} {
-    SendSQL "select password from profiles where login_name = '[SqlQuote $login]'"
+    SendSQL "select cryptpassword from profiles where login_name = '[SqlQuote $login]'"
     return [FetchSQLData]
 }
     
@@ -179,7 +179,7 @@ proc PasswordForLogin {login} {
 
 proc confirm_login {{nexturl ""}} {
 #    puts "Content-type: text/plain\n"
-    global FORM COOKIE argv0
+    global FORM COOKIE argv0 env
     ConnectToDatabase
     if { [info exists FORM(Bugzilla_login)] && 
          [info exists FORM(Bugzilla_password)] } {
@@ -194,10 +194,18 @@ proc confirm_login {{nexturl ""}} {
             puts "<p>Please click <b>back</b> and try again."
             exit
         }
-        set realpwd [PasswordForLogin $FORM(Bugzilla_login)]
+        set realcryptpwd [PasswordForLogin $FORM(Bugzilla_login)]
+        set enteredpwd $FORM(Bugzilla_password);
+        SendSQL "select encrypt('[SqlQuote $enteredpwd]','[crange $realcryptpwd 0 1]')";
+        set enteredcryptpwd [lindex [FetchSQLData] 0]
+        
+        
         if {[info exists FORM(PleaseMailAPassword)]} {
-            if {[cequal $realpwd ""]} {
+            if {[cequal $realcryptpwd ""]} {
                 set realpwd [InsertNewUser $FORM(Bugzilla_login)]
+            } else {
+                SendSQL "select password from profiles where login_name = '[SqlQuote $FORM(Bugzilla_login)]'"
+                set realpwd [lindex [FetchSQLData] 0]
             }
             set template "From: bugzilla-daemon
 To: %s
@@ -205,15 +213,16 @@ Subject: Your bugzilla password.
 
 To use the wonders of bugzilla, you can use the following:
 
-E-mail address: %s
-      Password: %s
+ E-mail address: %s
+       Password: %s
 
-To change your password, go to:
-[Param urlbase]changepassword.cgi
+ To change your password, go to:
+ [Param urlbase]changepassword.cgi
 
-(Your bugzilla and CVS password, if any, are not currently synchronized.
-Top hackers are working around the clock to fix this, as you read this.)
+ (Your bugzilla and CVS password, if any, are not currently synchronized.
+ Top hackers are working around the clock to fix this, as you read this.)
 "
+
             set msg [format $template $FORM(Bugzilla_login) \
                          $FORM(Bugzilla_login) $realpwd]
             
@@ -227,7 +236,7 @@ Top hackers are working around the clock to fix this, as you read this.)
             exit
         }
                 
-        if {[cequal $realpwd ""] || ![cequal $realpwd $FORM(Bugzilla_password)]} {
+        if {[cequal $realcryptpwd ""] || ![cequal $enteredcryptpwd $realcryptpwd]} {
             puts "Content-type: text/html\n"
             puts "<H1>Login failed.</H1>"
             puts "The username or password you entered is not valid.  Please"
@@ -235,19 +244,33 @@ Top hackers are working around the clock to fix this, as you read this.)
             exit
         }
         set COOKIE(Bugzilla_login) $FORM(Bugzilla_login)
-        set COOKIE(Bugzilla_password) $FORM(Bugzilla_password)
+	SendSQL "insert into logincookies (userid,cryptpassword,hostname) values ([DBNameToIdAndCheck $FORM(Bugzilla_login)], '[SqlQuote $realcryptpwd]', '[SqlQuote $env(REMOTE_HOST)]')"
+        SendSQL "select LAST_INSERT_ID()"
+        set logincookie [FetchSQLData]
+        
+        
+
+
+        set COOKIE(Bugzilla_logincookie) $logincookie
         puts "Set-Cookie: Bugzilla_login=$COOKIE(Bugzilla_login) ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT"
-        puts "Set-Cookie: Bugzilla_password=$COOKIE(Bugzilla_password) ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT"
+        puts "Set-Cookie: Bugzilla_logincookie=$COOKIE(Bugzilla_logincookie) ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT"
+
+        # This next one just cleans out any old bugzilla passwords that may
+        # be sitting around in the cookie files, from the bad old days when
+        # we actually stored the password there.
+        puts "Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT"
+
     }
 
 
-    set realpwd {}
+    set loginok 0
 
-    if { [info exists COOKIE(Bugzilla_login)] && [info exists COOKIE(Bugzilla_password)] } {
-        set realpwd [PasswordForLogin $COOKIE(Bugzilla_login)]
+    if { [info exists COOKIE(Bugzilla_login)] && [info exists COOKIE(Bugzilla_logincookie)] } {
+        SendSQL "select profiles.login_name = '[SqlQuote $COOKIE(Bugzilla_login)]' and profiles.cryptpassword = logincookies.cryptpassword and logincookies.hostname = '[SqlQuote $env(REMOTE_HOST)]' from profiles,logincookies where logincookies.cookie = $COOKIE(Bugzilla_logincookie) and profiles.userid = logincookies.userid"
+        set loginok [FetchSQLData]
     }
 
-    if {[cequal $realpwd ""] || ![cequal $realpwd $COOKIE(Bugzilla_password)]} {
+    if {$loginok != "1"} {
         puts "Content-type: text/html\n"
         puts "<H1>Please log in.</H1>"
         puts "I need a legitimate e-mail address and password to continue."
@@ -284,9 +307,18 @@ e-mail address above and click
  here:<input type=submit value=\"E-mail me a password\"
 name=PleaseMailAPassword>
 </form>"
+
+        # This seems like as good as time as any to get rid of old
+        # crufty junk in the logincookies table.  Get rid of any entry
+        # that hasn't been used in a month.
+        SendSQL "delete from logincookies where to_days(now()) - to_days(lastused) > 30"
+
         
         exit
     }
+
+    # Update the timestamp on our logincookie, so it'll keep on working.
+    SendSQL "update logincookies set lastused = null where cookie = $COOKIE(Bugzilla_logincookie)"
 }
 
 

@@ -18,26 +18,23 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-mysql > /dev/null 2>/dev/null << OK_ALL_DONE
+mysql bugs > /dev/null 2>/dev/null << OK_ALL_DONE
 
-use bugs;
-
-drop table profiles
+drop table logincookies;
 OK_ALL_DONE
 
-mysql << OK_ALL_DONE
-use bugs;
-create table profiles (
-userid mediumint not null auto_increment primary key,
-login_name varchar(255) not null,
-password varchar(16),
-cryptpassword varchar(64),
-realname varchar(255),
-index(login_name)
+mysql bugs << OK_ALL_DONE
+
+create table logincookies (
+    cookie mediumint not null auto_increment primary key,
+    userid mediumint not null,
+    cryptpassword varchar(64),
+    hostname varchar(128),
+    lastused timestamp,
+    index(lastused)
 );
 
-
-show columns from profiles;
-show index from profiles;
+show columns from logincookies;
+show index from logincookies;
 
 OK_ALL_DONE

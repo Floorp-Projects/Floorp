@@ -49,14 +49,6 @@ proc ConnectToDatabase {} {
     }
 }
 
-# Useful for my stand-alone debugging
-proc DebugConnect {} {
-    global COOKIE
-    set COOKIE(Bugzilla_login) terry
-    set COOKIE(Bugzilla_password) terry
-    ConnectToDatabase
-}
-
 
 proc SendSQL { str } {
 # puts $str
@@ -71,7 +63,12 @@ proc SendSQL { str } {
 proc MoreSQLData {} {
     global mysqlhandle
     set result [mysqlresult $mysqlhandle "rows?"]
-    return [expr ![cequal $result ""] && $result > 0]
+    if {![cequal $result ""]} {
+        if {$result > 0} {
+            return 1
+        }
+    }
+    return 0
 }
 
 proc FetchSQLData {} {
@@ -286,7 +283,7 @@ proc InsertNewUser {username} {
     loop i 0 8 {
         append pwd [cindex "abcdefghijklmnopqrstuvwxyz" [random 26]]
     }
-    SendSQL "insert into profiles (login_name, password) values ('[SqlQuote $username]', '$pwd')"
+    SendSQL "insert into profiles (login_name, password, cryptpassword) values ('[SqlQuote $username]', '$pwd', encrypt('$pwd'))"
     return $pwd
 }
 
