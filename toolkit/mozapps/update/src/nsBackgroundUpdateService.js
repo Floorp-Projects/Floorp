@@ -40,6 +40,7 @@ const PREF_APP_VERSION                  = "app.version";
 const PREF_UPDATE_APP_ENABLED           = "update.app.enabled";
 const PREF_UPDATE_APP_URI               = "update.app.url";
 const PREF_UPDATE_APP_UPDATESAVAILABLE  = "update.app.updatesAvailable";
+const PREF_UPDATE_APP_UPDATEVERSION     = "update.app.updateVersion";
 const PREF_UPDATE_APP_UPDATEDESCRIPTION = "update.app.updateDescription";
 const PREF_UPDATE_APP_UPDATEURL         = "update.app.updateURL";
 
@@ -51,7 +52,8 @@ const PREF_UPDATE_INTERVAL              = "update.interval";
 const PREF_UPDATE_LASTUPDATEDATE        = "update.lastUpdateDate";
 const PREF_UPDATE_SEVERITY              = "update.severity";
 
-const nsIBUS = Components.interfaces.nsIBackgroundUpdateService;
+const nsIUpdateService  = Components.interfaces.nsIUpdateService;
+const nsIUpdateItem     = Components.interfaces.nsIUpdateItem;
 
 const UPDATED_EXTENSIONS  = 0x01;
 const UPDATED_APP         = 0x02;
@@ -67,8 +69,8 @@ nsBackgroundUpdateService.prototype = {
   _pref: null,
 
   /////////////////////////////////////////////////////////////////////////////
-  // nsIBackgroundUpdateService
-  checkForUpdates: function ()
+  // nsIUpdateService
+  watchForUpdates: function ()
   {
     // This is called when the app starts, so check to see if the time interval
     // expired between now and the last time an automated update was performed.
@@ -81,28 +83,67 @@ nsBackgroundUpdateService.prototype = {
     var interval = this._pref.getIntPref(PREF_UPDATE_INTERVAL);
     var lastUpdateTime = this._pref.getIntPref(PREF_UPDATE_LASTUPDATEDATE);
     var timeSinceLastCheck = Date.UTC() - lastUpdateTime;
-    this.checkForUpdatesNow();  /// XXXben
+    this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY);  /// XXXben
     
     if (timeSinceLastCheck > interval)
-      this.checkForUpdatesNow();
+      this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY);
     else
       this._makeTimer(interval - timeSinceLastCheck);
   },
   
-  checkForUpdatesNow: function ()
+  checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent)
+  {
+    switch (aSourceEvent) {
+    case Components.interfaces.nsIExtensionManager.SOURCE_EVENT_MISMATCH:
+    case nsIUpdateService.SOURCE_EVENT_USER:
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                        .getService(Components.interfaces.nsIWindowWatcher);
+      var ary = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+      var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
+      updateTypes.data = aUpdateTypes;
+      ary.AppendElement(updateTypes);
+      var sourceEvent = Components.classes["@mozilla.org/supports-PRUint8;1"]
+                                  .createInstance(Components.interfaces.nsISupportsPRUint8);
+      sourceEvent.data = aSourceEvent;
+      ary.AppendElement(sourceEvent);
+      for (var i = 0; i < aItems.length; ++i)
+        ary.AppendElement(aItems[i]);
+      ww.openWindow(null, "chrome://mozapps/content/update/update.xul", 
+                    "", "chrome,modal,centerscreen", ary);
+      break;
+    case nsIUpdateService.SOURCE_EVENT_BACKGROUND:
+      // Rather than show a UI, call the checkForUpdates function directly here. 
+      // The Browser's inline front end update notification system listens for the
+      // updates that this function broadcasts.
+      this.checkForUpdatesInternal([], 0, aUpdateTypes, aSourceEvent);
+
+      // If this was a background update, reset timer. 
+      this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
+      this._pref.setIntPref(PREF_UPDATE_LASTUPDATEDATE, Date.UTC());
+
+      break;
+    }  
+  },
+  
+  checkForUpdatesInternal: function (aItems, aItemCount, aUpdateTypes)
   {
     // Listen for notifications sent out by the app updater (implemented here) and the
     // extension updater (implemented in nsExtensionItemUpdater)
     var os = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
+                       .getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "Update:Extension:Item-Ended", false);
     os.addObserver(this, "Update:Extension:Ended", false);
     os.addObserver(this, "Update:App:Ended", false);
+    
+    this._updateState = 0;
 
     var appUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED);
     var extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
 
-    if (appUpdatesEnabled) {
+    if (appUpdatesEnabled && ((aUpdateTypes == nsIUpdateItem.TYPE_ANY) || 
+                              (aUpdateTypes == nsIUpdateItem.TYPE_APP))) {
       var dsURI = this._pref.getComplexValue(PREF_UPDATE_APP_URI, 
                                              Components.interfaces.nsIPrefLocalizedString).data;
       var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -111,13 +152,11 @@ nsBackgroundUpdateService.prototype = {
       ds = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
       ds.addXMLSinkObserver(new nsAppUpdateXMLRDFDSObserver(this));
     }
-    if (extUpdatesEnabled) {
+    if (extUpdatesEnabled && (aUpdateTypes != nsIUpdateItem.TYPE_APP)) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
                          .getService(Components.interfaces.nsIExtensionManager);
-      em.update([], 0, Components.interfaces.nsIExtensionManager.UPDATE_TYPE_BACKGROUND);      
+      em.update(aItems, aItems.length);      
     }
-     
-    this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
   },
   
   get updateCount()
@@ -133,6 +172,11 @@ nsBackgroundUpdateService.prototype = {
   get updateSeverity()
   {
     return this._pref.getIntPref(PREF_UPDATE_SEVERITY);
+  },
+  
+  get appUpdateVersion()
+  {
+    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEVERSION, Components.interfaces.nsISupportsString).data;
   },
   
   get appUpdateDescription()
@@ -210,7 +254,7 @@ nsBackgroundUpdateService.prototype = {
   // nsISupports
   QueryInterface: function (aIID) 
   {
-    if (!aIID.equals(Components.interfaces.nsIBackgroundUpdateService) &&
+    if (!aIID.equals(Components.interfaces.nsIUpdateService) &&
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -281,6 +325,8 @@ nsAppUpdateXMLRDFDSObserver.prototype =
     var version = this._getProperty(ds, appID, "version");
     var checker = new VersionChecker(appVersion, version);
     if (checker.isNewer) {
+      pref.setCharPref(PREF_UPDATE_APP_UPDATEVERSION, version);
+    
       var severity = this._getProperty(ds, appID, "severity");
       // Synthesize the real severity value using the hint from the web site
       // and the version.
@@ -452,7 +498,7 @@ var gModule = {
   
   _objects: {
     manager: { CID: Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"),
-               contractID: "@mozilla.org/updates/background-update-service;1",
+               contractID: "@mozilla.org/updates/update-service;1",
                className: "Background Update Service",
                factory: {
                           createInstance: function (aOuter, aIID) 

@@ -1,6 +1,4 @@
 //
-// window.arguments[0] is the nsIExtensionItemUpdater object
-//
 // window.arguments[1...] is an array of nsIUpdateItem implementing objects 
 // that are to be updated. 
 //  * if the array is empty, all items are updated (like a background update
@@ -41,11 +39,14 @@
 //    performed again. 
 //
 
-const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
-const MISMATCH = Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH;
-const USERINVOKED = Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED;
+const nsIUpdateItem                     = Components.interfaces.nsIUpdateItem;
+const nsIUpdateService                  = Components.interfaces.nsIUpdateService;
 
-var gUpdater = null;
+const PREF_APP_ID                       = "app.id";
+const PREF_UPDATE_APP_UPDATESAVAILABLE  = "update.app.updatesAvailable";
+
+var gSourceEvent = null;
+var gUpdateTypes = null;
 
 var gUpdateWizard = {
   // The items to check for updates for (e.g. an extension, some subset of extensions, 
@@ -62,16 +63,17 @@ var gUpdateWizard = {
   
   init: function ()
   {
-    gUpdater = window.arguments[0].QueryInterface(Components.interfaces.nsIExtensionItemUpdater);
-    for (var i = 1; i < window.arguments.length; ++i)
+    gUpdateTypes = window.arguments[0];
+    gSourceEvent = window.arguments[1];
+    for (var i = 2; i < window.arguments.length; ++i)
       this.items.push(window.arguments[i].QueryInterface(nsIUpdateItem));
-      
+
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    this.shouldSuggestAutoChecking = (gUpdater.updateType == MISMATCH) && 
-                                     !pref.getBoolPref("update.extensions.enabled");
+    this.shouldSuggestAutoChecking = (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) && 
+                                      !pref.getBoolPref("update.extensions.enabled");
 
-    if (gUpdater.updateType == USERINVOKED) {
+    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_USER) {
       document.getElementById("mismatch").setAttribute("next", "checking");
       document.documentElement.advance();
     }
@@ -138,7 +140,6 @@ var gMismatchPage = {
   }
 };
 
-const nsIBUS = Components.interfaces.nsIBackgroundUpdateService;
 var gUpdatePage = {
   _completeCount: 0,
   _updateState: 0,
@@ -146,7 +147,9 @@ var gUpdatePage = {
               "Update:Extension:Ended", 
               "Update:Extension:Item-Started", 
               "Update:Extension:Item-Ended",
-              "Update:Extension:Item-Error"],
+              "Update:Extension:Item-Error",
+              "Update:App:Ended",
+              "Update:Ended"],
   
   onPageShow: function ()
   {
@@ -160,9 +163,11 @@ var gUpdatePage = {
     for (var i = 0; i < this._messages.length; ++i)
       os.addObserver(this, this._messages[i], false);
 
-    gUpdater.checkForUpdates();
-    
-    this._updateState = nsIBUS.UPDATED_NONE;
+    var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                            .getService(Components.interfaces.nsIUpdateService);
+    updates.checkForUpdatesInternal(gUpdateWizard.items, gUpdateWizard.items.length, gUpdateTypes);
+
+    this._updateState = nsIUpdateService.UPDATED_NONE;
   },
   
   uninit: function ()
@@ -194,7 +199,8 @@ var gUpdatePage = {
       // If we were passed a set of extensions/themes/other to update, this
       // means we're not checking for app updates, so don't wait for the app
       // update to complete before advancing (because there is none).
-      canFinish = gUpdateWizard.items.length > 0;
+      // canFinish = gUpdateWizard.items.length > 0;
+      // XXXben
       break;
     case "Update:Ended":
       // If we're doing a general update check, (that is, no specific extensions/themes
@@ -207,7 +213,23 @@ var gUpdatePage = {
       // updates so it can list them first. 
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
-      gUpdateWizard.appUpdatesAvailable = pref.getBoolPref(PREF_UPDATE_APPUPDATESAVAILABLE);     
+      gUpdateWizard.appUpdatesAvailable = pref.getBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE);
+      
+      if (gUpdateWizard.appUpdatesAvailable) {
+        var appID = pref.getCharPref(PREF_APP_ID);
+        var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                                .getService(Components.interfaces.nsIUpdateService);
+        
+        
+        var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
+        var item = Components.classes["@mozilla.org/updates/item;1"]
+                             .createInstance(Components.interfaces.nsIUpdateItem);
+        item.init(appID, updates.appUpdateVersion,
+                  brandShortName, -1, updates.appUpdateURL, 
+                  "chrome://mozapps/skin/update/icon32.png", 
+                  Components.interfaces.nsIUpdateItem.TYPE_APP);
+        gUpdateWizard.itemsToUpdate.splice(0, 0, item);
+      }
       break;
     }
 
@@ -285,7 +307,7 @@ var gFinishedPage = {
       fEC.hidden = true;
     }
     
-    if (gUpdater.updateType == MISMATCH) {
+    if (gUpdater.updateType == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
       document.getElementById("finishedMismatch").hidden = false;
       document.getElementById("incompatibleAlert").hidden = false;
     }
