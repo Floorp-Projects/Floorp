@@ -2317,7 +2317,8 @@ nsChildView::Idle()
     [self removeTrackingRect:mMouseEnterExitTag];
 
   mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
-                                    userData:nil assumeInside: YES];
+                                    userData:nil assumeInside: [[self window]
+                                    acceptsMouseMovedEvents]];
 }
 
 
@@ -2390,7 +2391,8 @@ nsChildView::Idle()
     mGeckoChild->AddedToWindow();
 
   mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
-                                    userData:nil assumeInside: YES];
+                                    userData:nil assumeInside: [[self window]
+                                    acceptsMouseMovedEvents]];
 }
 
 - (void)viewWillStartLiveResize
