@@ -619,6 +619,7 @@ sub MakeResourceAliases()
 
     # communicator
     _InstallResources(":mozilla:xpfe:communicator:resources:content:MANIFEST",          "$communicatorContent");
+    _InstallResources(":mozilla:xpfe:communicator:resources:content:mac:MANIFEST",      "$communicatorContent");
     _InstallResources(":mozilla:xpfe:communicator:resources:locale:en-US:MANIFEST",     "$communicatorLocale", 0);
 
     _InstallResources(":mozilla:docshell:base:MANIFEST",                                "$globalLocale", 0);
