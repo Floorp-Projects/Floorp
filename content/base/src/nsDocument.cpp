@@ -1095,6 +1095,17 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
+      else if (mPropName == "onpaint") {
+        if (NS_OK == GetListenerManager(&mManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)
+            JS_GetContextPrivate(aContext);
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
+                                                      kIDOMPaintListenerIID)) {
+            NS_RELEASE(mManager);
+            return PR_FALSE;
+          }
+        }
+      }
       NS_IF_RELEASE(mManager);
     }
   }

@@ -1298,6 +1298,8 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
       AddScriptEventListener(nsHTMLAtoms::onfocus, aValue, kIDOMFocusListenerIID); 
     else if (nsHTMLAtoms::onblur == aAttribute)
       AddScriptEventListener(nsHTMLAtoms::onblur, aValue, kIDOMFocusListenerIID); 
+    else if (nsHTMLAtoms::onpaint == aAttribute)
+      AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
 
     nsHTMLValue val;
     if (NS_CONTENT_ATTR_NOT_THERE !=
@@ -1966,6 +1968,17 @@ nsGenericHTMLElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMLoadListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (propName == "onpaint") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)
+            JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner,
+                                                    kIDOMPaintListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }

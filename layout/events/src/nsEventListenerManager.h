@@ -83,6 +83,7 @@ protected:
   nsVoidArray* mFocusListeners;
   nsVoidArray* mFormListeners;
   nsVoidArray* mDragListeners;
+  nsVoidArray* mPaintListeners;
 
 };
 

@@ -27,5 +27,6 @@ extern const nsIID kIDOMFocusListenerIID;
 extern const nsIID kIDOMFormListenerIID;
 extern const nsIID kIDOMLoadListenerIID;
 extern const nsIID kIDOMDragListenerIID;
+extern const nsIID kIDOMPaintListenerIID;
 
 #endif /* nsDOMEVENTSIIDs_h___ */

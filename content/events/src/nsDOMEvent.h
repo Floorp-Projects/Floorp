@@ -36,10 +36,27 @@ class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent, public nsIPrivateDO
 #define DOM_EVENT_CAPTURE   0x0004
 
 public:
+  // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
   enum nsDOMEvents {
-    eDOMEvents_mousedown=0, eDOMEvents_mouseup=1, eDOMEvents_click=2, eDOMEvents_dblclick=3, eDOMEvents_mouseover=4, eDOMEvents_mouseout=5,
-    eDOMEvents_mousemove=6, eDOMEvents_keydown=7, eDOMEvents_keyup=8, eDOMEvents_keypress=9, eDOMEvents_focus=10, eDOMEvents_blur=11,
-    eDOMEvents_load=12, eDOMEvents_unload=13, eDOMEvents_abort=14, eDOMEvents_error=15, eDOMEvents_submit, eDOMEvents_reset
+    eDOMEvents_mousedown=0,
+    eDOMEvents_mouseup,
+    eDOMEvents_click,
+    eDOMEvents_dblclick,
+    eDOMEvents_mouseover,
+    eDOMEvents_mouseout,
+    eDOMEvents_mousemove,
+    eDOMEvents_keydown,
+    eDOMEvents_keyup,
+    eDOMEvents_keypress,
+    eDOMEvents_focus,
+    eDOMEvents_blur,
+    eDOMEvents_load,
+    eDOMEvents_unload,
+    eDOMEvents_abort,
+    eDOMEvents_error,
+    eDOMEvents_submit,
+    eDOMEvents_reset,
+    eDOMEvents_paint,
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);
