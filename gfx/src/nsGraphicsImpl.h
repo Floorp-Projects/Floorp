@@ -30,7 +30,8 @@ class nsIRenderingContext;
 class nsGraphicsImpl : public nsIGraphics {
 public:
 	nsGraphicsImpl(nsIRenderingContext* aRenderer);
-	
+	virtual ~nsGraphicsImpl() {}
+
 	NS_DECL_ISUPPORTS
 
 	NS_DECL_NSIGRAPHICS
