@@ -84,9 +84,9 @@ public:
     virtual ~nsDNSService();
  
     // Define a Create method to be used with a factory:
-    static NS_METHOD        Create( nsISupports * outer,
-                                    const nsIID & iid,
-                                    void **       result);
+    static NS_METHOD        Create(nsISupports * outer,
+                                   const nsIID & iid,
+                                   void **       result);
     
     static void             Lock();
     static void             Unlock();
@@ -104,15 +104,22 @@ public:
     static nsDNSService *   gService;
 
 private:
+    /**
+     *  Internal Methods
+     */
     nsresult                LateInit();
     nsresult                InstallPrefObserver();
     nsresult                RemovePrefObserver();
-    nsDNSLookup *           FindOrCreateLookup( const char *  hostName);
-    void                    EvictLookup( nsDNSLookup * lookup);
-    void                    AddToEvictionQ( nsDNSLookup *  lookup);
+    nsDNSLookup *           FindOrCreateLookup(const char * hostName);
+    void                    EvictLookup(nsDNSLookup * lookup);
+    void                    EvictLookupsIfNecessary(PRInt32 targetCount);
+    void                    AddToEvictionQ(nsDNSLookup * lookup);
     void                    AbortLookups();
     nsresult                ShutdownInternal();
-        
+
+    /**
+     *  Data members
+     */
     static PRBool           gNeedLateInitialization;
     static PLDHashTableOps  gHashTableOps;
     
@@ -133,7 +140,8 @@ private:
     nsCOMPtr<nsIIDNService> mIDNConverter;
 
     PRIntervalTime          mLastReset;  
-    PRIntervalTime          mResetMaxInterval; 
+    PRIntervalTime          mResetMaxInterval;
+    PRBool                  mCacheNeedsClearing;
 
     enum {
         DNS_NOT_INITIALIZED = 0,
@@ -144,7 +152,10 @@ private:
     };
 
 #if defined(XP_MAC)
-    friend pascal void      nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+    friend pascal void      nsDnsServiceNotifierRoutine(void *      contextPtr,
+                                                        OTEventCode code,
+                                                        OTResult    result,
+                                                        void *      cookie);
 public:
     InetSvcRef              mServiceRef;
     OTNotifyUPP             nsDnsServiceNotifierRoutineUPP;
@@ -157,7 +168,7 @@ private:
 #if defined(XP_WIN)
 public:
 
-    PRUint32                AllocMsgID( void);
+    PRUint32                AllocMsgID(void);
     HWND                    mDNSWindow;
 
     // This should really be private but making public to be accessible
@@ -165,7 +176,7 @@ public:
     LRESULT                 ProcessLookup( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-    void                    FreeMsgID( PRUint32 msgID); 
+    void                    FreeMsgID(PRUint32 msgID); 
 
     PRUint32                mMsgIDBitVector[4];
 #endif /* XP_WIN */
