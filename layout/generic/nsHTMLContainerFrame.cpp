@@ -403,22 +403,14 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
           viewManager->InsertChild(parentView, view, zIndex);
         }
 
-        // If the background color is transparent or the visibility is hidden
+        // If the background color is transparent or the visibility is hidden,
         // then mark the view as having transparent content. The reason we
-        // need to do it for visibility of hidden is that child elements can
-        // override their parent's visibility and be visible
-        // XXX We could try and be smarter about this and check whether there's
-        // a background image. If there is a background image and the image is
-        // fully opaque then we don't need to mark the view as having transparent
-        // content...
+        // need to do it for hidden visibility is that child elements can
+        // override their parent's visibility and be visible.
         if ((NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) ||
-            !display->mVisible) {
+            (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible)) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
         }
-
-        // Set the initial visiblity of the view -EDV
-        view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ?
-                            nsViewVisibility_kHide : nsViewVisibility_kShow);
 
         // XXX If it's fixed positioned, then create a widget so it floats
         // above the scrolling area
