@@ -396,7 +396,9 @@ var calendarToGet = null;
 
 calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject, onResponse )
 {
-   document.getElementById( "calendar-list-image-"+ThisCalendarObject.serverNumber ).setAttribute( "synching", "true" );
+   //the image doesn't always exist. If it doesn't exist, it causes problems, so check for it here
+   if( document.getElementById( "calendar-list-image-"+ThisCalendarObject.serverNumber ) )
+      document.getElementById( "calendar-list-image-"+ThisCalendarObject.serverNumber ).setAttribute( "synching", "true" );
 
    calendarToGet = ThisCalendarObject;
    // make a request
