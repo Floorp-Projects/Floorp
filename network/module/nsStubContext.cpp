@@ -538,8 +538,8 @@ void stub_abort(NET_StreamClass *stream, int status)
 
 int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 {
-    PRInt32 bytesWritten, errorCode;
-    nsresult rv = NS_OK;
+    PRInt32 bytesWritten;
+    nsresult errorCode;
     nsConnectionInfo *pConn = GetConnectionInfoFromStream(stream);
 
     TRACEMSG(("+++ stream put_block.  Length = %d\n", length));
@@ -550,18 +550,18 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
      *       is interrupted...  In this case, Netlib will call put_block(...)
      *       with the string "Transfer Interrupted!"
      */
-    bytesWritten = pConn->pNetStream->Write(&errorCode, buffer, 0, length);
+    errorCode = pConn->pNetStream->Write(buffer, 0, length, &bytesWritten);
 
     /* Abort the connection... */
-    if (NS_INPUTSTREAM_EOF == errorCode) {
+    if (NS_BASE_STREAM_EOF == errorCode) {
         return -1;
     }
 
     if (pConn->pConsumer && (0 < bytesWritten)) {
-        rv = pConn->pConsumer->OnDataAvailable(pConn->pURL, pConn->pNetStream, bytesWritten);
+        errorCode = pConn->pConsumer->OnDataAvailable(pConn->pURL, pConn->pNetStream, bytesWritten);
     }
 
-    return ((NS_OK == rv) && (bytesWritten == length));
+    return ((NS_OK == errorCode) && (bytesWritten == length));
 }
 
 unsigned int stub_is_write_ready(NET_StreamClass *stream)
@@ -577,7 +577,7 @@ unsigned int stub_is_write_ready(NET_StreamClass *stream)
      * If the InputStream has been closed...  Return 1 byte available so
      * Netlib will call put_block(...) one more time...
      */
-    if (NS_INPUTSTREAM_EOF == errorCode) {
+    if (NS_BASE_STREAM_EOF == errorCode) {
         free_space = 1;
     }
 

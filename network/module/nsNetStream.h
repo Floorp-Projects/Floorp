@@ -59,7 +59,7 @@ public:
     virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode) = 0;
 
     /* From nsIBaseStream interface */
-    virtual void Close(void);
+    NS_IMETHOD Close(void);
 
 protected:
     virtual ~nsNetlibStream();
@@ -85,20 +85,19 @@ public:
 
     virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
     
-    /* From nsIBaseStream interface */
-    virtual PRInt32 GetLength(void);
-
     /* nsIInputStream interface */
-    virtual PRInt32 Read(PRInt32 *aErrorCode, 
-                         char *aBuf, 
-                         PRInt32 aOffset, 
-                         PRInt32 aCount);
+    NS_IMETHOD GetLength(PRInt32 *aLength);
+
+    NS_IMETHOD Read(char *aBuf, 
+                    PRInt32 aOffset, 
+                    PRInt32 aCount,
+                    PRInt32 *aReadCount);
 
     /* nsIOutputStream interface */
-    virtual PRInt32 Write(PRInt32 *aErrorCode,
-                          const char *aBuf, 
-                          PRInt32 aOffset,
-                          PRInt32 aLen);
+    NS_IMETHOD Write(const char *aBuf, 
+                     PRInt32 aOffset,
+                     PRInt32 aLen,
+                     PRInt32 *aWriteCount);
 
 protected:
     virtual ~nsBufferedStream();
@@ -124,20 +123,19 @@ public:
 
     virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
 
-    /* From nsIBaseStream interface */
-    virtual PRInt32 GetLength(void);
-
     /* nsIInputStream interface */
-    virtual PRInt32 Read(PRInt32 *aErrorCode, 
-                         char *aBuf, 
-                         PRInt32 aOffset, 
-                         PRInt32 aCount);
+    NS_IMETHOD GetLength(PRInt32 *aLength);
+
+    NS_IMETHOD Read(char *aBuf, 
+                    PRInt32 aOffset, 
+                    PRInt32 aCount,
+                    PRInt32 *aReadLength);
 
     /* nsIOutputStream interface */
-    virtual PRInt32 Write(PRInt32 *aErrorCode,
-                          const char *aBuf, 
-                          PRInt32 aOffset,
-                          PRInt32 aLen);
+    NS_IMETHOD Write(const char *aBuf, 
+                     PRInt32 aOffset,
+                     PRInt32 aLen,
+                     PRInt32 *aWriteLength);
 
 protected:
     virtual ~nsAsyncStream();
@@ -162,20 +160,19 @@ public:
 
     virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
 
-    /* From nsIBaseStream interface */
-    virtual PRInt32 GetLength(void);
-
     /* nsIInputStream interface */
-    virtual PRInt32 Read(PRInt32 *aErrorCode, 
-                         char *aBuf, 
-                         PRInt32 aOffset, 
-                         PRInt32 aCount);
+    NS_IMETHOD GetLength(PRInt32 *aLength);
+
+    NS_IMETHOD Read(char *aBuf, 
+                    PRInt32 aOffset, 
+                    PRInt32 aCount,
+                    PRInt32 *aReadLength);
 
     /* nsIOutputStream interface */
-    virtual PRInt32 Write(PRInt32 *aErrorCode,
-                          const char *aBuf, 
-                          PRInt32 aOffset,
-                          PRInt32 aLen);
+    NS_IMETHOD Write(const char *aBuf, 
+                     PRInt32 aOffset,
+                     PRInt32 aLen,
+                     PRInt32 *aWriteLength);
 
 protected:
     virtual ~nsBlockingStream();

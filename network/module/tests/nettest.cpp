@@ -127,13 +127,15 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStre
     }
 
     do {
-        PRInt32 err;
+        nsresult err;
         char buffer[80];
         int i;
 
-        len = pIStream->Read(&err, buffer, 0, 80);
-        for (i=0; i<len; i++) {
-            putchar(buffer[i]);
+        err = pIStream->Read(buffer, 0, 80, &len);
+        if (err == NS_OK) {
+            for (i=0; i<len; i++) {
+                putchar(buffer[i]);
+            }
         }
     } while (len > 0);
 
