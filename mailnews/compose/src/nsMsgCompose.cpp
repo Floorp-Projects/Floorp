@@ -32,15 +32,18 @@
 
 #ifdef XP_UNIX
 #define TEMP_PATH_DIR "/usr/tmp/"
-#endif
-
+#else 
 #ifdef XP_PC
 #define TEMP_PATH_DIR "c:\\temp\\"
-#endif
-
+#else
 #ifdef XP_MAC
 #define TEMP_PATH_DIR ""
-#endif
+#else
+#error TEMP_PATH_DIR_NOT_DEFINED
+#endif /* XP_MAC */
+#endif /* XP_PC */
+#endif /* XP_UNIX */
+
 #define TEMP_MESSAGE_IN  "tempMessage.eml"
 #define TEMP_MESSAGE_OUT  "tempMessage.html"
 
