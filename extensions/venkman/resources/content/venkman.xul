@@ -82,6 +82,7 @@
   <script src="chrome://venkman/content/venkman-eval.js"/>
   <script src="chrome://venkman/content/venkman-msg.js"/>
   <script src="chrome://venkman/content/venkman-munger.js"/>
+  <script src="chrome://venkman/content/venkman-outliners.js"/>
 
   <commandset id="tasksCommands">
     <command id="cmd_close" oncommand="window.close();"/>
@@ -125,12 +126,82 @@
     </menubar>
   </toolbox>
 
-  <box flex="1" orient="vertical">
-    <iframe id="output-iframe" flex="1" tooltip="tooltip-popup"
-      ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
-      src="chrome://venkman/content/venkman-output-window.html" type="content"/>
-    <textbox id="input-single-line" class="input-widget"
-      onkeypress="console.onSingleLineKeypress(event);"/>
-  </box>
+  <vbox flex="1">
+
+    <hbox flex="1" id="middle-containing-hbox">
+      <box flex="1" id="side-vbox" orient="vertical">
+
+        <outliner flex="1" id="script-list-outliner"
+          onclick="console.onScriptClick(event);">
+
+          <outlinercol id="script-file-name" label="&FileName.header;"
+            class="outlinercol-header outlinercol-inset-header" flex="95"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol flex="5" id="script-count"
+            label="&ScriptCount.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <outlinerbody id="script-list-body" flex="1"/>
+        </outliner>
+
+        <splitter collapse="before"><grippy/></splitter>
+
+        <outliner flex="1" id="call-stack-outliner"
+          onclick="console.onStackClick(event);">
+
+          <outlinercol id="current-frame" display="&IsCurrent.header;"
+            class="outlinercol-header outlinercol-inset-header" width="20px"/>
+          <outlinercol flex="50" id="function-name"
+            label="&FunctionName.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol flex="25" id="line-number"
+            label="&LineNumber.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol flex="50" id="file-name"
+            label="&FileName.header;"
+            class="outlinercol-header outlinercol-inset-header"/>
+          <outlinerbody id="call-stack-body" flex="1"/>
+        </outliner>
+
+      </box>
+      <splitter collapse="before"><grippy/></splitter>
+      <box flex="3" orient="vertical"> <!-- have to use box instead of vbox -->
+                                       <!-- to get grippy styled right.     -->
+
+        <hbox flex="50" style="overflow: auto">
+          <outliner id="source-outliner" flex="1"
+            onclick="console.onSourceClick(event);">
+            <outlinercol id="breakpoint-col" width="20px"
+              display="&Breakpoint.header;"
+              class="outlinercol-header outlinercell-inset-header"/>
+            <outlinercol id="source-line-number" flex="5"
+              display="&LineNumber.header;"
+              class="outlinercol-header outlinercell-inset-header"/>
+            <splitter class="tree-splitter"/>          
+            <outlinercol id="source-line-text" flex="95"
+              display="&SourceText.header;"
+              class="outlinercol-header outlinercell-inset-header"/>
+            <outlinerbody id="source-outliner-body" flex="1"/>
+          </outliner>
+        </hbox>
+
+        <splitter orient="vertical" collapse="after" autostretch="never">
+          <grippy/>
+        </splitter>
+
+        <vbox flex="50">
+          <iframe id="output-iframe" flex="1" tooltip="tooltip-popup"
+            ondraggesture=
+              "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
+            src="chrome://venkman/content/venkman-output-window.html"
+            type="content"/>
+          <textbox id="input-single-line" class="input-widget"
+            onkeypress="console.onSingleLineKeypress(event);"/>
+        </vbox>
+
+      </box>
+    </hbox>
+  </vbox>
 
 </window>
