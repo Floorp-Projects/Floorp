@@ -108,6 +108,8 @@
 #include "nsUnicharUtils.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
+#include "nsIFocusController.h"
+#include "nsPIDOMWindow.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -3962,10 +3964,32 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
   // a page is reloaded. Shutdown happens usually when the last instance
   // is destroyed. Here we make sure the plugin instance in the old
   // document is destroyed before we try to create the new one.
-  nsCOMPtr<nsIPresShell> shell;
-  mContext->GetShell(getter_AddRefs(shell));
-  if (shell)
-    shell->UnsuppressPainting();
+
+  nsCOMPtr<nsISupports> container;
+  aPresContext->GetContainer(getter_AddRefs(container));
+  if (container) {
+    // We need to suppress the focus controller so that destroying the old
+    // content viewer doesn't transfer focus to the toplevel window.
+
+    nsCOMPtr<nsPIDOMWindow> privWindow = do_GetInterface(container);
+    nsCOMPtr<nsIFocusController> fc;
+    if (privWindow) {
+      privWindow->GetRootFocusController(getter_AddRefs(fc));
+      if (fc)
+        fc->SetSuppressFocus(PR_TRUE, "PluginInstanceOwner::Init Suppression");
+    }
+
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    if (docShell) {
+      nsCOMPtr<nsIContentViewer> cv;
+      docShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv)
+        cv->Show();
+    }
+
+    if (fc)
+      fc->SetSuppressFocus(PR_FALSE, "PluginInstanceOwner::Init Suppression");
+  }
 
   // register context menu listener
   mCXMenuListener = new nsPluginDOMContextMenuListener();
