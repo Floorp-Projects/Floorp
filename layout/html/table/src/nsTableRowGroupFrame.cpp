@@ -1253,11 +1253,12 @@ nsTableRowGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
 {
   const nsStyleDisplay *display;
   aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  PRBool validChild = (NS_STYLE_DISPLAY_TABLE_ROW       == display->mDisplay) ||
+                      (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay); 
 
   // Remove the frame and destroy it
   if (mFrames.DestroyFrame(aPresContext, aOldFrame)) {
-    if ((NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) ||
-        (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay)) {
+    if (validChild) {
       // Get the table frame
       nsTableFrame* tableFrame = nsnull;
       nsTableFrame::GetTableFrame(this, tableFrame);
