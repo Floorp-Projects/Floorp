@@ -276,7 +276,7 @@ nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey start
 {
     NS_INIT_REFCNT();
 	mCurKey = startKey;
-	mChildIndex = -1;
+	mChildIndex = 0;
 	mThread = thread;
     NS_ADDREF(thread);
 }
@@ -304,7 +304,7 @@ NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
 	if (mCurKey == nsMsgKey_None)
 	{
 		rv = mThread->GetChildHdrAt(0, &mResultHdr);
-		mChildIndex = 0;
+		mChildIndex = 1;
 	}
 	else
 	{
