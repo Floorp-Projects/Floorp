@@ -100,7 +100,7 @@ interface nsIMessenger : nsISupports {
     void Redo(in nsIMsgWindow msgWindow);
     void sendUnsentMessages(in nsIMsgIdentity aIdentity, in nsIMsgWindow aMsgWindow);
     void SetDocumentCharset(in string characterSet);
-    void saveAs(in string aURI, in boolean aAsFile, in nsIMsgIdentity aIdentity, in nsIMsgWindow aMsgWindow);
+    void saveAs(in string aURI, in boolean aAsFile, in nsIMsgIdentity aIdentity, in wstring aMsgFilename);
     void openAttachment(in string contentTpe, in string url, in string displayName, in string messageUri);
     void saveAttachment(in string contentTpe, in string url, in string displayName, in string messageUri);
     void saveAllAttachments(in unsigned long count, [array, size_is(count)] in string contentTypeArray,

@@ -334,14 +334,23 @@ function SubscribeOKCallback(changeTable)
 
 function SaveAsFile(uri)
 {
-	if (uri) messenger.saveAs(uri, true, null, msgWindow);
+  if (uri) {
+    var filename = null;
+    try {
+      var subject = messenger.messageServiceFromURI(uri)
+                             .messageURIToMsgHdr(uri).subject;
+      filename = GenerateValidFilename(subject, ".eml");
+    }
+    catch (ex) {}
+    messenger.saveAs(uri, true, null, filename);
+  }
 }
 
 function SaveAsTemplate(uri, folder)
 {
 	if (uri) {
 		var identity = getIdentityForServer(folder.server);
-		messenger.saveAs(uri, false, identity, msgWindow);
+		messenger.saveAs(uri, false, identity, null);
 	}
 }
 

@@ -883,7 +883,7 @@ enum MESSENGER_SAVEAS_FILE_TYPE
 #define EML_FILE_EXTENSION  ".eml"
 
 NS_IMETHODIMP
-nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWindow)
+nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity, const PRUnichar *aMsgFilename)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   
@@ -905,8 +905,12 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
       goto done;
     
     filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveMailAs").get()), nsIFilePicker::modeSave);
-    
-    filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName").get()));
+
+    // if we have a non-null filename use it, otherwise use default save message one
+    if (aMsgFilename)    
+      filePicker->SetDefaultString(aMsgFilename);
+    else
+      filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName").get()));
     
     // because we will be using GetFilterIndex()
     // we must call AppendFilters() one at a time, 

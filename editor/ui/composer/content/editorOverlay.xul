@@ -32,6 +32,7 @@
 
 <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/XPCNativeWrapper.js"/>
 
   <keyset id="editorKeys">
     <!-- defined in globalOverlay -->
