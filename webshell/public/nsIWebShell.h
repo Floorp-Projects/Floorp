@@ -347,7 +347,8 @@ public:
 #else
                      nsURLReloadType aType=nsURLReload,
 #endif
-                     const PRUint32 aLocalIP=0) = 0;
+                     const PRUint32 aLocalIP=0,
+					 nsISupports * aHistoryState=nsnull) = 0;
 
   /**
    * Load the document associated with the specified URL into the WebShell.
@@ -361,7 +362,8 @@ public:
 #else
                      nsURLReloadType aType=nsURLReload,
 #endif
-                     const PRUint32 aLocalIP=0) = 0;
+                     const PRUint32 aLocalIP=0,
+					 nsISupports * aHistoryState=nsnull) = 0;
 
 
   /**
