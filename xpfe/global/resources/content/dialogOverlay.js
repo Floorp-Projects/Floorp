@@ -61,18 +61,30 @@ function doButton3()
 
 function moveToAlertPosition()
 {
-	var xOffset = opener.outerWidth/2 - window.outerWidth/2;
-	var yOffset = (opener.outerHeight *2)/10;
-	
-	xOffset  = xOffset> 0 ? xOffset : 0;
-	if ((opener.screenX + xOffset + window.outerWidth) > screen.availWidth)
-        xOffset = screen.availWidth - window.outerWidth - opener.screenX;
-    if((opener.screenY + yOffset + window.outerHeight) > screen.availHeight)
-            yOffset = screen.availHeight - window.outerHeight - opener.screenY;
-    xOffset = ( xOffset > 0 ) ? xOffset : 0;
-    yOffset = ( yOffset > 0 ) ? yOffset : 0;
-	window.moveTo( opener.screenX + xOffset, opener.screenY + yOffset );
+    // hack. we need this so the window has something like its final size
+    if (window.outerWidth == 1) {
+        dump("Trying to position a sizeless window; caller should have called sizeToContent() or sizeTo(). See bug 75649.\n");
+        sizeToContent();
+    }
 
+	var xOffset = (opener.outerWidth - window.outerWidth) / 2;
+	var yOffset = opener.outerHeight / 5;
+	
+	var newX = opener.screenX + xOffset;
+	var newY = opener.screenY + yOffset;
+	
+	// ensure the window is fully onscreen (if smaller than the screen)
+	if (newX < screen.availLeft)
+		newX = screen.availLeft + 20;
+	if ((newX + window.outerWidth) > (screen.availLeft + screen.availWidth))
+		newX = (screen.availLeft + screen.availWidth) - window.outerWidth - 20;
+
+	if (newY < screen.availTop)
+		newY = screen.availTop + 20;
+	if ((newY + window.outerHeight) > (screen.availTop + screen.availHeight))
+		newY = (screen.availTop + screen.availHeight) - window.outerHeight - 60;
+
+	window.moveTo( newX, newY );
 }
 
 function centerWindowOnScreen()
