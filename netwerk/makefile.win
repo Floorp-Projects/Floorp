@@ -27,7 +27,6 @@ DIRS=              \
 	cache      \
 	base       \
 	dns        \
-	security   \
 	socket     \
 	mime       \
 	streamconv \
