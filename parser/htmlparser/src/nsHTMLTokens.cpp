@@ -1357,7 +1357,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       }
       else {
           //If you're here, handle an unquoted key.
-        static nsString theTerminals = NS_ConvertToString("\b\t\n\r \"<=>",9);
+        static nsString theTerminals = NS_ConvertToString("\b\t\n\r \"=>",8);
         result=aScanner.ReadUntil(mTextKey,theTerminals,PR_FALSE);
       }
 
@@ -1390,6 +1390,18 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     else if(kGreaterThan==aChar){      
                       mHasEqualWithoutValue=PR_TRUE;
                       result=aScanner.PutBack(aChar);
+                    }
+                    else if(kAmpersand==aChar) {
+                      // XXX - Discard script entity for now....except in
+                      // view-source
+                      PRBool discard=!aRetainWhitespace; 
+                      mTextValue.Append(aChar);
+                      result=aScanner.GetChar(aChar);
+                      if(NS_OK==result) {
+                        mTextValue.Append(aChar);
+                        result=CEntityToken::ConsumeEntity(aChar,mTextValue,aScanner);
+                      }
+                      if(discard) mTextValue.Truncate();
                     }
                     else {
                       mTextValue.Append(aChar);       //it's an alphanum attribute...

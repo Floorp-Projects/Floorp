@@ -44,7 +44,7 @@
 #include "COtherDTD.h"
 #include "prenv.h" 
 #include "nsParserCIID.h"
- 
+#include "nsCOMPtr.h"
 //#define rickgdebug 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -219,6 +219,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   mInternalState=NS_OK;
   mObserversEnabled=PR_TRUE;
   mCommand=eViewNormal;
+  mBundle=nsnull;
 
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);  
@@ -226,7 +227,6 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   MOZ_TIMER_RESET(mTokenizeTime);
 }
 
- 
 /**
  *  Default destructor
  *  
@@ -238,6 +238,9 @@ nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mProgressEventSink);
   NS_IF_RELEASE(mSink);
+
+  if(mBundle) 
+    delete mBundle;
 
   //don't forget to add code here to delete 
   //what may be several contexts...
@@ -261,7 +264,7 @@ NS_IMPL_RELEASE(nsParser)
  *  @return   NS_xxx result code
  */
 nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
-{                                                                        
+{                                                                       
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
@@ -283,7 +286,10 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
     *aInstancePtr = (nsParser*)(this);                                        
-  }                 
+  }   
+  else if(aIID.Equals(NS_GET_IID(nsISupportsParserBundle))) {
+     *aInstancePtr = (nsISupportsParserBundle*)(this);      
+  }
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -618,7 +624,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
   }
   else {
     if(eDTDMode_unknown==aParseMode) {
-      aBuffer.InsertWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n",0);
+      aBuffer.InsertWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n",0);
       aDocType=eHTML3Text;
       aParseMode=eDTDMode_quirks;
     }
@@ -2078,7 +2084,6 @@ nsParser::GetDTD(nsIDTD** aDTD)
   return NS_OK;
 }
 
-
 /** 
  * Get the observer service
  *
@@ -2092,3 +2097,116 @@ CObserverService* nsParser::GetObserverService(void) {
   return 0;
 }
 
+/** 
+ * Store data into the bundle.
+ *
+ * @update harishd 05/10/00
+ * @param aData - The data to be stored.
+ * @return NS_OK if all went well else ERROR.
+ */
+NS_IMETHODIMP 
+nsParser::SetDataIntoBundle(const nsString& aKey,nsISupports* anObject) {
+  nsresult result=NS_OK;
+  if(!mBundle) {
+    mBundle = new nsParserBundle();
+    if(mBundle==nsnull) result=NS_ERROR_OUT_OF_MEMORY;
+  }
+  result=mBundle->SetDataIntoBundle(aKey,anObject);
+  return result;
+}
+ 
+/** 
+ * Retrieve data from the bundle by IID.
+ * NOTE: The object retireved should not be released
+ *
+ * @update harishd 05/10/00
+ * @param aIID - The ID to identify the correct object in the bundle
+ * @return Return object if found in bundle else return NULL.
+ */
+NS_IMETHODIMP
+nsParser::GetDataFromBundle(const nsString& aKey,nsISupports** anObject) {
+  nsresult result=NS_OK;
+  result=mBundle->GetDataFromBundle(aKey,anObject);
+  return result;
+}
+
+
+NS_IMPL_ISUPPORTS1(nsParserBundle, 
+                   nsISupportsParserBundle
+                   );
+  
+  
+/** 
+ * Release data from the Hash table
+ *
+ * @update harishd 05/10/00 
+ */                 
+static PRBool PR_CALLBACK ReleaseData(nsHashKey* aKey, void* aData, void* aClosure) {
+  nsISupports* object = (nsISupports*)aData;
+  NS_RELEASE(object);
+  return PR_TRUE;
+}
+
+/** 
+ *
+ * @update harishd 05/10/00
+ */                  
+nsParserBundle::nsParserBundle (){
+  mData=new nsHashtable(5);
+}
+
+/** 
+ * Release objects from the bundle.
+ *
+ * @update harishd 05/10/00
+ */
+nsParserBundle::~nsParserBundle () {
+  mData->Enumerate(ReleaseData);
+  delete mData;
+}
+
+/** 
+ * Store data into the bundle.
+ *
+ * @update harishd 05/10/00
+ * @param aData - The data to be stored.
+ * @return NS_OK if all went well else ERROR.
+ */
+NS_IMETHODIMP 
+nsParserBundle::SetDataIntoBundle(const nsString& aKey,nsISupports* anObject) {
+  nsresult result=NS_OK;
+  if(anObject) {
+    nsStringKey key(aKey);
+    PRBool found=mData->Exists(&key);
+    if(!found) {
+      NS_ADDREF(anObject);
+      mData->Put(&key,anObject);
+    }
+  }
+  return result;
+}
+ 
+/** 
+ * Retrieve data from the bundle by IID. 
+ * NOTE: The object retrieved should not be released.
+ *
+ * @update harishd 05/10/00
+ * @param aIID - The ID to identify the correct object in the bundle
+ * @return Return object if found in bundle else return NULL.
+ */
+NS_IMETHODIMP
+nsParserBundle::GetDataFromBundle(const nsString& aKey,nsISupports** anObject) {
+  nsresult result=NS_OK;
+
+  nsStringKey key(aKey);
+  *anObject=(mData)? (nsISupports*)mData->Get(&key):nsnull;
+  
+  if(*anObject) {
+    NS_ADDREF(*anObject);
+  }
+  else{
+    result=NS_ERROR_NULL_POINTER;
+  }
+  
+  return result;
+}

@@ -75,7 +75,7 @@ class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
 class nsIProgressEventSink;
-
+class nsParserBundle;
 
 #include <fstream.h>
 
@@ -84,11 +84,12 @@ class nsIProgressEventSink;
 #endif
 
 
-CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
+CLASS_EXPORT_HTMLPARS nsParser : public nsIParser,
+                                 public nsISupportsParserBundle,
+                                 public nsIStreamListener{
 
   
   public:
-
     friend class CTokenHandler;
     static void FreeSharedObjects(void);
 
@@ -263,6 +264,8 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
     CParserContext*   PopContext();
     CParserContext*   PeekContext() {return mParserContext;}
 
+    const nsParserBundle*  GetParserBundle() { return mBundle; }
+
     /**
      * 
      * @update	gess 1/22/99
@@ -294,6 +297,12 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @return  
      */
     CObserverService* GetObserverService(void);
+
+      
+    // nsISupportsParserBundle
+    NS_IMETHOD GetDataFromBundle(const nsString& aKey,nsISupports** anObject);
+    NS_IMETHOD SetDataIntoBundle(const nsString& aKey,nsISupports* anObject);
+
 
 protected:
 
@@ -402,11 +411,45 @@ protected:
     CObserverService    mObserverService;
     PRBool              mObserversEnabled;
     nsString            mCommandStr;
+    
+    nsParserBundle*     mBundle;
 
 public:    
     MOZ_TIMER_DECLARE(mParseTime)
     MOZ_TIMER_DECLARE(mDTDTime)
     MOZ_TIMER_DECLARE(mTokenizeTime)
+};
+
+// -----------------------------------------------------------------
+
+class nsParserBundle : public nsISupportsParserBundle {
+public:;
+
+  NS_DECL_ISUPPORTS
+
+  nsParserBundle ();
+  ~nsParserBundle ();
+
+  /** 
+   * Retrieve data from the bundle by IID.
+   *
+   * @update harishd 05/10/00
+   * @param aIID - The ID to identify the correct object in the bundle
+   * @return Return object if found in bundle else return NULL.
+   */
+   NS_IMETHOD GetDataFromBundle(const nsString& aKey,nsISupports** anObject);
+  
+  /** 
+   * Store data into the bundle.
+   *
+   * @update harishd 05/10/00
+   * @param aData - The data to be stored.
+   * @return NS_OK if all went well else ERROR.
+   */
+   NS_IMETHOD SetDataIntoBundle(const nsString& aKey,nsISupports* anObject);
+  
+protected:
+  nsHashtable*  mData;
 };
 
 #endif 
