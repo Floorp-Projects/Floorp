@@ -135,6 +135,7 @@ nsNetlibService::nsNetlibService()
    * Cache the EventQueueService...
    */
   // XXX: What if this fails?
+  mEventQService = nsnull;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                     kIEventQueueServiceIID,
                                     (nsISupports **)&mEventQService);
@@ -321,7 +322,9 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     }
 
 #if defined(NETLIB_THREAD)
-    mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+    if (nsnull != mEventQService) {
+      mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+    }
     if (nsnull == evQueue) {
       return NS_FALSE;
     }
@@ -445,7 +448,9 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
     if (NULL != aUrl) {
 #if defined(NETLIB_THREAD)
-        mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+        if (nsnull != mEventQService) {
+          mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+        }
         if (nsnull == evQueue) {
           goto loser;
         }
