@@ -180,6 +180,9 @@ public:
     nsresult
     UpdateContainer(nsIContent *container);
 
+    nsresult
+    CheckRDFGraphForUpdates(nsIContent *container);
+
     void
     Notify(nsITimer *timer);
 
@@ -198,6 +201,7 @@ public:
     static nsIAtom* kTreeItemAtom;
     static nsIAtom* kTitledButtonAtom;
     static nsIAtom* kPulseAtom;
+    static nsIAtom* kLastPulseAtom;
     static nsIAtom* kOpenAtom;
 };
 
@@ -217,6 +221,7 @@ nsIAtom* RDFTreeBuilderImpl::kTreeIndentationAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
 nsIAtom* RDFTreeBuilderImpl::kTitledButtonAtom;
 nsIAtom* RDFTreeBuilderImpl::kPulseAtom;
+nsIAtom* RDFTreeBuilderImpl::kLastPulseAtom;
 nsIAtom* RDFTreeBuilderImpl::kOpenAtom;
 
 ////////////////////////////////////////////////////////////////////////
@@ -255,6 +260,7 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeItemAtom        = NS_NewAtom("treeitem");
         kTitledButtonAtom    = NS_NewAtom("titledbutton");
         kPulseAtom           = NS_NewAtom("pulse");
+        kLastPulseAtom       = NS_NewAtom("lastPulse");
         kOpenAtom            = NS_NewAtom("open");
     }
     ++gRefCnt;
@@ -276,6 +282,7 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeItemAtom);
         NS_RELEASE(kTitledButtonAtom);
         NS_RELEASE(kPulseAtom);
+        NS_RELEASE(kLastPulseAtom);
         NS_RELEASE(kOpenAtom);
     }
 }
@@ -312,17 +319,46 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 							{
 								if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (pulse.Length() > 0))
 								{
-#ifdef	DEBUG
-									nsIRDFResource		*res;
-									if (NS_SUCCEEDED(rv = dom->GetResource(&res)))
+									PRInt32	errorCode;
+									PRInt32 pulseInterval = pulse.ToInteger(&errorCode);
+									if ((!errorCode) && (pulseInterval > 0))
 									{
-										nsXPIDLCString	uri;
-										res->GetValue( getter_Copies(uri) );
-										const char *url = uri;
-										printf("    URL wants a pulse: '%s'\n", url);
-										NS_RELEASE(res);
-									}
+										nsAutoString	lastPulse("");
+										PRInt32		lastPulseTime = 0;
+										if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kLastPulseAtom, lastPulse)))
+										{
+											if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (lastPulse.Length() > 0))
+											{
+												lastPulseTime = lastPulse.ToInteger(&errorCode);
+												if (errorCode)	lastPulseTime = 0;
+											}
+										}
+										PRInt32	now;
+										PRTime	prNow = PR_Now(), oneMillion, temp;
+										LL_I2L(oneMillion, PR_USEC_PER_SEC);
+										LL_DIV(temp, prNow, oneMillion);
+										LL_L2I(now, temp);
+										if ((lastPulseTime == 0L) || ((now - lastPulseTime) > pulseInterval))
+										{
+											lastPulse.SetLength(0);
+											lastPulse.Append(now, 10);
+											if (NS_SUCCEEDED(rv = child->SetAttribute(kNameSpaceID_None, kLastPulseAtom, lastPulse, PR_FALSE)))
+											{
+#ifdef	DEBUG
+												nsIRDFResource		*res;
+												if (NS_SUCCEEDED(rv = dom->GetResource(&res)))
+												{
+													nsXPIDLCString	uri;
+													res->GetValue( getter_Copies(uri) );
+													const char *url = uri;
+													printf("    URL '%s' gets a pulse now (at %lu)\n", url, now);
+													NS_RELEASE(res);
+												}
 #endif
+												CheckRDFGraphForUpdates(child);
+											}
+										}
+									}
 								}
 							}
 
@@ -340,7 +376,7 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 										continue;
 									if (tag.get() == kTreeChildrenAtom)
 									{
-										UpdateContainer(grandChild);
+										rv = UpdateContainer(grandChild);
 									}
 								}
 							}
@@ -351,6 +387,17 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 			}
 		}
 	}
+	return(NS_OK);
+}
+
+
+nsresult
+RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
+{
+	// XXX To do: get resource of container, gets its children,
+	//            sort them based upon the current sort,
+	//            then insert/remove from content model as appropriate
+
 	return(NS_OK);
 }
 
