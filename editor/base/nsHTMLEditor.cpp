@@ -39,6 +39,8 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 
+#include "nsISelectionController.h"
+
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
@@ -1287,6 +1289,47 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
 
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel, handled;
+
+  // If it's one of these modes,
+  // we have to extend the selection first.
+  // This can't happen inside selection batching --
+  // selection refuses to move if batching is on.
+  if (aAction == eNextWord || aAction == ePreviousWord
+      || aAction == eToEndOfLine)
+  {
+    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    nsCOMPtr<nsISelectionController> selCont (do_QueryInterface(ps));
+    if (!selCont)
+      return NS_ERROR_NO_INTERFACE;
+
+    nsresult result;
+    switch (aAction)
+    {
+        case eNextWord:
+          result = selCont->WordMove(PR_TRUE, PR_TRUE);
+          // DeleteSelectionImpl doesn't handle these actions
+          // because it's inside batching, so don't confuse it:
+          aAction = eNone;
+          break;
+        case ePreviousWord:
+          result = selCont->WordMove(PR_FALSE, PR_TRUE);
+          aAction = eNone;
+          break;
+        case eToEndOfLine:
+          result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
+          aAction = eNone;
+          break;
+        default: break;       // avoid compiler warnings
+    }
+    if (NS_FAILED(result))
+    {
+#ifdef DEBUG
+      printf("Selection controller interface didn't work!\n");
+#endif
+      return result;
+    }
+  }
 
   // delete placeholder txns merge.
   nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);

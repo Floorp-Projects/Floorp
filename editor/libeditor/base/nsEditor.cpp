@@ -47,7 +47,6 @@
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIDOMSelection.h"
-#include "nsISelectionController.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsISupportsArray.h"
@@ -4310,11 +4309,15 @@ nsEditor::CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleShee
 
 NS_IMETHODIMP
 nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
-                                                    EditAggregateTxn  ** aTxn)
+                                      EditAggregateTxn  ** aTxn)
 {
   if (!aTxn)
     return NS_ERROR_NULL_POINTER;
   *aTxn = nsnull;
+
+#ifdef DEBUG_akkana
+  NS_ASSERTION(aAction != eNextWord && aAction != ePreviousWord && aAction != eToEndOfLine, "CreateTxnForDeleteSelection: unsupported action!");
+#endif
 
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
@@ -4324,35 +4327,6 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
   result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
-    // If it's one of these modes,
-    // we have to extend the selection first:
-    if (aAction == eNextWord || aAction == ePreviousWord
-        || aAction == eToEndOfLine)
-    {
-      nsCOMPtr<nsISelectionController> selCont (do_QueryInterface(ps));
-      if (!selCont)
-        return NS_ERROR_NO_INTERFACE;
-
-      switch (aAction)
-      {
-        case eNextWord:
-          result = selCont->WordMove(PR_TRUE, PR_TRUE);
-          break;
-        case ePreviousWord:
-          result = selCont->WordMove(PR_FALSE, PR_TRUE);
-          break;
-        case eToEndOfLine:
-          result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
-          break;
-        default: break;       // avoid compiler warnings
-      }
-      if (NS_FAILED(result))
-      {
-        printf("Selection controller interface didn't work!\n");
-        return result;
-      }
-    }
-
     // Check whether the selection is collapsed and we should do nothing:
     PRBool isCollapsed;
     result = (selection->GetIsCollapsed(&isCollapsed));
