@@ -175,7 +175,7 @@ public:
 
   // nsIContent
   virtual void SetFocus(nsIPresContext* aPresContext);
-  virtual void RemoveFocus(nsIPresContext* aPresContext);
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -1078,27 +1078,6 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     formControlFrame->ScrollIntoView(aPresContext);
     // Could call SelectAll(aPresContext) here to automatically
     // select text when we receive focus - only for text and password!
-  }
-}
-
-void
-nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
-{
-  if (!aPresContext)
-    return;
-
-  // If we are disabled, we probably shouldn't have focus in the
-  // first place, so allow it to be removed.
-
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-  if (formControlFrame) {
-    formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
-  }
-
-  if (mDocument) {
-    aPresContext->EventStateManager()->SetContentState(nsnull,
-                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 
@@ -2633,43 +2612,45 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLInputElement::GetTabbable(PRBool *isTabbable)
+PRBool
+nsHTMLInputElement::IsFocusable(PRInt32 *aTabIndex)
 {
-  *isTabbable = PR_TRUE;
-
-  PRBool disabled;
-  GetDisabled(&disabled);
-  // XXX aaronlev: when fix for bug 171366 goes in we'll need to check 
-  // for negative tabIndex, which indicates something is not tabbable.
-  // PRInt32 tabIndex;
-  // GetTabIndex(&tabIndex);
-
-  if (disabled || /* tabIndex < 0 || */ mType == NS_FORM_INPUT_HIDDEN || 
-      mType == NS_FORM_INPUT_FILE) {
-    // Sub controls of file input are tabbable, not the file input itself.
-    *isTabbable = PR_FALSE;
-    return NS_OK;
+  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
+    return PR_FALSE;
   }
 
-  if (mType != NS_FORM_INPUT_TEXT && mType != NS_FORM_INPUT_PASSWORD) {
-    nsCOMPtr<nsIPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
-    if (presContext) {
-      nsIEventStateManager *esm = presContext->EventStateManager();
-      esm->GetTabbable(eTabFocus_formElementsMask, isTabbable);
+  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) {
+    return PR_TRUE;
+  }
+
+  if (mType == NS_FORM_INPUT_HIDDEN || mType == NS_FORM_INPUT_FILE) {
+    // Sub controls of file input are tabbable, not the file input itself.
+    if (aTabIndex) {
+      *aTabIndex = -1;
     }
+    return PR_FALSE;
+  }
+
+  if (!aTabIndex) {
+    // The other controls are all focusable
+    return PR_TRUE;
+  }
+
+  // We need to set tabindex to -1 if we're not tabbable
+  if (mType != NS_FORM_INPUT_TEXT && mType != NS_FORM_INPUT_PASSWORD &&
+      !(sTabFocusModel & eTabFocus_formElementsMask)) {
+    *aTabIndex = -1;
   }
 
   if (mType != NS_FORM_INPUT_RADIO) {
-    return NS_OK;
+    return PR_TRUE;
   }
 
   PRBool checked;
   GetChecked(&checked);
   if (checked) {
     // Selected radio buttons are tabbable
-    return NS_OK;
+    return PR_TRUE;
   }
 
   // Current radio button is not selected.
@@ -2677,16 +2658,15 @@ nsHTMLInputElement::GetTabbable(PRBool *isTabbable)
   nsCOMPtr<nsIRadioGroupContainer> container = GetRadioGroupContainer();
   nsAutoString name;
   if (!container || !GetNameIfExists(name)) {
-    return NS_OK;
+    return PR_TRUE;
   }
 
   nsCOMPtr<nsIDOMHTMLInputElement> currentRadio;
   container->GetCurrentRadioButton(name, getter_AddRefs(currentRadio));
   if (currentRadio) {
-    *isTabbable = PR_FALSE;
+    *aTabIndex = -1;
   }
-
-  return NS_OK;
+  return PR_TRUE;
 }
 
 nsresult

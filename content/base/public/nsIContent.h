@@ -436,6 +436,35 @@ public:
   }
 
   /**
+   * Check if this content is focusable and in the current tab order.
+   * Note: most callers should use nsIFrame::IsFocusable() instead as it 
+   *       checks visibility and other layout factors as well.
+   * Tabbable is indicated by a nonnegative tabindex & is a subset of focusable.
+   * For example, only the selected radio button in a group is in the 
+   * tab order, unless the radio group has no selection in which case
+   * all of the visible, non-disabled radio buttons in the group are 
+   * in the tab order. On the other hand, all of the visible, non-disabled 
+   * radio buttons are always focusable via clicking or script.
+   * Also, depending on the pref accessibility.tabfocus some widgets may be 
+   * focusable but removed from the tab order. This is the default on
+   * Mac OS X, where fewer items are focusable.
+   * @param  [inout, optional] aTabIndex the computed tab index
+   *         In: default tabindex for element (-1 nonfocusable, == 0 focusable)
+   *         Out: computed tabindex
+   * @param  [optional] aTabIndex the computed tab index
+   *         < 0 if not tabbable
+   *         == 0 if in normal tab order
+   *         > 0 can be tabbed to in the order specified by this value
+   * @return whether the content is focusable via mouse, kbd or script.
+   */
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
+  {
+    if (aTabIndex) 
+      *aTabIndex = -1; // Default, not tabbable
+    return PR_FALSE;
+  }
+
+  /**
    * Sets content node with the binding responsible for our construction (and
    * existence).  Used by anonymous content (XBL-generated). null for all
    * explicit content.
@@ -576,6 +605,17 @@ public:
   virtual void DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
                            PRBool aDumpAll = PR_TRUE) const = 0;
 #endif
+
+  enum ETabFocusType {
+  //eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
+    eTabFocus_formElementsMask = (1<<1),  // non-text form elements
+    eTabFocus_linksMask = (1<<2),         // links
+    eTabFocus_any = 1 + (1<<1) + (1<<2)   // everything that can be focused
+  };
+
+  // Tab focus model bit field:
+  static PRInt32 sTabFocusModel;
+
 
 protected:
   typedef PRWord PtrBits;

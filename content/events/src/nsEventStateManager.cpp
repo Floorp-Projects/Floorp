@@ -155,7 +155,6 @@ static PRBool sLeftClickOnly = PR_TRUE;
 static PRBool sKeyCausesActivation = PR_TRUE;
 static PRUint32 sESMInstanceCount = 0;
 static PRInt32 sGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
-static PRInt32 sTabFocusModel = eTabFocus_any;
 
 enum {
  MOUSE_SCROLL_N_LINES,
@@ -260,8 +259,9 @@ nsEventStateManager::Init()
         nsContentUtils::GetIntPref("ui.key.generalAccessKey",
                                    sGeneralAccesskeyModifier);
 
-      sTabFocusModel = nsContentUtils::GetIntPref("accessibility.tabfocus",
-                                                  sTabFocusModel);
+      nsIContent::sTabFocusModel =
+        nsContentUtils::GetIntPref("accessibility.tabfocus",
+                                   nsIContent::sTabFocusModel);
     }
     prefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
     prefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
@@ -382,8 +382,9 @@ nsEventStateManager::Observe(nsISupports *aSubject,
     } else if (data.EqualsLiteral("accessibility.browsewithcaret")) {
       ResetBrowseWithCaret();
     } else if (data.EqualsLiteral("accessibility.tabfocus")) {
-      sTabFocusModel = nsContentUtils::GetIntPref("accessibility.tabfocus",
-                                                  sTabFocusModel);
+      nsIContent::sTabFocusModel =
+        nsContentUtils::GetIntPref("accessibility.tabfocus",
+                                   nsIContent::sTabFocusModel);
     } else if (data.EqualsLiteral("nglayout.events.dispatchLeftClickOnly")) {
       sLeftClickOnly =
         nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
@@ -1916,9 +1917,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
             break;
           }
 
-          const nsStyleUserInterface* ui = currFrame->GetStyleUserInterface();
-          if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
-              (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
+          if (currFrame->IsFocusable()) {
             newFocus = currFrame->GetContent();
             nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
             if (domElement)
@@ -3393,35 +3392,6 @@ nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
   }
 }
 
-PRBool
-nsEventStateManager::HasFocusableAncestor(nsIFrame *aFrame)
-{
-  // This method helps prevent a situation where a link or other element
-  // with -moz-user-focus is focused twice, because the parent link
-  // would get focused, and all of the children also get focus.
-
-  nsIFrame *ancestorFrame = aFrame;
-  while ((ancestorFrame = ancestorFrame->GetParent()) != nsnull) {
-    nsIContent *ancestorContent = ancestorFrame->GetContent();
-    if (!ancestorContent) {
-      break;
-    }
-    nsIAtom *ancestorTag = ancestorContent->Tag();
-    if (ancestorTag == nsHTMLAtoms::frame || ancestorTag == nsHTMLAtoms::iframe) {
-      break; // The only focusable containers that can also have focusable children
-    }
-    // Any other parent that's focusable can't have focusable children
-    const nsStyleUserInterface *ui = ancestorFrame->GetStyleUserInterface();
-    if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
-        ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
-      // Inside a focusable parent -- let parent get focus
-      // instead of child (to avoid links within links etc.)
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
 nsresult
 nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                                             nsIContent* aStartContent,
@@ -3433,284 +3403,126 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 {
   *aResultNode = nsnull;
   *aResultFrame = nsnull;
-  PRBool keepFirstFrame = PR_FALSE;
-  PRBool findLastFrame = PR_FALSE;
 
+  nsresult rv;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
+  // --- Get frame to start with ---
   if (!aStartFrame) {
-    //No frame means we need to start with the root content again.
-    if (mPresContext) {
-      nsIFrame* result = nsnull;
-      nsIPresShell *presShell = mPresContext->GetPresShell();
-      if (presShell) {
-        presShell->GetPrimaryFrameFor(aRootContent, &result);
-      }
-
-      aStartFrame = result;
-
-      if (!forward)
-        findLastFrame = PR_TRUE;
+    // No frame means we need to start with the root content again.
+    NS_ENSURE_TRUE(mPresContext, NS_ERROR_FAILURE);
+    nsIPresShell *presShell = mPresContext->GetPresShell();
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    presShell->GetPrimaryFrameFor(aRootContent, &aStartFrame);
+    NS_ENSURE_TRUE(aStartFrame, NS_ERROR_FAILURE);
+    rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
+                                mPresContext, aStartFrame);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!forward) {
+      rv = frameTraversal->Last();
     }
-    if (!aStartFrame) {
-      return NS_ERROR_FAILURE;
-    }
-    keepFirstFrame = PR_TRUE;
   }
-
-  // Need to do special check in case we're in an imagemap which has multiple content per frame
-  if (aStartContent) {
-    if (aStartContent->Tag() == nsHTMLAtoms::area &&
-        aStartContent->IsContentOfType(nsIContent::eHTML)) {
-      // We're starting from an imagemap area, so don't skip over the starting frame.
-      keepFirstFrame = PR_TRUE;
+  else {
+    rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
+                                mPresContext, aStartFrame);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!aStartContent || aStartContent->Tag() != nsHTMLAtoms::area ||
+        !aStartContent->IsContentOfType(nsIContent::eHTML)) {
+      // Need to do special check in case we're in an imagemap which has multiple
+      // content per frame, so don't skip over the starting frame.
+      rv = forward ? frameTraversal->Next() : frameTraversal->Prev();
     }
   }
 
-  nsresult result;
-  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,&result));
-  if (NS_FAILED(result))
-    return result;
-
-  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
-                                   mPresContext, aStartFrame);
-  if (NS_FAILED(result))
-    return NS_OK;
-
-  if (!keepFirstFrame) {
-    if (forward)
-      frameTraversal->Next();
-    else frameTraversal->Prev();
-  } else if (findLastFrame)
-    frameTraversal->Last();
-
-  nsISupports* currentItem;
-  frameTraversal->CurrentItem(&currentItem);
-  nsIFrame* currentFrame = (nsIFrame*)currentItem;
-
-  while (currentFrame) {
-    const nsStyleVisibility* vis = currentFrame->GetStyleVisibility();
-    const nsStyleUserInterface* ui = currentFrame->GetStyleUserInterface();
-
-    PRBool viewShown = currentFrame->AreAncestorViewsVisible();
-
-    nsIContent* child = currentFrame->GetContent();
-    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
-    PRInt32 tabIndex = -1;
-
-    if (element && viewShown) {
-      if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
-          vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN &&
-          ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
-          ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
-        tabIndex = 0; // Default value when focusable via -moz-user-focus
-      }
-      TabIndexFrom(child, &tabIndex);
+  // -- Walk frames to find something tabbable matching mCurrentTabIndex --
+  while (NS_SUCCEEDED(rv)) {
+    nsISupports* currentItem;
+    frameTraversal->CurrentItem(&currentItem);
+    *aResultFrame = (nsIFrame*)currentItem;
+    if (!*aResultFrame) {
+      break;
     }
-    // if collapsed or hidden, we don't get tabbed into.
+
+    // TabIndex not set defaults to 0 for form elements, anchors and other
+    // elements that are normally focusable. Tabindex defaults to -1
+    // for elements that are not normally focusable.
+    // The returned computed tabindex from IsFocusable() is as follows:
+    //          < 0 not tabbable at all
+    //          == 0 in normal tab order (last after positive tabindex'd items)
+    //          > 0 can be tabbed to in the order specified by this value
+    PRInt32 tabIndex;
+    nsIContent* currentContent = (*aResultFrame)->GetContent();
+    (*aResultFrame)->IsFocusable(&tabIndex);
     if (tabIndex >= 0) {
-      PRBool disabled = PR_TRUE;
-
-      nsIAtom *tag = child->Tag();
-      if (child->IsContentOfType(nsIContent::eHTML)) {
-        if (tag == nsHTMLAtoms::input) {
-          nsCOMPtr<nsIDOMNSHTMLInputElement> nextInputNS(do_QueryInterface(child));
-          NS_ASSERTION(nextInputNS, "input element must QI to nsIDOMNSHTMLInputElement!");
-          PRBool isTabbable;
-          nextInputNS->GetTabbable(&isTabbable);
-          disabled = !isTabbable;
-        }
-        else if (tag == nsHTMLAtoms::select) {
-          // Select counts as form but not as text
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
-          if (!disabled) {
-            nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
-            if (nextSelect) {
-              nextSelect->GetDisabled(&disabled);
-            }
-          }
-        }
-        else if (tag == nsHTMLAtoms::textarea) {
-          // it's a textarea
-          disabled = PR_FALSE;
-          if (!disabled) {
-            nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
-            if (nextTextArea) {
-              nextTextArea->GetDisabled(&disabled);
-            }
-          }
-        }
-        else if (tag == nsHTMLAtoms::a) {
-          // it's a link
-          disabled = !(sTabFocusModel & eTabFocus_linksMask);
-          nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
-          if (!disabled) {
-            nsAutoString href;
-            nextAnchor->GetAttribute(NS_LITERAL_STRING("href"), href);
-            if (href.IsEmpty()) {
-              disabled = PR_TRUE; // Don't tab unless href, bug 17605
-            } else {
-              disabled = PR_FALSE;
-            }
-          }
-        }
-        else if (tag == nsHTMLAtoms::button) {
-          // Button counts as a form element but not as text
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
-          if (!disabled) {
-            nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
-            if (nextButton) {
-              nextButton->GetDisabled(&disabled);
-            }
-          }
-        }
-        else if (tag == nsHTMLAtoms::img) {
-          PRBool hasImageMap = PR_FALSE;
-          // Don't need to set disabled here, because if we
-          // match an imagemap, we'll return from there.
-          nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
-          nsAutoString usemap;
-          if (nextImage) {
-            nsCOMPtr<nsIDocument> doc = child->GetDocument();
-            if (doc) {
-              nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
-              nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc,usemap);
-              if (imageMap) {
-                hasImageMap = PR_TRUE;
-                if (sTabFocusModel & eTabFocus_linksMask) {
-                  nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
-                  if (map) {
-                    nsIContent *childArea;
-                    PRUint32 index, count = map->GetChildCount();
-                    // First see if mCurrentFocus is in this map
-                    for (index = 0; index < count; index++) {
-                      childArea = map->GetChildAt(index);
-                      if (childArea == mCurrentFocus) {
-                        PRInt32 val = 0;
-                        TabIndexFrom(childArea, &val);
-                        if (mCurrentTabIndex == val) {
-                          // mCurrentFocus is in this map so we must start
-                          // iterating past it.
-                          // We skip the case where mCurrentFocus has the
-                          // same tab index as mCurrentTabIndex since the
-                          // next tab ordered element might be before it
-                          // (or after for backwards) in the child list.
-                          break;
-                        }
-                      }
-                    }
-                    PRInt32 increment = forward ? 1 : -1;
-                    // In the following two lines we might substract 1 from zero,
-                    // the |index < count| loop condition will be false in that case too.
-                    index = index < count ? index + increment : (forward ? 0 : count - 1);
-                    for (; index < count; index += increment) {
-                      //Iterate over the children.
-                      childArea = map->GetChildAt(index);
-
-                      //Got the map area, check its tabindex.
-                      PRInt32 val = 0;
-                      TabIndexFrom(childArea, &val);
-                      if (mCurrentTabIndex == val) {
-                        //tabindex == the current one, use it.
-                        *aResultNode = childArea;
-                        NS_IF_ADDREF(*aResultNode);
-                        *aResultFrame = currentFrame;
-                        return NS_OK;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          // Might be using -moz-user-focus and imitating a control.
-          // If already inside link, -moz-user-focus'd element, or already has
-          // image map with tab stops, then don't use the
-          // image frame itself as a tab stop.
-          disabled = HasFocusableAncestor(currentFrame) || hasImageMap ||
-                     !(sTabFocusModel & eTabFocus_formElementsMask);
-        }
-        else if (tag == nsHTMLAtoms::object) {
-          // OBJECT is treated as a form element.
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
-        }
-        else if (tag == nsHTMLAtoms::iframe || tag == nsHTMLAtoms::frame) {
-          disabled = PR_TRUE;
-          if (child) {
-            nsCOMPtr<nsIDocument> doc = child->GetDocument();
-            if (doc) {
-              nsIDocument *subDoc = doc->GetSubDocumentFor(child);
-              if (subDoc) {
-                nsCOMPtr<nsISupports> container = subDoc->GetContainer();
-                nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-                if (docShell) {
-                  nsCOMPtr<nsIContentViewer> contentViewer;
-                  docShell->GetContentViewer(getter_AddRefs(contentViewer));
-                  if (contentViewer) {
-                    nsCOMPtr<nsIContentViewer> zombieViewer;
-                    contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-                    if (!zombieViewer) {
-                      // If there are 2 viewers for the current docshell, that
-                      // means the current document is a zombie document.
-                      // Only navigate into the frame/iframe if it's not a zombie
-                      disabled = PR_FALSE;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        else {
-          // Let any HTML element with -moz-user-focus: normal be tabbable
-          // Without this rule, DHTML form controls made from div or span
-          // cannot be put in the tab order.
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask) ||
-            HasFocusableAncestor(currentFrame);
+      if (currentContent->Tag() == nsHTMLAtoms::img &&
+          currentContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::usemap)) {
+        // Must be an image w/ a map -- it's tabbable but no tabindex is specified
+        // Special case for image maps: they don't get walked by nsIFrameTraversal
+        nsIContent *areaContent = GetNextTabbableMapArea(forward, currentContent);
+        if (areaContent) {
+          NS_ADDREF(*aResultNode = areaContent);
+          return NS_OK;
         }
       }
-      else {
-        // Is it disabled?
-        nsAutoString value;
-        child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
-        if (!value.EqualsLiteral("true")) {
-          nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(child));
-          if (control)
-            control->GetDisabled(&disabled);
-          else
-            disabled = PR_FALSE;
-        }
-      }
-
-      // TabIndex not set treated at same level as set to 0
-      if (!disabled && (aIgnoreTabIndex || mCurrentTabIndex == tabIndex) &&
-          child != aStartContent) {
-        *aResultNode = child;
-        NS_IF_ADDREF(*aResultNode);
-        *aResultFrame = currentFrame;
+      else if ((aIgnoreTabIndex || mCurrentTabIndex == tabIndex) &&
+          currentContent != aStartContent) {
+        NS_ADDREF(*aResultNode = currentContent);
         return NS_OK;
       }
     }
-
-    if (forward)
-      frameTraversal->Next();
-    else frameTraversal->Prev();
-
-    frameTraversal->CurrentItem(&currentItem);
-    currentFrame = (nsIFrame*)currentItem;
+    rv = forward ? frameTraversal->Next() : frameTraversal->Prev();
   }
 
-  // Reached end or beginning of document
-  //If already at lowest priority tab (0), end
-  if (((forward) && (0 == mCurrentTabIndex)) ||
-      ((!forward) && (1 == mCurrentTabIndex))) {
+  // -- Reached end or beginning of document --
+
+  // If already at lowest priority tab (0), end search completely.
+  // A bit counterintuitive but true, tabindex order goes 1, 2, ... 32767, 0
+  if (mCurrentTabIndex == (forward? 0: 1)) {
     return NS_OK;
   }
-  //else continue looking for next highest priority tab
+
+  // else continue looking for next highest priority tabindex
   mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
   return GetNextTabbableContent(aRootContent, aStartContent, nsnull, forward,
                                 aIgnoreTabIndex, aResultNode, aResultFrame);
+}
+
+nsIContent*
+nsEventStateManager::GetNextTabbableMapArea(PRBool aForward,
+                                            nsIContent *aImageContent)
+{
+  nsAutoString useMap;
+  aImageContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, useMap);
+
+  nsCOMPtr<nsIDocument> doc = aImageContent->GetDocument();
+  if (doc) {
+    nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc, useMap);
+    nsCOMPtr<nsIContent> mapContent = do_QueryInterface(imageMap);
+    PRUint32 count = mapContent->GetChildCount();
+    // First see if mCurrentFocus is in this map
+    PRInt32 index = mapContent->IndexOf(mCurrentFocus);
+    PRInt32 tabIndex;
+    if (index < 0 || (mCurrentFocus->IsFocusable(&tabIndex) &&
+                      tabIndex != mCurrentTabIndex)) {
+      // If mCurrentFocus is in this map we must start iterating past it.
+      // We skip the case where mCurrentFocus has tabindex == mCurrentTabIndex
+      // since the next tab ordered element might be before it
+      // (or after for backwards) in the child list.
+      index = aForward? -1 : count;
+    }
+
+    // GetChildAt will return nsnull if our index < 0 or index >= count
+    nsCOMPtr<nsIContent> areaContent;
+    while ((areaContent = mapContent->GetChildAt(aForward? ++index : --index)) != nsnull) {
+      if (areaContent->IsFocusable(&tabIndex) && tabIndex == mCurrentTabIndex) {
+        return areaContent;
+      }
+    }
+  }
+
+  return nsnull;
 }
 
 PRInt32
@@ -5132,12 +4944,6 @@ nsEventStateManager::ResetBrowseWithCaret()
                            (!gLastFocusedDocument ||
                             gLastFocusedDocument == mDocument));
   }
-}
-
-NS_IMETHODIMP nsEventStateManager::GetTabbable(PRInt32 aTabFocusType, PRBool *aIsTabbable)
-{
- *aIsTabbable = (sTabFocusModel & aTabFocusType) != 0;
- return NS_OK;
 }
 
 //--------------------------------------------------------------------------------

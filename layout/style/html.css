@@ -408,8 +408,20 @@ noframes {
   display: none;
 }
 
+*|*:-moz-any-link:focus img {
+  -moz-outline: 1px dotted invert;
+}
+
+*|*:-moz-any-link:focus object {
+  -moz-outline: 1px dotted invert;
+}
+
+*|*:-moz-any-link:focus embed {
+  -moz-outline: 1px dotted invert;
+}
+
 /* focusable content: anything w/ tabindex >=0 is focusable */
-a:focus, abbr:focus, acronym:focus, address:focus, applet:focus, b:focus, 
+abbr:focus, acronym:focus, address:focus, applet:focus, b:focus, 
 base:focus, big:focus, blockquote:focus, br:focus, caption:focus, center:focus, 
 cite:focus, code:focus, col:focus, colgroup:focus, dd:focus, del:focus, 
 dfn:focus, dir:focus, div:focus, dl:focus, dt:focus, em:focus, fieldset:focus, 

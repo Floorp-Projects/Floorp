@@ -98,7 +98,7 @@ public:
 
   // nsIContent overrides...
   virtual void SetFocus(nsIPresContext* aPresContext);
-  virtual void RemoveFocus(nsIPresContext* aPresContext);
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -219,6 +219,18 @@ nsHTMLButtonElement::Click()
   return NS_OK;
 }
 
+PRBool
+nsHTMLButtonElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
+    return PR_FALSE;
+  }
+  if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
+    *aTabIndex = -1;
+  }
+  return PR_TRUE;
+}
+
 void
 nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 {
@@ -238,26 +250,6 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
-  }
-}
-
-void
-nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
-{
-  if (!aPresContext)
-    return;
-
-  // If we are disabled, we probably shouldn't have focus in the
-  // first place, so allow it to be removed.
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-
-  if (formControlFrame) {
-    formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
-  }
-
-  if (mDocument) {
-    aPresContext->EventStateManager()->SetContentState(nsnull,
-                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 

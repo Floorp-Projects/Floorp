@@ -58,9 +58,4 @@ interface nsIDOMNSHTMLInputElement : nsISupports
 	/* convenience */
   void                      setSelectionRange(in long selectionStart,
                                               in long selectionEnd);
-
-  /**
-   * Is this input control in the tab order?
-   */
-  readonly attribute boolean tabbable;
 };

@@ -108,7 +108,6 @@ public:
   // If aCanFocusDoc == PR_TRUE, the current document will be focused if caret is not on a focusable element
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus) = 0;
   NS_IMETHOD MoveCaretToFocus() = 0;
-  NS_IMETHOD GetTabbable(PRInt32 aTabFocusType, PRBool *aIsTabbable) = 0;
 
   // This is an experiment and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
@@ -142,14 +141,6 @@ enum EFocusedWithType {
   eEventFocusedByKey,         // focus gained via key press (like tab)
   eEventFocusedByContextMenu, // focus gained via context menu
   eEventFocusedByApplication  // focus gained via Application (like script)
-};
-
-// Tab focus model bit field:
-enum ETabFocusType {
-//eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
-  eTabFocus_formElementsMask = (1<<1),  // non-text form elements
-  eTabFocus_linksMask = (1<<2),         // links
-  eTabFocus_any = 1 + (1<<1) + (1<<2)   // everything that can be focused
 };
 
 #endif // nsIEventStateManager_h__

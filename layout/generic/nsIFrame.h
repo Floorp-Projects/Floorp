@@ -1240,6 +1240,26 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
    */
   virtual PRBool SupportsVisibilityHidden() { return PR_TRUE; }
 
+  /**
+   * Check if this frame is focusable and in the current tab order.
+   * Tabbable is indicated by a nonnegative tabindex & is a subset of focusable.
+   * For example, only the selected radio button in a group is in the 
+   * tab order, unless the radio group has no selection in which case
+   * all of the visible, non-disabled radio buttons in the group are 
+   * in the tab order. On the other hand, all of the visible, non-disabled 
+   * radio buttons are always focusable via clicking or script.
+   * Also, depending on the pref accessibility.tabfocus some widgets may be 
+   * focusable but removed from the tab order. This is the default on
+   * Mac OS X, where fewer items are focusable.
+   * @param  [in, optional] aTabIndex the computed tab index
+   *         < 0 if not tabbable
+   *         == 0 if in normal tab order
+   *         > 0 can be tabbed to in the order specified by this value
+   * @return whether the frame is focusable via mouse, kbd or script.
+   */
+  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  static nsIFrame *FocusableAncestor(nsIFrame *aFrame);
+
 protected:
   // Members
   nsRect           mRect;

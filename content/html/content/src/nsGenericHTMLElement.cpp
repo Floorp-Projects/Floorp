@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
+#include "nsIContentViewer.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
@@ -1374,14 +1375,11 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       !(aFlags & (NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_SYSTEM_EVENT)) && 
       aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN &&
       !IsContentOfType(eHTML_FORM_CONTROL) &&
-      HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+      HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex) &&
+      IsFocusable()) {
     // Any visible element is focusable if tabindex >= 0
-    PRInt32 tabIndex;
-    GetTabIndex(&tabIndex);
-    if (tabIndex >= 0) {
-      Focus();
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
-    }
+    ret = Focus();
+    *aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
 
   return ret;
@@ -3300,6 +3298,45 @@ nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
+PRBool
+nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
+    return PR_FALSE;
+  }
+
+  // If there is no subdocument, docshell or content viewer, it's not tabbable
+  PRBool isFocusable = PR_FALSE;
+  if (mDocument) {
+    nsIDocument *subDoc = mDocument->GetSubDocumentFor(this);
+    if (subDoc) {
+      nsCOMPtr<nsISupports> container = subDoc->GetContainer();
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      if (docShell) {
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        docShell->GetContentViewer(getter_AddRefs(contentViewer));
+        if (contentViewer) {
+          isFocusable = PR_TRUE;
+          nsCOMPtr<nsIContentViewer> zombieViewer;
+          contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+          if (zombieViewer) {
+            // If there are 2 viewers for the current docshell, that 
+            // means the current document is a zombie document.
+            // Only navigate into the frame/iframe if it's not a zombie.
+            isFocusable = PR_FALSE;
+          }
+        }
+      }
+    }
+  }
+
+  if (!isFocusable && aTabIndex) {
+    *aTabIndex = -1;
+  }
+
+  return isFocusable;
+}
+
 void
 nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
 {
@@ -3623,17 +3660,47 @@ nsGenericHTMLElement::Focus()
 {
   // Generic HTML elements are focusable only if 
   // tabindex explicitly set and tabindex >= 0
-  nsAutoString tabIndexStr;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
-  if (!tabIndexStr.IsEmpty()) {
-    PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
-    if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
-      SetElementFocus(PR_TRUE);
-      return NS_OK;
-    }
+  if (IsFocusable()) {
+    SetElementFocus(PR_TRUE);
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+void
+nsGenericHTMLElement::RemoveFocus(nsIPresContext *aPresContext)
+{
+  if (!aPresContext) 
+    return;
+
+  if (IsContentOfType(eHTML_FORM_CONTROL)) {
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+    if (formControlFrame) {
+      formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
+    }
+  }
+  
+  if (mDocument) {
+    aPresContext->EventStateManager()->SetContentState(nsnull,
+                                                       NS_EVENT_STATE_FOCUS);
+  }
+}
+
+PRBool
+nsGenericHTMLElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  PRInt32 tabIndex = 0;   // Default value for non HTML elements with -moz-user-focus
+  GetTabIndex(&tabIndex);
+  // Just check for disabled attribute on all HTML elements
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+    tabIndex = -1;
+  }
+
+  if (aTabIndex) {
+    *aTabIndex = tabIndex;
+  }
+
+  return tabIndex >= 0;
 }
 
 void

@@ -493,6 +493,7 @@ public:
     virtual PRBool IsContentOfType(PRUint32 aFlags) const;
     virtual already_AddRefed<nsIURI> GetBaseURI() const;
     virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
+    virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
     // nsIXMLContent
     NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
