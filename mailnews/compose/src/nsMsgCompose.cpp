@@ -3254,7 +3254,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                   PRUint32 nbrAddresses = 0;
                   for (mailListAddresses->Count(&nbrAddresses); nbrAddresses > 0; nbrAddresses --)
                   {
-			              item = mailListAddresses->ElementAt(nbrAddresses - 1);
+			              item = getter_AddRefs(mailListAddresses->ElementAt(nbrAddresses - 1));
 			              existingCard = do_QueryInterface(item, &rv);
 			              if (NS_FAILED(rv))
 				              return rv;
