@@ -20,6 +20,7 @@
 #define nspr_cpucfg___
 
 #ifdef XP_MAC
+#include "prmacos.h"
 #undef  IS_LITTLE_ENDIAN
 #define IS_BIG_ENDIAN 1
 
