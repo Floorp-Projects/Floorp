@@ -74,10 +74,7 @@ Contributor(s):
         </box>
 
         <separator align="center" class="groove" flex="100%"/>
-        <box class="selection" id="okcancelBox">
-            <button class="dialog push" id="start" default="true" value="&dialogOk.label;" onclick="onOk();"/> 
-            <button class="dialog push" id="cancel" value="&dialogCancel.label;"  onclick="cancel();" />
-        </box>
+        <box class="selection" id="okCancelButtonsRight"/>
     </box>
 
 

@@ -56,7 +56,7 @@ function onLoad()
 	var moduleName;
 	var URL;
     var numberOfDialogTreeElements;
-
+              doSetOKCancel(onOk, cancel);
 	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
 	if( !param )
 	{
