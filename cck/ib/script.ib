@@ -28,7 +28,7 @@ modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/aim/IM.dtd,throbber.too
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/navigator/navigator.dtd,throbber.tooltip,%AnimatedLogoURL%)
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/editor/editorOverlay.dtd,throbber.tooltip,%AnimatedLogoURL%)
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/messenger/messenger.dtd,throbber.tooltip,%AnimatedLogoURL%)
-modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/messenger/addressbook/abMainWindow.dtd,throbber.tooltip,%AnimatedLogo
+modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/messenger/addressbook/abMainWindow.dtd,throbber.tooltip,%AnimatedLogoURL%)
 modifyJS(browser.xpi,no.jar,bin/defaults/pref/all-ns.js,general.useragent.vendorComment,%OrganizationName%)
 modifyJS1(browser.xpi,no.jar,bin/defaults/pref/all.js,network.proxy.ftp,%FTPproxyname%)
 modifyJS1(browser.xpi,no.jar,bin/defaults/pref/all.js,network.proxy.gopher,%Gopherproxyname%)
