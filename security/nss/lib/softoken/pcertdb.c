@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.45 2003/03/05 01:02:03 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.46 2003/07/28 22:55:16 bishakhabanerjee%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2662,7 +2662,6 @@ static SECStatus
 nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle, 
 	SECItem *derSubject, char *emailAddr, nsslowcertUpdateType updateType)
 {
-    PRBool save = PR_FALSE, delold = PR_FALSE;
     certDBEntrySubject *entry = NULL;
     int index = -1, i;
     SECStatus rv;
@@ -5235,7 +5234,6 @@ SECStatus
 nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr, 
 	SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime)
 {
-    certDBEntrySMime *entry = NULL;
     SECStatus rv = SECFailure;;
 
     rv = db_BeginTransaction(dbhandle->permCertDB);
