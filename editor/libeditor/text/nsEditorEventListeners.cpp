@@ -35,9 +35,6 @@
 #include "nsIHTMLEditor.h"
 // end for testing only
 
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
-
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -82,20 +79,17 @@ nsTextEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
+  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMKeyListenerIID)) {
+  if (aIID.Equals(nsIDOMKeyListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -747,20 +741,18 @@ nsTextEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
+  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMMouseListenerIID)) {
+  if (aIID.Equals(nsIDOMMouseListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -898,20 +890,18 @@ nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMTextListenerIID, NS_IDOMTEXTLISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
+  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMTextListenerIID)) {
+  if (aIID.Equals(nsIDOMTextListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMTextListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -969,20 +959,18 @@ nsTextEditorDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
+  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMDragListenerIID)) {
+  if (aIID.Equals(nsIDOMDragListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMDragListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1139,20 +1127,17 @@ nsTextEditorCompositionListener::QueryInterface(REFNSIID aIID, void** aInstanceP
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMCompositionListenerIID, NS_IDOMCOMPOSITIONLISTENER_IID);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventListenerIID)) {
+  if (aIID.Equals(nsIDOMEventListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMCompositionListenerIID)) {
+  if (aIID.Equals(nsIDOMCompositionListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMCompositionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1200,9 +1185,7 @@ NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult,
 
   it->SetEditor(aEditor);
 
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-
-  return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
+  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);   
 }
 
 
@@ -1218,9 +1201,7 @@ NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult,
 
   it->SetEditor(aEditor);
 
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-
-  return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
+  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);   
 }
 
 
@@ -1233,9 +1214,8 @@ NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor
 	}
 
 	it->SetEditor(aEditor);
-	static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 
-	return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);
+	return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
 
@@ -1251,9 +1231,7 @@ NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult,
 
   it->SetEditor(aEditor);
 
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-
-  return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
+  return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);   
 }
 
 nsresult
@@ -1265,9 +1243,8 @@ NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsITex
 	}
 
 	it->SetEditor(aEditor);
-	static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 
-	return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);
+	return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
 

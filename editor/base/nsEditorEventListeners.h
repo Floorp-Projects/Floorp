@@ -44,7 +44,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -62,7 +62,7 @@ protected:
   virtual nsresult ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed);
 
 protected:
-  nsCOMPtr<nsITextEditor> mEditor;
+  nsITextEditor*  mEditor;		// weak reference
 };
 
 
@@ -81,7 +81,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -93,7 +93,7 @@ public:
 /*END implementations of textevent handler interface*/
 
 protected:
-	nsCOMPtr<nsITextEditor> mEditor;
+  nsITextEditor*  mEditor;		// weak reference
 	PRBool					mCommitText;
 	PRBool					mInTransaction;
 };
@@ -111,7 +111,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -124,7 +124,7 @@ public:
 /*END implementations of textevent handler interface*/
 
 protected:
-	nsCOMPtr<nsITextEditor> mEditor;
+  nsITextEditor*  mEditor;		// weak reference
 };
 
 
@@ -143,7 +143,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -160,7 +160,7 @@ public:
 /*END implementations of mouseevent handler interface*/
 
 protected:
-  nsCOMPtr<nsITextEditor> mEditor;
+  nsITextEditor*  mEditor;		// weak reference
 
 };
 
@@ -180,7 +180,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -195,8 +195,8 @@ public:
 /*END implementations of dragevent handler interface*/
 
 protected:
-  nsCOMPtr<nsITextEditor> mEditor;
-
+  nsITextEditor*  mEditor;		// weak reference
+  
 };
 
 
