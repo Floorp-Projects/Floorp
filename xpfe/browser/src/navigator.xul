@@ -283,6 +283,17 @@
     }
   }
 
+  function WalletSamples()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Samples\n");
+      appCore.walletSamples();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
 
   </html:script>
 
@@ -443,6 +454,8 @@
       <menuitem name="Wallet contents" onclick="WalletEditor();"/>
       <menuitem name="Safe fillins" onclick="WalletSafeFillin();"/>
       <menuitem name="Quick fillins" onclick="WalletQuickFillin();"/>
+      <separator />
+      <menuitem name="Samples" onclick="WalletSamples();"/>
     </menu>
      <menu name="Help">
       <menuitem name="Help Contents" onclick="BrowserReload();"/>

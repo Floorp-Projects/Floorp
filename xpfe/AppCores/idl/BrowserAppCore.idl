@@ -12,6 +12,7 @@ interface BrowserAppCore : BaseAppCore
 	void walletEditor();
 	void walletSafeFillin();
 	void walletQuickFillin();
+	void walletSamples();
 
 	void setToolbarWindow(in Window win);
 	void setContentWindow(in Window win);
