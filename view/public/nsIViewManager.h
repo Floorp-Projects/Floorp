@@ -100,22 +100,12 @@ public:
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height) = 0;
 
   /**
-   * Get the position of the root window relative to the
-   * composited area. This indicates the scrolled position of the
-   * root window.
+   * Get the position of the window relative to the composited
+   * area. This indicates the scrolled position of the window.
    * @param xoffset out parameter for X scroll position of window in twips
    * @param yoffset out parameter for Y scroll position of window in twips
    */
-  NS_IMETHOD  GetWindowOffsets(nscoord *xoffset, nscoord *yoffset) = 0;
-
-  /**
-   * Set the position of the root window relative to the
-   * composited area. This indicates the scrolled position of the
-   * root window. Called when the root window is scrolled.
-   * @param xoffset X scroll position of window in twips
-   * @param yoffset Y scroll position of window in twips
-   */
-  NS_IMETHOD  SetWindowOffsets(nscoord xoffset, nscoord yoffset) = 0;
+  NS_IMETHOD  GetWindowOffsets(nsIView *aView, nscoord *xoffset, nscoord *yoffset) const = 0;
 
   /**
    * Reset the state of scrollbars and the scrolling region
