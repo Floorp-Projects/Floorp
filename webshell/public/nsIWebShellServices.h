@@ -42,8 +42,7 @@ public:
                           const char* aCharset= nsnull , 
                           nsCharsetSource aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD ReloadDocument(const char* aCharset = nsnull , 
-                            nsCharsetSource aSource = kCharsetUninitialized,
-                            const char* aCmd = nsnull) = 0;
+                            nsCharsetSource aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD StopDocumentLoad(void) = 0;
   NS_IMETHOD SetRendering(PRBool aRender) = 0;
 
