@@ -51,6 +51,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
+char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
+
 MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
 MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
 
@@ -100,7 +102,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     mDefault.ToCString(fileBuffer,MAX_PATH);
   }
   else {
-    PL_strcpy(fileBuffer, converted);
+    PL_strncpyz(fileBuffer, converted, MAX_PATH+1);
     nsMemory::Free( converted );
   }
 
@@ -109,6 +111,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     title = ToNewCString(mTitle);
   nsCAutoString initialDir;
   mDisplayDirectory->GetNativePath(initialDir);
+  // If no display directory, re-use the last one.
+  if(initialDir.IsEmpty()) {
+    // Allocate copy of last used dir.
+    initialDir = mLastUsedDirectory;
+  }
 
   mFile.SetLength(0);
 
@@ -118,9 +125,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   filedlg.pszTitle = title;
 
   if (mMode == modeGetFolder) {
+    PL_strncat(filedlg.szFullFile, initialDir.get(), MAX_PATH);
+    PL_strncat(filedlg.szFullFile, "\\", 1);
+    PL_strncat(filedlg.szFullFile, "^", 1);
     filedlg.fl = FDS_OPEN_DIALOG | FDS_CENTER;
     filedlg.pfnDlgProc = DirDialogProc;
-    strcpy(filedlg.szFullFile, "^");
     DosError(FERR_DISABLEHARDERR);
     WinFileDlg(HWND_DESKTOP, mWnd, &filedlg);
     DosError(FERR_ENABLEHARDERR);
@@ -133,6 +142,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     }
   }
   else {
+    PL_strncpy(filedlg.szFullFile, initialDir.get(), MAX_PATH);
+    PL_strncat(filedlg.szFullFile, "\\", 1);
+    PL_strncat(filedlg.szFullFile, fileBuffer, MAX_PATH);
     filedlg.fl = FDS_CENTER;
     if (mMode == modeSave) {
        filedlg.fl |= FDS_SAVEAS_DIALOG | FDS_ENABLEFILELB;
@@ -144,15 +156,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     memset(pmydata, 0, sizeof(MYDATA));
     filedlg.ulUser = (ULONG)pmydata;
     filedlg.pfnDlgProc = FileDialogProc;
-    if (!initialDir.IsEmpty()) {
-      strcpy(filedlg.szFullFile, initialDir.get());
-      strcat(filedlg.szFullFile, "\\");
-    } else if (lastPath[0]) {
-      strcpy(filedlg.szFullFile, lastPath);
-      strcat(filedlg.szFullFile, "\\");
-    }
-
-    strcat(filedlg.szFullFile, fileBuffer);
 
     int i;
 
@@ -232,13 +235,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
       mFile.Append(filedlg.szFullFile);
-
-      char* temp = (char*)gWidgetModuleData->DBCSstrrchr(filedlg.szFullFile, '\\');
-      *temp = '\0';
-      strcpy(lastPath, filedlg.szFullFile);
-
-      // Store the current directory in mDisplayDirectory
-      mDisplayDirectory->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
 
@@ -262,15 +258,28 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   if (result) {
     PRInt16 returnOKorReplace = returnOK;
 
+    // Remember last used directory.
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+    file->InitWithNativePath(mFile);
+    nsCOMPtr<nsIFile> dir;
+    if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
+      nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
+      if (localDir) {
+        nsCAutoString newDir;
+        localDir->GetNativePath(newDir);
+        if(!newDir.IsEmpty())
+          PL_strncpyz(mLastUsedDirectory, newDir.get(), MAX_PATH+1);
+        // Update mDisplayDirectory with this directory, also.
+        // Some callers rely on this.
+        mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
+      }
+    }
+
     if (mMode == modeSave) {
       // Windows does not return resultReplace,
       //   we must check if file already exists
-      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-
-      NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-      file->InitWithNativePath(mFile);
-
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
       if (exists)
@@ -329,6 +338,40 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
 {
   mDefault = aString;
+
+  //First, make sure the file name is not too long!
+  PRInt32 nameLength;
+  PRInt32 nameIndex = mDefault.RFind("\\");
+  if (nameIndex == kNotFound)
+    nameIndex = 0;
+  else
+    nameIndex ++;
+  nameLength = mDefault.Length() - nameIndex;
+  
+  if (nameLength > CCHMAXPATH) {
+    PRInt32 extIndex = mDefault.RFind(".");
+    if (extIndex == kNotFound)
+      extIndex = mDefault.Length();
+
+    //Let's try to shave the needed characters from the name part
+    PRInt32 charsToRemove = nameLength - CCHMAXPATH;
+    if (extIndex - nameIndex >= charsToRemove) {
+      mDefault.Cut(extIndex - charsToRemove, charsToRemove);
+    }
+  }
+
+  //Then, we need to replace illegal characters.
+  //Windows has the following statement:
+  //At this stage, we cannot replace the backslash as the string might represent a file path.
+  //But it is not correct - Windows assumes this is not a path as well,
+  //as one of the FILE_ILLEGAL_CHARACTERS is a colon (:)
+
+  mDefault.ReplaceChar("\"", '\'');
+  mDefault.ReplaceChar("\<", '(');
+  mDefault.ReplaceChar("\>", ')');
+
+  mDefault.ReplaceChar(FILE_ILLEGAL_CHARACTERS, '_');
+
   return NS_OK;
 }
 

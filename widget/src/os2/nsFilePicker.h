@@ -30,8 +30,6 @@
 #include "nsdefs.h"
 #include "nsIFileChannel.h"
 
-static char lastPath[CCHMAXPATH] = { 0 };
-
 /**
  * Native Windows FileSelector wrapper
  */
@@ -82,6 +80,9 @@ protected:
   nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
+
+  static char            mLastUsedDirectory[];
+
   char    pszFDFileExists[256];
   char    pszFDSaveCaption[256];
 };
