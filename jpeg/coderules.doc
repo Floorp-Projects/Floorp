@@ -1,6 +1,6 @@
 IJG JPEG LIBRARY:  CODING RULES
 
-Copyright (C) 1991-1994, Thomas G. Lane.
+Copyright (C) 1991-1996, Thomas G. Lane.
 This file is part of the Independent JPEG Group's software.
 For conditions of distribution and use, see the accompanying README file.
 
@@ -43,17 +43,17 @@ ansi2knr is not very bright, so it imposes a format requirement on function
 declarations: the function name MUST BEGIN IN COLUMN 1.  Thus all functions
 should be written in the following style:
 
-LOCAL int *
+LOCAL(int *)
 function_name (int a, char *b)
 {
     code...
 }
 
-Note that each function definition is prefixed with GLOBAL, LOCAL, or
-METHODDEF.  These macros expand to "static" or nothing as appropriate.
-They provide a readable indication of the routine's usage and can readily be
-changed for special needs.  (For instance, all routines can be made global for
-use with debuggers or code profilers that require it.)
+Note that each function definition must begin with GLOBAL(type), LOCAL(type),
+or METHODDEF(type).  These macros expand to "static type" or just "type" as
+appropriate.  They provide a readable indication of the routine's usage and
+can readily be changed for special needs.  (For instance, special linkage
+keywords can be inserted for use in Windows DLLs.)
 
 ansi2knr does not transform method declarations (function pointers in
 structs).  We handle these with a macro JMETHOD, defined as
@@ -69,8 +69,8 @@ which is used like this:
 	};
 Note the set of parentheses surrounding the parameter list.
 
-A similar solution is used for external function declarations (see the JPP
-macro).
+A similar solution is used for forward and external function declarations
+(see the EXTERN and JPP macros).
 
 If the code is to work on non-ANSI compilers, we cannot rely on a prototype
 declaration to coerce actual parameters into the right types.  Therefore, use

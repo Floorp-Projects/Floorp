@@ -1,7 +1,7 @@
 /*
  * jmemmgr.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -182,7 +182,7 @@ struct jvirt_barray_control {
 
 #ifdef MEM_STATS		/* optional extra stuff for statistics */
 
-LOCAL void
+LOCAL(void)
 print_mem_stats (j_common_ptr cinfo, int pool_id)
 {
   my_mem_ptr mem = (my_mem_ptr) cinfo->mem;
@@ -213,7 +213,7 @@ print_mem_stats (j_common_ptr cinfo, int pool_id)
 #endif /* MEM_STATS */
 
 
-LOCAL void
+LOCAL(void)
 out_of_memory (j_common_ptr cinfo, int which)
 /* Report an out-of-memory error and stop execution */
 /* If we compiled MEM_STATS support, report alloc requests before dying */
@@ -253,7 +253,7 @@ static const size_t extra_pool_slop[JPOOL_NUMPOOLS] =
 #define MIN_SLOP  50		/* greater than 0 to avoid futile looping */
 
 
-METHODDEF void *
+METHODDEF(void *)
 alloc_small (j_common_ptr cinfo, int pool_id, size_t sizeofobject)
 /* Allocate a "small" object */
 {
@@ -338,7 +338,7 @@ alloc_small (j_common_ptr cinfo, int pool_id, size_t sizeofobject)
  * deliberately bunch rows together to ensure a large request size.
  */
 
-METHODDEF void FAR *
+METHODDEF(void FAR *)
 alloc_large (j_common_ptr cinfo, int pool_id, size_t sizeofobject)
 /* Allocate a "large" object */
 {
@@ -391,7 +391,7 @@ alloc_large (j_common_ptr cinfo, int pool_id, size_t sizeofobject)
  * a virtual array.
  */
 
-METHODDEF JSAMPARRAY
+METHODDEF(JSAMPARRAY)
 alloc_sarray (j_common_ptr cinfo, int pool_id,
 	      JDIMENSION samplesperrow, JDIMENSION numrows)
 /* Allocate a 2-D sample array */
@@ -439,7 +439,7 @@ alloc_sarray (j_common_ptr cinfo, int pool_id,
  * This is essentially the same as the code for sample arrays, above.
  */
 
-METHODDEF JBLOCKARRAY
+METHODDEF(JBLOCKARRAY)
 alloc_barray (j_common_ptr cinfo, int pool_id,
 	      JDIMENSION blocksperrow, JDIMENSION numrows)
 /* Allocate a 2-D coefficient-block array */
@@ -519,7 +519,7 @@ alloc_barray (j_common_ptr cinfo, int pool_id,
  */
 
 
-METHODDEF jvirt_sarray_ptr
+METHODDEF(jvirt_sarray_ptr)
 request_virt_sarray (j_common_ptr cinfo, int pool_id, boolean pre_zero,
 		     JDIMENSION samplesperrow, JDIMENSION numrows,
 		     JDIMENSION maxaccess)
@@ -549,7 +549,7 @@ request_virt_sarray (j_common_ptr cinfo, int pool_id, boolean pre_zero,
 }
 
 
-METHODDEF jvirt_barray_ptr
+METHODDEF(jvirt_barray_ptr)
 request_virt_barray (j_common_ptr cinfo, int pool_id, boolean pre_zero,
 		     JDIMENSION blocksperrow, JDIMENSION numrows,
 		     JDIMENSION maxaccess)
@@ -579,7 +579,7 @@ request_virt_barray (j_common_ptr cinfo, int pool_id, boolean pre_zero,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 realize_virt_arrays (j_common_ptr cinfo)
 /* Allocate the in-memory buffers for any unrealized virtual arrays */
 {
@@ -686,7 +686,7 @@ realize_virt_arrays (j_common_ptr cinfo)
 }
 
 
-LOCAL void
+LOCAL(void)
 do_sarray_io (j_common_ptr cinfo, jvirt_sarray_ptr ptr, boolean writing)
 /* Do backing store read or write of a virtual sample array */
 {
@@ -719,7 +719,7 @@ do_sarray_io (j_common_ptr cinfo, jvirt_sarray_ptr ptr, boolean writing)
 }
 
 
-LOCAL void
+LOCAL(void)
 do_barray_io (j_common_ptr cinfo, jvirt_barray_ptr ptr, boolean writing)
 /* Do backing store read or write of a virtual coefficient-block array */
 {
@@ -752,7 +752,7 @@ do_barray_io (j_common_ptr cinfo, jvirt_barray_ptr ptr, boolean writing)
 }
 
 
-METHODDEF JSAMPARRAY
+METHODDEF(JSAMPARRAY)
 access_virt_sarray (j_common_ptr cinfo, jvirt_sarray_ptr ptr,
 		    JDIMENSION start_row, JDIMENSION num_rows,
 		    boolean writable)
@@ -837,7 +837,7 @@ access_virt_sarray (j_common_ptr cinfo, jvirt_sarray_ptr ptr,
 }
 
 
-METHODDEF JBLOCKARRAY
+METHODDEF(JBLOCKARRAY)
 access_virt_barray (j_common_ptr cinfo, jvirt_barray_ptr ptr,
 		    JDIMENSION start_row, JDIMENSION num_rows,
 		    boolean writable)
@@ -926,7 +926,7 @@ access_virt_barray (j_common_ptr cinfo, jvirt_barray_ptr ptr,
  * Release all objects belonging to a specified pool.
  */
 
-METHODDEF void
+METHODDEF(void)
 free_pool (j_common_ptr cinfo, int pool_id)
 {
   my_mem_ptr mem = (my_mem_ptr) cinfo->mem;
@@ -998,7 +998,7 @@ free_pool (j_common_ptr cinfo, int pool_id)
  * Note that this cannot be called unless cinfo->mem is non-NULL.
  */
 
-METHODDEF void
+METHODDEF(void)
 self_destruct (j_common_ptr cinfo)
 {
   int pool;
@@ -1024,7 +1024,7 @@ self_destruct (j_common_ptr cinfo)
  * When this is called, only the error manager pointer is valid in cinfo!
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_memory_mgr (j_common_ptr cinfo)
 {
   my_mem_ptr mem;
@@ -1075,6 +1075,9 @@ jinit_memory_mgr (j_common_ptr cinfo)
   mem->pub.access_virt_barray = access_virt_barray;
   mem->pub.free_pool = free_pool;
   mem->pub.self_destruct = self_destruct;
+
+  /* Make MAX_ALLOC_CHUNK accessible to other modules */
+  mem->pub.max_alloc_chunk = MAX_ALLOC_CHUNK;
 
   /* Initialize working state */
   mem->pub.max_memory_to_use = max_to_use;

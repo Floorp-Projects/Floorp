@@ -1,7 +1,7 @@
 /*
  * jmorecfg.h
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -9,8 +9,14 @@
  * JPEG software for special applications or support machine-dependent
  * optimizations.  Most users will not need to touch this file.
  */
-#ifndef __JMORECFG_H__
-#define __JMORECFG_H__
+
+/*
+ * This file has been modified for the Mozilla/Netscape environment.
+ * Modifications are distributed under the Netscape Public License and are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 
 /*
  * Define BITS_IN_JSAMPLE as either
@@ -174,20 +180,43 @@ typedef unsigned int JDIMENSION;
 #define JPEG_MAX_DIMENSION  65500L  /* a tad under 64K to prevent overflows */
 
 
-/* These defines are used in all function definitions and extern declarations.
- * You could modify them if you need to change function linkage conventions.
+/* These macros are used in all function definitions and extern declarations.
+ * You could modify them if you need to change function linkage conventions;
+ * in particular, you'll need to do that to make the library a Windows DLL.
  * Another application is to make all functions global for use with debuggers
  * or code profilers that require it.
  */
 
-#define METHODDEF static	/* a function called through method pointers */
-#define LOCAL	  static	/* a function used only in its module */
-#define GLOBAL			/* a function referenced thru EXTERNs */
+/* Mozilla mod: make external functions be DLL-able via JRI_PUBLIC_API(),
+ * and supply extern "C" for C++ users of the C-compiled IJG library.
+ */
+
+/* a function called through method pointers: */
+#define METHODDEF(type)		static type
+/* a function used only in its module: */
+#define LOCAL(type)		static type
+/* a function referenced thru EXTERNs: */
+#define GLOBAL(type)		JRI_PUBLIC_API(type)
+/* a reference to a GLOBAL function: */
 #ifdef __cplusplus
-#define EXTERN    extern "C"    /* a reference to a GLOBAL function */
+#define EXTERN(type)		extern "C" JRI_PUBLIC_API(type)
 #else
-#define EXTERN    extern        /* a reference to a GLOBAL function */
+#define EXTERN(type)		extern JRI_PUBLIC_API(type)
 #endif
+
+
+/* This macro is used to declare a "method", that is, a function pointer.
+ * We want to supply prototype parameters if the compiler can cope.
+ * Note that the arglist parameter must be parenthesized!
+ * Again, you can customize this if you need special linkage keywords.
+ */
+
+#ifdef HAVE_PROTOTYPES
+#define JMETHOD(type,methodname,arglist)  type (*methodname) arglist
+#else
+#define JMETHOD(type,methodname,arglist)  type (*methodname) ()
+#endif
+
 
 /* Here is the pseudo-keyword for declaring pointers that must be "far"
  * on 80x86 machines.  Most of the specialized coding for 80x86 is handled
@@ -203,6 +232,7 @@ typedef unsigned int JDIMENSION;
 #endif
 #endif
 
+
 /*
  * On a few systems, type boolean and/or its values FALSE, TRUE may appear
  * in standard header files.  Or you may have conflicts with application-
@@ -210,8 +240,13 @@ typedef unsigned int JDIMENSION;
  * Defining HAVE_BOOLEAN before including jpeglib.h should make it work.
  */
 
+/* Mozilla mod: IJG distribution makes boolean = int, but on Windows
+ * it's far safer to define boolean = unsigned char.  Easier to switch
+ * than fight.
+ */
+
 #ifndef HAVE_BOOLEAN
-typedef int boolean;
+typedef unsigned char boolean;
 #endif
 #ifndef FALSE			/* in case these macros already exist */
 #define FALSE	0		/* values of boolean */
@@ -243,13 +278,22 @@ typedef int boolean;
  * (You may HAVE to do that if your compiler doesn't like null source files.)
  */
 
+/*
+ * Mozilla mods here: undef some features not actually used by the browser.
+ * This reduces object code size and more importantly allows us to compile
+ * even with broken compilers that crash when fed certain modules of the
+ * IJG sources.  Currently we undef:
+ * DCT_FLOAT_SUPPORTED INPUT_SMOOTHING_SUPPORTED IDCT_SCALING_SUPPORTED
+ * QUANT_1PASS_SUPPORTED QUANT_2PASS_SUPPORTED
+ */
+
 /* Arithmetic coding is unsupported for legal reasons.  Complaints to IBM. */
 
 /* Capability options common to encoder and decoder: */
 
 #define DCT_ISLOW_SUPPORTED	/* slow but accurate integer algorithm */
 #define DCT_IFAST_SUPPORTED	/* faster, less accurate integer method */
-#define DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
+#undef  DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
 
 /* Encoder capability options: */
 
@@ -265,19 +309,20 @@ typedef int boolean;
  * The exact same statements apply for progressive JPEG: the default tables
  * don't work for progressive mode.  (This may get fixed, however.)
  */
-#define INPUT_SMOOTHING_SUPPORTED   /* Input image smoothing option? */
+#undef  INPUT_SMOOTHING_SUPPORTED   /* Input image smoothing option? */
 
 /* Decoder capability options: */
 
 #undef  D_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
 #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
 #define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
+#define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
-#undef IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
+#undef  IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
 #undef  UPSAMPLE_SCALING_SUPPORTED  /* Output rescaling at upsample stage? */
 #define UPSAMPLE_MERGING_SUPPORTED  /* Fast path for sloppy upsampling? */
-#define QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
-#define QUANT_2PASS_SUPPORTED	    /* 2-pass color quantization? */
+#undef  QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
+#undef  QUANT_2PASS_SUPPORTED	    /* 2-pass color quantization? */
 
 /* more capability options later, no doubt */
 
@@ -310,6 +355,8 @@ typedef int boolean;
  * as the inline keyword; otherwise define it as empty.
  */
 
+/* Mozilla mods here: add more ways of defining INLINE */
+
 #ifndef INLINE
 #ifdef __GNUC__			/* for instance, GNU C knows about inline */
 #define INLINE __inline__
@@ -318,7 +365,11 @@ typedef int boolean;
 #define INLINE _Inline
 #endif
 #ifndef INLINE
+#ifdef __cplusplus
+#define INLINE inline		/* a C++ compiler should have it too */
+#else
 #define INLINE			/* default is to define it as empty */
+#endif
 #endif
 #endif
 
@@ -327,7 +378,7 @@ typedef int boolean;
  * two 16-bit shorts is faster than multiplying two ints.  Define MULTIPLIER
  * as short on such a machine.  MULTIPLIER must be at least 16 bits wide.
  */
-/* Netscape modification:  MULTIPLIER should be explicitly declared int16 */
+
 #ifndef MULTIPLIER
 #define MULTIPLIER  int16		/* type for fastest integer multiply */
 #endif
@@ -350,5 +401,3 @@ typedef int boolean;
 #endif
 
 #endif /* JPEG_INTERNAL_OPTIONS */
-
-#endif /* __JMORECFG_H__ */

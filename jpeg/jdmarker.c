@@ -1,7 +1,7 @@
 /*
  * jdmarker.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1998, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -14,6 +14,8 @@
 
 #define JPEG_INTERNALS
 #include "jinclude.h"
+#include "jpeglib.h"
+
 
 typedef enum {			/* JPEG marker codes */
   M_SOF0  = 0xc0,
@@ -77,15 +79,31 @@ typedef enum {			/* JPEG marker codes */
   M_JPG13 = 0xfd,
   M_COM   = 0xfe,
   
-  M_TEM   = 0x01,
-  
-  M_ERROR = 0x100
+  M_TEM   = 0x01
 } JPEG_MARKER;
 
-#include "jpeglib.h" /* Move this after JPEG_MARKER to avoid name
-                      * clash with Sun header, /usr/include/sys/stream.h,
-                      * which defines M_ERROR.
-                      */
+
+/* Private state */
+
+typedef struct {
+  struct jpeg_marker_reader pub; /* public fields */
+
+  /* Application-overridable marker processing methods */
+  jpeg_marker_parser_method process_COM;
+  jpeg_marker_parser_method process_APPn[16];
+
+  /* Limit on marker data length to save for each marker type */
+  unsigned int length_limit_COM;
+  unsigned int length_limit_APPn[16];
+
+  /* Status of COM/APPn marker saving */
+  jpeg_saved_marker_ptr cur_marker;	/* NULL if not processing a marker */
+  unsigned int bytes_read;		/* data bytes read so far in marker */
+  /* Note: cur_marker is not linked into marker_list until it's all read. */
+} my_marker_reader;
+
+typedef my_marker_reader * my_marker_ptr;
+
 
 /*
  * Macros for fetching data from the data source module.
@@ -106,7 +124,7 @@ typedef enum {			/* JPEG marker codes */
 	( datasrc->next_input_byte = next_input_byte,  \
 	  datasrc->bytes_in_buffer = bytes_in_buffer )
 
-/* Reload the local copies --- seldom used except in MAKE_BYTE_AVAIL */
+/* Reload the local copies --- used only in MAKE_BYTE_AVAIL */
 #define INPUT_RELOAD(cinfo)  \
 	( next_input_byte = datasrc->next_input_byte,  \
 	  bytes_in_buffer = datasrc->bytes_in_buffer )
@@ -120,14 +138,14 @@ typedef enum {			/* JPEG marker codes */
 	  if (! (*datasrc->fill_input_buffer) (cinfo))  \
 	    { action; }  \
 	  INPUT_RELOAD(cinfo);  \
-	}  \
-	bytes_in_buffer--
+	}
 
 /* Read a byte into variable V.
  * If must suspend, take the specified action (typically "return FALSE").
  */
 #define INPUT_BYTE(cinfo,V,action)  \
 	MAKESTMT( MAKE_BYTE_AVAIL(cinfo,action); \
+		  bytes_in_buffer--; \
 		  V = GETJOCTET(*next_input_byte++); )
 
 /* As above, but read two bytes interpreted as an unsigned 16-bit integer.
@@ -135,8 +153,10 @@ typedef enum {			/* JPEG marker codes */
  */
 #define INPUT_2BYTES(cinfo,V,action)  \
 	MAKESTMT( MAKE_BYTE_AVAIL(cinfo,action); \
+		  bytes_in_buffer--; \
 		  V = ((unsigned int) GETJOCTET(*next_input_byte++)) << 8; \
 		  MAKE_BYTE_AVAIL(cinfo,action); \
+		  bytes_in_buffer--; \
 		  V += GETJOCTET(*next_input_byte++); )
 
 
@@ -152,11 +172,18 @@ typedef enum {			/* JPEG marker codes */
  *   marker parameters; restart point has not been moved.  Same routine
  *   will be called again after application supplies more input data.
  *
- * This approach to suspension assumes that all of a marker's parameters can
- * fit into a single input bufferload.  This should hold for "normal"
- * markers.  Some COM/APPn markers might have large parameter segments,
- * but we use skip_input_data to get past those, and thereby put the problem
- * on the source manager's shoulders.
+ * This approach to suspension assumes that all of a marker's parameters
+ * can fit into a single input bufferload.  This should hold for "normal"
+ * markers.  Some COM/APPn markers might have large parameter segments
+ * that might not fit.  If we are simply dropping such a marker, we use
+ * skip_input_data to get past it, and thereby put the problem on the
+ * source manager's shoulders.  If we are saving the marker's contents
+ * into memory, we use a slightly different convention: when forced to
+ * suspend, the marker processor updates the restart point to the end of
+ * what it's consumed (ie, the end of the buffer) before returning FALSE.
+ * On resumption, cinfo->unread_marker still contains the marker code,
+ * but the data source will point to the next chunk of marker data.
+ * The marker processor must retain internal state to deal with this.
  *
  * Note that we don't bother to avoid duplicate trace messages if a
  * suspension occurs within marker parameters.  Other side effects
@@ -164,7 +191,7 @@ typedef enum {			/* JPEG marker codes */
  */
 
 
-LOCAL boolean
+LOCAL(boolean)
 get_soi (j_decompress_ptr cinfo)
 /* Process an SOI marker */
 {
@@ -190,7 +217,9 @@ get_soi (j_decompress_ptr cinfo)
   cinfo->CCIR601_sampling = FALSE; /* Assume non-CCIR sampling??? */
 
   cinfo->saw_JFIF_marker = FALSE;
-  cinfo->density_unit = 0;	/* set default JFIF APP0 values */
+  cinfo->JFIF_major_version = 1; /* set default JFIF APP0 values */
+  cinfo->JFIF_minor_version = 1;
+  cinfo->density_unit = 0;
   cinfo->X_density = 1;
   cinfo->Y_density = 1;
   cinfo->saw_Adobe_marker = FALSE;
@@ -202,7 +231,7 @@ get_soi (j_decompress_ptr cinfo)
 }
 
 
-LOCAL boolean
+LOCAL(boolean)
 get_sof (j_decompress_ptr cinfo, boolean is_prog, boolean is_arith)
 /* Process a SOFn marker */
 {
@@ -266,7 +295,7 @@ get_sof (j_decompress_ptr cinfo, boolean is_prog, boolean is_arith)
 }
 
 
-LOCAL boolean
+LOCAL(boolean)
 get_sos (j_decompress_ptr cinfo)
 /* Process a SOS marker */
 {
@@ -282,10 +311,10 @@ get_sos (j_decompress_ptr cinfo)
 
   INPUT_BYTE(cinfo, n, return FALSE); /* Number of components */
 
+  TRACEMS1(cinfo, 1, JTRC_SOS, n);
+
   if (length != (n * 2 + 6) || n < 1 || n > MAX_COMPS_IN_SCAN)
     ERREXIT(cinfo, JERR_BAD_LENGTH);
-
-  TRACEMS1(cinfo, 1, JTRC_SOS, n);
 
   cinfo->comps_in_scan = n;
 
@@ -336,113 +365,9 @@ get_sos (j_decompress_ptr cinfo)
 }
 
 
-METHODDEF boolean
-get_app0 (j_decompress_ptr cinfo)
-/* Process an APP0 marker */
-{
-#define JFIF_LEN 14
-  INT32 length;
-  UINT8 b[JFIF_LEN];
-  int buffp;
-  INPUT_VARS(cinfo);
+#ifdef D_ARITH_CODING_SUPPORTED
 
-  INPUT_2BYTES(cinfo, length, return FALSE);
-  length -= 2;
-
-  /* See if a JFIF APP0 marker is present */
-
-  if (length >= JFIF_LEN) {
-    for (buffp = 0; buffp < JFIF_LEN; buffp++)
-      INPUT_BYTE(cinfo, b[buffp], return FALSE);
-    length -= JFIF_LEN;
-
-    if (b[0]==0x4A && b[1]==0x46 && b[2]==0x49 && b[3]==0x46 && b[4]==0) {
-      /* Found JFIF APP0 marker: check version */
-      /* Major version must be 1, anything else signals an incompatible change.
-       * We used to treat this as an error, but now it's a nonfatal warning,
-       * because some bozo at Hijaak couldn't read the spec.
-       * Minor version should be 0..2, but process anyway if newer.
-       */
-      if (b[5] != 1)
-	WARNMS2(cinfo, JWRN_JFIF_MAJOR, b[5], b[6]);
-      else if (b[6] > 2)
-	TRACEMS2(cinfo, 1, JTRC_JFIF_MINOR, b[5], b[6]);
-      /* Save info */
-      cinfo->saw_JFIF_marker = TRUE;
-      cinfo->density_unit = b[7];
-      cinfo->X_density = (b[8] << 8) + b[9];
-      cinfo->Y_density = (b[10] << 8) + b[11];
-      TRACEMS3(cinfo, 1, JTRC_JFIF,
-	       cinfo->X_density, cinfo->Y_density, cinfo->density_unit);
-      if (b[12] | b[13])
-	TRACEMS2(cinfo, 1, JTRC_JFIF_THUMBNAIL, b[12], b[13]);
-      if (length != ((INT32) b[12] * (INT32) b[13] * (INT32) 3))
-	TRACEMS1(cinfo, 1, JTRC_JFIF_BADTHUMBNAILSIZE, (int) length);
-    } else {
-      /* Start of APP0 does not match "JFIF" */
-      TRACEMS1(cinfo, 1, JTRC_APP0, (int) length + JFIF_LEN);
-    }
-  } else {
-    /* Too short to be JFIF marker */
-    TRACEMS1(cinfo, 1, JTRC_APP0, (int) length);
-  }
-
-  INPUT_SYNC(cinfo);
-  if (length > 0)		/* skip any remaining data -- could be lots */
-    (*cinfo->src->skip_input_data) (cinfo, (long) length);
-
-  return TRUE;
-}
-
-
-METHODDEF boolean
-get_app14 (j_decompress_ptr cinfo)
-/* Process an APP14 marker */
-{
-#define ADOBE_LEN 12
-  INT32 length;
-  UINT8 b[ADOBE_LEN];
-  int buffp;
-  unsigned int version, flags0, flags1, transform;
-  INPUT_VARS(cinfo);
-
-  INPUT_2BYTES(cinfo, length, return FALSE);
-  length -= 2;
-
-  /* See if an Adobe APP14 marker is present */
-
-  if (length >= ADOBE_LEN) {
-    for (buffp = 0; buffp < ADOBE_LEN; buffp++)
-      INPUT_BYTE(cinfo, b[buffp], return FALSE);
-    length -= ADOBE_LEN;
-
-    if (b[0]==0x41 && b[1]==0x64 && b[2]==0x6F && b[3]==0x62 && b[4]==0x65) {
-      /* Found Adobe APP14 marker */
-      version = (b[5] << 8) + b[6];
-      flags0 = (b[7] << 8) + b[8];
-      flags1 = (b[9] << 8) + b[10];
-      transform = b[11];
-      TRACEMS4(cinfo, 1, JTRC_ADOBE, version, flags0, flags1, transform);
-      cinfo->saw_Adobe_marker = TRUE;
-      cinfo->Adobe_transform = (UINT8) transform;
-    } else {
-      /* Start of APP14 does not match "Adobe" */
-      TRACEMS1(cinfo, 1, JTRC_APP14, (int) length + ADOBE_LEN);
-    }
-  } else {
-    /* Too short to be Adobe marker */
-    TRACEMS1(cinfo, 1, JTRC_APP14, (int) length);
-  }
-
-  INPUT_SYNC(cinfo);
-  if (length > 0)		/* skip any remaining data -- could be lots */
-    (*cinfo->src->skip_input_data) (cinfo, (long) length);
-
-  return TRUE;
-}
-
-
-LOCAL boolean
+LOCAL(boolean)
 get_dac (j_decompress_ptr cinfo)
 /* Process a DAC marker */
 {
@@ -474,12 +399,21 @@ get_dac (j_decompress_ptr cinfo)
     }
   }
 
+  if (length != 0)
+    ERREXIT(cinfo, JERR_BAD_LENGTH);
+
   INPUT_SYNC(cinfo);
   return TRUE;
 }
 
+#else /* ! D_ARITH_CODING_SUPPORTED */
 
-LOCAL boolean
+#define get_dac(cinfo)  skip_variable(cinfo)
+
+#endif /* D_ARITH_CODING_SUPPORTED */
+
+
+LOCAL(boolean)
 get_dht (j_decompress_ptr cinfo)
 /* Process a DHT marker */
 {
@@ -493,7 +427,7 @@ get_dht (j_decompress_ptr cinfo)
   INPUT_2BYTES(cinfo, length, return FALSE);
   length -= 2;
   
-  while (length > 0) {
+  while (length > 16) {
     INPUT_BYTE(cinfo, index, return FALSE);
 
     TRACEMS1(cinfo, 1, JTRC_DHT, index);
@@ -514,8 +448,11 @@ get_dht (j_decompress_ptr cinfo)
 	     bits[9], bits[10], bits[11], bits[12],
 	     bits[13], bits[14], bits[15], bits[16]);
 
+    /* Here we just do minimal validation of the counts to avoid walking
+     * off the end of our table space.  jdhuff.c will check more carefully.
+     */
     if (count > 256 || ((INT32) count) > length)
-      ERREXIT(cinfo, JERR_DHT_COUNTS);
+      ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
 
     for (i = 0; i < count; i++)
       INPUT_BYTE(cinfo, huffval[i], return FALSE);
@@ -539,12 +476,15 @@ get_dht (j_decompress_ptr cinfo)
     MEMCOPY((*htblptr)->huffval, huffval, SIZEOF((*htblptr)->huffval));
   }
 
+  if (length != 0)
+    ERREXIT(cinfo, JERR_BAD_LENGTH);
+
   INPUT_SYNC(cinfo);
   return TRUE;
 }
 
 
-LOCAL boolean
+LOCAL(boolean)
 get_dqt (j_decompress_ptr cinfo)
 /* Process a DQT marker */
 {
@@ -576,27 +516,33 @@ get_dqt (j_decompress_ptr cinfo)
 	INPUT_2BYTES(cinfo, tmp, return FALSE);
       else
 	INPUT_BYTE(cinfo, tmp, return FALSE);
-      quant_ptr->quantval[i] = (UINT16) tmp;
+      /* We convert the zigzag-order table to natural array order. */
+      quant_ptr->quantval[jpeg_natural_order[i]] = (UINT16) tmp;
     }
 
-    for (i = 0; i < DCTSIZE2; i += 8) {
-      TRACEMS8(cinfo, 2, JTRC_QUANTVALS,
-	       quant_ptr->quantval[i  ], quant_ptr->quantval[i+1],
-	       quant_ptr->quantval[i+2], quant_ptr->quantval[i+3],
-	       quant_ptr->quantval[i+4], quant_ptr->quantval[i+5],
-	       quant_ptr->quantval[i+6], quant_ptr->quantval[i+7]);
+    if (cinfo->err->trace_level >= 2) {
+      for (i = 0; i < DCTSIZE2; i += 8) {
+	TRACEMS8(cinfo, 2, JTRC_QUANTVALS,
+		 quant_ptr->quantval[i],   quant_ptr->quantval[i+1],
+		 quant_ptr->quantval[i+2], quant_ptr->quantval[i+3],
+		 quant_ptr->quantval[i+4], quant_ptr->quantval[i+5],
+		 quant_ptr->quantval[i+6], quant_ptr->quantval[i+7]);
+      }
     }
 
     length -= DCTSIZE2+1;
     if (prec) length -= DCTSIZE2;
   }
 
+  if (length != 0)
+    ERREXIT(cinfo, JERR_BAD_LENGTH);
+
   INPUT_SYNC(cinfo);
   return TRUE;
 }
 
 
-LOCAL boolean
+LOCAL(boolean)
 get_dri (j_decompress_ptr cinfo)
 /* Process a DRI marker */
 {
@@ -620,7 +566,280 @@ get_dri (j_decompress_ptr cinfo)
 }
 
 
-METHODDEF boolean
+/*
+ * Routines for processing APPn and COM markers.
+ * These are either saved in memory or discarded, per application request.
+ * APP0 and APP14 are specially checked to see if they are
+ * JFIF and Adobe markers, respectively.
+ */
+
+#define APP0_DATA_LEN	14	/* Length of interesting data in APP0 */
+#define APP14_DATA_LEN	12	/* Length of interesting data in APP14 */
+#define APPN_DATA_LEN	14	/* Must be the largest of the above!! */
+
+
+LOCAL(void)
+examine_app0 (j_decompress_ptr cinfo, JOCTET FAR * data,
+	      unsigned int datalen, INT32 remaining)
+/* Examine first few bytes from an APP0.
+ * Take appropriate action if it is a JFIF marker.
+ * datalen is # of bytes at data[], remaining is length of rest of marker data.
+ */
+{
+  INT32 totallen = (INT32) datalen + remaining;
+
+  if (datalen >= APP0_DATA_LEN &&
+      GETJOCTET(data[0]) == 0x4A &&
+      GETJOCTET(data[1]) == 0x46 &&
+      GETJOCTET(data[2]) == 0x49 &&
+      GETJOCTET(data[3]) == 0x46 &&
+      GETJOCTET(data[4]) == 0) {
+    /* Found JFIF APP0 marker: save info */
+    cinfo->saw_JFIF_marker = TRUE;
+    cinfo->JFIF_major_version = GETJOCTET(data[5]);
+    cinfo->JFIF_minor_version = GETJOCTET(data[6]);
+    cinfo->density_unit = GETJOCTET(data[7]);
+    cinfo->X_density = (GETJOCTET(data[8]) << 8) + GETJOCTET(data[9]);
+    cinfo->Y_density = (GETJOCTET(data[10]) << 8) + GETJOCTET(data[11]);
+    /* Check version.
+     * Major version must be 1, anything else signals an incompatible change.
+     * (We used to treat this as an error, but now it's a nonfatal warning,
+     * because some bozo at Hijaak couldn't read the spec.)
+     * Minor version should be 0..2, but process anyway if newer.
+     */
+    if (cinfo->JFIF_major_version != 1)
+      WARNMS2(cinfo, JWRN_JFIF_MAJOR,
+	      cinfo->JFIF_major_version, cinfo->JFIF_minor_version);
+    /* Generate trace messages */
+    TRACEMS5(cinfo, 1, JTRC_JFIF,
+	     cinfo->JFIF_major_version, cinfo->JFIF_minor_version,
+	     cinfo->X_density, cinfo->Y_density, cinfo->density_unit);
+    /* Validate thumbnail dimensions and issue appropriate messages */
+    if (GETJOCTET(data[12]) | GETJOCTET(data[13]))
+      TRACEMS2(cinfo, 1, JTRC_JFIF_THUMBNAIL,
+	       GETJOCTET(data[12]), GETJOCTET(data[13]));
+    totallen -= APP0_DATA_LEN;
+    if (totallen !=
+	((INT32)GETJOCTET(data[12]) * (INT32)GETJOCTET(data[13]) * (INT32) 3))
+      TRACEMS1(cinfo, 1, JTRC_JFIF_BADTHUMBNAILSIZE, (int) totallen);
+  } else if (datalen >= 6 &&
+      GETJOCTET(data[0]) == 0x4A &&
+      GETJOCTET(data[1]) == 0x46 &&
+      GETJOCTET(data[2]) == 0x58 &&
+      GETJOCTET(data[3]) == 0x58 &&
+      GETJOCTET(data[4]) == 0) {
+    /* Found JFIF "JFXX" extension APP0 marker */
+    /* The library doesn't actually do anything with these,
+     * but we try to produce a helpful trace message.
+     */
+    switch (GETJOCTET(data[5])) {
+    case 0x10:
+      TRACEMS1(cinfo, 1, JTRC_THUMB_JPEG, (int) totallen);
+      break;
+    case 0x11:
+      TRACEMS1(cinfo, 1, JTRC_THUMB_PALETTE, (int) totallen);
+      break;
+    case 0x13:
+      TRACEMS1(cinfo, 1, JTRC_THUMB_RGB, (int) totallen);
+      break;
+    default:
+      TRACEMS2(cinfo, 1, JTRC_JFIF_EXTENSION,
+	       GETJOCTET(data[5]), (int) totallen);
+      break;
+    }
+  } else {
+    /* Start of APP0 does not match "JFIF" or "JFXX", or too short */
+    TRACEMS1(cinfo, 1, JTRC_APP0, (int) totallen);
+  }
+}
+
+
+LOCAL(void)
+examine_app14 (j_decompress_ptr cinfo, JOCTET FAR * data,
+	       unsigned int datalen, INT32 remaining)
+/* Examine first few bytes from an APP14.
+ * Take appropriate action if it is an Adobe marker.
+ * datalen is # of bytes at data[], remaining is length of rest of marker data.
+ */
+{
+  unsigned int version, flags0, flags1, transform;
+
+  if (datalen >= APP14_DATA_LEN &&
+      GETJOCTET(data[0]) == 0x41 &&
+      GETJOCTET(data[1]) == 0x64 &&
+      GETJOCTET(data[2]) == 0x6F &&
+      GETJOCTET(data[3]) == 0x62 &&
+      GETJOCTET(data[4]) == 0x65) {
+    /* Found Adobe APP14 marker */
+    version = (GETJOCTET(data[5]) << 8) + GETJOCTET(data[6]);
+    flags0 = (GETJOCTET(data[7]) << 8) + GETJOCTET(data[8]);
+    flags1 = (GETJOCTET(data[9]) << 8) + GETJOCTET(data[10]);
+    transform = GETJOCTET(data[11]);
+    TRACEMS4(cinfo, 1, JTRC_ADOBE, version, flags0, flags1, transform);
+    cinfo->saw_Adobe_marker = TRUE;
+    cinfo->Adobe_transform = (UINT8) transform;
+  } else {
+    /* Start of APP14 does not match "Adobe", or too short */
+    TRACEMS1(cinfo, 1, JTRC_APP14, (int) (datalen + remaining));
+  }
+}
+
+
+METHODDEF(boolean)
+get_interesting_appn (j_decompress_ptr cinfo)
+/* Process an APP0 or APP14 marker without saving it */
+{
+  INT32 length;
+  JOCTET b[APPN_DATA_LEN];
+  unsigned int i, numtoread;
+  INPUT_VARS(cinfo);
+
+  INPUT_2BYTES(cinfo, length, return FALSE);
+  length -= 2;
+
+  /* get the interesting part of the marker data */
+  if (length >= APPN_DATA_LEN)
+    numtoread = APPN_DATA_LEN;
+  else if (length > 0)
+    numtoread = (unsigned int) length;
+  else
+    numtoread = 0;
+  for (i = 0; i < numtoread; i++)
+    INPUT_BYTE(cinfo, b[i], return FALSE);
+  length -= numtoread;
+
+  /* process it */
+  switch (cinfo->unread_marker) {
+  case M_APP0:
+    examine_app0(cinfo, (JOCTET FAR *) b, numtoread, length);
+    break;
+  case M_APP14:
+    examine_app14(cinfo, (JOCTET FAR *) b, numtoread, length);
+    break;
+  default:
+    /* can't get here unless jpeg_save_markers chooses wrong processor */
+    ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, cinfo->unread_marker);
+    break;
+  }
+
+  /* skip any remaining data -- could be lots */
+  INPUT_SYNC(cinfo);
+  if (length > 0)
+    (*cinfo->src->skip_input_data) (cinfo, (long) length);
+
+  return TRUE;
+}
+
+
+#ifdef SAVE_MARKERS_SUPPORTED
+
+METHODDEF(boolean)
+save_marker (j_decompress_ptr cinfo)
+/* Save an APPn or COM marker into the marker list */
+{
+  my_marker_ptr marker = (my_marker_ptr) cinfo->marker;
+  jpeg_saved_marker_ptr cur_marker = marker->cur_marker;
+  unsigned int bytes_read, data_length;
+  JOCTET FAR * data;
+  INT32 length = 0;
+  INPUT_VARS(cinfo);
+
+  if (cur_marker == NULL) {
+    /* begin reading a marker */
+    INPUT_2BYTES(cinfo, length, return FALSE);
+    length -= 2;
+    if (length >= 0) {		/* watch out for bogus length word */
+      /* figure out how much we want to save */
+      unsigned int limit;
+      if (cinfo->unread_marker == (int) M_COM)
+	limit = marker->length_limit_COM;
+      else
+	limit = marker->length_limit_APPn[cinfo->unread_marker - (int) M_APP0];
+      if ((unsigned int) length < limit)
+	limit = (unsigned int) length;
+      /* allocate and initialize the marker item */
+      cur_marker = (jpeg_saved_marker_ptr)
+	(*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+				    SIZEOF(struct jpeg_marker_struct) + limit);
+      cur_marker->next = NULL;
+      cur_marker->marker = (UINT8) cinfo->unread_marker;
+      cur_marker->original_length = (unsigned int) length;
+      cur_marker->data_length = limit;
+      /* data area is just beyond the jpeg_marker_struct */
+      data = cur_marker->data = (JOCTET FAR *) (cur_marker + 1);
+      marker->cur_marker = cur_marker;
+      marker->bytes_read = 0;
+      bytes_read = 0;
+      data_length = limit;
+    } else {
+      /* deal with bogus length word */
+      bytes_read = data_length = 0;
+      data = NULL;
+    }
+  } else {
+    /* resume reading a marker */
+    bytes_read = marker->bytes_read;
+    data_length = cur_marker->data_length;
+    data = cur_marker->data + bytes_read;
+  }
+
+  while (bytes_read < data_length) {
+    INPUT_SYNC(cinfo);		/* move the restart point to here */
+    marker->bytes_read = bytes_read;
+    /* If there's not at least one byte in buffer, suspend */
+    MAKE_BYTE_AVAIL(cinfo, return FALSE);
+    /* Copy bytes with reasonable rapidity */
+    while (bytes_read < data_length && bytes_in_buffer > 0) {
+      *data++ = *next_input_byte++;
+      bytes_in_buffer--;
+      bytes_read++;
+    }
+  }
+
+  /* Done reading what we want to read */
+  if (cur_marker != NULL) {	/* will be NULL if bogus length word */
+    /* Add new marker to end of list */
+    if (cinfo->marker_list == NULL) {
+      cinfo->marker_list = cur_marker;
+    } else {
+      jpeg_saved_marker_ptr prev = cinfo->marker_list;
+      while (prev->next != NULL)
+	prev = prev->next;
+      prev->next = cur_marker;
+    }
+    /* Reset pointer & calc remaining data length */
+    data = cur_marker->data;
+    length = cur_marker->original_length - data_length;
+  }
+  /* Reset to initial state for next marker */
+  marker->cur_marker = NULL;
+
+  /* Process the marker if interesting; else just make a generic trace msg */
+  switch (cinfo->unread_marker) {
+  case M_APP0:
+    examine_app0(cinfo, data, data_length, length);
+    break;
+  case M_APP14:
+    examine_app14(cinfo, data, data_length, length);
+    break;
+  default:
+    TRACEMS2(cinfo, 1, JTRC_MISC_MARKER, cinfo->unread_marker,
+	     (int) (data_length + length));
+    break;
+  }
+
+  /* skip any remaining data -- could be lots */
+  INPUT_SYNC(cinfo);		/* do before skip_input_data */
+  if (length > 0)
+    (*cinfo->src->skip_input_data) (cinfo, (long) length);
+
+  return TRUE;
+}
+
+#endif /* SAVE_MARKERS_SUPPORTED */
+
+
+METHODDEF(boolean)
 skip_variable (j_decompress_ptr cinfo)
 /* Skip over an unknown or uninteresting variable-length marker */
 {
@@ -628,11 +847,13 @@ skip_variable (j_decompress_ptr cinfo)
   INPUT_VARS(cinfo);
 
   INPUT_2BYTES(cinfo, length, return FALSE);
+  length -= 2;
   
   TRACEMS2(cinfo, 1, JTRC_MISC_MARKER, cinfo->unread_marker, (int) length);
 
   INPUT_SYNC(cinfo);		/* do before skip_input_data */
-  (*cinfo->src->skip_input_data) (cinfo, (long) length - 2L);
+  if (length > 0)
+    (*cinfo->src->skip_input_data) (cinfo, (long) length);
 
   return TRUE;
 }
@@ -647,7 +868,7 @@ skip_variable (j_decompress_ptr cinfo)
  * but it will never be 0 or FF.
  */
 
-LOCAL boolean
+LOCAL(boolean)
 next_marker (j_decompress_ptr cinfo)
 {
   int c;
@@ -694,7 +915,7 @@ next_marker (j_decompress_ptr cinfo)
 }
 
 
-LOCAL boolean
+LOCAL(boolean)
 first_marker (j_decompress_ptr cinfo)
 /* Like next_marker, but used to obtain the initial SOI marker. */
 /* For this marker, we do not allow preceding garbage or fill; otherwise,
@@ -725,7 +946,7 @@ first_marker (j_decompress_ptr cinfo)
  * JPEG_SUSPENDED, JPEG_REACHED_SOS, or JPEG_REACHED_EOI.
  */
 
-METHODDEF int
+METHODDEF(int)
 read_markers (j_decompress_ptr cinfo)
 {
   /* Outer loop repeats once for each marker. */
@@ -832,12 +1053,13 @@ read_markers (j_decompress_ptr cinfo)
     case M_APP13:
     case M_APP14:
     case M_APP15:
-      if (! (*cinfo->marker->process_APPn[cinfo->unread_marker - (int) M_APP0]) (cinfo))
+      if (! (*((my_marker_ptr) cinfo->marker)->process_APPn[
+		cinfo->unread_marker - (int) M_APP0]) (cinfo))
 	return JPEG_SUSPENDED;
       break;
       
     case M_COM:
-      if (! (*cinfo->marker->process_COM) (cinfo))
+      if (! (*((my_marker_ptr) cinfo->marker)->process_COM) (cinfo))
 	return JPEG_SUSPENDED;
       break;
 
@@ -885,7 +1107,7 @@ read_markers (j_decompress_ptr cinfo)
  * it holds a marker which the decoder will be unable to read past.
  */
 
-METHODDEF boolean
+METHODDEF(boolean)
 read_restart_marker (j_decompress_ptr cinfo)
 {
   /* Obtain a marker unless we already did. */
@@ -898,7 +1120,7 @@ read_restart_marker (j_decompress_ptr cinfo)
   if (cinfo->unread_marker ==
       ((int) M_RST0 + cinfo->marker->next_restart_num)) {
     /* Normal case --- swallow the marker and let entropy decoder continue */
-    TRACEMS1(cinfo, 2, JTRC_RST, cinfo->marker->next_restart_num);
+    TRACEMS1(cinfo, 3, JTRC_RST, cinfo->marker->next_restart_num);
     cinfo->unread_marker = 0;
   } else {
     /* Uh-oh, the restart markers have been messed up. */
@@ -964,7 +1186,7 @@ read_restart_marker (j_decompress_ptr cinfo)
  * any other marker would have to be bogus data in that case.
  */
 
-GLOBAL JRI_PUBLIC_API(boolean)
+GLOBAL(boolean)
 jpeg_resync_to_restart (j_decompress_ptr cinfo, int desired)
 {
   int marker = cinfo->unread_marker;
@@ -1014,15 +1236,18 @@ jpeg_resync_to_restart (j_decompress_ptr cinfo, int desired)
  * Reset marker processing state to begin a fresh datastream.
  */
 
-METHODDEF void
+METHODDEF(void)
 reset_marker_reader (j_decompress_ptr cinfo)
 {
+  my_marker_ptr marker = (my_marker_ptr) cinfo->marker;
+
   cinfo->comp_info = NULL;		/* until allocated by get_sof */
   cinfo->input_scan_number = 0;		/* no SOS seen yet */
   cinfo->unread_marker = 0;		/* no pending marker */
-  cinfo->marker->saw_SOI = FALSE;	/* set internal state too */
-  cinfo->marker->saw_SOF = FALSE;
-  cinfo->marker->discarded_bytes = 0;
+  marker->pub.saw_SOI = FALSE;		/* set internal state too */
+  marker->pub.saw_SOF = FALSE;
+  marker->pub.discarded_bytes = 0;
+  marker->cur_marker = NULL;
 }
 
 
@@ -1031,24 +1256,103 @@ reset_marker_reader (j_decompress_ptr cinfo)
  * This is called only once, when the decompression object is created.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_marker_reader (j_decompress_ptr cinfo)
 {
+  my_marker_ptr marker;
   int i;
 
   /* Create subobject in permanent pool */
-  cinfo->marker = (struct jpeg_marker_reader *)
+  marker = (my_marker_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
-				SIZEOF(struct jpeg_marker_reader));
-  /* Initialize method pointers */
-  cinfo->marker->reset_marker_reader = reset_marker_reader;
-  cinfo->marker->read_markers = read_markers;
-  cinfo->marker->read_restart_marker = read_restart_marker;
-  cinfo->marker->process_COM = skip_variable;
-  for (i = 0; i < 16; i++)
-    cinfo->marker->process_APPn[i] = skip_variable;
-  cinfo->marker->process_APPn[0] = get_app0;
-  cinfo->marker->process_APPn[14] = get_app14;
+				SIZEOF(my_marker_reader));
+  cinfo->marker = (struct jpeg_marker_reader *) marker;
+  /* Initialize public method pointers */
+  marker->pub.reset_marker_reader = reset_marker_reader;
+  marker->pub.read_markers = read_markers;
+  marker->pub.read_restart_marker = read_restart_marker;
+  /* Initialize COM/APPn processing.
+   * By default, we examine and then discard APP0 and APP14,
+   * but simply discard COM and all other APPn.
+   */
+  marker->process_COM = skip_variable;
+  marker->length_limit_COM = 0;
+  for (i = 0; i < 16; i++) {
+    marker->process_APPn[i] = skip_variable;
+    marker->length_limit_APPn[i] = 0;
+  }
+  marker->process_APPn[0] = get_interesting_appn;
+  marker->process_APPn[14] = get_interesting_appn;
   /* Reset marker processing state */
   reset_marker_reader(cinfo);
+}
+
+
+/*
+ * Control saving of COM and APPn markers into marker_list.
+ */
+
+#ifdef SAVE_MARKERS_SUPPORTED
+
+GLOBAL(void)
+jpeg_save_markers (j_decompress_ptr cinfo, int marker_code,
+		   unsigned int length_limit)
+{
+  my_marker_ptr marker = (my_marker_ptr) cinfo->marker;
+  long maxlength;
+  jpeg_marker_parser_method processor;
+
+  /* Length limit mustn't be larger than what we can allocate
+   * (should only be a concern in a 16-bit environment).
+   */
+  maxlength = cinfo->mem->max_alloc_chunk - SIZEOF(struct jpeg_marker_struct);
+  if (((long) length_limit) > maxlength)
+    length_limit = (unsigned int) maxlength;
+
+  /* Choose processor routine to use.
+   * APP0/APP14 have special requirements.
+   */
+  if (length_limit) {
+    processor = save_marker;
+    /* If saving APP0/APP14, save at least enough for our internal use. */
+    if (marker_code == (int) M_APP0 && length_limit < APP0_DATA_LEN)
+      length_limit = APP0_DATA_LEN;
+    else if (marker_code == (int) M_APP14 && length_limit < APP14_DATA_LEN)
+      length_limit = APP14_DATA_LEN;
+  } else {
+    processor = skip_variable;
+    /* If discarding APP0/APP14, use our regular on-the-fly processor. */
+    if (marker_code == (int) M_APP0 || marker_code == (int) M_APP14)
+      processor = get_interesting_appn;
+  }
+
+  if (marker_code == (int) M_COM) {
+    marker->process_COM = processor;
+    marker->length_limit_COM = length_limit;
+  } else if (marker_code >= (int) M_APP0 && marker_code <= (int) M_APP15) {
+    marker->process_APPn[marker_code - (int) M_APP0] = processor;
+    marker->length_limit_APPn[marker_code - (int) M_APP0] = length_limit;
+  } else
+    ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, marker_code);
+}
+
+#endif /* SAVE_MARKERS_SUPPORTED */
+
+
+/*
+ * Install a special processing method for COM or APPn markers.
+ */
+
+GLOBAL(void)
+jpeg_set_marker_processor (j_decompress_ptr cinfo, int marker_code,
+			   jpeg_marker_parser_method routine)
+{
+  my_marker_ptr marker = (my_marker_ptr) cinfo->marker;
+
+  if (marker_code == (int) M_COM)
+    marker->process_COM = routine;
+  else if (marker_code >= (int) M_APP0 && marker_code <= (int) M_APP15)
+    marker->process_APPn[marker_code - (int) M_APP0] = routine;
+  else
+    ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, marker_code);
 }

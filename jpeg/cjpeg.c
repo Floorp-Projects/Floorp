@@ -1,7 +1,7 @@
 /*
  * cjpeg.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1998, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -28,7 +28,8 @@
 
 #ifdef USE_CCOMMAND		/* command-line reader for Macintosh */
 #ifdef __MWERKS__
-#include <SIOUX.h>              /* Metrowerks declares it here */
+#include <SIOUX.h>              /* Metrowerks needs this */
+#include <console.h>		/* ... and this */
 #endif
 #ifdef THINK_C
 #include <console.h>		/* Think declares it here */
@@ -75,7 +76,7 @@ static const char * const cdjpeg_message_table[] = {
 static boolean is_targa;	/* records user -targa switch */
 
 
-LOCAL cjpeg_source_ptr
+LOCAL(cjpeg_source_ptr)
 select_file_type (j_compress_ptr cinfo, FILE * infile)
 {
   int c;
@@ -136,7 +137,7 @@ static const char * progname;	/* program name for error messages */
 static char * outfilename;	/* for -outfile switch */
 
 
-LOCAL void
+LOCAL(void)
 usage (void)
 /* complain about bad command line */
 {
@@ -183,7 +184,7 @@ usage (void)
 #ifdef C_ARITH_CODING_SUPPORTED
   fprintf(stderr, "  -arithmetic    Use arithmetic coding\n");
 #endif
-  fprintf(stderr, "  -baseline      Force baseline output\n");
+  fprintf(stderr, "  -baseline      Force baseline quantization tables\n");
   fprintf(stderr, "  -qtables file  Use quantization tables given in file\n");
   fprintf(stderr, "  -qslots N[,...]    Set component quantization tables\n");
   fprintf(stderr, "  -sample HxV[,...]  Set component sampling factors\n");
@@ -194,7 +195,7 @@ usage (void)
 }
 
 
-LOCAL int
+LOCAL(int)
 parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 		int last_file_arg_seen, boolean for_real)
 /* Parse optional switches.
@@ -254,7 +255,7 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 #endif
 
     } else if (keymatch(arg, "baseline", 1)) {
-      /* Force baseline output (8-bit quantizer values). */
+      /* Force baseline-compatible output (8-bit quantizer values). */
       force_baseline = TRUE;
 
     } else if (keymatch(arg, "dct", 2)) {
@@ -456,7 +457,7 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
  * The main program.
  */
 
-GLOBAL int
+int
 main (int argc, char **argv)
 {
   struct jpeg_compress_struct cinfo;

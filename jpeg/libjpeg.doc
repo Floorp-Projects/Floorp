@@ -1,6 +1,6 @@
 USING THE IJG JPEG LIBRARY
 
-Copyright (C) 1994-1995, Thomas G. Lane.
+Copyright (C) 1994-1998, Thomas G. Lane.
 This file is part of the Independent JPEG Group's software.
 For conditions of distribution and use, see the accompanying README file.
 
@@ -47,6 +47,7 @@ Advanced features:
 	Really raw data: DCT coefficients
 	Progress monitoring
 	Memory management
+	Memory usage
 	Library compile-time options
 	Portability considerations
 	Notes for MS-DOS implementors
@@ -186,19 +187,20 @@ Before diving into procedural details, it is helpful to understand the
 image data format that the JPEG library expects or returns.
 
 The standard input image format is a rectangular array of pixels, with each
-pixel having the same number of "component" values (color channels).  You
-must specify how many components there are and the colorspace interpretation
-of the components.  Most applications will use RGB data (three components
-per pixel) or grayscale data (one component per pixel).  PLEASE NOTE THAT
-RGB DATA IS THREE SAMPLES PER PIXEL, GRAYSCALE ONLY ONE.  A remarkable
-number of people manage to miss this, only to find that their programs don't
-work with grayscale JPEG files.
+pixel having the same number of "component" or "sample" values (color
+channels).  You must specify how many components there are and the colorspace
+interpretation of the components.  Most applications will use RGB data
+(three components per pixel) or grayscale data (one component per pixel).
+PLEASE NOTE THAT RGB DATA IS THREE SAMPLES PER PIXEL, GRAYSCALE ONLY ONE.
+A remarkable number of people manage to miss this, only to find that their
+programs don't work with grayscale JPEG files.
 
-Note that there is no provision for colormapped input.  You can feed in a
-colormapped image by expanding it to full-color format.  However JPEG often
-doesn't work very well with colormapped source data, because of dithering
-noise.  This is discussed in more detail in the JPEG FAQ and the other
-references mentioned in the README file.
+There is no provision for colormapped input.  JPEG files are always full-color
+or full grayscale (or sometimes another colorspace such as CMYK).  You can
+feed in a colormapped image by expanding it to full-color format.  However
+JPEG often doesn't work very well with source data that has been colormapped,
+because of dithering noise.  This is discussed in more detail in the JPEG FAQ
+and the other references mentioned in the README file.
 
 Pixels are stored by scanlines, with each scanline running from left to
 right.  The component values for each pixel are adjacent in the row; for
@@ -227,8 +229,11 @@ byte before passing it to the compressor.  If you need to compress data
 that has more than 8 bits/channel, compile with BITS_IN_JSAMPLE = 12.
 (See "Library compile-time options", later.)
 
+
 The data format returned by the decompressor is the same in all details,
-except that colormapped data is supported.  If you request colormapped
+except that colormapped output is supported.  (Again, a JPEG file is never
+colormapped.  But you can ask the decompressor to perform on-the-fly color
+quantization to deliver colormapped output.)  If you request colormapped
 output then the returned data array contains a single JSAMPLE per pixel;
 its value is an index into a color map.  The color map is represented as
 a 2-D JSAMPARRAY in which each row holds the values of one color component,
@@ -433,7 +438,7 @@ Typical code:
 	jpeg_finish_compress(&cinfo);
 
 If using the stdio destination manager, don't forget to close the output
-stdio stream if necessary.
+stdio stream (if necessary) afterwards.
 
 If you have requested a multi-pass operating mode, such as Huffman code
 optimization, jpeg_finish_compress() will perform the additional passes using
@@ -459,12 +464,13 @@ you'll need to repeat all of step 3.
 7. Release the JPEG compression object.
 
 When you are done with a JPEG compression object, destroy it by calling
-jpeg_destroy_compress().  This will free all subsidiary memory.  Or you can
-call jpeg_destroy() which works for either compression or decompression
-objects --- this may be more convenient if you are sharing code between
-compression and decompression cases.  (Actually, these routines are equivalent
-except for the declared type of the passed pointer.  To avoid gripes from
-ANSI C compilers, jpeg_destroy() should be passed a j_common_ptr.)
+jpeg_destroy_compress().  This will free all subsidiary memory (regardless of
+the previous state of the object).  Or you can call jpeg_destroy(), which
+works for either compression or decompression objects --- this may be more
+convenient if you are sharing code between compression and decompression
+cases.  (Actually, these routines are equivalent except for the declared type
+of the passed pointer.  To avoid gripes from ANSI C compilers, jpeg_destroy()
+should be passed a j_common_ptr.)
 
 If you allocated the jpeg_compress_struct structure from malloc(), freeing
 it is your responsibility --- jpeg_destroy() won't.  Ditto for the error
@@ -485,13 +491,19 @@ in either of two ways:
   legitimate at any point after calling jpeg_create_compress() --- in fact,
   it's safe even if jpeg_create_compress() fails.
 
-* If you want to re-use the JPEG object, call jpeg_abort_compress(), or
+* If you want to re-use the JPEG object, call jpeg_abort_compress(), or call
   jpeg_abort() which works on both compression and decompression objects.
   This will return the object to an idle state, releasing any working memory.
   jpeg_abort() is allowed at any time after successful object creation.
 
 Note that cleaning up the data destination, if required, is your
-responsibility.
+responsibility; neither of these routines will call term_destination().
+(See "Compressed data handling", below, for more about that.)
+
+jpeg_destroy() and jpeg_abort() are the only safe calls to make on a JPEG
+object that has reported an error by calling error_exit (see "Error handling"
+for more info).  The internal state of such an object is likely to be out of
+whack.  Either of these two routines will return the object to a known state.
 
 
 Decompression details
@@ -666,12 +678,13 @@ The return value always equals the change in the value of output_scanline.
 
 If you don't use a suspending data source, it is safe to assume that
 jpeg_read_scanlines() reads at least one scanline per call, until the
-bottom of the image has been reached.  If you use a buffer larger than one
-scanline, it is NOT safe to assume that jpeg_read_scanlines() fills it.
-(The current implementation won't return more than cinfo.rec_outbuf_height
-scanlines per call, no matter how large a buffer you pass.)  So you must
-always provide a loop that calls jpeg_read_scanlines() repeatedly until
-the whole image has been read.
+bottom of the image has been reached.
+
+If you use a buffer larger than one scanline, it is NOT safe to assume that
+jpeg_read_scanlines() fills it.  (The current implementation returns only a
+few scanlines per call, no matter how large a buffer you pass.)  So you must
+always provide a loop that calls jpeg_read_scanlines() repeatedly until the
+whole image has been read.
 
 
 7. jpeg_finish_decompress(...);
@@ -688,7 +701,7 @@ If using the stdio source manager, don't forget to close the source stdio
 stream if necessary.
 
 It is an error to call jpeg_finish_decompress() before reading the correct
-total number of scanlines.  If you wish to abort compression, call
+total number of scanlines.  If you wish to abort decompression, call
 jpeg_abort() as discussed below.
 
 After completing a decompression cycle, you may dispose of the JPEG object as
@@ -738,6 +751,17 @@ machines) and reference it at your link step.  If you use only half of the
 library (only compression or only decompression), only that much code will be
 included from the library, unless your linker is hopelessly brain-damaged.
 The supplied makefiles build libjpeg.a automatically (see install.doc).
+
+While you can build the JPEG library as a shared library if the whim strikes
+you, we don't really recommend it.  The trouble with shared libraries is that
+at some point you'll probably try to substitute a new version of the library
+without recompiling the calling applications.  That generally doesn't work
+because the parameter struct declarations usually change with each new
+version.  In other words, the library's API is *not* guaranteed binary
+compatible across versions; we only try to ensure source-code compatibility.
+(In hindsight, it might have been smarter to hide the parameter structs from
+applications and introduce a ton of access functions instead.  Too late now,
+however.)
 
 On some systems your application may need to set up a signal handler to ensure
 that temporary files are deleted if the program is interrupted.  This is most
@@ -831,9 +855,14 @@ jpeg_add_quant_table (j_compress_ptr cinfo, int which_tbl,
 		      int scale_factor, boolean force_baseline)
 	Allows an arbitrary quantization table to be created.  which_tbl
 	indicates which table slot to fill.  basic_table points to an array
-	of 64 unsigned ints given in JPEG zigzag order.  These values are
+	of 64 unsigned ints given in normal array order.  These values are
 	multiplied by scale_factor/100 and then clamped to the range 1..65535
 	(or to 1..255 if force_baseline is TRUE).
+	CAUTION: prior to library version 6a, jpeg_add_quant_table expected
+	the basic table to be given in JPEG zigzag order.  If you need to
+	write code that works with either older or newer versions of this
+	routine, you must check the library version number.  Something like
+	"#if JPEG_LIB_VERSION >= 61" is the right test.
 
 jpeg_simple_progression (j_compress_ptr cinfo)
 	Generates a default scan script for writing a progressive-JPEG file.
@@ -883,6 +912,11 @@ int restart_in_rows
 	Set restart_in_rows to specify the interval in MCU rows.  (If
 	restart_in_rows is not 0, then restart_interval is set after the
 	image width in MCUs is computed.)  Defaults are zero (no restarts).
+	One restart marker per MCU row is often a good choice.
+	NOTE: the overhead of restart markers is higher in grayscale JPEG
+	files than in color files, and MUCH higher in progressive JPEGs.
+	If you use restarts, you may want to use larger intervals in those
+	cases.
 
 const jpeg_scan_info * scan_info
 int num_scans
@@ -905,6 +939,13 @@ boolean write_JFIF_header
 	If TRUE, a JFIF APP0 marker is emitted.  jpeg_set_defaults() and
 	jpeg_set_colorspace() set this TRUE if a JFIF-legal JPEG color space
 	(ie, YCbCr or grayscale) is selected, otherwise FALSE.
+
+UINT8 JFIF_major_version
+UINT8 JFIF_minor_version
+	The version number to be written into the JFIF marker.
+	jpeg_set_defaults() initializes the version to 1.01 (major=minor=1).
+	You should set it to 1.02 (major=1, minor=2) if you plan to write
+	any JFIF 1.02 extension markers.
 
 UINT8 density_unit
 UINT16 X_density
@@ -1003,6 +1044,8 @@ JDIMENSION image_height
 int num_components			Number of color components
 J_COLOR_SPACE jpeg_color_space		Colorspace of image
 boolean saw_JFIF_marker			TRUE if a JFIF APP0 marker was seen
+  UINT8 JFIF_major_version		Version information from JFIF marker
+  UINT8 JFIF_minor_version
   UINT8 density_unit			Resolution data from JFIF marker
   UINT16 X_density
   UINT16 Y_density
@@ -1134,6 +1177,8 @@ copying.  In high-quality modes, rec_outbuf_height is always 1, but some
 faster, lower-quality modes set it to larger values (typically 2 to 4).
 If you are going to ask for a high-speed processing mode, you may as well
 go to the trouble of honoring rec_outbuf_height so as to avoid data copying.
+(An output buffer larger than rec_outbuf_height lines is OK, but won't
+provide any material speed improvement over that height.)
 
 
 Special color spaces
@@ -1194,8 +1239,11 @@ set out_color_space to override this.  Again, you must select a supported
 transformation.  jdcolor.c currently supports
 	YCbCr => GRAYSCALE
 	YCbCr => RGB
+	GRAYSCALE => RGB
 	YCCK => CMYK
-as well as the null transforms.
+as well as the null transforms.  (Since GRAYSCALE=>RGB is provided, an
+application can force grayscale JPEGs to look like color JPEGs if it only
+wants to handle one case.)
 
 The two-pass color quantizer, jquant2.c, is specialized to handle RGB data
 (it weights distances appropriately for RGB colors).  You'll need to modify
@@ -1254,7 +1302,10 @@ additional data which is not known to the JPEG library or the standard error
 handler.  The most convenient way to do this is to embed either the JPEG
 object or the jpeg_error_mgr struct in a larger structure that contains
 additional fields; then casting the passed pointer provides access to the
-additional fields.  Again, see example.c for one way to do it.
+additional fields.  Again, see example.c for one way to do it.  (Beginning
+with IJG version 6b, there is also a void pointer "client_data" in each
+JPEG object, which the application can also use to find related data.
+The library does not touch client_data at all.)
 
 The individual methods that you might wish to override are:
 
@@ -1593,19 +1644,27 @@ fill_input_buffer() knows that no more data is available, it can set the
 pointer/count to point to a dummy EOI marker and then return TRUE just as
 though it had read more data in a non-suspending situation.
 
-The decompressor does not attempt to suspend within any JPEG marker; it will
-backtrack to the start of the marker.  Hence the input buffer must be large
-enough to hold the longest marker in the file.  We recommend at least a 2K
-buffer.  The buffer would need to be 64K to allow for arbitrary COM or APPn
-markers, but the decompressor does not actually try to read these; it just
-skips them by calling skip_input_data().  If you provide a special marker
-handling routine that does look at such markers, coping with buffer overflow
-is your problem.  Ordinary JPEG markers should normally not exceed a few
-hundred bytes each (DHT tables are typically the longest).  For robustness
-against damaged marker length counts, you may wish to insert a test in your
-application for the case that the input buffer is completely full and yet the
-decoder has suspended without consuming any data --- otherwise, if this
-situation did occur, it would lead to an endless loop.
+The decompressor does not attempt to suspend within standard JPEG markers;
+instead it will backtrack to the start of the marker and reprocess the whole
+marker next time.  Hence the input buffer must be large enough to hold the
+longest standard marker in the file.  Standard JPEG markers should normally
+not exceed a few hundred bytes each (DHT tables are typically the longest).
+We recommend at least a 2K buffer for performance reasons, which is much
+larger than any correct marker is likely to be.  For robustness against
+damaged marker length counts, you may wish to insert a test in your
+application for the case that the input buffer is completely full and yet
+the decoder has suspended without consuming any data --- otherwise, if this
+situation did occur, it would lead to an endless loop.  (The library can't
+provide this test since it has no idea whether "the buffer is full", or
+even whether there is a fixed-size input buffer.)
+
+The input buffer would need to be 64K to allow for arbitrary COM or APPn
+markers, but these are handled specially: they are either saved into allocated
+memory, or skipped over by calling skip_input_data().  In the former case,
+suspension is handled correctly, and in the latter case, the problem of
+buffer overrun is placed on skip_input_data's shoulders, as explained above.
+Note that if you provide your own marker handling routine for large markers,
+you should consider how to deal with buffer overflow.
 
 Multiple-buffer management:
 
@@ -1825,7 +1884,7 @@ JPEG_REACHED_EOI.
 The target scan number passed to jpeg_start_output() is saved in the
 cinfo.output_scan_number field.  The library's output processing calls
 jpeg_consume_input() whenever the current input scan number and row within
-the scan is less than or equal to the current output scan number and row.
+that scan is less than or equal to the current output scan number and row.
 Thus, input processing can "get ahead" of the output processing but is not
 allowed to "fall behind".  You can achieve several different effects by
 manipulating this interlock rule.  For example, if you pass a target scan
@@ -1844,10 +1903,26 @@ processor to simply display whatever it finds in the image buffer, without
 waiting for input.  (However, the library will not accept a target scan
 number less than one, so you can't avoid waiting for the first scan.)
 
-When using jpeg_consume_input(), you'll typically want to be sure that you
-perform a final output pass after receiving all the data; otherwise your last
-display may not be full quality across the whole screen.  So the right outer
-loop logic is something like this:
+When data is arriving faster than the output display processing can advance
+through the image, jpeg_consume_input() will store data into the buffered
+image beyond the point at which the output processing is reading data out
+again.  If the input arrives fast enough, it may "wrap around" the buffer to
+the point where the input is more than one whole scan ahead of the output.
+If the output processing simply proceeds through its display pass without
+paying attention to the input, the effect seen on-screen is that the lower
+part of the image is one or more scans better in quality than the upper part.
+Then, when the next output scan is started, you have a choice of what target
+scan number to use.  The recommended choice is to use the current input scan
+number at that time, which implies that you've skipped the output scans
+corresponding to the input scans that were completed while you processed the
+previous output scan.  In this way, the decoder automatically adapts its
+speed to the arriving data, by skipping output scans as necessary to keep up
+with the arriving data.
+
+When using this strategy, you'll want to be sure that you perform a final
+output pass after receiving all the data; otherwise your last display may not
+be full quality across the whole screen.  So the right outer loop logic is
+something like this:
 	do {
 	    absorb any waiting input by calling jpeg_consume_input()
 	    final_pass = jpeg_input_complete(&cinfo);
@@ -1869,15 +1944,15 @@ the final pass, the right loop logic is like this:
 	        cinfo.input_scan_number == cinfo.output_scan_number)
 	      break;
 	}
-In this case you don't need to know in advance whether an output pass is
-the last one, so it's not necessary to have reached EOF before starting the
-final output pass; rather, what you want to test is whether the output pass
-was performed in sync with the final input scan.  This form of the loop
-will avoid an extra output pass whenever the decoder is able (or nearly
-able) to keep up with the incoming data.
+In this case you don't need to know in advance whether an output pass is to
+be the last one, so it's not necessary to have reached EOF before starting
+the final output pass; rather, what you want to test is whether the output
+pass was performed in sync with the final input scan.  This form of the loop
+will avoid an extra output pass whenever the decoder is able (or nearly able)
+to keep up with the incoming data.
 
 When the data transmission speed is high, you might begin a display pass,
-then find that much or all of the image has arrived before you can complete
+then find that much or all of the file has arrived before you can complete
 the pass.  (You can detect this by noting the JPEG_REACHED_EOI return code
 from jpeg_consume_input(), or equivalently by testing jpeg_input_complete().)
 In this situation you may wish to abort the current display pass and start a
@@ -1916,10 +1991,10 @@ routines:
 * jpeg_read_scanlines(), as always, returns the number of scanlines that it
   was able to produce before suspending.
 * jpeg_finish_output() will read any markers following the target scan,
-  up to the end of the image or the SOS marker that begins another scan.
+  up to the end of the file or the SOS marker that begins another scan.
   (But it reads no input if jpeg_consume_input() has already reached the
-  end of the image or a SOS marker beyond the target output scan.)
-* jpeg_finish_decompress() will read until the end of image, and thus can
+  end of the file or a SOS marker beyond the target output scan.)
+* jpeg_finish_decompress() will read until the end of file, and thus can
   suspend if the end hasn't already been reached (as can be tested by
   calling jpeg_input_complete()).
 jpeg_start_output(), jpeg_finish_output(), and jpeg_finish_decompress()
@@ -2153,17 +2228,49 @@ In some cases you might want to compress an image using tables which are
 not stored in the application, but are defined in an interchange or
 tables-only file readable by the application.  This can be done by setting up
 a JPEG decompression object to read the specification file, then copying the
-tables into your compression object.
+tables into your compression object.  See jpeg_copy_critical_parameters()
+for an example of copying quantization tables.
 
 
 To read abbreviated image files, you simply need to load the proper tables
 into the decompression object before trying to read the abbreviated image.
 If the proper tables are stored in the application program, you can just
-allocate the table structs and fill in their contents directly.  More commonly
-you'd want to read the tables from a tables-only file.  The jpeg_read_header()
-call is sufficient to read a tables-only file.  You must pass a second
-parameter of FALSE to indicate that you do not require an image to be present.
-Thus, the typical scenario is
+allocate the table structs and fill in their contents directly.  For example,
+to load a fixed quantization table into table slot "n":
+
+    if (cinfo.quant_tbl_ptrs[n] == NULL)
+      cinfo.quant_tbl_ptrs[n] = jpeg_alloc_quant_table((j_common_ptr) &cinfo);
+    quant_ptr = cinfo.quant_tbl_ptrs[n];	/* quant_ptr is JQUANT_TBL* */
+    for (i = 0; i < 64; i++) {
+      /* Qtable[] is desired quantization table, in natural array order */
+      quant_ptr->quantval[i] = Qtable[i];
+    }
+
+Code to load a fixed Huffman table is typically (for AC table "n"):
+
+    if (cinfo.ac_huff_tbl_ptrs[n] == NULL)
+      cinfo.ac_huff_tbl_ptrs[n] = jpeg_alloc_huff_table((j_common_ptr) &cinfo);
+    huff_ptr = cinfo.ac_huff_tbl_ptrs[n];	/* huff_ptr is JHUFF_TBL* */
+    for (i = 1; i <= 16; i++) {
+      /* counts[i] is number of Huffman codes of length i bits, i=1..16 */
+      huff_ptr->bits[i] = counts[i];
+    }
+    for (i = 0; i < 256; i++) {
+      /* symbols[] is the list of Huffman symbols, in code-length order */
+      huff_ptr->huffval[i] = symbols[i];
+    }
+
+(Note that trying to set cinfo.quant_tbl_ptrs[n] to point directly at a
+constant JQUANT_TBL object is not safe.  If the incoming file happened to
+contain a quantization table definition, your master table would get
+overwritten!  Instead allocate a working table copy and copy the master table
+into it, as illustrated above.  Ditto for Huffman tables, of course.)
+
+You might want to read the tables from a tables-only file, rather than
+hard-wiring them into your application.  The jpeg_read_header() call is
+sufficient to read a tables-only file.  You must pass a second parameter of
+FALSE to indicate that you do not require an image to be present.  Thus, the
+typical scenario is
 
 	create JPEG decompression object
 	set source to tables-only file
@@ -2237,6 +2344,7 @@ the selected colorspace is RGB, CMYK, or YCCK.  You can disable this, but
 we don't recommend it.  The decompression library will recognize JFIF and
 Adobe markers and will set the JPEG colorspace properly when one is found.
 
+
 You can write special markers immediately following the datastream header by
 calling jpeg_write_marker() after jpeg_start_compress() and before the first
 call to jpeg_write_scanlines().  When you do this, the markers appear after
@@ -2246,18 +2354,96 @@ all else.  Specify the marker type parameter as "JPEG_COM" for COM or
 any marker type, but we don't recommend writing any other kinds of marker.)
 For example, to write a user comment string pointed to by comment_text:
 	jpeg_write_marker(cinfo, JPEG_COM, comment_text, strlen(comment_text));
-Or if you prefer to synthesize the marker byte sequence yourself, you can
-just cram it straight into the data destination module.
 
-For decompression, you can supply your own routine to process COM or APPn
-markers by calling jpeg_set_marker_processor().  Usually you'd call this
-after creating a decompression object and before calling jpeg_read_header(),
-because the markers of interest will normally be scanned by jpeg_read_header.
-Once you've supplied a routine, it will be used for the life of that
-decompression object.  A separate routine may be registered for COM and for
-each APPn marker code.
+If it's not convenient to store all the marker data in memory at once,
+you can instead call jpeg_write_m_header() followed by multiple calls to
+jpeg_write_m_byte().  If you do it this way, it's your responsibility to
+call jpeg_write_m_byte() exactly the number of times given in the length
+parameter to jpeg_write_m_header().  (This method lets you empty the
+output buffer partway through a marker, which might be important when
+using a suspending data destination module.  In any case, if you are using
+a suspending destination, you should flush its buffer after inserting
+any special markers.  See "I/O suspension".)
 
-A marker processor routine must have the signature
+Or, if you prefer to synthesize the marker byte sequence yourself,
+you can just cram it straight into the data destination module.
+
+If you are writing JFIF 1.02 extension markers (thumbnail images), don't
+forget to set cinfo.JFIF_minor_version = 2 so that the encoder will write the
+correct JFIF version number in the JFIF header marker.  The library's default
+is to write version 1.01, but that's wrong if you insert any 1.02 extension
+markers.  (We could probably get away with just defaulting to 1.02, but there
+used to be broken decoders that would complain about unknown minor version
+numbers.  To reduce compatibility risks it's safest not to write 1.02 unless
+you are actually using 1.02 extensions.)
+
+
+When reading, two methods of handling special markers are available:
+1. You can ask the library to save the contents of COM and/or APPn markers
+into memory, and then examine them at your leisure afterwards.
+2. You can supply your own routine to process COM and/or APPn markers
+on-the-fly as they are read.
+The first method is simpler to use, especially if you are using a suspending
+data source; writing a marker processor that copes with input suspension is
+not easy (consider what happens if the marker is longer than your available
+input buffer).  However, the second method conserves memory since the marker
+data need not be kept around after it's been processed.
+
+For either method, you'd normally set up marker handling after creating a
+decompression object and before calling jpeg_read_header(), because the
+markers of interest will typically be near the head of the file and so will
+be scanned by jpeg_read_header.  Once you've established a marker handling
+method, it will be used for the life of that decompression object
+(potentially many datastreams), unless you change it.  Marker handling is
+determined separately for COM markers and for each APPn marker code.
+
+
+To save the contents of special markers in memory, call
+	jpeg_save_markers(cinfo, marker_code, length_limit)
+where marker_code is the marker type to save, JPEG_COM or JPEG_APP0+n.
+(To arrange to save all the special marker types, you need to call this
+routine 17 times, for COM and APP0-APP15.)  If the incoming marker is longer
+than length_limit data bytes, only length_limit bytes will be saved; this
+parameter allows you to avoid chewing up memory when you only need to see the
+first few bytes of a potentially large marker.  If you want to save all the
+data, set length_limit to 0xFFFF; that is enough since marker lengths are only
+16 bits.  As a special case, setting length_limit to 0 prevents that marker
+type from being saved at all.  (That is the default behavior, in fact.)
+
+After jpeg_read_header() completes, you can examine the special markers by
+following the cinfo->marker_list pointer chain.  All the special markers in
+the file appear in this list, in order of their occurrence in the file (but
+omitting any markers of types you didn't ask for).  Both the original data
+length and the saved data length are recorded for each list entry; the latter
+will not exceed length_limit for the particular marker type.  Note that these
+lengths exclude the marker length word, whereas the stored representation
+within the JPEG file includes it.  (Hence the maximum data length is really
+only 65533.)
+
+It is possible that additional special markers appear in the file beyond the
+SOS marker at which jpeg_read_header stops; if so, the marker list will be
+extended during reading of the rest of the file.  This is not expected to be
+common, however.  If you are short on memory you may want to reset the length
+limit to zero for all marker types after finishing jpeg_read_header, to
+ensure that the max_memory_to_use setting cannot be exceeded due to addition
+of later markers.
+
+The marker list remains stored until you call jpeg_finish_decompress or
+jpeg_abort, at which point the memory is freed and the list is set to empty.
+(jpeg_destroy also releases the storage, of course.)
+
+Note that the library is internally interested in APP0 and APP14 markers;
+if you try to set a small nonzero length limit on these types, the library
+will silently force the length up to the minimum it wants.  (But you can set
+a zero length limit to prevent them from being saved at all.)  Also, in a
+16-bit environment, the maximum length limit may be constrained to less than
+65533 by malloc() limitations.  It is therefore best not to assume that the
+effective length limit is exactly what you set it to be.
+
+
+If you want to supply your own marker-reading routine, you do it by calling
+jpeg_set_marker_processor().  A marker processor routine must have the
+signature
 	boolean jpeg_marker_parser_method (j_decompress_ptr cinfo)
 Although the marker code is not explicitly passed, the routine can find it
 in cinfo->unread_marker.  At the time of call, the marker proper has been
@@ -2271,9 +2457,16 @@ use a suspending data source.)
 If you override the default APP0 or APP14 processors, it is up to you to
 recognize JFIF and Adobe markers if you want colorspace recognition to occur
 properly.  We recommend copying and extending the default processors if you
-want to do that.
+want to do that.  (A better idea is to save these marker types for later
+examination by calling jpeg_save_markers(); that method doesn't interfere
+with the library's own processing of these markers.)
+
+jpeg_set_marker_processor() and jpeg_save_markers() are mutually exclusive
+--- if you call one it overrides any previous call to the other, for the
+particular marker type specified.
 
 A simple example of an external COM processor can be found in djpeg.c.
+Also, see jpegtran.c for an example of using jpeg_save_markers.
 
 
 Raw (downsampled) image data
@@ -2419,6 +2612,15 @@ and also read structure.doc's discussion of virtual array handling).  Or,
 for simple transcoding to a different JPEG file format, the array list can
 just be handed directly to jpeg_write_coefficients().
 
+Each block in the block arrays contains quantized coefficient values in
+normal array order (not JPEG zigzag order).  The block arrays contain only
+DCT blocks containing real data; any entirely-dummy blocks added to fill out
+interleaved MCUs at the right or bottom edges of the image are discarded
+during reading and are not stored in the block arrays.  (The size of each
+block array can be determined from the width_in_blocks and height_in_blocks
+fields of the component's comp_info entry.)  This is also the data format
+expected by jpeg_write_coefficients().
+
 When you are done using the virtual arrays, call jpeg_finish_decompress()
 to release the array storage and return the decompression object to an idle
 state; or just call jpeg_destroy() if you don't need to reuse the object.
@@ -2428,14 +2630,14 @@ NULL if it is forced to suspend; a non-NULL return value indicates successful
 completion.  You need not test for a NULL return value when using a
 non-suspending data source.
 
-Each block in the block arrays contains quantized coefficient values in
-normal array order (not JPEG zigzag order).  The block arrays contain only
-DCT blocks containing real data; any entirely-dummy blocks added to fill out
-interleaved MCUs at the right or bottom edges of the image are discarded
-during reading and are not stored in the block arrays.  (The size of each
-block array can be determined from the width_in_blocks and height_in_blocks
-fields of the component's comp_info entry.)  This is also the data format
-expected by jpeg_write_coefficients().
+It is also possible to call jpeg_read_coefficients() to obtain access to the
+decoder's coefficient arrays during a normal decode cycle in buffered-image
+mode.  This frammish might be useful for progressively displaying an incoming
+image and then re-encoding it without loss.  To do this, decode in buffered-
+image mode as discussed previously, then call jpeg_read_coefficients() after
+the last jpeg_finish_output() call.  The arrays will be available for your use
+until you call jpeg_finish_decompress().
+
 
 To write the contents of a JPEG file as DCT coefficients, you must provide
 the DCT coefficients stored in virtual block arrays.  You can either pass
@@ -2603,8 +2805,55 @@ DOS will require a reboot to recover the memory.)  Thus, with these memory
 managers, it's a good idea to provide a signal handler that will trap any
 early exit from your program.  The handler should call either jpeg_abort()
 or jpeg_destroy() for any active JPEG objects.  A handler is not needed with
-jmemnobs.c, and shouldn't be necessary with jmemansi.c either, since the C
-library is supposed to take care of deleting files made with tmpfile().
+jmemnobs.c, and shouldn't be necessary with jmemansi.c or jmemmac.c either,
+since the C library is supposed to take care of deleting files made with
+tmpfile().
+
+
+Memory usage
+------------
+
+Working memory requirements while performing compression or decompression
+depend on image dimensions, image characteristics (such as colorspace and
+JPEG process), and operating mode (application-selected options).
+
+As of v6b, the decompressor requires:
+ 1. About 24K in more-or-less-fixed-size data.  This varies a bit depending
+    on operating mode and image characteristics (particularly color vs.
+    grayscale), but it doesn't depend on image dimensions.
+ 2. Strip buffers (of size proportional to the image width) for IDCT and
+    upsampling results.  The worst case for commonly used sampling factors
+    is about 34 bytes * width in pixels for a color image.  A grayscale image
+    only needs about 8 bytes per pixel column.
+ 3. A full-image DCT coefficient buffer is needed to decode a multi-scan JPEG
+    file (including progressive JPEGs), or whenever you select buffered-image
+    mode.  This takes 2 bytes/coefficient.  At typical 2x2 sampling, that's
+    3 bytes per pixel for a color image.  Worst case (1x1 sampling) requires
+    6 bytes/pixel.  For grayscale, figure 2 bytes/pixel.
+ 4. To perform 2-pass color quantization, the decompressor also needs a
+    128K color lookup table and a full-image pixel buffer (3 bytes/pixel).
+This does not count any memory allocated by the application, such as a
+buffer to hold the final output image.
+
+The above figures are valid for 8-bit JPEG data precision and a machine with
+32-bit ints.  For 12-bit JPEG data, double the size of the strip buffers and
+quantization pixel buffer.  The "fixed-size" data will be somewhat smaller
+with 16-bit ints, larger with 64-bit ints.  Also, CMYK or other unusual
+color spaces will require different amounts of space.
+
+The full-image coefficient and pixel buffers, if needed at all, do not
+have to be fully RAM resident; you can have the library use temporary
+files instead when the total memory usage would exceed a limit you set.
+(But if your OS supports virtual memory, it's probably better to just use
+jmemnobs and let the OS do the swapping.)
+
+The compressor's memory requirements are similar, except that it has no need
+for color quantization.  Also, it needs a full-image DCT coefficient buffer
+if Huffman-table optimization is asked for, even if progressive mode is not
+requested.
+
+If you need more detailed information about memory usage in a particular
+situation, you can enable the MEM_STATS code in jmemmgr.c.
 
 
 Library compile-time options
@@ -2613,7 +2862,7 @@ Library compile-time options
 A number of compile-time options are available by modifying jmorecfg.h.
 
 The JPEG standard provides for both the baseline 8-bit DCT process and
-a 12-bit DCT process.  12-bit lossy JPEG is supported if you define
+a 12-bit DCT process.  The IJG code supports 12-bit lossy JPEG if you define
 BITS_IN_JSAMPLE as 12 rather than 8.  Note that this causes JSAMPLE to be
 larger than a char, so it affects the surrounding application's image data.
 The sample applications cjpeg and djpeg can support 12-bit mode only for PPM
@@ -2630,6 +2879,9 @@ Note that a 12-bit library always compresses in Huffman optimization mode,
 in order to generate valid Huffman tables.  This is necessary because our
 default Huffman tables only cover 8-bit data.  If you need to output 12-bit
 files in one pass, you'll have to supply suitable default Huffman tables.
+You may also want to supply your own DCT quantization tables; the existing
+quality-scaling code has been developed for 8-bit use, and probably doesn't
+generate especially good tables for 12-bit.
 
 The maximum number of components (color channels) in the image is determined
 by MAX_COMPONENTS.  The JPEG standard allows up to 255 components, but we
@@ -2646,6 +2898,16 @@ to burn.
 You can reduce the size of the library by compiling out various optional
 functions.  To do this, undefine xxx_SUPPORTED symbols as necessary.
 
+You can also save a few K by not having text error messages in the library;
+the standard error message table occupies about 5Kb.  This is particularly
+reasonable for embedded applications where there's no good way to display 
+a message anyway.  To do this, remove the creation of the message table
+(jpeg_std_message_table[]) from jerror.c, and alter format_message to do
+something reasonable without it.  You could output the numeric value of the
+message code number, for example.  If you do this, you can also save a couple
+more K by modifying the TRACEMSn() macros in jerror.h to expand to nothing;
+you don't need trace capability anyway, right?
+
 
 Portability considerations
 --------------------------
@@ -2656,9 +2918,9 @@ the design goals in this area.  (If you encounter any bugs that cause the
 library to be less portable than is claimed here, we'd appreciate hearing
 about them.)
 
-The code works fine on both ANSI and pre-ANSI C compilers, using any of the
-popular system include file setups, and some not-so-popular ones too.  See
-install.doc for configuration procedures.
+The code works fine on ANSI C, C++, and pre-ANSI C compilers, using any of
+the popular system include file setups, and some not-so-popular ones too.
+See install.doc for configuration procedures.
 
 The code is not dependent on the exact sizes of the C data types.  As
 distributed, we make the assumptions that
@@ -2735,7 +2997,7 @@ Far data space may also be a tight resource when you are dealing with large
 images.  The most memory-intensive case is decompression with two-pass color
 quantization, or single-pass quantization to an externally supplied color
 map.  This requires a 128Kb color lookup table plus strip buffers amounting
-to about 50 bytes per column for typical sampling ratios (eg, about 32000
+to about 40 bytes per column for typical sampling ratios (eg, about 25600
 bytes for a 640-pixel-wide image).  You may not be able to process wide
 images if you have large data structures of your own.
 

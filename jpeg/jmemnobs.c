@@ -1,7 +1,7 @@
 /*
  * jmemnobs.c
  *
- * Copyright (C) 1992-1994, Thomas G. Lane.
+ * Copyright (C) 1992-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -31,13 +31,13 @@ extern void free JPP((void *ptr));
  * routines malloc() and free().
  */
 
-GLOBAL void *
+GLOBAL(void *)
 jpeg_get_small (j_common_ptr cinfo, size_t sizeofobject)
 {
   return (void *) malloc(sizeofobject);
 }
 
-GLOBAL void
+GLOBAL(void)
 jpeg_free_small (j_common_ptr cinfo, void * object, size_t sizeofobject)
 {
   free(object);
@@ -51,13 +51,13 @@ jpeg_free_small (j_common_ptr cinfo, void * object, size_t sizeofobject)
  * you probably won't be able to process useful-size images in only 64KB.
  */
 
-GLOBAL void FAR *
+GLOBAL(void FAR *)
 jpeg_get_large (j_common_ptr cinfo, size_t sizeofobject)
 {
   return (void FAR *) malloc(sizeofobject);
 }
 
-GLOBAL void
+GLOBAL(void)
 jpeg_free_large (j_common_ptr cinfo, void FAR * object, size_t sizeofobject)
 {
   free(object);
@@ -69,7 +69,7 @@ jpeg_free_large (j_common_ptr cinfo, void FAR * object, size_t sizeofobject)
  * Here we always say, "we got all you want bud!"
  */
 
-GLOBAL long
+GLOBAL(long)
 jpeg_mem_available (j_common_ptr cinfo, long min_bytes_needed,
 		    long max_bytes_needed, long already_allocated)
 {
@@ -83,7 +83,7 @@ jpeg_mem_available (j_common_ptr cinfo, long min_bytes_needed,
  * this should never be called and we can just error out.
  */
 
-GLOBAL void
+GLOBAL(void)
 jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 			 long total_bytes_needed)
 {
@@ -96,13 +96,13 @@ jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
  * cleanup required.  Here, there isn't any.
  */
 
-GLOBAL long
+GLOBAL(long)
 jpeg_mem_init (j_common_ptr cinfo)
 {
   return 0;			/* just set max_memory_to_use to 0 */
 }
 
-GLOBAL void
+GLOBAL(void)
 jpeg_mem_term (j_common_ptr cinfo)
 {
   /* no work */

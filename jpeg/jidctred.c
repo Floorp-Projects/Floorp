@@ -1,7 +1,7 @@
 /*
  * jidctred.c
  *
- * Copyright (C) 1994, Thomas G. Lane.
+ * Copyright (C) 1994-1998, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -114,7 +114,7 @@
  * producing a reduced-size 4x4 output block.
  */
 
-GLOBAL void
+GLOBAL(void)
 jpeg_idct_4x4 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	       JCOEFPTR coef_block,
 	       JSAMPARRAY output_buf, JDIMENSION output_col)
@@ -139,8 +139,9 @@ jpeg_idct_4x4 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     /* Don't bother to process column 4, because second pass won't use it */
     if (ctr == DCTSIZE-4)
       continue;
-    if ((inptr[DCTSIZE*1] | inptr[DCTSIZE*2] | inptr[DCTSIZE*3] |
-	 inptr[DCTSIZE*5] | inptr[DCTSIZE*6] | inptr[DCTSIZE*7]) == 0) {
+    if (inptr[DCTSIZE*1] == 0 && inptr[DCTSIZE*2] == 0 &&
+	inptr[DCTSIZE*3] == 0 && inptr[DCTSIZE*5] == 0 &&
+	inptr[DCTSIZE*6] == 0 && inptr[DCTSIZE*7] == 0) {
       /* AC terms all zero; we need not examine term 4 for 4x4 output */
       int dcval = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]) << PASS1_BITS;
       
@@ -198,8 +199,8 @@ jpeg_idct_4x4 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     /* It's not clear whether a zero row test is worthwhile here ... */
 
 #ifndef NO_ZERO_ROW_TEST
-    if ((wsptr[1] | wsptr[2] | wsptr[3] | wsptr[5] | wsptr[6] |
-	 wsptr[7]) == 0) {
+    if (wsptr[1] == 0 && wsptr[2] == 0 && wsptr[3] == 0 &&
+	wsptr[5] == 0 && wsptr[6] == 0 && wsptr[7] == 0) {
       /* AC terms all zero */
       JSAMPLE dcval = range_limit[(int) DESCALE((INT32) wsptr[0], PASS1_BITS+3)
 				  & RANGE_MASK];
@@ -266,7 +267,7 @@ jpeg_idct_4x4 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
  * producing a reduced-size 2x2 output block.
  */
 
-GLOBAL void
+GLOBAL(void)
 jpeg_idct_2x2 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	       JCOEFPTR coef_block,
 	       JSAMPARRAY output_buf, JDIMENSION output_col)
@@ -290,8 +291,8 @@ jpeg_idct_2x2 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     /* Don't bother to process columns 2,4,6 */
     if (ctr == DCTSIZE-2 || ctr == DCTSIZE-4 || ctr == DCTSIZE-6)
       continue;
-    if ((inptr[DCTSIZE*1] | inptr[DCTSIZE*3] |
-	 inptr[DCTSIZE*5] | inptr[DCTSIZE*7]) == 0) {
+    if (inptr[DCTSIZE*1] == 0 && inptr[DCTSIZE*3] == 0 &&
+	inptr[DCTSIZE*5] == 0 && inptr[DCTSIZE*7] == 0) {
       /* AC terms all zero; we need not examine terms 2,4,6 for 2x2 output */
       int dcval = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]) << PASS1_BITS;
       
@@ -331,7 +332,7 @@ jpeg_idct_2x2 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     /* It's not clear whether a zero row test is worthwhile here ... */
 
 #ifndef NO_ZERO_ROW_TEST
-    if ((wsptr[1] | wsptr[3] | wsptr[5] | wsptr[7]) == 0) {
+    if (wsptr[1] == 0 && wsptr[3] == 0 && wsptr[5] == 0 && wsptr[7] == 0) {
       /* AC terms all zero */
       JSAMPLE dcval = range_limit[(int) DESCALE((INT32) wsptr[0], PASS1_BITS+3)
 				  & RANGE_MASK];
@@ -374,7 +375,7 @@ jpeg_idct_2x2 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
  * producing a reduced-size 1x1 output block.
  */
 
-GLOBAL void
+GLOBAL(void)
 jpeg_idct_1x1 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	       JCOEFPTR coef_block,
 	       JSAMPARRAY output_buf, JDIMENSION output_col)

@@ -1,7 +1,7 @@
 /*
  * jdatadst.c
  *
- * Copyright (C) 1994, Thomas G. Lane.
+ * Copyright (C) 1994-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -39,7 +39,7 @@ typedef my_destination_mgr * my_dest_ptr;
  * before any data is actually written.
  */
 
-METHODDEF void
+METHODDEF(void)
 init_destination (j_compress_ptr cinfo)
 {
   my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
@@ -77,7 +77,7 @@ init_destination (j_compress_ptr cinfo)
  * write it out when emptying the buffer externally.
  */
 
-METHODDEF boolean
+METHODDEF(boolean)
 empty_output_buffer (j_compress_ptr cinfo)
 {
   my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
@@ -102,7 +102,7 @@ empty_output_buffer (j_compress_ptr cinfo)
  * for error exit.
  */
 
-METHODDEF void
+METHODDEF(void)
 term_destination (j_compress_ptr cinfo)
 {
   my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
@@ -126,7 +126,7 @@ term_destination (j_compress_ptr cinfo)
  * for closing it after finishing compression.
  */
 
-GLOBAL JRI_PUBLIC_API(void)
+GLOBAL(void)
 jpeg_stdio_dest (j_compress_ptr cinfo, FILE * outfile)
 {
   my_dest_ptr dest;
@@ -150,9 +150,6 @@ jpeg_stdio_dest (j_compress_ptr cinfo, FILE * outfile)
   dest->outfile = outfile;
 }
 
-
-
-
 /*
  * term_destination_file_close --- called by jpeg_finish_compress
  * after all data has been written.  Usually needs to flush buffer.
@@ -162,7 +159,7 @@ jpeg_stdio_dest (j_compress_ptr cinfo, FILE * outfile)
  * for error exit.
  */
 
-METHODDEF void
+METHODDEF(void)
 term_destination_file_close(j_compress_ptr cinfo)
 {
   my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
@@ -192,7 +189,7 @@ term_destination_file_close(j_compress_ptr cinfo)
  * for closing it after finishing compression.
  */
 
-GLOBAL JRI_PUBLIC_API(void)
+GLOBAL(void)
 jpeg_file_dest (j_compress_ptr cinfo, char * outfile)
 {
   my_dest_ptr dest;
@@ -222,14 +219,12 @@ jpeg_file_dest (j_compress_ptr cinfo, char * outfile)
 API to close file in case of error. needed for win16. DLL that opens file must also close it.
 */
 
-GLOBAL JRI_PUBLIC_API(void)
+GLOBAL(void)
 jpeg_close_file(j_compress_ptr cinfo)
 {
   my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
   fclose(dest->outfile);
 }
-
-
 
 
 

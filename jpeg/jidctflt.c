@@ -1,7 +1,7 @@
 /*
  * jidctflt.c
  *
- * Copyright (C) 1994, Thomas G. Lane.
+ * Copyright (C) 1994-1998, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -64,7 +64,7 @@
  * Perform dequantization and inverse DCT on one block of coefficients.
  */
 
-GLOBAL void
+GLOBAL(void)
 jpeg_idct_float (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col)
@@ -96,9 +96,10 @@ jpeg_idct_float (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      * column DCT calculations can be simplified this way.
      */
     
-    if ((inptr[DCTSIZE*1] | inptr[DCTSIZE*2] | inptr[DCTSIZE*3] |
-	 inptr[DCTSIZE*4] | inptr[DCTSIZE*5] | inptr[DCTSIZE*6] |
-	 inptr[DCTSIZE*7]) == 0) {
+    if (inptr[DCTSIZE*1] == 0 && inptr[DCTSIZE*2] == 0 &&
+	inptr[DCTSIZE*3] == 0 && inptr[DCTSIZE*4] == 0 &&
+	inptr[DCTSIZE*5] == 0 && inptr[DCTSIZE*6] == 0 &&
+	inptr[DCTSIZE*7] == 0) {
       /* AC terms all zero */
       FAST_FLOAT dcval = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]);
       

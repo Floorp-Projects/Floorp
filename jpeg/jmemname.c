@@ -1,7 +1,7 @@
 /*
  * jmemname.c
  *
- * Copyright (C) 1992-1994, Thomas G. Lane.
+ * Copyright (C) 1992-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -30,8 +30,13 @@ extern void free JPP((void *ptr));
 #define READ_BINARY	"r"
 #define RW_BINARY	"w+"
 #else
+#ifdef VMS			/* VMS is very nonstandard */
+#define READ_BINARY	"rb", "ctx=stm"
+#define RW_BINARY	"w+b", "ctx=stm"
+#else				/* standard ANSI-compliant case */
 #define READ_BINARY	"rb"
 #define RW_BINARY	"w+b"
+#endif
 #endif
 
 
@@ -86,7 +91,7 @@ extern int errno;
 #endif
 
 
-LOCAL void
+LOCAL(void)
 select_file_name (char * fname)
 {
   FILE * tfile;
@@ -117,7 +122,7 @@ select_file_name (char * fname)
 #define TEMP_FILE_NAME  "%sJPG%dXXXXXX"
 #endif
 
-LOCAL void
+LOCAL(void)
 select_file_name (char * fname)
 {
   next_file_num++;		/* advance counter */
@@ -134,13 +139,13 @@ select_file_name (char * fname)
  * routines malloc() and free().
  */
 
-GLOBAL void *
+GLOBAL(void *)
 jpeg_get_small (j_common_ptr cinfo, size_t sizeofobject)
 {
   return (void *) malloc(sizeofobject);
 }
 
-GLOBAL void
+GLOBAL(void)
 jpeg_free_small (j_common_ptr cinfo, void * object, size_t sizeofobject)
 {
   free(object);
@@ -154,13 +159,13 @@ jpeg_free_small (j_common_ptr cinfo, void * object, size_t sizeofobject)
  * you probably won't be able to process useful-size images in only 64KB.
  */
 
-GLOBAL void FAR *
+GLOBAL(void FAR *)
 jpeg_get_large (j_common_ptr cinfo, size_t sizeofobject)
 {
   return (void FAR *) malloc(sizeofobject);
 }
 
-GLOBAL void
+GLOBAL(void)
 jpeg_free_large (j_common_ptr cinfo, void FAR * object, size_t sizeofobject)
 {
   free(object);
@@ -179,7 +184,7 @@ jpeg_free_large (j_common_ptr cinfo, void FAR * object, size_t sizeofobject)
 #define DEFAULT_MAX_MEM		1000000L /* default: one megabyte */
 #endif
 
-GLOBAL long
+GLOBAL(long)
 jpeg_mem_available (j_common_ptr cinfo, long min_bytes_needed,
 		    long max_bytes_needed, long already_allocated)
 {
@@ -195,7 +200,7 @@ jpeg_mem_available (j_common_ptr cinfo, long min_bytes_needed,
  */
 
 
-METHODDEF void
+METHODDEF(void)
 read_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 		    void FAR * buffer_address,
 		    long file_offset, long byte_count)
@@ -208,7 +213,7 @@ read_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 write_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 		     void FAR * buffer_address,
 		     long file_offset, long byte_count)
@@ -221,7 +226,7 @@ write_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 close_backing_store (j_common_ptr cinfo, backing_store_ptr info)
 {
   fclose(info->temp_file);	/* close the file */
@@ -238,7 +243,7 @@ close_backing_store (j_common_ptr cinfo, backing_store_ptr info)
  * Initial opening of a backing-store object.
  */
 
-GLOBAL void
+GLOBAL(void)
 jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 			 long total_bytes_needed)
 {
@@ -257,14 +262,14 @@ jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
  * cleanup required.
  */
 
-GLOBAL long
+GLOBAL(long)
 jpeg_mem_init (j_common_ptr cinfo)
 {
   next_file_num = 0;		/* initialize temp file name generator */
   return DEFAULT_MAX_MEM;	/* default for max_memory_to_use */
 }
 
-GLOBAL void
+GLOBAL(void)
 jpeg_mem_term (j_common_ptr cinfo)
 {
   /* no work */

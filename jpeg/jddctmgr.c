@@ -1,7 +1,7 @@
 /*
  * jddctmgr.c
  *
- * Copyright (C) 1994-1995, Thomas G. Lane.
+ * Copyright (C) 1994-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -85,7 +85,7 @@ typedef union {
  * a matching multiplier table.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_pass (j_decompress_ptr cinfo)
 {
   my_idct_ptr idct = (my_idct_ptr) cinfo->idct;
@@ -161,11 +161,11 @@ start_pass (j_decompress_ptr cinfo)
     case JDCT_ISLOW:
       {
 	/* For LL&M IDCT method, multipliers are equal to raw quantization
-	 * coefficients, but are stored in natural order as ints.
+	 * coefficients, but are stored as ints to ensure access efficiency.
 	 */
 	ISLOW_MULT_TYPE * ismtbl = (ISLOW_MULT_TYPE *) compptr->dct_table;
 	for (i = 0; i < DCTSIZE2; i++) {
-	  ismtbl[i] = (ISLOW_MULT_TYPE) qtbl->quantval[jpeg_zigzag_order[i]];
+	  ismtbl[i] = (ISLOW_MULT_TYPE) qtbl->quantval[i];
 	}
       }
       break;
@@ -178,7 +178,7 @@ start_pass (j_decompress_ptr cinfo)
 	 *   scalefactor[0] = 1
 	 *   scalefactor[k] = cos(k*PI/16) * sqrt(2)    for k=1..7
 	 * For integer operation, the multiplier table is to be scaled by
-	 * IFAST_SCALE_BITS.  The multipliers are stored in natural order.
+	 * IFAST_SCALE_BITS.
 	 */
 	IFAST_MULT_TYPE * ifmtbl = (IFAST_MULT_TYPE *) compptr->dct_table;
 #define CONST_BITS 14
@@ -197,7 +197,7 @@ start_pass (j_decompress_ptr cinfo)
 
 	for (i = 0; i < DCTSIZE2; i++) {
 	  ifmtbl[i] = (IFAST_MULT_TYPE)
-	    DESCALE(MULTIPLY16V16((INT32) qtbl->quantval[jpeg_zigzag_order[i]],
+	    DESCALE(MULTIPLY16V16((INT32) qtbl->quantval[i],
 				  (INT32) aanscales[i]),
 		    CONST_BITS-IFAST_SCALE_BITS);
 	}
@@ -211,7 +211,6 @@ start_pass (j_decompress_ptr cinfo)
 	 * coefficients scaled by scalefactor[row]*scalefactor[col], where
 	 *   scalefactor[0] = 1
 	 *   scalefactor[k] = cos(k*PI/16) * sqrt(2)    for k=1..7
-	 * The multipliers are stored in natural order.
 	 */
 	FLOAT_MULT_TYPE * fmtbl = (FLOAT_MULT_TYPE *) compptr->dct_table;
 	int row, col;
@@ -224,7 +223,7 @@ start_pass (j_decompress_ptr cinfo)
 	for (row = 0; row < DCTSIZE; row++) {
 	  for (col = 0; col < DCTSIZE; col++) {
 	    fmtbl[i] = (FLOAT_MULT_TYPE)
-	      ((double) qtbl->quantval[jpeg_zigzag_order[i]] *
+	      ((double) qtbl->quantval[i] *
 	       aanscalefactor[row] * aanscalefactor[col]);
 	    i++;
 	  }
@@ -244,7 +243,7 @@ start_pass (j_decompress_ptr cinfo)
  * Initialize IDCT manager.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_inverse_dct (j_decompress_ptr cinfo)
 {
   my_idct_ptr idct;

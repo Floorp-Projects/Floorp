@@ -647,9 +647,16 @@ The underlying type is at least a 16-bit signed integer; while "short" is big
 enough on all machines of interest, on some machines it is preferable to use
 "int" for speed reasons, despite the storage cost.  Coefficients are grouped
 into 8x8 blocks (but we always use #defines DCTSIZE and DCTSIZE2 rather than
-"8" and "64").  The contents of a block may be either in "natural" or
-zigzagged order, and may be true values or divided by the quantization
-coefficients, depending on where the block is in the processing pipeline.
+"8" and "64").
+
+The contents of a coefficient block may be in either "natural" or zigzagged
+order, and may be true values or divided by the quantization coefficients,
+depending on where the block is in the processing pipeline.  In the current
+library, coefficient blocks are kept in natural order everywhere; the entropy
+codecs zigzag or dezigzag the data as it is written or read.  The blocks
+contain quantized coefficients everywhere outside the DCT/IDCT subsystems.
+(This latter decision may need to be revisited to support variable
+quantization a la JPEG Part 3.)
 
 Notice that the allocation unit is now a row of 8x8 blocks, corresponding to
 eight rows of samples.  Otherwise the structure is much the same as for

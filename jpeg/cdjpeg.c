@@ -1,7 +1,7 @@
 /*
  * cdjpeg.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -31,7 +31,7 @@
 
 static j_common_ptr sig_cinfo;
 
-GLOBAL void			/* must be global for Manx C */
+void				/* must be global for Manx C */
 signal_catcher (int signum)
 {
   if (sig_cinfo != NULL) {
@@ -43,11 +43,13 @@ signal_catcher (int signum)
 }
 
 
-GLOBAL void
+GLOBAL(void)
 enable_signal_catcher (j_common_ptr cinfo)
 {
   sig_cinfo = cinfo;
+#ifdef SIGINT			/* not all systems have SIGINT */
   signal(SIGINT, signal_catcher);
+#endif
 #ifdef SIGTERM			/* not all systems have SIGTERM */
   signal(SIGTERM, signal_catcher);
 #endif
@@ -62,7 +64,7 @@ enable_signal_catcher (j_common_ptr cinfo)
 
 #ifdef PROGRESS_REPORT
 
-METHODDEF void
+METHODDEF(void)
 progress_monitor (j_common_ptr cinfo)
 {
   cd_progress_ptr prog = (cd_progress_ptr) cinfo->progress;
@@ -83,7 +85,7 @@ progress_monitor (j_common_ptr cinfo)
 }
 
 
-GLOBAL void
+GLOBAL(void)
 start_progress_monitor (j_common_ptr cinfo, cd_progress_ptr progress)
 {
   /* Enable progress display, unless trace output is on */
@@ -97,7 +99,7 @@ start_progress_monitor (j_common_ptr cinfo, cd_progress_ptr progress)
 }
 
 
-GLOBAL void
+GLOBAL(void)
 end_progress_monitor (j_common_ptr cinfo)
 {
   /* Clear away progress display */
@@ -116,7 +118,7 @@ end_progress_monitor (j_common_ptr cinfo)
  * minchars is length of minimum legal abbreviation.
  */
 
-GLOBAL boolean
+GLOBAL(boolean)
 keymatch (char * arg, const char * keyword, int minchars)
 {
   register int ca, ck;
@@ -143,7 +145,7 @@ keymatch (char * arg, const char * keyword, int minchars)
  * Non-Unix systems often require some hacking to get out of text mode.
  */
 
-GLOBAL FILE *
+GLOBAL(FILE *)
 read_stdin (void)
 {
   FILE * input_file = stdin;
@@ -161,7 +163,7 @@ read_stdin (void)
 }
 
 
-GLOBAL FILE *
+GLOBAL(FILE *)
 write_stdout (void)
 {
   FILE * output_file = stdout;

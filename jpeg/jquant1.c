@@ -1,7 +1,7 @@
 /*
  * jquant1.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -182,7 +182,7 @@ typedef my_cquantizer * my_cquantize_ptr;
  */
 
 
-LOCAL int
+LOCAL(int)
 select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
 /* Determine allocation of desired colors to components, */
 /* and fill in Ncolors[] array to indicate choice. */
@@ -241,7 +241,7 @@ select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
 }
 
 
-LOCAL int
+LOCAL(int)
 output_value (j_decompress_ptr cinfo, int ci, int j, int maxj)
 /* Return j'th output value, where j will range from 0 to maxj */
 /* The output values must fall in 0..MAXJSAMPLE in increasing order */
@@ -255,29 +255,13 @@ output_value (j_decompress_ptr cinfo, int ci, int j, int maxj)
 }
 
 
-LOCAL int
+LOCAL(int)
 largest_input_value (j_decompress_ptr cinfo, int ci, int j, int maxj)
 /* Return largest input value that should map to j'th output value */
 /* Must have largest(j=0) >= 0, and largest(j=maxj) >= MAXJSAMPLE */
 {
   /* Breakpoints are halfway between values returned by output_value */
-#if defined(_WINDOWS) && !defined(_WIN32)
-	int iRetval;
-	INT32 lTemp;
-
-	iRetval = 0;
-	lTemp = 2*j + 1;
-	lTemp *= MAXJSAMPLE;
-	lTemp += maxj;
-	lTemp /= 2;
-	lTemp /= maxj;
-
-	iRetval = (int)lTemp;
-
-	return(iRetval);
-#else
   return (int) (((INT32) (2*j + 1) * MAXJSAMPLE + maxj) / (2*maxj));
-#endif
 }
 
 
@@ -285,7 +269,7 @@ largest_input_value (j_decompress_ptr cinfo, int ci, int j, int maxj)
  * Create the colormap.
  */
 
-LOCAL void
+LOCAL(void)
 create_colormap (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -345,7 +329,7 @@ create_colormap (j_decompress_ptr cinfo)
  * Create the color index table.
  */
 
-LOCAL void
+LOCAL(void)
 create_colorindex (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -408,7 +392,7 @@ create_colorindex (j_decompress_ptr cinfo)
  * distinct output values.
  */
 
-LOCAL ODITHER_MATRIX_PTR
+LOCAL(ODITHER_MATRIX_PTR)
 make_odither_array (j_decompress_ptr cinfo, int ncolors)
 {
   ODITHER_MATRIX_PTR odither;
@@ -444,7 +428,7 @@ make_odither_array (j_decompress_ptr cinfo, int ncolors)
  * share a dither table.
  */
 
-LOCAL void
+LOCAL(void)
 create_odither_tables (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -471,7 +455,7 @@ create_odither_tables (j_decompress_ptr cinfo)
  * Map some rows of pixels to the output colormapped representation.
  */
 
-METHODDEF void
+METHODDEF(void)
 color_quantize (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 		JSAMPARRAY output_buf, int num_rows)
 /* General case, no dithering */
@@ -499,7 +483,7 @@ color_quantize (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 color_quantize3 (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 		 JSAMPARRAY output_buf, int num_rows)
 /* Fast path for out_color_components==3, no dithering */
@@ -527,7 +511,7 @@ color_quantize3 (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 quantize_ord_dither (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 		     JSAMPARRAY output_buf, int num_rows)
 /* General case, with ordered dithering */
@@ -577,7 +561,7 @@ quantize_ord_dither (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 quantize3_ord_dither (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 		      JSAMPARRAY output_buf, int num_rows)
 /* Fast path for out_color_components==3, with ordered dithering */
@@ -622,7 +606,7 @@ quantize3_ord_dither (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 quantize_fs_dither (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 		    JSAMPARRAY output_buf, int num_rows)
 /* General case, with Floyd-Steinberg dithering */
@@ -734,7 +718,7 @@ quantize_fs_dither (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
  * Allocate workspace for Floyd-Steinberg errors.
  */
 
-LOCAL void
+LOCAL(void)
 alloc_fs_workspace (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -753,7 +737,7 @@ alloc_fs_workspace (j_decompress_ptr cinfo)
  * Initialize for one-pass color quantization.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_pass_1_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -810,7 +794,7 @@ start_pass_1_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
  * Finish up at the end of the pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 finish_pass_1_quant (j_decompress_ptr cinfo)
 {
   /* no work in 1-pass case */
@@ -822,7 +806,7 @@ finish_pass_1_quant (j_decompress_ptr cinfo)
  * Shouldn't get to this module!
  */
 
-METHODDEF void
+METHODDEF(void)
 new_color_map_1_quant (j_decompress_ptr cinfo)
 {
   ERREXIT(cinfo, JERR_MODE_CHANGE);
@@ -833,7 +817,7 @@ new_color_map_1_quant (j_decompress_ptr cinfo)
  * Module initialization routine for 1-pass color quantization.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_1pass_quantizer (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize;

@@ -1,7 +1,7 @@
 /*
  * jcmaster.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -12,7 +12,6 @@
  */
 
 #define JPEG_INTERNALS
-#include "xp_core.h"/*defines of int32 ect*/
 #include "jinclude.h"
 #include "jpeglib.h"
 
@@ -30,10 +29,10 @@ typedef struct {
 
   c_pass_type pass_type;	/* the type of the current pass */
 
-  int16 pass_number;		/* # of passes completed */
-  int16 total_passes;		/* total # of passes needed */
+  int pass_number;		/* # of passes completed */
+  int total_passes;		/* total # of passes needed */
 
-  int16 scan_number;		/* current index in scan_info[] */
+  int scan_number;		/* current index in scan_info[] */
 } my_comp_master;
 
 typedef my_comp_master * my_master_ptr;
@@ -43,13 +42,13 @@ typedef my_comp_master * my_master_ptr;
  * Support routines that do various essential calculations.
  */
 
-LOCAL void
+LOCAL(void)
 initial_setup (j_compress_ptr cinfo)
 /* Do computations that are needed before master selection phase */
 {
-  int16 ci;
+  int ci;
   jpeg_component_info *compptr;
-  int32 samplesperrow;
+  long samplesperrow;
   JDIMENSION jd_samplesperrow;
 
   /* Sanity check on image dimensions */
@@ -58,14 +57,14 @@ initial_setup (j_compress_ptr cinfo)
     ERREXIT(cinfo, JERR_EMPTY_IMAGE);
 
   /* Make sure image isn't bigger than I can handle */
-  if ((int32) cinfo->image_height > (int32) JPEG_MAX_DIMENSION ||
-      (int32) cinfo->image_width > (int32) JPEG_MAX_DIMENSION)
-    ERREXIT1(cinfo, JERR_IMAGE_TOO_BIG, (uint16) JPEG_MAX_DIMENSION);
+  if ((long) cinfo->image_height > (long) JPEG_MAX_DIMENSION ||
+      (long) cinfo->image_width > (long) JPEG_MAX_DIMENSION)
+    ERREXIT1(cinfo, JERR_IMAGE_TOO_BIG, (unsigned int) JPEG_MAX_DIMENSION);
 
   /* Width of an input scanline must be representable as JDIMENSION. */
-  samplesperrow = (int32) cinfo->image_width * (int32) cinfo->input_components;
+  samplesperrow = (long) cinfo->image_width * (long) cinfo->input_components;
   jd_samplesperrow = (JDIMENSION) samplesperrow;
-  if ((int32) jd_samplesperrow != samplesperrow)
+  if ((long) jd_samplesperrow != samplesperrow)
     ERREXIT(cinfo, JERR_WIDTH_OVERFLOW);
 
   /* For now, precision must match compiled-in value... */
@@ -100,18 +99,18 @@ initial_setup (j_compress_ptr cinfo)
     compptr->DCT_scaled_size = DCTSIZE;
     /* Size in DCT blocks */
     compptr->width_in_blocks = (JDIMENSION)
-      jdiv_round_up((int32) cinfo->image_width * (int32) compptr->h_samp_factor,
-		    (int32) (cinfo->max_h_samp_factor * DCTSIZE));
+      jdiv_round_up((long) cinfo->image_width * (long) compptr->h_samp_factor,
+		    (long) (cinfo->max_h_samp_factor * DCTSIZE));
     compptr->height_in_blocks = (JDIMENSION)
-      jdiv_round_up((int32) cinfo->image_height * (int32) compptr->v_samp_factor,
-		    (int32) (cinfo->max_v_samp_factor * DCTSIZE));
+      jdiv_round_up((long) cinfo->image_height * (long) compptr->v_samp_factor,
+		    (long) (cinfo->max_v_samp_factor * DCTSIZE));
     /* Size in samples */
     compptr->downsampled_width = (JDIMENSION)
-      jdiv_round_up((int32) cinfo->image_width * (int32) compptr->h_samp_factor,
-		    (int32) cinfo->max_h_samp_factor);
+      jdiv_round_up((long) cinfo->image_width * (long) compptr->h_samp_factor,
+		    (long) cinfo->max_h_samp_factor);
     compptr->downsampled_height = (JDIMENSION)
-      jdiv_round_up((int32) cinfo->image_height * (int32) compptr->v_samp_factor,
-		    (int32) cinfo->max_v_samp_factor);
+      jdiv_round_up((long) cinfo->image_height * (long) compptr->v_samp_factor,
+		    (long) cinfo->max_v_samp_factor);
     /* Mark component needed (this flag isn't actually used for compression) */
     compptr->component_needed = TRUE;
   }
@@ -120,26 +119,26 @@ initial_setup (j_compress_ptr cinfo)
    * main controller will call coefficient controller).
    */
   cinfo->total_iMCU_rows = (JDIMENSION)
-    jdiv_round_up((int32) cinfo->image_height,
-		  (int32) (cinfo->max_v_samp_factor*DCTSIZE));
+    jdiv_round_up((long) cinfo->image_height,
+		  (long) (cinfo->max_v_samp_factor*DCTSIZE));
 }
 
 
 #ifdef C_MULTISCAN_FILES_SUPPORTED
 
-LOCAL void
+LOCAL(void)
 validate_script (j_compress_ptr cinfo)
 /* Verify that the scan script in cinfo->scan_info[] is valid; also
  * determine whether it uses progressive JPEG, and set cinfo->progressive_mode.
  */
 {
   const jpeg_scan_info * scanptr;
-  int16 scanno, ncomps, ci, coefi, thisi;
-  int16 Ss, Se, Ah, Al;
+  int scanno, ncomps, ci, coefi, thisi;
+  int Ss, Se, Ah, Al;
   boolean component_sent[MAX_COMPONENTS];
 #ifdef C_PROGRESSIVE_SUPPORTED
-  int16 * last_bitpos_ptr;
-  int16 last_bitpos[MAX_COMPONENTS][DCTSIZE2];
+  int * last_bitpos_ptr;
+  int last_bitpos[MAX_COMPONENTS][DCTSIZE2];
   /* -1 until that coefficient has been seen; then last Al for it */
 #endif
 
@@ -186,8 +185,20 @@ validate_script (j_compress_ptr cinfo)
     Al = scanptr->Al;
     if (cinfo->progressive_mode) {
 #ifdef C_PROGRESSIVE_SUPPORTED
+      /* The JPEG spec simply gives the ranges 0..13 for Ah and Al, but that
+       * seems wrong: the upper bound ought to depend on data precision.
+       * Perhaps they really meant 0..N+1 for N-bit precision.
+       * Here we allow 0..10 for 8-bit data; Al larger than 10 results in
+       * out-of-range reconstructed DC values during the first DC scan,
+       * which might cause problems for some decoders.
+       */
+#if BITS_IN_JSAMPLE == 8
+#define MAX_AH_AL 10
+#else
+#define MAX_AH_AL 13
+#endif
       if (Ss < 0 || Ss >= DCTSIZE2 || Se < Ss || Se >= DCTSIZE2 ||
-	  Ah < 0 || Ah > 13 || Al < 0 || Al > 13)
+	  Ah < 0 || Ah > MAX_AH_AL || Al < 0 || Al > MAX_AH_AL)
 	ERREXIT1(cinfo, JERR_BAD_PROG_SCRIPT, scanno);
       if (Ss == 0) {
 	if (Se != 0)		/* DC and AC together not OK */
@@ -252,11 +263,11 @@ validate_script (j_compress_ptr cinfo)
 #endif /* C_MULTISCAN_FILES_SUPPORTED */
 
 
-LOCAL void
+LOCAL(void)
 select_scan_parameters (j_compress_ptr cinfo)
 /* Set up the scan parameters for the current scan */
 {
-  int16 ci;
+  int ci;
 
 #ifdef C_MULTISCAN_FILES_SUPPORTED
   if (cinfo->scan_info != NULL) {
@@ -293,12 +304,12 @@ select_scan_parameters (j_compress_ptr cinfo)
 }
 
 
-LOCAL void
+LOCAL(void)
 per_scan_setup (j_compress_ptr cinfo)
 /* Do computations that are needed before processing a JPEG scan */
 /* cinfo->comps_in_scan and cinfo->cur_comp_info[] are already set */
 {
-  int16 ci, mcublks, tmp;
+  int ci, mcublks, tmp;
   jpeg_component_info *compptr;
   
   if (cinfo->comps_in_scan == 1) {
@@ -319,7 +330,7 @@ per_scan_setup (j_compress_ptr cinfo)
     /* For noninterleaved scans, it is convenient to define last_row_height
      * as the number of block rows present in the last iMCU row.
      */
-    tmp = (int16) (compptr->height_in_blocks % compptr->v_samp_factor);
+    tmp = (int) (compptr->height_in_blocks % compptr->v_samp_factor);
     if (tmp == 0) tmp = compptr->v_samp_factor;
     compptr->last_row_height = tmp;
     
@@ -336,11 +347,11 @@ per_scan_setup (j_compress_ptr cinfo)
     
     /* Overall image size in MCUs */
     cinfo->MCUs_per_row = (JDIMENSION)
-      jdiv_round_up((int32) cinfo->image_width,
-		    (int32) (cinfo->max_h_samp_factor*DCTSIZE));
+      jdiv_round_up((long) cinfo->image_width,
+		    (long) (cinfo->max_h_samp_factor*DCTSIZE));
     cinfo->MCU_rows_in_scan = (JDIMENSION)
-      jdiv_round_up((int32) cinfo->image_height,
-		    (int32) (cinfo->max_v_samp_factor*DCTSIZE));
+      jdiv_round_up((long) cinfo->image_height,
+		    (long) (cinfo->max_v_samp_factor*DCTSIZE));
     
     cinfo->blocks_in_MCU = 0;
     
@@ -352,10 +363,10 @@ per_scan_setup (j_compress_ptr cinfo)
       compptr->MCU_blocks = compptr->MCU_width * compptr->MCU_height;
       compptr->MCU_sample_width = compptr->MCU_width * DCTSIZE;
       /* Figure number of non-dummy blocks in last MCU column & row */
-      tmp = (int16) (compptr->width_in_blocks % compptr->MCU_width);
+      tmp = (int) (compptr->width_in_blocks % compptr->MCU_width);
       if (tmp == 0) tmp = compptr->MCU_width;
       compptr->last_col_width = tmp;
-      tmp = (int16) (compptr->height_in_blocks % compptr->MCU_height);
+      tmp = (int) (compptr->height_in_blocks % compptr->MCU_height);
       if (tmp == 0) tmp = compptr->MCU_height;
       compptr->last_row_height = tmp;
       /* Prepare array describing MCU composition */
@@ -372,8 +383,8 @@ per_scan_setup (j_compress_ptr cinfo)
   /* Convert restart specified in rows to actual MCU count. */
   /* Note that count must fit in 16 bits, so we provide limiting. */
   if (cinfo->restart_in_rows > 0) {
-    int32 nominal = (int32) cinfo->restart_in_rows * (int32) cinfo->MCUs_per_row;
-    cinfo->restart_interval = (uint16) MIN(nominal, 65535L);
+    long nominal = (long) cinfo->restart_in_rows * (long) cinfo->MCUs_per_row;
+    cinfo->restart_interval = (unsigned int) MIN(nominal, 65535L);
   }
 }
 
@@ -386,7 +397,7 @@ per_scan_setup (j_compress_ptr cinfo)
  * required.
  */
 
-METHODDEF void
+METHODDEF(void)
 prepare_for_pass (j_compress_ptr cinfo)
 {
   my_master_ptr master = (my_master_ptr) cinfo->master;
@@ -474,7 +485,7 @@ prepare_for_pass (j_compress_ptr cinfo)
  * In multi-pass processing, this routine is not used.
  */
 
-METHODDEF void
+METHODDEF(void)
 pass_startup (j_compress_ptr cinfo)
 {
   cinfo->master->call_pass_startup = FALSE; /* reset flag so call only once */
@@ -488,7 +499,7 @@ pass_startup (j_compress_ptr cinfo)
  * Finish up at end of pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 finish_pass_master (j_compress_ptr cinfo)
 {
   my_master_ptr master = (my_master_ptr) cinfo->master;
@@ -528,7 +539,7 @@ finish_pass_master (j_compress_ptr cinfo)
  * Initialize master compression control.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_c_master_control (j_compress_ptr cinfo, boolean transcode_only)
 {
   my_master_ptr master;

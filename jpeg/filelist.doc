@@ -1,6 +1,6 @@
 IJG JPEG LIBRARY:  FILE LIST
 
-Copyright (C) 1994-1995, Thomas G. Lane.
+Copyright (C) 1994-1998, Thomas G. Lane.
 This file is part of the Independent JPEG Group's software.
 For conditions of distribution and use, see the accompanying README file.
 
@@ -113,8 +113,9 @@ module:
 jmemnobs.c	"No backing store": assumes adequate virtual memory exists.
 jmemansi.c	Makes temporary files with ANSI-standard routine tmpfile().
 jmemname.c	Makes temporary files with program-generated file names.
-jmemdos.c	Custom implementation for MS-DOS: knows about extended and
-		expanded memory as well as temporary files.
+jmemdos.c	Custom implementation for MS-DOS (16-bit environment only):
+		can use extended and expanded memory as well as temp files.
+jmemmac.c	Custom implementation for Apple Macintosh.
 
 Exactly one of the system-dependent modules should be configured into an
 installed JPEG library (see install.doc for hints about which one to use).
@@ -133,8 +134,9 @@ CJPEG/DJPEG/JPEGTRAN
 
 Include files:
 
-cdjpeg.h	Declarations shared by cjpeg/djpeg modules.
-cderror.h	Additional error and trace message codes for cjpeg/djpeg.
+cdjpeg.h	Declarations shared by cjpeg/djpeg/jpegtran modules.
+cderror.h	Additional error and trace message codes for cjpeg et al.
+transupp.h	Declarations for jpegtran support routines in transupp.c.
 
 C source code files:
 
@@ -145,11 +147,12 @@ cdjpeg.c	Utility routines used by all three programs.
 rdcolmap.c	Code to read a colormap file for djpeg's "-map" switch.
 rdswitch.c	Code to process some of cjpeg's more complex switches.
 		Also used by jpegtran.
+transupp.c	Support code for jpegtran: lossless image manipulations.
 
 Image file reader modules for cjpeg:
 
 rdbmp.c		BMP file input.
-rdgif.c		GIF file input.
+rdgif.c		GIF file input (now just a stub).
 rdppm.c		PPM/PGM file input.
 rdrle.c		Utah RLE file input.
 rdtarga.c	Targa file input.
@@ -157,7 +160,7 @@ rdtarga.c	Targa file input.
 Image file writer modules for djpeg:
 
 wrbmp.c		BMP file output.
-wrgif.c		GIF file output.
+wrgif.c		GIF file output (a mere shadow of its former self).
 wrppm.c		PPM/PGM file output.
 wrrle.c		Utah RLE file output.
 wrtarga.c	Targa file output.
@@ -189,6 +192,11 @@ example.c	Sample code for calling JPEG library.
 Configuration/installation files and programs (see install.doc for more info):
 
 configure	Unix shell script to perform automatic configuration.
+ltconfig	Support scripts for configure (from GNU libtool).
+ltmain.sh
+config.guess
+config.sub
+install-sh	Install shell script for those Unix systems lacking one.
 ckconfig.c	Program to generate jconfig.h on non-Unix systems.
 jconfig.doc	Template for making jconfig.h by hand.
 makefile.*	Sample makefiles for particular systems.

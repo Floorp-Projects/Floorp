@@ -1,7 +1,7 @@
 /*
  * jdmainct.c
  *
- * Copyright (C) 1994-1995, Thomas G. Lane.
+ * Copyright (C) 1994-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -140,20 +140,20 @@ typedef my_main_controller * my_main_ptr;
 
 
 /* Forward declarations */
-METHODDEF void process_data_simple_main
+METHODDEF(void) process_data_simple_main
 	JPP((j_decompress_ptr cinfo, JSAMPARRAY output_buf,
 	     JDIMENSION *out_row_ctr, JDIMENSION out_rows_avail));
-METHODDEF void process_data_context_main
+METHODDEF(void) process_data_context_main
 	JPP((j_decompress_ptr cinfo, JSAMPARRAY output_buf,
 	     JDIMENSION *out_row_ctr, JDIMENSION out_rows_avail));
 #ifdef QUANT_2PASS_SUPPORTED
-METHODDEF void process_data_crank_post
+METHODDEF(void) process_data_crank_post
 	JPP((j_decompress_ptr cinfo, JSAMPARRAY output_buf,
 	     JDIMENSION *out_row_ctr, JDIMENSION out_rows_avail));
 #endif
 
 
-LOCAL void
+LOCAL(void)
 alloc_funny_pointers (j_decompress_ptr cinfo)
 /* Allocate space for the funny pointer lists.
  * This is done only once, not once per pass.
@@ -191,7 +191,7 @@ alloc_funny_pointers (j_decompress_ptr cinfo)
 }
 
 
-LOCAL void
+LOCAL(void)
 make_funny_pointers (j_decompress_ptr cinfo)
 /* Create the funny pointer lists discussed in the comments above.
  * The actual workspace is already allocated (in main->buffer),
@@ -234,7 +234,7 @@ make_funny_pointers (j_decompress_ptr cinfo)
 }
 
 
-LOCAL void
+LOCAL(void)
 set_wraparound_pointers (j_decompress_ptr cinfo)
 /* Set up the "wraparound" pointers at top and bottom of the pointer lists.
  * This changes the pointer list state from top-of-image to the normal state.
@@ -262,7 +262,7 @@ set_wraparound_pointers (j_decompress_ptr cinfo)
 }
 
 
-LOCAL void
+LOCAL(void)
 set_bottom_pointers (j_decompress_ptr cinfo)
 /* Change the pointer lists to duplicate the last sample row at the bottom
  * of the image.  whichptr indicates which xbuffer holds the final iMCU row.
@@ -303,7 +303,7 @@ set_bottom_pointers (j_decompress_ptr cinfo)
  * Initialize for a processing pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_pass_main (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
 {
   my_main_ptr main = (my_main_ptr) cinfo->main;
@@ -341,7 +341,7 @@ start_pass_main (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
  * This handles the simple case where no context is required.
  */
 
-METHODDEF void
+METHODDEF(void)
 process_data_simple_main (j_decompress_ptr cinfo,
 			  JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
 			  JDIMENSION out_rows_avail)
@@ -381,7 +381,7 @@ process_data_simple_main (j_decompress_ptr cinfo,
  * This handles the case where context rows must be provided.
  */
 
-METHODDEF void
+METHODDEF(void)
 process_data_context_main (j_decompress_ptr cinfo,
 			   JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
 			   JDIMENSION out_rows_avail)
@@ -455,7 +455,7 @@ process_data_context_main (j_decompress_ptr cinfo,
 
 #ifdef QUANT_2PASS_SUPPORTED
 
-METHODDEF void
+METHODDEF(void)
 process_data_crank_post (j_decompress_ptr cinfo,
 			 JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
 			 JDIMENSION out_rows_avail)
@@ -472,7 +472,7 @@ process_data_crank_post (j_decompress_ptr cinfo,
  * Initialize main buffer controller.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_d_main_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
 {
   my_main_ptr main;

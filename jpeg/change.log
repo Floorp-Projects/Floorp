@@ -1,6 +1,111 @@
 CHANGE LOG for Independent JPEG Group's JPEG software
 
 
+Version 6b  27-Mar-1998
+-----------------------
+
+jpegtran has new features for lossless image transformations (rotation
+and flipping) as well as "lossless" reduction to grayscale.
+
+jpegtran now copies comments by default; it has a -copy switch to enable
+copying all APPn blocks as well, or to suppress comments.  (Formerly it
+always suppressed comments and APPn blocks.)  jpegtran now also preserves
+JFIF version and resolution information.
+
+New decompressor library feature: COM and APPn markers found in the input
+file can be saved in memory for later use by the application.  (Before,
+you had to code this up yourself with a custom marker processor.)
+
+There is an unused field "void * client_data" now in compress and decompress
+parameter structs; this may be useful in some applications.
+
+JFIF version number information is now saved by the decoder and accepted by
+the encoder.  jpegtran uses this to copy the source file's version number,
+to ensure "jpegtran -copy all" won't create bogus files that contain JFXX
+extensions but claim to be version 1.01.  Applications that generate their
+own JFXX extension markers also (finally) have a supported way to cause the
+encoder to emit JFIF version number 1.02.
+
+djpeg's trace mode reports JFIF 1.02 thumbnail images as such, rather
+than as unknown APP0 markers.
+
+In -verbose mode, djpeg and rdjpgcom will try to print the contents of
+APP12 markers as text.  Some digital cameras store useful text information
+in APP12 markers.
+
+Handling of truncated data streams is more robust: blocks beyond the one in
+which the error occurs will be output as uniform gray, or left unchanged
+if decoding a progressive JPEG.  The appearance no longer depends on the
+Huffman tables being used.
+
+Huffman tables are checked for validity much more carefully than before.
+
+To avoid the Unisys LZW patent, djpeg's GIF output capability has been
+changed to produce "uncompressed GIFs", and cjpeg's GIF input capability
+has been removed altogether.  We're not happy about it either, but there
+seems to be no good alternative.
+
+The configure script now supports building libjpeg as a shared library
+on many flavors of Unix (all the ones that GNU libtool knows how to
+build shared libraries for).  Use "./configure --enable-shared" to
+try this out.
+
+New jconfig file and makefiles for Microsoft Visual C++ and Developer Studio.
+Also, a jconfig file and a build script for Metrowerks CodeWarrior
+on Apple Macintosh.  makefile.dj has been updated for DJGPP v2, and there
+are miscellaneous other minor improvements in the makefiles.
+
+jmemmac.c now knows how to create temporary files following Mac System 7
+conventions.
+
+djpeg's -map switch is now able to read raw-format PPM files reliably.
+
+cjpeg -progressive -restart no longer generates any unnecessary DRI markers.
+
+Multiple calls to jpeg_simple_progression for a single JPEG object
+no longer leak memory.
+
+
+Version 6a  7-Feb-96
+--------------------
+
+Library initialization sequence modified to detect version mismatches
+and struct field packing mismatches between library and calling application.
+This change requires applications to be recompiled, but does not require
+any application source code change.
+
+All routine declarations changed to the style "GLOBAL(type) name ...",
+that is, GLOBAL, LOCAL, METHODDEF, EXTERN are now macros taking the
+routine's return type as an argument.  This makes it possible to add
+Microsoft-style linkage keywords to all the routines by changing just
+these macros.  Note that any application code that was using these macros
+will have to be changed.
+
+DCT coefficient quantization tables are now stored in normal array order
+rather than zigzag order.  Application code that calls jpeg_add_quant_table,
+or otherwise manipulates quantization tables directly, will need to be
+changed.  If you need to make such code work with either older or newer
+versions of the library, a test like "#if JPEG_LIB_VERSION >= 61" is
+recommended.
+
+djpeg's trace capability now dumps DQT tables in natural order, not zigzag
+order.  This allows the trace output to be made into a "-qtables" file
+more easily.
+
+New system-dependent memory manager module for use on Apple Macintosh.
+
+Fix bug in cjpeg's -smooth option: last one or two scanlines would be
+duplicates of the prior line unless the image height mod 16 was 1 or 2.
+
+Repair minor problems in VMS, BCC, MC6 makefiles.
+
+New configure script based on latest GNU Autoconf.
+
+Correct the list of include files needed by MetroWerks C for ccommand().
+
+Numerous small documentation updates.
+
+
 Version 6  2-Aug-95
 -------------------
 

@@ -1,7 +1,7 @@
 /*
  * jdcoefct.c
  *
- * Copyright (C) 1994-1995, Thomas G. Lane.
+ * Copyright (C) 1994-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -62,20 +62,20 @@ typedef struct {
 typedef my_coef_controller * my_coef_ptr;
 
 /* Forward declarations */
-METHODDEF int decompress_onepass
+METHODDEF(int) decompress_onepass
 	JPP((j_decompress_ptr cinfo, JSAMPIMAGE output_buf));
 #ifdef D_MULTISCAN_FILES_SUPPORTED
-METHODDEF int decompress_data
+METHODDEF(int) decompress_data
 	JPP((j_decompress_ptr cinfo, JSAMPIMAGE output_buf));
 #endif
 #ifdef BLOCK_SMOOTHING_SUPPORTED
-LOCAL boolean smoothing_ok JPP((j_decompress_ptr cinfo));
-METHODDEF int decompress_smooth_data
+LOCAL(boolean) smoothing_ok JPP((j_decompress_ptr cinfo));
+METHODDEF(int) decompress_smooth_data
 	JPP((j_decompress_ptr cinfo, JSAMPIMAGE output_buf));
 #endif
 
 
-LOCAL void
+LOCAL(void)
 start_iMCU_row (j_decompress_ptr cinfo)
 /* Reset within-iMCU-row counters for a new row (input side) */
 {
@@ -103,7 +103,7 @@ start_iMCU_row (j_decompress_ptr cinfo)
  * Initialize for an input processing pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_input_pass (j_decompress_ptr cinfo)
 {
   cinfo->input_iMCU_row = 0;
@@ -115,7 +115,7 @@ start_input_pass (j_decompress_ptr cinfo)
  * Initialize for an output processing pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_output_pass (j_decompress_ptr cinfo)
 {
 #ifdef BLOCK_SMOOTHING_SUPPORTED
@@ -139,11 +139,11 @@ start_output_pass (j_decompress_ptr cinfo)
  * Input and output must run in lockstep since we have only a one-MCU buffer.
  * Return value is JPEG_ROW_COMPLETED, JPEG_SCAN_COMPLETED, or JPEG_SUSPENDED.
  *
- * NB: output_buf contains a plane for each component in image.
- * For single pass, this is the same as the components in the scan.
+ * NB: output_buf contains a plane for each component in image,
+ * which we index according to the component's SOF position.
  */
 
-METHODDEF int
+METHODDEF(int)
 decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 {
   my_coef_ptr coef = (my_coef_ptr) cinfo->coef;
@@ -186,7 +186,8 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 	inverse_DCT = cinfo->idct->inverse_DCT[compptr->component_index];
 	useful_width = (MCU_col_num < last_MCU_col) ? compptr->MCU_width
 						    : compptr->last_col_width;
-	output_ptr = output_buf[ci] + yoffset * compptr->DCT_scaled_size;
+	output_ptr = output_buf[compptr->component_index] +
+	  yoffset * compptr->DCT_scaled_size;
 	start_col = MCU_col_num * compptr->MCU_sample_width;
 	for (yindex = 0; yindex < compptr->MCU_height; yindex++) {
 	  if (cinfo->input_iMCU_row < last_iMCU_row ||
@@ -223,7 +224,7 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * Dummy consume-input routine for single-pass operation.
  */
 
-METHODDEF int
+METHODDEF(int)
 dummy_consume_data (j_decompress_ptr cinfo)
 {
   return JPEG_SUSPENDED;	/* Always indicate nothing was done */
@@ -239,7 +240,7 @@ dummy_consume_data (j_decompress_ptr cinfo)
  * Return value is JPEG_ROW_COMPLETED, JPEG_SCAN_COMPLETED, or JPEG_SUSPENDED.
  */
 
-METHODDEF int
+METHODDEF(int)
 consume_data (j_decompress_ptr cinfo)
 {
   my_coef_ptr coef = (my_coef_ptr) cinfo->coef;
@@ -310,7 +311,7 @@ consume_data (j_decompress_ptr cinfo)
  * NB: output_buf contains a plane for each component in image.
  */
 
-METHODDEF int
+METHODDEF(int)
 decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 {
   my_coef_ptr coef = (my_coef_ptr) cinfo->coef;
@@ -385,6 +386,13 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * the coefficients it can estimate are not yet known to full precision.
  */
 
+/* Natural-order array positions of the first 5 zigzag-order coefficients */
+#define Q01_POS  1
+#define Q10_POS  8
+#define Q20_POS  16
+#define Q11_POS  9
+#define Q02_POS  2
+
 /*
  * Determine whether block smoothing is applicable and safe.
  * We also latch the current states of the coef_bits[] entries for the
@@ -393,7 +401,7 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * more accurately than they really are.
  */
 
-LOCAL boolean
+LOCAL(boolean)
 smoothing_ok (j_decompress_ptr cinfo)
 {
   my_coef_ptr coef = (my_coef_ptr) cinfo->coef;
@@ -421,10 +429,13 @@ smoothing_ok (j_decompress_ptr cinfo)
     if ((qtable = compptr->quant_table) == NULL)
       return FALSE;
     /* Verify DC & first 5 AC quantizers are nonzero to avoid zero-divide. */
-    for (coefi = 0; coefi <= 5; coefi++) {
-      if (qtable->quantval[coefi] == 0)
-	return FALSE;
-    }
+    if (qtable->quantval[0] == 0 ||
+	qtable->quantval[Q01_POS] == 0 ||
+	qtable->quantval[Q10_POS] == 0 ||
+	qtable->quantval[Q20_POS] == 0 ||
+	qtable->quantval[Q11_POS] == 0 ||
+	qtable->quantval[Q02_POS] == 0)
+      return FALSE;
     /* DC values must be at least partly known for all components. */
     coef_bits = cinfo->coef_bits[ci];
     if (coef_bits[0] < 0)
@@ -446,7 +457,7 @@ smoothing_ok (j_decompress_ptr cinfo)
  * Variant of decompress_data for use when doing block smoothing.
  */
 
-METHODDEF int
+METHODDEF(int)
 decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 {
   my_coef_ptr coef = (my_coef_ptr) cinfo->coef;
@@ -521,11 +532,11 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
     coef_bits = coef->coef_bits_latch + (ci * SAVED_COEFS);
     quanttbl = compptr->quant_table;
     Q00 = quanttbl->quantval[0];
-    Q01 = quanttbl->quantval[1];
-    Q10 = quanttbl->quantval[2];
-    Q20 = quanttbl->quantval[3];
-    Q11 = quanttbl->quantval[4];
-    Q02 = quanttbl->quantval[5];
+    Q01 = quanttbl->quantval[Q01_POS];
+    Q10 = quanttbl->quantval[Q10_POS];
+    Q20 = quanttbl->quantval[Q20_POS];
+    Q11 = quanttbl->quantval[Q11_POS];
+    Q02 = quanttbl->quantval[Q02_POS];
     inverse_DCT = cinfo->idct->inverse_DCT[ci];
     output_ptr = output_buf[ci];
     /* Loop over all DCT blocks to be processed. */
@@ -661,7 +672,7 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
  * Initialize coefficient buffer controller.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_d_coef_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
 {
   my_coef_ptr coef;

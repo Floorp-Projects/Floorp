@@ -1,7 +1,7 @@
 /*
  * jdphuff.c
  *
- * Copyright (C) 1995, Thomas G. Lane.
+ * Copyright (C) 1995-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -74,21 +74,21 @@ typedef struct {
 typedef phuff_entropy_decoder * phuff_entropy_ptr;
 
 /* Forward declarations */
-METHODDEF boolean decode_mcu_DC_first JPP((j_decompress_ptr cinfo,
-					   JBLOCKROW *MCU_data));
-METHODDEF boolean decode_mcu_AC_first JPP((j_decompress_ptr cinfo,
-					   JBLOCKROW *MCU_data));
-METHODDEF boolean decode_mcu_DC_refine JPP((j_decompress_ptr cinfo,
+METHODDEF(boolean) decode_mcu_DC_first JPP((j_decompress_ptr cinfo,
 					    JBLOCKROW *MCU_data));
-METHODDEF boolean decode_mcu_AC_refine JPP((j_decompress_ptr cinfo,
+METHODDEF(boolean) decode_mcu_AC_first JPP((j_decompress_ptr cinfo,
 					    JBLOCKROW *MCU_data));
+METHODDEF(boolean) decode_mcu_DC_refine JPP((j_decompress_ptr cinfo,
+					     JBLOCKROW *MCU_data));
+METHODDEF(boolean) decode_mcu_AC_refine JPP((j_decompress_ptr cinfo,
+					     JBLOCKROW *MCU_data));
 
 
 /*
  * Initialize for a Huffman-compressed scan.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_pass_phuff_decoder (j_decompress_ptr cinfo)
 {
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
@@ -119,6 +119,12 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
   }
   if (cinfo->Al > 13)		/* need not check for < 0 */
     bad = TRUE;
+  /* Arguably the maximum Al value should be less than 13 for 8-bit precision,
+   * but the spec doesn't say so, and we try to be liberal about what we
+   * accept.  Note: large Al values could result in out-of-range DC
+   * coefficients during early scans, leading to bizarre displays due to
+   * overflows in the IDCT math.  But we won't crash.
+   */
   if (bad)
     ERREXIT4(cinfo, JERR_BAD_PROGRESSION,
 	     cinfo->Ss, cinfo->Se, cinfo->Ah, cinfo->Al);
@@ -160,18 +166,12 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
     if (is_DC_band) {
       if (cinfo->Ah == 0) {	/* DC refinement needs no table */
 	tbl = compptr->dc_tbl_no;
-	if (tbl < 0 || tbl >= NUM_HUFF_TBLS ||
-	    cinfo->dc_huff_tbl_ptrs[tbl] == NULL)
-	  ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tbl);
-	jpeg_make_d_derived_tbl(cinfo, cinfo->dc_huff_tbl_ptrs[tbl],
+	jpeg_make_d_derived_tbl(cinfo, TRUE, tbl,
 				& entropy->derived_tbls[tbl]);
       }
     } else {
       tbl = compptr->ac_tbl_no;
-      if (tbl < 0 || tbl >= NUM_HUFF_TBLS ||
-          cinfo->ac_huff_tbl_ptrs[tbl] == NULL)
-        ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tbl);
-      jpeg_make_d_derived_tbl(cinfo, cinfo->ac_huff_tbl_ptrs[tbl],
+      jpeg_make_d_derived_tbl(cinfo, FALSE, tbl,
 			      & entropy->derived_tbls[tbl]);
       /* remember the single active table */
       entropy->ac_derived_tbl = entropy->derived_tbls[tbl];
@@ -183,7 +183,7 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
   /* Initialize bitread state variables */
   entropy->bitstate.bits_left = 0;
   entropy->bitstate.get_buffer = 0; /* unnecessary, but keeps Purify quiet */
-  entropy->bitstate.printed_eod = FALSE;
+  entropy->pub.insufficient_data = FALSE;
 
   /* Initialize private state variables */
   entropy->saved.EOBRUN = 0;
@@ -224,7 +224,7 @@ static const int extend_offset[16] = /* entry n is (-1 << n) + 1 */
  * Returns FALSE if must suspend.
  */
 
-LOCAL boolean
+LOCAL(boolean)
 process_restart (j_decompress_ptr cinfo)
 {
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
@@ -248,8 +248,13 @@ process_restart (j_decompress_ptr cinfo)
   /* Reset restart counter */
   entropy->restarts_to_go = cinfo->restart_interval;
 
-  /* Next segment can get another out-of-data warning */
-  entropy->bitstate.printed_eod = FALSE;
+  /* Reset out-of-data flag, unless read_restart_marker left us smack up
+   * against a marker.  In that case we will end up treating the next data
+   * segment as empty, and we can avoid producing bogus output pixels by
+   * leaving the flag set.
+   */
+  if (cinfo->unread_marker == 0)
+    entropy->pub.insufficient_data = FALSE;
 
   return TRUE;
 }
@@ -277,7 +282,7 @@ process_restart (j_decompress_ptr cinfo)
  * or first pass of successive approximation).
  */
 
-METHODDEF boolean
+METHODDEF(boolean)
 decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
@@ -297,38 +302,44 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	return FALSE;
   }
 
-  /* Load up working state */
-  BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
-  ASSIGN_STATE(state, entropy->saved);
+  /* If we've run out of data, just leave the MCU set to zeroes.
+   * This way, we return uniform gray for the remainder of the segment.
+   */
+  if (! entropy->pub.insufficient_data) {
 
-  /* Outer loop handles each block in the MCU */
+    /* Load up working state */
+    BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
+    ASSIGN_STATE(state, entropy->saved);
 
-  for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
-    block = MCU_data[blkn];
-    ci = cinfo->MCU_membership[blkn];
-    compptr = cinfo->cur_comp_info[ci];
-    tbl = entropy->derived_tbls[compptr->dc_tbl_no];
+    /* Outer loop handles each block in the MCU */
 
-    /* Decode a single block's worth of coefficients */
+    for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
+      block = MCU_data[blkn];
+      ci = cinfo->MCU_membership[blkn];
+      compptr = cinfo->cur_comp_info[ci];
+      tbl = entropy->derived_tbls[compptr->dc_tbl_no];
 
-    /* Section F.2.2.1: decode the DC coefficient difference */
-    HUFF_DECODE(s, br_state, tbl, return FALSE, label1);
-    if (s) {
-      CHECK_BIT_BUFFER(br_state, s, return FALSE);
-      r = GET_BITS(s);
-      s = HUFF_EXTEND(r, s);
+      /* Decode a single block's worth of coefficients */
+
+      /* Section F.2.2.1: decode the DC coefficient difference */
+      HUFF_DECODE(s, br_state, tbl, return FALSE, label1);
+      if (s) {
+	CHECK_BIT_BUFFER(br_state, s, return FALSE);
+	r = GET_BITS(s);
+	s = HUFF_EXTEND(r, s);
+      }
+
+      /* Convert DC difference to actual value, update last_dc_val */
+      s += state.last_dc_val[ci];
+      state.last_dc_val[ci] = s;
+      /* Scale and output the coefficient (assumes jpeg_natural_order[0]=0) */
+      (*block)[0] = (JCOEF) (s << Al);
     }
 
-    /* Convert DC difference to actual value, update last_dc_val */
-    s += state.last_dc_val[ci];
-    state.last_dc_val[ci] = s;
-    /* Scale and output the DC coefficient (assumes jpeg_natural_order[0]=0) */
-    (*block)[0] = (JCOEF) (s << Al);
+    /* Completed MCU, so update state */
+    BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
+    ASSIGN_STATE(entropy->saved, state);
   }
-
-  /* Completed MCU, so update state */
-  BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
-  ASSIGN_STATE(entropy->saved, state);
 
   /* Account for restart interval (no-op if not using restarts) */
   entropy->restarts_to_go--;
@@ -342,7 +353,7 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
  * or first pass of successive approximation).
  */
 
-METHODDEF boolean
+METHODDEF(boolean)
 decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
@@ -361,52 +372,58 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	return FALSE;
   }
 
-  /* Load up working state.
-   * We can avoid loading/saving bitread state if in an EOB run.
+  /* If we've run out of data, just leave the MCU set to zeroes.
+   * This way, we return uniform gray for the remainder of the segment.
    */
-  EOBRUN = entropy->saved.EOBRUN; /* only part of saved state we care about */
+  if (! entropy->pub.insufficient_data) {
 
-  /* There is always only one block per MCU */
+    /* Load up working state.
+     * We can avoid loading/saving bitread state if in an EOB run.
+     */
+    EOBRUN = entropy->saved.EOBRUN;	/* only part of saved state we need */
 
-  if (EOBRUN > 0)		/* if it's a band of zeroes... */
-    EOBRUN--;			/* ...process it now (we do nothing) */
-  else {
-    BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
-    block = MCU_data[0];
-    tbl = entropy->ac_derived_tbl;
+    /* There is always only one block per MCU */
 
-    for (k = cinfo->Ss; k <= Se; k++) {
-      HUFF_DECODE(s, br_state, tbl, return FALSE, label2);
-      r = s >> 4;
-      s &= 15;
-      if (s) {
-        k += r;
-        CHECK_BIT_BUFFER(br_state, s, return FALSE);
-        r = GET_BITS(s);
-        s = HUFF_EXTEND(r, s);
-	/* Scale and output coefficient in natural (dezigzagged) order */
-        (*block)[jpeg_natural_order[k]] = (JCOEF) (s << Al);
-      } else {
-        if (r == 15) {		/* ZRL */
-          k += 15;		/* skip 15 zeroes in band */
-        } else {		/* EOBr, run length is 2^r + appended bits */
-          EOBRUN = 1 << r;
-          if (r) {		/* EOBr, r > 0 */
-	    CHECK_BIT_BUFFER(br_state, r, return FALSE);
-            r = GET_BITS(r);
-            EOBRUN += r;
-          }
-	  EOBRUN--;		/* this band is processed at this moment */
-	  break;		/* force end-of-band */
+    if (EOBRUN > 0)		/* if it's a band of zeroes... */
+      EOBRUN--;			/* ...process it now (we do nothing) */
+    else {
+      BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
+      block = MCU_data[0];
+      tbl = entropy->ac_derived_tbl;
+
+      for (k = cinfo->Ss; k <= Se; k++) {
+	HUFF_DECODE(s, br_state, tbl, return FALSE, label2);
+	r = s >> 4;
+	s &= 15;
+	if (s) {
+	  k += r;
+	  CHECK_BIT_BUFFER(br_state, s, return FALSE);
+	  r = GET_BITS(s);
+	  s = HUFF_EXTEND(r, s);
+	  /* Scale and output coefficient in natural (dezigzagged) order */
+	  (*block)[jpeg_natural_order[k]] = (JCOEF) (s << Al);
+	} else {
+	  if (r == 15) {	/* ZRL */
+	    k += 15;		/* skip 15 zeroes in band */
+	  } else {		/* EOBr, run length is 2^r + appended bits */
+	    EOBRUN = 1 << r;
+	    if (r) {		/* EOBr, r > 0 */
+	      CHECK_BIT_BUFFER(br_state, r, return FALSE);
+	      r = GET_BITS(r);
+	      EOBRUN += r;
+	    }
+	    EOBRUN--;		/* this band is processed at this moment */
+	    break;		/* force end-of-band */
+	  }
 	}
       }
+
+      BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
     }
 
-    BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
+    /* Completed MCU, so update state */
+    entropy->saved.EOBRUN = EOBRUN;	/* only part of saved state we need */
   }
-
-  /* Completed MCU, so update state */
-  entropy->saved.EOBRUN = EOBRUN; /* only part of saved state we care about */
 
   /* Account for restart interval (no-op if not using restarts) */
   entropy->restarts_to_go--;
@@ -421,7 +438,7 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
  * is not very clear on the point.
  */
 
-METHODDEF boolean
+METHODDEF(boolean)
 decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
@@ -436,6 +453,10 @@ decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       if (! process_restart(cinfo))
 	return FALSE;
   }
+
+  /* Not worth the cycles to check insufficient_data here,
+   * since we will not change the data anyway if we read zeroes.
+   */
 
   /* Load up working state */
   BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
@@ -466,7 +487,7 @@ decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
  * MCU decoding for AC successive approximation refinement scan.
  */
 
-METHODDEF boolean
+METHODDEF(boolean)
 decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
@@ -489,55 +510,93 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	return FALSE;
   }
 
-  /* Load up working state */
-  BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
-  EOBRUN = entropy->saved.EOBRUN; /* only part of saved state we care about */
-
-  /* There is always only one block per MCU */
-  block = MCU_data[0];
-  tbl = entropy->ac_derived_tbl;
-
-  /* If we are forced to suspend, we must undo the assignments to any newly
-   * nonzero coefficients in the block, because otherwise we'd get confused
-   * next time about which coefficients were already nonzero.
-   * But we need not undo addition of bits to already-nonzero coefficients;
-   * instead, we can test the current bit position to see if we already did it.
+  /* If we've run out of data, don't modify the MCU.
    */
-  num_newnz = 0;
+  if (! entropy->pub.insufficient_data) {
 
-  /* initialize coefficient loop counter to start of band */
-  k = cinfo->Ss;
+    /* Load up working state */
+    BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
+    EOBRUN = entropy->saved.EOBRUN; /* only part of saved state we need */
 
-  if (EOBRUN == 0) {
-    for (; k <= Se; k++) {
-      HUFF_DECODE(s, br_state, tbl, goto undoit, label3);
-      r = s >> 4;
-      s &= 15;
-      if (s) {
-	if (s != 1)		/* size of new coef should always be 1 */
-	  WARNMS(cinfo, JWRN_HUFF_BAD_CODE);
-        CHECK_BIT_BUFFER(br_state, 1, goto undoit);
-        if (GET_BITS(1))
-	  s = p1;		/* newly nonzero coef is positive */
-	else
-	  s = m1;		/* newly nonzero coef is negative */
-      } else {
-	if (r != 15) {
-	  EOBRUN = 1 << r;	/* EOBr, run length is 2^r + appended bits */
-	  if (r) {
-	    CHECK_BIT_BUFFER(br_state, r, goto undoit);
-	    r = GET_BITS(r);
-	    EOBRUN += r;
+    /* There is always only one block per MCU */
+    block = MCU_data[0];
+    tbl = entropy->ac_derived_tbl;
+
+    /* If we are forced to suspend, we must undo the assignments to any newly
+     * nonzero coefficients in the block, because otherwise we'd get confused
+     * next time about which coefficients were already nonzero.
+     * But we need not undo addition of bits to already-nonzero coefficients;
+     * instead, we can test the current bit to see if we already did it.
+     */
+    num_newnz = 0;
+
+    /* initialize coefficient loop counter to start of band */
+    k = cinfo->Ss;
+
+    if (EOBRUN == 0) {
+      for (; k <= Se; k++) {
+	HUFF_DECODE(s, br_state, tbl, goto undoit, label3);
+	r = s >> 4;
+	s &= 15;
+	if (s) {
+	  if (s != 1)		/* size of new coef should always be 1 */
+	    WARNMS(cinfo, JWRN_HUFF_BAD_CODE);
+	  CHECK_BIT_BUFFER(br_state, 1, goto undoit);
+	  if (GET_BITS(1))
+	    s = p1;		/* newly nonzero coef is positive */
+	  else
+	    s = m1;		/* newly nonzero coef is negative */
+	} else {
+	  if (r != 15) {
+	    EOBRUN = 1 << r;	/* EOBr, run length is 2^r + appended bits */
+	    if (r) {
+	      CHECK_BIT_BUFFER(br_state, r, goto undoit);
+	      r = GET_BITS(r);
+	      EOBRUN += r;
+	    }
+	    break;		/* rest of block is handled by EOB logic */
 	  }
-	  break;		/* rest of block is handled by EOB logic */
+	  /* note s = 0 for processing ZRL */
 	}
-	/* note s = 0 for processing ZRL */
+	/* Advance over already-nonzero coefs and r still-zero coefs,
+	 * appending correction bits to the nonzeroes.  A correction bit is 1
+	 * if the absolute value of the coefficient must be increased.
+	 */
+	do {
+	  thiscoef = *block + jpeg_natural_order[k];
+	  if (*thiscoef != 0) {
+	    CHECK_BIT_BUFFER(br_state, 1, goto undoit);
+	    if (GET_BITS(1)) {
+	      if ((*thiscoef & p1) == 0) { /* do nothing if already set it */
+		if (*thiscoef >= 0)
+		  *thiscoef += p1;
+		else
+		  *thiscoef += m1;
+	      }
+	    }
+	  } else {
+	    if (--r < 0)
+	      break;		/* reached target zero coefficient */
+	  }
+	  k++;
+	} while (k <= Se);
+	if (s) {
+	  int pos = jpeg_natural_order[k];
+	  /* Output newly nonzero coefficient */
+	  (*block)[pos] = (JCOEF) s;
+	  /* Remember its position in case we have to suspend */
+	  newnz_pos[num_newnz++] = pos;
+	}
       }
-      /* Advance over already-nonzero coefs and r still-zero coefs,
-       * appending correction bits to the nonzeroes.  A correction bit is 1
+    }
+
+    if (EOBRUN > 0) {
+      /* Scan any remaining coefficient positions after the end-of-band
+       * (the last newly nonzero coefficient, if any).  Append a correction
+       * bit to each already-nonzero coefficient.  A correction bit is 1
        * if the absolute value of the coefficient must be increased.
        */
-      do {
+      for (; k <= Se; k++) {
 	thiscoef = *block + jpeg_natural_order[k];
 	if (*thiscoef != 0) {
 	  CHECK_BIT_BUFFER(br_state, 1, goto undoit);
@@ -549,49 +608,16 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 		*thiscoef += m1;
 	    }
 	  }
-	} else {
-	  if (--r < 0)
-	    break;		/* reached target zero coefficient */
-	}
-	k++;
-      } while (k <= Se);
-      if (s) {
-	int pos = jpeg_natural_order[k];
-	/* Output newly nonzero coefficient */
-	(*block)[pos] = (JCOEF) s;
-	/* Remember its position in case we have to suspend */
-	newnz_pos[num_newnz++] = pos;
-      }
-    }
-  }
-
-  if (EOBRUN > 0) {
-    /* Scan any remaining coefficient positions after the end-of-band
-     * (the last newly nonzero coefficient, if any).  Append a correction
-     * bit to each already-nonzero coefficient.  A correction bit is 1
-     * if the absolute value of the coefficient must be increased.
-     */
-    for (; k <= Se; k++) {
-      thiscoef = *block + jpeg_natural_order[k];
-      if (*thiscoef != 0) {
-	CHECK_BIT_BUFFER(br_state, 1, goto undoit);
-	if (GET_BITS(1)) {
-	  if ((*thiscoef & p1) == 0) { /* do nothing if already changed it */
-	    if (*thiscoef >= 0)
-	      *thiscoef += p1;
-	    else
-	      *thiscoef += m1;
-	  }
 	}
       }
+      /* Count one block completed in EOB run */
+      EOBRUN--;
     }
-    /* Count one block completed in EOB run */
-    EOBRUN--;
-  }
 
-  /* Completed MCU, so update state */
-  BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
-  entropy->saved.EOBRUN = EOBRUN; /* only part of saved state we care about */
+    /* Completed MCU, so update state */
+    BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
+    entropy->saved.EOBRUN = EOBRUN; /* only part of saved state we need */
+  }
 
   /* Account for restart interval (no-op if not using restarts) */
   entropy->restarts_to_go--;
@@ -611,7 +637,7 @@ undoit:
  * Module initialization routine for progressive Huffman entropy decoding.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_phuff_decoder (j_decompress_ptr cinfo)
 {
   phuff_entropy_ptr entropy;
