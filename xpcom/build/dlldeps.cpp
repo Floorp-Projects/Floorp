@@ -47,6 +47,7 @@
 #include "nsPipe2.h"
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
+#include "nsTextFormater.h"
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -63,6 +64,7 @@ TestSegmentedBuffer();
 
 void XXXNeverCalled()
 {
+    nsTextFormater::snprintf(nsnull,0,nsnull);
     dummyComparitor dummy;
     nsVoidArray();
     nsAVLTree(dummy, nsnull);
