@@ -100,13 +100,13 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 
   for(i=1; i<aArgc; i++) {
 
-    if (aArgv[i][0] == '-') {
-     /* An option that starts with -. May or many not
+    if ((aArgv[i][0] == '-') || (aArgv[i][0] == '/')) {
+       /* An option that starts with -. May or many not
 	    * have a value after it. 
 	    */
 	   mArgList.AppendElement((void *)PL_strdup(aArgv[i]));
 	   //Increment the index to look ahead at the next option.
-     i++;
+       i++;
 
 
      //Look ahead if this option has a value like -w 60
@@ -119,12 +119,12 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	     mArgCount++;
 	     break;
 	   }
-     if (aArgv[i][0] == '-') {
+     if ((aArgv[i][0] == '-') || (aArgv[i][0] == '/')) {
         /* An other option. The previous one didn't have a value.
          * So, store the previous one's value as PR_TRUE in the
-	       * mArgValue array and retract the index so that this option 
-	       * will get stored in the next iteration
-	       */
+	     * mArgValue array and retract the index so that this option 
+	     * will get stored in the next iteration
+	     */
         mArgValueList.AppendElement((void *)PL_strdup("1"));
    	    mArgCount++;
         i--;
@@ -132,11 +132,10 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	    }
       else {
         /* The next argument does not start with '-'. This 
-	       * could be value to the previous option or a url to
-         * load if this is the last argument and has a ':/' in it.
-	       */
-	      if ((i == (aArgc-1)) && (PL_strstr(aArgv[i], ":/"))) {
-	         /* This is the last argument and a URL 
+	     * could be value to the previous option 
+	     */
+	      if (i == (aArgc-1)) {
+	       /* This is the last argument and a URL 
             * Append a PR_TRUE for the previous option in the value array
             */
            //mArgValueList.AppendElement((void *)PL_strdup("1"));
@@ -152,15 +151,15 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	         /* This is a value to the previous option.
 	          * Store it in the mArgValue array 
 	          */
-           mArgValueList.AppendElement((void *)PL_strdup(aArgv[i]));
+             mArgValueList.AppendElement((void *)PL_strdup(aArgv[i]));
 	         mArgCount++;
 	      }
 	   }
   }
   else {
-       if ((i == (aArgc-1)) && (PL_strstr(aArgv[i], ":/"))) {
-	        /* This must be the  URL at the end 
-	         * Append the url to the arrays
+       if (i == (aArgc-1)) {
+	      /* This must be the  URL at the end 
+	       * Append the url to the arrays
            */
            mArgList.AppendElement((void *)PL_strdup("-url"));
 	         mArgValueList.AppendElement((void *) PL_strdup(aArgv[i]));
