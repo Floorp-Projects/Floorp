@@ -275,7 +275,7 @@ private:
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
   already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
   void UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion,
-                        nsView* aIgnoreWidgetView, PRBool* aCoveredRegion = nsnull);
+                        nsView* aIgnoreWidgetView);
 
   void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
 

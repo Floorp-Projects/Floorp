@@ -1669,16 +1669,12 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
  * every widget child of aWidgetView, plus aWidgetView's own widget
  * @param aIgnoreWidgetView if non-null, the aIgnoreWidgetView's widget and its
  * children are not updated.
- * @param aCoveredRegion if non-null, is set to PR_TRUE whenever the aWidgetView's
- * widget completely covers the region. Must be null when refresh is disabled.
  */
 void
 nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion,
-                                nsView* aIgnoreWidgetView, PRBool* aCoveredRegion)
+                                nsView* aIgnoreWidgetView)
 {
   if (!IsRefreshEnabled()) {
-    NS_ASSERTION(!aCoveredRegion, "aCoveredRegion is not computed when refresh is disabled");
-
     // accumulate this rectangle in the view's dirty region, so we can
     // process it later.
     nsRegion* dirtyRegion = aWidgetView->GetDirtyRegion();
@@ -1694,10 +1690,6 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
     // this should only happen at the top level, and this result
     // should not be consumed by top-level callers, so it doesn't
     // really matter what we return
-  }
-
-  if (aCoveredRegion) {
-    *aCoveredRegion = PR_FALSE;
   }
 
   // If the bounds don't overlap at all, there's nothing to do
@@ -1723,10 +1715,6 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
 
   if (aWidgetView == aIgnoreWidgetView) {
     // the widget for aIgnoreWidgetView (and its children) should be treated as already updated.
-    // We still need to report whether this widget covers the rectangle.
-    if (aCoveredRegion) {
-      *aCoveredRegion = intersection.IsEqual(aDamagedRegion);
-    }
     return;
   }
 
@@ -1738,40 +1726,45 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
     return;
   }
 
-  if (aCoveredRegion) {
-    *aCoveredRegion = intersection.IsEqual(aDamagedRegion);
-  }
-
-  PRBool childCovers = PR_FALSE;
+  // Update all child widgets with the damage. In the process,
+  // accumulate the union of all the child widget areas, or at least
+  // some subset of that.
+  nsRegion children;
   for (nsIWidget* childWidget = widget->GetFirstChild();
        childWidget;
        childWidget = childWidget->GetNextSibling()) {
     nsView* view = nsView::GetViewFor(childWidget);
     if (nsnull != view) {
       nsView* vp = view;
-      nsPoint offset(0, 0);
-      while (vp != aWidgetView && nsnull != vp) {
-        offset -= vp->GetPosition();
-        vp = vp->GetParent();
-      }
-            
-      if (nsnull != vp) { // vp == nsnull means it's in a different hierarchy so we ignore it
+      // Don't mess with views that are in completely different view
+      // manager trees
+      if (vp->GetViewManager()->RootViewManager() == RootViewManager()) {
+        // get the damage region into 'view's coordinate system
         nsRegion damage = intersection;
-        damage.MoveBy(offset);
-        PRBool covers;
-        UpdateWidgetArea(view, damage, aIgnoreWidgetView, &covers);
-        if (covers) {
-          childCovers = PR_TRUE;
-        }
+        damage.MoveBy(-view->GetOffsetTo(aWidgetView));
+        UpdateWidgetArea(view, damage, aIgnoreWidgetView);
       }
     }
+
+    nsRect r;
+    childWidget->GetBounds(r);
+    r.ScaleRoundIn(mContext->DevUnitsToAppUnits());
+    children.Or(children, r);
+    children.SimplifyInward(20);
   }
 
-  if (!childCovers) {
+  // children is relative to aWidgetView's widget origin. Need to make
+  // it relative to the origin of aWidgetView
+  children.MoveBy(aWidgetView->GetBounds().TopLeft() - aWidgetView->GetPosition());
+
+  nsRegion leftOver;
+  leftOver.Sub(intersection, children);
+
+  if (!leftOver.IsEmpty()) {
     NS_ASSERTION(IsRefreshEnabled(), "Can only get here with refresh enabled, I hope");
 
     const nsRect* r;
-    for (nsRegionRectIterator iter(intersection); (r = iter.Next());) {
+    for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
       nsRect bounds = *r;
       ViewToWidget(aWidgetView, aWidgetView, bounds);
       widget->Invalidate(bounds, PR_FALSE);

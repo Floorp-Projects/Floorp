@@ -75,6 +75,10 @@ struct nsPoint {
     y -= aPoint.y;
     return *this;
   }
+
+  nsPoint operator-() const {
+    return nsPoint(-x, -y);
+  }
 };
 
 #ifdef NS_COORD_IS_FLOAT
