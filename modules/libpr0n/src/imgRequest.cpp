@@ -444,6 +444,8 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
 
   LOG_SCOPE(gImgLog, "imgRequest::OnStopFrame");
 
+  mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE;
+
   if (mCacheEntry) {
     PRUint32 cacheSize = 0;
 

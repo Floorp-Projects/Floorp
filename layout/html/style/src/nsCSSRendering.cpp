@@ -2752,7 +2752,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     if (req)
       req->GetImageStatus(&status);
 
-    if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+    if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
       if (!transparentBG) {
         // The background color is rendered over the 'border' 'padding' and
         // 'content' areas
