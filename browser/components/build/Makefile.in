@@ -83,7 +83,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)timebomb_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-OLD_COMPONENTS_DIR=$(DEPTH)/xpfe/components
+OLD_COMPONENTS_DIR=$(topsrcdir)/xpfe/components
 
 LOCAL_INCLUDES	= \
 	-I$(OLD_COMPONENTS_DIR)/autocomplete/src  \
