@@ -35,49 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
-
-// XXX MAKE SURE that the "url" field is LAST!
-// This is important for what happens if/when the URL itself is changed.
-// Ask rjc@netscape.com if you want to know why exactly this is.
-
 // This is the set of fields that are visible in the window.
-var gFields     = ["name", "shortcut", "description", "url"];
+var gFields;
 
 // ...and this is a parallel array that contains the RDF properties
 // that they are associated with.
-var gProperties = [NC_NAMESPACE_URI + "Name",
-                   NC_NAMESPACE_URI + "ShortcutURL",
-                   NC_NAMESPACE_URI + "Description",
-                   NC_NAMESPACE_URI + "URL"];
+var gProperties;
 
-var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                    .getService(Components.interfaces.nsIRDFService);
-
-var RDFCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                      .getService(Components.interfaces.nsIRDFContainerUtils);
-
-var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-
-var gBookmarkURL = "";
+var Bookmarks;
+var gBookmarkID;
 
 function showDescription()
 {
-  gBookmarkURL = window.arguments[0];
-  var resource = RDF.GetResource(gBookmarkURL);
+  initServices();
+  initBMService();
+
+  gBookmarkID = window.arguments[0];
+  var resource = RDF.GetResource(gBookmarkID);
 
   // Check the description
-  var primaryType = BookmarksUtils.resolveType(resource).split("#")[1];
-  if (primaryType == "Folder") {
-    if (resource.Value == "NC:PersonalToolbarFolder")
-      primaryType = "PersonalToolbarFolder";
-    else {
-      var folderGroupArc = RDF.GetResource(NC_NAMESPACE_URI+"FolderGroup");
-      var isFolderGroup  = Bookmarks.GetTarget(resource, folderGroupArc, true);
-      if (isFolderGroup)
-        primaryType = "FolderGroup";
-    }
-  }
+  var primaryType = BookmarksUtils.resolveType(resource);
   var description = BookmarksUtils.getLocaleString("description_"+primaryType);
   
   var newBookmarkFolder = BookmarksUtils.getNewBookmarkFolder();
@@ -92,13 +69,24 @@ function showDescription()
 
   var textNode = document.createTextNode(description);
   document.getElementById("bookmarkDescription").appendChild(textNode);
-
 }
 
 function Init()
 {
+  // This is the set of fields that are visible in the window.
+  gFields     = ["name", "url", "shortcut", "description"];
+
+  // ...and this is a parallel array that contains the RDF properties
+  // that they are associated with.
+  gProperties = [NC_NS + "Name",
+                 NC_NS + "URL",
+                 NC_NS + "ShortcutURL",
+                 NC_NS + "Description"];
+
+  Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+
   var x;
-  var resource = RDF.GetResource(gBookmarkURL);
+  var resource = RDF.GetResource(gBookmarkID);
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 
@@ -194,7 +182,7 @@ function Init()
   }
 
   // if its a container, disable some things
-  var isContainerFlag = RDFCU.IsContainer(Bookmarks, RDF.GetResource(gBookmarkURL));
+  var isContainerFlag = RDFCU.IsContainer(Bookmarks, resource);
   if (!isContainerFlag) {
     // XXX To do: the "RDFCU.IsContainer" call above only works for RDF sequences;
     //            if its not a RDF sequence, we should to more checking to see if
@@ -202,14 +190,28 @@ function Init()
     //            of this is the "File System" container.
   }
 
-  if (isContainerFlag) {
+  var isSeparator = BookmarksUtils.resolveType(resource) == "BookmarkSeparator";
+
+  if (isContainerFlag || isSeparator) {
     // If it is a folder, it has no URL or Keyword
     document.getElementById("locationrow").setAttribute("hidden", "true");
     document.getElementById("shortcutrow").setAttribute("hidden", "true");
+    if (isSeparator) {
+      document.getElementById("descriptionrow").setAttribute("hidden", "true");
+    }
   }
 
-  if (gBookmarkURL.substr(0, 7).toLowerCase() != "http://" &&
-      gBookmarkURL.substr(0, 8).toLowerCase() != "https://") {
+  var showScheduling = false;
+  var url = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[1]), true);
+  if (url) {
+    url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    if (url.substr(0, 7).toLowerCase() == "http://" ||
+        url.substr(0, 8).toLowerCase() == "https://") {
+      showScheduling = true;
+    }
+  }
+
+  if (!showScheduling) {
     // only allow scheduling of http/https URLs
     document.getElementById("ScheduleTab").setAttribute("hidden", "true");
     document.getElementById("NotifyTab").setAttribute("hidden", "true");
@@ -241,18 +243,18 @@ function Commit()
       // Get the new value as a literal, using 'null' if the value is empty.
       var newvalue = field.value;
 
-      var oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
+      var oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
                                          RDF.GetResource(gProperties[i]),
                                          true);
 
       if (oldvalue)
         oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-      if (newvalue && gProperties[i] == (NC_NAMESPACE_URI + "ShortcutURL")) {
+      if (newvalue && gProperties[i] == (NC_NS + "ShortcutURL")) {
         // shortcuts are always lowercased internally
         newvalue = newvalue.toLowerCase();
       }
-      else if (newvalue && gProperties[i] == (NC_NAMESPACE_URI + "URL")) {
+      else if (newvalue && gProperties[i] == (NC_NS + "URL")) {
         // we're dealing with the URL attribute;
         // if a scheme isn't specified, use "http://"
         if (newvalue.indexOf(":") < 0)
@@ -263,10 +265,6 @@ function Commit()
         newvalue = RDF.GetLiteral(newvalue);
 
       if (updateAttribute(gProperties[i], oldvalue, newvalue)) {
-        // Update gBookmarkURL if the url changed
-        if (newvalue && gProperties[i] == NC_NAMESPACE_URI + "URL")
-          gBookmarkURL = newvalue.Value;
-
         changed = true;
       }
     }
@@ -277,7 +275,7 @@ function Commit()
   var scheduleTab = document.getElementById("ScheduleTab");
   if (scheduleTab) {
     var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-    oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
+    oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
                                    RDF.GetResource(scheduleRes), true);
     newvalue = "";
     var dayRangeNode = document.getElementById("dayRange");
@@ -346,18 +344,18 @@ function updateAttribute(prop, oldvalue, newvalue)
   if (prop && (oldvalue || newvalue) && oldvalue != newvalue) {
 
     if (oldvalue && !newvalue) {
-      Bookmarks.Unassert(RDF.GetResource(gBookmarkURL),
+      Bookmarks.Unassert(RDF.GetResource(gBookmarkID),
                          RDF.GetResource(prop),
                          oldvalue);
     }
     else if (!oldvalue && newvalue) {
-      Bookmarks.Assert(RDF.GetResource(gBookmarkURL),
+      Bookmarks.Assert(RDF.GetResource(gBookmarkID),
                        RDF.GetResource(prop),
                        newvalue,
                        true);
     }
     else /* if (oldvalue && newvalue) */ {
-      Bookmarks.Change(RDF.GetResource(gBookmarkURL),
+      Bookmarks.Change(RDF.GetResource(gBookmarkID),
                        RDF.GetResource(prop),
                        oldvalue,
                        newvalue);
@@ -409,5 +407,3 @@ function dayRangeChange (aMenuList)
   for (var i = 0; i < controls.length; ++i)
     document.getElementById(controls[i]).disabled = !aMenuList.value;
 }
-
-
