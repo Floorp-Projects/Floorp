@@ -119,8 +119,8 @@ function SetupTextEditorCommands()
   //dump("Registering plain text editor commands\n");
   
   commandManager.registerCommand("cmd_find",       nsFindCommand);
-  controller.registerCommand("cmd_findNext",       new nsFindAgainCommand(false));
-  controller.registerCommand("cmd_findPrev",       new nsFindAgainCommand(true));
+  commandManager.registerCommand("cmd_findNext",   new nsFindAgainCommand(false));
+  commandManager.registerCommand("cmd_findPrev",   new nsFindAgainCommand(true));
   commandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
   commandManager.registerCommand("cmd_validate",   nsValidateCommand);
   commandManager.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
