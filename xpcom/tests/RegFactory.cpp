@@ -139,5 +139,18 @@ int ProcessArgs(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-  return ProcessArgs(argc, argv);
+    int ret = 0;
+
+    /* With no arguments, RegFactory will autoregister */
+    if (argc <= 1)
+    {
+        nsresult rv = nsComponentManager::AutoRegister(
+                                                       nsIComponentManager::NS_Startup,
+                                                       NULL /* default location */);
+        ret = (NS_FAILED(rv)) ? -1 : 0;
+    }
+    else
+      ret = ProcessArgs(argc, argv);
+
+    return ret;
 }
