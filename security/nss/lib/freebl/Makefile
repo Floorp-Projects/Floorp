@@ -286,7 +286,7 @@ FILES2LN = \
 
 LINKEDFILES = $(addprefix $(PURE32DIR)/, $(FILES2LN))
 
-CDDIR=$(shell pwd)
+CDDIR := $(shell pwd)
 
 $(PURE32DIR):
 	-mkdir $(PURE32DIR)
