@@ -55,7 +55,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
 LOCALE_DIR		= mac
 else
-LOCAlE_DIR		= unix
+LOCALE_DIR		= unix
 endif
 endif
 
