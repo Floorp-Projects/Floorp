@@ -193,35 +193,12 @@ NS_MakeAbsoluteURI(char* *result,
                    nsIURI* baseURI = nsnull, 
                    nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    nsresult rv;
     NS_ASSERTION(baseURI, "It doesn't make sense to not supply a base URI");
  
     if (spec == nsnull)
         return baseURI->GetSpec(result);
     
-    nsIIOService* serv = ioService;
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    if (serv == nsnull) {
-        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
-                                          (nsISupports**)&serv);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    PRUint32 startPos, endPos;
-    rv = serv->ExtractScheme(spec, &startPos, &endPos, nsnull);
-    if (NS_SUCCEEDED(rv)) {
-        // if spec has a scheme, then it's already absolute
-        *result = nsCRT::strdup(spec);
-        rv = (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else {
-        rv = baseURI->Resolve(spec, result);
-    }
-
-    if (ioService == nsnull) {
-        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
-    }
-    return rv;
+    return baseURI->Resolve(spec, result);
 }
 
 inline nsresult
