@@ -94,7 +94,7 @@ nsPop3IncomingServer::GetServerURI(char **uri)
     rv = GetHostName(&hostname);
     if (NS_FAILED(rv)) return rv;
 
-    *uri = PR_smprintf("mailbox://%s/", hostname);
+    *uri = PR_smprintf("mailbox://%s", hostname);
 
     PR_Free(hostname);
     return rv;
