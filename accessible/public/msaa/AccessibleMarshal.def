@@ -1,5 +1,5 @@
-LIBRARY        ISimpleDOMDocumentMarshal.dll
-DESCRIPTION    'ISimpleDOMDocument proxy/stub DLL - allows cross-process communication'
+LIBRARY        AccessibleMarshal.dll
+DESCRIPTION    'ISimpleDOM* proxy/stub DLLs - allows cross-process communication'
 EXPORTS        DllGetClassObject      @1 PRIVATE
                DllCanUnloadNow        @2 PRIVATE
                DllRegisterServer      @4 PRIVATE
