@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.18 2002/10/23 23:18:17 jpierre%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.19 2002/10/23 23:41:02 jpierre%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -1216,10 +1216,11 @@ sec_asn1d_free_child (sec_asn1d_state *state, PRBool error)
 	if (error && state->top->their_pool == NULL) {
 	    /*
 	     * XXX We need to free anything allocated.
-             At this point, we failed in the middle of decoding. But we can't free
-             the data we previously allocated with PR_Malloc unless we keep track of
-             every pointer. So instead we have a memory leak when decoding fails
-             half-way, unless an arena is used. See bug 95311 .
+             * At this point, we failed in the middle of decoding. But we
+             * can't free the data we previously allocated with PR_Malloc
+             * unless we keep track of every pointer. So instead we have a
+             * memory leak when decoding fails half-way, unless an arena is
+             * used. See bug 95311 .
 	     */
 	}
 	state->child = NULL;
