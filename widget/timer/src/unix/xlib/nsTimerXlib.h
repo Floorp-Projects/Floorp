@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Tony Tsui <tony@igelaus.com.au>
  */
 
 #ifndef __nsTimerXlib_h
@@ -28,13 +29,12 @@
 
 #include <sys/time.h>
 
+class nsVoidArray;
+
 class nsTimerXlib : public nsITimer
 {
 public:
-  static nsTimerXlib *gTimerList;
-  static struct timeval gTimer;
-  static struct timeval gNextFire;
-  static void ProcessTimeouts(struct timeval *aNow);
+  static void ProcessTimeouts(nsVoidArray *array);
   nsTimerXlib();
   virtual ~nsTimerXlib();
 
@@ -54,33 +54,39 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual void Cancel();
-  PRBool Fire(struct timeval *aNow);
+  PRBool Fire();
   
-  virtual PRUint32 GetDelay() { return 0; };
-  virtual void SetDelay(PRUint32 aDelay) {};
+  virtual PRUint32 GetDelay() { return mDelay; }
+  virtual void SetDelay(PRUint32 aDelay);
 
-  virtual PRUint32 GetPriority() {}
-  virtual void SetPriority(PRUint32 aPriority) {}
+  virtual PRUint32 GetPriority() { return mPriority; }
+  virtual void SetPriority(PRUint32 aPriority);
 
-  virtual PRUint32 GetType() {}
-  virtual void SetType(PRUint32 aType) {}
+  virtual PRUint32 GetType() { return mType; }
+  virtual void SetType(PRUint32 aType);
 
   virtual void *GetClosure() { return mClosure; }
 
-  // this needs to be public so that the mainloop can
-  // find the next fire time...
-  struct timeval       mFireTime;
-  nsTimerXlib *        mNext;
+  static nsVoidArray *gHighestList;
+  static nsVoidArray *gHighList;
+  static nsVoidArray *gNormalList;
+  static nsVoidArray *gLowList;
+  static nsVoidArray *gLowestList;
 
+  static PRBool      gTimeoutAdded;
+  static PRBool      gProcessingTimer;
+
+  struct timeval       mFireTime;  
+  PRUint32             mDelay;
 private:
-  nsresult Init(PRUint32 aDelay);
+  nsresult Init(PRUint32 aDelay, PRUint32 aPriority);
   nsresult EnsureWindowService();
 
-  PRUint32             mType;
-  nsTimerCallbackFunc  mFunc;
   void *               mClosure;
-  PRUint32             mDelay;
   nsITimerCallback *   mCallback;
-};
+  nsTimerCallbackFunc  mFunc;
+  PRUint32             mPriority;
+  PRUint32             mType;
 
+};
 #endif // __nsTimerXlib_h
