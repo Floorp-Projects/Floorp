@@ -429,7 +429,7 @@ class JavaMembers {
                             Method[] setMethods = setJavaMethod.getMethods();
                             for (int pass = 1; pass <= 2 && setMethod == null; ++pass) {
                                 for (int i = 0; i < setMethods.length; ++i) {
-                                    if (setMethods[i].getReturnType() == void.class &&
+                                    if (setMethods[i].getReturnType() == Void.TYPE &&
                                         (!isStatic || Modifier.isStatic(setMethods[i].getModifiers())) &&
                                         (params = setMethods[i].getParameterTypes()) != null &&
                                         params.length == 1 ) {

@@ -138,7 +138,7 @@ public class FunctionObject extends BaseFunction {
             // Either variable args or an error.
             if (types[1].isArray()) {
                 if (!isStatic ||
-                    types[0] != Context.class ||
+                    types[0] != ScriptRuntime.ContextClass ||
                     types[1].getComponentType() != ScriptRuntime.ObjectClass ||
                     types[2] != ScriptRuntime.FunctionClass ||
                     types[3] != Boolean.TYPE)
@@ -149,7 +149,7 @@ public class FunctionObject extends BaseFunction {
                 parmsLength = VARARGS_CTOR;
             } else {
                 if (!isStatic ||
-                    types[0] != Context.class ||
+                    types[0] != ScriptRuntime.ContextClass ||
                     types[1] != ScriptRuntime.ScriptableClass ||
                     types[2].getComponentType() != ScriptRuntime.ObjectClass ||
                     types[3] != ScriptRuntime.FunctionClass)
@@ -168,7 +168,7 @@ public class FunctionObject extends BaseFunction {
                     type != ScriptRuntime.StringClass &&
                     type != ScriptRuntime.BooleanClass &&
                     !ScriptRuntime.NumberClass.isAssignableFrom(type) &&
-                    !Scriptable.class.isAssignableFrom(type) &&
+                    !ScriptRuntime.ScriptableClass.isAssignableFrom(type) &&
                     type != Boolean.TYPE &&
                     type != Byte.TYPE &&
                     type != Short.TYPE &&
@@ -662,7 +662,7 @@ public class FunctionObject extends BaseFunction {
 
     /** Get default master implementation or null if not available */
     private static Invoker newInvokerMaster() {
-        Class cl = ScriptRuntime.getClassOrNull(INVOKER_MASTER_CLASS);
+        Class cl = ScriptRuntime.classOrNull(INVOKER_MASTER_CLASS);
         if (cl != null) {
             return (Invoker)ScriptRuntime.newInstanceOrNull(cl);
         }

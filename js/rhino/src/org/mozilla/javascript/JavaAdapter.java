@@ -116,7 +116,7 @@ public class JavaAdapter extends ScriptableObject {
         }
 
         if (superClass == null)
-            superClass = Object.class;
+            superClass = ScriptRuntime.ObjectClass;
 
         Class[] interfaces = new Class[interfaceCount];
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
@@ -136,7 +136,7 @@ public class JavaAdapter extends ScriptableObject {
             generatedClasses.put(sig, adapterClass);
         }
 
-        Class[] ctorParms = { Scriptable.class };
+        Class[] ctorParms = { ScriptRuntime.ScriptableClass };
         Object[] ctorArgs = { obj };
         Object adapter = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         return getAdapterSelf(adapterClass, adapter);
@@ -168,9 +168,11 @@ public class JavaAdapter extends ScriptableObject {
         }
 
         try {
-            Class[] ctorParms = { Scriptable.class, Scriptable.class };
+            Class[] ctorParms = {
+                ScriptRuntime.ScriptableClass,
+                ScriptRuntime.ScriptableClass
+            };
             Object[] ctorArgs = { obj, self };
-
             return adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
         } catch(InstantiationException e) {
         } catch(IllegalAccessException e) {
@@ -311,8 +313,9 @@ public class JavaAdapter extends ScriptableObject {
                 }
                 Class[] parms = new Class[length];
                 for (int k=0; k < length; k++)
-                    parms[k] = Object.class;
-                generateMethod(cfw, adapterName, id, parms, Object.class);
+                    parms[k] = ScriptRuntime.ObjectClass;
+                generateMethod(cfw, adapterName, id, parms,
+                               ScriptRuntime.ObjectClass);
             }
         }
         return cfw.toByteArray();

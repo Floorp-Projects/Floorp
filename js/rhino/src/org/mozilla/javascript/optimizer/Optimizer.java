@@ -420,8 +420,10 @@ class Optimizer {
                         if ((theVar != null) && theVar.isNumber()) {
                             if (rType != TypeEvent.NumberType) {
                                 n.removeChild(rChild);
-                                Node newRChild = new Node(TokenStream.CONVERT, rChild);
-                                newRChild.putProp(Node.TYPE_PROP, Double.class);
+                                Node newRChild = new Node(TokenStream.CONVERT,
+                                                          rChild);
+                                newRChild.putProp(Node.TYPE_PROP,
+                                                  ScriptRuntime.DoubleClass);
                                 n.addChildToBack(newRChild);
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
@@ -433,7 +435,8 @@ class Optimizer {
                                 if (!convertParameter(rChild)) {
                                     n.removeChild(rChild);
                                     Node newRChild = new Node(TokenStream.CONVERT, rChild);
-                                    newRChild.putProp(Node.TYPE_PROP, Object.class);
+                                    newRChild.putProp(Node.TYPE_PROP,
+                                                      ScriptRuntime.ObjectClass);
                                     n.addChildToBack(newRChild);
                                 }
                             }
@@ -455,7 +458,8 @@ class Optimizer {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
                                 Node nuChild = new Node(TokenStream.CONVERT, lChild);
-                                nuChild.putProp(Node.TYPE_PROP, Object.class);
+                                nuChild.putProp(Node.TYPE_PROP,
+                                                ScriptRuntime.ObjectClass);
                                 n.addChildToFront(nuChild);
                             }
                         }
@@ -463,7 +467,8 @@ class Optimizer {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
                                 Node nuChild = new Node(TokenStream.CONVERT, rChild);
-                                nuChild.putProp(Node.TYPE_PROP, Object.class);
+                                nuChild.putProp(Node.TYPE_PROP,
+                                                ScriptRuntime.ObjectClass);
                                 n.addChildToBack(nuChild);
                             }
                         }
@@ -579,7 +584,8 @@ class Optimizer {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
                                 Node newRChild = new Node(TokenStream.CONVERT, rChild);
-                                newRChild.putProp(Node.TYPE_PROP, Double.class);
+                                newRChild.putProp(Node.TYPE_PROP,
+                                                  ScriptRuntime.DoubleClass);
                                 n.addChildToBack(newRChild);
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
@@ -591,7 +597,8 @@ class Optimizer {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
                                 Node newLChild = new Node(TokenStream.CONVERT, lChild);
-                                newLChild.putProp(Node.TYPE_PROP, Double.class);
+                                newLChild.putProp(Node.TYPE_PROP,
+                                                  ScriptRuntime.DoubleClass);
                                 n.addChildToFront(newLChild);
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
@@ -601,13 +608,15 @@ class Optimizer {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
                                 Node newLChild = new Node(TokenStream.CONVERT, lChild);
-                                newLChild.putProp(Node.TYPE_PROP, Double.class);
+                                newLChild.putProp(Node.TYPE_PROP,
+                                                  ScriptRuntime.DoubleClass);
                                 n.addChildToFront(newLChild);
                             }
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
                                 Node newRChild = new Node(TokenStream.CONVERT, rChild);
-                                newRChild.putProp(Node.TYPE_PROP, Double.class);
+                                newRChild.putProp(Node.TYPE_PROP,
+                                                  ScriptRuntime.DoubleClass);
                                 n.addChildToBack(newRChild);
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
@@ -624,7 +633,8 @@ class Optimizer {
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
                             Node nuChild = new Node(TokenStream.CONVERT, arrayBase);
-                            nuChild.putProp(Node.TYPE_PROP, Object.class);
+                            nuChild.putProp(Node.TYPE_PROP,
+                                            ScriptRuntime.ObjectClass);
                             n.addChildToFront(nuChild);
                         }
                     }
@@ -641,7 +651,8 @@ class Optimizer {
                         if (!convertParameter(rValue)) {
                             n.removeChild(rValue);
                             Node nuChild = new Node(TokenStream.CONVERT, rValue);
-                            nuChild.putProp(Node.TYPE_PROP, Object.class);
+                            nuChild.putProp(Node.TYPE_PROP,
+                                            ScriptRuntime.ObjectClass);
                             n.addChildToBack(nuChild);
                         }
                     }
@@ -655,7 +666,8 @@ class Optimizer {
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
                             Node nuChild = new Node(TokenStream.CONVERT, arrayBase);
-                            nuChild.putProp(Node.TYPE_PROP, Object.class);
+                            nuChild.putProp(Node.TYPE_PROP,
+                                            ScriptRuntime.ObjectClass);
                             n.addChildToFront(nuChild);
                         }
                     }
@@ -704,7 +716,8 @@ class Optimizer {
                             if (!convertParameter(child)) {
                                 n.removeChild(child);
                                 Node nuChild = new Node(TokenStream.CONVERT, child);
-                                nuChild.putProp(Node.TYPE_PROP, Object.class);
+                                nuChild.putProp(Node.TYPE_PROP,
+                                                ScriptRuntime.ObjectClass);
                                 if (nextChild == null)
                                     n.addChildToBack(nuChild);
                                 else

@@ -45,7 +45,7 @@ public abstract class ClassNameHelper {
     public static ClassNameHelper get(Context cx) {
         ClassNameHelper helper = savedNameHelper;
         if (helper == null && !helperNotAvailable) {
-            Class nameHelperClass = ScriptRuntime.getClassOrNull(
+            Class nameHelperClass = ScriptRuntime.classOrNull(
                 "org.mozilla.javascript.optimizer.OptClassNameHelper");
             // nameHelperClass == null if running lite
             if (nameHelperClass != null) {

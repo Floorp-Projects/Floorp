@@ -605,8 +605,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 }
                 if (val != null && (val == Undefined.instance ||
                                     !(val instanceof Scriptable) ||
-                                    typeHint == Scriptable.class ||
-                                    typeHint == Function.class))
+                                    typeHint == ScriptRuntime.ScriptableClass ||
+                                    typeHint == ScriptRuntime.FunctionClass))
                 {
                     return val;
                 }
@@ -788,7 +788,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 continue;
             Class[] parmTypes = method.getParameterTypes();
             if (parmTypes.length == 3 &&
-                parmTypes[0] == ContextClass &&
+                parmTypes[0] == ScriptRuntime.ContextClass &&
                 parmTypes[1] == ScriptRuntime.ScriptableClass &&
                 parmTypes[2] == Boolean.TYPE &&
                 Modifier.isStatic(method.getModifiers()))
@@ -1094,7 +1094,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Class[] parmTypes = getter.getParameterTypes();
         if (parmTypes.length != 0) {
             if (parmTypes.length != 1 ||
-                parmTypes[0] != ScriptableObject.class)
+                parmTypes[0] != ScriptRuntime.ScriptableObjectClass)
             {
                 throw PropertyException.withMessage1
                     ("msg.bad.getter.parms", getter.toString());
@@ -1112,7 +1112,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
             parmTypes = setter.getParameterTypes();
             if (parmTypes.length == 2) {
-                if (parmTypes[0] != ScriptableObject.class) {
+                if (parmTypes[0] != ScriptRuntime.ScriptableObjectClass) {
                     throw PropertyException.withMessage0("msg.setter2.parms");
                 }
                 if (delegateTo == null) {
@@ -1794,6 +1794,4 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             setter = (Method) FunctionObject.readMember(in);
         }
     }
-
-    private static final Class ContextClass = Context.class;
 }

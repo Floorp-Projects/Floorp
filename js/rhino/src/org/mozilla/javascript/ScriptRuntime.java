@@ -66,29 +66,40 @@ public class ScriptRuntime {
      * that they won't cause problems by being loaded early.
      */
 
-    public final static Class UndefinedClass = Undefined.class;
-    public final static Class ScriptableClass = Scriptable.class;
-    public final static Class StringClass = String.class;
-    public final static Class NumberClass = Number.class;
-    public final static Class BooleanClass = Boolean.class;
-    public final static Class ByteClass = Byte.class;
-    public final static Class ShortClass = Short.class;
-    public final static Class IntegerClass = Integer.class;
-    public final static Class LongClass = Long.class;
-    public final static Class FloatClass = Float.class;
-    public final static Class DoubleClass = Double.class;
-    public final static Class CharacterClass = Character.class;
-    public final static Class ObjectClass = Object.class;
-    public final static Class FunctionClass = Function.class;
-    public final static Class ClassClass = Class.class;
-    public final static Class SerializableClass = java.io.Serializable.class;
-    public final static Class DateClass = java.util.Date.class;
+    public final static Class 
+		BooleanClass      = classOrNull("java.lang.Boolean"),
+		ByteClass         = classOrNull("java.lang.Byte"),
+		CharacterClass    = classOrNull("java.lang.Character"),
+		ClassClass        = classOrNull("java.lang.Class"),
+		DoubleClass       = classOrNull("java.lang.Double"),
+		FloatClass        = classOrNull("java.lang.Float"),
+		IntegerClass      = classOrNull("java.lang.Integer"),
+		LongClass         = classOrNull("java.lang.Long"),
+		NumberClass       = classOrNull("java.lang.Number"),
+		ObjectClass       = classOrNull("java.lang.Object"),
+		ShortClass        = classOrNull("java.lang.Short"),
+		StringClass       = classOrNull("java.lang.String"),
 
-    // Can not use .class as Comparable is only since JDK 1.2
+		SerializableClass = classOrNull("java.io.Serializable"),
+
+		DateClass         = classOrNull("java.util.Date");
+
+    // It will be null under JDK 1.1 as Comparable is only since JDK 1.2
     public final static Class
-        ComparableClass = getClassOrNull("java.lang.Comparable");
+        ComparableClass = classOrNull("java.lang.Comparable");
 
-    /**
+	public final static Class 
+		ContextClass      = classOrNull("org.mozilla.javascript.Context"),
+		FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
+		NativeGlobalClass = classOrNull("org.mozilla.javascript.NativeGlobal"),
+		NativeScriptClass = classOrNull("org.mozilla.javascript.NativeScript"),
+		NativeWithClass   = classOrNull("org.mozilla.javascript.NativeWith"),
+		ScriptableClass   = classOrNull("org.mozilla.javascript.Scriptable"),
+		ScriptableObjectClass = classOrNull(
+			                       "org.mozilla.javascript.ScriptableObject"),
+		UndefinedClass    = classOrNull("org.mozilla.javascript.Undefined");
+    
+	/**
      * Convert the value to a boolean.
      *
      * See ECMA 9.2.
@@ -283,17 +294,23 @@ public class ScriptRuntime {
             start++;
         }
 
-        if (startChar == '0' && start+2 < len &&
-            Character.toLowerCase(s.charAt(start+1)) == 'x')
-            // A hexadecimal number
-            return stringToNumber(s, start + 2, 16);
-
-        if ((startChar == '+' || startChar == '-') && start+3 < len &&
-            s.charAt(start+1) == '0' &&
-            Character.toLowerCase(s.charAt(start+2)) == 'x') {
-            // A hexadecimal number
-            double val = stringToNumber(s, start + 3, 16);
-            return startChar == '-' ? -val : val;
+        if (startChar == '0') {
+            if (start + 2 < len) {
+                int c1 = s.charAt(start + 1);
+                if (c1 == 'x' || c1 == 'X') {
+                    // A hexadecimal number
+                    return stringToNumber(s, start + 2, 16);
+                }
+            }
+        } else if (startChar == '+' || startChar == '-') {
+            if (start + 3 < len && s.charAt(start + 1) == '0') {
+                int c2 = s.charAt(start + 2);
+                if (c2 == 'x' || c2 == 'X') {
+                    // A hexadecimal number with sign
+                    double val = stringToNumber(s, start + 3, 16);
+                    return startChar == '-' ? -val : val;
+                }
+            }
         }
 
         int end = len - 1;
@@ -1188,19 +1205,19 @@ public class ScriptRuntime {
             String name = f.getFunctionName();
             if (name.length() == 4) {
                 if (name.equals("eval")) {
-                    if (f.master.getClass() == NativeGlobal.class) {
+                    if (f.master.getClass() == NativeGlobalClass) {
                         return NativeGlobal.evalSpecial(cx, scope,
                                                         thisArg, args,
                                                         filename, lineNumber);
                     }
                 }
                 else if (name.equals("With")) {
-                    if (f.master.getClass() == NativeWith.class) {
+                    if (f.master.getClass() == NativeWithClass) {
                         return NativeWith.newWithSpecial(cx, args, f, !isCall);
                     }
                 }
                 else if (name.equals("exec")) {
-                    if (f.master.getClass() == NativeScript.class) {
+                    if (f.master.getClass() == NativeScriptClass) {
                         return ((NativeScript)jsThis).
                             exec(cx, ScriptableObject.getTopLevelScope(scope));
                     }
@@ -1758,14 +1775,12 @@ public class ScriptRuntime {
     // Statements
     // ------------------
 
-    private static final String GLOBAL_CLASS =
-        "org.mozilla.javascript.tools.shell.Global";
-
     private static ScriptableObject getGlobal(Context cx) {
-        Class globalClass = getClassOrNull(GLOBAL_CLASS);
+    	final String GLOBAL_CLASS = "org.mozilla.javascript.tools.shell.Global";
+        Class globalClass = classOrNull(GLOBAL_CLASS);
         if (globalClass != null) {
             try {
-                Class[] parm = { Context.class };
+                Class[] parm = { ScriptRuntime.ContextClass };
                 Constructor globalClassCtor = globalClass.getConstructor(parm);
                 Object[] arg = { cx };
                 return (ScriptableObject) globalClassCtor.newInstance(arg);
@@ -1961,7 +1976,7 @@ public class ScriptRuntime {
         cx.currentActivation = activation;
     }
 
-    static Class getClassOrNull(String className)
+    static Class classOrNull(String className)
     {
         try {
             return Class.forName(className);
@@ -1974,7 +1989,7 @@ public class ScriptRuntime {
         return null;
     }
 
-    static Class getClassOrNull(ClassLoader loader, String className)
+    static Class classOrNull(ClassLoader loader, String className)
     {
         try {
             return loader.loadClass(className);

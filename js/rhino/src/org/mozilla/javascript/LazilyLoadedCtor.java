@@ -78,7 +78,7 @@ public final class LazilyLoadedCtor {
                 //  java.util.PropertyPermission
                 //        org.mozilla.javascript.JavaAdapter read
 
-                Class cl = ScriptRuntime.getClassOrNull(className);
+                Class cl = ScriptRuntime.classOrNull(className);
                 if (cl == null) {
                     removeOnError = true;
                 } else {

@@ -292,9 +292,9 @@ public class NativeJavaPackage extends ScriptableObject {
             loader = cx.getApplicationClassLoader();
         }
         if (loader != null) {
-            cl = ScriptRuntime.getClassOrNull(loader, className);
+            cl = ScriptRuntime.classOrNull(loader, className);
         } else {
-            cl = ScriptRuntime.getClassOrNull(className);
+            cl = ScriptRuntime.classOrNull(className);
         }
         return cl;
     }

@@ -169,7 +169,7 @@ public class Codegen extends Interpreter {
                     }
                 }
                 if (superClass == null) {
-                    superClass = Object.class;
+                    superClass = ScriptRuntime.ObjectClass;
                 }
                 byte[] classFile = JavaAdapter.createAdapterCode(
                                        cx, obj, adapterClassName,

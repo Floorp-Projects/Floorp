@@ -1742,7 +1742,7 @@ public class Context {
         // If Context was subclussed, cxClass != Context.class
         Class cxClass = this.getClass();
         // Check that Context or its suclass is accesible from this loader
-        Class x = ScriptRuntime.getClassOrNull(loader, cxClass.getName());
+        Class x = ScriptRuntime.classOrNull(loader, cxClass.getName());
         if (x != cxClass) {
             // The check covers the case when x == null =>
             // threadLoader does not know about Rhino or the case
@@ -1919,7 +1919,7 @@ public class Context {
         return errorCount == 0 ? result : null;
     }
 
-    private static Class codegenClass = ScriptRuntime.getClassOrNull(
+    private static Class codegenClass = ScriptRuntime.classOrNull(
                              "org.mozilla.javascript.optimizer.Codegen");
 
     private Interpreter createCompiler() {
@@ -1991,7 +1991,7 @@ public class Context {
 
     RegExpProxy getRegExpProxy() {
         if (regExpProxy == null) {
-            Class cl = ScriptRuntime.getClassOrNull(
+            Class cl = ScriptRuntime.classOrNull(
                           "org.mozilla.javascript.regexp.RegExpImpl");
             if (cl != null) {
                 regExpProxy = (RegExpProxy)ScriptRuntime.newInstanceOrNull(cl);
@@ -2076,7 +2076,7 @@ public class Context {
     private static Method threadLocalSet;
 
     static {
-        Class cl = ScriptRuntime.getClassOrNull("java.lang.ThreadLocal");
+        Class cl = ScriptRuntime.classOrNull("java.lang.ThreadLocal");
         if (cl != null) {
             try {
                 threadLocalGet = cl.getMethod("get", null);
@@ -2095,7 +2095,7 @@ public class Context {
         // Don't use "Thread.class": that performs the lookup
         // in the class initializer, which doesn't allow us to
         // catch possible security exceptions.
-        Class threadClass = ScriptRuntime.getClassOrNull("java.lang.Thread");
+        Class threadClass = ScriptRuntime.classOrNull("java.lang.Thread");
         if (threadClass != null) {
             try {
                 method_getContextClassLoader =
