@@ -217,8 +217,6 @@ nsBoxFrame::Init(nsPresContext*  aPresContext,
                  nsStyleContext*  aContext,
                  nsIFrame*        aPrevInFlow)
 {
-  SetParent(aParent);
-
   mPresContext = aPresContext;
 
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
