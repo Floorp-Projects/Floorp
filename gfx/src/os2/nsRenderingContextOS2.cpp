@@ -1372,7 +1372,7 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const char* aString,
    {
       ULONG thislen = min( lLength, 512);
       GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aStringTemp, 4, ptls);
-      sum += ptls[ TXTBOX_TOPRIGHT].x;
+      sum += ptls[ TXTBOX_TOPRIGHT].x - ptls[ TXTBOX_TOPLEFT].x;
       lLength -= thislen;
       aStringTemp += thislen;
    }
