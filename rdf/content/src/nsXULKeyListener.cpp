@@ -532,8 +532,10 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
       if (!handled) {
         // Give the DOM window's associated key binding doc a shot.
         // XXX Check to see if we're in edit mode (how??!)
+        nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(piWindow));
         nsCOMPtr<nsIDocShell> docShell;
-        result = piWindow->GetDocShell(getter_AddRefs(docShell));
+        if(sgo)
+          result = sgo->GetDocShell(getter_AddRefs(docShell));
 
         nsCOMPtr<nsIPresShell> presShell;
         if(docShell)
