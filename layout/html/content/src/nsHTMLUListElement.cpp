@@ -29,7 +29,7 @@
 #include "nsIHTMLAttributes.h"
 
 extern nsGenericHTMLElement::EnumTable kListTypeTable[];
-extern nsGenericHTMLElement::EnumTable kOtherListTypeTable[];
+extern nsGenericHTMLElement::EnumTable kOldListTypeTable[];
 
 static NS_DEFINE_IID(kIDOMHTMLUListElementIID, NS_IDOMHTMLULISTELEMENT_IID);
 
@@ -140,7 +140,7 @@ nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,
     if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
                                               aResult)) {
       if (!nsGenericHTMLElement::ParseCaseSensitiveEnumValue(aValue,
-                                  kOtherListTypeTable, aResult)) {
+                                  kOldListTypeTable, aResult)) {
         aResult.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
       }
     }
@@ -163,7 +163,20 @@ nsHTMLUListElement::AttributeToString(nsIAtom* aAttribute,
                                       nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable, aResult);
+    PRInt32 v = aValue.GetIntValue();
+    switch (v) {
+      case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+      case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
+      case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+      case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
+        nsGenericHTMLElement::EnumValueToString(aValue, kOldListTypeTable,
+                                                aResult);
+        break;
+      default:
+        nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable,
+                                                aResult);
+        break;
+    }
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return mInner.AttributeToString(aAttribute, aValue, aResult);

@@ -145,11 +145,11 @@ nsGenericHTMLElement::EnumTable kListTypeTable[] = {
   { 0 }
 };
 
-nsGenericHTMLElement::EnumTable kOtherListTypeTable[] = {
-  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
-  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
-  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
-  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+nsGenericHTMLElement::EnumTable kOldListTypeTable[] = {
+  { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN },
   { 0 }
 };
 
@@ -162,7 +162,7 @@ nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
     if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
                                               aResult)) {
       if (!nsGenericHTMLElement::ParseCaseSensitiveEnumValue(aValue,
-                                  kOtherListTypeTable, aResult)) {
+                                  kOldListTypeTable, aResult)) {
         aResult.SetIntValue(NS_STYLE_LIST_STYLE_DECIMAL, eHTMLUnit_Enumerated);
       }
     }
@@ -185,7 +185,20 @@ nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
                                       nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable, aResult);
+    PRInt32 v = aValue.GetIntValue();
+    switch (v) {
+      case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+      case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
+      case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+      case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
+        nsGenericHTMLElement::EnumValueToString(aValue, kOldListTypeTable,
+                                                aResult);
+        break;
+      default:
+        nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable,
+                                                aResult);
+        break;
+    }
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
