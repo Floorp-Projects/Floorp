@@ -43,6 +43,7 @@
 #include "SaveHeaderSniffer.h"
 
 #include "netCore.h"
+#include "nsNetUtil.h"
 
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -210,8 +211,30 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         }
     }
     
+    // If we're saving view-source, create a temporary URI which is
+    // the original URI which the source came from and use it in the
+    // steps below which divine a file name from a URI.
+    PRBool isViewSrc = PR_FALSE;
+    nsCOMPtr<nsIURI> origURI;
+    if (mURL) {
+        nsCAutoString scheme;
+        mURL->GetScheme(scheme);
+        if (scheme.Equals("view-source")) {
+            nsCAutoString path;
+            rv = mURL->GetPath(path);
+            if (NS_FAILED(rv))
+                return rv;
+            rv = NS_NewURI(getter_AddRefs(origURI), path);
+            if (NS_FAILED(rv))
+                return rv;
+            isViewSrc = PR_TRUE;
+        }
+        else
+            origURI = mURL;
+    }
+    
     if (defaultFileName.IsEmpty()) {
-        nsCOMPtr<nsIURL> url(do_QueryInterface(mURL));
+        nsCOMPtr<nsIURL> url(do_QueryInterface(origURI));
         if (url)
         {
             nsCAutoString urlFileName;
@@ -233,10 +256,10 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         defaultFileName = mDefaultFilename;
     }
 
-    if (defaultFileName.IsEmpty() && mURL) {
+    if (defaultFileName.IsEmpty() && origURI) {
         // (5) Use the host.
         nsCAutoString hostName;
-        mURL->GetHost(hostName);
+        origURI->GetHost(hostName);
         defaultFileName = NS_ConvertUTF8toUCS2(hostName);
     }
     
@@ -260,7 +283,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     fileURL->GetFileExtension(fileExtension);
     
     PRBool setExtension = PR_FALSE;
-    if (mContentType.Equals("text/html")) {
+    if (mContentType.Equals("text/html") || isViewSrc) {
         if (fileExtension.IsEmpty() || (!fileExtension.Equals("htm") && !fileExtension.Equals("html"))) {
             defaultFileName.AppendWithConversion(".html");
             setExtension = PR_TRUE;
