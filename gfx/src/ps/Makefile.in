@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  string \
 		  widget \
 		  pref \
+		  caps \
 		  uconv \
 		  view \
 		  necko \
@@ -72,7 +73,21 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
+ifdef MOZ_ENABLE_FREETYPE2
+CPPSRCS		+= \
+		nsCidMap.cpp \
+		nsType1.cpp \
+		nsType8.cpp \
+		$(NULL)
+DEFINES         += -DMOZ_ENABLE_FREETYPE2
+LOCAL_INCLUDES  += -I$(srcdir)/../freetype
+endif
+
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_ENABLE_FREETYPE2
+INCLUDES        += $(FT2_CFLAGS)
+endif
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
