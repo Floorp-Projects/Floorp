@@ -1907,6 +1907,11 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, PRInt32 aNameSpaceID, ns
 
 
     // Add the element to the XUL document's ID-to-element map.
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+    if (! xuldoc)
+        return NS_ERROR_UNEXPECTED;
+
+    // check for an 'id' attribute
     nsAutoString id;
     rv = element->GetAttribute(kNameSpaceID_None, kIdAtom, id);
     if (NS_FAILED(rv)) return rv;
@@ -1923,10 +1928,15 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, PRInt32 aNameSpaceID, ns
     }
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
-        if (! xuldoc)
-            return NS_ERROR_UNEXPECTED;
+        rv = xuldoc->AddElementForID(id, element);
+        if (NS_FAILED(rv)) return rv;
+    }
 
+    // ...and a 'ref' attribute
+    rv = element->GetAttribute(kNameSpaceID_None, kRefAtom, id);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         rv = xuldoc->AddElementForID(id, element);
         if (NS_FAILED(rv)) return rv;
     }
