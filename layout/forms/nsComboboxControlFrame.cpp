@@ -496,8 +496,15 @@ nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  mFocused = aOn?this:nsnull;
-  // Thiis is needed on a temporary basis. It causes the focus
+  if (aOn) {
+    mFocused = this;
+  } else {
+    mFocused = nsnull;
+    if (mDroppedDown) {
+      ToggleList(mPresContext);
+    }
+  }
+  // This is needed on a temporary basis. It causes the focus
   // rect to be drawn. This is much faster than ReResolvingStyle
   // Bug 32920
   Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
