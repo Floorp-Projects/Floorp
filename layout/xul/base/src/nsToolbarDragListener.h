@@ -27,6 +27,7 @@
 class nsToolbarFrame;
 class nsIPresContext;
 class nsIDOMEvent;
+class nsIFrame;
 
 
 class nsToolbarDragListener : public nsIDOMDragListener
@@ -56,6 +57,9 @@ protected:
     // is a container and the drop would be "on" that item.
   void ItemMouseIsOver(nsIDOMEvent* aDragEvent, nscoord* outXLoc, PRUint32* outIndex, PRBool* outOnChild);
 
+    // Find the frame (or subframe) that contains the buttons that can be dragged.
+  nsIFrame* LocateDropAreaFrame ( ) ;
+  
   nsToolbarFrame * mToolbar;         // toolbar owns me, don't be circular
   nsIPresContext * mPresContext;     // weak reference
   PRInt32          mCurrentDropLoc;
