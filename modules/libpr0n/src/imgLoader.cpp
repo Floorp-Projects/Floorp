@@ -48,6 +48,8 @@
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
 
+#include "ImageErrors.h"
+
 #if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
@@ -572,7 +574,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     /* XXX If |*listener| is null when we return here, the caller should 
        probably cancel the channel instead of us doing it here.
     */
-    channel->Cancel(NS_BINDING_ABORTED); // this should fire an OnStopRequest
+    channel->Cancel(NS_IMAGELIB_ERROR_LOAD_ABORTED); // this should fire an OnStopRequest
 
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
