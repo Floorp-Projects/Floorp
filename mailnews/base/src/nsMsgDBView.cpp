@@ -979,7 +979,7 @@ NS_IMETHODIMP nsMsgDBView::GetRowProperties(PRInt32 index, nsISupportsArray *pro
   }
 
   // we only care if label is between 1 and PREF_LABELS_MAX inclusive.
-  if (NS_SUCCEEDED(msgHdr->GetLabel(&label)) && ((label >= 1) || (label <= PREF_LABELS_MAX)))
+  if (NS_SUCCEEDED(msgHdr->GetLabel(&label)) && (label >= 1) && (label <= PREF_LABELS_MAX))
   {
     // Set the row properties.  This will color the background of a row given
     // a particular label color.
@@ -1060,7 +1060,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
 #endif
 
   // we only care if label is between 1 and PREF_LABELS_MAX inclusive.
-  if (NS_SUCCEEDED(msgHdr->GetLabel(&label)) && ((label >= 1) || (label <= PREF_LABELS_MAX)))
+  if (NS_SUCCEEDED(msgHdr->GetLabel(&label)) && (label >= 1) && (label <= PREF_LABELS_MAX))
   {
     // Set the cell properties.  This will color the text of a column given
     // a particular label color.
