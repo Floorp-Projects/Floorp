@@ -240,6 +240,11 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
                                         PRInt32& aOutNumColumns,
                                         PRInt32 *& aOutColumnIndexes)
 {
+  // initialize out-params
+  aOutNumColumns=0;
+  aOutColumnIndexes=nsnull;
+  
+  // fill out params with column info based on aType
   switch (aType)
   {
     case eStyleUnit_Auto:
@@ -2595,6 +2600,12 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
   return NS_OK;
 }
 
+/* We have to go through our child list twice.
+ * The first time, we scan until we find the first row.  
+ * We set column style from the cells in the first row.
+ * Then we terminate that loop and start a second pass.
+ * In the second pass, we build column and cell cache info.
+ */
 void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
                                      nsReflowMetrics&     aDesiredSize,
                                      const nsReflowState& aReflowState,
@@ -2606,6 +2617,33 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
   {
     mColCache = new ColumnInfoCache(mColCount);
     nsIFrame * childFrame = mFirstChild;
+    while (nsnull!=childFrame)
+    { // for every child, if it's a col group then get the columns
+      const nsStyleDisplay *childDisplay;
+      childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
+               NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
+               NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
+      { // for every cell in every row, call SetCellLayoutData with the cached info
+        // QQQ we can probably just leave the info in the table cell frame, not cache it here
+        nsIFrame *rowFrame;
+        childFrame->ChildAt(0, rowFrame);
+        nsIFrame *cellFrame;
+        rowFrame->ChildAt(0, cellFrame);
+        while (nsnull!=cellFrame)
+        {
+          /* this is the first time we are guaranteed to have both the cell frames
+           * and the column frames, so it's a good time to 
+           * set the column style from the cell's width attribute (if this is the first row)
+           */
+          SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
+          cellFrame->GetNextSibling(cellFrame);
+        }
+      }
+      childFrame->GetNextSibling(childFrame);
+    }
+    // second time through, set column cache info for each column
+    childFrame = mFirstChild;
     while (nsnull!=childFrame)
     { // for every child, if it's a col group then get the columns
       const nsStyleDisplay *childDisplay;
@@ -2638,11 +2676,6 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
           {
             nsCellLayoutData *cld = ((nsTableCellFrame*)cellFrame)->GetCellLayoutData();
             SetCellLayoutData(aPresContext, cld, (nsTableCellFrame*)cellFrame);
-            /* this is the first time we are guaranteed to have both the cell frames
-             * and the column frames, so it's a good time to 
-             * set the column style from the cell's width attribute (if this is the first row)
-             */
-            SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
             cellFrame->GetNextSibling(cellFrame);
           }
           rowFrame->GetNextSibling(rowFrame);

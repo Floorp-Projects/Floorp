@@ -162,6 +162,22 @@ public:
                                            nscoord aMinTableWidth, 
                                            nscoord aMaxTableWidth);
 
+  /** starting with a partially balanced table, compute the amount
+    * of space to pad each column by to completely balance the table.
+    * set the column widths in mTableFrame based on these computations.
+    *
+    * @param aTableFixedWidth     the specified width of the table.  If there is none,
+    *                             this param is 0
+    * @param aComputedTableWidth  the width of the table before this final step.
+    * @param aNumCols             the number of columns in the table
+    *
+    * @return void
+    */
+  virtual void DistributeExcessSpace(nscoord  aTableFixedWidth,
+                                     nscoord  aComputedTableWidth,
+                                     PRInt32  aNumCols,
+                                     PRInt32 *aColWidths);
+
   /** return true if the style indicates that the width is a specific width 
     * for the purposes of column width determination.
     * return false if the width changes based on content, parent size, etc.
