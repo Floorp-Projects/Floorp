@@ -246,7 +246,7 @@
             this.preferences.rootBranch.setIntPref(this.name, val);
             break;
           case "bool":
-            this.preferences.rootBranch.setBoolPref(this.name, val);
+            this.preferences.rootBranch.setBoolPref(this.name, this.inverted ? !val : val);
             break;
           case "string":
             this.preferences.rootBranch.setCharPref(this.name, val);

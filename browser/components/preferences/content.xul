@@ -51,18 +51,16 @@
       <preference id="browser.jsannoyances.disabled"  name="browser.jsannoyances.disabled"  type="bool"/>
       <preference id="dom.event.contextmenu.enabled"  name="dom.event.contextmenu.enabled"  type="bool" 
                   onchange="gContentPane.annoyancesPrefChanged();"/>
-      <preference id="dom.disable_window_move_resize" name="dom.disable_window_move_resize" type="bool" inverted="true" 
+      <preference id="dom.disable_window_move_resize" name="dom.disable_window_move_resize" type="bool"
                   onchange="gContentPane.annoyancesPrefChanged();"/>
-      <preference id="dom.disable_window_flip"        name="dom.disable_window_flip"        type="bool" inverted="true" 
+      <preference id="dom.disable_window_flip"        name="dom.disable_window_flip"        type="bool"
                   onchange="gContentPane.annoyancesPrefChanged();"/>
       <preference id="dom.disable_window_open_feature.status"
                   name="dom.disable_window_open_feature.status"
-                  type="bool" inverted="true"
-                  onchange="gContentPane.annoyancesPrefChanged();"/>
+                  type="bool" onchange="gContentPane.annoyancesPrefChanged();"/>
       <preference id="dom.disable_window_status_change"
                   name="dom.disable_window_status_change"
-                  type="bool" inverted="true"
-                  onchange="gContentPane.annoyancesPrefChanged();"/>
+                  type="bool" onchange="gContentPane.annoyancesPrefChanged();"/>
       <preference id="font.language.group"            name="font.language.group"            type="wstring"  onchange="gContentPane._rebuildFonts();"/>
       <preference id="font.default"                   name="font.default"                   type="string"   onchange="gContentPane._rebuildFonts();"/>
       <preference id="pref.advanced.images.disable_button.view_image"
