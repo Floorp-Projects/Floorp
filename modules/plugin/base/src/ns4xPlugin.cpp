@@ -362,51 +362,58 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 
 #if defined(XP_MAC)
   nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER);
-  if(!pluginsDir.Valid())
+
+  short appRefNum = ::CurResFile();
+  short pluginRefNum;
+  Boolean found = false;
+
+  if (pluginsDir.Valid())
+  { 
+    for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
+    {
+      const nsFileSpec& file = iter;
+      if (pluginsDir.IsPluginFile(file)) 
+      {
+        FSSpec spec = file;
+        if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
+        {
+          Boolean targetIsFolder, wasAliased;
+          OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
+          pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
+          found = true;
+        }
+      }
+    }
+  }
+  
+  // if we didn't find it, try locally
+  if (!found)
+  {
+    nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
+    if (!pluginsDir.Valid())
+      return NS_ERROR_FAILURE;
+
+    appRefNum = ::CurResFile();
+    for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
+    {
+      const nsFileSpec& file = iter;
+      if (pluginsDir.IsPluginFile(file)) 
+      {
+        FSSpec spec = file;
+        if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
+        {
+          Boolean targetIsFolder, wasAliased;
+          OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
+          pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
+          found = PR_TRUE;
+        }
+      }
+    }
+  }
+
+  if (!found)
     return NS_ERROR_FAILURE;
 
-	short appRefNum = ::CurResFile();
-	short pluginRefNum;
-	Boolean found = false;
-	for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
-	{
-		const nsFileSpec& file = iter;
-		if (pluginsDir.IsPluginFile(file)) 
-		{
-            FSSpec spec = file;
-            if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
-            {
-                Boolean targetIsFolder, wasAliased;
-                OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-                pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
-                found = true;
-            }
-		}
-	}
-	
-	// if we didn't find it, try locally
-	if (!found)
-	{
-  	  nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
-
-	  appRefNum = ::CurResFile();
-	  for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
-	  {
-        const nsFileSpec& file = iter;
-        if (pluginsDir.IsPluginFile(file)) 
-        {
-          FSSpec spec = file;
-          if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
-          {
-            Boolean targetIsFolder, wasAliased;
-            OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-            pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
-            found = PR_TRUE;
-          }
-		}
-      }
-    } 
-   
 #if TARGET_CARBON
   // call into the entry point
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
