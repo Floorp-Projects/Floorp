@@ -128,7 +128,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
       // if this is a file url, try to play it.
       // otherwise, treat it as a system sound.
       if (NS_SUCCEEDED(rv) && !strncmp(soundURLSpec.get(), "file://", 7)) {
-        nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance("@mozilla.org/network/standard-url;1");
+        nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID);
         rv = soundURL->SetSpec(soundURLSpec);                                       
         NS_ENSURE_SUCCESS(rv,rv);
         
