@@ -50,8 +50,6 @@ LIBS =	\
 		-lxp \
 		-lpref \
 		-lmozjs \
-		-lraptorbase \
-		-lgmbase$(MOZ_TOOLKIT) \
 		-lsecfree \
 		-ljsdom \
 		-ljsurl \
@@ -61,6 +59,9 @@ LIBS =	\
 		-lxmltok \
 		-lraptorgfx \
 		-limg \
+		-lgfxgtk        \
+		-lraptorgfx     \
+		-lgfxps         \
 		-lmozutil \
 		-lmsgbaseutil \
 		$(JPEG_LIBS) \
