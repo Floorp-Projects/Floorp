@@ -177,18 +177,7 @@
                     <!-- Server -->
                     <hbox align="center" flex="1">
                       <label id="server-field-label" value="&newevent.server.label;"/>
-                      <menulist id="server-field">
-                        <menupopup id="server-menulist-menupopup" datasources="rdf:null"
-                                   ref="urn:calendarcontainer">
-                          <template>
-                            <rule>
-                              <menuitem uri="rdf:*"
-                                        value="rdf:http://home.netscape.com/NC-rdf#path"
-                                        label="rdf:http://home.netscape.com/NC-rdf#name"/>
-                            </rule>
-                          </template>
-                        </menupopup>
-                      </menulist>
+                      <menulist id="server-field"/>
                     </hbox>
                   </hbox>
                 </row>

@@ -964,85 +964,21 @@ function editEventCommand()
 
 //originalEvent is the item before edits were committed, 
 //used to check if there were external changes for shared calendar
-function saveItem( calendarEvent, Server, functionToRun, originalEvent )
+function saveItem( calendarEvent, calendar, functionToRun, originalEvent )
 {
     dump(functionToRun + " " + calendarEvent.title + "\n");
-
-    var calendar = getCalendar();
 
     if (functionToRun == 'addEvent')
         calendar.addItem(calendarEvent, null);
 
-    else if (functionToRun == 'modifyEvent')
-        calendar.modifyItem(calendarEvent, null);
-
-
-
-
-
-    /*
-   var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( Server );
-   var path = calendarServer.getAttribute("http://home.netscape.com/NC-rdf#path");
-   var shared = (calendarServer.getAttribute("http://home.netscape.com/NC-rdf#shared" ) == "true");
-   var publishAutomatically = (calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true");
-   if( calendarServer ) {
-   
-      if( publishAutomatically ) {
-         var onResponseExtra = function( ) {
-            //add the event
-            eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
-            gCalendarWindow.clearSelectedEvent( calendarEvent );
-            //publish the changes back to the server
-            gCalendarWindow.calendarManager.publishCalendar( calendarServer );
-         }
-         //refresh the calendar file.
-         gCalendarWindow.calendarManager.retrieveAndSaveRemoteCalendar( calendarServer, onResponseExtra );
-            
-      } else if ( shared ) {
-         
-         if ( !gCalendarWindow.calendarManager.startLocalLock(calendarServer)) {
-            alert(gCalendarBundle.getString( "unableToWrite" ) + path + ".lock");
-            return;
-         }
-         
-         //Do not override external changes to other events, reload all calendar and merge only modified event... 
-         //check if the same event was edited externally  before edits were committed since the last reload.
-         if (gCalendarWindow.calendarManager.reloadCalendar(calendarServer, true)) {
-            //calendar edited externally
-            var uneditedEvent = fetchItem(calendarEvent);
-            if (uneditedEvent != null) {
-               //not a new event
-               if (!compareItems( uneditedEvent, originalEvent )) {
-                  //event edited externally
-                  alert(gCalendarBundle.getString("concurrentEdit"));
-                  return;
-               }
-            }
-         }
-         
-         //Merge single edited event and save
-         eval( "gICalLib." + functionToRun + "(calendarEvent, path)" );
-         gCalendarWindow.calendarManager.removeLocalLock(calendarServer);
-         
-         //Check if the edited event is actually in the calendar file in case the lock failed
-         gCalendarWindow.calendarManager.reloadCalendar( calendarServer );
-         if ( !compareItems( fetchItem( calendarEvent ), calendarEvent ) ){ 
-            alert(gCalendarBundle.getString( "unableToWrite" ) + path );  
-         }
-         gCalendarWindow.clearSelectedEvent( calendarEvent );
-         
-      } else {
-         //Normal local calendar
-         eval("gICalLib."+functionToRun+"(calendarEvent, path)");
-         gCalendarWindow.clearSelectedEvent( calendarEvent );
-      }
-
-   } else {
-      eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
-      gCalendarWindow.clearSelectedEvent( calendarEvent );
-   }
-
-    */
+    else if (functionToRun == 'modifyEvent') {
+        if (!originalEvent.parent || (originalEvent.parent == calendar))
+            calendar.modifyItem(calendarEvent, null);
+        else {
+            originalEvent.parent.removeItem(calendarEvent, null);
+            calendar.addItem(calendarEvent, null);
+        }
+    }
 }
 
 

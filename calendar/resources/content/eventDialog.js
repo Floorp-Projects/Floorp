@@ -413,28 +413,16 @@ function loadCalendarEventDialog()
     else
         document.getElementById("categories-field").selectedIndex = -1;
 
-
-    /* XXX
     // Server stuff
-    document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
-    document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
-   
-    if (args.mode == "new") {
-        if ("server" in args)
-            setElementValue( "server-field", args.server );
-        else
-            document.getElementById( "server-field" ).selectedIndex = 1;
-    } else {
-        if (gEvent.parent)
-            setElementValue( "server-field", gEvent.parent.server );
-        else
-            document.getElementById( "server-field" ).selectedIndex = 1;
-          
-        //for now you can't edit which file the event is in.
-        setElementValue( "server-field", "true", "disabled" );
-        setElementValue( "server-field-label", "true", "disabled" );
-    }
-    */
+    var calendar = event.calendar;
+    var calendars = getCalendarManager().getCalendars({});
+    for (var i = 0; i < calendars.length; i++) {
+        var menuitem = document.getElementById('server-field')
+                               .appendItem(calendars[i].name, calendars[i].uri);
+        menuitem.calendar = calendars[i];
+        if (event.parent == calendar)
+            document.getElementById('server-field').selectedIndex = i;
+    }    
 
     // update enabling and disabling
     updateRepeatItemEnabled();
@@ -664,16 +652,16 @@ function onOKCommand()
     */
 
 
-    var Server = getElementValue("server-field");
+    var calendar = document.getElementById("server-field").selectedItem.calendar;
 
-   // :TODO: REALLY only do this if the alarm or start settings change.
-   // if the end time is later than the start time... alert the user using text from the dtd.
-   // call caller's on OK function
+    // :TODO: REALLY only do this if the alarm or start settings change.
+    // if the end time is later than the start time... alert the user using text from the dtd.
+    // call caller's on OK function
 
-   gOnOkFunction(event, Server, originalEvent);
+    gOnOkFunction(event, calendar, originalEvent);
 
-   // tell standard dialog stuff to close the dialog
-   return true;
+    // tell standard dialog stuff to close the dialog
+    return true;
 }
 
 
