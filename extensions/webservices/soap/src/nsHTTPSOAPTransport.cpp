@@ -315,9 +315,9 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
   NS_ENSURE_ARG(aCall);
 
   nsresult rv;
-  nsCOMPtr < nsIXMLHttpRequest > request;
+  nsCOMPtr<nsIXMLHttpRequest> request;
 
-  nsCOMPtr < nsIDOMDocument > messageDocument;
+  nsCOMPtr<nsIDOMDocument> messageDocument;
   rv = aCall->GetMessage(getter_AddRefs(messageDocument));
   if (NS_FAILED(rv))
     return rv;
@@ -367,7 +367,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
       return rv;
   }
 
-  nsCOMPtr < nsIWritableVariant > variant =
+  nsCOMPtr<nsIWritableVariant> variant =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
@@ -392,7 +392,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
 #endif
 
   if (aResponse) {
-    nsCOMPtr < nsIDOMDocument > response;
+    nsCOMPtr<nsIDOMDocument> response;
     rv = request->GetResponseXML(getter_AddRefs(response));
     if (NS_FAILED(rv))
       return rv;
@@ -437,7 +437,7 @@ NS_IMETHODIMP
 {
   NS_ENSURE_ARG(aResponse);
   *aResponse =
-      mRequest ? (nsCOMPtr < nsISOAPResponse >) nsnull : mResponse;
+      mRequest ? (nsCOMPtr<nsISOAPResponse>) nsnull : mResponse;
   NS_IF_ADDREF(*aResponse);
   return NS_OK;
 }
@@ -490,7 +490,7 @@ NS_IMETHODIMP
       rv = NS_ERROR_FAILURE;
 #endif
     if (mResponse) { // && NS_SUCCEEDED(rv)) {
-      nsCOMPtr < nsIDOMDocument > document;
+      nsCOMPtr<nsIDOMDocument> document;
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {
         rv = mResponse->SetMessage(document);
@@ -503,7 +503,7 @@ NS_IMETHODIMP
     } else {
       mResponse = nsnull;
     }
-    nsCOMPtr < nsISOAPCallCompletion > kungFuDeathGrip = this;
+    nsCOMPtr<nsISOAPCallCompletion> kungFuDeathGrip = this;
     mRequest = nsnull;                //  Break cycle of references by releas.
     PRBool c;                        //  In other transports, this may signal to stop returning if multiple returns
     mListener->HandleResponse(mResponse, mCall, rv, PR_TRUE, &c);
@@ -522,9 +522,9 @@ NS_IMETHODIMP
   NS_ENSURE_ARG(aCompletion);
 
   nsresult rv;
-  nsCOMPtr < nsIXMLHttpRequest > request;
+  nsCOMPtr<nsIXMLHttpRequest> request;
 
-  nsCOMPtr < nsIDOMDocument > messageDocument;
+  nsCOMPtr<nsIDOMDocument> messageDocument;
   rv = aCall->GetMessage(getter_AddRefs(messageDocument));
   if (NS_FAILED(rv))
     return rv;
@@ -535,7 +535,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr < nsIDOMEventTarget > eventTarget =
+  nsCOMPtr<nsIDOMEventTarget> eventTarget =
       do_QueryInterface(request, &rv);
   if (NS_FAILED(rv))
     return rv;
@@ -578,7 +578,7 @@ NS_IMETHODIMP
       return rv;
   }
 
-  nsCOMPtr < nsIWritableVariant > variant =
+  nsCOMPtr<nsIWritableVariant> variant =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
@@ -588,7 +588,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr < nsISOAPCallCompletion > completion;
+  nsCOMPtr<nsISOAPCallCompletion> completion;
 
   if (aListener) {
     completion =
@@ -597,7 +597,7 @@ NS_IMETHODIMP
     if (!completion)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr < nsIDOMEventListener > listener =
+    nsCOMPtr<nsIDOMEventListener> listener =
         do_QueryInterface(completion);
     rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener,
                                        PR_FALSE);

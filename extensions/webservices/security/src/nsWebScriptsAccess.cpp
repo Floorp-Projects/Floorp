@@ -735,7 +735,7 @@ nsWebScriptsAccess::IsPublicService(const char* aHost, PRBool* aReturn)
 
   block->SetName(NS_LITERAL_STRING("fqdn"));
 
-  nsCOMPtr <nsIWritableVariant> variant =
+  nsCOMPtr<nsIWritableVariant> variant =
     do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
 
   if (NS_FAILED(rv))

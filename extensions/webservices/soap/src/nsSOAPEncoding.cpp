@@ -90,13 +90,13 @@ nsSOAPEncodingRegistry::GetAssociatedEncoding(const nsAString & aStyleURI,
   nsStringKey styleKey(aStyleURI);
   *aEncoding = (nsISOAPEncoding *) mEncodings.Get(&styleKey);
   if (!*aEncoding) {
-    nsCOMPtr < nsISOAPEncoding > defaultEncoding;
+    nsCOMPtr<nsISOAPEncoding> defaultEncoding;
     nsCAutoString encodingContractid;
     encodingContractid.Assign(NS_SOAPENCODING_CONTRACTID_PREFIX);
     encodingContractid.Append(NS_ConvertUCS2toUTF8(aStyleURI));
     defaultEncoding = do_GetService(encodingContractid.get());
     if (defaultEncoding || aCreateIf) {
-      nsCOMPtr < nsISOAPEncoding > encoding = new nsSOAPEncoding(aStyleURI,this,defaultEncoding);
+      nsCOMPtr<nsISOAPEncoding> encoding = new nsSOAPEncoding(aStyleURI,this,defaultEncoding);
       *aEncoding = encoding;
       if (encoding) {
         NS_ADDREF(*aEncoding);
@@ -130,7 +130,7 @@ nsresult
   NS_ENSURE_ARG_POINTER(aSchemaCollection);
   if (!mSchemaCollection) {
     nsresult rv;
-    nsCOMPtr < nsISchemaLoader > loader =
+    nsCOMPtr<nsISchemaLoader> loader =
         do_CreateInstance(NS_SCHEMALOADER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return rv;
@@ -307,7 +307,7 @@ NS_IMETHODIMP
   NS_ENSURE_ARG(aSource);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsCOMPtr < nsISOAPEncoder > encoder;
+  nsCOMPtr<nsISOAPEncoder> encoder;
   nsresult rv = GetDefaultEncoder(getter_AddRefs(encoder));
   if (NS_FAILED(rv))
     return rv;
@@ -329,7 +329,7 @@ NS_IMETHODIMP
 {
   NS_ENSURE_ARG(aSource);
   NS_ENSURE_ARG_POINTER(_retval);
-  nsCOMPtr < nsISOAPDecoder > decoder;
+  nsCOMPtr<nsISOAPDecoder> decoder;
   nsresult rv = GetDefaultDecoder(getter_AddRefs(decoder));
   if (NS_FAILED(rv))
     return rv;
@@ -403,7 +403,7 @@ nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI,
       return NS_OK;
     }
     nsresult rc;
-    nsCOMPtr < nsIWritableVariant > p =
+    nsCOMPtr<nsIWritableVariant> p =
         do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
     if (NS_FAILED(rc))
       return rc;
@@ -413,7 +413,7 @@ nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI,
     mMappedInternal.Put(&internalKey, p);
   }
   nsresult rc;
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;

@@ -72,7 +72,7 @@ public:
 
 protected:
   nsString mName;
-  nsCOMPtr < nsIVariant > mValue;
+  nsCOMPtr<nsIVariant> mValue;
 };
 
 class nsSOAPPropertyBagEnumerator:public nsISimpleEnumerator {
@@ -85,7 +85,7 @@ public:
   virtual ~nsSOAPPropertyBagEnumerator();
 
 protected:
-  nsCOMPtr < nsSupportsArray > mProperties;
+  nsCOMPtr<nsSupportsArray> mProperties;
   PRUint32 mCurrent;
 };
 NS_IMPL_ISUPPORTS2_CI(nsSOAPPropertyBag, nsIPropertyBag, nsIXPCScriptable) 
@@ -139,7 +139,7 @@ NS_IMETHODIMP
                                                 JS_GetStringChars(str));
     nsDependentString namestr(name);
     nsStringKey nameKey(namestr);
-    nsCOMPtr < nsIVariant > value =
+    nsCOMPtr<nsIVariant> value =
         dont_AddRef(NS_STATIC_CAST
                     (nsIVariant *, mProperties->Get(&nameKey)));
     if (!value)

@@ -75,7 +75,7 @@ public:
 
 protected:
   nsObjectHashtable mEncodings;
-  nsCOMPtr < nsISchemaCollection > mSchemaCollection;
+  nsCOMPtr<nsISchemaCollection> mSchemaCollection;
 
 };
 
@@ -101,9 +101,9 @@ protected:
   // Weak Reference to avoid cyclic refs and leaks. See notes above.
   nsISOAPEncodingRegistry *mRegistry;
 
-  nsCOMPtr < nsISOAPEncoding > mDefaultEncoding;
-  nsCOMPtr < nsISOAPEncoder > mDefaultEncoder;
-  nsCOMPtr < nsISOAPDecoder > mDefaultDecoder;
+  nsCOMPtr<nsISOAPEncoding> mDefaultEncoding;
+  nsCOMPtr<nsISOAPEncoder> mDefaultEncoder;
+  nsCOMPtr<nsISOAPDecoder> mDefaultDecoder;
   nsSupportsHashtable mMappedInternal;
   nsSupportsHashtable mMappedExternal;
 

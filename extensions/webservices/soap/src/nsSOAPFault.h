@@ -51,7 +51,7 @@ public:
   NS_DECL_ISUPPORTS
       // nsISOAPFault
 NS_DECL_NSISOAPFAULT protected:
-  nsCOMPtr < nsIDOMElement > mFaultElement;
+  nsCOMPtr<nsIDOMElement> mFaultElement;
   PRUint16 mVersion;
 };
 #endif

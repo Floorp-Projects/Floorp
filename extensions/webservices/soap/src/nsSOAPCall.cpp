@@ -99,7 +99,7 @@ nsresult nsSOAPCall::GetTransport(nsISOAPTransport ** aTransport)
   *aTransport = nsnull;
 
   nsresult rv;
-  nsCOMPtr < nsIURI > uri;
+  nsCOMPtr<nsIURI> uri;
 
   rv = NS_NewURI(getter_AddRefs(uri), mTransportURI);
   if (NS_FAILED(rv))
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv;
-  nsCOMPtr < nsISOAPTransport > transport;
+  nsCOMPtr<nsISOAPTransport> transport;
 
   if (mTransportURI.IsEmpty()) {
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr < nsISOAPResponse >
+  nsCOMPtr<nsISOAPResponse>
       response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse ** _retval)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr < nsIDOMDocument > document;
+  nsCOMPtr<nsIDOMDocument> document;
   rv = response->GetMessage(getter_AddRefs(document));        //  No XML response.
   if (NS_FAILED(rv))
     return rv;
@@ -162,7 +162,7 @@ NS_IMETHODIMP
 {
   NS_ENSURE_ARG_POINTER(aCompletion);
   nsresult rv;
-  nsCOMPtr < nsISOAPTransport > transport;
+  nsCOMPtr<nsISOAPTransport> transport;
 
   if (mTransportURI.IsEmpty()) {
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
@@ -172,7 +172,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr < nsISOAPResponse >
+  nsCOMPtr<nsISOAPResponse>
       response(do_CreateInstance(NS_SOAPRESPONSE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;

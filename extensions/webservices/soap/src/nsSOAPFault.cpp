@@ -95,7 +95,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAString & aFaultCode)
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
   aFaultCode.Truncate();
-  nsCOMPtr < nsIDOMElement > faultcode;
+  nsCOMPtr<nsIDOMElement> faultcode;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
                                        gSOAPStrings->kEmpty,
                                        gSOAPStrings->kFaultCodeTagName,
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultNamespaceURI(nsAString & aNamespaceURI)
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
   aNamespaceURI.Truncate();
-  nsCOMPtr < nsIDOMElement > faultcode;
+  nsCOMPtr<nsIDOMElement> faultcode;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
                                        gSOAPStrings->kEmpty,
                                        gSOAPStrings->kFaultCodeTagName,
@@ -140,7 +140,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAString & aFaultString)
     return NS_ERROR_ILLEGAL_VALUE;
 
   aFaultString.Truncate();
-  nsCOMPtr < nsIDOMElement > element;
+  nsCOMPtr<nsIDOMElement> element;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
                                        gSOAPStrings->kEmpty,
                                        gSOAPStrings->kFaultStringTagName,
@@ -161,7 +161,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultActor(nsAString & aFaultActor)
     return NS_ERROR_ILLEGAL_VALUE;
 
   aFaultActor.Truncate();
-  nsCOMPtr < nsIDOMElement > element;
+  nsCOMPtr<nsIDOMElement> element;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
                                        gSOAPStrings->kEmpty,
                                        gSOAPStrings->kFaultActorTagName,

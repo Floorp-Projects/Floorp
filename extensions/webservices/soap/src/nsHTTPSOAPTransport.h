@@ -80,10 +80,10 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent * aEvent);
 
 protected:
-   nsCOMPtr < nsISOAPCall > mCall;
-   nsCOMPtr < nsISOAPResponse > mResponse;
-   nsCOMPtr < nsIXMLHttpRequest > mRequest;
-   nsCOMPtr < nsISOAPResponseListener > mListener;
+   nsCOMPtr<nsISOAPCall> mCall;
+   nsCOMPtr<nsISOAPResponse> mResponse;
+   nsCOMPtr<nsIXMLHttpRequest> mRequest;
+   nsCOMPtr<nsISOAPResponseListener> mListener;
 };
 
 #define NS_HTTPSOAPTRANSPORT_CID                   \

@@ -60,8 +60,8 @@ NS_DECL_NSISOAPMESSAGE protected:
   nsresult GetEncodingWithVersion(nsIDOMElement * aFirst,
                                   PRUint16 * aVersion,
                                   nsISOAPEncoding ** aEncoding);
-   nsCOMPtr < nsIDOMDocument > mMessage;
-   nsCOMPtr < nsISOAPEncoding > mEncoding;
+   nsCOMPtr<nsIDOMDocument> mMessage;
+   nsCOMPtr<nsISOAPEncoding> mEncoding;
   nsString mActionURI;
 };
 

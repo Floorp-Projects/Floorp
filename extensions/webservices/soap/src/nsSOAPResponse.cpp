@@ -65,7 +65,7 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPResponse, nsISOAPMessage,
 NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
 {
   NS_ENSURE_ARG_POINTER(aFault);
-  nsCOMPtr < nsIDOMElement > body;
+  nsCOMPtr<nsIDOMElement> body;
 
   *aFault = nsnull;
   nsresult rc = GetBody(getter_AddRefs(body));
@@ -77,13 +77,13 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
     if (NS_FAILED(rc))
       return rc;
     if (rc != nsSOAPMessage::VERSION_UNKNOWN) {
-      nsCOMPtr < nsIDOMElement > fault;
+      nsCOMPtr<nsIDOMElement> fault;
       nsSOAPUtils::GetSpecificChildElement(nsnull, body,
                                            *gSOAPStrings->kSOAPEnvURI[version],
                                            gSOAPStrings->kFaultTagName,
                                            getter_AddRefs(fault));
       if (fault) {
-        nsCOMPtr < nsISOAPFault > f =
+        nsCOMPtr<nsISOAPFault> f =
             do_CreateInstance(NS_SOAPFAULT_CONTRACTID);
         if (!f)
           return NS_ERROR_OUT_OF_MEMORY;

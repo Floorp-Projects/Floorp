@@ -197,7 +197,7 @@ static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, 
   switch (typevalue) {
     case nsISchemaType::SCHEMA_TYPE_COMPLEX:
     {
-      nsCOMPtr < nsISchemaComplexType > type =
+      nsCOMPtr<nsISchemaComplexType> type =
         do_QueryInterface(aType);
       rc = type->GetBaseType(getter_AddRefs(base));
       if (NS_FAILED(rc))
@@ -206,7 +206,7 @@ static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, 
     }
     case nsISchemaType::SCHEMA_TYPE_SIMPLE:
     {
-      nsCOMPtr < nsISchemaSimpleType > type =
+      nsCOMPtr<nsISchemaSimpleType> type =
         do_QueryInterface(aType);
       PRUint16 simpletypevalue;
       rc = type->GetSimpleType(&simpletypevalue);
@@ -224,9 +224,9 @@ static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, 
         //  guarantees.
         case nsISchemaSimpleType::SIMPLE_TYPE_RESTRICTION:
         {
-          nsCOMPtr < nsISchemaRestrictionType > simpletype =
+          nsCOMPtr<nsISchemaRestrictionType> simpletype =
             do_QueryInterface(type);
-          nsCOMPtr < nsISchemaSimpleType > simplebasetype;
+          nsCOMPtr<nsISchemaSimpleType> simplebasetype;
           rc = simpletype->GetBaseType(getter_AddRefs(simplebasetype));
           if (NS_FAILED(rc))
             return rc;
@@ -235,7 +235,7 @@ static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, 
         }
         case nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN:
         {
-          nsCOMPtr < nsISchemaBuiltinType > builtintype = 
+          nsCOMPtr<nsISchemaBuiltinType> builtintype = 
             do_QueryInterface(type);
           PRUint16 builtintypevalue;
           rc = builtintype->GetBuiltinType(&builtintypevalue);
@@ -491,15 +491,15 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
   }
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIDOMDocument > document;
+  nsCOMPtr<nsIDOMDocument> document;
   rc = aDestination->GetOwnerDocument(getter_AddRefs(document));
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIDOMElement > element;
+  nsCOMPtr<nsIDOMElement> element;
   rc = document->CreateElementNS(ns, name, getter_AddRefs(element));
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIDOMNode > ignore;
+  nsCOMPtr<nsIDOMNode> ignore;
   rc = aDestination->AppendChild(element, getter_AddRefs(ignore));
   if (NS_FAILED(rc))
     return rc;
@@ -520,7 +520,7 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
       return rc;
   }
   if (!aValue.IsEmpty()) {
-    nsCOMPtr < nsIDOMText > text;
+    nsCOMPtr<nsIDOMText> text;
     rc = document->CreateTextNode(aValue, getter_AddRefs(text));
     if (NS_FAILED(rc))
       return rc;
@@ -586,9 +586,9 @@ NS_IMETHODIMP
     if (NS_FAILED(rc))
       return rc;
   }
-  nsCOMPtr < nsISOAPEncoder > encoder;
+  nsCOMPtr<nsISOAPEncoder> encoder;
   if (aSchemaType) {
-    nsCOMPtr < nsISchemaType > lookupType = aSchemaType;
+    nsCOMPtr<nsISchemaType> lookupType = aSchemaType;
     do {
       nsAutoString schemaType;
       nsAutoString schemaURI;
@@ -752,7 +752,7 @@ NS_IMETHODIMP
       return rc;
   }
 
-  nsCOMPtr < nsISOAPEncoder > encoder;
+  nsCOMPtr<nsISOAPEncoder> encoder;
   nsAutoString encodingKey;
   SOAPEncodingKey(nativeSchemaURI, nativeSchemaType, encodingKey);
   rc = aEncoding->GetEncoder(encodingKey, getter_AddRefs(encoder));
@@ -764,7 +764,7 @@ NS_IMETHODIMP
       type = aSchemaType;
     }
     else {
-      nsCOMPtr < nsISchemaCollection > collection;
+      nsCOMPtr<nsISchemaCollection> collection;
       nsresult rc =
           aEncoding->GetSchemaCollection(getter_AddRefs(collection));
       if (NS_FAILED(rc))
@@ -1172,7 +1172,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
 #define ENCODE_SIMPLE_ARRAY(XPType, VType, Source) \
       {\
         XPType* values = NS_STATIC_CAST(XPType*, array);\
-        nsCOMPtr < nsIWritableVariant > p =\
+        nsCOMPtr<nsIWritableVariant> p =\
            do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);\
         if (NS_FAILED(rc)) break;\
         for (i = 0; i < count; i++) {\
@@ -1270,7 +1270,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
           }
         }
         else {
-          nsCOMPtr < nsIWritableVariant > p =
+          nsCOMPtr<nsIWritableVariant> p =
             do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
           if (NS_FAILED(rc)) break;
           for (i = 0; i < count; i++) {
@@ -1377,7 +1377,7 @@ NS_IMETHODIMP
         if (NS_FAILED(rc))
           return rc;
     }
-    nsCOMPtr < nsISchemaCollection > collection;
+    nsCOMPtr<nsISchemaCollection> collection;
     nsresult rc =
         aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     if (NS_FAILED(rc))
@@ -1839,10 +1839,10 @@ NS_IMETHODIMP
   NS_ENSURE_ARG_POINTER(aSource);
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
-  nsCOMPtr < nsISOAPEncoding > encoding = aEncoding;        //  First, handle encoding redesignation, if any
+  nsCOMPtr<nsISOAPEncoding> encoding = aEncoding;        //  First, handle encoding redesignation, if any
 
   {
-    nsCOMPtr < nsIDOMAttr > enc;
+    nsCOMPtr<nsIDOMAttr> enc;
     nsresult rv =
         aSource->
         GetAttributeNodeNS(*gSOAPStrings->kSOAPEnvURI[mSOAPVersion],
@@ -1860,7 +1860,7 @@ NS_IMETHODIMP
       if (NS_FAILED(rv))
         return rv;
       if (!style.Equals(oldstyle)) {
-        nsCOMPtr < nsISOAPEncoding > newencoding;
+        nsCOMPtr<nsISOAPEncoding> newencoding;
         rv = encoding->GetAssociatedEncoding(style, PR_FALSE,
                                              getter_AddRefs(newencoding));
         if (NS_FAILED(rv))
@@ -1886,11 +1886,11 @@ NS_IMETHODIMP
       return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_NILL_VALUE","The value of the nill attribute must be true or false.");
   }
 
-  nsCOMPtr < nsISchemaType > type = aSchemaType;
-  nsCOMPtr < nsISOAPDecoder > decoder;  //  All that comes out of this block is decoder, type, and some checks.
+  nsCOMPtr<nsISchemaType> type = aSchemaType;
+  nsCOMPtr<nsISOAPDecoder> decoder;  //  All that comes out of this block is decoder, type, and some checks.
   {                        //  Look up type element and schema attribute, if possible
-    nsCOMPtr < nsISchemaType > subType;
-    nsCOMPtr < nsISchemaCollection > collection;
+    nsCOMPtr<nsISchemaType> subType;
+    nsCOMPtr<nsISchemaCollection> collection;
     nsresult rc =
         aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     if (NS_FAILED(rc))
@@ -1907,7 +1907,7 @@ NS_IMETHODIMP
     rc = aSource->GetLocalName(name);
     if (NS_FAILED(rc))
       return rc;
-    nsCOMPtr < nsISchemaElement > element;
+    nsCOMPtr<nsISchemaElement> element;
     rc = collection->GetElement(name, ns, getter_AddRefs(element));
 //      if (NS_FAILED(rc)) return rc;
     if (element) {
@@ -1934,7 +1934,7 @@ NS_IMETHODIMP
     if (!subType)
       subType = type;
 
-    nsCOMPtr < nsISchemaType > subsubType;
+    nsCOMPtr<nsISchemaType> subsubType;
     nsAutoString explicitType;
     if (nsSOAPUtils::GetAttribute(aEncoding, aSource, gSOAPStrings->kXSIURI,
                                  gSOAPStrings->kXSITypeAttribute,
@@ -1953,7 +1953,7 @@ NS_IMETHODIMP
   
     if (subsubType) {  //  Loop up the hierarchy, to check and look for decoders
       for(;;) {
-        nsCOMPtr < nsISchemaType > lookupType = subsubType;
+        nsCOMPtr<nsISchemaType> lookupType = subsubType;
         do {
           if (lookupType == subType) {  //  Tick off the located super classes
             subType = nsnull;
@@ -2056,7 +2056,7 @@ NS_IMETHODIMP
     SOAPEncodingKey(gSOAPStrings->kXSURI,
                     gSOAPStrings->kAnySimpleTypeSchemaType, decodingKey);
   }
-  nsCOMPtr < nsISOAPDecoder > decoder;
+  nsCOMPtr<nsISOAPDecoder> decoder;
   nsresult rc =
       aEncoding->GetDecoder(decodingKey, getter_AddRefs(decoder));
   if (NS_FAILED(rc))
@@ -2324,11 +2324,11 @@ NS_IMETHODIMP
     rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_LEFTOVERS","Decoded struct contained extra items not mentioned in the content model.");
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIPropertyBag > bag;
+  nsCOMPtr<nsIPropertyBag> bag;
   rc = mutator->GetPropertyBag(getter_AddRefs(bag));
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
@@ -2355,7 +2355,7 @@ NS_IMETHODIMP
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
@@ -2573,7 +2573,7 @@ NS_IMETHODIMP
   *_retval = nsnull;
   nsAutoString ns;
   nsAutoString name;
-  nsCOMPtr < nsISchemaType > schemaArrayType;
+  nsCOMPtr<nsISchemaType> schemaArrayType;
   nsAutoString value;
   PRUint32 dimensionCount = 0;                  //  Number of dimensions
   PRInt32 dimensionSizes[MAX_ARRAY_DIMENSIONS];
@@ -2632,7 +2632,7 @@ NS_IMETHODIMP
     }
 
     //  The array type is either array if ']' or other specific type.
-    nsCOMPtr < nsISchemaCollection > collection;
+    nsCOMPtr<nsISchemaCollection> collection;
     rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     if (NS_FAILED(rc))
       return rc;
@@ -2656,7 +2656,7 @@ NS_IMETHODIMP
   
     if (subtype) {  //  Loop up the hierarchy, to ensure suitability of subtype
       if (schemaArrayType) {
-        nsCOMPtr < nsISchemaType > lookupType = subtype;
+        nsCOMPtr<nsISchemaType> lookupType = subtype;
         do {
           if (lookupType == schemaArrayType) {  //  Tick off the located super classes
             schemaArrayType = nsnull;
@@ -2906,7 +2906,7 @@ NS_IMETHODIMP
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
     return rc;
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
   if (NS_FAILED(rc))
     return rc;
@@ -2943,7 +2943,7 @@ NS_IMETHODIMP
   } else
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BOOLEAN","Illegal value discovered for boolean");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -2974,7 +2974,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_DOUBLE","Illegal value discovered for double");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3005,7 +3005,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_FLOAT","Illegal value discovered for float");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3036,7 +3036,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_LONG","Illegal value discovered for long");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3067,7 +3067,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_INT","Illegal value discovered for int");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3098,7 +3098,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_SHORT","Illegal value discovered for short");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3129,7 +3129,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length() || f < -128 || f > 127)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BYTE","Illegal value discovered for byte");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3160,7 +3160,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_ULONG","Illegal value discovered for unsigned long");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3191,7 +3191,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UINT","Illegal value discovered for unsigned int");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3222,7 +3222,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_USHORT","Illegal value discovered for unsigned short");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;
@@ -3253,7 +3253,7 @@ NS_IMETHODIMP
   if (r == 0 || n < value.Length() || f > 255)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UBYTE","Illegal value discovered for unsigned byte");
 
-  nsCOMPtr < nsIWritableVariant > p =
+  nsCOMPtr<nsIWritableVariant> p =
       do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
   if (NS_FAILED(rc))
     return rc;

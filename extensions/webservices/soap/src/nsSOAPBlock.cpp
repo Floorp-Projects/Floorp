@@ -216,9 +216,9 @@ NS_IMETHODIMP
                            &s3))
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_BLOCK_INIT", "Could not interpret block initialization arguments.");
   
-  nsCOMPtr < nsIVariant > value = dont_AddRef(s1);
-  nsCOMPtr < nsISupports > schemaType = dont_AddRef(s2);
-  nsCOMPtr < nsISupports > encoding = dont_AddRef(s3);
+  nsCOMPtr<nsIVariant> value = dont_AddRef(s1);
+  nsCOMPtr<nsISupports> schemaType = dont_AddRef(s2);
+  nsCOMPtr<nsISupports> encoding = dont_AddRef(s3);
 
   nsresult rc = SetValue(value);
   if (NS_FAILED(rc))
@@ -230,7 +230,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   if (schemaType) {
-    nsCOMPtr < nsISchemaType > v = do_QueryInterface(schemaType, &rc);
+    nsCOMPtr<nsISchemaType> v = do_QueryInterface(schemaType, &rc);
     if (NS_FAILED(rc))
       return rc;
     rc = SetSchemaType(v);
@@ -238,7 +238,7 @@ NS_IMETHODIMP
       return rc;
   }
   if (encoding) {
-    nsCOMPtr < nsISOAPEncoding > v = do_QueryInterface(encoding, &rc);
+    nsCOMPtr<nsISOAPEncoding> v = do_QueryInterface(encoding, &rc);
     if (NS_FAILED(rc))
       return rc;
     rc = SetEncoding(v);

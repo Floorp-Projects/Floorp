@@ -122,7 +122,7 @@ void nsSOAPUtils::GetSpecificChildElement(nsISOAPEncoding * aEncoding,
                                           const nsAString & aType,
                                           nsIDOMElement * *aElement)
 {
-  nsCOMPtr < nsIDOMElement > sibling;
+  nsCOMPtr<nsIDOMElement> sibling;
 
   *aElement = nsnull;
   GetFirstChildElement(aParent, getter_AddRefs(sibling));
@@ -137,7 +137,7 @@ void nsSOAPUtils::GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
                                             const nsAString & aType,
                                             nsIDOMElement * *aElement)
 {
-  nsCOMPtr < nsIDOMElement > sibling;
+  nsCOMPtr<nsIDOMElement> sibling;
 
   *aElement = nsnull;
   sibling = aSibling;
@@ -159,7 +159,7 @@ void nsSOAPUtils::GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
         return;
       }
     }
-    nsCOMPtr < nsIDOMElement > temp = sibling;
+    nsCOMPtr<nsIDOMElement> temp = sibling;
     GetNextSiblingElement(temp, getter_AddRefs(sibling));
   } while (sibling);
 }
@@ -167,7 +167,7 @@ void nsSOAPUtils::GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
 void nsSOAPUtils::GetFirstChildElement(nsIDOMElement * aParent,
                                        nsIDOMElement ** aElement)
 {
-  nsCOMPtr < nsIDOMNode > child;
+  nsCOMPtr<nsIDOMNode> child;
 
   *aElement = nsnull;
   aParent->GetFirstChild(getter_AddRefs(child));
@@ -178,7 +178,7 @@ void nsSOAPUtils::GetFirstChildElement(nsIDOMElement * aParent,
       child->QueryInterface(NS_GET_IID(nsIDOMElement), (void **) aElement);
       break;
     }
-    nsCOMPtr < nsIDOMNode > temp = child;
+    nsCOMPtr<nsIDOMNode> temp = child;
     GetNextSibling(temp, getter_AddRefs(child));
   }
 }
@@ -186,7 +186,7 @@ void nsSOAPUtils::GetFirstChildElement(nsIDOMElement * aParent,
 void nsSOAPUtils::GetNextSiblingElement(nsIDOMElement * aStart,
                                         nsIDOMElement ** aElement)
 {
-  nsCOMPtr < nsIDOMNode > sibling;
+  nsCOMPtr<nsIDOMNode> sibling;
 
   *aElement = nsnull;
   GetNextSibling(aStart, getter_AddRefs(sibling));
@@ -198,7 +198,7 @@ void nsSOAPUtils::GetNextSiblingElement(nsIDOMElement * aStart,
                               (void **) aElement);
       break;
     }
-    nsCOMPtr < nsIDOMNode > temp = sibling;
+    nsCOMPtr<nsIDOMNode> temp = sibling;
     GetNextSibling(temp, getter_AddRefs(sibling));
   }
 }
@@ -208,7 +208,7 @@ nsresult
                                        nsAString & aText)
 {
   aText.Truncate();
-  nsCOMPtr < nsIDOMNode > child;
+  nsCOMPtr<nsIDOMNode> child;
   nsAutoString rtext;
   aElement->GetFirstChild(getter_AddRefs(child));
   while (child) {
@@ -216,14 +216,14 @@ nsresult
     child->GetNodeType(&type);
     if (nsIDOMNode::TEXT_NODE == type
         || nsIDOMNode::CDATA_SECTION_NODE == type) {
-      nsCOMPtr < nsIDOMText > text = do_QueryInterface(child);
+      nsCOMPtr<nsIDOMText> text = do_QueryInterface(child);
       nsAutoString data;
       text->GetData(data);
       rtext.Append(data);
     } else if (nsIDOMNode::ELEMENT_NODE == type) {
       return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_UNEXPECTED_ELEMENT", "Unable to retrieve simple content because a child element was present.");
     }
-    nsCOMPtr < nsIDOMNode > temp = child;
+    nsCOMPtr<nsIDOMNode> temp = child;
     GetNextSibling(temp, getter_AddRefs(child));
   }
   aText.Assign(rtext);
@@ -232,7 +232,7 @@ nsresult
 
 PRBool nsSOAPUtils::HasChildElements(nsIDOMElement * aElement)
 {
-  nsCOMPtr < nsIDOMNode > child;
+  nsCOMPtr<nsIDOMNode> child;
 
   aElement->GetFirstChild(getter_AddRefs(child));
   while (child) {
@@ -241,7 +241,7 @@ PRBool nsSOAPUtils::HasChildElements(nsIDOMElement * aElement)
     if (nsIDOMNode::ELEMENT_NODE == type) {
       return PR_TRUE;
     }
-    nsCOMPtr < nsIDOMNode > temp = child;
+    nsCOMPtr<nsIDOMNode> temp = child;
     GetNextSibling(temp, getter_AddRefs(child));
   }
 
@@ -251,8 +251,8 @@ PRBool nsSOAPUtils::HasChildElements(nsIDOMElement * aElement)
 void nsSOAPUtils::GetNextSibling(nsIDOMNode * aSibling,
                                  nsIDOMNode ** aNext)
 {
-  nsCOMPtr < nsIDOMNode > last;
-  nsCOMPtr < nsIDOMNode > current;
+  nsCOMPtr<nsIDOMNode> last;
+  nsCOMPtr<nsIDOMNode> current;
   PRUint16 type;
 
   *aNext = nsnull;
@@ -303,9 +303,9 @@ nsresult
   else {
 
     nsresult rc;
-    nsCOMPtr < nsIDOMNode > current = aScope;
-    nsCOMPtr < nsIDOMNamedNodeMap > attrs;
-    nsCOMPtr < nsIDOMNode > temp;
+    nsCOMPtr<nsIDOMNode> current = aScope;
+    nsCOMPtr<nsIDOMNamedNodeMap> attrs;
+    nsCOMPtr<nsIDOMNode> temp;
     nsAutoString value;
     while (current) {
       rc = current->GetAttributes(getter_AddRefs(attrs));
@@ -374,9 +374,9 @@ nsresult
     aPrefix.Assign(gSOAPStrings->kXMLPrefix);
     return NS_OK;
   }
-  nsCOMPtr < nsIDOMNode > current = aScope;
-  nsCOMPtr < nsIDOMNamedNodeMap > attrs;
-  nsCOMPtr < nsIDOMNode > temp;
+  nsCOMPtr<nsIDOMNode> current = aScope;
+  nsCOMPtr<nsIDOMNamedNodeMap> attrs;
+  nsCOMPtr<nsIDOMNode> temp;
   nsAutoString tstr;
   nsresult rc;
   PRUint32 maxns = 0;                //  Keep track of max generated NS
@@ -403,9 +403,9 @@ nsresult
           rc = temp->GetLocalName(prefix);
           if (NS_FAILED(rc))
             return rc;
-          nsCOMPtr < nsIDOMNode > check = aScope;
+          nsCOMPtr<nsIDOMNode> check = aScope;
           PRBool hasDecl;
-          nsCOMPtr < nsIDOMElement > echeck;
+          nsCOMPtr<nsIDOMElement> echeck;
           while (check != current) {        // Make sure prefix is not overridden
             echeck = do_QueryInterface(check);
             if (echeck) {
