@@ -180,6 +180,8 @@ private:
     static nsIAtom	*kRDF_type;
 
     static nsIRDFResource	*kNC_Name;
+    static nsIRDFResource	*kRDF_instanceOf;
+    static nsIRDFResource	*kRDF_Seq;
 
     static PRInt32	kNameSpaceID_XUL;
     static PRInt32	kNameSpaceID_RDF;
@@ -241,6 +243,8 @@ nsIAtom* XULSortServiceImpl::kNaturalOrderPosAtom;
 nsIAtom* XULSortServiceImpl::kRDF_type;
 
 nsIRDFResource		*XULSortServiceImpl::kNC_Name;
+nsIRDFResource		*XULSortServiceImpl::kRDF_instanceOf;
+nsIRDFResource		*XULSortServiceImpl::kRDF_Seq;
 
 PRInt32  XULSortServiceImpl::kNameSpaceID_XUL;
 PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
@@ -313,7 +317,9 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 			NS_ERROR("couldn't get locale factory");
 		}
 
-		gRDFService->GetResource(kURINC_Name, &kNC_Name);
+		gRDFService->GetResource(kURINC_Name, 				&kNC_Name);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",	&kRDF_instanceOf);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",		&kRDF_Seq);
 
 	        // Register the XUL and RDF namespaces: these'll just retrieve
 	        // the IDs if they've already been registered by someone else.
@@ -363,6 +369,8 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 		NS_RELEASE(kRDF_type);
 
 	        NS_RELEASE(kNC_Name);
+	        NS_RELEASE(kRDF_instanceOf);
+	        NS_RELEASE(kRDF_Seq);
 
 		if (collationService)
 		{
@@ -1325,88 +1333,110 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 		sortInfo.naturalOrderSort = PR_TRUE;
 	}
 
+	PRBool			isContainerRDFSeq = PR_FALSE;
+
+	if (sortInfo.db)
+	{
+		nsCOMPtr<nsIRDFResource>	containerRes;
+		if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetElementResource(container,
+					getter_AddRefs(containerRes))))
+		{
+			if (NS_FAILED(rv = sortInfo.db->HasAssertion( containerRes,
+				kRDF_instanceOf , kRDF_Seq, PR_TRUE, &isContainerRDFSeq))
+				|| (rv == NS_RDF_NO_VALUE))
+			{
+				isContainerRDFSeq = PR_FALSE;
+			}
+		}
+	}
+
 	PRBool			childAdded = PR_FALSE;
 
-#ifdef	XUL_BINARY_INSERTION_SORT
-	// figure out where to insert the node when a sort order is being imposed
-	// using a smart binary comparison
-	PRInt32			numChildren = 0;
-	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-	if (numChildren > 0)
+	if ((sortInfo.naturalOrderSort == PR_FALSE) ||
+		((sortInfo.naturalOrderSort == PR_TRUE) &&
+		(isContainerRDFSeq == PR_TRUE)))
 	{
-	        nsCOMPtr<nsIContent>	child;
-		PRInt32			last = -1, current, direction = 0, delta = numChildren;
-		while(PR_TRUE)
+#ifdef	XUL_BINARY_INSERTION_SORT
+		// figure out where to insert the node when a sort order is being imposed
+		// using a smart binary comparison
+		PRInt32			numChildren = 0;
+		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+		if (numChildren > 0)
 		{
-			delta = delta / 2;
+		        nsCOMPtr<nsIContent>	child;
+			PRInt32			last = -1, current, direction = 0, delta = numChildren;
+			while(PR_TRUE)
+			{
+				delta = delta / 2;
 
-			if (last == -1)
-			{
-				current = delta;
-			}
-			else if (direction > 0)
-			{
-				if (delta == 0)	delta = 1;
-				current = last + delta;
-			}
-			else
-			{
-				if (delta == 0)	delta = 1;
-				current = last - delta;
-			}
-
-			if (current != last)
-			{
-				container->ChildAt(current, *getter_AddRefs(child));
-				nsIContent	*theChild = child.get();
-				direction = inplaceSortCallback(&node, &theChild, &sortInfo);
-			}
-			if ( (direction == 0) ||
-				((current == last + 1) && (direction < 0)) ||
-				((current == last - 1) && (direction > 0)) ||
-				((current == 0) && (direction < 0)) ||
-				((current >= numChildren - 1) && (direction > 0)) )
-			{
-				if (current >= numChildren)
+				if (last == -1)
 				{
-					container->AppendChildTo(node, PR_TRUE);
+					current = delta;
+				}
+				else if (direction > 0)
+				{
+					if (delta == 0)	delta = 1;
+					current = last + delta;
 				}
 				else
 				{
-					container->InsertChildAt(node,
-						((direction > 0) ? current + 1: (current >= 0) ? current : 0),
-						PR_TRUE);
+					if (delta == 0)	delta = 1;
+					current = last - delta;
 				}
-				childAdded = PR_TRUE;
-				break;
-			}
-			last = current;
-		}
-	}
-#else
-	// figure out where to insert the node when a sort order is being imposed
-	// using a simple linear brute-force comparison
-	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
-        nsCOMPtr<nsIContent>	child;
 
-	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-	for (childIndex=0; childIndex<numChildren; childIndex++)
-	{
-		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
-		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
-		if (nameSpaceID == kNameSpaceID_XUL)
-		{
-			nsIContent	*theChild = child.get();
-			PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
-			if (sortVal <= 0)
-			{
-				container->InsertChildAt(node, childIndex, PR_TRUE);
-				childAdded = PR_TRUE;
-				break;
+				if (current != last)
+				{
+					container->ChildAt(current, *getter_AddRefs(child));
+					nsIContent	*theChild = child.get();
+					direction = inplaceSortCallback(&node, &theChild, &sortInfo);
+				}
+				if ( (direction == 0) ||
+					((current == last + 1) && (direction < 0)) ||
+					((current == last - 1) && (direction > 0)) ||
+					((current == 0) && (direction < 0)) ||
+					((current >= numChildren - 1) && (direction > 0)) )
+				{
+					if (current >= numChildren)
+					{
+						container->AppendChildTo(node, PR_TRUE);
+					}
+					else
+					{
+						container->InsertChildAt(node,
+							((direction > 0) ? current + 1: (current >= 0) ? current : 0),
+							PR_TRUE);
+					}
+					childAdded = PR_TRUE;
+					break;
+				}
+				last = current;
 			}
 		}
-	}
+#else
+		// figure out where to insert the node when a sort order is being imposed
+		// using a simple linear brute-force comparison
+		PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
+	        nsCOMPtr<nsIContent>	child;
+
+		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+		for (childIndex=0; childIndex<numChildren; childIndex++)
+		{
+			if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
+			if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
+			if (nameSpaceID == kNameSpaceID_XUL)
+			{
+				nsIContent	*theChild = child.get();
+				PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
+				if (sortVal <= 0)
+				{
+					container->InsertChildAt(node, childIndex, PR_TRUE);
+					childAdded = PR_TRUE;
+					break;
+				}
+			}
+		}
 #endif
+	}
 
 	if (childAdded == PR_FALSE)
 	{
