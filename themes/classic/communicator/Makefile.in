@@ -39,6 +39,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/offline.gif \
 		$(srcdir)/online.gif \
 		$(srcdir)/smallheader-bg.gif \
+		$(srcdir)/smallheader-bg-pale.gif \
 		$(srcdir)/securityOverlay.css \
 		$(srcdir)/toolbar-bg.gif \
 		$(srcdir)/toolbar-bg.png \

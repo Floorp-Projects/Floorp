@@ -32,4 +32,5 @@ install::
 	$(MAKE_INSTALL) customize.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) preview.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebar.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) sidebarBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 

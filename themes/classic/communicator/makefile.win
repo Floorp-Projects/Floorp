@@ -41,6 +41,7 @@ install::
 	$(MAKE_INSTALL) online.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) securityOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) smallheader-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) smallheader-bg-pale.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) search-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) search-active.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin

@@ -20,7 +20,7 @@
       <xul:box class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
         <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>
         <xul:text class="menubutton-toolbar-single-text" inherits="value,accesskey,crop,disabled,dragover-top" flex="1"/>
-        <xul:image class="menubutton-toolbar-single-dropmarker" inherits="disabled"/>
+        <xul:image class="menubutton-toolbar-single-dropmarker" inherits="menubuttontype,disabled"/>
       </xul:box>
     </content>
   </binding>

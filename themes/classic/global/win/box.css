@@ -47,7 +47,7 @@ title
       text-align          : right;
     }
 
-  row
+  row[autostretch="never"]
     {
       vertical-align      : middle;
     }

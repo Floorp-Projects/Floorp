@@ -26,32 +26,6 @@
   min-width: 1px;
 }
 
-#FormatToolbar {
-  border-bottom: 1px solid #003366;
-}
-
-.separator_small { 
-  width: 1em; 
-}
-
-.margin-left-right {
-  margin-left:  3px;
-  margin-right: 3px;
-}
-
-.toolbar, .key-toolbar {
-  margin-right: 2px;
-}
-
-.inset-border {
-  border: 1px inset white;
-}
-
-/* THIS DOESN'T WORK ON <text>! */
-.center {
-  text-align: center;
-}
-
 #EditModeToolbar {
   padding:       0px;
   /* Same as "standard" toolbar background */
