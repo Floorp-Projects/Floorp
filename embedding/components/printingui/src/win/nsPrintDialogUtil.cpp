@@ -294,6 +294,7 @@ SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 
+  aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
   if (aDevMode->dmFields & DM_ORIENTATION) {
     PRInt32 orientation  = aDevMode->dmOrientation == DMORIENT_PORTRAIT?
                            nsIPrintSettings::kPortraitOrientation:nsIPrintSettings::kLandscapeOrientation;
