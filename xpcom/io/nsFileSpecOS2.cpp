@@ -15,8 +15,10 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1998 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
- *
+ * Contributor(s): Henry Sobotka <sobotka@axess.com>
+ *                 00/01/06: general review and update against Win/Unix versions;
+ *                           replaced nsFileSpec::Execute implementation with system() call
+ *                           which properly launches OS/2 PM|VIO, WinOS2 and DOS programs
  */
 
 // This file is #include-d by nsFileSpec.cpp and contains OS/2 specific
@@ -38,6 +40,11 @@
 #define INCL_DOS
 #define INCL_WINWORKPLACE
 #include <os2.h>
+
+#ifdef XP_OS2_VACPP
+#include <fcntl.h> /* for O_RDWR */
+#include <direct.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -141,6 +148,7 @@ void nsFileSpec::operator = ( const nsFilePath &inPath)
 {
    mPath = (const char*) inPath;
    nsFileSpecHelpers::UnixToNative( mPath);
+   mError = NS_OK;
 }
 
 void nsFilePath::operator = ( const nsFileSpec &inSpec)
@@ -151,14 +159,13 @@ void nsFilePath::operator = ( const nsFileSpec &inSpec)
 
 // nsFilePath constructor
 nsFilePath::nsFilePath( const nsFileSpec &inSpec)
-           : mPath(0)
 {
    *this = inSpec;
 }
 
 // nsFileSpec implementation ------------------------------------------
 
-nsFileSpec::nsFileSpec( const nsFilePath &inPath) : mPath(0)
+nsFileSpec::nsFileSpec( const nsFilePath &inPath)
 {
    *this = inPath;
 }
@@ -176,7 +183,7 @@ char *nsFileSpec::GetLeafName() const
 PRBool nsFileSpec::Exists() const
 {
    struct stat st;
-   return 0 == stat( mPath, &st); 
+   return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st); 
 }
 
 // These stat tests are done somewhat verbosely 'cos the VACPP version
@@ -185,13 +192,13 @@ PRBool nsFileSpec::Exists() const
 PRBool nsFileSpec::IsFile() const
 {
    struct stat st;
-   return (0 == stat( mPath, &st)) && (S_IFREG == (st.st_mode & S_IFREG));
+   return (!mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st)) && (S_IFREG == (st.st_mode & S_IFREG));
 }
 
 PRBool nsFileSpec::IsDirectory() const
 {
    struct stat st;
-   return (0 == stat( mPath, &st)) && (S_IFDIR == (st.st_mode & S_IFDIR));
+   return (!mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st)) && (S_IFDIR == (st.st_mode & S_IFDIR));
 }
 
 // Really should factor out DosQPI() call to an internal GetFS3() method and then use
@@ -202,11 +209,13 @@ PRBool nsFileSpec::IsHidden() const
 {
    FILESTATUS3 fs3;
    APIRET rc;
-   PRBool bHidden = PR_FALSE; // XXX how do I return an error?
-   rc = DosQueryPathInfo( mPath, FIL_STANDARD, &fs3, sizeof fs3);
-   if( !rc)
-      bHidden = fs3.attrFile & FILE_HIDDEN ? PR_TRUE : PR_FALSE;
+   PRBool bHidden = PR_FALSE;
 
+   if (!mPath.IsEmpty()) {
+     rc = DosQueryPathInfo( mPath, FIL_STANDARD, &fs3, sizeof fs3);
+     if(!rc)
+       bHidden = fs3.attrFile & FILE_HIDDEN ? PR_TRUE : PR_FALSE;
+   }
    return bHidden; 
 }
 
@@ -226,7 +235,7 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
 void nsFileSpec::GetModDate( TimeStamp& outStamp) const
 {
    struct stat st;
-   if( stat( mPath, &st) == 0) 
+   if(!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
       outStamp = st.st_mtime; 
    else
       outStamp = 0;
@@ -236,7 +245,7 @@ PRUint32 nsFileSpec::GetFileSize() const
 {
    struct stat st;
    PRUint32 size = 0;
-   if( stat( mPath, &st) == 0) 
+   if(!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
       size = (PRUint32) st.st_size;
    return size;
 }
@@ -262,11 +271,11 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
                 fsAllocate.cbSector;
    }
    
-   PRInt64 int64;
+   PRInt64 space64;
 
-   LL_I2L(int64 , cbAvail);
+   LL_I2L(space64 , cbAvail);
 
-   return int64;
+   return space64;
 }
 
 void nsFileSpec::GetParent( nsFileSpec &outSpec) const
@@ -293,11 +302,13 @@ void nsFileSpec::operator += ( const char *inRelativePath)
    SetLeafName( relPath);
 }
 
-void nsFileSpec::CreateDirectory( int /*mode*/)
+void nsFileSpec::CreateDirectory( int mode)
 {
    // Note that mPath is canonical.
    // This means that all directories above us are meant to exist.
-   PR_MkDir( mPath, PR_CREATE_FILE);
+  // mode is ignored
+  if (!mPath.IsEmpty())
+    PR_MkDir(nsNSPRPath(*this), PR_CREATE_FILE);
 }
 
 void nsFileSpec::Delete( PRBool inRecursive) const
@@ -314,11 +325,11 @@ void nsFileSpec::Delete( PRBool inRecursive) const
             child.Delete( inRecursive);
          }
       }
-      PR_RmDir( mPath);
+      PR_RmDir(nsNSPRPath(*this));
    }
-   else
+   else if (!mPath.IsEmpty())
    {
-      PR_Delete( mPath);
+      remove(nsNSPRPath(*this));
    }
 }
 
@@ -333,23 +344,20 @@ nsresult nsFileSpec::Rename( const char *inNewName)
    {
       // PR_Rename just calls DosMove() on what you give it.
 
-      char *aLocal = PL_strdup( mPath);
+      char *oldPath = nsCRT::strdup(mPath);
       SetLeafName( inNewName);
-      APIRET ret = DosMove( aLocal, (const char*) mPath);
+      APIRET ret = DosMove( oldPath, (const char*) mPath);
       if( NO_ERROR == ret)
-      {
-         delete [] aLocal;
-         rc = NS_OK;
-      }
+	rc = NS_OK;
       else
       {
 #ifdef DEBUG
-         printf( "DosMove %s %s returned %d\n", (char*)mPath, aLocal, ret);
+         printf( "DosMove %s %s returned %ld\n", (char*)mPath, oldPath, ret);
 #endif
-         mPath = aLocal;
+         mPath = oldPath;
       }
+      nsCRT::free(oldPath);
    }
-
    return rc;
 }
 
@@ -364,69 +372,48 @@ nsresult nsFileSpec::CopyToDir( const nsFileSpec &inParentDirectory) const
       nsSimpleCharString copyTo( inParentDirectory.GetCString());
       copyTo += "\\";
       copyTo += myLeaf;
-      delete [] myLeaf;
+      nsCRT::free(myLeaf);
 
       APIRET ret = DosCopy( (const char*) mPath, (const char*) copyTo, DCPY_EXISTING);
 
       if( NO_ERROR == ret)
          rc = NS_OK;
-#ifdef DEBUG
       else
-         printf( "DosCopy %s %s returned %dl\n",
-                 (const char*) mPath, (const char*) copyTo, ret);
+	{
+#ifdef DEBUG
+	  printf( "DosCopy %s %s returned %ld\n",
+		  (const char*) mPath, (const char*) copyTo, ret);
 #endif
+	  rc = NS_FILE_FAILURE;
+	}
    }
 
    return rc;
 }
 
 // XXX not sure about the semantics of this method...
-nsresult nsFileSpec::MoveToDir( const nsFileSpec &aParentDirectory)
+nsresult nsFileSpec::MoveToDir( const nsFileSpec &inNewParentDirectory)
 {
    // Copy first & then delete self to avoid drive-clashes
-   nsresult rc = CopyToDir( aParentDirectory);
+   nsresult rc = CopyToDir( inNewParentDirectory);
    if( NS_SUCCEEDED(rc))
    {
-      Delete( PR_FALSE); // XXX why no return code ?
-      *this = aParentDirectory + GetLeafName();
+      Delete( PR_FALSE); // XXX why no return code
+      *this = inNewParentDirectory + GetLeafName();
    }
-
    return rc;
 }
 
-nsresult nsFileSpec::Execute( const char *inArgs) const
+nsresult nsFileSpec::Execute(const char *inArgs) const
 {
-   // Running arbitrary programs in OS/2 seems soooo hard: getting a single
-   // routine which deals correctly with PM, VIO, DOS & various Win 3.1
-   // types would be so nice.
-   //
-   // The method here looks quite elegant, but makes me shiver with
-   // unease:  we create a new program object for the program and its
-   // parameters, get the shell to open it, and then destroy the object.
-   //
-   // I can't get either DosStartSession() or WinStartApp() to open
-   // all types of thing, including varieties of Win3.1 programs.
-   //
-   nsresult rc = NS_FILE_FAILURE;
-
-   char setupstring[ CCHMAXPATH * 2];
-   sprintf( setupstring, "EXENAME=%s;PARAMETERS=%s;CCVIEW=NO",
-            (const char *)mPath, inArgs);
-
-   HOBJECT hObject = WinCreateObject( "WPProgram", "Title", setupstring,
-                                      "<WP_NOWHERE>", CO_UPDATEIFEXISTS);
-   if( 0 != hObject)
-   {
-      // Doing this twice gives focus to the opened object.
-      // (no, this doesn't alter the object's settings - there's rather
-      //  unexpected hackery in wpSetup)
-      WinSetObjectData( hObject, "OPEN=DEFAULT");
-      WinSetObjectData( hObject, "OPEN=DEFAULT");
-      WinDestroyObject( hObject);
-      rc = NS_OK;
-   }
-
-   return rc;
+    nsresult result = NS_FILE_FAILURE;
+    
+    if (!mPath.IsEmpty() && !IsDirectory())
+    {
+       nsSimpleCharString fileNameWithArgs = mPath + " " + inArgs;
+       result = NS_FILE_RESULT(system(fileNameWithArgs));
+    } 
+    return result;
 }
 
 // nsDirectoryIterator ------------------------------------------------------
@@ -434,12 +421,14 @@ nsresult nsFileSpec::Execute( const char *inArgs) const
 nsDirectoryIterator::nsDirectoryIterator(	const nsFileSpec &aDirectory,
                                             PRBool resolveSymlinks)
 : mCurrent( aDirectory), 
-  mDir( nsnull), 
   mExists(PR_FALSE), 
-  mResoveSymLinks(resolveSymlinks)
+  mResoveSymLinks(resolveSymlinks), 
+  mStarting( aDirectory),
+  mDir( nsnull)
 {
    mDir = PR_OpenDir( aDirectory);
    mCurrent += "dummy";
+   mStarting += "dummy";
    ++(*this);
 }
 
@@ -458,6 +447,7 @@ nsDirectoryIterator &nsDirectoryIterator::operator ++ ()
    if( entry)
    {
       mExists = PR_TRUE;
+      mCurrent = mStarting;
       mCurrent.SetLeafName( entry->name);
       if (mResoveSymLinks)
       {   
@@ -471,4 +461,68 @@ nsDirectoryIterator &nsDirectoryIterator::operator ++ ()
 nsDirectoryIterator& nsDirectoryIterator::operator -- ()
 {
    return ++(*this); // can't go backwards without much pain & suffering.
+}
+
+void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
+{
+  if (IsDirectory())
+    {
+      if (!(newDir.Exists()))
+	{
+	  newDir.CreateDirectory();
+	}
+
+      for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
+	{
+	  nsFileSpec& child = (nsFileSpec&)i;
+	  
+	  if (child.IsDirectory())
+	    {
+	      nsFileSpec tmpDirSpec(newDir);
+	      
+	      char *leafname = child.GetLeafName();
+	      tmpDirSpec += leafname;
+	      nsCRT::free(leafname);
+
+	      child.RecursiveCopy(tmpDirSpec);
+	    }
+	  else
+	    {
+	      child.RecursiveCopy(newDir);
+	    }
+	}
+    }
+  else if (!mPath.IsEmpty())
+    {
+      nsFileSpec& filePath = (nsFileSpec&) *this;
+      
+      if (!(newDir.Exists()))
+	{
+	  newDir.CreateDirectory();
+	}
+
+      filePath.CopyToDir(newDir);
+    }
+}
+
+nsresult nsFileSpec::Truncate(PRInt32 offset) const
+{
+    char* Path = nsCRT::strdup(mPath);
+    int rv = 0;
+
+#ifdef XP_OS2_VACPP
+    int fh = open(Path, O_RDWR);
+
+    if (fh != -1)
+      rv = _chsize(fh, offset);
+#else
+    truncate(Path, offset);
+#endif
+
+    nsCRT::free(Path);
+
+    if(!rv) 
+        return NS_OK;
+    else
+        return NS_ERROR_FAILURE;
 }
