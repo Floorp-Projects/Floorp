@@ -63,9 +63,10 @@ MimeInlineTextClassInitialize(MimeInlineTextClass *clazz)
   PR_ASSERT(!oclass->class_initialized);
   oclass->initialize           = MimeInlineText_initialize;
   oclass->finalize             = MimeInlineText_finalize;
-  oclass->parse_eof			   = MimeInlineText_parse_eof;
+  oclass->parse_eof            = MimeInlineText_parse_eof;
   oclass->parse_end            = MimeInlineText_parse_end;
   clazz->rot13_line            = MimeInlineText_rot13_line;
+  clazz->initialize_charset    =  MimeInlineText_initializeCharset;
   lclass->parse_decoded_buffer = MimeInlineText_parse_decoded_buffer;
   return 0;
 }
@@ -184,7 +185,6 @@ static int MimeInlineText_initializeCharset(MimeObject *obj)
 
   return 0;
 }
-
 
 static void
 MimeInlineText_finalize (MimeObject *obj)

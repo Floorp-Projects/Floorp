@@ -1948,6 +1948,9 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
     nsCAutoString variableFontType;   // serif, sans-serif
 
     // get a charset
+    if (!text->initializeCharset)
+      ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
+
     if (!text->charset || !(*text->charset))
       aCharset.Assign("us-ascii");
     else

@@ -79,6 +79,7 @@ struct MimeInlineTextClass {
   MimeLeafClass   leaf;
   int (*rot13_line) (MimeObject *obj, char *line, PRInt32 length);
   int (*convert_line_charset) (MimeObject *obj, char *line, PRInt32 length);
+  int (*initialize_charset) (MimeObject *obj);
 };
 
 extern MimeInlineTextClass mimeInlineTextClass;
