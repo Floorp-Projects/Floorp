@@ -1070,7 +1070,7 @@ nsBaseWidget::debug_GetCachedBoolPref(const char * aPrefName)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-    if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
+    if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
       return debug_PrefValues[i].value;
     }
@@ -1085,7 +1085,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-    if (NS_ConvertASCIItoUCS2(debug_PrefValues[i].name).EqualsWithConversion(aPrefName))
+    if (strcmp(debug_PrefValues[i].name, aPrefName) == 0)
     {
       debug_PrefValues[i].value = aValue;
 
