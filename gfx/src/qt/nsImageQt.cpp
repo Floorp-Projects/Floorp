@@ -41,15 +41,36 @@
 #include "nsImageQt.h"
 #include "nsRenderingContextQt.h"
 
+#include <qimage.h>
+
 #include "nspr.h"
 #include "qtlog.h"
 
 #define IsFlagSet(a,b) ((a) & (b))
 
-#ifdef DEBUG
-PRUint32 gImageCount = 0;
-PRUint32 gImageID = 0;
+#ifdef CHECK_PIXMAPS
+#include <qfileinfo.h>
+static void savePixmap(const QPixmap &px)
+{
+    static int i = 0;
+
+    QString baseFile( "saved_pixmap" );
+    const char *format = "PNG";
+
+
+    QString fileName = QString("%1%2.%2").arg(baseFile)
+                       .arg(i).arg(format);
+
+    while (QFileInfo(fileName).exists()) {
+        ++i;
+        fileName = QString("%1%2.%2").arg(baseFile)
+                   .arg(i).arg(format);
+    }
+    px.save(fileName, format);
+}
 #endif
+
+
 
 NS_IMPL_ISUPPORTS1(nsImageQt, nsIImage)
 
@@ -66,22 +87,11 @@ nsImageQt::nsImageQt()
     , mNumBytesPixel(0)
     , pixmapDirty(PR_FALSE)
 {
-#ifdef DEBUG
-    gImageCount++;
-    mID = gImageID++;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsImageQt CTOR (%p) ID: %d, Count: %d\n", this, mID, gImageCount));
-#endif
 }
 
 //------------------------------------------------------------
 nsImageQt::~nsImageQt()
 {
-#ifdef DEBUG
-    gImageCount--;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsImageQt DTOR (%p) ID: %d, Count: %d\n", this, mID, gImageCount));
-#endif
     if (nsnull != mImageBits) {
         delete[] mImageBits;
         mImageBits = nsnull;
@@ -97,6 +107,7 @@ nsresult nsImageQt::Init(PRInt32 aWidth,PRInt32 aHeight,
                          PRInt32 aDepth,
                          nsMaskRequirements aMaskRequirements)
 {
+    qDebug("creating a pixmap with [%d,%d,%d]", aWidth, aHeight, aDepth);
     // gfxImageFrame forces only one nsImageQt::Init
     if (aWidth == 0 || aHeight == 0) {
         return NS_ERROR_FAILURE;
@@ -328,6 +339,10 @@ void nsImageQt::updatePixmap()
     }
 
     pixmap = QPixmap(qimage);
+
+#ifdef CHECK_PIXMAPS
+    savePixmap(pixmap);
+#endif
     pixmapDirty = PR_FALSE;
 }
 

@@ -247,7 +247,6 @@ protected:
     nsFontQt             *mCurrentFont;
     Qt::PenStyle	 mQLineStyle;
     Qt::RasterOp	 mFunction;
-    PRUint32             mID;
 };
 
 #endif /* nsRenderingContextQt_h___ */

@@ -121,8 +121,6 @@ private:
     PRUint32      mLockHeight;
     PRUint32      mLockFlags;
     PRBool        mLocked;
-
-    PRUint32      mID;
 };
 
 #endif

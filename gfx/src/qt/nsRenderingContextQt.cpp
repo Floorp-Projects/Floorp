@@ -53,14 +53,6 @@
 
 #include "qtlog.h"
 
-#ifdef DEBUG
-PRUint32 gRCCount = 0;
-PRUint32 gRCID = 0;
-
-PRUint32 gGSCount = 0;
-PRUint32 gGSID = 0;
-#endif
-
 class GraphicsState
 {
 public:
@@ -73,19 +65,10 @@ public:
   nscolor             mColor;
   nsLineStyle         mLineStyle;
   nsIFontMetrics      *mFontMetrics;
-
-private:
-  PRUint32            mID;
 };
 
 GraphicsState::GraphicsState()
 {
-#ifdef DEBUG
-  gGSCount++;
-  mID = gGSID++;
-  PR_LOG(gQtLogModule, QT_BASIC,
-      ("GraphicsState CTOR (%p) ID: %d, Count: %d\n", this, mID, gGSCount));
-#endif
   mMatrix      = nsnull;
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mClipRegion  = nsnull;
@@ -96,11 +79,6 @@ GraphicsState::GraphicsState()
 
 GraphicsState::~GraphicsState()
 {
-#ifdef DEBUG
-  gGSCount--;
-  PR_LOG(gQtLogModule, QT_BASIC,
-      ("GraphicsState DTOR (%p) ID: %d, Count: %d\n", this, mID, gGSCount));
-#endif
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextQt, nsIRenderingContext)
@@ -109,13 +87,6 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 nsRenderingContextQt::nsRenderingContextQt()
 {
-#ifdef DEBUG
-  gRCCount++;
-  mID = gRCID++;
-  PR_LOG(gQtLogModule, QT_BASIC,
-      ("nsRenderingContextQt CTOR (%p) ID: %d, Count: %d\n", this, mID, gRCCount));
-#endif
-
   mFontMetrics        = nsnull;
   mContext            = nsnull;
   mSurface            = nsnull;
@@ -135,11 +106,6 @@ nsRenderingContextQt::nsRenderingContextQt()
 
 nsRenderingContextQt::~nsRenderingContextQt()
 {
-#ifdef DEBUG
-  gRCCount--;
-  PR_LOG(gQtLogModule, QT_BASIC,
-      ("nsRenderingContextQt DTOR (%p) ID: %d, Count: %d\n", this, mID, gRCCount));
-#endif
   // Destroy the State Machine
   PRInt32 cnt = mStateCache.Count();
 

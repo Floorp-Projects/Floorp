@@ -44,23 +44,10 @@
 
 #include "qtlog.h"
 
-#ifdef DEBUG
-PRUint32 gDSCount = 0;
-PRUint32 gDSID = 0;
-#endif
-
 NS_IMPL_ISUPPORTS1(nsDrawingSurfaceQt, nsIDrawingSurface)
 
 nsDrawingSurfaceQt::nsDrawingSurfaceQt()
 {
-#ifdef DEBUG
-    gDSCount++;
-    mID = gDSID++;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsDrawingSurfaceQt CTOR (%p) ID: %d, Count: %d\n",
-            this, mID, gDSCount));
-#endif
-
     mPaintDevice = nsnull;
     mGC          = nsnull;
     mDepth       = -1;
@@ -87,13 +74,6 @@ nsDrawingSurfaceQt::nsDrawingSurfaceQt()
 
 nsDrawingSurfaceQt::~nsDrawingSurfaceQt()
 {
-#ifdef DEBUG
-    gDSCount--;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsDrawingSurfaceQt DTOR (%p) ID: %d, Count: %d\n",
-            this, mID, gDSCount));
-#endif
-
     if (mGC && mGC->isActive()) {
         mGC->end();
     }

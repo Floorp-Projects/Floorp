@@ -133,8 +133,6 @@ private:
 
     QPixmap pixmap;
     PRBool pixmapDirty;
-
-    PRUint32  mID;
 };
 
 #endif
