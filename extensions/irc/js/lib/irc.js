@@ -2423,12 +2423,20 @@ function chan_geturl ()
 {
     var target = this.encodedName;
 
-    if (target.match(/^#[^!+&]/))
+    if ((target[0] == "#") &&
+        arrayIndexOf(this.parent.channelTypes, target[1]) == -1)
+    {
+        /* First character is "#" (which we're allowed to ommit), and the
+         * following character is NOT a valid prefix, so it's safe to remove.
+         */
         target = ecmaEscape(target.substr(1));
+    }
     else
+    {
         target = ecmaEscape(target);
+    }
+
     target = target.replace("/", "%2f");
-    //target += "?charset=" + this.prefs["charset"];
 
     return this.parent.parent.getURL(target);
 }

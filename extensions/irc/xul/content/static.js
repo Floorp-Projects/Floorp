@@ -1816,9 +1816,14 @@ function gotoIRCURL (url)
                 // with the Unicode forms.
                 var serv = network.primServ;
                 var target = url.target;
-                if (arrayIndexOf(serv.channelTypes, target[0]) == -1) {
-                    target = serv.channelTypes[0] + target;
-                }
+
+                /* If we don't have a valid prefix, stick a "#" on it.
+                 * NOTE: This is always a "#" so that URLs may be compared
+                 * properly without involving the server (e.g. off-line).
+                 */
+                if (arrayIndexOf(serv.channelTypes, target[0]) == -1)
+                    target = "#" + target;
+
                 var chan = new CIRCChannel(serv, null, target);
 
                 d = { channelName: chan.unicodeName, key: key,
