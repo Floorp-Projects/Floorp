@@ -10,7 +10,7 @@
         class="color-dialog"
         orient="vertical">
 
-  <script language="javascript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "emailCollectionNewsgroup", "addressingAutocomplete", "enableCABsizeLimit", "CABsizeLimit"];
   ]]>
@@ -56,9 +56,11 @@
 	<titledbox orient="vertical">
     <title><text value="&emailCollectiontitle.label;"/></title>
 	<html>&emailCollectiontext.label;</html>
-		<checkbox id="emailCollection" value="&emailCollectionEnable.label;"
-              pref="true" preftype="bool" prefstring="mail.collect_email_address"
-              prefattribute="checked" oncommand="doEnabling();"/>
+            <vbox autostretch="never">
+                <checkbox id="emailCollection" value="&emailCollectionEnable.label;"
+                          pref="true" preftype="bool" prefstring="mail.collect_email_address"
+                          prefattribute="checked" oncommand="doEnabling();"/>
+            </vbox>
     <box orient="vertical" autostretch="never" class="indent">
 		<text class="label" value="&emailCollectionTypeText.label;" id="emailCollectionTypeText"/>
 		<checkbox id="emailCollectionIncoming" value="&emailCollectionIncomingEnable.label;"
@@ -84,9 +86,11 @@
     <titledbox orient="vertical">
       <title><text value="&addressingTitle.label;"/></title>
       <html>&addressingText.label;</html>
+      <box autostretch="never">
         <checkbox id="addressingAutocomplete" value="&addressingEnable.label;"
           pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
           prefattribute="checked"/>
+      </box>
     </titledbox>
 
 </window>

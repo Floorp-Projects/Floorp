@@ -26,12 +26,12 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-debug1.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-debug1.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-debug1.xul');">
 
-  <script language="JavaScript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
                        "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", 
@@ -47,25 +47,26 @@
   <!-- Event Debugging -->  
   <titledbox orient="vertical">
     <title><text value="&debugEventDebugging.label;"/></title>
-
-    <checkbox id="nglayoutDebugPaintFlashing" value="&debugPaintFlashing.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugPaintDumping" value="&debugPaintDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.paint_dumping"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugInvalidateDumping" value="&debugInvalidateDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugEventDumping" value="&debugEventDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
-              prefattribute="checked"/>              
-    <checkbox id="nglayoutDebugMotionEventDumping" value="&debugMotionEventDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugCrossingEventDumping" value="&debugCrossingEventDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
-              prefattribute="checked"/>
+    <vbox autostretch="never">
+      <checkbox id="nglayoutDebugPaintFlashing" value="&debugPaintFlashing.label;"
+                pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"
+                prefattribute="checked"/>
+      <checkbox id="nglayoutDebugPaintDumping" value="&debugPaintDumping.label;"
+                pref="true" preftype="bool" prefstring="nglayout.debug.paint_dumping"
+                prefattribute="checked"/>
+      <checkbox id="nglayoutDebugInvalidateDumping" value="&debugInvalidateDumping.label;"
+                pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
+                prefattribute="checked"/>
+      <checkbox id="nglayoutDebugEventDumping" value="&debugEventDumping.label;"
+                pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
+                prefattribute="checked"/>              
+      <checkbox id="nglayoutDebugMotionEventDumping" value="&debugMotionEventDumping.label;"
+                pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
+                prefattribute="checked"/>
+      <checkbox id="nglayoutDebugCrossingEventDumping" value="&debugCrossingEventDumping.label;"
+                pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
+                prefattribute="checked"/>
+    </vbox>
   </titledbox>
 
 </window>

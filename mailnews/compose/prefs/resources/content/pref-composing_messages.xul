@@ -14,7 +14,7 @@
 
   <popupset id="aTooltipSet"/>
     
-  <script language="JavaScript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList"];
 
@@ -55,10 +55,11 @@
         </menupopup>
       </menulist>
     </box>
-    
-    <checkbox id="autoQuote" value="&autoQuote.label;" 
-              pref="true" preftype="bool" prefstring="mail.auto_quote"
-              prefattribute="checked" oncommand="doEnabling();"/>		
+    <box autostretch="never">
+      <checkbox id="autoQuote" value="&autoQuote.label;" 
+                pref="true" preftype="bool" prefstring="mail.auto_quote"
+                prefattribute="checked" oncommand="doEnabling();"/>
+    </box>
     <box class="indent" autostretch="never" id="thenBox">
       <text class="label" value="&then.label;" accesskey="&then.accesskey;" for="replyOnTop"/>
       <menulist id="replyOnTop" pref="true" preftype="int" prefstring="mailnews.reply_on_top"

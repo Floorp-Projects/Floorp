@@ -13,7 +13,7 @@
         orient="vertical">
   <popupset id="aTooltipSet"/>
 
-  <script language="javascript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
 
@@ -39,8 +39,8 @@
   ]]>
   </script>
         
-  <script language="javascript" src="chrome://global/content/strres.js"/>
-  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
   <box class="box-smallheader" title="&pane.title;"/>
 
@@ -89,7 +89,7 @@
 
 	<separator class="thin"/>
 	<html>&viewingPlainText.label;</html>
-    <box orient="vertical" class="indent">
+    <box orient="vertical" autostretch="never" class="indent">
       <checkbox id="wrapLongLines" value="&wrapInMsg.label;"
                 pref="true" preftype="bool" prefstring="mail.wrap_long_lines" 
                 prefattribute="checked"/>
@@ -119,10 +119,12 @@
         </menupopup>
       </template>
     </menulist>       
-    </box>    
-  <checkbox id="forceCharsetOverride" value="&forceCharsetOverride.label;"
-            pref="true" preftype="bool" prefstring="mailnews.force_charset_override" 
-            prefattribute="checked"/>
+    </box>
+    <box autostretch="never">  
+      <checkbox id="forceCharsetOverride" value="&forceCharsetOverride.label;"
+                pref="true" preftype="bool" prefstring="mailnews.force_charset_override" 
+                prefattribute="checked"/>
+    </box>
 	</titledbox>
 	  
 </window>

@@ -29,21 +29,21 @@ Contributor(s):
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-		    onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
-		    orient="vertical">
+        onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
+        orient="vertical">
 
-  <script language="javascript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl",
                        "newMailNotification" ];
   ]]>
   </script>
-  <script language="javascript" src="chrome://global/content/strres.js"/>
-  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <script language="javascript" src="chrome://messenger/content/pref-mailnews.js"/>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="text/javascript" src="chrome://messenger/content/pref-mailnews.js"/>
   
   <box class="box-smallheader" title="&pane.title;"/>
 
@@ -62,19 +62,22 @@ Contributor(s):
     
     <html>&chooseExp.label;</html>
 
-	<separator class="thin"/>
-    <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;"
-              pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
-              prefattribute="checked"/>
+    <separator class="thin"/>
+    <box autostretch="never">
+      <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;"
+                pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
+                prefattribute="checked"/>
+    </box>
 
 	</titledbox>
 
 	<titledbox orient="vertical">
     <title><text value="&messengerStartPage.label;"/></title>
-
-    <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;"
-              pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
-              prefattribute="checked"/>
+      <box autostretch="never">
+        <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;"
+                  pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
+                  prefattribute="checked"/>
+      </box>
     <box autostretch="never" class="indent">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="mailnews.start_page.url"/>
       <textfield id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
@@ -88,13 +91,13 @@ Contributor(s):
 	</titledbox>
 	
   <!-- Sound notification for new mail -->    
-	<titledbox orient="vertical">
+        <titledbox orient="vertical">
 	  <title><text value="&newMessage.label;"/></title>
-	  
-	  <checkbox allowevents="true" id="newMailNotification" value="&playSound.label;"
-	            pref="true" preftype="bool" prefstring="mail.biff.play_sound"
-	            prefattribute="checked" accesskey="&playSound.accesskey;" />
-	            
-    </titledbox>
+	  <box autostretch="never">
+            <checkbox allowevents="true" id="newMailNotification" value="&playSound.label;"
+	              pref="true" preftype="bool" prefstring="mail.biff.play_sound"
+	              prefattribute="checked" accesskey="&playSound.accesskey;" />
+          </box>	            
+        </titledbox>
   
 </window>

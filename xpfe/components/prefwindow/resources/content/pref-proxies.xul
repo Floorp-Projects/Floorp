@@ -28,20 +28,20 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-proxies.dtd" >
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-    		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-proxies.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-proxies.xul');">
 
-  <script language="JavaScript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP",                        "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxySOCKS",                        "networkProxySOCKS_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
-  <script language="JavaScript" src="chrome://communicator/content/pref/pref-proxies.js"></script>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
   
   <box class="box-smallheader" title="&lHeader;"/>
 
@@ -52,8 +52,10 @@
     <radiogroup id="networkProxyType" orient="vertical"
                 pref="true" preftype="int" prefstring="network.proxy.type"
                 prefattribute="data">
-      <radio group="networkProxyType" data="0" value="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-      <radio group="networkProxyType" data="1" value="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <vbox autostretch="never">
+        <radio group="networkProxyType" data="0" value="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
+        <radio group="networkProxyType" data="1" value="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
+      </vbox>
       <grid class="indent" flex="1">
         <columns>
           <column/>
@@ -112,7 +114,9 @@
           </row>
         </rows>
       </grid>
-      <radio group="networkProxyType" data="2" value="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <box autostretch="never">
+        <radio group="networkProxyType" data="2" value="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
+      </box>
       <box class="indent" flex="1">
         <textfield id="networkProxyAutoconfigURL" flex="1" 
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
