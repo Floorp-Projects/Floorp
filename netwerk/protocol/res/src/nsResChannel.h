@@ -57,7 +57,9 @@ public:
                   nsILoadGroup* aLoadGroup, 
                   nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes,
-                  nsIURI* originalURI);
+                  nsIURI* originalURI,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
 
 protected:
     class Substitutions {
@@ -117,6 +119,8 @@ protected:
     nsCOMPtr<nsIInputStream>            mFromStream;
     PRUint32                            mStartPosition;
     PRInt32                             mCount;
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif // nsResChannel_h__

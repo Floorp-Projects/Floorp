@@ -284,6 +284,7 @@ main(int argc, char* argv[])
                                   nsnull,    // notificationCallbacks
                                   nsIChannel::LOAD_NORMAL,
                                   nsnull,    // originalURI
+                                  0, 0,
                                   getter_AddRefs(dummyChannel));
     if (NS_FAILED(rv)) return rv;
 

@@ -193,6 +193,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
                                 nsnull, // notificationCallbacks
                                 nsIChannel::LOAD_NORMAL,
                                 nsnull, // originalURI
+                                0, 0,
                                 getter_AddRefs(mQuoteChannel));
   if (NS_FAILED(rv)) return rv;
 
@@ -219,6 +220,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
                                      nsnull, // notificationCallbacks
                                      nsIChannel::LOAD_NORMAL,
                                      nsnull, // originalURI
+                                     0, 0,
                                      getter_AddRefs(aChannel));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aURL);

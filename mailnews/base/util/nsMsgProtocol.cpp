@@ -68,7 +68,8 @@ nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on
 		aURL->GetPort(&port);
 		aURL->GetHost(getter_Copies(hostName));
 
-		rv = socketService->CreateTransport(hostName, port, nsnull, getter_AddRefs(m_channel));
+		rv = socketService->CreateTransport(hostName, port, nsnull, 0, 0,
+                                            getter_AddRefs(m_channel));
 		if (NS_SUCCEEDED(rv) && m_channel)
 		{
 			m_socketIsOpen = PR_FALSE;
@@ -102,6 +103,7 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
                                     nsnull,     // notificationCallbacks
                                     nsIChannel::LOAD_NORMAL, 
                                     nsnull,     // originalURI
+                                    0, 0, 
                                     getter_AddRefs(m_channel));
 		PR_FREEIF(urlSpec);
 

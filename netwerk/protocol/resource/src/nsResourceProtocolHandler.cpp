@@ -287,6 +287,8 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                       nsIInterfaceRequestor* notificationCallbacks,
                                       nsLoadFlags loadAttributes,
                                       nsIURI* originalURI,
+                                      PRUint32 bufferSegmentSize,
+                                      PRUint32 bufferMaxSize,
                                       nsIChannel* *result)
 {
     nsresult rv;
@@ -310,7 +312,8 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     
     nsIChannel* channel;
     rv = serv->NewChannel(verb, filePath, uri, aLoadGroup, notificationCallbacks,
-                          loadAttributes, originalURI ? originalURI : uri, &channel);
+                          loadAttributes, originalURI ? originalURI : uri, 
+                          bufferSegmentSize, bufferMaxSize, &channel);
     nsCRT::free(filePath);
     if (NS_FAILED(rv)) return rv;
 

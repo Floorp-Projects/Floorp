@@ -525,18 +525,23 @@ nsSocketTransportService::Run(void)
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
-                                          const char* aPrintHost, 
+                                          const char* aPrintHost,
+                                          PRUint32 bufferSegmentSize,
+                                          PRUint32 bufferMaxSize, 
                                           nsIChannel** aResult)
 {
-  return CreateTransportOfType(nsnull, aHost, aPort, aPrintHost, aResult);
+  return CreateTransportOfType(nsnull, aHost, aPort, aPrintHost,
+                               bufferSegmentSize, bufferMaxSize, aResult);
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
-                                        const char* aHost, 
-                                        PRInt32 aPort,
-                                        const char* aPrintHost,
-                                        nsIChannel** aResult)
+                                                const char* aHost, 
+                                                PRInt32 aPort,
+                                                const char* aPrintHost,
+                                                PRUint32 bufferSegmentSize,
+                                                PRUint32 bufferMaxSize,
+                                                nsIChannel** aResult)
 {
   nsresult rv = NS_OK;
   nsSocketTransport* transport = nsnull;
@@ -550,7 +555,8 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
   // Create and initialize a new connection object...
   NS_NEWXPCOM(transport, nsSocketTransport);
   if (transport) {
-    rv = transport->Init(this, aHost, aPort, aSocketType, aPrintHost);
+    rv = transport->Init(this, aHost, aPort, aSocketType, aPrintHost,
+                         bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
       delete transport;
       transport = nsnull;

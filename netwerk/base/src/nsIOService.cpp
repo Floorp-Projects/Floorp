@@ -231,6 +231,8 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
                                nsIInterfaceRequestor* notificationCallbacks,
                                nsLoadFlags loadAttributes,
                                nsIURI* originalURI,
+                               PRUint32 bufferSegmentSize,
+                               PRUint32 bufferMaxSize,
                                nsIChannel **result)
 {
     nsresult rv;
@@ -244,7 +246,8 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     if (NS_FAILED(rv)) return rv;
 
     rv = handler->NewChannel(verb, aURI, aGroup, notificationCallbacks,
-                             loadAttributes, originalURI, result);
+                             loadAttributes, originalURI, 
+                             bufferSegmentSize, bufferMaxSize, result);
     return rv;
 }
 
@@ -255,6 +258,8 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIInterfaceRequestor* notificationCallbacks,
                         nsLoadFlags loadAttributes,
                         nsIURI* originalURI,
+                        PRUint32 bufferSegmentSize,
+                        PRUint32 bufferMaxSize,
                         nsIChannel **result)
 {
     nsresult rv;
@@ -264,7 +269,8 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
     if (NS_FAILED(rv)) return rv;
 
     rv = handler->NewChannel(verb, uri, aGroup, notificationCallbacks,
-                             loadAttributes, originalURI, result);
+                             loadAttributes, originalURI, 
+                             bufferSegmentSize, bufferMaxSize, result);
     return rv;
 }
 
@@ -337,7 +343,14 @@ nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **result)
+nsIOService::NewChannelFromNativePath(const char *nativePath,
+                                      nsILoadGroup* aLoadGroup,
+                                      nsIInterfaceRequestor* notificationCallbacks,
+                                      nsLoadFlags loadAttributes,
+                                      nsIURI* originalURI,
+                                      PRUint32 bufferSegmentSize,
+                                      PRUint32 bufferMaxSize,
+                                      nsIFileChannel **result)
 {
     nsresult rv;
     nsCOMPtr<nsIProtocolHandler> handler;
@@ -348,11 +361,18 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIFileChannel> channel;
-    rv = fileHandler->NewChannelFromNativePath(nativePath, getter_AddRefs(channel));
+    rv = fileHandler->NewChannelFromNativePath(nativePath, 
+                                               aLoadGroup,
+                                               notificationCallbacks,
+                                               loadAttributes,
+                                               originalURI,
+                                               bufferSegmentSize,
+                                               bufferMaxSize,
+                                               getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     
     *result = channel;
-	NS_ADDREF(*result);
+    NS_ADDREF(*result);
     return NS_OK;
 }
 

@@ -1470,7 +1470,8 @@ nsFtpConnectionThread::R_retr() {
             mSentStart = PR_TRUE;
         }
 
-        rv = NS_NewPipe(getter_AddRefs(mBufInStream), getter_AddRefs(mBufOutStream));
+        rv = NS_NewPipe(getter_AddRefs(mBufInStream), getter_AddRefs(mBufOutStream),
+                        nsnull, mBufferSegmentSize, mBufferMaxSize);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         return FTP_READ_DATA_BUF;
@@ -1563,7 +1564,9 @@ nsFtpConnectionThread::R_pasv() {
     nsAllocator::Free(response);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, getter_AddRefs(mDPipe)); // the data channel
+    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, 
+                               mBufferSegmentSize, mBufferMaxSize,
+                               getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     // hook ourself up as a proxy for progress notifications
@@ -1750,7 +1753,9 @@ nsFtpConnectionThread::Run() {
         if (NS_FAILED(rv)) return rv;
 
         // build our own
-        rv = mSTS->CreateTransport(host, mPort, host, getter_AddRefs(mCPipe)); // the command channel
+        rv = mSTS->CreateTransport(host, mPort, host, 
+                                   mBufferSegmentSize, mBufferMaxSize,
+                                   getter_AddRefs(mCPipe)); // the command channel
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
@@ -1925,8 +1930,13 @@ nsFtpConnectionThread::Resume(void)
 nsresult
 nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
-                            nsISupports* aContext) {
+                            nsISupports* aContext,
+                            PRUint32 bufferSegmentSize,
+                            PRUint32 bufferMaxSize) {
     nsresult rv;
+
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
 
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");

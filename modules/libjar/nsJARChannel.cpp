@@ -58,6 +58,12 @@ public:
 
             nsCOMPtr<nsIFileChannel> jarCacheFile;
             rv = serv->NewChannelFromNativePath(mJarCacheFile.GetNativePathCString(), 
+                                                mJARChannel->mLoadGroup,
+                                                mJARChannel->mCallbacks,
+                                                mJARChannel->mLoadAttributes,
+                                                nsnull,
+                                                mJARChannel->mBufferSegmentSize,
+                                                mJARChannel->mBufferMaxSize,
                                                 getter_AddRefs(jarCacheFile));
             if (NS_FAILED(rv)) return rv;
 
@@ -137,7 +143,9 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
                    nsILoadGroup* aLoadGroup, 
                    nsIInterfaceRequestor* notificationCallbacks,
                    nsLoadFlags loadAttributes,
-                   nsIURI* originalURI)
+                   nsIURI* originalURI,
+                   PRUint32 bufferSegmentSize,
+                   PRUint32 bufferMaxSize)
 {
     nsresult rv;
 	mURI = do_QueryInterface(uri, &rv);
@@ -146,6 +154,8 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
     if (mCommand == nsnull)
         return NS_ERROR_OUT_OF_MEMORY; 
     mOriginalURI = originalURI;
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
 
     rv = SetLoadAttributes(loadAttributes);
     if (NS_FAILED(rv)) return rv;
@@ -267,6 +277,7 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         // on some other thread)
         nsCOMPtr<nsIChannel> jarCacheTransport;
         rv = fts->CreateTransport(jarCacheFile, mCommand,
+                                  mBufferSegmentSize, mBufferMaxSize,
                                   getter_AddRefs(jarCacheTransport));
         if (NS_FAILED(rv)) return rv;
 
@@ -323,6 +334,7 @@ nsJARChannel::ExtractJARElement(nsIFileChannel* jarBaseFile)
 
     nsCOMPtr<nsIChannel> jarTransport;
     rv = fts->CreateTransportFromFileSystem(this, mCommand,
+                                            mBufferSegmentSize, mBufferMaxSize,
                                             getter_AddRefs(jarTransport));
     if (NS_FAILED(rv)) return rv;
 

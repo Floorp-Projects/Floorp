@@ -77,6 +77,8 @@ nsFTPChannel::Init(const char* verb,
                    nsIInterfaceRequestor* notificationCallbacks, 
                    nsLoadFlags loadAttributes, 
                    nsIURI* originalURI,
+                   PRUint32 bufferSegmentSize,
+                   PRUint32 bufferMaxSize,
                    nsIProtocolHandler* aHandler, 
                    nsIThreadPool* aPool)
 {
@@ -104,6 +106,9 @@ nsFTPChannel::Init(const char* verb,
 
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
+
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
 
     return rv;
 }
@@ -200,7 +205,8 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     // when data become available to it.
     nsCOMPtr<nsIBufferOutputStream> bufOutStream;
     nsCOMPtr<nsIBufferInputStream>  bufInStream;
-    rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream));
+    rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream),
+                    nsnull, mBufferSegmentSize, mBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
     *_retval = NS_STATIC_CAST(nsIInputStream*, bufInStream.get());
@@ -218,7 +224,8 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     NS_ADDREF(mConnThread); // keep our own ref to the thread obj (we'll 
                             // release it later in this same call.
 
-    rv = mConnThread->Init(mHandler, this, nsnull);
+    rv = mConnThread->Init(mHandler, this, nsnull, 
+                           mBufferSegmentSize, mBufferMaxSize);
     mHandler = 0;
     if (NS_FAILED(rv)) {
         NS_RELEASE(mConnThread);
@@ -270,7 +277,8 @@ nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 
     mThreadRequest = do_QueryInterface((nsISupports*)(nsIRequest*)mConnThread);
 
-    rv = mConnThread->Init(mHandler, this, ctxt);
+    rv = mConnThread->Init(mHandler, this, ctxt, 
+                           mBufferSegmentSize, mBufferMaxSize);
     mHandler = 0;
     if (NS_FAILED(rv)) {
         NS_RELEASE(mConnThread);
@@ -335,7 +343,8 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
         mThreadRequest = do_QueryInterface((nsISupports*)(nsIRequest*)mConnThread);
 
-        rv = mConnThread->Init(mHandler, this, ctxt);
+        rv = mConnThread->Init(mHandler, this, ctxt, 
+                               mBufferSegmentSize, mBufferMaxSize);
         mHandler = 0;
         if (NS_FAILED(rv)) {
             NS_RELEASE(mConnThread);

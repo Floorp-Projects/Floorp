@@ -265,6 +265,8 @@ NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb,
                                         nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
+                                        PRUint32 bufferSegmentSize,
+                                        PRUint32 bufferMaxSize,
                                         nsIChannel **_retval)
 {
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us

@@ -57,7 +57,9 @@ interface nsIProtocolHandler : nsISupports
                           in nsILoadGroup aLoadGroup,
                           in nsIInterfaceRequestor notificationCallbacks,
                           in nsLoadFlags loadAttributes,
-                          in nsIURI originalURI);
+                          in nsIURI originalURI,
+                          in unsigned long bufferSegmentSize,
+                          in unsigned long bufferMaxSize);
 };
 
 %{C++

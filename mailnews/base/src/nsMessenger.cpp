@@ -483,6 +483,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
                                           nsnull,      // notificationCallbacks
                                           nsIChannel::LOAD_NORMAL,
                                           nsnull,      // originalURI
+                                          0, 0, 
                                           getter_AddRefs(aListener->m_channel));
             if (NS_FAILED(rv))
             {
@@ -616,6 +617,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                                                 nsnull,      // notificationCallbacks
                                                 nsIChannel::LOAD_NORMAL,
                                                 nsnull,      // originalURI
+                                                0, 0, 
                                                 getter_AddRefs(aListener->m_channel));
                   if (NS_FAILED(rv))
                   {

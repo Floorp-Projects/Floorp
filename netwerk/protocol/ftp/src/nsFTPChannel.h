@@ -71,6 +71,8 @@ public:
                   nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes, 
                   nsIURI* originalURI,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize,
                   nsIProtocolHandler* aHandler, 
                   nsIThreadPool* aPool);
 
@@ -96,6 +98,8 @@ protected:
     nsCOMPtr<nsIProtocolHandler>    mHandler;
     nsCOMPtr<nsIThreadPool>         mPool; // the thread pool we want to use to fire off connections.
     nsFtpConnectionThread           *mConnThread; // the raw pointer to the thread object.
+    PRUint32                        mBufferSegmentSize;
+    PRUint32                        mBufferMaxSize;
 };
 
 #endif /* nsFTPChannel_h___ */

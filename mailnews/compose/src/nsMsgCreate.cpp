@@ -201,6 +201,7 @@ nsresult  rv;
                                 nsnull, // notificationCallbacks
                                 nsIChannel::LOAD_NORMAL,
                                 nsnull, // originalURI
+                                0, 0, 
                                 getter_AddRefs(dummyChannel));
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {

@@ -55,7 +55,9 @@ public:
                   nsILoadGroup* aLoadGroup,
                   nsIInterfaceRequestor* notificationCallbacks, 
                   nsLoadFlags loadAttributes,
-                  nsIURI* originalURI);
+                  nsIURI* originalURI,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
     nsresult ParseData();
 
 protected:
@@ -68,7 +70,8 @@ protected:
     nsCString                           mContentType;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
-
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif /* nsFTPChannel_h___ */

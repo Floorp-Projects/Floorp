@@ -266,13 +266,27 @@ public:
         nsIFileChannel* inCh = nsnull;
         nsIFileChannel* outCh = nsnull;
 
-        rv = ioserv->NewChannelFromNativePath(mInPath, &inCh);
+        rv = ioserv->NewChannelFromNativePath(mInPath, 
+                                              nsnull,   // aLoadGroup
+                                              nsnull,   // notificationCallbacks
+                                              nsIChannel::LOAD_NORMAL,
+                                              nsnull,   // originalURI
+                                              0,        // bufferSegmentSize
+                                              0,        // bufferMaxSize
+                                              &inCh);
         if (NS_FAILED(rv)) goto done;
 
         rv = inCh->OpenInputStream(0, -1, &inStr);
         if (NS_FAILED(rv)) goto done;
 
-        rv = ioserv->NewChannelFromNativePath(mOutPath, &outCh);
+        rv = ioserv->NewChannelFromNativePath(mOutPath,
+                                              nsnull,   // aLoadGroup
+                                              nsnull,   // notificationCallbacks
+                                              nsIChannel::LOAD_NORMAL,
+                                              nsnull,   // originalURI
+                                              0,        // bufferSegmentSize
+                                              0,        // bufferMaxSize
+                                              &outCh);
         if (NS_FAILED(rv)) goto done;
 
         rv = outCh->OpenOutputStream(0, &outStr);

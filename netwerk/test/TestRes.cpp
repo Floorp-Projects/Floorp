@@ -70,7 +70,7 @@ TestOpenInputStream(const char* url)
 
     nsCOMPtr<nsIChannel> channel;
     rv = serv->NewChannel("load", url, nsnull, nsnull, nsnull, 0, nsnull,
-                          getter_AddRefs(channel));
+                          0, 0, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> in;
@@ -196,7 +196,7 @@ TestAsyncRead(const char* url)
 
     nsCOMPtr<nsIChannel> channel;
     rv = serv->NewChannel("load", url, nsnull, nsnull, nsnull, 0, nsnull,
-                          getter_AddRefs(channel));
+                          0, 0, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamListener> listener = new Listener();

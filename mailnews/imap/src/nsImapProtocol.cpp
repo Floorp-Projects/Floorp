@@ -600,7 +600,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         aURL->GetHost(getter_Copies(hostName));
 
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
-        rv = socketService->CreateTransport(hostName, port, nsnull, getter_AddRefs(m_channel));
+        rv = socketService->CreateTransport(hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
         
         if (NS_SUCCEEDED(rv))
           rv = m_channel->OpenOutputStream(0 /* start position */, getter_AddRefs(m_outputStream));

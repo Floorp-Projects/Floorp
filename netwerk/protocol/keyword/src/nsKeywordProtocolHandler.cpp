@@ -157,6 +157,8 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                      nsIInterfaceRequestor* notificationCallbacks,
                                      nsLoadFlags loadAttributes,
                                      nsIURI* aOriginalURI,
+                                     PRUint32 bufferSegmentSize,
+                                     PRUint32 bufferMaxSize,
                                      nsIChannel* *result)
 {
     nsresult rv;
@@ -175,7 +177,8 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     // now we have an HTTP url, give the user an HTTP channel
     rv = serv->NewChannel(verb, httpSpec, nsnull, aLoadGroup, notificationCallbacks,
-                          loadAttributes, aOriginalURI, result);
+                          loadAttributes, aOriginalURI,
+                          bufferSegmentSize, bufferMaxSize, result);
     nsAllocator::Free(httpSpec);
     return rv;
 

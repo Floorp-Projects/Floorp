@@ -336,6 +336,8 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
                                     nsIInterfaceRequestor* aNotificationCallbacks,
                                     nsLoadFlags aLoadAttributes,
                                     nsIURI* aOriginalURI,
+                                    PRUint32 bufferSegmentSize,
+                                    PRUint32 bufferMaxSize,
                                     nsIChannel* *aResult)
 {
     nsresult rv;
@@ -378,6 +380,7 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
                                      aNotificationCallbacks,
                                      aLoadAttributes,
                                      aOriginalURI ? aOriginalURI : aURI,
+                                     bufferSegmentSize, bufferMaxSize,
                                      getter_AddRefs(result));
 
         if (NS_FAILED(rv)) return rv;

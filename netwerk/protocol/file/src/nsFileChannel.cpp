@@ -68,7 +68,9 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler,
                     nsILoadGroup* aLoadGroup,
                     nsIInterfaceRequestor* notificationCallbacks,
                     nsLoadFlags loadAttributes,
-                    nsIURI* originalURI)
+                    nsIURI* originalURI,
+                    PRUint32 bufferSegmentSize, 
+                    PRUint32 bufferMaxSize)
 {
     nsresult rv;
 
@@ -76,6 +78,8 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler,
     mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
     mCommand = nsCRT::strdup(command);
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
     if (mCommand == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -222,7 +226,7 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, 0, 0, getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
@@ -248,7 +252,8 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, mBufferSegmentSize, mBufferMaxSize,
+                              getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
@@ -304,7 +309,8 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, mBufferSegmentSize, mBufferMaxSize,
+                              getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
@@ -333,7 +339,8 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mSpec, mCommand, getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mSpec, mCommand, mBufferSegmentSize, mBufferMaxSize,
+                              getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->SetNotificationCallbacks(mCallbacks);
@@ -553,12 +560,15 @@ public:
         NS_INIT_REFCNT();
     }
 
-    nsresult Init(nsIFileProtocolHandler* handler, nsFileSpec& spec) {
+    nsresult Init(nsFileChannel* parent, nsIFileProtocolHandler* handler,
+                  nsFileSpec& spec) {
         const char* path = spec.GetNativePathCString();
         mDir = PR_OpenDir(path);
         if (mDir == nsnull)    // not a directory?
             return NS_ERROR_FAILURE;
         mHandler = handler;
+        mParent = parent;
+        NS_ADDREF(mParent);
         return NS_OK;
     }
 
@@ -579,7 +589,14 @@ public:
             }
 
             const char* path = entry->name;
-            rv = mHandler->NewChannelFromNativePath(path, getter_AddRefs(mNext));
+            rv = mHandler->NewChannelFromNativePath(path,
+                                                    mParent->mLoadGroup,
+                                                    mParent->mCallbacks,
+                                                    mParent->mLoadAttributes,
+                                                    nsnull,
+                                                    mParent->mBufferSegmentSize,
+                                                    mParent->mBufferMaxSize,
+                                                    getter_AddRefs(mNext));
             if (NS_FAILED(rv)) return rv;
 
             NS_ASSERTION(mNext, "NewChannel failed");
@@ -604,9 +621,11 @@ public:
             PRStatus status = PR_CloseDir(mDir);
             NS_ASSERTION(status == PR_SUCCESS, "close failed");
         }
+        NS_RELEASE(mParent);
     }
 
 protected:
+    nsFileChannel*                      mParent;
     nsCOMPtr<nsIFileProtocolHandler>    mHandler;
     PRDir*                              mDir;
     nsCOMPtr<nsIFileChannel>            mNext;
@@ -629,7 +648,7 @@ nsFileChannel::GetChildren(nsISimpleEnumerator * *aChildren)
     if (dirEnum == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(dirEnum);
-    rv = dirEnum->Init(mHandler, mSpec);
+    rv = dirEnum->Init(this, mHandler, mSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(dirEnum);
         return rv;
@@ -816,8 +835,10 @@ nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **
                           nsnull,
                           mLoadGroup,
                           mCallbacks,
-                          nsIChannel::LOAD_NORMAL,
+                          mLoadAttributes,
                           nsnull,
+                          mBufferSegmentSize,
+                          mBufferMaxSize,
                           &channel);
     if (NS_FAILED(rv)) return rv;
 

@@ -369,7 +369,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(listener, "QI failed");
     
         nsIChannel* trans;
-        rv = fts->CreateTransport(spec, "load", &trans);
+        rv = fts->CreateTransport(spec, "load", 0, 0, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
 
         rv = trans->AsyncRead(0, -1, nsnull, listener);

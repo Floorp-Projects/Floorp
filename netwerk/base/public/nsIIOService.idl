@@ -69,7 +69,9 @@ interface nsIIOService : nsISupports
                                  in nsILoadGroup aLoadGroup,
                                  in nsIInterfaceRequestor notificationCallbacks,
                                  in nsLoadFlags loadAttributes,
-                                 in nsIURI originalURI);
+                                 in nsIURI originalURI,
+                                 in unsigned long bufferSegmentSize,
+                                 in unsigned long bufferMaxSize);
 
     /**
      * Convenience routine that first creates a URI by calling NewURI, and
@@ -81,7 +83,9 @@ interface nsIIOService : nsISupports
                           in nsILoadGroup aLoadGroup,
                           in nsIInterfaceRequestor notificationCallbacks,
                           in nsLoadFlags loadAttributes,
-                          in nsIURI originalURI);
+                          in nsIURI originalURI,
+                          in unsigned long bufferSegmentSize,
+                          in unsigned long bufferMaxSize);
 
     /**
      * Get the application name string that will be used as part
@@ -121,7 +125,13 @@ interface nsIIOService : nsISupports
      * This convenience routine first looks up the file protocol handler, and
      * then uses it to construct a file channel from a native path string.
      */
-    nsIFileChannel newChannelFromNativePath(in string nativePath);
+    nsIFileChannel newChannelFromNativePath(in string nativePath,
+                                            in nsILoadGroup aLoadGroup,
+                                            in nsIInterfaceRequestor notificationCallbacks,
+                                            in nsLoadFlags loadAttributes,
+                                            in nsIURI originalURI,
+                                            in unsigned long bufferSegmentSize,
+                                            in unsigned long bufferMaxSize);
 
     /**
      * Utility for protocol implementors -- extracts the scheme from a URL 

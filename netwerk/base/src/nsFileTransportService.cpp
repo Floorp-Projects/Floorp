@@ -83,6 +83,8 @@ nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 NS_IMETHODIMP
 nsFileTransportService::CreateTransport(nsFileSpec& spec,
                                         const char* command,
+                                        PRUint32 bufferSegmentSize,
+                                        PRUint32 bufferMaxSize,
                                         nsIChannel** result)
 {
     nsresult rv;
@@ -90,7 +92,7 @@ nsFileTransportService::CreateTransport(nsFileSpec& spec,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(spec, command);
+    rv = trans->Init(spec, command, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -104,6 +106,8 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
                                                   const char* contentType,
                                                   PRInt32 contentLength,
                                                   const char *command,
+                                                  PRUint32 bufferSegmentSize,
+                                                  PRUint32 bufferMaxSize,
                                                   nsIChannel** result)
 {
     nsresult rv;
@@ -111,7 +115,8 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fromStream, contentType, contentLength, command);
+    rv = trans->Init(fromStream, contentType, contentLength, command, 
+                     bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -123,6 +128,8 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
                                                       const char *command,
+                                                      PRUint32 bufferSegmentSize,
+                                                      PRUint32 bufferMaxSize,
                                                       nsIChannel **result)
 {
     nsresult rv;
@@ -130,7 +137,7 @@ nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fsObj, command);
+    rv = trans->Init(fsObj, command, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;

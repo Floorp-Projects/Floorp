@@ -122,6 +122,8 @@ nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                  nsIInterfaceRequestor* notificationCallbacks,
                                  nsLoadFlags loadAttributes,
                                  nsIURI* originalURI,
+                                 PRUint32 bufferSegmentSize,
+                                 PRUint32 bufferMaxSize,
                                  nsIChannel* *result)
 {
     nsresult rv;
@@ -131,7 +133,7 @@ nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
 	rv = channel->Init(this, verb, uri, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI);
+                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

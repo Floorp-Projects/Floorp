@@ -460,7 +460,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 			mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
 
           rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsIChannel::LOAD_NORMAL,
-                          nsnull, getter_AddRefs(aChannel));
+                          nsnull, 0, 0, getter_AddRefs(aChannel));
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
@@ -2236,6 +2236,8 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb,
                                         nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
+                                        PRUint32 bufferSegmentSize,
+                                        PRUint32 bufferMaxSize,
                                         nsIChannel **_retval)
 {
     // imap can't open and return a channel right away...the url needs to go in the imap url queue 

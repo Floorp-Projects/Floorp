@@ -199,6 +199,7 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
                                   nsnull,     // notificationCallbacks
                                   nsIChannel::LOAD_NORMAL, 
                                   nsnull,     // originalURI
+                                  0, 0,
                                   getter_AddRefs(channel));
   if (NS_FAILED(rv)) return rv;
 

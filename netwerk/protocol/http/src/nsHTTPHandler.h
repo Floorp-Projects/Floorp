@@ -87,6 +87,8 @@ public:
                                         nsIInterfaceRequestor* notificationCallbacks,
                                         nsLoadFlags loadAttributes,
                                         nsIURI* originalURI,
+                                        PRUint32 bufferSegmentSize,
+                                        PRUint32 bufferMaxSize,
                                         nsIChannel **_retval);
     
     NS_IMETHOD               NewURI(const char *aSpec, nsIURI *aBaseURI,
@@ -132,6 +134,8 @@ public:
     */
     virtual nsresult RequestTransport(nsIURI *i_Uri, 
                                       nsHTTPChannel* i_Channel, 
+                                      PRUint32 bufferSegmentSize,
+                                      PRUint32 bufferMaxSize,
                                       nsIChannel** o_pTrans);
     
     /**
@@ -141,6 +145,8 @@ public:
 
     virtual nsresult CreateTransport(const char* host, PRInt32 port, 
                                      const char* aPrintHost,
+                                     PRUint32 bufferSegmentSize,
+                                     PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);
     
     /*

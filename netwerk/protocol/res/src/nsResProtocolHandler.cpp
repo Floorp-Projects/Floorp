@@ -176,6 +176,8 @@ nsResProtocolHandler::NewChannel(const char* command, nsIURI* uri,
                                  nsIInterfaceRequestor* notificationCallbacks,
                                  nsLoadFlags loadAttributes,
                                  nsIURI* originalURI,
+                                 PRUint32 bufferSegmentSize,
+                                 PRUint32 bufferMaxSize,
                                  nsIChannel* *result)
 {
     nsresult rv;
@@ -185,7 +187,7 @@ nsResProtocolHandler::NewChannel(const char* command, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->Init(this, command, uri, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI);
+                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

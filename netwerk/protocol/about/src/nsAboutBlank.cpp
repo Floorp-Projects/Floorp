@@ -39,6 +39,8 @@ nsAboutBlank::NewChannel(const char *verb,
                          nsIInterfaceRequestor* notificationCallbacks,
                          nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
+                         PRUint32 bufferSegmentSize,
+                         PRUint32 bufferMaxSize,
                          nsIChannel **result)
 {
     nsresult rv;
@@ -55,7 +57,8 @@ nsAboutBlank::NewChannel(const char *verb,
     rv = NS_NewInputStreamChannel(aURI, "text/html", 
                                   nsCRT::strlen(kBlankPage),
                                   in, aLoadGroup, notificationCallbacks,
-                                  loadAttributes, originalURI, &channel);
+                                  loadAttributes, originalURI,
+                                  bufferSegmentSize, bufferMaxSize, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

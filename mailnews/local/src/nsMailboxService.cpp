@@ -302,6 +302,8 @@ NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb,
                                            nsIInterfaceRequestor* notificationCallbacks,
                                            nsLoadFlags loadAttributes,
                                            nsIURI* originalURI,
+                                           PRUint32 bufferSegmentSize,
+                                           PRUint32 bufferMaxSize,
                                            nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;

@@ -132,6 +132,8 @@ nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
                                   nsIInterfaceRequestor* notificationCallbacks,
                                   nsLoadFlags loadAttributes,
                                   nsIURI* originalURI,
+                                  PRUint32 bufferSegmentSize,
+                                  PRUint32 bufferMaxSize,
                                   nsIChannel* *result)
 {
     nsresult rv;
@@ -141,7 +143,7 @@ nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->Init(this, command, url, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI);
+                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
@@ -153,6 +155,12 @@ nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
 
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath, 
+                                                nsILoadGroup* aLoadGroup,
+                                                nsIInterfaceRequestor* notificationCallbacks,
+                                                nsLoadFlags loadAttributes,
+                                                nsIURI* originalURI,
+                                                PRUint32 bufferSegmentSize,
+                                                PRUint32 bufferMaxSize,
                                                 nsIFileChannel* *result)
 {
     nsresult rv;
@@ -166,10 +174,12 @@ nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath,
 
     rv = NewChannel("load",  // XXX what should this be?
                     uri, 
-                    nsnull,  // loadGroup
-                    nsnull,  // notificationCallbacks
-                    nsIChannel::LOAD_NORMAL,
-                    nsnull,  // originalURI same as uri
+                    aLoadGroup,
+                    notificationCallbacks,
+                    loadAttributes,
+                    originalURI,
+                    bufferSegmentSize,
+                    bufferMaxSize,
                     (nsIChannel**)result);
     NS_RELEASE(uri);
     return rv;

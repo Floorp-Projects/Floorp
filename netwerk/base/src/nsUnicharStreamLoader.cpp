@@ -44,7 +44,9 @@ nsUnicharStreamLoader::Init(nsIURI* aURL,
                             nsIUnicharStreamLoaderObserver* observer, 
                             nsILoadGroup* aGroup,
                             nsIInterfaceRequestor* notificationCallbacks,
-                            nsLoadFlags loadAttributes)
+                            nsLoadFlags loadAttributes,
+                            PRUint32 bufferSegmentSize,
+                            PRUint32 bufferMaxSize)
 {
   nsresult rv = NS_OK;
   mObserver = observer;
@@ -59,7 +61,8 @@ nsUnicharStreamLoader::Init(nsIURI* aURL,
 
   nsIChannel* channel;
   rv = serv->NewChannelFromURI("load", aURL, aGroup, notificationCallbacks,
-                               loadAttributes, nsnull, &channel);
+                               loadAttributes, nsnull, 
+                               bufferSegmentSize, bufferMaxSize, &channel);
   if (NS_FAILED(rv)) return rv;
 
   rv = channel->AsyncRead(0, -1, nsnull, this);

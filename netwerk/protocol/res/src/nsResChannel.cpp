@@ -52,7 +52,9 @@ nsResChannel::Init(nsIResProtocolHandler* handler,
                    nsILoadGroup* aLoadGroup,
                    nsIInterfaceRequestor* notificationCallbacks,
                    nsLoadFlags loadAttributes,
-                   nsIURI* originalURI)
+                   nsIURI* originalURI,
+                   PRUint32 bufferSegmentSize,
+                   PRUint32 bufferMaxSize)
 {
     nsresult rv;
 
@@ -60,6 +62,8 @@ nsResChannel::Init(nsIResProtocolHandler* handler,
     if (mLock == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    mBufferSegmentSize = bufferSegmentSize;
+    mBufferMaxSize = bufferMaxSize;
     mResolvedURI = uri;
     mHandler = handler;
     mOriginalURI = originalURI ? originalURI : uri;
@@ -253,6 +257,7 @@ nsResChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
         rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
                                      mLoadAttributes, mOriginalURI,
+                                     mBufferSegmentSize, mBufferMaxSize,
                                      getter_AddRefs(mResolvedChannel));
         if (NS_FAILED(rv)) continue;
 
@@ -284,6 +289,7 @@ nsResChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result)
 
         rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
                                      mLoadAttributes, mOriginalURI,
+                                     mBufferSegmentSize, mBufferMaxSize,
                                      getter_AddRefs(mResolvedChannel));
         if (NS_FAILED(rv)) continue;
 
@@ -330,6 +336,7 @@ nsResChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 
         rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
                                      mLoadAttributes, mOriginalURI,
+                                     mBufferSegmentSize, mBufferMaxSize,
                                      getter_AddRefs(mResolvedChannel));
         if (NS_FAILED(rv)) continue;
 
@@ -390,6 +397,7 @@ nsResChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
         rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
                                      mLoadAttributes, mOriginalURI,
+                                     mBufferSegmentSize, mBufferMaxSize,
                                      getter_AddRefs(mResolvedChannel));
         if (NS_FAILED(rv)) continue;
 
@@ -452,6 +460,7 @@ nsResChannel::AsyncWrite(nsIInputStream *fromStream,
 
         rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
                                      mLoadAttributes, mOriginalURI,
+                                     mBufferSegmentSize, mBufferMaxSize,
                                      getter_AddRefs(mResolvedChannel));
         if (NS_FAILED(rv)) continue;
 

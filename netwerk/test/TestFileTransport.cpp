@@ -126,7 +126,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsFileSpec fs(fileName);
     nsIChannel* fileTrans;
-    rv = fts->CreateTransport(fs, "load", &fileTrans);
+    rv = fts->CreateTransport(fs, "load", 0, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -167,7 +167,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     outFile += ".out";
     nsFileSpec fs(outFile);
     nsIChannel* fileTrans;
-    rv = fts->CreateTransport(fs, "load", &fileTrans);
+    rv = fts->CreateTransport(fs, "load", 0, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -243,7 +243,7 @@ TestAsyncOpen(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsFileSpec fs(fileName);
     nsIChannel* fileTrans;
-    rv = fts->CreateTransport(fs, "load", &fileTrans);
+    rv = fts->CreateTransport(fs, "load", 0, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener(1);

@@ -258,6 +258,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                                                   nsnull,    // notificationCallbacks
                                                   nsIChannel::LOAD_NORMAL,
                                                   nsnull,    // originalURI
+                                                  0, 0,
                                                   getter_AddRefs(mPartChannel));
                     if (NS_FAILED(rv)) {
                         nsAllocator::Free(buffer);

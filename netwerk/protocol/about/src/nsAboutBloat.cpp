@@ -49,6 +49,8 @@ nsAboutBloat::NewChannel(const char *verb,
                          nsIInterfaceRequestor* notificationCallbacks,
                          nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
+                         PRUint32 bufferSegmentSize,
+                         PRUint32 bufferMaxSize,
                          nsIChannel **result)
 {
     nsresult rv;
@@ -141,7 +143,8 @@ nsAboutBloat::NewChannel(const char *verb,
     nsIChannel* channel;
     rv = NS_NewInputStreamChannel(aURI, "text/plain", 
                                   size, inStr, aLoadGroup, notificationCallbacks,
-                                  loadAttributes, originalURI, &channel);
+                                  loadAttributes, originalURI, 
+                                  bufferSegmentSize, bufferMaxSize, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

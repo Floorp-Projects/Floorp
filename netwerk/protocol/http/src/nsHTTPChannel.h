@@ -64,7 +64,9 @@ public:
     nsHTTPChannel(nsIURI* i_URL, 
                   const char* verb,
                   nsIURI* originalURI,
-                  nsHTTPHandler* i_Handler);
+                  nsHTTPHandler* i_Handler,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize);
 
     virtual ~nsHTTPChannel();
 
@@ -77,7 +79,7 @@ public:
 
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
-                                 nsIChannel **oChannel);
+                                     nsIChannel **oChannel);
     nsresult            Init(nsILoadGroup *aGroup);
     nsresult            Open();
     nsresult            Redirect(const char *aURL,
@@ -129,6 +131,9 @@ protected:
     */
     PRBool                              mAuthTriedWithPrehost;
     PRBool                              mUsingProxy;
+
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif /* _nsHTTPChannel_h_ */

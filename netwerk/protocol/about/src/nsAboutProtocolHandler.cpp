@@ -124,6 +124,8 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsIInterfaceRequestor* notificationCallbacks,
                                    nsLoadFlags loadAttributes,
                                    nsIURI* originalURI,
+                                   PRUint32 bufferSegmentSize,
+                                   PRUint32 bufferMaxSize,
                                    nsIChannel* *result)
 {
     // about:what you ask?
@@ -149,7 +151,8 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         return aboutMod->NewChannel(verb, uri, aLoadGroup, notificationCallbacks,
-                                    loadAttributes, originalURI, result);
+                                    loadAttributes, originalURI, bufferSegmentSize,
+                                    bufferMaxSize, result);
     }
 
     // mumble...

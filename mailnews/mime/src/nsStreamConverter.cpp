@@ -429,6 +429,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
                                 nsnull, // notificationCallbacks
                                 nsIChannel::LOAD_NORMAL,
                                 nsnull, // originalURI
+                                0, 0,
                                 getter_AddRefs(mOutgoingChannel));
   if (NS_FAILED(rv)) 
 		return rv;
