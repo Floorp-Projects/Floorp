@@ -3592,7 +3592,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 setLength(this, container, newLength);
             }
             else
-                i->second.value = newValue;
+                if ((i->second.flags & DynamicPropertyValue::READONLY) == 0)
+                    i->second.value = newValue;
             return true;
         }
         if (!createIfMissing)
@@ -4318,7 +4319,7 @@ deleteClassProperty:
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(publicNamespace);
     
-        // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
+        // Adding "prototype" & "length", etc as static members of the class - not dynamic properties; XXX
         env->addFrame(builtinClass);
         {
             Variable *v = new Variable(builtinClass, OBJECT_TO_JS2VAL(builtinClass->prototype), true);
@@ -4333,6 +4334,7 @@ deleteClassProperty:
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
                     defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+                    writeDynamicProperty(callInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
                     pf++;
                 }
             }

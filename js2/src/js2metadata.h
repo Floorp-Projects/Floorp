@@ -199,7 +199,14 @@ public:
     static void markJS2Value(js2val v);
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue, uint32 flags)  { ASSERT(false); }
+};
 
+class RootKeeper {
+public:
+    RootKeeper(void *t) : ri(JS2Object::addRoot(t)) { }
+    ~RootKeeper() { JS2Object::removeRoot(ri); }
+
+    JS2Object::RootIterator ri;
 };
 
 class Attribute : public JS2Object {

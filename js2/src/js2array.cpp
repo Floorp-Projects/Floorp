@@ -72,15 +72,18 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 {
     js2val result = meta->engine->allocNumber(newLength);
 
-    uint32 length = getLength(meta, obj);
-    if (newLength < length) {
-        // need to delete all the elements above the new length
-        // XXX (But only for array instances!) XXX
-        LookupKind lookup(false, JS2VAL_NULL);
-        bool deleteResult;
-        for (uint32 i = newLength; i < length; i++) {
-            meta->mn1->name = meta->engine->numberToString(i);
-            meta->deleteProperty(OBJECT_TO_JS2VAL(obj), meta->mn1, &lookup, RunPhase, &deleteResult);
+    if ((obj->kind == PrototypeInstanceKind)
+            || (checked_cast<PrototypeInstance *>(obj)->type == meta->arrayClass)) {
+        uint32 length = getLength(meta, obj);
+        if (newLength < length) {
+            // need to delete all the elements above the new length
+            // XXX (But only for array instances, maybe should have setArrayLength as a specialization)
+            LookupKind lookup(false, JS2VAL_NULL);
+            bool deleteResult;
+            for (uint32 i = newLength; i < length; i++) {
+                meta->mn1->name = meta->engine->numberToString(i);
+                meta->deleteProperty(OBJECT_TO_JS2VAL(obj), meta->mn1, &lookup, RunPhase, &deleteResult);
+            }
         }
     }
 
@@ -128,8 +131,7 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
                 const DynamicPropertyMap::value_type e(*meta->engine->numberToString(i), DynamicPropertyValue(argv[i], DynamicPropertyValue::ENUMERATE));
                 arrInst->dynamicProperties.insert(e);
             }
-            const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(INT_TO_JS2VAL(i), DynamicPropertyValue::PERMANENT));
-            arrInst->dynamicProperties.insert(e);
+            setLength(meta, arrInst, i);
         }
     }
     JS2Object::removeRoot(ri);

@@ -66,7 +66,9 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
         strInst->mValue = meta->engine->allocStringPtr("");
-    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), DynamicPropertyValue::PERMANENT));
+    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, 
+                                                        DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
+                                                        DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
     strInst->dynamicProperties.insert(e);
     JS2Object::removeRoot(ri);
     return thatValue;
@@ -172,6 +174,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     }
     else {
         PrototypeInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
+        RootKeeper rk(&A);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
@@ -408,6 +411,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
+    RootKeeper rk(&A);
 
     uint32 lim;
     js2val separatorV = (argc > 0) ? argv[0] : JS2VAL_UNDEFINED;
@@ -787,14 +791,16 @@ void initStringObject(JS2Metadata *meta)
 
     FunctionData staticFunctions[] =
     {
-        { "fromCharCode",           1, String_fromCharCode },
+        { "fromCharCode",       1, String_fromCharCode },
         { NULL }
     };
 
     StringInstance *strInst = new StringInstance(meta, meta->objectClass->prototype, meta->stringClass);
     meta->stringClass->prototype = strInst;
     strInst->mValue = meta->engine->allocStringPtr("");
-    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), DynamicPropertyValue::PERMANENT));
+    const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, 
+                                                        DynamicPropertyValue(meta->engine->allocNumber(strInst->mValue->length()), 
+                                                        DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT));
     strInst->dynamicProperties.insert(e);
     meta->initBuiltinClass(meta->stringClass, &prototypeFunctions[0], &staticFunctions[0], String_Constructor, String_Call);
 
