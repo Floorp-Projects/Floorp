@@ -1050,8 +1050,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
     PRInt32 status = 0;
     char * command=0;   
 
-    if(m_responseCode != 354)
-	{
+    if((m_responseCode != 354) && (m_responseCode != 250)) {
                 nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
@@ -1196,8 +1195,7 @@ PRInt32 nsSmtpProtocol::SendPostData()
 PRInt32 nsSmtpProtocol::SendMessageResponse()
 {
 
-    if(m_responseCode != 250)
-	{
+    if((m_responseCode != 354) && (m_responseCode != 250)) {
                 nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
