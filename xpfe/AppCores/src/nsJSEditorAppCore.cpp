@@ -411,6 +411,108 @@ EditorAppCoreSetParagraphFormat(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 
 //
+// Native method LoadUrl
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->LoadUrl(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function loadUrl requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method NewWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->NewWindow()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function newWindow requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Open
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Open()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function open requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Save
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -502,6 +604,72 @@ EditorAppCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   else {
     JS_ReportError(cx, "Function closeWindow requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Print
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCorePrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Print()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function print requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Exit
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Exit()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function exit requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -819,7 +987,6 @@ EditorAppCoreEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 }
 
 
-
 //
 // Native method InsertText
 //
@@ -1087,39 +1254,6 @@ EditorAppCoreInsertLinkAroundSelection(JSContext *cx, JSObject *obj, uintN argc,
 
 
 //
-// Native method Exit
-//
-PR_STATIC_CALLBACK(JSBool)
-EditorAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->Exit()) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function exit requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method SetToolbarWindow
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1287,9 +1421,14 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"removeTextProperty",          EditorAppCoreRemoveTextProperty,     2},
   {"getTextProperty",          EditorAppCoreGetTextProperty,     6},
   {"setParagraphFormat",          EditorAppCoreSetParagraphFormat,     1},
+  {"loadUrl",          EditorAppCoreLoadUrl,     1},
+  {"newWindow",          EditorAppCoreNewWindow,     0},
+  {"open",          EditorAppCoreOpen,     0},
   {"save",          EditorAppCoreSave,     0},
   {"saveAs",          EditorAppCoreSaveAs,     0},
   {"closeWindow",          EditorAppCoreCloseWindow,     0},
+  {"print",          EditorAppCorePrint,     0},
+  {"exit",          EditorAppCoreExit,     0},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},
   {"cut",          EditorAppCoreCut,     0},
@@ -1306,7 +1445,6 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"createElementWithDefaults",          EditorAppCoreCreateElementWithDefaults,     1},
   {"insertElement",          EditorAppCoreInsertElement,     2},
   {"insertLinkAroundSelection",          EditorAppCoreInsertLinkAroundSelection,     1},
-  {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},
   {"setWebShellWindow",          EditorAppCoreSetWebShellWindow,     1},
