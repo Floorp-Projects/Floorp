@@ -1931,17 +1931,28 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     nsCOMPtr<nsIFile> dir;
     nsresult rv;
 
-    if (inDirSpec) {
-	dir = inDirSpec;
-    } else {
+    if (inDirSpec) 
+    {
+        // Use supplied components' directory   
+        dir = inDirSpec;
+	
+        // Set components' directory for AutoRegisterInterfces to query
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        // Don't care if undefining fails
+        directoryService->Undefine("xpcom.currentProcess.componentDirectory"); 
+        rv = directoryService->Define("xpcom.currentProcess.componentDirectory", dir);
+        if (NS_FAILED(rv)) return rv;
+    } 
+    else 
+    {
         // Do default components directory
         NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-    
         rv = directoryService->Get("xpcom.currentProcess.componentDirectory", NS_GET_IID(nsIFile), getter_AddRefs(dir));
-        if (NS_FAILED(rv)) 
-	    return rv; // XXX translate error code?
+        if (NS_FAILED(rv)) return rv; // XXX translate error code?
     }
 
     // Force the InterfaceInfoManager to do its AutoReg first.
