@@ -22,6 +22,7 @@
 #include "EditTxn.h"
 #include "nsCOMPtr.h"
 #include "nsIEditor.h"
+#include "nsICSSStyleSheet.h"
 
 #define ADD_STYLESHEET_TXN_IID \
 {/* d05e2980-2fbe-11d3-9ce4-e8393835307c */ \
@@ -31,8 +32,6 @@
 {/* d05e2981-2fbe-11d3-9ce4-e8393835307c */ \
 0xd05e2981, 0x2fbe, 0x11d3, { 0x9c, 0xe4, 0xe8, 0x39, 0x38, 0x35, 0x30, 0x7c } }
 
-
-class nsICSSStyleSheet;
 
 class AddStyleSheetTxn : public EditTxn
 {

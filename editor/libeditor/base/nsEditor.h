@@ -36,6 +36,7 @@
 #include "nsIEditProperty.h"
 #include "nsIFileSpec.h"
 #include "nsIDOMCharacterData.h"
+#include "nsICSSStyleSheet.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
@@ -58,7 +59,6 @@ class nsIStringBundleService;
 class nsIStringBundle;
 class nsILocale;
 class IMETextTxn;
-class nsICSSStyleSheet;
 class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 
