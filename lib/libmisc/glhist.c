@@ -27,9 +27,6 @@
 #include <time.h>
 #include "merrors.h"
 #include "xpgetstr.h"
-#if !defined(XP_MAC)	/* macOS doesn't need this, but other platforms may still */
-	#include "bkmks.h"
-#endif
 #include "prefapi.h"
 #include "xplocale.h"
 #include "libi18n.h"

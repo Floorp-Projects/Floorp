@@ -36,14 +36,9 @@
 
 #include "libi18n.h"
 
-#include "hotlist.h"
 #include "net.h"
 #include "xp.h"
 #include "secnav.h"
-
-#if !defined(XP_MAC) && !defined(XP_WIN32)	/* macOS doesn't need this anymore... nor does Windows */
-	#include "bkmks.h"
-#endif
 
 #ifdef EDITOR
 #include "edt.h" /* for EDT_IS_EDITOR macro */
@@ -245,37 +240,6 @@ SHIST_CreateWysiwygURLStruct(MWContext * ctxt, History_entry * entry)
 	  }
 	return URL_s;
 }
-
-/*
- * Returns NULL if the entry cannot be a hotlist item (form submission).
- */
-
-#if !defined(XP_MAC) && !defined(XP_WIN32)	/* macOS doesn't need this anymore -- we're 100% RDF! so is windows! */
-
-BM_Entry* SHIST_CreateHotlistStructFromHistoryEntry(History_entry * h)
-{
-	BM_Entry* hs = NULL;
-	if ((h == NULL) || h->post_data)	/* Cannot make form submission into bookmarks */
-		return NULL;
-	
-	/* if title is empty make the title the URL in the form www.XXX...YYY.html */
-	if ( *h->title )
-		hs = BM_NewUrl( h->title, h->address, NULL, h->last_access);
-	else
-	{
-		/* Strip off the protocol info (eg, http://) */
-		char trunkedAddress [HIST_MAX_URL_LEN + 1];
-		char* strippedAddress = SHIST_StripProtocol ( h->address );
-		
-		/* truncate it */
-		INTL_MidTruncateString ( 0, strippedAddress, trunkedAddress, HIST_MAX_URL_LEN );
-		hs = BM_NewUrl( trunkedAddress, h->address, NULL, h->last_access);
-	}
-	
-	return hs;
-	
-} /* SHIST_CreateHotlistStructFromHistoryEntry */
-#endif
 
 /*
  * SHIST_StripProtocol

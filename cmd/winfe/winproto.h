@@ -150,7 +150,6 @@ extern char * szLoadString (UINT iID, ResourceSwitcher *pSwticher = NULL);
 extern void fe_InitFileFormatTypes(void);
 extern CHelperApp * fe_AddNewFileFormatType(const char *mime_type,const char *subtype); 
 extern void fe_CleanupFileFormatTypes(void);
-extern HotlistStruct * fe_find_hotlist_root (HotlistStruct * pListTop, BOOL add_p, MWContext * context);
 
 // Get a file name given a type prefix and extension 
 // Name is returned in static space --- user must not free

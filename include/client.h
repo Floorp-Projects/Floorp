@@ -49,7 +49,6 @@
 #include "net.h"
 #include "gui.h"
 #include "shist.h"
-#include "hotlist.h"
 #include "glhist.h"
 #include "mime.h"
 

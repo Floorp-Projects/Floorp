@@ -967,7 +967,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !endif
 
 	$(DEPTH)\lib\libmisc\glhist.c
-	$(DEPTH)\lib\libmisc\hotlist.c
 	$(DEPTH)\lib\libmisc\shist.c
 	$(DEPTH)\lib\libmisc\undo.c
 

@@ -23,12 +23,9 @@ MODULE		= misc
 LIBRARY_NAME	= misc
 
 CSRCS		= \
-		bkmutils.c \
 		glhist.c \
 		undo.c \
-		bkmks.c \
 		shist.c \
-		hotlist.c \
 		dirprefs.c \
 		$(NULL)
 

@@ -21,7 +21,6 @@
 
 #include "xp_list.h"
 #include "ntypes.h"
-#include "hotlist.h"
 
 
 /* see shistele.h for the structure definitions. :(
