@@ -64,7 +64,7 @@ Contributor(s):
           <hbox pack="end">
             <label value="&status;"/>
           </hbox>
-          <label id="dialog.status"/>
+          <label id="dialog.status" crop="center"/>
         </row>
         <row class="thin-separator">             
           <hbox pack="end">
