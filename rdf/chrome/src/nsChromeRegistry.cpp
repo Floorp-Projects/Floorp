@@ -74,9 +74,13 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, content);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, locale);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, base);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, main);
-DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
-DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, theme);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, text);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, version);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, author);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, siteURL);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, previewImageURL);
 
 // XXX This nasty function should disappear when we land Necko completely and 
 // change chrome://global/skin/foo to chrome://skin@global/foo
@@ -297,9 +301,15 @@ public:
     static nsIRDFResource* kCHROME_locale;
     static nsIRDFResource* kCHROME_base;
     static nsIRDFResource* kCHROME_main;
-    static nsIRDFResource* kCHROME_archive;
+    
     static nsIRDFResource* kCHROME_name;
-    static nsIRDFResource* kCHROME_theme;
+    static nsIRDFResource* kCHROME_archive;
+    static nsIRDFResource* kCHROME_text;
+    static nsIRDFResource* kCHROME_version;
+    static nsIRDFResource* kCHROME_author;
+    static nsIRDFResource* kCHROME_siteURL;
+    static nsIRDFResource* kCHROME_previewImageURL;
+    
     static nsSupportsHashtable *mDataSourceTable;
 
 protected:
@@ -353,9 +363,13 @@ nsIRDFResource* nsChromeRegistry::kCHROME_content = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_locale = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_base = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_main = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_archive = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_name = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_theme = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_archive = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_text = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_version = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_author = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_siteURL = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_previewImageURL = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -391,13 +405,25 @@ nsChromeRegistry::nsChromeRegistry()
       rv = gRDFService->GetResource(kURICHROME_main, &kCHROME_main);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
 
-      rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-
       rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
 
-      rv = gRDFService->GetResource(kURICHROME_theme, &kCHROME_theme);
+      rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_text, &kCHROME_text);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_version, &kCHROME_version);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_author, &kCHROME_author);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_siteURL, &kCHROME_siteURL);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_previewImageURL, &kCHROME_previewImageURL);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
   }
 }
@@ -414,9 +440,14 @@ nsChromeRegistry::~nsChromeRegistry()
         NS_IF_RELEASE(kCHROME_locale);
         NS_IF_RELEASE(kCHROME_base);
         NS_IF_RELEASE(kCHROME_main);
-        NS_IF_RELEASE(kCHROME_archive);
-        NS_IF_RELEASE(kCHROME_theme);
         NS_IF_RELEASE(kCHROME_name);
+        NS_IF_RELEASE(kCHROME_archive);
+        NS_IF_RELEASE(kCHROME_text);
+        NS_IF_RELEASE(kCHROME_author);
+        NS_IF_RELEASE(kCHROME_version);
+        NS_IF_RELEASE(kCHROME_siteURL);
+        NS_IF_RELEASE(kCHROME_previewImageURL);
+        
         delete mDataSourceTable;
        
         if (gRDFService) {

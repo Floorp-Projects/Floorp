@@ -26,8 +26,9 @@
 interface nsIChromeEntry : nsISupports
 {
   attribute wstring name;
-  attribute wstring displayText;
-  attribute wstring versionNumber;
+  attribute wstring archive;
+  attribute wstring text;
+  attribute wstring version;
   attribute wstring author;
   attribute wstring siteURL;
   attribute wstring previewImageURL;

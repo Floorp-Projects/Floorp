@@ -53,13 +53,17 @@ NS_IMPL_ISUPPORTS1(nsChromeEntry, nsIChromeEntry)
 NS_IMETHODIMP nsChromeEntry::GetName(PRUnichar * *aName) { return NS_OK; }
 NS_IMETHODIMP nsChromeEntry::SetName(const PRUnichar * aName) { return NS_OK; }
 
-/* attribute wstring displayText; */
-NS_IMETHODIMP nsChromeEntry::GetDisplayText(PRUnichar * *aDisplayText) { return NS_OK; }
-NS_IMETHODIMP nsChromeEntry::SetDisplayText(const PRUnichar * aDisplayText) { return NS_OK; }
+/* attribute wstring Archive; */
+NS_IMETHODIMP nsChromeEntry::GetArchive(PRUnichar * *aName) { return NS_OK; }
+NS_IMETHODIMP nsChromeEntry::SetArchive(const PRUnichar * aName) { return NS_OK; }
 
-/* attribute wstring versionNumber; */
-NS_IMETHODIMP nsChromeEntry::GetVersionNumber(PRUnichar * *aVersionNumber) { return NS_OK; }
-NS_IMETHODIMP nsChromeEntry::SetVersionNumber(const PRUnichar * aVersionNumber) { return NS_OK; }
+/* attribute wstring Text; */
+NS_IMETHODIMP nsChromeEntry::GetText(PRUnichar * *aText) { return NS_OK; }
+NS_IMETHODIMP nsChromeEntry::SetText(const PRUnichar * aText) { return NS_OK; }
+
+/* attribute wstring Version; */
+NS_IMETHODIMP nsChromeEntry::GetVersion(PRUnichar * *aVersion) { return NS_OK; }
+NS_IMETHODIMP nsChromeEntry::SetVersion(const PRUnichar * aVersion) { return NS_OK; }
 
 /* attribute wstring author; */
 NS_IMETHODIMP nsChromeEntry::GetAuthor(PRUnichar * *aAuthor) { return NS_OK; }
