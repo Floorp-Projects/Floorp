@@ -30,11 +30,11 @@ struct nsStylePosition;
 
 struct SpanInfo
 {
-  PRInt32 span;
-  PRInt32 cellMinWidth;
-  PRInt32 cellDesiredWidth;
+  nscoord span;
+  nscoord cellMinWidth;
+  nscoord cellDesiredWidth;
 
-  SpanInfo(PRInt32 aSpan, PRInt32 aMinWidth, PRInt32 aDesiredWidth)
+  SpanInfo(nscoord aSpan, nscoord aMinWidth, nscoord aDesiredWidth)
   {
     span = aSpan;
     cellMinWidth = aMinWidth;
@@ -58,11 +58,11 @@ public:
   virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
                                      nsIStyleContext *aTableStyle,
                                      const nsReflowState& aReflowState,
-                                     PRInt32 aMaxWidth, 
-                                     PRInt32 aNumCols,
-                                     PRInt32 &aTotalFixedWidth,
-                                     PRInt32 &aMinTableWidth,
-                                     PRInt32 &aMaxTableWidth,
+                                     nscoord aMaxWidth, 
+                                     nscoord aNumCols,
+                                     nscoord &aTotalFixedWidth,
+                                     nscoord &aMinTableWidth,
+                                     nscoord &aMaxTableWidth,
                                      nsSize* aMaxElementSize);
 
   /** assign widths for each column that has fixed width.  
@@ -82,11 +82,11 @@ public:
     * TODO: should be renamed to "AssignKnownWidthInformation
     */
   virtual PRBool AssignFixedColumnWidths(nsIPresContext* aPresContext, 
-                                         PRInt32   aMaxWidth, 
-                                         PRInt32   aNumCols, 
-                                         PRInt32 & aTotalFixedWidth,
-                                         PRInt32 & aMinTableWidth, 
-                                         PRInt32 & aMaxTableWidth);
+                                         nscoord   aMaxWidth, 
+                                         nscoord   aNumCols, 
+                                         nscoord & aTotalFixedWidth,
+                                         nscoord & aMinTableWidth, 
+                                         nscoord & aMaxTableWidth);
 
   /** assign widths for each column that has proportional width inside a table that 
     * has auto width (width set by the content and available space.)
@@ -104,10 +104,10 @@ public:
     */
   virtual PRBool BalanceProportionalColumns(nsIPresContext*  aPresContext,
                                             const nsReflowState& aReflowState,
-                                            PRInt32 aAvailWidth,
-                                            PRInt32 aMaxWidth,
-                                            PRInt32 aMinTableWidth, 
-                                            PRInt32 aMaxTableWidth,
+                                            nscoord aAvailWidth,
+                                            nscoord aMaxWidth,
+                                            nscoord aMinTableWidth, 
+                                            nscoord aMaxTableWidth,
                                             nscoord aTableFixedWidth);
 
   /** assign the minimum allowed width for each column that has proportional width.
@@ -155,10 +155,11 @@ public:
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
   virtual PRBool BalanceColumnsConstrained(nsIPresContext*  aPresContext,
-                                           PRInt32 aAvailWidth,
-                                           PRInt32 aMaxWidth,
-                                           PRInt32 aMinTableWidth, 
-                                           PRInt32 aMaxTableWidth);
+                                           const nsReflowState& aReflowState,
+                                           nscoord aAvailWidth,
+                                           nscoord aMaxWidth,
+                                           nscoord aMinTableWidth, 
+                                           nscoord aMaxTableWidth);
 
   /** return true if the style indicates that the width is a specific width 
     * for the purposes of column width determination.
