@@ -96,6 +96,8 @@ static char* gRDFTypes[] = {
 static char* gImageTypes[] = {
   "image/gif",
   "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
   "image/png",
   "image/x-png",
   "image/x-art",
