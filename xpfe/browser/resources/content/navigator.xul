@@ -402,7 +402,7 @@ Contributor(s): ______________________________________. -->
        will let us use included files. -->
    <toolbox id="main-toolbox">
     <menubar chromeclass="menubar">
-      <menu value="&fileMenu.label;">
+      <menu accesskey="f" value="&fileMenu.label;">
         <menupopup>
           <menuitem value="&browserCmd.label;" onaction="BrowserNewWindow();"/>
 		           <menu value="New">
@@ -436,7 +436,7 @@ Contributor(s): ______________________________________. -->
       </menupopup>
     </menu>
 
-	<menu value="&editMenu.label;">
+	<menu accesskey="e" value="&editMenu.label;">
 	  <menupopup>
 		  <menuitem value="&undoCmd.label;" onaction="BrowserReload();"/> 
 		  <menuitem value="&redoCmd.label;" onaction="BrowserReload();"/> 
@@ -466,7 +466,7 @@ Contributor(s): ______________________________________. -->
 	  </menupopup>
     </menu> 
 
-    <menu value="&viewMenu.label;">
+    <menu accesskey="v" value="&viewMenu.label;">
 	  <menupopup>
 		  <menuitem value="&toolbarsCmd.label;" onaction="toolbar.visible=true"/>
 		  <menuitem value="&sidebarCmd.label;" onaction="BrowserReload();"/>
@@ -588,7 +588,7 @@ Contributor(s): ______________________________________. -->
 		 </menu>
 	  </menupopup>
     </menu>
-    <menu value="&searchMenu.label;">
+    <menu accesskey="s" value="&searchMenu.label;">
 	  <menupopup>
 		  <menuitem value="&findOnCmd.label;" onaction="BrowserFind();"/>
 		  <menuitem value="&findAgainCmd.label;" onaction="BrowserFindAgain();"/>
@@ -606,7 +606,7 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&searchComputerCmd.label;" onaction="BrowserReload();"/>
 	  </menupopup>
     </menu>
-    <menu value="&goMenu.label;">
+    <menu accesskey="g" value="&goMenu.label;">
 	  <menupopup>
 		  <menuitem id="menuitem-back" value="&goBackCmd.label;" onaction="BrowserBack();"/>
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" onaction="BrowserForward();" />
@@ -617,7 +617,7 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&goPrevnCmd.label;" onaction="BrowserBack();"/>
 	  </menupopup>
     </menu>
-    <menu value="&bookmarksMenu.label;" onaction="OpenBookmarkURL(event.target)" 
+    <menu accesskey="b" value="&bookmarksMenu.label;" onaction="OpenBookmarkURL(event.target)" 
                            datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
 		<template>
 			<rule iscontainer="true">
@@ -643,11 +643,11 @@ Contributor(s): ______________________________________. -->
 		</menupopup>
     </menu>
   
-  <menu id="tasksMenu"/>
-  <menu id="helpMenu"/>
+  <menu accesskey="t" id="tasksMenu"/>
+  <menu accesskey="h" id="helpMenu"/>
 
   // Menu for testing.
-  <menu value="&debugMenu.label;">
+  <menu accesskey="d" value="&debugMenu.label;">
     <menupopup>
       <menu value="&debugVerCmd.label;">
 	   <menupopup>
@@ -718,7 +718,7 @@ Contributor(s): ______________________________________. -->
      </menupopup>
   </menu>
 
-  <menu value="&QA.label;">
+  <menu accesskey="q" value="&QA.label;">
     <menupopup>
         <menuitem value="&QABugCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
         <menuitem value="&QATempCmd.label;" onaction="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
