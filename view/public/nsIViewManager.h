@@ -526,6 +526,15 @@ public:
    * @param aColor the default background color
    */
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor)=0;
+
+  /**
+   * Retrieve the time of the last user event. User events
+   * include mouse and keyboard events. The viewmanager
+   * saves the time of the last user event.
+   *
+   * @param aTime Last user event time in microseconds
+   */
+  NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
 };
 
 //when the refresh happens, should it be double buffered?

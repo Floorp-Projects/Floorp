@@ -396,6 +396,7 @@ nsSize nsViewManager::gLargestRequestedSize = nsSize(0, 0);
 
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
+PRUint32 nsViewManager::gLastUserEventTime = 0;
 
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
@@ -1978,12 +1979,16 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 				nsPoint offset;
 				nsIScrollbar* sb;
 
+        if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent)) {
+          gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+        }
+
 				//Find the view whose coordinates system we're in.
 				baseView = nsView::GetViewFor(aEvent->widget);
         
 				//Find the view to which we're initially going to send the event 
 				//for hittesting.
-				if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_DRAG_EVENT(aEvent))) {
+				if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || (NS_IS_DRAG_EVENT(aEvent)))) {
 					view = mMouseGrabber;
 				}
 				else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
@@ -2723,6 +2728,7 @@ PRInt32 nsViewManager::GetViewManagerCount()
 {
   return mVMCount;
 }
+
 
 const nsVoidArray* nsViewManager::GetViewManagerArray() 
 {
@@ -3858,3 +3864,14 @@ nsViewManager::GetDefaultBackgroundColor(nscolor* aColor)
     *aColor = mDefaultBackgroundColor;
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsViewManager::GetLastUserEventTime(PRUint32& aTime)
+{
+    aTime = gLastUserEventTime;
+    return NS_OK;
+}
+
+
+
