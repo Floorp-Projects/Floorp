@@ -48,6 +48,7 @@ SHARED_LIBRARY_LIBS =		       \
 	$(DIST)/lib/libjsdombase_s.a   \
 	$(DIST)/lib/libjsdomcore_s.a   \
 	$(DIST)/lib/libjsdomevents_s.a \
+	$(DIST)/lib/libjsdomrange_s.a \
 	$(DIST)/lib/libjsdomhtml_s.a   \
 	$(DIST)/lib/libjsdomcss_s.a    \
 	$(NULL)
