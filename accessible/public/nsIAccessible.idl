@@ -1,0 +1,86 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * 
+ * Contributor(s): pav
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(B26FBE47-9A5F-42a1-822B-082461AE4D6D)]
+interface nsIAccessible : nsISupports
+{
+  /* Can't use these javascript can't tell us if properties are undefined 
+     
+  readonly attribute nsIAccessible accParent;
+  readonly attribute nsIAccessible accNextSibling;
+  readonly attribute nsIAccessible accPreviousSibling;
+  readonly attribute nsIAccessible accFirstChild;
+  readonly attribute nsIAccessible accLastChild;
+  readonly attribute long accChildCount;
+
+  attribute wstring accName;
+  attribute wstring accValue;
+  readonly attribute wstring accDescription;
+  readonly attribute wstring accRole;
+  readonly attribute wstring accState;
+  readonly attribute wstring accHelp;
+  readonly attribute wstring accDefaultAction;
+  readonly attribute boolean accFocused;
+  */
+
+  nsIAccessible getAccParent();
+  nsIAccessible getAccNextSibling();
+  nsIAccessible getAccPreviousSibling();
+  nsIAccessible getAccFirstChild();
+  nsIAccessible getAccLastChild();
+
+  long getAccChildCount();
+  wstring getAccName();
+  wstring getAccValue();
+  void setAccName(in wstring name);
+  void setAccValue(in wstring value);
+
+  wstring getAccDescription();
+  wstring getAccRole();
+  wstring getAccState();
+  wstring getAccDefaultAction();
+  wstring getAccHelp();
+  boolean getAccFocused();
+
+  nsIAccessible accGetAt(in long x, in long y);
+
+  nsIAccessible accNavigateRight();
+  nsIAccessible accNavigateLeft();
+  nsIAccessible accNavigateUp();
+  nsIAccessible accNavigateDown();
+
+  void accGetBounds(out long x, 
+                    out long y, 
+					out long width, 
+					out long height);
+
+  void accAddSelection();
+  void accRemoveSelection();
+  void accExtendSelection();
+  void accTakeSelection();
+  void accTakeFocus();
+  void accDoDefaultAction();
+};
