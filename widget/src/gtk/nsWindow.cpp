@@ -83,7 +83,7 @@ extern "C" int usleep(unsigned int);
 #define WANT_PAINT_FLASHING \
 (CAPS_LOCK_IS_ON && debug_WantPaintFlashing())
 
-#define kWindowPositionSlop 10
+#define kWindowPositionSlop 20
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
