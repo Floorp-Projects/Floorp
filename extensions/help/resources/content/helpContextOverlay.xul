@@ -50,6 +50,8 @@
                 label="&goForwardCmd.label;"
                 accesskey="&goForwardCmd.accesskey;"
                 command="Browser:Forward"/>
+      <menuseparator/>
+      <menu id="menu_textZoom"/>
       <menuseparator id="context-sep-undo"/>
       <menuitem id="context-cut"
                 label="&cutCmd.label;"

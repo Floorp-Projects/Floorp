@@ -7,6 +7,7 @@
 <?xul-overlay href="chrome://help/content/helpContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
+<?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
