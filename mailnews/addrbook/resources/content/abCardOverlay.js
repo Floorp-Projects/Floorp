@@ -111,8 +111,6 @@ function OnLoadEditCard()
 {
   InitEditCard();
 
-  doSetOKCancel(EditCardOKButton, 0);
-
   editCard.titleProperty = "editCardTitle";
 
   if (window.arguments && window.arguments[0])

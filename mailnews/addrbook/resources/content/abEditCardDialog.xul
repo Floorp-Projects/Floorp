@@ -27,6 +27,7 @@ Rights Reserved.
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="abcardWindow"
+        ondialogaccept="return EditCardOKButton();"
         onload="OnLoadEditCard()">
 
   <stringbundleset id="stringbundleset"/>
