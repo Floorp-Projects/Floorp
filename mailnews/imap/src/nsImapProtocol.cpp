@@ -838,6 +838,7 @@ void nsImapProtocol::ReleaseUrlState()
       m_mockChannel->Close();
      m_mockChannel = nsnull;
   }
+  m_channelContext = nsnull; // this might be the url - null it out before the final release of the url
   if (m_runningUrl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl>  mailnewsurl = do_QueryInterface(m_runningUrl);
@@ -868,7 +869,6 @@ void nsImapProtocol::ReleaseUrlState()
   m_imapExtensionSink = nsnull;
   m_imapMiscellaneousSink = nsnull;
   m_channelListener = nsnull;
-  m_channelContext = nsnull;
   
   m_channelInputStream = nsnull;
   m_channelOutputStream = nsnull;
@@ -1369,8 +1369,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // release the url as we are done with it...
   ReleaseUrlState();
   ResetProgressInfo();
-  m_urlInProgress = PR_FALSE;
-  ClearFlag(IMAP_CLEAN_UP_URL_STATE);
 
   if (GetConnectionStatus() >= 0 && imapMailFolderSink)
   {
@@ -1386,6 +1384,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   {
     if (GetConnectionStatus() >= 0)
     {
+      ClearFlag(IMAP_CLEAN_UP_URL_STATE);
+      m_urlInProgress = PR_FALSE;
       rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
       SetFlag(IMAP_FIRST_PASS_IN_THREAD);
     }

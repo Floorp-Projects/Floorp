@@ -465,6 +465,9 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
     m_urlConsumers.AppendElement((void*)aConsumer);
     NS_IF_ADDREF(aConsumer);
     PR_CExitMonitor(this);
+    // let's try running it now - maybe the connection is free now.
+    PRBool urlRun;
+    rv = LoadNextQueuedUrl(&urlRun);
   }
 
   return rv;
