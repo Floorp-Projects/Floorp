@@ -385,7 +385,7 @@ Test(CreateFun create, PRUint32 count,
         if (NS_FAILED(rv)) goto done;
 
         if (exists) {
-            rv = outSpec->Delete(PR_FALSE);
+            rv = outSpec->Remove(PR_FALSE);
             if (NS_FAILED(rv)) goto done;
         }
 

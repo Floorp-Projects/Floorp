@@ -1088,7 +1088,7 @@ nsPluginStreamInfo::~nsPluginStreamInfo()
                                     PR_FALSE, 
                                     getter_AddRefs(localFile));
      if(NS_SUCCEEDED(res))
-       localFile->Delete(PR_FALSE);
+       localFile->Remove(PR_FALSE);
   }
   if (mFilePath)
     PL_strfree(mFilePath);
@@ -1455,7 +1455,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
     nsCOMPtr<nsILocalFile> localFile;
     nsresult res = NS_NewLocalFile(mLocalFile, PR_FALSE, getter_AddRefs(localFile));
     if(NS_SUCCEEDED(res))
-      localFile->Delete(PR_FALSE);
+      localFile->Remove(PR_FALSE);
     delete [] mLocalFile;
   }
   delete mDataForwardToRequest;
@@ -2806,7 +2806,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
   rv = pluginTmp->Append(kPluginTmpDirName);
   if (NS_FAILED(rv)) return rv;
 
-  pluginTmp->Delete(PR_TRUE);
+  pluginTmp->Remove(PR_TRUE);
 
   return NS_OK;
 }

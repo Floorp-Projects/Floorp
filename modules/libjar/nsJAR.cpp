@@ -270,7 +270,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   PR_Close(fd);
 
   if (err != ZIP_OK)
-    outFile->Delete(PR_FALSE);
+    outFile->Remove(PR_FALSE);
   else
   {
 #if defined(XP_UNIX)

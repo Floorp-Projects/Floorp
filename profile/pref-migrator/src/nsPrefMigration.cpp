@@ -1128,11 +1128,11 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   PRBool flagExists = PR_FALSE;
   m_prefsFile->Exists(&flagExists); //Delete the prefs.js file in the temp directory.
   if (flagExists)
-    m_prefsFile->Delete(PR_FALSE);
+    m_prefsFile->Remove(PR_FALSE);
   
   systemTempIFileDir->Exists(&flagExists); //Delete the unique dir in the system temp dir.
   if (flagExists)
-    systemTempIFileDir->Delete(PR_FALSE);
+    systemTempIFileDir->Remove(PR_FALSE);
 
   return rv;
 }

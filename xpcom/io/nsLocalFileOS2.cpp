@@ -1265,7 +1265,7 @@ nsLocalFile::Load(PRLibrary * *_retval)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Delete(PRBool recursive)
+nsLocalFile::Remove(PRBool recursive)
 {
     PRBool isDir;
     
@@ -1296,7 +1296,7 @@ nsLocalFile::Delete(PRBool recursive)
                 iterator->GetNext(getter_AddRefs(item));
                 file = do_QueryInterface(item);
     
-                file->Delete(recursive);
+                file->Remove(recursive);
                 
                 iterator->HasMoreElements(&more);
             }

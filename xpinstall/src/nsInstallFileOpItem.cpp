@@ -588,7 +588,7 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpDirCreateAbort()
 {
   if(nsInstallFileOpItem::ACTION_SUCCESS == mAction)
-    mTarget->Delete(PR_FALSE);
+    mTarget->Remove(PR_FALSE);
 
   return nsInstall::SUCCESS;
 }
@@ -615,7 +615,7 @@ nsInstallFileOpItem::NativeFileOpDirRemovePrepare()
 PRInt32
 nsInstallFileOpItem::NativeFileOpDirRemoveComplete()
 {
-  mTarget->Delete(mFlags);
+  mTarget->Remove(mFlags);
   return nsInstall::SUCCESS;
 }
 
@@ -826,7 +826,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
     mTarget->IsFile(&flagIsFile); //Target is file that is already on the system
     if (flagIsFile)
     {
-      rv = mTarget->Delete(PR_FALSE);
+      rv = mTarget->Remove(PR_FALSE);
       if (NS_FAILED(rv)) return rv;
       rv = mTarget->GetParent(getter_AddRefs(parent));
       if (NS_FAILED(rv)) return rv;
@@ -844,7 +844,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
       if (NS_FAILED(rv)) return rv;
       tempTarget->Exists(&flagExists);
       if (flagExists)
-        tempTarget->Delete(PR_FALSE);
+        tempTarget->Remove(PR_FALSE);
 
       rv = mSrc->CopyTo(mTarget, leafName);
     }
@@ -876,7 +876,7 @@ nsInstallFileOpItem::NativeFileOpFileCopyAbort()
     char* leafName;
     mSrc->GetLeafName(&leafName);
     fullTarget->Append(leafName);
-    fullTarget->Delete(PR_FALSE);
+    fullTarget->Remove(PR_FALSE);
   }
 
   return ret;
@@ -1236,7 +1236,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutPrepare()
       if(!flagExists)
         ret = nsInstall::ACCESS_DENIED;
       else
-        tempVar->Delete(0);
+        tempVar->Remove(0);
     }
   }
 

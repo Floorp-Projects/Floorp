@@ -3038,7 +3038,7 @@ nsChromeRegistry::CheckForNewChrome()
     }
   }
   PR_Close(file);
-  // listFile->Delete(PR_FALSE);
+  // listFile->Remove(PR_FALSE);
 
   return rv;
 }
@@ -3223,7 +3223,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const PRUnichar *
       nsCOMPtr<nsIFile> userChromeDir;  
       rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR, getter_AddRefs(userChromeDir));
       if (NS_SUCCEEDED(rv) && userChromeDir)
-        rv = userChromeDir->Delete(PR_TRUE);
+        rv = userChromeDir->Remove(PR_TRUE);
     }
   }  
   else if (!nsCRT::strcmp(NS_LITERAL_STRING("profile-do-change").get(), aTopic)) {

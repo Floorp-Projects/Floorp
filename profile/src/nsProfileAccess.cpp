@@ -1358,7 +1358,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         {
             SetResolvedProfileDir(tempLocal);
             if (leafCreated)
-                tempLocal->Delete(PR_FALSE);
+                tempLocal->Remove(PR_FALSE);
         }
     }
     
@@ -1383,7 +1383,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         rv = resolvedLocation->GetPersistentDescriptor(getter_Copies(descBuf));
         if (NS_FAILED(rv)) return rv;
         if (leafCreated)
-            resolvedLocation->Delete(PR_FALSE);
+            resolvedLocation->Remove(PR_FALSE);
         regData = NS_ConvertUTF8toUCS2(descBuf);
 #else
         nsXPIDLString ucPath;

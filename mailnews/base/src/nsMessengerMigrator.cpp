@@ -1960,7 +1960,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
 #ifdef DEBUG_AB_MIGRATION
   printf("remove the tmp file\n");
 #endif /* DEBUG_AB_MIGRATION */
-  rv = tmpLDIFFile->Delete(PR_TRUE);
+  rv = tmpLDIFFile->Remove(PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to delete the temp ldif file");
   if (NS_FAILED(rv)) return;
   

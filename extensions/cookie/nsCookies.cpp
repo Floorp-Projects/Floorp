@@ -132,7 +132,7 @@ COOKIE_DeletePersistentUserData(void)
   if (NS_SUCCEEDED(res)) {
     res = cookiesFile->Append(kCookiesFileName);
     if (NS_SUCCEEDED(res))
-        (void) cookiesFile->Delete(PR_FALSE);
+        (void) cookiesFile->Remove(PR_FALSE);
   }
 }
 

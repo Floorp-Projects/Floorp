@@ -1504,7 +1504,7 @@ nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBo
 				rv = CopyTo( newParentDir, newName );
 				if ( NS_FAILED ( rv ) )
 					return rv;
-				return Delete( PR_TRUE );
+				return Remove( PR_TRUE );
 		}
 	}	
 	return MacErrorMapper( macErr );
@@ -1588,7 +1588,7 @@ nsLocalFile::Load(PRLibrary * *_retval)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Delete(PRBool recursive)
+nsLocalFile::Remove(PRBool recursive)
 {
 	MakeDirty();
 	

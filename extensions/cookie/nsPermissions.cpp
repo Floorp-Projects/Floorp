@@ -662,7 +662,7 @@ PERMISSION_DeletePersistentUserData(void)
   if (NS_SUCCEEDED(res)) {
     res = cookiesPermFile->Append(kCookiesPermFileName);
     if (NS_SUCCEEDED(res))
-        (void) cookiesPermFile->Delete(PR_FALSE);
+        (void) cookiesPermFile->Remove(PR_FALSE);
   }
 }
 

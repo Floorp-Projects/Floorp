@@ -180,7 +180,7 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
 #endif
 
     // step 3: remove .mozlock file, in any case
-    rv = tmplocfile->Delete(PR_FALSE /* non-recursive */);
+    rv = tmplocfile->Remove(PR_FALSE /* non-recursive */);
 #ifdef MOVEMAIL_DEBUG
     if (NS_FAILED(rv)) {
         // Could not delete our .mozlock file... very unusual, but
@@ -225,7 +225,7 @@ PRBool YieldSpoolLock(const char *spoolnameStr)
         return PR_FALSE;
 
     // Delete the file
-    rv = locklocfile->Delete(PR_FALSE /* non-recursive */);
+    rv = locklocfile->Remove(PR_FALSE /* non-recursive */);
     if (NS_FAILED(rv))
         return PR_FALSE;
 

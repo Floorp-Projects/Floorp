@@ -287,7 +287,7 @@ nsDiskCacheDevice::Init()
     nsCOMPtr<nsIFile> cacheTrashDir;
     rv = GetCacheTrashDirectory(getter_AddRefs(cacheTrashDir));
     if (NS_FAILED(rv))  goto error_exit;
-    (void) cacheTrashDir->Delete(PR_TRUE);      // ignore errors, we tried...
+    (void) cacheTrashDir->Remove(PR_TRUE);      // ignore errors, we tried...
 
     // Try opening cache map file.
     mCacheMap = new nsDiskCacheMap;
@@ -730,7 +730,7 @@ nsDiskCacheDevice::InitializeCacheDirectory()
     nsresult rv;
     
     // recursively delete the disk cache directory.
-    rv = mCacheDirectory->Delete(PR_TRUE);
+    rv = mCacheDirectory->Remove(PR_TRUE);
     if (NS_FAILED(rv)) {
         // try moving it aside
         
@@ -850,7 +850,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     
     rv = directory->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists)
-        (void) directory->Delete(PR_TRUE);
+        (void) directory->Remove(PR_TRUE);
     
     // clean up obsolete NewCache directory
     rv = parentDir->Clone(getter_AddRefs(directory));
@@ -860,7 +860,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     
     rv = directory->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists)
-        (void) directory->Delete(PR_TRUE);
+        (void) directory->Remove(PR_TRUE);
 }
 
 

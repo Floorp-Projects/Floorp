@@ -172,7 +172,7 @@ interface nsIFile : nsISupports
      *
      *  This will not resolve any symlinks.
      */
-    void delete(in boolean recursive);
+    void remove(in boolean recursive);
 
     /**
      *  Attributes of nsIFile.

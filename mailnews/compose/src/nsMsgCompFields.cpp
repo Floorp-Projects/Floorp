@@ -157,7 +157,7 @@ nsresult nsMsgCompFields::CleanUpTempFiles()
       }
 
       // remove it if not a dir
-	  urlFile->Delete(PR_FALSE); 
+	  urlFile->Remove(PR_FALSE); 
 	}
 
     token = nsCRT::strtok(rest, ",", &rest);

@@ -170,7 +170,7 @@ nsNetDiskCache::~nsNetDiskCache()
     	
 
       if( trash.CompareWithConversion( filename, PR_FALSE, 5 ) == 0)
-        file->Delete( PR_TRUE );
+        file->Remove( PR_TRUE );
       
       nsCRT::free(filename) ;  
     }
@@ -642,12 +642,12 @@ nsNetDiskCache::RemoveAll(void)
   		return rv ;
   	PRBool isDirectory;		
 		if ( NS_SUCCEEDED(file->IsDirectory( &isDirectory )) && isDirectory )
-    	file->Delete( PR_TRUE );
+    	file->Remove( PR_TRUE );
      
   }
   if ( mDBFile )
   {
- 	 mDBFile->Delete(PR_FALSE) ;
+ 	 mDBFile->Remove(PR_FALSE) ;
 	 if (mDBFile)
 	 {
 		PRBool exists = PR_FALSE;

@@ -186,7 +186,7 @@ out:
         if(NS_FAILED(mainFile->Exists(&exists)))
             return PR_FALSE;
 
-        if(exists && NS_FAILED(mainFile->Delete(PR_FALSE)))
+        if(exists && NS_FAILED(mainFile->Remove(PR_FALSE)))
             return PR_FALSE;
     
         // XXX Would prefer MoveTo with a 'null' newdir, the but nsILocalFile
