@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "transactionManager.h"
+#include "nsTransactionManager.h"
 #include "COM_auto_ptr.h"
 
 nsTransactionManager::nsTransactionManager()

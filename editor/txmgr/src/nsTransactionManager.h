@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef transactionManager_h__
-#define transactionManager_h__
+#ifndef nsTransactionManager_h__
+#define nsTransactionManager_h__
 
 #include "nsITransactionManager.h"
 
@@ -47,4 +47,4 @@ public:
   // virtual nsresult RemoveListener(nsITransactionListener *l);
 };
 
-#endif // transactionManager_h__
+#endif // nsTransactionManager_h__
