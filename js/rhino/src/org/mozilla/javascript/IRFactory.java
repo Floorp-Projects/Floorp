@@ -939,6 +939,8 @@ public class IRFactory {
 
     public static boolean hasSideEffects(Node exprTree) {
         switch (exprTree.getType()) {
+            case TokenStream.INC:
+            case TokenStream.DEC:
             case TokenStream.SETPROP:
             case TokenStream.SETELEM:
             case TokenStream.CALL:
@@ -979,13 +981,20 @@ public class IRFactory {
         if (nodeOp == TokenStream.NOP)
             return new Node(type, obj, id, expr);
 /*
-    if the RHS expression could modify the LHS we have
-    to construct a temporary to hold the LHS context
-    prior to running the expression
-
+*    If the RHS expression could modify the LHS we have
+*    to construct a temporary to hold the LHS context
+*    prior to running the expression. Ditto, if the id
+*    expression has side-effects.
+*
+*    XXX If the hasSideEffects tests take too long, we
+*       could make this an optimizer-only transform
+*       and always do the temp assignment otherwise.
+*
 */
         Node tmp1, tmp2, opLeft;
-        if (hasSideEffects(expr) || (obj.getType() != TokenStream.NAME))  {
+        if (hasSideEffects(expr)
+                || hasSideEffects(id)
+                || (obj.getType() != TokenStream.NAME))  {
             tmp1 = createNewTemp(obj);
             Node useTmp1 = createUseTemp(tmp1);
 
