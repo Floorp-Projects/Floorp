@@ -51,6 +51,7 @@
 
 #include <AppleEvents.h>
 #include <AEDataModel.h>
+#include <AERegistry.h>
 
 #include <Math64.h>
 #include <Aliases.h>
@@ -2375,6 +2376,122 @@ nsresult nsLocalFile::FindAppOnLocalVolumes(OSType sig, FSSpec &outSpec)
 	}
 
 	return NS_OK;
+}
+
+#define aeSelectionKeyword	'fsel'
+#define kAEOpenSelection	'sope'
+#define kAERevealSelection  'srev'
+#define kFinderType			'FNDR'
+
+NS_IMETHODIMP nsLocalFile::Launch()
+{
+  AppleEvent 		aeEvent = {0, nil};
+  AppleEvent 		aeReply = {0, nil};
+  StAEDesc			aeDirDesc, listElem, myAddressDesc, fileList;
+  FSSpec				dirSpec, appSpec;
+  AliasHandle			DirAlias, FileAlias;
+  OSErr				errorResult = noErr;
+  ProcessSerialNumber	process;
+  
+  // for launching a file, we'll use mTargetSpec (which is both a resolved spec and a resolved alias)
+  ResolveAndStat(PR_TRUE);
+    
+  nsresult rv = FindRunningAppBySignature ('MACS', appSpec, process);
+  if (NS_SUCCEEDED(rv))
+  {	
+    errorResult = AECreateDesc(typeProcessSerialNumber, (Ptr)&process, sizeof(process), &myAddressDesc);
+    if (errorResult == noErr)
+    {
+	  /* Create the FinderEvent */
+	  errorResult = AECreateAppleEvent(kFinderType, kAEOpenSelection, &myAddressDesc, kAutoGenerateReturnID, kAnyTransactionID,
+								       &aeEvent);	
+      if (errorResult == noErr) 
+      {
+        errorResult = FSMakeFSSpec(mTargetSpec.vRefNum, mTargetSpec.parID, nil, &dirSpec);
+	    NewAlias(nil, &dirSpec, &DirAlias);
+		/* Create alias for file */
+		NewAlias(nil, &mTargetSpec, &FileAlias);
+		
+		/* Create the file  list */
+		 errorResult = AECreateList(nil, 0, false, &fileList);
+		/*  create the folder  descriptor */
+		HLock((Handle)DirAlias);
+		errorResult = AECreateDesc(typeAlias, (Ptr)*DirAlias, GetHandleSize((Handle)DirAlias), &aeDirDesc);
+		HUnlock((Handle)DirAlias);
+		if (errorResult == noErr)
+		{
+		  errorResult = AEPutParamDesc(&aeEvent, keyDirectObject, &aeDirDesc);
+		  if ( errorResult == noErr) 
+		  {
+			/*  create the file descriptor and add to aliasList */
+			HLock((Handle)FileAlias);
+			errorResult = AECreateDesc(typeAlias, (Ptr)*FileAlias, GetHandleSize((Handle)FileAlias), &listElem);
+			HLock((Handle)FileAlias);
+			if (errorResult == noErr)
+			{
+			  errorResult = AEPutDesc(&fileList, 0, &listElem);
+			  if (errorResult == noErr)
+			  {
+			  	/* Add the file alias list to the event */
+				errorResult = AEPutParamDesc(&aeEvent, aeSelectionKeyword, &fileList);
+			    if (errorResult == noErr)
+					AESend(&aeEvent, &aeReply, kAEWaitReply + kAENeverInteract 
+							      + kAECanSwitchLayer, kAEHighPriority, kAEDefaultTimeout, nil, nil);
+			  }
+		    }
+		  }
+	    }
+	  }
+	}
+  }
+					  
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsLocalFile::Reveal()
+{
+  AppleEvent 		aeEvent = {0, nil};
+  AppleEvent 		aeReply = {0, nil};
+  StAEDesc			aeDirDesc, listElem, myAddressDesc, fileList;
+  OSErr				errorResult = noErr;
+  ProcessSerialNumber	process;
+  FSSpec appSpec;
+    
+  ResolveAndStat(PR_TRUE);
+  
+  // for reveal, we'll use mResolvedSpec (which is a resolved spec and possibly an alias)
+  nsresult rv = FindRunningAppBySignature ('MACS', appSpec, process);
+  if (NS_SUCCEEDED(rv))
+  {	
+    errorResult = AECreateDesc(typeProcessSerialNumber, (Ptr)&process, sizeof(process), &myAddressDesc);
+    if (errorResult == noErr)
+    {
+	  /* Create the FinderEvent */
+	  errorResult = AECreateAppleEvent(kFinderType, kAERevealSelection, &myAddressDesc, kAutoGenerateReturnID, kAnyTransactionID,
+								       &aeEvent);	
+      if (errorResult == noErr) 
+      {
+		/* Create the file  list */
+	    errorResult = AECreateList(nil, 0, false, &fileList);
+		if (errorResult == noErr) 
+		{
+		  errorResult = AEPutPtr(&fileList, 0, typeFSS, &mResolvedSpec, sizeof(FSSpec));
+		  if (errorResult == noErr)
+		  {
+		    errorResult = AEPutParamDesc(&aeEvent,keySelection, &fileList);
+			if (errorResult == noErr)
+			{
+		      errorResult = AESend(&aeEvent, &aeReply, kAENoReply, kAENormalPriority, kAEDefaultTimeout, nil, nil);
+			  if (errorResult == noErr)
+				SetFrontProcess(&process);
+			}
+		  }
+		}
+	  }
+	}
+  }
+    
+  return NS_OK;
 }
 
 nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aDocToLoad, PRBool aLaunchInBackground)
