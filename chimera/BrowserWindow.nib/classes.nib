@@ -112,6 +112,7 @@
         {
             CLASS = CHHistoryDataSource; 
             LANGUAGE = ObjC; 
+            OUTLETS = {mBrowserWindowController = id; }; 
             SUPERCLASS = CHRDFOutlineViewDataSource; 
         }, 
         {CLASS = CHLocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 

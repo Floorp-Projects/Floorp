@@ -10,8 +10,13 @@
 
 #import "CHRDFOutlineViewDataSource.h"
 
-@interface CHHistoryDataSource : CHRDFOutlineViewDataSource {
+@interface CHHistoryDataSource : CHRDFOutlineViewDataSource
+{
+
+  IBOutlet id mBrowserWindowController;
 
 }
+
+-(IBAction)openHistoryItem: (id)aSender;
 
 @end

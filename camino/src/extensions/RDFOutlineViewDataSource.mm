@@ -69,6 +69,8 @@
         
     mDataSource = nsnull;
     mRootResource = nsnull;
+
+    mDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
 }
 
 - (void) dealloc
@@ -80,29 +82,35 @@
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mRootResource);
     
+    [mDictionary release];
+    
     [super dealloc];
 }
 
 - (nsIRDFDataSource*) dataSource
 {
+    NS_IF_ADDREF(mDataSource);
     return mDataSource;
 }
 
 - (nsIRDFResource*) rootResource
 {
+    NS_IF_ADDREF(mRootResource);
     return mRootResource;
 }
 
 - (void) setDataSource: (nsIRDFDataSource*) aDataSource
 {
-    NS_IF_RELEASE(mDataSource);
+    nsIRDFDataSource* oldDataSource = mDataSource;
     NS_IF_ADDREF(mDataSource = aDataSource);
+    NS_IF_RELEASE(oldDataSource);
 }
 
 - (void) setRootResource: (nsIRDFResource*) aResource
 {
-    NS_IF_RELEASE(mRootResource);
+    nsIRDFResource* oldResource = mRootResource;
     NS_IF_ADDREF(mRootResource = aResource);
+    NS_IF_RELEASE(oldResource);
 }
 
 //
@@ -123,7 +131,7 @@
     if (!aItem)
         return YES; // The root is always open
     
-    nsCOMPtr<nsIRDFResource> itemResource = [aItem resource];
+    nsCOMPtr<nsIRDFResource> itemResource = dont_AddRef([aItem resource]);
     
     PRBool isSeq = PR_FALSE;
     mContainerUtils->IsSeq(mDataSource, itemResource, &isSeq);
@@ -145,7 +153,7 @@
     if (!mDataSource)
         return nil;
     
-    nsCOMPtr<nsIRDFResource> resource = !aItem ? mRootResource : [aItem resource];
+    nsCOMPtr<nsIRDFResource> resource = !aItem ? dont_AddRef([self rootResource]) : dont_AddRef([aItem resource]);
     
     nsCOMPtr<nsIRDFResource> ordinalResource;
     mContainerUtils->IndexToOrdinalResource(aIndex + 1, getter_AddRefs(ordinalResource));
@@ -159,55 +167,43 @@
         if (childResource) 
             return [self MakeWrapperFor:childResource];
     }
-#if 0
-    else {
+    else
+    {
         // Oh well, not a regular container. We need to count, dagnabbit. 
         nsCOMPtr<nsIRDFResource> childProperty;
         mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
 
-        NSLog(@"1");
         nsCOMPtr<nsISimpleEnumerator> childNodes;
         mDataSource->GetTargets(resource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
         
-        NSLog(@"2");
-        PRBool hasMore = PR_FALSE;
-        childNodes->HasMoreElements(&hasMore);
-        
-        PRInt32 count = 0;
-        
-        NSLog(@"3");
         nsCOMPtr<nsISupports> supp;
-        while (hasMore && count < aIndex) {
+        PRInt32 count = 0;
+
+        PRBool hasMore = PR_FALSE;
+        while (NS_SUCCEEDED(childNodes->HasMoreElements(&hasMore)) && hasMore)
+        {
             childNodes->GetNext(getter_AddRefs(supp));
-            
-            NSLog(@"4");
-            ++count;
-            
-            childNodes->HasMoreElements(&hasMore);
-            NSLog(@"5");
+            if (count == aIndex)
+                break;
+            count ++;
         }
+
         nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(supp));
-        NSLog(@"6");
         if (childResource) {
-            NSLog(@"6.5");
-            RDFOutlineViewItem* thing = [self MakeWrapperFor:childResource];
-            
-            NSLog(@"thing = %@", thing);
-            return thing;
+            return [self MakeWrapperFor:childResource];
         }
     }
-    NSLog(@"7");
-#endif    
+
     return nil;
 }
     
 - (int) outlineView: (NSOutlineView*) aOutlineView numberOfChildrenOfItem: (id) aItem;
 {
     if (!mDataSource)
-        return nil;
+        return 0;
     
-    nsCOMPtr<nsIRDFResource> resource = !aItem ? mRootResource : [aItem resource];
-    
+    nsCOMPtr<nsIRDFResource> resource = dont_AddRef(aItem ? [aItem resource] : [self rootResource]);
+        
     // XXX just assume NC:child is the only containment arc for now
     nsCOMPtr<nsIRDFResource> childProperty;
     mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
@@ -216,20 +212,16 @@
     mDataSource->GetTargets(resource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
     
     PRBool hasMore = PR_FALSE;
-    childNodes->HasMoreElements(&hasMore);
-    
     PRInt32 count = 0;
-    
-    while (hasMore) {
+        
+    while (NS_SUCCEEDED(childNodes->HasMoreElements(&hasMore)) && hasMore)
+    {
         nsCOMPtr<nsISupports> supp;
         childNodes->GetNext(getter_AddRefs(supp));
-        
-        ++count;
-        
-        childNodes->HasMoreElements(&hasMore);
+        count ++;
     }
     
-    if (!count) {
+    if (count == 0) {
         nsresult rv = mContainer->Init(mDataSource, resource);
         if (NS_FAILED(rv))
             return 0;
@@ -243,27 +235,18 @@
 - (id) outlineView: (NSOutlineView*) aOutlineView objectValueForTableColumn: (NSTableColumn*) aTableColumn
                                                   byItem: (id) aItem
 {
-    NSLog(@"*** aItem = %@", aItem);
     if (!mDataSource || !aItem)
         return nil;
     
-    NSLog(@"1");
-        
     // The table column's identifier is the RDF Resource URI of the property being displayed in
     // that column, e.g. "http://home.netscape.com/NC-rdf#Name"
     NSString* columnPropertyURI = [aTableColumn identifier];
     
-    NSLog(@"2");
-        
     nsCOMPtr<nsIRDFResource> propertyResource;
     mRDFService->GetResource([columnPropertyURI cString], getter_AddRefs(propertyResource));
-    
-    NSLog(@"3");
-        
-    nsCOMPtr<nsIRDFResource> resource = [aItem resource];
-    
-    NSLog(@"4");
-        
+            
+    nsCOMPtr<nsIRDFResource> resource = dont_AddRef([aItem resource]);
+            
     nsCOMPtr<nsIRDFNode> valueNode;
     mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
     if (!valueNode) {
@@ -272,19 +255,13 @@
     }
     
     nsCOMPtr<nsIRDFLiteral> valueLiteral(do_QueryInterface(valueNode));
-    nsXPIDLString str3;
-    valueLiteral->GetValue(getter_Copies(str3));
-    nsCAutoString str2; str2.AssignWithConversion(str3);
-    NSLog(@"Value = %@", [NSString stringWithCString: str2.get()]);
-    
     if (!valueLiteral)
         return nil;
     
     nsXPIDLString literalValue;
     valueLiteral->GetValue(getter_Copies(literalValue));
-    
-    nsCAutoString str; str.AssignWithConversion(literalValue);
-    return [NSString stringWithCString: str.get()];
+
+    return [NSString stringWithCharacters: literalValue.get() length:literalValue.Length()];
 }
 
 - (void) outlineView: (NSOutlineView*) aOutlineView setObjectValue: (id) aObject
@@ -306,6 +283,11 @@
 {
     RDFOutlineViewItem* item = [[[RDFOutlineViewItem alloc] init] autorelease];
     [item setResource: aRDFResource];
+    // keep a copy around
+    const char* resourceValue;
+    aRDFResource->GetValueConst(&resourceValue);
+    
+    [mDictionary setObject:item forKey:[NSString stringWithCString:resourceValue]];
     return item;
 }
 
@@ -314,14 +296,23 @@
 
 @implementation RDFOutlineViewItem
 
+- (void) dealloc
+{
+    NS_IF_RELEASE(mResource);
+    [super dealloc];
+}
+
 - (nsIRDFResource*) resource
 {
+    NS_IF_ADDREF(mResource);
     return mResource;
 }
 
 - (void) setResource: (nsIRDFResource*) aResource
 {
-    mResource = aResource;
+    nsIRDFResource* oldResource = mResource;
+    NS_IF_ADDREF(mResource = aResource);
+    NS_IF_RELEASE(oldResource);
 }
 
 @end

@@ -40,6 +40,7 @@
 #import "CHFind.h"
 #include "nsCOMPtr.h"
 
+
 @implementation FindDlgController
 
 - (id)initWithWindowNibName:(NSString *)windowNibName
