@@ -97,40 +97,9 @@ else
 endif
 endif
 
-nsm:: all 
-	cd ssm/lib/protocol; gmake
-	cd ssm/server; gmake import; gmake
-
-nsm_rebuild:: 
-	cd ssm/lib/protocol; gmake
-	cd ssm/ui; gmake
-	cd ssm/server; gmake import; gmake
-
-nsm_protocol: all
-	cd ssm/lib/protocol; gmake
-
-nsm_ui: all
-	cd ssm/ui; gmake
-
-nsm_gromit: nsm_protocol
-	cd ssm/lib/client; gmake
-	cd ssm/nav/gromit; gmake
-
-nsm_server: nsm_protocol nsm_ui
-	cd ssm/server; gmake import; gmake
-
 coreconf_hack:
-	cd ../coreconf; gmake
-	gmake import
+	cd ../coreconf; $(MAKE)
+	$(MAKE) import
 
 nss_RelEng_bld: coreconf_hack
-#	gmake import; gmake
-#	cd ns/svrcore; gmake
-	gmake
-
-nsm_RelEng_srvr_coreconf_import:
-	gmake import
-
-nsm_RelEng_srvr_bld_Win: nsm_RelEng_srvr_coreconf_import nsm_server
-
-nsm_RelEng_srvr_bld: coreconf_hack nsm_server
+	$(MAKE)
