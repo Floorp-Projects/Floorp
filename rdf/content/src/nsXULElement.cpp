@@ -1728,10 +1728,7 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     // Make sure that we're not trying to insert the same child
     // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
     // freak out.
-    PRInt32 i = mChildren->IndexOf(aKid);
-    NS_ASSERTION(i < 0, "element is already a child");
-    if (i >= 0)
-        return NS_ERROR_FAILURE;
+    NS_ASSERTION(mChildren->IndexOf(aKid) < 0, "element is already a child");
 
     PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
     if (insertOk) {
