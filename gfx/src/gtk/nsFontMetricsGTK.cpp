@@ -1398,9 +1398,35 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
          */
         if (aSelf->Convert == DoubleByteConvert) {
           PRUint32* map = aSelf->mMap;
-          for (PRUint16 i = 0; i < (0x2200 >> 5); i++) {
-            map[i] = 0;
-          }
+#undef REMOVE_CHAR
+#define REMOVE_CHAR(map, c)  (map)[(c) >> 5] &= ~(1L << ((c) & 0x1f))
+          REMOVE_CHAR(map, 0x20AC);
+          REMOVE_CHAR(map, 0x201A);
+          REMOVE_CHAR(map, 0x0192);
+          REMOVE_CHAR(map, 0x201E);
+          REMOVE_CHAR(map, 0x2026);
+          REMOVE_CHAR(map, 0x2020);
+          REMOVE_CHAR(map, 0x2021);
+          REMOVE_CHAR(map, 0x02C6);
+          REMOVE_CHAR(map, 0x2030);
+          REMOVE_CHAR(map, 0x0160);
+          REMOVE_CHAR(map, 0x2039);
+          REMOVE_CHAR(map, 0x0152);
+          REMOVE_CHAR(map, 0x017D);
+          REMOVE_CHAR(map, 0x2018);
+          REMOVE_CHAR(map, 0x2019);
+          REMOVE_CHAR(map, 0x201C);
+          REMOVE_CHAR(map, 0x201D);
+          REMOVE_CHAR(map, 0x2022);
+          REMOVE_CHAR(map, 0x2013);
+          REMOVE_CHAR(map, 0x2014);
+          REMOVE_CHAR(map, 0x02DC);
+          REMOVE_CHAR(map, 0x2122);
+          REMOVE_CHAR(map, 0x0161);
+          REMOVE_CHAR(map, 0x203A);
+          REMOVE_CHAR(map, 0x0153);
+          REMOVE_CHAR(map, 0x017E);
+          REMOVE_CHAR(map, 0x0178);
         }
       }
       else {
