@@ -143,6 +143,7 @@ moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
   gdk_window_set_back_pixmap(drawingarea->clip_window, NULL, FALSE);
 
   attributes.event_mask = (GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
+			   GDK_VISIBILITY_NOTIFY_MASK |
 			   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
 			   GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
 			   GDK_POINTER_MOTION_MASK);

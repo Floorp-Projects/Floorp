@@ -37,6 +37,7 @@
 #include "nsToolkit.h"
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
+#include "nsIRollupListener.h"
 
 #include "nsGtkKeyUtils.h"
 
@@ -78,8 +79,12 @@ static gboolean key_release_event_cb      (GtkWidget *widget,
 					   GdkEventKey *event);
 static gboolean scroll_event_cb           (GtkWidget *widget,
 					   GdkEventScroll *event);
+static gboolean visibility_notify_event_cb(GtkWidget *widget,
+					   GdkEventVisibility *event);
 
-static PRBool gJustGotActivate = PR_FALSE;
+static PRBool                 gJustGotActivate = PR_FALSE;
+nsCOMPtr  <nsIRollupListener> gRollupListener;
+nsWeakPtr                     gRollupWindow;
 
 nsWindow::nsWindow()
 {
@@ -93,6 +98,9 @@ nsWindow::nsWindow()
   mContainerBlockFocus = PR_FALSE;
   mHasFocus            = PR_FALSE;
   mInKeyRepeat         = PR_FALSE;
+  mIsVisible           = PR_FALSE;
+  mRetryGrab           = PR_FALSE;
+  mTransientParent     = nsnull;
   mWindowType          = eWindowType_child;
 }
 
@@ -101,6 +109,9 @@ nsWindow::~nsWindow()
   LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
   Destroy();
 }
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsCommonWidget,
+			     nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
@@ -136,6 +147,15 @@ nsWindow::Destroy(void)
 
   LOG(("nsWindow::Destroy [%p]\n", (void *)this));
   mIsDestroyed = PR_TRUE;
+
+  // ungrab if required
+  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
+  if (NS_STATIC_CAST(nsIWidget *, this) == rollupWidget.get()) {
+    if (gRollupListener)
+      gRollupListener->Rollup();
+    gRollupWindow = nsnull;
+    gRollupListener = nsnull;
+  }
 
   NativeShow(PR_FALSE);
 
@@ -214,7 +234,8 @@ nsWindow::SetModal(PRBool aModal)
 NS_IMETHODIMP
 nsWindow::IsVisible(PRBool & aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  aState = mIsVisible;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -641,10 +662,22 @@ nsWindow::CaptureMouse(PRBool aCapture)
 
 NS_IMETHODIMP
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
-			      PRBool           aDoCapture,
-			      PRBool           aConsumeRollupEvent)
+			      PRBool             aDoCapture,
+			      PRBool             aConsumeRollupEvent)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aDoCapture) {
+    gRollupListener = aListener;
+    gRollupWindow =
+      getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
+    NativeGrab(PR_TRUE);
+  }
+  else {
+    NativeGrab(PR_FALSE);
+    gRollupListener = nsnull;
+    gRollupWindow = nsnull;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1013,6 +1046,24 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
   DispatchEvent(&event, status);
 }
 
+void
+nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
+				  GdkEventVisibility *aEvent)
+{
+  switch (aEvent->state) {
+  case GDK_VISIBILITY_UNOBSCURED:
+  case GDK_VISIBILITY_PARTIAL:
+    mIsVisible = PR_TRUE;
+    // if we have to retry the grab, retry it.
+    if (mRetryGrab)
+      NativeGrab(PR_TRUE);
+    break;
+  default: // includes GDK_VISIBILITY_FULLY_OBSCURED
+    mIsVisible = PR_FALSE;
+    break;
+  }
+}
+
 nsresult
 nsWindow::NativeCreate(nsIWidget        *aParent,
 		       nsNativeWidget    aNativeParent,
@@ -1092,6 +1143,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 	gtk_window_set_type_hint(GTK_WINDOW(mShell),
 				 GDK_WINDOW_TYPE_HINT_DIALOG);
 	gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+	mTransientParent = topLevelParent;
 	// add ourselves to the parent window's window group
 	if (parentArea) {
 	  nsWindow *parentnsWindow =
@@ -1110,6 +1162,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
       else if (mWindowType == eWindowType_popup) {
 	mShell = gtk_window_new(GTK_WINDOW_POPUP);
 	gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+	mTransientParent = topLevelParent;
       }
       else { // must be eWindowType_toplevel
 	mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -1192,6 +1245,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 		     G_CALLBACK(key_release_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "scroll_event",
 		     G_CALLBACK(scroll_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "visibility_notify_event",
+		     G_CALLBACK(visibility_notify_event_cb), NULL);
   }
 
   LOG(("nsWindow [%p]\n", (void *)this));
@@ -1287,6 +1342,72 @@ nsWindow::NativeShow (PRBool  aAction)
       gtk_widget_hide(GTK_WIDGET(mContainer));
     }
     moz_drawingarea_set_visibility(mDrawingarea, aAction);
+  }
+}
+
+void
+nsWindow::NativeGrab(PRBool aGrab)
+{
+  LOG(("NativeGrab aGrab %d mRetryGrab %d\n", aGrab, mRetryGrab));
+
+  // Clear the retry flag.  It doesn't matter if it's being released
+  // or grabbed.
+  mRetryGrab = PR_FALSE;
+
+  if (aGrab) {
+    // If the window isn't visible, just set the flag to retry the
+    // grab.  When this window becomes visible, the grab will be
+    // retried.
+    PRBool visibility = PR_TRUE;
+    IsVisible(visibility);
+    if (!visibility) {
+      LOG(("window not visible\n"));
+      mRetryGrab = PR_TRUE;
+      return;
+    }
+
+    GdkCursor *cursor = gdk_cursor_new(GDK_ARROW);
+    
+    gint retval;
+    retval = gdk_pointer_grab(mDrawingarea->inner_window, PR_TRUE,
+			      (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
+					     GDK_BUTTON_RELEASE_MASK |
+					     GDK_ENTER_NOTIFY_MASK |
+					     GDK_LEAVE_NOTIFY_MASK |
+					     GDK_POINTER_MOTION_MASK),
+			      (GdkWindow *)NULL, cursor, GDK_CURRENT_TIME);
+
+    // now that we're done with the cursor, destroy it
+    gdk_cursor_destroy(cursor);
+
+    if (retval != GDK_GRAB_SUCCESS) {
+      LOG(("pointer grab failed\n"));
+      mRetryGrab = PR_TRUE;
+      return;
+    }
+
+    GdkWindow *grabWindow;
+
+    // we need to grab the keyboard on the transient parent so that we
+    // don't end up with any focus events that end up on the parent
+    // window that will cause the popup to go away
+    if (mTransientParent)
+      grabWindow = GTK_WIDGET(mTransientParent)->window;
+    else
+      grabWindow = mDrawingarea->inner_window;
+
+    retval = gdk_keyboard_grab(grabWindow, PR_TRUE, GDK_CURRENT_TIME);
+
+    if (retval != GDK_GRAB_SUCCESS) {
+      LOG(("keyboard grab failed %d\n", retval));
+      gdk_pointer_ungrab(GDK_CURRENT_TIME);
+      mRetryGrab = PR_TRUE;
+      return;
+    }
+  }
+  else {
+    gdk_pointer_ungrab(GDK_CURRENT_TIME);
+    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
   }
 }
 
@@ -1554,6 +1675,19 @@ scroll_event_cb (GtkWidget *widget, GdkEventScroll *event)
     return FALSE;
 
   window->OnScrollEvent(widget, event);
+
+  return TRUE;
+}
+
+/* static */
+gboolean
+visibility_notify_event_cb (GtkWidget *widget, GdkEventVisibility *event)
+{
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
+    return FALSE;
+
+  window->OnVisibilityNotifyEvent(widget, event);
 
   return TRUE;
 }
