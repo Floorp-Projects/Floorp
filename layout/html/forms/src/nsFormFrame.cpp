@@ -451,7 +451,38 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
 
 void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame)
 {
-  mFormControls.AppendElement(&aFrame);
+  // Add this control to the list
+  // Sort by content ID - this assures we submit in document order (bug 18728)
+  PRInt32 i = mFormControls.Count();
+
+  nsCOMPtr<nsIContent> newContent;
+  nsIFrame* newFrame = nsnull;
+  nsresult rv = aFrame.QueryInterface(kIFrameIID, (void **)&newFrame);
+  if (NS_SUCCEEDED(rv) && newFrame) {
+    rv = newFrame->GetContent(getter_AddRefs(newContent));
+    if (NS_SUCCEEDED(rv) && newContent) {
+      PRUint32 newID;
+      newContent->GetContentID(&newID);
+      for (; i>0; i--) {
+        nsIFormControlFrame* thisControl = (nsIFormControlFrame*) mFormControls.ElementAt(i-1);
+        if (thisControl) {
+          nsCOMPtr<nsIContent> thisContent;
+          nsIFrame* thisFrame = nsnull;
+          nsresult rv = thisControl->QueryInterface(kIFrameIID, (void **)&thisFrame);
+          if (NS_SUCCEEDED(rv) && thisFrame) {
+            rv = thisFrame->GetContent(getter_AddRefs(thisContent));
+            if (NS_SUCCEEDED(rv) && thisContent) {
+              PRUint32 thisID;
+              thisContent->GetContentID(&thisID);
+              if (newID > thisID)
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+  mFormControls.InsertElementAt(&aFrame, i);
 
   // determine which radio buttons belong to which radio groups, unnamed radio buttons
   // don't go into any group since they can't be submitted. Determine which controls
