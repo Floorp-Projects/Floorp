@@ -176,13 +176,17 @@ static GtkWidget *debugTopLevel = NULL;
 static GtkWidget *debugBox = NULL;
 static GtkWidget *debugEntryBox = NULL;
 static GtkWidget *debugButton = NULL;
+static GtkWidget *debugCheckBox = NULL;
 nsWidget  *nsWidget::debugWidget = NULL;
+PRBool     nsWidget::sDebugFeedback = PR_FALSE;
 static PRBool     debugCheckedDebugWindow = PR_FALSE;
 static PRBool     debugCallbackRegistered = PR_FALSE;
 
 static void      debugHandleActivate(GtkEditable *editable,
                                      gpointer user_data);
 static void      debugHandleClicked (GtkButton   *button,
+                                     gpointer user_data);
+static void      debugHandleToggle  (GtkToggleButton *button,
                                      gpointer user_data);
 static void      debugSetupWindow   (void);
 static void      debugDestroyWindow (void);
@@ -814,7 +818,7 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 }
 
 #define CAPS_LOCK_IS_ON \
-(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+(nsWidget::sDebugFeedback && (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK))
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
@@ -3196,6 +3200,17 @@ static void      debugHandleClicked (GtkButton   *button,
   setDebugWindow();
 }
 
+static void      debugHandleToggle  (GtkToggleButton *button,
+                                     gpointer user_data)
+{
+  if (gtk_toggle_button_get_active(button) == TRUE) {
+    nsWidget::sDebugFeedback = PR_TRUE;
+  }
+  else {
+    nsWidget::sDebugFeedback = PR_FALSE;
+  }
+}
+
 static void      debugDestroyWindow (void)
 {
   // this will destroy all of the widgets inside the window, too.
@@ -3204,6 +3219,7 @@ static void      debugDestroyWindow (void)
   debugBox = NULL;
   debugEntryBox = NULL;
   debugButton = NULL;
+  debugCheckBox = NULL;
   nsWidget::debugWidget = NULL;  
 }
 
@@ -3235,6 +3251,11 @@ static void      debugSetupWindow   (void)
       gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugButton);
       gtk_signal_connect(GTK_OBJECT(debugButton), "clicked",
                          GTK_SIGNAL_FUNC(debugHandleClicked), NULL);
+
+      debugCheckBox = gtk_check_button_new_with_label("Debug Feedback");
+      gtk_box_pack_start_defaults(GTK_BOX(debugBox), debugCheckBox);
+      gtk_signal_connect(GTK_OBJECT(debugCheckBox), "toggled",
+                         GTK_SIGNAL_FUNC(debugHandleToggle), NULL);
       
       gtk_widget_show_all(debugTopLevel);
     }
