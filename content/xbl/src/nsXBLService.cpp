@@ -880,7 +880,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
 
   nsCOMPtr<nsIDocument> boundDocument;
   aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
-    
+
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
   LoadBindingDocumentInfo(aBoundElement, boundDocument, uri, ref, PR_FALSE, getter_AddRefs(docInfo));
   if (!docInfo)
@@ -1081,6 +1081,11 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
       nsCOMPtr<nsIURI> uri;
       rv = NS_NewURI(getter_AddRefs(uri), aURLStr);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a url");
+
+      // Always load chrome synchronously
+      PRBool chrome;
+      if (NS_SUCCEEDED(uri->SchemeIs("chrome", &chrome)) && chrome)
+        aForceSyncLoad = PR_TRUE;
 
       nsCOMPtr<nsIDocument> document;
       FetchBindingDocument(aBoundElement, aBoundDocument, uri, aRef, aForceSyncLoad, getter_AddRefs(document));

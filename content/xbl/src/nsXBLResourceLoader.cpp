@@ -143,16 +143,31 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
         continue;
 
       // Kick off the load of the stylesheet.
-      PRBool doneLoading;
-      NS_NAMED_LITERAL_STRING(empty, "");
 
-      nsresult rv = cssLoader->LoadStyleLink(nsnull, url, empty, empty, kNameSpaceID_Unknown,
-                               nsnull,
-                               doneLoading, this);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
+      // Always load chrome synchronously
+      PRBool chrome;
+      if (NS_SUCCEEDED(url->SchemeIs("chrome", &chrome)) && chrome)
+      {
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        nsresult rv = cssLoader->LoadAgentSheet(url, getter_AddRefs(sheet));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = StyleSheetLoaded(sheet, PR_TRUE);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Processing the style sheet failed!!!");
+        }
+      }
+      else
+      {
+        PRBool doneLoading;
+        NS_NAMED_LITERAL_STRING(empty, "");
+        nsresult rv = cssLoader->LoadStyleLink(nsnull, url, empty, empty, kNameSpaceID_Unknown,
+                                               nsnull, doneLoading, this);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
 
-      if (!doneLoading)
-        mPendingSheets++;
+        if (!doneLoading)
+          mPendingSheets++;
+      }
     }
   }
 
