@@ -41,6 +41,8 @@ namespace ICodeASM {
     static char *keyword_offset = "offset";
     static char *keyword_binaryops[] = {"add", "subtract", "multiply", "divide",
                                         "remainder", "leftshift", "rightshift",
+                                        "logicalrightshift", "bitwiseor",
+                                        "bitwisexor", "bitwiseand", "less",
                                         "lessorequal", "equal", "identical", 0};
 
 #define IS_ALPHA(ch) ((ch >= 'a' && ch <= 'z') || \
@@ -71,6 +73,7 @@ namespace ICodeASM {
         iter begin = source.begin();
         iter end = source.end();
         mMaxRegister = 0;
+        mInstructionCount = 0;
         
         while (begin < end)
         {
@@ -301,8 +304,7 @@ namespace ICodeASM {
             if (++begin != end) {
                 try
                 {
-                    end = ParseUInt32 (++begin, end, 
-                                       static_cast<uint32 *>(rval));
+                    end = ParseUInt32 (begin, end, static_cast<uint32 *>(rval));
                     if (*rval != VM::NotARegister && *rval > mMaxRegister)
                         mMaxRegister = *rval;
                     return end;
@@ -656,17 +658,18 @@ namespace ICodeASM {
         
         if (cmp_nocase(*str, keyword_offset, keyword_offset +
                        strlen(keyword_offset) + 1) == 0) {
+            delete str;
             /* got the "Offset" keyword, treat next thing as a jump offset
              * expressed as "Offset +/-N" */
             tl = SeekTokenStart (begin, end);
 
-            if ((tl.estimate != teNumeric) && (tl.estimate != teMinus) &&
-                (tl.estimate != tePlus)) 
+            if (tl.estimate != teNumeric)
                 throw new ICodeParseException ("Expected numeric value after Offset keyword");
-            int32 ofs;
-            begin = ParseInt32 (tl.begin, end, &ofs);
+            
+            uint32 ofs;
+            begin = ParseUInt32 (tl.begin, end, &ofs);
             VM::Label *new_label = new VM::Label(mInstructions);
-            new_label->mOffset = mInstructionCount + ofs;
+            new_label->mOffset = ofs;
             mUnnamedLabels.push_back (new_label);
             *rval = new_label;
         } else {
@@ -684,6 +687,7 @@ namespace ICodeASM {
                 *rval = new_label;
                 mNamedLabels[str->c_str()] = new_label;
             }       
+            delete str;
         }
         return begin;
     }
@@ -778,7 +782,8 @@ namespace ICodeASM {
 
 #       undef CASE_TYPE
 
-        mInstructions.push_back (InstructionFromNode(&node));
+        VM::Instruction *i = InstructionFromNode(&node);
+        mInstructions->push_back (i);
         ++mInstructionCount;
         
         TokenLocation tl = SeekTokenStart (curpos, end);

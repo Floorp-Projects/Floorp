@@ -129,14 +129,17 @@ namespace ICodeASM {
         
         Interpreter::Context *mCx;
         uint32 mInstructionCount;
-        uint32 mMaxRegister;
-        VM::InstructionStream mInstructions;
         VM::LabelList mUnnamedLabels;
         typedef std::map<const char *, VM::Label*> LabelMap;
         LabelMap mNamedLabels;
-
+        
     public:
-        ICodeParser (Interpreter::Context *aCx = 0) : mCx(aCx) {}
+        uint32 mMaxRegister;
+        VM::InstructionStream *mInstructions;
+        
+    public:
+        ICodeParser (Interpreter::Context *aCx) : mCx(aCx)
+            { mInstructions = new VM::InstructionStream(); }
         void ParseSourceFromString (const string &source);
 
         /* locate the beginning of the next token and take a guess at what it

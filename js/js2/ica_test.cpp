@@ -34,10 +34,15 @@
 #include <stdio.h>
 #include <string>
 
+#include "utilities.h"
+#include "icodegenerator.h"
 #include "icodeasm.h"
 
-void testAlpha (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-                const string &expect)
+using namespace JavaScript;
+
+void
+testAlpha (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
+           const string &expect)
 {
     string *result;
     icp.ParseAlpha (str.begin(), str.end(), &result);
@@ -49,8 +54,9 @@ void testAlpha (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
              result->c_str());
 }
 
-void testBool (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-               bool expect)
+void
+testBool (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
+          bool expect)
 {
     bool b;
     icp.ParseBool (str.begin(), str.end(), &b);
@@ -61,8 +67,9 @@ void testBool (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
     fprintf (stderr, "string '%s' bool parsed as %i\n", str.c_str(), b);
 }
 
-void testDouble (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-                 double expect)
+void
+testDouble (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
+            double expect)
 {
     double result;
     icp.ParseDouble (str.begin(), str.end(), &result);
@@ -74,8 +81,9 @@ void testDouble (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
              result);
 }
 
-void testString (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-                 const string &expect)
+void
+testString (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
+            const string &expect)
 {
     string *result;
     icp.ParseString (str.begin(), str.end(), &result);
@@ -87,8 +95,9 @@ void testString (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
              result->c_str());
 }
 
-void testUInt32 (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-                 uint32 expect)
+void
+testUInt32 (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
+            uint32 expect)
 {
     uint32 result;
     icp.ParseUInt32 (str.begin(), str.end(), &result);
@@ -100,16 +109,51 @@ void testUInt32 (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
              result);
 }
 
-void testParse (JavaScript::ICodeASM::ICodeParser &icp, const string &str)
+void
+testParse (JavaScript::ICodeASM::ICodeParser &icp,
+           JavaScript::Interpreter::Context cx,
+           const string &str)
 {
-    icp.ParseSourceFromString (str);    
+    using namespace JavaScript;
+    
+    icp.ParseSourceFromString (str);
+    ICG::ICodeModule icm = ICG::ICodeModule (icp.mInstructions,
+                                             new ICG::VariableList(),
+                                             icp.mMaxRegister, 0, 0, false,
+                                             false, &JSTypes::Any_Type);
+
+    stdOut << icm;
+
+    JSTypes::JSValues args;
+    cx.interpret (&icm, args);
+    
+}
+
+static JSTypes::JSValue
+print(Interpreter::Context *, const JSTypes::JSValues &argv)
+{
+    size_t n = argv.size();
+    if (n > 1) {                // the 'this' parameter is un-interesting
+        stdOut << argv[1];
+        for (size_t i = 2; i < n; ++i)
+            stdOut << ' ' << argv[i];
+    }
+    stdOut << "\n";
+    return JSTypes::kUndefinedValue;
 }
 
 int
 main (int , char **)
 {
-    JavaScript::ICodeASM::ICodeParser icp;
+    World world;
+    JSTypes::JSScope global;
     
+    global.defineNativeFunction(world.identifiers["print"], print);
+    
+    Interpreter::Context cx (world, &global);
+    ICodeASM::ICodeParser icp(&cx);
+
+    /*
     testAlpha (icp, "False", "False");
     testAlpha (icp, "fe fi fo fum", "fe");
     testAlpha (icp, "   bla", "");
@@ -140,20 +184,56 @@ main (int , char **)
     testUInt32 (icp, "12.3", 12);
     testUInt32 (icp, "-123", 0);
     testUInt32 (icp, "-12.3", 0);
+    */
     /* XXX what to do with the overflow? */
     //testUInt32 (icp, "12123687213612873621873438754387934657834", 0);
 
-    string src = 
+    string src;
+    
+    /*
+    src = 
         "some_label:\n"
         "LOAD_STRING               R1, 'hello'   ;test comment\n"
         "CAST                      R2, R1, 'any';another test comment\n"
         "SAVE_NAME                 'x', R2\n"
         "LOAD_NAME                 R1, 'x'\n"
         "LOAD_NAME                 R2, 'print'\n"
-        "CALL                      R3, R2, <NaR>, ('foo':R1, R2)\n"
+        "CALL                      R3, R2, <NaR>, (R1)\n"
         "RETURN                    R3";
     
-    testParse (icp, src);
+    testParse (icp, cx, src);
+    */
+
+    /* {x= 1;  for (i = 10; i > 0; --i) x = x * i; print ("x is " + x);} */
+    src = 
+        "LOAD_IMMEDIATE            R1, 1\n"
+        "CAST                      R2, R1, 'any'\n"
+        "SAVE_NAME                 'x', R2\n"
+        "LOAD_IMMEDIATE            R1, 10\n"
+        "CAST                      R2, R1, 'any'\n"
+        "SAVE_NAME                 'i', R2\n"
+        "BRANCH                    Offset 17\n"
+        "LOAD_NAME                 R1, 'x'\n"
+        "LOAD_NAME                 R2, 'i'\n"
+        "GENERIC_BINARY_OP         R3, Multiply, R1, R2\n"
+        "CAST                      R4, R3, 'any'\n"
+        "SAVE_NAME                 'x', R4\n"
+        "LOAD_NAME                 R1, 'i'\n"
+        "LOAD_IMMEDIATE            R2, 1\n"
+        "GENERIC_BINARY_OP         R3, Subtract, R1, R2\n"
+        "SAVE_NAME                 'i', R3\n"
+        "LOAD_NAME                 R4, 'i'\n"
+        "LOAD_IMMEDIATE            R5, 0\n"
+        "GENERIC_BINARY_OP         R6, Less, R5, R4\n"
+        "BRANCH_TRUE               Offset 8, R6\n"
+        "LOAD_STRING               R1, 'x is '\n"
+        "LOAD_NAME                 R2, 'x'\n"
+        "GENERIC_BINARY_OP         R3, Add, R1, R2\n"
+        "LOAD_NAME                 R4, 'print'\n"
+        "CALL                      R5, R4, <NaR>, (R3)\n"
+        "RETURN                    <NaR>\n";
+
+    testParse (icp, cx, src);
 
     return 0;
 }

@@ -155,7 +155,7 @@ namespace ICodeASM {
                 i = new BranchTrue (reinterpret_cast<Label*>(node->operand[0].data), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
             case 7:
-                i = new Call (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0), static_cast<ArgumentList>(node->operand[3].data));
+                i = new Call (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0), *(reinterpret_cast<ArgumentList *>(node->operand[3].data)));
                 break;
             case 8:
                 i = new Cast (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<JSType*>(node->operand[2].data));
@@ -188,7 +188,7 @@ namespace ICodeASM {
                 i = new DeleteProp (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<const StringAtom*>(node->operand[2].data));
                 break;
             case 18:
-                i = new DirectCall (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSFunction*>(node->operand[1].data), static_cast<ArgumentList>(node->operand[2].data));
+                i = new DirectCall (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSFunction*>(node->operand[1].data), *(reinterpret_cast<ArgumentList *>(node->operand[2].data)));
                 break;
             case 19:
                 i = new Divide (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
