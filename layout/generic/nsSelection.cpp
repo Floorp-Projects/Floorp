@@ -2215,7 +2215,7 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
     // we are neither at the beginning nor at the end of the frame, so we have no worries
     *aPrevFrame = *aNextFrame = currentFrame;
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)aNextLevel, sizeof(aNextLevel) );
+                                  (void**)aNextLevel, sizeof(*aNextLevel) );
     *aPrevLevel = *aNextLevel;
     return NS_OK;
   }
@@ -2299,9 +2299,9 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                                             //              set aNextLevel to the paragraph embedding level
     *aPrevFrame = currentFrame;
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)aPrevLevel, sizeof(aPrevLevel) );
+                                  (void**)aPrevLevel, sizeof(*aPrevLevel) );
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
-                                  (void**)aNextLevel, sizeof(aNextLevel) );
+                                  (void**)aNextLevel, sizeof(*aNextLevel) );
     *aNextFrame = nsnull;
     return NS_OK;
   }
@@ -2312,9 +2312,9 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                                                  //                    set aNextLevel to the embedding level of the current frame
     *aNextFrame = currentFrame;
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)aNextLevel, sizeof(aNextLevel) );
+                                  (void**)aNextLevel, sizeof(*aNextLevel) );
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
-                                  (void**)aPrevLevel, sizeof(aPrevLevel) );
+                                  (void**)aPrevLevel, sizeof(*aPrevLevel) );
     *aPrevFrame = nsnull;
     return NS_OK;
   }
@@ -2349,18 +2349,18 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
   if (direction == eDirNext) {
     *aPrevFrame = currentFrame;
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)aPrevLevel, sizeof(aPrevLevel) );
+                                  (void**)aPrevLevel, sizeof(*aPrevLevel) );
     *aNextFrame = newFrame;
     newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                              (void**)aNextLevel, sizeof(aNextLevel) );
+                              (void**)aNextLevel, sizeof(*aNextLevel) );
   }
   else {
     *aNextFrame = currentFrame;
     currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)aNextLevel, sizeof(aNextLevel) );
+                                  (void**)aNextLevel, sizeof(*aNextLevel) );
     *aPrevFrame = newFrame;
     newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                              (void**)aPrevLevel, sizeof(aPrevLevel) );
+                              (void**)aPrevLevel, sizeof(*aPrevLevel) );
   }
 
   return NS_OK;
