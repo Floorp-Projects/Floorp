@@ -95,7 +95,6 @@ CPPSRCS = \
         nsRegion.cpp \
         nsTransform2D.cpp \
         nsScriptableRegion.cpp \
-        nsGraphicsImpl.cpp \
         nsPrintOptionsImpl.cpp \
         nsPrintSettingsImpl.cpp \
         nsPrintSession.cpp \
