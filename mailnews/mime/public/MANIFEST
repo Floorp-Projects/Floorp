@@ -19,3 +19,4 @@
 nsIStreamConverter.h
 nsIMimeObjectClassAccess.h
 nsIMimeHeaderConverter.h
+nsIMimeEmitter.h

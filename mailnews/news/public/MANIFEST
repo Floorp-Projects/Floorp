@@ -25,3 +25,4 @@ nsIMsgOfflineNewsState.h
 nsINNTPArticleList.h
 nsINntpUrl.h
 nsINNTPNewsgroupPost.h
+nsINntpService.h
