@@ -129,10 +129,7 @@ nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry *    entry,
         if (!*transport)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(*transport);
-        rv = entry->SetData(*transport);
-        if (NS_SUCCEEDED(rv))
-            NS_STATIC_CAST(nsMemoryCacheTransport *, *transport)->SetCacheEntry(entry);
-        return rv;
+        return entry->SetData(*transport);
     }
 }
 

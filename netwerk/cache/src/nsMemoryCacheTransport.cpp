@@ -82,8 +82,7 @@ nsReadFromInputStream(nsIOutputStream *aOutput,
 //----------------------------------------------------------------------------
 
 nsMemoryCacheTransport::nsMemoryCacheTransport()
-    : mCacheEntry(nsnull)
-    , mOutputStream(nsnull)
+    : mOutputStream(nsnull)
     , mSegmentSize(NS_MEMORY_CACHE_SEGMENT_SIZE)
     , mMaxSize(NS_MEMORY_CACHE_BUFFER_SIZE)
     , mSegments(nsnull)
@@ -167,10 +166,6 @@ nsMemoryCacheTransport::AddToBytesWritten(PRUint32 aCount)
         if (req->IsWaitingForWrite())
             req->Process();
     }
-
-    // update the data size recorded in the cache entry
-    if (mCacheEntry)
-        mCacheEntry->SetDataSize(mWriteCursor);
 
     return NS_OK;
 }
@@ -838,7 +833,7 @@ NS_IMETHODIMP
 nsMemoryCacheBOS::GetNonBlocking(PRBool *aNonBlocking)
 {
     NS_ENSURE_ARG_POINTER(aNonBlocking);
-    *aNonBlocking = PR_TRUE;
+    *aNonBlocking = PR_FALSE;
     return NS_OK;
 }
 
