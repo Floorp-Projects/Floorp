@@ -2206,6 +2206,16 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                                       PRBool aDeep,
+                                                       PRBool aCompileEventHandlers)
+{
+  // XXX WRITE ME
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP 
 nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
                                        nsIContent *      aContent,

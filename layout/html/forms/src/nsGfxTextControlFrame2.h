@@ -82,6 +82,9 @@ public:
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
+  NS_IMETHOD SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                            PRBool aDeep,
+                                            PRBool aCompileEventHandlers);
 
   // Utility methods to get and set current widget state
   void GetTextControlFrameState(nsString& aValue);

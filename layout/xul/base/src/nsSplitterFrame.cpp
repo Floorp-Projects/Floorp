@@ -297,6 +297,15 @@ nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsSplitterFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                                PRBool aDeep,
+                                                PRBool aCompileEventHandlers)
+{
+  // XXX WRITE ME
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSplitterFrame::GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)

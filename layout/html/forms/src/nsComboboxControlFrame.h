@@ -79,6 +79,9 @@ public:
    // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
+  NS_IMETHOD SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                            PRBool aDeep,
+                                            PRBool aCompileEventHandlers);
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame);
