@@ -578,9 +578,7 @@ nsresult nsTreeWalker::TestNode(nsIDOMNode* aNode, PRInt16* _filtered)
     PRUint16 nodeType;
     PRUint32 mask = 1;
 
-    nsCOMPtr<nsIDOMNode> node(aNode);
-
-    rv = node->GetNodeType(&nodeType);
+    rv = aNode->GetNodeType(&nodeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (nodeType <= 12 && !((mask << (nodeType-1)) & mWhatToShow)) {
@@ -590,7 +588,7 @@ nsresult nsTreeWalker::TestNode(nsIDOMNode* aNode, PRInt16* _filtered)
     }
 
     if (mFilter)
-        return mFilter->AcceptNode(node, _filtered);
+        return mFilter->AcceptNode(aNode, _filtered);
 
     *_filtered = nsIDOMNodeFilter::FILTER_ACCEPT;
     return NS_OK;
