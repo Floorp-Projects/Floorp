@@ -2664,20 +2664,17 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
   if (tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
-
+    
     if (!ptr) return NS_ERROR_NULL_POINTER;
 
-	if (NS_FAILED(aExitCode))
-		switch (aExitCode)
-		{
-			default:
-				if (! NS_IS_MSG_ERROR(aExitCode))
-					aExitCode = NS_ERROR_SEND_FAILED;
-				break;
-		}
-    ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
+	  if (NS_FAILED(aExitCode))
+	  {
+		  if (! NS_IS_MSG_ERROR(aExitCode))
+			  aExitCode = NS_ERROR_SEND_FAILED;
 
-    NS_RELEASE(ptr);
+      ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
+      NS_RELEASE(ptr);
+    }
   }
 
   return aExitCode;
