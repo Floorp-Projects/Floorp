@@ -471,7 +471,7 @@ PRStatus _PR_MapOptionName(
     };
 
     if ((optname < PR_SockOpt_Linger)
-    && (optname > PR_SockOpt_MaxSegment))
+    || (optname >= PR_SockOpt_Last))
     {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
