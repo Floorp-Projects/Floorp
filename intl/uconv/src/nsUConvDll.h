@@ -58,4 +58,7 @@ NS_IMETHODIMP
 NS_NewTextToSubURI(nsISupports* aOuter, const nsIID& aIID,
                    void** aResult);
 
+NS_IMETHODIMP
+NS_RegisterConverterManagerData();
+
 #endif /* nsUConvDll_h___ */
