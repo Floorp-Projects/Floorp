@@ -37,6 +37,7 @@ XPIDLSRCS	= \
 		nsIWebBrowserSetup.idl			\
 		nsICommandHandler.idl			\
 		nsIContextMenuListener.idl		\
+		nsITooltipListener.idl		\
 		nsIWebBrowserPersist.idl		\
 		$(NULL)
 
