@@ -25,8 +25,6 @@ const mediatorContractId = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 
 function nsBrowserContentListener(toplevelWindow, contentWindow)
 {
-    dump("Creating a content listener..\n");
-    
     // this one is not as easy as you would hope.
     // need to convert toplevelWindow to an XPConnected object, instead
     // of a DOM-based object, to be able to QI() it to nsIXULWindow
@@ -40,7 +38,6 @@ nsBrowserContentListener.prototype =
 {
     init: function(toplevelWindow, contentWindow)
     {
-        dump("nsBrowserContentListener.init(" + toplevelWindow + ", " + contentWindow + "\n");
         this.toplevelWindow = toplevelWindow;
         this.contentWindow = contentWindow;
 
@@ -128,9 +125,9 @@ nsBrowserContentListener.prototype =
         var contentListener;
         try {
             contentListener =
-                docShell.QueryInterface(Components.interfaces.nsIInterfaceRequester).getInterface(Components.interfaces.nsIURIContentListener);
+                docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIURIContentListener);
         } catch (ex) {
-            // dump(ex);
+            dump(ex);
         }
         if (!contentListener) return false;
         
