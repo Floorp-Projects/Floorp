@@ -35,7 +35,7 @@
 #include "nsLDAP.h"
 #include "ldap.h"
 #include "nsString.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "nsILDAPService.h"
 #include "nsILDAPMessage.h"
@@ -71,16 +71,16 @@ class nsLDAPServiceEntry
     inline PRTime GetTimestamp();
     inline void SetTimestamp();
 
-    inline nsILDAPServer *GetServer();
+    inline already_AddRefed<nsILDAPServer> GetServer();
     inline PRBool SetServer(nsILDAPServer *aServer);
 
-    inline nsILDAPConnection *GetConnection();
+    inline already_AddRefed<nsILDAPConnection> GetConnection();
     inline void SetConnection(nsILDAPConnection *aConnection);
 
-    inline nsILDAPMessage *GetMessage();
+    inline already_AddRefed<nsILDAPMessage> GetMessage();
     inline void SetMessage(nsILDAPMessage *aMessage);
 
-    inline nsILDAPMessageListener *PopListener();
+    inline already_AddRefed<nsILDAPMessageListener> PopListener();
     inline PRBool PushListener(nsILDAPMessageListener *);
 
     inline PRBool IsRebinding();
@@ -99,7 +99,7 @@ class nsLDAPServiceEntry
     nsCOMPtr<nsILDAPMessage> mMessage;
 
     // Array holding all the pending callbacks (listeners) for this entry
-    nsCOMPtr<nsISupportsArray> mListeners;  
+    nsCOMArray<nsILDAPMessageListener> mListeners;  
 };
 
 // This is the interface we're implementing.
