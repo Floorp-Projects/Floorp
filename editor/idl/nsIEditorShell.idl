@@ -99,6 +99,11 @@ interface nsIEditorShell : nsISupports
   
   void Init();
   
+  /* Do any cleanup that needs the content window here
+   *   because it's gone by the time destructor is called
+  */
+  void Shutdown();
+  
   /* Access for the common alert dialog */
   void AlertWithTitle(in wstring title, in wstring msg);
   
@@ -219,6 +224,12 @@ interface nsIEditorShell : nsISupports
     */
   nsIDOMElement GetFirstSelectedCell();
   
+  /** Get first selected cell in table: the upper-left-most cell
+    * Returns null if ranges don't contain cell selections
+    * rowIndex and colIndex are those of the cell if found
+    */
+  nsIDOMElement GetFirstSelectedCellInTable(out PRInt32 rowIndex, out PRInt32 colIndex );
+
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)

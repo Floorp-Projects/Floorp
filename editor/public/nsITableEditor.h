@@ -221,19 +221,20 @@ public:
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
     * a table editing action. 
-    * Used for aDirection param in SetCaretAfterTableEdit
+    * Used for aDirection param in SetSelectionAfterTableEdit
     */
   enum { 
     eNoSearch, 
     ePreviousColumn, 
     ePreviousRow 
   };
-  /** Reset a collapsed selection (the caret) after table editing
+  /** Reset a selected cell or collapsed selection (the caret) after table editing
     *
     * @param aTable      A table in the document
     * @param aRow        The row ...
     * @param aCol        ... and column defining the cell
     *                    where we will try to place the caret
+    * @param aSelected   If true, we select the whole cell instead of setting caret
     * @param aDirection  If cell at (aCol, aRow) is not found,
     *                    search for previous cell in the same
     *                    column (aPreviousColumn) or row (ePreviousRow)
@@ -241,10 +242,11 @@ public:
     *                    If no cell is found, caret is place just before table;
     *                    and if that fails, at beginning of document.
     *                    Thus we generally don't worry about the return value
-    *                     and can use the nsSetCaretAfterTableEdit stack-based 
+    *                     and can use the nsSetSelectionAfterTableEdit stack-based 
     *                     object to insure we reset the caret in a table-editing method.
     */
-  NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection)=0;
+  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, 
+                                        PRInt32 aDirection, PRBool aSelected)=0;
 
   /** Examine the current selection and find
     *   a selected TABLE, TD or TH, or TR element.
@@ -291,6 +293,17 @@ public:
     */
   NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
   
+  /** Get first selected element from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * @param aCell       Selected cell or null if ranges don't contain cell selections
+    * @param aRowIndex   Optional: if not null, return the row index of first cell
+    * @param aColIndex   Optional: if not null, return the column index of first cell
+    *
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    */
+  NS_IMETHOD GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIndex, PRInt32 *aColIndex)=0;
+
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)

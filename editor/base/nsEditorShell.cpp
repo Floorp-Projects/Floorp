@@ -272,17 +272,6 @@ nsEditorShell::~nsEditorShell()
   NS_IF_RELEASE(mStateMaintainer);
   NS_IF_RELEASE(mParserObserver);
   
-  // Remove our document mouse event listener
-  if (mMouseListenerP)
-  {
-    nsCOMPtr<nsIDOMEventReceiver> erP;
-    nsresult rv = GetDocumentEventReceiver(getter_AddRefs(erP));
-    if (NS_SUCCEEDED(rv) && erP)
-    {
-      erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
-      mMouseListenerP = nsnull;
-    }
-  }
   // the only other references we hold are in nsCOMPtrs, so they'll take
   // care of themselves.
 }
@@ -347,6 +336,27 @@ nsEditorShell::Init()
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsEditorShell::Shutdown()
+{
+  nsresult rv = NS_OK;
+  // Remove our document mouse event listener
+  if (mMouseListenerP)
+  {
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    rv = GetDocumentEventReceiver(getter_AddRefs(erP));
+    if (NS_SUCCEEDED(rv))
+    {
+      if (erP)
+      {
+        erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
+        mMouseListenerP = nsnull;
+      }
+      else rv = NS_ERROR_NULL_POINTER;
+    }
+  }
+  return rv;
+}
 
 nsresult
 nsEditorShell::ResetEditingState()
@@ -3336,6 +3346,37 @@ nsEditorShell::GetFirstSelectedCell(nsIDOMElement **aOutElement)
   return result;
 }
 
+NS_IMETHODIMP 
+nsEditorShell::GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColIndex, nsIDOMElement **aOutElement)
+{
+  if (!aOutElement || !aRowIndex || !aColIndex)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+      if (tableEditor)
+      {
+        result = tableEditor->GetFirstSelectedCellInTable(aOutElement, aRowIndex, aColIndex);
+        // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+        //  to JavaScript
+        if(NS_SUCCEEDED(result)) return NS_OK;
+      }
+      
+      break;
+    }
+
+    case ePlainTextEditorType:
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
 
 NS_IMETHODIMP
 nsEditorShell::GetNextSelectedCell(nsIDOMElement **aOutElement)
