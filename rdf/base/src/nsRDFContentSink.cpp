@@ -885,6 +885,13 @@ RDFContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID)
     rv = ns->FindNameSpaceID(aPrefix, aNameSpaceID);
 
     if (NS_FAILED(rv)) {
+
+	if (aPrefix == nsnull)
+	{
+		aNameSpaceID = kNameSpaceID_None;
+		rv = NS_OK;
+	}
+
         // Couldn't find the namespace, probably because the prefix
         // was never declared using an 'xmlns' decl.
 
