@@ -282,6 +282,17 @@ public:
   // Helper method used by block reflow to identify runs of text so that
   // proper word-breaking can be done.
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout) = 0;
+
+  // Justification helper method used to distribute extra space in a
+  // line to leaf frames. aUsedSpace is filled in with the amount of
+  // space actually used.
+  NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace) = 0;
+
+  // Justification helper method that is used to remove trailing
+  // whitespace before justification.
+  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+                                    nsIRenderingContext& aRC,
+                                    nscoord& aDeltaWidth) = 0;
 };
 
 //----------------------------------------------------------------------
