@@ -453,9 +453,8 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
   PRInt32 ruleCount = 0;
 
   if (nsnull != aSheets) {
-    PRInt32 sheetCount = aSheets->Count();
-    PRInt32 index;
-    for (index = 0; index < sheetCount; index++) {
+    PRInt32 index = aSheets->Count();
+    while (0 < index--) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
       ruleCount += sheet->RulesMatching(aPresContext, aContent, aParentFrame,
                                         aResults);
@@ -549,11 +548,15 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
     nsISupportsArray*  rules = nsnull;
     if (NS_OK == NS_NewISupportsArray(&rules)) {
-      PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aContent, aParentFrame, rules);
+      PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
+      PRInt32 backstopRules = ruleCount;
       ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
-      ruleCount += RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
+      ruleCount += RulesMatching(mOverrideSheets, aPresContext, aContent, aParentFrame, rules);
 
       result = GetContext(aPresContext, aParentFrame, aContent, parentContext, rules, aForceUnique);
+      if (nsnull != result) {
+        result->SetBackstopStyleRuleCount(backstopRules);
+      }
 
       NS_RELEASE(rules);
     }
@@ -574,9 +577,8 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
   PRInt32 ruleCount = 0;
 
   if (nsnull != aSheets) {
-    PRInt32 sheetCount = aSheets->Count();
-    PRInt32 index;
-    for (index = 0; index < sheetCount; index++) {
+    PRInt32 index = aSheets->Count();
+    while (0 < index--) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
       ruleCount += sheet->RulesMatching(aPresContext, aPseudoTag, aParentFrame,
                                         aResults);
@@ -605,11 +607,15 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
   nsISupportsArray*  rules = nsnull;
   if (NS_OK == NS_NewISupportsArray(&rules)) {
-    PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    PRInt32 backstopRules = ruleCount;
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
-    ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    ruleCount += RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
     result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
+    if (nsnull != result) {
+      result->SetBackstopStyleRuleCount(backstopRules);
+    }
 
     NS_RELEASE(rules);
   }
@@ -638,12 +644,16 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
 
   nsISupportsArray*  rules = nsnull;
   if (NS_OK == NS_NewISupportsArray(&rules)) {
-    PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    PRInt32 backstopRules = ruleCount;
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
-    ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
+    ruleCount += RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
     if (0 < ruleCount) {
       result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
+      if (nsnull != result) {
+        result->SetBackstopStyleRuleCount(backstopRules);
+      }
     }
 
     NS_RELEASE(rules);
