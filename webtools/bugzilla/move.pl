@@ -122,8 +122,10 @@ foreach my $id (split(/:/, scalar($cgi->param('buglist')))) {
             "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
             "($id,$exporterid,now(),$fieldid,'$cur_res','MOVED')");
 
-    SendSQL("UPDATE bugs SET bug_status =\"RESOLVED\" where bug_id=\"$id\"");
-    SendSQL("UPDATE bugs SET resolution =\"MOVED\" where bug_id=\"$id\"");
+    SendSQL("UPDATE bugs SET bug_status =\"RESOLVED\",
+                             resolution =\"MOVED\",
+                             delta_ts = NOW()
+              WHERE bug_id=\"$id\"");
 
     my $comment = "";
     if (defined $cgi->param('comment') && $cgi->param('comment') !~ /^\s*$/) {

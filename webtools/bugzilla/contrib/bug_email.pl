@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.20 2004/04/09 02:23:09 jocuri%softhome.net Exp $
+# $Id: bug_email.pl,v 1.21 2005/01/28 19:01:28 travis%sedsystems.ca Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1085,7 +1085,7 @@ END
     my $reporter = "";
 
     my $query = "insert into bugs (\n" . join(",\n", @used_fields ) . 
-	", bug_status, creation_ts, everconfirmed) values ( ";
+	", bug_status, creation_ts, delta_ts, everconfirmed) values ( ";
     
     # 'Yuck'. Then again, this whole file should be rewritten anyway...
     $query =~ s/product/product_id/;
@@ -1140,7 +1140,7 @@ END
       $state = SqlQuote("NEW");
     }
 
-    $query .=  $state . ", \'$bug_when\', $ever_confirmed)\n";
+    $query .=  $state . ", \'$bug_when\', \'$bug_when\', $ever_confirmed)\n";
 #    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
 
     SendSQL("SELECT userid FROM profiles WHERE login_name=\'$reporter\'");

@@ -415,8 +415,7 @@ sub ProcessOneBug($) {
     }
 
 
-    SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
-            "WHERE bug_id = $id");
+    SendSQL("UPDATE bugs SET lastdiffed = '$end' WHERE bug_id = $id");
 
     # Filter the exclude list for dupes one last time
     @excludedAddresses = filterExcludeList(\@excludedAddresses,
