@@ -56,6 +56,15 @@ if (verifyDiskSpace(communicatorFolder, srDest))
     {
 	    err = performInstall(); 
 	    logComment("performInstall() returned: " + err);
+        if (! ('buildID' in Install))
+        {
+          logComment("Running Pre-Mozilla 0.9.1");
+          initInstall("Post-install Cleanup Utility", "xpicleanup", "$Version$");
+          cleanupUtility = getFolder(communicatorFolder, "xpicleanup");
+          err = File.execute(cleanupUtility);
+          logComment("execute() returned: " + err);
+          err = performInstall();
+        }
     }
     else
     {
