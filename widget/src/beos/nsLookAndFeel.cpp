@@ -243,7 +243,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       break;  
     case eColor__moz_dragtargetzone:
       aColor = NS_RGB(0x63, 0x63, 0xCE);
-    break;
+      break;
+    case eColor__moz_buttondefault:
+      aColor = NS_RGB(0x77, 0x77, 0x77);
+      break;
     case eColor_LAST_COLOR:
     default:
       aColor = NS_RGB(0xff, 0xff, 0xff);

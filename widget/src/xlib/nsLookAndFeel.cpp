@@ -197,6 +197,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x00, 0x00, 0x00);
         break;
 
+    case eColor__moz_buttondefault:
+          // default button border color
+        aColor = NS_RGB(0x00, 0x00, 0x00);
+        break;
+
     default:
         /* default color is BLACK */
         aColor = 0;

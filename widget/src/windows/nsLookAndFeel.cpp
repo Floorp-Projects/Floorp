@@ -190,11 +190,14 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_dragtargetzone:
-        idx = COLOR_HIGHLIGHTTEXT;
-        break;
+      idx = COLOR_HIGHLIGHTTEXT;
+      break;
+    case eColor__moz_buttondefault:
+      idx = COLOR_3DDKSHADOW;
+      break;
     default:
-        idx = COLOR_WINDOW;
-        break;
+      idx = COLOR_WINDOW;
+      break;
     }
 
   DWORD color = ::GetSysColor(idx);

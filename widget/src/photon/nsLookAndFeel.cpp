@@ -212,6 +212,10 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 	  aColor = PH_TO_NS_RGB(Pg_LGREY);
 	  break;
 
+	case eColor__moz_buttondefault:
+	  aColor = PH_TO_NS_RGB(Pg_DGREY);
+	  break;
+
   	default:
     aColor = PH_TO_NS_RGB(Pg_WHITE);
     break;
