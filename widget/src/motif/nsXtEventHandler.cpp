@@ -28,7 +28,6 @@
 #include "nsWindow.h"
 #include "nsTextWidget.h"
 #include "nsCheckButton.h"
-#include "nsRadioButton.h"
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIMenuItem.h"
@@ -320,29 +319,6 @@ void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data
   nsCheckButton * checkBtn = (nsCheckButton *) p;
   checkBtn->DisArmed();
 }
-
-//==============================================================
-void nsXtWidget_RadioButton_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
-{
-  nsRadioButton * radioBtn = (nsRadioButton *) p ;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-  radioBtn->Armed();
-  nsMouseEvent mevent;
-  nsXtWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
-  radioBtn->DispatchMouseEvent(mevent);
-}
-
-//==============================================================
-void nsXtWidget_RadioButton_DisArmCallback(Widget w, XtPointer p, XtPointer call_data)
-{
-  nsRadioButton * radioBtn = (nsRadioButton *) p ;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-  radioBtn->DisArmed();
-  nsMouseEvent mevent;
-  nsXtWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
-  radioBtn->DispatchMouseEvent(mevent);
-}
-
 
 //==============================================================
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)

@@ -47,7 +47,6 @@ CPPSRCS		= \
 		nsLookAndFeel.cpp \
 		nsObject.cpp \
 		nsPopUpMenu.cpp \
-		nsRadioButton.cpp \
 		nsScrollbar.cpp \
 		nsSound.cpp \
 		nsTextAreaWidget.cpp \
