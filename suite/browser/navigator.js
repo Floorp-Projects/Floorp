@@ -601,7 +601,7 @@ function OpenSearch(tabName)
 
   function BrowserEditBookmarks()
   {
-    window.open("resource:/res/samples/bookmarks.xul", "BookmarksWindow", "chrome,menubar,resizable,scrollbars");
+    window.open("chrome://bookmarks/content/", "BookmarksWindow", "chrome,menubar,resizable,scrollbars");
   }
 
   function BrowserPrintPreview()

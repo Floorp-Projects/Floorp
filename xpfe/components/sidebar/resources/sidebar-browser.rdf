@@ -27,7 +27,7 @@
     <RDF:li>
        <RDF:Description ID="bookmarks">
          <NC:title>&sidebar.bookmarks.label;</NC:title>
-         <NC:content>resource:/res/samples/bm-panel.xul</NC:content>
+         <NC:content>chrome://bookmarks/content/bm-panel.xul</NC:content>
        </RDF:Description>
     </RDF:li>
   </RDF:Seq>
