@@ -33,6 +33,7 @@ CPPSRCS =				\
 	nsCRT.cpp			\
 	nsDeque.cpp			\
 	nsProperties.cpp		\
+	nsVariant.cpp   		\
 	nsRBTree.cpp			\
 	nsSizeOfHandler.cpp		\
 	nsStr.cpp			\
@@ -60,10 +61,11 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsBaseDLL.obj		\
 	.\$(OBJDIR)\nsBTree.obj			\
 	.\$(OBJDIR)\nsByteBuffer.obj		\
-	.\$(OBJDIR)\nsByteBufferInputStream.obj \
+	.\$(OBJDIR)\nsByteBufferInputStream.obj	\
 	.\$(OBJDIR)\nsCRT.obj			\
 	.\$(OBJDIR)\nsDeque.obj			\
 	.\$(OBJDIR)\nsProperties.obj		\
+	.\$(OBJDIR)\nsVariant.obj		\
 	.\$(OBJDIR)\nsRBTree.obj		\
 	.\$(OBJDIR)\nsSizeOfHandler.obj		\
 	.\$(OBJDIR)\nsStr.obj		\
@@ -112,9 +114,9 @@ LCFLAGS = \
         $(NULL)
 
 # These are the libraries we need to link with to create the dll
-LLIBS=				\
- $(DIST)\lib\xpcom32.lib	\
- $(DIST)\lib\plc3.lib       \
+LLIBS=                     \
+ $(DIST)\lib\xpcom32.lib   \
+ $(DIST)\lib\plc3.lib      \
  $(LIBNSPR)  
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

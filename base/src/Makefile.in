@@ -44,8 +44,9 @@ CPPSRCS =                       \
     nsIFileStream.cpp           \
     nsIStringStream.cpp         \
     nsProperties.cpp            \
+    nsVariant.cpp               \
     nsRBTree.cpp                \
-    nsSizeOfHandler.cpp		    \
+    nsSizeOfHandler.cpp		\
     nsStr.cpp                   \
     nsString.cpp                \
     nsString2.cpp               \

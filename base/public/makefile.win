@@ -24,6 +24,8 @@ EXPORTS =                       \
         nsAutoLock.h            \
         nsCaretProperties.h     \
         nsIProperties.h         \
+        nsIScriptable.h         \
+        nsIVariant.h            \
         nsISizeOfHandler.h      \
         nsEscape.h              \
         nsFileSpec.h            \
@@ -34,9 +36,9 @@ EXPORTS =                       \
         nsIThread.h             \
         nsSpecialSystemDirectory.h \
         nsIByteBufferInputStream.h \
-		nsIObserverService.h    \
-		nsIObserverList.h       \
-		nsIObserver.h           \
+        nsIObserverService.h    \
+        nsIObserverList.h       \
+        nsIObserver.h           \
 	nsQuickSort.h	\
         $(NULL)
 
