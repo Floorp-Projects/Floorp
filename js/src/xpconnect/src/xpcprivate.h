@@ -2830,6 +2830,9 @@ xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID);
 extern nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 
+extern JSBool
+xpc_JSObjectIsID(JSContext *cx, JSObject* obj);
+
 /***************************************************************************/
 // in xpcdebug.cpp
 

@@ -997,15 +997,27 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-    if(wrapper)
+    if(wrapper &&
+       (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
+        wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
+        wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID))))
     {
-        if(wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
-           wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
-           wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID)))
-        {
-            ((nsIJSID*)wrapper->GetIdentityObject())->GetId(&id);
-        }
+        ((nsIJSID*)wrapper->GetIdentityObject())->GetId(&id);
     }
     return id;
 }
+
+JSBool
+xpc_JSObjectIsID(JSContext *cx, JSObject* obj)
+{
+    NS_ASSERTION(cx && obj, "bad param");
+    // NOTE: this call does NOT addref
+    XPCWrappedNative* wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+    return wrapper &&
+           (wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSID))  ||
+            wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSIID)) ||
+            wrapper->HasInterfaceNoQI(NS_GET_IID(nsIJSCID)));
+}
+
 

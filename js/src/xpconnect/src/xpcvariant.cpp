@@ -37,7 +37,7 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_ISUPPORTS2(XPCVariant, XPCVariant, nsIVariant)
+NS_IMPL_ISUPPORTS2_CI(XPCVariant, XPCVariant, nsIVariant)
 
 XPCVariant::XPCVariant()
     : mJSVal(JSVAL_VOID)
@@ -87,6 +87,152 @@ XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
     return variant;
 }
 
+
+// Helper class to give us a namespace for the table based code below.
+class XPCArrayHomogenizer
+{
+private:
+    enum Type
+    {
+        tNull  = 0 ,  // null value
+        tInt       ,  // Integer
+        tDbl       ,  // Double
+        tBool      ,  // Boolean
+        tStr       ,  // String
+        tID        ,  // ID
+        tArr       ,  // Array
+        tISup      ,  // nsISupports (really just a plain JSObject)
+        tUnk       ,  // Unknown. Used only for initial state.
+
+        tTypeCount ,  // Just a count for table dimensioning.
+
+        tVar       ,  // nsVariant - last ditch if no other common type found.
+        tErr          // No valid state or type has this value. 
+    };
+
+    // Table has tUnk as a state (column) but not as a type (row).
+    static Type StateTable[tTypeCount][tTypeCount-1];
+
+public:
+    static JSBool GetTypeForArray(XPCCallContext& ccx, JSObject* array, 
+                                  jsuint length, 
+                                  nsXPTType* resultType, nsID* resultID);
+};
+
+
+// Current state is the column down the side. 
+// Current type is the row along the top. 
+// New state is in the box at the intersection.
+
+XPCArrayHomogenizer::Type 
+XPCArrayHomogenizer::StateTable[tTypeCount][tTypeCount-1] = {
+/*          tNull,tInt ,tDbl ,tBool,tStr ,tID  ,tArr ,tISup */
+/* tNull */{tNull,tVar ,tVar ,tVar ,tStr ,tID  ,tVar ,tISup },
+/* tInt  */{tVar ,tInt ,tDbl ,tVar ,tVar ,tVar ,tVar ,tVar  },
+/* tDbl  */{tVar ,tDbl ,tDbl ,tVar ,tVar ,tVar ,tVar ,tVar  },
+/* tBool */{tVar ,tVar ,tVar ,tBool,tVar ,tVar ,tVar ,tVar  },
+/* tStr  */{tStr ,tVar ,tVar ,tVar ,tStr ,tVar ,tVar ,tVar  },
+/* tID   */{tID  ,tVar ,tVar ,tVar ,tVar ,tID  ,tVar ,tVar  },
+/* tArr  */{tErr ,tErr ,tErr ,tErr ,tErr ,tErr ,tErr ,tErr  },
+/* tISup */{tISup,tVar ,tVar ,tVar ,tVar ,tVar ,tVar ,tISup },
+/* tUnk  */{tNull,tInt ,tDbl ,tBool,tStr ,tID  ,tVar ,tISup }};
+
+// static
+JSBool
+XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
+                                     jsuint length, 
+                                     nsXPTType* resultType, nsID* resultID)    
+{
+    Type state = tUnk;
+    Type type;
+       
+    for(jsuint i = 0; i < length; i++)
+    {
+        jsval val;
+        if(!JS_GetElement(ccx, array, i, &val))
+            return JS_FALSE;
+           
+        if(JSVAL_IS_INT(val))
+            type = tInt;
+        else if(JSVAL_IS_DOUBLE(val))
+            type = tDbl;
+        else if(JSVAL_IS_BOOLEAN(val))
+            type = tBool;
+        else if(JSVAL_IS_VOID(val))
+        {
+            state = tVar;
+            break;
+        }
+        else if(JSVAL_IS_NULL(val))
+            type = tNull;
+        else if(JSVAL_IS_STRING(val))
+            type = tStr;
+        else
+        {
+            NS_ASSERTION(JSVAL_IS_OBJECT(val), "invalid type of jsval!");
+            JSObject* jsobj = JSVAL_TO_OBJECT(val);
+            if(JS_IsArrayObject(ccx, jsobj))
+                type = tArr;
+            else if(xpc_JSObjectIsID(ccx, jsobj))
+                type = tID;
+            else
+                type = tISup;
+        }
+
+        NS_ASSERTION(state != tErr, "bad state table!");
+        NS_ASSERTION(type  != tErr, "bad type!");
+        NS_ASSERTION(type  != tVar, "bad type!");
+        NS_ASSERTION(type  != tUnk, "bad type!");
+
+        state = StateTable[state][type];
+        
+        NS_ASSERTION(state != tErr, "bad state table!");
+        NS_ASSERTION(state != tUnk, "bad state table!");
+        
+        if(state == tVar)
+            break;
+    }
+
+    switch(state)
+    {
+        case tInt : 
+            *resultType = nsXPTType((uint8)TD_INT32);
+            break;
+        case tDbl : 
+            *resultType = nsXPTType((uint8)TD_DOUBLE);
+            break;
+        case tBool:
+            *resultType = nsXPTType((uint8)TD_BOOL);
+            break;
+        case tStr : 
+            *resultType = nsXPTType((uint8)(TD_PWSTRING | XPT_TDP_POINTER));
+            break;
+        case tID  : 
+            *resultType = nsXPTType((uint8)(TD_PNSIID | XPT_TDP_POINTER));
+            break;
+        case tISup: 
+            *resultType = nsXPTType((uint8)(TD_INTERFACE_IS_TYPE | XPT_TDP_POINTER));
+            *resultID = NS_GET_IID(nsISupports);
+            break;
+        case tNull: 
+            // FALL THROUGH
+        case tVar :
+            *resultType = nsXPTType((uint8)(TD_INTERFACE_IS_TYPE | XPT_TDP_POINTER));
+            *resultID = NS_GET_IID(nsIVariant);
+            break;
+        case tArr : 
+            // FALL THROUGH
+        case tUnk : 
+            // FALL THROUGH
+        case tErr : 
+            // FALL THROUGH
+        default:
+            NS_ERROR("bad state");
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 {
     if(JSVAL_IS_INT(mJSVal))
@@ -111,11 +257,13 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     // leaving only JSObject...
     NS_ASSERTION(JSVAL_IS_OBJECT(mJSVal), "invalid type of jsval!");
+    
+    JSObject* jsobj = JSVAL_TO_OBJECT(mJSVal);
 
-    // let's see if it is a xpcJSID
+    // Let's see if it is a xpcJSID.
 
     // XXX It might be nice to have a non-allocing version of xpc_JSObjectToID.
-    nsID* id = xpc_JSObjectToID(ccx, JSVAL_TO_OBJECT(mJSVal));
+    nsID* id = xpc_JSObjectToID(ccx, jsobj);
     if(id)
     {
         JSBool success = NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
@@ -123,6 +271,34 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         return success;
     }
     
+    // Let's see if it is a js array object.
+
+    jsuint len;
+
+    if(JS_IsArrayObject(ccx, jsobj) && 
+       JS_GetArrayLength(ccx, jsobj, &len) && len)
+    {
+        nsXPTType type;
+        nsID id;
+
+        if(!XPCArrayHomogenizer::GetTypeForArray(ccx, jsobj, len, &type, &id))
+            return JS_FALSE; 
+
+        if(!XPCConvert::JSArray2Native(ccx, &mData.u.array.mArrayValue, 
+                                       mJSVal, len, len,
+                                       type, type.IsPointer(),
+                                       &id, nsnull))
+            return JS_FALSE;
+
+        mData.mType = nsIDataType::VTYPE_ARRAY;
+        if(type.IsInterfacePointer())
+            mData.u.array.mArrayInterfaceID = id;
+        mData.u.array.mArrayCount = len;
+        mData.u.array.mArrayType = type.TagPart();
+        
+        return JS_TRUE;
+    }    
+
     // XXX This could be smarter and pick some more interesting iface.
 
     nsXPConnect*  xpc;
@@ -130,7 +306,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
     const nsIID& iid = NS_GET_IID(nsISupports);
 
     return nsnull != (xpc = nsXPConnect::GetXPConnect()) &&
-           NS_SUCCEEDED(xpc->WrapJS(ccx, JSVAL_TO_OBJECT(mJSVal),
+           NS_SUCCEEDED(xpc->WrapJS(ccx, jsobj,
                         iid, getter_AddRefs(wrapper))) &&
            NS_SUCCEEDED(nsVariant::SetFromInterface(&mData, iid, wrapper));
 }
@@ -151,16 +327,17 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
     if(xpcvariant)
     {
         jsval realVal = xpcvariant->GetJSVal();
-        if(JSVAL_IS_PRIMITIVE(realVal) || type == nsIDataType::VTYPE_ID)
+        if(JSVAL_IS_PRIMITIVE(realVal) || 
+           type == nsIDataType::VTYPE_ARRAY ||
+           type == nsIDataType::VTYPE_ID)
         {
-            // Not a JSObject (or is a JSObject representing an nsID),.
+            // Not a JSObject (or is a JSArray or is a JSObject representing 
+            // an nsID),.
             // So, just pass through the underlying data.
             *pJSVal = realVal;
             return JS_TRUE;
         }
 
-        // XXX Need to deal with the Array case!
-        
         // else, it's an object and we really need to double wrap it if we've 
         // already decided that its 'natural' type is as some sort of interface.
         
@@ -177,6 +354,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
     nsAutoString astring;
     PRUint32 size;
     xpctvar.flags = 0;
+    JSBool success;
 
     switch(type)
     {
@@ -265,9 +443,84 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                 xpctvar.SetValIsInterface();
             break;
         }
-        case nsIDataType::VTYPE_ARRAY:        
-            // XXX FIXME
-            return JS_FALSE;
+        case nsIDataType::VTYPE_ARRAY:
+        {
+            nsDiscriminatedUnion du;
+            nsVariant::Initialize(&du);
+            nsresult rv;
+
+            rv = variant->GetAsArray(&du.u.array.mArrayType,
+                                     &du.u.array.mArrayInterfaceID,
+                                     &du.u.array.mArrayCount,
+                                     &du.u.array.mArrayValue);
+            if(NS_FAILED(rv))
+                return JS_FALSE;
+        
+            // must exit via VARIANT_DONE from here on...
+            du.mType = nsIDataType::VTYPE_ARRAY;
+            success = JS_FALSE;
+
+            nsXPTType conversionType;
+            PRUint16 elementType = du.u.array.mArrayType;
+            const nsID* pid = nsnull;
+
+            switch(elementType)
+            {
+                case nsIDataType::VTYPE_INT8:        
+                case nsIDataType::VTYPE_INT16:        
+                case nsIDataType::VTYPE_INT32:        
+                case nsIDataType::VTYPE_INT64:        
+                case nsIDataType::VTYPE_UINT8:        
+                case nsIDataType::VTYPE_UINT16:        
+                case nsIDataType::VTYPE_UINT32:        
+                case nsIDataType::VTYPE_UINT64:        
+                case nsIDataType::VTYPE_FLOAT:        
+                case nsIDataType::VTYPE_DOUBLE:        
+                case nsIDataType::VTYPE_BOOL:        
+                case nsIDataType::VTYPE_CHAR:        
+                case nsIDataType::VTYPE_WCHAR:        
+                    conversionType = nsXPTType((uint8)elementType);
+                    break;
+
+                case nsIDataType::VTYPE_ID:        
+                case nsIDataType::VTYPE_CHAR_STR:        
+                case nsIDataType::VTYPE_WCHAR_STR:        
+                    conversionType = nsXPTType((uint8)elementType | XPT_TDP_POINTER);
+                    break;
+
+                case nsIDataType::VTYPE_INTERFACE:        
+                    pid = &NS_GET_IID(nsISupports);
+                    conversionType = nsXPTType((uint8)elementType | XPT_TDP_POINTER);
+                    break;
+
+                case nsIDataType::VTYPE_INTERFACE_IS:        
+                    pid = &du.u.array.mArrayInterfaceID;
+                    conversionType = nsXPTType((uint8)elementType | XPT_TDP_POINTER);
+                    break;
+
+                // The rest are illegal.
+                case nsIDataType::VTYPE_VOID:        
+                case nsIDataType::VTYPE_ASTRING:        
+                case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
+                case nsIDataType::VTYPE_STRING_SIZE_IS:        
+                case nsIDataType::VTYPE_ARRAY:
+                case nsIDataType::VTYPE_EMPTY:
+                default:
+                    NS_ERROR("bad type in array!");
+                    goto VARIANT_DONE;
+            }
+
+            success = 
+                XPCConvert::NativeArray2JS(ccx, pJSVal, 
+                                           (const void**)&du.u.array.mArrayValue,
+                                           conversionType, pid,
+                                           du.u.array.mArrayCount, 
+                                           scope, pErr);
+
+VARIANT_DONE:                                
+            nsVariant::Cleanup(&du);
+            return success;
+        }        
         case nsIDataType::VTYPE_VOID:        
         case nsIDataType::VTYPE_EMPTY:
             *pJSVal = JSVAL_VOID;
@@ -278,8 +531,6 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
     }
 
     // If we are here then we need to convert the data in the xpctvar.
-
-    PRBool success;
     
     if(xpctvar.type.TagPart() == TD_PSTRING_SIZE_IS ||
        xpctvar.type.TagPart() == TD_PWSTRING_SIZE_IS)
