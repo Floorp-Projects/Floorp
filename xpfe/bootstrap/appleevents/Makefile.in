@@ -90,12 +90,16 @@ REZ_TOOL = /Developer/Tools/Rez
 SDEF_SRC = $(srcdir)/mozilla.sdef
 RES_DEST = mozillaSuite.r
 RSRC_DEST = mozillaSuite.rsrc
+PACKAGE_DIR = $(DIST)/package
 
-$(RSRC_DEST): $(SDEF_SRC)
-	$(SDP_TOOL) -fa -o $(RES_DEST) $(SDEF_SRC) 
+$(RSRC_DEST): $(SDEF_SRC) $(PACKAGE_DIR)
+	NEXT_ROOT= $(SDP_TOOL) -fa -o $(RES_DEST) $(SDEF_SRC) 
 	$(REZ_TOOL) -useDF -o $(RSRC_DEST) $(RES_DEST) 
-	cp $(RSRC_DEST) $(DIST)/package/
-	rm -f $(RES_DEST) $(RSRC_DEST)
+	cp $(RSRC_DEST) $(PACKAGE_DIR)
+	rm -f $(RES_DEST)
+
+$(PACKAGE_DIR):
+	mkdir $(PACKAGE_DIR)
 
 libs:: $(RSRC_DEST)
 
