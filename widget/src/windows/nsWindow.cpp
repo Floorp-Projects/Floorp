@@ -5051,8 +5051,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
       mIMECompUnicode->SetCapacity((compStrLen / sizeof(WCHAR))+1);
 
+      long buflen = compStrLen + sizeof(WCHAR);
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompUnicode->get(), compStrLen, compStrLen);
+        (LPVOID)mIMECompUnicode->get(), buflen, compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
       mIMECompUnicode->SetLength(compStrLen);
     } else {
@@ -5060,8 +5061,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
       mIMECompString->SetCapacity(compStrLen+1);
 
+      long buflen = compStrLen + 1;
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompString->get(), compStrLen+1, compStrLen);
+        (LPVOID)mIMECompString->get(), buflen, compStrLen);
       mIMECompString->SetLength(compStrLen);
     }
 #ifdef DEBUG_IME
@@ -5185,20 +5187,22 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
       mIMECompUnicode->SetCapacity((compStrLen / sizeof(WCHAR)) + 1);
 
+      long buflen = compStrLen + sizeof(WCHAR);
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext,
         GCS_COMPSTR,
         (LPVOID)mIMECompUnicode->get(),
-        compStrLen, compStrLen);
+        buflen, compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
       mIMECompUnicode->SetLength(compStrLen);
     } else {
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPSTR, NULL, 0, compStrLen);
       mIMECompString->SetCapacity(compStrLen+1);
 
+      long buflen = compStrLen + 1;
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
         GCS_COMPSTR,
         (char*)mIMECompString->get(),
-        compStrLen+1, compStrLen);
+        buflen, compStrLen);
       mIMECompString->SetLength(compStrLen);
     }
 #ifdef DEBUG_IME
