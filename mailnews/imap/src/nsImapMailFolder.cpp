@@ -1708,9 +1708,9 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
 
 NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-    if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIMsgFolder> inbox;
   nsCOMPtr<nsIMsgFolder> rootFolder;
   rv = GetRootFolder(getter_AddRefs(rootFolder));
@@ -1719,6 +1719,8 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     PRUint32 numFolders;
     rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
   }
+  if (inbox)
+  {
     nsCOMPtr <nsIEventQueue> eventQ;
     NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
@@ -1726,8 +1728,9 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
                         getter_AddRefs(eventQ));
     inbox->SetGettingNewMessages(PR_TRUE);
     rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
+  }
 
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::Shutdown(PRBool shutdownChildren)

@@ -2115,8 +2115,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
 	}
 
+  if (inbox)
     rv = localMailServer->GetNewMail(aWindow, nsnull, inbox, nsnull); 
-    return rv;
+  return rv;
 }
 
 nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
