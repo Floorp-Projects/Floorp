@@ -178,7 +178,7 @@ class nsDerivedSafe : public T
       NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
-#ifndef XP_OS2_VACPP
+#if !defined(XP_OS2_VACPP) && !defined(AIX)
       void operator delete( void*, size_t );                  // NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 #endif
