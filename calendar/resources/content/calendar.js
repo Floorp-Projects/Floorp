@@ -508,6 +508,7 @@ function newToDoCommand()
    args.onOk =  self.addToDoDialogResponse;
    args.calendarToDo = calendarToDo;
 
+   window.setCursor( "wait" );
    // open the dialog modally
    openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditEvent", "chrome,modal", args );
 }
@@ -663,8 +664,8 @@ function editToDo( calendarToDo )
    args.onOk = self.modifyToDoDialogResponse;           
    args.calendarToDo = calendarToDo;
    
+   window.setCursor( "wait" );
    // open the dialog modally
-   
    openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditToDo", "chrome,modal", args );
 }
    
@@ -694,6 +695,120 @@ function modifyToDoDialogResponse( calendarToDo, Server )
    gICalLib.modifyTodo( calendarToDo, Server );
 }
 
+
+/**
+*  This is called from the unifinder's edit command
+*/
+
+function editEventCommand()
+{
+   if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
+   {
+      var calendarEvent = gCalendarWindow.EventSelection.selectedEvents[0];
+
+      if( calendarEvent != null )
+      {
+         editEvent( calendarEvent );
+      }
+   }
+}
+
+
+/**
+*  This is called from the unifinder's delete command
+*/
+
+function deleteEventCommand( DoNotConfirm )
+{
+   if( unifinderToDoHasFocus() )
+   {
+      unifinderDeleteToDoCommand( DoNotConfirm );
+      return;
+   }
+   
+   var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
+   
+   if( SelectedItems.length == 1 )
+   {
+      var calendarEvent = SelectedItems[0];
+
+      if ( calendarEvent.title != "" ) {
+         if( !DoNotConfirm ) {        
+            if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
+               gICalLib.deleteEvent( calendarEvent.id );
+
+               gCalendarWindow.clearSelectedEvent( calendarEvent );
+            }
+         }
+         else
+         {
+            gICalLib.deleteEvent( calendarEvent.id );
+
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+         }
+      }
+      else
+      {
+         if( !DoNotConfirm ) {        
+            if ( confirm( confirmDeleteUntitledEvent ) ) {
+               gICalLib.deleteEvent( calendarEvent.id );
+
+               gCalendarWindow.clearSelectedEvent( calendarEvent );
+            }
+         }
+         else
+         {
+            gICalLib.deleteEvent( calendarEvent.id );
+
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+         }
+      }
+   }
+   else if( SelectedItems.length > 1 )
+   {
+      var NumberOfEventsToDelete = SelectedItems.length;
+
+      gICalLib.batchMode = true;
+      
+      if( !DoNotConfirm )
+      {
+         if( confirm( "Are you sure you want to delete all selected events?" ) )
+         {
+            gCalendarWindow.clearSelectedEvent( calendarEvent );
+            
+            while( SelectedItems.length )
+            {
+               var ThisItem = SelectedItems.pop();
+               
+               gICalLib.deleteEvent( ThisItem.id );
+            }
+         }
+      }
+      else
+      {
+         gCalendarWindow.clearSelectedEvent( calendarEvent );
+            
+         while( SelectedItems.length )
+         {
+            var ThisItem = SelectedItems.pop();
+            
+            gICalLib.deleteEvent( ThisItem.id );
+         }
+      }
+
+      gICalLib.batchMode = false;
+
+      /*
+      var NumberOfTotalEvents  = gCalendarWindow.calendarEvent.getAllEvents().length;
+
+      if( NumberOfTotalEvents = NumberOfEventsToDelete )
+      {
+         //highlight today's date
+         gCalendarWindow.currentView.hiliteTodaysDate();
+      }
+      */
+   }
+}
 
 function goFindNewCalendars()
 {
@@ -886,11 +1001,17 @@ function publishCalendarDataDialogResponse( CalendarPublishObject )
 /*
 ** A little function to see if we can show the tooltip
 */
-function checkTooltip()
+function checkTooltip( event )
 {
    //returns true if you can show the tooltip
    //or false if the tooltip should not be shown
+   
    return( showTooltip );
+   
+   if( getCalendarEventFromEvent( event ) == false )
+      return( false );
+   else
+      return( true );
 }
 
 

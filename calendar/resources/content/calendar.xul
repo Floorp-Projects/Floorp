@@ -80,9 +80,9 @@
  
 <commandset id="calendar_commands">
    <command id="new_command" oncommand="newEventCommand( event )"/>
-   <command id="delete_command" oncommand="unifinderDeleteCommand( )" disabled="true"/>
-   <command id="delete_command_no_confirm" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
-   <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
+   <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true"/>
+   <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true"/>
+   <command id="modify_command" oncommand="editEventCommand()" disabled="true"/>
    <command id="send_event_command" oncommand="sendEvent()" disabled="true"/>
    <command id="print_command" oncommand="print()" disabled="true"/>
    <command id="cut_command" oncommand="cutToClipboard()" disabled="true"/>
@@ -91,8 +91,8 @@
    <command id="select_all_command" oncommand="selectAllEvents()"/>
    
    <command id="new_todo_command" oncommand="newToDoCommand()"/>
-   <command id="modify_todo_command" oncommand="unifinderDoubleClickToDo( event )"/>
-   <command id="delete_todo_command" oncommand="unifinderDeleteToDoCommand()"/>
+   <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
+   <command id="delete_todo_command" oncommand="deleteToDoCommand()"/>
 
    <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
    <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
@@ -277,7 +277,9 @@
    </toolbar>
 </toolbox>
 
-<tooltip id="savetip" onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip() );"/>
+<tooltip id="eventTooltip" onpopupshowing="changeToolTipTextForEvent( event );"/>
+
+<tooltip id="taskTooltip" onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip( event ) );"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
 
@@ -379,12 +381,11 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren tooltip="savetip"
+                  <treechildren tooltip="taskTooltip"
                     onclick="unifinderClickToDo( event )" 
-                    ondblclick="unifinderDoubleClickToDo( event )"
+                    ondblclick="modifyToDoCommand( event )"
                     onmousedown="unifinderMouseDownToDo( event )"
-                    context="taskitem-context-menu">
-                 </treechildren>
+                    context="taskitem-context-menu"/>
                </tree>
             </vbox>
          </vbox>
@@ -455,8 +456,7 @@
                   </treecols>
        
                   <!-- on mousedown here happens before onclick above -->
-                  <treechildren tooltip="savetip" 
-                    onmousemove="changeToolTipTextForEvent( event )"
+                  <treechildren tooltip="eventTooltip" 
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
