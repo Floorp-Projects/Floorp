@@ -2778,19 +2778,7 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
 
-  nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
-
-  if (!shell) {
-    return NS_OK;
-  }
-
-  nsPresContext *cx = shell->GetPresContext();
-  NS_ENSURE_TRUE(cx, NS_OK);
-
-  nsCOMPtr<nsISupports> container = cx->GetContainer();
-  NS_ENSURE_TRUE(container, NS_OK);
-
-  nsCOMPtr<nsIDOMWindow> window(do_GetInterface(container));
+  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
   NS_ENSURE_TRUE(window, NS_OK);
 
   nsCOMPtr<nsISelection> selection;
@@ -3531,18 +3519,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     return NS_ERROR_FAILURE;
 
   if (aDesignMode.LowerCaseEqualsLiteral("on")) {
-    // go through hoops to get dom window (see nsHTMLDocument::GetSelection)
-    nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
-    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-
-    nsPresContext *cx = shell->GetPresContext();
-    NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsISupports> container = cx->GetContainer();
-    NS_ENSURE_TRUE(container, NS_OK);
-
-    // get content root frame
-    nsCOMPtr<nsIDOMWindow> domwindow(do_GetInterface(container));
+    nsCOMPtr<nsIDOMWindow> domwindow(do_QueryInterface(mScriptGlobalObject));
     NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
 
     rv = editSession->MakeWindowEditable(domwindow, "html", PR_FALSE);
