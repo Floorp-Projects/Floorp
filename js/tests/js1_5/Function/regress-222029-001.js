@@ -52,7 +52,7 @@
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
-var bug =   222029;
+var bug = 222029;
 var summary = "Make our f.caller property match IE's wrt f.apply and f.call";
 var status = '';
 var statusitems = [];
