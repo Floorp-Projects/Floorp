@@ -253,15 +253,15 @@ nsHTTPChannel::GetContentType(char * *aContentType)
             return rv;
             // we should probably set the content-type for this response at this stage too.
         }
-    }
+	}
 
     // if all else fails treat it as text/html?
-    *aContentType = nsCRT::strdup(DUMMY_TYPE);
-    if (!*aContentType) {
+	if (!*aContentType) 
+		*aContentType = nsCRT::strdup(DUMMY_TYPE);
+    if (!*aContentType)
         return NS_ERROR_OUT_OF_MEMORY;
-    } else {
+    else
         rv = NS_OK;
-    }
 
     return rv;
 }
