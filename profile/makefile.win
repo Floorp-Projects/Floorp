@@ -28,8 +28,10 @@ DIRS= \
     pref-migrator \
     defaults \
     idlservices \
+!if "$(_MSC_VER)" != "" && "$(_MSC_VER)" != "1100"
     acct \
     acctidl \
+!endif
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
