@@ -58,7 +58,8 @@ nsLinkableAccessible(aDOMNode, aShell)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aDOMNode));
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
+  if (!shell)
+    return;
 
   shell->GetDocument(getter_AddRefs(doc));
   nsAutoString mapElementName;

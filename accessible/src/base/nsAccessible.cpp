@@ -1232,7 +1232,7 @@ nsIFrame* nsAccessible::GetFrame()
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
   if (!shell) 
-       return nsnull;  
+    return nsnull;  
 
   nsIFrame* frame = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
