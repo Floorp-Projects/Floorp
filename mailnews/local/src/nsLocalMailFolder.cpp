@@ -954,7 +954,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
 	mMailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
 	nsString author, subject;
 	nsISupports *msgSupports;
-	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
 		for(int i = 0; i < mListeners->Count(); i++)
 		{
