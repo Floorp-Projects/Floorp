@@ -326,8 +326,12 @@ function PerformExpandForAllOpenServers(tree)
 							//dump("uri="+uri+"\n");
 							server = GetServer(uri);
 							if (server) {
-								//dump("PerformExpand on " + uri + "\n");
-								server.PerformExpand(msgWindow);
+								// don't do this for imap servers.
+								// see bug #41943
+								if (server.type != "imap") {
+									//dump("PerformExpand on " + uri + "\n");
+									server.PerformExpand(msgWindow);
+								}
 							}
 						}
 					}
