@@ -2772,6 +2772,29 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
         {
             mLoadType = aLoadType;
             OnNewURI(aURI, nsnull, mLoadType);
+		    /* Clear out LSHE so that further anchor visits get
+			 * recorded in SH and SH won't misbehave. i think this is  
+			 * sufficient for now to take care of any Sh mis-behaviors.
+			 * Other option is to call OnEndDocumentLoad() with a dummy channel
+			 * and uriloader and letting everybody know that we are done
+			 *  with this target load. I don't think that is necessay
+			 * considering that nsIDocLoaderObserver is on its way out.
+			 *  Hopefully  the following is sufficient.
+			 */
+			LSHE = nsnull;
+			/* Set the title for the SH entry for this target url. so that
+			 * SH menus in go/back/forward buttons won't be empty for this.
+			 */
+		    if(mSessionHistory)
+			{
+               PRInt32 index = -1;
+               mSessionHistory->GetIndex(&index);
+               nsCOMPtr<nsISHEntry>   shEntry;
+               mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(shEntry));
+               if(shEntry)
+                 shEntry->SetTitle(mTitle.GetUnicode());      
+			}
+   
             return NS_OK;
         }
     }
