@@ -668,3 +668,4 @@ NS_NewScriptInstallVersion(nsIScriptContext *aContext, nsISupports *aSupports,
 
   return NS_OK;
 }
+

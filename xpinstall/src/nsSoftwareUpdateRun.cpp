@@ -597,3 +597,4 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
     delete info;
 }
+

@@ -755,3 +755,4 @@ nsAppleSingleDecoder::PLstrcmp(StringPtr str1, StringPtr str2)
 		
 	return bEqual;
 }
+

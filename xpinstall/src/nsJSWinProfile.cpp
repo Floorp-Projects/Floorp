@@ -224,3 +224,4 @@ InitWinProfilePrototype(JSContext *jscontext, JSObject *global, JSObject **winPr
 
   return NS_OK;
 }
+

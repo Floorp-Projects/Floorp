@@ -696,3 +696,4 @@ NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aContext,
 
   return NS_OK;
 }
+

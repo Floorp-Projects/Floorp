@@ -88,3 +88,4 @@ nsXPIProxy::Confirm(const PRUnichar* aTitle, const PRUnichar* aText, PRBool *aRe
 
     return dialog->Confirm( nsnull, aTitle, aText, aReturn );
 }
+

@@ -423,3 +423,4 @@ nsInstallFile::RegisterPackageNode()
 {
     return PR_TRUE;
 }
+

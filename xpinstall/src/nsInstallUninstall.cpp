@@ -219,3 +219,4 @@ REGERR su_UninstallProcessItem(char *component_path)
     }
     return err;
 }
+
