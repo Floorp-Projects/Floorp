@@ -669,10 +669,10 @@ nsHTMLInputElement::Click()
 	  nsMouseEvent event;
 	  event.eventStructType = NS_GUI_EVENT;
 	  event.message = NS_MOUSE_LEFT_CLICK;
-    event.isShift = false;
-    event.isControl = false;
-    event.isAlt = false;
-    event.isMeta = false;
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
     event.clickCount = 0;
     event.widget = nsnull;
           rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
