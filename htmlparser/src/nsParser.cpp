@@ -263,7 +263,7 @@ nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mProgressEventSink);
   NS_IF_RELEASE(mSink);
-
+  NS_IF_RELEASE(mParserFilter);
   NS_IF_RELEASE(mBundle);
 
   //don't forget to add code here to delete 
