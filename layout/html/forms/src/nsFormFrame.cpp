@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Adrian Havill <havill@redhat.com>
  */
 
 
@@ -1356,6 +1357,8 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 #define FILENAME "\"; filename=\""
 #define CONTENT_TYPE "Content-Type: "
 #define CONTENT_ENCODING "Content-Encoding: "
+#define CONTENT_TRANSFER "Content-Transfer-Encoding: "
+#define BINARY_CONTENT "binary"
 #define BUFSIZE 1024
 #define MULTIPART "multipart/form-data"
 #define SEP "--"
@@ -1472,6 +1475,16 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           }
           // End Content-Disp Line (quote plus CRLF)
           contentLen += 1 + crlfLen;  // ending name quote plus CRLF
+
+          // File inputs should include Content-Transfer-Encoding
+          if (NS_FORM_INPUT_FILE == type) {
+            contentLen += PL_strlen(CONTENT_TRANSFER);
+            // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
+            // always using "binary"?
+            contentLen += PL_strlen(BINARY_CONTENT);
+            contentLen += crlfLen;
+          }
+          // End Content-Transfer-Encoding line
 
           // File inputs add Content-Type line
           if (NS_FORM_INPUT_FILE == type) {
@@ -1625,6 +1638,23 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               // end content-type header
 	          }
+
+            // File inputs should include Content-Transfer-Encoding to prep server side
+            // MIME decoders
+
+            if (NS_FORM_INPUT_FILE == type) {
+              rv = postDataFile->Write(CONTENT_TRANSFER, wantbytes = PL_strlen(CONTENT_TRANSFER), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+              // XXX is there any way to tell when "8bit" or "7bit" etc may be more appropriate than
+              // always using "binary"?
+
+              rv = postDataFile->Write(BINARY_CONTENT, wantbytes = PL_strlen(BINARY_CONTENT), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+            }
 
             // Blank line before value
             rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
