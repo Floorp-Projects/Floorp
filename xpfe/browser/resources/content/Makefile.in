@@ -36,6 +36,7 @@ CHROME_CONTENT = \
 	viewsource.js \
 	navigator.xul \
 	navigatorOverlay.xul \
+	navExtraOverlay.xul \
 	navigator.js \
 	navigatorDD.js \
 	openLocation.xul \
