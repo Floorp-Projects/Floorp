@@ -27,13 +27,18 @@
 #include "nsUnixTimerCIID.h"
 #include "nsTimerPh.h"
 
+// {48B62AD2-48D3-11d3-B224-000064657374}
+#define NS_TIMER_PH_CID \
+{ 0x48b62ad2, 0x48d3, 0x11d3, \
+  { 0xb2, 0x24, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerPh)
 
 static nsModuleComponentInfo components[] =
 {
   { "Photon timer",
     NS_TIMER_PH_CID,
-    "component://netscape/timer/unix/ph", 
+    "component://netscape/timer", 
     nsTimerPhConstructor }
 };
 
