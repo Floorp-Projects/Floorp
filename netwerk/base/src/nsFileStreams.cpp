@@ -475,12 +475,14 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool del
     if (NS_FAILED(rv)) return rv;
 
     if (deleteOnClose) {
-#if defined(XP_UNIX) || defined(XP_WIN)
+        // POSIX compatible filesystems allow a file to be unlinked while a
+        // file descriptor is still referencing the file.  since we've already
+        // opened the file descriptor, we'll try to remove the file.  if that
+        // fails, then we'll just remember the nsIFile and remove it after we
+        // close the file descriptor.
         rv = file->Remove(PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
-#else
-        mFileToDelete = file;
-#endif
+        if (NS_FAILED(rv))
+            mFileToDelete = file;
     }
     return NS_OK;
 }
@@ -491,13 +493,11 @@ nsFileInputStream::Close()
     PR_FREEIF(mLineBuffer);
     mLineBuffer = nsnull;       // in case Close() is called again after failing
     nsresult rv = nsFileStream::Close();
-#if !defined(XP_UNIX) && !defined(XP_WIN)
     if (NS_FAILED(rv)) return rv;
     if (mFileToDelete) {
         rv = mFileToDelete->Remove(PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
     }
-#endif
     return rv;
 }
 

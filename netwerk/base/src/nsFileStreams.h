@@ -109,10 +109,8 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 protected:
-    nsLineBuffer * mLineBuffer;
-#if !defined(XP_UNIX) && !defined(XP_WIN)
+    nsLineBuffer     *mLineBuffer;
     nsCOMPtr<nsIFile> mFileToDelete;
-#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
