@@ -38,6 +38,10 @@
   // for |NS_MIN|, |NS_MAX|, and |NS_COUNT|...
 #endif
 
+#ifndef nsPrivateSharableString_h___
+#include "nsPrivateSharableString.h"
+#endif
+
 #include "nsMemory.h"
 
 /*
@@ -293,9 +297,7 @@ SameFragment( const Iterator& lhs, const Iterator& rhs )
 
 template <class CharT>
 class basic_nsAReadableString
-    /*
-      ...
-    */
+    : public nsPrivateSharableString<CharT>
   {
     public:
       typedef CharT                     char_type;
@@ -813,10 +815,9 @@ class basic_nsLiteralString
 
       virtual PRUint32 Length() const;
 
-      operator const CharT*() const
-        {
-          return mStart;
-        }
+
+      const CharT* get() const        { return mStart; }
+      operator const CharT*() const   { return get(); }   // to be deprecated, prefer |get()|
 
     private:
       const CharT* mStart;
@@ -1402,68 +1403,78 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStr
 #define kDefaultFlatStringSize 64
 
 template <class CharT>
-class basic_nsPromiseFlatString :
-   public basic_nsAReadableString<CharT>
-{
- public:
-  explicit basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& );
-  virtual ~basic_nsPromiseFlatString( ) {
-    if (mOwnsBuffer) {
-      nsMemory::Free((void*)mBuffer);
-    }
-  }
+class basic_nsPromiseFlatString
+    : public basic_nsAReadableString<CharT>
+  {
+    public:
+      explicit basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& );
 
-  virtual PRUint32  Length() const { return mLength; }
-  virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const;
+      virtual
+     ~basic_nsPromiseFlatString( )
+        {
+          if (mOwnsBuffer)
+            nsMemory::Free((void*)mBuffer);
+        }
 
-  operator const CharT*() const { return mBuffer; }
+      virtual PRUint32  Length() const { return mLength; }
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const;
 
- protected:
-  PRUint32 mLength;
-  const CharT *mBuffer;
-  PRBool mOwnsBuffer;
-  CharT mInlineBuffer[kDefaultFlatStringSize];
-};
+      const CharT* get() const        { return mBuffer; }
+      operator const CharT*() const   { return get(); } // to be deprecated, prefer |get()|
+
+    protected:
+      PRUint32      mLength;
+      const CharT*  mBuffer;
+      PRBool        mOwnsBuffer;
+      CharT         mInlineBuffer[kDefaultFlatStringSize];
+  };
 
 template <class CharT>
-basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& aString ) : mLength(aString.Length()), mOwnsBuffer(PR_FALSE)
-{
-  typedef nsReadingIterator<CharT> iterator;
+basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& aString )
+    : mLength(aString.Length()),
+      mOwnsBuffer(PR_FALSE)
+  {
+    typedef nsReadingIterator<CharT> iterator;
 
-  iterator start( aString.BeginReading() );
-  iterator end( aString.EndReading() );
+    iterator start;
+    iterator end;
+    
+    aString.BeginReading(start);
+    aStrign.EndReading(end);
 
-  // First count the number of buffers
-  PRInt32 buffer_count = 0;
-  while ( start != end ) {
-    buffer_count++;
-    start += start.size_forward();
+    // First count the number of buffers
+    PRInt32 buffer_count = 0;
+    while ( start != end )
+      {
+        buffer_count++;
+        start += start.size_forward();
+      }
+
+    // Now figure out what we want to do with the string
+    start = aString.BeginReading();
+    // XXX Not guaranteed null-termination in the first case
+    // If it's a single buffer, we just use the implementation's buffer
+    if ( buffer_count == 1 ) 
+      mBuffer = start.get();
+    // If it's too big for our inline buffer, we allocate a new one
+    else if ( mLength > kDefaultFlatStringSize-1 )
+      {
+        CharT* result = NS_STATIC_CAST(CharT*, nsMemory::Alloc((mLength+1) * sizeof(CharT)));
+    		CharT* toBegin = result;
+        *copy_string(start, end, toBegin) = CharT(0);
+
+        mBuffer = result;
+        mOwnsBuffer = PR_TRUE;
+      }
+    // Otherwise copy into our internal buffer
+    else
+      {
+        mBuffer = mInlineBuffer;
+        CharT* toBegin = &mInlineBuffer[0];
+        copy_string( start, end, toBegin);
+        mInlineBuffer[mLength] = 0;
+      }
   }
-
-  // Now figure out what we want to do with the string
-  start = aString.BeginReading();
-  // XXX Not guaranteed null-termination in the first case
-  // If it's a single buffer, we just use the implementation's buffer
-  if ( buffer_count == 1 ) 
-    mBuffer = start.get();
-  // If it's too big for our inline buffer, we allocate a new one
-  else if ( mLength > kDefaultFlatStringSize-1 ) {
-    CharT* result = NS_STATIC_CAST(CharT*, 
-				   nsMemory::Alloc((mLength+1) * sizeof(CharT)));
-		CharT* toBegin = result;
-    *copy_string(start, end, toBegin) = CharT(0);
-
-    mBuffer = result;
-    mOwnsBuffer = PR_TRUE;
-  }
-  // Otherwise copy into our internal buffer
-  else {
-    mBuffer = mInlineBuffer;
-    CharT* toBegin = &mInlineBuffer[0];
-    copy_string( start, end, toBegin);
-    mInlineBuffer[mLength] = 0;
-  }
-}
 
 
 template <class CharT>
@@ -1471,20 +1482,21 @@ const CharT*
 basic_nsPromiseFlatString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, 
 						 nsFragmentRequest aRequest, 
 						 PRUint32 aOffset ) const 
-{
-  switch ( aRequest ) {
-    case kFirstFragment:
-    case kLastFragment:
-    case kFragmentAt:
-      aFragment.mEnd = (aFragment.mStart = mBuffer) + mLength;
-      return aFragment.mStart + aOffset;
-    
-    case kPrevFragment:
-    case kNextFragment:
-    default:
-      return 0;
+  {
+    switch ( aRequest )
+      {
+        case kFirstFragment:
+        case kLastFragment:
+        case kFragmentAt:
+          aFragment.mEnd = (aFragment.mStart = mBuffer) + mLength;
+          return aFragment.mStart + aOffset;
+        
+        case kPrevFragment:
+        case kNextFragment:
+        default:
+          return 0;
+      }
   }
-}
 
 
 typedef basic_nsAReadableString<PRUnichar>    nsAReadableString;
