@@ -48,6 +48,7 @@ nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
   name.AssignWithConversion(aName);
   style = aStyle;
   variant = aVariant;
+  familyNameQuirks = PR_FALSE;
   weight = aWeight;
   decorations = aDecoration;
   size = aSize;
@@ -61,6 +62,7 @@ nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
 {
   style = aStyle;
   variant = aVariant;
+  familyNameQuirks = PR_FALSE;
   weight = aWeight;
   decorations = aDecoration;
   size = aSize;
@@ -72,6 +74,7 @@ nsFont::nsFont(const nsFont& aOther)
 {
   style = aOther.style;
   variant = aOther.variant;
+  familyNameQuirks = aOther.familyNameQuirks;
   weight = aOther.weight;
   decorations = aOther.decorations;
   size = aOther.size;
@@ -90,6 +93,7 @@ PRBool nsFont::Equals(const nsFont& aOther) const
 {
   if ((style == aOther.style) &&
       (variant == aOther.variant) &&
+      (familyNameQuirks == aOther.familyNameQuirks) &&
       (weight == aOther.weight) &&
       (decorations == aOther.decorations) &&
       (size == aOther.size) &&
@@ -105,6 +109,7 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   name = aOther.name;
   style = aOther.style;
   variant = aOther.variant;
+  familyNameQuirks = aOther.familyNameQuirks;
   weight = aOther.weight;
   decorations = aOther.decorations;
   size = aOther.size;

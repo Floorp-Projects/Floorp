@@ -56,6 +56,13 @@ struct nsCSSStruct {
   // EMPTY on purpose.  ABSTRACT with no virtuals (typedef void nsCSSStruct?)
 };
 
+// Eventually we should stop using the nsCSS* structures for storing
+// nsCSSDeclaration's data, because they're extremely bloated.  However,
+// we'll still want to use them for nsRuleData.  So, for now, use
+// typedefs and inheritance (forwards, when the rule data needs extra
+// data) to make the rule data structs from the declaration structs.
+typedef nsCSSStruct nsRuleDataStruct;
+
 
 // SID for the nsCSSFont struct {f645dbf8-b48a-11d1-9ca5-0060088f9ff7}
 #define NS_CSS_FONT_SID   \
@@ -139,6 +146,10 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSValue mStretch; // NEW
 };
 
+struct nsRuleDataFont : public nsCSSFont {
+  PRBool mFamilyFromHTML; // Is the family from an HTML FONT element
+};
+
 struct nsCSSValueList {
   nsCSSValueList(void);
   nsCSSValueList(const nsCSSValueList& aCopy);
@@ -166,6 +177,9 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue      mBackPositionY;
   nsCSSValue      mBackClip;
   nsCSSValue      mBackOrigin;
+};
+
+struct nsRuleDataColor : public nsCSSColor {
 };
 
 struct nsCSSShadow {
@@ -201,6 +215,9 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
+};
+
+struct nsRuleDataText : public nsCSSText {
 };
 
 struct nsCSSRect {
@@ -239,15 +256,15 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mOverflow;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
-  // mLang member variable is here not because in needs to be stored 
-  // in nsCSSDeclaration objects but because it's needed on the
-  // stack when the struct is used in WalkRuleTree.
-  nsCSSValue mLang;
 
   // temp fix for bug 24000 
   nsCSSValue mBreakBefore;
   nsCSSValue mBreakAfter;
   // end temp fix
+};
+
+struct nsRuleDataDisplay : public nsCSSDisplay {
+  nsCSSValue mLang;
 };
 
 struct nsCSSMargin : public nsCSSStruct  {
@@ -276,6 +293,9 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mFloatEdge; // NEW
 };
 
+struct nsRuleDataMargin : public nsCSSMargin {
+};
+
 struct nsCSSPosition : public nsCSSStruct  {
   nsCSSPosition(void);
   nsCSSPosition(const nsCSSPosition& aCopy);
@@ -297,6 +317,9 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSValue  mZIndex;
 };
 
+struct nsRuleDataPosition : public nsCSSPosition {
+};
+
 struct nsCSSList : public nsCSSStruct  {
   nsCSSList(void);
   nsCSSList(const nsCSSList& aCopy);
@@ -311,6 +334,9 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSValue mImage;
   nsCSSValue mPosition;
   nsCSSRect*  mImageRegion;
+};
+
+struct nsRuleDataList : public nsCSSList {
 };
 
 struct nsCSSTable : public nsCSSStruct  { // NEW
@@ -336,6 +362,9 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSValue mCols; // Not mappable via CSS, only using HTML4 table attrs.
 };
 
+struct nsRuleDataTable : public nsCSSTable {
+};
+
 struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSBreaks(void);
   nsCSSBreaks(const nsCSSBreaks& aCopy);
@@ -354,6 +383,9 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSValue mPageBreakInside;
 };
 
+struct nsRuleDataBreaks : public nsCSSBreaks {
+};
+
 struct nsCSSPage : public nsCSSStruct  { // NEW
   nsCSSPage(void);
   nsCSSPage(const nsCSSPage& aCopy);
@@ -367,6 +399,9 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   nsCSSValue mMarks;
   nsCSSValue mSizeWidth;
   nsCSSValue mSizeHeight;
+};
+
+struct nsRuleDataPage : public nsCSSPage {
 };
 
 struct nsCSSCounterData {
@@ -406,6 +441,9 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSQuotes*      mQuotes;
 };
 
+struct nsRuleDataContent : public nsCSSContent {
+};
+
 struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(void);
   nsCSSUserInterface(const nsCSSUserInterface& aCopy);
@@ -425,6 +463,9 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   
   nsCSSValueList* mCursor;
   nsCSSValue      mForceBrokenImageIcon;
+};
+
+struct nsRuleDataUserInterface : public nsCSSUserInterface {
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW
@@ -458,6 +499,9 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSValue mVolume;
 };
 
+struct nsRuleDataAural : public nsCSSAural {
+};
+
 #ifdef INCLUDE_XUL
 struct nsCSSXUL : public nsCSSStruct  {
   nsCSSXUL(void);
@@ -475,6 +519,9 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSValue  mBoxOrient;
   nsCSSValue  mBoxPack;
   nsCSSValue  mBoxOrdinal;
+};
+
+struct nsRuleDataXUL : public nsCSSXUL {
 };
 #endif
 
@@ -500,6 +547,9 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mStrokeMiterlimit;
   nsCSSValue mStrokeOpacity;
   nsCSSValue mStrokeWidth;
+};
+
+struct nsRuleDataSVG : public nsCSSSVG {
 };
 #endif
 
