@@ -13,12 +13,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-VERBOSE=1
 IGNORE_MANIFEST=1
 DEPTH=..\..\..\..\..\.. 
-
-# Get CFLAGS, OBJDIR and such defined before using them in this makefile...
-!include "$(DEPTH)\config\config.mak"
 
 #################################################################
 
