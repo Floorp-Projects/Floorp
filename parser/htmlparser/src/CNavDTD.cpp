@@ -725,7 +725,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
  
   static eHTMLTags gBodyBlockers[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map};
   PRInt32 theBodyBlocker=GetTopmostIndexOf(gBodyBlockers,sizeof(gBodyBlockers)/sizeof(eHTMLTag_unknown));
-  if(!theBodyBlocker) {
+  if(kNotFound==theBodyBlocker) {
     if(CanPropagate(eHTMLTag_body,aChildTag)) {
       mHasOpenBody=PR_TRUE;
       CStartToken theToken(eHTMLTag_body);  //open the body container...
@@ -1269,7 +1269,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
     }//if
   }//if
   else if(nsHTMLElement::IsTextTag(aChildTag)){
-
+    result=PR_TRUE;
   }
   return result;
 }
