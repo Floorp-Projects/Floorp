@@ -431,6 +431,8 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
     printf("CACHE: GetCachedNetDataByID(id=%d) created nsDiskCacheRecord %p\n", RecordID, *_retval);
 #endif /* DEBUG_dp */
     return rv;
+  } else if(!info) {
+    rv = NS_ERROR_FAILURE;
   }
 
 #ifdef DEBUG_dp
