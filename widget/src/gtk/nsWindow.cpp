@@ -86,7 +86,7 @@ nsWindow::nsWindow()
   mSuperWin = 0;
   mMozArea = 0;
   mMozAreaClosestParent = 0;
-  
+  mScrollExposeCounter = 0;
   mMenuBar = nsnull;
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
@@ -888,7 +888,6 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
   NS_ADDREF(win);
 
   // dispatch an "onclose" event. to delete immediately, call win->Destroy()
-
   nsGUIEvent event;
   nsEventStatus status;
   
@@ -1284,7 +1283,9 @@ struct GtkLayoutChild {
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   UnqueueDraw();
-  mUpdateArea->SetTo(0,0,0,0);
+  mUpdateArea->Offset(aDx, aDy);
+  //  printf("mScrollExposeCounter++ = %i\n", mScrollExposeCounter);
+  mScrollExposeCounter++;
 
   if (mSuperWin) {
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
@@ -1588,12 +1589,18 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     // expose.. we didn't get an Invalidate, so we should up the count here
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
+    mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
 
     //    NS_ADDREF(mUpdateArea);
     //    event.region = mUpdateArea;
+    if (mScrollExposeCounter > 1) {
+      //printf("mScrollExposeCounter-- = %i\n", mScrollExposeCounter);
+      mScrollExposeCounter--;
+      return NS_OK;
+    }
+    //    printf("mScrollExposeCounter   = 0\n");
+    mScrollExposeCounter = 0;
 
-
-    mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
 
     //    printf("\n\n");
     PRInt32 x, y, w, h;
@@ -1610,6 +1617,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
       //      printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
       return NS_OK;
     }
+
 
     // print out stuff here incase the event got dropped on the floor above
 #ifdef NS_DEBUG
@@ -2363,6 +2371,11 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
       XWindowEvent(event->xany.display, event->xany.window, ExposureMask, (XEvent *)&extra_event);
       pevent.rect->UnionRect(*pevent.rect, nsRect(extra_event.xexpose.x, extra_event.xexpose.y,
                                                   extra_event.xexpose.width, extra_event.xexpose.height));
+      if (mScrollExposeCounter > 0) {
+        int delta = MIN(mScrollExposeCounter, extra_event.xexpose.count);
+        //printf("delta = %i\n", delta);
+        mScrollExposeCounter -= delta;
+      }
     } while (extra_event.xexpose.count > 0);
   }
   
