@@ -292,9 +292,15 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      res = mAlias->GetPreferred(newCharset, preferred);
                      if(NS_SUCCEEDED(res))
                      {
-                        res = NotifyWebShell(aDocumentID,
-                                        NS_ConvertUCS2toUTF8(preferred).get(),
-                                        kCharsetFromMetaTag);
+                        // following charset should have been detected by parser
+                        if (!preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
+                            !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
+                            !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
+                            !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
+                            !preferred.Equals(NS_LITERAL_STRING("UTF-32LE")))
+                          res = NotifyWebShell(aDocumentID,
+                                          NS_ConvertUCS2toUTF8(preferred).get(),
+                                          kCharsetFromMetaTag);
                      } // if(NS_SUCCEEDED(res)
                  }
              } // if EqualIgnoreCase 
