@@ -35,16 +35,18 @@
 #endif
 
 #ifdef XP_MAC
-//	PStrFromCStr converts the source C string to a destination
-//	pascal string as it copies. The dest string will
-//	be truncated to fit into an Str255 if necessary.
-//  If the C String pointer is NULL, the pascal string's length is set to zero
-//
+/*
+ * PStrFromCStr converts the source C string to a destination
+ * pascal string as it copies. The dest string will
+ * be truncated to fit into an Str255 if necessary.
+ * If the C String pointer is NULL, the pascal string's length is
+ * set to zero.
+ */
 static void PStrFromCStr(const char* src, Str255 dst)
 {
 	short 	length  = 0;
 	
-	// handle case of overlapping strings
+	/* handle case of overlapping strings */
 	if ( (void*)src == (void*)dst )
 	{
 		unsigned char*		curdst = &dst[1];
@@ -55,7 +57,10 @@ static void PStrFromCStr(const char* src, Str255 dst)
 		{
 			unsigned char	nextChar;
 			
-			// use nextChar so we don't overwrite what we are about to read
+			/*
+                         * Use nextChar so we don't overwrite what we
+                         * are about to read
+                         */
 			nextChar = *(const unsigned char*)src++;
 			*curdst++ = thisChar;
 			thisChar = nextChar;
@@ -67,11 +72,15 @@ static void PStrFromCStr(const char* src, Str255 dst)
 	else if ( src != NULL )
 	{
 		unsigned char*		curdst = &dst[1];
-		short 				overflow = 255;		// count down so test it loop is faster
+		/* count down so test it loop is faster */
+		short 				overflow = 255;
 		register char		temp;
 	
-		// Can't do the K&R C thing of Òwhile (*s++ = *t++)Ó because it will copy trailing zero
-		// which might overrun pascal buffer.  Instead we use a temp variable.
+		/*
+                 * Can't do the K&R C thing of while (*s++ = *t++)
+                 * because it will copy trailing zero which might
+                 * overrun pascal buffer.  Instead we use a temp variable.
+                 */
 		while ( (temp = *src++) != 0 ) 
 		{
 			*(char*)curdst++ = temp;
@@ -104,7 +113,7 @@ static void dprintf(const char *format, ...)
 	debugstr(buffer);
 	JS_DELETE(buffer);
 }
-#endif
+#endif   /* XP_MAC */
 
 JS_EXPORT_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 {
