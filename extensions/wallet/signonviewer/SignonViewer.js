@@ -32,7 +32,7 @@ var nopreviewList       = [];
 var nocaptureList       = [];
 var goneSS              = ""; // signon
 var goneIS              = ""; // ignored site
-var goneFR              = ""; // form preview
+var goneNP              = ""; // nopreview
 var goneNC              = ""; // nocapture
 
 // function : <SignonViewer.js>::Startup();
@@ -47,6 +47,7 @@ function Startup()
   LoadSignons();
   LoadReject();
   LoadNopreview();
+  LoadNocapture();
 }
 
 /*** =================== SAVED SIGNONS CODE =================== ***/
@@ -128,8 +129,35 @@ function LoadNopreview()
 // purpose  : deletes no-preview entry(s)
 function DeleteNoPreviewForm()
 {
-  goneFR += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');
+  goneNP += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');
   DoButtonEnabling("nopreviewtree");
+}
+
+/*** =================== NO CAPTURE FORMS CODE =================== ***/
+
+// function : <SignonViewer.js>::LoadNocapture();
+// purpose  : reads non-captured forms from interface and loads into tree
+function LoadNocapture()
+{
+  nocaptureList = signonviewer.GetNocaptureValue();
+  var delim = nocaptureList[0];
+  nocaptureList = nocaptureList.split(delim);
+  for(var i = 1; i < nocaptureList.length; i++)
+  {
+    var currSignon = TrimString(nocaptureList[i]);
+    // TEMP HACK until morse fixes signon viewer functions
+    currSignon = RemoveHTMLFormatting(currSignon);
+    var form = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
+    AddItem("nocapturelist",[form],"nocapture_",i-1);
+  }
+}
+
+// function : <SignonViewer>::DeleteNoCaptureForm()
+// purpose  : deletes no-capture entry(s)
+function DeleteNoCaptureForm()
+{
+  goneNC += DeleteItemSelected('nocapturetree','nocapture_','nocapturelist');
+  DoButtonEnabling("nocapturetree");
 }
 
 /*** =================== GENERAL CODE =================== ***/
@@ -139,7 +167,7 @@ function DeleteNoPreviewForm()
 function onOK()
 {
   var result = "|goneS|"+goneSS+"|goneR|"+goneIS;
-  result += "|goneC|"+goneNC+"|goneP|"+goneFR+"|";
+  result += "|goneC|"+goneNC+"|goneP|"+goneNP+"|";
   signonviewer.SetValue(result, window);
   return true;
 }
@@ -233,6 +261,9 @@ function HandleEvent( event, page )
     case 2:
       DeleteNoPreviewForm();
       break;
+    case 2:
+      DeleteNoCaptureForm();
+      break;
     default:
       break;
     }
@@ -251,6 +282,9 @@ function DoButtonEnabling( treeid )
     break;
   case "nopreviewtree":
     var button = document.getElementById("removeNoPreview");
+    break;
+  case "nocapturetree":
+    var button = document.getElementById("removeNoCapture");
     break;
   default:
     break;

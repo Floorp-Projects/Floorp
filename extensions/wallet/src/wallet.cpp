@@ -25,6 +25,7 @@
    wallet.cpp
 */
 
+#define AutoCapture
 #include "wallet.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -327,6 +328,9 @@ PRIVATE nsVoidArray * wallet_FieldToSchema_list=0;
 PRIVATE nsVoidArray * wallet_SchemaToValue_list=0;
 PRIVATE nsVoidArray * wallet_SchemaConcat_list=0;
 PRIVATE nsVoidArray * wallet_URL_list = 0;
+#ifdef AutoCapture
+PRIVATE nsVoidArray * wallet_DistinguishedSchema_list = 0;
+#endif
 
 #define LIST_COUNT(list) (list ? list->Count() : 0)
 
@@ -761,9 +765,10 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
     szMessage, /* this is the main message */
     NULL, /* This is the checkbox message */
     yes_string, /* first button text */
-    no_string, /* second button text */
-    never_string, /* third button text */
+    never_string, /* second button text */
+    no_string, /* third button text */
     NULL, /* fourth button text */
+    /* note: buttons are laid out as FIRST, THIRD, FOURTH, SECOND */
     NULL, /* first edit field label */
     NULL, /* second edit field label */
     NULL, /* first edit field initial and final value */
@@ -782,9 +787,9 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
 
   if (buttonPressed == 0) {
     return 1; /* YES button pressed */
-  } else if (buttonPressed == 1) {
-    return 0; /* NO button pressed */
   } else if (buttonPressed == 2) {
+    return 0; /* NO button pressed */
+  } else if (buttonPressed == 1) {
     return -1; /* NEVER button pressed */
   } else {
     return 0; /* should never happen */
@@ -1302,6 +1307,15 @@ time_t keyExpiresTime;
 char* keyFileName = nsnull;
 char* schemaValueFileName = nsnull;
 
+const char URLFileName[] = "URL.tbl";
+const char allFileName[] = "All.tbl";
+const char fieldSchemaFileName[] = "FieldSchema.tbl";
+const char URLFieldSchemaFileName[] = "URLFieldSchema.tbl";
+const char schemaConcatFileName[] = "SchemaConcat.tbl";
+#ifdef AutoCapture
+const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
+#endif
+
 PUBLIC PRUnichar
 Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   return key.CharAt((PRInt32)(writeCount % key.Length()));
@@ -1792,7 +1806,7 @@ wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCo
  * write contents of designated list into designated file
  */
 void
-wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
+wallet_WriteToFile(const char filename[], nsVoidArray* list, PRBool obscure) {
   wallet_MapElement * ptr;
 
   if (obscure && !Wallet_KeySet()) {
@@ -1859,7 +1873,7 @@ wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
  */
 void
 wallet_ReadFromFile
-    (char* filename, nsVoidArray*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
+    (const char filename[], nsVoidArray*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
@@ -1891,6 +1905,15 @@ wallet_ReadFromFile
       /* end of file reached */
       break;
     }
+
+#ifdef AutoCapture
+    /* Distinguished schema list is a list of single entries, not name/value pairs */
+    if (PL_strcmp(filename, distinguishedSchemaFileName) == 0) {
+      nsVoidArray* dummy = NULL;
+      wallet_WriteToList(item1, item1, dummy, list, placement);
+      continue;
+    }
+#endif
 
     nsAutoString item2;
     if (NS_FAILED(wallet_GetLine(strm, item2, obscure, saveCount, &readCount))) {
@@ -1963,7 +1986,7 @@ wallet_ReadFromFile
  */
 void
 wallet_ReadFromURLFieldToSchemaFile
-    (char* filename, nsVoidArray*& list, PlacementType placement = DUP_AFTER) {
+    (const char filename[], nsVoidArray*& list, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
@@ -2418,7 +2441,7 @@ wallet_Patch(nsFileSpec dirSpec, nsAutoString& patch, nsInputFileStream patchFil
 void
 wallet_FetchFromNetCenter() {
   nsresult rv;
-  char * url = nsnull;
+  nsCAutoString url;
 
   /* obtain the server from which to fetch the patch files */
   SI_GetCharPref(pref_WalletServer, &wallet_Server);
@@ -2446,7 +2469,6 @@ wallet_FetchFromNetCenter() {
     url = (nsAutoString(wallet_Server) + "patchfile." + version).ToNewCString();
     Recycle(version);
     rv = NS_NewURItoFile(url, dirSpec, "patchfile");
-    Recycle(url);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -2480,10 +2502,17 @@ wallet_FetchFromNetCenter() {
 
     /* make sure all tables exist and no error occured */
     if (!error) {
-      nsInputFileStream table1(dirSpec + "SchemaConcat.tbl");
-      nsInputFileStream table2(dirSpec + "FieldSchema.tbl");
-      nsInputFileStream table3(dirSpec + "URLFieldSchema.tbl");
+#ifdef AutoCapture
+      nsInputFileStream table0(dirSpec + distinguishedSchemaFileName);
+#endif
+      nsInputFileStream table1(dirSpec + schemaConcatFileName);
+      nsInputFileStream table2(dirSpec + fieldSchemaFileName);
+      nsInputFileStream table3(dirSpec + URLFieldSchemaFileName);
+#ifdef AutoCapture
+      if (table0.is_open() && table1.is_open() && table2.is_open() && table3.is_open()) {
+#else
       if (table1.is_open() && table2.is_open() && table3.is_open()) {
+#endif
         return;
       }
     }
@@ -2492,32 +2521,33 @@ wallet_FetchFromNetCenter() {
   /* failed to do the patching, get files manually */
 
 #ifdef fetchingIndividualFiles
-  url = (nsAutoString(wallet_Server) + "URLFieldSchema.tbl").ToNewCString();
-  rv = NS_NewURItoFile(url, dirSpec, "URLFieldSchema.tbl");
-  Recycle(url);
+  url = nsCAutoString(wallet_Server) + URLFieldSchemaFileName;
+  rv = NS_NewURItoFile(url, dirSpec, URLFieldSchemaFileName);
   if (NS_FAILED(rv)) {
     return;
   }
-  url = (nsAutoString(wallet_Server) + "SchemaConcat.tbl").ToNewCString();
-  rv = NS_NewURItoFile(url, dirSpec, "SchemaConcat.tbl");
-  Recycle(url);
+  url = nsCAutoString(wallet_Server) + schemaConcatFileName;
+  rv = NS_NewURItoFile(url, dirSpec, schemaConcatFileName);
   if (NS_FAILED(rv)) {
     return;
   }
-  url = (nsAutoString(wallet_Server) + "FieldSchema.tbl").ToNewCString();
-  rv = NS_NewURItoFile(url, dirSpec, "FieldSchema.tbl");
-  Recycle(url);
+  url = nsCAutoString(wallet_Server) + fieldSchemaFileName;
+  rv = NS_NewURItoFile(url, dirSpec, fieldSchemaFileName);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  url = nsCAutoString(wallet_Server) + distinguishedSchemaFileName;
+  rv = NS_NewURItoFile(url, dirSpec, distinguishedSchemaFileName);
   if (NS_FAILED(rv)) {
     return;
   }
 #else
-  /* first fetch the composite of all files and put it into All.tbl */
-  url = (nsAutoString(wallet_Server) + "All.tbl").ToNewCString();
-  rv = NS_NewURItoFile(url, dirSpec, "All.tbl");
-  Recycle(url);
+  /* first fetch the composite of all files and put it into a local composite file */
+  url = nsCAutoString(wallet_Server) + allFileName;
+  rv = NS_NewURItoFile(url, dirSpec, allFileName);
 
-  /* fetch version number from first line of All.tbl */
-  nsInputFileStream allFile(dirSpec + "All.tbl");
+  /* fetch version number from first line of local composite file */
+  nsInputFileStream allFile(dirSpec + allFileName);
   nsAutoString buffer;
   if (NS_FAILED(wallet_GetLine(allFile, buffer, PR_FALSE))) {
     return;
@@ -2535,7 +2565,9 @@ wallet_FetchFromNetCenter() {
   SI_SetCharPref(pref_WalletVersion, version);
   Recycle(version);
 
-  /* get next line of All.tbl.  This is name of first subfile in the composite file */
+  /* get next line of local composite file.
+   *  This is name of first subfile in the composite file
+   */
   if (NS_FAILED(wallet_GetLine(allFile, buffer, PR_FALSE))) {
     return;
   }
@@ -2572,7 +2604,7 @@ wallet_FetchFromNetCenter() {
  * initialization for wallet session (done only once)
  */
 void
-wallet_Initialize(PRBool fetchTables) {
+wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
   static PRBool wallet_tablesInitialized = PR_FALSE;
   static PRBool wallet_keyInitialized = PR_FALSE;
 
@@ -2595,10 +2627,17 @@ wallet_Initialize(PRBool fetchTables) {
 //wallet_PauseStopwatch();
 //wallet_DumpStopwatch();
 #endif
-    wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
-    wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
-    wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
+#ifdef AutoCapture
+    wallet_ReadFromFile(distinguishedSchemaFileName, wallet_DistinguishedSchema_list, PR_FALSE, PR_FALSE);
+#endif
+    wallet_ReadFromFile(fieldSchemaFileName, wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
+    wallet_ReadFromURLFieldToSchemaFile(URLFieldSchemaFileName, wallet_URLFieldToSchema_list);
+    wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
     wallet_tablesInitialized = PR_TRUE;
+  }
+
+  if (!unlockDatabase) {
+    return;
   }
 
   /* see if key has timed out */
@@ -2686,7 +2725,7 @@ void
 wallet_InitializeURLList() {
   static PRBool wallet_URLListInitialized = PR_FALSE;
   if (!wallet_URLListInitialized) {
-    wallet_ReadFromFile("URL.tbl", wallet_URL_list, PR_FALSE, PR_TRUE);
+    wallet_ReadFromFile(URLFileName, wallet_URL_list, PR_FALSE, PR_TRUE);
     wallet_URLListInitialized = PR_TRUE;
   }
 }
@@ -2835,7 +2874,7 @@ Wallet_SignonViewerReturn (nsAutoString results) {
         url->item2.SetCharAt('n', NO_PREVIEW);
         if (url->item2.CharAt(NO_CAPTURE) == 'n') {
           wallet_FreeURL(url);
-          wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+          wallet_WriteToFile(URLFileName, wallet_URL_list, PR_FALSE);
         }
       }
     }
@@ -2850,7 +2889,7 @@ Wallet_SignonViewerReturn (nsAutoString results) {
         url->item2.SetCharAt('n', NO_CAPTURE);
         if (url->item2.CharAt(NO_PREVIEW) == 'n') {
           wallet_FreeURL(url);
-          wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+          wallet_WriteToFile(URLFileName, wallet_URL_list, PR_FALSE);
         }
       }
     }
@@ -2864,6 +2903,11 @@ PRIVATE PRBool
 wallet_OKToCapture(char* urlName) {
   nsAutoString url = nsAutoString(urlName);
 
+  /* exit if pref is not set */
+  if (!wallet_GetFormsCapturingPref()) {
+    return PR_FALSE;
+  }
+
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
   nsVoidArray* dummy;
@@ -2876,20 +2920,17 @@ wallet_OKToCapture(char* urlName) {
 
   /* ask user if we should capture the values on this form */
   PRUnichar * message = Wallet_Localize("WantToCaptureForm?");
-  PRUnichar * checkMessage = Wallet_Localize("NeverSave");
-  PRBool checkValue;
-  PRBool result = Wallet_CheckConfirmYN(message, checkMessage, &checkValue);
-  if (!result) {
-    if (checkValue) {
-      /* add URL to list with NO_CAPTURE indicator set */
-      value.SetCharAt('y', NO_CAPTURE);
-      wallet_WriteToList(url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
-      wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
-    }
+
+  PRInt32 button = Wallet_3ButtonConfirm(message);
+  /* button 1 = YES, 0 = NO, -1 = NEVER */
+  if (button == -1) { /* NEVER button was pressed */
+    /* add URL to list with NO_CAPTURE indicator set */
+    value.SetCharAt('y', NO_CAPTURE);
+    wallet_WriteToList(url, value, dummy, wallet_URL_list, DUP_OVERWRITE);
+    wallet_WriteToFile(URLFileName, wallet_URL_list, PR_FALSE);
   }
-  Recycle(checkMessage);
   Recycle(message);
-  return result;
+  return (button == 1);
 }
 #endif
 
@@ -3165,7 +3206,7 @@ WLLT_PrefillReturn(nsAutoString results) {
     wallet_ReadFromList(url, value, dummy, wallet_URL_list);
     value.SetCharAt('y', NO_PREVIEW);
     wallet_WriteToList(url, value, dummy, wallet_URL_list, DUP_OVERWRITE);
-    wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    wallet_WriteToFile(URLFileName, wallet_URL_list, PR_FALSE);
   }
 
   /* process the list, doing the fillins */
@@ -3465,7 +3506,6 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
             nsIDOMNode* formNode = nsnull;
             forms->Item(formX, &formNode);
             if (nsnull != formNode) {
-              PRInt32 count = 0;
               nsIDOMHTMLFormElement* formElement = nsnull;
               result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
               if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
@@ -3477,73 +3517,43 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                   /* now find out how many text fields are on the form */
                   PRUint32 numElements;
                   elements->GetLength(&numElements);
-                  for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+                  for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
                     nsIDOMNode* elementNode = nsnull;
-                    elements->Item(elementX, &elementNode);
+                    elements->Item(elementY, &elementNode);
                     if (nsnull != elementNode) {
                       nsIDOMHTMLInputElement* inputElement;  
                       result =
                         elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
                       if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
+
+                        /* it's an input element */
                         nsAutoString type;
                         result = inputElement->GetType(type);
-                        if (NS_SUCCEEDED(result)) {
-                          PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
-                          if (isText) {
-                            count++;
+                        if ((NS_SUCCEEDED(result)) &&
+                            ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+                          nsAutoString field;
+                          result = inputElement->GetName(field);
+                          if (NS_SUCCEEDED(result)) {
+                            nsAutoString value;
+                            result = inputElement->GetValue(value);
+                            if (NS_SUCCEEDED(result)) {
+
+                              /* get schema name from vcard attribute if it exists */
+                              nsAutoString vcardValue("");
+                              nsIDOMElement * element;
+                              result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
+                              if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
+                                nsAutoString vcardName("VCARD_NAME");
+                                result = element->GetAttribute(vcardName, vcardValue);
+                                NS_RELEASE(element);
+                              }
+                              wallet_Capture(doc, field, value, vcardValue);
+                            }
                           }
                         }
                         NS_RELEASE(inputElement);
                       }
                       NS_RELEASE(elementNode);
-                    }
-                  }
-
-                  /* save form if it meets all necessary conditions */
-#ifdef AutoCapture
-                  if (wallet_GetFormsCapturingPref() && (count>=3)) {
-#else
-                  if (count>=3) {
-#endif
-                    /* conditions all met, now save it */
-                    for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
-                      nsIDOMNode* elementNode = nsnull;
-                      elements->Item(elementY, &elementNode);
-                      if (nsnull != elementNode) {
-                        nsIDOMHTMLInputElement* inputElement;  
-                        result =
-                          elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
-                        if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
-
-                          /* it's an input element */
-                          nsAutoString type;
-                          result = inputElement->GetType(type);
-                          if ((NS_SUCCEEDED(result)) &&
-                              ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
-                            nsAutoString field;
-                            result = inputElement->GetName(field);
-                            if (NS_SUCCEEDED(result)) {
-                              nsAutoString value;
-                              result = inputElement->GetValue(value);
-                              if (NS_SUCCEEDED(result)) {
-
-                                /* get schema name from vcard attribute if it exists */
-                                nsAutoString vcardValue("");
-                                nsIDOMElement * element;
-                                result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
-                                if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
-                                  nsAutoString vcardName("VCARD_NAME");
-                                  result = element->GetAttribute(vcardName, vcardValue);
-                                  NS_RELEASE(element);
-                                }
-                                wallet_Capture(doc, field, value, vcardValue);
-                              }
-                            }
-                          }
-                          NS_RELEASE(inputElement);
-                        }
-                        NS_RELEASE(elementNode);
-                      }
                     }
                   }
                   NS_RELEASE(elements);
@@ -3590,130 +3600,168 @@ WLLT_OnSubmit(nsIContent* formNode) {
   (void)docURL->GetSpec(&URLName);
 
   /* get to the form elements */
-  PRInt32 count = 0;
-  nsIDOMHTMLFormElement* formElement = nsnull;
-  nsresult result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
-  if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
-    nsIDOMHTMLCollection* elements = nsnull;
-    result = formElement->GetElements(&elements);
-    if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
+  nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));
+  if (htmldoc == nsnull) {
+    nsCRT::free(URLName);
+    return;
+  }
 
-      nsVoidArray * signonData = new nsVoidArray();
-      si_SignonDataStruct * data;
+  nsCOMPtr<nsIDOMHTMLCollection> forms;
+  nsresult rv = htmldoc->GetForms(getter_AddRefs(forms));
+  if (NS_FAILED(rv) || (forms == nsnull)) {
+    nsCRT::free(URLName);
+    return;
+  }
 
-      /* got to the form elements at long last */
-      /* now build arrays for single signon */
-      /* also find out how many text fields are on the form */
-      PRUint32 numElements;
-      elements->GetLength(&numElements);
-      for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
-        nsIDOMNode* elementNode = nsnull;
-        elements->Item(elementX, &elementNode);
-        if (nsnull != elementNode) {
-          nsIDOMHTMLInputElement* inputElement;  
-          result =
-            elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
-          if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
-            nsAutoString type;
-            result = inputElement->GetType(type);
-            if (NS_SUCCEEDED(result)) {
-              PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
-              PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
-              if (isText) {
-                count++;
-              }
-              if (isText || isPassword) {
-                nsAutoString value;
-                result = inputElement->GetValue(value);
-                if (NS_SUCCEEDED(result)) {
-                  nsAutoString field;
-                  result = inputElement->GetName(field);
-                  if (NS_SUCCEEDED(result)) {
-                    data = new si_SignonDataStruct;
-                    data->value = value;
-                    data->name = field;
-                    data->isPassword = isPassword;
-                    signonData->AppendElement(data);
+  PRUint32 elementNumber = 0;
+  PRUint32 numForms;
+  forms->GetLength(&numForms);
+  for (PRUint32 formX = 0; formX < numForms; formX++) {
+    nsCOMPtr<nsIDOMNode> formNode;
+    forms->Item(formX, getter_AddRefs(formNode));
+    if (nsnull != formNode) {
+#ifndef AutoCapture
+      PRInt32 fieldcount = 0;
+#endif
+      nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(formNode));
+      if ((nsnull != formElement)) {
+        nsCOMPtr<nsIDOMHTMLCollection> elements;
+        rv = formElement->GetElements(getter_AddRefs(elements));
+        if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
+          /* got to the form elements at long last */ 
+          nsVoidArray * signonData = new nsVoidArray();
+          si_SignonDataStruct * data;
+          PRUint32 numElements;
+          elements->GetLength(&numElements);
+#ifdef AutoCapture
+          PRBool OKToPrompt = PR_FALSE;
+#endif
+          for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+            nsCOMPtr<nsIDOMNode> elementNode;
+            elements->Item(elementX, getter_AddRefs(elementNode));
+            if (nsnull != elementNode) {
+              nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
+              if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
+                nsAutoString type("");
+                rv = inputElement->GetType(type);
+                if (NS_SUCCEEDED(rv)) {
+
+                  PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
+                  PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
+#ifndef AutoCapture
+                  if (isText) {
+                    fieldcount++;
+                  }
+#endif
+                  if (isText || isPassword) {
+                    nsAutoString value;
+                    rv = inputElement->GetValue(value);
+                    if (NS_SUCCEEDED(rv)) {
+                      nsAutoString field;
+                      rv = inputElement->GetName(field);
+                      if (NS_SUCCEEDED(rv)) {
+                        data = new si_SignonDataStruct;
+                        data->value = value;
+                        data->name = field;
+                        data->isPassword = isPassword;
+                        signonData->AppendElement(data);
+#ifdef AutoCapture
+                        /* get schema from field */
+                        wallet_Initialize(PR_TRUE, PR_FALSE);
+                        wallet_InitializeCurrentURL(doc);
+                        nsAutoString schema;
+                        nsVoidArray* dummy;
+                        if (schema.Length() ||
+                            (wallet_ReadFromList(field, schema, dummy, wallet_specificURLFieldToSchema_list)) ||
+                            (wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list))) {
+                        }
+                        /* see if schema is in distinguished list */
+                        schema.ToLowerCase();
+                        wallet_MapElement * ptr;
+                        PRInt32 count = LIST_COUNT(wallet_DistinguishedSchema_list);
+                        for (PRInt32 i=0; i<count; i++) {
+                          ptr = NS_STATIC_CAST
+                            (wallet_MapElement*, wallet_DistinguishedSchema_list->ElementAt(i));
+                          if (ptr->item1 == schema && value.Length() > 0) {
+                            OKToPrompt = PR_TRUE;
+                            break;
+                          }
+                        }
+#endif
+                      }
+                    }
                   }
                 }
               }
             }
-            NS_RELEASE(inputElement);
           }
-          NS_RELEASE(elementNode);
-        }
-      }
 
-      /* save login if appropriate */
-      SINGSIGN_RememberSignonData (URLName, signonData);
-
-      PRInt32 count2 = signonData->Count();
-      for (PRInt32 i=count2-1; i>=0; i--) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
-        delete data;
-      }
-      delete signonData;
+          /* save login if appropriate */
+          SINGSIGN_RememberSignonData (URLName, signonData);
+          PRInt32 count2 = signonData->Count();
+          for (PRInt32 i=count2-1; i>=0; i--) {
+            data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
+            delete data;
+          }
+          delete signonData;
 
 #ifndef AutoCapture
-      /* give notification if this is first significant form submitted */
-      if ((count>=3) && !wallet_GetWalletNotificationPref()) {
+          /* give notification if this is first significant form submitted */
+          if ((fieldcount>=3) && !wallet_GetWalletNotificationPref()) {
 
-        /* conditions all met, now give notification */
-        PRUnichar * notification = Wallet_Localize("WalletNotification");
-        wallet_SetWalletNotificationPref(PR_TRUE);
-        Wallet_Alert(notification);
-        Recycle(notification);
-      }
+            /* conditions all met, now give notification */
+            PRUnichar * notification = Wallet_Localize("WalletNotification");
+            wallet_SetWalletNotificationPref(PR_TRUE);
+            Wallet_Alert(notification);
+            Recycle(notification);
+          }
 #else
-      /* save form if it meets all necessary conditions */
-      if (wallet_GetFormsCapturingPref() && (count>=3) && wallet_OKToCapture(URLName)) {
+          /* save form if it meets all necessary conditions */
+          if (wallet_GetFormsCapturingPref() && (OKToPrompt) && wallet_OKToCapture(URLName)) {
 
-        /* conditions all met, now save it */
-        for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
-          nsIDOMNode* elementNode = nsnull;
-          elements->Item(elementY, &elementNode);
-          if (nsnull != elementNode) {
-            nsIDOMHTMLInputElement* inputElement;  
-            result =
-              elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
-            if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
+            /* conditions all met, now save it */
+            for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
+              nsIDOMNode* elementNode = nsnull;
+              elements->Item(elementY, &elementNode);
+              if (nsnull != elementNode) {
+                nsIDOMHTMLInputElement* inputElement;  
+                rv =
+                  elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+                if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
 
-              /* it's an input element */
-              nsAutoString type;
-              result = inputElement->GetType(type);
-              if ((NS_SUCCEEDED(result)) &&
-                  ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
-                nsAutoString field;
-                result = inputElement->GetName(field);
-                if (NS_SUCCEEDED(result)) {
-                  nsAutoString value;
-                  result = inputElement->GetValue(value);
-                  if (NS_SUCCEEDED(result)) {
+                  /* it's an input element */
+                  nsAutoString type;
+                  rv = inputElement->GetType(type);
+                  if ((NS_SUCCEEDED(rv)) &&
+                      ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+                    nsAutoString field;
+                    rv = inputElement->GetName(field);
+                    if (NS_SUCCEEDED(rv)) {
+                      nsAutoString value;
+                      rv = inputElement->GetValue(value);
+                      if (NS_SUCCEEDED(rv)) {
 
-                    /* get schema name from vcard attribute if it exists */
-                    nsAutoString vcardValue("");
-                    nsIDOMElement * element;
-                    result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
-                    if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
-                      nsAutoString vcardName("VCARD_NAME");
-                      result = element->GetAttribute(vcardName, vcardValue);
-                      NS_RELEASE(element);
+                        /* get schema name from vcard attribute if it exists */
+                        nsAutoString vcardValue("");
+                        nsIDOMElement * element;
+                        rv = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
+                        if ((NS_SUCCEEDED(rv)) && (nsnull != element)) {
+                          nsAutoString vcardName("VCARD_NAME");
+                          rv = element->GetAttribute(vcardName, vcardValue);
+                          NS_RELEASE(element);
+                        }
+                        wallet_Capture(doc, field, value, vcardValue);
+                      }
                     }
-                    wallet_Capture(doc, field, value, vcardValue);
                   }
                 }
               }
-              NS_RELEASE(inputElement);
             }
-            NS_RELEASE(elementNode);
           }
+#endif
         }
       }
-#endif
-
-      NS_RELEASE(elements);
     }
-    NS_RELEASE(formElement);
   }
   nsCRT::free(URLName);
 }
