@@ -67,7 +67,14 @@
 <content>html</content>
 </container><!--b-->
 <content> to aid in testing features 
-under development.  It's also a great place to not use latin.
+under development.
+</content>
+
+<entity value="lt"/><content>a href="http://www.mozilla.org"</content>
+<entity value="gt"/></content>
+
+<content>
+It's also a great place to not use latin.
 </content>
 
 <comment><content> This is a comment;
