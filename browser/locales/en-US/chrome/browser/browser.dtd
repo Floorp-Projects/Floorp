@@ -318,8 +318,6 @@
 <!ENTITY copyButton.tooltip             "Copy">
 <!ENTITY pasteButton.tooltip            "Paste">
 
-<!ENTITY findOnSearchBarCmd.label       "Find in This Page">
-
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
 <!ENTITY quitApplicationCmdWin.accesskey   "x">
 <!ENTITY goBackCmd.commandKey "[">
@@ -355,15 +353,6 @@
 <!ENTITY bidiSwitchTextDirectionItem.label        "Switch Text Direction">
 <!ENTITY bidiSwitchTextDirectionItem.accesskey    "w">
 <!ENTITY bidiSwitchTextDirectionItem.commandkey   "X">
-
-<!ENTITY find.label "Find:">
-<!ENTITY findNext.label "Find Next">
-<!ENTITY findNext.tooltip "Find the next occurrence of the phrase">
-<!ENTITY findPrevious.label "Find Previous">
-<!ENTITY findPrevious.tooltip "Find the previous occurrence of the phrase">
-<!ENTITY findCloseButton.tooltip "Close Find bar">
-<!ENTITY highlight.label "Highlight">
-<!ENTITY highlight.tooltip "Highlight all occurrences of the phrase (Ctrl+Enter)">
 
 <!ENTITY findOnCmd.label     "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "F">

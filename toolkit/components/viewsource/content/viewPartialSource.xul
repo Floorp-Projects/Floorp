@@ -25,6 +25,7 @@
 #     Roger B. Sidje <rbs@maths.uq.edu.au>
 #     Pierre Chanial <p_ch@verizon.net>
 #     Blake Ross <blake@cs.stanford.edu>
+#     Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,11 +52,8 @@
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
-<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
-%browserDTD;
-<!ENTITY % findDTD SYSTEM "chrome://global/locale/finddialog.dtd" >
-%findDTD;
-
+<!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
+%findBarDTD;
 ]>
 
 <window id="main-window"
@@ -80,7 +78,7 @@
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
-  <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
+  <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
   <command id="cmd_print" oncommand="PrintUtils.print();"/>

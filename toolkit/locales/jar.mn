@@ -20,6 +20,8 @@
 + locale/@AB_CD@/global/editMenuOverlay.dtd             (%chrome/global/editMenuOverlay.dtd)
   locale/@AB_CD@/global/filepicker.dtd                  (%chrome/global/filepicker.dtd)
   locale/@AB_CD@/global/filepicker.properties           (%chrome/global/filepicker.properties)
+  locale/@AB_CD@/global/findbar.dtd                     (%chrome/global/findbar.dtd)
+  locale/@AB_CD@/global/findbar.properties              (%chrome/global/findbar.properties)
 + locale/@AB_CD@/global/finddialog.dtd                  (%chrome/global/finddialog.dtd)
 + locale/@AB_CD@/global/finddialog.properties           (%chrome/global/finddialog.properties)
 + locale/@AB_CD@/global/intl.css                        (%chrome/global/intl.css)
