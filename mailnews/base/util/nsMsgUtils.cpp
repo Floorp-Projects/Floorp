@@ -57,10 +57,13 @@
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsIRDFService.h"
+#include "nsIMimeConverter.h"
+#include "nsMsgMimeCID.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractID)
 {
@@ -350,7 +353,19 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
   PRBool result = PR_FALSE;
   NS_ASSERTION(stringP, "bad null param");
   if (!stringP) return PR_FALSE;
-  s = *stringP;
+
+  // decode the string
+  nsXPIDLCString decodedString;
+  nsCOMPtr<nsIMimeConverter> mimeConverter;
+  nsresult rv;
+  if (strstr(*stringP, "=?"))
+  {
+    mimeConverter = do_GetService(kCMimeConverterCID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = mimeConverter->DecodeMimeHeader(*stringP, getter_Copies(decodedString));
+  }
+
+  s = decodedString ? decodedString.get() : *stringP;
   L = lengthP ? *lengthP : strlen(s);
 
   s_end = s + L;
@@ -390,6 +405,40 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
 			}
 		}
 	}
+
+  if (decodedString)
+  {
+    // encode the string back if any modification is made
+    if (s != decodedString.get())
+    {
+      // extract between "=?" and "?"
+      // e.g. =?ISO-2022-JP?
+      char *p1 = strstr(*stringP, "=?");
+      if (p1) 
+      {
+        p1 += sizeof("=?")-1;         // skip "=?"
+        char *p2 = strchr(p1, '?');   // then search for '?' 
+        if (p2) 
+        {
+          char charset[kMAX_CSNAME] = "";
+          if (kMAX_CSNAME >= (p2 - p1))
+            strncpy(charset, p1, p2 - p1);
+          nsXPIDLCString encodedString;
+          rv = mimeConverter->EncodeMimePartIIStr_UTF8(s, PR_FALSE, charset, sizeof("Subject:"), 
+                                                       kMIME_ENCODED_WORD_SIZE, getter_Copies(encodedString));
+          if (NS_SUCCEEDED(rv)) 
+          {
+            strcpy((char *)*stringP, encodedString.get());
+            *lengthP = encodedString.Length();
+            return result;
+          }
+        }
+      }
+    }
+    else 
+      s = *stringP;   // no modification, set the original encoded string
+  }
+
 
   /* Decrease length by difference between current ptr and original ptr.
 	 Then store the current ptr back into the caller. */
