@@ -51,9 +51,9 @@ interface calITodo : calIItemBase
   const long CAL_TODO_STATUS_COMPLETED = 5;
   const long CAL_TODO_STATUS_INPROCESS = 6;
 
-  readonly attribute calIDateTime entryDate;
-  readonly attribute calIDateTime dueDate;
-  readonly attribute calIDateTime completedDate;
+  attribute calIDateTime entryDate;
+  attribute calIDateTime dueDate;
+  attribute calIDateTime completedDate;
   attribute short percentComplete;
 };
 
