@@ -876,7 +876,7 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISimpleEnumerator> pModules;
-    rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, getter_AddRefs(pModules));
+    rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, getter_AddRefs(pModules));
     if (NS_FAILED(rv)) return rv;
 
     // Go through the external modules and notify each one.
