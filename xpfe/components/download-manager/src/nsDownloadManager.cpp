@@ -698,7 +698,7 @@ nsDownloadManager::EndBatchUpdate()
 }
 
 NS_IMETHODIMP
-nsDownloadManager::Open(nsIDOMWindow* aParent)
+nsDownloadManager::Open(nsIDOMWindow* aParent, nsIDownload* aDownload)
 {
 
   // first assert new progress info so the ui is correctly updated
@@ -710,11 +710,16 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsISupports> dlSupports(do_QueryInterface(aDownload));
+
   // if the window's already open, do nothing (focusing it would be annoying)
   nsCOMPtr<nsIDOMWindowInternal> recentWindow;
   wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(recentWindow));
-  if (recentWindow)
-    return NS_OK;
+  if (recentWindow) {
+    nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+    return obsService->NotifyObservers(dlSupports, "download-starting", nsnull);
+  }
 
   // if we ever have the capability to display the UI of third party dl managers,
   // we'll open their UI here instead.
@@ -725,6 +730,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   nsCOMPtr<nsISupportsArray> params(do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID));
   nsCOMPtr<nsISupports> dsSupports(do_QueryInterface(mDataSource));
   params->AppendElement(dsSupports);
+  params->AppendElement(dlSupports);
 
   nsCOMPtr<nsIDOMWindow> newWindow;
   rv = ww->OpenWindow(aParent,
@@ -736,16 +742,12 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
 
   if (NS_FAILED(rv)) return rv;
 
-  // XXX whether or not mDocument is null is not a sufficient flag,
-  // because in the future we may support using a third party download manager that
-  // doesn't use our architecture
-
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(newWindow);
   if (!target) return NS_ERROR_FAILURE;
   
   rv = target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
   if (NS_FAILED(rv)) return rv;
- 
+
   return target->AddEventListener(NS_LITERAL_STRING("unload"), this, PR_FALSE);
 }
 
@@ -841,7 +843,6 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
   mDocument = do_QueryInterface(targetNode);
   mListener->SetDocument(mDocument);
-
   return NS_OK;
 }
 
