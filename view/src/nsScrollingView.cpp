@@ -836,7 +836,13 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     rv = mClipView->Init(mViewManager, mBounds, this);
     mViewManager->InsertChild(this, mClipView, 1);
     mViewManager->SetViewOpacity(mClipView, 0.0f);
-    rv = mClipView->CreateWidget(kWidgetCID, nsnull,
+
+    // XXX Have the clip view clip siblings. For the time being this is needed
+    // for 'fixed' elements...
+    nsWidgetInitData  initData;
+    initData.clipChildren = PR_TRUE;
+    initData.clipSiblings = PR_TRUE;
+    rv = mClipView->CreateWidget(kWidgetCID, &initData,
                                  mWindow ? nsnull : aNative);
   }
 
