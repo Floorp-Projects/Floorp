@@ -41,7 +41,10 @@
 #ifndef TRANSFRMX_TXSTANDALONEXSLTPROCESSOR_H
 #define TRANSFRMX_TXSTANDALONEXSLTPROCESSOR_H
 
-#include "XSLTProcessor.h"
+#include "txStylesheet.h"
+#include "txXSLTProcessor.h"
+#include "ErrorObserver.h"
+
 #ifndef __BORLANDC__
 #include <iostream.h>
 #include <fstream.h>
@@ -130,7 +133,7 @@ public:
      * @param aErr     error observer
      * @result NS_OK if transformation was successful
      */
-    nsresult transform(Document* aXMLDoc, Node* aXSLNode,
+    nsresult transform(Document* aXMLDoc, txStylesheet* aXSLNode,
                        ostream& aOut, ErrorObserver& aErr);
 
 protected:

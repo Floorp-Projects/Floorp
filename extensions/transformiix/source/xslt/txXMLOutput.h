@@ -82,9 +82,9 @@
 #define XML_DECL        "xml version="
 #define XML_VERSION     "1.0"
 
-class txAttribute {
+class txOutAttr {
 public:
-    txAttribute(PRInt32 aNsID, nsIAtom* aLocalName, const nsAString& aValue);
+    txOutAttr(PRInt32 aNsID, nsIAtom* aLocalName, const nsAString& aValue);
     txExpandedName mName;
     nsString mValue;
     MBool mShorthand;

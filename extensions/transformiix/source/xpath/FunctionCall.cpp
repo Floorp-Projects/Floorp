@@ -126,7 +126,7 @@ NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext)
         return 0;
 
     if (exprResult->getResultType() != ExprResult::NODESET) {
-        aContext->receiveError(NS_LITERAL_STRING("NodeSet expected as argument"), NS_ERROR_XPATH_INVALID_ARG);
+        aContext->receiveError(NS_LITERAL_STRING("NodeSet expected as argument"), NS_ERROR_XSLT_NODESET_EXPECTED);
         delete exprResult;
         return 0;
     }

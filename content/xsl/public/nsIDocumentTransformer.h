@@ -42,6 +42,8 @@
 
 class nsIDOMDocument;
 class nsIDOMNode;
+class nsILoadGroup;
+class nsIURI;
 
 #define NS_ITRANSFORMOBSERVER_IID \
   {0xcce88481, 0x6eb3, 0x11d6, \
@@ -55,7 +57,8 @@ public:
 
   NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument) = 0;
 
-  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument) = 0;
+  NS_IMETHOD OnTransformDone(nsresult aResult,
+                             nsIDOMDocument *aResultDocument) = 0;
 
 };
 
@@ -69,10 +72,11 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTTRANSFORMER_IID)
 
-  NS_IMETHOD TransformDocument(nsIDOMNode *aSourceDOM,
-                               nsIDOMNode *aStyleDOM,
-                               nsITransformObserver *aObserver,
-                               nsIDOMDocument **_retval) = 0;
+  NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) = 0;
+  NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
+                            nsIURI* aReferrerUri) = 0;
+  NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) = 0;
+  NS_IMETHOD CancelLoads() = 0;
 };
 
 #endif //nsIDocumentTransformer_h__

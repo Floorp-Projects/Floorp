@@ -39,9 +39,8 @@
 #include "txTextHandler.h"
 #include "nsAString.h"
 
-txTextHandler::txTextHandler(nsAString& aValue, MBool aOnlyText) : mLevel(0),
-                                                                   mValue(aValue),
-                                                                   mOnlyText(aOnlyText)
+txTextHandler::txTextHandler(MBool aOnlyText) : mLevel(0),
+                                                mOnlyText(aOnlyText)
 {
 }
 

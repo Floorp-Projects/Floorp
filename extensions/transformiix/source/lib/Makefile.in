@@ -36,10 +36,10 @@ REQUIRES = string \
 
 OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../base/List.$(OBJ_SUFFIX) \
-  ../base/Map.$(OBJ_SUFFIX) \
   ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../base/txAtoms.$(OBJ_SUFFIX) \
   ../base/txExpandedNameMap.$(OBJ_SUFFIX) \
+  ../base/txNamespaceMap.$(OBJ_SUFFIX) \
   ../base/txStringUtils.$(OBJ_SUFFIX) \
   ../base/txURIUtils.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \
@@ -82,21 +82,27 @@ OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../xml/XMLUtils.$(OBJ_SUFFIX) \
   ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../xml/parser/txXMLParser.$(OBJ_SUFFIX) \
-  ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
-  ../xslt/ProcessorState.$(OBJ_SUFFIX) \
   ../xslt/txBufferingHandler.$(OBJ_SUFFIX) \
+  ../xslt/txExecutionState.$(OBJ_SUFFIX) \
   ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
+  ../xslt/txInstructions.$(OBJ_SUFFIX) \
+  ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
   ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
+  ../xslt/txStandaloneXSLTProcessor.$(OBJ_SUFFIX) \
+  ../xslt/txStandaloneStylesheetCompiler.$(OBJ_SUFFIX) \
+  ../xslt/txStylesheet.$(OBJ_SUFFIX) \
+  ../xslt/txStylesheetCompileHandlers.$(OBJ_SUFFIX) \
+  ../xslt/txStylesheetCompiler.$(OBJ_SUFFIX) \
   ../xslt/txTextHandler.$(OBJ_SUFFIX) \
   ../xslt/txTextOutput.$(OBJ_SUFFIX) \
+  ../xslt/txToplevelItems.$(OBJ_SUFFIX) \
   ../xslt/txUnknownHandler.$(OBJ_SUFFIX) \
   ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
   ../xslt/txXSLTNumber.$(OBJ_SUFFIX) \
   ../xslt/txXSLTNumberCounters.$(OBJ_SUFFIX) \
   ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
   ../xslt/txPatternParser.$(OBJ_SUFFIX) \
-  ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
-  ../xslt/txStandaloneXSLTProcessor.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTProcessor.$(OBJ_SUFFIX) \
   ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \
@@ -121,3 +127,4 @@ INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
   -I$(srcdir)/../xml/parser \
   -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
   -I$(srcdir)/../xslt/functions $(MARK_INC)
+DEFINES		+= -DXML_DTD -DXML_UNICODE

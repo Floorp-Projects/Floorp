@@ -18,13 +18,14 @@
  *   -- original author.
  */
 
-#include "ProcessorState.h"
+#include "txExecutionState.h"
 #include "txAtoms.h"
 #include "txSingleNodeContext.h"
 #include "XMLDOMUtils.h"
 #include "XSLTFunctions.h"
 #include "nsReadableUtils.h"
 #include "txKey.h"
+#include "txXSLTPatterns.h"
 
 /*
  * txKeyFunctionCall
@@ -34,10 +35,8 @@
 /*
  * Creates a new key function call
  */
-txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs,
-                                     Node* aQNameResolveNode)
-    : mProcessorState(aPs),
-      mQNameResolveNode(aQNameResolveNode)
+txKeyFunctionCall::txKeyFunctionCall(txNamespaceMap* aMappings)
+    : mMappings(aMappings)
 {
 }
 
@@ -54,6 +53,9 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     if (!aContext || !requireParams(2, 2, aContext))
         return new StringResult(NS_LITERAL_STRING("error"));
 
+    txExecutionState* es =
+        NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
+
     NodeSet* res = new NodeSet;
     if (!res) {
         // ErrorReport: out of memory
@@ -65,7 +67,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     evaluateToString((Expr*)iter.next(), aContext, keyQName);
 
     txExpandedName keyName;
-    nsresult rv = keyName.init(keyQName, mQNameResolveNode, PR_FALSE);
+    nsresult rv = keyName.init(keyQName, mMappings, PR_FALSE);
     if (NS_FAILED(rv)) {
         delete res;
         return new StringResult(NS_LITERAL_STRING("error"));
@@ -89,8 +91,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
             nsAutoString val;
             XMLDOMUtils::getNodeValue(nodeSet->get(i), val);
             const NodeSet* nodes = 0;
-            rv = mProcessorState->getKeyNodes(keyName, contextDoc, val,
-                                              i == 0, &nodes);
+            rv = es->getKeyNodes(keyName, contextDoc, val, i == 0, &nodes);
             if (NS_FAILED(rv)) {
                 delete res;
                 delete exprResult;
@@ -105,8 +106,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
         nsAutoString val;
         exprResult->stringValue(val);
         const NodeSet* nodes = 0;
-        rv = mProcessorState->getKeyNodes(keyName, contextDoc, val,
-                                          PR_TRUE, &nodes);
+        rv = es->getKeyNodes(keyName, contextDoc, val, PR_TRUE, &nodes);
         if (NS_FAILED(rv)) {
             delete res;
             delete exprResult;
@@ -199,7 +199,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
                        Document* aDocument,
                        const nsAString& aKeyValue,
                        PRBool aIndexIfNotFound,
-                       ProcessorState* aPs,
+                       txExecutionState& aEs,
                        const NodeSet** aResult)
 {
     NS_ENSURE_TRUE(mKeyValues.mHashTable.ops && mIndexedKeys.mHashTable.ops,
@@ -241,7 +241,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
         return NS_ERROR_INVALID_ARG;
     }
 
-    nsresult rv = xslKey->indexDocument(aDocument, mKeyValues, aPs);
+    nsresult rv = xslKey->indexDocument(aDocument, mKeyValues, aEs);
     NS_ENSURE_SUCCESS(rv, rv);
     
     indexEntry->mIndexed = PR_TRUE;
@@ -273,8 +273,6 @@ txXSLKey::~txXSLKey()
     txListIterator iter(&mKeys);
     Key* key;
     while ((key = (Key*)iter.next())) {
-        delete key->matchPattern;
-        delete key->useExpr;
         delete key;
     }
 }
@@ -285,18 +283,22 @@ txXSLKey::~txXSLKey()
  * @param aUse    use-expression
  * @return PR_FALSE if an error occured, PR_TRUE otherwise
  */
-PRBool txXSLKey::addKey(txPattern* aMatch, Expr* aUse)
+PRBool txXSLKey::addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse)
 {
     if (!aMatch || !aUse)
         return PR_FALSE;
 
-    Key* key = new Key;
+    nsAutoPtr<Key> key(new Key);
     if (!key)
         return PR_FALSE;
 
     key->matchPattern = aMatch;
     key->useExpr = aUse;
-    mKeys.add(key);
+    nsresult rv = mKeys.add(key);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    
+    key.forget();
+
     return PR_TRUE;
 }
 
@@ -304,14 +306,14 @@ PRBool txXSLKey::addKey(txPattern* aMatch, Expr* aUse)
  * Indexes a document and adds it to the hash of key values
  * @param aDocument     Document to index and add
  * @param aKeyValueHash Hash to add values to
- * @param aPs           ProcessorState to use for XPath evaluation
+ * @param aEs           txExecutionState to use for XPath evaluation
  */
 nsresult txXSLKey::indexDocument(Document* aDocument,
                                  txKeyValueHash& aKeyValueHash,
-                                 ProcessorState* aPs)
+                                 txExecutionState& aEs)
 {
     txKeyValueHashKey key(mName, aDocument, NS_LITERAL_STRING(""));
-    return indexTree(aDocument, key, aKeyValueHash, aPs);
+    return indexTree(aDocument, key, aKeyValueHash, aEs);
 }
 
 /**
@@ -320,27 +322,27 @@ nsresult txXSLKey::indexDocument(Document* aDocument,
  * @param aNode         Node to search
  * @param aKey          Key to use when adding into the hash
  * @param aKeyValueHash Hash to add values to
- * @param aPs           ProcessorState to use for XPath evaluation
+ * @param aEs           txExecutionState to use for XPath evaluation
  */
 nsresult txXSLKey::indexTree(Node* aNode, txKeyValueHashKey& aKey,
                              txKeyValueHash& aKeyValueHash,
-                             ProcessorState* aPs)
+                             txExecutionState& aEs)
 {
-    nsresult rv = testNode(aNode, aKey, aKeyValueHash, aPs);
+    nsresult rv = testNode(aNode, aKey, aKeyValueHash, aEs);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // check if the nodes attributes matches
     NamedNodeMap* attrs = aNode->getAttributes();
     if (attrs) {
         for (PRUint32 i=0; i<attrs->getLength(); i++) {
-            rv = testNode(attrs->item(i), aKey, aKeyValueHash, aPs);
+            rv = testNode(attrs->item(i), aKey, aKeyValueHash, aEs);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     }
 
     Node* child = aNode->getFirstChild();
     while (child) {
-        rv = indexTree(child, aKey, aKeyValueHash, aPs);
+        rv = indexTree(child, aKey, aKeyValueHash, aEs);
         NS_ENSURE_SUCCESS(rv, rv);
 
         child = child->getNextSibling();
@@ -355,22 +357,25 @@ nsresult txXSLKey::indexTree(Node* aNode, txKeyValueHashKey& aKey,
  * @param aNode         Node to test
  * @param aKey          Key to use when adding into the hash
  * @param aKeyValueHash Hash to add values to
- * @param aPs           ProcessorState to use for XPath evaluation
+ * @param aEs           txExecutionState to use for XPath evaluation
  */
 nsresult txXSLKey::testNode(Node* aNode, txKeyValueHashKey& aKey,
-                            txKeyValueHash& aKeyValueHash, ProcessorState* aPs)
+                            txKeyValueHash& aKeyValueHash, txExecutionState& aEs)
 {
+    nsresult rv = NS_OK;
     nsAutoString val;
     txListIterator iter(&mKeys);
     while (iter.hasNext())
     {
         Key* key=(Key*)iter.next();
-        if (key->matchPattern->matches(aNode, aPs)) {
-            txSingleNodeContext evalContext(aNode, aPs);
-            txIEvalContext* prevCon =
-                aPs->setEvalContext(&evalContext);
+        if (key->matchPattern->matches(aNode, &aEs)) {
+            txSingleNodeContext evalContext(aNode, &aEs);
+            rv = aEs.pushEvalContext(&evalContext);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             ExprResult* exprResult = key->useExpr->evaluate(&evalContext);
-            aPs->setEvalContext(prevCon);
+            aEs.popEvalContext();
+
             if (exprResult->getResultType() == ExprResult::NODESET) {
                 NodeSet* res = (NodeSet*)exprResult;
                 for (int i=0; i<res->size(); i++) {

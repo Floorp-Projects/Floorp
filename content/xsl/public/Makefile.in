@@ -47,7 +47,6 @@ XPIDL_MODULE = content_xslt
 
 EXPORTS		= \
 		nsIDocumentTransformer.h \
-		nsITransformMediator.h \
 		$(NULL)
 
 XPIDLSRCS	= \

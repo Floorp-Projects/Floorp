@@ -85,7 +85,6 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
-#include "nsXSLContentSink.h"
 #include "nsParserCIID.h"
 #include "nsParserUtils.h"
 #include "nsIScrollable.h"
@@ -438,13 +437,12 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // Check if we want to prettyprint
   MaybePrettyPrint();
 
-  if (mXSLTransformMediator) {
+  if (mXSLTProcessor) {
     nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
-    mXSLTransformMediator->SetSourceContentModel(currentDOMDoc);
-    mXSLTransformMediator->SetTransformObserver(this);
-    // Since the mediator now holds a reference to us we drop our reference
+    mXSLTProcessor->SetSourceContentModel(currentDOMDoc);
+    // Since the processor now holds a reference to us we drop our reference
     // to it to avoid owning cycles
-    mXSLTransformMediator = nsnull;
+    mXSLTProcessor = nsnull;
   }
   else {
     // Kick off layout for non-XSLT transformed documents.
@@ -785,59 +783,23 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 {
-  nsresult rv = NS_OK;
-
-  // Create a transform mediator
-  rv = NS_NewTransformMediator(getter_AddRefs(mXSLTransformMediator),
-                               NS_LITERAL_CSTRING(kXSLType));
-  if (NS_FAILED(rv)) {
+  mXSLTProcessor =
+    do_CreateInstance("@mozilla.org/document-transformer;1?type=text/xslt");
+  if (!mXSLTProcessor) {
     // No XSLT processor available, continue normal document loading
     return NS_OK;
   }
 
-  // Enable the transform mediator. It will start the transform
-  // as soon as it has enough state to do so.  The state needed is
-  // the source content model, the style content model, the current
-  // document, and an observer.  The XML and XSL content sinks provide
-  // this state by calling the various setters on nsITransformMediator.
-  mXSLTransformMediator->SetEnabled(PR_TRUE);
+  mXSLTProcessor->SetTransformObserver(this);
 
-  // Create and set up the channel
   nsCOMPtr<nsILoadGroup> loadGroup;
-  rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aUrl);
-  if (NS_FAILED(rv)) return rv;
-
-  channel->SetLoadGroup(loadGroup);
-
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  if (httpChannel) {
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
-                                  PR_FALSE);
-
-    httpChannel->SetReferrer(mDocumentURL);
+  nsresult rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  if (NS_FAILED(rv)) {
+    mXSLTProcessor = nsnull;
+    return rv;
   }
 
-
-  // Create the XSL stylesheet document
-  nsCOMPtr<nsIDocument> styleDoc = do_CreateInstance(kXMLDocumentCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create the XSL content sink
-  nsCOMPtr<nsIXMLContentSink> sink;
-  rv = NS_NewXSLContentSink(getter_AddRefs(sink), mXSLTransformMediator, styleDoc, aUrl, mWebShell);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIStreamListener> sl;
-  rv = styleDoc->StartDocumentLoad(kLoadAsData, channel, loadGroup, nsnull,
-                                   getter_AddRefs(sl), PR_TRUE, sink);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return channel->AsyncOpen(sl, nsnull);
+  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocumentURL);
 }
 
 NS_IMETHODIMP
@@ -871,7 +833,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
@@ -1817,7 +1779,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
       // For XSLT, we need to wait till after the transform
       // to set the root content object.
-      if (!mXSLTransformMediator) {
+      if (!mXSLTProcessor) {
         mDocument->SetRootContent(mDocElement);
       }
     }
@@ -2101,10 +2063,10 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   }
   NS_IF_RELEASE(mDocElement); 
 
-  if (mXSLTransformMediator) {
-    // Get rid of the transform mediator.
-    mXSLTransformMediator->SetEnabled(PR_FALSE);
-    mXSLTransformMediator = nsnull;
+  if (mXSLTProcessor) {
+    // Get rid of the XSLT processor.
+    mXSLTProcessor->CancelLoads();
+    mXSLTProcessor = nsnull;
   }
 
   NS_NAMED_LITERAL_STRING(name, "xmlns");

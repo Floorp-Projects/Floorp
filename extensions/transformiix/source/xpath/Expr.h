@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "TxObject.h"
+#include "nsAutoPtr.h"
 
 /*
   XPath class definitions.
@@ -343,18 +344,13 @@ public:
      * @param nodeExpr the NodeExpr to use when matching Nodes
      * @param axisIdentifier the Axis Identifier in which to search for nodes
     **/
-    LocationStep(txNodeTest* aNodeTest, LocationStepType aAxisIdentifier);
-
-    /**
-     * Destructor, will delete all predicates and the given NodeExpr
-    **/
-    virtual ~LocationStep();
+    LocationStep(nsAutoPtr<txNodeTest> aNodeTest, LocationStepType aAxisIdentifier);
 
     TX_DECL_EXPR;
 
 private:
 
-    txNodeTest* mNodeTest;
+    nsAutoPtr<txNodeTest> mNodeTest;
     LocationStepType mAxisIdentifier;
 
     void fromDescendants(Node* node, txIMatchContext* aContext,

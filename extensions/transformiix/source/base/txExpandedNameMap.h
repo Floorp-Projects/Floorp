@@ -73,7 +73,7 @@ public:
      * @param  aKey  key for item to get
      * @return item with specified key, or null if no such item exists
      */
-    TxObject* get(const txExpandedName& aKey);
+    TxObject* get(const txExpandedName& aKey) const;
 
     /**
      * Removes an item, deleting it if the map owns the values

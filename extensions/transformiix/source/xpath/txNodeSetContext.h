@@ -40,8 +40,7 @@
 #define __TX_XPATH_SET_CONTEXT
 
 #include "txIXPathContext.h"
-
-class NodeSet;
+#include "NodeSet.h"
 
 class txNodeSetContext : public txIEvalContext
 {
@@ -50,7 +49,7 @@ public:
         : mContextSet(aContextNodeSet), mPosition(0), mInner(aContext)
     {
     }
-    ~txNodeSetContext()
+    virtual ~txNodeSetContext()
     {
     }
 
@@ -67,10 +66,23 @@ public:
 
     TX_DECL_EVAL_CONTEXT;
 
-private:
+protected:
     NodeSet* mContextSet;
     PRUint32 mPosition;
     txIMatchContext* mInner;
+};
+
+class txOwningNodeSetContext : public txNodeSetContext
+{
+public:
+    txOwningNodeSetContext(NodeSet* aContextNodeSet, txIMatchContext* aContext)
+        : txNodeSetContext(aContextNodeSet, aContext)
+    {
+    }
+    virtual ~txOwningNodeSetContext()
+    {
+        delete mContextSet;
+    }
 };
 
 #endif // __TX_XPATH_SET_CONTEXT
