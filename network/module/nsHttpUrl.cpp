@@ -818,7 +818,10 @@ nsresult nsHttpUrlImpl::GetContainer(nsISupports* *result) const
     *result = mContainer;
     NS_IF_ADDREF(mContainer);
     NS_UNLOCK_INSTANCE();
-    return NS_OK;
+    if (mContainer)
+    	return NS_OK;
+    else
+    	return NS_ERROR_UNEXPECTED;  // Indicate an error if no container
 }
   
 nsresult nsHttpUrlImpl::SetContainer(nsISupports* container)
