@@ -215,14 +215,17 @@ NS_IMETHODIMP
 nsHTMLBRElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                           nsChangeHint& aHint) const
 {
-  if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (nsHTMLAtoms::clear == aAttribute) {
-      aHint = NS_STYLE_HINT_REFLOW;
-    }
-    else {
-      aHint = NS_STYLE_HINT_CONTENT;
-    }
-  }
+  static const AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::clear, NS_STYLE_HINT_REFLOW },
+    { nsnull, NS_STYLE_HINT_NONE }
+  };
+
+  static const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap,
+  };
+
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
   return NS_OK;
 }
 

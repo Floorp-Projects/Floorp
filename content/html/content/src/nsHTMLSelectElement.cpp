@@ -1880,16 +1880,19 @@ nsHTMLSelectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32 aModType,
                                               nsChangeHint& aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::multiple ||
-      aAttribute == nsHTMLAtoms::size) {
-    aHint = NS_STYLE_HINT_FRAMECHANGE;
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  static const AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::multiple, NS_STYLE_HINT_FRAMECHANGE },
+    { &nsHTMLAtoms::size, NS_STYLE_HINT_FRAMECHANGE },
+    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
+    { nsnull, NS_STYLE_HINT_NONE }
+  };
+
+  static const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap,
+  };
+
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
 
   return NS_OK;
 }
