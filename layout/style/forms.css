@@ -95,6 +95,7 @@ input {
   cursor: text;
   -moz-user-focus: normal;
   -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#inputFields");
+  text-indent: 0;
 }
 
 textarea {
@@ -113,6 +114,7 @@ textarea {
   -moz-user-focus: normal;
   -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
+  text-indent: 0;
 }
 
 textarea > scrollbar {
@@ -143,6 +145,7 @@ select {
   border-width: 2px !important;
   border-style: inset !important;
   -moz-border-radius: 0 !important;
+  text-indent: 0;
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on
@@ -205,6 +208,7 @@ option {
   line-height: normal !important;
   -moz-user-select: none;
   -moz-user-focus: none;
+  text-indent: 0;
 }
 
 select > option {
@@ -224,6 +228,7 @@ optgroup {
   font-weight: bold;
   -moz-user-select: none;
   -moz-user-focus: none;
+  text-indent: 0;
 }
 
 optgroup > option {
@@ -420,6 +425,7 @@ input[type="submit"] {
 button {
   /* Buttons should lay out like "normal" html, mostly */
   white-space: normal;  
+  text-indent: 0;
 }
 
 *|*::-moz-button-content {
