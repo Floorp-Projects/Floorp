@@ -64,7 +64,9 @@ EX_LIBS=\
 	-lnetlib	\
 	-lraptorwebwidget	\
 	-lraptorhtml	\
+	-lraptorhtmlpars	\
 	-ljsdom		\
+	-ljsurl		\
 	-lraptorbase	\
 	-lsecfree	\
 	-ljs		\
