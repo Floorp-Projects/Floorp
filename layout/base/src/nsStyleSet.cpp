@@ -687,6 +687,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    nsIStyleContext* aParentContext,
                                                    PRBool aForceUnique)
 {
+  NS_START_STOPWATCH(mStyleResolutionWatch)
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
@@ -737,6 +738,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     }
   }
 
+  NS_STOP_STOPWATCH(mStyleResolutionWatch)
   return result;
 }
 
