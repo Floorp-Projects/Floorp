@@ -136,11 +136,9 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 
-#ifdef XP_WIN
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
-#endif
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
