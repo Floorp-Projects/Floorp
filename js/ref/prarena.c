@@ -88,6 +88,7 @@ PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb)
 	    if (b->limit - b->base == pool->arenasize) {
 #ifdef JS_THREADSAFE
 		do {
+                    b = *ap;
 		    c = b->next;
 		} while (!js_CompareAndSwap((prword *)ap,(prword)b,(prword)c));
 #else
