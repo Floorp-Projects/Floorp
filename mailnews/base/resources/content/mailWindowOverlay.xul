@@ -323,7 +323,7 @@ Rights Reserved.
 	<menu id="menu_File">
 		<menupopup id="menu_FilePopup">
 			<menuitem value="&newMsgCmd.label;"
-                                          accesskey="&newMsgCmd.accesskey;"
+			accesskey="&newMsgCmd.accesskey;"
 			key="key_newMessage"
 			oncommand="MsgNewMessage(event);"/>
 			<menu id="menu_New">
