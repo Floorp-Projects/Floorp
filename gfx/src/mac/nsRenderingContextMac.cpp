@@ -36,6 +36,7 @@ public:
 
 	void				Init();
 	void				Init(nsIWidget* aWindow);
+	void				Init(nsDrawingSurface aSurface);
 	void				Duplicate(GraphicState* aGS);
 
 protected:
@@ -129,6 +130,28 @@ void GraphicState::Init(nsIWidget* aWindow)
 	RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
 	mMainRegion			= DuplicateRgn(widgetRgn);
   mClipRegion			= DuplicateRgn(widgetRgn);
+
+  mColor 					= NS_RGB(255,255,255);
+	mFont						= 0;
+  mFontMetrics		= nsnull;
+  mCurrFontHandle	= 0;
+}
+
+//------------------------------------------------------------------------
+
+void GraphicState::Init(nsDrawingSurface aSurface)
+{
+	if (mTMatrix == nsnull)
+		mTMatrix = new nsTransform2D();
+
+  nsDrawingSurfaceMac drawingSurface = (nsDrawingSurfaceMac)aSurface;
+	mRenderingSurface	= drawingSurface;
+  mOffx = 0;
+  mOffy = 0;
+
+	//RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
+	//mMainRegion			= DuplicateRgn(widgetRgn);
+  //mClipRegion			= DuplicateRgn(widgetRgn);
 
   mColor 					= NS_RGB(255,255,255);
 	mFont						= 0;
@@ -279,6 +302,9 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
+
+	// use widget to initialize graphic state
+	mGS->Init(aSurface);
 
 	// init rendering context data
 	nsDrawingSurfaceMac drawingSurface = (nsDrawingSurfaceMac)aSurface;
