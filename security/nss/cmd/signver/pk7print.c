@@ -770,37 +770,6 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
     return 0;
 }
 
-PR_IMPLEMENT(int)
-SECU_PrintCrl (FILE *out, SECItem *der, char *m, int level)
-{
-    PRArenaPool *arena = NULL;
-    CERTCrl *c = NULL;
-    int rv;
-
-    do {
-	/* Decode CRL */
-	c = (CERTCrl*) PORT_ZAlloc(sizeof(CERTCrl));
-	if (!c) {
-	    rv = PORT_GetError();
-	    break;
-	}
-
-	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	if (!arena) {
-	    rv = SEC_ERROR_NO_MEMORY;
-	    break;
-	}
-
-	rv = SEC_ASN1DecodeItem(arena, c, CERT_CrlTemplate, der);
-	if (rv != SECSuccess)
-	    break;
-	SECU_PrintCRLInfo (out, c, m, level);
-    } while (0);
-    PORT_FreeArena (arena, PR_FALSE);
-    PORT_Free (c);
-    return (rv);
-}
-
 /*
 ** secu_PrintPKCS7Encrypted
 **   Pretty print a PKCS7 encrypted data type (up to version 1).
