@@ -227,16 +227,22 @@ function CheckForWallet()
       var element;
       element = document.getElementById("walletSafeFill");
       element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
       element = document.getElementById("walletQuickFill");
       element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
       element = document.getElementById("walletCapture");
       element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
       element = document.getElementById("walletSeparator");
       element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
       element = document.getElementById("walleteditor");
       element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
       element = document.getElementById("walletSamples");
       element.setAttribute("style","display: none;" );
+      element.setAttribute("disabled","true" );
     }
   } catch(e) {
     dump("wallet.enabled pref is missing from all.js");
