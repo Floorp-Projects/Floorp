@@ -181,14 +181,6 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 	return rv;
 }
 
-nsresult nsMsgCompose::LoadFields()
-{
-  nsresult rv = NS_OK;
-  
-  // Not sure if this call is really necessary anymore...
-  return rv;
-}
-
 nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset) 
 {
 	// Set charset, this will be used for the MIME charset labeling.

@@ -84,9 +84,6 @@ interface nsIMsgCompose : nsISupports {
 		in nsISupports object); /*object is temporary*/
 
 	/* ... */
-	void LoadFields();
-
-	/* ... */
 	void SetDocumentCharset(in wstring charset);
 
 	/* ... */

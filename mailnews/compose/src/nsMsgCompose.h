@@ -48,49 +48,7 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_DECL_ISUPPORTS
 
 	/*** nsIMsgCompose pure virtual functions */
-
-	/* void Initialize (in nsIDOMWindow aWindow, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format, in nsIMsgCompFields compFields, in nsISupports object); */
-	NS_IMETHOD Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields *compFields, nsISupports *object);
-
-	/* void LoadFields (); */
-	NS_IMETHOD LoadFields();
-
-	/* void SetDocumentCharset (in wstring charset); */
-	NS_IMETHOD SetDocumentCharset(const PRUnichar *charset);
-
-	/* void SendMsg (in MSG_DeliverMode deliverMode, in wstring callback); */
-	NS_IMETHOD SendMsg(MSG_DeliverMode deliverMode,
-                     nsIMsgIdentity *identity,
-                     const PRUnichar *callback);
-
-	/* void SendMsgEx (in MSG_DeliverMode deliverModer, in wstring addrTo, in wstring addrCc, in wstring addrBcc,
-		in wstring newsgroup, in wstring subject, in wstring body, in wstring callback); */
-	NS_IMETHOD SendMsgEx(MSG_DeliverMode deliverMode,
-                       nsIMsgIdentity *identity,
-                       const PRUnichar *addrTo, const PRUnichar *addrCc,
-                       const PRUnichar *addrBcc, const PRUnichar *newsgroup,
-                       const PRUnichar *subject, const PRUnichar *body,
-                       const PRUnichar *callback);
-
-	/* void CloseWindow (); */
-	NS_IMETHOD CloseWindow();
-
-	/* attribute nsIEditorShell editor; */ 
-	NS_IMETHOD GetEditor(nsIEditorShell * *aEditor); 
-	NS_IMETHOD SetEditor(nsIEditorShell * aEditor); 
-  
-	/* readonly attribute nsIDOMWindow domWindow; */
-	NS_IMETHOD GetDomWindow(nsIDOMWindow * *aDomWindow);
-
-	/* readonly attribute nsIMsgCompFields compFields; */
-	NS_IMETHOD GetCompFields(nsIMsgCompFields * *aCompFields); //GetCompFields will addref, you need to release when your are done with it
-	
-	/* readonly attribute boolean composeHTML; */
-	NS_IMETHOD GetComposeHTML(PRBool *aComposeHTML);
-
-	/* readonly attribute long wrapLength; */
-	NS_IMETHOD GetWrapLength(PRInt32 *aWrapLength);
-/******/
+	NS_DECL_NSIMSGCOMPOSE
 
    MSG_ComposeType				GetMessageType();
 
