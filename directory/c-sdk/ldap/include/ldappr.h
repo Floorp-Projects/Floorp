@@ -116,7 +116,7 @@ int LDAP_CALL prldap_get_session_option( LDAP *ld, void *sessionarg,
  * Available options.
  */
 /*
- * PRLDAP_OPT_IO_MAX_TIMEOUT: set the maximum time in milliseconds to
+ * PRLDAP_OPT_IO_MAX_TIMEOUT: the maximum time in milliseconds to
  * block waiting for a network I/O operation to complete.
  *
  * Data type: int.
