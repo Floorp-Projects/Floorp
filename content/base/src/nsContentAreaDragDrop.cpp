@@ -92,6 +92,8 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
 #include "imgIContainer.h"
@@ -284,8 +286,7 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
   // if the drag originated w/in this content area, bail
   // early. This avoids loading a URL dragged from the content
   // area into the very same content area (which is almost never
-  // the desired action). This code is a bit too simplistic and
-  // may have problems with nested frames.
+  // the desired action).
   nsCOMPtr<nsIDragService> dragService(do_GetService("@mozilla.org/widget/dragservice;1"));
   if ( !dragService )
     return NS_ERROR_FAILURE;
@@ -322,8 +323,42 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
     session->GetSourceDocument(getter_AddRefs(sourceDoc));
     nsCOMPtr<nsIDOMDocument> eventDoc;
     GetEventDocument(inEvent, getter_AddRefs(eventDoc));
-    if ( sourceDoc == eventDoc )
+    if ( sourceDoc == eventDoc ) {  // common case
       dropAllowed = PR_FALSE;
+    } else if (sourceDoc && eventDoc) {
+      // dig deeper
+      // XXXbz we need better ways to get from a document to the docshell!
+      nsCOMPtr<nsIDocument> sourceDocument(do_QueryInterface(sourceDoc));
+      nsCOMPtr<nsIDocument> eventDocument(do_QueryInterface(eventDoc));
+      NS_ASSERTION(sourceDocument, "Confused document object");
+      NS_ASSERTION(eventDocument, "Confused document object");
+
+      nsIScriptGlobalObject * sourceGlobal =
+        sourceDocument->GetScriptGlobalObject();
+      nsIScriptGlobalObject* eventGlobal =
+        eventDocument->GetScriptGlobalObject();
+
+      if (sourceGlobal && eventGlobal) {
+        nsCOMPtr<nsIDocShellTreeItem> sourceShell =
+          do_QueryInterface(sourceGlobal->GetDocShell());
+        nsCOMPtr<nsIDocShellTreeItem> eventShell =
+          do_QueryInterface(eventGlobal->GetDocShell());
+
+        if (sourceShell && eventShell) {
+          // Whew.  Almost there.  Get the roots that are of the same type
+          // (otherwise we'll always end up with the root docshell for the
+          // window, and drag/drop from chrom to content won't work).
+          nsCOMPtr<nsIDocShellTreeItem> sourceRoot;
+          nsCOMPtr<nsIDocShellTreeItem> eventRoot;
+          sourceShell->GetSameTypeRootTreeItem(getter_AddRefs(sourceRoot));
+          eventShell->GetSameTypeRootTreeItem(getter_AddRefs(eventRoot));
+          if (sourceRoot && sourceRoot == eventRoot) {
+            dropAllowed = PR_FALSE;
+          }
+        }
+      }
+    }
+        
     session->SetCanDrop(dropAllowed);
   }
   
