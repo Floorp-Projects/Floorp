@@ -23,8 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- *
- * Evaluator
+ * The base visitor object extended by semantic evaluators.
  *
  * This is a visitor that is used by the compiler for various forms for
  * evaluation of a parse tree (e.g. a type evaluator might compute the 

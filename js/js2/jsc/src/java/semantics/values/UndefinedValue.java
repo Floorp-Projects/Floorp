@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class UndefinedValue
+ * The undefined value.
  */
 
 public class UndefinedValue extends ObjectValue {

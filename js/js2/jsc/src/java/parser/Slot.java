@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * Slot
+ * A slot.
  */
 
 public class Slot {

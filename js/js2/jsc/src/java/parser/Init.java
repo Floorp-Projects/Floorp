@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * interface Init
+ * Interface that object initializers implement.
  *
  * This interface is implemented by objects that can build
  * instances of the Value class. For example, there is an

@@ -26,13 +26,12 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * class BlockEvaluator
+ * Delineates the program into its basic execution blocks.
  *
- * The purpose of this pass is to delineate the basic
- * blocks of the program. It is necessary to know all
- * the blocks in the program before we can mark the
- * flow-control edges and compute the dominance relationship
- * between a reference and definition.
+ * It is necessary to know all the blocks in the program 
+ * before we can mark the flow-control edges and compute 
+ * the dominance relationship between a reference and 
+ * definition.
  *
  * The algorithm for partitioning the program into basic
  * blocks goes like this:

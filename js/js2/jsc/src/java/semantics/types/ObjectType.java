@@ -29,7 +29,7 @@ import java.util.Vector;
 
 public class ObjectType implements Type {
 
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     public static final TypeValue type = new TypeValue(new ObjectType());
 
@@ -108,11 +108,9 @@ public class ObjectType implements Type {
 
     public boolean includes(Value value) {
 
-        // A type is always a member of itself.
-
-        if(value.type==ObjectType.type) {
-           return true;
-        }
+	    if( debug ) {
+		    Debugger.trace("ObjectType.includes() with this = " + this + ", value.type = " + value.type + ", values_ = " + values_);
+		}
 
         return values_.contains(value.type);
     }

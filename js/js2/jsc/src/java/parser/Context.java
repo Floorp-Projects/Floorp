@@ -27,7 +27,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 /**
- * Context
+ * Context used during semantic analysis.
  */
 
 public class Context {

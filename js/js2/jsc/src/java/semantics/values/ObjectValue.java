@@ -26,7 +26,7 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 /**
- * ObjectValue
+ * An object value.
  */
 
 public class ObjectValue extends Value implements Attributes, Scope {
@@ -46,6 +46,7 @@ public class ObjectValue extends Value implements Attributes, Scope {
      */
 
     public ObjectValue() {
+	    this.type = null;
     }
 
     /**

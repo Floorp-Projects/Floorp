@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * interface Errors
+ * Not used.
 **/
 
 public interface Errors {

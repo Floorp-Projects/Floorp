@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class StringValue
+ * A string value.
  */
 
 public final class StringValue extends ObjectValue {

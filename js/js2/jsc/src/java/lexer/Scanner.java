@@ -21,7 +21,7 @@
  */
 
 /**
- * Scanner.java
+ * Scans input for tokens.
  */
 
 

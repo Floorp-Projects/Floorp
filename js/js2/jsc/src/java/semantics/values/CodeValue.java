@@ -24,10 +24,9 @@ package com.compilercompany.ecmascript;
 import java.util.Vector;
 
 /**
- * class CodeValue
+ * A code value (intermediate).
  *
- * This value holds the compiled code for an unevaluated
- * expression. 
+ * This value holds the intermediate code for an non-constant value.
  */
 
 public class CodeValue extends Value {

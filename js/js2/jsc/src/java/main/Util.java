@@ -27,15 +27,8 @@ import java.util.ResourceBundle;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 
-/**
- * Messages, verbose and error handling support.
- *
- * For errors, the failure modes are:
- *      error -- User did something wrong
- *      bug   -- Bug has occurred in javah
- *      fatal -- We can't even find resources, so bail fast, don't localize
- *
- * @version 1.6, 02/02/00
+/*
+ * Utility for the main driver.
  */
 public class Util {
 

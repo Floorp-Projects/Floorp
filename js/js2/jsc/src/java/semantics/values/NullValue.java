@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class NullValue
+ * The null value.
  */
 
 public class NullValue extends ObjectValue {

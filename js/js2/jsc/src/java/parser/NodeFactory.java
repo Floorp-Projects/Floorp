@@ -20,6 +20,10 @@
  * Jeff Dyer <jeff@compilercompany.com>
  */
 
+/*
+ * Creates parse tree nodes.
+ */
+
 package com.compilercompany.ecmascript;
 
 public final class NodeFactory {

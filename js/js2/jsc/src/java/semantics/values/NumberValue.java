@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class NumberValue
+ * A number value.
  */
 
 public final class NumberValue extends ObjectValue {
