@@ -642,6 +642,7 @@ protected:
   PRBool HasMatchingAttributes(nsIDOMNode *aNode1, 
                                nsIDOMNode *aNode2);
 
+  nsresult RemoveBlockContainer(nsIDOMNode *inNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);

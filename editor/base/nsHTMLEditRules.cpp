@@ -2108,41 +2108,10 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   }
 
   // if there is only one node in the array, and it is a list, div, or blockquote,
-  // then look inside of it until we find what we want to make a list out of.
-  if (listCount == 1)
-  {
-    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
-    
-    while (nsHTMLEditUtils::IsDiv(curNode)
-           || nsHTMLEditUtils::IsList(curNode)
-           || nsHTMLEditUtils::IsBlockquote(curNode))
-    {
-      // dive as long as there is only one child, and it is a list, div, blockquote
-      PRUint32 numChildren;
-      res = mHTMLEditor->CountEditableChildren(curNode, numChildren);
-      if (NS_FAILED(res)) return res;
-      
-      if (numChildren == 1)
-      {
-        // keep diving
-        nsCOMPtr <nsIDOMNode> tmpNode = nsEditor::GetChildAt(curNode, 0);
-        if (nsHTMLEditUtils::IsDiv(tmpNode)
-            || nsHTMLEditUtils::IsList(tmpNode)
-            || nsHTMLEditUtils::IsBlockquote(tmpNode))
-        {
-          // check editablility XXX floppy moose
-          curNode = tmpNode;
-        }
-        else break;
-      }
-      else break;
-    }
-    // we've found innermost list/blockquote/div: 
-    // replace the one node in the array with this node
-    isupports = do_QueryInterface(curNode);
-    arrayOfNodes->ReplaceElementAt(isupports, 0);
-  }
+  // then look inside of it until we find inner list or content.
+
+  res = LookInsideDivBQandList(arrayOfNodes);
+  if (NS_FAILED(res)) return res;                                 
 
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
@@ -2209,7 +2178,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         res = ConvertListType(curNode, address_of(newBlock), *aListType, itemType);
         if (NS_FAILED(res)) return res;
-        res = mHTMLEditor->RemoveContainer(newBlock);
+        res = mHTMLEditor->RemoveBlockContainer(newBlock);
         if (NS_FAILED(res)) return res;
       }
       else
@@ -2358,7 +2327,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
   
   // use these ranges to contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kMakeList);
+  res = GetListActionNodes(address_of(arrayOfNodes), PR_FALSE);
   if (NS_FAILED(res)) return res;                                 
                                      
   // Remove all non-editable nodes.  Leave them be.
@@ -2479,6 +2448,9 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
     nsString tString(*aBlockType);
     if (tString.EqualsWithConversion("blockquote"))
       res = MakeBlockquote(arrayOfNodes);
+    else if (tString.EqualsWithConversion("normal") ||
+             tString.IsEmpty() )
+      res = RemoveBlockStyle(arrayOfNodes);
     else
       res = ApplyBlockStyle(arrayOfNodes, aBlockType);
     return res;
@@ -2660,20 +2632,15 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
   if (NS_FAILED(res)) return res;
   
   // use these ranges to contruct a list of nodes to act on.
+
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kOutdent);
   if (NS_FAILED(res)) return res;                                 
                                      
-  // Next we detect all the transitions in the array, where a transition
-  // means that adjacent nodes in the array don't have the same parent.
-  
-  nsVoidArray transitionList;
-  res = MakeTransitionList(arrayOfNodes, &transitionList);
-  if (NS_FAILED(res)) return res;                                 
-  
   // Ok, now go through all the nodes and remove a level of blockquoting, 
   // or whatever is appropriate.  Wohoo!
 
+  nsCOMPtr<nsIDOMNode> curBlockQuote, firstBQChild, lastBQChild;
   PRUint32 listCount;
   PRInt32 i;
   arrayOfNodes->Count(&listCount);
@@ -2687,78 +2654,175 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
     
-    if (nsHTMLEditUtils::IsList(curParent))  // move node out of list
+    // is it a blockquote?
+    if (nsHTMLEditUtils::IsBlockquote(curNode)) 
     {
-      if (nsHTMLEditUtils::IsList(curNode))  // just unwrap this sublist
+      // if it is a blockquote, remove it.
+      // So we need to finish up dealng with any curBlockQuote first.
+      if (curBlockQuote)
       {
-        res = mHTMLEditor->RemoveContainer(curNode);
+        res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
         if (NS_FAILED(res)) return res;
+        curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
       }
-      else  // we are moving a list item, but not whole list
-      {
-        PRBool bOutOfList;
-        res = PopListItem(curNode, &bOutOfList);
-        if (NS_FAILED(res)) return res;
-      }
-    }
-    else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, but parent is non-list: move list items out
-    {
-      nsCOMPtr<nsIDOMNode> child;
-      curNode->GetLastChild(getter_AddRefs(child));
-      while (child)
-      {
-        if (nsHTMLEditUtils::IsListItem(child))
-        {
-          PRBool bOutOfList;
-          res = PopListItem(child, &bOutOfList);
-          if (NS_FAILED(res)) return res;
-        }
-        else if (nsHTMLEditUtils::IsList(child))
-        {
-          // We have an embedded list, so move it out from under the
-          // parent list. Be sure to put it after the parent list
-          // because this loop iterates backwards through the parent's
-          // list of children.
-
-          res = mHTMLEditor->MoveNode(child, curParent, offset + 1);
-          if (NS_FAILED(res)) return res;
-        }
-        else
-        {
-          // delete any non- list items for now
-          res = mHTMLEditor->DeleteNode(child);
-          if (NS_FAILED(res)) return res;
-        }
-        curNode->GetLastChild(getter_AddRefs(child));
-      }
-      // delete the now-empty list
-      res = mHTMLEditor->DeleteNode(curNode);
+      res = mHTMLEditor->RemoveBlockContainer(curNode);
       if (NS_FAILED(res)) return res;
+      continue;
     }
-    else if (transitionList[i])  // not list related - look for enclosing blockquotes and remove
+    // is it a list item?
+    if (nsHTMLEditUtils::IsListItem(curNode)) 
     {
-      // look for a blockquote somewhere above us and remove it.
-      // this is a hack until i think about outdent for real.
-      nsCOMPtr<nsIDOMNode> n = curNode;
-      nsCOMPtr<nsIDOMNode> tmp;
-      while (!nsTextEditUtils::IsBody(n))
+      // if it is a list item, that means we are not outdenting whole list.
+      // So we need to finish up dealng with any curBlockQuote, and then
+      // pop this list item.
+      if (curBlockQuote)
       {
-        if (nsHTMLEditUtils::IsBlockquote(n))
-        {
-          res = AddTerminatingBR(n);
-          if (NS_FAILED(res)) return res;
-          mHTMLEditor->RemoveContainer(n);
-          break;
-        }
-        n->GetParentNode(getter_AddRefs(tmp));
-        n = tmp;
+        res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
+        if (NS_FAILED(res)) return res;
+        curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
+      }
+      PRBool bOutOfList;
+      res = PopListItem(curNode, &bOutOfList);
+      if (NS_FAILED(res)) return res;
+      continue;
+    }
+    // do we have a blockquote that we are already committed to removing?
+    if (curBlockQuote)
+    {
+      // if so, is this node a descendant?
+      if (nsHTMLEditUtils::IsDescendantOf(curNode, curBlockQuote))
+      {
+        lastBQChild = curNode;
+        continue;  // then we dont need to do anything different for this node
+      }
+      else
+      {
+        // otherwise, we have progressed beyond end of curBlockQuote,
+        // so lets handle it now.  We need to remove the portion of 
+        // curBlockQuote that contains [firstBQChild - lastBQChild].
+        res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
+        if (NS_FAILED(res)) return res;
+        curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
+        // fall out and handle curNode
       }
     }
+    
+    // are we inside a blockquote?
+    nsCOMPtr<nsIDOMNode> n = curNode;
+    nsCOMPtr<nsIDOMNode> tmp;
+    while (!nsTextEditUtils::IsBody(n))
+    {
+      n->GetParentNode(getter_AddRefs(tmp));
+      n = tmp;
+      if (nsHTMLEditUtils::IsBlockquote(n))
+      {
+        // if so, remember it, and remember first node we are taking out of it.
+        curBlockQuote = n;
+        firstBQChild  = curNode;
+        lastBQChild   = curNode;
+        break;
+      }
+    }
+
+    if (!curBlockQuote)
+    {
+      // could not find an enclosing blockquote for this node.  handle list cases.
+      if (nsHTMLEditUtils::IsList(curParent))  // move node out of list
+      {
+        if (nsHTMLEditUtils::IsList(curNode))  // just unwrap this sublist
+        {
+          res = mHTMLEditor->RemoveBlockContainer(curNode);
+          if (NS_FAILED(res)) return res;
+        }
+        // handled list item case above
+      }
+      else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, but parent is non-list: move list items out
+      {
+        nsCOMPtr<nsIDOMNode> child;
+        curNode->GetLastChild(getter_AddRefs(child));
+        while (child)
+        {
+          if (nsHTMLEditUtils::IsListItem(child))
+          {
+            PRBool bOutOfList;
+            res = PopListItem(child, &bOutOfList);
+            if (NS_FAILED(res)) return res;
+          }
+          else if (nsHTMLEditUtils::IsList(child))
+          {
+            // We have an embedded list, so move it out from under the
+            // parent list. Be sure to put it after the parent list
+            // because this loop iterates backwards through the parent's
+            // list of children.
+
+            res = mHTMLEditor->MoveNode(child, curParent, offset + 1);
+            if (NS_FAILED(res)) return res;
+          }
+          else
+          {
+            // delete any non- list items for now
+            res = mHTMLEditor->DeleteNode(child);
+            if (NS_FAILED(res)) return res;
+          }
+          curNode->GetLastChild(getter_AddRefs(child));
+        }
+        // delete the now-empty list
+        res = mHTMLEditor->RemoveBlockContainer(curNode);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+  if (curBlockQuote)
+  {
+    // we have a blockquote we haven't finished handling
+    res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
+    if (NS_FAILED(res)) return res;
   }
 
   return res;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// ConvertListType:  convert list type and list item type.
+//                
+//                  
+nsresult 
+nsHTMLEditRules::RemovePartOfBlock(nsIDOMNode *aBlock, 
+                                   nsIDOMNode *aStartChild, 
+                                   nsIDOMNode *aEndChild)
+{
+  if (!aBlock || !aStartChild || !aEndChild)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMNode> startParent, endParent, leftNode, rightNode;
+  PRInt32 startOffset, endOffset, offset;
+  nsresult res;
+
+  // get split point location
+  res = nsEditor::GetNodeLocation(aStartChild, address_of(startParent), &startOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // do the splits!
+  res = mHTMLEditor->SplitNodeDeep(aBlock, startParent, startOffset, &offset, 
+                                   PR_TRUE, address_of(leftNode), address_of(rightNode));
+  if (NS_FAILED(res)) return res;
+  if (rightNode)  aBlock = rightNode;
+
+  // get split point location
+  res = nsEditor::GetNodeLocation(aEndChild, address_of(endParent), &endOffset);
+  if (NS_FAILED(res)) return res;
+  endOffset++;  // want to be after lastBQChild
+
+  // do the splits!
+  res = mHTMLEditor->SplitNodeDeep(aBlock, endParent, endOffset, &offset, 
+                                   PR_TRUE, address_of(leftNode), address_of(rightNode));
+  if (NS_FAILED(res)) return res;
+  if (leftNode)  aBlock = leftNode;
+  
+  // get rid of part of blockquote we are outdenting
+  res = mHTMLEditor->RemoveBlockContainer(aBlock);
+  return res;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // ConvertListType:  convert list type and list item type.
@@ -3891,6 +3955,23 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
       }
     }
   }
+  // outdent should look inside of divs.
+  if (inOperationType == kOutdent) 
+  {
+    PRUint32 listCount;
+    (*outArrayOfNodes)->Count(&listCount);
+    for (i=(PRInt32)listCount-1; i>=0; i--)
+    {
+      isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
+      nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
+      if (nsHTMLEditUtils::IsDiv(node))
+      {
+        (*outArrayOfNodes)->RemoveElementAt(i);
+        res = GetInnerContent(node, *outArrayOfNodes, PR_FALSE, PR_FALSE);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
 
 
   // post process the list to break up inline containers that contain br's.
@@ -4057,13 +4138,75 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
       (*outArrayOfNodes)->RemoveElementAt(i);
     }
     
-    // scan for table elements.  If we find table elements other than table,
+    // scan for table elements and divs.  If we find table elements other than table,
     // replace it with a list of any editable non-table content.
-    if (nsHTMLEditUtils::IsTableElement(testNode) && !nsHTMLEditUtils::IsTable(testNode))
+    if ( (nsHTMLEditUtils::IsTableElement(testNode) && !nsHTMLEditUtils::IsTable(testNode))
+         || nsHTMLEditUtils::IsDiv(testNode) )
     {
       (*outArrayOfNodes)->RemoveElementAt(i);
       res = GetInnerContent(testNode, *outArrayOfNodes, PR_FALSE);
       if (NS_FAILED(res)) return res;
+    }
+  }
+
+  // if there is only one node in the array, and it is a list, div, or blockquote,
+  // then look inside of it until we find inner list or content.
+  res = LookInsideDivBQandList(*outArrayOfNodes);
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// LookInsideDivBQandList: 
+//                       
+nsresult 
+nsHTMLEditRules::LookInsideDivBQandList(nsISupportsArray *aNodeArray)
+{
+  // if there is only one node in the array, and it is a list, div, or blockquote,
+  // then look inside of it until we find inner list or content.
+  nsresult res = NS_OK;
+  PRUint32 listCount;
+  aNodeArray->Count(&listCount);
+  if (listCount == 1)
+  {
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(aNodeArray->ElementAt(0));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+    
+    while (nsHTMLEditUtils::IsDiv(curNode)
+           || nsHTMLEditUtils::IsList(curNode)
+           || nsHTMLEditUtils::IsBlockquote(curNode))
+    {
+      // dive as long as there is only one child, and it is a list, div, blockquote
+      PRUint32 numChildren;
+      res = mHTMLEditor->CountEditableChildren(curNode, numChildren);
+      if (NS_FAILED(res)) return res;
+      
+      if (numChildren == 1)
+      {
+        // keep diving
+        nsCOMPtr <nsIDOMNode> tmpNode = nsEditor::GetChildAt(curNode, 0);
+        if (nsHTMLEditUtils::IsDiv(tmpNode)
+            || nsHTMLEditUtils::IsList(tmpNode)
+            || nsHTMLEditUtils::IsBlockquote(tmpNode))
+        {
+          // check editablility XXX floppy moose
+          curNode = tmpNode;
+        }
+        else break;
+      }
+      else break;
+    }
+    // we've found innermost list/blockquote/div: 
+    // replace the one node in the array with these nodes
+    aNodeArray->RemoveElementAt(0);
+    if ((nsHTMLEditUtils::IsDiv(curNode) || nsHTMLEditUtils::IsBlockquote(curNode)))
+    {
+      res = GetInnerContent(curNode, aNodeArray, PR_FALSE, PR_FALSE);
+    }
+    else
+    {
+      nsCOMPtr<nsISupports> isuports (do_QueryInterface(curNode));
+      res = aNodeArray->AppendElement(isuports);
     }
   }
   return res;
@@ -4770,6 +4913,144 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// RemoveBlockStyle:  make the list nodes have no special block type.  
+//                       
+nsresult 
+nsHTMLEditRules::RemoveBlockStyle(nsISupportsArray *arrayOfNodes)
+{
+  // intent of this routine is to be used for converting to/from
+  // headers, paragraphs, pre, and address.  Those blocks
+  // that pretty much just contain inline things...
+  
+  if (!arrayOfNodes) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  
+  nsCOMPtr<nsIDOMNode> curNode, curParent, curBlock, firstNode, lastNode;
+  PRInt32 offset;
+  PRUint32 listCount;
+    
+  arrayOfNodes->Count(&listCount);
+  
+  PRUint32 i;
+  for (i=0; i<listCount; i++)
+  {
+    // get the node to act on, and it's location
+    nsCOMPtr<nsISupports> isupports  = dont_AddRef(arrayOfNodes->ElementAt(i));
+    curNode = do_QueryInterface(isupports);
+    res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
+    if (NS_FAILED(res)) return res;
+    nsAutoString curNodeTag;
+    nsEditor::GetTagString(curNode, curNodeTag);
+    curNodeTag.ToLowerCase();
+ 
+    // if curNode is a address, p, header, address, or pre, remove it 
+    if ((curNodeTag.EqualsWithConversion("pre")) || 
+        (curNodeTag.EqualsWithConversion("p"))   ||
+        (curNodeTag.EqualsWithConversion("h1"))  ||
+        (curNodeTag.EqualsWithConversion("h2"))  ||
+        (curNodeTag.EqualsWithConversion("h3"))  ||
+        (curNodeTag.EqualsWithConversion("h4"))  ||
+        (curNodeTag.EqualsWithConversion("h5"))  ||
+        (curNodeTag.EqualsWithConversion("h6"))  ||
+        (curNodeTag.EqualsWithConversion("address")))
+    {
+      // process any partial progress saved
+      if (curBlock)
+      {
+        res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+        if (NS_FAILED(res)) return res;
+        curBlock = 0;  firstNode = 0;  lastNode = 0;
+      }
+      // remove curent block
+      res = mHTMLEditor->RemoveBlockContainer(curNode); 
+      if (NS_FAILED(res)) return res;
+    }
+    else if ((curNodeTag.EqualsWithConversion("table"))      || 
+             (curNodeTag.EqualsWithConversion("tbody"))      ||
+             (curNodeTag.EqualsWithConversion("tr"))         ||
+             (curNodeTag.EqualsWithConversion("td"))         ||
+             (curNodeTag.EqualsWithConversion("ol"))         ||
+             (curNodeTag.EqualsWithConversion("ul"))         ||
+             (curNodeTag.EqualsWithConversion("dl"))         ||
+             (curNodeTag.EqualsWithConversion("li"))         ||
+             (curNodeTag.EqualsWithConversion("blockquote")) ||
+             (curNodeTag.EqualsWithConversion("div"))) 
+    {
+      // process any partial progress saved
+      if (curBlock)
+      {
+        res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+        if (NS_FAILED(res)) return res;
+        curBlock = 0;  firstNode = 0;  lastNode = 0;
+      }
+      // recursion time
+      nsCOMPtr<nsISupportsArray> childArray;
+      res = GetChildNodesForOperation(curNode, address_of(childArray));
+      if (NS_FAILED(res)) return res;
+      res = RemoveBlockStyle(childArray);
+      if (NS_FAILED(res)) return res;
+    }
+    else if (IsInlineNode(curNode))
+    {
+      if (curBlock)
+      {
+        // if so, is this node a descendant?
+        if (nsHTMLEditUtils::IsDescendantOf(curNode, curBlock))
+        {
+          lastNode = curNode;
+          continue;  // then we dont need to do anything different for this node
+        }
+        else
+        {
+          // otherwise, we have progressed beyond end of curBlock,
+          // so lets handle it now.  We need to remove the portion of 
+          // curBlock that contains [firstNode - lastNode].
+          res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+          if (NS_FAILED(res)) return res;
+          curBlock = 0;  firstNode = 0;  lastNode = 0;
+          // fall out and handle curNode
+        }
+      }
+      curBlock = mHTMLEditor->GetBlockNodeParent(curNode);
+      if ((curNodeTag.EqualsWithConversion("pre")) || 
+          (curNodeTag.EqualsWithConversion("p"))   ||
+          (curNodeTag.EqualsWithConversion("h1"))  ||
+          (curNodeTag.EqualsWithConversion("h2"))  ||
+          (curNodeTag.EqualsWithConversion("h3"))  ||
+          (curNodeTag.EqualsWithConversion("h4"))  ||
+          (curNodeTag.EqualsWithConversion("h5"))  ||
+          (curNodeTag.EqualsWithConversion("h6"))  ||
+          (curNodeTag.EqualsWithConversion("address")))
+      {
+        firstNode = curNode;  
+        lastNode = curNode;
+      }
+      else
+        curBlock = 0;  // not a block kind that we care about.
+    }
+    else
+    { // some node that is already sans block style.  skip over it and
+      // process any partial progress saved
+      if (curBlock)
+      {
+        res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+        if (NS_FAILED(res)) return res;
+        curBlock = 0;  firstNode = 0;  lastNode = 0;
+      }
+    }
+  }
+  // process any partial progress saved
+  if (curBlock)
+  {
+    res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+    if (NS_FAILED(res)) return res;
+    curBlock = 0;  firstNode = 0;  lastNode = 0;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // ApplyBlockStyle:  do whatever it takes to make the list of nodes into 
 //                   one or more blocks of type blockTag.  
 //                       
@@ -4786,15 +5067,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
   nsCOMPtr<nsIDOMNode> curNode, curParent, curBlock, newBlock;
   PRInt32 offset;
   PRUint32 listCount;
-  PRBool bNoParent = PR_FALSE;
-  
-  // we special case an empty tag name to mean "remove block parents".
-  // This is used for the "normal" paragraph style in mail-compose
   nsString tString(*aBlockTag);////MJUDGE SCC NEED HELP
-  if (tString.IsEmpty() || 
-    !Compare(tString,NS_LITERAL_STRING("normal"),nsCaseInsensitiveStringComparator())) 
-    bNoParent = PR_TRUE;
-  
+
   arrayOfNodes->Count(&listCount);
   
   PRUint32 i;
@@ -4810,13 +5084,13 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
     curNodeTag.ToLowerCase();
  
     // is it already the right kind of block?
-    if (!bNoParent && curNodeTag == *aBlockTag)
+    if (curNodeTag == *aBlockTag)
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       continue;  // do nothing to this block
     }
         
-    // if curNode is a mozdiv, p, header, address, or pre, replace 
+    // if curNode is a address, p, header, address, or pre, replace 
     // it with a new block of correct type.
     // xxx floppy moose: pre cant hold everything the others can
     if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
@@ -4831,17 +5105,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
         (curNodeTag.EqualsWithConversion("address")))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
-      if (bNoParent)
-      {
-        // make sure we have a normal br at end of block
-        res = AddTerminatingBR(curNode);
-        if (NS_FAILED(res)) return res;
-        res = mHTMLEditor->RemoveContainer(curNode); 
-      }
-      else
-      {
-        res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), *aBlockTag);
-      }
+      res = mHTMLEditor->ReplaceContainer(curNode, address_of(newBlock), *aBlockTag);
       if (NS_FAILED(res)) return res;
     }
     else if ((curNodeTag.EqualsWithConversion("table"))      || 
@@ -4850,9 +5114,10 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
              (curNodeTag.EqualsWithConversion("td"))         ||
              (curNodeTag.EqualsWithConversion("ol"))         ||
              (curNodeTag.EqualsWithConversion("ul"))         ||
+             (curNodeTag.EqualsWithConversion("dl"))         ||
              (curNodeTag.EqualsWithConversion("li"))         ||
              (curNodeTag.EqualsWithConversion("blockquote")) ||
-             (curNodeTag.EqualsWithConversion("div")))  // div's other than mozdivs
+             (curNodeTag.EqualsWithConversion("div"))) 
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       // recursion time
@@ -4867,11 +5132,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
     else if (curNodeTag.EqualsWithConversion("br"))
     {
       curBlock = 0;  // forget any previous block used for previous inline nodes
-      if (!bNoParent)
-      {
-        res = mHTMLEditor->DeleteNode(curNode);
-        if (NS_FAILED(res)) return res;
-      }
+      res = mHTMLEditor->DeleteNode(curNode);
+      if (NS_FAILED(res)) return res;
     }
         
     
@@ -4882,7 +5144,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
     // arrayOfNodes is contructed, but some additional logic should
     // be added here if that should change
     
-    else if (IsInlineNode(curNode) && !bNoParent)
+    else if (IsInlineNode(curNode))
     {
       // if curNode is a non editable, drop it if we are going to <pre>
       if (!Compare(tString,NS_LITERAL_STRING("pre"),nsCaseInsensitiveStringComparator()) 
@@ -4957,43 +5219,6 @@ nsHTMLEditRules::SplitAsNeeded(const nsAReadableString *aTag,
   }
   return res;
 }      
-
-///////////////////////////////////////////////////////////////////////////
-// AddTerminatingBR:  place an ordinary br node at the end of aBlock,   
-//                  if it doens't already have one.  If it has a moz-BR,
-//                  simply convertit to a normal br.  
-nsresult 
-nsHTMLEditRules::AddTerminatingBR(nsIDOMNode *aBlock)
-{
-  if (!aBlock) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMNode> last;
-  nsresult res = mHTMLEditor->GetLastEditableLeaf(aBlock, address_of(last));
-  if (last && nsTextEditUtils::IsBreak(last))
-  {
-    if (nsTextEditUtils::IsMozBR(last))
-    {
-      // need to convert a br
-      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(last);
-      res = mHTMLEditor->RemoveAttribute(elem, NS_ConvertASCIItoUCS2("type")); 
-      if (NS_FAILED(res)) return res;
-    }
-    else // we have what we want, we're done
-    {
-      return res;
-    }
-  }
-  else // need to add a br
-  {
-    PRUint32 len;
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = mHTMLEditor->GetLengthOfDOMNode(aBlock, len);
-    if (NS_FAILED(res)) return res;
-    res = mHTMLEditor->CreateBR(aBlock, len, address_of(brNode));
-    if (NS_FAILED(res)) return res;
-  }
-  return res;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 // JoinNodesSmart:  join two nodes, doing whatever makes sense for their  
@@ -5744,9 +5969,7 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
   if (!nsHTMLEditUtils::IsList(curParPar)
       && nsHTMLEditUtils::IsListItem(curNode)) 
   {
-    res = AddTerminatingBR(curNode);
-    if (NS_FAILED(res)) return res;
-    res = mHTMLEditor->RemoveContainer(curNode);
+    res = mHTMLEditor->RemoveBlockContainer(curNode);
     if (NS_FAILED(res)) return res;
     *aOutOfList = PR_TRUE;
   }
@@ -5788,7 +6011,7 @@ nsHTMLEditRules::RemoveListStructure(nsIDOMNode *aList)
     aList->GetFirstChild(getter_AddRefs(child));
   }
   // delete the now-empty list
-  res = mHTMLEditor->DeleteNode(aList);
+  res = mHTMLEditor->RemoveBlockContainer(aList);
   if (NS_FAILED(res)) return res;
 
   return res;
@@ -6128,12 +6351,3 @@ nsHTMLEditRules::DidDeleteSelection(nsISelection *aSelection)
 {
   return NS_OK;
 }
-
-
-
-
-
-
-
-
-

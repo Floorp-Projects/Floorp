@@ -4096,6 +4096,103 @@ nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////
+// RemoveBlockContainer: remove inNode, reparenting it's children into their
+//                  the parent of inNode.  In addition, INSERT ANY BR's NEEDED
+//                  TO PRESERVE IDENTITY OF REMOVED BLOCK.
+//
+nsresult
+nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
+{
+  if (!inNode)
+    return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> sibling, child, unused;
+  
+  // Two possibilities: the container cold be empty of editable content.
+  // If that is the case, we need to compare what is before and after inNode
+  // to determine if we need a br.
+  // Or it could not be empty, in which case we have to compare previous
+  // sibling and first child to determine if we need a leading br,
+  // and compare following sibling and last child to determine if we need a
+  // trailing br.
+  
+  res = GetFirstEditableChild(inNode, address_of(child));
+  if (NS_FAILED(res)) return res;
+  
+  if (child)  // the case of inNode not being empty
+  {
+    // we need a br at start unless:
+    // 1) previous sibling of inNode is a block, OR
+    // 2) previous sibling of inNode is a br, OR
+    // 3) first child of inNode is a block OR
+    // 4) either is null
+    
+    res = GetPriorHTMLSibling(inNode, address_of(sibling));
+    if (NS_FAILED(res)) return res;
+    if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
+    {
+      res = GetFirstEditableChild(inNode, address_of(child));
+      if (NS_FAILED(res)) return res;
+      if (child && !IsBlockNode(child))
+      {
+        // insert br node
+        res = CreateBR(inNode, 0, address_of(unused));
+        if (NS_FAILED(res)) return res;
+      }
+    }
+    
+    // we need a br at end unless:
+    // 1) following sibling of inNode is a block, OR
+    // 2) last child of inNode is a block, OR
+    // 3) last child of inNode is a block OR
+    // 4) either is null
+
+    res = GetNextHTMLSibling(inNode, address_of(sibling));
+    if (NS_FAILED(res)) return res;
+    if (sibling && !IsBlockNode(sibling))
+    {
+      res = GetLastEditableChild(inNode, address_of(child));
+      if (NS_FAILED(res)) return res;
+      if (child && !IsBlockNode(child) && !nsTextEditUtils::IsBreak(child))
+      {
+        // insert br node
+        PRUint32 len;
+        res = GetLengthOfDOMNode(inNode, len);
+        if (NS_FAILED(res)) return res;
+        res = CreateBR(inNode, (PRInt32)len, address_of(unused));
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+  else  // the case of inNode being empty
+  {
+    // we need a br at start unless:
+    // 1) previous sibling of inNode is a block, OR
+    // 2) previous sibling of inNode is a br, OR
+    // 3) following sibling of inNode is a block, OR
+    // 4) following sibling of inNode is a br OR
+    // 5) either is null
+    res = GetPriorHTMLSibling(inNode, address_of(sibling));
+    if (NS_FAILED(res)) return res;
+    if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
+    {
+      res = GetNextHTMLSibling(inNode, address_of(sibling));
+      if (NS_FAILED(res)) return res;
+      if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
+      {
+        // insert br node
+        res = CreateBR(inNode, 0, address_of(unused));
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+    
+  // now remove container
+  return RemoveContainer(inNode);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // GetPriorHTMLSibling: returns the previous editable sibling, if there is
 //                   one within the parent
 //                       
@@ -4163,7 +4260,7 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNo
   {
     res = node->GetNextSibling(getter_AddRefs(temp));
     if (NS_FAILED(res)) return res;
-    if (!temp) return NS_ERROR_FAILURE;
+    if (!temp) return NS_OK;  // return null sibling
     // if it's editable, we're done
     if (IsEditable(temp)) break;
     // otherwise try again

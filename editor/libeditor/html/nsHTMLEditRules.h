@@ -122,6 +122,9 @@ protected:
   nsresult ReturnInParagraph(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection);
+  nsresult RemovePartOfBlock(nsIDOMNode *curBlockQuote, 
+                             nsIDOMNode *firstBQChild, 
+                             nsIDOMNode *lastBQChild);
   nsresult ConvertListType(nsIDOMNode *aList, nsCOMPtr<nsIDOMNode> *outList, const nsAReadableString& aListType, const nsAReadableString& aItemType);
   nsresult CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocument *aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
@@ -155,12 +158,14 @@ protected:
   nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aEntireList, PRBool aDontTouchContent=PR_FALSE);
   nsresult GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBool &aDD);
   nsresult GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
+  nsresult LookInsideDivBQandList(nsISupportsArray *aNodeArray);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
   nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
                                    nsVoidArray *inTransitionArray);
+  nsresult RemoveBlockStyle(nsISupportsArray *arrayOfNodes);
   nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadableString *aBlockTag);
   nsresult MakeBlockquote(nsISupportsArray *arrayOfNodes);
   nsresult SplitAsNeeded(const nsAReadableString *aTag, nsCOMPtr<nsIDOMNode> *inOutParent, PRInt32 *inOutOffset);
