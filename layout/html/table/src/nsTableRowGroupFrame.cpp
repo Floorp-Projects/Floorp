@@ -1330,20 +1330,20 @@ nsTableRowGroupFrame::RecoverState(nsRowGroupReflowState& aReflowState,
   nsTableFrame::GetTableFrame(this, tableFrame);
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
-  // Walk the list of children looking for aKidFrame
-  for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
-    if (frame == aKidFrame) {
-      break;
-    }
+  // Walk the list of children up to aKidFrame
+  for (nsIFrame* frame = mFrames.FirstChild(); frame && (frame != aKidFrame); frame->GetNextSibling(&frame)) {
+       nsCOMPtr<nsIAtom> fType;
+    frame->GetFrameType(getter_AddRefs(fType));
+    if (fType.get() == nsLayoutAtoms::tableRowFrame) {
+      // Update the running y-offset
+      nsSize  kidSize;
+      frame->GetSize(kidSize);
+      aReflowState.y += kidSize.height + cellSpacingY;
 
-    // Update the running y-offset
-    nsSize  kidSize;
-    frame->GetSize(kidSize);
-    aReflowState.y += cellSpacingY + kidSize.height;
-
-    // If our height is constrained then update the available height
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height) {
-      aReflowState.availSize.height -= kidSize.height;
+      // If our height is constrained then update the available height
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height) {
+        aReflowState.availSize.height -= kidSize.height;
+      }
     }
   }
 
