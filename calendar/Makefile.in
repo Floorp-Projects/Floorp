@@ -97,4 +97,24 @@ macxpi::
 	mv ./linux/calendar_mac.xpi .
 	echo "Done."
 
+openvmsxpi::
+	rm -f calendar_openvms.xpi
+	rm -rf linux/components
+	rm -rf linux/resources
+	echo "Building OpenVMS xpi..."
+	cp $(srcdir)/install.js ./linux
+	cp -r $(srcdir)/resources ./linux
+	cp -r $(srcdir)/linux/icons ./linux
+	$(PERL) $(srcdir)/createBuildId.pl ./linux/resources/content/about.html
+	mkdir -p ./linux/components
+	cp libxpical/libxpical.so ./linux/components
+	cp libxpical/_xpidlgen/calendar.xpt ./linux/components
+	cp $(srcdir)/resources/content/calendarService.js ./linux/components
+	cd linux; \
+	find components/ resources/ icons/ install.js \( \
+	-name CVS -o -name Makefile -o -name makefile.win -o \
+	-name Makefile.in -o -name test -o -name .cvsignore \
+	\) -prune -o -print | zip -u -D -@ calendar_openvms.xpi
+	mv ./linux/calendar_openvms.xpi .
+	echo "Done."
 
