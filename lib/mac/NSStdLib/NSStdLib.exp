@@ -3,6 +3,7 @@ strcasecmp
 strncasecmp
 strdup
 strcmpcore
+InitializeMacToolbox
 
 #Morefiles exports (add more if you need them)
 FSpFileCopy
@@ -304,8 +305,6 @@ __extended_nan
 __msipl_rd__3std		# std::__msipl_rd
 __dt__Q23std18__random_generatorFv		# std::__random_generator::~__random_generator()
 seed__Q23std18__random_generatorFUl		# std::__random_generator::seed(unsigned long)
-npos__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::npos
-npos__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::npos
 setfill__3stdFi		# std::setfill(int)
 setbase__3stdFi		# std::setbase(int)
 setiosflags__3stdFl		# std::setiosflags(long)
@@ -314,11 +313,11 @@ ffill__3stdFRQ23std35basic_ios<w,Q23std14char_traits<w>>w		# std::ffill(std::bas
 ffill__3stdFRQ23std35basic_ios<c,Q23std14char_traits<c>>i		# std::ffill(std::basic_ios<char, std::char_traits<char>>&,int)
 setw__3stdFi		# std::setw(int)
 setprecision__3stdFi		# std::setprecision(int)
-__vt__Q23std39basic_filebuf<c,Q23std14char_traits<c>>		# std::basic_filebuf<char, std::char_traits<char>>::__vt
-__vt__Q23std41basic_streambuf<c,Q23std14char_traits<c>>		# std::basic_streambuf<char, std::char_traits<char>>::__vt
-__vt__Q23std39basic_ostream<c,Q23std14char_traits<c>>		# std::basic_ostream<char, std::char_traits<char>>::__vt
 __vt__Q23std39basic_istream<c,Q23std14char_traits<c>>		# std::basic_istream<char, std::char_traits<char>>::__vt
 __vt__Q23std35basic_ios<c,Q23std14char_traits<c>>		# std::basic_ios<char, std::char_traits<char>>::__vt
+__vt__Q23std39basic_ostream<c,Q23std14char_traits<c>>		# std::basic_ostream<char, std::char_traits<char>>::__vt
+__vt__Q23std39basic_filebuf<c,Q23std14char_traits<c>>		# std::basic_filebuf<char, std::char_traits<char>>::__vt
+__vt__Q23std41basic_streambuf<c,Q23std14char_traits<c>>		# std::basic_streambuf<char, std::char_traits<char>>::__vt
 __vt__Q23std8bad_cast		# std::bad_cast::__vt
 __vt__Q23std9exception		# std::exception::__vt
 cerr__3std		# std::cerr
@@ -340,12 +339,7 @@ __dt__Q23std8bad_castFv		# std::bad_cast::~bad_cast()
 init__Q23std35basic_ios<c,Q23std14char_traits<c>>FPQ23std41basic_streambuf<c,Q23std14char_traits<c>>		# std::basic_ios<char, std::char_traits<char>>::init(std::basic_streambuf<char, std::char_traits<char>>*)
 always_noconv__Q23std23_Generic_codecvt<c,c,i>CFv		# std::_Generic_codecvt<char, char, int>::always_noconv() const
 out__Q23std23_Generic_codecvt<c,c,i>CFRiPCcPCcRPCcPcPcRPc		# std::_Generic_codecvt<char, char, int>::out(int&,const char*,const char*,const char*&,char*,char*,char*&) const
-__dt__Q23std39basic_istream<c,Q23std14char_traits<c>>Fv		# std::basic_istream<char, std::char_traits<char>>::~basic_istream()
-@12@68@__dt__Q23std39basic_istream<c,Q23std14char_traits<c>>Fv
-__dt__Q23std39basic_ostream<c,Q23std14char_traits<c>>Fv		# std::basic_ostream<char, std::char_traits<char>>::~basic_ostream()
-@8@68@__dt__Q23std39basic_ostream<c,Q23std14char_traits<c>>Fv
 __ct__Q23std39basic_ostream<c,Q23std14char_traits<c>>FPQ23std41basic_streambuf<c,Q23std14char_traits<c>>		# std::basic_ostream<char, std::char_traits<char>>::basic_ostream(std::basic_streambuf<char, std::char_traits<char>>*)
-__dt__Q23std35basic_ios<c,Q23std14char_traits<c>>Fv		# std::basic_ios<char, std::char_traits<char>>::~basic_ios()
 __ct__Q23std39basic_istream<c,Q23std14char_traits<c>>FPQ23std41basic_streambuf<c,Q23std14char_traits<c>>		# std::basic_istream<char, std::char_traits<char>>::basic_istream(std::basic_streambuf<char, std::char_traits<char>>*)
 __dt__Q33std39basic_ostream<c,Q23std14char_traits<c>>6sentryFv		# std::basic_ostream<char, std::char_traits<char>>::sentry::~sentry()
 flush__Q23std39basic_ostream<c,Q23std14char_traits<c>>Fv		# std::basic_ostream<char, std::char_traits<char>>::flush()
@@ -358,7 +352,7 @@ underflow__Q23std41basic_streambuf<c,Q23std14char_traits<c>>Fv		# std::basic_str
 xsgetn__Q23std41basic_streambuf<c,Q23std14char_traits<c>>FPci		# std::basic_streambuf<char, std::char_traits<char>>::xsgetn(char*,int)
 showmanyc__Q23std41basic_streambuf<c,Q23std14char_traits<c>>Fv		# std::basic_streambuf<char, std::char_traits<char>>::showmanyc()
 sync__Q23std41basic_streambuf<c,Q23std14char_traits<c>>Fv		# std::basic_streambuf<char, std::char_traits<char>>::sync()
-seekpos__Q23std41basic_streambuf<c,Q23std14char_traits<c>>FQ23std9streamposs		# std::basic_streambuf<char, std::char_traits<char>>::seekpos(std::streampos,short)
+seekpos__Q23std41basic_streambuf<c,Q23std14char_traits<c>>FQ23std7fpos<i>s		# std::basic_streambuf<char, std::char_traits<char>>::seekpos(std::fpos<int>,short)
 seekoff__Q23std41basic_streambuf<c,Q23std14char_traits<c>>FlQ33std8ios_base7seekdirs		# std::basic_streambuf<char, std::char_traits<char>>::seekoff(long,std::ios_base::seekdir,short)
 setbuf__Q23std41basic_streambuf<c,Q23std14char_traits<c>>FPci		# std::basic_streambuf<char, std::char_traits<char>>::setbuf(char*,int)
 imbue__Q23std41basic_streambuf<c,Q23std14char_traits<c>>FRCQ23std6locale		# std::basic_streambuf<char, std::char_traits<char>>::imbue(const std::locale&)
@@ -369,11 +363,16 @@ imbue__Q23std39basic_filebuf<c,Q23std14char_traits<c>>FRCQ23std6locale		# std::b
 uflow__Q23std39basic_filebuf<c,Q23std14char_traits<c>>Fv		# std::basic_filebuf<char, std::char_traits<char>>::uflow()
 sync__Q23std39basic_filebuf<c,Q23std14char_traits<c>>Fv		# std::basic_filebuf<char, std::char_traits<char>>::sync()
 setbuf__Q23std39basic_filebuf<c,Q23std14char_traits<c>>FPci		# std::basic_filebuf<char, std::char_traits<char>>::setbuf(char*,int)
-seekpos__Q23std39basic_filebuf<c,Q23std14char_traits<c>>FQ23std9streamposs		# std::basic_filebuf<char, std::char_traits<char>>::seekpos(std::streampos,short)
+seekpos__Q23std39basic_filebuf<c,Q23std14char_traits<c>>FQ23std7fpos<i>s		# std::basic_filebuf<char, std::char_traits<char>>::seekpos(std::fpos<int>,short)
 seekoff__Q23std39basic_filebuf<c,Q23std14char_traits<c>>FlQ33std8ios_base7seekdirs		# std::basic_filebuf<char, std::char_traits<char>>::seekoff(long,std::ios_base::seekdir,short)
 underflow__Q23std39basic_filebuf<c,Q23std14char_traits<c>>Fv		# std::basic_filebuf<char, std::char_traits<char>>::underflow()
 pbackfail__Q23std39basic_filebuf<c,Q23std14char_traits<c>>Fi		# std::basic_filebuf<char, std::char_traits<char>>::pbackfail(int)
 overflow__Q23std39basic_filebuf<c,Q23std14char_traits<c>>Fi		# std::basic_filebuf<char, std::char_traits<char>>::overflow(int)
+@8@68@__dt__Q23std39basic_ostream<c,Q23std14char_traits<c>>Fv
+__dt__Q23std35basic_ios<c,Q23std14char_traits<c>>Fv		# std::basic_ios<char, std::char_traits<char>>::~basic_ios()
+@12@68@__dt__Q23std39basic_istream<c,Q23std14char_traits<c>>Fv
+__dt__Q23std39basic_istream<c,Q23std14char_traits<c>>Fv		# std::basic_istream<char, std::char_traits<char>>::~basic_istream()
+__dt__Q23std39basic_ostream<c,Q23std14char_traits<c>>Fv		# std::basic_ostream<char, std::char_traits<char>>::~basic_ostream()
 __dt__Q33std8ios_base4InitFv		# std::ios_base::Init::~Init()
 __dt__Q23std41basic_streambuf<c,Q23std14char_traits<c>>Fv		# std::basic_streambuf<char, std::char_traits<char>>::~basic_streambuf()
 __ct__Q33std8ios_base4InitFv		# std::ios_base::Init::Init()
@@ -394,10 +393,10 @@ __vt__Q23std8ctype<c>		# std::ctype<char>::__vt
 __vt__Q23std8ctype<w>		# std::ctype<wchar_t>::__vt
 __vt__Q33std6locale5facet		# std::locale::facet::__vt
 __vt__Q23std13runtime_error		# std::runtime_error::__vt
-__vt__Q23std12length_error		# std::length_error::__vt
-__vt__Q23std9bad_alloc		# std::bad_alloc::__vt
 __vt__Q23std12out_of_range		# std::out_of_range::__vt
+__vt__Q23std12length_error		# std::length_error::__vt
 __vt__Q23std11logic_error		# std::logic_error::__vt
+__vt__Q23std9bad_alloc		# std::bad_alloc::__vt
 __vt__Q23std23_Generic_codecvt<c,c,i>		# std::_Generic_codecvt<char, char, int>::__vt
 __vt__Q23std23_Generic_codecvt<w,c,i>		# std::_Generic_codecvt<wchar_t, char, int>::__vt
 __vt__Q23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::num_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>::__vt
@@ -476,17 +475,17 @@ id__Q23std8ctype<w>		# std::ctype<wchar_t>::id
 __init__id__Q23std8ctype<w>
 global_s__Q23std6locale		# std::locale::global_s
 id_count_s__Q33std6locale2id		# std::locale::id::id_count_s
-uninitialized_fill_n<PPQ33std6locale5facet,l,PQ33std6locale5facet>__3stdFPPQ33std6locale5facetlRCPQ33std6locale5facet		# std::uninitialized_fill_n<PPQ33std6locale5facet,l,PQ33std6locale5facet>(std::locale::facet**,long,std::locale::facet*const&)
-copy_backward<PPQ33std6locale5facet,PPQ33std6locale5facet>__3stdFPPQ33std6locale5facetPPQ33std6locale5facetPPQ33std6locale5facet		# std::copy_backward<PPQ33std6locale5facet,PPQ33std6locale5facet>(std::locale::facet**,std::locale::facet**,std::locale::facet**)
-fill<PPQ33std6locale5facet,PQ33std6locale5facet>__3stdFPPQ33std6locale5facetPPQ33std6locale5facetRCPQ33std6locale5facet		# std::fill<PPQ33std6locale5facet,PQ33std6locale5facet>(std::locale::facet**,std::locale::facet**,std::locale::facet*const&)
-insert__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>FQ33std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>8iteratorUlRCPQ33std6locale5facet		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::insert(std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::iterator,unsigned long,std::locale::facet*const&)
-uninitialized_fill_n<PPQ33std6locale5facet,Ul,PQ33std6locale5facet>__3stdFPPQ33std6locale5facetUlRCPQ33std6locale5facet		# std::uninitialized_fill_n<PPQ33std6locale5facet,Ul,PQ33std6locale5facet>(std::locale::facet**,unsigned long,std::locale::facet*const&)
-uninitialized_copy<PPQ33std6locale5facet,PPQ33std6locale5facet>__3stdFPPQ33std6locale5facetPPQ33std6locale5facetPPQ33std6locale5facet		# std::uninitialized_copy<PPQ33std6locale5facet,PPQ33std6locale5facet>(std::locale::facet**,std::locale::facet**,std::locale::facet**)
+insert__Q23std32vector<Pv,Q23std13allocator<Pv>>FPPvUlRCPv		# std::vector<void*, std::allocator<void*>>::insert(void**,unsigned long,void*const&)
+erase__Q23std32vector<Pv,Q23std13allocator<Pv>>FPPvPPv		# std::vector<void*, std::allocator<void*>>::erase(void**,void**)
+do_assign<PCPv>__Q23std32vector<Pv,Q23std13allocator<Pv>>FPCPvPCPvQ23std20forward_iterator_tag		# std::vector<void*, std::allocator<void*>>::do_assign<PCPv>(void*const*,void*const*,std::forward_iterator_tag)
+resize__Q23std32vector<Pv,Q23std13allocator<Pv>>FUlPv		# std::vector<void*, std::allocator<void*>>::resize(unsigned long,void*)
+compare__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>CFUlUlPCcUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::compare(unsigned long,unsigned long,const char*,unsigned long) const
+max_size__Q23std13allocator<Pv>CFv		# std::allocator<void*>::max_size() const
 max_size__Q23std12allocator<w>CFv		# std::allocator<wchar_t>::max_size() const
 max_size__Q23std12allocator<c>CFv		# std::allocator<char>::max_size() const
-copy<PPQ33std6locale5facet,PPQ33std6locale5facet>__3stdFPPQ33std6locale5facetPPQ33std6locale5facetPPQ33std6locale5facet		# std::copy<PPQ33std6locale5facet,PPQ33std6locale5facet>(std::locale::facet**,std::locale::facet**,std::locale::facet**)
-append__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FPCcUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::append(const char*,unsigned long)
-erase__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>FQ33std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>8iteratorQ33std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>8iterator		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::erase(std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::iterator,std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::iterator)
+init__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FPCcPCcRCQ23std12allocator<c>Q23std26random_access_iterator_tag		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::init(const char*,const char*,const std::allocator<char>&,std::random_access_iterator_tag)
+append__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>UlUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::append(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&,unsigned long,unsigned long)
+init__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FPCwPCwRCQ23std12allocator<w>Q23std26random_access_iterator_tag		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::init(const wchar_t*,const wchar_t*,const std::allocator<wchar_t>&,std::random_access_iterator_tag)
 __dt__Q23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>Fv		# std::money_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>::~money_put()
 __dt__Q23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>Fv		# std::money_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>::~money_put()
 __dt__Q23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>Fv		# std::money_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>::~money_get()
@@ -503,6 +502,32 @@ __dt__Q23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>Fv
 __dt__Q23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>Fv		# std::num_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>::~num_get()
 what__Q23std9bad_allocCFv		# std::bad_alloc::what() const
 what__Q23std11logic_errorCFv		# std::logic_error::what() const
+replace<Q23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::time_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+replace<Q23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::time_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+replace<Q23std12timepunct<w>>__Q33std6locale3impFRCQ23std12timepunct<w>		# std::locale::imp::replace<Q23std12timepunct<w>>(const std::timepunct<wchar_t>&)
+replace<Q23std65time_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std65time_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std65time_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::time_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>&)
+replace<Q23std65time_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std65time_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std65time_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::time_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>&)
+replace<Q23std12timepunct<c>>__Q33std6locale3impFRCQ23std12timepunct<c>		# std::locale::imp::replace<Q23std12timepunct<c>>(const std::timepunct<char>&)
+replace<Q23std64num_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std64num_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std64num_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::num_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+replace<Q23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::num_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+replace<Q23std11numpunct<w>>__Q33std6locale3impFRCQ23std11numpunct<w>		# std::locale::imp::replace<Q23std11numpunct<w>>(const std::numpunct<wchar_t>&)
+replace<Q23std64num_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std64num_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std64num_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>&)
+replace<Q23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::num_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>&)
+replace<Q23std11numpunct<c>>__Q33std6locale3impFRCQ23std11numpunct<c>		# std::locale::imp::replace<Q23std11numpunct<c>>(const std::numpunct<char>&)
+replace<Q23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::money_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+replace<Q23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::money_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+replace<Q23std15moneypunct<w,1>>__Q33std6locale3impFRCQ23std15moneypunct<w,1>		# std::locale::imp::replace<Q23std15moneypunct<w,1>>(const std::moneypunct<wchar_t, 1>&)
+replace<Q23std15moneypunct<w,0>>__Q33std6locale3impFRCQ23std15moneypunct<w,0>		# std::locale::imp::replace<Q23std15moneypunct<w,0>>(const std::moneypunct<wchar_t, 0>&)
+replace<Q23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::money_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>&)
+replace<Q23std66money_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std66money_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std66money_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::money_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>&)
+replace<Q23std15moneypunct<c,1>>__Q33std6locale3impFRCQ23std15moneypunct<c,1>		# std::locale::imp::replace<Q23std15moneypunct<c,1>>(const std::moneypunct<char, 1>&)
+replace<Q23std15moneypunct<c,0>>__Q33std6locale3impFRCQ23std15moneypunct<c,0>		# std::locale::imp::replace<Q23std15moneypunct<c,0>>(const std::moneypunct<char, 0>&)
+replace<Q23std14codecvt<w,c,i>>__Q33std6locale3impFRCQ23std14codecvt<w,c,i>		# std::locale::imp::replace<Q23std14codecvt<w,c,i>>(const std::codecvt<wchar_t, char, int>&)
+replace<Q23std8ctype<w>>__Q33std6locale3impFRCQ23std8ctype<w>		# std::locale::imp::replace<Q23std8ctype<w>>(const std::ctype<wchar_t>&)
+replace<Q23std14codecvt<c,c,i>>__Q33std6locale3impFRCQ23std14codecvt<c,c,i>		# std::locale::imp::replace<Q23std14codecvt<c,c,i>>(const std::codecvt<char, char, int>&)
+replace<Q23std8ctype<c>>__Q33std6locale3impFRCQ23std8ctype<c>		# std::locale::imp::replace<Q23std8ctype<c>>(const std::ctype<char>&)
+replace<Q23std10collate<w>>__Q33std6locale3impFRCQ23std10collate<w>		# std::locale::imp::replace<Q23std10collate<w>>(const std::collate<wchar_t>&)
+replace<Q23std10collate<c>>__Q33std6locale3impFRCQ23std10collate<c>		# std::locale::imp::replace<Q23std10collate<c>>(const std::collate<char>&)
 use_facet<Q23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__3stdFRCQ23std6locale		# std::use_facet<Q23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::locale&)
 use_facet<Q23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__3stdFRCQ23std6locale		# std::use_facet<Q23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::locale&)
 use_facet<Q23std12timepunct<w>>__3stdFRCQ23std6locale		# std::use_facet<Q23std12timepunct<w>>(const std::locale&)
@@ -527,39 +552,46 @@ use_facet<Q23std14codecvt<w,c,i>>__3stdFRCQ23std6locale		# std::use_facet<Q23std
 use_facet<Q23std8ctype<w>>__3stdFRCQ23std6locale		# std::use_facet<Q23std8ctype<w>>(const std::locale&)
 use_facet<Q23std10collate<w>>__3stdFRCQ23std6locale		# std::use_facet<Q23std10collate<w>>(const std::locale&)
 use_facet<Q23std10collate<c>>__3stdFRCQ23std6locale		# std::use_facet<Q23std10collate<c>>(const std::locale&)
-__ct__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>FUlRCPQ33std6locale5facetRCQ23std31allocator<PQ33std6locale5facet>		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::vector(unsigned long,std::locale::facet*const&,const std::allocator<std::locale::facet*>&)
-__ct__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>FRCQ23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::vector(const std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>&)
-__as__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>FRCQ23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::operator =(const std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>&)
-resize__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>FUlPQ33std6locale5facet		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::resize(unsigned long,std::locale::facet*)
+__ct__Q23std32vector<Pv,Q23std13allocator<Pv>>FRCQ23std32vector<Pv,Q23std13allocator<Pv>>		# std::vector<void*, std::allocator<void*>>::vector(const std::vector<void*, std::allocator<void*>>&)
+__as__Q23std32vector<Pv,Q23std13allocator<Pv>>FRCQ23std32vector<Pv,Q23std13allocator<Pv>>		# std::vector<void*, std::allocator<void*>>::operator =(const std::vector<void*, std::allocator<void*>>&)
+init__Q23std32vector<Pv,Q23std13allocator<Pv>>FUlRCPv		# std::vector<void*, std::allocator<void*>>::init(unsigned long,void*const&)
+__ne<c,Q23std14char_traits<c>,Q23std12allocator<c>>__3stdFRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>PCc		# std::operator !=<char, std::char_traits<char>, std::allocator<char>>(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&,const char*)
 __pl<c,Q23std14char_traits<c>,Q23std12allocator<c>>__3stdFRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>RCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>		# std::operator +<char, std::char_traits<char>, std::allocator<char>>(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&,const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&)
-__ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(const std::allocator<wchar_t>&)
-__ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FRCQ23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>UlUlRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(const std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>&,unsigned long,unsigned long,const std::allocator<wchar_t>&)
+__ct__Q33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArrayFRCQ23std12allocator<w>Ul		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray::CharArray(const std::allocator<wchar_t>&,unsigned long)
+__dt__Q23std40_EmptyMemberOpt<Q23std12allocator<w>,Ul>Fv		# std::_EmptyMemberOpt<std::allocator<wchar_t>, unsigned long>::~_EmptyMemberOpt()
+__ct__Q33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArrayFRCQ33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArray		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray::CharArray(const std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray&)
+get_allocator__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>CFv		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::get_allocator() const
+__ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FRCQ23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>UlUl		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(const std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>&,unsigned long,unsigned long)
 __ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FPCwRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(const wchar_t*,const std::allocator<wchar_t>&)
-__ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUlwRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(unsigned long,wchar_t,const std::allocator<wchar_t>&)
-resize__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUlw		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::resize(unsigned long,wchar_t)
-__vc__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUl		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::operator [](unsigned long)
-__ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(const std::allocator<char>&)
-__ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>UlUlRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&,unsigned long,unsigned long,const std::allocator<char>&)
+init__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUlwRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::init(unsigned long,wchar_t,const std::allocator<wchar_t>&)
+change_size__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUlb		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::change_size(unsigned long,bool)
+__ct__Q33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArrayFRCQ23std12allocator<c>Ul		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray::CharArray(const std::allocator<char>&,unsigned long)
+get_allocator__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>CFv		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::get_allocator() const
+__ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>UlUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&,unsigned long,unsigned long)
 __ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FPCcRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(const char*,const std::allocator<char>&)
-__ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlcRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(unsigned long,char,const std::allocator<char>&)
-__as__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::operator =(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&)
-__as__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FPCc		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::operator =(const char*)
-begin__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>Fv		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::begin()
-end__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>Fv		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::end()
-resize__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlc		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::resize(unsigned long,char)
-clear__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>Fv		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::clear()
-__vc__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::operator [](unsigned long)
-insert__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlUlc		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::insert(unsigned long,unsigned long,char)
-__dt__Q23std12length_errorFv		# std::length_error::~length_error()
-__dt__Q23std11logic_errorFv		# std::logic_error::~logic_error()
-erase__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::erase(unsigned long,unsigned long)
-__dt__Q23std9bad_allocFv		# std::bad_alloc::~bad_alloc()
+__dt__Q23std40_EmptyMemberOpt<Q23std12allocator<c>,Ul>Fv		# std::_EmptyMemberOpt<std::allocator<char>, unsigned long>::~_EmptyMemberOpt()
+__ct__Q33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArrayFRCQ33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArray		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray::CharArray(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray&)
+assign__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>UlUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::assign(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>&,unsigned long,unsigned long)
+replace__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlUlUlc		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::replace(unsigned long,unsigned long,unsigned long,char)
 __dt__Q23std12out_of_rangeFv		# std::out_of_range::~out_of_range()
-compare__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>CFPCc		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::compare(const char*) const
+init__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlcRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::init(unsigned long,char,const std::allocator<char>&)
+__dt__Q23std11logic_errorFv		# std::logic_error::~logic_error()
+change_size__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlb		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::change_size(unsigned long,bool)
+__dt__Q23std12length_errorFv		# std::length_error::~length_error()
 __ct__62_RefCountedPtr<Q33std6locale3imp,26_Single<Q33std6locale3imp>>FPQ33std6locale3imp		# _RefCountedPtr<std::locale::imp, _Single<std::locale::imp>>::_RefCountedPtr(std::locale::imp*)
 __as__62_RefCountedPtr<Q33std6locale3imp,26_Single<Q33std6locale3imp>>FRC62_RefCountedPtr<Q33std6locale3imp,26_Single<Q33std6locale3imp>>		# _RefCountedPtr<std::locale::imp, _Single<std::locale::imp>>::operator =(const _RefCountedPtr<std::locale::imp, _Single<std::locale::imp>>&)
 __dt__28_RefCountedPtr<c,9_Array<c>>Fv		# _RefCountedPtr<char, _Array<char>>::~_RefCountedPtr()
 __ct__62_RefCountedPtr<Q33std6locale3imp,26_Single<Q33std6locale3imp>>FRC62_RefCountedPtr<Q33std6locale3imp,26_Single<Q33std6locale3imp>>		# _RefCountedPtr<std::locale::imp, _Single<std::locale::imp>>::_RefCountedPtr(const _RefCountedPtr<std::locale::imp, _Single<std::locale::imp>>&)
+assign__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FPCcUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::assign(const char*,unsigned long)
+__vc__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUl		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::operator [](unsigned long)
+resize__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlc		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::resize(unsigned long,char)
+end__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>Fv		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::end()
+begin__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>Fv		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::begin()
+__ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(const std::allocator<char>&)
+__vc__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUl		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::operator [](unsigned long)
+resize__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUlw		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::resize(unsigned long,wchar_t)
+__ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(const std::allocator<wchar_t>&)
+__dt__Q23std9bad_allocFv		# std::bad_alloc::~bad_alloc()
 __dt__Q23std23_Generic_codecvt<c,c,i>Fv		# std::_Generic_codecvt<char, char, int>::~_Generic_codecvt()
 __ct__Q23std23_Generic_codecvt<c,c,i>FUl		# std::_Generic_codecvt<char, char, int>::_Generic_codecvt(unsigned long)
 __dt__Q23std23_Generic_codecvt<w,c,i>Fv		# std::_Generic_codecvt<wchar_t, char, int>::~_Generic_codecvt()
@@ -594,32 +626,9 @@ __dt__Q23std24_Generic_moneypunct<w,0>Fv		# std::_Generic_moneypunct<wchar_t, 0>
 __ct__Q23std24_Generic_moneypunct<w,0>FUl		# std::_Generic_moneypunct<wchar_t, 0>::_Generic_moneypunct(unsigned long)
 __dt__Q23std24_Generic_moneypunct<w,1>Fv		# std::_Generic_moneypunct<wchar_t, 1>::~_Generic_moneypunct()
 __ct__Q23std24_Generic_moneypunct<w,1>FUl		# std::_Generic_moneypunct<wchar_t, 1>::_Generic_moneypunct(unsigned long)
-replace<Q23std10collate<c>>__Q33std6locale3impFRCQ23std10collate<c>		# std::locale::imp::replace<Q23std10collate<c>>(const std::collate<char>&)
-replace<Q23std10collate<w>>__Q33std6locale3impFRCQ23std10collate<w>		# std::locale::imp::replace<Q23std10collate<w>>(const std::collate<wchar_t>&)
-replace<Q23std8ctype<c>>__Q33std6locale3impFRCQ23std8ctype<c>		# std::locale::imp::replace<Q23std8ctype<c>>(const std::ctype<char>&)
-replace<Q23std14codecvt<c,c,i>>__Q33std6locale3impFRCQ23std14codecvt<c,c,i>		# std::locale::imp::replace<Q23std14codecvt<c,c,i>>(const std::codecvt<char, char, int>&)
-replace<Q23std8ctype<w>>__Q33std6locale3impFRCQ23std8ctype<w>		# std::locale::imp::replace<Q23std8ctype<w>>(const std::ctype<wchar_t>&)
-replace<Q23std14codecvt<w,c,i>>__Q33std6locale3impFRCQ23std14codecvt<w,c,i>		# std::locale::imp::replace<Q23std14codecvt<w,c,i>>(const std::codecvt<wchar_t, char, int>&)
-replace<Q23std15moneypunct<c,0>>__Q33std6locale3impFRCQ23std15moneypunct<c,0>		# std::locale::imp::replace<Q23std15moneypunct<c,0>>(const std::moneypunct<char, 0>&)
-replace<Q23std15moneypunct<c,1>>__Q33std6locale3impFRCQ23std15moneypunct<c,1>		# std::locale::imp::replace<Q23std15moneypunct<c,1>>(const std::moneypunct<char, 1>&)
-replace<Q23std66money_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std66money_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std66money_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::money_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>&)
-replace<Q23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std66money_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::money_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>&)
-replace<Q23std15moneypunct<w,0>>__Q33std6locale3impFRCQ23std15moneypunct<w,0>		# std::locale::imp::replace<Q23std15moneypunct<w,0>>(const std::moneypunct<wchar_t, 0>&)
-replace<Q23std15moneypunct<w,1>>__Q33std6locale3impFRCQ23std15moneypunct<w,1>		# std::locale::imp::replace<Q23std15moneypunct<w,1>>(const std::moneypunct<wchar_t, 1>&)
-replace<Q23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std66money_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::money_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
-replace<Q23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std66money_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::money_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
-replace<Q23std11numpunct<c>>__Q33std6locale3impFRCQ23std11numpunct<c>		# std::locale::imp::replace<Q23std11numpunct<c>>(const std::numpunct<char>&)
-replace<Q23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std64num_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::num_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>&)
-replace<Q23std64num_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std64num_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std64num_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::num_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>&)
-replace<Q23std11numpunct<w>>__Q33std6locale3impFRCQ23std11numpunct<w>		# std::locale::imp::replace<Q23std11numpunct<w>>(const std::numpunct<wchar_t>&)
-replace<Q23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std64num_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::num_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
-replace<Q23std64num_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std64num_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std64num_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::num_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
-replace<Q23std12timepunct<c>>__Q33std6locale3impFRCQ23std12timepunct<c>		# std::locale::imp::replace<Q23std12timepunct<c>>(const std::timepunct<char>&)
-replace<Q23std65time_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std65time_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std65time_get<c,Q23std45istreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::time_get<char, std::istreambuf_iterator<char, std::char_traits<char>>>&)
-replace<Q23std65time_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>__Q33std6locale3impFRCQ23std65time_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>		# std::locale::imp::replace<Q23std65time_put<c,Q23std45ostreambuf_iterator<c,Q23std14char_traits<c>>>>(const std::time_put<char, std::ostreambuf_iterator<char, std::char_traits<char>>>&)
-replace<Q23std12timepunct<w>>__Q33std6locale3impFRCQ23std12timepunct<w>		# std::locale::imp::replace<Q23std12timepunct<w>>(const std::timepunct<wchar_t>&)
-replace<Q23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std65time_get<w,Q23std45istreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::time_get<wchar_t, std::istreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
-replace<Q23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>__Q33std6locale3impFRCQ23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>		# std::locale::imp::replace<Q23std65time_put<w,Q23std45ostreambuf_iterator<w,Q23std14char_traits<w>>>>(const std::time_put<wchar_t, std::ostreambuf_iterator<wchar_t, std::char_traits<wchar_t>>>&)
+__ct<PQ33std6locale5facet>__Q23std13allocator<Pv>FRCQ23std31allocator<PQ33std6locale5facet>		# std::allocator<void*>::!<std::locale::facet*>(const std::allocator<std::locale::facet*>&)
+__ct<c>__Q23std88allocator<Q33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArray>FRCQ23std12allocator<c>		# std::allocator<std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray>::!<char>(const std::allocator<char>&)
+__ct<w>__Q23std88allocator<Q33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArray>FRCQ23std12allocator<w>		# std::allocator<std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray>::!<wchar_t>(const std::allocator<wchar_t>&)
 what__Q23std13runtime_errorCFv		# std::runtime_error::what() const
 __dt__Q23std8ctype<w>Fv		# std::ctype<wchar_t>::~ctype()
 __dt__Q23std15ctype_byname<c>Fv		# std::ctype_byname<char>::~ctype_byname()
@@ -659,6 +668,9 @@ do_grouping__Q23std15moneypunct<c,1>CFv		# std::moneypunct<char, 1>::do_grouping
 do_thousands_sep__Q23std15moneypunct<c,1>CFv		# std::moneypunct<char, 1>::do_thousands_sep() const
 do_decimal_point__Q23std15moneypunct<c,1>CFv		# std::moneypunct<char, 1>::do_decimal_point() const
 __dt__Q23std15moneypunct<c,1>Fv		# std::moneypunct<char, 1>::~moneypunct()
+__dt__Q23std88allocator<Q33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArray>Fv		# std::allocator<std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray>::~allocator()
+__dt__Q23std192_EmptyMemberOpt<Q23std88allocator<Q33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArray>,PQ33std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>9CharArray>Fv		# std::_EmptyMemberOpt<std::allocator<std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray>, std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::CharArray*>::~_EmptyMemberOpt()
+__ct__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>FUlwRCQ23std12allocator<w>		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::basic_string(unsigned long,wchar_t,const std::allocator<wchar_t>&)
 do_neg_format__Q23std15moneypunct<w,0>CFv		# std::moneypunct<wchar_t, 0>::do_neg_format() const
 do_pos_format__Q23std15moneypunct<w,0>CFv		# std::moneypunct<wchar_t, 0>::do_pos_format() const
 do_frac_digits__Q23std15moneypunct<w,0>CFv		# std::moneypunct<wchar_t, 0>::do_frac_digits() const
@@ -669,6 +681,9 @@ do_grouping__Q23std15moneypunct<w,0>CFv		# std::moneypunct<wchar_t, 0>::do_group
 do_thousands_sep__Q23std15moneypunct<w,0>CFv		# std::moneypunct<wchar_t, 0>::do_thousands_sep() const
 do_decimal_point__Q23std15moneypunct<w,0>CFv		# std::moneypunct<wchar_t, 0>::do_decimal_point() const
 __dt__Q23std15moneypunct<w,0>Fv		# std::moneypunct<wchar_t, 0>::~moneypunct()
+__dt__Q23std88allocator<Q33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArray>Fv		# std::allocator<std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray>::~allocator()
+__dt__Q23std192_EmptyMemberOpt<Q23std88allocator<Q33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArray>,PQ33std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>9CharArray>Fv		# std::_EmptyMemberOpt<std::allocator<std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray>, std::basic_string<char, std::char_traits<char>, std::allocator<char>>::CharArray*>::~_EmptyMemberOpt()
+__ct__Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>FUlcRCQ23std12allocator<c>		# std::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(unsigned long,char,const std::allocator<char>&)
 do_neg_format__Q23std15moneypunct<w,1>CFv		# std::moneypunct<wchar_t, 1>::do_neg_format() const
 do_pos_format__Q23std15moneypunct<w,1>CFv		# std::moneypunct<wchar_t, 1>::do_pos_format() const
 do_frac_digits__Q23std15moneypunct<w,1>CFv		# std::moneypunct<wchar_t, 1>::do_frac_digits() const
@@ -705,13 +720,13 @@ do_out__Q23std14codecvt<w,c,i>CFRiPCwPCwRPCwPcPcRPc		# std::codecvt<wchar_t, cha
 __ct__Q23std14codecvt<w,c,i>FUl		# std::codecvt<wchar_t, char, int>::codecvt(unsigned long)
 do_nothing__Q23std14codecvt<c,c,i>CFPCcPCcRPCcPcPcRPc		# std::codecvt<char, char, int>::do_nothing(const char*,const char*,const char*&,char*,char*,char*&) const
 __ct__Q23std14codecvt<c,c,i>FUl		# std::codecvt<char, char, int>::codecvt(unsigned long)
-__dt__Q23std8ctype<c>Fv		# std::ctype<char>::~ctype()
 __ct__Q23std15ctype_byname<c>FPCcUl		# std::ctype_byname<char>::ctype_byname(const char*,unsigned long)
 do_tolower__Q23std8ctype<c>CFPcPCc		# std::ctype<char>::do_tolower(char*,const char*) const
 do_toupper__Q23std8ctype<c>CFPcPCc		# std::ctype<char>::do_toupper(char*,const char*) const
 scan_not__Q23std8ctype<c>CFQ33std10ctype_base4maskPCcPCc		# std::ctype<char>::scan_not(std::ctype_base::mask,const char*,const char*) const
 scan_is__Q23std8ctype<c>CFQ33std10ctype_base4maskPCcPCc		# std::ctype<char>::scan_is(std::ctype_base::mask,const char*,const char*) const
 is__Q23std8ctype<c>CFPCcPCcPQ33std10ctype_base4mask		# std::ctype<char>::is(const char*,const char*,std::ctype_base::mask*) const
+__dt__Q23std8ctype<c>Fv		# std::ctype<char>::~ctype()
 __ct__Q23std8ctype<c>FPCQ33std10ctype_base4maskbUl		# std::ctype<char>::ctype(const std::ctype_base::mask*,bool,unsigned long)
 __dt__Q23std59basic_string<w,Q23std14char_traits<w>,Q23std12allocator<w>>Fv		# std::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>::~basic_string()
 __dt__Q23std12allocator<w>Fv		# std::allocator<wchar_t>::~allocator()
@@ -727,8 +742,11 @@ do_is__Q23std8ctype<w>CFPCwPCwPQ33std10ctype_base4mask		# std::ctype<wchar_t>::d
 __as__Q33std6locale3impFRCQ33std6locale3imp		# std::locale::imp::operator =(const std::locale::imp&)
 __dt__Q33std6locale3impFv		# std::locale::imp::~imp()
 __ct__Q33std6locale3impFRCQ33std6locale3imp		# std::locale::imp::imp(const std::locale::imp&)
+__dt__Q23std32vector<Pv,Q23std13allocator<Pv>>Fv		# std::vector<void*, std::allocator<void*>>::~vector()
 __dt__Q23std68vector<PQ33std6locale5facet,Q23std31allocator<PQ33std6locale5facet>>Fv		# std::vector<std::locale::facet*, std::allocator<std::locale::facet*>>::~vector()
 __dt__Q23std31allocator<PQ33std6locale5facet>Fv		# std::allocator<std::locale::facet*>::~allocator()
+__dt__Q23std13allocator<Pv>Fv		# std::allocator<void*>::~allocator()
+__dt__Q23std41_EmptyMemberOpt<Q23std13allocator<Pv>,Ul>Fv		# std::_EmptyMemberOpt<std::allocator<void*>, unsigned long>::~_EmptyMemberOpt()
 __ct__Q33std6locale3impFUl		# std::locale::imp::imp(unsigned long)
 __dt__Q33std6locale5facetFv		# std::locale::facet::~facet()
 make_classic__Q23std6localeFv		# std::locale::make_classic()
@@ -797,6 +815,9 @@ towctrans
 __wctype_map
 __wlower_map
 __wupper_map
+iswctype
+wctype
+wctob
 towupper
 towlower
 iswxdigit
@@ -849,7 +870,7 @@ wasctime
 __vt__Q23std12strstreambuf		# std::strstreambuf::__vt
 init__Q23std12strstreambufFPciPc		# std::strstreambuf::init(char*,int,char*)
 setbuf__Q23std12strstreambufFPci		# std::strstreambuf::setbuf(char*,int)
-seekpos__Q23std12strstreambufFQ23std9streamposs		# std::strstreambuf::seekpos(std::streampos,short)
+seekpos__Q23std12strstreambufFQ23std7fpos<i>s		# std::strstreambuf::seekpos(std::fpos<int>,short)
 seekoff__Q23std12strstreambufFlQ33std8ios_base7seekdirs		# std::strstreambuf::seekoff(long,std::ios_base::seekdir,short)
 underflow__Q23std12strstreambufFv		# std::strstreambuf::underflow()
 pbackfail__Q23std12strstreambufFi		# std::strstreambuf::pbackfail(int)
@@ -969,5 +990,3 @@ scalbn
 #longjmp
 #__terminate
 #__initialize
-
-InitializeMacToolbox
