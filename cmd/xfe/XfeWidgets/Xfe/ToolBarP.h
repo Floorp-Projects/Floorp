@@ -123,6 +123,7 @@ typedef struct _XfeToolBarPart
 	Cardinal			num_components;			/* Num components		*/
 	Widget				indicator;				/* Indicator			*/
 	Widget				indicator_target;		/* Indicator target		*/
+	Widget				edit_text;				/* Edit text			*/
 
 } XfeToolBarPart;
 

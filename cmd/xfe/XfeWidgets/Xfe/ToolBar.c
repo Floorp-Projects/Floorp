@@ -35,6 +35,7 @@
 
 #include <Xm/Separator.h>
 #include <Xm/SeparatoG.h>
+#include <Xm/TextF.h>
 
 #define MESSAGE1 "Widget is not an XfeToolBar."
 #define MESSAGE2 "XfeToolbar can only have XfeButton & XmSeparator children."
@@ -43,11 +44,13 @@
 #define MESSAGE5 "XmNindicatorPosition is set but XmNnumChildren is 0."
 #define MESSAGE6 "XmNindicatorPosition is less than 0."
 #define MESSAGE7 "XmNindicatorPosition is more than XmNnumChildren."
+#define MESSAGE8 "No valid edit text found in toolbar."
 
 #define DEFAULT_MAX_CHILD_HEIGHT	0
 #define DEFAULT_MAX_CHILD_WIDTH		0
 
 #define INDICATOR_NAME				"Indicator"
+#define EDIT_TEXT_NAME				"EditText"
 #define FAR_AWAY					-1000
 
 /*----------------------------------------------------------------------*/
@@ -154,6 +157,13 @@ static void		IndicatorCheckPosition		(Widget);
 static Widget	IndicatorGetTarget			(Widget);
 static int		IndicatorGetTargetPosition	(Widget);
 static Boolean	IndicatorIsShown			(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Edit text functions													*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void		EditTextCreate			(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -622,8 +632,6 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	tp->indicator				= NULL;
 	tp->indicator_target		= NULL;
 
-/* 	IndicatorCreate(nw); */
-	
     /* Finish of initialization */
     _XfeManagerChainInitialize(rw,nw,xfeToolBarWidgetClass);
 }
@@ -2007,6 +2015,8 @@ IndicatorCreate(Widget w)
 {
 	XfeToolBarPart *	tp = _XfeToolBarPart(w);
 
+	assert( !_XfeIsAlive(tp->indicator ) );
+
 	if (tp->dynamic_indicator)
 	{
 		tp->indicator = XtVaCreateManagedWidget(
@@ -2146,6 +2156,26 @@ IndicatorGetTargetPosition(Widget w)
 	}
 
 	return XmINDICATOR_DONT_SHOW;
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* EditText functions													*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+EditTextCreate(Widget w)
+{
+	XfeToolBarPart *	tp = _XfeToolBarPart(w);
+
+	assert( !_XfeIsAlive(tp->edit_text ) );
+
+	tp->edit_text = XtVaCreateWidget(EDIT_TEXT_NAME,
+									 xmTextFieldWidgetClass,
+									 w,
+									 XmNprivateComponent,	True,
+									 NULL);
 }
 /*----------------------------------------------------------------------*/
 
@@ -2349,9 +2379,149 @@ XfeToolBarGetIndicatorItem(Widget w)
 	/* Make sure the indicator exists */
     if (!tp->indicator)
     {
-      IndicatorCreate(w);
+		IndicatorCreate(w);
     }
 
     return tp->indicator;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBar item editting functions									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeToolBarGetEditText(Widget w)
+{
+    XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	
+	assert( XfeIsToolBar(w) );
+	assert( _XfeIsAlive(w) );
+
+	/* Make sure the edit text exists */
+    if (!tp->edit_text)
+    {
+		EditTextCreate(w);
+    }
+
+	/* Make sure the edit text is realized */
+    if (!_XfeIsRealized(tp->edit_text))
+    {
+		XtRealizeWidget(tp->edit_text);
+    }
+
+    return tp->edit_text;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeToolBarEditItem(Widget	w,
+				   Widget	item,
+				   int		label_x,
+				   int		label_y,
+				   int		label_width,
+				   int		label_height)
+{
+/*     XfeToolBarPart *	tp = _XfeToolBarPart(w); */
+	Widget				text = NULL;
+
+	assert( XfeIsToolBar(w) );
+	assert( _XfeIsAlive(w) );
+	assert( _XfeIsAlive(item) );
+	assert( _XfeParent(item) == w );
+
+	text = XfeToolBarGetEditText(w);
+	
+	if (!_XfeIsAlive(text))
+	{
+		_XfeWarning(w,MESSAGE8);
+		
+		return;
+	}
+
+	/* Make the text look like the target item */
+	XtVaSetValues(text,
+				  XmNbackground,			_XfeBackgroundPixel(item),
+				  XmNbackgroundPixmap,		_XfeBackgroundPixmap(item),
+				  XmNforeground,			_XfeForeground(item),
+				  XmNfontList,				XfeFastAccessFontList(item),
+				  XmNshadowThickness,		1,
+				  XmNborderWidth,			0,
+				  XmNeditable,				True,
+				  XmNcursorPositionVisible,	True,
+				  XmNmarginWidth,			3,
+				  XmNmarginHeight,			1,
+				  XmNresizeWidth,			False,
+				  NULL);	
+
+	/* Set the edit text's string */
+	{
+		XmString	xmstr = XfeFastAccessLabelString(item);
+		String		str = XfeXmStringGetPSZ(xmstr,XmFONTLIST_DEFAULT_TAG);
+
+		if (str)
+		{
+			XmTextFieldSetString(text,str);
+			
+			/* Free the psz String */
+			XtFree(str);
+		}
+	}
+
+	/* Place the edit text above the label */
+	{
+		int			x;
+		int			y;
+		int			width;
+		int			height;
+		Dimension	text_margin_width;
+		Dimension	text_margin_height;
+		Dimension	text_margin_top;
+		Dimension	text_margin_bottom;
+
+		XtVaGetValues(text,
+					  XmNmarginWidth,	&text_margin_width,
+					  XmNmarginHeight,	&text_margin_height,
+					  XmNmarginTop,		&text_margin_top,
+					  XmNmarginBottom,	&text_margin_bottom,
+					  NULL);
+
+		x = 
+			_XfeX(item) +
+			label_x - 
+			text_margin_width - 
+			_XfeShadowThickness(text) -
+			_XfeHighlightThickness(text);
+
+		y = 
+			_XfeY(item) +
+			label_y - 
+			text_margin_top -
+			text_margin_height - 
+			_XfeShadowThickness(text) -
+			_XfeHighlightThickness(text);
+		
+		width = 
+			label_width + 
+			2 * text_margin_width +
+			2 * _XfeShadowThickness(text) + 
+			2 * _XfeHighlightThickness(text);
+
+		height = 
+			label_height + 
+			text_margin_bottom + text_margin_top +
+			2 * text_margin_height +
+			2 * _XfeShadowThickness(text) +
+			2 * _XfeHighlightThickness(text);
+
+		_XfeConfigureWidget(text,x,y,width,height);
+
+		XtManageChild(text);
+
+		XRaiseWindow(XtDisplay(item),_XfeWindow(text));
+
+		XmProcessTraversal(text,XmTRAVERSE_CURRENT);	
+	}
 }
 /*----------------------------------------------------------------------*/

@@ -131,6 +131,23 @@ extern Widget
 XfeToolBarGetIndicatorItem		(Widget		w);
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBar item editting functions									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern Widget
+XfeToolBarGetEditText			(Widget		w);
+/*----------------------------------------------------------------------*/
+extern void
+XfeToolBarEditItem				(Widget		w,
+								 Widget		item,
+								 int		label_x,
+								 int		label_y,
+								 int		label_width,
+								 int		label_height);
+/*----------------------------------------------------------------------*/
+	
 #ifdef __cplusplus								/* end C++				*/
 }
 #endif

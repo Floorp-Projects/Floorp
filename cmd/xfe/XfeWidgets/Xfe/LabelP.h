@@ -89,6 +89,9 @@ typedef struct _XfeLabelPart
     Pixel					selection_color;		/* Selection color	*/
     Modifiers				selection_modifiers;	/* Selection mod	*/
 
+	/* Edit resources */
+    Modifiers				edit_modifiers;			/* Edit mod			*/
+
     /* Private Data Members */
     GC						label_GC;				/* Label gc			*/
     GC						insensitive_top_GC;		/* Insens top gc	*/
@@ -153,7 +156,13 @@ _XfeLabelGetSelectionGC			(Widget			w);
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
+_XfeLabelBtn1Down				(Widget,XEvent *,char **,Cardinal *);
+/*----------------------------------------------------------------------*/
+extern void
 _XfeLabelSelect					(Widget,XEvent *,char **,Cardinal *);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeLabelEdit					(Widget,XEvent *,char **,Cardinal *);
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -163,6 +172,11 @@ _XfeLabelSelect					(Widget,XEvent *,char **,Cardinal *);
 /*----------------------------------------------------------------------*/
 extern  Boolean
 _XfeLabelAcceptSelectionEvent	(Widget			w,
+								 XEvent *		event,
+								 Boolean		inside_label);
+/*----------------------------------------------------------------------*/
+extern  Boolean
+_XfeLabelAcceptEditEvent		(Widget			w,
 								 XEvent *		event,
 								 Boolean		inside_label);
 /*----------------------------------------------------------------------*/

@@ -2153,8 +2153,6 @@ _XfeButtonLeave(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 /* extern */  void
 _XfeButtonMotion(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
-    XfeButtonPart *	bp = _XfeButtonPart(w);
-
 	/* Make sure a button is not being pressed */ 
 	if (XfeEventGetModifiers(event) & Button1Mask)
 	{
@@ -2234,6 +2232,14 @@ _XfeButtonArm(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 	if (_XfeLabelAcceptSelectionEvent(w,event,!accept_event))
 	{
 		_XfeLabelSetSelected(w,event,!lp->selected,True);
+
+		return;
+	}
+
+	/* Look for a Edit() action */
+	if (_XfeLabelAcceptEditEvent(w,event,!accept_event))
+	{
+		_XfeLabelEdit(w,event,params,nparams);
 
 		return;
 	}

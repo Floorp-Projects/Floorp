@@ -48,7 +48,7 @@ c<Btn1Down>:				Focus()\n\
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ char _XfeLabelDefaultTranslations[] ="\
-<Btn1Down>:					Select()\n\
+<Btn1Down>:					Btn1Down()\n\
 c<Btn1Down>:				Focus()\n\
 :<Key>osfHelp:				Help()\n\
 <Enter>:					Enter()\n\

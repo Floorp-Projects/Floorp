@@ -25,6 +25,7 @@
 
 
 #include <Xfe/LabelP.h>
+#include <Xfe/ToolBar.h>
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -33,7 +34,7 @@
 /*----------------------------------------------------------------------*/
 #define MESSAGE1 "Widget is not a XfeLabel."
 #define MESSAGE2 "If XmNtruncateLabel is true, XmNtruncateProc cannot be NULL."
-
+#define MESSAGE3 "Cannot edit label because parent is not XfeToolBar."
 
 #define INSENSITIVE_OFFSET 1
 
@@ -74,7 +75,7 @@ static GC	GetSelectionGC			(Widget);
 /* Misc XfeLabel functions												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmString	CreateTruncatedString		(Widget);
+static XmString	CreateTruncatedString				(Widget);
 static void		InvokeSelectionChangedCallback		(Widget,XEvent *);
 
 /*----------------------------------------------------------------------*/
@@ -182,7 +183,18 @@ static XtResource resources[] =
 		(XtPointer) None
     },
 
-    /* Force buffer type to XmBUFFER_NONE */
+	/* Edit resources */
+    { 
+		XmNeditModifiers,
+		XmCEditModifiers,
+		XmRModifiers,
+		sizeof(Modifiers),
+		XtOffsetOf(XfeLabelRec , xfe_label  . edit_modifiers),
+		XmRImmediate, 
+		(XtPointer) None
+    },
+
+    /* Force XmNbufferType to XmBUFFER_SHARED */
     { 
 		XmNbufferType,
 		XmCBufferType,
@@ -193,6 +205,7 @@ static XtResource resources[] =
 		(XtPointer) XmBUFFER_SHARED
     },
 
+    /* Force XmNtraversalOn to False */
     { 
 		XmNtraversalOn,
 		XmCTraversalOn,
@@ -202,6 +215,8 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) False
     },
+
+    /* Force XmNhighlightThickness to 0 */
     { 
 		XmNhighlightThickness,
 		XmCHighlightThickness,
@@ -220,7 +235,7 @@ static XtResource resources[] =
 /*----------------------------------------------------------------------*/
 static XtActionsRec actions[] = 
 {
-    { "Select",				_XfeLabelSelect			},
+    { "Btn1Down",				_XfeLabelBtn1Down			},
 };
 
 /*----------------------------------------------------------------------*/
@@ -959,7 +974,7 @@ InvokeSelectionChangedCallback(Widget w,XEvent * event)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */  void
-_XfeLabelSelect(Widget w,XEvent * event,char ** params,Cardinal * nparams)
+_XfeLabelBtn1Down(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
     XfeLabelPart *	lp = _XfeLabelPart(w);
 
@@ -969,11 +984,49 @@ _XfeLabelSelect(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 		return;
 	}
 
-	/* Look for modifiers that matches the selection modifiers */
+	/* Look for modifiers that matche the selection modifiers */
 	if (_XfeLabelAcceptSelectionEvent(w,event,True))
 	{
 		_XfeLabelSetSelected(w,event,!lp->selected,True);
+
+        return;
     }
+
+	/* Look for modifiers that matche the edit modifiers */
+	if (_XfeLabelAcceptEditEvent(w,event,True))
+	{
+      _XfeLabelEdit(w,event,params,nparams);
+    }
+}
+/*----------------------------------------------------------------------*/
+/* extern */  void
+_XfeLabelSelect(Widget w,XEvent * event,char ** params,Cardinal * nparams)
+{
+    XfeLabelPart *	lp = _XfeLabelPart(w);
+
+	_XfeLabelSetSelected(w,event,!lp->selected,True);
+}
+/*----------------------------------------------------------------------*/
+/* extern */  void
+_XfeLabelEdit(Widget w,XEvent * event,char ** params,Cardinal * nparams)
+{
+    XfeLabelPart *	lp = _XfeLabelPart(w);
+
+	/* Make sure parent is XfeToolBar */
+	if (!XfeIsToolBar(_XfeParent(w)))
+	{
+		_XfeWarning(w,MESSAGE3);
+
+		return;
+	}
+
+	/* Ask the toolbar to edit us */
+	XfeToolBarEditItem(_XfeParent(w),
+					   w,
+					   lp->label_rect.x,
+					   lp->label_rect.y,
+					   lp->label_rect.width,
+					   lp->label_rect.height);
 }
 /*----------------------------------------------------------------------*/
 
@@ -991,6 +1044,35 @@ _XfeLabelAcceptSelectionEvent(Widget w,XEvent * event,Boolean inside_label)
 	/* Look for modifiers that matches the selection modifiers */
 	if ((XfeEventGetModifiers(event) & lp->selection_modifiers) || 
 		(lp->selection_modifiers == AnyModifier))
+	{
+		/* Make sure the event's x,y occured inside the label if needed */
+		if (inside_label)
+		{
+			int	x;
+			int	y;
+
+			/* Determine if the pointer is in the label */
+			result = (XfeEventGetXY(event,&x,&y) && 
+					  XfePointInRect(&lp->label_rect,x,y));
+		}
+		else
+		{
+			result = True;
+		}
+	}
+
+	return result;
+}
+/*----------------------------------------------------------------------*/
+/* extern */  Boolean
+_XfeLabelAcceptEditEvent(Widget w,XEvent * event,Boolean inside_label)
+{
+    XfeLabelPart *	lp = _XfeLabelPart(w);
+	Boolean			result = False;
+
+	/* Look for modifiers that matches the edit modifiers */
+	if ((XfeEventGetModifiers(event) & lp->edit_modifiers) || 
+		(lp->edit_modifiers == AnyModifier))
 	{
 		/* Make sure the event's x,y occured inside the label if needed */
 		if (inside_label)
@@ -1168,8 +1250,6 @@ XfeLabelSetStringPSZ(Widget w,String psz_label)
 /* extern */  void
 XfeLabelSetSelected(Widget w,Boolean selected)
 {
-    XfeLabelPart *	lp = _XfeLabelPart(w);
-
 	assert( XfeIsLabel(w) );
 
 	_XfeLabelSetSelected(w,NULL,selected,False);
