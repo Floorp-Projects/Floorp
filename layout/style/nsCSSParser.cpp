@@ -1844,7 +1844,7 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
         if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
           PRInt32 index = SearchKeywordTable(keyword, nsCSSProps::kColorKTable);
           if (0 < index) {
-            aValue.SetIntValue(nsCSSProps::kColorKTable[index], eCSSUnit_Enumerated);
+            aValue.SetIntValue(nsCSSProps::kColorKTable[index], eCSSUnit_Integer);
             return PR_TRUE;
           }
         }
