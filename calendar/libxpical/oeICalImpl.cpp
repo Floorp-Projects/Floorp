@@ -2054,7 +2054,7 @@ oeICalImpl::GetAllTodos(nsISimpleEnumerator **resultList )
 
 NS_IMETHODIMP oeICalImpl::ReportError( PRInt16 severity, PRUint32 errorid, const char *errorstring ) {
 
-    if( severity >= ICAL_ERROR_PROBLEM ) {
+    if( severity >= oeIICalError::PROBLEM ) {
         #ifdef ICAL_DEBUG
             printf( "oeICalImpl::ReportError(%d,%x) : %s\n", severity, errorid, errorstring );
         #endif

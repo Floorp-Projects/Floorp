@@ -201,11 +201,6 @@ interface oeIICalTodoObserver : nsISupports
 [scriptable, uuid(981ab93d-ad51-45bb-a4a2-e158c2cfdeb4)]
 interface oeIICal : nsISupports
 {
-    const long ICAL_ERROR_DEBUG = 0;
-    const long ICAL_ERROR_WARN = 1;
-    const long ICAL_ERROR_PROBLEM = 1;
-    const long ICAL_ERROR_CRITICAL = 1;
-
 	void Test();
 
     attribute boolean batchMode;
@@ -275,6 +270,19 @@ interface oeIICalContainer : nsISupports
     void reportError( in short severity, in unsigned long errorid, in string errorstring );
 };
 
+[scriptable, uuid(0d42d962-e5fd-428b-b622-867928c9b669)]
+interface oeIICalError : nsISupports
+{
+    //severity codes
+    const long DEBUG = 0;
+    const long WARN = 1;
+    const long PROBLEM = 2;
+    const long CRITICAL = 3;
+
+    //error codes
+    const long UID_NOT_FOUND               =  1001;
+};
+
 %{ C++
 extern nsresult
 NS_NewICal(oeIICal** inst);
@@ -286,4 +294,9 @@ extern nsresult
 NS_NewDateTime(oeIDateTime** inst);
 extern nsresult
 NS_NewICalEventDisplay( oeIICalEvent* event, oeIICalEventDisplay** inst );
+
+#define GENERATE_CAL_FAILURE(x) \
+            (NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_CALENDAR,x))
+#define NS_ERROR_CAL_UID_NOT_FOUND              \
+  GENERATE_CAL_FAILURE(oeIICalError::UID_NOT_FOUND)
 %}

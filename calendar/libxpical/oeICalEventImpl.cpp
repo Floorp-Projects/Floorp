@@ -1696,7 +1696,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         tmpstr = icalproperty_get_uid( prop );
         SetId( tmpstr );
     } else {
-        ReportError( oeIICal::ICAL_ERROR_WARN, 0, "oeICalEventImpl::ParseIcalComponent() : Warning UID not found! Assigning new one." );
+        ReportError( oeIICalError::WARN, oeIICalError::UID_NOT_FOUND, "oeICalEventImpl::ParseIcalComponent() : Warning UID not found! Assigning new one." );
         char uidstr[40];
         GenerateUUID( uidstr );
         SetId( uidstr );
