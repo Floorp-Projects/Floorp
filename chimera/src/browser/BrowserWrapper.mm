@@ -232,9 +232,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   mIsBusy = YES;
   [mTab setLabel: LOADING_STRING];
-  
-  if (mWindowController)
+
+  if (mWindowController) {
     [mWindowController updateToolbarItems];
+    [mWindowController startThrobber];
+  }
 }
 
 - (void)onLoadingCompleted:(BOOL)succeeded
@@ -268,8 +270,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [self removeFromSuperview];
   }
 
-  if (mWindowController)
+  if (mWindowController) {
     [mWindowController updateToolbarItems];
+    [mWindowController stopThrobber];
+  }
 }
 
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes 
