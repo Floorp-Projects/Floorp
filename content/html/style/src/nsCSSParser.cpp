@@ -1391,6 +1391,7 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
                 (aSelector.mIDList == nsnull) &&
                 (aSelector.mClassList == nsnull) &&
                 (aSelector.mAttrList == nsnull) &&
+                (aSelector.mNegations == nsnull) &&
                 (aSelector.mPseudoClassList != nsnull) &&
                 (aSelector.mPseudoClassList->mNext == nsnull));
 }
