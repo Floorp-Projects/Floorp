@@ -210,12 +210,12 @@ nsresult nsAbOutlookCard::Init(const char *aUri)
     nsAutoString unichar ;
     nsAutoString unicharBis ;
 
-    if (mapiAddBook->GetPropertyUString(*mMapiData, PR_HOME_ADDRESS_STREET, unichar)) {
+    if (mapiAddBook->GetPropertyUString(*mMapiData, PR_HOME_ADDRESS_STREET_W, unichar)) {
         splitString(unichar, unicharBis) ;
         SetHomeAddress(unichar.get()) ;
         SetHomeAddress2(unicharBis.get()) ;
     }
-    if (mapiAddBook->GetPropertyUString(*mMapiData, PR_BUSINESS_ADDRESS_STREET, unichar)) {
+    if (mapiAddBook->GetPropertyUString(*mMapiData, PR_BUSINESS_ADDRESS_STREET_W, unichar)) {
         splitString(unichar, unicharBis) ;
         SetWorkAddress(unichar.get()) ;
         SetWorkAddress2(unicharBis.get()) ;
