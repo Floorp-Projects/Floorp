@@ -1995,7 +1995,8 @@ ResetChannelCharset(MimeObject *obj)
   ////////////////////////////////////////////////////////////
 
 
-nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontPixelSize)
+nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, 
+                         PRInt32 *fontPixelSize, PRInt32 *fontSizePercentage)
 {
   nsresult rv = NS_OK;
 
@@ -2089,6 +2090,15 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       rv = aPrefs->GetIntPref(aPrefStr, fontPixelSize);
       if (NS_FAILED(rv))
         return rv;
+
+      // get original font size
+      PRInt32 originalSize;
+      rv = aPrefs->GetDefaultIntPref(aPrefStr, &originalSize);
+      if (NS_FAILED(rv))
+        return rv;
+
+      // calculate percentage
+      *fontSizePercentage = (PRInt32)((float)*fontPixelSize / (float)originalSize * 100);
 
     }
     // otherwise, use the mailnews font setting from pref

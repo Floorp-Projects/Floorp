@@ -142,8 +142,9 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
        (otherwise unicode font will be used since the data is UTF-8). */
     char fontName[128];     // default font name
     PRInt32 fontSize;       // default font size
+    PRInt32 fontSizePercentage;   // size percentage
     nsresult rv = GetMailNewsFont(obj, exdata->fixedwidthfont,
-                                  fontName, 128, &fontSize);
+                                  fontName, 128, &fontSize, &fontSizePercentage);
     if (NS_SUCCEEDED(rv))
     {
       fontstyle = "font-family: ";
