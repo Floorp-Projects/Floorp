@@ -564,6 +564,7 @@ SECMOD_AddNewModuleEx;
 SECMOD_DeleteModule;
 SECMOD_FreeModuleSpecList;
 SECMOD_GetModuleSpecList;
+SECMOD_LoadModule;
 SECMOD_LoadUserModule;
 SECMOD_UnloadUserModule;
 SECMOD_UpdateModule;
