@@ -80,8 +80,6 @@
 #include "imgIContainer.h"
 #include "nsIPresContext.h"
 
-#include "nsEditorParserObserver.h"
-
 #if DEBUG
 //#define NOISY_DOC_LOADING  1
 #endif
@@ -267,17 +265,6 @@ const char* const gSupportedTextTypes[] = {
   "application/vnd.mozilla.xul+xml",
   NULL      // IMPORTANT! Null must be at end
 };
-
-// Elements that editor cannot currently support (11/11/02),
-//   but hopefully we will be able to soon.
-#ifndef FULL_EDITOR_HTML_SUPPORT
-static eHTMLTags gWatchTags[] = 
-{ eHTMLTag_frameset,
-  eHTMLTag_iframe,
-  eHTMLTag_unknown
-};
-#endif
-
 
 PRBool
 IsSupportedTextType(const char* aMIMEType)
