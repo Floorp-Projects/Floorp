@@ -104,11 +104,6 @@ Rights Reserved.
 						<treecol style="width:100%"/>
 
 						<treechildren id="bucketBody">
-							<treeitem>
-								<treerow>
-									<treecell/>
-								</treerow>
-							</treeitem>
 						</treechildren>
 					</tree>
 				</box>
