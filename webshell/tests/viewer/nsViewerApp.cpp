@@ -20,6 +20,7 @@
 #ifdef NGPREFS
 #define INITGUID
 #endif
+
 #include "nsCOMPtr.h"
 #include "nsXPBaseWindow.h" 
 #include "nsViewerApp.h"
@@ -27,6 +28,11 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIPref.h"
+
+// Form Processor
+#include "nsIFormProcessor.h"
+
+
 #ifndef NECKO
 #include "nsINetService.h"
 #endif // NECKO
@@ -47,12 +53,15 @@
 #include "nsILookAndFeel.h"
 #include "nsColor.h"
 #include "nsWidgetSupport.h"
+#include "nsVector.h"
 
 
 // XXX For font setting below
 #include "nsFont.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
+
+#include "nsIDOMHTMLSelectElement.h"
 
 // Charset converter
 #include "nsMetaCharsetCID.h"
@@ -95,6 +104,10 @@ static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 
 static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
+
+static NS_DEFINE_IID(kFormProcessorCID,   NS_IFORMPROCESSOR_CID);
+static NS_DEFINE_IID(kFormProcessorIID,   NS_IFORMPROCESSOR_IID);
+static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 
 #define DEFAULT_WIDTH 620
 #define DEFAULT_HEIGHT 400
@@ -187,11 +200,60 @@ nsViewerApp::Destroy()
   }
 }
 
+class nsTestFormProcessor : public nsIFormProcessor {
+public:
+  nsTestFormProcessor();
+  NS_IMETHOD ProcessValue(nsIDOMHTMLElement *aElement, 
+                          const nsString& aName, 
+                          nsString& aValue);
+
+  NS_IMETHOD ProvideContent(const nsString& aFormType, 
+                            nsVector& aContent,
+                            nsString& aAttribute);
+  NS_DECL_ISUPPORTS;
+};
+
+
+
+NS_IMPL_ADDREF(nsTestFormProcessor);
+NS_IMPL_RELEASE(nsTestFormProcessor);
+NS_IMPL_QUERY_INTERFACE(nsTestFormProcessor, kFormProcessorIID);
+
+nsTestFormProcessor::nsTestFormProcessor()
+{
+   NS_INIT_REFCNT();
+}
+
+NS_METHOD 
+nsTestFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement, 
+                                  const nsString& aName, 
+                                  nsString& aValue)
+{
+#ifdef DEBUG_kmcclusk
+  char *name = aName.ToNewCString();
+  char *value = aValue.ToNewCString();
+  printf("ProcessValue: name %s value %s\n",  name, value);
+  delete [] name;
+  delete [] value;
+#endif
+
+  return NS_OK;
+}
+
+NS_METHOD nsTestFormProcessor::ProvideContent(const nsString& aFormType, 
+                               nsVector& aContent,
+                               nsString& aAttribute)
+{
+  return NS_OK;
+}
+
+
 nsresult
 nsViewerApp::AutoregisterComponents()
 {
   nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                                  NULL /* default */);
+
   return rv;
 }
 
@@ -218,6 +280,16 @@ nsViewerApp::SetupRegistry()
   NS_NewXPBaseWindowFactory(&bwf);
   nsComponentManager::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
   NS_RELEASE(bwf);
+
+
+   // Register a form processor. The form processor has the opportunity to
+   // modify the value's passed during form submission.
+  nsTestFormProcessor* testFormProcessor = new nsTestFormProcessor();
+  nsCOMPtr<nsISupports> formProcessor;
+  rv = testFormProcessor->QueryInterface(kISupportsIID, getter_AddRefs(formProcessor));
+  if (NS_SUCCEEDED(rv) && formProcessor) {
+    rv = nsServiceManager::RegisterService(kFormProcessorCID, formProcessor);
+  }
 
   return NS_OK;
 }
@@ -339,6 +411,10 @@ nsViewerApp::Exit()
       mEventQService = nsnull;
     }
   }
+
+    // Unregister the test form processor registered in nsViewerApp::SetupRegistry
+  rv = nsServiceManager::UnregisterService(kFormProcessorCID);
+
   return rv;
 }
 
