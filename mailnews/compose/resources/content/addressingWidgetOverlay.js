@@ -44,7 +44,7 @@ var gNumberOfCols = 0;
 
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
-gMimeHeaderParser = null;
+var gMimeHeaderParser = null;
 
 /**
  * global variable inherited from MsgComposeCommands.js
