@@ -3951,6 +3951,9 @@ ULONG nsWindow::GetFCFlags()
     style |= FCF_SIZEBORDER | FCF_MINMAX;
   }
 
+  if (mWindowType == eWindowType_invisible) {
+    style &= ~FCF_TASKLIST;
+  }
 
   if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_resizeh)) {

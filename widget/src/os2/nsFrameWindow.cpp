@@ -44,8 +44,6 @@ extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 extern PRBool              gRollupConsumeRollupEvent;
 
-BOOL nsFrameWindow::fHiddenWindowCreated = FALSE;
-
 nsFrameWindow::nsFrameWindow() : nsWindow()
 {
    fnwpDefFrame = 0;
@@ -106,14 +104,6 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 #endif
 
    ULONG fcfFlags = GetFCFlags();
-
-   // Set flags only if not first hidden window created by nsAppShellService
-   if (!fHiddenWindowCreated) {
-      if ((aRect.x == 0) && (aRect.y == 0) && (aRect.height == 100) && (aRect.width == 100)) {
-         fcfFlags &= ~FCF_TASKLIST;
-         fHiddenWindowCreated = TRUE;
-      }
-   }
 
    ULONG style = WindowStyle();
    if( aInitData)
