@@ -85,7 +85,6 @@ DIRS		+= \
 		docshell \
 		webshell \
 		editor \
-		xpinstall \
 		sun-java \
 		profile \
 		$(NULL)
@@ -93,6 +92,8 @@ DIRS		+= \
 ifdef MOZ_BUILD_XPFE
 DIRS		+= xpfe
 endif
+
+DIRS		+= xpinstall
 
 ifdef MOZ_EXTENSIONS
 DIRS		+= extensions
