@@ -83,6 +83,11 @@ nsXULRadioGroupElement::GetSelectedItem(nsIDOMXULRadioElement** aResult)
 NS_IMETHODIMP
 nsXULRadioGroupElement::SetSelectedItem(nsIDOMXULRadioElement* aItem)
 {
+  PRBool disabled;
+  aItem->GetDisabled(&disabled);
+  if (disabled)
+    return NS_OK;
+
   if (mSelectedItem)
     mSelectedItem->SetChecked(PR_FALSE);
   mSelectedItem = aItem;
