@@ -162,8 +162,11 @@ public:
                                    nsChangeHint& aTopLevelChange) = 0;
 
   // Determine whether an attribute affects style
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects) = 0;
+  NS_IMETHOD HasAttributeDependentStyle(nsIPresContext* aPresContext,
+                                        nsIContent *aContent,
+                                        nsIAtom *aAttribute,
+                                        PRInt32 aModType,
+                                        PRBool *aResult) = 0;
 
   /**
    * Capture/restore frame state for the frame subtree rooted at aFrame.

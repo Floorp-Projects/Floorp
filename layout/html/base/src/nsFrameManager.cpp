@@ -346,8 +346,11 @@ public:
                                    nsStyleChangeList& aChangeList,
                                    nsChangeHint aMinChange,
                                    nsChangeHint& aTopLevelChange);
-  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                   PRBool &aAffects);
+  NS_IMETHOD HasAttributeDependentStyle(nsIPresContext *aPresContext,
+                                        nsIContent *aContent,
+                                        nsIAtom *aAttribute,
+                                        PRInt32 aModType,
+                                        PRBool *aResult);
 
   // Capture state from the entire frame heirarchy and store in aState
   NS_IMETHOD CaptureFrameState(nsIPresContext*        aPresContext,
@@ -2066,31 +2069,25 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
-                                    PRBool &aAffects)
+FrameManager::HasAttributeDependentStyle(nsIPresContext *aPresContext,
+                                         nsIContent *aContent,
+                                         nsIAtom *aAttribute,
+                                         PRInt32 aModType,
+                                         PRBool *aResult)
 {
-  nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
 
   if (aAttribute == nsHTMLAtoms::style) {
     // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
-    // it doesn't really matter.
-    aAffects = PR_TRUE;
+    // it doesn't really matter.  Or we could even let
+    // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.
+    *aResult = PR_TRUE;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
-  if (xml) {
-    rv = mStyleSet->AttributeAffectsStyle(aAttribute, aContent, aAffects);
-  } else {
-    // not an XML element, so assume it is an HTML element and further assume that
-    // any attribute may affect style
-    // NOTE: we could list all of the presentation-hint attributes and check them,
-    //       but there are a lot of them and this is safer.
-    aAffects = PR_TRUE;
-    rv = NS_OK;
-  }
-  return rv;
+  return mStyleSet->HasAttributeDependentStyle(aPresContext, aContent,
+                                               aAttribute, aModType,
+                                               aResult);
 }
 
 // Capture state for a given frame.

@@ -384,36 +384,9 @@ nsHTMLMappedAttributes::~nsHTMLMappedAttributes(void)
   Reset();
 }
 
-NS_IMPL_ADDREF(nsHTMLMappedAttributes);
-NS_IMPL_RELEASE(nsHTMLMappedAttributes);
-
-nsresult 
-nsHTMLMappedAttributes::QueryInterface(const nsIID& aIID,
-                                       void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsIHTMLMappedAttributes))) {
-    *aInstancePtrResult = (void*) ((nsIHTMLMappedAttributes*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsIHTMLMappedAttributes*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
+NS_IMPL_ISUPPORTS2(nsHTMLMappedAttributes,
+                   nsIHTMLMappedAttributes,
+                   nsIStyleRule)
 
 NS_IMETHODIMP
 nsHTMLMappedAttributes::Init(nsIHTMLStyleSheet* aSheet,
