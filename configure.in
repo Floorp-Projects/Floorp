@@ -57,8 +57,6 @@ MOZPNG=95
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GTK_VERSION=1.2.0
-
-dnl The minimum libIDL that we need
 LIBIDL_VERSION=0.6.3
 
 dnl Set various checks
@@ -255,71 +253,14 @@ dnl ========================================================
 dnl the qsort routine under solaris is faulty
 dnl Linux Alpha needs -mieee for FPU to work correctly
 case "$target" in
-*-*-aix*)
-	if test ! "$GNU_CC"; then
-		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
-		DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
-	fi
-	MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
-	MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
-	;;
-
-*-*-solaris*) 
-    AC_DEFINE(BROKEN_QSORT)
+*-aix*)
     if test ! "$GNU_CC"; then
-       LDFLAGS='-xildoff'
-       MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-       MKCSHLIB='$(CC) $(DSO_LDOPTS)'
-       MKSHLIB_FORCE_ALL='-z allextract'
-       MKSHLIB_UNFORCE_ALL=''
-       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-       AR='$(CXX) -xar -o $@'
-       AS='/usr/ccs/bin/as'
-       AS_DASH_C_FLAG=''
-
-       case `uname -m` in
-         sun4u)
-           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0'
-           ;;
-         *)
-           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0'
-           ;;
-       esac
-
-       NS_USE_NATIVE=1
-    else
-       MKSHLIB='$(CC) $(DSO_LDOPTS)'
-       _WARNINGS_CFLAGS=''
-       _WARNINGS_CXXFLAGS=''
-       AS='$(CC)'
-       ASFLAGS='$(CFLAGS)'
+	DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
+	DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
     fi
+    MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
+    MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
     ;;
-
-*-*-sunos*) 
-    AS='$(CC)'
-    ASFLAGS='$(CFLAGS)'
-    DSO_LDOPTS=''
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-    ;;
-
-alpha*-*-linux*)
-    CFLAGS="$CFLAGS -mieee"
-    CXXFLAGS="$CXXFLAGS -mieee"
-    ;;
-
-alpha*-*-osf*)
-    if test "$GNU_CC"; then
-        DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-    else
-	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
-	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
-        DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-        DSO_CFLAGS=
-        MKSHLIB_FORCE_ALL='-all'
-        MKSHLIB_UNFORCE_ALL='-none'
-    fi ;;
 
 *-bsdi*)
     case `uname -r` in
@@ -340,41 +281,8 @@ alpha*-*-osf*)
     fi
     if test ! "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
-    fi ;; 
-
-*-netbsd*)
-    DLL_SUFFIX="so.1.0"
-    DSO_CFLAGS='-fPIC'
-    CFLAGS="$CFLAGS -Dunix"
-    CXXFLAGS="$CXXFLAGS -Dunix"
-    case `uname -m` in
-	*86)
-		MKSHLIB='$(LD) $(DSO_LDOPTS)'
-		MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-		;;
-    esac
-dnl Test for a.out platform and handle C++ libraries correctly
-    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-shared"
     fi
-    if test "$LIBRUNPATH"; then
-	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
-    fi
-    ;;
-
-*-openbsd*)
-    DLL_SUFFIX="so.1.0"
-    DSO_CFLAGS='-fPIC'
-    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
-    fi
-    if test "$LIBRUNPATH"; then
-	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
-    fi
-    ;;
+    ;; 
 
 *-hpux*)
     DLL_SUFFIX="sl"
@@ -401,6 +309,96 @@ dnl Test for a.out platform and handle C++ libraries correctly
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
     fi
+    ;;
+
+alpha*-*-linux*)
+    CFLAGS="$CFLAGS -mieee"
+    CXXFLAGS="$CXXFLAGS -mieee"
+    ;;
+
+*-netbsd*)
+    DLL_SUFFIX="so.1.0"
+    DSO_CFLAGS='-fPIC'
+    CFLAGS="$CFLAGS -Dunix"
+    CXXFLAGS="$CXXFLAGS -Dunix"
+    case `uname -m` in
+	*86)
+		MKSHLIB='$(LD) $(DSO_LDOPTS)'
+		MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+		;;
+    esac
+    dnl Test for a.out platform and handle C++ libraries correctly
+    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
+	DSO_LDOPTS="-shared"
+    fi
+    if test "$LIBRUNPATH"; then
+	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
+    fi
+    ;;
+
+*-openbsd*)
+    DLL_SUFFIX="so.1.0"
+    DSO_CFLAGS='-fPIC'
+    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
+	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
+    fi
+    if test "$LIBRUNPATH"; then
+	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
+    fi
+    ;;
+
+alpha*-*-osf*)
+    if test "$GNU_CC"; then
+        DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    else
+	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
+	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
+        DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+        DSO_CFLAGS=
+        MKSHLIB_FORCE_ALL='-all'
+        MKSHLIB_UNFORCE_ALL='-none'
+    fi
+    ;;
+
+*-solaris*) 
+    AC_DEFINE(BROKEN_QSORT)
+    if test ! "$GNU_CC"; then
+       LDFLAGS='-xildoff'
+       MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+       MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+       MKSHLIB_FORCE_ALL='-z allextract'
+       MKSHLIB_UNFORCE_ALL=''
+       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       AR='$(CXX) -xar -o $@'
+       AS='/usr/ccs/bin/as'
+       AS_DASH_C_FLAG=''
+       NS_USE_NATIVE=1
+       case `uname -m` in
+         sun4u)
+           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0'
+           ;;
+         *)
+           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0'
+           ;;
+       esac
+    else
+       MKSHLIB='$(CC) $(DSO_LDOPTS)'
+       _WARNINGS_CFLAGS=''
+       _WARNINGS_CXXFLAGS=''
+       AS='$(CC)'
+       ASFLAGS='$(CFLAGS)'
+    fi
+    ;;
+
+*-sunos*) 
+    AS='$(CC)'
+    ASFLAGS='$(CFLAGS)'
+    DSO_LDOPTS=''
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
 esac
