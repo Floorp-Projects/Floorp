@@ -503,8 +503,13 @@ void nsBlockFrame::AddInlineChildToLine(nsIPresContext* aCX,
 {
   NS_PRECONDITION(nsnull != aState.lineStart, "bad line");
 
+  nsStylePosition* kidPosition;
+   
+  // Get the position style data
+  aKidFrame->GetStyleData(kStylePositionSID, (nsStyleStruct*&)kidPosition);
+
   PRIntn direction = aState.mol->direction;
-  if (NS_STYLE_POSITION_RELATIVE == aKidMol->positionFlags) {
+  if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
     aState.needRelativePos = PR_TRUE;
   }
 
@@ -592,7 +597,11 @@ void nsBlockFrame::AddBlockChild(nsIPresContext* aCX,
 {
   NS_PRECONDITION(nsnull != aState.lineStart, "bad line");
 
-  if (NS_STYLE_POSITION_RELATIVE == aKidMol->positionFlags) {
+  nsStylePosition* kidPosition;
+   
+  // Get the position style data
+  aKidFrame->GetStyleData(kStylePositionSID, (nsStyleStruct*&)kidPosition);
+  if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
     aState.needRelativePos = PR_TRUE;
   }
 
