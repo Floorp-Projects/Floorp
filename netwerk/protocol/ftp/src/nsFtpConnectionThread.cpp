@@ -1395,7 +1395,7 @@ nsFtpState::R_retr() {
     if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
         return FTP_ERROR;
 
-    if (mResponseCode/100 == 5) {
+    if ((mResponseCode/100 == 5) && (mServerType != FTP_OS2_TYPE)) {
         mRETRFailed = PR_TRUE;
         
         // We need to kill off the existing connection - see bug 101128
