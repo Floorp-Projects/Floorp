@@ -1067,7 +1067,7 @@ nsGlobalHistory::SetPageTitle(nsIURI *aURI, const nsAString& aTitle)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsGlobalHistory::RemovePage(const char *aURL)
 {
   mdb_err err;
