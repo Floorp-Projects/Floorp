@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.209 $ ';
+$::UtilsVersion = '$Revision: 1.210 $ ';
 
 package TinderUtils;
 
@@ -1437,9 +1437,9 @@ sub run_all_tests {
             # Set security prefs to allow us to close our own window,
             # pageloader test (and possibly other tests) needs this on.
             if (system("\\grep -s dom.allow_scripts_to_close_windows $pref_file > /dev/null")) {
-                print_log "Setting dom.allow_scripts_to_close_windows to 2.\n";
+                print_log "Setting dom.allow_scripts_to_close_windows to true.\n";
                 open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-                print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", 2);\n";
+                print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", true);\n";
                 close PREFS;
             } else {
                 print_log "Already set dom.allow_scripts_to_close_windows\n";
