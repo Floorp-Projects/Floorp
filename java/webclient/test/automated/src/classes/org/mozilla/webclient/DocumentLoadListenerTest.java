@@ -1,5 +1,5 @@
 /*
- * $Id: DocumentLoadListenerTest.java,v 1.3 2005/02/28 17:15:45 edburns%acm.org Exp $
+ * $Id: DocumentLoadListenerTest.java,v 1.4 2005/03/13 17:56:16 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -40,6 +40,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import java.awt.Robot;
+import java.awt.event.InputEvent;
+
+
 // DocumentLoadListenerTest.java
 
 public class DocumentLoadListenerTest extends WebclientTestCase {
@@ -67,6 +71,12 @@ public class DocumentLoadListenerTest extends WebclientTestCase {
     //
     // Constants
     // 
+
+    static final int IN_X = 20;
+    static final int IN_Y = 117;
+
+    static final int OUT_X = 700;
+    static final int OUT_Y = 500;
 
     //
     // Testcases
@@ -134,11 +144,33 @@ public class DocumentLoadListenerTest extends WebclientTestCase {
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
     }
 
+    public static final int HAS_START_EVENT_DATA =                 0;
+    public static final int HAS_END_EVENT_DATA =                   1;
+    public static final int START_EVENT_DATA_IS_MAP =              2;
+    public static final int END_EVENT_DATA_IS_MAP =                3;
+    public static final int START_HAS_REQUEST_METHOD =             4;
+    public static final int END_HAS_REQUEST_METHOD =               5;
+    public static final int START_REQUEST_METHOD_IS_CORRECT =      6;
+    public static final int END_REQUEST_METHOD_IS_CORRECT =        7;
+    public static final int START_URI_IS_CORRECT =                 8;
+    public static final int END_URI_IS_CORRECT =                   9;
+    public static final int HAS_REQUEST_HEADERS =                 10;
+    public static final int HAS_RESPONSE_HEADERS =                12;
+    public static final int REQUEST_HEADERS_IS_MAP =              13;
+    public static final int RESPONSE_HEADERS_IS_MAP =             14;
+    public static final int REQUEST_HEADERS_ARE_CORRECT =         15;
+    public static final int RESPONSE_HEADERS_ARE_CORRECT =        16;
+    public static final int HAS_POST_BODY =                       17;
+    public static final int HAS_RESPONSE_CODE =                   18;
+    public static final int RESPONSE_CODE_IS_CORRECT =            19;
+    public static final int END_DOCUMENT_URI_IS_CORRECT =         20;
+
     public void testPageInfoListener() throws Exception {
 	BrowserControl firstBrowserControl = null;
 	DocumentLoadListener listener = null;
 	Selection selection = null;
 	final StringBuffer methodToCheck = new StringBuffer();
+	final StringBuffer url = new StringBuffer("http://localhost:5243/HttpNavigationTest.txt");
 	final BitSet listenerResult = new BitSet();
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
@@ -163,35 +195,46 @@ public class DocumentLoadListenerTest extends WebclientTestCase {
 	// try loading a file over HTTP
 	//
 	
-	DocumentLoadListenerTest.keepWaiting = true;
-	final String url = "http://localhost:5243/HttpNavigationTest.txt";
-
 	eventRegistration.addDocumentLoadListener(listener = new PageInfoListener() {
 		public void eventDispatched(WebclientEvent event) {
 		    Map map = null;
 		    Iterator iter = null;
 		    Object requestMethod;
+		    Object responseCode;
 		    if (event instanceof DocumentLoadEvent) {
 			switch ((int) event.getType()) {
 			case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
 			    // do we have eventData?
-			    assertNotNull(event.getEventData());
+			    listenerResult.set(HAS_START_EVENT_DATA,
+					       null != event.getEventData());
 			    // is it a map?
-			    assertTrue(event.getEventData() instanceof Map);
+			    listenerResult.set(START_EVENT_DATA_IS_MAP,
+					       event.getEventData() instanceof 
+					       Map);
 			    map = (Map) event.getEventData();
-			    // does it have a URI entry?
-			    assertEquals(url, map.get("URI"));
+
 			    // does it have a method entry
 			    requestMethod = map.get("method");
-			    assertNotNull(requestMethod);
+			    listenerResult.set(START_HAS_REQUEST_METHOD,
+					       null != requestMethod);
+
 			    // is it the expected value?
-			    assertEquals(methodToCheck.toString(), 
-					 requestMethod.toString());
+			    listenerResult.set(START_REQUEST_METHOD_IS_CORRECT,
+					       methodToCheck.toString().equals(requestMethod.toString()));
+
+			    System.out.println("START_URL_LOAD: request method: " + 
+					       requestMethod);
+
+			    // does it have a URI entry?
+			    listenerResult.set(START_URI_IS_CORRECT,
+					       url.toString().equals(map.get("URI")));;
 			    
 			    // does it have a headers entry?
-			    assertNotNull(map.get("headers"));
+			    listenerResult.set(HAS_REQUEST_HEADERS,
+					       null != map.get("headers"));
 			    // is it a map?
-			    assertTrue(map.get("headers") instanceof Map);
+			    listenerResult.set(REQUEST_HEADERS_IS_MAP,
+					       map.get("headers") instanceof Map);
 			    iter = (map = (Map) map.get("headers")).keySet().iterator();
 			    boolean hadCorrectHostHeader = false;
 			    while (iter.hasNext()) {
@@ -203,77 +246,39 @@ public class DocumentLoadListenerTest extends WebclientTestCase {
 				}
 			    }
 			    // does it have the correct entry?
-			    assertTrue(hadCorrectHostHeader);
+			    listenerResult.set(REQUEST_HEADERS_ARE_CORRECT,
+					       hadCorrectHostHeader);
+
 			    break;
 
 			case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
 			    // do we have eventData?
-			    assertNotNull(event.getEventData());
+			    listenerResult.set(HAS_END_EVENT_DATA,
+					       null != event.getEventData());
 			    // is it a map?
-			    assertTrue(event.getEventData() instanceof Map);
+			    listenerResult.set(END_EVENT_DATA_IS_MAP,
+					       event.getEventData() instanceof
+					       Map);
 			    map = (Map) event.getEventData();
-			    // do we have a URI entry?
-			    assertEquals(url, map.get("URI"));
-			    
+
 			    // do we have a method entry
 			    requestMethod = map.get("method");
-			    assertNotNull(requestMethod);
+			    listenerResult.set(END_HAS_REQUEST_METHOD,
+					       null != requestMethod);
+
 			    // is it the expected value
-			    assertEquals(methodToCheck.toString(), 
-					 requestMethod.toString());
-
-			    if (requestMethod.equals("GET")) {
-				// do we have a status entry
-				Object responseCode = map.get("status");
-				assertNotNull(responseCode);
-				assertEquals("200 OK",responseCode.toString());
-			    }
-
-			    // do we have a headers entry?
-			    assertNotNull(map.get("headers"));
-			    assertTrue(map.get("headers") instanceof Map);
-			    iter = (map = (Map) map.get("headers")).keySet().iterator();
-			    boolean hadCorrectServerHeader = false;
-			    while (iter.hasNext()) {
-				String curName = iter.next().toString();
-				if (curName.equals("Server")) {
-				    if (-1 != map.get(curName).toString().indexOf("THTTPD")) {
-					hadCorrectServerHeader = true;
-				    }
-				}
-				System.out.println("\t" + curName + 
-						   ": " + 
-						   map.get(curName));
-			    }
-			    assertTrue(hadCorrectServerHeader);
-			    break;
-			case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
-			    // do we have eventData?
-			    assertNotNull(event.getEventData());
-			    // is it a map?
-			    assertTrue(event.getEventData() instanceof Map);
-			    map = (Map) event.getEventData();
-			    // do we have a URI entry?
-			    assertEquals(url, map.get("URI"));
+			    listenerResult.set(END_REQUEST_METHOD_IS_CORRECT,
+					       methodToCheck.toString().equals(requestMethod.toString()));
 			    
-			    // do we have a method entry
-			    requestMethod = map.get("method");
-			    assertNotNull(requestMethod);
-			    // is it the expected value
-			    assertEquals(methodToCheck.toString(), 
-					 requestMethod.toString());
+			    System.out.println("END_URL_LOAD request method: "
+					       + requestMethod);
 
-			    // do we have a status entry
-			    Object responseCode = map.get("status");
-			    assertNotNull(responseCode);
-			    assertEquals("200 OK",responseCode.toString());
-
-			    /**
 			    if (requestMethod.equals("POST")) {
 				listenerResult.set(0);
 				InputStream requestBody = (InputStream)
 				    map.get("requestBody");
-				assertNotNull(requestBody);
+				listenerResult.set(HAS_POST_BODY,
+						   null != requestBody);
 				int avail;
 				byte bytes[];
 				try {
@@ -287,39 +292,183 @@ public class DocumentLoadListenerTest extends WebclientTestCase {
 				    fail();
 				}
 			    }
-			    ***/
-			    break;
 
+			    // do we have a URI entry?
+			    listenerResult.set(END_URI_IS_CORRECT,
+					       url.toString().equals(map.get("URI")));
+			    
+			    // do we have a status entry
+			    responseCode = map.get("status");
+
+			    if (requestMethod.equals("GET")) {
+				// do we have a status entry
+				listenerResult.set(HAS_RESPONSE_CODE,
+						   null != responseCode);
+				listenerResult.set(RESPONSE_CODE_IS_CORRECT,
+						   responseCode.toString().equals("200 OK"));
+			    }
+
+			    // do we have a headers entry?
+			    listenerResult.set(HAS_RESPONSE_HEADERS,
+					       null != map.get("headers"));
+			    listenerResult.set(RESPONSE_HEADERS_IS_MAP,
+					       map.get("headers") instanceof Map);
+			    iter = (map = (Map) map.get("headers")).keySet().iterator();
+			    boolean hadCorrectResponseHeader = false;
+			    while (iter.hasNext()) {
+				String curName = iter.next().toString();
+				if (curName.equals("Server")) {
+				    if (-1 != map.get(curName).toString().indexOf("THTTPD")) {
+					hadCorrectResponseHeader = true;
+				    }
+				}
+				System.out.println("\t" + curName + 
+						   ": " + 
+						   map.get(curName));
+			    }
+			    listenerResult.set(RESPONSE_HEADERS_ARE_CORRECT,
+					       hadCorrectResponseHeader);
+
+			    break;
+			case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
+			    map = (Map) event.getEventData();
+			    // do we have a URI entry?
+			    listenerResult.set(END_DOCUMENT_URI_IS_CORRECT,
+					       url.toString().equals(map.get("URI")));
+			    
+			    DocumentLoadListenerTest.keepWaiting = false;
+			    break;
 			}
 		    }
-		    DocumentLoadListenerTest.keepWaiting = false;
 		}
 	    });
 
 	Thread.currentThread().sleep(3000);
 	
+	DocumentLoadListenerTest.keepWaiting = true;
 	methodToCheck.replace(0, methodToCheck.length(), "GET");
 	System.out.println("++++++++++ Testing GET to " + url);
-	nav.loadURL(url);
-	
+	listenerResult.clear();
+	nav.loadURL(url.toString());
+
 	// keep waiting until the previous load completes
 	while (DocumentLoadListenerTest.keepWaiting) {
 	    Thread.currentThread().sleep(1000);
 	}
 
+	// START_URL_LOAD tests
+	assertTrue(listenerResult.get(HAS_START_EVENT_DATA));
+	assertTrue(listenerResult.get(START_EVENT_DATA_IS_MAP));
+	assertTrue(listenerResult.get(START_HAS_REQUEST_METHOD));
+	assertTrue(listenerResult.get(START_REQUEST_METHOD_IS_CORRECT));
+	assertTrue(listenerResult.get(START_URI_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_REQUEST_HEADERS));
+	assertTrue(listenerResult.get(REQUEST_HEADERS_IS_MAP));
+	assertTrue(listenerResult.get(REQUEST_HEADERS_ARE_CORRECT));
+
+	// END_URL_LOAD tests
+	assertTrue(listenerResult.get(HAS_END_EVENT_DATA));
+	assertTrue(listenerResult.get(END_EVENT_DATA_IS_MAP));
+	assertTrue(listenerResult.get(END_HAS_REQUEST_METHOD));
+	assertTrue(listenerResult.get(END_REQUEST_METHOD_IS_CORRECT));
+	assertTrue(listenerResult.get(END_URI_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_RESPONSE_CODE));
+	assertTrue(listenerResult.get(RESPONSE_CODE_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_RESPONSE_HEADERS));
+	assertTrue(listenerResult.get(RESPONSE_HEADERS_IS_MAP));
+	assertTrue(listenerResult.get(RESPONSE_HEADERS_ARE_CORRECT));
+
+	// END_DOCUMENT_LOAD tests
+	assertTrue(listenerResult.get(END_DOCUMENT_URI_IS_CORRECT));
+
 	Thread.currentThread().sleep(3000);
 
-	/**********
-	methodToCheck.replace(0, methodToCheck.length(), "POST");
-	System.out.println("++++++++++ Testing POST to " + url);
-	nav.post(url, null, "PostData\r\n", "X-WakaWaka: true\r\n\r\n");
-	
+	DocumentLoadListenerTest.keepWaiting = true;
+	url.replace(0, url.length(), 
+		    "http://localhost:5243/DocumentLoadListenerTest0.html");
+	methodToCheck.replace(0, methodToCheck.length(), "GET");
+	listenerResult.clear();
+	nav.loadURL(url.toString());
+
 	// keep waiting until the previous load completes
-	while (NavigationTest.keepWaiting) {
+	while (DocumentLoadListenerTest.keepWaiting) {
 	    Thread.currentThread().sleep(1000);
 	}
-	assertTrue(listenerResult.get(0));
-	**********/
+
+	// START_URL_LOAD tests
+	assertTrue(listenerResult.get(HAS_START_EVENT_DATA));
+	assertTrue(listenerResult.get(START_EVENT_DATA_IS_MAP));
+	assertTrue(listenerResult.get(START_HAS_REQUEST_METHOD));
+	assertTrue(listenerResult.get(START_REQUEST_METHOD_IS_CORRECT));
+	assertTrue(listenerResult.get(START_URI_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_REQUEST_HEADERS));
+	assertTrue(listenerResult.get(REQUEST_HEADERS_IS_MAP));
+	assertTrue(listenerResult.get(REQUEST_HEADERS_ARE_CORRECT));
+
+	// END_URL_LOAD tests
+	assertTrue(listenerResult.get(HAS_END_EVENT_DATA));
+	assertTrue(listenerResult.get(END_EVENT_DATA_IS_MAP));
+	assertTrue(listenerResult.get(END_HAS_REQUEST_METHOD));
+	assertTrue(listenerResult.get(END_REQUEST_METHOD_IS_CORRECT));
+	assertTrue(listenerResult.get(END_URI_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_RESPONSE_CODE));
+	assertTrue(listenerResult.get(RESPONSE_CODE_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_RESPONSE_HEADERS));
+	assertTrue(listenerResult.get(RESPONSE_HEADERS_IS_MAP));
+	assertTrue(listenerResult.get(RESPONSE_HEADERS_ARE_CORRECT));
+
+	// END_DOCUMENT_LOAD tests
+	assertTrue(listenerResult.get(END_DOCUMENT_URI_IS_CORRECT));
+	
+	DocumentLoadListenerTest.keepWaiting = true;
+
+	System.out.println("++++++++++ Testing POST to " + url);
+
+	// press the submit button
+	listenerResult.clear();
+	url.replace(0, url.length(), 
+		    "http://localhost:5243/HistoryTest0.html");
+	methodToCheck.replace(0, methodToCheck.length(), "POST");
+
+	Robot robot = new Robot();
+	robot.mouseMove(IN_X, IN_Y);
+	robot.mousePress(InputEvent.BUTTON1_MASK);
+	robot.mouseRelease(InputEvent.BUTTON1_MASK);
+
+	// keep waiting until the previous load completes
+	while (DocumentLoadListenerTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	// START_URL_LOAD tests
+	assertTrue(listenerResult.get(HAS_START_EVENT_DATA));
+	assertTrue(listenerResult.get(START_EVENT_DATA_IS_MAP));
+	assertTrue(listenerResult.get(START_HAS_REQUEST_METHOD));
+	assertTrue(listenerResult.get(START_REQUEST_METHOD_IS_CORRECT));
+	assertTrue(listenerResult.get(START_URI_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_REQUEST_HEADERS));
+	assertTrue(listenerResult.get(REQUEST_HEADERS_IS_MAP));
+	assertTrue(listenerResult.get(REQUEST_HEADERS_ARE_CORRECT));
+
+	// END_URL_LOAD tests
+	assertTrue(listenerResult.get(HAS_END_EVENT_DATA));
+	assertTrue(listenerResult.get(END_EVENT_DATA_IS_MAP));
+	assertTrue(listenerResult.get(END_HAS_REQUEST_METHOD));
+	assertTrue(listenerResult.get(END_REQUEST_METHOD_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_POST_BODY));
+	assertTrue(listenerResult.get(END_URI_IS_CORRECT));
+	// For some reason, there is no response code when the method is POST
+	// assertTrue(listenerResult.get(HAS_RESPONSE_CODE));
+	// assertTrue(listenerResult.get(RESPONSE_CODE_IS_CORRECT));
+	assertTrue(listenerResult.get(HAS_RESPONSE_HEADERS));
+	assertTrue(listenerResult.get(RESPONSE_HEADERS_IS_MAP));
+	// For some reason, no response headers when the method is POST
+	// assertTrue(listenerResult.get(RESPONSE_HEADERS_ARE_CORRECT));
+
+	// END_DOCUMENT_LOAD tests
+	assertTrue(listenerResult.get(END_DOCUMENT_URI_IS_CORRECT));
+	
+
 
 	eventRegistration.removeDocumentLoadListener(listener);
 

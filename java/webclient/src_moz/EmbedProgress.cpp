@@ -26,6 +26,7 @@
 #include <nsIHttpChannel.h>
 #include <nsIUploadChannel.h>
 #include <nsIInputStream.h>
+#include <nsISeekableStream.h>
 #include <nsIHttpHeaderVisitor.h>
 
 #include "nsIURI.h"
@@ -190,7 +191,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 						 (jobject)
 						 &(mOwner->GetWrapperFactory()->shareContext));
 	    }
-
 	}
 
 	util_SendEventToJava(nsnull, 
@@ -255,6 +255,13 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		    jmethodID jID;
 		    pStream = (jint) uploadStream;
 		    uploadStream->AddRef();
+		    // rewind upload stream
+		    nsCOMPtr<nsISeekableStream> seekable = 
+			do_QueryInterface(uploadStream);
+		    if (seekable) {
+			seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+		    }
+		    
 		    if (clazz = env->FindClass("org/mozilla/webclient/impl/wrapper_native/NativeInputStream")) {
 			if (jID = env->GetMethodID(clazz, "<init>", "(I)V")) {
 			    if (streamObj = env->NewObject(clazz,jID,pStream)){
@@ -272,7 +279,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		    }
 		}
 	    }
-
 	}
 
 	util_SendEventToJava(nsnull, 

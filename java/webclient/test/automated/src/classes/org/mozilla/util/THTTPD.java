@@ -1,5 +1,5 @@
 /*
- * $Id: THTTPD.java,v 1.5 2004/09/03 19:04:21 edburns%acm.org Exp $
+ * $Id: THTTPD.java,v 1.6 2005/03/13 17:56:16 edburns%acm.org Exp $
  */
 
 /* 
@@ -136,13 +136,7 @@ public class THTTPD extends Object {
 		   
 		    switch (getRequestMethod(requestLine)) {
 		    case REQUEST_POST:
-			while (null != (curLine = requestReader.readLine())) {
-			    requestData.append(curLine);
-			    if (socketInputStream.available() <= 0 ||
-				curLine.trim().length() == 0) {
-				break;
-			    }
-			}
+			System.out.println("THTTPD: POST");
 			// intentional fall through!
 		    case REQUEST_GET:
 			responseWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
