@@ -286,7 +286,9 @@ nsSplashScreenWin::Show() {
 
     // Spawn new thread to display real splash screen.
     DWORD threadID = 0;
-    CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
+    HANDLE handle = CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
+    CloseHandle(handle);
+
     return NS_OK;
 }
 
