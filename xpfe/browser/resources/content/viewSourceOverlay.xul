@@ -65,6 +65,7 @@
     <commandset id="selectEditMenuItems"/>
     <commandset id="clipboardEditMenuItems"/>
     <commandset id="viewSourceMenuItems">
+      <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
       <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
       <command id="cmd_close" oncommand="ViewSourceClose()"/>
       <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
@@ -106,9 +107,11 @@
     <popup id="viewSourceContextMenu">
       <menuitem label="&findNextCmd.label;" accesskey="&findNextCmd.accesskey;"  command="Browser:FindAgain"/>
       <menuseparator/>
-      <menuitem id="menu_copy_cm" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+      <menuitem id="menu_copy_cm" command="cmd_copy"
+                label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
       <menuseparator/>
-      <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
+      <menuitem id="menu_selectAll_cm" command="cmd_selectAll"
+                label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"/>
     </popup>
   </popupset>
 
@@ -126,13 +129,14 @@
           </menu>
           <menuseparator/>
           <menuitem id="menu_close"/>
-          <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="cmd_savePage"/>
-<!-- XXX misnomer should have been called "saveframe" -->
-<!--      <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="ViewSourceSavePage();" hidden="true"/> -->
+          <menuitem key="key_savePage" command="cmd_savePage"
+                    label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
           <menuseparator/>
-          <menuitem label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;" key="key_editPage" command="cmd_editPage"/>
+          <menuitem key="key_editPage" command="cmd_editPage"
+                    label="&editPageCmd.label;" accesskey="&editPageCmd.accesskey;"/>
           <menuseparator/>
-          <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>     
+          <menuitem key="printKb" command="Browser:Print"
+                    label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
 <!--      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/> -->
         </menupopup>
       </menu>
@@ -149,8 +153,10 @@
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
           <menuseparator /> 
-          <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-          <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+          <menuitem id="menu_find" key="key_find" command="Browser:Find"
+                    label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+          <menuitem id="menu_findAgain" key="key_findAgain" command="Browser:FindAgain"
+                    label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;"/>
         </menupopup>
       </menu>
 
@@ -158,10 +164,14 @@
         <menupopup>
           <menu id="menu_textZoom"/>  
           <menuseparator/>
-<!--      <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;" key="key_viewInfo" observes="View:PageInfo"/>
+<!--      <menuitem key="key_viewInfo" observes="View:PageInfo"
+                    label="&pageInfoCmd.label;" accesskey="&pageInfoCmd.accesskey;"/>
           <menuseparator id="file_moduleSeparator"/>-->
           <menu id="charsetMenu"/>
-          <menuitem id="menu_wrapLongLines" label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;" type="checkbox" command="cmd_wrapLongLines"/>
+          <menuitem id="menu_wrapLongLines"type="checkbox" command="cmd_wrapLongLines"
+                    label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
+          <menuitem type="checkbox" command="cmd_highlightSyntax"
+                    label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
         </menupopup>
       </menu>
 
