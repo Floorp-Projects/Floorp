@@ -2275,7 +2275,7 @@ theContext->mTransferBufferSize;
           if(mParserFilter) 
              mParserFilter->RawBuffer(theContext->mTransferBuffer, &theNumRead); 
 
-    #ifdef NS_DEBUG 
+    #ifdef rickgdebug 
           unsigned int index=0; 
           for(index=0;index<theNumRead;index++) { 
             if(0==theContext->mTransferBuffer[index]){ 

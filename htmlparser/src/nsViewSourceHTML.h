@@ -241,9 +241,15 @@ class CViewSourceHTML: public nsIDTD {
 
 
 private:
+#ifdef VIEW_SOURCE_HTML
+    nsresult WriteTag(PRInt32 tagType,CToken* aTag,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTag(PRInt32 tagType,nsString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTagWithError(PRInt32 tagType,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired);
+#else
     nsresult WriteTag(nsString &anXMLName,CToken* aTag,PRInt32 attrCount,PRBool aNewlineRequired);
     nsresult WriteTag(nsString &anXMLName,nsString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
     nsresult WriteTagWithError(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired);
+#endif
     void     AddContainmentError(eHTMLTags aChild,eHTMLTags aParent,PRInt32 aLineNumber);
 
     nsresult WriteAttributes(PRInt32 attrCount);
@@ -252,9 +258,27 @@ private:
 protected:
 
     nsParser*           mParser;
+#ifdef VIEW_SOURCE_HTML
+    nsIHTMLContentSink* mSink;
+#else
     nsIXMLContentSink*  mSink;
+#endif
     PRInt32             mLineNumber;
     nsITokenizer*       mTokenizer;
+#ifdef VIEW_SOURCE_HTML
+    PRInt32             mStartTag;
+    PRInt32             mEndTag;
+    PRInt32             mCommentTag;
+    PRInt32             mCDATATag;
+    PRInt32             mDocTypeTag;
+    PRInt32             mPITag;
+    PRInt32             mEntityTag;
+    PRInt32             mText;
+    PRInt32             mKey;
+    PRInt32             mValue;
+    PRInt32             mPopupTag;
+    PRInt32             mSummaryTag;
+#else
     nsAutoString        mStartTag;
     nsAutoString        mEndTag;
     nsAutoString        mCommentTag;
@@ -267,6 +291,7 @@ protected:
     nsAutoString        mValue;
     nsAutoString        mPopupTag;
     nsAutoString        mSummaryTag;
+#endif
 
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
