@@ -825,11 +825,11 @@ nsImageWin  *theimage;
 
 
   // bits of the alpha mask
-  num = theimage->mAlphaWidth*theimage->mAlphaHeight;
-  if(num>0)
+  num = theimage->mARowBytes * theimage->mAlphaHeight;
+  if(num > 0)
     {
     theimage->mAlphaBits = new unsigned char[num];
-    memcpy(theimage->mImageBits,this->mImageBits,theimage->mSizeImage);
+    memcpy(theimage->mAlphaBits,this->mAlphaBits,num);
     }
   else
     theimage->mAlphaBits = nsnull;
