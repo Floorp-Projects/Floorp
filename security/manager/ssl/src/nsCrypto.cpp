@@ -25,6 +25,7 @@
 #include "nsKeygenHandler.h"
 #include "nsNSSCertificate.h"
 #include "nsPKCS12Blob.h"
+#include "nsPK11TokenDB.h"
 #include "nsIServiceManager.h"
 #include "nsINSSDialogs.h"
 #include "nsIMemory.h"
@@ -161,12 +162,13 @@ private:
 //as an event.
 class nsP12Runnable : public nsIRunnable {
 public:
-  nsP12Runnable(nsIX509Cert **certArr, PRInt32 numCerts);
+  nsP12Runnable(nsIX509Cert **certArr, PRInt32 numCerts, nsIPK11Token *token);
   virtual ~nsP12Runnable();
 
   NS_IMETHOD Run();
   NS_DECL_ISUPPORTS
 private:
+  nsCOMPtr<nsIPK11Token> mToken;
   nsIX509Cert **mCertArr;
   PRInt32       mNumCerts;
 };
@@ -1594,11 +1596,13 @@ CryptoRunnableEvent::~CryptoRunnableEvent()
 
 // Reminder that we inherit the memory passed into us here.
 // An implementation to let us back up certs as an event.
-nsP12Runnable::nsP12Runnable(nsIX509Cert **certArr, PRInt32 numCerts)
+nsP12Runnable::nsP12Runnable(nsIX509Cert **certArr, PRInt32 numCerts,
+                             nsIPK11Token *token)
 {
   NS_INIT_REFCNT();
   mCertArr  = certArr;
   mNumCerts = numCerts;
+  mToken = token;
 }
 
 nsP12Runnable::~nsP12Runnable()
@@ -1686,7 +1690,8 @@ nsP12Runnable::Run()
     return NS_ERROR_FAILURE;
 
   nsPKCS12Blob p12Cxt;
-
+  
+  p12Cxt.SetToken(mToken);
   p12Cxt.ExportToFile(localFile, mCertArr, mNumCerts);
   return NS_OK;
 }
@@ -1808,6 +1813,7 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsresult rv = NS_OK;
   CERTCertList *caPubs = nsnull;
+  nsCOMPtr<nsIPK11Token> token;
 
   nickname = ToNewCString(aNickname);
   cmmfResponse = ToNewCString(aCmmfResponse);
@@ -1883,6 +1889,12 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
     } else if (nickname == nsnull || nickname[0] == '\0') {
       localNick = default_nickname(currCert, ctx);
       freeLocalNickname = PR_TRUE;
+    } else {
+      //This is the case where we're getting a brand new
+      //cert that doesn't have the same subjectName as a cert
+      //that already exists in our db and the CA page has 
+      //designated a nickname to use for the newly issued cert.
+      localNick = nickname;
     }
     slot = PK11_ImportCertForKey(currCert, localNick, ctx);
     if (freeLocalNickname) {
@@ -1898,11 +1910,16 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
       NS_ADDREF(certArr[i]);
     }
     CERT_DestroyCertificate(currCert);
+
+    if (!token)
+      token = new nsPK11Token(slot);
+
     PK11_FreeSlot(slot);
     CMMF_DestroyCertResponse(currResponse);
   }
-  if (nickname)
-    nsMemory::Free(nickname);
+  //Let the loser: label take care of freeing up our reference to
+  //nickname (This way we don't free it twice and avoid crashing.
+  //That would be a good thing.
 
   retString = "";
 
@@ -1936,7 +1953,8 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
     // I can't pop up a file picker from the depths of JavaScript,
     // so I'll just post an event on the UI queue to do the backups
     // later.
-    nsCOMPtr<nsIRunnable> p12Runnable = new nsP12Runnable(certArr, numResponses);
+    nsCOMPtr<nsIRunnable> p12Runnable = new nsP12Runnable(certArr, numResponses,
+                                                          token);
     CryptoRunnableEvent *runnable;
     if (!p12Runnable) {
       rv = NS_ERROR_FAILURE;
