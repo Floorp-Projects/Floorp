@@ -223,7 +223,7 @@ nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
 	try
 	{
 		NS_ADDREF(aTimer);
-		mTimers->AddItem( aTimer );
+		mTimers->AddItem( &aTimer );
 		StartRepeating();
 	}
 	catch(...)
@@ -252,6 +252,7 @@ void	TimerPeriodical::SpendTime( const EventRecord &inMacEvent)
 	while (iter.Next( &timer))
 	{
 		if ( timer->GetFireTime() <= inMacEvent.when )
+		//if (  1  )
 		{
 			NS_ADDREF(timer);
 			RemoveTimer(timer);
