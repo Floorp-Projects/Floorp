@@ -281,7 +281,7 @@ nsSupportsArray::AppendElements(nsISupportsArray* aElements)
       }
       if (0 != oldArray) { // need to move old data
         if (0 < mCount) {
-          ::memcpy(mArray, oldArray, mCount);
+          ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
         }
         if (oldArray != &(mAutoArray[0])) {
           delete[] oldArray;
