@@ -616,7 +616,7 @@ nsEditor::EndPlaceHolderTransaction()
       }
       else  // but if we did make one it should be around
       {
-        NS_NOTREACHED("should this ever happen?");
+        NS_WARN_IF_FALSE(PR_FALSE, "should this ever happen?");
       }
     }
   }
