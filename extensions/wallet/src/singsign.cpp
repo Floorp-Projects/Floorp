@@ -322,7 +322,7 @@ si_Prompt(char *szMessage, char* szDefaultUsername)
 }
 
 PRBool
-si_SelectDialog(const char* szMessage, char** pList, int16* pCount)
+si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount)
 {
 #ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
@@ -335,7 +335,11 @@ si_SelectDialog(const char* szMessage, char** pList, int16* pCount)
 
   const nsString message = szMessage;
 #ifdef xxx
-  dialog->Select(message, pList, pCount, &retval);
+  nsString users[10]; // need to make this dynamic ?????
+  for (int i=0; i<*pCount; i++) {
+    users[i] = pList[i];
+  }
+  dialog->Select(message, users, pCount, &retval);
 #else
   for (int i=0; i<*pCount; i++) {
     nsString msg = "user = ";
@@ -851,7 +855,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
     if (url != NULL) {
 
         /* node for this URL was found */
-        int16 user_count;
+        PRInt32 user_count;
         user_ptr = url->signonUser_list;
         if ((user_count = XP_ListCount(user_ptr)) == 1) {
 
@@ -990,7 +994,7 @@ si_GetURLAndUserForChangeForm(char* password)
     XP_List * url_ptr = 0;
     XP_List * user_ptr = 0;
     XP_List * data_ptr = 0;
-    int16 user_count;
+    PRInt32 user_count;
 
     char ** list;
     char ** list2;
@@ -2461,6 +2465,20 @@ SINGSIGN_RestoreSignonData
 #endif
 
     /* restore the data from previous time this URL was visited */
+#ifndef NECKO
+/* fix bug 9326 */
+/*
+ * This is a temporary hack until necko lands because it is believed necko will fix this
+ * The problem is that if the database of saved passwords had not already been unlocked,
+ * a dialog will come up at this time asking for password to unlock the database.  But
+ * that dialog was coming up blank because we are on the netlib thread.  Hack is to not
+ * attempt to prefill with saved passwords at this time if the database has not been
+ * previously unlocked.  Such unlocking could be done by doing edit/wallet/wallet-contents
+ * for example.
+ */
+extern PRBool keySet;
+if (!keySet) user=0; else
+#endif
     user = si_GetUser(URLName, PR_FALSE, name);
     if (user) {
         SI_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */

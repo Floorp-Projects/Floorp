@@ -22,7 +22,6 @@
 */
 
 #include "wallet.h"
-
 #ifndef NECKO
 #include "nsINetService.h"
 #else
@@ -791,6 +790,10 @@ wallet_ReadFromSublist(nsAutoString& value, XP_List*& resume)
 char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
 PRBool keyFailure = PR_FALSE;
+#ifndef NECKO
+/* avoid bug 9326 */
+PUBLIC
+#endif
 PRBool keySet = PR_FALSE;
 
 PUBLIC void
