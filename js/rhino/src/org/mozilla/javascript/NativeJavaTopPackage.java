@@ -112,12 +112,9 @@ public class NativeJavaTopPackage
         top.setPrototype(getObjectPrototype(scope));
         top.setParentScope(scope);
 
-        for (int nameStart = 0; ;) {
-            int nameEnd = commonPackages.indexOf(';', nameStart);
-            if (nameEnd < 0) { break; }
-            String packageName = commonPackages.substring(nameStart, nameEnd);
-            top.forcePackage(packageName);
-            nameStart = nameEnd + 1;
+        String[] names = ScriptRuntime.splitSC(commonPackages);
+        for (int i = 0; i != names.length; ++i) {
+            top.forcePackage(names[i]);
         }
 
         // getClass implementation
