@@ -37,7 +37,7 @@
 
 #include "nsIPref.h"
 #include "prefapi.h"
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 
 extern "C" {
 #include "prmon.h"
@@ -1487,16 +1487,16 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     PRUnichar * message;
     if (prev_cookie) {
       message = cookie_Localize("PermissionToModifyCookie");
-      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "");
+      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
     } else if (count>1) {
       message = cookie_Localize("PermissionToSetAnotherCookie");
-      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "", count);
+      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "", count);
     } else if (count==1){
       message = cookie_Localize("PermissionToSetSecondCookie");
-      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "");
+      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
     } else {
       message = cookie_Localize("PermissionToSetACookie");
-      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "");
+      new_string = nsTextFormatter::smprintf(message, host_from_header ? host_from_header : "");
     }
     Recycle(message);
 
@@ -2295,7 +2295,7 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     buffer[0] = '\0';
     g = 0;
 
-    g += nsTextFormater::snprintf(buffer+g, BUFLEN2-g,
+    g += nsTextFormatter::snprintf(buffer+g, BUFLEN2-g,
       nsString("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S").GetUnicode(),
       BREAK, cookieNum,
       BREAK, fixed_name,

@@ -43,7 +43,7 @@
 #include "nsIProfile.h"
 #include "nsQuickSort.h"
 
-#include "nsTextFormater.h"
+#include "nsTextFormatter.h"
 
 #include "plhash.h"
 #include "prmem.h"
@@ -717,13 +717,13 @@ NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar ** return_buf)
     // convert to PRUnichar using nsTextFormatter
     // this is so ugly, it allocates memory at least 4 times :(
     PRUnichar *unicodeString =
-        nsTextFormater::smprintf(unicodeFormatter, utf8String);
+        nsTextFormatter::smprintf(unicodeFormatter, utf8String);
     PL_strfree(utf8String);
     if (!unicodeString) return NS_ERROR_OUT_OF_MEMORY;
 
     // use the right allocator
     *return_buf = nsCRT::strdup(unicodeString);
-    nsTextFormater::smprintf_free(unicodeString);
+    nsTextFormatter::smprintf_free(unicodeString);
     if (!*return_buf) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
