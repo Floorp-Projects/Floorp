@@ -610,6 +610,9 @@ y
 MODSCRIPT
   RET=$?
   if [ "$RET" -ne 0 ]; then
+    # Debugging output for bug 195127
+    echo "ls -l ../../../../dist/${OBJDIR}/lib/libsoftokn3.chk"
+    ls -l ../../../../dist/${OBJDIR}/lib/libsoftokn3.chk
     html_failed "<TR><TD>${CU_ACTION} ($RET) " 
     cert_log "ERROR: ${CU_ACTION} failed $RET"
   else
