@@ -180,7 +180,13 @@ public:
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules) = 0;
 
   // get a style data struct by ID, may return null 
-  virtual nsStyleStruct* GetData(nsStyleStructID aSID) = 0;
+  virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID) = 0;
+
+  // get a style data struct by ID, may return null 
+  virtual nsStyleStruct* GetMutableStyleData(nsStyleStructID aSID) = 0;
+
+  // call this to prevent context from getting shared
+  virtual void  ForceUnique(void) = 0;
 
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
