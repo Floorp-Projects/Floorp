@@ -65,16 +65,16 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define DOWNLOAD_MANAGER_FE_URL "chrome://communicator/content/downloadmanager/downloadmanager.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
 
-nsCOMPtr<nsIRDFResource> gNC_DownloadsRoot;
-nsCOMPtr<nsIRDFResource> gNC_File;
-nsCOMPtr<nsIRDFResource> gNC_URL;
-nsCOMPtr<nsIRDFResource> gNC_Name;
-nsCOMPtr<nsIRDFResource> gNC_ProgressPercent;
-nsCOMPtr<nsIRDFResource> gNC_Transferred;
-nsCOMPtr<nsIRDFResource> gNC_DownloadState;
-nsCOMPtr<nsIRDFResource> gNC_StatusText;
+nsIRDFResource* gNC_DownloadsRoot;
+nsIRDFResource* gNC_File;
+nsIRDFResource* gNC_URL;
+nsIRDFResource* gNC_Name;
+nsIRDFResource* gNC_ProgressPercent;
+nsIRDFResource* gNC_Transferred;
+nsIRDFResource* gNC_DownloadState;
+nsIRDFResource* gNC_StatusText;
 
-nsCOMPtr<nsIRDFService> gRDFService;
+nsIRDFService* gRDFService;
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
@@ -84,12 +84,23 @@ NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIDOMEventListener, n
 nsDownloadManager::nsDownloadManager() : mCurrDownloads(nsnull)
 {
   NS_INIT_ISUPPORTS();
-  NS_INIT_REFCNT();
 }
 
 nsDownloadManager::~nsDownloadManager()
 {
   gRDFService->UnregisterDataSource(mDataSource);
+
+  NS_IF_RELEASE(gNC_DownloadsRoot);                                             
+  NS_IF_RELEASE(gNC_File);                                                      
+  NS_IF_RELEASE(gNC_URL);                                                       
+  NS_IF_RELEASE(gNC_Name);                                                      
+  NS_IF_RELEASE(gNC_ProgressPercent);
+  NS_IF_RELEASE(gNC_Transferred);
+  NS_IF_RELEASE(gNC_DownloadState);
+  NS_IF_RELEASE(gNC_StatusText);
+
+  nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);                
+  gRDFService = nsnull;                                                         
 
   delete mCurrDownloads;
   mCurrDownloads = nsnull;
@@ -102,17 +113,18 @@ nsDownloadManager::Init()
   mRDFContainerUtils = do_GetService("@mozilla.org/rdf/container-utils;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
+                                    (nsISupports**) &gRDFService);
+  if (NS_FAILED(rv)) return rv;                                                 
 
-  gRDFService->GetResource("NC:DownloadsRoot", getter_AddRefs(gNC_DownloadsRoot));
-  gRDFService->GetResource(NC_NAMESPACE_URI "File", getter_AddRefs(gNC_File));
-  gRDFService->GetResource(NC_NAMESPACE_URI "URL", getter_AddRefs(gNC_URL));
-  gRDFService->GetResource(NC_NAMESPACE_URI "Name", getter_AddRefs(gNC_Name));
-  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", getter_AddRefs(gNC_ProgressPercent));
-  gRDFService->GetResource(NC_NAMESPACE_URI "Transferred", getter_AddRefs(gNC_Transferred));
-  gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", getter_AddRefs(gNC_DownloadState));
-  gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", getter_AddRefs(gNC_StatusText));
+  gRDFService->GetResource("NC:DownloadsRoot", &gNC_DownloadsRoot);
+  gRDFService->GetResource(NC_NAMESPACE_URI "File", &gNC_File);
+  gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
+  gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
+  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", &gNC_ProgressPercent);
+  gRDFService->GetResource(NC_NAMESPACE_URI "Transferred", &gNC_Transferred);
+  gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
+  gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
 
   nsXPIDLCString downloadsDB;
   rv = GetProfileDownloadsFileURL(getter_Copies(downloadsDB));
@@ -247,7 +259,6 @@ nsDownloadManager::AssertProgressInfo()
 nsresult
 nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   nsCStringKey key(aPersistentDescriptor);
   if (!mCurrDownloads->Exists(&key))
     return NS_ERROR_FAILURE;
@@ -258,6 +269,7 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
   if (!download)
     return NS_ERROR_FAILURE;
   
+  nsresult rv;
   PRInt32 percentComplete;
   nsCOMPtr<nsIRDFNode> oldTarget;
   nsCOMPtr<nsIRDFInt> intLiteral;
@@ -269,28 +281,27 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
   // update percentage
   download->GetPercentComplete(&percentComplete);
 
-  rv = mDataSource->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(intLiteral));
-  if (NS_FAILED(rv)) return rv;
+  mDataSource->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
+  gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(intLiteral));
 
   if (oldTarget)
     rv = mDataSource->Change(res, gNC_ProgressPercent, oldTarget, intLiteral);
   else
     rv = mDataSource->Assert(res, gNC_ProgressPercent, intLiteral, PR_TRUE);
- 
+  if (NS_FAILED(rv)) return rv;
+
   // update download state (not started, downloading, queued, finished, etc...)
   DownloadState state;
   internalDownload->GetDownloadState(&state);
  
-  rv = gRDFService->GetIntLiteral(state, getter_AddRefs(intLiteral));
+  gRDFService->GetIntLiteral(state, getter_AddRefs(intLiteral));
 
-  rv = mDataSource->GetTarget(res, gNC_DownloadState, PR_TRUE, getter_AddRefs(oldTarget));
-  if (NS_FAILED(rv)) return rv;
+  mDataSource->GetTarget(res, gNC_DownloadState, PR_TRUE, getter_AddRefs(oldTarget));
   
-  if (oldTarget)
+  if (oldTarget) {
     rv = mDataSource->Change(res, gNC_DownloadState, oldTarget, intLiteral);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   nsAutoString strKey;
   if (state == NOTSTARTED)
@@ -305,15 +316,21 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
     strKey.Assign(NS_LITERAL_STRING("canceled"));
 
   nsXPIDLString value;
-  mBundle->GetStringFromName(strKey.get(), getter_Copies(value));    
+  rv = mBundle->GetStringFromName(strKey.get(), getter_Copies(value));    
+  if (NS_FAILED(rv)) return rv;
 
-  rv = gRDFService->GetLiteral(value, getter_AddRefs(literal));
+  gRDFService->GetLiteral(value, getter_AddRefs(literal));
 
   rv = mDataSource->GetTarget(res, gNC_StatusText, PR_TRUE, getter_AddRefs(oldTarget));
-  if (NS_FAILED(rv)) return rv;
   
-  if (oldTarget)
+  if (oldTarget) {
     rv = mDataSource->Change(res, gNC_StatusText, oldTarget, literal);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else {
+    rv = mDataSource->Assert(res, gNC_StatusText, literal, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+  }
   
   // update transferred
   PRInt32 current = 0;
@@ -329,16 +346,17 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
   
   rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("transferred").get(),
                                      strings, 2, getter_Copies(value));
-  
-  rv = gRDFService->GetLiteral(value, getter_AddRefs(literal));
- 
-  rv = mDataSource->GetTarget(res, gNC_Transferred, PR_TRUE, getter_AddRefs(oldTarget));
   if (NS_FAILED(rv)) return rv;
+
+  gRDFService->GetLiteral(value, getter_AddRefs(literal));
+ 
+  mDataSource->GetTarget(res, gNC_Transferred, PR_TRUE, getter_AddRefs(oldTarget));
  
   if (oldTarget)
     rv = mDataSource->Change(res, gNC_Transferred, oldTarget, literal);
   else
     rv = mDataSource->Assert(res, gNC_Transferred, literal, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mDataSource);
   remote->Flush();
@@ -373,10 +391,12 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   if (!aDownload)
     return NS_ERROR_FAILURE;
 
+  // give our new nsIDownload some info so it's ready to go off into the world
   internalDownload->SetDownloadManager(this);
-
   internalDownload->SetTarget(aTarget);
+  internalDownload->SetSource(aSource);
 
+  // the persistent descriptor of the target is the unique identifier we use
   nsXPIDLCString persistentDescriptor;
   aTarget->GetPersistentDescriptor(getter_Copies(persistentDescriptor));
 
@@ -395,8 +415,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   rv = downloads->AppendElement(downloadRes);
   if (NS_FAILED(rv)) return rv;
   
-  internalDownload->SetSource(aSource);
-  // NC:URL
+  // Assert source url information
   nsXPIDLCString spec;
   aSource->GetSpec(getter_Copies(spec));
 
@@ -409,7 +428,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     return rv;
   }
 
-  // NC:Name
+  // Set and assert the "pretty" (display) name of the download
   nsXPIDLString prettyName;
   nsAutoString displayName; displayName.Assign(aDisplayName);
   if (displayName.IsEmpty()) {
@@ -427,7 +446,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     return rv;
   }
 
-  // NC:File
+  // Assert file information
   nsCOMPtr<nsIRDFResource> fileResource;
   gRDFService->GetResource(persistentDescriptor, getter_AddRefs(fileResource));
   rv = mDataSource->Assert(downloadRes, gNC_File, fileResource, PR_TRUE);
@@ -437,6 +456,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     return rv;
   }
   
+  // Assert download state information (NOTSTARTED, since it's just now being added)
   nsCOMPtr<nsIRDFInt> intLiteral;
   gRDFService->GetIntLiteral(NOTSTARTED, getter_AddRefs(intLiteral));
   rv = mDataSource->Assert(downloadRes, gNC_DownloadState, intLiteral, PR_TRUE);
@@ -445,7 +465,8 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
     return rv;
   }
-
+  
+  // Now flush all this to disk
   nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mDataSource));
   rv = remote->Flush();
   if (NS_FAILED(rv)) {
@@ -462,6 +483,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     aPersist->SetProgressListener(listener);
   }
 
+  // we use this table to manage ongoing downloads internally
   if (!mCurrDownloads)
     mCurrDownloads = new nsHashtable();
   
@@ -733,7 +755,6 @@ nsDownload::nsDownload():mStartTime(0),
                          mDownloadState(NOTSTARTED)
 {
   NS_INIT_ISUPPORTS();
-  NS_INIT_REFCNT();
 }
 
 nsDownload::~nsDownload()
