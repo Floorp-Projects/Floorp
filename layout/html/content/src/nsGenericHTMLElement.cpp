@@ -2534,6 +2534,8 @@ static nsGenericHTMLElement::EnumTable kCompatTableHAlignTable[] = {
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
   { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
   { "abscenter", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
   { 0 }
 };
 

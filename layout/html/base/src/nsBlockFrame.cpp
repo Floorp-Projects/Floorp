@@ -1502,12 +1502,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  /*
-  ListTag(stdout);
-    printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
-           aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
-           aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-*/
   DO_GLOBAL_REFLOW_COUNT("nsBlockFrame", aReflowState.reason);
 
 #ifdef DEBUG
@@ -2570,14 +2564,24 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 
   nsLineBox* line = mLines;
   if (tryAndSkipLines) {
-    // The line's bounds are relative to the border edge of the frame
     nscoord newAvailWidth = aState.mReflowState.mComputedBorderPadding.left;
      
     if (NS_SHRINKWRAPWIDTH == aState.mReflowState.mComputedWidth) {
-      newAvailWidth += aState.mReflowState.mComputedMaxWidth;
+      if (NS_UNCONSTRAINEDSIZE != aState.mReflowState.mComputedMaxWidth) {
+        newAvailWidth += aState.mReflowState.mComputedMaxWidth;
+      }
+      else {
+        newAvailWidth += aState.mReflowState.availableWidth;
+      }
     } else {
-      newAvailWidth += aState.mReflowState.mComputedWidth;
+      if (NS_UNCONSTRAINEDSIZE != aState.mReflowState.mComputedMaxWidth) {
+        newAvailWidth += aState.mReflowState.mComputedWidth;
+      }
+      else {
+        newAvailWidth += aState.mReflowState.availableWidth;
+      }
     }
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != newAvailWidth, "bad math, newAvailWidth is infinite");
 
 #ifdef DEBUG
     if (gNoisyReflow) {
@@ -4450,13 +4454,14 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       if (NS_FAILED(rv)) {
         return rv;
       }
-
+#if 0
       // Mark next line dirty in case SplitLine didn't end up
       // pushing any frames.
       nsLineBox* next = aLine->mNext;
       if ((nsnull != next) && !next->IsBlock()) {
         next->MarkDirty();
       }
+#endif
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
