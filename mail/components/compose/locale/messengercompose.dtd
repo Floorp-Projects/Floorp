@@ -65,7 +65,7 @@
 <!ENTITY pasteCmd.key "V">
 <!ENTITY pasteCmd.accesskey "p">
 <!ENTITY editRewrapCmd.label "Rewrap">
-<!ENTITY editRewrapCmd.accesskey "R">
+<!ENTITY editRewrapCmd.accesskey "w">
 <!ENTITY deleteCmd.label "Delete">
 <!ENTITY deleteCmd.key "D">
 <!ENTITY deleteCmd.accesskey "d">
