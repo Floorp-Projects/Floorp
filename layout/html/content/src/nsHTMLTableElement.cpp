@@ -1176,19 +1176,13 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     }
 
     // cellspacing  (reuses tableStyle if already resolved)
+    // ua.css sets cellspacing
     aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       if (nsnull==tableStyle)
         tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
       tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
       tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
-    }
-    else
-    { // XXX: remove me as soon as we get this from the style sheet
-      if (nsnull==tableStyle)
-        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-      tableStyle->mBorderSpacingX.SetCoordValue(NSIntPixelsToTwips(2, p2t));
-      tableStyle->mBorderSpacingY.SetCoordValue(NSIntPixelsToTwips(2, p2t));
     }
 
     // cols

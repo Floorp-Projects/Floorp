@@ -200,8 +200,8 @@ protected:
 
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
                                nsStyleSpacing& aSpacingStyle, 
-                               nscoord aBorderWidth,
-                               nsTableFrame *aTableFrame);
+                               nscoord         aBorderWidth,
+                               nsTableFrame*   aTableFrame);
 
   void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
   void      MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
