@@ -58,15 +58,15 @@ public:
   NS_IMETHOD DropDocumentReference();
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
-                         const nsAReadableString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
+                         const nsAString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aQualifiedName,
-                         const nsAReadableString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
+                         const nsAString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo); 
   NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager);
   NS_IMETHOD GetDocument(nsIDocument*& aDocument);
@@ -80,6 +80,11 @@ public:
   static nsresult GetAnonymousManager(nsINodeInfoManager*& aNodeInfoManager);
 
 private:
+  static PRIntn PR_CALLBACK NodeInfoInnerKeyCompare(const void *key1,
+                                                    const void *key2);
+  static PLHashNumber PR_CALLBACK GetNodeInfoInnerHashValue(const void *key);
+
+
   PLHashTable *mNodeInfoHash;
   nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
   nsIDocument *mDocument; // WEAK
