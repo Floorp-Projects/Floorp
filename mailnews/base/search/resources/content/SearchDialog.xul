@@ -40,7 +40,7 @@ Rights Reserved.
     <!ENTITY buttonClear.label "Clear">
     <!ENTITY buttonSearch.label "Search">
     <!ENTITY buttonOptions.label "Options">
-    <!ENTITY buttonCancel.label "Cancel">
+    <!ENTITY buttonClose.label "Close">
 
 ]>
 <xul:window id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -101,7 +101,7 @@ Rights Reserved.
   <box align="vertical" class="padded">
     <titledbutton class="push" value="&buttonSearch.label;"/>
     <titledbutton class="push" value="&buttonOptions.label;"/>
-    <titledbutton class="push" value="&buttonCancel.label;"/>
+    <titledbutton class="push" value="&buttonClose.label;" onclick="window.close();"/>
   </box>
 </box>
 </xul:window>
