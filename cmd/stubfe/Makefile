@@ -87,7 +87,6 @@ OBJS		= $(CSRCS:.c=.o) $(CPPSRCS:.cc=.o)
 
 NSPR_LIB	= $(DIST)/lib/libplds21.a \
 	$(DIST)/lib/libplc21.a \
-	$(DIST)/lib/libmsgc21.a \
 	$(DIST)/lib/libnspr21.a
 
 ifdef DBMALLOC

@@ -269,9 +269,9 @@ NSPR_LIB	=
 else
 # XXX To a DSO...
 ifdef FULL_STATIC_BUILD
-NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libmsgc21.a $(DIST)/lib/libnspr21.a
+NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
 else
-BASIC_DSOS     += -lplds21 -lplc21 -lmsgc21 -lnspr21
+BASIC_DSOS     += -lplds21 -lplc21 -lnspr21
 endif
 endif
 
