@@ -21,7 +21,7 @@
 # Igor Kushnirskiy <idk@eng.sun.com>
 #
 
-DEPTH=..\..\..\
+DEPTH=..\..\..
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = bcxpcomstubs
@@ -35,11 +35,12 @@ OBJS= \
 	.\$(OBJDIR)\bcXPCOMStub.obj \
 	.\$(OBJDIR)\bcXPCOMMarshalToolkit.obj \
 	.\$(OBJDIR)\bcXPCOMStubsAndProxies.obj \
-	.\$(OBJDIR)\bcXPCOMLog.obj \	
+	.\$(OBJDIR)\bcXPCOMLog.obj \
 	$(NULL)
 
 EXPORTS = \
-       bcXPCOMStubsAndProxies.h
+	bcXPCOMStubsAndProxies.h \
+	$(NULL)
 
 LLIBS=	\
 	$(DIST)\lib\xpcom.lib \
