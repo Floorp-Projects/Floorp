@@ -83,7 +83,7 @@ static bool promptLine(LineReader &inReader, string &s,
 JavaScript::World world;
 JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
                                 JavaScript::stdOut);
-const bool showTokens = true;
+const bool showTokens = false;
 
 static Register genExpr(ICodeGenerator &icg, ExprNode *p)
 {
@@ -128,7 +128,7 @@ static void genCode(ExprNode *p)
     icg.returnStatement(ret);
     stdOut << icg;
     JSValue result = cx.interpret(icg.complete(), JSValues());
-    stdOut << "result = " << result.f64 << "\n";
+    stdOut << "result = " << result << "\n";
 }
 
 static void readEvalPrint(FILE *in, World &world)
@@ -384,7 +384,7 @@ static float64 testFunctionCall(World &world, float64 n)
     return result.f64;    
 }
 
-JSValue print(const JSValues &argv)
+static JSValue print(const JSValues &argv)
 {
     size_t n = argv.size();
     if (n > 0) {
