@@ -1432,7 +1432,7 @@
 		7919FCF0044631350000010E = {
 			isa = PBXBundleReference;
 			name = PrintPDE.plugin;
-			path = ../dist/PrintPDE.plugin;
+			path = ../dist/package/PrintPDE.plugin;
 			refType = 2;
 		};
 		7919FCF5044631550000010E = {
@@ -10007,7 +10007,7 @@
 		F5F0BDC803C0A76F01202892 = {
 			isa = PBXBundleReference;
 			name = PrintPDE.plugin;
-			path = ../dist/PrintPDE.plugin;
+			path = ../dist/package/PrintPDE.plugin;
 			refType = 2;
 		};
 		F5F0BDD803C0A7CE01202892 = {
