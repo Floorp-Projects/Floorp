@@ -299,8 +299,8 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
         cwd.CreateDir();
 
 #elif defined(XP_PC)
-    // set its directory an aunt of the executable.
-    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    // set its directory an aunt of the moz bin directory
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Moz_BinDirectory);
 
     // Users50 directory is kept 1 level above the executable directory.
     cwd.GetParent(cwd); 
