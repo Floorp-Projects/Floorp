@@ -406,7 +406,6 @@ operator==( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>&
     return lhs.operator->() == rhs.operator->();
   }
 
-#ifdef HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 template <class CharT>
 inline
 PRBool
@@ -414,7 +413,6 @@ operator!=( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>&
   {
     return lhs.operator->() != rhs.operator->();
   }
-#endif
 
 
 
