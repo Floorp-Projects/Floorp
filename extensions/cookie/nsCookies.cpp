@@ -1265,6 +1265,8 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       PR_Free(domain_from_header);
     }
   }
+
+  /* set path if none found in header, else verify that host has authority for indicated path */
   if(!path_from_header) {
     /* Strip down everything after the last slash to get the path,
      * ignoring slashes in the query string part.
@@ -1278,6 +1280,13 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       *(iter+1) = '\0';
     }
     path_from_header = nsCRT::strdup(cur_path.get());
+  } else {
+    if(PL_strncmp(cur_path.get(), path_from_header, PL_strlen(path_from_header))) {
+      PR_FREEIF(path_from_header);
+      PR_FREEIF(host_from_header);
+      nsCRT::free(setCookieHeaderInternal);
+      return;
+    }
   }
   if(!host_from_header) {
     host_from_header = nsCRT::strdup(cur_host.get());
