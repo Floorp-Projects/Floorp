@@ -414,7 +414,7 @@ nsGlyphTable(NS_TABLE_TYPE_UNICODE, "UNDEFINED",
 // Data sets that we have ...
 
 // -----------------------------------------------------------------------------------
-// Data for strecthy chars that are supported by the Symbol font ---------------------
+// Data for stretchy chars that are supported by the Symbol font ---------------------
 
 static nsCharData gCharDataSymbol[] = {
 #define WANT_SYMBOL_DATA
@@ -438,7 +438,7 @@ nsGlyphTable(NS_TABLE_TYPE_UNICODE, "Symbol",
              gGlyphCodeSymbol, sizeof(gGlyphCodeSymbol) / sizeof(gGlyphCodeSymbol[0]));
 
 // -----------------------------------------------------------------------------------
-// Data for strecthy chars that are supported by the MT Extra font -------------------
+// Data for stretchy chars that are supported by the MT Extra font -------------------
 
 static nsCharData gCharDataMTExtra[] = {
 #define WANT_MTEXTRA_DATA
@@ -462,7 +462,7 @@ nsGlyphTable(NS_TABLE_TYPE_UNICODE, "MT Extra",
              gGlyphCodeMTExtra, sizeof(gGlyphCodeMTExtra) / sizeof(gGlyphCodeMTExtra[0]));
 
 // -----------------------------------------------------------------------------------
-// Data for strecthy chars that are supported by TeX's CMEX font ---------------------
+// Data for stretchy chars that are supported by TeX's CMEX font ---------------------
 
 static nsCharData gCharDataCMEX[] = {
 #define WANT_CMEX_DATA
@@ -486,7 +486,7 @@ nsGlyphTable(NS_TABLE_TYPE_UNICODE, "CMEX10",
              gGlyphCodeCMEX, sizeof(gGlyphCodeCMEX) / sizeof(gGlyphCodeCMEX[0]));
 
 // -----------------------------------------------------------------------------------
-// Data for strecthy chars that are supported by TeX's CMSY font ---------------------
+// Data for stretchy chars that are supported by TeX's CMSY font ---------------------
 
 static nsCharData gCharDataCMSY[] = {
 #define WANT_CMSY_DATA
@@ -510,7 +510,7 @@ nsGlyphTable(NS_TABLE_TYPE_UNICODE, "CMSY10",
              gGlyphCodeCMSY, sizeof(gGlyphCodeCMSY) / sizeof(gGlyphCodeCMSY[0]));
 
 // -----------------------------------------------------------------------------------
-// Data for strecthy chars that are supported by the Math4 font ----------------------
+// Data for stretchy chars that are supported by the Math4 font ----------------------
 
 static nsCharData gCharDataMath4[] = {
 #define WANT_MATH4_DATA
@@ -629,7 +629,7 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
         if (mDirection != NS_STRETCH_DIRECTION_UNSUPPORTED) {
           // ... now see if there is a glyph table for us
           mGlyphTable = gGlyphTableList.FindTableFor(mEnum);
-          // don't bother with the streching if there is no glyph table for us...
+          // don't bother with the stretching if there is no glyph table for us...
           if (!mGlyphTable) {
             gCharInfo[i].mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // update to never try again
             mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
@@ -670,7 +670,7 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
     if (mDirection != NS_STRETCH_DIRECTION_UNSUPPORTED) {
       // ... now see if there is a glyph table for us
       mGlyphTable = gGlyphTableList.FindTableFor(mEnum);
-      // don't bother with the streching if there is no glyph table for us...
+      // don't bother with the stretching if there is no glyph table for us...
       if (!mGlyphTable) {
         gCharInfo[mEnum].mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // update to never try again
         mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
@@ -1034,9 +1034,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
     PRInt32 i;
 
-    // XXX hack!
-    float flex[3] = {0.7f, 0.3f, 0.7f};
-
+    // compute the bounding metrics of all partial glyphs
     nsGlyphCode chdata[4];
     nsBoundingMetrics bmdata[4];
     for (i = 0; i < 4; i++) {
@@ -1050,83 +1048,92 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       rv = glyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
       if (NS_FAILED(rv)) {
         printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
-        // ensure that the char later behaves like a normal char
-        mEnum = eMathMLChar_DONT_STRETCH; // XXX need to reset in dynamic updates
-        return rv;
+        // stop if we failed to compute the bounding metrics of a part.
+        // we will use the best glyph encountered earlier
+        break;
       }
       chdata[i] = ch;
       bmdata[i] = bm;
     }
 
-    // refine the flexibility depending on whether some parts are not there
-    if ((chdata[1] == chdata[0]) || // mid == top (or mid == left) 
-        (chdata[1] == chdata[2]) || // mid == bot (or mid == right)
-        (chdata[1] == chdata[3]))   // mid == glue
-    {
-      flex[0] = 0.5f;
-      flex[1] = 0.0f;
-      flex[2] = 0.5f;
-    }
-
-    if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
-      // default is to fill-up the area given to us
-      nscoord lbearing = bmdata[0].leftBearing;
-      nscoord rbearing = bmdata[0].rightBearing;
-      nscoord h = 0;
-      nscoord w = bmdata[0].width;
-      for (i = 0; i < 4; i++) {
-        bm = bmdata[i];
-        if (w < bm.width) w = bm.width;
-        if (i < 3) {
-          h += nscoord(flex[i]*(bm.ascent + bm.descent)); // sum heights of the parts...
-          // compute and cache our bounding metrics (vertical stacking!)
-          if (lbearing > bm.leftBearing) lbearing = bm.leftBearing;
-          if (rbearing < bm.rightBearing) rbearing = bm.rightBearing;
+    // build by parts if we have successfully computed the
+    // bounding metrics of all partial glyphs
+    if (NS_SUCCEEDED(rv)) {
+      // We want to place the glyphs even if they don't fit at their
+      // full extent, i.e., we may clip to tolerate a small amount of
+      // overlap between the parts. This is important to cater for fonts
+      // with long glues.
+      float flex[3] = {0.7f, 0.3f, 0.7f};
+      // refine the flexibility depending on whether some parts are not there
+      if ((chdata[1] == chdata[0]) || // mid == top (or mid == left) 
+          (chdata[1] == chdata[2]) || // mid == bot (or mid == right)
+          (chdata[1] == chdata[3]))   // mid == glue
+      {
+        flex[0] = 0.5f;
+        flex[1] = 0.0f;
+        flex[2] = 0.5f;
+      }
+  
+      if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
+        // default is to fill-up the area given to us
+        nscoord lbearing = bmdata[0].leftBearing;
+        nscoord rbearing = bmdata[0].rightBearing;
+        nscoord h = 0;
+        nscoord w = bmdata[0].width;
+        for (i = 0; i < 4; i++) {
+          bm = bmdata[i];
+          if (w < bm.width) w = bm.width;
+          if (i < 3) {
+            h += nscoord(flex[i]*(bm.ascent + bm.descent)); // sum heights of the parts...
+            // compute and cache our bounding metrics (vertical stacking)
+            if (lbearing > bm.leftBearing) lbearing = bm.leftBearing;
+            if (rbearing < bm.rightBearing) rbearing = bm.rightBearing;
+          }
+        }
+        if (h <= aContainerSize.ascent + aContainerSize.descent) { 
+          // can nicely fit in the available space...
+          bestbm.width = w;
+          bestbm.ascent = aContainerSize.ascent;
+          bestbm.descent = aContainerSize.descent;
+          bestbm.leftBearing = lbearing;
+          bestbm.rightBearing = rbearing;
+          // reset
+          bestGlyph = 0; // this will tell paint to build by parts
+          bestGlyphTable = glyphTable;
+        }
+        else {
+          // sum of parts doesn't fit in the space... we will use a single glyph
+          // we will use the best glyph encountered earlier
         }
       }
-      if (h <= aContainerSize.ascent + aContainerSize.descent) { 
-      	// can nicely fit in the available space...
-        bestbm.width = w;
-        bestbm.ascent = aContainerSize.ascent;
-        bestbm.descent = aContainerSize.descent;
-        bestbm.leftBearing = lbearing;
-        bestbm.rightBearing = rbearing;
-        // reset
-        bestGlyph = 0; // this will tell paint to build by parts
-        bestGlyphTable = glyphTable;
-      }
-      else {
-      	// sum of parts doesn't fit in the space... will use a single glyph
-        // will use the best glyph encountered earlier
-      }
-    }
-    else if (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
-      // default is to fill-up the area given to us
-      nscoord a = bmdata[0].ascent;
-      nscoord d = bmdata[0].descent;
-      nscoord w = 0;
-      for (i = 0; i < 4; i++) {
-        bm = bmdata[i];
-        if (a < bm.ascent) a = bm.ascent;
-        if (d < bm.descent) d = bm.descent;
-        if (i < 3) {
-          w += nscoord(flex[i]*(bm.rightBearing - bm.leftBearing)); // sum widths of the parts...
+      else if (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
+        // default is to fill-up the area given to us
+        nscoord a = bmdata[0].ascent;
+        nscoord d = bmdata[0].descent;
+        nscoord w = 0;
+        for (i = 0; i < 4; i++) {
+          bm = bmdata[i];
+          if (a < bm.ascent) a = bm.ascent;
+          if (d < bm.descent) d = bm.descent;
+          if (i < 3) {
+            w += nscoord(flex[i]*(bm.rightBearing - bm.leftBearing)); // sum widths of the parts...
+          }
         }
-      }
-      if (w <= aContainerSize.width) { 
-      	// can nicely fit in the available space...
-        bestbm.width = aContainerSize.width;
-        bestbm.ascent = a;
-        bestbm.descent = d;
-        bestbm.leftBearing = 0;
-        bestbm.rightBearing = aContainerSize.width;
-        // reset
-        bestGlyph = 0; // this will tell paint to build by parts
-        bestGlyphTable = glyphTable;
-      }
-      else {
-      	// sum of parts doesn't fit in the space... will use a single glyph
-        // will use the best glyph encountered earlier
+        if (w <= aContainerSize.width) { 
+          // can nicely fit in the available space...
+          bestbm.width = aContainerSize.width;
+          bestbm.ascent = a;
+          bestbm.descent = d;
+          bestbm.leftBearing = 0;
+          bestbm.rightBearing = aContainerSize.width;
+          // reset
+          bestGlyph = 0; // this will tell paint to build by parts
+          bestGlyphTable = glyphTable;
+        }
+        else {
+          // sum of parts doesn't fit in the space... we will use a single glyph
+          // we will use the best glyph encountered earlier
+        }
       }
     }
   }

@@ -110,7 +110,7 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(0, 1, PR_FALSE, PR_TRUE);
+    UpdatePresentationDataFromChildAt(0, 1, PR_FALSE, PR_FALSE);
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
