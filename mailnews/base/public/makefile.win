@@ -50,6 +50,7 @@ EXPORTS =                           \
 			nsIDOMMsgAppCore.h		\
 			nsIMsgGroupRecord.h		\
 			nsICopyMessageListener.h \
+			nsIMessageView.h		\
 			$(NULL)
 
 MODULE=mailnews

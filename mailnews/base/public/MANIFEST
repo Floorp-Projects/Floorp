@@ -37,3 +37,4 @@ nsIMsgMailSession.h
 nsIMsgIdentity.h
 nsIDOMMsgAppCore.h
 nsICopyMessageListener.h
+nsIMessageView.h
