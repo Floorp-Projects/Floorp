@@ -23,19 +23,14 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 NSPRDIR		= $(topsrcdir)/nsprpub
-NSPRDIR_AC	= nsprpub
 NSPR20		= 1
-NSPR_MAKE_ARGS	= -C $(NSPRDIR) DIST=`pwd`/dist CC=$(CC) CCC=$(CXX) MOZILLA_CLIENT=$(MOZILLA_CLIENT) MOZ_DEBUG=$(MOZ_DEBUG) USE_PTHREADS=$(USE_PTHREADS) BUILD_OPT=$(BUILD_OPT) NO_MDUPDATE=$(NO_MDUPDATE) $@
+NSPR_MAKE_ARGS	= -C $(NSPRDIR) DIST=`pwd`/dist NS_USE_GCC=$(GNU_CC) MOZILLA_CLIENT=$(MOZILLA_CLIENT) MOZ_DEBUG=$(MOZ_DEBUG) USE_PTHREADS=$(USE_PTHREADS) BUILD_OPT=$(BUILD_OPT) NO_MDUPDATE=$(NO_MDUPDATE) $@
 
 ifndef NO_MOCHA
 DIRS_JS		= js
 endif
 
-DIRS		= config coreconf 
-ifdef NSPR_AUTOCONF
-DIRS		+= $(NSPRDIR_AC)
-endif
-DIRS		+= dbm xpcom base network caps
+DIRS		= config coreconf dbm xpcom base network caps
 
 ifndef MOZ_NATIVE_JPEG
 DIRS		+= jpeg
@@ -71,7 +66,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef NSPR_AUTOCONF
 export:: envirocheck $(OBJS)
 	$(MAKE) $(NSPR_MAKE_ARGS)
 
@@ -93,8 +87,6 @@ clobber::
 clobber_all::
 	$(MAKE) $(NSPR_MAKE_ARGS)
 
-endif # !NSPR_AUTOCONF
-	
 # Running this rule assembles all the SDK source pieces into dist/sdk.
 # You'll need to run this rule on every platform to get all the
 # binaries (e.g. javah) copied there. You'll also have to do special
