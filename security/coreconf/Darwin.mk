@@ -62,7 +62,7 @@ OS_CFLAGS	= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fpascal-strings -traditional-
 ARCH		= darwin
 
 # May override this with -bundle to create a loadable module.
-DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1
+DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@)
 
 MKSHLIB		= $(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS)
 DLL_SUFFIX	= dylib

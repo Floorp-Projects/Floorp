@@ -176,6 +176,10 @@ ifeq ($(OS_ARCH), Linux)
 EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
 endif
 
+ifeq ($(OS_ARCH), Darwin)
+EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
+endif
+
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \

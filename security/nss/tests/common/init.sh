@@ -172,6 +172,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
         SHLIB_PATH=${DIST}/${OBJDIR}/lib
         LIBPATH=${DIST}/${OBJDIR}/lib
+        DYLD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
     fi
 
     if [ ! -d "${TESTDIR}" ]; then
@@ -388,7 +389,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     TEMPFILES="${PWFILE} ${NOISE_FILE}"
     trap "Exit $0 Signal_caught" 2 3
 
-    export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
+    export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH DYLD_LIBRARY_PATH
     export DOMSUF HOSTADDR
     export KILL SLEEP PS
     export MOZILLA_ROOT SECURITY_ROOT DIST TESTDIR OBJDIR HOSTDIR QADIR
