@@ -363,7 +363,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   fprintf(fp,"<html><head><title>Jprof Profile Report</title></head><body>\n");
   fprintf(fp,"<h1><center>Jprof Profile Report</center></h1>\n");
   fprintf(fp,"<center>");
-  fprintf(fp,"<A href=#flat>Flat</A> <A href=#hier>hierarchical</A>");
+  fprintf(fp,"<A href=#flat>flat</A><b> | </b><A href=#hier>hierarchical</A>");
   fprintf(fp,"</center><P><P><P>\n");
 
   int *rankingTable = new int[usefulSymbols];
@@ -394,7 +394,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   // this loop.  Later we can get callers and callees into it like gprof
   // does
   fprintf(fp,
-  "<h2><A NAME=hier></A><center>Hierarchical Profile</center></h2><hr>\n");
+  "<h2><A NAME=hier></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#hier\">Hierarchical Profile</a></center></h2><hr>\n");
   fprintf(fp, "<pre>\n");
   fprintf(fp, "%5s %5s    %4s %s\n",
   "index", "Count", "Hits", "Function Name");
@@ -431,7 +431,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
     }
   }
 
-  fprintf(fp,"<h2><A NAME=flat></A><center>Flat Profile</center></h2><br>\n");
+  fprintf(fp,"<h2><A NAME=flat></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#flat\">Flat Profile</a></center></h2><br>\n");
   fprintf(fp, "<pre>\n");
   fprintf(fp, "Count   Function Name\n");
   // Now loop for as long as we have timer hits
