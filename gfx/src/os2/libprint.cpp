@@ -26,23 +26,74 @@
 #define INCL_DOSERRORS
 #define INCL_SPLDOSPRINT
 #include <os2.h>
+#include <stdio.h> // DJ - only for debug
 #include <stdlib.h>
 #include <string.h>
 
 #include "libprint.h"
 #include "libprres.h"
 
+
+
 /* print-queue structure, opaque so I can change it. */
-struct _PRTQUEUE
+class PRTQUEUE
 {
-   PRQINFO3 q;
+public:
+    PRTQUEUE (PPRQINFO3 pInfo);
+   ~PRTQUEUE (void) { delete [] pQI3; }
+   PRQINFO3& PQI3 () const { return *(PRQINFO3*)pQI3; }
+   const char* DriverName () const { return mDriverName; }
+   const char* DeviceName () const { return mDeviceName; }
+   const char* PrinterName() const { return mPrinterName; }
+   
+private:
+   PBYTE pQI3;
+   CHAR  mDriverName  [DRIV_NAME_SIZE + 1];          // Driver name
+   CHAR  mDeviceName  [DRIV_DEVICENAME_SIZE + 1];    // Device name
+   CHAR  mPrinterName [PRINTERNAME_SIZE + 1];        // Printer name
 };
+
+PRTQUEUE::PRTQUEUE (PPRQINFO3 pInfo)
+{
+   // Make local copy of PPRQINFO3 object
+   ULONG SizeNeeded;
+   ::SplQueryQueue (NULL, pInfo->pszName, 3, NULL, 0, &SizeNeeded);
+   pQI3 = new BYTE [SizeNeeded];
+   ::SplQueryQueue (NULL, pInfo->pszName, 3, pQI3, SizeNeeded, &SizeNeeded);
+
+
+   PCHAR sep = strchr (pInfo->pszDriverName, '.');
+
+   if (sep)
+   {
+      *sep = '\0';
+      strcpy (mDriverName, pInfo->pszDriverName);
+      strcpy (mDeviceName, sep + 1);
+      *sep = '.';
+   } else
+   {
+      strcpy (mDriverName, pInfo->pszDriverName);
+      mDeviceName [0] = '\0';
+   }
+
+
+   sep = strchr (pInfo->pszPrinters, ',');
+
+   if (sep)
+   {
+      *sep = '\0';
+      strcpy (mPrinterName, pInfo->pszPrinters);
+      *sep = '.';
+   } else
+   {
+      strcpy (mPrinterName, pInfo->pszPrinters);
+   }
+}
 
 /* local functions */
 static PRTQUEUE *prnGetDefaultPrinter( void);
 static PRQINFO3 *prnGetAllQueues( PULONG pNumQueues);
 static BOOL prnEscape( HDC hdc, long lEscape);
-static PRTQUEUE *prnCreatePRTQUEUE( PRQINFO3 *pInfo);
 
 MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
 
@@ -92,9 +143,9 @@ BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue)
 {
    BOOL rc = FALSE;
 
-   if( pPrintQueue)
+   if (pPrintQueue)
    {
-      free( pPrintQueue);
+      delete pPrintQueue;
       rc = TRUE;
    }
 
@@ -119,7 +170,7 @@ PRTQUEUE *prnGetDefaultPrinter()
       if( i == ulQueues)
          i = 0;
 
-      pq = prnCreatePRTQUEUE( pInfo + i);
+      pq = new PRTQUEUE (pInfo + i);
 
       free( pInfo);
    }
@@ -127,12 +178,6 @@ PRTQUEUE *prnGetDefaultPrinter()
    return pq;
 }
 
-PRTQUEUE *prnCreatePRTQUEUE( PRQINFO3 *pInfo)
-{
-   PRTQUEUE *pq = (PRTQUEUE *) malloc( sizeof( PRTQUEUE));
-   memcpy( &pq->q, pInfo, sizeof( PRQINFO3));
-   return pq;
-}
 
 PRQINFO3 *prnGetAllQueues( PULONG pNumQueues)
 {
@@ -141,14 +186,14 @@ PRQINFO3 *prnGetAllQueues( PULONG pNumQueues)
    SPLERR rc = 0;
 
    /* first work out how much space we need */
-   rc = SplEnumQueue( NULL, 3, pBuffer, 0, &ulReturned,
-                      &ulTotal, &ulNeeded, NULL);
+   rc = ::SplEnumQueue( NULL, 3, pBuffer, 0, &ulReturned,
+                        &ulTotal, &ulNeeded, NULL);
 
    pBuffer = (PBYTE) malloc( ulNeeded);
 
    /* now get the queue-infos */
-   rc = SplEnumQueue( NULL, 3, pBuffer, ulNeeded, &ulReturned,
-                      &ulTotal, &ulNeeded, NULL);
+   rc = ::SplEnumQueue( NULL, 3, pBuffer, ulNeeded, &ulReturned,
+                        &ulTotal, &ulNeeded, NULL);
 
    *pNumQueues = ulReturned;
 
@@ -161,29 +206,12 @@ BOOL PrnDoJobProperties( PRTQUEUE *pInfo)
 
    if( pInfo)
    {
-      char *pszPrinter = strdup( pInfo->q.pszPrinters);
-      char *pszDriverName = strdup( pInfo->q.pszDriverName);
-      char *pszDeviceName = 0;
-      char *c;
-      long  lRC;
-   
-      if( 0 != (c = strchr( pszPrinter, ',')))
-         *c = '\0';
-   
-      if( 0 != (c = strchr( pszDriverName, '.')))
-      {
-         *c = '\0';
-         pszDeviceName = c + 1;
-      }
-   
-      lRC = DevPostDeviceModes( 0 /*hab*/,
-                                pInfo->q.pDriverData,
-                                pszDriverName,
-                                pszDeviceName,
-                                pszPrinter,
-                                DPDM_POSTJOBPROP);
-      free( pszPrinter);
-      free( pszDriverName);
+      LONG lRC = ::DevPostDeviceModes( 0 /*hab*/,
+                                       pInfo->PQI3 ().pDriverData,
+                                       pInfo->DriverName (),
+                                       pInfo->DeviceName (),
+                                       pInfo->PrinterName (),
+                                       DPDM_POSTJOBPROP);
    
       rc = (lRC != DPDM_ERROR);
    }
@@ -201,38 +229,25 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName)
 
    if( pInfo && pszApplicationName)
    {
-      char *pszDriverName = strdup( pInfo->q.pszDriverName), *c;
-/*      DEVOPENSTRUC dop = { pInfo->q.pszName,
-                           pszDriverName,
-                           pInfo->q.pDriverData,
-                           "PM_Q_STD",
-                           pszApplicationName,
-                           pInfo->q.pszPrProc,
-                           0, 0, 0 }; */
-
       DEVOPENSTRUC dop;
 
-      dop.pszLogAddress = pInfo->q.pszName;
-      dop.pszDriverName = pszDriverName;
-      dop.pdriv = pInfo->q.pDriverData;
-      dop.pszDataType = "PM_Q_STD"; 
-      dop.pszComment = pszApplicationName;
-      dop.pszQueueProcName = pInfo->q.pszPrProc;;     
+      dop.pszLogAddress      = pInfo->PQI3 ().pszName;
+      dop.pszDriverName      = (char*)pInfo->DriverName ();
+      dop.pdriv              = pInfo->PQI3 ().pDriverData;
+      dop.pszDataType        = "PM_Q_STD";
+      dop.pszComment         = pszApplicationName;
+      dop.pszQueueProcName   = pInfo->PQI3 ().pszPrProc;;     
       dop.pszQueueProcParams = 0;   
-      dop.pszSpoolerParams = 0;     
-      dop.pszNetworkParams = 0;     
+      dop.pszSpoolerParams   = 0;     
+      dop.pszNetworkParams   = 0;     
 
-      if( 0 != (c = strchr( pszDriverName, '.')))
-         *c = '\0';
-   
-      hdc = DevOpenDC( 0,
-                       OD_QUEUED,
-                       "*",
-                       6,
-                       (PDEVOPENDATA) &dop,
-                       NULLHANDLE);
-   
-      free( pszDriverName);
+      hdc = ::DevOpenDC( 0, OD_QUEUED, "*", 6, (PDEVOPENDATA) &dop, NULLHANDLE);
+
+if (hdc == 0)
+{
+  ULONG ErrorCode = ERRORIDERROR (::WinGetLastError (0));
+  printf ("!ERROR! - Can't open DC for printer %04X\a\n", ErrorCode);
+}   
    }
 
    return hdc;
@@ -240,7 +255,7 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName)
 
 BOOL PrnCloseDC( HDC hdc)
 {
-   return (hdc != 0 && DEV_OK == DevCloseDC( hdc));
+   return (hdc != 0 && DEV_OK == ::DevCloseDC( hdc));
 }
 
 BOOL PrnStartJob( HDC hdc, PSZ pszJobName)
@@ -250,9 +265,9 @@ BOOL PrnStartJob( HDC hdc, PSZ pszJobName)
    if( hdc && pszJobName)
    {
       long lDummy = 0;
-      long lResult = DevEscape( hdc, DEVESC_STARTDOC,
-                                (long) strlen( pszJobName) + 1, pszJobName,
-                                &lDummy, NULL);
+      long lResult = ::DevEscape( hdc, DEVESC_STARTDOC,
+                                  (long) strlen( pszJobName) + 1, pszJobName,
+                                  &lDummy, NULL);
       rc = (lResult == DEV_OK);
    }
 
@@ -271,8 +286,7 @@ BOOL prnEscape( HDC hdc, long lEscape)
    if( hdc)
    {
       long lDummy = 0;
-      long lResult = DevEscape( hdc, lEscape,
-                                0, NULL, &lDummy, NULL);
+      long lResult = ::DevEscape( hdc, lEscape, 0, NULL, &lDummy, NULL);
       rc = (lResult == DEV_OK);
    }
 
@@ -292,8 +306,8 @@ BOOL PrnEndJob( HDC hdc)
    {
       long   lOutCount = 2;
       USHORT usJobID = 0;
-      long   lResult = DevEscape( hdc, DEVESC_ENDDOC,
-                                  0, NULL, &lOutCount, (PBYTE) &usJobID);
+      long   lResult = ::DevEscape( hdc, DEVESC_ENDDOC,
+                                    0, NULL, &lOutCount, (PBYTE) &usJobID);
       rc = (lResult == DEV_OK);
    }
 
@@ -311,11 +325,11 @@ BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
       long    lAvail, i;
 
       /* query how many forms are available */
-      lAvail = DevQueryHardcopyCaps( hdc, 0, 0, NULL);
+      lAvail = ::DevQueryHardcopyCaps( hdc, 0, 0, NULL);
 
       pBuffer = (PHCINFO) malloc( lAvail * sizeof(HCINFO));
 
-      DevQueryHardcopyCaps( hdc, 0, lAvail, pBuffer);
+      ::DevQueryHardcopyCaps( hdc, 0, lAvail, pBuffer);
 
       for( i = 0; i < lAvail; i++)
          if( pBuffer[ i].flAttributes & HCAPS_CURRENT)
@@ -438,7 +452,7 @@ MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
                /* set return value */
                PPRQINFO3 pInfo;
                pInfo = (PPRQINFO3) WinSendMsg( hwnd, PRM_QUERYQUEUE, 0, 0);
-               *(pData->ppQueue) = prnCreatePRTQUEUE( pInfo);
+               *(pData->ppQueue) = new PRTQUEUE (pInfo);
                break; /* dismiss dialog normally */
             }
          }
