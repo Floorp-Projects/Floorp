@@ -35,7 +35,7 @@
  * Header file for routines specific to S/MIME.  Keep things that are pure
  * pkcs7 out of here; this is for S/MIME policy, S/MIME interoperability, etc.
  *
- * $Id: smime.h,v 1.2 2000/06/13 21:56:33 chrisk%netscape.com Exp $
+ * $Id: smime.h,v 1.3 2000/06/14 23:16:41 chrisk%netscape.com Exp $
  */
 
 #ifndef _SECMIME_H_
@@ -122,10 +122,8 @@ extern PRBool NSS_SMIMEUtil_EncryptionPossible(void);
  *
  * scans the list of allowed and enabled ciphers and construct a PKCS9-compliant
  * S/MIME capabilities attribute value.
- *
- * "cert" - sender's certificate
  */
-extern SECItem *NSS_SMIMEUtil_GetSMIMECapabilities(CERTCertificate *cert);
+extern SECStatus NSS_SMIMEUtil_GetSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers);
 
 /*
  * NSS_SMIMEUtil_FindBulkAlgForRecipients - find bulk algorithm suitable for all recipients

@@ -34,7 +34,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.2 2000/06/13 21:56:34 chrisk%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.3 2000/06/14 23:16:42 chrisk%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -104,12 +104,6 @@ static smime_cipher_map_entry smime_cipher_map[] = {
 };
 static const int smime_cipher_map_count = sizeof(smime_cipher_map) / sizeof(smime_cipher_map_entry);
 
-/* the other global variables */
-static PRBool smime_prefs_changed = PR_TRUE;
-static NSSSMIMECapability **smime_capabilities;
-static SECItem *smime_encoded_caps;
-static PRBool lastUsedFortezza;
-
 /*
  * smime_mapi_by_cipher - find index into smime_cipher_map by cipher
  */
@@ -152,10 +146,9 @@ NSS_SMIMEUtil_EnableCipher(unsigned long which, PRBool on)
 	return SECFailure;
     }
 
-    if (smime_cipher_map[mapi].enabled != on) {
+    if (smime_cipher_map[mapi].enabled != on)
 	smime_cipher_map[mapi].enabled = on;
-	smime_prefs_changed = PR_TRUE;
-    }
+
     return SECSuccess;
 }
 
@@ -181,10 +174,9 @@ NSS_SMIMEUtil_AllowCipher(unsigned long which, PRBool on)
 	/* XXX set an error */
 	return SECFailure;
 
-    if (smime_cipher_map[mapi].allowed != on) {
+    if (smime_cipher_map[mapi].allowed != on)
 	smime_cipher_map[mapi].allowed = on;
-	smime_prefs_changed = PR_TRUE;
-    }
+
     return SECSuccess;
 }
 
@@ -521,155 +513,82 @@ NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts, SECOidTag *bulk
     return SECSuccess;
 }
 
-static SECStatus
-smime_init_caps(PRBool isFortezza)
-{
-    NSSSMIMECapability *cap;
-    smime_cipher_map_entry *map;
-    SECOidData *oiddata;
-    SECStatus rv;
-    int i, capIndex;
-
-    /* if we have caps, and the prefs did not change, and we are using fortezza as last time */
-    /* we're done */
-    if (smime_encoded_caps != NULL && (!smime_prefs_changed) && lastUsedFortezza == isFortezza)
-	return SECSuccess;
-
-    /* ok, we need to cook up new caps. So throw the old ones away */
-    if (smime_encoded_caps != NULL) {
-	SECITEM_FreeItem (smime_encoded_caps, PR_TRUE);
-	smime_encoded_caps = NULL;
-    }
-
-    /* if we have an old NSSSMIMECapability array, we'll reuse it (has the right size) */
-    if (smime_capabilities == NULL) {
-	smime_capabilities = (NSSSMIMECapability **)PORT_ZAlloc((smime_cipher_map_count + 1)
-					  * sizeof(NSSSMIMECapability *));
-	if (smime_capabilities == NULL)
-	    return SECFailure;
-    }
-
-    rv = SECFailure;
-
-    /* 
-       The process of creating the encoded CMS cipher capability list
-       involves two basic steps: 
-
-       (a) Convert our internal representation of cipher preferences 
-           (smime_prefs) into an array containing cipher OIDs and 
-	   parameter data (smime_capabilities). This step is
-	   performed here.
-
-       (b) Encode, using ASN.1, the cipher information in 
-           smime_capabilities, leaving the encoded result in 
-	   smime_encoded_caps.
-
-       (In the process of performing (a), Lisa put in some optimizations
-       which allow us to avoid needlessly re-populating elements in 
-       smime_capabilities as we walk through smime_prefs.)
-
-       We want to use separate loop variables for smime_prefs and
-       smime_capabilities because in the case where the Skipjack cipher 
-       is turned on in the prefs, but where we don't want to include 
-       Skipjack in the encoded capabilities (presumably due to using a 
-       non-fortezza cert when sending a message), we want to avoid creating
-       an empty element in smime_capabilities. This would otherwise cause 
-       the encoding step to produce an empty set, since Skipjack happens 
-       to be the first cipher in smime_prefs, if it is turned on.
-    */
-    capIndex = 0;
-    for (i = 0; i < smime_cipher_map_count; i++) {
-	/* Find the corresponding entry in the cipher map. */
-	map = &(smime_cipher_map[i]);
-
-	if (!map->enabled)
-	    continue;
-
-	/* If we're using a non-Fortezza cert, only advertise non-Fortezza
-	   capabilities. (We advertise all capabilities if we have a 
-	   Fortezza cert.) */
-	if ((!isFortezza) && (map->cipher == SMIME_FORTEZZA))
-	    continue;
-
-	/* get next SMIME capability */
-	cap = smime_capabilities[capIndex];
-	if (cap == NULL) {
-	    cap = (NSSSMIMECapability *)PORT_ZAlloc(sizeof(NSSSMIMECapability));
-	    if (cap == NULL)
-		break;
-	    smime_capabilities[capIndex] = cap;
-	}
-	capIndex++;
-
-	if (cap->cipher == smime_cipher_map[i].cipher)
-	    continue;		/* no change to this one */
-
-	oiddata = SECOID_FindOIDByTag(map->algtag);
-	if (oiddata == NULL)
-	    break;
-
-	if (cap->capabilityID.data != NULL) {
-	    SECITEM_FreeItem (&(cap->capabilityID), PR_FALSE);
-	    cap->capabilityID.data = NULL;
-	    cap->capabilityID.len = 0;
-	}
-
-	rv = SECITEM_CopyItem(NULL, &(cap->capabilityID), &(oiddata->oid));
-	if (rv != SECSuccess)
-	    break;
-
-	if (map->parms == NULL) {
-	    cap->parameters.data = NULL;
-	    cap->parameters.len = 0;
-	} else {
-	    cap->parameters.data = map->parms->data;
-	    cap->parameters.len = map->parms->len;
-	}
-
-	cap->cipher = smime_cipher_map[i].cipher;
-    }
-
-    while (capIndex < smime_cipher_map_count) {
-	cap = smime_capabilities[capIndex];
-	if (cap != NULL) {
-	    SECITEM_FreeItem(&(cap->capabilityID), PR_FALSE);
-	    PORT_Free(cap);
-	}
-	smime_capabilities[capIndex] = NULL;
-	capIndex++;
-    }
-    smime_capabilities[capIndex] = NULL;	/* last one */
-
-    smime_encoded_caps = SEC_ASN1EncodeItem (NULL, NULL, &smime_capabilities,
-					     smime_capabilities_template);
-    if (smime_encoded_caps == NULL)
-	return SECFailure;
-
-    lastUsedFortezza = isFortezza;
-
-    return SECSuccess;
-}
-
 /*
  * NSS_SMIMEUtil_GetSMIMECapabilities - get S/MIME capabilities for this instance of NSS
  *
  * scans the list of allowed and enabled ciphers and construct a PKCS9-compliant
  * S/MIME capabilities attribute value.
  *
- * "cert" - sender's certificate
+ * XXX Please note that, in contradiction to RFC2633 2.5.2, the capabilities only include
+ * symmetric ciphers, NO signature algorithms or key encipherment algorithms.
+ *
+ * "poolp" - arena pool to create the S/MIME capabilities data on
+ * "dest" - SECItem to put the data in
+ * "includeFortezzaCiphers" - PR_TRUE if fortezza ciphers should be included
  */
-SECItem *
-NSS_SMIMEUtil_GetSMIMECapabilities(CERTCertificate *cert)
+SECStatus
+NSS_SMIMEUtil_GetSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers)
 {
+    NSSSMIMECapability *cap;
+    NSSSMIMECapability **smime_capabilities;
+    smime_cipher_map_entry *map;
+    SECOidData *oiddata;
+    SECItem *dummy;
+    int i, capIndex;
 
-    PRBool isFortezza = PR_FALSE;
+    /* if we have an old NSSSMIMECapability array, we'll reuse it (has the right size) */
+    /* smime_cipher_map_count + 1 is an upper bound - we might end up with less */
+    smime_capabilities = (NSSSMIMECapability **)PORT_ZAlloc((smime_cipher_map_count + 1)
+				      * sizeof(NSSSMIMECapability *));
+    if (smime_capabilities == NULL)
+	return SECFailure;
 
-    /* See if the sender's cert specifies Fortezza key exchange. */
-    if (cert != NULL)
-	isFortezza = PK11_FortezzaHasKEA(cert);
+    capIndex = 0;
 
-    if (smime_init_caps(isFortezza) != SECSuccess)
-	return NULL;
+    /* Add all the symmetric ciphers
+     * We walk the cipher list backwards, as it is ordered by increasing strength,
+     * we prefer the stronger cipher over a weaker one, and we have to list the
+     * preferred algorithm first */
+    for (i = smime_cipher_map_count - 1; i >= 0; i--) {
+	/* Find the corresponding entry in the cipher map. */
+	map = &(smime_cipher_map[i]);
+	if (!map->enabled)
+	    continue;
 
-    return smime_encoded_caps;
+	/* If we're using a non-Fortezza cert, only advertise non-Fortezza
+	   capabilities. (We advertise all capabilities if we have a 
+	   Fortezza cert.) */
+	if ((!includeFortezzaCiphers) && (map->cipher == SMIME_FORTEZZA))
+	    continue;
+
+	/* get next SMIME capability */
+	cap = (NSSSMIMECapability *)PORT_ZAlloc(sizeof(NSSSMIMECapability));
+	if (cap == NULL)
+	    break;
+	smime_capabilities[capIndex++] = cap;
+
+	oiddata = SECOID_FindOIDByTag(map->algtag);
+	if (oiddata == NULL)
+	    break;
+
+	cap->capabilityID.data = oiddata->oid.data;
+	cap->capabilityID.len = oiddata->oid.len;
+	cap->parameters.data = map->parms ? map->parms->data : NULL;
+	cap->parameters.len = map->parms ? map->parms->len : 0;
+	cap->cipher = smime_cipher_map[i].cipher;
+    }
+
+    /* XXX add signature algorithms */
+    /* XXX add key encipherment algorithms */
+
+    smime_capabilities[capIndex] = NULL;	/* last one - now encode */
+    dummy = SEC_ASN1EncodeItem(poolp, dest, &smime_capabilities, smime_capabilities_template);
+
+    /* now that we have the proper encoded SMIMECapabilities (or not),
+     * free the work data */
+    for (i = 0; smime_capabilities[i] != NULL; i++)
+	PORT_Free(smime_capabilities[i]);
+    PORT_Free(smime_capabilities);
+
+    return (dummy == NULL) ? SECFailure : SECSuccess;
 }

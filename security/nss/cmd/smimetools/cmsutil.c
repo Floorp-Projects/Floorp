@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.2 2000/06/13 21:56:15 chrisk%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.3 2000/06/14 23:16:39 chrisk%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -418,13 +418,17 @@ sign(FILE *out, FILE *infile, char *progName, struct optionsStr options, struct 
 
     if (signOptions.signingTime) {
 	if (NSS_CMSSignerInfo_AddSigningTime(signerinfo, PR_Now()) != SECSuccess) {
-	    fprintf(stderr, "ERROR: cannot create CMS signerInfo object.\n");
+	    fprintf(stderr, "ERROR: cannot add signingTime attribute.\n");
 	    NSS_CMSMessage_Destroy(cmsg);
 	    return SECFailure;
 	}
     }
     if (signOptions.smimeProfile) {
-	/* TBD */
+	if (NSS_CMSSignerInfo_AddSMIMECaps(signerinfo) != SECSuccess) {
+	    fprintf(stderr, "ERROR: cannot add SMIMECaps attribute.\n");
+	    NSS_CMSMessage_Destroy(cmsg);
+	    return SECFailure;
+	}
     }
     if (signOptions.encryptionKeyPreferenceNick) {
 	/* TBD */

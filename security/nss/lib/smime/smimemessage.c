@@ -34,7 +34,7 @@
 /*
  * SMIME message methods
  *
- * $Id: smimemessage.c,v 1.2 2000/06/13 21:56:34 chrisk%netscape.com Exp $
+ * $Id: smimemessage.c,v 1.3 2000/06/14 23:16:42 chrisk%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -49,24 +49,6 @@
 #include "prtime.h"
 #include "secerr.h"
 
-
-SECStatus
-NSS_SMIMESignerInfo_AddSMIMEProfile(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert)
-{
-    SECItem *smimecapsdata;
-    NSSCMSAttribute *smimecapsattr;
-
-    if ((smimecapsdata = NSS_SMIMEUtil_GetSMIMECapabilities(cert)) == NULL)
-	return SECFailure;
-
-    smimecapsattr = NSS_CMSAttribute_Create(signerinfo->cmsg->poolp,
-				    SEC_OID_PKCS9_SMIME_CAPABILITIES,
-				    smimecapsdata, PR_TRUE);
-    if (smimecapsattr == NULL)
-	return SECFailure;
-
-    return NSS_CMSSignerInfo_AddAuthAttr(signerinfo, smimecapsattr);
-}
 
 #if 0
 /*
