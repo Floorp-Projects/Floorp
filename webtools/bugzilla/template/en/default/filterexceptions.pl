@@ -311,10 +311,6 @@
   'h3', 
   'message', 
 ],
-'global/hidden-fields.html.tmpl' => [
-  'mvalue | html | html_linebreak', # Need to eliminate | usage
-  'field.value | html | html_linebreak',
-],
 
 'global/messages.html.tmpl' => [
   'parameters',
@@ -385,7 +381,7 @@
 ],
 
 'bug/dependency-tree.html.tmpl' => [
-  'hide_resolved ? "Open b" : "B"', 
+  'hide_resolved ? "Open $terms.bugs" : "$terms.Bugs"',
   'bugid', 
   'maxdepth', 
   'dependson_ids.join(",")', 
@@ -400,7 +396,7 @@
   'maxdepth == 0 || maxdepth == realdepth ? "disabled" : ""', 
   'realdepth < 2 || ( maxdepth && maxdepth < 2 ) ? "disabled" : ""',
   'maxdepth > 0 && maxdepth <= realdepth ? maxdepth : ""',
-  'maxdepth == 1 ? 1 
+  'maxdepth == 1 ? 1
                        : ( maxdepth ? maxdepth - 1 : realdepth - 1 )',
   'realdepth < 2 || ! maxdepth || maxdepth >= realdepth ?
             "disabled" : ""',
@@ -420,7 +416,7 @@
   'bug.${dep.fieldname}.join(\', \')', 
   'selname',
   'depbug FILTER bug_link(depbug)',
-  '"bug ${bug.dup_id}" FILTER bug_link(bug.dup_id)',
+  '"${bug.dup_id}" FILTER bug_link(bug.dup_id)',
 ],
 
 'bug/navigate.html.tmpl' => [
@@ -585,6 +581,8 @@
   'item', #
   'type.sortkey || 1',
   '(last_action == "enter" || last_action == "copy") ? "Create" : "Save Changes"',
+  'typeLabelLowerPlural',
+  'typeLabelLowerSingular',
 ],
 
 'admin/flag-type/list.html.tmpl' => [
