@@ -160,7 +160,7 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsresult result = CheckDocumentExistence();
   if (NS_OK == result) {
     if (nsnull != mDocument) {
-      mDocument->FlushPendingNotifications(); // Flush pending content changes Bug 4891
+      mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
     }
       
     nsISupports *element = (nsISupports *)mContent.ElementAt(aIndex);
@@ -183,7 +183,7 @@ nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
   
   if (NS_OK == result) {
     if (nsnull != mDocument) {
-      mDocument->FlushPendingNotifications(); // Flush pending content changes Bug 4891
+      mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
     }
 
     PRInt32 i, count = mContent.Count();

@@ -334,7 +334,7 @@ public:
    */
   NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-  NS_IMETHOD FlushPendingNotifications();
+  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE);
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
   NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
