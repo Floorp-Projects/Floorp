@@ -865,7 +865,10 @@ public:
 #if 0//def NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCAutoString, char)
 #endif
+
+#ifdef NEW_STRING_APIS
 NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
+#endif
 
 /***************************************************************
   The subsumestr class is very unusual. 
