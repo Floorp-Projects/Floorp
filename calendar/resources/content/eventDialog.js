@@ -171,6 +171,8 @@ function loadCalendarEventDialog()
             setFieldValue("event-status-field", "ICAL_STATUS_CANCELLED");
             break;
         }
+    setFieldValue("all-day-event-checkbox", event.isAllDay, "checked");
+
     } else if (isToDo(event)) {
         var hasStart = event.start && event.start.isSet;
         if (hasStart) 
@@ -201,33 +203,20 @@ function loadCalendarEventDialog()
         }
 
         // todo status fields
-        switch(event.status) {
-        case event.CAL_ITEM_STATUS_CANCELLED:
-            setFieldValue( "cancelled-checkbox", true, "checked" );
-            break;
-        case event.CAL_TODO_STATUS_COMPLETED:
-            setFieldValue( "completed-checkbox", true, "checked" );
-            setFieldValue( "percent-complete-menulist", "100" );
-            // XXX get the time for the completed event
-            /*var completedDate = document.getElementById( "completed-date-picker" ).value;
-      
-            gEvent.completed.year = completedDate.getYear() + 1900;
-            gEvent.completed.month = completedDate.getMonth();
-            gEvent.completed.day = completedDate.getDate();
-            gEvent.status = gEvent.ICAL_STATUS_COMPLETED;*/
-            break;
+        processToDoStatus(event.status);
 
-        /* XXX Support these
-        case event.CAL_TODO_STATUS_NEEDSACTION:
-            // do something
-            break;
-        case event.CAL_TODO_STATUS_INPROCESS:
-            // do something
-            break;*/
+        var completedDatePicker = document.getElementById( "completed-date-picker" );
+        if (event.completedDate) {
+            var completedDate = event.completedDate.jsDate;
+            completedDatePicker.value = completedDate;
+        } else {
+            completedDatePicker.value = null;
+        }
+
+        if (event.percentComplete && event.status == "CAL_TODO_STATUS_INPROCESS" ) {
+            setFieldValue( "percent-complete-menulist", event.percentComplete );
         }
     }
-
-
 
 
     // GENERAL -----------------------------------------------------------
@@ -237,8 +226,6 @@ function loadCalendarEventDialog()
     setFieldValue("uri-field",         event.getProperty("url"));
     // only enable "Go" button if there's a url
     processTextboxWithButton( "uri-field", "load-url-button" );
-
-    setFieldValue("all-day-event-checkbox", event.isAllDay, "checked");
 
 
     // PRIVACY -----------------------------------------------------------
@@ -252,9 +239,28 @@ function loadCalendarEventDialog()
         setFieldValue("private-menulist", "PUBLIC");
         break;
     default:  // bogus value
-        dump("loadCalendarEventDialog: ERROR! Event has invalid " + 
-             "privacy string: " + event.privacy + "\n");
+        dump("loadCalendarEventDialog: ERROR! Event has invalid privacy string: " + event.privacy + "\n");
         break;
+    }
+
+
+    // PRIORITY ----------------------------------------------------------
+    var priorityInteger = parseInt( event.priority );
+    var priorityMenu = document.getElementById( "priority-levels" );
+    if( priorityInteger == 0 ) {
+        // Priority: NONE
+        priorityMenu.selectedIndex = 0;
+    } else if( priorityInteger >= 1 || priorityInteger <= 4 ) {
+        // Priority: HIGH
+        priorityMenu.selectedIndex = 3;
+    } else if( priorityInteger = 5 ) {
+        // Priority: MEDIUM
+        priorityMenu.selectedIndex = 2;
+    } else if( priorityInteger >= 6 || priorityInteger <= 9 ) {
+        // Priority: LOW
+        priorityMenu.selectedIndex = 1;
+    } else {
+        dump("loadCalendarEventDialog: ERROR! Event has invalid priority: " + event.priority +"\n");
     }
 
 
@@ -346,8 +352,7 @@ function loadCalendarEventDialog()
     document.getElementById("exceptions-date-picker").value = gStartDate;
 
 
-    // INVITEES
-
+    // INVITEES ----------------------------------------------------------
     var inviteEmailAddress = event.getProperty("inviteEmailAddress");
     if (inviteEmailAddress != undefined && inviteEmailAddress != "") {
         setFieldValue("invite-checkbox", true, "checked");
@@ -356,7 +361,6 @@ function loadCalendarEventDialog()
         setFieldValue("invite-checkbox", false, "checked");
     }
     processInviteCheckbox();
-
 
     // handle attendees
     attendeeList = event.getAttendees({});
@@ -367,7 +371,7 @@ function loadCalendarEventDialog()
 
 
     // ATTACHMENTS -------------------------------------------------------
-    /* XXX this could will work when attachments are supported by calItemBase
+    /* XXX this could work when attachments are supported by calItemBase
     var count = event.attachments.length;
     for(var i = 0; i < count; i++) {
         var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.calIAttachment);
@@ -376,12 +380,9 @@ function loadCalendarEventDialog()
     */
 
 
-
-    /* Categories stuff */
-
-    // Load categories
+    // CATEGORIES --------------------------------------------------------
+    // Load categories from preferences
     var categoriesString = opener.GetUnicharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories());
-
     var categoriesList = categoriesString.split( "," );
 
     // insert the category already in the task so it doesn't get lost
@@ -390,17 +391,14 @@ function loadCalendarEventDialog()
         if (categoriesString.indexOf(categories) == -1)
             categoriesList[categoriesList.length] = categories;
     }
-
     categoriesList.sort();
 
     var oldMenulist = document.getElementById( "categories-menulist-menupopup" );
     while( oldMenulist.hasChildNodes() )
         oldMenulist.removeChild( oldMenulist.lastChild );
-
     for (i = 0; i < categoriesList.length ; i++) {
         document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
     }
-
     document.getElementById( "categories-field" ).selectedIndex = -1;
     setFieldValue( "categories-field", gEvent.categories );
 
@@ -431,7 +429,6 @@ function loadCalendarEventDialog()
     // update enabling and disabling
     updateRepeatItemEnabled();
     updateStartEndItemEnabled();
-    updateCompletedItemEnabled();
 
     updateAddExceptionButton();
 
@@ -446,7 +443,7 @@ function loadCalendarEventDialog()
 
 
     // enable/disable subordinate buttons of textboxes
-  /*  these are listboxes, not textboxes
+    /*  these are listboxes, not textboxes
     processTextboxWithButton( "exception-dates-listbox", "delete-exception-button" );
     processTextboxWithButton( "invite-email-field", "invite-email-button" ); */
 
@@ -609,6 +606,7 @@ function onOKCommand()
     else
         event.deleteProperty('inviteEmailAddress');
 
+    event.priority = getFieldValue( "priority-levels", "value" );
 
     /* File attachments */
     /* XXX this could will work when attachments are supported by calItemBase
@@ -633,48 +631,6 @@ function onOKCommand()
         attendee.id = label;
         event.addAttendee(attendee);
     }
-
-/* OLD ToDo crap we need to replace
-
-   gEvent.priority    = getFieldValue( "priority-levels", "value" );
-   var completed = getFieldValue( "completed-checkbox", "checked" );
-
-   var percentcomplete = getFieldValue( "percent-complete-menulist" );
-   percentcomplete =  parseInt( percentcomplete );
-   
-   if(percentcomplete > 100)
-      percentcomplete = 100;
-   else if(percentcomplete < 0)
-      percentcomplete = 0;
-      
-   gEvent.percent = percentcomplete;
-   
-   if( completed )
-   {
-      //get the time for the completed event
-      var completedDate = document.getElementById( "completed-date-picker" ).value;
-
-      gEvent.completed.year = completedDate.getYear() + 1900;
-      gEvent.completed.month = completedDate.getMonth();
-      gEvent.completed.day = completedDate.getDate();
-      gEvent.status = gEvent.ICAL_STATUS_COMPLETED;
-   }
-   else
-   {
-      gEvent.completed.clear();
-      
-      var cancelled = getFieldValue( "cancelled-checkbox", "checked" );
-      
-      if( cancelled )
-         gEvent.status = gEvent.ICAL_STATUS_CANCELLED;
-      else if (percentcomplete > 0)
-         gEvent.status = gEvent.ICAL_STATUS_INPROCESS;
-      else
-         gEvent.status = gEvent.ICAL_STATUS_NEEDSACTION;
-         
-       
-*/
-
 
    var Server = getFieldValue( "server-field" );
 
@@ -878,7 +834,7 @@ function updateOKButton()
    var checkRecur = checkSetRecur();
    var checkTimeDate = checkSetTimeDate();
    setOkButton(checkRecur && checkTimeDate);
-   this.sizeToContent();
+   //this.sizeToContent();
 }
 
 
@@ -1085,7 +1041,7 @@ function updateRepeatUnitExtensions( )
             hideElement("repeat-extensions-month");
             break;
         }
-        sizeToContent();
+        //sizeToContent();
     }
 }
 
@@ -1288,7 +1244,7 @@ function addException( dateToAdd )
    //ensure user can see that add occurred (also, avoid bug 231765, bug 250123)
    listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
 
-   sizeToContent();
+   //sizeToContent();
 }
 
 
@@ -1413,7 +1369,7 @@ function addAttachment(attachmentToAdd)
    //add a row to the listbox
    document.getElementById("attachmentBucket").appendItem(attachmentToAdd.url, attachmentToAdd.url);
 
-   sizeToContent();
+   //sizeToContent();
 }
 
 
@@ -1659,49 +1615,37 @@ function processAlarmType()
 function processComponentType(componentType)
 {
     var componentMenu = document.getElementById("component-type");
-
     debug("processComponentType: " + componentType );
-
     switch( componentType ) {
     case "event":
-        // Hide and show the appropriate fields and widgets
+         // Hide and show the appropriate fields and widgets
         changeMenuState("todo", "event");
-
+         // Set the menu properly if it isn't already
         componentMenu.selectedIndex = 0;
-
-        // calling just enableElement _should_ work here, but it doesn't
+         // calling just enableElement _should_ work here, but it doesn't
         document.getElementById("start-datetime").setAttribute( "disabled", "false" );
         enableElement("start-datetime");
         enableElement("end-datetime");
-
-        // Set menubar title correctly
-        changeTitleBar("event")
-
+         // Set menubar title correctly
+        changeTitleBar("event");
         break;
-
     case "todo":
-        // Hide and show the appropriate fields and widgets
+         // Hide and show the appropriate fields and widgets
         changeMenuState("event", "todo");
-
+         // Set the menu properly if it isn't already
         componentMenu.selectedIndex = 1;
-
-        onDateTimeCheckbox("start-checkbox", "start-datetime")
-        onDateTimeCheckbox("due-checkbox", "due-datetime")
-        updateCompletedItemEnabled()
-
+         // Enable/disable date/time pickers as need be
+        onDateTimeCheckbox("start-checkbox", "start-datetime");
+        onDateTimeCheckbox("due-checkbox", "due-datetime");
         // Set menubar title correctly
-        changeTitleBar("todo")
-
+        changeTitleBar("todo");
         break;
-
-        //case "journal":
+    //case "journal":
     default:
         // We were passed an invalid value:
         dump("processComponentType: ERROR! Tried to select invalid component type: "+componentType+"\n");
         break;
     }
-    // Make the window big enough for all the fields and widgets
-    //window.sizeToContent();
 }
 
 
@@ -1755,6 +1699,47 @@ function changeTitleBar(componentType)
         document.title = title;
     } else {
         dump("changeTitleBar: ERROR! Tried to change titlebar to invalid value: "+componentType+"\n");
+    }
+}
+
+
+function processToDoStatus(status)
+{
+    var toDoStatusMenu = document.getElementById( "todo-status-field" );
+    var completedDatePicker = document.getElementById( "completed-date-picker" );
+    switch(status) {
+    case "":
+    case "None":
+        toDoStatusMenu.selectedIndex = 0;
+        disableElement( "completed-date-picker" );
+        disableElement( "percent-complete-menulist" );
+        disableElement( "percent-complete-label" );
+        break;
+    case "CAL_ITEM_STATUS_CANCELLED":
+        toDoStatusMenu.selectedIndex = 1;
+        disableElement( "completed-date-picker" );
+        disableElement( "percent-complete-menulist" );
+        disableElement( "percent-complete-label" );
+        break;
+    case "CAL_TODO_STATUS_COMPLETED":
+        toDoStatusMenu.selectedIndex = 2;
+        enableElement( "completed-date-picker" );
+        enableElement( "percent-complete-menulist" );
+        enableElement( "percent-complete-label" );
+        completedDatePicker.value = new Date();
+        setFieldValue( "percent-complete-menulist", "100" );
+        break;
+    case "CAL_TODO_STATUS_INPROCESS":
+        toDoStatusMenu.selectedIndex = 3;
+        enableElement( "completed-date-picker" );
+        enableElement( "percent-complete-menulist" );
+        enableElement( "percent-complete-label" );
+        break;
+    case "CAL_TODO_STATUS_NEEDSACTION":
+        toDoStatusMenu.selectedIndex = 4;
+        enableElement( "percent-complete-menulist" );
+        enableElement( "percent-complete-label" );
+        break;
     }
 }
 
@@ -1859,32 +1844,4 @@ function menuListIndexOf(menuList, value)
     return -1; // not found
 }
 
-
-function updateCompletedItemEnabled()
-{
-    var completedCheckbox = "completed-checkbox";
-
-    if( getFieldValue( completedCheckbox, "checked" ) ) {
-        enableElement("completed-date-picker");
-        disableElement("percent-complete-menulist");
-        disableElement("percent-complete-label");
-        setFieldValue( "percent-complete-menulist", "100" );
-    } else {
-        disableElement("completed-date-picker");
-        enableElement("percent-complete-menulist");
-        enableElement("percent-complete-label");
-        if( getFieldValue( "percent-complete-menulist" ) == 100 )
-            setFieldValue( "percent-complete-menulist", "0" );
-    }
-}
-
-
-function percentCompleteCommand()
-{
-    var percentCompleteMenu = getFieldValue( "percent-complete-menulist" );
-    if( percentCompleteMenu == "100")
-        setFieldValue( "completed-checkbox", "checked" );
-
-    updateCompletedItemEnabled();
-}
 

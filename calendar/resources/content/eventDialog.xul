@@ -148,6 +148,18 @@
                   </hbox>
                   <textbox id="location-field"/>
                 </row>
+                <!-- Description -->
+                <!-- XXX localise &newevent.description.label; -->
+                <row flex="1" align="start">
+                   <hbox class="field-label-box-class" pack="end">
+                       <label for="description-field" value="Description"/>
+                   </hbox>
+                   <textbox id="description-field"
+                            multiline="true"
+                            rows="1"
+                            cols="60"
+                            flex="1" />
+                </row>
                 <row align="center">
                   <!-- Categories -->
                   <hbox pack="end">
@@ -179,9 +191,9 @@
                     </hbox>
                   </hbox>
                 </row>
-                <!-- Privacy -->
                 <row align="center" flex="1">
-                  <hbox class="field-label-box-class" pack="end">
+                  <!-- Privacy -->
+                <hbox class="field-label-box-class" pack="end">
                     <!-- XXX Localise this: &newevent.private.label; -->
                     <label for="privacy-menulist" value="Privacy"/>
                   </hbox>
@@ -196,6 +208,22 @@
                                   value="CONFIDENTIAL"/>
                       </menupopup>
                     </menulist>
+                    <spacer width="10px"/>
+                    <!-- Priority -->
+                    <hbox align="center" flex="1">
+                      <label id="priority-label"
+                             for="priority-levels"
+                             value="&newtodo.priority.label;"/>
+                      <menulist id="priority-levels">
+                        <menupopup>
+                          <menuitem label="Not Specified"           value="0"/>
+                          <!-- XXX localize "&priority.level.none;" -->
+                          <menuitem label="&priority.level.low;"    value="9"/>
+                          <menuitem label="&priority.level.medium;" value="5"/>
+                          <menuitem label="&priority.level.high;"   value="1"/>
+                        </menupopup>
+                      </menulist>
+                    </hbox>
                     <spacer flex="1"/>
                   </hbox>
                 </row>
@@ -247,9 +275,10 @@
                              hidden="true"/>
                       <label id="task-start-datetime-label"
                              class="field-label-box-class"
-                             value="&newevent.startdate.label;"
+                             value="Date"
                              hidden-controller="todo"
                              hidden="true"/>
+                             <!-- XXX Localise: &newevent.startdate.label; -->
                     </hbox>
                     <hbox flex="1">
                       <checkbox id="start-checkbox"
@@ -328,19 +357,45 @@
                            value="&newtodo.duedate.warning;" hidden="true"/>
                   </row>
 
-                  <!-- Completed -->
+                  <!-- Status -->
                   <row>
                     <hbox pack="end" align="center">
-                      <label id="task-completed-label"
-                             value="&newtodo.completed.label;"
-                             hidden-controller="todo"
-                             hidden="true"/>
+                      <label id="event-status-label"
+                             for="event-status-menulist-menupopup"
+                             value="&newevent.status.label;"/>
                     </hbox>
                     <hbox flex="1" align="center">
-                      <checkbox id="completed-checkbox"
-                                oncommand="updateCompletedItemEnabled()"
+                      <menulist id="event-status-field"
+                                hidden-controller="event"
+                                hidden="true">
+                        <menupopup id="event-status-menulist-menupopup">
+                          <menuitem label="None"/>
+                          <menuitem label="&newevent.status.tentative.label;"
+                                    value="ICAL_STATUS_TENTATIVE"/>
+                          <menuitem label="&newevent.status.confirmed.label;"
+                                    value="ICAL_STATUS_CONFIRMED"/>
+                          <menuitem label="&newevent.status.cancelled.label;"
+                                    value="ICAL_STATUS_CANCELLED"/>
+                        </menupopup>
+                      </menulist>
+                      <menulist id="todo-status-field"
+                                oncommand="processToDoStatus(this.value)"
                                 hidden-controller="todo"
-                                hidden="true"/>
+                                hidden="true">
+                        <menupopup id="todo-status-menulist-menupopup">
+                          <menuitem label="None"
+                                    value="None"/>
+                          <menuitem label="Cancelled"
+                                    value="CAL_ITEM_STATUS_CANCELLED"/>
+                          <menuitem label="Completed on"
+                                    value="CAL_TODO_STATUS_COMPLETED"/>
+                          <menuitem label="In Process"
+                                    value="CAL_TODO_STATUS_INPROCESS"/>
+                          <menuitem label="Needs Action"
+                                    value="CAL_TODO_STATUS_NEEDSACTION"/>
+                        </menupopup>
+                      </menulist>
+                      <spacer/>
                       <datepicker id="completed-date-picker"
                                   value=""
                                   disabled="true"
@@ -349,9 +404,9 @@
                       <spacer/>
                       <menulist id="percent-complete-menulist"
                                 editable="true"
-                                oncommand="percentCompleteCommand()"
                                 hidden-controller="todo"
                                 hidden="true">
+                                <!-- oncommand="percentCompleteCommand()" -->
                         <menupopup>
                           <menuitem label="0"   value="0"/>
                           <menuitem label="10"  value="10"/>
@@ -374,169 +429,105 @@
                       <spacer flex="1"/>
                     </hbox>
                   </row>
-                  
-                  <!-- Task Cancelled -->
+
+                  <!-- Alarm -->
                   <row>
                     <hbox pack="end" align="center">
-                      <label id="todo-cancelled-label"
-                             value="&newtodo.cancelled.label;"
-                             hidden-controller="todo"
-                             hidden="true"/>
+                      <label id="alarm-label"
+                             for="alarm-type"
+                             value="Alarm"/>
                     </hbox>
                     <hbox flex="1" align="center">
-                      <checkbox id="todo-cancelled-checkbox"
-                                checked="false"
-                                hidden-controller="todo"
-                                hidden="true"/>
-                      <spacer flex="1"/>
+                      <menulist id="alarm-type" crop="none" oncommand="processAlarmType()">
+                        <menupopup>
+                          <menuitem label="None" value="none"/>
+                          <menuitem label="Popup" value="popup"/>
+                          <menuitem label="Popup &amp; Play Sound" value="popupAndSound"
+                                    hidden="true" disabled="true"/>
+                          <menuitem label="Send Email" value="email"/>
+                        </menupopup>
+                      </menulist>
+                      <textbox id="alarm-length-field" size="5" maxlength="3" 
+                               oninput="alarmLengthKeyDown( this )"/>
+                      <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
+                        <menupopup>
+                          <menuitem label="minutes before this begins"
+                                    labelplural="minutes before this begins"
+                                    labelsingular="minute before this begins"
+                                    value="minutes"/>
+                          <menuitem label="hours before this begins"
+                                    labelplural="hours before this begins"
+                                    labelsingular="hour before this begins"
+                                    value="hours" />
+                          <menuitem label="days before this begins"
+                                    labelplural="days before this begins"
+                                    labelsingular="day before this begins"
+                                    value="days"/>
+                          <menuitem label="minutes before this ends"
+                                    labelplural="minutes before this ends"
+                                    labelsingular="minute before this ends"
+                                    value="minutes"/>
+                          <menuitem label="hours before this ends"
+                                    labelplural="hours before this ends"
+                                    labelsingular="hour before this ends"
+                                    value="hours" />
+                          <menuitem label="days before this ends"
+                                    labelplural="days before this ends"
+                                    labelsingular="day before this ends"
+                                    value="days"/>
+                          <!-- XXX original code for fixing localization 
+                          <menuitem label="&alarm.units.minutes;"
+                                    labelplural="&alarm.units.minutes;"
+                                    labelsingular="&alarm.units.minutes.singular;"
+                                    value="minutes"/>
+                          <menuitem label="&alarm.units.hours;"
+                                    labelplural="&alarm.units.hours;"
+                                    labelsingular="&alarm.units.hours.singular;"
+                                    value="hours" />
+                          <menuitem label="&alarm.units.days;"
+                                    labelplural="&alarm.units.days;"
+                                    labelsingular="&alarm.units.days.singular;"
+                                    value="days"/>
+                          <menuitem label="&newevent.beforealarm.label;"
+                                    value="ICAL_RELATED_START"/>
+                          <menuitem label="&newevent.beforealarmends.label;"
+                                    value="ICAL_RELATED_END"/>
+                          -->
+                        </menupopup>
+                      </menulist>
+                      <menulist id="alarm-trigger-relation" crop="none" hidden="true">
+                        <menupopup>
+                          <menuitem label="&newtodo.beforealarm.label;"
+                                    value="ICAL_RELATED_START"/>
+                          <menuitem label="&newtodo.beforealarmends.label;"
+                                    value="ICAL_RELATED_END"/>
+                        </menupopup>
+                      </menulist>
                     </hbox>
                   </row>
-
-                  <!-- Status / Priority -->
                   <row>
                     <hbox pack="end" align="center">
-                      <label id="event-status-label"
-                             for="event-status-menulist-menupopup"
-                             value="&newevent.status.label;"
-                             hidden-controller="event"
-                             hidden="true"/>
-                      <label id="task-priority-label"
-                             for="priority-levels"
-                             value="&newtodo.priority.label;"
-                             hidden-controller="todo"
-                             hidden="true"/>
+                      <spacer />
                     </hbox>
                     <hbox flex="1" align="center">
-                      <menulist id="event-status-field"
-                                hidden-controller="event"
-                                hidden="true">
-                        <menupopup id="event-status-menulist-menupopup">
-                          <menuitem label="None"/>
-                          <menuitem label="&newevent.status.tentative.label;"
-                                    value="ICAL_STATUS_TENTATIVE"/>
-                          <menuitem label="&newevent.status.confirmed.label;"
-                                    value="ICAL_STATUS_CONFIRMED"/>
-                          <menuitem label="&newevent.status.cancelled.label;"
-                                    value="ICAL_STATUS_CANCELLED"/>
-                        </menupopup>
-                      </menulist>
-                      <menulist id="priority-levels"
-                                hidden-controller="todo"
-                                hidden="true">
-                        <menupopup>
-                          <menuitem label="&priority.level.none;"   value="0"/>
-                          <menuitem label="&priority.level.low;"    value="9"/>
-                          <menuitem label="&priority.level.medium;" value="5"/>
-                          <menuitem label="&priority.level.high;"   value="1"/>
-                        </menupopup>
-                      </menulist>
-                      <spacer flex="1"/>
+                      <label id="alarm-email-field-label"
+                             class="field-label-box-class"
+                             for="alarm-email-field"
+                             value="Send email to:"/>
+                      <!-- XXX oncommand="commandAlarmEmail()"/> -->
+                      <textbox id="alarm-email-field"
+#ifndef MOZ_SUNBIRD
+                               type="autocomplete"
+                               searchSessions="addrbook"
+#endif
+                               size="40"
+                               value=""
+                               hidden="false"/>
+                      <textbox id="alarm-trigger-relation" hidden="true"/>
                     </hbox>
                   </row>
                 </rows>
               </grid>
-            </hbox>
-            <hbox>
-              <separator class="thin"/>
-            </hbox>
-          </groupbox>
-        </hbox>
-
-        <!-- Alarm -->
-        <hbox flex="1">
-          <groupbox flex="1">
-            <caption label="Alarm"/>
-            <hbox>
-              <vbox>
-                <menulist id="alarm-type" crop="none" oncommand="processAlarmType()">
-                  <menupopup>
-                    <menuitem label="None" value="none"/>
-                    <menuitem label="Popup" value="popup"/>
-                    <menuitem label="Popup &amp; Play Sound" value="popupAndSound"
-                              hidden="true" disabled="true"/>
-                    <menuitem label="Send Email" value="email"/>
-                  </menupopup>
-                </menulist>
-              </vbox>
-              <vbox>
-                <textbox id="alarm-length-field" size="5" maxlength="3" 
-                         oninput="alarmLengthKeyDown( this )"/>
-              </vbox>
-              <vbox>
-                <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
-                  <menupopup>
-                    <menuitem label="minutes before this begins"
-                              labelplural="minutes before this begins"
-                              labelsingular="minute before this begins"
-                              value="minutes"/>
-                    <menuitem label="hours before this begins"
-                              labelplural="hours before this begins"
-                              labelsingular="hour before this begins"
-                              value="hours" />
-                    <menuitem label="days before this begins"
-                              labelplural="days before this begins"
-                              labelsingular="day before this begins"
-                              value="days"/>
-                    <menuitem label="minutes before this ends"
-                              labelplural="minutes before this ends"
-                              labelsingular="minute before this ends"
-                              value="minutes"/>
-                    <menuitem label="hours before this ends"
-                              labelplural="hours before this ends"
-                              labelsingular="hour before this ends"
-                              value="hours" />
-                    <menuitem label="days before this ends"
-                              labelplural="days before this ends"
-                              labelsingular="day before this ends"
-                              value="days"/>
-                    <!-- XXX original code for fixing localization 
-                    <menuitem label="&alarm.units.minutes;"
-                              labelplural="&alarm.units.minutes;"
-                              labelsingular="&alarm.units.minutes.singular;"
-                              value="minutes"/>
-                    <menuitem label="&alarm.units.hours;"
-                              labelplural="&alarm.units.hours;"
-                              labelsingular="&alarm.units.hours.singular;"
-                              value="hours" />
-                    <menuitem label="&alarm.units.days;"
-                              labelplural="&alarm.units.days;"
-                              labelsingular="&alarm.units.days.singular;"
-                              value="days"/>
-                    <menuitem label="&newevent.beforealarm.label;"
-                              value="ICAL_RELATED_START"/>
-                    <menuitem label="&newevent.beforealarmends.label;"
-                              value="ICAL_RELATED_END"/>
-                    -->
-                  </menupopup>
-                </menulist>
-                <menulist id="alarm-trigger-relation" crop="none" hidden="true">
-                  <menupopup>
-                    <menuitem label="&newtodo.beforealarm.label;"
-                              value="ICAL_RELATED_START"/>
-                    <menuitem label="&newtodo.beforealarmends.label;"
-                              value="ICAL_RELATED_END"/>
-                  </menupopup>
-                </menulist>
-              </vbox>
-            </hbox>
-            <hbox id="alarm-box-email" align="center">
-              <!-- XXX &newevent.email.label; -->
-              <label id="alarm-email-field-label"
-                     class="field-label-box-class"
-                     for="alarm-email-field"
-                     value="Send email to:"/>
-              <!-- XXX oncommand="commandAlarmEmail()"/> -->
-              <textbox id="alarm-email-field"
-#ifndef MOZ_SUNBIRD
-                       type="autocomplete"
-                       searchSessions="addrbook"
-#endif
-                       size="40"
-                       value=""
-                       hidden="false"/>
-            </hbox>
-            <hbox>
-              <textbox id="alarm-trigger-relation" hidden="true"/>
             </hbox>
             <hbox>
               <separator class="thin"/>
@@ -742,9 +733,9 @@
       </vbox>
     </tabpanel><!-- /Repeat -->
 
-            <!-- Contacts panel -->
+            <!-- "Contacts" tab -->
             <tabpanel orient="vertical">
-               <!-- Invite -->    
+               <!-- Invite -->
                <vbox collapsed="false">
                   <hbox id="invite-box" align="center">
                      <checkbox id="invite-checkbox"
@@ -755,7 +746,10 @@
                               size="39"
                               oninput="processTextboxWithButton( this.id, 'invite-email-button' );"
                               disabled="true"/>
-                     <button label="Add" id="invite-email-button" onclick="onIniviteAdd();"/>
+                     <button id="invite-email-button"
+                             label="Add"
+                             onclick="onIniviteAdd();"
+                             disabled="true"/>
                   </hbox>
                </vbox>
 
@@ -774,14 +768,13 @@
                                         label="rdf:http://home.netscape.com/NC-rdf#DirName"
                                         value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
                            </rule>
-                        </template> 
+                        </template>
                      </menupopup>
                   </menulist>-->
                </hbox>
-               
-               <hbox flex="1">    
-               
-                  <!-- Existing addresses -->                
+
+               <hbox flex="1">
+                  <!-- Existing addresses -->
                   <vbox id="resultsBox" flex="4">
                      <label value=" " />
                      <tree id="abResultsTree"
@@ -831,7 +824,7 @@
                       <spacer flex="1" />
                   </vbox>
                   
-                  <!-- Recipient list -->                           
+                  <!-- Recipient list -->
                   <vbox id="bucketBox" flex="1">
                       <label value="&ab-selectAddressesDialogInviteList.label;"/>
                       
@@ -852,21 +845,25 @@
                </hbox>
             </vbox>
          </tabpanel>
-      
+
+         <!-- "Attachments" tab -->
          <tabpanel>
-            <listbox id="attachmentBucket" flex="1" rows="8"
-                onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
-                onclick="AttachmentBucketClicked(event);"
-                ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
-                ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
-            <vbox>
-               <button onclick="AttachFile()"
-                       label="&newevent.choosefile.label;"/>
-               <button onclick="removeSelectedAttachment()"
-                       label="&newevent.removeselectedfile.label;"/>
-               <spacer flex="1"/>
-            </vbox>
+            <groupbox flex="1">
+              <listbox id="attachmentBucket" flex="1" rows="12"
+                  onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
+                  onclick="AttachmentBucketClicked(event);"
+                  ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
+                  ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
+                  ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
+              <hbox pack="end">
+                 <spacer flex="1"/>
+                 <button onclick="removeSelectedAttachment()"
+                         label="&newevent.removeselectedfile.label;"/>
+                 <button onclick="AttachFile()"
+                         label="Attach File..."/>
+                         <!-- XXX Localize "&newevent.choosefile.label;" -->
+              </hbox>
+            </groupbox>
          </tabpanel>
 
          <!-- "Advanced" tab -->
@@ -879,7 +876,6 @@
                        <column/>
                        <column flex="1"/>
                     </columns>
-
                     <rows>
                        <!-- URI/URL -->
                        <row align="center" flex="1">
@@ -899,18 +895,6 @@
                                       oncommand="loadURL()"
                                       disabled="true"/>
                           </hbox>
-                       </row>
-
-                       <!-- Description -->
-                       <row flex="1" align="start">
-                          <hbox class="field-label-box-class" pack="end">
-                              <label for="description-field" value="&newevent.description.label;"/>
-                          </hbox>
-                          <textbox id="description-field"
-                                   multiline="true"
-                                   rows="3"
-                                   cols="30"
-                                   flex="1" />
                        </row>
                     </rows>
                  </grid>
