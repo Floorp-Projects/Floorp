@@ -33,33 +33,6 @@
 <html:script>
   function setColorWell(menu)
   {
-    // Debug tree walking.
-    dump("\n");
-    
-    dump("parent: ");
-    dump(menu.id);
-    dump("\n");
-
-    dump("child 1: ");
-    dump(menu.firstChild.id);
-    dump("\n");
-
-    dump("child 2: ");
-    dump(menu.firstChild.nextSibling.id);
-    dump("\n");
-
-    dump("child 3: ");
-    dump(menu.firstChild.nextSibling.nextSibling.id);
-    dump("\n");
-
-    dump("child 3's child 1: ");
-    dump(menu.firstChild.nextSibling.nextSibling.firstChild.id);
-    dump("\n");
-
-
-    dump("\n");
-    dump("\n");
-
     // Find the colorWell and colorPicker in the hierarchy.
     var colorWell = menu.firstChild.nextSibling;
     var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
