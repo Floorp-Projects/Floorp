@@ -1779,9 +1779,13 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
     JSAtom *atom;
 
     CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
-    if (!atom)
-	return NULL;
+
+    atom = NULL;
+    if (name) {
+        atom = js_Atomize(cx, name, strlen(name), 0);
+        if (!atom)
+	    return NULL;
+    }
     return js_NewFunction(cx, NULL, call, nargs, flags, parent, atom);
 }
 
