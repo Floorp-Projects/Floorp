@@ -24,6 +24,6 @@
 <!ENTITY ignoreThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY more.label "More">
-<!ENTITY less.label "Less">
+<!ENTITY less.label "Fewer">
 <!ENTITY filterName.label "Filter Name:">
 <!ENTITY conditions.label "Conditions">
