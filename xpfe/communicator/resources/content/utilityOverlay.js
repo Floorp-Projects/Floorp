@@ -137,7 +137,7 @@ function goPageSetup(domwin, printSettings)
     // the ShowPrintSetupDialog method.
     var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                              .getService(Components.interfaces.nsIPrintingPromptService);
-    printingPromptService.showPageSetup(domwin, printSettings);
+    printingPromptService.showPageSetup(domwin, printSettings, null);
     return true;
   } catch(e) {
     return false; 

@@ -454,7 +454,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
   nsCOMPtr<nsIPrintSettingsMac> printSettingsMac(do_QueryInterface(printSettings));
   if (!printSettingsMac)
