@@ -185,16 +185,6 @@ public:
   virtual nsresult GetXBLBindingURL(nsIContent* aContent,
                                     nsIURI** aResult) = 0;
 
-  /** 
-   * For a given frame tree, get a new style context that is the equivalent
-   * but within a new parent.  The StyleContextParent of aFrame should be
-   * changed _before_ this method is called, so that style tree verification
-   * can take place correctly.
-   */
-  NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
-                                  nsStyleContext* aNewParentContext) = 0;
-
-
   NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult) = 0;
   NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk) = 0;
 
@@ -203,10 +193,11 @@ public:
    */
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
 
-  /** Get the default font correponding to the given ID */
-  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, const nsFont** aResult) = 0;
-  /** Set the default font correponding to the given ID */
-  NS_IMETHOD SetDefaultFont(PRUint8 aFontID, const nsFont& aFont) = 0;
+  /**
+   * Get the default font correponding to the given ID.  This object is
+   * read-only, you must copy the font to modify it.
+   */
+  virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const = 0;
 
   /** Get a cached boolean pref, by its type
        if the type is not supported, then NS_ERROR_INVALID_ARG is returned
@@ -225,29 +216,23 @@ public:
   /**
    * Access Nav's magic font scaler value
    */
-  NS_IMETHOD GetFontScaler(PRInt32* aResult) = 0;
-  NS_IMETHOD SetFontScaler(PRInt32 aScaler) = 0;
+  PRInt32 FontScaler() const { return mFontScaler; }
 
   /** 
    * Get the default colors
    */
-  NS_IMETHOD GetDefaultColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetDefaultLinkColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetDefaultActiveLinkColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetFocusBackgroundColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetFocusTextColor(nscolor* aColor) = 0; 
+  const nscolor DefaultColor() const { return mDefaultColor; }
+  const nscolor DefaultBackgroundColor() const { return mBackgroundColor; }
+  const nscolor DefaultLinkColor() const { return mLinkColor; }
+  const nscolor DefaultActiveLinkColor() const { return mActiveLinkColor; }
+  const nscolor DefaultVisitedLinkColor() const { return mVisitedLinkColor; }
+  const nscolor FocusBackgroundColor() const { return mFocusBackgroundColor; }
+  const nscolor FocusTextColor() const { return mFocusTextColor; }
+
   NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors) = 0;
-  NS_IMETHOD GetFocusRingWidth(PRUint8 *focusRingWidth) = 0;
+  PRUint8 FocusRingWidth() const { return mFocusRingWidth; }
   NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything) = 0;
  
-
-  NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
-  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;
-  NS_IMETHOD SetDefaultLinkColor(nscolor aColor) = 0;
-  NS_IMETHOD SetDefaultActiveLinkColor(nscolor aColor) = 0;
-  NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor) = 0;
 
   /**
    * Load an image for the target frame. This call can be made
@@ -510,6 +495,20 @@ protected:
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
+
+  PRInt32               mFontScaler;
+
+  nscolor               mDefaultColor;
+  nscolor               mBackgroundColor;
+
+  nscolor               mLinkColor;
+  nscolor               mActiveLinkColor;
+  nscolor               mVisitedLinkColor;
+
+  nscolor               mFocusBackgroundColor;
+  nscolor               mFocusTextColor;
+
+  PRUint8               mFocusRingWidth;
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;

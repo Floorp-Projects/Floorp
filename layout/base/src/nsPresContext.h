@@ -74,34 +74,15 @@ public:
   virtual void ClearStyleDataAndReflow();
 
   virtual nsresult GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult);
-  NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
-                                  nsStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult);
   NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk);
-  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, const nsFont** aResult);
-  NS_IMETHOD SetDefaultFont(PRUint8 aFontID, const nsFont& aFont);
+  virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const;
   NS_IMETHOD GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue);
   NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue);
 
-  NS_IMETHOD GetFontScaler(PRInt32* aResult);
-  NS_IMETHOD SetFontScaler(PRInt32 aScaler);
-  NS_IMETHOD GetDefaultColor(nscolor* aColor);
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
-  NS_IMETHOD GetDefaultLinkColor(nscolor* aColor);
-  NS_IMETHOD GetDefaultActiveLinkColor(nscolor* aColor);
-  NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor);
-
-  NS_IMETHOD GetFocusBackgroundColor(nscolor* aColor);
-  NS_IMETHOD GetFocusTextColor(nscolor* aColor);
   NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors);
-  NS_IMETHOD GetFocusRingWidth(PRUint8 *focusRingWidth);
   NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything);
-  NS_IMETHOD SetDefaultColor(nscolor aColor);
-  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
-  NS_IMETHOD SetDefaultLinkColor(nscolor aColor);
-  NS_IMETHOD SetDefaultActiveLinkColor(nscolor aColor);
-  NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor);
 
   NS_IMETHOD LoadImage(nsIURI* aURL,
                        nsIFrame* aTargetFrame,
@@ -198,22 +179,11 @@ protected:
   nsFont                mDefaultFantasyFont;
   nscoord               mMinimumFontSize;
 
-  PRInt32               mFontScaler;
-
   PRPackedBool          mUseDocumentFonts;        // set in GetUserPrefs
   PRPackedBool          mUseDocumentColors;       // set in GetUserPrefs
   PRPackedBool          mUnderlineLinks;          // set in GetUserPrefs
   PRPackedBool          mUseFocusColors;          // set in GetUserPrefs
 
-  nscolor               mDefaultColor;            // set in GetUserPrefs
-  nscolor               mDefaultBackgroundColor;  // set in GetUserPrefs
-  nscolor               mLinkColor;               // set in GetUserPrefs
-  nscolor               mActiveLinkColor;         // set in GetUserPrefs
-  nscolor               mVisitedLinkColor;        // set in GetUserPrefs
-  nscolor               mFocusTextColor;          // set in GetUserPrefs
-  nscolor               mFocusBackgroundColor;    // set in GetUserPrefs
-
-  PRUint8               mFocusRingWidth;          // set in GetUserPrefs
   PRPackedBool          mFocusRingOnAnything;     // set in GetUserPrefs
 
   PRPackedBool          mDrawImageBackground;

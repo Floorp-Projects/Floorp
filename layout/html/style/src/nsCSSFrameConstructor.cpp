@@ -1032,7 +1032,8 @@ MoveChildrenTo(nsIPresContext*          aPresContext,
     // anonymous block frame, but oddly they aren't -- need to
     // investigate that...)
     if (aNewParentSC)
-      aPresContext->ReParentStyleContext(aFrameList, aNewParentSC);
+      aPresContext->GetFrameManager()->ReParentStyleContext(aFrameList,
+                                                            aNewParentSC);
 #endif
 
     aFrameList = aFrameList->GetNextSibling();
@@ -2763,7 +2764,8 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
   InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, aStyleContext, nsnull, aNewFrame);
   // if the parent frame was anonymous then reparent the style context
   if (aIsPseudoParent) {
-    aPresContext->ReParentStyleContext(aNewFrame, parentFrame->GetStyleContext());
+    aPresContext->GetFrameManager()->
+      ReParentStyleContext(aNewFrame, parentFrame->GetStyleContext());
   }
 
   // construct additional col frames if the col frame has a span > 1
@@ -11489,7 +11491,8 @@ ReparentFrame(nsIPresContext* aPresContext,
               nsIFrame* aFrame)
 {
   aFrame->SetParent(aNewParentFrame);
-  aPresContext->ReParentStyleContext(aFrame, aParentStyleContext);
+  aPresContext->GetFrameManager()->ReParentStyleContext(aFrame,
+                                                        aParentStyleContext);
 }
 
 // Special routine to handle placing a list of frames into a block

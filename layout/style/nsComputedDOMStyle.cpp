@@ -511,9 +511,9 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
     const nsString& fontName = font->mFont.name;
     PRUint8 generic = font->mFlags & NS_STYLE_FONT_FACE_MASK;
     if (generic == kGenericFont_NONE) { 
-      const nsFont* defaultFont; 
-      presContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                  &defaultFont);
+      const nsFont* defaultFont =
+        presContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
+
       PRInt32 lendiff = fontName.Length() - defaultFont->name.Length();
       if (lendiff > 0) {
         val->SetString(Substring(fontName, 0, lendiff-1)); // -1 removes comma
