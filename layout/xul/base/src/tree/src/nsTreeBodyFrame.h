@@ -51,6 +51,7 @@
 #include "nsHashtable.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsIReflowCallback.h"
 
 #ifdef USE_IMG2
 #include "imgIDecoderObserver.h"
@@ -239,7 +240,8 @@ private:
 
 // The actual frame that paints the cells and rows.
 class nsTreeBodyFrame : public nsLeafBoxFrame, public nsITreeBoxObject, public nsICSSPseudoComparator,
-                            public nsIScrollbarMediator, public nsITimerCallback
+                        public nsIScrollbarMediator, public nsITimerCallback,
+                        public nsIReflowCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -248,6 +250,9 @@ public:
   // nsIBox
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect);
+
+  // nsIReflowCallback
+  NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);
 
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
@@ -360,7 +365,7 @@ public:
   // This method is called whenever an treecol is added or removed and
   // the column cache needs to be rebuilt.
   void InvalidateColumnCache();
-                                  
+
   // nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
@@ -413,7 +418,7 @@ protected:
   void UpdateScrollbar();
 
   // Check vertical overflow.
-  nsresult CheckVerticalOverflow(PRBool aInReflow);
+  nsresult CheckVerticalOverflow();
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
@@ -512,6 +517,8 @@ protected: // Data Members
 
   // A guard that prevents us from recursive painting.
   PRPackedBool mImageGuard;
+
+  PRPackedBool mReflowCallbackPosted;
 
   // The row the mouse is hovering over during a drop.
   PRInt32 mDropRow;
