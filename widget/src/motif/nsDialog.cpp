@@ -63,7 +63,7 @@ void nsDialog::Create(nsIWidget *aParent,
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
 
-  mWidget = ::XtVaCreateManagedWidget("Dialog",
+  mShell = ::XtVaCreateManagedWidget("Dialog",
                                     xmDialogShellWidgetClass, 
                                     parentWidget,
                                     XmNwidth, aRect.width,
@@ -72,6 +72,21 @@ void nsDialog::Create(nsIWidget *aParent,
                                     XmNhighlightOnEnter, False,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
+                                    nsnull);
+
+  // Initially used xmDrawingAreaWidgetClass instead of
+  // newManageClass. Drawing area will spontaneously resize
+  // to fit it's contents.
+
+  mWidget = ::XtVaCreateManagedWidget("drawingArea",
+                                    newManageClass,
+                                    mShell,
+                                    XmNwidth, aRect.width,
+                                    XmNheight, aRect.height,
+                                    XmNmarginHeight, 0,
+                                    XmNmarginWidth, 0,
+                                    XmNrecomputeSize, False,
+                                    XmNuserData, this,
                                     nsnull);
 
   if (DBG) fprintf(stderr, "Dialog 0x%x  this 0x%x\n", mWidget, this);

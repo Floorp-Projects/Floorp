@@ -61,6 +61,7 @@ public:
   //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 private:
+  Widget mShell;
 
   // this should not be public
   static PRInt32 GetOuterOffset() {
