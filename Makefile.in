@@ -22,10 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-NSPRDIR		= $(topsrcdir)/nsprpub
-NSPR20		= 1
-NSPR_MAKE_ARGS	= -C $(NSPRDIR) DIST=`pwd`/dist NS_USE_GCC=$(GNU_CC) MOZILLA_CLIENT=$(MOZILLA_CLIENT) MOZ_DEBUG=$(MOZ_DEBUG) USE_PTHREADS=$(USE_PTHREADS) BUILD_OPT=$(BUILD_OPT) NO_MDUPDATE=$(NO_MDUPDATE) $@
-
 ifndef NO_MOCHA
 DIRS_JS		= js
 endif
@@ -66,29 +62,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef LOSE_NSPR
 export:: envirocheck
-	$(MAKE) $(NSPR_MAKE_ARGS)
-
-libs::
-	$(MAKE) $(NSPR_MAKE_ARGS)
-               
-install::
-	$(MAKE) $(NSPR_MAKE_ARGS)
-               
-clean::
-	$(MAKE) $(NSPR_MAKE_ARGS)
-               
-realclean::
-	$(MAKE) $(NSPR_MAKE_ARGS)
-
-clobber::
-	$(MAKE) $(NSPR_MAKE_ARGS)
-               
-clobber_all::
-	$(MAKE) $(NSPR_MAKE_ARGS)
-
-endif
 
 # Running this rule assembles all the SDK source pieces into dist/sdk.
 # You'll need to run this rule on every platform to get all the
