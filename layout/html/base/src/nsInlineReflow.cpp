@@ -358,7 +358,7 @@ nsInlineReflow::ApplyTopLeftMargins()
     }
     else if (eStyleUnit_Percent == unit) {
       nscoord width =
-        nsHTMLReflowState::GetContainingBlockContentWidth(&mOuterReflowState);
+        nsHTMLReflowState::GetContainingBlockContentWidth(mOuterReflowState.parentReflowState);
       if (0 != width) {
         indent = nscoord(text->mTextIndent.GetPercentValue() * width);
       }
