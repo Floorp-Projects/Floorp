@@ -784,7 +784,7 @@ nsresult testLatin1Decoder()
 
   // test data
   char src[] = {"\x00\x0d\x7f\x80\xff"};
-  PRUnichar exp[] = {0x0000,0x000d,0x007F,0x0080,0x00FF};
+  PRUnichar exp[] = {0x0000,0x000d,0xfffd,0xfffd,0x00ff};
 
   // test converter - easy test
   res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
