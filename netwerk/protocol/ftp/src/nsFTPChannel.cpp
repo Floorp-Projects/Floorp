@@ -325,10 +325,11 @@ nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     }
 
     if (mProxyChannel) {
+        // rjc says: ignore errors on SetTransferOffset() and
+        // SetTransferCount() as they may be unimplemented
         rv = mProxyChannel->SetTransferOffset(mSourceOffset);
-        if (NS_FAILED(rv)) return rv;
         rv = mProxyChannel->SetTransferCount(mAmount);
-        if (NS_FAILED(rv)) return rv;
+
         return mProxyChannel->AsyncRead(this, ctxt);
     }
 
