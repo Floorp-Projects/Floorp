@@ -235,6 +235,11 @@ int BeginGIF(
   PRUint32 aLogicalScreenHeight,
   PRUint8  aBackgroundRGBIndex)
 {
+  // If we have passed an illogical screen size, bail and hope that we'll get
+  // set later by the first frame's local image header.
+  if(aLogicalScreenWidth == 0 || aLogicalScreenHeight == 0)
+    return 0;
+    
   // copy GIF info into imagelib structs
   nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
 
