@@ -85,10 +85,10 @@ function stackTraceFunctionFormat(aFunctionName)
   var classDelimiter = aFunctionName.indexOf("_");
   var className = aFunctionName.substr(0, classDelimiter);
   if (!className)
-    className == "<global>";
+    className = "<global>";
   var functionName = aFunctionName.substr(classDelimiter + 1, aFunctionName.length);
   if (!functionName) 
-    functionName == "<anonymous>";
+    functionName = "<anonymous>";
   return className + "::" + functionName;
 }
 
