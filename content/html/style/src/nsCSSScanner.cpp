@@ -51,6 +51,7 @@ static void BuildLexTable()
   int i;
   lt[CSS_ESCAPE] = START_IDENT;
   lt['-'] |= IS_IDENT;
+  lt['_'] |= IS_IDENT;
   // XXX add in other whitespace chars
   lt[' '] |= IS_WHITESPACE;   // space
   lt['\t'] |= IS_WHITESPACE;  // horizontal tab
