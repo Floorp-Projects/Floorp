@@ -979,9 +979,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {
-    PRUnichar* requestCharset;
-    muCV->GetPrevDocCharacterSet(&requestCharset);
-    if (*requestCharset) {
+    nsXPIDLString requestCharset;
+    muCV->GetPrevDocCharacterSet(getter_Copies(requestCharset));
+    if (!requestCharset.IsEmpty()) {
       charsetSource = kCharsetFromHintPrevDoc;
       charset = requestCharset;
     }
