@@ -139,13 +139,15 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
                       nextFrame));
       // It's an absolutely positioned frame that's the target.
       // XXX FIX ME. For an absolutely positioned item we need to properly
-      // compute the available space and then resize the frame if necessary...
+      // compute the available space and compute the origin...
       nsReflowState reflowState(nextFrame, aReflowState, aReflowState.maxSize);
+      nextFrame->WillReflow(aPresContext);
       nsresult rv = nextFrame->Reflow(aPresContext, aDesiredSize,
                                       reflowState, aStatus);
       if (NS_OK != rv) {
         return rv;
       }
+      nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
 
       // XXX Temporary code: if the frame we just reflowed is a
       // floating frame then fall through into the main reflow pathway
