@@ -1587,12 +1587,11 @@ nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*     aPresContext,
     }
   }
   
-  // Invalidate the area we offset. Note that we only repaint within
-  // XXX It would be better to bitblt the row frames and not repaint,
-  // but we don't have such a view manager function yet...
+  // Invalidate the area we offset.
   if (NS_UNCONSTRAINEDSIZE != yInvalid) {
     nsRect  dirtyRect(0, yInvalid, mRect.width, mRect.height - yInvalid);
-    Invalidate(aPresContext, dirtyRect);
+    // XXX what if some of the cells have outlines?
+    Invalidate(dirtyRect);
   }
 
   return NS_OK;
@@ -1667,12 +1666,11 @@ ProcessRowInserted(nsIPresContext*     aPresContext,
           rowFrame->SetFirstInserted(PR_FALSE);
           if (aInvalidate) {
             // damage the table from the 1st row inserted to the end of the table
-            nsRect damageRect = aTableFrame.GetRect();
+            nscoord damageY = rgFrame->GetPosition().y + rowFrame->GetPosition().y;
+            nsRect damageRect(0, damageY,
+                              aTableFrame.GetSize().width, aNewHeight - damageY);
 
-            damageRect.y += rgFrame->GetPosition().y + rowFrame->GetPosition().y; 
-            damageRect.height = aNewHeight - damageRect.y;
-
-            aTableFrame.Invalidate(aPresContext, damageRect);
+            aTableFrame.Invalidate(damageRect);
             aTableFrame.SetRowInserted(PR_FALSE);
           }
           return; // found it, so leave
@@ -2105,7 +2103,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     if (oldOverflowArea) {
       damage.UnionRect(damage, *oldOverflowArea);
     }
-    Invalidate(aPresContext, damage);
+    Invalidate(damage);
   } else {
     // use the old overflow area
      nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
@@ -3000,7 +2998,7 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
       dirtyRect.y = PR_MIN(oldKidRect.YMost(), kidRect.YMost());
       dirtyRect.width = mRect.width;
       dirtyRect.height = PR_MAX(oldKidRect.YMost(), kidRect.YMost()) - dirtyRect.y;
-      Invalidate(aPresContext, dirtyRect);
+      Invalidate(dirtyRect);
     }
 
     // Adjust the row groups that follow
@@ -3297,10 +3295,10 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
       nsRect kidRect = kidFrame->GetRect();
       if (haveReflowedRowGroup) { 
         if (kidRect.y != aReflowState.y) {
-          Invalidate(aPresContext, kidRect); // invalidate the old position
+          Invalidate(kidRect); // invalidate the old position
           kidRect.y = aReflowState.y;
           kidFrame->SetRect(kidRect);        // move to the new position
-          Invalidate(aPresContext, kidRect); // invalidate the new position
+          Invalidate(kidRect); // invalidate the new position
         }
       }
       aReflowState.y += cellSpacingY + kidRect.height;

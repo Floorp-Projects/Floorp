@@ -2124,7 +2124,7 @@ nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   }
 
   // Make sure the SelectArea frame gets painted
-  Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+  Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
 }
 
 void nsListControlFrame::ComboboxFocusSet()
@@ -2995,7 +2995,7 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
       // XXX this shouldn't be needed, but other places in this code do it
       // and if we don't do this, invalidation doesn't happen when we move out
       // of the top-level window. We should track this down and fix it --- roc
-      Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
     }
   } else {// XXX - temporary until we get drag events
     if (mButtonDown) {
@@ -3503,7 +3503,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
 
     // Make sure the SelectArea frame gets painted
-    Invalidate(mPresContext, nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+    Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
 
   } else {
     REFLOW_DEBUG_MSG("  After: SKIPPED it\n");

@@ -166,7 +166,7 @@ NS_IMETHODIMP
 nsGfxCheckboxControlFrame::OnChecked(nsIPresContext* aPresContext,
                                      PRBool aChecked)
 {
-  nsFormControlHelper::ForceDrawFrame(aPresContext, this);
+  Invalidate(GetOutlineRect(), PR_FALSE);
   return aChecked;
 }
 

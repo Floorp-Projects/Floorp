@@ -1045,7 +1045,7 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
                   if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(presContext))) && presContext) {
                     nsRect dmgRect;
                     area->GetRect(presContext, dmgRect);
-                    Invalidate(presContext, imgFrame, dmgRect);
+                    imgFrame->Invalidate(dmgRect, PR_TRUE);
                   }
                 }
               }
@@ -1062,28 +1062,6 @@ nsresult
 nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
 {
   return NS_OK;
-}
-
-nsresult
-nsImageMap::Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect)
-{
-  PRUint32 flags = NS_VMREFRESH_IMMEDIATE;
-  nsIView* view;
-  nsRect damageRect(aRect);
-
-  if (aFrame->HasView()) {
-    view = aFrame->GetView();
-  }
-  else {
-    nsPoint offset;
-    aFrame->GetOffsetFromView(aPresContext, offset, &view);
-    NS_ASSERTION(view, "no view");
-    damageRect += offset;
-  }
-  view->GetViewManager()->UpdateView(view, damageRect, flags);
-
-  return NS_OK;
-
 }
 
 void

@@ -221,10 +221,6 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
 void
 nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
 {
-  // Determine damaged area and tell view manager to redraw it
-  nsPoint offset;
-  nsIView* view;
-
   // NOTE: It is not sufficient to invalidate only the size of the image:
   //       the image may be tiled! 
   //       The best option is to call into the frame, however lacking this
@@ -234,8 +230,8 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
 
   // Invalidate the entire frame
   // XXX We really only need to invalidate the client area of the frame...    
-  nsRect bounds = mFrame->GetRect();
-  bounds.x = bounds.y = 0;
+
+  nsRect bounds(nsPoint(0, 0), mFrame->GetSize());
 
   // XXX this should be ok, but there is some crappy ass bug causing it not to work
   // XXX seems related to the "body fixup rule" dealing with the canvas and body frames...
@@ -259,22 +255,6 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
   }
 
 #endif
-  if ((bounds.width > 0) && (bounds.height > 0)) {
 
-    // XXX We should tell the frame the damage area and let it invalidate
-    // itself. Add some API calls to nsIFrame to allow a caller to invalidate
-    // parts of the frame...
-    if (mFrame->HasView()) {
-      view = mFrame->GetView();
-    } else {
-      mFrame->GetOffsetFromView(mPresContext, offset, &view);
-      bounds.x += offset.x;
-      bounds.y += offset.y;
-    }
-
-    nsIViewManager* vm = view->GetViewManager();
-    if (vm) {
-      vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
-    }
-  }
+  mFrame->Invalidate(bounds, PR_FALSE);
 }

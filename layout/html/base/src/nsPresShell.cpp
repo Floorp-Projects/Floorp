@@ -4817,10 +4817,9 @@ PresShell::UnsuppressAndInvalidate()
   mPaintingSuppressed = PR_FALSE;
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
-    nsRect rect = rootFrame->GetRect();
-    if (!rect.IsEmpty()) {
-      ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
-    }
+    // let's assume that outline on a root frame is not supported
+    nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
+    rootFrame->Invalidate(rect, PR_FALSE);
   }
 
   if (ourWindow)

@@ -1313,7 +1313,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
         dirtyRect.height = mRect.height;
         ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, cellFrame);
         dirtyRect.UnionRect(dirtyRect, aDesiredSize.mOverflowArea);
-        Invalidate(aPresContext, dirtyRect);
+        Invalidate(dirtyRect);
       }
     }
     else { // we dont realign vertical but we need to update the overflow area

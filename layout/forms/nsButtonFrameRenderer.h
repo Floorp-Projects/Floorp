@@ -102,8 +102,6 @@ public:
   virtual void SetStyleContext(PRInt32 aIndex, nsStyleContext* aStyleContext);
 	virtual void ReResolveStyles(nsIPresContext* aPresContext);
 
-  virtual void Redraw(nsIPresContext* aPresContext);
-
   virtual nsIFrame* GetFrame();
 
 protected:

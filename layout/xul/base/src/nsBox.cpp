@@ -1093,11 +1093,6 @@ nsBox::Redraw(nsBoxLayoutState& aState,
       return NS_OK;
   }
 
-  PRBool suppressed = PR_FALSE;
-  presContext->PresShell()->IsPaintingSuppressed(&suppressed);
-  if (suppressed)
-    return NS_OK; // Don't redraw. Painting is still suppressed.
-
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
@@ -1109,24 +1104,15 @@ nsBox::Redraw(nsBoxLayoutState& aState,
 
   // Checks to see if the damaged rect should be infalted 
   // to include the outline
+  // XXX This makes NO SENSE. if the damage rect is just a small part of
+  // this frame's rect then adding the outline width doesn't make any sense.
   nscoord width;
   frame->GetStyleOutline()->GetOutlineWidth(width);
   if (width > 0) {
     damageRect.Inflate(width, width);
   }
 
-  PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
-
-  nsIView *view;
-  if (frame->HasView()) {
-    view = frame->GetView();
-  } else {
-    nsPoint   offset;
-    frame->GetOffsetFromView(presContext, offset, &view);
-    NS_BOX_ASSERTION(this, nsnull != view, "no view");
-    damageRect += offset;
-  }
-  view->GetViewManager()->UpdateView(view, damageRect, flags);
+  frame->Invalidate(damageRect, aImmediate);
 
   return NS_OK;
 }

@@ -128,8 +128,6 @@ public:
   void GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent);
   void GetListItemNextSibling(nsIContent* aListItem, nsIContent** aContent, PRInt32& aSiblingIndex);
 
-  static void ForceDrawFrame ( nsIPresContext* aPresContext, nsIFrame * aFrame ) ;
-
   void PostReflowCallback();
 
   void InitGroup(nsCSSFrameConstructor* aFC, nsIPresContext* aContext) 

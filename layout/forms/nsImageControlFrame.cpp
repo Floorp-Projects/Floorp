@@ -276,10 +276,6 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
 void 
 nsImageControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  /*if (aRepaint) {
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    Invalidate(rect, PR_TRUE);
-  }*/
 }
 
 void

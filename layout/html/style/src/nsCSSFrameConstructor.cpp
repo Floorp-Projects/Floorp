@@ -9492,6 +9492,10 @@ DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsFrameManager* aFrameManager,
                              nsChangeHint aChange);
 
+/**
+ * @param aBoundsRect returns the bounds enclosing the areas covered by aFrame and its childre
+ * This rect is relative to aFrame's parent
+ */
 static void
 UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame, 
                    nsIViewManager* aViewManager, nsFrameManager* aFrameManager,
@@ -9510,10 +9514,7 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
-  nsRect bounds = aFrame->GetRect();
-  nsPoint parentOffset(bounds.x, bounds.y);
-  bounds.x = 0;
-  bounds.y = 0;
+  nsRect bounds = aFrame->GetOutlineRect();
 
   // now do children of frame
   PRInt32 listIndex = 0;
@@ -9542,8 +9543,9 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
     }
     childList = aFrame->GetAdditionalChildListName(listIndex++);
   } while (childList);
-  aBoundsRect = bounds;
-  aBoundsRect += parentOffset;
+
+  nsPoint parentOffset = aFrame->GetPosition();
+  aBoundsRect = bounds + parentOffset;
 }
 
 static void
@@ -9557,38 +9559,20 @@ DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                   "should only be called within ApplyRenderingChangeToTree");
 
   for ( ; aFrame; aFrame = GetNifOrSpecialSibling(aFrameManager, aFrame)) {
-    // Get the frame's bounding rect
-    nsRect invalidRect;
-    nsPoint viewOffset;
-
     // Get view if this frame has one and trigger an update. If the
     // frame doesn't have a view, find the nearest containing view
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
-    nsIView* view = aFrame->GetView();
-    nsIView* parentView;
-    if (! view) { // XXX can view have children outside it?
-      aFrame->GetOffsetFromView(aPresContext, viewOffset, &parentView);
-      NS_ASSERTION(nsnull != parentView, "no view");
-    }
+    nsRect invalidRect;
     UpdateViewsForTree(aPresContext, aFrame, aViewManager, aFrameManager,
                        invalidRect, aChange);
 
-    if (! view && (aChange & nsChangeHint_RepaintFrame)) { // if frame has view, will already be invalidated
-      // XXX Instead of calling this we should really be calling
-      // Invalidate on on the nsFrame (which does this)
-      // XXX This rect inflation should be done when the rects are
-      // being accumulated in UpdateViewsForTree, not in
-      // DoApplyRenderingChangeToTree
-      const nsStyleOutline* outline = aFrame->GetStyleOutline();
-      nscoord width;
-      outline->GetOutlineWidth(width);
-      if (width > 0) {
-        invalidRect.Inflate(width, width);
-      }
+    if (!aFrame->HasView()
+        && (aChange & nsChangeHint_RepaintFrame)) {
+      // if frame has view, will already be invalidated
       invalidRect -= aFrame->GetPosition();
-      invalidRect += viewOffset;
-      aViewManager->UpdateView(parentView, invalidRect, NS_VMREFRESH_NO_SYNC);
+
+      aFrame->Invalidate(invalidRect, PR_FALSE);
     }
   }
 }

@@ -114,8 +114,6 @@ static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 #include "nsICaret.h"
 #include "nsILineIterator.h"
-// [HACK] Foward Declarations
-void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame);
 
 //non Hack prototypes
 #if 0
@@ -763,18 +761,18 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
 }
 
- /********************************************************
-* Refreshes each content's frame
+/********************************************************
+* Refreshes this frame and all child frames that are frames for aContent
 *********************************************************/
-static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFrame, nsIContent * aContent)
+static void RefreshAllContentFrames(nsIFrame* aFrame, nsIContent* aContent)
 {
   if (aFrame->GetContent() == aContent) {
-    ForceDrawFrame(aPresContext, (nsFrame *)aFrame);
+    aFrame->Invalidate(aFrame->GetOutlineRect(), PR_FALSE);
   }
 
   aFrame = aFrame->GetFirstChild(nsnull);
   while (aFrame) {
-    RefreshAllContentFrames(aPresContext, aFrame, aContent);
+    RefreshAllContentFrames(aFrame, aContent);
     aFrame = aFrame->GetNextSibling();
   }
 }
@@ -782,32 +780,6 @@ static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFr
 /********************************************************
 * Refreshes each content's frame
 *********************************************************/
-
-/**
-  *
- */
-void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame)//, PRBool)
-{
-  if (!aFrame) {
-    return;
-  }
-  nsIView * view;
-  nsPoint   pnt;
-  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
-  nsRect rect = aFrame->GetRect();
-  rect.x = pnt.x;
-  rect.y = pnt.y;
-  if (view) {
-    nsIViewManager* viewMgr = view->GetViewManager();
-    if (viewMgr) {
-      viewMgr->UpdateView(view, rect, 0);
-    }
-    //viewMgr->UpdateView(view, rect, NS_VMREFRESH_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
-  }
-}
-
-
-
 
 NS_IMETHODIMP
 nsFrame::Paint(nsIPresContext*      aPresContext,
@@ -2520,6 +2492,31 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
   }
 }
 
+nsRect
+nsIFrame::GetOutlineRect(PRBool* aAnyOutline) const
+{
+  const nsStyleOutline* outline = GetStyleOutline();
+  PRUint8 outlineStyle = outline->GetOutlineStyle();
+  nsRect r(0, 0, mRect.width, mRect.height);
+  PRBool anyOutline = PR_FALSE;
+  if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE) {
+    nscoord width;
+#ifdef DEBUG
+    PRBool result = 
+#endif
+      outline->GetOutlineWidth(width);
+    NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
+    if (width > 0) {
+      r.Inflate(width, width);
+      anyOutline = PR_TRUE;
+    }
+  }
+  if (aAnyOutline) {
+    *aAnyOutline = anyOutline;
+  }
+  return r;
+}
+
 void
 nsFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
@@ -2545,37 +2542,30 @@ nsFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
   // Currently we actually paint 'outline' inside the element so this code
   // isn't strictly necessary. But we're trying to get ready to switch to
   // CSS2 compliance.
-  const nsStyleOutline* outline = GetStyleOutline();
-  PRUint8 outlineStyle = outline->GetOutlineStyle();
-  if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE
-      && outlineStyle != NS_STYLE_BORDER_STYLE_HIDDEN) {
-    nscoord width;
-    outline->GetOutlineWidth(width);
-    if (width > 0) {
-      nsRect r(0, 0, mRect.width, mRect.height);
-      r.Inflate(width, width);
-      Invalidate(aPresContext, r);
-      return;
-    }
+  PRBool anyOutline;
+  nsRect r = GetOutlineRect(&anyOutline);
+  if (anyOutline) {
+    Invalidate(r);
+    return;
   }
 
-  // Invalidate the old frame if the frame has borders. Those borders
+  // Invalidate the old frame borders if the frame has borders. Those borders
   // may be moving.
   const nsStyleBorder* border = GetStyleBorder();
   if (border->IsBorderSideVisible(NS_SIDE_LEFT)
       || border->IsBorderSideVisible(NS_SIDE_RIGHT)
       || border->IsBorderSideVisible(NS_SIDE_TOP)
       || border->IsBorderSideVisible(NS_SIDE_BOTTOM)) {
-    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
     return;
   }
 
-  // Invalidate the old frame if the frame has a background
+  // Invalidate the old frame background if the frame has a background
   // whose position depends on the size of the frame
   const nsStyleBackground* background = GetStyleBackground();
   if (background->mBackgroundFlags &
       (NS_STYLE_BG_X_POSITION_PERCENT | NS_STYLE_BG_Y_POSITION_PERCENT)) {
-    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
     return;
   }
 }
@@ -3002,39 +2992,16 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool a
   }
   else
     RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
-  nsRect frameRect = GetRect();
-  nsRect rect(0, 0, frameRect.width, frameRect.height);
-  if (!rect.IsEmpty()) {
-    Invalidate(aPresContext, rect, PR_FALSE);
-  }
+
+  // repaint this frame's outline area.
+  // In CSS3 selection can change the outline style! and border and content too
+  Invalidate(GetOutlineRect(), PR_FALSE);
+
   if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
   {
-    RefreshAllContentFrames(aPresContext, this, mContent);
+    RefreshAllContentFrames(this, mContent);
   }
-#if 0
-  if (aRange) {
-    //lets see if the range contains us, if so we must redraw!
-    nsCOMPtr<nsIDOMNode> endNode;
-    nsCOMPtr<nsIDOMNode> startNode;
-    aRange->GetEndParent(getter_AddRefs(endNode));
-    aRange->GetStartParent(getter_AddRefs(startNode));
-    nsIContent* content = GetContent();
-    nsCOMPtr<nsIDOMNode> thisNode;
-    thisNode = do_QueryInterface(content);
 
-//we must tell the siblings about the set selected call
-//since the getprimaryframe call is done with this content node.
-    if (thisNode != startNode && thisNode != endNode)
-    { //whole node selected
-      nsIFrame *frame = GetNextSibling();
-      while (frame)
-      {
-        frame->SetSelected(aRange,aSelected,eSpreadDown);
-        frame = frame->GetNextSibling();
-      }
-    }
-  }
-#endif
 #ifdef IBMBIDI
   PRInt32 start, end;
   nsIFrame* frame = GetNextSibling();
@@ -3046,6 +3013,7 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool a
     }
   }
 #endif // IBMBIDI
+
   return NS_OK;
 }
 

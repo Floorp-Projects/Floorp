@@ -95,25 +95,6 @@ nsFormControlHelper::~nsFormControlHelper()
   MOZ_COUNT_DTOR(nsFormControlHelper);
 }
 
-void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
-{
-  if (!aFrame) {
-    return;
-  }
-  nsIView * view;
-  nsPoint   pnt;
-  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
-  nsRect rect = aFrame->GetRect();
-  rect.x = pnt.x;
-  rect.y = pnt.y;
-  if (view) {
-    nsIViewManager* viewMgr = view->GetViewManager();
-    if (viewMgr) {
-      viewMgr->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
-    }
-  }
-}
-
 void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
 {
   // Windows linebreaks: Map CRLF to LF:

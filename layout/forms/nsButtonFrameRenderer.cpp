@@ -96,15 +96,6 @@ nsButtonFrameRenderer::isDisabled()
   return PR_FALSE;
 }
 
-void
-nsButtonFrameRenderer::Redraw(nsIPresContext* aPresContext)
-{
-  nsRect rect = mFrame->GetRect();
-  rect.x = 0;
-  rect.y = 0;
-  mFrame->Invalidate(aPresContext, rect, PR_FALSE);
-}
-
 void 
 nsButtonFrameRenderer::PaintButton     (nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,

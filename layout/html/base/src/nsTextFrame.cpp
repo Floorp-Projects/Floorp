@@ -339,13 +339,9 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
     FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
 
     // Determine damaged area and tell view manager to redraw it
-    nsPoint offset;
-    nsRect bounds = frameData->mFrame->GetRect();
-    nsIView* view;
-    frameData->mFrame->GetOffsetFromView(frameData->mPresContext, offset, &view);
-    bounds.x = offset.x;
-    bounds.y = offset.y;
-    view->GetViewManager()->UpdateView(view, bounds, 0);
+    // blink doesn't blink outline ... I hope
+    nsRect bounds(nsPoint(0, 0), frameData->mFrame->GetSize());
+    frameData->mFrame->Invalidate(bounds, PR_FALSE);
   }
   return NS_OK;
 }
@@ -3656,11 +3652,10 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     }
   }
   if (found){ //if range contains this frame...
-    nsRect frameRect = GetRect();
-    nsRect rect(0, 0, frameRect.width, frameRect.height);
-    if (!rect.IsEmpty())
-      Invalidate(aPresContext, rect, PR_FALSE);
-//    ForceDrawFrame(this);
+    // Selection might change our border, content and outline appearance
+    // But textframes can't have an outline. So just use the simple
+    // bounds
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
   }
   if (aSpread == eSpreadDown)
   {
@@ -5493,9 +5488,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width) + onePixel; 
     maxFrameHeight = PR_MAX(maxFrameHeight, mRect.height);
     nsRect damage(0,0,maxFrameWidth,maxFrameHeight);
-    if (!damage.IsEmpty()) {
-      Invalidate(aPresContext, damage);
-    }
+    Invalidate(damage);
   /*}*/
 
 

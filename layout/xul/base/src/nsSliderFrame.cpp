@@ -789,10 +789,8 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     nsRect changeRect;
     changeRect.UnionRect(thumbRect, newThumbRect);
 
-    if (!changeRect.IsEmpty()) {
-      // redraw just the change
-      Invalidate(aPresContext, changeRect, mRedrawImmediate);
-    }
+    // redraw just the change
+    Invalidate(changeRect, mRedrawImmediate);
     
     if (mScrollbarListener)
       mScrollbarListener->PositionChanged(aPresContext, mCurPos, curpos);
