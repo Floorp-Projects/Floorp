@@ -1847,8 +1847,10 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName, fileExt);
     }
 
-    if (NS_FAILED(rv) || !fileToUse) 
-      return Cancel();
+    if (NS_FAILED(rv) || !fileToUse) {
+      Cancel();
+      return NS_ERROR_FAILURE;
+    }
     
     mFinalFileDestination = do_QueryInterface(fileToUse);
 
