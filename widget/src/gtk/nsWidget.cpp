@@ -77,6 +77,7 @@ nsWidget *nsWidget::focusWindow = NULL;
 PRBool nsWidget::OnInput(nsInputEvent &aEvent)
 {
 
+  PRBool    ret = PR_FALSE;
   PRBool    releaseWidget = PR_FALSE;
   nsWidget *widget = NULL;
 
@@ -88,13 +89,13 @@ PRBool nsWidget::OnInput(nsInputEvent &aEvent)
     releaseWidget = PR_TRUE;
   }
   if (mEventCallback) {
-    return DispatchWindowEvent(&aEvent);
+    ret = DispatchWindowEvent(&aEvent);
   }
 
   if (releaseWidget)
     NS_RELEASE(widget);
 
-  return PR_FALSE;
+  return ret;
 }
 
 nsresult nsWidget::KillICSpotTimer ()
