@@ -309,6 +309,7 @@ public:
 
   NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
   NS_IMETHOD SetContentListFor(nsIContent* aContent, nsISupportsArray* aList);
+  NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult);
 
   NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
   NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList);
@@ -713,6 +714,21 @@ nsBindingManager::SetContentListFor(nsIContent* aContent, nsISupportsArray* aLis
   }
   else
     mContentListTable->Remove(&key);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::HasContentListFor(nsIContent* aContent, PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  if (mContentListTable) {
+    nsISupportsKey key(aContent);
+    nsCOMPtr<nsIDOMNodeList> list =
+      NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key));
+
+    *aResult = (list != nsnull);
+  }
 
   return NS_OK;
 }

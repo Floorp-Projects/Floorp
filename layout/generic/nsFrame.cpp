@@ -2319,6 +2319,34 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 }
 
 #ifdef NS_DEBUG
+
+#ifdef DEBUG_waterson
+
+/**
+ * List a single frame to stdout. Meant to be called from gdb.
+ */
+void
+DebugListFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  ((nsFrame*) aFrame)->List(aPresContext, stdout, 0);
+  printf("\n");
+}
+
+/**
+ * List a frame tree to stdout. Meant to be called from gdb.
+ */
+void
+DebugListFrameTree(nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  nsIFrameDebug* fdbg;
+  aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
+  if (fdbg)
+    fdbg->List(aPresContext, stdout, 0);
+}
+
+#endif
+
+
 // Debugging
 NS_IMETHODIMP
 nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
@@ -2337,6 +2365,7 @@ nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
+  fprintf(out, " [content=%p]", mContent);
   fputs("\n", out);
   return NS_OK;
 }

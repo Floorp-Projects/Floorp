@@ -86,6 +86,7 @@ public:
   // For a given element with an insertion point child, returns a flat list of all the real children.
   NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
   NS_IMETHOD SetContentListFor(nsIContent* aContent, nsISupportsArray* aList)=0;
+  NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult) = 0;
 
   NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
   NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList) = 0;

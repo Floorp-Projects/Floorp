@@ -83,6 +83,20 @@
 // baseURI
 #include "nsIXMLDocument.h"
 
+#ifdef DEBUG_waterson
+
+/**
+ * List a content tree to stdout. Meant to be called from gdb.
+ */
+void
+DebugListContentTree(nsIContent* aElement)
+{
+  aElement->List(stdout, 0);
+  printf("\n");
+}
+
+#endif
+
 //----------------------------------------------------------------------
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)
@@ -3283,6 +3297,64 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
     for (index = aIndent; --index >= 0; ) fputs("  ", out);
   }
   fputs(">\n", out);
+
+  if (mDocument) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    if (bindingManager) {
+      nsCOMPtr<nsIDOMNodeList> anonymousChildren;
+      bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),
+                                           getter_AddRefs(anonymousChildren));
+
+      if (anonymousChildren) {
+        PRUint32 length;
+        anonymousChildren->GetLength(&length);
+        if (length) {
+          for (index = aIndent; --index >= 0; ) fputs("  ", out);
+          fputs("anonymous-children<\n", out);
+
+          for (PRUint32 i = 0; i < length; ++i) {
+            nsCOMPtr<nsIDOMNode> node;
+            anonymousChildren->Item(i, getter_AddRefs(node));
+            nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+            child->List(out, aIndent + 1);
+          }
+
+          for (index = aIndent; --index >= 0; ) fputs("  ", out);
+          fputs(">\n", out);
+        }
+      }
+
+      PRBool hasContentList;
+      bindingManager->HasContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),
+                                        &hasContentList);
+
+      if (hasContentList) {
+        nsCOMPtr<nsIDOMNodeList> contentList;
+        bindingManager->GetContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),
+                                          getter_AddRefs(contentList));
+
+        NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
+
+        PRUint32 length;
+        contentList->GetLength(&length);
+        if (length) {
+          for (index = aIndent; --index >= 0; ) fputs("  ", out);
+          fputs("content-list<\n", out);
+
+          for (PRUint32 i = 0; i < length; ++i) {
+            nsCOMPtr<nsIDOMNode> node;
+            contentList->Item(i, getter_AddRefs(node));
+            nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+            child->List(out, aIndent + 1);
+          }
+
+          for (index = aIndent; --index >= 0; ) fputs("  ", out);
+          fputs(">\n", out);
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }
