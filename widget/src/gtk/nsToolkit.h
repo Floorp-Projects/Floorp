@@ -22,6 +22,7 @@
 #include "nsIToolkit.h"
 #include <gtk/gtk.h>
 
+struct PLEventQueue;
 struct MethodInfo;
 
 /**
@@ -35,18 +36,13 @@ class nsToolkit : public nsIToolkit
 
 public:
   nsToolkit();
-  virtual                 ~nsToolkit();
+  virtual		~nsToolkit();
   
   NS_DECL_ISUPPORTS
   NS_IMETHOD            Init(PRThread *aThread);
   
-public:
-  NS_IMETHOD_(GdkGC*) GetSharedGC();
-  NS_IMETHOD_(void) SetSharedGC(GdkGC *aGC);
-
 private:
-  GdkGC *mSharedGC;
-
+  PLEventQueue		*mPLEventQueue;
 };
 
 
