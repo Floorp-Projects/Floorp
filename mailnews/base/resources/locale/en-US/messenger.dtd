@@ -352,7 +352,7 @@ Rights Reserved.
 <!ENTITY copyMsgMenu.label "Copy Message">
 <!ENTITY copyMsgMenu.accesskey "C">
 <!ENTITY killThreadMenu.label "Ignore Thread">
-<!ENTITY killThreadMenu.accesskey "k">
+<!ENTITY killThreadMenu.accesskey "I">
 <!ENTITY killThreadMenu.key "k">
 <!ENTITY watchThreadMenu.label "Watch Thread">
 <!ENTITY watchThreadMenu.accesskey "W">
