@@ -267,7 +267,7 @@ nsresult DIR_GetDirServers()
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
 
 	if (!dir_ServerList)
@@ -860,7 +860,7 @@ PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return PR_FALSE;
 
 	PRInt32    i, count, num;
@@ -1115,7 +1115,7 @@ static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *in
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
 
 	DIR_PrefId id = DIR_AtomizePrefName(prefname);
@@ -1911,7 +1911,7 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return nsnull;
 
 	char *value = nsnull;
@@ -1946,7 +1946,7 @@ static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return defaultValue;
 
 	PRInt32 value;
@@ -1965,7 +1965,7 @@ static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, char *
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return defaultValue;
 
 	PRBool value;
@@ -2382,7 +2382,7 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
 
 	char **tokenList = nsnull;
@@ -2445,7 +2445,7 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
 {
     nsresult status = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &status); 
-    if (NS_FAILED(status) || pPref == nsnull) 
+    if (NS_FAILED(status) || !pPref) 
 		return NS_ERROR_FAILURE;
 
 	PRBool keepGoing = PR_TRUE;
@@ -2563,16 +2563,16 @@ char * dir_ConvertDescriptionToPrefName(DIR_Server * server)
 	PRInt32 srcIndex = 0;
 	PRInt32 destIndex = 0;
 	PRInt32 numSrcBytes = 0;
-	const char * description = nsnull;
+	const char * descr = nsnull;
 	if (server && server->description)
 	{
-		description = server->description;
-		numSrcBytes = PL_strlen(description);
+		descr = server->description;
+		numSrcBytes = PL_strlen(descr);
 		while (srcIndex < numSrcBytes && destIndex < MAX_PREF_NAME_SIZE-1)
 		{
-			if (XP_IS_DIGIT(description[srcIndex]) ||XP_IS_ALPHA(description[srcIndex]) )
+			if (XP_IS_DIGIT(descr[srcIndex]) ||XP_IS_ALPHA(descr[srcIndex]) )
 			{
-				fileNameBuf[destIndex] = description[srcIndex];
+				fileNameBuf[destIndex] = descr[srcIndex];
 				destIndex++;
 			}
 
@@ -2676,7 +2676,7 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return nsnull;
 
 	/* we are going to try to be smart in how we generate our server
@@ -2732,7 +2732,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	PRBool  prefBool;
@@ -2862,7 +2862,7 @@ static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return -1;
 
 	PRInt32 result = -1;
@@ -2913,7 +2913,7 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
 {
     nsresult result = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &result); 
-    if (NS_FAILED(result) || pPref == nsnull) 
+    if (NS_FAILED(result) || !pPref) 
 		return NS_ERROR_FAILURE;
 
  	char *children;
@@ -2979,7 +2979,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 {
     nsresult err = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &err); 
-    if (NS_FAILED(err) || pPref == nsnull) 
+    if (NS_FAILED(err) || !pPref) 
 		return NS_ERROR_FAILURE;
 
 	PRInt32 position = 1;
@@ -3161,7 +3161,7 @@ void DIR_ClearPrefBranch(const char *branch)
 {
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-	if (NS_FAILED(rv) || pPref == nsnull) 
+	if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	/* This little function provides a way to delete a prefs object but still
@@ -3185,7 +3185,7 @@ static void DIR_ClearIntPref (const char *pref)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	PRInt32 oldDefault;
@@ -3200,7 +3200,7 @@ static void DIR_ClearStringPref (const char *pref)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	char *oldDefault = nsnull;
@@ -3216,7 +3216,7 @@ static void DIR_ClearBoolPref (const char *pref)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	PRBool oldDefault;
@@ -3231,7 +3231,7 @@ static void DIR_SetStringPref (const char *prefRoot, const char *prefLeaf, char 
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	char *defaultPref = nsnull;
@@ -3283,7 +3283,7 @@ static void DIR_SetIntPref (const char *prefRoot, const char *prefLeaf, char *sc
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	PRInt32 defaultPref;
@@ -3323,7 +3323,7 @@ static void DIR_SetBoolPref (const char *prefRoot, const char *prefLeaf, char *s
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    if (NS_FAILED(rv) || !pPref) 
 		return;
 
 	PRBool defaultPref;
@@ -3659,7 +3659,7 @@ nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
 	{
 		nsresult rv = NS_OK;
 		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-		if (NS_FAILED(rv) || pPref == nsnull) 
+		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
 
 		PRInt32  i;
