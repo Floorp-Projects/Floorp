@@ -32,8 +32,9 @@
 
 PRBool nsFileWidget::Show()
 {
-  char fileBuffer[MAX_PATH];
-  fileBuffer[0] = '\0';
+  char fileBuffer[MAX_PATH+1] = "";
+  mDefault.ToCString(fileBuffer,MAX_PATH);
+
   OPENFILENAME ofn;
   memset(&ofn, 0, sizeof(ofn));
 
@@ -126,6 +127,18 @@ void  nsFileWidget::GetFile(nsString& aFile)
 {
   aFile.SetLength(0);
   aFile.Append(mFile);
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Get the file + path
+//
+//-------------------------------------------------------------------------
+
+void  nsFileWidget::SetDefaultString(nsString& aString)
+{
+  mDefault = aString;
 }
 
 //-------------------------------------------------------------------------

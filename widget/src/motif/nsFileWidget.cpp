@@ -270,6 +270,18 @@ void  nsFileWidget::GetFile(nsString& aFile)
   aFile.Append(mFile);
 }
 
+//-------------------------------------------------------------------------
+//
+// Get the file + path
+//
+//-------------------------------------------------------------------------
+
+void  nsFileWidget::SetDefaultString(nsString& aString)
+{
+  mDefault = aString;
+}
+
+
 
 //-------------------------------------------------------------------------
 //
@@ -315,6 +327,12 @@ void nsFileWidget::AggFileWidget::GetFile(nsString& aFile)
 {
   GET_OUTER()->GetFile(aFile);
 }
+
+void nsFileWidget::AggFileWidget::SetDefaultString(nsString& aFile)
+{
+  GET_OUTER()->SetDefaultString(aFile);
+}
+
 
 void nsFileWidget::AggFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
                                                 const nsString aTitles[],

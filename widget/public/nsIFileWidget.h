@@ -92,6 +92,16 @@ public:
   
   virtual void GetFile(nsString& aFile) = 0;
 
+
+ /**
+  * Set the default string that appears in file open/save dialog 
+  *
+  * @param      aString          the name of the file
+  * @return     void
+  *
+  */
+  virtual void SetDefaultString(nsString& aString) = 0;
+
 };
 
 #endif // nsIFileWidget_h__
