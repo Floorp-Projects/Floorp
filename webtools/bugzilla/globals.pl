@@ -426,28 +426,8 @@ sub InsertNewUser {
 }
 
 sub GenerateRandomPassword {
-    my ($size) = @_;
-
-    # Generated passwords are eight characters long by default.
-    $size ||= 8;
-
-    # The list of characters that can appear in a randomly generated password.
-    # Note that users can put any character into a password they choose
-    # themselves.
-    my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_', '!', '@', '#', '$',
-        '%', '^', '*');
-
-    # The number of characters in the list.
-    my $pwcharslen = scalar(@pwchars);
-
-    # Generate the password.
-    my $password = "";
-    for ( my $i=0 ; $i<$size ; $i++ ) {
-        $password .= $pwchars[rand($pwcharslen)];
-    }
-
-    # Return the password.
-    return $password;
+    my $size = (shift or 10); # default to 10 chars if nothing specified
+    return join("", map{ ('0'..'9','a'..'z','A'..'Z')[rand 62] } (1..$size));
 }
 
 #
