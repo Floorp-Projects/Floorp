@@ -25,14 +25,14 @@
 #include "nsIImage.h"
 #include "libimg.h"
 
-
-typedef enum{
-  nsLowQual=0,
+typedef enum
+{
+  nsLowQual = 0,
   nsLowMedQual,
   nsMedQual,
   nsHighMedQual,
   nsHighQual
-}nsBlendQuality;
+} nsBlendQuality;
 
 //----------------------------------------------------------------------
 
