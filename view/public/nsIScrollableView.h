@@ -68,8 +68,6 @@ class nsIScrollableView {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
-
   /**
    * Create the controls used to allow scrolling. Call this method
    * before anything else is done with the scrollable view.
@@ -192,10 +190,9 @@ public:
   NS_IMETHOD ScrollByWhole(PRBool aTop) = 0;
 
   /**
-   * Returns the clip view
-   * XXX Obsolete; with nsScrollingView gone, this always returns 'this'
+   * Returns the view as an nsIView*
    */
-  NS_IMETHOD GetClipView(const nsIView** aClipView) const = 0;
+  NS_IMETHOD_(nsIView*) View() = 0;
 
   /**
    * Adds a scroll position listener.

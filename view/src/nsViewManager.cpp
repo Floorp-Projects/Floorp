@@ -2834,9 +2834,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   // the root scrollable) are on top.
   nsRegion opaqueRegion;
   if (mRootScrollable != nsnull) {
-    const nsIView* scrollableClipView;
-    mRootScrollable->GetClipView(&scrollableClipView);
-    if (IsAncestorOf(NS_STATIC_CAST(const nsView*, scrollableClipView), aView)) {
+    if (IsAncestorOf(NS_STATIC_CAST(const nsScrollPortView*, mRootScrollable), aView)) {
       // add areas of fixed views to the opaque area.
       // This is a bit of a hack. We should not be doing special case processing for fixed views.
       nsView* fixedView = mRootView->GetFirstChild();
@@ -3898,10 +3896,7 @@ nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
   if (scrollingView) {   
     // Determine the visible rect in the scrolled view's coordinate space.
     // The size of the visible area is the clip view size
-    const nsIView*  clipViewI;
-    scrollingView->GetClipView(&clipViewI);
-
-    const nsView* clipView = NS_STATIC_CAST(const nsView*, clipViewI);
+    nsScrollPortView* clipView = NS_STATIC_CAST(nsScrollPortView*, scrollingView);
     clipView->GetDimensions(aVisibleRect);
 
     scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);

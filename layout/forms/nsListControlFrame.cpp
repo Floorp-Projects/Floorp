@@ -2776,13 +2776,11 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 
     if (NS_SUCCEEDED(result) && childframe) {
       if (NS_SUCCEEDED(result) && scrollableView) {
-        const nsIView * clippedView;
-        scrollableView->GetClipView(&clippedView);
         nscoord x;
         nscoord y;
         scrollableView->GetScrollPosition(x,y);
         // get the clipped rect
-        nsRect rect = clippedView->GetBounds();
+        nsRect rect = scrollableView->View()->GetBounds();
         // now move it by the offset of the scroll position
         rect.x = x;
         rect.y = y;

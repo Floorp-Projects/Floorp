@@ -1690,17 +1690,11 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         nsSize scrolledSize;
         scrollView->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
 
-        nsIView* portView = nsnull;
-        CallQueryInterface(scrollView, &portView);
-        if (portView) {
-          nsRect portRect = portView->GetBounds();
+        nsRect portRect = scrollView->View()->GetBounds();
 
-          passToParent = (aScrollHorizontal ?
-                          (xPos + portRect.width >= scrolledSize.width) :
-                          (yPos + portRect.height >= scrolledSize.height));
-        } else {
-          NS_WARNING("failed to get view from scrollview");
-        }
+        passToParent = (aScrollHorizontal ?
+                        (xPos + portRect.width >= scrolledSize.width) :
+                        (yPos + portRect.height >= scrolledSize.height));
       }
 
       // Comboboxes need special care.
@@ -1742,10 +1736,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     else
       scrollView->ScrollByLines(scrollX, scrollY);
 
-    nsIView* updateView = nsnull;
-    CallQueryInterface(scrollView, &updateView);
-    if (updateView)
-      ForceViewUpdate(updateView);
+    ForceViewUpdate(scrollView->View());
   }
   if (passToParent) {
     nsresult rv;

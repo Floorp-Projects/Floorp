@@ -123,10 +123,9 @@ nsresult nsScrollPortView::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return nsView::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP nsScrollPortView::GetClipView(const nsIView** aClipView) const
+NS_IMETHODIMP_(nsIView*) nsScrollPortView::View()
 {
-  *aClipView = this; 
-  return NS_OK;
+  return this;
 }
 
 NS_IMETHODIMP nsScrollPortView::AddScrollPositionListener(nsIScrollPositionListener* aListener)

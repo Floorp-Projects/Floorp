@@ -2903,7 +2903,6 @@ nsSelection::CommonPageMove(PRBool aForward,
   // and remain relative position of the caret in view. see Bug 4302.
 
   nsresult result;
-  const nsIView* clipView;
   //get the frame from the scrollable view
 
   nsIFrame* mainframe = nsnull;
@@ -2922,9 +2921,7 @@ nsSelection::CommonPageMove(PRBool aForward,
     return NS_ERROR_FAILURE;
 
   // find out where we are; determine amount to page up/down
-  if (NS_FAILED(result = aScrollableView->GetClipView(&clipView))) 
-    return result;
-  nsRect viewRect = clipView->GetBounds();
+  nsRect viewRect = aScrollableView->View()->GetBounds();
 
   // find out where the caret is.
   // we should know mDesiredX value of nsSelection, but I havent seen that behavior in other windows applications yet.
@@ -5252,25 +5249,12 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
     return NS_OK; // Nothing to do!
 
   //
-  // Get the clip view.
-  //
-
-  const nsIView *cView = 0;
-
-  result = scrollableView->GetClipView(&cView);
-
-  if (NS_FAILED(result))
-    return result;
-
-  //
   // Get the view that is being scrolled.
   //
 
   nsIView *scrolledView = 0;
 
   result = scrollableView->GetScrolledView(scrolledView);
-  if (!cView)
-    return NS_ERROR_FAILURE;
   
   //
   // Now walk up aView's hierarchy, this time keeping track of
@@ -5289,7 +5273,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
   // If it is, scroll the view till it is inside the visible area!
   //
 
-  nsRect bounds = cView->GetBounds();
+  nsRect bounds = scrollableView->View()->GetBounds();
 
   result = scrollableView->GetScrollPosition(bounds.x,bounds.y);
 
@@ -5445,9 +5429,7 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
       //
 
       nsIView *scrolledView = 0;
-      nsIView *view = 0;
-
-      CallQueryInterface(scrollableView, &view);
+      nsIView *view = scrollableView->View();
 
       if (view)
       {
@@ -5500,12 +5482,7 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
           // can scroll the next parent view.
           //
 
-          view = 0;
-          result = CallQueryInterface(scrollableView, &view);
-          if (!view)
-            return result;
-
-          view = view->GetParent();
+          view = scrollableView->View()->GetParent();
         }
       }
     }
@@ -6976,14 +6953,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     // padding!
     //
 
-    const nsIView* clipView = 0;
-
-    result = (*aScrollableView)->GetClipView(&clipView);
-
-    if (NS_FAILED(result))
-      return result;
-
-    nsRect clipRect = clipView->GetBounds();
+    nsRect clipRect = (*aScrollableView)->View()->GetBounds();
 
     result = (*aScrollableView)->GetScrollPosition(clipRect.x, clipRect.y);
 
@@ -7072,10 +7042,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
 
   // Determine the visible rect in the scrolled view's coordinate space.
   // The size of the visible area is the clip view size
-  const nsIView*  clipView;
-
-  aScrollableView->GetClipView(&clipView);
-  nsRect visibleRect = clipView->GetBounds();
+  nsRect visibleRect = aScrollableView->View()->GetBounds();
   aScrollableView->GetScrollPosition(visibleRect.x, visibleRect.y);
 
   // The actual scroll offsets
@@ -7147,12 +7114,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
     // Check if aScrollableRect has a parent scrollable view!
     //
 
-    nsIView *view = 0;
-    rv = CallQueryInterface(aScrollableView, &view);
-    if (!view)
-      return rv;
-
-    view = view->GetParent();
+    nsIView *view = aScrollableView->View()->GetParent();
 
     if (view)
     {

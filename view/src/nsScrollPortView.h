@@ -78,7 +78,7 @@ public:
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY);
   NS_IMETHOD  ScrollByWhole(PRBool aTop);
   
-  NS_IMETHOD  GetClipView(const nsIView** aClipView) const;
+  NS_IMETHOD_(nsIView*) View();
 
   NS_IMETHOD  AddScrollPositionListener(nsIScrollPositionListener* aListener);
   NS_IMETHOD  RemoveScrollPositionListener(nsIScrollPositionListener* aListener);
