@@ -25,6 +25,7 @@ XPIDL_MODULE=chrome
 
 XPIDLSRCS =               \
   .\nsIChromeRegistry.idl \
+  .\nsIChromeEntry.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
