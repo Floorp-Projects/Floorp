@@ -37,6 +37,7 @@
 
 #include "nsNativeDragSource.h"
 #include <stdio.h>
+#include "nsISupportsImpl.h"
 
 
 /*
@@ -71,12 +72,16 @@ STDMETHODIMP nsNativeDragSource::QueryInterface(REFIID riid, void** ppv)
 
 STDMETHODIMP_(ULONG) nsNativeDragSource::AddRef(void)
 {
-    return ++m_cRef;
+    ++m_cRef;
+    NS_LOG_ADDREF(this, m_cRef, "nsNativeDragSource", sizeof(*this));
+    return m_cRef;
 }
 
 STDMETHODIMP_(ULONG) nsNativeDragSource::Release(void)
 {
-	 if (0 != --m_cRef)
+    --m_cRef;
+    NS_LOG_RELEASE(this, m_cRef, "nsNativeDragSource");
+    if (0 != m_cRef)
         return m_cRef;
 
     delete this;

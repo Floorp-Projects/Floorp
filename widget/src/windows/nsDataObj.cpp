@@ -129,8 +129,10 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 {
 	++g_cRef;
+	++m_cRef;
+	NS_LOG_ADDREF(this, m_cRef, "nsDataObj", sizeof(*this));
   //PRNTDEBUG3("nsDataObj::AddRef  >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
-	return ++m_cRef;
+	return m_cRef;
 }
 
 
@@ -141,6 +143,7 @@ STDMETHODIMP_(ULONG) nsDataObj::Release()
 	if (0 < g_cRef)
 		--g_cRef;
 
+	NS_LOG_RELEASE(this, m_cRef, "nsDataObj");
 	if (0 != --m_cRef)
 		return m_cRef;
 
