@@ -26,10 +26,12 @@ LIBRARY_NAME=raptorbase
 CPPSRCS =				\
 	nsArena.cpp			\
 	nsAtomTable.cpp			\
+	nsBaseDLL.cpp			\
 	nsBTree.cpp			\
 	nsByteBuffer.cpp		\
 	nsCRT.cpp			\
 	nsDeque.cpp			\
+	nsProperties.cpp		\
 	nsRBTree.cpp			\
 	nsSizeOfHandler.cpp		\
 	nsString.cpp			\
@@ -43,10 +45,12 @@ CPPSRCS =				\
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsArena.obj			\
 	.\$(OBJDIR)\nsAtomTable.obj		\
+	.\$(OBJDIR)\nsBaseDLL.obj		\
 	.\$(OBJDIR)\nsBTree.obj			\
 	.\$(OBJDIR)\nsByteBuffer.obj		\
 	.\$(OBJDIR)\nsCRT.obj			\
 	.\$(OBJDIR)\nsDeque.obj			\
+	.\$(OBJDIR)\nsProperties.obj		\
 	.\$(OBJDIR)\nsRBTree.obj		\
 	.\$(OBJDIR)\nsSizeOfHandler.obj		\
 	.\$(OBJDIR)\nsString.obj		\
