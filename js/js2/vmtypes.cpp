@@ -56,6 +56,26 @@ namespace VM {
         
         return f;
     }
+
+    Formatter& operator<< (Formatter& f, ArgList& al)
+    {
+        const RegisterList& rl = al.mList;
+        const JSValues& registers = al.mRegisters;
+        f << "(";
+        RegisterList::const_iterator i = rl.begin(), e = rl.end();
+        if (i != e) {
+            Register r = *i++;
+            f << "R" << r << '=' << registers[r];
+            while (i != e) {
+                r = *i++;
+                f << ", R" << r << '=' << registers[r];
+            }
+        }
+        f << ")";
+        
+        return f;
+    }
+
 } /* namespace VM */
 } /* namespace JavaScript */
 
