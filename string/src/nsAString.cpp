@@ -183,26 +183,6 @@ nsAString::CountChar( char_type c ) const
     return 0;
   }
 
-nsAString::size_type
-nsAString::Mid( self_type& aResult, index_type aStartPos, size_type aLengthToCopy ) const
-  {
-      // If we're just assigning our entire self, give |aResult| the opportunity to share
-    if ( aStartPos == 0 && aLengthToCopy >= Length() )
-      aResult = *this;
-    else
-      aResult = Substring(*this, aStartPos, aLengthToCopy);
-
-    return aResult.Length();
-  }
-
-nsAString::size_type
-nsAString::Right( self_type& aResult, size_type aLengthToCopy ) const
-  {
-    size_type myLength = Length();
-    aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
-    return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
-  }
-
 PRInt32
 nsAString::FindChar( char_type aChar, PRUint32 aOffset ) const
   {
@@ -700,26 +680,6 @@ nsACString::CountChar( char_type c ) const
       }
       // never reached; quiets warnings
     return 0;
-  }
-
-nsACString::size_type
-nsACString::Mid( self_type& aResult, index_type aStartPos, size_type aLengthToCopy ) const
-  {
-      // If we're just assigning our entire self, give |aResult| the opportunity to share
-    if ( aStartPos == 0 && aLengthToCopy >= Length() )
-      aResult = *this;
-    else
-      aResult = Substring(*this, aStartPos, aLengthToCopy);
-
-    return aResult.Length();
-  }
-
-nsACString::size_type
-nsACString::Right( self_type& aResult, size_type aLengthToCopy ) const
-  {
-    size_type myLength = Length();
-    aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
-    return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
   }
 
 PRInt32

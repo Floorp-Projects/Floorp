@@ -1556,8 +1556,7 @@ nsPlainTextSerializer::Write(const nsAString& aString)
       // Done searching
       if(newline == kNotFound) {
         // No new lines.
-        nsAutoString stringpart;
-        aString.Right(stringpart, totLen-bol);
+        nsAutoString stringpart(Substring(aString, bol, totLen - bol));
         if(!stringpart.IsEmpty()) {
           PRUnichar lastchar = stringpart[stringpart.Length()-1];
           if((lastchar == '\t') || (lastchar == ' ') ||
@@ -1575,8 +1574,7 @@ nsPlainTextSerializer::Write(const nsAString& aString)
       } 
       else {
         // There is a newline
-        nsAutoString stringpart;
-        aString.Mid(stringpart, bol, newline-bol);
+        nsAutoString stringpart(Substring(aString, bol, newline-bol));
         mInWhitespace = PR_TRUE;
         Output(stringpart);
         // and write the newline

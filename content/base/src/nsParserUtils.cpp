@@ -148,8 +148,9 @@ nsParserUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
   aParams.Truncate();
   PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
   if (-1 != semiIndex) {
-    aValue.Left(aType, semiIndex);
-    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
+    aType = Substring(aValue, 0, semiIndex);
+    aParams = Substring(aValue, semiIndex + 1,
+                       aValue.Length() - (semiIndex + 1));
     aParams.StripWhitespace();
   }
   else {

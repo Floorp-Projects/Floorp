@@ -43,6 +43,7 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsXPIDLString.h"
 #include "nsParserCIID.h"
 #include "nsIServiceManager.h"
@@ -212,9 +213,8 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
     // this is covered in bug #59604
     static const char kJavaScript[] = "javascript";
     PRInt32 pos = aValueString.FindChar(':');
-    nsAutoString scheme;
+    const nsAutoString scheme(Substring(aValueString, 0, pos));
     if ((pos == (PRInt32)(sizeof kJavaScript - 1)) &&
-        (aValueString.Left(scheme, pos) != -1) &&
         scheme.EqualsIgnoreCase(kJavaScript))
       return PR_TRUE;
     else
@@ -278,7 +278,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
 
   // Loop and escape parts by avoiding escaping reserved characters (and '%', '#' ).
   while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
-    aURI.Mid(part, start, (end-start));
+    part = Substring(aURI, start, (end-start));
     if (textToSubURI && !part.IsASCII()) {
       rv = textToSubURI->ConvertAndEscape(documentCharset, part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -289,14 +289,14 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
     aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
 
     // Append a reserved character without escaping.
-    aURI.Mid(part, end, 1);
+    part = Substring(aURI, end, 1);
     aEscapedURI.Append(part);
     start = end + 1;
   }
 
   if (start < (PRInt32) aURI.Length()) {
     // Escape the remaining part.
-    aURI.Mid(part, start, aURI.Length()-start);
+    part = Substring(aURI, start, aURI.Length()-start);
     if (textToSubURI) {
       rv = textToSubURI->ConvertAndEscape(documentCharset, part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -681,7 +681,7 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAString& aStr,
       }
       else {
         lineLength = length - strOffset;
-        aStr.Right(line, lineLength);
+        line = Substring(aStr, strOffset, lineLength);
         AppendToString(line, aOutputStr, aTranslateEntities);
       }
       done = PR_TRUE;
@@ -690,7 +690,7 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAString& aStr,
       // Add the part of the current old line that's part of the 
       // new line
       lineLength = indx - strOffset;
-      aStr.Mid(line, strOffset, lineLength);
+      line = Substring(aStr, strOffset, lineLength);
       AppendToString(line, aOutputStr, aTranslateEntities);
       
       // if we've reached the end of an old line, don't add the

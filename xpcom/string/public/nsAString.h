@@ -166,26 +166,6 @@ class NS_COM nsAString
       size_type  CountChar( char_type ) const;
 
 
-        /*
-          |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
-          any _other_ way than they are now.  Consider these alternatives
-
-            aWritable = aReadable.Left(17);   // ...a member function that returns a |Substring|
-            aWritable = Left(aReadable, 17);  // ...a global function that returns a |Substring|
-            Left(aReadable, 17, aWritable);   // ...a global function that does the assignment
-
-          as opposed to the current signature
-
-            aReadable.Left(aWritable, 17);    // ...a member function that does the assignment
-
-          or maybe just stamping them out in favor of |Substring|, they are just duplicate functionality
-
-            aWritable = Substring(aReadable, 0, 17);
-        */
-            
-      size_type  Left( self_type&, size_type ) const;
-      size_type  Mid( self_type&, PRUint32, PRUint32 ) const;
-      size_type  Right( self_type&, size_type ) const;
 
       // Find( ... ) const;
       PRInt32 FindChar( char_type, index_type aOffset = 0 ) const;
@@ -440,27 +420,6 @@ class NS_COM nsACString
 
       size_type  CountChar( char_type ) const;
 
-
-        /*
-          |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
-          any _other_ way than they are now.  Consider these alternatives
-
-            aWritable = aReadable.Left(17);   // ...a member function that returns a |Substring|
-            aWritable = Left(aReadable, 17);  // ...a global function that returns a |Substring|
-            Left(aReadable, 17, aWritable);   // ...a global function that does the assignment
-
-          as opposed to the current signature
-
-            aReadable.Left(aWritable, 17);    // ...a member function that does the assignment
-
-          or maybe just stamping them out in favor of |Substring|, they are just duplicate functionality
-
-            aWritable = Substring(aReadable, 0, 17);
-        */
-            
-      size_type  Left( self_type&, size_type ) const;
-      size_type  Mid( self_type&, PRUint32, PRUint32 ) const;
-      size_type  Right( self_type&, size_type ) const;
 
       // Find( ... ) const;
       PRInt32 FindChar( char_type, index_type aOffset = 0 ) const;
@@ -779,13 +738,6 @@ operator> ( const nsAString& lhs, const nsAString& rhs )
     return Compare(lhs, rhs)> 0;
   }
 
-inline
-nsAString::size_type
-nsAString::Left( nsAString& aResult, size_type aLengthToCopy ) const
-  {
-    return Mid(aResult, 0, aLengthToCopy);
-  }
-
 
   /**
    *
@@ -894,13 +846,6 @@ PRBool
 operator> ( const nsACString& lhs, const nsACString& rhs )
   {
     return Compare(lhs, rhs)> 0;
-  }
-
-inline
-nsACString::size_type
-nsACString::Left( nsACString& aResult, size_type aLengthToCopy ) const
-  {
-    return Mid(aResult, 0, aLengthToCopy);
   }
 
   // Once you've got strings, you shouldn't need to do anything else to have concatenation

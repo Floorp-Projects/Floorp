@@ -307,7 +307,7 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
       stringData->GetData(getter_Copies(data));
       PRInt32 separator = data.FindChar('\n');
       if ( separator >= 0 )
-        data.Left(outURL, separator);
+        outURL = Substring(data, 0, separator);
       else
         outURL = data;
     }  

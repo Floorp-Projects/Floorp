@@ -740,7 +740,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
     iter++;
     i++;
   }
-  aString.Right(unit, j-i);
+  unit = Substring(aString, aString.Length() - (j-i), j-i);
   *aValue = value * sign;
   *aUnit = NS_NewAtom(unit); 
 }
@@ -1164,15 +1164,13 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     }
 
     else if (nsIEditProperty::tt == aHTMLProperty) {
-      nsAutoString val;
-      valueString.Left(val, 9);
-      aIsSet = PRBool(val.Equals(NS_LITERAL_STRING("monospace")));
+      aIsSet = Substring(valueString, 0, 9).Equals(NS_LITERAL_STRING("monospace"));
     }
     
     else if ((nsIEditProperty::font == aHTMLProperty) && aHTMLAttribute
              && aHTMLAttribute->Equals(NS_LITERAL_STRING("face"))) {
       nsAutoString leftCSSValue;
-      valueString.Left(leftCSSValue, 5);
+      leftCSSValue = Substring(valueString, 0, 5);
       ToLowerCase(leftCSSValue);
       if (!htmlValueString.Equals(NS_LITERAL_STRING(""))) {
         nsAutoString leftHTMLValue;
