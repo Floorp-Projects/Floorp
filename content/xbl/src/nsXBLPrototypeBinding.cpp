@@ -989,8 +989,8 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement, nsIContent* aTe
     bm->GetBinding(aBoundElement, getter_AddRefs(binding));
     
     nsCOMPtr<nsIXBLBinding> currBinding = binding;
+    nsCOMPtr<nsIContent> anonContent;
     while (currBinding) {
-      nsCOMPtr<nsIContent> anonContent;
       currBinding->GetAnonymousContent(getter_AddRefs(anonContent));
       if (anonContent)
         break;
@@ -999,7 +999,10 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement, nsIContent* aTe
     }
 
     nsCOMPtr<nsISupportsArray> points;
-    currBinding->GetInsertionPointsFor(copyParent, getter_AddRefs(points));
+    if (anonContent == copyParent)
+      currBinding->GetInsertionPointsFor(aBoundElement, getter_AddRefs(points));
+    else
+      currBinding->GetInsertionPointsFor(copyParent, getter_AddRefs(points));
     nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
     PRUint32 count;
     points->Count(&count);
