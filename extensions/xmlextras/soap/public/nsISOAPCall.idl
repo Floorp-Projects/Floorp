@@ -123,13 +123,12 @@ interface nsISOAPCall : nsISupports {
   
   /**
    * The script-only method for setting the list of parameters to
-   * include in the SOAP call.
-   *
-   * @param parameters The expectation is that this parameter is either a
-   *                   JavaScript array that holds the nsISOAPParameter
-   *                   instances or a single nsISOAPParameter.
+   * include in the SOAP call. Despite what the idl implies, this
+   * method takes an arbitrary number of arguments. Each is either
+   * a SOAPParameter object or a JavaScript value which will be
+   * converted to an unnamed SOAPParameter.
    */
-  void setParameters(in nsISupports parameters);
+  void setParameters();
 
   /**
    * A script-only method for setting the list of parameters, where

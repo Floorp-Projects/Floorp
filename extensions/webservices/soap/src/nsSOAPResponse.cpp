@@ -31,6 +31,7 @@
 
 nsSOAPResponse::nsSOAPResponse(nsIDOMDocument* aEnvelopeDocument)
 {
+  NS_INIT_ISUPPORTS();
   mEnvelopeDocument = aEnvelopeDocument;
   if (mEnvelopeDocument) {
     nsCOMPtr<nsIDOMElement> element;
@@ -193,10 +194,15 @@ NS_IMETHODIMP nsSOAPResponse::GetReturnValue(nsISOAPParameter * *aReturnValue)
   *aReturnValue = nsnull;
 
   if (mResultElement) {
+    // The first child element is assumed to be the returned
+    // value
+    nsCOMPtr<nsIDOMElement> value;
+    nsSOAPUtils::GetFirstChildElement(mResultElement, getter_AddRefs(value));
+
     // Get the inherited encoding style starting from the
-    // body entry.
+    // value
     char* encodingStyle;
-    nsSOAPUtils::GetInheritedEncodingStyle(mResultElement, 
+    nsSOAPUtils::GetInheritedEncodingStyle(value, 
                                            &encodingStyle);
     
     if (!encodingStyle) {
@@ -216,8 +222,9 @@ NS_IMETHODIMP nsSOAPResponse::GetReturnValue(nsISOAPParameter * *aReturnValue)
 
     // Convert the result element to a parameter
     nsCOMPtr<nsISOAPParameter> param;
-    rv = encoder->ElementToParameter(mResultElement,
+    rv = encoder->ElementToParameter(value,
                                      encodingStyle,
+                                     nsISOAPParameter::PARAMETER_TYPE_UNKNOWN,
                                      getter_AddRefs(param));
     nsMemory::Free(encodingStyle);
     if (NS_FAILED(rv)) return rv;

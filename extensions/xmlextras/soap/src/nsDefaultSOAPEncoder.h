@@ -24,6 +24,8 @@
 #define nsDefaultSOAPEncoder_h__
 
 #include "nsISOAPEncoder.h"
+#include "nsISupportsArray.h"
+#include "jsapi.h"
 
 class nsDefaultSOAPEncoder : public nsISOAPEncoder {
 public:
@@ -34,6 +36,35 @@ public:
 
   // nsISOAPEncoder  
   NS_DECL_NSISOAPENCODER
+
+protected:
+  nsresult EncodeParameter(nsISOAPParameter* parameter,
+                           nsIDOMDocument* document,
+                           nsIDOMElement** element);
+  nsresult SerializeSupportsArray(nsISupportsArray* array,
+                                  nsIDOMElement* element, 
+                                  nsIDOMDocument* document);
+  nsresult SerializeJavaScriptArray(JSObject* arrayobj,
+                                    nsIDOMElement* element, 
+                                    nsIDOMDocument* document);
+  nsresult SerializeJavaScriptObject(JSObject* obj,
+                                     nsIDOMElement* element, 
+                                     nsIDOMDocument* document);
+  nsresult SerializeParameterValue(nsISOAPParameter* parameter, 
+                                   nsIDOMElement* element, 
+                                   nsIDOMDocument* document);
+
+
+  nsresult DecodeParameter(nsIDOMElement* element,
+                           PRInt32 type,
+                           nsISOAPParameter **_retval);
+  nsresult DeserializeSupportsArray(nsIDOMElement *element,
+                                    nsISupportsArray **_retval);
+  nsresult DeserializeJavaScriptObject(nsIDOMElement *element,
+                                       JSObject** obj);
+  nsresult DeserializeParameter(nsIDOMElement *element,
+                                PRInt32 type,
+                                nsISOAPParameter **_retval);
 };
 
 #define NS_DEFAULTSOAPENCODER_CID               \

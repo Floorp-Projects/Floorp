@@ -27,12 +27,14 @@
 #include "nsISOAPParameter.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsIXPCScriptable.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
 class nsSOAPParameter : public nsISOAPParameter,
                         public nsISecurityCheckedComponent,
-                        public nsIXPCScriptable
+                        public nsIXPCScriptable,
+                        public nsIJSNativeInitializer
 {
 public:
   nsSOAPParameter();
@@ -49,8 +51,14 @@ public:
   // nsIXPCScriptable
   XPC_DECLARE_IXPCSCRIPTABLE
 
+  NS_IMETHODIMP GetValue(JSContext* aContext,
+                         jsval* aValue);
   NS_IMETHODIMP SetValue(JSContext* aContext,
                          jsval aValue);
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
+                        PRUint32 argc, jsval *argv);
 
 protected:
   nsCString mEncodingStyleURI;

@@ -36,7 +36,7 @@ interface nsISOAPTransportListener : nsISupports {
    * @param result The call result
    */
   void handleResponse(in nsIDOMDocument document,
-		      in unsigned long status,
-		      in nsresult result);
+                      in unsigned long status,
+                      in nsresult result);
 };
 

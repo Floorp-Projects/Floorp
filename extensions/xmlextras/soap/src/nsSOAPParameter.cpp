@@ -29,6 +29,7 @@ nsSOAPParameter::nsSOAPParameter()
 {
   NS_INIT_ISUPPORTS();
   mType = PARAMETER_TYPE_NULL;
+  mJSValue = nsnull;
   JSContext* cx;
   cx = nsSOAPUtils::GetSafeContext();
   if (cx) {
@@ -45,7 +46,11 @@ nsSOAPParameter::~nsSOAPParameter()
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsSOAPParameter, nsISOAPParameter, nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS4(nsSOAPParameter, 
+                   nsISOAPParameter, 
+                   nsISecurityCheckedComponent,
+                   nsIXPCScriptable,
+                   nsIJSNativeInitializer)
 
 /* attribute string encodingStyleURI; */
 NS_IMETHODIMP nsSOAPParameter::GetEncodingStyleURI(char * *aEncodingStyleURI)
@@ -112,46 +117,48 @@ NS_IMETHODIMP nsSOAPParameter::SetValueAndType(nsISupports *value, PRInt32 type)
   return NS_OK;
 }
 
-/* readonly attribute nsISupports value; */
-NS_IMETHODIMP nsSOAPParameter::GetValue(nsISupports * *aValue)
+/* [noscript] void getValueAndType (out nsISupports value, out long type); */
+NS_IMETHODIMP nsSOAPParameter::GetValueAndType(nsISupports **value, PRInt32 *type)
 {
-  NS_ENSURE_ARG_POINTER(aValue);
-  nsresult rv;
+  NS_ENSURE_ARG_POINTER(value);
+  NS_ENSURE_ARG_POINTER(type);
 
-  // Check if this is a script or native call
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-  if(NS_SUCCEEDED(rv)) {
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-  }
-
-  // If this is a script call
-  if (NS_SUCCEEDED(rv) && cc) {
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    
-    jsval val;
-    rv = nsSOAPUtils::ConvertValueToJSVal(cx, mValue, mJSValue, mType, &val);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    
-    jsval* vp;
-    rv = cc->GetRetValPtr(&vp);
-    if (NS_SUCCEEDED(rv)) {
-      *vp = val;
-      cc->SetReturnValueWasSet(JS_TRUE);
-    }
-  }
-  else {
-    *aValue = mValue;
-    NS_IF_ADDREF(*aValue);
-  }
+  *value = mValue;
+  NS_IF_ADDREF(*value);
+  *type = mType;
 
   return NS_OK;
 }
 
-// We can't make this a setter in xpidl without a variant type.
-// For now, use nsIXPCScriptable to do the setting.
+/* attribute nsISupports value; */
+// We can't use this attribute for script calls without a variant type
+// in xpidl. For now, use nsIXPCScriptable to implement.
+NS_IMETHODIMP nsSOAPParameter::GetValue(nsISupports * *aValue)
+{
+  NS_ENSURE_ARG_POINTER(aValue);
+
+  *aValue = mValue;
+  NS_IF_ADDREF(*aValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSOAPParameter::SetValue(nsISupports* value)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsSOAPParameter::GetValue(JSContext* aContext,
+                                        jsval* aValue)
+{
+  return nsSOAPUtils::ConvertValueToJSVal(aContext,
+                                          mValue,
+                                          mJSValue,
+                                          mType,
+                                          aValue);
+}
+
 NS_IMETHODIMP nsSOAPParameter::SetValue(JSContext* aContext,
                                         jsval aValue)
 {
@@ -171,11 +178,27 @@ NS_IMETHODIMP nsSOAPParameter::GetJSValue(JSObject * *aJSValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsSOAPParameter::Initialize(JSContext *cx, JSObject *obj, 
+                            PRUint32 argc, jsval *argv)
+{
+  if (argc > 0) {
+    JSString* namestr = JS_ValueToString(cx, argv[0]);
+    if (namestr) {
+      SetName(NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(namestr)));
+      if (argc > 1) {
+        SetValue(cx, argv[1]);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 XPC_IMPLEMENT_IGNORE_CREATE(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsSOAPParameter)
-XPC_IMPLEMENT_IGNORE_GETPROPERTY(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsSOAPParameter)
@@ -184,7 +207,29 @@ XPC_IMPLEMENT_IGNORE_ENUMERATE(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_CHECKACCESS(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_CALL(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsSOAPParameter)
+XPC_IMPLEMENT_IGNORE_HASINSTANCE(nsSOAPParameter)
 XPC_IMPLEMENT_IGNORE_FINALIZE(nsSOAPParameter)
+
+NS_IMETHODIMP 
+nsSOAPParameter::GetProperty(JSContext *cx, JSObject *obj,
+                             jsid id, jsval *vp,
+                             nsIXPConnectWrappedNative* wrapper,
+                             nsIXPCScriptable* arbitrary,
+                             JSBool* retval)
+{
+  *retval = JS_TRUE;
+  jsval val;
+  if (JS_IdToValue(cx, id, &val)) {
+    if (JSVAL_IS_STRING(val)) {
+      JSString* str = JSVAL_TO_STRING(val);
+      char* name = JS_GetStringBytes(str);
+      if (nsCRT::strcmp(name, "value") == 0) {
+        return GetValue(cx, vp);
+      }
+    }
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsSOAPParameter::SetProperty(JSContext *cx, JSObject *obj, jsid id, 
@@ -198,7 +243,7 @@ nsSOAPParameter::SetProperty(JSContext *cx, JSObject *obj, jsid id,
     if (JSVAL_IS_STRING(val)) {
       JSString* str = JSVAL_TO_STRING(val);
       char* name = JS_GetStringBytes(str);
-      if (nsCRT::strcmp(name, "value")) {
+      if (nsCRT::strcmp(name, "value") == 0) {
         return SetValue(cx, *vp);
       }
     }

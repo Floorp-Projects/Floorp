@@ -40,7 +40,8 @@ interface nsISOAPEncoder : nsISupports {
    *
    */
   nsISOAPParameter elementToParameter(in nsIDOMElement element,
-                                      in string encodingStyle);
+                                      in string encodingStyle,
+                                      in long hintType);
 };
 
 %{ C++

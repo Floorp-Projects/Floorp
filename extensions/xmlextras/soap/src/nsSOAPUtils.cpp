@@ -29,14 +29,25 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsISupportsArray.h"
 
 const char* nsSOAPUtils::kSOAPEnvURI = "http://schemas.xmlsoap.org/soap/envelope/";
 const char* nsSOAPUtils::kSOAPEncodingURI = "http://schemas.xmlsoap.org/soap/encoding/";
+const char* nsSOAPUtils::kSOAPEnvPrefix = "SOAP-ENV";
+const char* nsSOAPUtils::kSOAPEncodingPrefix = "SOAP-ENC";
+const char* nsSOAPUtils::kXSIURI = "http://www.w3.org/1999/XMLSchema-instance";
+const char* nsSOAPUtils::kXSDURI = "http://www.w3.org/1999/XMLSchema";
+const char* nsSOAPUtils::kXSIPrefix = "xsi";
+const char* nsSOAPUtils::kXSDPrefix = "xsd";
 const char* nsSOAPUtils::kEncodingStyleAttribute = "encodingStyle";
 const char* nsSOAPUtils::kEnvelopeTagName = "Envelope";
 const char* nsSOAPUtils::kHeaderTagName = "Header";
 const char* nsSOAPUtils::kBodyTagName = "Body";
 const char* nsSOAPUtils::kFaultTagName = "Fault";
+const char* nsSOAPUtils::kFaultCodeTagName = "faultcode";
+const char* nsSOAPUtils::kFaultStringTagName = "faultstring";
+const char* nsSOAPUtils::kFaultActorTagName = "faultactor";
+const char* nsSOAPUtils::kFaultDetailTagName = "detail";
 
 void
 nsSOAPUtils::GetFirstChildElement(nsIDOMElement* aParent, 
@@ -82,22 +93,41 @@ void
 nsSOAPUtils::GetElementTextContent(nsIDOMElement* aElement, 
                                    nsString& aText)
 {
-  nsCOMPtr<nsIDOMNode> sibling;
+  nsCOMPtr<nsIDOMNode> child;
   
   aText.Truncate();
-  aElement->GetNextSibling(getter_AddRefs(sibling));
-  while (sibling) {
+  aElement->GetFirstChild(getter_AddRefs(child));
+  while (child) {
     PRUint16 type;
-    sibling->GetNodeType(&type);
+    child->GetNodeType(&type);
     if (nsIDOMNode::TEXT_NODE == type) {
-      nsCOMPtr<nsIDOMText> text = do_QueryInterface(sibling);
+      nsCOMPtr<nsIDOMText> text = do_QueryInterface(child);
       nsAutoString data;
       text->GetData(data);
       aText.Append(data);
     }
-    nsCOMPtr<nsIDOMNode> temp = sibling;
-    temp->GetNextSibling(getter_AddRefs(sibling));
+    nsCOMPtr<nsIDOMNode> temp = child;
+    temp->GetNextSibling(getter_AddRefs(child));
   }
+}
+
+PRBool
+nsSOAPUtils::HasChildElements(nsIDOMElement* aElement)
+{
+  nsCOMPtr<nsIDOMNode> child;
+
+  aElement->GetFirstChild(getter_AddRefs(child));
+  while (child) {
+    PRUint16 type;
+    child->GetNodeType(&type);
+    if (nsIDOMNode::ELEMENT_NODE == type) {
+      return PR_TRUE;
+    }
+    nsCOMPtr<nsIDOMNode> temp = child;
+    temp->GetNextSibling(getter_AddRefs(child));
+  }
+
+  return PR_FALSE;
 }
 
 void
@@ -106,7 +136,6 @@ nsSOAPUtils::GetInheritedEncodingStyle(nsIDOMElement* aEntry,
 {
   nsCOMPtr<nsIDOMNode> node = aEntry;
 
-  *aEncodingStyle = nsnull;
   while (node) {
     nsAutoString value;
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
@@ -116,12 +145,13 @@ nsSOAPUtils::GetInheritedEncodingStyle(nsIDOMElement* aEntry,
                               value);
       if (value.Length() > 0) {
         *aEncodingStyle = value.ToNewCString();
-        break;
+        return;
       }
     }
     nsCOMPtr<nsIDOMNode> temp = node;
     temp->GetParentNode(getter_AddRefs(node));
   }
+  *aEncodingStyle = nsCRT::strdup(kSOAPEncodingURI);
 }
 
 JSContext*
@@ -212,7 +242,8 @@ nsSOAPUtils::ConvertValueToJSVal(JSContext* aContext,
       double data;
       dub->GetData(&data);
 
-      *vp = DOUBLE_TO_JSVAL((jsdouble)data);
+      double* dataPtr = JS_NewDouble(aContext, (jsdouble)data); 
+      *vp = DOUBLE_TO_JSVAL(dataPtr);
 
       break;
     }
@@ -225,7 +256,8 @@ nsSOAPUtils::ConvertValueToJSVal(JSContext* aContext,
       float data;
       flt->GetData(&data);
 
-      *vp = DOUBLE_TO_JSVAL((jsdouble)data);
+      double* dataPtr = JS_NewDouble(aContext, (jsdouble)data); 
+      *vp = DOUBLE_TO_JSVAL(dataPtr);
       
       break;
     }
@@ -277,9 +309,37 @@ nsSOAPUtils::ConvertValueToJSVal(JSContext* aContext,
 
     case nsISOAPParameter::PARAMETER_TYPE_ARRAY:
     {
-      // XXX Can't (easily) convert a native nsISupportsArray
-      // to a script array.
-      return NS_ERROR_NOT_IMPLEMENTED;
+      nsCOMPtr<nsISupportsArray> array = do_QueryInterface(aValue);
+      if (!array) return NS_ERROR_FAILURE;
+
+      JSObject* arrayobj = JS_NewArrayObject(aContext, 0, nsnull);
+      if (!arrayobj) return NS_ERROR_FAILURE;
+
+      PRUint32 index, count;
+      array->Count(&count);
+
+      for (index = 0; index < count; index++) {
+        nsCOMPtr<nsISupports> isup = getter_AddRefs(array->ElementAt(index));
+        nsCOMPtr<nsISOAPParameter> param = do_QueryInterface(isup);
+        if (!param) return NS_ERROR_FAILURE;
+
+        nsCOMPtr<nsISupports> paramVal;
+        JSObject* paramObj;
+        PRInt32 paramType;
+
+        param->GetValueAndType(getter_AddRefs(paramVal), &paramType);
+        param->GetJSValue(&paramObj);
+
+        jsval val;
+        nsresult rv = ConvertValueToJSVal(aContext, paramVal, paramObj,
+                                          paramType, &val);
+        if (NS_FAILED(rv)) return rv;
+
+        JS_SetElement(aContext, arrayobj, (jsint)index, &val);
+      }
+
+      *vp = OBJECT_TO_JSVAL(arrayobj);
+      break;
     }
 
     case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY:

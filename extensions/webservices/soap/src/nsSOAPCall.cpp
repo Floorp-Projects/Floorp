@@ -22,6 +22,7 @@
 
 #include "nsSOAPCall.h"
 #include "nsSOAPResponse.h"
+#include "nsSOAPParameter.h"
 #include "nsSOAPUtils.h"
 #include "nsCRT.h"
 #include "jsapi.h"
@@ -158,7 +159,7 @@ NS_IMPL_ISUPPORTS3(nsSOAPCall,
                    nsISOAPTransportListener)
 
 
-static const char* kEmptySOAPDocStr = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
+static const char* kEmptySOAPDocStr = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/1999/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/1999/XMLSchema\">"
 "<SOAP-ENV:Header>"
 "</SOAP-ENV:Header>"
 "<SOAP-ENV:Body>"
@@ -320,7 +321,7 @@ nsSOAPCall::CreateBodyEntry(PRBool aNewParameters)
 
   // If there is, we're going to replace it, but preserve its
   // children.
-  if (entry) {
+  if (oldEntry) {
     // Remove the old entry from the body
     mBodyElement->RemoveChild(oldEntry, getter_AddRefs(dummy));
     
@@ -580,8 +581,8 @@ NS_IMETHODIMP nsSOAPCall::SetSOAPParameters(nsISOAPParameter **parameters, PRUin
   return NS_OK;
 }
 
-/* void setParameters (in nsISupports parameters); */
-NS_IMETHODIMP nsSOAPCall::SetParameters(nsISupports *parameters)
+/* void setParameters (); */
+NS_IMETHODIMP nsSOAPCall::SetParameters()
 {
   nsresult rv;
 
@@ -595,69 +596,65 @@ NS_IMETHODIMP nsSOAPCall::SetParameters(nsISupports *parameters)
     if (!mParameters) return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // If it's a single parameter, just add it to the list
-  nsCOMPtr<nsISOAPParameter> singleParam = do_QueryInterface(parameters);
-  if (singleParam) {
-    mParameters->AppendElement(singleParam);
+  nsCOMPtr<nsIXPCNativeCallContext> cc;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  if(NS_SUCCEEDED(rv)) {
+    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
   }
-  else {
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-    if(NS_SUCCEEDED(rv)) {
-      rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-    }
+
+  // This should only be called from script
+  if (NS_FAILED(rv) || !cc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  // For each parameter to this method
+  PRUint32 index;
+  for (index = 0; index < argc; index++) {
+    nsCOMPtr<nsISOAPParameter> param;
+    jsval val = argv[index];
     
-    // Otherwise see if it's a JSObject
-    if (NS_SUCCEEDED(rv) && cc) {
-      nsCOMPtr<nsIXPConnectJSObjectHolder> jsobjholder = do_QueryInterface(parameters);
-      if (jsobjholder) {
-        JSObject* arrayobj;
-        rv = jsobjholder->GetJSObject(&arrayobj);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    // First check if it's a parameter
+    if (JSVAL_IS_OBJECT(val)) {
+      JSObject* paramobj;
+      paramobj = JSVAL_TO_OBJECT(val);
 
-        JSContext* cx;
-        rv = cc->GetJSContext(&cx);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        
-        // We expect a JS array
-        if (!JS_IsArrayObject(cx, arrayobj)) {
-          return NS_ERROR_INVALID_ARG;
-        }
-
-        jsuint index, count;
-        if (!JS_GetArrayLength(cx, arrayobj, &count)) {
-          return NS_ERROR_INVALID_ARG;
-        }
-
-        // For each element in the array
-        for (index = 0; index < count; index++) {
-          jsval val;
-          JSObject* paramobj;
-          if (!JS_GetElement(cx, arrayobj, (jsint)index, &val)) {
-            return NS_ERROR_FAILURE;
-          }
-
-          // Make sure it's an object
-          if (!JSVAL_IS_OBJECT(val)) return NS_ERROR_INVALID_ARG;
-          paramobj = JSVAL_TO_OBJECT(val);
-
-          // It should be a wrapped native
-          nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-          xpc->GetWrappedNativeOfJSObject(cx, paramobj, getter_AddRefs(wrapper));
-          if (!wrapper) return NS_ERROR_INVALID_ARG;
-
-          // Get the native and make sure it's a SOAPParameter
-          nsCOMPtr<nsISupports> isup;
-          wrapper->GetNative(getter_AddRefs(isup));
-          if (!isup) return NS_ERROR_INVALID_ARG;
-          
-          nsCOMPtr<nsISOAPParameter> param = do_QueryInterface(isup);
-          if (!param) return NS_ERROR_INVALID_ARG;
-          
-          mParameters->AppendElement(param);
+      // Check if it's a wrapped native
+      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+      xpc->GetWrappedNativeOfJSObject(cx, paramobj, getter_AddRefs(wrapper));
+      
+      if (wrapper) {
+        // Get the native and see if it's a SOAPParameter
+        nsCOMPtr<nsISupports> native;
+        wrapper->GetNative(getter_AddRefs(native));
+        if (native) {
+          param = do_QueryInterface(native);
         }
       }
     }
+
+    // Otherwise create a new parameter with the value
+    if (!param) {
+      nsSOAPParameter* newparam = new nsSOAPParameter();
+      if (!newparam) return NS_ERROR_OUT_OF_MEMORY;
+      
+      param = (nsISOAPParameter*)newparam;
+      rv = newparam->SetValue(cx, val);
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    mParameters->AppendElement(param);
   }
 
   if (HasBodyEntry()) {

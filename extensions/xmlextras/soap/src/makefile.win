@@ -33,6 +33,7 @@ CPPSRCS=					\
 	nsSOAPFault.cpp				\
 	nsSOAPParameter.cpp			\
 	nsDefaultSOAPEncoder.cpp		\
+	nsHTTPSOAPTransport.cpp			\
 	$(NULL)
 
 
@@ -43,6 +44,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSOAPFault.obj		\
 	.\$(OBJDIR)\nsSOAPParameter.obj		\
 	.\$(OBJDIR)\nsDefaultSOAPEncoder.obj	\
+	.\$(OBJDIR)\nsHTTPSOAPTransport.obj	\
 	$(NULL)
 
 EXPORTS =					\

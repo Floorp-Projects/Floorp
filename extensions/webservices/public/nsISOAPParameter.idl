@@ -70,19 +70,20 @@ interface nsISOAPParameter : nsISupports {
    * </ul>
    * </p>
    */
-  const long PARAMETER_TYPE_NULL = 0;
-  const long PARAMETER_TYPE_VOID = 1;
-  const long PARAMETER_TYPE_STRING = 2;
-  const long PARAMETER_TYPE_BOOLEAN = 3;
-  const long PARAMETER_TYPE_DOUBLE = 4;
-  const long PARAMETER_TYPE_FLOAT = 5;
-  const long PARAMETER_TYPE_LONG = 6;
-  const long PARAMETER_TYPE_INT = 7;
-  const long PARAMETER_TYPE_SHORT = 8;
-  const long PARAMETER_TYPE_BYTE = 9;
-  const long PARAMETER_TYPE_ARRAY = 10;
-  const long PARAMETER_TYPE_JAVASCRIPT_ARRAY = 11;
-  const long PARAMETER_TYPE_JAVASCRIPT_OBJECT = 12;
+  const long PARAMETER_TYPE_UNKNOWN = 0;
+  const long PARAMETER_TYPE_NULL = 1;
+  const long PARAMETER_TYPE_VOID = 2;
+  const long PARAMETER_TYPE_STRING = 3;
+  const long PARAMETER_TYPE_BOOLEAN = 4;
+  const long PARAMETER_TYPE_DOUBLE = 5;
+  const long PARAMETER_TYPE_FLOAT = 6;
+  const long PARAMETER_TYPE_LONG = 7;
+  const long PARAMETER_TYPE_INT = 8;
+  const long PARAMETER_TYPE_SHORT = 9;
+  const long PARAMETER_TYPE_BYTE = 10;
+  const long PARAMETER_TYPE_ARRAY = 11;
+  const long PARAMETER_TYPE_JAVASCRIPT_ARRAY = 12;
+  const long PARAMETER_TYPE_JAVASCRIPT_OBJECT = 13;
 
   /**
    * An optional encodingStyle specifically for this parameter. The
@@ -119,17 +120,32 @@ interface nsISOAPParameter : nsISupports {
   [noscript] void setValueAndType(in nsISupports value, in long type);
 
   /**
-   * <p>The getter is for native and script callers. For native callers,
-   * the interface implemented by the returned value depends on the
+   * Native (non-script) method for getting the value and type of a parameter.
+   * The interface implemented by the <code>value</code> parameter 
+   * depends on the value of <code>type</code> parameter. Additional
+   * details can be found in the descriptions for the type constants.
+   *
+   * @param value Out parameter returning the value of the parameter. 
+   *              Either NULL or an object that implements an interface 
+   *              specified by the <code>type</code> parameter.
+   * @param type Out parameter returning the type of the parameter. See 
+   *             the description of the type contants for details.
+   */
+  [noscript] void getValueAndType(out nsISupports value, out long type);
+
+  /**
+   * <p>The getter is for native and script callers (despite the
+   * [noscript] qualification). For native callers, the interface
+   * implemented by the returned value depends on the
    * <code>type</code> attribute as detailed in the description of the
    * type constants. For script callers, the value returned is either
-   * a string, boolean, double, integer, Array or object.</p>
-   * <p>Even though the attribute is readonly in IDL, script callers can
-   * set it (native callers should use the <code>setValueAndType</code> 
-   * method). For script callers, the value can be either a string, 
-   * boolean, double, integer, Array or object.
+   * a string, boolean, double, integer, Array or object.</p> 
+   * <p>The setter is for script callers only. Native callers should
+   * use the <code>setValueAndType</code> method). For script callers,
+   * the value can be either a string, boolean, double, integer, Array
+   * or object.  
    */
-  readonly attribute nsISupports value;
+  [noscript] attribute nsISupports value;
 
   /**
    * Used by native callers (SOAP encoders, for example) to retrieve
@@ -145,6 +161,6 @@ interface nsISOAPParameter : nsISupports {
 { /* 87d21ec2-539d-11d4-9a59-00104bdf5339 */        \
   0x87d21ec2, 0x539d, 0x11d4,                       \
  {0x9a, 0x59, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
-#define NS_SOAPCPARAMETER_PROGID \
+#define NS_SOAPPARAMETER_PROGID \
 "component://netscape/xmlextras/soap/parameter"
 %}

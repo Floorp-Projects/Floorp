@@ -34,6 +34,7 @@ public:
                                     nsIDOMElement** aElement);
   static void GetElementTextContent(nsIDOMElement* aElement, 
                                     nsString& aText);
+  static PRBool HasChildElements(nsIDOMElement* aElement);
   static void GetInheritedEncodingStyle(nsIDOMElement* aEntry, 
                                         char** aEncodingStyle);
   static JSContext* GetSafeContext();
@@ -51,6 +52,12 @@ public:
 
   static const char* kSOAPEnvURI;
   static const char* kSOAPEncodingURI;
+  static const char* kSOAPEnvPrefix;
+  static const char* kSOAPEncodingPrefix;
+  static const char* kXSIURI;
+  static const char* kXSDURI;
+  static const char* kXSIPrefix;
+  static const char* kXSDPrefix;
   static const char* kEncodingStyleAttribute;
   static const char* kEnvelopeTagName;
   static const char* kHeaderTagName;
