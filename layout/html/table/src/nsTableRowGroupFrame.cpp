@@ -424,6 +424,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
       }
     }
 
+    // Reflow the row frame
     if (doReflowChild) {
       nsSize kidAvailSize(aReflowState.availSize);
       if (0>=kidAvailSize.height)
@@ -435,15 +436,22 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
       // it wants. We'll deal with splitting later after we've computed the row
       // heights, taking into account cells with row spans...
       kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
+      nsReflowReason  reason = aReason;
       if (aDirtyOnly) {
         if (frameState & NS_FRAME_FIRST_REFLOW) {
           // Newly inserted frame
-          aReason = eReflowReason_Initial;
+          reason = eReflowReason_Initial;
         }
       }
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, kidFrame,
-                                       kidAvailSize, aReason);
+                                       kidAvailSize, reason);
      
+      // If this isn't the first row frame, then we can't be at the top of
+      // the page anymore...
+      if (kidFrame != GetFirstFrame()) {
+        kidReflowState.isTopOfPage = PR_FALSE;
+      }
+
       if (aReflowState.tableFrame->RowGroupsShouldBeConstrained()) {
         // Only applies to the tree widget.
         const nsStyleDisplay *rowDisplay;
@@ -454,19 +462,14 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
         }
       }
   
-      if (kidFrame != GetFirstFrame()) {
-        // If this isn't the first row frame, then we can't be at the top of
-        // the page anymore...
-        kidReflowState.isTopOfPage = PR_FALSE;
-      }
-  
       if ((PR_TRUE==gsDebug) || (PR_TRUE==gsDebugIR))
         printf("%p RG reflowing child %p with avail width = %d, reason = %d\n",
-                          this, kidFrame, kidAvailSize.width, aReason);
+                          this, kidFrame, kidAvailSize.width, reason);
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
       if (gsDebug) printf("%p RG child %p returned desired width = %d\n",
                           this, kidFrame, desiredSize.width);
   
+      // Place the child
       nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
       PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                  kidMaxElementSize);
@@ -507,6 +510,13 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
           }
         }
       }
+    } else {
+      // Adjust the running y-offset so we know where the next row should
+      // be placed
+      nsSize  kidSize;
+
+      kidFrame->GetSize(kidSize);
+      aReflowState.y += kidSize.height;
     }
 
     if (PR_FALSE==aDoSiblings)
@@ -1251,13 +1261,11 @@ nsTableRowGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
-  nsresult              rv;
   const nsStyleDisplay *display;
   aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
 
   // Remove the frame and destroy it
-  rv = mFrames.DestroyFrame(aPresContext, aOldFrame);
-  if (NS_SUCCEEDED(rv)) {
+  if (mFrames.DestroyFrame(aPresContext, aOldFrame)) {
     if ((NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) ||
         (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay)) {
       // Get the table frame
@@ -1279,7 +1287,7 @@ nsTableRowGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
@@ -1299,17 +1307,17 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   switch (type)
   {
   case nsIReflowCommand::ReflowDirty:
-    // Reflow the dirty child frames
+    // Reflow the dirty child frames. Typically this is newly added frames.
     // XXX What we really should do is do a pass-1 reflow of newly added
-    // frames (only if necessary--because the table isn't fixed layout), then
+    // frames (only if necessary, i.e., the table isn't fixed layout), then
     // see if column widtsh changed and decide whether to do the pass-2 reflow
     // of just the dirty rows or have the table rebalance column widths and
     // do a pass-2 reflow of all rows
     rv = ReflowMappedChildren(aPresContext, aDesiredSize, aReflowState, aStatus,
                               nsnull, aReflowState.reflowState.reason, PR_TRUE, PR_TRUE);
 
-    // If any column widths have to change due to this, rebalance column widths
-    //XXX need to calculate this, but for now just do it
+    // If any column widths have to change due to this, rebalance column widths.
+    // XXX need to calculate this, but for now just do it
     aReflowState.tableFrame->InvalidateColumnWidths();  
     break;
 
