@@ -80,9 +80,9 @@ sub include {
             process($stack, $1, $2);
         } elsif (/^\#\n?/os) { # comment
             # ignore it
-        } else {
+        } elsif ($stack->enabled) {
             # print it, including any newlines
-            print $_ if $stack->enabled;
+            print filtered($stack, $_);
         }
     }
     close(FILE);
@@ -98,6 +98,22 @@ sub process {
     if ($@) {
         fatal($stack, "error evaluating $instruction:", $@);
     }
+}
+
+sub filtered {
+    my($stack, $text) = @_;
+    foreach my $filter (sort keys %{$stack->{'filters'}}) {
+        next unless $stack->{'filters'}->{$filter};
+        my $method = 'filter'->can($filter);
+        if (not defined($method)) {
+            fatal($stack, 'unknown filter', $filter);
+        }
+        $text = eval { &$method($stack, $text) };
+        if ($@) {
+            fatal($stack, "error using $filter:", $@);
+        }                
+    }
+    return $text;
 }
 
 sub fatal {
@@ -120,6 +136,9 @@ sub new {
             'LINE' => 0, # the line number in the source file
             'FILE' => '', # source filename
             '1' => 1, # for convenience
+        },
+        'filters' => {
+            # filters
         },
         'values' => [], # the value of the last condition evaluated at the nth lewel
         'lastPrinting' => [], # whether we were printing at the n-1th level
@@ -187,6 +206,13 @@ sub enabled {
 sub disabled {
     my $self = shift;
     return not $self->{'printing'};
+}
+
+sub filter {
+    my $self = shift;
+    my($filter, $value) = @_;
+    die "not a valid filter name: '$filter'\n" if $filter =~ m/\W/;
+    $self->{'filters'}->{$filter} = $value;
 }
 
 
@@ -326,6 +352,41 @@ sub include {
     return if $stack->disabled;
     die "argument expected\n" unless @_;
     main::include($stack, @_);
+}
+
+sub filter {
+    my $stack = shift;
+    return if $stack->disabled;
+    die "argument expected\n" unless @_;
+    foreach (split(/\s/os, shift)) {
+        $stack->filter($_, 1);
+    }
+}
+
+sub unfilter {
+    my $stack = shift;
+    return if $stack->disabled;
+    die "argument expected\n" unless @_;
+    foreach (split(/\s/os, shift)) {
+        $stack->filter($_, 0);
+    }
+}
+
+
+########################################################################
+
+package filter;
+
+sub spaces {
+    my($stack, $text) = @_;
+    $text =~ s/ +/ /gos;
+    return $text;
+}
+
+sub slashslash {
+    my($stack, $text) = @_;
+    $text =~ s|//.*?(\n?)$|$1|gos;
+    return $text;
 }
 
 ########################################################################
