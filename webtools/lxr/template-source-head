@@ -3,60 +3,6 @@
 <head>
 <META NAME="GENERATOR" CONTENT="lxr-1998-06-10: http://lxr.linux.no">
 <title>$title</title>
-
-<SCRIPT LANGUAGE="JavaScript">
-<!--
-var event = 0
-function js_dir_menu() {}
-function js_file_menu() {}
-//-->
-</SCRIPT>
-<SCRIPT LANGUAGE="JavaScript1.2">
-<!--
-function js_dir_menu(dir,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
-        return true;
-    }
-    l = document.layers['popup'];
-    urlmonth="/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=month&mindate=&maxdate=&cvsroot=%2Fcvsroot";
-    urlweek="/webtools/bonsai/cvsquery.cgi?module=MozillaSource&branch=HEAD&dir=mozilla"+dir+"&file=&who=&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot";
-    text="<table border><tr><td><a href=\"mozilla/source"+dir+"\"><a href=\""+urlweek+"\">Checkins to mozilla"+dir+" in the last week</a> <br><a href=\""+urlmonth+"\">Checkins to mozilla"+dir+" in the last month</a> </td></tr> </table>"
-    l.document.write(text);
-    l.top = d.target.y;
-    l.left = d.target.x +  110;
-    if( (l.left + l.clipWidth) > window.width ){
-        l.left = window.width - l.clipWidth;
-    }
-    l.visibility="show";
-    l.document.close();
-    return false;
-}
-
-
-function js_file_menu(file,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
-        return true;
-    }
-    l = document.layers['popup'];
-
-    text="<table border><tr><td><a href=\"/webtools/bonsai/cvslog.cgi?file=/mozilla"+file+"&root=/cvsroot\">mozilla"+file+" change log</a><br><a href=\"http://cvs1.mozilla.org/webtools/bonsai/cvsblame.cgi?&file=mozilla"+file+"&root=/cvsroot\">mozilla"+file+" with change log annotations</a></td></tr></table>"
-    l.document.write(text);
-    l.top = d.target.y;
-    l.left = d.target.x +  110;
-    if( (l.left + l.clipWidth) > window.width ){
-        l.left = window.width - l.clipWidth;
-    }
-    l.visibility="show";
-    l.document.close();
-    return false;
-}
-// end script -->
-</script>
-
-
-<layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#dddddd" visibility="hide">
-</layer>
-
 </head>
 
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
