@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsAppletHTMLObject.cpp,v 1.1 2001/05/10 18:12:41 edburns%acm.org Exp $
+ * $Id: nsAppletHTMLObject.cpp,v 1.2 2001/07/12 20:32:07 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -78,7 +78,7 @@ nsAppletHTMLObject::Initialize(nsIPluginInstancePeer *peer)
   m_peer = peer;
   NS_ADDREF(m_peer);
   peer->QueryInterface(kIPluginInstancePeer2IID,
-		       (void **)&m_peer2);
+                       (void **)&m_peer2);
   m_jobject = new nsJavaHTMLObject(m_factory);
   NS_ADDREF(m_jobject);
   res = nsServiceManager::GetService(kPluginManagerCID, 

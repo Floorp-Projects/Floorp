@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsWFSecureEnv.cpp,v 1.1 2001/05/10 18:12:44 edburns%acm.org Exp $
+ * $Id: nsWFSecureEnv.cpp,v 1.2 2001/07/12 20:32:09 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -181,7 +181,7 @@ nsWFSecureEnv::CallMethod(/*[in]*/  jni_type ret_type,
     {
       // XXX: do smth meaningful with possible Java exception
       if (call->jException) {
-	m_jvm->DeleteLocalRef(call->jException);
+	m_jvm->DeleteGlobalRef(call->jException);
 	rv = NS_ERROR_FAILURE; 
       } else {
 	*result = call->data.__callMethod.result;

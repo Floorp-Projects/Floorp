@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsJavaObjectInfo.cpp,v 1.1 2001/05/10 18:12:42 edburns%acm.org Exp $
+ * $Id: nsJavaObjectInfo.cpp,v 1.2 2001/07/12 20:32:09 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -29,6 +29,7 @@
 #include "nsIWFInstanceWrapper.h"
 #include "nsIPluginInstance.h"
 #include "wf_moz6_common.h"
+#include <stdlib.h>
 
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kIWFInstanceWrapperIID, NS_IWFINSTANCEWRAPPER_IID);

@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsJavaHTMLObjectFactory.cpp,v 1.1 2001/05/10 18:12:42 edburns%acm.org Exp $
+ * $Id: nsJavaHTMLObjectFactory.cpp,v 1.2 2001/07/12 20:32:08 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -38,6 +38,7 @@
 #include "nsWFSecurityContext.h"
 #include "nsIThread.h"
 #include "nsIJVMConsole.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginIID,         NS_IPLUGIN_IID);
@@ -69,12 +70,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsJavaHTMLObjectFactory, \
                               nsIFactory,              \
                               nsIPlugin,               \
                               nsIJVMPlugin,            \
-			      nsIJVMConsole,           \
+                              nsIJVMConsole,           \
                               nsIBrowserJavaSupport)
 
 static int GetProxyForURL(void* handle, 
-			  char* url, 
-			  char* *proxy)
+                          char* url, 
+                          char* *proxy)
 {
   nsresult res;
   nsIBrowserJavaSupport* obj = (nsIBrowserJavaSupport*)handle;
@@ -100,19 +101,20 @@ nsJavaHTMLObjectFactory::nsJavaHTMLObjectFactory()  {
   mainIThread->GetPRThread(&m_mainThread);
   instance = this;
   m_jsjRecursion = 0;
+  m_wrapper = nsnull;
 }
 
 nsJavaHTMLObjectFactory::~nsJavaHTMLObjectFactory() {
   OJI_LOG("nsJavaHTMLObjectFactory::~nsJavaHTMLObjectFactory");
   NS_RELEASE(m_jvm);
-  free(m_wrapper);
+  if (m_wrapper) free(m_wrapper);
 }
 
 
 NS_METHOD
 nsJavaHTMLObjectFactory::Create(nsISupports* outer,
-				const nsIID& aIID, 
-				void* *aInstancePtr)
+                                const nsIID& aIID, 
+                                void* *aInstancePtr)
 {
   //OJI_LOG2("nsJavaHTMLObjectFactory::Create with %p", outer);
   //OJI_LOG2("it is %s", aIID.ToString());
@@ -124,7 +126,9 @@ nsJavaHTMLObjectFactory::Create(nsISupports* outer,
   if (!instance) 
     { 
       instance = new nsJavaHTMLObjectFactory();
-      rv = instance->Initialize();
+      // XXX: instance never will be freed, need to be rewritten            
+      NS_ADDREF(instance);
+      rv = instance->Initialize();  
       if (NS_FAILED(rv)) return rv;
     }
 
@@ -136,8 +140,8 @@ nsJavaHTMLObjectFactory::Create(nsISupports* outer,
   if (aIID.Equals(kIPluginInstanceIID) || aIID.Equals(kIJavaHTMLObjectIID)) 
     {
       return instance->CreateInstance(outer, 
-				      aIID, 
-				      aInstancePtr);
+                                      aIID, 
+                                      aInstancePtr);
     }  
   OJI_LOG2("nsJavaHTMLObjectFactory::Create: no matching ifaces for %s", 
 	   aIID.ToString()); 
@@ -146,8 +150,8 @@ nsJavaHTMLObjectFactory::Create(nsISupports* outer,
 
 NS_IMETHODIMP 
 nsJavaHTMLObjectFactory::CreateInstance(nsISupports *aOuter, 
-					const nsIID & aIID,
-					void **result) 
+                                        const nsIID & aIID,
+                                        void **result) 
 {
   *result = NULL;
   if (aOuter != NULL) 
@@ -155,7 +159,8 @@ nsJavaHTMLObjectFactory::CreateInstance(nsISupports *aOuter,
       OJI_LOG("Aggregation of nsJavaHTMLObjectFactory failed");
       return NS_ERROR_NO_AGGREGATION;
     }
-  if (!m_jvm) return NS_ERROR_FAILURE;
+  // m_env is set if JVM is started up
+  if (!m_jvm || !m_env) return NS_ERROR_FAILURE;
   // XXX: remove me when it'll be called by Mozilla
   //if (NS_FAILED(Initialize())) return NS_ERROR_FAILURE; 
   if (aIID.Equals(kIJavaHTMLObjectIID)) 

@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsJavaHTMLObjectFactory.h,v 1.1 2001/05/10 18:12:42 edburns%acm.org Exp $
+ * $Id: nsJavaHTMLObjectFactory.h,v 1.2 2001/07/12 20:32:09 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -107,8 +107,9 @@ class nsJavaHTMLObjectFactory : public nsIPlugin,
   BrowserSupportWrapper*          m_wrapper;
   JNIEnv*                         m_env;
   NS_IMETHOD doGetProxyForURL(const char* url,
-			      char* *target);
-  NS_IMETHOD doJSCall(jint jstid, struct JSObject_CallInfo** call);
+                              char* *target);
+  NS_IMETHOD doJSCall(jint jstid, 
+                      struct JSObject_CallInfo** call);
   NS_IMETHOD initLiveConnect();
   PRThread*                       m_mainThread;
   jint                            m_jsjRecursion;
