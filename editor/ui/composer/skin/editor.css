@@ -295,13 +295,13 @@ text.color-caption {
 
 div#ColorButtons {
   /* Width needs to be >= 2x color button width 
-     (color.gif=12px + 2 for border) 
+     (color.gif=14px + 2 for border) 
      for initial layout.
      Then use relative position to move buttons
      to desired overlapping locations
   */
-  width:   28px;
-  max-width:   28px;
+  width:       32px;
+  max-width:   32px;
   height:      19px;
   /* This compensates for remaining gap 
      on right after relative button positioning
@@ -316,8 +316,8 @@ titledbutton#TextColorPopupButton {
   margin:  0px;
   position: relative;
   /* Position top left */
-  top:  2px;
-  left: -11px;
+  top:  1px;
+  left: -14px;
 
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #AA0000;
@@ -335,7 +335,7 @@ titledbutton#BackColorPopupButton {
   position: relative;
   /* Position lower right */
   top:  9px;
-  left: 9px;
+  left: 12px;
 
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: yellow;
