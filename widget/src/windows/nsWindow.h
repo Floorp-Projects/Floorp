@@ -201,6 +201,15 @@ protected:
 	void HandleEndComposition(void);
 	void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 
+private:
+
+#ifdef DEBUG
+  void DebugPrintEvent(nsGUIEvent &   aEvent,
+                       char *         sMessage,
+                       HWND           aWnd,
+                       PRBool         aPrintCoords);
+#endif
+
 protected:
     static      nsWindow* gCurrentWindow;
     nsPoint     mLastPoint;

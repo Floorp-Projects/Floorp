@@ -1210,105 +1210,6 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
                           PRBool         aPrintCoords,
                           PRBool         aPrintXID)
 {
-  nsString eventName = "UNKNOWN";
-
-  switch(aEvent.message)
-  {
-  case NS_MOUSE_MOVE: 
-    eventName = "NS_MOUSE_MOVE"; 
-    break;
-
-  case NS_MOUSE_LEFT_BUTTON_UP: 
-    eventName = "NS_MOUSE_LEFT_BUTTON_UP"; 
-    break;
-
-  case NS_MOUSE_LEFT_BUTTON_DOWN: 
-    eventName = "NS_MOUSE_LEFT_BUTTON_DOWN"; 
-    break;
-
-  case NS_MOUSE_MIDDLE_BUTTON_UP: 
-    eventName = "NS_MOUSE_MIDDLE_BUTTON_UP"; 
-    break;
-
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN: 
-    eventName = "NS_MOUSE_MIDDLE_BUTTON_DOWN"; 
-    break;
-
-  case NS_MOUSE_RIGHT_BUTTON_UP: 
-    eventName = "NS_MOUSE_RIGHT_BUTTON_UP"; 
-    break;
-
-  case NS_MOUSE_RIGHT_BUTTON_DOWN: 
-    eventName = "NS_MOUSE_RIGHT_BUTTON_DOWN"; 
-    break;
-
-  case NS_MOUSE_ENTER: 
-    eventName = "NS_MOUSE_ENTER"; 
-    break;
-
-  case NS_MOUSE_EXIT: 
-    eventName = "NS_MOUSE_EXIT"; 
-    break;
-
-  case NS_MOUSE_LEFT_DOUBLECLICK: 
-    eventName = "NS_MOUSE_LEFT_DOUBLECLICK"; 
-    break;
-
-  case NS_MOUSE_MIDDLE_DOUBLECLICK: 
-    eventName = "NS_MOUSE_MIDDLE_DOUBLECLICK"; 
-    break;
-
-  case NS_MOUSE_RIGHT_DOUBLECLICK: 
-    eventName = "NS_MOUSE_RIGHT_DOUBLECLICK"; 
-    break;
-
-  case NS_MOUSE_LEFT_CLICK: 
-    eventName = "NS_MOUSE_LEFT_CLICK"; 
-    break;
-
-  case NS_MOUSE_MIDDLE_CLICK: 
-    eventName = "NS_MOUSE_MIDDLE_CLICK"; 
-    break;
-
-  case NS_MOUSE_RIGHT_CLICK: 
-    eventName = "NS_MOUSE_RIGHT_CLICK"; 
-    break;
-
-  case NS_DRAGDROP_ENTER:
-    eventName = "NS_DRAGDROP_ENTER";
-    break;
-
-  case NS_DRAGDROP_OVER:
-    eventName = "NS_DRAGDROP_OVER";
-    break;
-
-  case NS_DRAGDROP_EXIT:
-    eventName = "NS_DRAGDROP_EXIT";
-    break;
-
-  case NS_DRAGDROP_DROP:
-    eventName = "NS_DRAGDROP_DROP";
-    break;
-
-  case NS_GOTFOCUS:
-    eventName = "NS_GOTFOCUS";
-    break;
-
-  case NS_LOSTFOCUS:
-    eventName = "NS_LOSTFOCUS";
-    break;
-
-  default: 
-    {
-      char buf[32];
-      
-      sprintf(buf,"%d",aEvent.message);
-      
-      eventName = buf;
-    }
-    break;
-  }
-
   static int sPrintCount=0;
 
   printf("%4d %-14s(this=%-8p , name=%-12s",
@@ -1324,7 +1225,7 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
   }
 
   printf(" , event=%-16s",
-         (const char *) nsAutoCString(eventName));
+         (const char *) nsAutoCString(GuiEventToString(aEvent)));
 
   if (aPrintCoords)
   {
