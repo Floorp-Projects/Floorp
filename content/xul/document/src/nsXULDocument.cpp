@@ -3555,6 +3555,7 @@ nsXULDocument::IsSupported(const nsAReadableString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if 0
 NS_IMETHODIMP
 nsXULDocument::GetBaseURI(nsAWritableString &aURI)
 {
@@ -3568,6 +3569,7 @@ nsXULDocument::GetBaseURI(nsAWritableString &aURI)
   }
   return NS_OK;
 }
+#endif
 
 
 //----------------------------------------------------------------------

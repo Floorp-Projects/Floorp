@@ -251,8 +251,10 @@ nsGenericDOMDataNode::GetBaseURI(nsAWritableString& aURI)
     node = do_QueryInterface(mDocument);
   }
 
+#if 0
   if (node)
     rv = node->GetBaseURI(aURI);
+#endif
 
   return rv;
 }

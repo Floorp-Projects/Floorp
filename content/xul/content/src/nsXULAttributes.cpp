@@ -462,12 +462,14 @@ nsXULAttribute::IsSupported(const nsAReadableString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if 0
 NS_IMETHODIMP
 nsXULAttribute::GetBaseURI(nsAWritableString &aURI)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+#endif
 
 // nsIDOMAttr interface
 

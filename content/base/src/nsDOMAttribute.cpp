@@ -527,6 +527,7 @@ nsDOMAttribute::IsSupported(const nsAReadableString& aFeature,
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
+#if 0
 NS_IMETHODIMP
 nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
 {
@@ -537,6 +538,7 @@ nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
     rv = node->GetBaseURI(aURI);
   return rv;
 }
+#endif
 
 //----------------------------------------------------------------------
 

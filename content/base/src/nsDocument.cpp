@@ -119,8 +119,6 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 #include "nsIHTMLDocument.h"
 
 
-
-
 nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
 {
   NS_INIT_REFCNT();
@@ -2738,6 +2736,7 @@ nsDocument::IsSupported(const nsAReadableString& aFeature,
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
+#if 0
 NS_IMETHODIMP
 nsDocument::GetBaseURI(nsAWritableString &aURI)
 {
@@ -2751,6 +2750,7 @@ nsDocument::GetBaseURI(nsAWritableString &aURI)
   }
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP    
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)

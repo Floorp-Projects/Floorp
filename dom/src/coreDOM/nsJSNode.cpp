@@ -71,8 +71,7 @@ enum Node_slots {
   NODE_OWNERDOCUMENT = -11,
   NODE_NAMESPACEURI = -12,
   NODE_PREFIX = -13,
-  NODE_LOCALNAME = -14,
-  NODE_BASEURI = -15
+  NODE_LOCALNAME = -14
 };
 
 /***********************************************************************/
@@ -271,18 +270,6 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case NODE_BASEURI:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_BASEURI, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetBaseURI(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
@@ -373,7 +360,6 @@ static JSPropertySpec NodeProperties[] =
   {"namespaceURI",    NODE_NAMESPACEURI,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"prefix",    NODE_PREFIX,    JSPROP_ENUMERATE},
   {"localName",    NODE_LOCALNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"baseURI",    NODE_BASEURI,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
