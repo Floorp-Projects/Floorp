@@ -51,11 +51,11 @@ select.combobox {
   border-style: outset;
 }
 
-titledbutton#TextColorPopup {
+titledbutton#TextColorPopupButton {
   margin-right: -3px;
 }
 
-titledbutton#BackColorPopup {
+titledbutton#BackColorPopupButton {
   margin-left: -3px;
 }
 
