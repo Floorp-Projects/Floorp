@@ -199,8 +199,7 @@ cx.setDebugger(new MyDebugger());
 
 Here debugger during execution needs to decide if a particular line has breakpoint on it set or not during script execution, not at the moment of script initialization.
 
-<p>See also Rhino Debugger that fully explore the new API:<br><tt><a  href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java">http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java</a></tt>.
-
+<p>See also Rhino Debugger that fully explore the new API:<br><tt><a  href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java">http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java</a></tt>. The debugger changes includes support for debugging eval and Function scripts and loading script sources from their URL if debugger was not installed during scripts initialization.
 
 <h3>WrapFactory introduced, WrapHandler deprecated</h3>
 A design flaw in the WrapHandler interface (a call to a Java contructor from
