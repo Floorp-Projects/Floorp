@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Blake Kaplan <mrbkap@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -759,8 +760,8 @@ nsresult CTextToken::ConsumeCharacterData(PRUnichar aChar,
         else if (!aConservativeConsume) {
           done = PR_TRUE; // Do this to fix Bug. 35456
           result = kFakeEndTag;
-          aScanner.BindSubstring(mTextValue, theStartOffset, endPos.advance(-1));
-          aScanner.SetPosition(endPos.advance(1));
+          aScanner.BindSubstring(mTextValue, theStartOffset, endPos);
+          aScanner.SetPosition(endPos);
         }
         else {
           done = PR_TRUE;
