@@ -321,7 +321,11 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
     // See if we an set the max element size and return the reflow states new reason. Sometimes reflow states need to 
     // be changed. Incremental dirty reflows targeted at us can be converted to Resize if we are not dirty. So make sure
     // we look at the reason returned.
-    PRBool canSetMaxElementSize = CanSetMaxElementSize(aState, reason);
+    nsReflowPath *path = nsnull;
+    PRBool canSetMaxElementSize = CanSetMaxElementSize(aState, reason, &path);
+
+    NS_ASSERTION(reason != eReflowReason_Incremental || path,
+                 "HandleIncrementalReflow should have changed the reason to dirty.");
 
     // If its a resize nothing in the block could have changed.
     // so use our cached sizes instead. Well of course that is if we have cached sizes
@@ -350,12 +354,17 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
      rect.height = NS_UNCONSTRAINEDSIZE;
     }
 
+    // Create a child reflow state, fix-up the reason and the
+    // incremental reflow path.
+    nsHTMLReflowState childReflowState(*reflowState);
+    childReflowState.reason = reason;
+    childReflowState.path   = path;
 
     // do the nasty.
     rv = Reflow(aState,
                 presContext, 
                 desiredSize, 
-                *reflowState, 
+                childReflowState, 
                 status,
                 rect.x,
                 rect.y,
@@ -658,6 +667,25 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
   return rv;
 }
 
+// Truncate the reflow path by pruning the subtree containing the
+// specified frame. This ensures that we don't accidentally
+// incrementally reflow a frame twice.
+// XXXwaterson We could be more efficient by remembering the parent in
+// FindReflowPathFor.
+static void
+PruneReflowPathFor(nsIFrame *aFrame, nsReflowPath *aReflowPath)
+{
+  nsReflowPath::iterator iter, end = aReflowPath->EndChildren();
+  for (iter = aReflowPath->FirstChild(); iter != end; ++iter) {
+    if (*iter == aFrame) {
+      aReflowPath->Remove(iter);
+      break;
+    }
+
+    PruneReflowPathFor(aFrame, iter.get());
+  }
+}
+
 nsresult
 nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                      nsIPresContext*   aPresContext,
@@ -699,11 +727,12 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   PRBool needsReflow = PR_FALSE;
   PRBool redrawNow = PR_FALSE;
   nsReflowReason reason;
-  
+  nsReflowPath *path = nsnull;
+
   HandleIncrementalReflow(aState, 
                           aReflowState, 
                           reason,
-                          PR_TRUE,
+                          &path,
                           redrawNow,
                           needsReflow, 
                           redrawAfterReflow, 
@@ -770,10 +799,14 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
           size.width = 0;
     }
 
-    nsHTMLReflowState   reflowState(aPresContext, aReflowState, mFrame, nsSize(size.width, NS_INTRINSICSIZE));
+    // Create with a reason of resize, and then change the `reason'
+    // and `path' appropriately (since for incremental reflow, we'll
+    // be mangling it so completely).
+    nsHTMLReflowState reflowState(aPresContext, aReflowState, mFrame,
+                                  nsSize(size.width, NS_INTRINSICSIZE),
+                                  eReflowReason_Resize);
     reflowState.reason = reason;
-    if (reason != eReflowReason_Incremental)
-       reflowState.reflowCommand = nsnull;
+    reflowState.path   = path;
 
     // XXX this needs to subtract out the border and padding of mFrame since it is content size
     reflowState.mComputedWidth = size.width;
@@ -784,34 +817,51 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     //    with 1 stone.
     // 2) If the command is incremental. See if its style change. If it is everything is ok if not
     //    we need to do a second reflow with the style change.
+    // XXXwaterson This logic seems _very_ squirrely.
     if (mStyleChange) {
       if (reflowState.reason == eReflowReason_Resize) {
          // maxElementSize does not work on style change reflows.
          // so remove it if set.
+         // XXXwaterson why doesn't MES computation work with a style change reflow?
          aDesiredSize.maxElementSize = nsnull;
 
          reflowState.reason = eReflowReason_StyleChange;
-      } else if (reason == eReflowReason_Incremental) {
-         nsReflowType  type;
-          reflowState.reflowCommand->GetType(type);
+      }
+      else if (reason == eReflowReason_Incremental) {
+        PRBool reflowChild = PR_TRUE;
 
-          if (type != eReflowType_StyleChanged) {
-             #ifdef DEBUG_REFLOW
-                nsAdaptorAddIndents();
-                printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
-                nsAdaptorAddIndents();
-                nsAdaptorPrintReason(reflowState);
-                printf("\n");
-             #endif
+        if (path->mReflowCommand &&
+            path->FirstChild() == path->EndChildren()) {
+          // There's an incremental reflow targeted directly at our
+          // frame, and our frame only (i.e., none of our descendants
+          // are targets).
+          nsReflowType type;
+          path->mReflowCommand->GetType(type);
+          if (type == eReflowType_StyleChanged)
+            reflowChild = PR_FALSE;
+        }
 
-             mFrame->WillReflow(aPresContext);
-             mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-             mFrame->DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
-             reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
-             reflowState.availableWidth = reflowState.mComputedWidth;
-             reflowState.reason = eReflowReason_StyleChange;
-             reflowState.reflowCommand = nsnull;
-          }
+        if (reflowChild) {
+#ifdef DEBUG_waterson
+          printf("*** nsBoxToBlockAdaptor::Reflow: performing extra reflow on child frame\n");
+#endif
+
+#ifdef DEBUG_REFLOW
+          nsAdaptorAddIndents();
+          printf("Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
+          nsAdaptorAddIndents();
+          nsAdaptorPrintReason(reflowState);
+          printf("\n");
+#endif
+
+          mFrame->WillReflow(aPresContext);
+          mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+          mFrame->DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
+          reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
+          reflowState.availableWidth = reflowState.mComputedWidth;
+          reflowState.reason = eReflowReason_StyleChange;
+          reflowState.path = nsnull;
+        }
       }
 
       mStyleChange = PR_FALSE;
@@ -865,7 +915,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                  reflowState.mComputedWidth = aDesiredSize.width - (border.left + border.right);
                  reflowState.availableWidth = reflowState.mComputedWidth;
                  reflowState.reason = eReflowReason_Resize;
-                 reflowState.reflowCommand = nsnull;
+                 reflowState.path = nsnull;
                  mFrame->DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
                  #ifdef DEBUG_REFLOW
                   nsAdaptorAddIndents();
@@ -906,6 +956,12 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   } else {
     aDesiredSize.ascent = mBlockAscent;
   }
+
+  // Clip the path we just reflowed, so that we don't incrementally
+  // reflow it again: subsequent reflows will be treated as resize
+  // reflows.
+  if (path)
+    PruneReflowPathFor(path->mFrame, aReflowState.path);
   
 #ifdef DEBUG_REFLOW
   if (aHeight != NS_INTRINSICSIZE && aDesiredSize.height != aHeight)
@@ -938,15 +994,33 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   return NS_OK;
 }
 
+// Look for aFrame in the specified reflow path's tree, returning the
+// reflow path node corresponding to the frame if we find it.
+static nsReflowPath *
+FindReflowPathFor(nsIFrame *aFrame, nsReflowPath *aReflowPath)
+{
+  nsReflowPath::iterator iter, end = aReflowPath->EndChildren();
+  for (iter = aReflowPath->FirstChild(); iter != end; ++iter) {
+    if (*iter == aFrame)
+      return iter.get();
+
+    nsReflowPath *subtree = FindReflowPathFor(aFrame, iter.get());
+    if (subtree)
+      return subtree;
+  }
+
+  return nsnull;
+}
+
 void
 nsBoxToBlockAdaptor::HandleIncrementalReflow(nsBoxLayoutState& aState, 
-                                          const nsHTMLReflowState aReflowState,
-                                          nsReflowReason& aReason,
-                                          PRBool aPopOffIncremental,
-                                          PRBool& aRedrawNow,
-                                          PRBool& aNeedsReflow,
-                                          PRBool& aRedrawAfterReflow,
-                                          PRBool& aMoveFrame)
+                                             const nsHTMLReflowState& aReflowState,
+                                             nsReflowReason& aReason,
+                                             nsReflowPath** aReflowPath,
+                                             PRBool& aRedrawNow,
+                                             PRBool& aNeedsReflow,
+                                             PRBool& aRedrawAfterReflow,
+                                             PRBool& aMoveFrame)
 {
   nsFrameState childState;
   mFrame->GetFrameState(&childState);
@@ -966,19 +1040,18 @@ nsBoxToBlockAdaptor::HandleIncrementalReflow(nsBoxLayoutState& aState,
    // needed size then we will do nothing. 
    case eReflowReason_Incremental: {
 
-      // if incremental see if the next child in the chain is the child. If so then
-      // we will just let it go down. If not then convert it to a dirty. It will get converted back when 
-      // needed in the case just below this one.
-      nsIFrame* incrementalChild = nsnull;
-      aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
-      
-      // if the increment child is our child then
-      // pop it off and continue sending it down
-      if (incrementalChild == mFrame ) {
+      // Grovel through the reflow path's children to find the path
+      // that corresponds to the current frame. If we can't find a
+      // child, then we'll convert the reflow to a dirty reflow,
+      // below.
+      nsReflowPath *path = FindReflowPathFor(mFrame, aReflowState.path);
+      if (path) {
           aNeedsReflow = PR_TRUE;
 
-          if (aPopOffIncremental)
-             aReflowState.reflowCommand->GetNext(incrementalChild);
+          // Return the path that we've found so that HTML incremental
+          // reflow can proceed normally.
+          if (aReflowPath)
+            *aReflowPath = path;
 
           // if we hit the target then we have used up the chain.
           // next time a layout 
@@ -1049,7 +1122,7 @@ nsBoxToBlockAdaptor::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed
 }
 
 PRBool 
-nsBoxToBlockAdaptor::CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason)
+nsBoxToBlockAdaptor::CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason, nsReflowPath **aReflowPath)
 {
       PRBool redrawAfterReflow = PR_FALSE;
       PRBool needsReflow = PR_FALSE;
@@ -1060,7 +1133,7 @@ nsBoxToBlockAdaptor::CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReas
       HandleIncrementalReflow(aState, 
                               *reflowState, 
                               aReason,
-                              PR_FALSE,
+                              aReflowPath,
                               redrawNow,
                               needsReflow, 
                               redrawAfterReflow, 
@@ -1068,10 +1141,12 @@ nsBoxToBlockAdaptor::CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReas
 
       // only  incremental reflows can handle maxelementsize being set.
       if (reflowState->reason == eReflowReason_Incremental) {
-        if (reflowState->reflowCommand) {
+        nsReflowPath *path = *aReflowPath;
+        if (path && path->mReflowCommand) {
           // MaxElement doesn't work on style change reflows.. :-(
+          // XXXwaterson why?
           nsReflowType  type;
-          reflowState->reflowCommand->GetType(type);
+          path->mReflowCommand->GetType(type);
 
           if (type == eReflowType_StyleChanged) 
             return PR_FALSE;

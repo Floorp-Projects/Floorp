@@ -889,9 +889,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
 
     if (eReflowReason_Incremental == aReflowState.reason) {
-      nsIFrame* targetFrame;
-      aReflowState.reflowCommand->GetTarget(targetFrame);
-      if (targetFrame == this) {
+      nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+      if (command) {
         // XXX So this may do it too often
         // the side effect of this is if the user has scrolled to some other place in the list and
         // an incremental reflow comes through the list gets scrolled to the first selected item
@@ -949,13 +948,12 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
 
   if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-    firstPassState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
+    nsHTMLReflowCommand *command = firstPassState.path->mReflowCommand;
+    if (command) {
       nsReflowType type;
-      aReflowState.reflowCommand->GetType(type);
+      command->GetType(type);
       firstPassState.reason = eReflowReason_StyleChange;
-      firstPassState.reflowCommand = nsnull;
+      firstPassState.path = nsnull;
     } else {
       nsresult res = nsScrollFrame::Reflow(aPresContext, 
                                            scrolledAreaDesiredSize,
@@ -966,10 +964,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
         return res;
       }
-      nsReflowType type;
-      aReflowState.reflowCommand->GetType(type);
+
       firstPassState.reason = eReflowReason_StyleChange;
-      firstPassState.reflowCommand = nsnull;
+      firstPassState.path = nsnull;
     }
   }
 

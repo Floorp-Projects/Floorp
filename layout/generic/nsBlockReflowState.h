@@ -199,11 +199,6 @@ public:
   // the sibling list.
   nsIFrame* mPrevChild;
 
-  // The next immediate child frame that is the target of an
-  // incremental reflow command. Once that child has been reflowed we
-  // null this slot out.
-  nsIFrame* mNextRCFrame;
-
   // The previous child frames collapsed bottom margin value.
   nsCollapsingMargin mPrevBottomMargin;
 

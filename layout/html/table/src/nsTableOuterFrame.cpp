@@ -1066,24 +1066,18 @@ nsTableOuterFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState,
                                      nsReflowStatus&          aStatus)
 {
-  nsresult  rv = NS_OK;
+  // the outer table is a target if its path has a reflow command
+  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
+  if (command)
+    IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  // determine if this frame is the target or not
-  nsIFrame* target=nsnull;
-  rv = aReflowState.reflowCommand->GetTarget(target);
-  if (NS_SUCCEEDED(rv) && target) {
-    if (this == target) {
-      rv = IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
-    }
-    else {
-      // Get the next frame in the reflow chain
-      nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
-      NS_ASSERTION(nextFrame, "next frame in reflow command is null"); 
-      rv = IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, nextFrame);
-    }
-  }
-  return rv;
+  // see if the chidren are targets as well
+  nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+  nsReflowPath::iterator end  = aReflowState.path->EndChildren();
+  for (; iter != end; ++iter)
+    IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, *iter);
+
+  return NS_OK;
 }
 
 nsresult 
@@ -1157,8 +1151,9 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
 
   // for now just reflow the table if a style changed. This should be improved
+  // XXXwaterson danger! assuming aOuterRS.tree->mReflowCommand...
   nsReflowType reflowCommandType;
-  aOuterRS.reflowCommand->GetType(reflowCommandType);
+  aOuterRS.path->mReflowCommand->GetType(reflowCommandType);
   PRBool needInnerReflow = (eReflowType_StyleChanged == reflowCommandType)
                             ? PR_TRUE : PR_FALSE;
 
@@ -1279,17 +1274,17 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext*           aPresContext
                                           nsReflowStatus&           aStatus)
 {
   nsresult rv = NS_OK;
+  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
   nsReflowType type;
-  aReflowState.reflowCommand->GetType(type);
+  command->GetType(type);
   nsIFrame* objectFrame;
-  aReflowState.reflowCommand->GetChildFrame(objectFrame); 
+  command->GetChildFrame(objectFrame); 
   switch (type) {
   case eReflowType_ReflowDirty:
      rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
   case eReflowType_StyleChanged :    
-  case eReflowType_Timeout :    
     rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
@@ -1330,11 +1325,10 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   // StyleChange reflow reasons down to the children so that they
   // don't over-optimize their reflow.
   nsReflowReason ReflowReason = eReflowReason_Incremental;
-  nsIFrame* target = nsnull;
-  aOuterRS.reflowCommand->GetTarget(target);
-  if (this == target) {
+  nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
+  if (command) {
     nsReflowType type;
-    aOuterRS.reflowCommand->GetType(type);
+    command->GetType(type);
     if (eReflowType_StyleChanged == type) {
       ReflowReason = eReflowReason_StyleChange;
     }

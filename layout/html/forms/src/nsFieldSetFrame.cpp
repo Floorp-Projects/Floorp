@@ -300,20 +300,18 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
   }
   
    //------------ Handle Incremental Reflow -----------------
-   nsIFrame* incrementalChild = nsnull;
    PRBool reflowContent = PR_TRUE;
    PRBool reflowLegend = PR_TRUE;
    nsReflowReason reason = aReflowState.reason;
 
     if ( aReflowState.reason == eReflowReason_Incremental ) {
-        nsReflowType  reflowType;
-        aReflowState.reflowCommand->GetType(reflowType);
+        nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
 
         // See if it's targeted at us
-        nsIFrame* targetFrame;    
-        aReflowState.reflowCommand->GetTarget(targetFrame);
+        if (command) {
+            nsReflowType  reflowType;
+            command->GetType(reflowType);
 
-        if (this == targetFrame) {
             switch (reflowType) {
 
               case eReflowType_StyleChanged: 
@@ -337,15 +335,18 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                     NS_ERROR("Unexpected Reflow Type");
             }
         } else {
-             aReflowState.reflowCommand->GetNext(incrementalChild);
-
              reflowContent = PR_FALSE;
              reflowLegend = PR_FALSE;
 
-             if (incrementalChild == mLegendFrame)
-                 reflowLegend = PR_TRUE;
-             else if (incrementalChild == mContentFrame)
-                 reflowContent = PR_TRUE;       
+             nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+             nsReflowPath::iterator end = aReflowState.path->EndChildren();
+
+             for ( ; iter != end; ++iter) {
+                 if (*iter == mLegendFrame)
+                     reflowLegend = PR_TRUE;
+                 else if (*iter == mContentFrame)
+                     reflowContent = PR_TRUE;
+             }
         }
     }
 
@@ -385,12 +386,12 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
         if (reflowLegend) {
           nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
-                                              mLegendFrame, nsSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE));
+                                              mLegendFrame, nsSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE),
+                                              reason);
 
           // always give the legend as much size as it needs
           legendReflowState.mComputedWidth = NS_INTRINSICSIZE;
           legendReflowState.mComputedHeight = NS_INTRINSICSIZE;
-          legendReflowState.reason = reason;
 
           nsHTMLReflowMetrics legendDesiredSize(0,0);
 
@@ -459,9 +460,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
             }
 #endif
             nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mContentFrame,
-                                             availSize);
-
-            kidReflowState.reason = reason;
+                                             availSize, reason);
 
             nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize, aDesiredSize.mFlags);
             // Reflow the frame

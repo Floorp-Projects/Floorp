@@ -64,7 +64,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mPresContext(aPresContext),
     mReflowState(aReflowState),
     mLastFloaterY(0),
-    mNextRCFrame(nsnull),
     mPrevBottomMargin(),
     mLineNumber(0),
     mFlags(0)

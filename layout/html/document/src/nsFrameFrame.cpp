@@ -530,7 +530,9 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.height += border.top + border.bottom;
   }
 
-  // Reflow the child and get its desired size
+  // Reflow the child and get its desired size. We'll need to convert
+  // an incremental reflow to a dirty reflow unless our child is along
+  // the path.
   nsIFrame* firstChild = mFrames.FirstChild();
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, firstChild,

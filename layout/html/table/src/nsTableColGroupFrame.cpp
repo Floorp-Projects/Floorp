@@ -39,7 +39,7 @@
 #include "nsTableFrame.h"
 #include "nsIHTMLTableColElement.h"
 #include "nsIDOMHTMLTableColElement.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -490,22 +490,18 @@ NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext*          aPres
 {
   nsresult  rv = NS_OK;
 
-  // determine if this frame is the target or not
-  nsIFrame *target=nsnull;
-  rv = aReflowState.reflowCommand->GetTarget(target);
-  if ((PR_TRUE==NS_SUCCEEDED(rv)) && (nsnull!=target))
-  {
-    if (this==target)
-      rv = IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
-    else
-    {
-      // Get the next frame in the reflow chain
-      nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
-      rv = IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, nextFrame);
-    }
-  }
-  return rv;
+  // the col group is a target if its path has a reflow command
+  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
+  if (command)
+    IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  // see if the chidren are targets as well
+  nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+  nsReflowPath::iterator end  = aReflowState.path->EndChildren();
+  for (; iter != end; ++iter)
+    IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, *iter);
+
+  return NS_OK;
 }
 
 NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresContext,
@@ -516,9 +512,9 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresCont
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
   nsReflowType type;
-  aReflowState.reflowCommand->GetType(type);
+  aReflowState.path->mReflowCommand->GetType(type);
   nsIFrame *objectFrame;
-  aReflowState.reflowCommand->GetChildFrame(objectFrame); 
+  aReflowState.path->mReflowCommand->GetChildFrame(objectFrame); 
   const nsStyleDisplay *childDisplay=nsnull;
   if (nsnull!=objectFrame)
     objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));

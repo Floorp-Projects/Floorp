@@ -110,7 +110,6 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*    aTargetFrame,
                                          nsIFrame*    aChildFrame,
                                          nsIAtom*     aAttribute)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mPrevSiblingFrame(nsnull),
     mAttribute(aAttribute),
     mListName(nsnull),
     mFlags(0)
@@ -142,110 +141,6 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
 
   NS_IF_RELEASE(mAttribute);
   NS_IF_RELEASE(mListName);
-}
-
-void nsHTMLReflowCommand::BuildPath()
-{
-#ifdef DEBUG_jesup
-  if (mPath.Count() == 0)
-    gReflowsZero++;
-  else if (mPath.Count() <= 8)
-    gReflowsAuto++;
-  else
-    gReflowsLarger++;
-#endif
-
-  mPath.Clear();
-
-  // Construct the reflow path by walking up the through the frames'
-  // parent chain until we reach either a `reflow root' or the root
-  // frame in the frame hierarchy.
-  nsIFrame *f = mTargetFrame;
-  nsFrameState state;
-  do {
-    mPath.AppendElement(f);
-    f->GetFrameState(&state);
-  } while (!(state & NS_FRAME_REFLOW_ROOT) && (f->GetParent(&f), f != nsnull));
-}
-
-nsresult
-nsHTMLReflowCommand::Dispatch(nsIPresContext*      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              const nsSize&        aMaxSize,
-                              nsIRenderingContext& aRendContext)
-{
-  // Build the path from the target frame (index 0)
-  BuildPath();
-
-  // Send an incremental reflow notification to the first frame in the
-  // path.
-  nsIFrame* first = (nsIFrame*)mPath[mPath.Count() - 1];
-
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-
-  nsIFrame* root;
-  shell->GetRootFrame(&root);
-
-  // Remove the first frame from the path and reflow it.
-  mPath.RemoveElementAt(mPath.Count() - 1);
-
-  first->WillReflow(aPresContext);
-  nsContainerFrame::PositionFrameView(aPresContext, first);
-
-  // If the first frame in the path is the root of the frame
-  // hierarchy, then use all the available space. If it's simply a
-  // `reflow root', then use the first frame's size as the available
-  // space.
-  //
-  // XXXwaterson Beware that this is not sufficiently general to allow
-  // arbitrary frames to be reflow roots. For example, and inline
-  // frame cannot be a reflow root because nsHTMLReflowState::Init()
-  // will try to walk up through the reflow state chain to find the
-  // containing block.
-  nsSize size;
-  if (first == root)
-    size = aMaxSize;
-  else
-    first->GetSize(size);
-
-  nsHTMLReflowState reflowState(aPresContext, first, *this,
-                                &aRendContext, size);
-
-  nsReflowStatus status;
-  first->Reflow(aPresContext, aDesiredSize, reflowState, status);
-
-  // If an incremental reflow is initiated at a frame other than the
-  // root frame, then its desired size had better not change!
-  NS_ASSERTION(first == root ||
-               (aDesiredSize.width == size.width && aDesiredSize.height == size.height),
-               "non-root frame's desired size changed during an incremental reflow");
-
-  first->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
-
-  nsIView* view;
-  first->GetView(aPresContext, &view);
-  if (view)
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, view, nsnull);
-
-  first->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::GetNext(nsIFrame*& aNextFrame, PRBool aRemove)
-{
-  PRInt32 count = mPath.Count();
-
-  aNextFrame = nsnull;
-  if (count > 0) {
-    aNextFrame = (nsIFrame*)mPath[count - 1];
-    if (aRemove) {
-      mPath.RemoveElementAt(count - 1);
-    }
-  }
-  return NS_OK;
 }
 
 nsresult
@@ -302,13 +197,6 @@ nsHTMLReflowCommand::SetChildListName(nsIAtom* aListName)
 }
 
 nsresult
-nsHTMLReflowCommand::GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const
-{
-  aSiblingFrame = mPrevSiblingFrame;
-  return NS_OK;
-}
-
-nsresult
 nsHTMLReflowCommand::List(FILE* out) const
 {
 #ifdef DEBUG
@@ -328,10 +216,6 @@ nsHTMLReflowCommand::List(FILE* out) const
   if (mChildFrame) {
     fprintf(out, " child=");
     nsFrame::ListTag(out, mChildFrame);
-  }
-  if (mPrevSiblingFrame) {
-    fprintf(out, " prevSibling=");
-    nsFrame::ListTag(out, mPrevSiblingFrame);
   }
   if (mAttribute) {
     fprintf(out, " attr=");

@@ -38,7 +38,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLIIDs.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsIStyleContext.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
@@ -289,24 +289,20 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
   aWasHandled = PR_FALSE;
   aChildBounds.SetRect(0, 0, 0, 0);
 
-  // See if the reflow command is targeted at us
-  nsIFrame* targetFrame;
-  aReflowState.reflowCommand->GetTarget(targetFrame);
+  // See if the reflow command is targeted at us.
+  nsReflowPath *path = aReflowState.path;
+  nsHTMLReflowCommand *command = path->mReflowCommand;
 
-  if (aReflowState.frame == targetFrame) {
-    nsIAtom*  listName;
-    PRBool    isAbsoluteChild;
-
+  if (command) {
     // It's targeted at us. See if it's for the positioned child frames
-    aReflowState.reflowCommand->GetChildListName(listName);
-    isAbsoluteChild = nsLayoutAtoms::absoluteList == listName;
-    NS_IF_RELEASE(listName);
+    nsCOMPtr<nsIAtom> listName;
+    command->GetChildListName(*getter_AddRefs(listName));
 
-    if (isAbsoluteChild) {
+    if (nsLayoutAtoms::absoluteList == listName) {
       nsReflowType  type;
 
       // Get the type of reflow command
-      aReflowState.reflowCommand->GetType(type);
+      command->GetType(type);
 
       // The only type of reflow command we expect is that we have dirty
       // child frames to reflow
@@ -321,47 +317,59 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
           nsReflowStatus  status;
           nsReflowReason  reason;
 
-          if (frameState & NS_FRAME_FIRST_REFLOW) {
-            reason = eReflowReason_Initial;
-          } else {
-            reason = eReflowReason_Dirty;
-          }
+          reason = (frameState & NS_FRAME_FIRST_REFLOW)
+            ? eReflowReason_Initial
+            : eReflowReason_Dirty;
+
           ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
                               aContainingBlockWidth, aContainingBlockHeight, f,
                               reason, status);
         }
       }
 
-      // Indicate we handled the reflow command
+      // Indicate we handled the reflow command.
       aWasHandled = PR_TRUE;
       
-      // Calculate the total child bounds
+      // Calculate the total child bounds.
       CalculateChildBounds(aPresContext, aChildBounds);
     }
+  }
 
-  } else if (mAbsoluteFrames.NotEmpty()) {
-    // Peek at the next frame in the reflow path
-    nsIFrame* nextFrame;
-    aReflowState.reflowCommand->GetNext(nextFrame, PR_FALSE);
+  nsReflowPath::iterator iter = path->FirstChild();
+  nsReflowPath::iterator end = path->EndChildren();
 
-    // See if it's one of our absolutely positioned child frames
-    NS_ASSERTION(nsnull != nextFrame, "next frame in reflow command is null"); 
-    if (mAbsoluteFrames.ContainsFrame(nextFrame)) {
-      // Remove the next frame from the reflow path
-      aReflowState.reflowCommand->GetNext(nextFrame, PR_TRUE);
+  if (iter != end && mAbsoluteFrames.NotEmpty()) {
+    // One of our children has been targeted for reflow. By default,
+    // assume we've handled it.
+    aWasHandled = PR_TRUE;
 
-      nsReflowStatus  kidStatus;
-      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                          aContainingBlockWidth, aContainingBlockHeight, nextFrame,
-                          aReflowState.reason, kidStatus);
-      // We don't need to invalidate anything because the frame should
-      // invalidate any area within its frame that needs repainting, and
-      // because it has a view if it changes size the view manager will
-      // damage the dirty area
-      aWasHandled = PR_TRUE;
+    for ( ; iter != end; ++iter) {
+      // See if it's one of our absolutely positioned child frames
+      if (mAbsoluteFrames.ContainsFrame(*iter)) {
+        // Remove the next frame from the reflow path
+        nsReflowStatus kidStatus;
+        ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
+                            aContainingBlockWidth, aContainingBlockHeight, *iter,
+                            aReflowState.reason, kidStatus);
 
-      // Calculate the total child bounds
-      CalculateChildBounds(aPresContext, aChildBounds);
+        // We don't need to invalidate anything because the frame
+        // should invalidate any area within its frame that needs
+        // repainting, and because it has a view if it changes size
+        // the view manager will damage the dirty area
+
+        // Calculate the total child bounds
+        CalculateChildBounds(aPresContext, aChildBounds);
+
+        // Prune the path so we don't flow the block frame _again_
+        // when returning to the caller.
+        aReflowState.path->Remove(iter);
+      }
+      else {
+        // At least one of the frames along the reflow path wasn't
+        // absolutely positioned, so we'll need to deal with it in
+        // normal block reflow.
+        aWasHandled = PR_FALSE;
+      }
     }
   }
 
@@ -405,10 +413,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
                                      availSize, aContainingBlockWidth,
-                                     aContainingBlockHeight);
-
-  // Set the reflow reason
-  kidReflowState.reason = aReason;
+                                     aContainingBlockHeight,
+                                     aReason);
 
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);

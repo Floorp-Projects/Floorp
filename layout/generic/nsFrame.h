@@ -274,9 +274,6 @@ public:
                                   nsPeekOffsetStruct *aPos);
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
-  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*        aPresShell,
-                                  nsHTMLReflowCommand* aRC,
-                                  PRBool               aCommandAdded);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);

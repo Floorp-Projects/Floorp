@@ -104,8 +104,7 @@ public:
 
 private:
   //void DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox);
-  void UnWind(nsHTMLReflowCommand* aCommand, nsIBox* aRootBox);
-  nsIBox* GetTargetBox(nsHTMLReflowCommand* mCommand, PRBool& aIsAdaptor);
+  void Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox, PRBool aClearDirtyBits);
   nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
   nsCOMPtr<nsIPresContext> mPresContext;

@@ -40,7 +40,7 @@
 #include "nsTableCellFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -864,29 +864,19 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 
   PRBool  isStyleChanged = PR_FALSE;
   if (eReflowReason_Incremental == aReflowState.reason) {
-    // We *must* do this otherwise incremental reflow that's
-    // passing through will not work right.
-    nsIFrame* next;
-    aReflowState.reflowCommand->GetNext(next);
-
-    // if it is a StyleChanged reflow targeted at this cell frame,
-    // handle that here
-    // first determine if this frame is the target or not
-    nsIFrame *target=nsnull;
-    rv = aReflowState.reflowCommand->GetTarget(target);
-    if ((PR_TRUE==NS_SUCCEEDED(rv)) && target) {
-      if (this == target) {
-        nsReflowType type;
-        aReflowState.reflowCommand->GetType(type);
-        if (eReflowType_StyleChanged == type) {
-          isStyleChanged = PR_TRUE;
-        }
-        else {
-          NS_ASSERTION(PR_FALSE, "table cell target of illegal incremental reflow type");
-        }
+    // if the path has a reflow command then the cell must be the target of a style change 
+    nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
+    if (command) {
+      // if there are other reflow commands targeted at the cell's block, these will
+      // be subsumed by the style change reflow
+      nsReflowType type;
+      command->GetType(type);
+      if (eReflowType_StyleChanged == type) {
+        isStyleChanged = PR_TRUE;
       }
+      else NS_ASSERTION(PR_FALSE, "table cell target of illegal incremental reflow type");
     }
-    // if any of these conditions are not true, we just pass the reflow command down
+    // else the reflow command will be passed down to the child
   }
 
   // Try to reflow the child into the available space. It might not
@@ -918,18 +908,18 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   else {
     SetHasPctOverHeight(PR_FALSE);
   }
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid, availSize);
-  // mIPercentHeightObserver is for non table related frames inside cells
-  kidReflowState.mPercentHeightObserver = (nsIPercentHeightObserver *)this;
 
-  // If it was a style change targeted at us, then reflow the child using
-  // the special reflow reason
+  // If it was a style change targeted at us, then reflow the child with a style change reason
+  nsReflowReason reason = aReflowState.reason;
   if (isStyleChanged) {
-    kidReflowState.reason = eReflowReason_StyleChange;
-    kidReflowState.reflowCommand = nsnull;
+    reason = eReflowReason_StyleChange;
     // the following could be optimized with a fair amount of effort
     tableFrame->SetNeedStrategyInit(PR_TRUE);
   }
+
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid, availSize, reason);
+  // mIPercentHeightObserver is for non table related frames inside cells
+  kidReflowState.mPercentHeightObserver = (nsIPercentHeightObserver *)this;
 
   // Assume the inner child will stay positioned exactly where it is. Later in
   // VerticallyAlignChild() we'll move it if it turns out to be wrong. This

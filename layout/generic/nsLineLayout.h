@@ -101,7 +101,6 @@ public:
   // Reflows the frame and returns the reflow status. aPushedFrame is PR_TRUE
   // if the frame is pushed to the next line because it doesn't fit
   nsresult ReflowFrame(nsIFrame* aFrame,
-                       nsIFrame** aNextRCFrame,
                        nsReflowStatus& aReflowStatus,
                        nsHTMLReflowMetrics* aMetrics,
                        PRBool& aPushedFrame);

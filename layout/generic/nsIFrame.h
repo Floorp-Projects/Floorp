@@ -1097,14 +1097,6 @@ public:
 #endif
 
   /**
-   *  Called during appending or cancelling a reflow command to give frames notice
-   *  of reflow commands that will be targeted below them. 
-   */
-  NS_IMETHOD ReflowCommandNotify(nsIPresShell*        aShell,
-                                 nsHTMLReflowCommand* aRC,
-                                 PRBool               aCommandAdded) = 0;
-
-  /**
    * Get the frame whose style context should be the parent of this
    * frame's style context (i.e., provide the parent style context).
    * This frame must either be an ancestor of this frame or a child.  If

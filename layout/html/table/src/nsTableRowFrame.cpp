@@ -47,7 +47,7 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIView.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
@@ -914,14 +914,13 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   // it's target is the current frame, then make sure we send
   // StyleChange reflow reasons down to the children so that they
   // don't over-optimize their reflow.
-  
-  nsIFrame* target = nsnull;
+
   PRBool notifyStyleChange = PR_FALSE;
   if (eReflowReason_Incremental == aReflowState.reason) {
-    aReflowState.reflowCommand->GetTarget(target);
-    if (this == target) {
+    nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
+    if (command) {
       nsReflowType type;
-      aReflowState.reflowCommand->GetType(type);
+      command->GetType(type);
       if (eReflowType_StyleChanged == type) {
         notifyStyleChange = PR_TRUE;
       }
@@ -1174,23 +1173,20 @@ NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext*          aPresConte
                                              nsTableFrame&            aTableFrame,
                                              nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
   CalcHeight(aReflowState); // need to recalculate it based on last reflow sizes
  
-  // determine if this frame is the target or not
-  nsIFrame* target = nsnull;
-  rv = aReflowState.reflowCommand->GetTarget(target);
-  if (target) {
-    if (this == target)
-      rv = IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus);
-    else {
-      // Get the next frame in the reflow chain
-      nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
-      rv = IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus, nextFrame);
-    }
-  }
-  return rv;
+  // the row is a target if its path has a reflow command
+  nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
+  if (command)
+    IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus);
+
+  // see if the chidren are targets as well
+  nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+  nsReflowPath::iterator end  = aReflowState.path->EndChildren();
+  for (; iter != end; ++iter)
+    IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus, *iter);
+
+  return NS_OK;
 }
 
 NS_METHOD 
@@ -1203,7 +1199,7 @@ nsTableRowFrame::IR_TargetIsMe(nsIPresContext*          aPresContext,
   nsresult rv = NS_FRAME_COMPLETE;
 
   nsReflowType type;
-  aReflowState.reflowCommand->GetType(type);
+  aReflowState.path->mReflowCommand->GetType(type);
   switch (type) {
     case eReflowType_ReflowDirty: 
       // Reflow the dirty child frames. Typically this is newly added frames.

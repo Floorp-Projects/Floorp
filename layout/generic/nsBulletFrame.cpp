@@ -46,7 +46,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsIRenderingContext.h"
 #include "nsILoadGroup.h"
 #include "nsIURL.h"
@@ -1418,62 +1418,70 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsBulletFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
-  if (eReflowReason_Incremental == aReflowState.reason) {
+
+  PRBool isStyleChange = PR_FALSE;
+  if (eReflowReason_StyleChange == aReflowState.reason)
+    isStyleChange = PR_TRUE;
+  else if (eReflowReason_Incremental == aReflowState.reason) {
+    // XXXwaterson The reflow had better be targeted at this frame.
     nsReflowType type;
-    aReflowState.reflowCommand->GetType(type);
+    aReflowState.path->mReflowCommand->GetType(type);
 
     /* if the style changed, see if we need to load a new url */
-    if (eReflowType_StyleChanged == type) {
-      nsCOMPtr<nsIURI> baseURI;
-      GetBaseURI(getter_AddRefs(baseURI));
+    if (eReflowType_StyleChanged == type)
+      isStyleChange = PR_TRUE;
+  }
 
-      const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  if (isStyleChange) {
+    nsCOMPtr<nsIURI> baseURI;
+    GetBaseURI(getter_AddRefs(baseURI));
 
-      if (!myList->mListStyleImage.IsEmpty()) {
+    const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
 
-        if (!mListener) {
-          nsBulletListener *listener;
-          NS_NEWXPCOM(listener, nsBulletListener);
-          NS_ADDREF(listener);
-          listener->SetFrame(this);
-          listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
-          NS_ASSERTION(mListener, "queryinterface for the listener failed");
-          NS_RELEASE(listener);
-        }
+    if (!myList->mListStyleImage.IsEmpty()) {
+
+      if (!mListener) {
+        nsBulletListener *listener;
+        NS_NEWXPCOM(listener, nsBulletListener);
+        NS_ADDREF(listener);
+        listener->SetFrame(this);
+        listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
+        NS_ASSERTION(mListener, "queryinterface for the listener failed");
+        NS_RELEASE(listener);
+      }
 
 
-        nsCOMPtr<nsIURI> newURI;
-        NS_NewURI(getter_AddRefs(newURI), myList->mListStyleImage, nsnull, baseURI);
+      nsCOMPtr<nsIURI> newURI;
+      NS_NewURI(getter_AddRefs(newURI), myList->mListStyleImage, nsnull, baseURI);
 
-        PRBool needNewRequest = PR_TRUE;
+      PRBool needNewRequest = PR_TRUE;
 
-        if (mImageRequest) {
-          // Reload the image, maybe...
-          nsCOMPtr<nsIURI> oldURI;
-          mImageRequest->GetURI(getter_AddRefs(oldURI));
-          if (oldURI) {
-            PRBool same;
-            newURI->Equals(oldURI, &same);
-            if (same) {
-              needNewRequest = PR_FALSE;
-            } else {
-              mImageRequest->Cancel(NS_ERROR_FAILURE);
-              mImageRequest = nsnull;
-            }
+      if (mImageRequest) {
+        // Reload the image, maybe...
+        nsCOMPtr<nsIURI> oldURI;
+        mImageRequest->GetURI(getter_AddRefs(oldURI));
+        if (oldURI) {
+          PRBool same;
+          newURI->Equals(oldURI, &same);
+          if (same) {
+            needNewRequest = PR_FALSE;
+          } else {
+            mImageRequest->Cancel(NS_ERROR_FAILURE);
+            mImageRequest = nsnull;
           }
         }
+      }
 
-        if (needNewRequest) {
-          nsresult rv;
-          nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-          if (NS_FAILED(rv))
-            return rv;
+      if (needNewRequest) {
+        nsresult rv;
+        nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+        if (NS_FAILED(rv))
+          return rv;
 
-          nsCOMPtr<nsILoadGroup> loadGroup;
-          GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-          il->LoadImage(newURI, nsnull, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
-        }
+        il->LoadImage(newURI, nsnull, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
       }
     }
   }

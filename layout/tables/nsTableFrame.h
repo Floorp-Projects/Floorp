@@ -587,14 +587,6 @@ protected:
   // Calculate the starting column index to use for the specified col group frame
   PRInt32 CalculateStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame);
 
-  PRBool DescendantReflowedNotTimeout() const;
-  void   SetDescendantReflowedNotTimeout(PRBool aValue);
-  PRBool RequestedTimeoutReflow() const;
-  void   SetRequestedTimeoutReflow(PRBool aValue);
-
-  void   InterruptNotification(nsIPresContext* aPresContext,
-                               PRBool          aIsRequest);
-
 public:
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
@@ -611,12 +603,6 @@ public:
   /** do I need to do a reflow? */
   virtual PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
 
-  // increment or decrement the count of pending reflow commands targeted at
-  // descendants. Only rebalance the table when this count goes to 0 or the
-  // reflow is the last one in a batch (limited by the pres shell).
-  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*        aShell,
-                                  nsHTMLReflowCommand* aRC,
-                                  PRBool               aCommandAdded);
   PRBool IsRowInserted() const;
   void   SetRowInserted(PRBool aValue);
 
@@ -949,19 +935,12 @@ protected:
     unsigned mCellSpansPctCol:1;       // does any cell span a col with a pct width (or containing a cell with a pct width)
     unsigned mDidResizeReflow:1;       // did a resize reflow happen (indicating pass 2)
     unsigned mIsBorderCollapse:1;      // border collapsing model vs. separate model
-    // true if a descendant was reflowed normally since the last time we reflowed.
-    // We will likely need a timeout reflow (targeted either at us or below)
-    unsigned mDescendantReflowedNotTimeout:1;      
-    // true if we requested a timeout reflow targeted at us. This will become false if
-    // we know that a descendant will be getting a timeout reflow and we cancel the one
-    // targeted at us, as an optimization.
-    unsigned mRequestedTimeoutReflow:1;
     unsigned mRowInserted:1;
     unsigned mNeedSpecialReflow:1;
     unsigned mNeedToInitiateSpecialReflow:1;
     unsigned mInitiatedSpecialReflow:1;
     unsigned mNeedToCalcBCBorders:1;
-    unsigned : 17;                     // unused
+    unsigned : 19;                     // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -970,10 +949,6 @@ protected:
   nscoord                 mMinWidth;       // XXX could store as PRUint16 with pixels
   nscoord                 mDesiredWidth;   // XXX could store as PRUint16 with pixels
   nscoord                 mPreferredWidth; // XXX could store as PRUint16 with pixels
-  // the number of normal incremental reflow commands targeted below this table
-  PRInt16   mNumDescendantReflowsPending;
-  // the number of timeout incremental reflow commands targeted below this table
-  PRInt16   mNumDescendantTimeoutReflowsPending;
 
 
   // DEBUG REFLOW 
@@ -1043,26 +1018,6 @@ inline PRBool nsTableFrame::HasCellSpanningPctCol() const
 inline void nsTableFrame::SetHasCellSpanningPctCol(PRBool aValue)
 {
   mBits.mCellSpansPctCol = (unsigned)aValue;
-}
-
-inline PRBool nsTableFrame::DescendantReflowedNotTimeout() const
-{
-  return (PRBool)mBits.mDescendantReflowedNotTimeout;
-}
-
-inline void nsTableFrame::SetDescendantReflowedNotTimeout(PRBool aValue)
-{
-  mBits.mDescendantReflowedNotTimeout = (unsigned)aValue;
-}
-
-inline PRBool nsTableFrame::RequestedTimeoutReflow() const
-{
-  return (PRBool)mBits.mRequestedTimeoutReflow;
-}
-
-inline void nsTableFrame::SetRequestedTimeoutReflow(PRBool aValue)
-{
-  mBits.mRequestedTimeoutReflow = (unsigned)aValue;
 }
 
 inline PRBool nsTableFrame::NeedSpecialReflow() const

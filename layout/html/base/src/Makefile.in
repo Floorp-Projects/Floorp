@@ -102,6 +102,7 @@ CPPSRCS		= \
 		nsSimplePageSequence.cpp \
 		nsSpacerFrame.cpp \
 		nsSplittableFrame.cpp \
+		nsReflowPath.cpp \
 		nsTextFrame.cpp \
 		nsTextTransformer.cpp \
 		nsViewportFrame.cpp \

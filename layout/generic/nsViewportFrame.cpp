@@ -43,7 +43,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresContext.h"
-#include "nsHTMLReflowCommand.h"
+#include "nsReflowPath.h"
 #include "nsIPresShell.h"
 
 
@@ -356,14 +356,16 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
 
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
   nsSize              availSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
-                                     availSize);
-    
+  nsReflowReason      reason = aReflowState.reason;
+
   // If it's the initial reflow, then override the reflow reason. This is
   // used when frames are inserted incrementally
   if (aInitialReflow) {
-    kidReflowState.reason = eReflowReason_Initial;
+    reason = eReflowReason_Initial;
   }
+
+  nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
+                                     availSize, reason);
     
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
@@ -438,6 +440,12 @@ ViewportFrame::ReflowFixedFrames(nsIPresContext*          aPresContext,
   reflowState.mComputedWidth = width;
   reflowState.mComputedHeight = height;
 
+  // If an incremental reflow was targeted at the viewport frame
+  // itself, then we'll be asked to reflow all the fixed frames,
+  // too. Propagate the reflow as a `resize'.
+  if (reflowState.reason == eReflowReason_Incremental)
+    reflowState.reason = eReflowReason_Resize;
+
   nsIFrame* kidFrame;
   for (kidFrame = mFixedFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     // Reflow the frame using our reflow reason
@@ -454,14 +462,16 @@ nsresult
 ViewportFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
-  nsReflowType  type;
-
   // Get the type of reflow command
-  aReflowState.reflowCommand->GetType(type);
+  nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+
+  nsReflowType type;
+  command->GetType(type);
 
   // The only type of reflow command we expect is that we have dirty
   // child frames to reflow
-  NS_ASSERTION(eReflowType_ReflowDirty, "unexpected reflow type");
+  // XXXwaterson heh, nice.
+  NS_ASSERTION(type == eReflowType_ReflowDirty, "unexpected reflow type");
   
   // Calculate how much room is available for the fixed items. That means
   // determining if the viewport is scrollable and whether the vertical and/or
@@ -473,6 +483,7 @@ ViewportFrame::IncrementalReflow(nsIPresContext*          aPresContext,
   // to reflect the available space for the fixed items
   // XXX Find a cleaner way to do this...
   nsHTMLReflowState reflowState(aReflowState);
+  reflowState.reason = eReflowReason_Dirty;
   reflowState.mComputedWidth = width;
   reflowState.mComputedHeight = height;
   
@@ -508,12 +519,16 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
-  nsIFrame* nextFrame = nsnull;
   PRBool    isHandled = PR_FALSE;
   
   nsReflowType reflowType = eReflowType_ContentChanged;
-  if (aReflowState.reflowCommand) {
-    aReflowState.reflowCommand->GetType(reflowType);
+  if (aReflowState.path) {
+    // XXXwaterson this is more restrictive than the previous code
+    // was: it insists that the UserDefined reflow be targeted at
+    // _this_ frame.
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+    if (command)
+      command->GetType(reflowType);
   }
   if (reflowType == eReflowType_UserDefined) {
     // Reflow the fixed frames to account for changed scrolled area size
@@ -523,14 +538,13 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
     // Otherwise check for an incremental reflow
   } else if (eReflowReason_Incremental == aReflowState.reason) {
     // See if we're the target frame
-    nsIFrame* targetFrame;
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+    if (command) {
       nsIAtom*  listName;
       PRBool    isFixedChild;
       
       // It's targeted at us. It better be for the fixed child list
-      aReflowState.reflowCommand->GetChildListName(listName);
+      command->GetChildListName(listName);
       isFixedChild = nsLayoutAtoms::fixedList == listName;
       NS_IF_RELEASE(listName);
       NS_ASSERTION(isFixedChild, "unexpected child list");
@@ -538,65 +552,69 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
       if (isFixedChild) {
         // Handle the incremental reflow command
         IncrementalReflow(aPresContext, aReflowState);
-        isHandled = PR_TRUE;
       }
-
-    } else {
-      // Get the next frame in the reflow chain
-      aReflowState.reflowCommand->GetNext(nextFrame);
     }
   }
 
   nsRect kidRect(0,0,aReflowState.availableWidth,aReflowState.availableHeight);
 
-  if (!isHandled) {
-    if ((eReflowReason_Incremental == aReflowState.reason) &&
-        (mFixedFrames.ContainsFrame(nextFrame))) {
-      // Reflow the 'fixed' frame that's the next frame in the reflow path
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsReflowPath::iterator iter = aReflowState.path->FirstChild();
+    nsReflowPath::iterator end = aReflowState.path->EndChildren();
+
+    for ( ; iter != end; ++iter) {
+      if (mFixedFrames.ContainsFrame(*iter)) {
+        // Reflow the 'fixed' frame that's the next frame in the reflow path
       
-      // Calculate how much room is available for the fixed frame. That means
-      // determining if the viewport is scrollable and whether the vertical and/or
-      // horizontal scrollbars are visible
-      nscoord width, height;
-      CalculateFixedContainingBlockSize(aPresContext, aReflowState, width, height);
+        // Calculate how much room is available for the fixed frame. That means
+        // determining if the viewport is scrollable and whether the vertical and/or
+        // horizontal scrollbars are visible
+        nscoord width, height;
+        CalculateFixedContainingBlockSize(aPresContext, aReflowState, width, height);
   
-      // Make a copy of the reflow state and change the computed width and height
-      // to reflect the available space for the fixed items
-      // XXX Find a cleaner way to do this...
-      nsHTMLReflowState reflowState(aReflowState);
-      reflowState.mComputedWidth = width;
-      reflowState.mComputedHeight = height;
+        // Make a copy of the reflow state and change the computed width and height
+        // to reflect the available space for the fixed items
+        // XXX Find a cleaner way to do this...
+        nsHTMLReflowState reflowState(aReflowState);
+        reflowState.mComputedWidth = width;
+        reflowState.mComputedHeight = height;
       
-      nsReflowStatus  kidStatus;
-      ReflowFixedFrame(aPresContext, reflowState, nextFrame, PR_FALSE,
-                       kidStatus);
+        nsReflowStatus  kidStatus;
+        ReflowFixedFrame(aPresContext, reflowState, *iter, PR_FALSE,
+                         kidStatus);
 
-    } else {
-      // Reflow our one and only principal child frame
-      if (mFrames.NotEmpty()) {
-        nsIFrame*           kidFrame = mFrames.FirstChild();
-        nsHTMLReflowMetrics kidDesiredSize(nsnull);
-        nsSize              availableSpace(aReflowState.availableWidth,
-                                           aReflowState.availableHeight);
-        nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
-                                           kidFrame, availableSpace);
-
-        // Reflow the frame
-        kidReflowState.mComputedHeight = aReflowState.availableHeight;
-        ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                    0, 0, 0, aStatus);
-        kidRect.width = kidDesiredSize.width;
-        kidRect.height = kidDesiredSize.height;
-
-        FinishReflowChild(kidFrame, aPresContext, nsnull, kidDesiredSize, 0, 0, 0);
-      }
-
-      // If it's a 'initial', 'resize', or 'style change' reflow command (anything
-      // but incremental), then reflow all the fixed positioned child frames
-      if (eReflowReason_Incremental != aReflowState.reason) {
-        ReflowFixedFrames(aPresContext, aReflowState);
       }
     }
+  }
+
+  if (mFrames.NotEmpty()) {
+    // Deal with a non-incremental reflow or an incremental reflow
+    // targeted at our one-and-only principal child frame.
+    if (eReflowReason_Incremental != aReflowState.reason ||
+        aReflowState.path->HasChild(mFrames.FirstChild())) {
+      // Reflow our one-and-only principal child frame
+      nsIFrame*           kidFrame = mFrames.FirstChild();
+      nsHTMLReflowMetrics kidDesiredSize(nsnull);
+      nsSize              availableSpace(aReflowState.availableWidth,
+                                         aReflowState.availableHeight);
+      nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
+                                         kidFrame, availableSpace);
+
+      // Reflow the frame
+      kidReflowState.mComputedHeight = aReflowState.availableHeight;
+      ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
+                  0, 0, 0, aStatus);
+      kidRect.width = kidDesiredSize.width;
+      kidRect.height = kidDesiredSize.height;
+
+      FinishReflowChild(kidFrame, aPresContext, nsnull, kidDesiredSize, 0, 0, 0);
+    }
+  }
+
+  if (eReflowReason_Incremental != aReflowState.reason) {
+    // If it's anything but an incremental reflow, then reflow all the
+    // fixed positioned child frames.
+    ReflowFixedFrames(aPresContext, aReflowState);
   }
 
   // If we were flowed initially at both an unconstrained width and height, 
