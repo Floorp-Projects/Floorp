@@ -73,12 +73,9 @@ private:
                             nsIDocShellTreeItem **aFoundItem);
 
   static JSContext *GetExtantJSContext(nsIDOMWindow *aWindow);
-  static nsresult   URIfromURL(const PRUnichar *aURL,
+  static nsresult   URIfromURL(const char *aURL,
                                nsIDOMWindow *aParent,
                                nsIURI **aURI);
-  static nsresult   Escape(const nsAReadableString& aStr,
-                           nsAWritableString& aReturn,
-                           nsIDOMWindow *aWindow);
   static void       CheckWindowName(nsString& aName);
   static PRUint32   CalculateChromeFlags(const char *aFeatures,
                                          PRBool aFeaturesSpecified,
@@ -94,6 +91,13 @@ private:
                                            PRUint32 aChromeFlags);
   static void       AttachArguments(nsIDOMWindow *aWindow,
                                     PRUint32 argc, jsval *argv);
+  static nsresult   ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
+                                            nsISupports *aArgs,
+                                            PRUint32 *aArgc, jsval **aArgv);
+  static nsresult   AddSupportsTojsvals(nsISupports *aArg,
+                                        JSContext *cx, jsval *aArgv);
+  static nsresult   AddInterfaceTojsvals(nsISupports *aArg,
+                                      JSContext *cx, jsval *aArgv);
   static void       GetWindowTreeItem(nsIDOMWindow *inWindow,
                                       nsIDocShellTreeItem **outTreeItem);
   static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,

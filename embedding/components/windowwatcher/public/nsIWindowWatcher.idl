@@ -54,14 +54,20 @@ interface nsIWindowWatcher : nsISupports {
 
   /** Create a new window. It will automatically be added to our list
       (via addWindow()).
-      @param aParent parent window, if any. null if not.
-      @param aURL window URL from JS window.open
-      @param aName window name from JS window.open
-      @param aFeatures window features from JS window.open
+      @param aParent parent window. null if not.
+      @param aURL url to which to open the new window. Must already be
+             escaped, if applicable. can be null.
+      @param aName window name from JS window.open. can be null.
+      @param aFeatures window features from JS window.open. can be null.
+      @param aArguments extra argument(s) to the new window, to be attached
+             as the |arguments| property. An nsISupportsArray will be
+             unwound into multiple arguments (but not recursively!).
+             can be null.
       @return the new window
   */
-  nsIDOMWindow openWindow(in nsIDOMWindow aParent, in wstring aUrl,
-               in wstring aName, in wstring aFeatures);
+  nsIDOMWindow openWindow(in nsIDOMWindow aParent, in string aUrl,
+               in string aName, in string aFeatures,
+               in nsISupports aArguments);
 
   /** Clients of this service can register themselves to be notified
       when a window is opened or closed (added to or removed from this
