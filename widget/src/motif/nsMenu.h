@@ -51,8 +51,6 @@ public:
         void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
-//  NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
-
   // nsIMenu Methods
   NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
   NS_IMETHOD GetParent(nsISupports *&aParent);
@@ -67,7 +65,6 @@ public:
   NS_IMETHOD GetItemCount(PRUint32 &aCount);
   NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
   NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
-  NS_IMETHOD InsertSeparator(const PRUint32 aCount);
   NS_IMETHOD RemoveItem(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void** aData);
@@ -78,7 +75,6 @@ public:
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
 
 protected:
-  void       Create(Widget aParent, const nsString &aLabel);
   Widget     GetNativeParent();
 
   nsString   mLabel;
