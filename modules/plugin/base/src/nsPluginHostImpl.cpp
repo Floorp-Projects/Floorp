@@ -1762,7 +1762,7 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
     return -1;
 
   const char *pExt = aExtensionList;
-  char *pComma = strchr(pExt, ',');
+  const char *pComma = strchr(pExt, ',');
 
   if(pComma == nsnull)
     return strcmp(pExt, aExtension);
