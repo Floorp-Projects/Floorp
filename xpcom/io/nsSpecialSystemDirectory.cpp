@@ -53,6 +53,39 @@
 
 #include "plstr.h"
 
+#include "nsHashtable.h"
+#include "prlog.h"
+
+class SystemDirectoriesKey : public nsHashKey {
+public:
+
+    SystemDirectoriesKey(nsSpecialSystemDirectory::SystemDirectories newKey) : sdKey(newKey) {}
+
+    virtual PRUint32 HashValue(void) const
+    {
+        return PRUint32(sdKey);
+    }
+    
+    virtual PRBool Equals(const nsHashKey *aKey) const
+    {
+        nsSpecialSystemDirectory::SystemDirectories other = 
+            ((SystemDirectoriesKey*)aKey)->sdKey;
+        return other == sdKey;
+    }
+    
+    virtual nsHashKey *Clone(void) const
+    {
+        return new SystemDirectoriesKey(sdKey);
+    }
+
+private:
+    nsSpecialSystemDirectory::SystemDirectories sdKey; // sd for SystemDirectories
+};
+
+#define NS_SYSTEMDIR_HASH_NUM (10)
+static nsHashtable *systemDirectoriesLocations = NULL;
+
+
 #if XP_PC
 //----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
@@ -259,6 +292,8 @@ nsSpecialSystemDirectory::~nsSpecialSystemDirectory()
 void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirectory)
 //----------------------------------------------------------------------------------------
 {
+    SystemDirectoriesKey dirKey(aSystemSystemDirectory);
+
     *this = (const char*)nsnull;
     switch (aSystemSystemDirectory)
     {
@@ -315,24 +350,52 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
 
         case XPCOM_CurrentProcessComponentRegistry:
-            GetCurrentProcessDirectory(*this);
-            // XXX We need to unify these names across all platforms
+            {
+                nsFileSpec *dirSpec = NULL;
+                if (systemDirectoriesLocations)
+                {
+                    dirSpec = (nsFileSpec *) systemDirectoriesLocations->Get(&dirKey);
+                }
+                if (dirSpec)
+                {
+                    *this = *dirSpec;
+                }
+                else
+                {
+                    GetCurrentProcessDirectory(*this);
+                    // XXX We need to unify these names across all platforms
 #ifdef XP_MAC
-            *this += "Component Registry";
+                    *this += "Component Registry";
 #else
-            *this += "component.reg";
+                    *this += "component.reg";
 #endif /* XP_MAC */
+                }
+            }
             break;
 
         case XPCOM_CurrentProcessComponentDirectory:
-            // <exedir>/Components
-            GetCurrentProcessDirectory(*this);
-            // XXX We need to unify these names across all platforms
+            {
+                nsFileSpec *dirSpec = NULL;
+                if (systemDirectoriesLocations)
+                {
+                    dirSpec = (nsFileSpec *) systemDirectoriesLocations->Get(&dirKey);
+                }
+                if (dirSpec)
+                {
+                    *this = *dirSpec;
+                }
+                else
+                {
+                    // <exedir>/Components
+                    GetCurrentProcessDirectory(*this);
+                    // XXX We need to unify these names across all platforms
 #ifdef XP_MAC
-            *this += "Components";
+                    *this += "Components";
 #else
-            *this += "components";
+                    *this += "components";
 #endif /* XP_MAC */
+                }
+            }
             break;
 
 #ifdef XP_MAC
@@ -608,7 +671,26 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
     }
 }
 
+PRBool
+nsSpecialSystemDirectory::Set(SystemDirectories dirToSet, nsFileSpec *dirSpec)
+{
+    PRBool rc = PR_FALSE;
+    SystemDirectoriesKey dirKey(dirToSet);
+    
+    PR_ASSERT(NULL != dirSpec);
 
+    if (NULL == systemDirectoriesLocations) {
+        systemDirectoriesLocations = new nsHashtable(NS_SYSTEMDIR_HASH_NUM);
+    }
+    PR_ASSERT(NULL != systemDirectoriesLocations);
+    
+    if (NULL != systemDirectoriesLocations->Put(&dirKey, dirSpec))
+    {
+        rc = PR_TRUE;
+    }
+    
+    return rc;
+}
 
 #ifdef XP_MAC
 //----------------------------------------------------------------------------------------

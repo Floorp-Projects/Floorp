@@ -111,9 +111,21 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
                     nsSpecialSystemDirectory(OSType folderType);
 #endif
 
+    /**
+
+     * @param: dirToSet, the value to set for this safeLocation
+
+     * @param: dirSpec, the directory specified as a filespec
+
+     */
+
+    static PRBool Set(SystemDirectories dirToSet, nsFileSpec *dirSpec);
+
+
 private:
     void            operator = (const char* inPath) { *(nsFileSpec*)this = inPath; }
 
 }; // class NS_COM nsSpecialSystemDirectory
+
 
 #endif
