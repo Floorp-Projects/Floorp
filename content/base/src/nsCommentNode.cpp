@@ -63,7 +63,7 @@ public:
 
   // nsIContent
   virtual nsIAtom *Tag() const;
-  NS_IMETHOD_(PRBool) MayHaveFrame() const;
+  virtual PRBool MayHaveFrame() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
@@ -122,7 +122,8 @@ nsCommentNode::Tag() const
   return nsLayoutAtoms::commentTagName;
 }
 
-NS_IMETHODIMP_(PRBool)
+// virtual
+PRBool
 nsCommentNode::MayHaveFrame() const
 {
   return PR_FALSE;

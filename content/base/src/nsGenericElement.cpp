@@ -2580,7 +2580,8 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager **aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+// virtual
+void
 nsGenericElement::SetMayHaveFrame(PRBool aMayHaveFrame)
 {
   if (aMayHaveFrame) {
@@ -2590,7 +2591,8 @@ nsGenericElement::SetMayHaveFrame(PRBool aMayHaveFrame)
   }
 }
 
-NS_IMETHODIMP_(PRBool)
+// virtual
+PRBool
 nsGenericElement::MayHaveFrame() const
 {
   return !!(GetFlags() & GENERIC_ELEMENT_MAY_HAVE_FRAME);

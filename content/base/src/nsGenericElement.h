@@ -438,8 +438,8 @@ public:
   virtual nsresult DeleteProperty(nsIAtom  *aPropertyName);
   virtual void*    UnsetProperty(nsIAtom *aPropertyName,
                                  nsresult *aStatus = nsnull);
-  NS_IMETHOD_(void) SetMayHaveFrame(PRBool aMayHaveFrame);
-  NS_IMETHOD_(PRBool) MayHaveFrame() const;
+  virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
+  virtual PRBool MayHaveFrame() const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;

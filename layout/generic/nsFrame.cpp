@@ -544,11 +544,11 @@ nsFrame::Init(nsPresContext*  aPresContext,
               nsIFrame*        aPrevInFlow)
 {
   mContent = aContent;
-  NS_IF_ADDREF(mContent);
   mParent = aParent;
 
-  if (mContent) {
-    mContent->SetMayHaveFrame(PR_TRUE);
+  if (aContent) {
+    NS_ADDREF(aContent);
+    aContent->SetMayHaveFrame(PR_TRUE);
     NS_ASSERTION(mContent->MayHaveFrame(), "SetMayHaveFrame failed?");
   }
 
