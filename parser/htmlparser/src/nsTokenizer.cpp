@@ -57,7 +57,7 @@ CTokenizer::~CTokenizer() {
 /**
  * Retrieve a reference to the internal token deque.
  *
- * @update	gess 4/20/98
+ * @update  gess 4/20/98
  * @return  deque reference
  */
 nsDeque& CTokenizer::GetDeque(void) {
@@ -73,7 +73,7 @@ nsDeque& CTokenizer::GetDeque(void) {
  *  @return  new token or null
  *------------------------------------------------------*/
 CToken* CTokenizer::GetToken(PRInt32& anError) {
-	CToken* nextToken=mDelegate->GetToken(*mScanner,anError);
+  CToken* nextToken=mDelegate->GetToken(*mScanner,anError);
   return nextToken;
 }
 
@@ -85,7 +85,7 @@ CToken* CTokenizer::GetToken(PRInt32& anError) {
  *  @return  int containing element count
  *-----------------------------------------------------*/
 PRInt32 CTokenizer::GetSize(void) {
-	return mTokenDeque.GetSize();
+  return mTokenDeque.GetSize();
 }
 
 
@@ -115,7 +115,7 @@ PRBool CTokenizer::WillTokenize(){
  *------------------------------------------------------*/
 PRInt32 CTokenizer::Tokenize(void) {
   CToken* nextToken;
-	PRInt32     result;
+  PRInt32     result;
 
   if(WillTokenize()) {
     do {
@@ -125,7 +125,7 @@ PRInt32 CTokenizer::Tokenize(void) {
         nextToken->DebugDumpToken(cout);
 #endif
         if(mDelegate->WillAddToken(*nextToken)) {
-	        mTokenDeque.Push(nextToken);
+          mTokenDeque.Push(nextToken);
         }
       }
     } while(nextToken!=0);
@@ -145,7 +145,7 @@ PRInt32 CTokenizer::Tokenize(void) {
  *  @return  TRUE if all went well
  *------------------------------------------------------*/
 PRBool CTokenizer::DidTokenize() {
-	PRBool result=mDelegate->DidTokenize();
+  PRBool result=mDelegate->DidTokenize();
 
 #ifdef VERBOSE_DEBUG
     DebugDumpTokens(cout);
@@ -208,3 +208,5 @@ void CTokenizer::SelfTest(void) {
 #ifdef _DEBUG
 #endif
 }
+
+

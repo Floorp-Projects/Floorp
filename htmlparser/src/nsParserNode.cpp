@@ -138,7 +138,7 @@ const nsString& nsCParserNode::GetSkippedContent() const {
  *  @return  int value that represents tag type
  *------------------------------------------------------*/
 PRInt32 nsCParserNode::GetNodeType(void) const{
-  return mToken->GetHTMLTag();
+  return mToken->GetHTMLTag(); 
 }
 
 
@@ -201,3 +201,5 @@ PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
   }
   return -1;
 }
+
+

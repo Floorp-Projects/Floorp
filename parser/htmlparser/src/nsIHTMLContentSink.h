@@ -61,8 +61,8 @@
  *       are going to be handled. Stay tuned.
  */
 
-#ifndef	NS_IHTMLCONTENTSINK
-#define	NS_ITMLCONTENTSINK
+#ifndef  NS_IHTMLCONTENTSINK
+#define  NS_ITMLCONTENTSINK
 
 #include "nsIParserNode.h"
 #include "nsIContentSink.h"
@@ -73,7 +73,7 @@
 
 
 class nsIHTMLContentSink : public nsIContentSink {
-	public:
+  public:
 
    /**
     * This method gets called by the parser when it encounters
@@ -217,5 +217,7 @@ class nsIHTMLContentSink : public nsIContentSink {
 
 
 #endif
+
+
 
 

@@ -115,7 +115,7 @@ CStartTokenHandler::CStartTokenHandler() : CTokenHandler(eToken_start) {
  *------------------------------------------------------*/
 CStartTokenHandler::~CStartTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -165,7 +165,7 @@ CEndTokenHandler::CEndTokenHandler(): CTokenHandler(eToken_end) {
  *------------------------------------------------------*/
 CEndTokenHandler::~CEndTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -215,7 +215,7 @@ CCommentTokenHandler::CCommentTokenHandler() : CTokenHandler(eToken_comment) {
  *------------------------------------------------------*/
 CCommentTokenHandler::~CCommentTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -264,7 +264,7 @@ CEntityTokenHandler::CEntityTokenHandler() : CTokenHandler(eToken_entity) {
  *------------------------------------------------------*/
 CEntityTokenHandler::~CEntityTokenHandler() {
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -313,7 +313,7 @@ CWhitespaceTokenHandler::CWhitespaceTokenHandler() : CTokenHandler(eToken_whites
  *------------------------------------------------------*/
 CWhitespaceTokenHandler::~CWhitespaceTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -325,7 +325,7 @@ CWhitespaceTokenHandler::~CWhitespaceTokenHandler(){
 PRBool CWhitespaceTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
-    return aParser->HandleWhitespaceToken(aToken);
+    return aParser->HandleSimpleContentToken(aToken);
   }
   return PR_FALSE;
 }
@@ -363,7 +363,7 @@ CNewlineTokenHandler::CNewlineTokenHandler() : CTokenHandler(eToken_newline) {
  *------------------------------------------------------*/
 CNewlineTokenHandler::~CNewlineTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -375,7 +375,7 @@ CNewlineTokenHandler::~CNewlineTokenHandler(){
 PRBool CNewlineTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
-    return aParser->HandleNewlineToken(aToken);
+    return aParser->HandleSimpleContentToken(aToken);
   }
   return PR_FALSE;
 }
@@ -412,7 +412,7 @@ CTextTokenHandler::CTextTokenHandler() : CTokenHandler(eToken_text) {
  *------------------------------------------------------*/
 CTextTokenHandler::~CTextTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -424,7 +424,7 @@ CTextTokenHandler::~CTextTokenHandler(){
 PRBool CTextTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
-    return aParser->HandleTextToken(aToken);
+    return aParser->HandleSimpleContentToken(aToken);
   }
   return PR_FALSE;
 }
@@ -460,7 +460,7 @@ CAttributeTokenHandler::CAttributeTokenHandler() : CTokenHandler(eToken_attribut
  *------------------------------------------------------*/
 CAttributeTokenHandler::~CAttributeTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -509,7 +509,7 @@ CScriptTokenHandler::CScriptTokenHandler() : CTokenHandler(eToken_script) {
  *------------------------------------------------------*/
 CScriptTokenHandler::~CScriptTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -558,7 +558,7 @@ CStyleTokenHandler::CStyleTokenHandler() : CTokenHandler(eToken_style) {
  *------------------------------------------------------*/
 CStyleTokenHandler::~CStyleTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -607,7 +607,7 @@ CSkippedContentTokenHandler::CSkippedContentTokenHandler() : CTokenHandler(eToke
  *------------------------------------------------------*/
 CSkippedContentTokenHandler::~CSkippedContentTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -635,3 +635,5 @@ PRBool CSkippedContentTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
+
+

@@ -44,7 +44,7 @@ class nsHTMLParser;
 
 class nsCParserNode :  public nsIParserNode {
             
-	public:
+  public:
 
                                 nsCParserNode(CHTMLToken* aToken);
                                 ~nsCParserNode();
@@ -77,3 +77,5 @@ class nsCParserNode :  public nsIParserNode {
 };
 
 #endif
+
+

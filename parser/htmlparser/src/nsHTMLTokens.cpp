@@ -44,12 +44,12 @@ static const char* kNullScanner = "Error: Scanner is null.";
 const PRInt32 kMAXNAMELEN=10;
 struct StrToUnicodeStruct
 {
-  char	  fName[kMAXNAMELEN+1];
+  char    fName[kMAXNAMELEN+1];
   PRInt32 fValue;
 };
 
 
-	// KEEP THIS LIST SORTED!
+  // KEEP THIS LIST SORTED!
   // NOTE: This names table is sorted in ascii collating order. If you
   // add a new entry, make sure you put it in the right spot otherwise
   // the binary search code above will break! 
@@ -77,8 +77,8 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
   {"euml",  0x00eb},  {"frac12",0x00bd},  {"frac14",0x00bc},
   {"frac34",0x00be},  {"gt",    0x003e},  {"iacute",0x00ed},  
   {"icirc", 0x00ee},  {"iexcl", 0x00a1},  {"igrave",0x00ec},  
-  {"iquest",0x00bf},  {"iuml",  0x00ef},  {"laquo",	0x00ab},  
-  {"lt",		0x003c},  {"macr",	0x00af},  {"micro",	0x00b5},
+  {"iquest",0x00bf},  {"iuml",  0x00ef},  {"laquo",  0x00ab},  
+  {"lt",    0x003c},  {"macr",  0x00af},  {"micro",  0x00b5},
   {"middot",0x00b7},  {"nbsp",  0x00a0},  {"not",   0x00ac}, 
   {"ntilde",0x00f1},  {"oacute",0x00f3},  {"ocirc", 0x00f4},  
   {"ograve",0x00f2},  {"ordf",  0x00aa},  {"ordm",  0x00ba},  
@@ -97,95 +97,99 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
 
 struct HTMLTagEntry
 {
-  char			fName[12];
-  eHTMLTags	fTagID;
+  char      fName[12];
+  eHTMLTags  fTagID;
 };
 
 
-	// KEEP THIS LIST SORTED!
+  // KEEP THIS LIST SORTED!
   // NOTE: This table is sorted in ascii collating order. If you
   // add a new entry, make sure you put it in the right spot otherwise
   // the binary search code above will break! 
 HTMLTagEntry gHTMLTagTable[] =
 {
-  {"!DOCTYPE",  eHTMLTag_doctype},      {"A", 			 	eHTMLTag_a},
-  {"ACRONYM", 	eHTMLTag_acronym},      {"ADDRESS", 	eHTMLTag_address},
-  {"APPLET",		eHTMLTag_applet},       {"AREA",			eHTMLTag_area},
+  {"!DOCTYPE",    eHTMLTag_doctype},      {"A",          eHTMLTag_a},
+  {"ACRONYM",     eHTMLTag_acronym},      {"ADDRESS",   eHTMLTag_address},
+  {"APPLET",      eHTMLTag_applet},       {"AREA",      eHTMLTag_area},
 
-  {"B", 			 	eHTMLTag_bold},         {"BASE", 		  eHTMLTag_base},
-  {"BASEFONT", 	eHTMLTag_basefont},     {"BDO", 			eHTMLTag_bdo},
-  {"BIG", 			eHTMLTag_big},          {"BLINK",     eHTMLTag_blink},
-  {"BLOCKQUOTE",eHTMLTag_blockquote},   {"BODY",			eHTMLTag_body},
-  {"BR",			  eHTMLTag_br},           {"BUTTON",		eHTMLTag_button},
+  {"B",           eHTMLTag_bold},         {"BASE",       eHTMLTag_base},
+  {"BASEFONT",    eHTMLTag_basefont},     {"BDO",       eHTMLTag_bdo},
+  {"BIG",         eHTMLTag_big},          {"BLINK",     eHTMLTag_blink},
+  {"BLOCKQUOTE",  eHTMLTag_blockquote},   {"BODY",      eHTMLTag_body},
+  {"BR",          eHTMLTag_br},           {"BUTTON",    eHTMLTag_button},
 
-  {"CAPTION",   eHTMLTag_caption},      {"CENTER",    eHTMLTag_center},
-  {"CERTIFICATE",eHTMLTag_certificate},
-  {"CITE",      eHTMLTag_cite},         {"CODE",      eHTMLTag_code},
-  {"COL",       eHTMLTag_col},          {"COLGROUP",  eHTMLTag_colgroup},
+  {"CAPTION",     eHTMLTag_caption},      {"CENTER",    eHTMLTag_center},
+  {"CERTIFICATE", eHTMLTag_certificate},
+  {"CITE",        eHTMLTag_cite},         {"CODE",      eHTMLTag_code},
+  {"COL",         eHTMLTag_col},          {"COLGROUP",  eHTMLTag_colgroup},
 
-  {"DD",        eHTMLTag_dd},           {"DEL",       eHTMLTag_del},
-  {"DFN",       eHTMLTag_dfn},          {"DIR", 			eHTMLTag_dir},
-  {"DIV", 			eHTMLTag_div},          {"DL", 			  eHTMLTag_dl},
-  {"DT",			  eHTMLTag_dt},
+  {"DD",          eHTMLTag_dd},           {"DEL",       eHTMLTag_del},
+  {"DFN",         eHTMLTag_dfn},          {"DIR",       eHTMLTag_dir},
+  {"DIV",         eHTMLTag_div},          {"DL",         eHTMLTag_dl},
+  {"DT",          eHTMLTag_dt},
 
-  {"EM", 			  eHTMLTag_em},           {"EMBED", 		eHTMLTag_embed},
+  {"EM",          eHTMLTag_em},           {"EMBED",     eHTMLTag_embed},
 
-  {"FIELDSET", 	eHTMLTag_fieldset},     {"FONT", 		  eHTMLTag_font},
-  {"FOOTER",    eHTMLTag_footer},       {"FORM", 		  eHTMLTag_form},
-  {"FRAME", 		eHTMLTag_frame},        {"FRAMESET", 	eHTMLTag_frameset},     
+  {"FIELDSET",    eHTMLTag_fieldset},     {"FONT",       eHTMLTag_font},
+  {"FOOTER",      eHTMLTag_footer},       {"FORM",       eHTMLTag_form},
+  {"FRAME",       eHTMLTag_frame},        {"FRAMESET",   eHTMLTag_frameset},     
 
-  {"H1", 			  eHTMLTag_h1},           {"H2",  			eHTMLTag_h2},
-  {"H3",  			eHTMLTag_h3},           {"H4",  			eHTMLTag_h4},
-  {"H5",        eHTMLTag_h5},           {"H6",        eHTMLTag_h6},
-  {"HEAD",      eHTMLTag_head},         {"HEADER",    eHTMLTag_header},
-  {"HR",        eHTMLTag_hr},           {"HTML",      eHTMLTag_html},
+  {"H1",          eHTMLTag_h1},           {"H2",        eHTMLTag_h2},
+  {"H3",          eHTMLTag_h3},           {"H4",        eHTMLTag_h4},
+  {"H5",          eHTMLTag_h5},           {"H6",        eHTMLTag_h6},
+  {"HEAD",        eHTMLTag_head},         {"HEADER",    eHTMLTag_header},
+  {"HR",          eHTMLTag_hr},           {"HTML",      eHTMLTag_html},
 
-  {"I",         eHTMLTag_italic},       {"IFRAME",    eHTMLTag_iframe}, 
-  {"ILAYER",    eHTMLTag_ilayer},       {"IMG",       eHTMLTag_img},          
-  {"INPUT",     eHTMLTag_input},        {"INS",       eHTMLTag_ins},          
-  {"ISINDEX",   eHTMLTag_isindex},      
+  {"I",           eHTMLTag_italic},       {"IFRAME",    eHTMLTag_iframe}, 
+  {"ILAYER",      eHTMLTag_ilayer},       {"IMG",       eHTMLTag_img},          
+  {"INPUT",       eHTMLTag_input},        {"INS",       eHTMLTag_ins},          
+  {"ISINDEX",     eHTMLTag_isindex},      
 
-  {"KBD",       eHTMLTag_kbd},          {"KEYGEN",    eHTMLTag_keygen},         
+  {"KBD",         eHTMLTag_kbd},          {"KEYGEN",    eHTMLTag_keygen},         
 
-  {"LABEL",     eHTMLTag_label},        {"LAYER",     eHTMLTag_layer},        
-  {"LEGEND",    eHTMLTag_legend},       {"LI",        eHTMLTag_listitem},     
-  {"LINK",      eHTMLTag_link},         {"LISTING",   eHTMLTag_listing},      
+  {"LABEL",       eHTMLTag_label},        {"LAYER",     eHTMLTag_layer},        
+  {"LEGEND",      eHTMLTag_legend},       {"LI",        eHTMLTag_listitem},     
+  {"LINK",        eHTMLTag_link},         {"LISTING",   eHTMLTag_listing},      
 
-  {"MAP",      	eHTMLTag_map},          {"MARQUEE",   eHTMLTag_marquee},        
-  {"MENU",      eHTMLTag_menu},         {"META",      eHTMLTag_meta},         
+  {"MAP",         eHTMLTag_map},          {"MARQUEE",   eHTMLTag_marquee},        
+  {"MENU",        eHTMLTag_menu},         {"META",      eHTMLTag_meta},         
 
-  {"NEWLINE",   eHTMLTag_newline},       
+  {"NEWLINE",     eHTMLTag_newline},       
 
-  {"NOEMBED",   eHTMLTag_noembed},      {"NOFRAMES",  eHTMLTag_noframes},     
-  {"NOLAYER",   eHTMLTag_nolayer},      {"NOSCRIPT",  eHTMLTag_noscript},
+  {"NOEMBED",     eHTMLTag_noembed},      {"NOFRAMES",  eHTMLTag_noframes},     
+  {"NOLAYER",     eHTMLTag_nolayer},      {"NOSCRIPT",  eHTMLTag_noscript},
 
-  {"OBJECT",    eHTMLTag_object},       {"OL",        eHTMLTag_ol},           
-  {"OPTION",    eHTMLTag_option},       
+  {"OBJECT",      eHTMLTag_object},       {"OL",        eHTMLTag_ol},           
+  {"OPTION",      eHTMLTag_option},       
 
-  {"P",				  eHTMLTag_paragraph},    {"PARAM", 	  eHTMLTag_param},
-  {"PLAINTEXT", eHTMLTag_plaintext},
+  {"P",           eHTMLTag_paragraph},    {"PARAM",     eHTMLTag_param},
+  {"PLAINTEXT",   eHTMLTag_plaintext},
 
-  {"PRE", 			eHTMLTag_pre},
+  {"PRE",         eHTMLTag_pre},
 
-  {"Q",         eHTMLTag_quotation},
+  {"Q",           eHTMLTag_quotation},
 
-  {"S", 		    eHTMLTag_strike},       {"SAMP", 		  eHTMLTag_samp},         
-  {"SCRIPT",		eHTMLTag_script},       {"SELECT", 		eHTMLTag_select},       
-  {"SERVER", 		eHTMLTag_server},       {"SMALL", 		eHTMLTag_small},
-  {"SPACER",    eHTMLTag_spacer},
-  {"SPAN",      eHTMLTag_span},         {"STRIKE", 		eHTMLTag_strike},       
-  {"STRONG", 		eHTMLTag_strong},       {"STYLE",			eHTMLTag_style},        
-  {"SUB", 		  eHTMLTag_sub},          {"SUP", 		  eHTMLTag_sup},
+  {"S",           eHTMLTag_strike},       {"SAMP",       eHTMLTag_samp},         
+  {"SCRIPT",      eHTMLTag_script},       {"SELECT",     eHTMLTag_select},       
+  {"SERVER",      eHTMLTag_server},       {"SMALL",     eHTMLTag_small},
+  {"SPACER",      eHTMLTag_spacer},
+  {"SPAN",        eHTMLTag_span},         {"STRIKE",     eHTMLTag_strike},       
+  {"STRONG",      eHTMLTag_strong},       {"STYLE",      eHTMLTag_style},        
+  {"SUB",         eHTMLTag_sub},          {"SUP",       eHTMLTag_sup},
 
-  {"TABLE", 		eHTMLTag_table},        {"TBODY", 		eHTMLTag_tbody},    
-  {"TD", 		    eHTMLTag_td},           {"TEXTAREA",  eHTMLTag_textarea},     
-  {"TFOOT",     eHTMLTag_tfoot},        {"TH", 		    eHTMLTag_th},           
-  {"THEAD",     eHTMLTag_thead},        {"TITLE",  		eHTMLTag_title},        
-  {"TR",  			eHTMLTag_tr},           {"TT",  			eHTMLTag_tt},
+  {"TABLE",       eHTMLTag_table},        {"TBODY",     eHTMLTag_tbody},    
+  {"TD",          eHTMLTag_td},           
+  
+  {"TEXT",        eHTMLTag_text},
 
-  {"U",  			  eHTMLTag_u},            {"UL",  			eHTMLTag_ul},
-  {"VAR", 			eHTMLTag_var},          {"WBR", 			eHTMLTag_wbr},
-  {"WS",        eHTMLTag_whitespace},       
+  {"TEXTAREA",  eHTMLTag_textarea},     
+  {"TFOOT",       eHTMLTag_tfoot},        {"TH",         eHTMLTag_th},           
+  {"THEAD",       eHTMLTag_thead},        {"TITLE",      eHTMLTag_title},        
+  {"TR",          eHTMLTag_tr},           {"TT",        eHTMLTag_tt},
+
+  {"U",           eHTMLTag_u},            {"UL",        eHTMLTag_ul},
+  {"VAR",         eHTMLTag_var},          {"WBR",       eHTMLTag_wbr},
+  {"WS",          eHTMLTag_whitespace},       
 
 
 };
@@ -193,55 +197,55 @@ HTMLTagEntry gHTMLTagTable[] =
 
 struct HTMLAttrEntry
 {
-  char			      fName[11];
-  eHTMLAttributes	fAttrID;
+  char            fName[11];
+  eHTMLAttributes  fAttrID;
 };
 
 HTMLAttrEntry gHTMLAttributeTable[] =
 {
-  {"ABBREV", 	  eHTMLAttr_abbrev},      {"ABOVE",     eHTMLAttr_above},
-  {"ALT",			 	eHTMLAttr_alt},         {"ARRAY", 		eHTMLAttr_array},
+  {"ABBREV",     eHTMLAttr_abbrev},      {"ABOVE",     eHTMLAttr_above},
+  {"ALT",         eHTMLAttr_alt},         {"ARRAY",     eHTMLAttr_array},
   {"AU",        eHTMLAttr_author},
 
-  {"BACKGROUND",eHTMLAttr_background},  {"BANNER",		eHTMLAttr_banner},
-  {"BELOW", 		eHTMLAttr_below},       {"BGSOUND", 	eHTMLAttr_bgsound},
-  {"BOX", 			eHTMLAttr_box},         {"BT",			  eHTMLAttr_bt},
+  {"BACKGROUND",eHTMLAttr_background},  {"BANNER",    eHTMLAttr_banner},
+  {"BELOW",     eHTMLAttr_below},       {"BGSOUND",   eHTMLAttr_bgsound},
+  {"BOX",       eHTMLAttr_box},         {"BT",        eHTMLAttr_bt},
 
   {"CLASS",     eHTMLAttr_class},       {"COMMENT",   eHTMLAttr_comment}, 
   {"CREDIT",    eHTMLAttr_credit},
 
   {"DIR",       eHTMLAttr_dir},
 
-  {"FIG", 		  eHTMLAttr_figure},      {"FIGURE", 		eHTMLAttr_figure},
-  {"FOOTNOTE",	eHTMLAttr_footnote},
+  {"FIG",       eHTMLAttr_figure},      {"FIGURE",     eHTMLAttr_figure},
+  {"FOOTNOTE",  eHTMLAttr_footnote},
 
-  {"HEIGHT",		eHTMLAttr_height},
+  {"HEIGHT",    eHTMLAttr_height},
 
-  {"ID",		    eHTMLAttr_id},
+  {"ID",        eHTMLAttr_id},
 
   {"LANG",      eHTMLAttr_lang},
 
-  {"MATH", 			eHTMLAttr_math},
+  {"MATH",       eHTMLAttr_math},
 
-  {"NAME",			eHTMLAttr_name},        {"NEXTID",    eHTMLAttr_nextid},
+  {"NAME",      eHTMLAttr_name},        {"NEXTID",    eHTMLAttr_nextid},
   {"NOBR",      eHTMLAttr_nobreak},
 
-  {"NOTE",			eHTMLAttr_note},
+  {"NOTE",      eHTMLAttr_note},
 
-  {"OPTION", 	  eHTMLAttr_option},      {"OVERLAY", 	eHTMLAttr_overlay},
+  {"OPTION",     eHTMLAttr_option},      {"OVERLAY",   eHTMLAttr_overlay},
 
-  {"PERSON", 	  eHTMLAttr_person},      {"PUBLIC",		eHTMLAttr_public},
+  {"PERSON",     eHTMLAttr_person},      {"PUBLIC",    eHTMLAttr_public},
 
-  {"RANGE",			eHTMLAttr_range},       {"ROOT", 			eHTMLAttr_root},
+  {"RANGE",      eHTMLAttr_range},       {"ROOT",       eHTMLAttr_root},
 
-  {"SGML", 		  eHTMLAttr_sgml},        {"SQRT", 			eHTMLAttr_sqrt},
-  {"SRC",			  eHTMLAttr_src},         {"STYLE",			eHTMLAttr_style},
+  {"SGML",       eHTMLAttr_sgml},        {"SQRT",       eHTMLAttr_sqrt},
+  {"SRC",        eHTMLAttr_src},         {"STYLE",      eHTMLAttr_style},
 
-  {"TEXT",  	  eHTMLAttr_text},        {"TITLE",  	  eHTMLAttr_title},
+  {"TEXT",      eHTMLAttr_text},        {"TITLE",      eHTMLAttr_title},
 
-  {"WBR",  			eHTMLAttr_wordbreak},   {"WIDTH", 		eHTMLAttr_width},
+  {"WBR",        eHTMLAttr_wordbreak},   {"WIDTH",     eHTMLAttr_width},
 
-  {"XMP", 			eHTMLAttr_xmp}
+  {"XMP",       eHTMLAttr_xmp}
 };
 
 
@@ -310,7 +314,7 @@ eHTMLTags CStartToken::GetHTMLTag(){
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CStartToken::GetClassName(void) {
+const char*  CStartToken::GetClassName(void) {
   return "start";
 }
 
@@ -357,12 +361,12 @@ PRBool CStartToken::IsAttributed(void) {
  *------------------------------------------------------*/
 PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-	//if you're here, we've already Consumed the < char, and are
+  //if you're here, we've already Consumed the < char, and are
    //ready to Consume the rest of the open tag identifier.
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
- 	mTextValue=aChar;
+   mTextValue=aChar;
   PRInt32 result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_FALSE);
 
    //Good. Now, let's skip whitespace after the identifier,
@@ -372,7 +376,7 @@ PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
    aScanner.SkipWhite();
    result=aScanner.GetChar(aChar);
    if(kGreaterThan!=aChar) { //look for '>' 
-   	//push that char back, since we apparently have attributes...
+     //push that char back, since we apparently have attributes...
       aScanner.PutBack(aChar);
       mAttributed=PR_TRUE;
    }
@@ -389,7 +393,7 @@ PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *------------------------------------------------------*/
 void CStartToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
-	out << "<" << *cp;
+  out << "<" << *cp;
   if(!mAttributed)
     out << ">";
   delete cp;
@@ -417,7 +421,7 @@ CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
  *------------------------------------------------------*/
 PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-	//if you're here, we've already Consumed the <! chars, and are
+  //if you're here, we've already Consumed the <! chars, and are
    //ready to Consume the rest of the open tag identifier.
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
@@ -452,7 +456,7 @@ eHTMLTags CEndToken::GetHTMLTag(){
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CEndToken::GetClassName(void) {
+const char*  CEndToken::GetClassName(void) {
   return "/end";
 }
 
@@ -476,7 +480,7 @@ PRInt32 CEndToken::GetTokenType(void) {
  *------------------------------------------------------*/
 void CEndToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
-	out << "</" << *cp << ">";
+  out << "</" << *cp << ">";
   delete cp;
 }
 
@@ -490,6 +494,7 @@ void CEndToken::DebugDumpSource(ostream& out) {
  *------------------------------------------------------*/
 CTextToken::CTextToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_text;
+  mTagType=eHTMLTag_text;
 }
 
 /**-------------------------------------------------------
@@ -499,7 +504,7 @@ CTextToken::CTextToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CTextToken::GetClassName(void) {
+const char*  CTextToken::GetClassName(void) {
   return "text";
 }
 
@@ -561,8 +566,8 @@ PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   if(kMinus==ch) {
     aScanner.GetChar(ch2);
     if(kMinus==ch2) {
-   	  	//in this case, we're reading a long-form comment <-- xxx -->
-			mTextValue+="--";
+         //in this case, we're reading a long-form comment <-- xxx -->
+      mTextValue+="--";
       PRInt32 findpos=-1;
       while((findpos==kNotFound) && (!result)) {
         result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
@@ -571,7 +576,7 @@ PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
       return result;
     }
   }
- 	  //if you're here, we're consuming a "short-form" comment
+     //if you're here, we're consuming a "short-form" comment
   mTextValue+=ch;
   result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
   return result;
@@ -608,6 +613,7 @@ PRInt32 CCommentToken::GetTokenType(void) {
  *------------------------------------------------------*/
 CNewlineToken::CNewlineToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_newline;
+  mTagType=eHTMLTag_newline;
 }
 
 /**-------------------------------------------------------
@@ -617,7 +623,7 @@ CNewlineToken::CNewlineToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CNewlineToken::GetClassName(void) {
+const char*  CNewlineToken::GetClassName(void) {
   return "crlf";
 }
 
@@ -668,7 +674,7 @@ CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CAttributeToken::GetClassName(void) {
+const char*  CAttributeToken::GetClassName(void) {
   return "attr";
 }
 
@@ -692,7 +698,7 @@ PRInt32 CAttributeToken::GetTokenType(void) {
  *------------------------------------------------------*/
 void CAttributeToken::DebugDumpToken(ostream& out) {
   char* cp=mTextKey.ToNewCString();
-	out << "[" << GetClassName() << "] " << *cp << "=";
+  out << "[" << GetClassName() << "] " << *cp << "=";
   delete cp;
   char* cp2=mTextValue.ToNewCString();
   out << *cp2 << ": " << mOrdinalValue << endl;
@@ -761,12 +767,12 @@ PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   PRInt32 result=aScanner.Peek(aChar);
   if(kEOF!=result) {
     if(kQuote==aChar) {               //if you're here, handle quoted key...
-   	  aScanner.GetChar(aChar);        //skip the quote sign...
+       aScanner.GetChar(aChar);        //skip the quote sign...
       mTextKey=aChar;
       result=ConsumeQuotedString(aChar,mTextKey,aScanner);
     }
     else if(kHashsign==aChar) {
-   	  aScanner.GetChar(aChar);        //skip the hash sign...
+       aScanner.GetChar(aChar);        //skip the hash sign...
       mTextKey=aChar;
       result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE);
     }
@@ -783,7 +789,7 @@ PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
         if(kEqual==aChar){
           aScanner.GetChar(aChar);  //skip the equal sign...
           aScanner.SkipWhite();     //now skip any intervening whitespace
-   	      aScanner.GetChar(aChar);  //and grab the next char.    
+           aScanner.GetChar(aChar);  //and grab the next char.    
   
           if((kQuote==aChar) || (kApostrophe==aChar)) {
             mTextValue=aChar;
@@ -813,7 +819,7 @@ PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *------------------------------------------------------*/
 void CAttributeToken::DebugDumpSource(ostream& out) {
   char* cp=mTextKey.ToNewCString();
-	out << " " << *cp;
+  out << " " << *cp;
   delete cp;
   if(mTextValue.Length()) {
     cp=mTextValue.ToNewCString();
@@ -833,6 +839,7 @@ void CAttributeToken::DebugDumpSource(ostream& out) {
  *------------------------------------------------------*/
 CWhitespaceToken::CWhitespaceToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_whitespace;
+  mTagType=eHTMLTag_whitespace;
 }
 
 /**-------------------------------------------------------
@@ -842,7 +849,7 @@ CWhitespaceToken::CWhitespaceToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CWhitespaceToken::GetClassName(void) {
+const char*  CWhitespaceToken::GetClassName(void) {
   return "ws";
 }
 
@@ -912,7 +919,7 @@ PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CEntityToken::GetClassName(void) {
+const char*  CEntityToken::GetClassName(void) {
   return "&entity";
 }
 
@@ -996,7 +1003,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
  *  @return  PR_TRUE if valid (ordered correctly)
  *------------------------------------------------------*/
 PRBool CEntityToken::VerifyEntityTable(){
-	PRInt32	count=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
+  PRInt32  count=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
   PRInt32 i,j;
   for(i=1;i<count-1;i++)
   {
@@ -1018,32 +1025,32 @@ PRBool CEntityToken::VerifyEntityTable(){
  *  @return  integer offset of string in table, or kNotFound
  *------------------------------------------------------*/
 PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
-	PRInt32	result=kNotFound;
-	PRInt32	cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
-	PRInt32	low=0; 
-	PRInt32	high=cnt-1;
-	PRInt32	middle=kNotFound;
+  PRInt32  result=kNotFound;
+  PRInt32  cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
+  PRInt32  low=0; 
+  PRInt32  high=cnt-1;
+  PRInt32  middle=kNotFound;
   
   if(kNotFound==aBufLen) {
     aBufLen=strlen(aBuffer);
   }
-	
+  
   if (aBuffer && aBufLen && cnt) {
-		while(low<=high)
-		{
-			middle=(PRInt32)(low+high)/2;
-//			result=strncmp(aBuffer,gStrToUnicodeTable[middle].fName,aBufLen);
-			result=strcmp(aBuffer,gStrToUnicodeTable[middle].fName);
+    while(low<=high)
+    {
+      middle=(PRInt32)(low+high)/2;
+//      result=strncmp(aBuffer,gStrToUnicodeTable[middle].fName,aBufLen);
+      result=strcmp(aBuffer,gStrToUnicodeTable[middle].fName);
       if (result==0) {
-				return middle;
+        return middle;
       }
       if (result<0) {
-				high=middle-1;
+        high=middle-1;
       }
-			else low=middle+1; 
-		}
+      else low=middle+1; 
+    }
   }
-	return kNotFound;
+  return kNotFound;
 }
 
 
@@ -1091,7 +1098,7 @@ PRInt32 CEntityToken::ReduceEntities(nsString& aString) {
  *------------------------------------------------------*/
 void CEntityToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
-	out << "&" << *cp;
+  out << "&" << *cp;
   delete cp;
 }
 
@@ -1102,7 +1109,7 @@ void CEntityToken::DebugDumpSource(ostream& out) {
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CScriptToken::GetClassName(void) {
+const char*  CScriptToken::GetClassName(void) {
   return "script";
 }
 
@@ -1124,7 +1131,7 @@ PRInt32 CScriptToken::GetTokenType(void) {
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CStyleToken::GetClassName(void) {
+const char*  CStyleToken::GetClassName(void) {
   return "style";
 }
 
@@ -1159,7 +1166,7 @@ CSkippedContentToken::CSkippedContentToken(const nsString& aName) : CAttributeTo
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-const char*	CSkippedContentToken::GetClassName(void) {
+const char*  CSkippedContentToken::GetClassName(void) {
   return "skipped";
 }
 
@@ -1210,7 +1217,7 @@ PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
 class CTagTableVerifier {
 public:
   CTagTableVerifier::CTagTableVerifier(){
-	  PRInt32	count=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
+    PRInt32  count=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
     PRInt32 i,j;
     for(i=1;i<count-1;i++)
     {
@@ -1229,7 +1236,7 @@ public:
 
 /*-------------------------------------------------------
  * 
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param 
  * @return
  *------------------------------------------------------*/
@@ -1247,23 +1254,23 @@ eHTMLTokenTypes DetermineTokenType(const nsString& aString){
  *------------------------------------------------------*/
 eHTMLTags DetermineHTMLTagType(const nsString& aString)
 {
-	PRInt32	result=-1;
-	PRInt32	cnt=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
-	PRInt32	low=0; 
-	PRInt32	high=cnt-1;
-	PRInt32	middle=kNotFound;
+  PRInt32  result=-1;
+  PRInt32  cnt=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
+  PRInt32  low=0; 
+  PRInt32  high=cnt-1;
+  PRInt32  middle=kNotFound;
   
-	if (0 != cnt)
-		while(low<=high)
-		{
-			middle=(PRInt32)(low+high)/2;
-			result=aString.Compare(gHTMLTagTable[middle].fName, PR_TRUE);
-			if (result==0)
-				return gHTMLTagTable[middle].fTagID; 
-			if (result<0)
-				high=middle-1; 
-			else low=middle+1; 
-		}
+  if (0 != cnt)
+    while(low<=high)
+    {
+      middle=(PRInt32)(low+high)/2;
+      result=aString.Compare(gHTMLTagTable[middle].fName, PR_TRUE);
+      if (result==0)
+        return gHTMLTagTable[middle].fTagID; 
+      if (result<0)
+        high=middle-1; 
+      else low=middle+1; 
+    }
   return eHTMLTag_userdefined;
 }
 
@@ -1280,7 +1287,7 @@ eHTMLTags DetermineHTMLTagType(const nsString& aString)
 class CAttributeTableVerifier {
 public:
   CAttributeTableVerifier::CAttributeTableVerifier(){
-	  PRInt32	count=sizeof(gHTMLAttributeTable)/sizeof(HTMLAttrEntry);
+    PRInt32  count=sizeof(gHTMLAttributeTable)/sizeof(HTMLAttrEntry);
     PRInt32 i,j;
     for(i=1;i<count-1;i++)
     {
@@ -1304,4 +1311,6 @@ public:
 
 CAttributeTableVerifier gAttributeTableVerifier;
 CTagTableVerifier gTableVerifier;
+
+
 

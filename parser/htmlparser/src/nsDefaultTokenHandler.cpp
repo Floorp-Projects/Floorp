@@ -115,7 +115,7 @@ CStartTokenHandler::CStartTokenHandler() : CDefaultTokenHandler(eToken_start) {
  *------------------------------------------------------*/
 CStartTokenHandler::~CStartTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -165,7 +165,7 @@ CEndTokenHandler::CEndTokenHandler(): CDefaultTokenHandler(eToken_end) {
  *------------------------------------------------------*/
 CEndTokenHandler::~CEndTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -215,7 +215,7 @@ CCommentTokenHandler::CCommentTokenHandler() : CDefaultTokenHandler(eToken_comme
  *------------------------------------------------------*/
 CCommentTokenHandler::~CCommentTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -264,7 +264,7 @@ CEntityTokenHandler::CEntityTokenHandler() : CDefaultTokenHandler(eToken_entity)
  *------------------------------------------------------*/
 CEntityTokenHandler::~CEntityTokenHandler() {
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -313,7 +313,7 @@ CWhitespaceTokenHandler::CWhitespaceTokenHandler() : CDefaultTokenHandler(eToken
  *------------------------------------------------------*/
 CWhitespaceTokenHandler::~CWhitespaceTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -363,7 +363,7 @@ CNewlineTokenHandler::CNewlineTokenHandler() : CDefaultTokenHandler(eToken_newli
  *------------------------------------------------------*/
 CNewlineTokenHandler::~CNewlineTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -412,7 +412,7 @@ CTextTokenHandler::CTextTokenHandler() : CDefaultTokenHandler(eToken_text) {
  *------------------------------------------------------*/
 CTextTokenHandler::~CTextTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -460,7 +460,7 @@ CAttributeTokenHandler::CAttributeTokenHandler() : CDefaultTokenHandler(eToken_a
  *------------------------------------------------------*/
 CAttributeTokenHandler::~CAttributeTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -509,7 +509,7 @@ CScriptTokenHandler::CScriptTokenHandler() : CDefaultTokenHandler(eToken_script)
  *------------------------------------------------------*/
 CScriptTokenHandler::~CScriptTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -558,7 +558,7 @@ CStyleTokenHandler::CStyleTokenHandler() : CDefaultTokenHandler(eToken_style) {
  *------------------------------------------------------*/
 CStyleTokenHandler::~CStyleTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -607,7 +607,7 @@ CSkippedContentTokenHandler::CSkippedContentTokenHandler() : CDefaultTokenHandle
  *------------------------------------------------------*/
 CSkippedContentTokenHandler::~CSkippedContentTokenHandler(){
 }
-		                      
+                          
 
 /**-------------------------------------------------------
  *  
@@ -635,3 +635,5 @@ PRBool CSkippedContentTokenHandler::CanHandle(eHTMLTokenTypes aType){
   PRBool result=PR_FALSE;
   return result;
 }
+
+

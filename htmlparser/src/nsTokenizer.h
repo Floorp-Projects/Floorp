@@ -18,7 +18,7 @@
 
 /**
  * MODULE NOTES:
- * LAST MODS:	gess 28Feb98
+ * LAST MODS:  gess 28Feb98
  * 
  * This file declares the basic tokenizer class. The 
  * central theme of this class is to control and 
@@ -37,8 +37,8 @@
  */
 
 
-#ifndef	TOKENIZER
-#define	TOKENIZER
+#ifndef  TOKENIZER
+#define  TOKENIZER
 
 #include "nsToken.h"
 #include "nsITokenizerDelegate.h"
@@ -49,28 +49,30 @@ class CScanner;
 class nsIURL;
 
 class  CTokenizer {
-	public:
-				                CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode);
-		      				      ~CTokenizer();
+  public:
+                        CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode);
+                        ~CTokenizer();
     
-    PRInt32   			    Tokenize(void);
-    CToken*			        GetToken(PRInt32& anErrorCode);
+    PRInt32             Tokenize(void);
+    CToken*              GetToken(PRInt32& anErrorCode);
     PRInt32             GetSize(void);
     nsDeque&            GetDeque(void);
 
-    void			          DebugDumpSource(ostream& out);
-    void			          DebugDumpTokens(ostream& out);
+    void                DebugDumpSource(ostream& out);
+    void                DebugDumpTokens(ostream& out);
     static void         SelfTest();
 
   protected:  
 
-		PRBool				      WillTokenize();
-		PRBool			        DidTokenize();
+    PRBool              WillTokenize();
+    PRBool              DidTokenize();
 
-    ITokenizerDelegate*	mDelegate;
+    ITokenizerDelegate*  mDelegate;
     CScanner*           mScanner;
     nsDeque             mTokenDeque;
     eParseMode          mParseMode;
 };
 
 #endif
+
+

@@ -49,7 +49,7 @@ class nsIContentSink;
  *------------------------------------------------------*/
 class nsIParser : public nsISupports {
             
-	public:
+  public:
 
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
     virtual PRBool          Parse(nsIURL* aURL)=0;
@@ -59,4 +59,6 @@ class nsIParser : public nsISupports {
 extern NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult);
 
 #endif 
+
+
 

@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef	ICONTENTSINK
-#define	ICONTENTSINK
+#ifndef  ICONTENTSINK
+#define  ICONTENTSINK
 
 #include "nsIParserNode.h"
 #include "nsISupports.h"
@@ -39,7 +39,7 @@
 
 
 class nsIContentSink : public nsISupports {
-	public:
+  public:
 
          /**
           * This method is used to open a generic container in the sink.
@@ -85,4 +85,6 @@ extern nsresult NS_NewHTMLContentSink(nsIContentSink** aInstancePtrResult);
 
 
 #endif
+
+
 

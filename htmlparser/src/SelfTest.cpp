@@ -37,8 +37,8 @@ PRBool compareFiles(const char* file1,const char* file2,int& failpos) {
   char ch1,ch2;
   int  eof1,eof2;
 
-  ifstream	input1(file1,ios::in && ios::binary,filebuf::openprot);
-  ifstream	input2(file2,ios::in && ios::binary,filebuf::openprot);
+  ifstream  input1(file1,ios::in && ios::binary,filebuf::openprot);
+  ifstream  input2(file2,ios::in && ios::binary,filebuf::openprot);
   input1.setmode(filebuf::binary);
   input2.setmode(filebuf::binary);
   failpos=-1;
@@ -79,7 +79,7 @@ PRBool compareFiles(const char* file1,const char* file2,int& failpos) {
 
 
 /**-------------------------------------------------------
- * LAST MODS:	gess
+ * LAST MODS:  gess
  *  
  * @param  
  * @return 
@@ -116,7 +116,7 @@ void parseFile (const char* aFilename,int size)
 
 
 /**-------------------------------------------------------
- * LAST MODS:	gess
+ * LAST MODS:  gess
  *  
  * @param  
  * @return 
@@ -167,7 +167,7 @@ int walkDirectoryTree(char* aPath) {
 
 
 /**-------------------------------------------------------
- * LAST MODS:	gess
+ * LAST MODS:  gess
  *  
  * @param  
  * @return 
@@ -175,7 +175,7 @@ int walkDirectoryTree(char* aPath) {
 int main(int argc, char* argv [])
 {
   int   result=0;
-  char 	buffer[_MAX_PATH];
+  char   buffer[_MAX_PATH];
 
   if(argc==2) 
     strcpy(buffer,argv[1]);
@@ -183,6 +183,8 @@ int main(int argc, char* argv [])
   walkDirectoryTree(buffer);
   return 0;
 }
+
+
 
 
 

@@ -61,8 +61,8 @@
  *       are going to be handled. Stay tuned.
  */
 
-#ifndef	NS_HTMLCONTENTSINK
-#define	NS_HTMLCONTENTSINK
+#ifndef  NS_HTMLCONTENTSINK
+#define  NS_HTMLCONTENTSINK
 
 #include "nsIParserNode.h"
 #include "nsIHTMLContentSink.h"
@@ -75,7 +75,7 @@
 
 
 class nsHTMLContentSink : public nsIHTMLContentSink {
-	public:
+  public:
 
   enum eSection {eNone=0,eHTML,eHead,eBody,eContainer};
 
@@ -127,5 +127,7 @@ class nsHTMLContentSink : public nsIHTMLContentSink {
 
 
 #endif
+
+
 
 

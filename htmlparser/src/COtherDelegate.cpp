@@ -41,7 +41,7 @@ static char gIdentChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
  *  @return  
  */
 COtherDelegate::COtherDelegate() :
-	ITokenizerDelegate(), mTokenDeque() {
+  ITokenizerDelegate(), mTokenDeque() {
 }
 
 /**
@@ -58,7 +58,7 @@ COtherDelegate::COtherDelegate(COtherDelegate& aDelegate) :
 
 /**
  * 
- * @update	gess4/11/98
+ * @update  gess4/11/98
  * @param 
  * @return
  */
@@ -69,7 +69,7 @@ eParseMode COtherDelegate::GetParseMode() const {
 /**
  * Cause delegate to create and return a new DTD.
  *
- * @update	gess4/22/98
+ * @update  gess4/22/98
  * @return  new DTD or null
  */
 nsIDTD* COtherDelegate::GetDTD(void) const{
@@ -86,7 +86,7 @@ nsIDTD* COtherDelegate::GetDTD(void) const{
  *  @return  
  */
 CToken* COtherDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-	CToken* result=0;
+  CToken* result=0;
   nsAutoString empty("");
   anErrorCode=anErrorCode=aScanner.GetChar(aChar);
 
@@ -130,19 +130,19 @@ CToken* COtherDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& a
  *  @return  
  */
 void COtherDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-	PRBool done=PR_FALSE;
+  PRBool done=PR_FALSE;
   nsAutoString as("");
   anErrorCode=kNoError;
   while((!done) && (anErrorCode==kNoError)) {
-   	CToken* result = new CAttributeToken(as);
+     CToken* result = new CAttributeToken(as);
       if(result){
         anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
          mTokenDeque.Push(result);
       }
-		aScanner.Peek(aChar);
+    aScanner.Peek(aChar);
       if(aChar==kGreaterThan) { //you just ate the '>'
-			  aScanner.GetChar(aChar); //skip the '>'
-      	done=PR_TRUE;
+        aScanner.GetChar(aChar); //skip the '>'
+        done=PR_TRUE;
       }
   }
   return;
@@ -181,7 +181,7 @@ CToken* COtherDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar
  *  @return new token or null 
  */
 CToken* COtherDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-	CStartToken* result=new CStartToken(nsAutoString(""));
+  CStartToken* result=new CStartToken(nsAutoString(""));
   if(result) {
     anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(result->IsAttributed()) {
@@ -292,7 +292,7 @@ CToken* COtherDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,P
   CToken* result=new CTextToken(aString);
   if(result) {
     PRUnichar ch;
-   	anErrorCode=result->Consume(ch,aScanner);
+     anErrorCode=result->Consume(ch,aScanner);
   }
   return result;
 }
@@ -307,9 +307,9 @@ CToken* COtherDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,P
  *  @return new token or null 
  */
 CToken* COtherDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
-	CToken* result=new CNewlineToken(nsAutoString(""));
+  CToken* result=new CNewlineToken(nsAutoString(""));
   if(result) {
-   	anErrorCode=result->Consume(aChar,aScanner);
+     anErrorCode=result->Consume(aChar,aScanner);
   }
   return result;
 }
@@ -327,15 +327,15 @@ CToken* COtherDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt3
  *  @return new token or null 
  */
 CToken* COtherDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode){
-	CToken* 	result=0;
+  CToken*   result=0;
   PRUnichar aChar;
 
   if(mTokenDeque.GetSize()>0) {
     return (CToken*)mTokenDeque.Pop();
   }
 
- 	while(!aScanner.Eof()) {
-   	anErrorCode=aScanner.GetChar(aChar);
+   while(!aScanner.Eof()) {
+     anErrorCode=aScanner.GetChar(aChar);
     switch(aChar) {
       case kAmpersand:
         return ConsumeEntity(aChar,aScanner,anErrorCode);
@@ -356,13 +356,13 @@ CToken* COtherDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode){
     } //switch
     if(anErrorCode==kEOF)
       anErrorCode=0;
- 	} //while
-	return result;
+   } //while
+  return result;
 }
 
 /**
  * 
- * @update	gess4/11/98
+ * @update  gess4/11/98
  * @param 
  * @return
  */
@@ -396,8 +396,8 @@ PRBool COtherDelegate::WillAddToken(CToken& /*aToken*/) {
  *  @return TRUE if preinitialization completed successfully
  */
 PRBool COtherDelegate::WillTokenize() {
-	PRBool result=PR_TRUE;
-	return result;
+  PRBool result=PR_TRUE;
+  return result;
 }
 
 /**
@@ -409,7 +409,7 @@ PRBool COtherDelegate::WillTokenize() {
  *  @return TRUE if preinitialization completed successfully
  */
 PRBool COtherDelegate::DidTokenize() {
-	PRBool result=PR_TRUE;
+  PRBool result=PR_TRUE;
    return result;
 }
 
@@ -427,5 +427,7 @@ void COtherDelegate::SelfTest(void) {
 
 #endif
 }
+
+
 
 

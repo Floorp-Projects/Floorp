@@ -34,9 +34,11 @@ class nsHTMLParser;
 
 class CITokenHandler {
 public:
-		                      
+                          
   virtual   PRBool    operator()(CToken* aToken,nsHTMLParser* aParser)=0;
 
 };
 
 #endif
+
+

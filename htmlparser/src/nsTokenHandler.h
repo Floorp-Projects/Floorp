@@ -36,23 +36,23 @@ class nsHTMLParser;
 
 class CTokenHandler : public CITokenHandler {
 public:
-									        CTokenHandler(eHTMLTokenTypes aType=eToken_unknown);
+                          CTokenHandler(eHTMLTokenTypes aType=eToken_unknown);
   virtual                 ~CTokenHandler();
-		                      
+                          
   virtual   eHTMLTokenTypes GetTokenType(void);
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 
 protected:
-          	eHTMLTokenTypes mType;
+            eHTMLTokenTypes mType;
 };
 
 
 class CStartTokenHandler : public CTokenHandler  {
 public:
-									        CStartTokenHandler();
+                          CStartTokenHandler();
   virtual                 ~CStartTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -60,9 +60,9 @@ public:
 
 class CEndTokenHandler : public CTokenHandler  {
 public:
-									        CEndTokenHandler();
+                          CEndTokenHandler();
   virtual                 ~CEndTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -70,9 +70,9 @@ public:
 
 class CCommentTokenHandler : public CTokenHandler  {
 public:
-									        CCommentTokenHandler();
+                          CCommentTokenHandler();
   virtual                 ~CCommentTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -80,9 +80,9 @@ public:
 
 class CEntityTokenHandler : public CTokenHandler  {
 public:
-									        CEntityTokenHandler();
+                          CEntityTokenHandler();
   virtual                 ~CEntityTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -90,9 +90,9 @@ public:
 
 class CWhitespaceTokenHandler : public CTokenHandler  {
 public:
-									        CWhitespaceTokenHandler();
+                          CWhitespaceTokenHandler();
   virtual                 ~CWhitespaceTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -100,9 +100,9 @@ public:
 
 class CNewlineTokenHandler : public CTokenHandler  {
 public:
-									        CNewlineTokenHandler();
+                          CNewlineTokenHandler();
   virtual                 ~CNewlineTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -110,9 +110,9 @@ public:
 
 class CTextTokenHandler : public CTokenHandler  {
 public:
-									        CTextTokenHandler();
+                          CTextTokenHandler();
   virtual                 ~CTextTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -120,9 +120,9 @@ public:
 
 class CAttributeTokenHandler : public CTokenHandler  {
 public:
-									        CAttributeTokenHandler();
+                          CAttributeTokenHandler();
   virtual                 ~CAttributeTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -130,9 +130,9 @@ public:
 
 class CScriptTokenHandler :  public CTokenHandler  {
 public:
-									        CScriptTokenHandler();
+                          CScriptTokenHandler();
   virtual                 ~CScriptTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -140,9 +140,9 @@ public:
 
 class CStyleTokenHandler : public CTokenHandler  {
 public:
-									        CStyleTokenHandler();
+                          CStyleTokenHandler();
   virtual                 ~CStyleTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
@@ -150,12 +150,14 @@ public:
 
 class CSkippedContentTokenHandler : public CTokenHandler  {
 public:
-									        CSkippedContentTokenHandler();
+                          CSkippedContentTokenHandler();
   virtual                 ~CSkippedContentTokenHandler();
-		                      
+                          
   virtual   PRBool        operator()(CToken* aToken,nsHTMLParser* aParser);
   virtual   PRBool        CanHandle(eHTMLTokenTypes aType);
 };
 
 
 #endif
+
+
