@@ -63,7 +63,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     printf("fullname = %s\n", pw->PW_GECOS);
 #endif
 
-    nsAutoString fullname(pw->PW_GECOS);
+    nsAutoString fullname(NS_ConvertASCIItoUCS2(pw->PW_GECOS));
 
     *aFullname = fullname.ToNewUnicode();
 
