@@ -67,7 +67,7 @@ class nsXBLService : public nsIXBLService,
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool aAugmentFlag,
+  NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFlag,
                           nsIXBLBinding** aBinding, PRBool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.

@@ -54,6 +54,7 @@ class nsIXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIAtom;
 class nsIStreamListener;
+class nsIURI;
 class nsIXPConnectWrappedJS;
 class nsIDOMNodeList;
 class nsVoidArray;
@@ -150,8 +151,8 @@ public:
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints) = 0;
 
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAString& aURL) = 0;
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL) = 0;
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, nsIURI* aURL) = 0;
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL) = 0;
   NS_IMETHOD LoadBindingDocument(nsIDocument* aDocument, const nsAString& aURL,
                                  nsIDocument** aResult) = 0;
 

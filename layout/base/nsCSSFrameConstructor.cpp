@@ -1367,9 +1367,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   *aFrame = nsnull;  // initialize OUT parameter
 
   // Get the content value
-  nsStyleContentType  type;
-  nsAutoString        contentString;
-  aStyleContent->GetContentAt(aContentIndex, type, contentString);
+  const nsStyleContentData &data = aStyleContent->ContentAt(aContentIndex);
+  nsStyleContentType  type = data.mType;
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -1395,8 +1394,10 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, contentString,
-                     PR_FALSE);
+    nsCAutoString spec;
+    data.mContent.mURL->GetSpec(spec); // XXXldb Ugh.
+    content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
+                     NS_ConvertUTF8toUCS2(spec), PR_FALSE);
 
     // Set aContent as the parent content and set the document object. This
     // way event handling works
@@ -1420,6 +1421,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     *aFrame = imageFrame;
 
   } else {
+
+    nsAutoString contentString(data.mContent.mString);
 
     switch (type) {
     case eStyleContentType_String:
@@ -3356,7 +3359,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   const nsStyleDisplay* display = styleContext->GetStyleDisplay();
 
   // Ensure that our XBL bindings are installed.
-  if (!display->mBinding.IsEmpty()) {
+  if (display->mBinding) {
     // Get the XBL loader.
     nsresult rv;
     PRBool resolveStyle;
@@ -7112,7 +7115,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   {
     
     // Ensure that our XBL bindings are installed.
-    if (!display->mBinding.IsEmpty()) {
+    if (display->mBinding) {
       // Get the XBL loader.
       nsresult rv;
       // Load the bindings.

@@ -352,8 +352,8 @@ public:
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints);
 
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAString& aURL);
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL);
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAString& aURL,
                                  nsIDocument** aResult);
 
@@ -801,7 +801,7 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aRes
 }
 
 NS_IMETHODIMP
-nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAString& aURL)
+nsBindingManager::AddLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 {
   // First we need to load our binding.
   nsresult rv;
@@ -823,7 +823,7 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAString& aURL)
 }
 
 NS_IMETHODIMP
-nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL)
+nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aContent, getter_AddRefs(binding));
@@ -844,11 +844,8 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAString& aU
   nsresult rv = NS_NewURI(getter_AddRefs(bindingUri), bindingUriStr);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aURL);
-  NS_ENSURE_SUCCESS(rv, rv);
   PRBool equalUri;
-  rv = uri->Equals(bindingUri, &equalUri);
+  rv = aURL->Equals(bindingUri, &equalUri);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!equalUri) {
     return NS_OK;

@@ -2586,7 +2586,9 @@ nsDocument::AddBinding(nsIDOMElement* aContent, const nsAString& aURL)
   GetBindingManager(getter_AddRefs(bm));
   nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
 
-  return bm->AddLayeredBinding(content, aURL);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), aURL);
+  return bm->AddLayeredBinding(content, uri);
 }
 
 NS_IMETHODIMP
@@ -2599,7 +2601,9 @@ nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAString& aURL)
 
   if (mBindingManager) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
-    return mBindingManager->RemoveLayeredBinding(content, aURL);
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aURL);
+    return mBindingManager->RemoveLayeredBinding(content, uri);
   }
 
   return NS_ERROR_FAILURE;

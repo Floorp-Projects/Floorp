@@ -1878,23 +1878,22 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 {
   *aResult = nsnull;
 
-  const nsAString* imagePtr;
   nsAutoString imageSrc;
   mView->GetImageSrc(aRowIndex, aColID, imageSrc);
   if (!aUseContext && !imageSrc.IsEmpty()) {
-    imagePtr = &imageSrc;
     aAllowImageRegions = PR_FALSE;
   }
   else {
     // Obtain the URL from the style context.
     aAllowImageRegions = PR_TRUE;
-    const nsStyleList* myList = aStyleContext->GetStyleList();
-    if (!myList->mListStyleImage.IsEmpty())
-      imagePtr = &myList->mListStyleImage;
-    else
+    nsIURI* uri = aStyleContext->GetStyleList()->mListStyleImage;
+    if (!uri)
       return NS_OK;
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    CopyUTF8toUTF16(spec, imageSrc);
   }
-  nsStringKey key(*imagePtr);
+  nsStringKey key(imageSrc);
 
   if (mImageCache) {
     // Look the image up in our cache.
@@ -1939,7 +1938,8 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     mContent->GetBaseURL(getter_AddRefs(baseURI));
 
     nsCOMPtr<nsIURI> srcURI;
-    NS_NewURI(getter_AddRefs(srcURI), *imagePtr, nsnull, baseURI);
+    // XXX origin charset needed
+    NS_NewURI(getter_AddRefs(srcURI), imageSrc, nsnull, baseURI);
     if (!srcURI)
       return NS_ERROR_FAILURE;
     nsCOMPtr<imgIRequest> imageRequest;
@@ -3324,7 +3324,7 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
   // See if we have a background image.  If we do, then we cannot blit.
-  PRBool hasBackground = !GetStyleBackground()->mBackgroundImage.IsEmpty();
+  PRBool hasBackground = GetStyleBackground()->mBackgroundImage != nsnull;
 
   PRInt32 absDelta = PR_ABS(delta);
   if (hasBackground || absDelta*mRowHeight >= mRect.height)

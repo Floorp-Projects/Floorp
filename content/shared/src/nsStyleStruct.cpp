@@ -701,7 +701,6 @@ nsStyleList::nsStyleList()
 {
   mListStyleType = NS_STYLE_LIST_STYLE_BASIC;
   mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
-  mListStyleImage.Truncate();  
 }
 
 nsStyleList::~nsStyleList() 
@@ -709,10 +708,10 @@ nsStyleList::~nsStyleList()
 }
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
+  : mListStyleType(aSource.mListStyleType),
+    mListStylePosition(aSource.mListStylePosition),
+    mListStyleImage(aSource.mListStyleImage)
 {
-  mListStyleType = aSource.mListStyleType;
-  mListStylePosition = aSource.mListStylePosition;
-  mListStyleImage = aSource.mListStyleImage;
 }
 
 nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
@@ -1192,7 +1191,7 @@ nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
   PRUint32 index;
   if (NS_SUCCEEDED(AllocateContents(aSource.ContentCount()))) {
     for (index = 0; index < mContentCount; index++) {
-      aSource.GetContentAt(index, mContents[index].mType, mContents[index].mContent);
+      ContentAt(index) = aSource.ContentAt(index);
     }
   }
 
@@ -1219,8 +1218,7 @@ nsChangeHint nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
         (mResetCount == aOther.mResetCount)) {
       PRUint32 ix = mContentCount;
       while (0 < ix--) {
-        if ((mContents[ix].mType != aOther.mContents[ix].mType) || 
-            (mContents[ix].mContent != aOther.mContents[ix].mContent)) {
+        if (mContents[ix] != aOther.mContents[ix]) {
           // Unfortunately we need to reframe here; a simple reflow
           // will not pick up different text or different image URLs,
           // since we set all that up in the CSSFrameConstructor

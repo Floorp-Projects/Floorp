@@ -269,9 +269,9 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
     do {
       bg = frame->GetStyleBackground();
       frame = frame->GetParent();
-    } while (bg && bg->mBackgroundImage.IsEmpty() && frame);
+    } while (!bg->mBackgroundImage && frame);
      
-    if (bg && !bg->mBackgroundImage.IsEmpty())
+    if (bg->mBackgroundImage)
     {
       nsIFrame *pBGFrame = nsnull;
       rv = GetFrameForBackgroundUpdate(presContext, frame, &pBGFrame);
@@ -304,7 +304,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
     PRBool isCanvas;
     PRBool foundBackground;
     presContext->FindFrameBackground(frame, &bg, &isCanvas, &foundBackground);
-    if (bg && !bg->mBackgroundImage.IsEmpty())
+    if (bg && bg->mBackgroundImage)
     {
       nsIFrame *pBGFrame = nsnull;
       rv = GetFrameForBackgroundUpdate(presContext, frame, &pBGFrame);

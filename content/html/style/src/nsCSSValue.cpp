@@ -90,6 +90,13 @@ nsCSSValue::nsCSSValue(nscolor aValue)
   mValue.mColor = aValue;
 }
 
+nsCSSValue::nsCSSValue(nsIURI* aValue)
+  : mUnit(eCSSUnit_URL)
+{
+  mValue.mURL = aValue;
+  NS_IF_ADDREF(aValue);
+}
+
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
@@ -106,6 +113,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   }
   else if (eCSSUnit_Color == mUnit){
     mValue.mColor = aCopy.mValue.mColor;
+  }
+  else if (eCSSUnit_URL == mUnit){
+    mValue.mURL = aCopy.mValue.mURL;
+    NS_IF_ADDREF(mValue.mURL);
   }
   else {
     mValue.mFloat = aCopy.mValue.mFloat;
@@ -127,6 +138,10 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
   else if (eCSSUnit_Color == mUnit){
     mValue.mColor = aCopy.mValue.mColor;
   }
+  else if (eCSSUnit_URL == mUnit){
+    mValue.mURL = aCopy.mValue.mURL;
+    NS_IF_ADDREF(mValue.mURL);
+  }
   else {
     mValue.mFloat = aCopy.mValue.mFloat;
   }
@@ -147,13 +162,20 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
       }
     }
     else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
-      return PRBool(mValue.mInt == aOther.mValue.mInt);
+      return mValue.mInt == aOther.mValue.mInt;
     }
-    else if (eCSSUnit_Color == mUnit){
-      return PRBool(mValue.mColor == aOther.mValue.mColor);
+    else if (eCSSUnit_Color == mUnit) {
+      return mValue.mColor == aOther.mValue.mColor;
+    }
+    else if (eCSSUnit_URL == mUnit) {
+      PRBool eq;
+      return (mValue.mURL == aOther.mValue.mURL || // handles null == null
+              (mValue.mURL && aOther.mValue.mURL &&
+               NS_SUCCEEDED(mValue.mURL->Equals(aOther.mValue.mURL, &eq)) &&
+               eq));
     }
     else {
-      return PRBool(mValue.mFloat == aOther.mValue.mFloat);
+      return mValue.mFloat == aOther.mValue.mFloat;
     }
   }
   return PR_FALSE;
@@ -187,6 +209,14 @@ void nsCSSValue::SetColorValue(nscolor aValue)
   Reset();
   mUnit = eCSSUnit_Color;
   mValue.mColor = aValue;
+}
+
+void nsCSSValue::SetURLValue(nsIURI* aValue)
+{
+  Reset();
+  mUnit = eCSSUnit_URL;
+  mValue.mURL = aValue;
+  NS_IF_ADDREF(mValue.mURL);
 }
 
 void nsCSSValue::SetAutoValue(void)
@@ -261,7 +291,7 @@ void nsCSSValue::AppendToString(nsAString& aBuffer,
 
     aBuffer.Append(PRUnichar(']'));
   }
-  else if (eCSSUnit_Color == mUnit){
+  else if (eCSSUnit_Color == mUnit) {
     aBuffer.Append(NS_LITERAL_STRING("(0x"));
 
     nsAutoString intStr;
@@ -287,6 +317,15 @@ void nsCSSValue::AppendToString(nsAString& aBuffer,
     aBuffer.Append(intStr);
 
     aBuffer.Append(PRUnichar(')'));
+  }
+  else if (eCSSUnit_URL == mUnit) {
+    if (mValue.mURL) {
+      nsCAutoString spec;
+      mValue.mURL->GetSpec(spec);
+      AppendUTF8toUTF16(spec, aBuffer);
+    } else {
+      aBuffer.Append(NS_LITERAL_STRING("url(invalid-url:)"));
+    }
   }
   else if (eCSSUnit_Percent == mUnit) {
     nsAutoString floatString;
@@ -351,4 +390,3 @@ void nsCSSValue::ToString(nsAString& aBuffer,
   aBuffer.Truncate();
   AppendToString(aBuffer, aPropID);
 }
-

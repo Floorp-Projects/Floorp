@@ -124,21 +124,14 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
   
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  const nsStyleList* myList = GetStyleList();
-
-  if (!myList->mListStyleImage.IsEmpty()) {
+  nsIURI *imgURI = GetStyleList()->mListStyleImage;
+  if (imgURI) {
     nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
     if (NS_FAILED(rv))
       return rv;
 
     nsCOMPtr<nsILoadGroup> loadGroup;
     GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-
-    nsCOMPtr<nsIURI> baseURI;
-    mContent->GetBaseURL(getter_AddRefs(baseURI));
-
-    nsCOMPtr<nsIURI> imgURI;
-    NS_NewURI(getter_AddRefs(imgURI), myList->mListStyleImage, nsnull, baseURI);
 
     // Get the document URI for the referrer...
     nsCOMPtr<nsIURI> documentURI;
@@ -201,7 +194,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     const nsStyleList* myList = GetStyleList();
     PRUint8 listStyleType = myList->mListStyleType;
 
-    if (!myList->mListStyleImage.IsEmpty() && mImageRequest) {
+    if (myList->mListStyleImage && mImageRequest) {
       PRUint32 status;
       mImageRequest->GetImageStatus(&status);
       if (status & imgIRequest::STATUS_LOAD_COMPLETE &&
@@ -1379,7 +1372,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   const nsStyleList* myList = GetStyleList();
   nscoord ascent;
 
-  if (!myList->mListStyleImage.IsEmpty() && mImageRequest) {
+  if (myList->mListStyleImage && mImageRequest) {
     PRUint32 status;
     mImageRequest->GetImageStatus(&status);
     if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
@@ -1595,12 +1588,9 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   if (isStyleChange) {
-    nsCOMPtr<nsIURI> baseURI;
-    mContent->GetBaseURL(getter_AddRefs(baseURI));
+    nsIURI *newURI = GetStyleList()->mListStyleImage;
 
-    const nsStyleList* myList = GetStyleList();
-
-    if (!myList->mListStyleImage.IsEmpty()) {
+    if (newURI) {
 
       if (!mListener) {
         nsBulletListener *listener;
@@ -1611,10 +1601,6 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         NS_ASSERTION(mListener, "queryinterface for the listener failed");
         NS_RELEASE(listener);
       }
-
-
-      nsCOMPtr<nsIURI> newURI;
-      NS_NewURI(getter_AddRefs(newURI), myList->mListStyleImage, nsnull, baseURI);
 
       PRBool needNewRequest = PR_TRUE;
 

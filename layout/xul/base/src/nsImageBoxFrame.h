@@ -146,7 +146,7 @@ private:
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
 
-  nsString mSrc; // The raw image source.
+  nsCOMPtr<nsIURI> mURI; // The URI of the image.
 
   PRPackedBool mUseSrcAttr; // Whether or not the image src comes from an attribute.
   PRPackedBool mSizeFrozen;

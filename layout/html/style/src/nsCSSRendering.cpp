@@ -2926,7 +2926,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   }
 
   // if there is no background image or background images are turned off, try a color.
-  if (aColor.mBackgroundImage.IsEmpty() || !canDrawBackgroundImage) {
+  if (!aColor.mBackgroundImage || !canDrawBackgroundImage) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
                          aColor, aBorder, aPadding, canDrawBackgroundColor);
     return;

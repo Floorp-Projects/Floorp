@@ -3419,7 +3419,6 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
     if (NS_CONTENT_ATTR_HAS_VALUE ==
         aAttributes->GetAttribute(nsHTMLAtoms::background, value)) {
       if (eHTMLUnit_String == value.GetUnit()) {
-        nsAutoString absURLSpec;
         nsAutoString spec;
         value.GetStringValue(spec);
         if (!spec.IsEmpty()) {
@@ -3437,10 +3436,11 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
               aAttributes->GetAttribute(nsHTMLAtoms::_baseHref, baseHref);
               nsGenericHTMLElement::GetBaseURL(baseHref, doc,
                                                getter_AddRefs(docURL));
-              rv = NS_MakeAbsoluteURI(absURLSpec, spec, docURL);
+              nsCOMPtr<nsIURI> uri;
+              rv = nsContentUtils::NewURIWithDocumentCharset(
+                                       getter_AddRefs(uri), spec, doc, docURL);
               if (NS_SUCCEEDED(rv))
-                aData->mColorData->mBackImage.SetStringValue(absURLSpec,
-                                                             eCSSUnit_URL);
+                aData->mColorData->mBackImage.SetURLValue(uri);
             }
           }
         }
@@ -3451,8 +3451,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
         aData->mPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode &&
             eHTMLUnit_Empty == value.GetUnit())
-          aData->mColorData->mBackImage.SetStringValue(NS_LITERAL_STRING(""),
-                                                       eCSSUnit_URL);
+          aData->mColorData->mBackImage.SetNoneValue();
       }
     }
   }

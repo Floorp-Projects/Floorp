@@ -247,10 +247,9 @@ public:
  
    /**
     * Resolve a new style context for a content node and return the URL
-    * for its XBL binding, or the empty string if it has no binding
-    * specified in CSS.
+    * for its XBL binding, or null if it has no binding specified in CSS.
     */
-   NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsAString& aResult) = 0;
+   NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult) = 0;
 
   /** 
    * For a given frame tree, get a new style context that is the equivalent
@@ -319,7 +318,7 @@ public:
    * method will be invoked (via the ViewManager) so that the
    * appropriate damage repair is done.
    */
-  NS_IMETHOD LoadImage(const nsString& aURL,
+  NS_IMETHOD LoadImage(nsIURI* aURL,
                        nsIFrame* aTargetFrame,
                        imgIRequest **aRequest) = 0;
 

@@ -1564,12 +1564,11 @@ HasAttributeContent(nsStyleContext* aStyleContext,
     const nsStyleContent* content = aStyleContext->GetStyleContent();
     PRUint32 count = content->ContentCount();
     while ((0 < count) && (! result)) {
-      nsStyleContentType  contentType;
-      nsAutoString        contentString;
-      content->GetContentAt(--count, contentType, contentString);
-      if (eStyleContentType_Attr == contentType) {
+      const nsStyleContentData &data = content->ContentAt(--count);
+      if (eStyleContentType_Attr == data.mType) {
         nsIAtom* attrName = nsnull;
         PRInt32 attrNameSpace = kNameSpaceID_None;
+        nsAutoString contentString(data.mContent.mString);
         PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
         if (-1 != barIndex) {
           nsAutoString  nameSpaceVal;
@@ -1731,8 +1730,12 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         const nsStyleBackground* oldColor = oldContext->GetStyleBackground();
         const nsStyleBackground* newColor = newContext->GetStyleBackground();
 
-        if (!oldColor->mBackgroundImage.IsEmpty() &&
-            oldColor->mBackgroundImage != newColor->mBackgroundImage) {
+        PRBool equal;
+        if (oldColor->mBackgroundImage &&
+            (!newColor->mBackgroundImage ||
+             NS_FAILED(oldColor->mBackgroundImage->Equals(
+                                        newColor->mBackgroundImage, &equal)) ||
+             !equal)) {
           // stop the image loading for the frame, the image has changed
           aPresContext->StopImagesFor(aFrame);
         }

@@ -985,13 +985,14 @@ nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
 }
 
 NS_IMETHODIMP
-nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsAString& aResult)
+nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult)
 {
   nsRefPtr<nsStyleContext> sc;
   sc = ResolveStyleContextFor(aContent, nsnull);
   NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
 
-  aResult = sc->GetStyleDisplay()->mBinding;
+  *aResult = sc->GetStyleDisplay()->mBinding;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -1357,7 +1358,7 @@ nsPresContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsPresContext::LoadImage(const nsString& aURL,
+nsPresContext::LoadImage(nsIURI* aURL,
                          nsIFrame* aTargetFrame,
                          imgIRequest **aRequest)
 {
@@ -1367,18 +1368,6 @@ nsPresContext::LoadImage(const nsString& aURL,
 
   nsVoidKey key(aTargetFrame);
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, mImageLoaders.Get(&key)); // addrefs
-
-  nsCOMPtr<nsIDocument> doc;
-  rv = mShell->GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIURI> baseURI;
-  doc->GetBaseURL(getter_AddRefs(baseURI));
-
-  nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIIOService> ioService;
-  GetIOService(getter_AddRefs(ioService));
-  NS_NewURI(getter_AddRefs(uri), aURL, nsnull, baseURI, ioService);
 
   if (!loader) {
     nsIContent* content = aTargetFrame->GetContent();
@@ -1402,7 +1391,7 @@ nsPresContext::LoadImage(const nsString& aURL,
 
           PRBool shouldLoad = PR_TRUE;
           rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                         uri, element, domWin, &shouldLoad);
+                                         aURL, element, domWin, &shouldLoad);
           if (NS_SUCCEEDED(rv) && !shouldLoad)
             return NS_ERROR_FAILURE;
         }
@@ -1431,7 +1420,7 @@ nsPresContext::LoadImage(const nsString& aURL,
     aTargetFrame->AddStateBits(NS_FRAME_HAS_LOADED_IMAGES);
   }
 
-  loader->Load(uri);
+  loader->Load(aURL);
 
   loader->GetRequest(aRequest);
 

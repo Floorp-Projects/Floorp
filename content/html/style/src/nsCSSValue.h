@@ -44,7 +44,7 @@
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
 #include "nsUnitConversion.h"
-
+#include "nsIURI.h"
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
@@ -53,11 +53,11 @@ enum nsCSSUnit {
   eCSSUnit_Initial      = 3,      // (n/a) value is default UA value
   eCSSUnit_None         = 4,      // (n/a) value is none
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
-  eCSSUnit_String       = 10,     // (nsString) a string value
-  eCSSUnit_URL          = 11,     // (nsString) a URL value
-  eCSSUnit_Attr         = 12,     // (nsString) a attr(string) value
-  eCSSUnit_Counter      = 13,     // (nsString) a counter(string,[string]) value
-  eCSSUnit_Counters     = 14,     // (nsString) a counters(string,string[,string]) value
+  eCSSUnit_String       = 10,     // (PRUnichar*) a string value
+  eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
+  eCSSUnit_Counter      = 12,     // (PRUnichar*) a counter(string,[string]) value
+  eCSSUnit_Counters     = 13,     // (PRUnichar*) a counters(string,string[,string]) value
+  eCSSUnit_URL          = 14,     // (nsIURI*) a URL value (null == invalid URI)
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
   eCSSUnit_Color        = 80,     // (color) an RGBA value
@@ -129,6 +129,7 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit);
   nsCSSValue(nscolor aValue);
+  nsCSSValue(nsIURI* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue(void)
   {
@@ -138,7 +139,11 @@ public:
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);
   PRBool      operator==(const nsCSSValue& aOther) const;
-  PRBool      operator!=(const nsCSSValue& aOther) const;
+
+  PRBool operator!=(const nsCSSValue& aOther) const
+  {
+    return !(*this == aOther);
+  }
 
   nsCSSUnit GetUnit(void) const { return mUnit; };
   PRBool    IsLengthUnit(void) const
@@ -154,11 +159,56 @@ public:
   PRBool    IsTimeUnit(void) const  
     { return PRBool((eCSSUnit_Seconds <= mUnit) && (mUnit <= eCSSUnit_Milliseconds)); }
 
-  PRInt32   GetIntValue(void) const;
-  float     GetPercentValue(void) const;
-  float     GetFloatValue(void) const;
-  nsAString& GetStringValue(nsAString& aBuffer) const;
-  nscolor   GetColorValue(void) const;
+  PRInt32 GetIntValue(void) const
+  {
+    NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated,
+                 "not an int value");
+    return mValue.mInt;
+  }
+
+  float GetPercentValue(void) const
+  {
+    NS_ASSERTION(mUnit == eCSSUnit_Percent, "not a percent value");
+    return mValue.mFloat;
+  }
+
+  float GetFloatValue(void) const
+  {
+    NS_ASSERTION(eCSSUnit_Number <= mUnit, "not a float value");
+    return mValue.mFloat;
+  }
+
+  nsAString& GetStringValue(nsAString& aBuffer) const
+  {
+    NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Counters,
+                 "not a string value");
+    aBuffer.Truncate();
+    if (nsnull != mValue.mString) {
+      aBuffer.Append(mValue.mString);
+    }
+    return aBuffer;
+  }
+
+  const PRUnichar* GetStringBufferValue() const
+  {
+    NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Counters,
+                 "not a string value");
+    return mValue.mString;
+  }
+
+  nscolor GetColorValue(void) const
+  {
+    NS_ASSERTION((mUnit == eCSSUnit_Color), "not a color value");
+    return mValue.mColor;
+  }
+
+  nsIURI* GetURLValue(void) const
+  {
+    NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
+    return mValue.mURL;
+  }
+
+
   nscoord   GetLengthTwips(void) const
   {
     NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
@@ -202,6 +252,8 @@ public:
     if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) &&
         (nsnull != mValue.mString)) {
       nsCRT::free(mValue.mString);
+    } else if (eCSSUnit_URL == mUnit) {
+      NS_IF_RELEASE(mValue.mURL);
     }
     mUnit = eCSSUnit_Null;
     mValue.mInt = 0;
@@ -227,6 +279,7 @@ public:
 
   void  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
   void  SetColorValue(nscolor aValue);
+  void  SetURLValue(nsIURI* aURI);
   void  SetAutoValue(void);
   void  SetInheritValue(void);
   void  SetInitialValue(void);
@@ -234,6 +287,7 @@ public:
   void  SetNormalValue(void);
 
   // debugging methods only
+  // XXXldb Not anymore!
   void  AppendToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
   void  ToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
 
@@ -244,64 +298,9 @@ protected:
     float      mFloat;
     PRUnichar* mString;
     nscolor    mColor;
+    nsIURI*    mURL;
   }         mValue;
 };
-
-inline PRInt32 nsCSSValue::GetIntValue(void) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_Integer) ||
-               (mUnit == eCSSUnit_Enumerated), "not an int value");
-  if ((mUnit == eCSSUnit_Integer) ||
-      (mUnit == eCSSUnit_Enumerated)) {
-    return mValue.mInt;
-  }
-  return 0;
-}
-
-inline float nsCSSValue::GetPercentValue(void) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_Percent), "not a percent value");
-  if ((mUnit == eCSSUnit_Percent)) {
-    return mValue.mFloat;
-  }
-  return 0.0f;
-}
-
-inline float nsCSSValue::GetFloatValue(void) const
-{
-  NS_ASSERTION((eCSSUnit_Number <= mUnit), "not a float value");
-  if ((mUnit >= eCSSUnit_Number)) {
-    return mValue.mFloat;
-  }
-  return 0.0f;
-}
-
-inline nsAString& nsCSSValue::GetStringValue(nsAString& aBuffer) const
-{
-  NS_ASSERTION((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters), "not a string value");
-  aBuffer.Truncate();
-  if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) && 
-      (nsnull != mValue.mString)) {
-    aBuffer.Append(mValue.mString);
-  }
-  return aBuffer;
-}
-
-inline nscolor nsCSSValue::GetColorValue(void) const
-{
-  NS_ASSERTION((mUnit == eCSSUnit_Color), "not a color value");
-  if (mUnit == eCSSUnit_Color) {
-    return mValue.mColor;
-  }
-  return NS_RGB(0,0,0);
-}
-
-inline PRBool nsCSSValue::operator!=(const nsCSSValue& aOther) const
-{
-  return PRBool(! ((*this) == aOther));
-}
-
-
 
 #endif /* nsCSSValue_h___ */
 
