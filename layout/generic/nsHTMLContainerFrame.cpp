@@ -402,6 +402,16 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       }
     }
 
+    // See if the frame is a scrolled frame
+    if (!aForce) {
+      nsIAtom*  pseudoTag;
+      aStyleContext->GetPseudoType(pseudoTag);
+      if (pseudoTag == nsHTMLAtoms::scrolledContentPseudo) {
+        aForce = PR_TRUE;
+      }
+      NS_IF_RELEASE(pseudoTag);
+    }
+
     if (aForce) {
       // Create a view
       nsIFrame* parent;

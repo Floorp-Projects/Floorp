@@ -42,6 +42,7 @@
 #include "nsTableOuterFrame.h"
 #include "nsIXMLDocument.h"
 #include "nsIWebShell.h"
+#include "nsHTMLContainerFrame.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -1088,7 +1089,12 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
   // Create an anonymous table outer frame which holds the caption and the
   // table frame
   NS_NewTableOuterFrame(aNewFrame);
+
+  // Init the table outer frame and see if we need to create a view, e.g.
+  // the frame is absolutely positioned
   aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+  nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                           aStyleContext, PR_FALSE);
 
   // Create the inner table frame
   NS_NewTableFrame(innerFrame);
@@ -1358,7 +1364,7 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
       nsIFrame*  scrollFrame;
       nsIFrame*  pageSequenceFrame;
 
-      // XXX This isn't the correct style context pseudo element to use...
+      // XXX This isn't the correct pseudo element style context to use...
       nsIStyleContext*  pseudoStyle;
       pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
                       nsHTMLAtoms::columnPseudo, aStyleContext);
@@ -1374,9 +1380,11 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
         if (NS_SUCCEEDED(rv)) {
           nsIFrame* childList;
   
-          // Initialize the frame
+          // Initialize the frame and force it to have a view
           pageSequenceFrame->Init(*aPresContext, aContent, scrollFrame, pseudoStyle);
           NS_RELEASE(pseudoStyle);
+          nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
+                                                   pseudoStyle, PR_TRUE);
   
           // Process the child content, and set the page sequence frame's initial
           // child list
@@ -1422,13 +1430,13 @@ HTMLStyleSheetImpl::ConstructXMLRootDescendants(nsIPresContext*  aPresContext,
   rv = NS_NewScrollFrame(scrollFrame);
 
   if (NS_SUCCEEDED(rv)) {
-    // The scroll frame gets the root pseudo style context, and the scrolled
-    // frame gets a SCROLLED-CONTENT pseudo element style context.
-    // XXX We should probably use a different pseudo style context...
+    // Initialize the scroll frame
     scrollFrame->Init(*aPresContext, nsnull, aParentFrame, aRootPseudoStyle);
     
+    // The scroll frame gets the root pseudo style context, and the scrolled
+    // frame gets a SCROLLED-CONTENT pseudo element style context.
     nsIStyleContext*  scrolledPseudoStyle;
-    nsIFrame* wrapperFrame;
+    nsIFrame*         wrapperFrame;
     
     scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
       (nsnull, nsHTMLAtoms::scrolledContentPseudo,
@@ -1436,7 +1444,11 @@ HTMLStyleSheetImpl::ConstructXMLRootDescendants(nsIPresContext*  aPresContext,
     
     // Create a body frame to wrap the document element
     NS_NewBodyFrame(wrapperFrame, NS_BODY_THE_BODY|NS_BODY_SHRINK_WRAP);
+
+    // Initialize it and force it to have a view
     wrapperFrame->Init(*aPresContext, nsnull, scrollFrame, scrolledPseudoStyle);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
+                                             scrolledPseudoStyle, PR_TRUE);
     
     // Construct a frame for the document element and process its children
     nsIFrame* docElementFrame;
@@ -1601,6 +1613,10 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
     aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
 
+    // See if we need to create a view, e.g. the frame is absolutely positioned
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             aStyleContext, PR_FALSE);
+
     // Process the child content if requested
     nsIFrame* childList = nsnull;
     if (processChildren) {
@@ -1715,6 +1731,10 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
   // process children (if requested), and initialize the frame
   if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
     aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+
+    // See if we need to create a view, e.g. the frame is absolutely positioned
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             aStyleContext, PR_FALSE);
 
     // Process the child content if requested
     nsIFrame* childList = nsnull;
@@ -1923,11 +1943,15 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
               aContent->CanContainChildren(isContainer);
               if (isContainer && (tag != nsHTMLAtoms::body)) {
                 NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
+
+                // Initialize the frame and force it to have a view
                 wrapperFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
+                nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
+                                                         scrolledPseudoStyle, PR_TRUE);
 
                 // The wrapped frame also gets a pseudo style context, but it doesn't
                 // inherit any background properties. It does inherit the 'display'
-                // property (very important that it does)
+                // property (it's very important that it does)
                 nsIStyleContext*  wrappedPseudoStyle;
                 wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
                                        (aContent, nsHTMLAtoms::wrappedFramePseudo,
