@@ -70,10 +70,12 @@ char *bindir[] = {
  "JSJ.DLL",
  "MOZJS.DLL",
  "MOZZ.DLL",
+ "MSGBSUTL.DLL",
  "NSPR4.DLL",
  "PLC4.DLL",
  "PLDS4.DLL",
  "XPCOM.DLL",
+ "XPCOMCT.DLL",
  0
  };
 
@@ -87,27 +89,28 @@ char *compdir[] = {
  "DOCSHELL.DLL",
  "EDITOR.DLL",
  "EMBEDCMP.DLL",
- "GFX_OS2.DLL",
+// "GFX_OS2.DLL", Can't load GFX_OS2.DLL because it loads PMWINX.DLL which horks SHUTDOWN */
  "GKLAYOUT.DLL",
  "GKPARSER.DLL",
  "GKPLUGIN.DLL",
- "GKVIEW.DLL",
  "I18N.DLL",
  "IMGLIB2.DLL",
  "JAR50.DLL",
+ "MAILNEWS.DLL",
+ "MORK.DLL",
  "MOZUCONV.DLL",
+ "MSGNEWS.DLL",
  "NECKO.DLL",
  "OJI.DLL",
  "PIPBOOT.DLL",
  "PREF.DLL",
  "PROFILE.DLL",
  "RDF.DLL",
- "SHISTORY.DLL",
  "TXMGR.DLL",
  "TYPAHEAD.DLL",
- "URILDR.DLL",
  "WDGTOS2.DLL",
  "WEBBRWSR.DLL",
+ "XPCOMCTC.DLL",
  "XPCONECT.DLL",
  0,
  };
@@ -201,7 +204,6 @@ int main(int argc, char *argv[]) {
     /* loop through list loading named modules */
     char filepath[CCHMAXPATH];
     HMODULE hmod;
-    APIRET rc;
 
     int i = 0, nummodules = 0;
     while (bindir[i]) {
