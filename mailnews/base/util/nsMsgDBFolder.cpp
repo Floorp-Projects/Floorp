@@ -131,6 +131,8 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 				}
 			}
 		}
+    // Ask base class shutdown itself.
+    nsMsgFolder::Shutdown(shutdownChildren);
 	}
 	return NS_OK;
 }

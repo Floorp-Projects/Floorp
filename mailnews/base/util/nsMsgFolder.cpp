@@ -284,6 +284,8 @@ nsresult nsMsgFolder::CreateBaseMessageURI(const char *aURI)
 
 NS_IMETHODIMP nsMsgFolder::Shutdown(PRBool shutdownChildren)
 {
+  // Reset incoming server pointer.
+  mServer = nsnull;
 	return NS_OK;
 }
 
