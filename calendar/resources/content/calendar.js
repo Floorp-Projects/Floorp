@@ -1018,13 +1018,14 @@ function deleteToDoCommand( DoNotConfirm )
     var end = new Object();
     var numRanges = tree.view.selection.getRangeCount();
 
+    // delete in reverse order so indexes of remaining selected tasks stay same
     var t;
     var v;
     var toDoItem;
     if( numRanges == 1 ) {
-        for (t=0; t<numRanges; t++){
+        for (t=numRanges-1; t>=0; t--){
             tree.view.selection.getRangeAt(t,start,end);
-            for (v=start.value; v<=end.value; v++){
+            for (v=end.value; v>=start.value; v--){
                 toDoItem = tree.taskView.getCalendarTaskAtRow( v );
                 refreshRemoteCalendarAndRunFunction( toDoItem.id, toDoItem.parent.server, "deleteTodo" );
             }
@@ -1032,9 +1033,9 @@ function deleteToDoCommand( DoNotConfirm )
     } else {
         gICalLib.batchMode = true;
 
-        for (t=0; t<numRanges; t++){
+        for (t=numRanges; t>=0; t--){
             tree.view.selection.getRangeAt(t,start,end);
-            for (v=start.value; v<=end.value; v++){
+            for (v=end.value; v>=start.value; v--){
                 toDoItem = tree.taskView.getCalendarTaskAtRow( v );
                 var todoId = toDoItem.id
                 gICalLib.deleteTodo( todoId );   
@@ -1042,6 +1043,8 @@ function deleteToDoCommand( DoNotConfirm )
         }
         gICalLib.batchMode = false;
     }
+    // all selected tasks deleted, now clear selection
+    tree.view.selection.clearSelection();
 }
 
 
