@@ -587,7 +587,7 @@ nsWebShell::nsWebShell() : nsDocShell()
   ++gNumberOfWebShells;
 #endif
 #ifdef NOISY_WEBSHELL_LEAKS
-  printf("WEBSHELL+ = %d\n", gNumberOfWebShells);
+  printf("WEBSHELL+ = %ld\n", gNumberOfWebShells);
 #endif
 
   NS_INIT_REFCNT();
@@ -671,7 +671,7 @@ nsWebShell::~nsWebShell()
   --gNumberOfWebShells;
 #endif
 #ifdef NOISY_WEBSHELL_LEAKS
-  printf("WEBSHELL- = %d\n", gNumberOfWebShells);
+  printf("WEBSHELL- = %ld\n", gNumberOfWebShells);
 #endif
 }
 
@@ -2129,7 +2129,9 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
       }
     }
 
+#ifdef DEBUG
     printf("Goto %d\n", aHistoryIndex);
+#endif
     mHistoryIndex = aHistoryIndex;
     ShowHistory();
 
