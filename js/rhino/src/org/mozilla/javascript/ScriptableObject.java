@@ -839,16 +839,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         final String setterPrefix = "jsSet_";
         final String ctorName = "jsConstructor";
 
-        Method[] ctorMeths = FunctionObject.findMethods(clazz, ctorName);
-        Member ctorMember = null;
-        if (ctorMeths != null) {
-            if (ctorMeths.length > 1) {
-                throw new ClassDefinitionException(
-                    Context.getMessage2("msg.multiple.ctors",
-                                        ctorMeths[0], ctorMeths[1]));
-            }
-            ctorMember = ctorMeths[0];
-        }
+        Member ctorMember = FunctionObject.findSingleMethod(methods, ctorName);
 
         if (ctorMember == null) {
             if (ctors.length == 1) {
@@ -921,20 +912,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                     throw PropertyException.withMessage2
                         ("msg.extend.scriptable",                                                         proto.getClass().toString(), name);
                 }
-                Method[] setter = FunctionObject.findMethods(
-                                    clazz,
+                Method setter = FunctionObject.findSingleMethod(
+                                    methods,
                                     setterPrefix + name);
-                if (setter != null && setter.length != 1) {
-                    throw PropertyException.withMessage2
-                        ("msg.no.overload", name, clazz.getName());
-                }
                 int attr = ScriptableObject.PERMANENT |
                            ScriptableObject.DONTENUM  |
                            (setter != null ? 0
                                            : ScriptableObject.READONLY);
-                Method m = setter == null ? null : setter[0];
                 ((ScriptableObject) proto).defineProperty(name, null,
-                                                          methods[i], m,
+                                                          methods[i], setter,
                                                           attr);
                 continue;
             }
@@ -1037,19 +1023,25 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                int attributes)
         throws PropertyException
     {
-        StringBuffer buf = new StringBuffer(propertyName);
-        buf.setCharAt(0, Character.toUpperCase(propertyName.charAt(0)));
-        String s = buf.toString();
-        Method[] getter = FunctionObject.findMethods(clazz, "get" + s);
-        Method[] setter = FunctionObject.findMethods(clazz, "set" + s);
+        int length = propertyName.length();
+        if (length == 0) throw new IllegalArgumentException();
+        char[] buf = new char[3 + length];
+        propertyName.getChars(0, length, buf, 3);
+        buf[3] = Character.toUpperCase(buf[3]);
+        buf[0] = 'g';
+        buf[1] = 'e';
+        buf[2] = 't';
+        String getterName = new String(buf);
+        buf[0] = 's';
+        String setterName = new String(buf);
+
+        Method[] methods = FunctionObject.getMethodList(clazz);
+        Method getter = FunctionObject.findSingleMethod(methods, getterName);
+        Method setter = FunctionObject.findSingleMethod(methods, setterName);
         if (setter == null)
             attributes |= ScriptableObject.READONLY;
-        if (getter.length != 1 || (setter != null && setter.length != 1)) {
-            throw PropertyException.withMessage2
-                ("msg.no.overload", propertyName, clazz.getName());
-        }
-        defineProperty(propertyName, null, getter[0],
-                       setter == null ? null : setter[0], attributes);
+        defineProperty(propertyName, null, getter,
+                       setter == null ? null : setter, attributes);
     }
 
     /**
@@ -1176,18 +1168,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                          int attributes)
         throws PropertyException
     {
+        Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < names.length; i++) {
             String name = names[i];
-            Method[] m = FunctionObject.findMethods(clazz, name);
+            Method m = FunctionObject.findSingleMethod(methods, name);
             if (m == null) {
                 throw PropertyException.withMessage2
                     ("msg.method.not.found", name, clazz.getName());
             }
-            if (m.length > 1) {
-                throw PropertyException.withMessage2
-                    ("msg.no.overload", name, clazz.getName());
-            }
-            FunctionObject f = new FunctionObject(name, m[0], this);
+            FunctionObject f = new FunctionObject(name, m, this);
             defineProperty(name, f, attributes);
         }
     }

@@ -131,9 +131,11 @@ public class NativeJavaPackage extends ScriptableObject {
             nameStart = nameEnd + 1;
         }
 
-        Method[] m = FunctionObject.findMethods(NativeJavaPackage.class,
-                                                "jsFunction_getClass");
-        FunctionObject f = new FunctionObject("getClass", m[0], scope);
+        Method[] methods = FunctionObject.getMethodList(
+                               NativeJavaPackage.class);
+        Method m = FunctionObject.findSingleMethod(methods,
+                                                   "jsFunction_getClass");
+        FunctionObject f = new FunctionObject("getClass", m, scope);
 
         // It's safe to downcast here since initStandardObjects takes
         // a ScriptableObject.

@@ -53,9 +53,9 @@ public final class LazilyLoadedCtor {
         this.sealed = sealed;
 
         if (getter == null) {
-            Method[] all = FunctionObject.getMethodList(getClass());
-            getter = FunctionObject.findMethods(all, "getProperty")[0];
-            setter = FunctionObject.findMethods(all, "setProperty")[0];
+            Method[] methods = FunctionObject.getMethodList(getClass());
+            getter = FunctionObject.findSingleMethod(methods, "getProperty");
+            setter = FunctionObject.findSingleMethod(methods, "setProperty");
         }
 
         try {

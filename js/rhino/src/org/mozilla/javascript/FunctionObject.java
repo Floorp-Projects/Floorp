@@ -219,59 +219,24 @@ public class FunctionObject extends BaseFunction {
         return getArity();
     }
 
-    // TODO: Make not public
-    /**
-     * Finds methods of a given name in a given class.
-     *
-     * <p>Searches <code>clazz</code> for methods with name
-     * <code>name</code>. Maintains a cache so that multiple
-     * lookups on the same class are cheap.
-     *
-     * @param clazz the class to search
-     * @param name the name of the methods to find
-     * @return an array of the found methods, or null if no methods
-     *         by that name were found.
-     * @see java.lang.Class#getMethods
-     */
-    public static Method[] findMethods(Class clazz, String name) {
-        return findMethods(getMethodList(clazz), name);
-    }
-
-    static Method[] findMethods(Method[] methods, String name) {
-        // Usually we're just looking for a single method, so optimize
-        // for that case.
-        ObjArray v = null;
-        Method first = null;
-        for (int i=0; i < methods.length; i++) {
-            if (methods[i] == null)
-                continue;
-            if (methods[i].getName().equals(name)) {
-                if (first == null) {
-                    first = methods[i];
-                } else {
-                    if (v == null) {
-                        v = new ObjArray(5);
-                        v.add(first);
-                    }
-                    v.add(methods[i]);
+    static Method findSingleMethod(Method[] methods, String name)
+    {
+        Method found = null;
+        for (int i = 0, N = methods.length; i != N; ++i) {
+            Method method = methods[i];
+            if (method != null && name.equals(method.getName())) {
+                if (found != null) {
+                    throw Context.reportRuntimeError2(
+                        "msg.no.overload", name,
+                        method.getDeclaringClass().getName());
                 }
+                found = method;
             }
         }
-        if (v == null) {
-            if (first == null)
-                return null;
-            Method[] single = { first };
-            return single;
-        }
-        Method[] result = new Method[v.size()];
-        v.toArray(result);
-        return result;
+        return found;
     }
 
     static Method[] getMethodList(Class clazz) {
-        Method[] cached = methodsCache; // get once to avoid synchronization
-        if (cached != null && cached[0].getDeclaringClass() == clazz)
-            return cached;
         Method[] methods = null;
         try {
             // getDeclaredMethods may be rejected by the security manager
@@ -302,8 +267,6 @@ public class FunctionObject extends BaseFunction {
             if (methods[i] != null)
                 result[j++] = methods[i];
         }
-        if (result.length > 0 && Context.isCachingEnabled)
-            methodsCache = result;
         return result;
     }
 
@@ -560,7 +523,6 @@ public class FunctionObject extends BaseFunction {
 
     static void setCachingEnabled(boolean enabled) {
         if (!enabled) {
-            methodsCache = null;
             invokerMaster = null;
         } else if (invokerMaster == null) {
             invokerMaster = newInvokerMaster();
@@ -716,8 +678,6 @@ public class FunctionObject extends BaseFunction {
     private static final short VARARGS_CTOR =   -2;
 
     private static boolean sawSecurityException;
-
-    static Method[] methodsCache;
 
     transient Method method;
     transient Constructor ctor;
