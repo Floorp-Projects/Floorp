@@ -108,7 +108,6 @@ public:
 
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
-
   // nsIWebShellWindow methods...
   NS_IMETHOD Show(PRBool aShow);
   NS_IMETHOD ShowModal();
@@ -224,6 +223,8 @@ public:
   NS_IMETHOD SetStatus(const PRUnichar* aStatus);
   NS_IMETHOD GetStatus(const PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD ShowMenuBar(PRBool aShow);
+  NS_IMETHOD IsMenuBarVisible(PRBool *aVisible);
 
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);

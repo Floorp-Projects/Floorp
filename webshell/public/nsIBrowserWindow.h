@@ -91,6 +91,9 @@ public:
 
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax) = 0;
 
+  NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
+  NS_IMETHOD IsMenuBarVisible(PRBool *aVisible) = 0;
+
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 
   // XXX minimize, maximize
