@@ -28,12 +28,10 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIURL.h"
-
+#include "nsVoidArray.h"
 #include "nsStringUtil.h"
 
-#if USE_IC
-# include <ICAPI.h>
-#endif
+#include <ICAPI.h>
 
 #include "nsMacControl.h"
 #include "nsCarbonHelpers.h"
@@ -51,18 +49,15 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 //
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
+  : mAllFilesDisplayed(PR_TRUE)
 {
   NS_INIT_REFCNT();
-
-  mIOwnEventLoop = PR_FALSE;
-  mNumberOfFilters = 0;
   
   // Zero out the type lists
   for (int i = 0; i < kMaxTypeListCount; i++)
-  {
   	mTypeLists[i] = 0L;
-  }
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -72,15 +67,27 @@ nsFilePicker::nsFilePicker()
 nsFilePicker::~nsFilePicker()
 {
 	// Destroy any filters we have built
-	if (mNumberOfFilters)
-	{
-	  for (int i = 0; i < kMaxTypeListCount; i++)
-	  {
+	if ( mFilters.Count() ) {
+	  for (int i = 0; i < kMaxTypeListCount; i++) {
 	  	if (mTypeLists[i])
 	  		DisposePtr((Ptr)mTypeLists[i]);
 	  }
-	}
+	}	
+  mFilters.Clear();
+  mTitles.Clear();
+
 }
+
+
+NS_IMETHODIMP
+nsFilePicker::InitNative(nsIWidget *aParent, const PRUnichar *aTitle, PRInt16 aMode)
+{
+  mTitle = aTitle;
+  mMode = aMode;
+
+  return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -90,7 +97,6 @@ nsFilePicker::~nsFilePicker()
 NS_IMETHODIMP nsFilePicker::OnOk()
 {
   mWasCancelled  = PR_FALSE;
-  mIOwnEventLoop = PR_FALSE;
   return NS_OK;
 }
 
@@ -102,7 +108,6 @@ NS_IMETHODIMP nsFilePicker::OnOk()
 NS_IMETHODIMP nsFilePicker::OnCancel()
 {
   mWasCancelled  = PR_TRUE;
-  mIOwnEventLoop = PR_FALSE;
   return NS_OK;
 }
 
@@ -118,7 +123,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   *retval = returnCancel;
   
   nsString filterList;
-  // GetFilterListArray(filterList);
   char *filterBuffer = filterList.ToNewCString();
 
   Str255 title;
@@ -182,6 +186,55 @@ static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavC
 }
 
 
+//
+// IsFileInFilterList
+//
+// Check our |mTypeLists| list to see if the given type is in there.
+//
+Boolean
+nsFilePicker :: IsFileInFilterList ( ResType inType )
+{
+  for ( int i = 0; i < mFilters.Count(); ++i ) {
+    for ( int j = 0; j < mTypeLists[i]->osTypeCount; ++j ) {
+      if ( mTypeLists[i]->osType[j] == inType ) 
+        return true;
+    }  // foreach type w/in the group
+  } // for each filter group
+  
+  return false;
+  
+} // IsFileInFilterList
+
+
+//
+// FileDialogFilterProc
+//
+// Called from navServices with our filePicker object as |callbackUD|, check our
+// internal list to see if the file should be displayed.
+//
+pascal
+Boolean 
+nsFilePicker :: FileDialogFilterProc ( AEDesc* theItem, void* theInfo,
+                                        NavCallBackUserData callbackUD, NavFilterModes filterMode )
+{
+  Boolean shouldDisplay = true;
+  nsFilePicker* self = NS_REINTERPRET_CAST(nsFilePicker*, callbackUD);
+  if ( self && !self->mAllFilesDisplayed ) {
+    if ( theItem->descriptorType == typeFSS ) {
+      NavFileOrFolderInfo* info = NS_REINTERPRET_CAST ( NavFileOrFolderInfo*, theInfo );
+      if ( !info->isFolder ) {
+        // check it against our list
+        if ( ! self->IsFileInFilterList(info->fileAndFolder.fileInfo.finderInfo.fdType) )
+          shouldDisplay = false;
+      } // if file isn't a folder
+    } // if the item is an FSSpec
+  }
+  
+  return shouldDisplay;
+  
+} // FileDialogFilterProc                                        
+
+
 //-------------------------------------------------------------------------
 //
 // GetFile
@@ -197,6 +250,7 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
 	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
+	NavObjectFilterUPP filterProc = NewNavObjectFilterProc(FileDialogFilterProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -207,16 +261,20 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
 		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
 		
-		// Display the get file dialog
+		// sets up the |mTypeLists| array so the filter proc can use it
+		MapFilterToFileTypes();
+		
+		// Display the get file dialog. Only use a filter proc if there are any
+		// filters registered.
 		anErr = ::NavGetFile(
 					NULL,
 					&reply,
 					&dialogOptions,
 					eventProc,
 					NULL, // preview proc
-					NULL, // filter proc
+					mFilters.Count() ? filterProc : NULL,
 					NULL, //typeList,
-					NULL); // callbackUD	
+					this); // callbackUD - used by the filterProc
 	
 		// See if the user has selected save
 		if (anErr == noErr && reply.validRecord) {
@@ -375,20 +433,16 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 	return retVal;	
 }
 
-//-------------------------------------------------------------------------
-//
-// Set the list of filters
-//
-//-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 filterMask)
+//
+// MapFilterToFileTypes
+//
+// Take the list of file types (in a nice win32-specific format) and ask IC to give us 
+// the MacOS file type codes for them.
+//
+void
+nsFilePicker :: MapFilterToFileTypes ( )
 {
-	
-#if USE_IC  // FOR NOW JUST BYPASS ALL THIS CODE
-
-	unsigned char	typeTemp[256];
-	unsigned char	tempChar;
-
 	OSType			tempOSType;
 	ICInstance		icInstance;
 	ICError			icErr;
@@ -396,6 +450,12 @@ NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 filterMask)
 	ICAttr			attr;
 	ICMapEntry		icEntry;
 	
+	// assume we're going to show all files until proven otherwise with
+	// a filter that isn't "*"
+	mAllFilesDisplayed = PR_TRUE;
+	
+	// grab the IC mappingDB so that it's a little faster looping over the file
+	// types.
 	icErr = ICStart(&icInstance, 'MOZZ');
 	if (icErr == noErr)
 	{
@@ -412,10 +472,11 @@ NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 filterMask)
 	else
 		goto bail_wo_IC;
 	
-	if (aNumberOfFilters)
+	
+	if (mFilters.Count())
 	{
 		// First we allocate the memory for the Mac type lists
-		for (PRUint32 loop1 = 0; loop1 < mNumberOfFilters; loop1++)
+		for (PRUint32 loop1 = 0; loop1 < mFilters.Count() && loop1 < kMaxTypeListCount; loop1++)
 		{
 			mTypeLists[loop1] =
 				(NavTypeListPtr)NewPtrClear(sizeof(NavTypeList) + kMaxTypesPerFilter * sizeof(OSType));
@@ -425,73 +486,80 @@ NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 filterMask)
 		}
 		
 		// Now loop through each of the filter strings
-	  	for (PRUint32 loop1 = 0; loop1 < mNumberOfFilters; loop1++)
-	  	{
-	  		const nsString& filter = mFilters[loop1];
-		  	PRUint32 filterIndex = 0;			// Index into the filter string
+    for (PRUint32 loop1 = 0; loop1 < mFilters.Count(); loop1++)
+  	{
+  		const nsString& filterWide = *mFilters[loop1];
+  		char* filter = filterWide.ToNewCString();
 
-	  		if (filter[filterIndex])
+      NS_ASSERTION ( filterWide.Length(), "Oops. filepicker.properties not correctly installed");       
+  		if ( filterWide.Length() && filter )
+  		{
+        PRUint32 filterIndex = 0;         // Index into the filter string
+        PRUint32 typeTempIndex = 1;       // Index into the temp string for a single filter type
+        PRUint32 typesInThisFilter = 0;   // Count for # of types in this filter
+        bool finishedThisFilter = false;  // Flag so we know when we're finsihed with the filter
+        Str255 typeTemp;
+        char tempChar;           // char we're currently looking at
+
+        // Loop through the characters of filter string. Every time we get to a
+        // semicolon (or a null, meaning we've hit the end of the full string)
+        // then we've found the filter and can pass it off to IC to get a macOS 
+        // file type out of it.
+  			do
 	  		{
-		  		PRUint32 typeTempIndex = 1;			// Index into the temp string for a single filter type
-		  		PRUint32 typesInThisFilter = 0;		// Count for # of types in this filter
-				bool finishedThisFilter = false;	// Flag so we know when we're finsihed with the filter
-	  			do	// Loop throught the characters of filter string
-		  		{
-		  			if ((tempChar == ';') || (tempChar == 0))
-		  			{ // End of filter type reached
-		  				typeTemp[typeTempIndex] = 0;
-		  				typeTemp[0] = typeTempIndex - 1;
-		  				
-		  				icErr = ICMapEntriesFilename(icInstance, mappings, typeTemp, &icEntry);
-		  				if (icErr != icPrefNotFoundErr)
-		  				{
-		  					bool addToList = true;
-		  					tempOSType = icEntry.file_type;
-		  					for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
-		  					{
-		  						if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)
-		  						{
-		  							addToList = false;
-		  							break;
-		  						}
-		  					}
-		  					if (addToList)
-		  						mTypeLists[loop1]->osType[typesInThisFilter++] = tempOSType;
-		  				}
-		  				
-		  				typeTempIndex = 0;			// Reset the temp string for the type
-		  				typeTemp[0] = 0;
-		  				if (tempChar == 0)
-		  					finishedThisFilter = true;
-		  			}
-		  			else
-		  			{
-		  				typeTemp[typeTempIndex++] = tempChar;
-		  			}
-		  			
-		  			filterIndex++;
-		  		} while (!finishedThisFilter);
-		  		
-		  		// Set hoe many OSTypes we actually found
-		  		mTypeLists[loop1]->osTypeCount = typesInThisFilter;
-	  		}
-		}
+	  		  tempChar = filter[filterIndex];
+	  			if ((tempChar == ';') || (tempChar == 0)) {   // End of filter type reached
+	  				typeTemp[typeTempIndex] = 0;                // turn it into a pString 
+	  				typeTemp[0] = typeTempIndex - 1;
+	  				
+	  				// ask IC if it's not "all files" (designated by "*")
+	  				if ( !(typeTemp[0] == 1 && typeTemp[1] == '*') ) {
+	  				  mAllFilesDisplayed = PR_FALSE;
+	  				  			
+  	  				icErr = ICMapEntriesFilename(icInstance, mappings, typeTemp, &icEntry);
+  	  				if (icErr != icPrefNotFoundErr)
+  	  				{
+  	  					bool addToList = true;
+  	  					tempOSType = icEntry.file_type;
+  	  					for (PRUint32 typeIndex = 0; typeIndex < typesInThisFilter; typeIndex++)
+  	  					{
+  	  						if (mTypeLists[loop1]->osType[typeIndex] == tempOSType)
+  	  						{
+  	  							addToList = false;
+  	  							break;
+  	  						}
+  	  					}
+  	  					if (addToList && typesInThisFilter < kMaxTypesPerFilter)
+  	  						mTypeLists[loop1]->osType[typesInThisFilter++] = tempOSType;
+  	  				}
+	  				} // if not "*"
+	  				
+	  				typeTempIndex = 1;			// Reset the temp string for the type
+	  				typeTemp[0] = 0;
+	  				if (tempChar == 0)
+	  					finishedThisFilter = true;
+	  			}
+	  			else
+	  			{
+	  				typeTemp[typeTempIndex++] = tempChar;
+	  			}
+	  			
+	  			filterIndex++;
+	  		} while (!finishedThisFilter);
+	  		
+	  		// Set how many OSTypes we actually found
+	  		mTypeLists[loop1]->osTypeCount = typesInThisFilter;
+	  		
+	  		nsMemory :: Free ( NS_REINTERPRET_CAST(void*, filter) );
+  		}
+    }
 	}
 
 bail_w_IC:
 	ICStop(icInstance);
 
 bail_wo_IC:
-
-#endif	// FOR NOW JUST BYPASS ALL THIS CODE
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
-                                         const PRUnichar *aFilters)
-{
-  return NS_ERROR_FAILURE;
+  ;
 }
 
 
@@ -552,21 +620,13 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *aParent,
-                                 const PRUnichar *aTitle,
-                                 PRInt16 aMode)
+
+NS_IMETHODIMP
+nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 {
-  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
-}
-
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
-                                       const PRUnichar *aTitle,
-                                       PRInt16 aMode)
-{
-
-  mTitle = aTitle;
-  mMode = aMode;
-
+  mFilters.AppendString(nsLiteralString(aFilter));
+  mTitles.AppendString(nsLiteralString(aTitle));
+  
   return NS_OK;
 }
+

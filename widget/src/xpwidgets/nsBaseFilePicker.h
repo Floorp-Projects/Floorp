@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Mike Pinkerton   <pinkerton@netscape.com>
  */
 
 #ifndef nsBaseFilePicker_h__
@@ -37,12 +38,14 @@ public:
                   const PRUnichar *aTitle,
                   PRInt16 aMode);
 
+  NS_IMETHOD AppendFilters(PRInt32 filterMask);
+
 protected:
-  NS_IMETHOD InitNative(nsIWidget *aParent,
-                        const PRUnichar *aTitle,
-                        PRInt16 aMode) = 0;
+
+  NS_IMETHOD InitNative(nsIWidget *aParent, const PRUnichar *aTitle, PRInt16 aMode) = 0;
 
 private:
+
   NS_IMETHOD DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **aResult);
 };
 

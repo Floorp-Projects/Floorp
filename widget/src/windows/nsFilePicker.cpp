@@ -38,10 +38,7 @@
 #include <windows.h>
 #include <SHLOBJ.H>
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-#define FILEPICKER_PROPERTIES "chrome://global/locale/filepicker.properties"
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -203,70 +200,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Set the list of filters
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 aFilterMask)
-{
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
-  nsCOMPtr<nsIStringBundle> stringBundle;
-  nsILocale   *locale = nsnull;
-
-  rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, locale, getter_AddRefs(stringBundle));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  PRUnichar *title;
-  PRUnichar *filter;
-
-  if (aFilterMask & filterAll) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterHTML) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterText) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterImages) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterXML) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterXUL) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulFilter").GetUnicode(), &filter);
-    AppendFilter(title, filter);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
-                                         const PRUnichar *aFilter)
-{
-  mFilterList.Append(aTitle);
-  mFilterList.AppendWithConversion('\0');
-  mFilterList.Append(aFilter);
-  mFilterList.AppendWithConversion('\0');
-
-  return NS_OK;
-}
 
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
@@ -342,12 +275,7 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *aParent,
-                                 const PRUnichar *aTitle,
-                                 PRInt16 aMode)
-{
-  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
-}
+
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
@@ -453,4 +381,16 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
   return NS_SUCCEEDED(rv) ? outString : nsnull;
+}
+
+
+NS_IMETHODIMP
+nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
+{
+  mFilterList.Append(aTitle);
+  mFilterList.AppendWithConversion('\0');
+  mFilterList.Append(aFilter);
+  mFilterList.AppendWithConversion('\0');
+
+  return NS_OK;
 }
