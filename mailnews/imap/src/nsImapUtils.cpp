@@ -138,7 +138,10 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     rv = localPath->GetFileSpec(&pathResult);
     if (NS_FAILED(rv)) return rv;
     
-//    nsFileSpec tempPath(pathResult.GetNativePathCString(), PR_TRUE); // This is needed so that we dont get imapservername.sbd See bug 210683
+    // This forces the creation of the parent server directory
+    // so that we don't get imapservername.sbd instead
+    // when the host directory has been deleted. See bug 210683
+    nsFileSpec tempPath(pathResult.GetNativePathCString(), PR_TRUE); 
     pathResult.CreateDirectory();
   }
   
