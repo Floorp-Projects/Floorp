@@ -358,6 +358,7 @@ nsHTMLReflowState::GetPageBoxReflowState(const nsHTMLReflowState* aParentRS)
   return nsnull;
 }
 
+/* static */
 nscoord
 nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState)
 {
@@ -365,6 +366,23 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aRefl
   if (!rs)
     return 0;
   return rs->mComputedWidth;
+}
+
+/* static */
+nsIFrame*
+nsHTMLReflowState::GetContainingBlockFor(const nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "Must have frame to work with");
+  nsIFrame* container = aFrame->GetParent();
+  if (aFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+    // Absolutely positioned frames are just kids of their containing
+    // blocks (which may happen to be inlines).
+    return container;
+  }
+  while (container && !container->IsContainingBlock()) {
+    container = container->GetParent();
+  }
+  return container;
 }
 
 void
