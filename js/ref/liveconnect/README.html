@@ -2,7 +2,7 @@
 <HEAD>
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
    <META NAME="Author" CONTENT="Scott Furman">
-   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (WinNT; I) [Netscape]">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 (Macintosh; U; PPC) [Netscape]">
    <TITLE>README for LiveConnect</TITLE>
 </HEAD>
 <BODY>
@@ -83,18 +83,33 @@ and appears in the output directory.</LI>
 <LI>
 You must have the JVM DLL in your <TT><FONT SIZE=+1>PATH</FONT></TT> environment
 variable in order to run.&nbsp; If you are using the Sun JDK, the DLL appears
-in the JDK's bin directory.<BR>
-<BR></LI>
+in the JDK's bin directory.</LI>
 </UL>
-<B>Mac</B>
+<B>Mac OS</B>
 <UL>
 <LI>
-<FONT COLOR="#FF0000">LiveConnect is known to build on the Mac, but no
-project files created yet</FONT></LI>
+Use CodeWarrior Pro 2 or Pro 3 (recommended).</LI>
 
 <LI>
-Use CodeWarrior 1.x (???.prj.hqx) or 2 (???.prj2.hqx).<BR>
-<BR></LI>
+I've added macbuild subdirectories to <TT>js/ref</TT> and <TT>js/ref/liveconnect</TT>.</LI>
+
+<LI>
+Install the <A HREF="ftp://dev.apple.com/devworld/Java/MRJSDK2.0.1EarlyAccess4.hqx">MRJ
+SDK 2.0.1ea4</A>.</LI>
+
+<LI>
+Copy the folders CIncludes &amp; Libraries from Interfaces&amp;Libraries
+to js/ref/macbuild/JavaSession.</LI>
+
+<LI>
+Build the test application <TT>JSRef</TT> with <TT>js/ref/macbuild/JSRef.mcp</TT>.</LI>
+
+<LI>
+Build <TT>liveconnect.jar</TT> with <TT>js/ref/liveconnect/macbuild/LiveConnect.mcp</TT>.</LI>
+
+<LI>
+Make an alias to <TT>liveconnect.jar</TT> and place it in "<TT>{SystemFolder}Extensions:MRJ
+Libraries:MRJClasses</TT>".</LI>
 </UL>
 <B>Unix</B>
 <UL>
