@@ -231,7 +231,7 @@ NS_IMETHODIMP nsMimeModule::UnregisterSelf(nsIComponentManager* aCompMgr,
     Components* end = cp + NUM_COMPONENTS;
     while (cp < end) 
     {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+       aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
         cp++;
     }
 
