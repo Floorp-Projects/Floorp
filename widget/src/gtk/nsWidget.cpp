@@ -435,10 +435,13 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
     return NS_ERROR_FAILURE;
   }
 
-  if (aIsSynchronous)
+  if (aIsSynchronous) {
     ::gtk_widget_draw(mWidget, NULL);
-  else
+    mUpdateArea.SetRect(0, 0, 0, 0);
+  } else {
     ::gtk_widget_queue_draw(mWidget);
+    mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
+  }
 
 #ifdef DEBUG_pavlov
   g_print("nsWidget::Invalidate(this=%p, %i)\n", this, aIsSynchronous);
