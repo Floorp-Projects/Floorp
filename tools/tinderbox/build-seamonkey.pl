@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.22 $ ';
+$Version = '$Revision: 1.23 $ ';
 
 
 sub PrintUsage {
@@ -684,6 +684,7 @@ sub RunAliveTest {
   sleep $waittime;
   $status = waitpid($pid, WNOHANG());
 
+  print LOG "Client quit Alive Test with status $status\n";
   if ($status != 0) {
     print LOG "$Binary has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
     print LOG "----------- failure output from mozilla-bin for alive test --------------- \n";
@@ -768,7 +769,7 @@ sub RunBloatTest {
   # Clear the alarm so we don't kill the next test!
   alarm 0;
 
-  print LOG "Client quit with status $status\n";
+  print LOG "Client quit Bloat Test with status $status\n";
   if ($status == 0) {
     print LOG "$Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
     print LOG "----------- failure Output from mozilla-bin for bloat stats --------------- \n";
