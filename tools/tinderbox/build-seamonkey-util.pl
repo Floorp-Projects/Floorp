@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.210 $ ';
+$::UtilsVersion = '$Revision: 1.211 $ ';
 
 package TinderUtils;
 
@@ -1959,13 +1959,12 @@ sub QATest {
     
     my $rv;
 
-    ##### short-cut, just read the file to test this.
-    #$rv = AliveTest("QATest_raw", $build_dir,
-    #                [@$args, $url],
-    #                $Settings::QATestTimeout);
-    #
+    $rv = AliveTest("QATest_raw", $build_dir,
+                    [@$args, $url],
+                    $Settings::QATestTimeout);
+    
     # XXXX testing.  -mcafee
-    $rv = 'success';
+    #$rv = 'success';
 
 
     # Post-process log of test output.
