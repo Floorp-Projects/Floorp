@@ -85,9 +85,6 @@ public:
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
-  // Strength is an out-of-band weighting, always 0 here
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
@@ -176,15 +173,6 @@ BodyRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   NS_IF_ADDREF(mSheet);
   aSheet = mSheet;
-  return NS_OK;
-}
-
-// Strength is an out-of-band weighting, useful for mapping CSS !
-// important always 0 here
-NS_IMETHODIMP
-BodyRule::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 0;
   return NS_OK;
 }
 

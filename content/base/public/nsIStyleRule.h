@@ -59,9 +59,6 @@ public:
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const = 0;
 
-  // Strength is an out-of-band weighting, useful for mapping CSS ! important
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const = 0;
-
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData)=0;
 

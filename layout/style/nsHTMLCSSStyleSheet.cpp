@@ -70,7 +70,6 @@ public:
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
   
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
@@ -115,14 +114,6 @@ CSSFirstLineRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   NS_IF_ADDREF(mSheet);
   aSheet = mSheet;
-  return NS_OK;
-}
-
-// Strength is an out-of-band weighting, always 0 here
-NS_IMETHODIMP
-CSSFirstLineRule::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 0;
   return NS_OK;
 }
 
