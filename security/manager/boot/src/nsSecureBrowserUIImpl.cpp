@@ -334,10 +334,17 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       mMixContentAlertShown = PR_FALSE;
       mFirstRequest = PR_TRUE;
       mSSLStatus = nsnull;
+      mRedirecting = PR_FALSE;
     }
   }
-  
-  // A Document is starting to load...
+
+  // We need to keep track of redirects. This tells us that the current request is going 
+  // to be redirected after it finishes loading.
+  if ((aProgressStateFlags & STATE_IS_REQUEST) && (aProgressStateFlags & STATE_REDIRECTING)) {
+    mRedirecting = PR_TRUE;
+  }
+
+  // Request has completed.
   if ((aProgressStateFlags & (STATE_STOP)) &&
       (aProgressStateFlags & STATE_IS_REQUEST)) {
 
@@ -350,6 +357,16 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       return NS_OK;
     }
 
+    // The document is going to be redirected. 
+    // We must reset our state and start again because the new document may have different security.
+    if (mRedirecting) {
+      mMixContentAlertShown = PR_FALSE;
+      mFirstRequest = PR_TRUE;
+      mSSLStatus = nsnull;
+      mRedirecting = PR_FALSE;
+      return NS_OK;
+    }
+    
     // If this is the first request, then do a protocol check
     if (mFirstRequest) {
       mFirstRequest = PR_FALSE;
@@ -555,11 +572,6 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
   PRInt32 newSecurityState;
 
   newSecurityState = GetSecurityStateFromChannel(aChannel);
-
-  // Deal with http redirect to https //
-  if (mSecurityState == STATE_IS_INSECURE && newSecurityState != STATE_IS_INSECURE) {
-      return CheckProtocolContextSwitch(eventSink, aRequest, aChannel);
-  }
 
   if ((newSecurityState == STATE_IS_INSECURE ||
        newSecurityState == STATE_IS_BROKEN) &&

@@ -86,6 +86,7 @@ protected:
   PRBool mMixContentAlertShown;
   PRInt32 mSecurityState;
   PRBool mFirstRequest;
+  PRBool mRedirecting;
 
   nsCOMPtr<nsISupports> mSSLStatus;
 
