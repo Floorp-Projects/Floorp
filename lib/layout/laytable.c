@@ -23,6 +23,7 @@
 #include "np.h"
 #include "laystyle.h"
 #include "edt.h"
+#include "timing.h"
 
 #ifdef TEST_16BIT
 #define XP_WIN16
@@ -4637,6 +4638,9 @@ lo_BeginTableAttributes(MWContext *context,
 		return;
 	}
 
+    if (state->top_state->table_nesting_level == 1)
+        TIMING_STARTCLOCK_OBJECT("layout:top-table", table_ele);
+
 	table_ele->type = LO_TABLE;
 	/* Copied into lo_PositionTableElement() */
 	/*
@@ -7653,6 +7657,9 @@ fprintf(stderr, "lo_EndTable called\n");
 	/* Decrement table nesting level (used for passing into lo_CreateCellBackGroundLayer() */
 	if (!relayout)
 	{
+        if (state->top_state->table_nesting_level == 1)
+            TIMING_STOPCLOCK_OBJECT("layout:top-table", table->table_ele, "ok");
+
  		state->top_state->table_nesting_level--;
 	}
 
