@@ -2683,9 +2683,6 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
    if (commandDispatcher)
      commandDispatcher->SetSuppressFocus(PR_FALSE);
 
-   if(mScriptContext)
-      mScriptContext->GC();
-
    mContentViewer = aNewViewer;
 
    nsCOMPtr<nsIWidget> widget;
