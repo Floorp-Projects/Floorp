@@ -21,3 +21,4 @@
 #
 
 nsIWindowCreator.idl
+nsIWindowCreator2.idl

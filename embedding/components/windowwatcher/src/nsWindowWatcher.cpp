@@ -73,6 +73,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowCreator.h"
+#include "nsIWindowCreator2.h"
 #include "nsIXPConnect.h"
 #include "nsPIDOMWindow.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -566,8 +567,24 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     NS_ASSERTION(mWindowCreator, "attempted to open a new window with no WindowCreator");
     if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
-      mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
-                        getter_AddRefs(newChrome));
+
+      // If the window creator is an nsIWindowCreator2, we can give it some hints.
+      nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
+      if (windowCreator2) {
+        PRUint32 contextFlags = 0;
+        nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aParent));
+        if (piWindow) {
+          PRBool parentIsLoadingOrRunningTimeout;
+          piWindow->IsLoadingOrRunningTimeout(&parentIsLoadingOrRunningTimeout);
+          if (parentIsLoadingOrRunningTimeout)
+            contextFlags |= nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
+        }
+        windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags, contextFlags,
+                          getter_AddRefs(newChrome));
+      }
+      else
+        mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
+                          getter_AddRefs(newChrome));
       if (newChrome) {
         /* It might be a chrome nsXULWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
