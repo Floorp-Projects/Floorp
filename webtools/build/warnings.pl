@@ -8,14 +8,13 @@ $cvsroot = '/u/slamm/tt/cvsroot/mozilla';
 @ignore = ( 'long long', '__cmsg_data' );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
-for $build_record (last_successful_builds($tree)) {
-  print "hey\n";
-  next unless $build_record->{errorparser} eq 'unix';
-  next unless $build_record->{buildname} =~ /\b(Clobber|Clbr)\b/;
+for $br (last_successful_builds($tree)) {
+  next unless $br->{errorparser} eq 'unix';
+  next unless $br->{buildname} =~ /\b(Clobber|Clbr)\b/;
 
-  print "log is $tree/$builld_record->{logfile}\n";
-  exit;
-  $fh = new FileHandle "gunzip $tree/$builld_record->{logfile} |";
+  print "log is $tree/$br->{logfile}\n";
+
+  $fh = new FileHandle "gunzip -c ../tinderbox/$tree/$br->{logfile} |";
   &gcc_parser($fh, $tree);
 
   last;
@@ -40,7 +39,7 @@ sub last_successful_builds {
   $mindate = $maxdate - 8*60*60; # Go back 8 hours
   
   print STDERR "Loading build data...";
-  use Cwd
+
   chdir '../tinderbox';
   require 'globals.pl';
   &load_data;
@@ -49,9 +48,10 @@ sub last_successful_builds {
   
   for (my $ii=1; $ii <= $name_count; $ii++) {
     for (my $tt=1; $tt <= $time_count; $tt++) {
-      if (defined($br = $build_table->[$tt][$build_index])
+      if (defined($br = $build_table->[$tt][$ii])
           and $br->{buildstatus} eq 'success') {
         push @build_records, $br;
+        last;
   } } }
   return @build_records;
 }
@@ -62,7 +62,6 @@ sub gcc_parser {
 
   my $find = new FileNameFind;
   $find->open($tree);
-  
   while (<$fh>) {
     # Directory
     #
@@ -95,8 +94,8 @@ sub gcc_parser {
     }
     $warnings{"$file:$line"}->{count}++;
     push @{$warnings_per_file{$file}}, $line;
-    $ii++;
-    last if $ii > 20;
+#    $ii++;
+#    last if $ii > 20;
   }
 }
 
