@@ -522,6 +522,7 @@ void DoMozInitialization(WebShellInitContext * initContext)
                     temp[i] = (char) Names[0][i];
                 }
                 nsMemory::Free(Names);
+                temp[i] = '\0';
                 argv[2] = temp;
                 argc = 3;
             }
