@@ -37,6 +37,7 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsICollection.h"
 #include "nsIDOMRange.h"
+#include "nsINameSpaceManager.h"
 
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
@@ -52,6 +53,7 @@ static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
 
 
@@ -264,6 +266,11 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kTextNodeCID)) {
     // XXX ibid
     if (NS_FAILED(res = NS_NewTextNode((nsIHTMLContent**) &inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kNameSpaceManagerCID)) {
+    if (NS_FAILED(res = NS_NewNameSpaceManager((nsINameSpaceManager**)&inst)))
       return res;
     refCounted = PR_TRUE;
   }
