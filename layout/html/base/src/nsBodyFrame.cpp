@@ -237,7 +237,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     desiredRect.x += borderPadding.left;
     desiredRect.y += borderPadding.top;
     mFirstChild->SetRect(desiredRect);
-    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+//    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   
 #if XXX
     // the block knows to PropagateContentOffsets so this isn't necessary
