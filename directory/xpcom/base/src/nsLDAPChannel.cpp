@@ -532,6 +532,7 @@ nsLDAPChannel::Open(nsIInputStream* *result)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
 nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
                          nsISupports* aCtxt)
 {
