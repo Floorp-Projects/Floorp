@@ -355,6 +355,13 @@ pref("mailnews.start_page.enabled", true);
 /* default prefs for Mozilla 5.0 */
 pref("mail.identity.default.compose_html", true);
 pref("mail.identity.default.valid", true);
+pref("mail.identity.default.fcc",true);
+pref("mail.identity.default.fcc_folder","mailbox://nobody@Local Folders/Sent");
+pref("mail.identity.default.bcc_self",false);
+pref("mail.identity.default.bcc_others",false);
+pref("mail.identity.default.bcc_list","");
+pref("mail.identity.default.draft_folder","mailbox://nobody@Local Folders/Drafts");
+pref("mail.identity.default.stationery_folder","mailbox://nobody@Local Folders/Templates");
 
 pref("mail.update_compose_title_as_you_type", true);
 
