@@ -122,8 +122,8 @@ ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
             // The first argument is not a NodeSet
             nsAutoString uriStr;
             exprResult1->stringValue(uriStr);
-            Node* loadNode =
-                es->retrieveDocument(uriStr, baseURISet ? baseURI : mBaseURI);
+            nsAString* base = baseURISet ? &baseURI : &mBaseURI;
+            Node* loadNode = es->retrieveDocument(uriStr, *base);
             if (loadNode) {
                 nodeSet->add(loadNode);
             }
