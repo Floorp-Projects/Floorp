@@ -168,7 +168,7 @@ public:
    * <LI>If the attribute exists, but has no value, return
    * NS_CONTENT_ATTR_NO_VALUE.
    *
-   * <LI>If the attribute has a value, empty or otherwise, set ret to
+   * <LI>If the attribute has a non-empty value, set ret to
    * be the value, and return NS_CONTENT_ATTR_HAS_VALUE (== NS_OK).
    *
    * </UL>
@@ -188,7 +188,7 @@ public:
    * <LI>If the attribute exists, but has no value, return
    * NS_CONTENT_ATTR_NO_VALUE.
    *
-   * <LI>If the attribute has a value, empty or otherwise, set ret to
+   * <LI>If the attribute has a non-empty value, set ret to
    * be the value, and return NS_CONTENT_ATTR_HAS_VALUE (== NS_OK).
    *
    * </UL>
