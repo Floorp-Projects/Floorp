@@ -161,6 +161,10 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
   
   mFlags |= (aCommand==eViewSource)? NS_IPARSER_FLAG_VIEW_SOURCE:NS_IPARSER_FLAG_VIEW_NORMAL;
 
+  NS_ASSERTION(!(mFlags & NS_IPARSER_FLAG_XML) || 
+                (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE),
+              "Why isn't this XML document going through our XML parser?");
+
   mTokenAllocator = nsnull;
   mTokenScanPos = 0;
   mPreserveTarget = eHTMLTag_unknown;
@@ -736,8 +740,10 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       /*  Now that that's over with, we have one more problem to solve.
           In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
           consume all the content itself.
+          But XML doesn't treat these tags differently, so we shouldn't if the
+          document is XML.
        */
-      if(NS_SUCCEEDED(result)) {
+      if(NS_SUCCEEDED(result) && !(mFlags & NS_IPARSER_FLAG_XML)) {
         CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
         //XXX - Find a better soution to record content
         if(!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
