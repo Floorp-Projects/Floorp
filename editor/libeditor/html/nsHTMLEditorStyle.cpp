@@ -970,8 +970,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       }
       if (!useCSS) {
         nsCOMPtr<nsIDOMNode> resultNode;
-        IsTextPropertySetByContent(collapsedNode, aProperty, 0, 0,
-                                   isSet, getter_AddRefs(resultNode));
+        IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue,
+                                   isSet, getter_AddRefs(resultNode), outValue);
         *aFirst = *aAny = *aAll = isSet;
         return NS_OK;
       }
