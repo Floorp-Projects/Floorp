@@ -107,7 +107,7 @@ extern "C"
 	void      fe_DependentListAddDependent(fe_DependentList** list_a,
 										   Widget widget, fe_Dependency mask,
 										   XtCallbackProc proc, XtPointer closure);
-	Widget    fe_CreateSwatch(Widget parent, char* name, Arg* p_args, Cardinal p_n);
+	Widget    fe_CreateSwatchButton(Widget parent, char* name, Arg* p_args, Cardinal p_n);
 	Widget    fe_PreviewPanelCreate(Widget parent, char* name, Arg* p_args, Cardinal p_n);
 	Widget    fe_CreatePasswordField(Widget parent, char* name, Arg* args, Cardinal n);
 
@@ -1022,7 +1022,7 @@ void XFE_PrefsPageEditorAppearance::create()
 		n = 0;
 		XtSetArg(args[n], XmNuserData, nswatch); n++;
 		XtSetArg(args[n], XmNwidth, SWATCH_SIZE); n++;
-		foo = fe_CreateSwatch(custom_form, name, args, n);
+		foo = fe_CreateSwatchButton(custom_form, name, args, n);
 		XtAddCallback(foo, XmNactivateCallback,
 					fe_document_appearance_color_cb, 
 					(XtPointer)w_data);

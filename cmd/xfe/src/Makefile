@@ -184,6 +184,7 @@ CPPSRCS		+= \
 		  EditorToolbar.cpp \
 		  EditorView.cpp \
 		  EditRecentMenu.cpp \
+		  EditTableDialog.cpp \
 		  $(NULL)
 endif
 

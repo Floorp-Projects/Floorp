@@ -3966,57 +3966,67 @@ File/New Document/From Template.
 *minutes.labelString:			minutes
 
 ! Editor/Tables Properties&Create
-*table.tabLabelString:			Table
-*row.tabLabelString:			Row
-*cell.tabLabelString:			Cell
-*tableCreateDialog_popup.title:				@NAME@: New Table Properties
-*tablePropertiesDialog_popup.title: 		@NAME@: Table Properties
-*tableRowsLabel.labelString:				Number of rows:
-*tableColumnsLabel.labelString:				Number of columns:
-*attributesTitle.labelString:				Attributes
-*tableAlignmentTitle.labelString:			Table alignment
-*borderLineWidthLabel.labelString:			Border line width
-*borderLineWidthUnits.labelString:			pixels
-*cellSpacingLabel.labelString:				Cell spacing
-*cellSpacingUnits.labelString:				pixels between cells
-*cellPaddingLabel.labelString:				Cell padding
-*cellPaddingUnits.labelString:			       pixel space within cells
-*tableWidthToggle.labelString:				Table width
-*tableHeightToggle.labelString:				Table min. height
-*tableColorToggle.labelString:				Table color
-*captionToggle.labelString:				Include caption
-*above.labelString:					above
-*below.labelString:					below table
-*tableWidthUnits.marginWidth:				0
-*tableWidthUnits.marginHeight:				0
-*tableHeightUnits.marginWidth:				0
-*tableHeightUnits.marginHeight:				0
-*captionUnits.marginWidth:				0
-*captionUnits.marginHeight:				0
-*textAlignmentTitle.labelString:			Text alignment
-*horizontalLabel.labelString:				Horizontal
-*verticalLabel.labelString:				Vertical
-*textAlignment*default.labelString:			Default
-*textAlignment*left.labelString:			Left
-*textAlignment*right.labelString:			Right
-*textAlignment*center.labelString:			Center
-*textAlignment*top.labelString:				Top
-*textAlignment*bottom.labelString:			Bottom
-*textAlignment*baselines.labelString:			Baselines
-*tableAlignmentBox*left.labelString:			Left
-*tableAlignmentBox*right.labelString:			Right
-*tableAlignmentBox*center.labelString:			Center
-*rowColorToggle.labelString:				Row color
-*textOtherTitle.labelString:				Text
-*headerStyle.labelString:				Header style
-*nonBreaking.labelString:				Nonbreaking
-*cellRowsLabel.labelString:				Cell spans
-*cellColumnsLabel.labelString:				row(s), and 
-*cellColumnsUnits.labelString:				column(s)
-*cellWidthToggle.labelString:				Cell width
-*cellHeightToggle.labelString:				Cell min. height
-*cellColorToggle.labelString:				Cell color
-*percentOfCell.labelString:				% of parent cell
+*tableTab.tabLabelString:			Table
+!*rowTab.tabLabelString:			Row
+*cellTab.tabLabelString:			Cell
+*tableCreateDialog_popup.title:		@NAME@: New Table Properties
+*tablePropertiesDialog_popup.title: 	@NAME@: Table Properties
+*tableRowsColumnsTitle.labelString:		Size
+*tableRowsLabel.labelString:			Rows
+*tableColumnsLabel.labelString:			Columns
+*attributesTitle.labelString:			Attributes
+*tableAlignmentTitle.labelString:		Table alignment
+*borderLineWidthLabel.labelString:		Border line width
+*borderLineWidthUnits.labelString:		pixels
+*cellSpacingLabel.labelString:			Cell spacing
+*cellSpacingUnits.labelString:			pixels between cells
+*cellPaddingLabel.labelString:			Cell padding
+*cellPaddingUnits.labelString:			pixel space within cells
+*tableWidthToggle.labelString:			Table width
+*tableHeightToggle.labelString:			Table min. height
+*tableColorToggle.labelString:			Table color
+*captionToggle.labelString:			Include caption
+*above.labelString:				above
+*below.labelString:				below table
+*tableWidthUnits.marginWidth:			0
+*tableWidthUnits.marginHeight:			0
+*tableHeightUnits.marginWidth:			0
+*tableHeightUnits.marginHeight:			0
+*captionUnits.marginWidth:			0
+*captionUnits.marginHeight:			0
+*textAlignmentTitle.labelString:		Text alignment
+*horizontalLabel.labelString:			Horizontal
+*verticalLabel.labelString:			Vertical
+*textAlignment*default.labelString:		Default
+*textAlignment*left.labelString:		Left
+*textAlignment*right.labelString:		Right
+*textAlignment*center.labelString:		Center
+*textAlignment*top.labelString:			Top
+*textAlignment*bottom.labelString:		Bottom
+*textAlignment*baselines.labelString:		Baselines
+*tableAlignmentBox*left.labelString:		Left
+*tableAlignmentBox*right.labelString:		Right
+*tableAlignmentBox*center.labelString:		Center
+*rowColorToggle.labelString:			Row color
+*textOtherTitle.labelString:			Text
+*headerStyle.labelString:			Header style
+*nonBreaking.labelString:			Nonbreaking
+*extraHTML.labelString:				Extra HTML...
+
+! Cell tab in table dialog
+*changeSelection.labelString:			Selection
+*previous.labelString:				Previous
+*tableCreateDialog_popup*next.labelString:			Next
+*selectCell.labelString:			Cell
+*selectRow.labelString:				Row
+*selectColumn.labelString:			Column
+*cellRowsLabel.labelString:			Cell spans
+*cellColumnsLabel.labelString:			row(s), and 
+*cellColumnsUnits.labelString:			column(s)
+*cellWidthToggle.labelString:			Cell width
+*cellHeightToggle.labelString:			Cell min. height
+*cellColorToggle.labelString:			Cell color
+*percentOfCell.labelString:			% of parent cell
 *percentOfWindow.labelString:			% of window
 *cancel.cancelLabelString:              Cancel
 *cancel.closeLabelString:               Close
