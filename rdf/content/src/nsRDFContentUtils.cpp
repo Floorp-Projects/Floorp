@@ -93,7 +93,7 @@ nsRDFContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
     if (NS_FAILED(rv)) return rv;
 
     // hook it up to the child
-    rv = parent->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(text) ), PR_TRUE);
+    rv = parent->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(text) ), PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

@@ -188,8 +188,6 @@ private:
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kInstanceOfAtom;
-    static nsIAtom* kTemplateContentsGeneratedAtom;
-    static nsIAtom* kContainerContentsGeneratedAtom;
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuBarAtom;
     static nsIAtom* kKeysetAtom;
@@ -225,6 +223,9 @@ public:
     NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
     NS_IMETHOD SetRootContent(nsIContent* aResource);
     NS_IMETHOD CreateContents(nsIContent* aElement);
+    NS_IMETHOD OpenContainer(nsIContent* aElement);
+    NS_IMETHOD CloseContainer(nsIContent* aElement);
+    NS_IMETHOD RebuildContainer(nsIContent* aElement);
     NS_IMETHOD CreateElement(PRInt32 aNameSpaceID,
                              nsIAtom* aTagName,
                              nsIRDFResource* aResource,
@@ -342,8 +343,6 @@ nsIAtom*        RDFXULBuilderImpl::kLazyContentAtom;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kInstanceOfAtom;
-nsIAtom*        RDFXULBuilderImpl::kTemplateContentsGeneratedAtom;
-nsIAtom*        RDFXULBuilderImpl::kContainerContentsGeneratedAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuBarAtom;
 nsIAtom*        RDFXULBuilderImpl::kKeysetAtom;
@@ -418,8 +417,6 @@ RDFXULBuilderImpl::Init()
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kIdAtom                   = NS_NewAtom("id");
         kInstanceOfAtom           = NS_NewAtom("instanceof");
-        kTemplateContentsGeneratedAtom = NS_NewAtom("itemcontentsgenerated");
-        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
         kMenuAtom                 = NS_NewAtom("menu");
         kMenuBarAtom              = NS_NewAtom("menubar");
         kKeysetAtom               = NS_NewAtom("keyset");
@@ -491,8 +488,6 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kXULContentsGeneratedAtom);
         NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kTemplateContentsGeneratedAtom);
-        NS_IF_RELEASE(kContainerContentsGeneratedAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kMenuAtom);
@@ -746,6 +741,27 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     }
 
     return rv;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OpenContainer(nsIContent* aContainer)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::CloseContainer(nsIContent* aContainer)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::RebuildContainer(nsIContent* aContainer)
+{
+    return NS_OK;
 }
 
 
@@ -1318,7 +1334,7 @@ RDFXULBuilderImpl::InsertChildAt(nsINameSpace* aNameSpace,
         }
 #endif
 
-        rv = aElement->InsertChildAt(child, aIndex, PR_TRUE);
+        rv = aElement->InsertChildAt(child, aIndex, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add element to content model");
         if (NS_FAILED(rv)) return rv;
     }
@@ -1398,7 +1414,7 @@ RDFXULBuilderImpl::ReplaceChildAt(nsINameSpace* aNameSpace,
         }
 #endif
 
-        rv = aElement->ReplaceChildAt(child, aIndex, PR_TRUE);
+        rv = aElement->ReplaceChildAt(child, aIndex, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add element to content model");
         if (NS_FAILED(rv)) return rv;
     }
