@@ -221,16 +221,16 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
     if (!hasDefault && miByType && miByExt) {
       // IC currently always uses nsMIMEInfoBase-derived classes.
       // When it stops doing that, this code will need changing.
-      // XXX This assumes that IC will give os an nsMIMEInfoBase. I'd use
-      // dynamic_cast but that crashes.
+      // Using dynamic_cast here so we can fail sorta gracefully if this is no
+      // nsMIMEInfoMac.
       // XXX these pBy* variables are needed because .get() returns an
       // nsDerivedSafe thingy that can't be cast to nsMIMEInfoBase*
       nsIMIMEInfo* pByType = miByType.get();
       nsIMIMEInfo* pByExt = miByExt.get();
-      nsMIMEInfoBase* byType = NS_STATIC_CAST(nsMIMEInfoBase*, pByType);
-      nsMIMEInfoBase* byExt = NS_STATIC_CAST(nsMIMEInfoBase*, pByExt);
+      nsMIMEInfoMac* byType = dynamic_cast<nsMIMEInfoMac*>(pByType);
+      nsMIMEInfoMac* byExt = dynamic_cast<nsMIMEInfoMac*>(pByExt);
       if (!byType || !byExt) {
-        NS_ERROR("IC gave us an nsIMIMEInfo that's no nsMIMEInfoBase! Fix nsOSHelperAppService.");
+        NS_ERROR("IC gave us an nsIMIMEInfo that's no nsMIMEInfoMac! Fix nsOSHelperAppService.");
         return nsnull;
       }
       // Copy the attributes of miByType onto miByExt
