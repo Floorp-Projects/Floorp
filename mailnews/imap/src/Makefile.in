@@ -68,6 +68,7 @@ CPPSRCS		= \
 		nsImapMoveCoalescer.cpp \
 		nsImapUndoTxn.cpp \
 		nsImapStringBundle.cpp \
+		nsImapOfflineSync.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
