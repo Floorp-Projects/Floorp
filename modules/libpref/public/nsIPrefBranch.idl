@@ -85,6 +85,7 @@ interface nsIPrefBranch : nsISupports
    */
 
   void    lockPref(in string aPrefName);
+  boolean prefHasUserValue(in string aPrefName);
   boolean prefIsLocked(in string aPrefName);
   void    unlockPref(in string aPrefName);
 

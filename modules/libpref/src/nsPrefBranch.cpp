@@ -429,6 +429,20 @@ NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
   return rv;
 }
 
+NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_retval)
+{
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    *_retval = PREF_HasUserPref(pref);
+  }
+  return rv;
+}
+
 NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 {
   const char *pref = getPrefName(aPrefName);
