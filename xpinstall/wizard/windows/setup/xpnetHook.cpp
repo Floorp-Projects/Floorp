@@ -1019,6 +1019,7 @@ int DownloadFiles(char *szInputIniFile,
       }
       else if((rv != nsFTPConn::OK) &&
               (rv != nsFTPConn::E_CMD_FAIL) &&
+              (rv != nsSocket::E_BIND) &&
               (gdwDownloadDialogStatus != CS_CANCEL))
       {
         /* We timed out.  No response from the server, or 
