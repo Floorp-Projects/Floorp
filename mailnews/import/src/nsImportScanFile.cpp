@@ -154,7 +154,7 @@ PRBool nsImportScanFile::FillBufferFromFile( void)
 PRBool nsImportScanFile::Scan( PRBool *pDone)
 {
 	PRBool eof = PR_FALSE;
-	nsresult rv = m_pFile->Eof( &eof);
+	m_pFile->Eof( &eof);
 
 	if (eof) {
 		if (m_pos < m_bytesInBuf) {

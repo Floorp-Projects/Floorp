@@ -63,7 +63,7 @@ static NS_DEFINE_IID(kISupportsWStringIID, NS_ISUPPORTSWSTRING_IID);
 
 
 static const char *kDirectoryDataSourceRoot = "abdirectory://";
-static const char *kCardDataSourceRoot = "abcard://";
+// static const char *kCardDataSourceRoot = "abcard://";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -438,6 +438,9 @@ void nsImportGenericAddressBooks::GetDefaultBooks( void)
 		return;
 
 	nsresult rv = m_pInterface->FindAddressBooks( m_pLocation, &m_pBooks);
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Error: FindAddressBooks failed\n");
+	}
 }
 
 void nsImportGenericAddressBooks::GetDefaultFieldMap( void)

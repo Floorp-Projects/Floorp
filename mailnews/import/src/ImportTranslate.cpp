@@ -33,8 +33,8 @@ PRBool ImportTranslate::ConvertString( const nsCString& inStr, nsCString& outStr
 	}
 
 	nsImportTranslator *pTrans = GetTranslator();
-	int			maxLen = (int) pTrans->GetMaxBufferSize( inStr.Length());
-	int			hLen = 0;
+	// int			maxLen = (int) pTrans->GetMaxBufferSize( inStr.Length());
+	// int			hLen = 0;
 	nsCString	set;
 	nsCString	lang;
 

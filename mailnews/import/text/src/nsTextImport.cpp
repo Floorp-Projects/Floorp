@@ -261,17 +261,17 @@ ImportAddressImpl::~ImportAddressImpl()
 NS_IMPL_ISUPPORTS(ImportAddressImpl, nsIImportAddressBooks::GetIID());
 
 	
-NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)
+NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **addrDescription, PRBool *_retval)
 {
-    NS_PRECONDITION(description != nsnull, "null ptr");
+    NS_PRECONDITION(addrDescription != nsnull, "null ptr");
     NS_PRECONDITION(_retval != nsnull, "null ptr");
-    if (! description || !_retval)
+    if (! addrDescription || !_retval)
         return NS_ERROR_NULL_POINTER;
     
     nsString	str;
     *_retval = PR_FALSE;
     nsTextStringBundle::GetStringByID( TEXTIMPORT_ADDRESS_NAME, str);
-    *description = str.ToNewUnicode();
+    *addrDescription = str.ToNewUnicode();
     
     return( NS_OK);
 }
@@ -446,7 +446,7 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
    
 	ClearSampleFile();
 
-    PRBool		abort = PR_FALSE;
+    PRBool		addrAbort = PR_FALSE;
     nsString	name;
     PRUnichar *	pName;
     if (NS_SUCCEEDED( pSource->GetPreferredName( &pName))) {
@@ -493,10 +493,10 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 		// to have an .ldi extension so if it doesn't we may need to
 		// copy the file to a temp file with the correct name, then
 		// import it!
-		rv = m_text.ImportLDIF( &abort, name.GetUnicode(), inFile, pDestination, error);
+		rv = m_text.ImportLDIF( &addrAbort, name.GetUnicode(), inFile, pDestination, error);
 	}
 	else {	
-		rv = m_text.ImportAddresses( &abort, name.GetUnicode(), inFile, pDestination, fieldMap, error, &m_bytesImported);
+		rv = m_text.ImportAddresses( &addrAbort, name.GetUnicode(), inFile, pDestination, fieldMap, error, &m_bytesImported);
 		SaveFieldMap( fieldMap);
 	}
 

@@ -326,15 +326,15 @@ NS_IMETHODIMP nsImportService::GetModuleWithCID( const nsCID& cid, nsIImportModu
 	return( NS_ERROR_NOT_AVAILABLE);
 }
 
-NS_IMETHODIMP nsImportService::GetModuleInfo( const char *filter, PRInt32 index, PRUnichar **name, PRUnichar **description)
+NS_IMETHODIMP nsImportService::GetModuleInfo( const char *filter, PRInt32 index, PRUnichar **name, PRUnichar **moduleDescription)
 {
     NS_PRECONDITION(name != nsnull, "null ptr");
-    NS_PRECONDITION(description != nsnull, "null ptr");
-    if (!name || !description)
+    NS_PRECONDITION(moduleDescription != nsnull, "null ptr");
+    if (!name || !moduleDescription)
         return NS_ERROR_NULL_POINTER;
     
 	*name = nsnull;
-	*description = nsnull;
+	*moduleDescription = nsnull;
 
     DoDiscover();
     if (!m_pModules)
@@ -350,7 +350,7 @@ NS_IMETHODIMP nsImportService::GetModuleInfo( const char *filter, PRInt32 index,
 		if (pDesc->SupportsThings( filter)) {
 			if (count == index) {
 				*name = nsCRT::strdup( pDesc->GetName());
-				*description = nsCRT::strdup( pDesc->GetDescription());
+				*moduleDescription = nsCRT::strdup( pDesc->GetDescription());
 				return( NS_OK);
 			}
 			else
@@ -591,27 +591,27 @@ nsresult nsImportService::LoadModuleInfo( char *pClsId, const char *pSupports)
 	rv = compMgr->CreateInstance( clsId, nsnull, kImportModuleIID, (void **) &module);
 	if (NS_FAILED(rv)) return rv;
 	
-	nsString	title;	
-	nsString	description;
+	nsString	theTitle;	
+	nsString	theDescription;
 	PRUnichar *	pName;
 	rv = module->GetName( &pName);
 	if (NS_SUCCEEDED( rv)) {
-		title = pName;
+		theTitle = pName;
 		delete [] pName;
 	}
 	else
-		title = "Unknown";
+		theTitle = "Unknown";
 		
 	rv = module->GetDescription( &pName);
 	if (NS_SUCCEEDED( rv)) {
-		description = pName;
+		theDescription = pName;
 		delete [] pName;
 	}
 	else
-		description = "Unknown description";
+		theDescription = "Unknown description";
 	
 	// call the module to get the info we need
-	m_pModules->AddModule( clsId, pSupports, title.GetUnicode(), description.GetUnicode());
+	m_pModules->AddModule( clsId, pSupports, theTitle.GetUnicode(), theDescription.GetUnicode());
 	
 	module->Release();
 	
