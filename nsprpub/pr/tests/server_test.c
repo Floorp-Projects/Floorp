@@ -38,7 +38,6 @@
 ***********************************************************************/
 /* Used to get the command line option */
 #include "plgetopt.h"
-#include "prttools.h"
 
 #include "nspr.h"
 #include "pprthred.h"
@@ -47,6 +46,10 @@
 
 #define PORT 15004
 #define STACKSIZE 0
+
+#define PASS 0
+#define FAIL 1
+static int debug_mode = 0;
 
 static int _iterations = 1000;
 static int _clients = 1;
@@ -100,9 +103,6 @@ static Test_Result (int result)
 			break;
 		case FAIL:
 			printf ("FAIL\n");
-			break;
-		case NOSTATUS:
-			printf ("NOSTATUS\n");
 			break;
 		default:
 			break;
@@ -598,8 +598,6 @@ main(int argc, char **argv)
 	}
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
-
-    PR_SetThreadRecycleMode(64);
 
     ServerStateCVLock = PR_NewLock();
     ServerStateCV = PR_NewCondVar(ServerStateCVLock);
