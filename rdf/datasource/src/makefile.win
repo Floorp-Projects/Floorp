@@ -25,7 +25,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \
         .\$(OBJDIR)\nsFTPDataSource.obj         \
         .\$(OBJDIR)\nsLocalStore.obj            \
-        .\$(OBJDIR)\nsXULContentSink.obj        \
 	$(NULL)
 
 # XXX Note the dependency on $(DEPTH)\rdf\base\src: we use rdfutil.h over
@@ -33,7 +32,6 @@ CPP_OBJS=\
 # "real live" XPCOM interface.
 
 LINCS=  -I$(DEPTH)\rdf\base\src         \
-        -I$(DEPTH)\rdf\content\src      \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

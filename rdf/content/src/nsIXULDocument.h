@@ -19,7 +19,7 @@
 
 /*
 
-  An RDF-specific extension to nsIXMLDocument. Includes methods for
+  An XUL-specific extension to nsIXMLDocument. Includes methods for
   setting the root resource of the document content model, a factory
   method for constructing the children of a node, etc.
 
@@ -27,13 +27,14 @@
 
  */
 
-#ifndef nsIRDFDocument_h___
-#define nsIRDFDocument_h___
+#ifndef nsIXULDocument_h___
+#define nsIXULDocument_h___
 
 class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class...
 
 #include "nsIXMLDocument.h"
 
+class nsForwardReference;
 class nsIAtom;
 class nsIRDFCompositeDataSource;
 class nsIRDFContent;
@@ -53,43 +54,31 @@ class nsIDOMHTMLFormElement;
 
 class nsIRDFDataSource;
 
-class nsIRDFDocument : public nsIXMLDocument
+class nsIXULDocument : public nsIXMLDocument
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
-
-  /**
-   * Set the document's "root" resource.
-   */
-  NS_IMETHOD SetRootResource(nsIRDFResource* aResource) = 0;
-
-  NS_IMETHOD SplitProperty(nsIRDFResource* aResource,
-                           PRInt32* aNameSpaceID,
-                           nsIAtom** aTag) = 0;
 
   // The resource-to-element map is a one-to-many mapping of RDF
   // resources to content elements.
 
   /**
-   * Add an entry to the resource-to-element map.
+   * Add an entry to the ID-to-element map.
    */
-  NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
+  NS_IMETHOD AddElementForID(const nsString& aID, nsIContent* aElement) = 0;
 
   /**
-   * Remove an entry from the resource-to-element map.
+   * Remove an entry from the ID-to-element map.
    */
-  NS_IMETHOD RemoveElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
+  NS_IMETHOD RemoveElementForID(const nsString& aID, nsIContent* aElement) = 0;
 
   /**
    * Get the elements for a particular resource in the resource-to-element
    * map. The nsISupportsArray will be truncated and filled in with
    * nsIContent pointers.
    */
-  NS_IMETHOD GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements) = 0;
+  NS_IMETHOD GetElementsForID(const nsString& aID, nsISupportsArray* aElements) = 0;
 
-  /**
-   * Create the contents for an element.
-   */
   NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 
   /**
@@ -98,10 +87,8 @@ public:
   NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 
   /**
-   * Get the RDF datasource that represents the document.
+   * Manipulate the XUL document's form element
    */
-  NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource) = 0;
-
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm) = 0;
 
@@ -109,14 +96,12 @@ public:
    * Add a "forward declaration" of a XUL observer. Such declarations
    * will be resolved when document loading completes.
    */
-  NS_IMETHOD AddForwardObserverDecl(nsIDOMElement* aListener,
-                                    const nsString& aTargetID,
-                                    const nsString& aAttribute) = 0;
+  NS_IMETHOD AddForwardReference(nsForwardReference* aForwardReference) = 0;
 
-  NS_IMETHOD ResolveForwardObserverDecls() = 0;
+  NS_IMETHOD ResolveForwardReferences() = 0;
 };
 
 // factory functions
-nsresult NS_NewXULDocument(nsIRDFDocument** result);
+nsresult NS_NewXULDocument(nsIXULDocument** result);
 
-#endif // nsIRDFDocument_h___
+#endif // nsIXULDocument_h___

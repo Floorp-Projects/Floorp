@@ -20,7 +20,7 @@
 /*
 
   A content model builder interface. An object that implements this
-  interface is associated with an nsIRDFDocument object to construct
+  interface is associated with an nsIXULDocument object to construct
   an NGLayout content model.
 
  */
@@ -33,7 +33,7 @@
 class nsIAtom;
 class nsIContent;
 class nsIRDFCompositeDataSource;
-class nsIRDFDocument;
+class nsIXULDocument;
 class nsIRDFNode;
 class nsIRDFResource;
 
@@ -50,7 +50,7 @@ public:
      * Point the content model builder to the document. The content model
      * builder must not reference count the document.
      */
-    NS_IMETHOD SetDocument(nsIRDFDocument* aDocument) = 0;
+    NS_IMETHOD SetDocument(nsIXULDocument* aDocument) = 0;
 
     NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase) = 0;
     NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase) = 0;
@@ -83,17 +83,6 @@ public:
      * Rebuild the contents of a container.
      */
     NS_IMETHOD RebuildContainer(nsIContent* aContainer) = 0;
-
-    /** 
-     * Construct an element. This is exposed as a public method,
-     * because the document implementation may need to call it to
-     * support the DOM's document.createElement() method.
-     */
-    NS_IMETHOD CreateElement(PRInt32 aNameSpaceID,
-                             nsIAtom* aTag,
-                             nsIRDFResource* aResource,
-                             nsIContent** aResult) = 0;
-
 };
 
 extern nsresult NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult);

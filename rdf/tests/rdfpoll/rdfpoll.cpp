@@ -40,7 +40,6 @@ NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
 #include "nsIGenericFactory.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
-#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFXMLSource.h"

@@ -28,7 +28,6 @@ EXPORTS		= \
 		nsILocalStore.h \
 		nsIRDFFileSystem.h \
 		nsIRDFFTP.h \
-		nsIXULContentSink.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

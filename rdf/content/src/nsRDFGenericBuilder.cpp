@@ -50,7 +50,7 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h" 
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFDocument.h"
+#include "nsIXULDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -126,7 +126,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFContentModelBuilder interface
-    NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
+    NS_IMETHOD SetDocument(nsIXULDocument* aDocument);
     NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase);
     NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase);
     NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
@@ -135,10 +135,6 @@ public:
     NS_IMETHOD OpenContainer(nsIContent* aContainer);
     NS_IMETHOD CloseContainer(nsIContent* aContainer);
     NS_IMETHOD RebuildContainer(nsIContent* aContainer);
-    NS_IMETHOD CreateElement(PRInt32 aNameSpaceID,
-                             nsIAtom* aTag,
-                             nsIRDFResource* aResource,
-                             nsIContent** aResult);
 
     // nsIRDFObserver interface
     NS_IMETHOD OnAssert(nsIRDFResource* aSource,
@@ -270,8 +266,16 @@ public:
     nsresult
     AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase);
 
+    nsresult
+    GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements);
+
+    nsresult
+    CreateElement(PRInt32 aNameSpaceID,
+                  nsIAtom* aTag,
+                  nsIContent** aResult);
+
 protected:
-    nsIRDFDocument*            mDocument; // [WEAK]
+    nsIXULDocument*            mDocument; // [WEAK]
 
     // We are an observer of the composite datasource. The cycle is
     // broken by out-of-band SetDataBase(nsnull) call when document is
@@ -613,7 +617,7 @@ RDFGenericBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
 // nsIRDFContentModelBuilder methods
 
 NS_IMETHODIMP
-RDFGenericBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
+RDFGenericBuilderImpl::SetDocument(nsIXULDocument* aDocument)
 {
     // note: null now allowed, it indicates document going away
 
@@ -912,74 +916,6 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
 }
 
 
-NS_IMETHODIMP
-RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
-                                     nsIAtom* aTag,
-                                     nsIRDFResource* aResource,
-                                     nsIContent** aResult)
-{
-    nsresult rv;
-    nsCOMPtr<nsIContent> result;
-
-    if (aNameSpaceID == kNameSpaceID_HTML) {
-        nsCOMPtr<nsIHTMLContent> element;
-        const PRUnichar *tagName;
-        aTag->GetUnicode(&tagName);
-
-        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
-        if (NS_FAILED(rv)) return rv;
-
-        result = do_QueryInterface(element);
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
-    }
-    else {
-        rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
-
-    if (aResource) {
-        const char *uri;
-        rv = aResource->GetValueConst(&uri);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
-        if (NS_FAILED(rv)) return rv;
-
-        PRUnichar buf[128];
-        nsAutoString id(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
-
-#if 0 // XXX c'mon, this URI is _never_ going to be relative to the document!
-        rv = gXULUtils->MakeElementID(doc, nsAutoString(uri), id);
-        if (NS_FAILED(rv)) return rv;
-#endif
-
-        id = uri;
-
-        rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    rv = result->SetDocument(doc, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
-    if (NS_FAILED(rv)) return rv;
-
-    if (aResource && aNameSpaceID == kNameSpaceID_HTML) {
-        // If this is an HTML element, then explicitly add it to the
-        // map. (XUL elements don't have to do this because their
-        // SetDocument() call does the magic.) Don't worry: the
-        // document observer methods are on the lookout to update the
-        // map for "attribute changed" calls that monkey with the 'id'
-        // or 'ref' parameters.
-        rv = mDocument->AddElementForResource(aResource, result);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    *aResult = result;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFObserver interface
@@ -1004,9 +940,9 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
     // Find all the elements in the content model that correspond to
     // aSource: for each, we'll try to build XUL children if
     // appropriate.
-    rv = mDocument->GetElementsForResource(aSource, elements);
+    rv = GetElementsForResource(aSource, elements);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     PRUint32 cnt;
     rv = elements->Count(&cnt);
@@ -1122,7 +1058,7 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
     // Find all the elements in the content model that correspond to
     // aSource: for each, we'll try to build XUL children if
     // appropriate.
-    rv = mDocument->GetElementsForResource(aSource, elements);
+    rv = GetElementsForResource(aSource, elements);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
 	if (NS_FAILED(rv)) return rv;
 
@@ -1246,7 +1182,7 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
     // Find all the elements in the content model that correspond to
     // aSource: for each, we'll try to build XUL children if
     // appropriate.
-    rv = mDocument->GetElementsForResource(aSource, elements);
+    rv = GetElementsForResource(aSource, elements);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
 	if (NS_FAILED(rv)) return rv;
 
@@ -1781,8 +1717,38 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         }
         else if (isResourceElement) {
             // It's the "resource" element
-            rv = CreateElement(nameSpaceID, tag, aChild, getter_AddRefs(realKid));
+            rv = CreateElement(nameSpaceID, tag, getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
+
+            const char *uri;
+            rv = aChild->GetValueConst(&uri);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString id(uri);
+            rv = realKid->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
+            if (NS_FAILED(rv)) return rv;
+
+            if (! aNotify) {
+                // XUL document will watch us, and take care of making
+                // sure that we get added to or removed from the
+                // element map if aNotify is true. If not, we gotta do
+                // it ourselves. Yay.
+                rv = mDocument->AddElementForID(id, realKid);
+                if (NS_FAILED(rv)) return rv;
+            }
+
+            // XXX Hackery to ensure that mailnews works. Force the
+            // element to hold a reference to the
+            // resource. Unfortunately, this'll break for HTML
+            // elements.
+            {
+                nsCOMPtr<nsIXULContent> xulele = do_QueryInterface(realKid);
+                if (xulele) {
+                    xulele->ForceElementToOwnResource(PR_TRUE);
+                }
+            }
 
             if (IsContainer(tmplKid, aChild)) {
                 rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, nsAutoString("true"), PR_FALSE);
@@ -1823,7 +1789,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         }
         else {
             // It's just a generic element. Create it!
-            rv = CreateElement(nameSpaceID, tag, nsnull, getter_AddRefs(realKid));
+            rv = CreateElement(nameSpaceID, tag, getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -2146,7 +2112,7 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
     if (NS_FAILED(rv)) return rv;
 
-    rv = mDocument->GetElementsForResource(aValue, elements);
+    rv = GetElementsForResource(aValue, elements);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 cnt;
@@ -2362,7 +2328,7 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
         // we need to construct a new child element.
         nsCOMPtr<nsIContent> element;
 
-        rv = CreateElement(nameSpaceID, tag, nsnull, getter_AddRefs(element));
+        rv = CreateElement(nameSpaceID, tag, getter_AddRefs(element));
         if (NS_FAILED(rv)) return rv;
 
         // XXX Note that the notification ensures we won't batch insertions! This could be bad! - Dave
@@ -2916,5 +2882,61 @@ RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, ns
     if (! ok)
         return NS_ERROR_FAILURE;
 
+    return NS_OK;
+}
+
+
+nsresult
+RDFGenericBuilderImpl::GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements)
+{
+    nsresult rv;
+
+    const char *uri;
+    rv = aResource->GetValueConst(&uri);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mDocument->GetElementsForID(nsAutoString(uri), aElements);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+nsresult
+RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
+                                     nsIAtom* aTag,
+                                     nsIContent** aResult)
+{
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    if (! doc)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+    nsCOMPtr<nsIContent> result;
+
+    if (aNameSpaceID == kNameSpaceID_HTML) {
+        nsCOMPtr<nsIHTMLContent> element;
+        const PRUnichar *tagName;
+        aTag->GetUnicode(&tagName);
+
+        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
+        if (NS_FAILED(rv)) return rv;
+
+        result = do_QueryInterface(element);
+        if (! result)
+            return NS_ERROR_UNEXPECTED;
+    }
+    else {
+        rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = result->SetDocument(doc, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }

@@ -27,19 +27,20 @@ LCFLAGS = \
         $(NULL)
 
 CPP_OBJS=\
-	.\$(OBJDIR)\nsJSXULCommandDispatcher.obj       \
+        .\$(OBJDIR)\nsElementMap.obj              \
+	.\$(OBJDIR)\nsJSXULCommandDispatcher.obj  \
 	.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
 	.\$(OBJDIR)\nsXULAttributes.obj		  \
-	.\$(OBJDIR)\nsXULCommandDispatcher.obj         \
+	.\$(OBJDIR)\nsXULCommandDispatcher.obj    \
 	.\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFElement.obj              \
-        .\$(OBJDIR)\nsRDFXULBuilder.obj           \
-        .\$(OBJDIR)\nsXULDocument.obj             \
         .\$(OBJDIR)\nsXULContentUtils.obj         \
+        .\$(OBJDIR)\nsXULContentSink.obj          \
+        .\$(OBJDIR)\nsXULDocument.obj             \
         .\$(OBJDIR)\nsXULDocumentInfo.obj	  \
         .\$(OBJDIR)\nsXULKeyListener.obj          \
         .\$(OBJDIR)\nsXULSortService.obj          \

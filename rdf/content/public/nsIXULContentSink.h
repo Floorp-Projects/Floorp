@@ -36,10 +36,9 @@ class nsIXULContentSink : public nsIXMLContentSink
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
 
-    NS_IMETHOD Init(nsIDocument* aDocument,
-                    nsIRDFDataSource* aDataSource) = 0;
+    NS_IMETHOD Init(nsIDocument* aDocument) = 0;
 
-	  NS_IMETHOD UnblockNextOverlay() = 0;
+    NS_IMETHOD UnblockNextOverlay() = 0;
 
     NS_IMETHOD UpdateOverlayCounters(PRInt32 aDelta) = 0;
 };

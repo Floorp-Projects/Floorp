@@ -2,10 +2,9 @@ nsIDOMXULCommandDispatcher.h
 nsIDOMXULDocument.h
 nsIDOMXULElement.h
 nsIDOMXULTreeElement.h
-nsIRDFContentModelBuilder.h
-nsIRDFDocument.h
 nsIXULParentDocument.h
 nsIXULChildDocument.h
+nsIXULContentSink.h
 nsIXULContentUtils.h
 nsIXULDocumentInfo.h
 nsIXULPopupListener.h

@@ -25,7 +25,6 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFContentSink.h"
-#include "nsIRDFDocument.h"
 #include "nsIRDFService.h"
 #include "nsIXULContentSink.h"
 #include "nsISupports.h"
@@ -36,6 +35,7 @@
 #include "nsIComponentManager.h"
 #include "rdf.h"
 #include "nsIXULContentUtils.h"
+#include "nsIXULDocument.h"
 #include "nsIXULSortService.h"
 #include "nsIXULDocumentInfo.h"
 #include "nsIXULPopupListener.h"
@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kRDFFTPDataSourceCID,                NS_RDFFTPDATASOURCE_CI
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,           NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,                NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFXULBuilderCID,                   NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,                  NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,                 NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
@@ -118,10 +117,9 @@ MAKE_CTOR(RDFCompositeDataSource,RDFCompositeDataSource,RDFCompositeDataSource)
 MAKE_CTOR(RDFContainer,RDFContainer,RDFContainer)
 
 MAKE_CTOR(RDFContainerUtils,RDFContainerUtils,RDFContainerUtils)
-MAKE_CTOR(XULDocument,XULDocument,RDFDocument)
+MAKE_CTOR(XULDocument,XULDocument,XULDocument)
 MAKE_CTOR(XULDocumentInfo,XULDocumentInfo,XULDocumentInfo)
 MAKE_CTOR(XULTemplateBuilder,XULTemplateBuilder,RDFContentModelBuilder)
-MAKE_CTOR(RDFXULBuilder,RDFXULBuilder,RDFContentModelBuilder)
 
 MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
 MAKE_CTOR(XULContentSink,XULContentSink,XULContentSink)
@@ -227,9 +225,6 @@ nsRDFModule::GetClassObject(nsIComponentManager *aCompMgr,
     else if (aClass.Equals(kXULTemplateBuilderCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULTemplateBuilder);
     }
-    else if (aClass.Equals(kRDFXULBuilderCID)) {
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewRDFXULBuilder);
-    }
     else if (aClass.Equals(kXULContentSinkCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULContentSink);
     }
@@ -309,8 +304,6 @@ static Components gComponents[] = {
       NS_RDF_PROGID "/xul-sort-service", },
     { "XUL Template Builder", &kXULTemplateBuilderCID,
       NS_RDF_PROGID "/xul-template-builder", },
-    { "RDF XUL Builder", &kRDFXULBuilderCID,
-      NS_RDF_PROGID "/xul-builder", },
     { "XUL Content Sink", &kXULContentSinkCID,
       NS_RDF_PROGID "/xul-content-sink", },
     { "XUL Document", &kXULDocumentCID,

@@ -28,6 +28,7 @@ LIBRARY_NAME	= rdfcontent_s
 REQUIRES	= dom js netlib rdf raptor xpcom locale
 
 CPPSRCS		= \
+		nsElementMap.cpp \
 		nsJSXULDocument.cpp \
 		nsJSXULElement.cpp \
 		nsJSXULCommandDispatcher.cpp \
@@ -35,8 +36,8 @@ CPPSRCS		= \
 		nsRDFDOMNodeList.cpp \
 		nsRDFElement.cpp \
 		nsRDFGenericBuilder.cpp \
-		nsRDFXULBuilder.cpp \
 		nsXULAttributes.cpp \
+		nsXULContentSink.cpp \
 		nsXULContentUtils.cpp \
 		nsXULDocument.cpp \
 		nsXULSortService.cpp \
