@@ -161,6 +161,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
           NS_RELEASE(parentContext);
         }
       }
+      break;
 
     case eStyleUnit_Percent:
       {
@@ -651,10 +652,14 @@ public:
   virtual void ForceUnique(void);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
 
+  virtual void  ReParent(nsIStyleContext* aNewParentContext,
+                         nsIPresContext* aPresContext);
+
   virtual void  List(FILE* out, PRInt32 aIndent);
 
 protected:
   void AppendChild(StyleContextImpl* aChild);
+  void RemoveChild(StyleContextImpl* aChild);
 
   StyleContextImpl* mParent;
   StyleContextImpl* mChild;
@@ -769,8 +774,6 @@ StyleContextImpl::~StyleContextImpl()
 #endif
 }
 
-
-
 #ifdef DEBUG_REFS
 NS_IMPL_QUERY_INTERFACE(StyleContextImpl, kIStyleContextIID)
 
@@ -823,6 +826,48 @@ void StyleContextImpl::AppendChild(StyleContextImpl* aChild)
     }
   }
   NS_ADDREF(aChild);
+}
+
+void StyleContextImpl::RemoveChild(StyleContextImpl* aChild)
+{
+  NS_ASSERTION((nsnull != aChild) && (this == mChild->mParent), "bad argument");
+
+  if ((nsnull == aChild) || (this != mChild->mParent)) {
+    return;
+  }
+
+  if (mEmptyChild == aChild) {
+    mEmptyChild = nsnull;
+  }
+  else {
+    if (aChild->mPrevSibling != aChild) {
+      if (mChild == aChild) {
+        mChild = mChild->mNextSibling;
+      }
+      aChild->mPrevSibling->mNextSibling = aChild->mNextSibling;
+      aChild->mNextSibling->mPrevSibling = aChild->mPrevSibling;
+      aChild->mNextSibling = aChild;
+      aChild->mPrevSibling = aChild;
+    }
+    else {
+      NS_ASSERTION(mChild == aChild, "bad sibling pointers");
+      if (mChild == aChild) {
+        mChild = nsnull;
+      }
+    }
+  }
+  NS_RELEASE(aChild);
+}
+
+void StyleContextImpl::ReParent(nsIStyleContext* aNewParentContext,
+                                nsIPresContext* aPresContext)
+{
+  if (aNewParentContext != mParent) {
+    mParent->RemoveChild(this);
+    mParent = (StyleContextImpl*)aNewParentContext;  // weak ref
+    mParent->AppendChild(this);
+    RemapStyle(aPresContext);
+  }
 }
 
 nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
@@ -1070,6 +1115,17 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       MapStyleData  data(this, aPresContext);
       mRules->EnumerateForwards(MapStyleRule, &data);
     }
+  }
+
+  if (nsnull != mChild) {
+    StyleContextImpl* child = mChild;
+    do {
+      child->RemapStyle(aPresContext);
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  if (nsnull != mEmptyChild) {
+    mEmptyChild->RemapStyle(aPresContext);
   }
   return NS_OK;
 }
