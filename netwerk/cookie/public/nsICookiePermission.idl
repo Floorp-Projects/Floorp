@@ -103,8 +103,8 @@ interface nsICookiePermission : nsISupports
    *
    * this method is called to test whether or not the given URI/channel may
    * set a specific cookie.  this method is always preceded by a call to
-   * canAccessCookies. it may modify the isSession and expiry attributes of
-   * the cookie via the aIsSession and aExpiry parameters, in order to limit
+   * canAccess. it may modify the isSession and expiry attributes of the
+   * cookie via the aIsSession and aExpiry parameters, in order to limit
    * or extend the lifetime of the cookie. this is useful, for instance, to
    * downgrade a cookie to session-only if it fails to meet certain criteria.
    *
