@@ -500,9 +500,12 @@ public:
    * Get the child frame of this frame which contains the given
    * content offset. outChildFrame may be this frame, or nsnull on return.
    * outContentOffset returns the content offset relative to the start
-   * of the returned node
+   * of the returned node. You can also pass a hint which tells the method
+   * to stick to the end of the first found frame or the beginning of the 
+   * next in case the offset falls on a boundary.
    */
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32       inContentOffset,
+                                 PRBool                   inHint,//false stick left
                                  PRInt32*                 outFrameContentOffset,
                                  nsIFrame*                *outChildFrame) = 0;
 

@@ -260,6 +260,7 @@ public:
                                 nsPoint*                outPoint);
                                 
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+                                PRBool                  inHint,
                                 PRInt32*                outFrameContentOffset,
                                 nsIFrame*               *outChildFrame);
 
@@ -1916,6 +1917,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
+                                           PRBool  inHint,
                                            PRInt32* outFrameContentOffset,
                                            nsIFrame **outChildFrame)
 {
@@ -1927,13 +1929,13 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   if (contentOffset != -1) //-1 signified the end of the current content
     contentOffset = inContentOffset - mContentOffset;
 
-  if (contentOffset > mContentLength)
+  if ((contentOffset > mContentLength) || ((contentOffset == mContentLength) && inHint) )
   {
     //this is not the frame we are looking for.
     nsIFrame *nextInFlow;
     nextInFlow = GetNextInFlow();
     if (nextInFlow)
-      return nextInFlow->GetChildFrameContainingOffset(inContentOffset, outFrameContentOffset, outChildFrame);
+      return nextInFlow->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
     else
       return NS_ERROR_FAILURE;
   }
@@ -1941,7 +1943,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   {
     result = GetPrevInFlow(outChildFrame);
     if (NS_SUCCEEDED(result))
-      return (*outChildFrame)->GetChildFrameContainingOffset(inContentOffset,
+      return (*outChildFrame)->GetChildFrameContainingOffset(inContentOffset, inHint,
         outFrameContentOffset,outChildFrame);
     else
       return result;
@@ -1992,10 +1994,10 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   PRInt32 textLength;
   nsresult result(NS_OK);
 
+  aPos->mResultContent = mContent;//do this right off
 
   switch (aPos->mAmount){
   case eSelectNoAmount : {
-      aPos->mResultContent = mContent;
       aPos->mContentOffset = aPos->mStartOffset;
     }
     break;
@@ -2161,8 +2163,8 @@ printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n
 printf("aEatingWS = %s\n" , aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
     if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset)){ //gone too far
-      aPos->mStartOffset = start;
       if (frameUsed){
+        aPos->mStartOffset = start;
         result = frameUsed->PeekOffset(aPos);
       }
       else {//reached end ask the frame for help
@@ -2185,7 +2187,7 @@ printf("aEatingWS = %s\n" , aPos->mEatingWS ? "TRUE" : "FALSE");
   }
   if (NS_FAILED(result)){
     aPos->mResultContent = mContent;
-    aPos->mContentOffset = aPos->mStartOffset;
+    //aPos->mContentOffset = aPos->mStartOffset;
     result = NS_OK;
   }
   aPos->mResultFrame = this;
@@ -2200,7 +2202,9 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
-
+  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  if (me->clickCount > 2)
+    return nsFrame::HandleMultiplePress(aPresContext,aEvent,aEventStatus);
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
@@ -2240,7 +2244,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         eDirNext,
                         startPos,
                         PR_FALSE,
-                        PR_TRUE);
+                        PR_FALSE);
         rv = PeekOffset(&endpos);
         if (NS_FAILED(rv))
           return rv;
