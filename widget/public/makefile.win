@@ -31,7 +31,6 @@ EXPORTS=nsui.h \
   nsIFontSizeIterator.h \
   nsIFontNameIterator.h \
   nsIFontRetrieverService.h \
-  nsIFileChooser.h \
   nsIFileListTransferable.h \
   nsIFormatConverter.h \
   nsIClipboardOwner.h \
