@@ -209,10 +209,11 @@ pages[20][0]=new page("ok.htm",null,null);
 pages[21]=new Array();
 pages[21][0]=new page("okreboot.htm",null,null);
 
-pages[22]=new Array();
-pages[22][0]=new page("error.htm",null,null);
-pages[22][1]=new method("register.htm","parent.content.go('New Path')",true);
-pages[22][2]=new method("connect2.htm","parent.content.go('Existing Path')",true);
+pages[ 22 ] = new Array();
+pages[ 22 ][ 0 ] = new page( "error.htm", null, null );
+pages[ 22 ][ 1 ] = new method( "1step.htm", "parent.content.go( 'firstDial' )", true );
+pages[ 22 ][ 2 ] = new method( "register.htm", "parent.content.go( 'New Path' )", true );
+pages[ 22 ][ 3 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
 
 pages[23]=new Array();
 pages[23][0]=new page("later.htm",null,null);
