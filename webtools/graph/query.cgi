@@ -200,7 +200,15 @@ sub show_graph {
   print "</li>\n";
 
   print "<li>\n";
-  print "<a href=\"rawdata.cgi?tbox=$TBOX&testname=$TESTNAME&days=$DAYS\">Show the raw data for this plot.</a>";
+  print "<a href=\"rawdata.cgi?tbox=$TBOX&testname=$TESTNAME&days=$DAYS\">Show the raw data for this plot</a>";
+  print "</li>\n";
+
+  print "<li>\n";
+  print "<a href=\"mailto:mozilla-performance\@mozilla.org?subject=Perf: $TBOX/$TESTNAME test regression\">Mail m.performance about regressions for this test</a>";
+  print "</li>\n";
+
+  print "<li>\n";
+  print "<a href=\"news://news.mozilla.org/netscape.public.mozilla.performance\">performance newsgroup</a>";
   print "</li>\n";
 
   print "</font>";
