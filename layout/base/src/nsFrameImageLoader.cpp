@@ -322,13 +322,16 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
   // XXX We should tell the frame the damage area and let it invalidate
   // itself. Add some API calls to nsIFrame to allow a caller to invalidate
   // parts of the frame...
-  mTargetFrame->GetOffsetFromView(offset, view);
-  nsIViewManager* vm;
-  view->GetViewManager(vm);
-  bounds.x += offset.x;
-  bounds.y += offset.y;
+  mTargetFrame->GetView(view);
+  if (nsnull == view) {
+    mTargetFrame->GetOffsetFromView(offset, view);
+    bounds.x += offset.x;
+    bounds.y += offset.y;
+  }
   // XXX At least for the time being don't allow a synchronous repaint, because
   // we may already be repainting and we don't want to go re-entrant...
+  nsIViewManager* vm;
+  view->GetViewManager(vm);
   vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);
   NS_RELEASE(vm);
 }
