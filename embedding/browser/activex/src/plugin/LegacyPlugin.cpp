@@ -855,7 +855,7 @@ NewControl(const char *pluginType,
                         nsCOMPtr<nsIDocument> doc(do_QueryInterface(DOMdocument));
                         if (doc)
                         {
-                            nsIURI *baseURI = doc->GetBaseURL();
+                            nsIURI *baseURI = doc->GetBaseURI();
                             if (baseURI)
                             {
                                 nsCAutoString newURL;

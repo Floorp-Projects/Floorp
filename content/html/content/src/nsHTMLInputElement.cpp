@@ -173,8 +173,8 @@ public:
   NS_IMETHOD RestoreState(nsIPresState* aState);
 
   // nsIContent
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void RemoveFocus(nsIPresContext* aPresContext);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -187,16 +187,17 @@ public:
                                     nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-                            
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD_(void) SetParent(nsIContent* aParent);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual void SetParent(nsIContent* aParent);
 
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify) {
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify)
+  {
     BeforeSetAttr(aNameSpaceID, aName, &aValue, aNotify);
 
     nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
@@ -205,14 +206,16 @@ public:
     AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
     return rv;
   }
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify) {
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify)
+  {
     // This will end up calling the other SetAttr().
     return nsGenericHTMLLeafFormElement::SetAttr(aNodeInfo, aValue, aNotify);
   }
 
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                       PRBool aNotify) {
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify)
+  {
     BeforeSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
 
     nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
@@ -223,7 +226,7 @@ public:
     return rv;
   }
 
-  NS_IMETHOD DoneCreatingElement();
+  virtual void DoneCreatingElement();
 
   // nsITextControlElement
   NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
@@ -1153,29 +1156,34 @@ nsHTMLInputElement::FireOnChange()
 NS_IMETHODIMP
 nsHTMLInputElement::Blur()
 {
-  return SetElementFocus(PR_FALSE);
+  SetElementFocus(PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::Focus()
 {
-  return SetElementFocus(PR_TRUE);
+  SetElementFocus(PR_TRUE);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
 
   // We can't be focus'd if we don't have a document
-  if (! mDocument)
-    return NS_OK;
+  if (!mDocument)
+    return;
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
                                            nsHTMLAtoms::disabled, disabled)) {
-    return NS_OK;
+    return;
   }
  
   // If the window is not active, do not allow the focus to bring the
@@ -1190,11 +1198,11 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(win));
     focusController->SetFocusedWindow(domWin);
     focusController->SetFocusedElement(this);
-    return NS_OK;
+
+    return;
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
   if (esm) {
@@ -1209,17 +1217,16 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     // Could call SelectAll(aPresContext) here to automatically
     // select text when we receive focus - only for text and password!
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
+
   // If we are disabled, we probably shouldn't have focus in the
   // first place, so allow it to be removed.
-  nsresult rv = NS_OK;
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
@@ -1230,14 +1237,9 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   nsCOMPtr<nsIEventStateManager> esm;
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
-  if (esm) {
-    if (!mDocument)
-      return NS_ERROR_NULL_POINTER;
-
-    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (esm && mDocument) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -1393,7 +1395,7 @@ nsHTMLInputElement::Click()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
@@ -1745,7 +1747,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP
+void
 nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
@@ -1758,10 +1760,8 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     WillRemoveFromRadioGroup();
   }
 
-  nsresult rv = nsGenericHTMLLeafFormElement::SetDocument(aDocument, aDeep,
-                                                          aCompileEventHandlers);
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsGenericHTMLLeafFormElement::SetDocument(aDocument, aDeep,
+                                            aCompileEventHandlers);
 
   if (mType == NS_FORM_INPUT_IMAGE &&
       documentChanging && aDocument && GetParent()) {
@@ -1778,7 +1778,7 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   // and the parser is still creating the element.
   if (mForm || mType != NS_FORM_INPUT_RADIO ||
       GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-    return NS_OK;
+    return;
   }
   
   // Add radio to document if we don't have a form already (if we do it's
@@ -1786,11 +1786,9 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   if (aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
     AddedToRadioGroup();
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsHTMLInputElement::SetParent(nsIContent* aParent)
 {
   nsGenericHTMLLeafFormElement::SetParent(aParent);
@@ -2388,8 +2386,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!filename.IsEmpty()) {
-        PRBool acceptsFiles = PR_FALSE;
-        aFormSubmission->AcceptsFiles(&acceptsFiles);
+        PRBool acceptsFiles = aFormSubmission->AcceptsFiles();
 
         if (acceptsFiles) {
           //
@@ -2544,7 +2541,7 @@ nsHTMLInputElement::SaveState()
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLInputElement::DoneCreatingElement()
 {
   SET_BOOLBIT(mBitField, BF_PARSER_CREATING, PR_FALSE);
@@ -2582,8 +2579,6 @@ nsHTMLInputElement::DoneCreatingElement()
   //
   if (!mForm && mType == NS_FORM_INPUT_RADIO)
     AddedToRadioGroup();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

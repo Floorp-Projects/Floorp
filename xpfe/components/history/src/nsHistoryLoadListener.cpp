@@ -109,7 +109,7 @@ nsHistoryLoadListener::OnStateChange(nsIWebProgress *aWebProgress,
     if (!doc) return NS_OK;
 
     nsCOMPtr<nsIURI> uri;
-    rv = doc->GetDocumentURL(getter_AddRefs(uri));
+    rv = doc->GetDocumentURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
         
     nsXPIDLCString urlString;

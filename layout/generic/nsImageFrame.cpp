@@ -1495,7 +1495,7 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       rv = ps->GetDocument(getter_AddRefs(doc));
       
       if (NS_SUCCEEDED(rv)) {
-        nsIURI *baseURI = doc ? doc->GetDocumentURL() : nsnull;
+        nsIURI *baseURI = doc ? doc->GetDocumentURI() : nsnull;
 
         rv = securityManager->CheckLoadURI(baseURI, aURI,
                                            nsIScriptSecurityManager::STANDARD);
@@ -1659,10 +1659,9 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
         }
 
         if (!inside && isServerMap) {
-          nsCOMPtr<nsIURI> baseURL;
-          mContent->GetBaseURL(getter_AddRefs(baseURL));
-          
-          if (baseURL) {
+          nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+
+          if (baseURI) {
             // Server side image maps use the href in a containing anchor
             // element to provide the basis for the destination url.
             nsAutoString src;
@@ -1676,7 +1675,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
               } 
               nsCOMPtr<nsIURI> uri;
               nsresult rv = NS_NewURI(getter_AddRefs(uri), src, charset.get(),
-                                      baseURL);
+                                      baseURI);
               NS_ENSURE_SUCCESS(rv, rv);
             
               // XXX if the mouse is over/clicked in the border/padding area
@@ -1701,7 +1700,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
           } 
           else 
           {
-            NS_WARNING("baseURL is null for imageFrame - ignoring mouse event");
+            NS_WARNING("baseURI is null for imageFrame - ignoring mouse event");
           }
         }
       }
@@ -1865,7 +1864,7 @@ nsImageFrame::SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
 {
   nsCOMPtr<nsIURI> baseURI;
   if (mContent) {
-    mContent->GetBaseURL(getter_AddRefs(baseURI));
+    baseURI = mContent->GetBaseURI();
   }
   nsCAutoString charset;
   GetDocumentCharacterSet(charset);

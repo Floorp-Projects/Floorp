@@ -70,7 +70,7 @@ public:
    *
    * @param aAcceptsFiles the boolean output
    */
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const = 0;
+  virtual PRBool AcceptsFiles() const = 0;
 
   /**
    * Call to perform the submission
@@ -83,9 +83,10 @@ public:
    *        loaded
    * @param aRequest (out param) the Request for the submission
    */
-  NS_IMETHOD SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                      nsIContent* aSource, nsIPresContext* aPresContext,
-                      nsIDocShell** aDocShell, nsIRequest** aRequest) = 0;
+  virtual nsresult SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
+                            nsIContent* aSource, nsIPresContext* aPresContext,
+                            nsIDocShell** aDocShell,
+                            nsIRequest** aRequest) = 0;
 
   /**
    * Submit a name/value pair
@@ -94,9 +95,9 @@ public:
    * @param aName the name of the parameter
    * @param aValue the value of the parameter
    */
-  NS_IMETHOD AddNameValuePair(nsIDOMHTMLElement* aSource,
-                              const nsAString& aName,
-                              const nsAString& aValue) = 0;
+  virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
+                                    const nsAString& aName,
+                                    const nsAString& aValue) = 0;
 
   /**
    * Submit a name/file pair
@@ -109,12 +110,12 @@ public:
    * @param aMoreFilesToCome true if another name/file pair with the same name
    *        will be sent soon
    */
-  NS_IMETHOD AddNameFilePair(nsIDOMHTMLElement* aSource,
-                             const nsAString& aName,
-                             const nsAString& aFilename,
-                             nsIInputStream* aStream,
-                             const nsACString& aContentType,
-                             PRBool aMoreFilesToCome) = 0;
+  virtual nsresult AddNameFilePair(nsIDOMHTMLElement* aSource,
+                               const nsAString& aName,
+                               const nsAString& aFilename,
+                               nsIInputStream* aStream,
+                               const nsACString& aContentType,
+                               PRBool aMoreFilesToCome) = 0;
 
 };
 

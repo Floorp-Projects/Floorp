@@ -48,7 +48,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsIRefreshURI.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
@@ -122,7 +122,7 @@ static const char kLoadAsData[] = "loadAsData";
 nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
-                     nsIURI* aURL,
+                     nsIURI* aURI,
                      nsISupports* aContainer,
                      nsIChannel* aChannel)
 {
@@ -137,7 +137,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   }
   
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
-  nsresult rv = it->Init(aDoc, aURL, aContainer, aChannel);
+  nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
   
   return CallQueryInterface(it, aResult);
@@ -147,8 +147,8 @@ nsXMLContentSink::nsXMLContentSink()
 {
 
   mDocument = nsnull;
-  mDocumentURL = nsnull;
-  mDocumentBaseURL = nsnull;
+  mDocumentURI = nsnull;
+  mDocumentBaseURI = nsnull;
   mParser = nsnull;
   mDocElement = nsnull;
   mText = nsnull;
@@ -175,11 +175,11 @@ nsXMLContentSink::~nsXMLContentSink()
 
 nsresult
 nsXMLContentSink::Init(nsIDocument* aDoc,
-                       nsIURI* aURL,
+                       nsIURI* aURI,
                        nsISupports* aContainer,
                        nsIChannel* aChannel)
 {
-  nsresult rv = nsContentSink::Init(aDoc, aURL, aContainer, aChannel);
+  nsresult rv = nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mDocShell) {
@@ -264,12 +264,12 @@ nsXMLContentSink::DidBuildModel()
       // documentElement?
       NS_ASSERTION(mDocument->IndexOf(mDocElement) != -1,
                    "mDocElement not in doc?");
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+
+      mozAutoDocUpdate(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
       mDocument->ContentInserted(nsnull, mDocElement,
                                  // XXXbz is this last arg relevant if
                                  // the container is null?
                                  mDocument->IndexOf(mDocElement));
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
 
     // Check if we want to prettyprint
@@ -600,7 +600,7 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 }
 
 // Create an XML parser and an XSL content sink and start parsing
-// the XSL stylesheet located at the given URL.
+// the XSL stylesheet located at the given URI.
 nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 {
@@ -619,7 +619,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_ERROR_FAILURE;
   }
 
-  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocumentURL);
+  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocumentURI);
 }
 
 nsresult
@@ -651,15 +651,15 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
       return NS_OK;
 
     nsCOMPtr<nsIURI> url;
-    rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
+    rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-    rv = secMan->CheckLoadURI(mDocumentURL, url,
+    rv = secMan->CheckLoadURI(mDocumentURI, url,
                               nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
-    rv = secMan->CheckSameOriginURI(mDocumentURL, url);
+    rv = secMan->CheckSameOriginURI(mDocumentURI, url);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     return LoadXSLStyleSheet(url);
@@ -699,9 +699,9 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       nsCOMPtr<nsIURI> baseURI;
       rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {
-        rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
+        rv = mDocument->SetBaseURI(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
-          mDocumentBaseURL = mDocument->GetBaseURL();
+          mDocumentBaseURI = mDocument->GetBaseURI();
         }
       }
     }
@@ -873,7 +873,7 @@ nsXMLContentSink::StartLayout()
     RefreshIfEnabled(shell->GetViewManager());
   }
 
-  if (mDocumentURL) {
+  if (mDocumentURI) {
     nsCAutoString ref;
 
     // Since all URI's that pass through here aren't URL's we can't
@@ -881,7 +881,7 @@ nsXMLContentSink::StartLayout()
     // finding the 'ref' part of the URI, we'll haveto revert to
     // string routines for finding the data past '#'
 
-    mDocumentURL->GetSpec(ref);
+    mDocumentURI->GetSpec(ref);
 
     nsReadingIterator<char> start, end;
 

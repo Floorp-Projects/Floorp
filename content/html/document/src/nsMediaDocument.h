@@ -51,15 +51,15 @@ public:
   nsMediaDocument();
   virtual ~nsMediaDocument();
 
-  virtual nsresult  Init();
+  virtual nsresult Init();
 
-  NS_IMETHOD StartDocumentLoad(const char*         aCommand,
-                               nsIChannel*         aChannel,
-                               nsILoadGroup*       aLoadGroup,
-                               nsISupports*        aContainer,
-                               nsIStreamListener** aDocListener,
-                               PRBool              aReset = PR_TRUE,
-                               nsIContentSink*     aSink = nsnull);
+  virtual nsresult StartDocumentLoad(const char*         aCommand,
+                                     nsIChannel*         aChannel,
+                                     nsILoadGroup*       aLoadGroup,
+                                     nsISupports*        aContainer,
+                                     nsIStreamListener** aDocListener,
+                                     PRBool              aReset = PR_TRUE,
+                                     nsIContentSink*     aSink = nsnull);
 
 protected:
   virtual nsresult CreateSyntheticDocument();

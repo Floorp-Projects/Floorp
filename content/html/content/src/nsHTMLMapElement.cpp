@@ -73,8 +73,8 @@ public:
   NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
                                     PRInt32 aModType,
                                     nsChangeHint& aHint) const;
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
 
 protected:
   GenericElementCollection* mAreas;
@@ -134,7 +134,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMapElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMETHODIMP 
+void
 nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                               PRBool aCompileEventHandlers)
 {
@@ -148,9 +148,8 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     }
   }
 
-  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                                           aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                             aCompileEventHandlers);
   
   if (documentChanging) {
     // Since we changed the document, gotta re-QI
@@ -160,8 +159,6 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       htmlDoc->AddImageMap(this);
     }
   }
-  
-  return NS_OK;
 }
 
 NS_IMETHODIMP

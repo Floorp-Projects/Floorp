@@ -64,7 +64,7 @@
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
-                     nsIURI* aURL,
+                     nsIURI* aURI,
                      nsISupports* aContainer)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -74,7 +74,7 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
   NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
-  nsresult rv = it->Init(aDoc, aURL, aContainer);
+  nsresult rv = it->Init(aDoc, aURI, aContainer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(it, aResult);
@@ -102,11 +102,11 @@ nsXBLContentSink::~nsXBLContentSink()
 
 nsresult
 nsXBLContentSink::Init(nsIDocument* aDoc,
-                       nsIURI* aURL,
+                       nsIURI* aURI,
                        nsISupports* aContainer)
 {
   nsresult rv;
-  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer, nsnull);
+  rv = nsXMLContentSink::Init(aDoc, aURI, aContainer, nsnull);
   return rv;
 }
 
@@ -263,7 +263,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString documentURI;
-  mDocumentURL->GetSpec(documentURI);
+  mDocumentURI->GetSpec(documentURI);
   
   rv = errorObject->Init(errorText.get(),
                          NS_ConvertUTF8toUCS2(documentURI).get(),
@@ -411,13 +411,13 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
 
       mDocument->GetBindingManager()->PutXBLDocumentInfo(mDocInfo);
 
-      nsIURI *url = mDocument->GetDocumentURL();
+      nsIURI *uri = mDocument->GetDocumentURI();
       
       PRBool isChrome = PR_FALSE;
       PRBool isRes = PR_FALSE;
 
-      url->SchemeIs("chrome", &isChrome);
-      url->SchemeIs("resource", &isRes);
+      uri->SchemeIs("chrome", &isChrome);
+      uri->SchemeIs("resource", &isRes);
       mIsChromeOrResource = isChrome || isRes;
       
       nsIXBLDocumentInfo* info = mDocInfo;
@@ -963,7 +963,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
           NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      rv = mCSSParser->ParseStyleAttribute(value, mDocumentURL,
+      rv = mCSSParser->ParseStyleAttribute(value, mDocumentURI,
                              getter_AddRefs(aElement->mInlineStyleRule));
 
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse style rule");

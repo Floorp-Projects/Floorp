@@ -5617,7 +5617,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       if (NS_SUCCEEDED(rv) && doc)
       {
         // Create an absolute URL
-        rv = NS_MakeAbsoluteURI(absUrl, aURL, doc->GetBaseURL());
+        rv = NS_MakeAbsoluteURI(absUrl, aURL, doc->GetBaseURI());
       }
     }
   }
@@ -5737,13 +5737,13 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsIURI *sourceURL = doc->GetDocumentURL();
+  nsIURI *sourceURL = doc->GetDocumentURI();
   if (!sourceURL)
     return NS_ERROR_FAILURE;
 
   // Create an absolute URL for the target in case the target is relative
   nsCOMPtr<nsIURI> targetURL;
-  rv = NS_NewURI(getter_AddRefs(targetURL), aURL, doc->GetBaseURL());
+  rv = NS_NewURI(getter_AddRefs(targetURL), aURL, doc->GetBaseURI());
 
   if (!targetURL)
     return NS_ERROR_FAILURE;
@@ -5911,7 +5911,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
       // to reject requests without referrer set, see bug 157796
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
       if (httpChannel && doc)
-        httpChannel->SetReferrer(doc->GetBaseURL());
+        httpChannel->SetReferrer(doc->GetBaseURI());
 
       rv = channel->AsyncOpen(listener, nsnull);
       if (NS_SUCCEEDED(rv))

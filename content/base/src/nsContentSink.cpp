@@ -150,21 +150,21 @@ nsContentSink::~nsContentSink()
 
 nsresult
 nsContentSink::Init(nsIDocument* aDoc,
-                    nsIURI* aURL,
+                    nsIURI* aURI,
                     nsISupports* aContainer,
                     nsIChannel* aChannel)
 {
   NS_PRECONDITION(aDoc, "null ptr");
-  NS_PRECONDITION(aURL, "null ptr");
+  NS_PRECONDITION(aURI, "null ptr");
 
-  if (!aDoc || !aURL) {
+  if (!aDoc || !aURI) {
     return NS_ERROR_NULL_POINTER;
   }
 
   mDocument = aDoc;
 
-  mDocumentURL = aURL;
-  mDocumentBaseURL = aURL;
+  mDocumentURI = aURI;
+  mDocumentBaseURI = aURI;
   mDocShell = do_QueryInterface(aContainer);
 
   // use this to avoid a circular reference sink->document->scriptloader->sink
@@ -404,11 +404,11 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
   }
   else if (aHeader == nsHTMLAtoms::contentLocation) {
     nsCOMPtr<nsIURI> newBase;
-    rv = NS_NewURI(getter_AddRefs(newBase), aValue, nsnull, mDocumentBaseURL);
+    rv = NS_NewURI(getter_AddRefs(newBase), aValue, nsnull, mDocumentBaseURI);
     if (NS_SUCCEEDED(rv)) {
-      rv = mDocument->SetBaseURL(newBase); // does security check
+      rv = mDocument->SetBaseURI(newBase); // does security check
       if (NS_SUCCEEDED(rv)) {
-        mDocumentBaseURL = mDocument->GetBaseURL();
+        mDocumentBaseURI = mDocument->GetBaseURI();
       }
     }
   }
@@ -669,10 +669,10 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   }
 
   nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
+  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURI);
   
   if (NS_FAILED(rv)) {
-    // The URL is bad, move along, don't propagate the error (for now)
+    // The URI is bad, move along, don't propagate the error (for now)
     return NS_OK;
   }
 
@@ -760,9 +760,9 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
-              mDocumentBaseURL);
+              mDocumentBaseURI);
     if (uri) {
-      prefetchService->PrefetchURI(uri, mDocumentURL, aExplicit);
+      prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
     }
   }
 }
@@ -855,7 +855,7 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
         rv = NS_ERROR_FAILURE;
       }
 
-      // If UTF-8 URL failed then try to assume the string as a
+      // If UTF-8 URI failed then try to assume the string as a
       // document's charset.
 
       if (NS_FAILED(rv)) {

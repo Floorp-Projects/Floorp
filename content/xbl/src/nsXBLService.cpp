@@ -392,7 +392,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
     // Remove ourselves from the set of pending docs.
     nsIBindingManager *bindingManager = doc->GetBindingManager();
-    nsIURI* documentURI = mBindingDocument->GetDocumentURL();
+    nsIURI* documentURI = mBindingDocument->GetDocumentURI();
     bindingManager->RemoveLoadingDocListener(documentURI);
 
     if (!mBindingDocument->GetRootContent()) {
@@ -563,7 +563,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   }
 
   // Security check - remote pages can't load local bindings, except from chrome
-  nsIURI *docURI = document->GetDocumentURL();
+  nsIURI *docURI = document->GetDocumentURI();
   PRBool isChrome = PR_FALSE;
   rv = docURI->SchemeIs("chrome", &isChrome);
 
@@ -982,8 +982,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
         nsCOMPtr<nsIURI> bindingURI;
         nsresult rv =
           NS_NewURI(getter_AddRefs(bindingURI), value,
-                    PromiseFlatCString(doc->GetDocumentCharacterSet()).get(),
-                    doc->GetBaseURL());
+                    doc->GetDocumentCharacterSet().get(),
+                    doc->GetBaseURI());
         NS_ENSURE_SUCCESS(rv, rv);
         
         if (NS_FAILED(GetBindingInternal(aBoundElement, bindingURI, aPeekOnly,

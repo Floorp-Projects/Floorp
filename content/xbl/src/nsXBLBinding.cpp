@@ -339,7 +339,8 @@ struct ContentListData : public EnumData {
 
 
 
-PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PRBool)
+BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
 {
   ContentListData* data = (ContentListData*)aClosure;
   nsIBindingManager* bm = data->mBindingManager;
@@ -423,7 +424,8 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
   return PR_TRUE;
 }
 
-PRBool PR_CALLBACK RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PRBool)
+RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
 {
   ContentListData* data = (ContentListData*)aClosure;
   nsIBindingManager* bm = data->mBindingManager;
@@ -475,7 +477,8 @@ PRBool PR_CALLBACK RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aCl
   return PR_TRUE;
 }
 
-PRBool PR_CALLBACK ChangeDocumentForDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PRBool)
+ChangeDocumentForDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsVoidArray* arr = NS_STATIC_CAST(nsVoidArray*, aData);
   PRInt32 count = arr->Count();
@@ -1369,7 +1372,7 @@ nsXBLBinding::AllowScripts()
   return result;
 }
 
-static PRBool PR_CALLBACK
+PR_STATIC_CALLBACK(PRBool)
 DeleteVoidArray(nsHashKey* aKey, void* aData, void* aClosure)
 {
   delete NS_STATIC_CAST(nsVoidArray*, aData);

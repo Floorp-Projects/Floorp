@@ -3100,7 +3100,7 @@ nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aRes
           nsCOMPtr<nsIDocument> doc = content->GetDocument();
           nsCOMPtr<nsIURI> url;
           rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(token),
-                         nsnull, doc->GetDocumentURL());
+                         nsnull, doc->GetDocumentURI());
 
           nsCOMPtr<nsICSSStyleSheet> sheet;
           // The CSSLoader handles all the prototype cache stuff for

@@ -67,10 +67,10 @@ public:
 
   // nsIContent
   virtual nsIAtom *Tag() const;
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
 
   // nsITextContent
@@ -119,8 +119,8 @@ nsXMLCDATASection::Tag() const
   return nsLayoutAtoms::textTagName;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsXMLCDATASection::IsContentOfType(PRUint32 aFlags)
+PRBool
+nsXMLCDATASection::IsContentOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~eTEXT);
 }
@@ -180,7 +180,7 @@ nsXMLCDATASection::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(mDocument, "bad content");
@@ -195,12 +195,10 @@ nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
   fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
 
   fputs(">\n", out);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXMLCDATASection::DumpContent(FILE* out, PRInt32 aIndent,
                                PRBool aDumpAll) const {
-  return NS_OK;
 }
 #endif

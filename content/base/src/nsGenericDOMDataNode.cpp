@@ -278,16 +278,16 @@ nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
 nsresult
 nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 {
-  nsCOMPtr<nsIURI> baseURI;
-  nsresult rv = GetBaseURL(getter_AddRefs(baseURI));
-
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsCAutoString spec;
-  if (NS_SUCCEEDED(rv) && baseURI) {
+
+  if (baseURI) {
     baseURI->GetSpec(spec);
   }
+
   CopyUTF8toUTF16(spec, aURI);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -524,8 +524,8 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
 
 //----------------------------------------------------------------------
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
+nsresult
+nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager **aResult)
 {
   nsCOMPtr<nsIEventListenerManager> listener_manager;
   LookupListenerManager(getter_AddRefs(listener_manager));
@@ -561,11 +561,6 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::DoneCreatingElement()
-{
-  return NS_OK;
-}
 //----------------------------------------------------------------------
 
 // Implementation of nsIContent
@@ -619,7 +614,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 }
 #endif
 
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                   PRBool aCompileEventHandlers)
 {
@@ -628,11 +623,9 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   if (mDocument && mText.IsBidi()) {
     mDocument->SetBidiEnabled(PR_TRUE);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsGenericDOMDataNode::SetParent(nsIContent* aParent)
 {
   PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
@@ -642,66 +635,65 @@ nsGenericDOMDataNode::SetParent(nsIContent* aParent)
   mParentPtrBits = new_bits;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsGenericDOMDataNode::IsNativeAnonymous() const
 {
   nsIContent* parent = GetParent();
   return parent && parent->IsNativeAnonymous();
 }
 
-NS_IMETHODIMP_(void)
+void
 nsGenericDOMDataNode::SetNativeAnonymous(PRBool aAnonymous)
 {
   // XXX Need to fix this to do something - bug 165110
 }
 
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::GetNameSpaceID(PRInt32* aID) const
 {
   *aID = kNameSpaceID_None;
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIAtom*)
+nsIAtom *
 nsGenericDOMDataNode::GetIDAttributeName() const
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(nsIAtom*)
+nsIAtom *
 nsGenericDOMDataNode::GetClassAttributeName() const
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
-nsGenericDOMDataNode::GetExistingAttrNameFromQName(const nsAString& aStr)
+already_AddRefed<nsINodeInfo>
+nsGenericDOMDataNode::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {
   return nsnull;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
                               const nsAString& aValue, PRBool aNotify)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::SetAttr(nsINodeInfo *aNodeInfo,
                               const nsAString& aValue, PRBool aNotify)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
                                 PRBool aNotify)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
                               nsAString& aResult) const
 {
@@ -710,7 +702,7 @@ nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
                               nsIAtom** aPrefix,
                               nsAString& aResult) const
@@ -721,13 +713,13 @@ nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsGenericDOMDataNode::HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const
 {
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
                                     nsIAtom** aName, nsIAtom** aPrefix) const
 {
@@ -738,13 +730,13 @@ nsGenericDOMDataNode::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-NS_IMETHODIMP_(PRUint32)
+PRUint32
 nsGenericDOMDataNode::GetAttrCount() const
 {
   return 0;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
                                      nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                      PRUint32 aFlags,
@@ -835,70 +827,64 @@ nsGenericDOMDataNode::ContentID() const
   return 0;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::SetContentID(PRUint32 aID)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsINodeInfo *)
+nsINodeInfo *
 nsGenericDOMDataNode::GetNodeInfo() const
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsGenericDOMDataNode::CanContainChildren() const
 {
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(PRUint32)
+PRUint32
 nsGenericDOMDataNode::GetChildCount() const
 {
   return 0;
 }
 
-NS_IMETHODIMP_(nsIContent *)
+nsIContent *
 nsGenericDOMDataNode::GetChildAt(PRUint32 aIndex) const
 {
   return nsnull;
 }
 
-NS_IMETHODIMP_(PRInt32)
+PRInt32
 nsGenericDOMDataNode::IndexOf(nsIContent* aPossibleChild) const
 {
   return -1;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                     PRBool aNotify, PRBool aDeepSetDocument)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                      PRBool aNotify, PRBool aDeepSetDocument)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                     PRBool aDeepSetDocument)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 {
   // lazy allocation of range list
@@ -950,7 +936,7 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 }
 
 
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
 {
   RangeListMapEntry *entry = nsnull;
@@ -973,12 +959,8 @@ nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
 
         SetHasRangeList(PR_FALSE);
       }
-
-      return NS_OK;
     }
   }
-
-  return NS_ERROR_FAILURE;
 }
 
 const nsVoidArray *
@@ -987,68 +969,55 @@ nsGenericDOMDataNode::GetRangeList() const
   return LookupRangeList();
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::SetFocus(nsIPresContext* aPresContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericDOMDataNode::RemoveFocus(nsIPresContext* aPresContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIContent*)
+nsIContent *
 nsGenericDOMDataNode::GetBindingParent() const
 {
   nsIContent* parent = GetParent();
   return parent ? parent->GetBindingParent() : nsnull;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGenericDOMDataNode::SetBindingParent(nsIContent* aParent)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsGenericDOMDataNode::IsContentOfType(PRUint32 aFlags)
+PRBool
+nsGenericDOMDataNode::IsContentOfType(PRUint32 aFlags) const
 {
   return PR_FALSE;
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::List(FILE* out, PRInt32 aIndent) const
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGenericDOMDataNode::DumpContent(FILE* out, PRInt32 aIndent,
                                   PRBool aDumpAll) const 
 {
-  return NS_OK;
 }
 #endif
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetBaseURL(nsIURI** aURI) const
+already_AddRefed<nsIURI>
+nsGenericDOMDataNode::GetBaseURI() const
 {
   // DOM Data Node inherits the base from its parent element/document
   nsIContent* parent_weak = GetParent();
   if (parent_weak) {
-    return parent_weak->GetBaseURL(aURI);
+    return parent_weak->GetBaseURI();
   }
 
+  nsIURI *uri;
   if (mDocument) {
-    NS_IF_ADDREF(*aURI = mDocument->GetBaseURL());
+    NS_IF_ADDREF(uri = mDocument->GetBaseURI());
   } else {
-    *aURI = nsnull;
+    uri = nsnull;
   }
 
-  return NS_OK;
+  return uri;
 }
 
 //----------------------------------------------------------------------

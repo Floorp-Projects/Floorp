@@ -255,6 +255,7 @@ NS_ScriptErrorReporter(JSContext *cx,
     }
   }
 
+#ifdef DEBUG
   // Print it to stderr as well, for the benefit of those invoking
   // mozilla with -console.
   nsAutoString error;
@@ -274,7 +275,6 @@ NS_ScriptErrorReporter(JSContext *cx,
   if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
     error.Append(NS_LITERAL_STRING("Error was suppressed by event handler\n"));
 
-#ifdef DEBUG
   char *errorStr = ToNewCString(error);
   if (errorStr) {
     fprintf(stderr, "%s\n", errorStr);

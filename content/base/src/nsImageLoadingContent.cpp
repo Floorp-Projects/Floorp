@@ -425,7 +425,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
 
-  nsIURI *documentURI = doc->GetDocumentURL();
+  nsIURI *documentURI = doc->GetDocumentURI();
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
@@ -573,14 +573,10 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
   NS_PRECONDITION(aDocument, "Must have a document");
   NS_PRECONDITION(aURI, "Null out param");
 
-  nsresult rv;
-  
   // (1) Get the base URI
-  nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   NS_ASSERTION(thisContent, "An image loading content must be an nsIContent");
-  rv = thisContent->GetBaseURL(getter_AddRefs(baseURL));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> baseURL = thisContent->GetBaseURI();
 
   // (2) Get the charset
   const nsACString &charset = aDocument->GetDocumentCharacterSet();

@@ -36,7 +36,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIAttributeContent.h"
 #include "nsGenericElement.h"
 #include "nsIDocument.h"
 #include "nsIDocument.h"
@@ -67,135 +66,120 @@
 // XXX share all id's in this dir
 
 
-class nsAttributeContent : public nsITextContent, public nsIAttributeContent
+class nsAttributeContent : public nsITextContent
 {
 public:
-  friend nsresult NS_NewAttributeContent(nsAttributeContent** aNewFrame);
-
-  nsAttributeContent();
+  nsAttributeContent(nsIContent* aContent, PRInt32 aNameSpaceID,
+                     nsIAtom* aAttrName);
   virtual ~nsAttributeContent();
-
-  NS_IMETHOD Init(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttrName);
 
   // nsISupports
   NS_DECL_ISUPPORTS
 
   // Implementation for nsIContent
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const { return PR_TRUE; }
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) { }
+  virtual PRBool IsNativeAnonymous() const { return PR_TRUE; }
+  virtual void SetNativeAnonymous(PRBool aAnonymous) { }
 
-  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const
+  virtual void GetNameSpaceID(PRInt32* aID) const
   {
     *aID = kNameSpaceID_None;
-    return NS_OK;
   }
 
-  nsIAtom *Tag() const
+  virtual nsIAtom *Tag() const
   {
     return nsLayoutAtoms::textTagName;
   }
 
-  NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const
+  virtual nsINodeInfo *GetNodeInfo() const
   {
     return nsnull;
   }
 
-  NS_IMETHOD_(nsIAtom *) GetIDAttributeName() const
+  virtual nsIAtom *GetIDAttributeName() const
   {
     return nsnull;
   }
   
-  NS_IMETHOD_(nsIAtom *) GetClassAttributeName() const
+  virtual nsIAtom * GetClassAttributeName() const
   {
     return nsnull;
   }
   
-  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr)
+  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const
   {
     return nsnull; 
   }
 
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) { return NS_OK; }
-
-  NS_IMETHOD_(nsIContent*) GetBindingParent() const {
+  virtual nsIContent *GetBindingParent() const {
     return nsnull;
   }
 
-  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
+  virtual nsresult SetBindingParent(nsIContent* aParent) {
     return NS_OK;
   }
 
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) {
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const {
     return !(aFlags & ~eTEXT);
   }
 
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager **aResult) {
+  virtual nsresult GetListenerManager(nsIEventListenerManager **aResult) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_IMETHOD GetBaseURL(nsIURI** aURI) const;
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
   
-  NS_IMETHOD DoneCreatingElement() {
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAString& aValue,
-                     PRBool aNotify) {  return NS_OK; }
-  NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify) {  return NS_OK; }
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom** aPrefix, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAString& aValue,
+                           PRBool aNotify) {  return NS_OK; }
+  virtual nsresult SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify) {  return NS_OK; }
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom** aPrefix, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
     return PR_FALSE;
   }
-  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID, nsIAtom** aName, nsIAtom** aPrefix) const {
+  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                 nsIAtom** aName, nsIAtom** aPrefix) const {
     aName = nsnull;
     aPrefix = nsnull;
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  NS_IMETHOD_(PRUint32) GetAttrCount() const { return 0; }
+  virtual PRUint32 GetAttrCount() const { return 0; }
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {  return NS_OK;  }
+  void List(FILE* out, PRInt32 aIndent) const { }
+  void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const { }
 #endif
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
-                          nsEvent* aEvent,
-                          nsIDOMEvent** aDOMEvent,
-                          PRUint32 aFlags,
-                          nsEventStatus* aEventStatus);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
   virtual PRUint32 ContentID() const {
     NS_ERROR("nsAttributeContent::ContentID() not implemented!");
     return 0;
   }
 
-  NS_IMETHOD SetContentID(PRUint32 aID) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
-  NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
+  virtual nsresult RangeAdd(nsIDOMRange* aRange);
+  virtual void RangeRemove(nsIDOMRange* aRange);
   const nsVoidArray * GetRangeList() const;
 
   // Implementation for nsIContent
-  NS_IMETHOD_(PRBool) CanContainChildren() const { return PR_FALSE; }
+  virtual PRBool CanContainChildren() const { return PR_FALSE; }
 
-  NS_IMETHOD_(PRUint32) GetChildCount() const { return 0; }
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const { return nsnull; }
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const { return -1; }
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument) { return NS_OK; }
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument) { return NS_OK; }
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument) { return NS_OK; }
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify) { return NS_OK; }
+  virtual PRUint32 GetChildCount() const { return 0; }
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const { return nsnull; }
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const { return -1; }
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                                 PRBool aDeepSetDocument) { return NS_OK; }
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                                  PRBool aDeepSetDocument) { return NS_OK; }
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument) { return NS_OK; }
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify) { return NS_OK; }
   NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn){ return NS_OK; }
- 
+
   ///////////////////
   // Implementation for nsITextContent
   NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);
@@ -239,46 +223,34 @@ public:
 
 
 nsresult
-NS_NewAttributeContent(nsIContent** aContent)
+NS_NewAttributeContent(nsIContent* aContent, PRInt32 aNameSpaceID,
+                       nsIAtom* aAttrName, nsIContent** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aContent);
+  NS_ENSURE_TRUE(aContent && aAttrName && aResult, NS_ERROR_ILLEGAL_VALUE);
 
-  nsAttributeContent* it = new nsAttributeContent();
-  if (!it) {
+  *aResult = new nsAttributeContent(aContent, aNameSpaceID, aAttrName);
+  if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return CallQueryInterface(it, aContent);
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
 
-nsAttributeContent::nsAttributeContent()
-  : mText()
+nsAttributeContent::nsAttributeContent(nsIContent* aContent,
+                                       PRInt32 aNameSpaceID,
+                                       nsIAtom* aAttrName)
+  : mContent(aContent), mNameSpaceID(aNameSpaceID), mAttrName(aAttrName)
 {
-  mContent  = nsnull;
 }
 
 //----------------------------------------------------------------------
 nsAttributeContent::~nsAttributeContent()
 {
 }
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsAttributeContent::Init(nsIContent* aContent, PRInt32 aNameSpaceID,
-                         nsIAtom* aAttrName)
-{
-  NS_ENSURE_TRUE(aAttrName && aContent, NS_ERROR_NULL_POINTER);
-
-  mContent = aContent;
-
-  mNameSpaceID = aNameSpaceID;
-  mAttrName    = aAttrName;
-  return NS_OK;
-}
-
-
 
 /**
  * @param aIID The name of the class implementing the method
@@ -290,7 +262,6 @@ nsAttributeContent::Init(nsIContent* aContent, PRInt32 aNameSpaceID,
 NS_INTERFACE_MAP_BEGIN(nsAttributeContent)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsITextContent)
-  NS_INTERFACE_MAP_ENTRY(nsIAttributeContent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
@@ -329,10 +300,9 @@ nsAttributeContent::RangeAdd(nsIDOMRange* aRange)
 }
 
 
-nsresult 
+void
 nsAttributeContent::RangeRemove(nsIDOMRange* aRange)
 {
-  return NS_ERROR_FAILURE;
 }
 
 
@@ -342,20 +312,23 @@ nsAttributeContent::GetRangeList() const
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsAttributeContent::GetBaseURL(nsIURI** aURI) const
+already_AddRefed<nsIURI>
+nsAttributeContent::GetBaseURI() const
 {
   if (GetParent()) {
-    return GetParent()->GetBaseURL(aURI);
+    return GetParent()->GetBaseURI();
   }
+
+  nsIURI *uri;
 
   if (mDocument) {
-    NS_IF_ADDREF(*aURI = mDocument->GetBaseURL());
+    uri = mDocument->GetBaseURI();
+    NS_IF_ADDREF(uri);
   } else {
-    *aURI = nsnull;
+    uri = nsnull;
   }
 
-  return NS_OK;
+  return uri;
 }
 
 
@@ -511,22 +484,17 @@ nsAttributeContent::IsOnlyWhitespace(PRBool* aResult)
 NS_IMETHODIMP
 nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
 {
-  nsresult result = NS_OK;
-  nsAttributeContent* it;
-  NS_NEWXPCOM(it, nsAttributeContent);
-  if (nsnull == it) {
+  nsAttributeContent* it =
+    new nsAttributeContent(mContent, mNameSpaceID, mAttrName);
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  result = CallQueryInterface(it, aReturn);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  result = it->Init(mContent, mNameSpaceID, mAttrName);
-  if (NS_FAILED(result) || !aCloneText) {
-    return result;
-  }
+
   it->mText = mText;
-  return result;
+
+  NS_ADDREF(*aReturn = it);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

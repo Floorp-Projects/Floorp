@@ -81,7 +81,7 @@ public:
   virtual ~nsGenericHTMLElement();
 
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS
-  nsresult Init(nsINodeInfo *aNodeInfo);
+  virtual nsresult Init(nsINodeInfo *aNodeInfo);
 #endif
 
   /** Call on shutdown to release globals */
@@ -102,9 +102,8 @@ public:
                              void **aInstancePtr);
 
   // From nsGenericElement
-  NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
-                        nsGenericHTMLElement* aDest,
-                        PRBool aDeep);
+  virtual nsresult CopyInnerTo(nsIContent* aSrcContent,
+                               nsGenericHTMLElement* aDest, PRBool aDeep);
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);
@@ -123,33 +122,33 @@ public:
                                  nsIDOMNodeList** aReturn);
 
   // Implementation for nsIDOMHTMLElement
-  nsresult GetId(nsAString& aId);
-  nsresult SetId(const nsAString& aId);
-  nsresult GetTitle(nsAString& aTitle);
-  nsresult SetTitle(const nsAString& aTitle);
-  nsresult GetLang(nsAString& aLang);
-  nsresult SetLang(const nsAString& aLang);
-  nsresult GetDir(nsAString& aDir);
-  nsresult SetDir(const nsAString& aDir);
-  nsresult GetClassName(nsAString& aClassName);
-  nsresult SetClassName(const nsAString& aClassName);
-  nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  nsresult GetOffsetTop(PRInt32* aOffsetTop);
-  nsresult GetOffsetLeft(PRInt32* aOffsetLeft);
-  nsresult GetOffsetWidth(PRInt32* aOffsetWidth);
-  nsresult GetOffsetHeight(PRInt32* aOffsetHeight);
-  nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
-  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
-  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
-  nsresult GetScrollTop(PRInt32* aScrollTop);
-  nsresult SetScrollTop(PRInt32 aScrollTop);
-  nsresult GetScrollLeft(PRInt32* aScrollLeft);
-  nsresult SetScrollLeft(PRInt32 aScrollLeft);
-  nsresult GetScrollHeight(PRInt32* aScrollHeight);
-  nsresult GetScrollWidth(PRInt32* aScrollWidth);
-  nsresult GetClientHeight(PRInt32* aClientHeight);
-  nsresult GetClientWidth(PRInt32* aClientWidth);
-  nsresult ScrollIntoView(PRBool aTop);
+  NS_IMETHOD GetId(nsAString& aId);
+  NS_IMETHOD SetId(const nsAString& aId);
+  NS_IMETHOD GetTitle(nsAString& aTitle);
+  NS_IMETHOD SetTitle(const nsAString& aTitle);
+  NS_IMETHOD GetLang(nsAString& aLang);
+  NS_IMETHOD SetLang(const nsAString& aLang);
+  NS_IMETHOD GetDir(nsAString& aDir);
+  NS_IMETHOD SetDir(const nsAString& aDir);
+  NS_IMETHOD GetClassName(nsAString& aClassName);
+  NS_IMETHOD SetClassName(const nsAString& aClassName);
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop);
+  NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft);
+  NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth);
+  NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight);
+  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent);
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  NS_IMETHOD GetScrollTop(PRInt32* aScrollTop);
+  NS_IMETHOD SetScrollTop(PRInt32 aScrollTop);
+  NS_IMETHOD GetScrollLeft(PRInt32* aScrollLeft);
+  NS_IMETHOD SetScrollLeft(PRInt32 aScrollLeft);
+  NS_IMETHOD GetScrollHeight(PRInt32* aScrollHeight);
+  NS_IMETHOD GetScrollWidth(PRInt32* aScrollWidth);
+  NS_IMETHOD GetClientHeight(PRInt32* aClientHeight);
+  NS_IMETHOD GetClientWidth(PRInt32* aClientWidth);
+  NS_IMETHOD ScrollIntoView(PRBool aTop);
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.
@@ -171,33 +170,29 @@ public:
   static const nsSize GetClientAreaSize(nsIFrame *aFrame);
 
   // Implementation for nsIContent
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
-  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue,
-                          PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsAString& aResult) const;
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom** aPrefix, nsAString& aResult) const;
-  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                       PRBool aNotify);
-  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
-                           PRInt32* aNameSpaceID,
-                           nsIAtom** aName,
-                           nsIAtom** aPrefix) const;
-  NS_IMETHOD_(PRUint32) GetAttrCount() const;
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual void GetNameSpaceID(PRInt32* aID) const;
+  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsAString& aResult) const;
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom** aPrefix, nsAString& aResult) const;
+  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             PRBool aNotify);
+  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                 nsIAtom** aName, nsIAtom** aPrefix) const;
+  virtual PRUint32 GetAttrCount() const;
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   /**
    * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
@@ -219,13 +214,13 @@ public:
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
   NS_IMETHOD GetID(nsIAtom** aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
-  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
-  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
+  virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom *GetClassAttributeName() const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
-  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
+  already_AddRefed<nsIURI> GetBaseURI() const;
   NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   //----------------------------------------
@@ -655,7 +650,7 @@ public:
    * @param aDocument the document
    * @param aResult the base URL
    */
-  static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
+  static nsresult GetBaseURI(const nsHTMLValue& aBaseHref,
                              nsIDocument* aDocument,
                              nsIURI** aResult);
 
@@ -755,7 +750,7 @@ protected:
    * methods where you want to catch what occurs on your element.
    * @param aDoFocus true to focus, false to blur
    */
-  nsresult SetElementFocus(PRBool aDoFocus);
+  void SetElementFocus(PRBool aDoFocus);
   /**
    * Register or unregister an access key to this element based on the
    * accesskey attribute.
@@ -819,31 +814,31 @@ public:
   NS_IMETHOD Compact() {
     return NS_OK;
   }
-  NS_IMETHOD_(PRBool) CanContainChildren() const {
+  virtual PRBool CanContainChildren() const {
     return PR_FALSE;
   }
-  NS_IMETHOD_(PRUint32) GetChildCount() const {
+  virtual PRUint32 GetChildCount() const {
     return 0;
   }
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const {
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const {
     return nsnull;
   }
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const {
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const {
     return -1;
   }
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument) {
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument) {
     return NS_OK;
   }
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument) {
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument) {
     return NS_OK;
   }
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument) {
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument) {
     return NS_OK;
   }
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify) {
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify) {
     return NS_OK;
   }
 };
@@ -890,10 +885,10 @@ public:
 
   // Remainder of nsIHTMLContent (and nsIContent)
   NS_IMETHOD Compact();
-  NS_IMETHOD_(PRBool) CanContainChildren() const;
-  NS_IMETHOD_(PRUint32) GetChildCount() const;
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
+  virtual PRBool CanContainChildren() const;
+  virtual PRUint32 GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
 
   // Child list modification hooks
   virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
@@ -947,7 +942,7 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
@@ -957,20 +952,18 @@ public:
   NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
 
   // nsIContent
-  NS_IMETHOD_(void) SetParent(nsIContent *aParent);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
+  virtual void SetParent(nsIContent *aParent);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
 
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
 
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
 
-
-  NS_METHOD SetAttribute(const nsAString& aName,
-                         const nsAString& aValue)
+  NS_IMETHOD SetAttribute(const nsAString& aName,
+                          const nsAString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
@@ -994,7 +987,7 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
@@ -1004,20 +997,19 @@ public:
   NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
 
   // nsIContent
-  NS_IMETHOD_(void) SetParent(nsIContent *aParent);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
+  virtual void SetParent(nsIContent *aParent);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
 
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
 
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD DoneCreatingElement();
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual void DoneCreatingElement();
 
-  NS_METHOD SetAttribute(const nsAString& aName,
-                         const nsAString& aValue)
+  NS_IMETHOD SetAttribute(const nsAString& aName,
+                          const nsAString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }

@@ -362,7 +362,7 @@ nsImageBoxFrame::GetImageSource()
   if (mUseSrcAttr) {
     nsCOMPtr<nsIURI> baseURI;
     if (mContent) {
-      mContent->GetBaseURL(getter_AddRefs(baseURI));
+      baseURI = mContent->GetBaseURI();
     }
     // XXX origin charset needed
     NS_NewURI(getter_AddRefs(mURI), src, nsnull, baseURI);
@@ -459,7 +459,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   if (mContent) {
     doc = mContent->GetDocument();
     if (doc) {
-      documentURI = doc->GetDocumentURL();
+      documentURI = doc->GetDocumentURI();
     }
   }
 

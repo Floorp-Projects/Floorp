@@ -87,22 +87,21 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual void SetFocus(nsIPresContext* aPresContext);
+  virtual void RemoveFocus(nsIPresContext* aPresContext);
 
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                       PRBool aNotify);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
 protected:
   // The cached visited state
@@ -216,7 +215,7 @@ nsHTMLAreaElement::StringToAttribute(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent,
                                   nsIDOMEvent** aDOMEvent,
@@ -227,10 +226,12 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  if (!aPresContext)
+    return;
+
   nsCOMPtr<nsIEventStateManager> esm;
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
   if (esm) {
@@ -252,22 +253,22 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
       }
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  nsIEventStateManager* esm;
-  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+  if (!aPresContext)
+    return;
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+  if (esm) {
     esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-    NS_RELEASE(esm);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
@@ -278,18 +279,15 @@ nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult rv = nsGenericHTMLElement::SetDocument(aDocument, aDeep,
-                                                  aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   // Register the access key for the new document.
   if (documentChanging && mDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
-
-  return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLAreaElement::SetAttr(nsINodeInfo* aNodeInfo,
                            const nsAString& aValue,
                            PRBool aNotify)
@@ -297,8 +295,7 @@ nsHTMLAreaElement::SetAttr(nsINodeInfo* aNodeInfo,
   return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-
-NS_IMETHODIMP
+nsresult
 nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            const nsAString& aValue,
                            PRBool aNotify)
@@ -322,7 +319,7 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLAreaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify)
 {

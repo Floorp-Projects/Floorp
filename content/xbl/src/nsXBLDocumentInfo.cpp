@@ -365,7 +365,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
     mScriptAccess(PR_TRUE),
     mBindingTable(nsnull)
 {
-  nsIURI* uri = aDocument->GetDocumentURL();
+  nsIURI* uri = aDocument->GetDocumentURI();
   if (IsChromeOrResourceURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
     nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));

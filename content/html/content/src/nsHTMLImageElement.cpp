@@ -127,28 +127,29 @@ public:
                                     nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
 
   // XXXbz What about UnsetAttr?  We don't seem to unload images when
   // that happens...
 
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);  
-  NS_IMETHOD_(void) SetParent(nsIContent* aParent);  
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);  
+  virtual void SetParent(nsIContent* aParent);  
 
 protected:
   void GetImageFrame(nsIImageFrame** aImageFrame);
-  nsresult GetXY(PRInt32* aX, PRInt32* aY);
-  nsresult GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight);
+  nsPoint GetXY();
+  nsSize GetWidthHeight();
 };
 
 nsresult
@@ -301,25 +302,19 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   return NS_OK;
 }
 
-nsresult
-nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
+nsPoint
+nsHTMLImageElement::GetXY()
 {
-  if (aX) {
-    *aX = 0;
-  }
-
-  if (aY) {
-    *aY = 0;
-  }
+  nsPoint point(0, 0);
 
   if (!mDocument) {
-    return NS_OK;
+    return point;
   }
 
   // Get Presentation shell 0
   nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) {
-    return NS_OK;
+    return point;
   }
 
   // Get the Presentation Context from the Shell
@@ -327,7 +322,7 @@ nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
   presShell->GetPresContext(getter_AddRefs(context));
 
   if (!context) {
-    return NS_OK;
+    return point;
   }
 
   // Flush all pending notifications so that our frames are uptodate
@@ -338,52 +333,47 @@ nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
   presShell->GetPrimaryFrameFor(this, &frame);
 
   if (!frame) {
-    return NS_OK;
+    return point;
   }
 
   nsPoint origin(0, 0);
   nsIView* parentView;
   nsresult rv = frame->GetOffsetFromView(context, origin, &parentView);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return point;
+  }
 
   // Get the scale from that Presentation Context
   float scale;
   context->GetTwipsToPixels(&scale);
 
   // Convert to pixels using that scale
-  if (aX) {
-    *aX = NSTwipsToIntPixels(origin.x, scale);
-  }
+  point.x = NSTwipsToIntPixels(origin.x, scale);
+  point.y = NSTwipsToIntPixels(origin.y, scale);
 
-  if (aY) {
-    *aY = NSTwipsToIntPixels(origin.y, scale);
-  }
-
-  return NS_OK;
+  return point;
 }
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetX(PRInt32* aX)
 {
-  return GetXY(aX, nsnull);
+  *aX = GetXY().x;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetY(PRInt32* aY)
 {
-  return GetXY(nsnull, aY);
+  *aY = GetXY().y;
+
+  return NS_OK;
 }
 
-nsresult
-nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
+nsSize
+nsHTMLImageElement::GetWidthHeight()
 {
-  if (aHeight) {
-    *aHeight = 0;
-  }
-
-  if (aWidth) {
-    *aWidth = 0;
-  }
+  nsSize size;
 
   if (mDocument) {
     // Flush all pending notifications so that our frames are up to date.
@@ -405,7 +395,7 @@ nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
   if (frame) {
     // XXX we could put an accessor on nsIImageFrame to return its
     // mComputedSize.....
-    nsSize size = frame->GetSize();
+    size = frame->GetSize();
 
     nsMargin margin;
     frame->CalcBorderPadding(margin);
@@ -420,13 +410,8 @@ nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
       float t2p;
       context->GetTwipsToPixels(&t2p);
 
-      if (aWidth) {
-        *aWidth = NSTwipsToIntPixels(size.width, t2p);
-      }
-
-      if (aHeight) {
-        *aHeight = NSTwipsToIntPixels(size.height, t2p);
-      }
+      size.width = NSTwipsToIntPixels(size.width, t2p);
+      size.height = NSTwipsToIntPixels(size.height, t2p);
     }
   } else {
     nsHTMLValue value;
@@ -435,34 +420,30 @@ nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
       mCurrentRequest->GetImage(getter_AddRefs(image));
     }
 
-    if (aWidth) {
-      nsresult rv = GetHTMLAttribute(nsHTMLAtoms::width, value);
-
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        *aWidth = value.GetPixelValue();
-      } else if (image) {
-        image->GetWidth(aWidth);
-      }
+    if (GetHTMLAttribute(nsHTMLAtoms::width,
+                         value) == NS_CONTENT_ATTR_HAS_VALUE) {
+      size.width = value.GetPixelValue();
+    } else if (image) {
+      image->GetWidth(&size.width);
     }
 
-    if (aHeight) {
-      nsresult rv = GetHTMLAttribute(nsHTMLAtoms::height, value);
-
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        *aHeight = value.GetPixelValue();
-      } else if (image) {
-        image->GetHeight(aHeight);
-      }
+    if (GetHTMLAttribute(nsHTMLAtoms::height,
+                         value) == NS_CONTENT_ATTR_HAS_VALUE) {
+      size.height = value.GetPixelValue();
+    } else if (image) {
+      image->GetHeight(&size.height);
     }
   }
 
-  return NS_OK;
+  return size;
 }
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetHeight(PRInt32* aHeight)
 {
-  return GetWidthHeight(nsnull, aHeight);
+  *aHeight = GetWidthHeight().height;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -480,7 +461,9 @@ nsHTMLImageElement::SetHeight(PRInt32 aHeight)
 NS_IMETHODIMP
 nsHTMLImageElement::GetWidth(PRInt32* aWidth)
 {
-  return GetWidthHeight(aWidth, nsnull);
+  *aWidth = GetWidthHeight().width;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -588,10 +571,9 @@ nsHTMLImageElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
+                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
                                    nsEventStatus* aEventStatus)
 {
@@ -612,7 +594,7 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                   aEventStatus);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             const nsAString& aValue, PRBool aNotify)
 {
@@ -630,21 +612,21 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                            aValue, aNotify);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLImageElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                             PRBool aNotify)
 {
   return nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
   PRBool documentChanging = aDocument && (aDocument != mDocument);
   
-  nsresult rv = nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
-                                                      aCompileEventHandlers);
+  nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
+                                        aCompileEventHandlers);
   if (documentChanging && GetParent()) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -654,10 +636,9 @@ nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       ImageURIChanged(uri);
     }
   }
-  return rv;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsHTMLImageElement::SetParent(nsIContent* aParent)
 {
   nsGenericHTMLLeafElement::SetParent(aParent);

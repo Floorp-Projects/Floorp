@@ -350,7 +350,7 @@ public:
    * Initialize this element given a NodeInfo object
    * @param aNodeInfo information about this type of node
    */
-  nsresult Init(nsINodeInfo *aNodeInfo);
+  virtual nsresult Init(nsINodeInfo *aNodeInfo);
 
   /**
    * Called during QueryInterface to give the binding manager a chance to
@@ -362,44 +362,42 @@ public:
   static void Shutdown();
 
   // nsIContent interface methods
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
-  NS_IMETHOD_(void) SetParent(nsIContent* aParent);
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
-  NS_IMETHOD GetNameSpaceID(PRInt32* aNameSpaceID) const;
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual void SetParent(nsIContent* aParent);
+  virtual PRBool IsNativeAnonymous() const;
+  virtual void SetNativeAnonymous(PRBool aAnonymous);
+  virtual void GetNameSpaceID(PRInt32* aNameSpaceID) const;
   virtual nsIAtom *Tag() const;
-  NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
-  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
-  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
-  NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
-  NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
+  virtual  nsINodeInfo *GetNodeInfo() const;
+  virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom *GetClassAttributeName() const;
+  virtual nsresult RangeAdd(nsIDOMRange* aRange);
+  virtual void RangeRemove(nsIDOMRange* aRange);
   virtual const nsVoidArray *GetRangeList() const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
   virtual PRUint32 ContentID() const;
-  NS_IMETHOD SetContentID(PRUint32 aID);
-  NS_IMETHOD SetFocus(nsIPresContext* aContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aContext);
-  NS_IMETHOD_(nsIContent*) GetBindingParent() const;
-  NS_IMETHOD SetBindingParent(nsIContent* aParent);
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-  NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
-  NS_IMETHOD DoneCreatingElement();
+  virtual void SetContentID(PRUint32 aID);
+  virtual void SetFocus(nsIPresContext* aContext);
+  virtual nsIContent *GetBindingParent() const;
+  virtual nsresult SetBindingParent(nsIContent* aParent);
+  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   // Declare these here so we can consolidate the implementations.
   // Subclasses that don't want to implement these should override.
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument);
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
 
   // nsIStyledContent interface methods
@@ -782,33 +780,29 @@ public:
   }
 
   // Remainder of nsIContent
-  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr);
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsAString& aResult) const;
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom** aPrefix, nsAString& aResult) const;
-  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                       PRBool aNotify);
-  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
-                           PRInt32* aNameSpaceID,
-                           nsIAtom** aName,
-                           nsIAtom** aPrefix) const;
-  NS_IMETHOD_(PRUint32) GetAttrCount() const;
+  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsAString& aResult) const;
+  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom** aPrefix, nsAString& aResult) const;
+  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
+  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
+                                 nsIAtom** aName, nsIAtom** aPrefix) const;
+  virtual PRUint32 GetAttrCount() const;
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
-  NS_IMETHOD_(PRBool) CanContainChildren() const;
-  NS_IMETHOD_(PRUint32) GetChildCount() const;
-  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
-  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
+  virtual PRBool CanContainChildren() const;
+  virtual PRUint32 GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
 
   // Child list modification hooks
   virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {

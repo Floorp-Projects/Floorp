@@ -91,9 +91,9 @@ public:
   NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
 
   // nsIContent
-  NS_IMETHOD_(void) SetParent(nsIContent *aParent);
-  NS_IMETHOD SetDocument(nsIDocument *aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
+  virtual void SetParent(nsIContent *aParent);
+  virtual void SetDocument(nsIDocument *aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -101,8 +101,9 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify) {
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify)
+  {
     nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
                                                          aValue, aNotify);
 
@@ -113,8 +114,9 @@ public:
 
     return rv;
   }
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                     PRBool aNotify) {
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify)
+  {
     // This will end up calling our other SetAttr method
     return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
   }
@@ -320,7 +322,7 @@ nsHTMLIFrameElement::LoadSrc()
 }
 
 
-NS_IMETHODIMP_(void)
+void
 nsHTMLIFrameElement::SetParent(nsIContent *aParent)
 {
   nsGenericHTMLContainerElement::SetParent(aParent);
@@ -334,16 +336,14 @@ nsHTMLIFrameElement::SetParent(nsIContent *aParent)
   LoadSrc();
 }
 
-NS_IMETHODIMP
+void
 nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
   const nsIDocument *old_doc = mDocument;
 
-  nsresult rv =
-    nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                               aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                             aCompileEventHandlers);
 
   if (!aDocument && mFrameLoader) {
     // This iframe is being taken out of the document, destroy the
@@ -358,11 +358,9 @@ nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
   // When document is being set to null on the element's destruction,
   // or when the document is being set to what the document already
   // is, do not call LoadSrc().
-  if (!GetParent() || !aDocument || aDocument == old_doc) {
-    return NS_OK;
+  if (GetParent() && aDocument && aDocument != old_doc) {
+    LoadSrc();
   }
-
-  return LoadSrc();
 }
 
 NS_IMETHODIMP

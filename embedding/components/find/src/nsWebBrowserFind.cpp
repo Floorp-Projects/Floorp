@@ -668,7 +668,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(domDoc);
     if (!theDoc) return NS_ERROR_FAILURE;
 
-    nsIURI *docURI = theDoc->GetDocumentURL();
+    nsIURI *docURI = theDoc->GetDocumentURI();
     NS_ENSURE_TRUE(docURI, NS_ERROR_FAILURE);
 
     // Get the security manager and do the same-origin check

@@ -422,8 +422,8 @@ nsXULDocument::~nsXULDocument()
             // case the document did not make it past StartLayout in
             // ResumeWalk. The FastLoad table must be clear of entries so
             // that the FastLoad file footer can be properly written.
-            if (mDocumentURL)
-                gXULCache->RemoveFromFastLoadSet(mDocumentURL);
+            if (mDocumentURI)
+                gXULCache->RemoveFromFastLoadSet(mDocumentURI);
 
             NS_RELEASE(gXULCache);
         }
@@ -560,7 +560,7 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
@@ -571,10 +571,10 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
     mDocumentTitle.Truncate();
 
-    nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURL));
+    nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURI));
     if (NS_FAILED(rv)) return rv;
 
-    rv = PrepareStyleSheets(mDocumentURL);
+    rv = PrepareStyleSheets(mDocumentURI);
     if (NS_FAILED(rv)) return rv;
 
     RetrieveRelevantHeaders(aChannel);
@@ -582,8 +582,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // Look in the chrome cache: we've got this puppy loaded
     // already.
     nsCOMPtr<nsIXULPrototypeDocument> proto;
-    if (IsChromeURI(mDocumentURL))
-        gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
+    if (IsChromeURI(mDocumentURI))
+        gXULCache->GetPrototype(mDocumentURI, getter_AddRefs(proto));
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::ResumeWalk
@@ -632,7 +632,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     else {
         PRBool useXULCache;
         gXULCache->GetEnabled(&useXULCache);
-        PRBool fillXULCache = (useXULCache && IsChromeURI(mDocumentURL));
+        PRBool fillXULCache = (useXULCache && IsChromeURI(mDocumentURI));
 
 
         // It's just a vanilla document load. Create a parser to deal
@@ -654,7 +654,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
         *aDocListener = listener;
 
-        parser->Parse(mDocumentURL);
+        parser->Parse(mDocumentURI);
 
         // Put the current prototype, created under PrepareToLoad, into the
         // XUL prototype cache now.  We can't do this under PrepareToLoad or
@@ -679,11 +679,10 @@ nsXULDocument::GetPrincipal()
     return mMasterPrototype->GetDocumentPrincipal();
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::SetPrincipal(nsIPrincipal *aPrincipal)
 {
     NS_NOTREACHED("SetPrincipal");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
@@ -1227,7 +1226,7 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
                                   aIndexInContainer);
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
@@ -1621,7 +1620,7 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
     // there already).
     {
         nsCAutoString docurl;
-        rv = mDocumentURL->GetSpec(docurl);
+        rv = mDocumentURI->GetSpec(docurl);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFResource> doc;
@@ -2196,7 +2195,7 @@ nsXULDocument::StartLayout(void)
     if (!mRootContent) {
 #ifdef PR_LOGGING
         nsCAutoString urlspec;
-        mDocumentURL->GetSpec(urlspec);
+        mDocumentURI->GetSpec(urlspec);
 
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: unable to layout '%s'; no root content", urlspec.get()));
@@ -2375,7 +2374,7 @@ nsXULDocument::PrepareToLoad(nsISupports* aContainer,
 
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
 
-    return PrepareToLoadPrototype(mDocumentURL, aCommand, principal, aResult);
+    return PrepareToLoadPrototype(mDocumentURI, aCommand, principal, aResult);
 }
 
 
@@ -2445,7 +2444,7 @@ nsXULDocument::ApplyPersistentAttributes()
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString docurl;
-    mDocumentURL->GetSpec(docurl);
+    mDocumentURI->GetSpec(docurl);
 
     nsCOMPtr<nsIRDFResource> doc;
     gRDFService->GetResource(docurl, getter_AddRefs(doc));
@@ -3025,9 +3024,9 @@ nsXULDocument::ResumeWalk()
         // the master document and prototype document have the same origin.
 
         PRBool overlayIsChrome = IsChromeURI(uri);
-        if (!IsChromeURI(mDocumentURL) && !overlayIsChrome) {
+        if (!IsChromeURI(mDocumentURI) && !overlayIsChrome) {
             // Make sure we're allowed to load this overlay.
-            rv = secMan->CheckSameOriginURI(mDocumentURL, uri);
+            rv = secMan->CheckSameOriginURI(mDocumentURI, uri);
             if (NS_FAILED(rv)) {
                 // move on to the next overlay
                 continue;
@@ -3146,7 +3145,7 @@ nsXULDocument::ResumeWalk()
 
     StartLayout();
 
-    if (mIsWritingFastLoad && IsChromeURI(mDocumentURL))
+    if (mIsWritingFastLoad && IsChromeURI(mDocumentURI))
         gXULCache->WritePrototype(mMasterPrototype);
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
@@ -3324,7 +3323,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             PRBool useXULCache;
             gXULCache->GetEnabled(&useXULCache);
 
-            if (useXULCache && IsChromeURI(mDocumentURL)) {
+            if (useXULCache && IsChromeURI(mDocumentURI)) {
                 gXULCache->PutScript(scriptProto->mSrcURI,
                                      NS_REINTERPRET_CAST(void*, scriptProto->mJSObject));
             }
@@ -3459,8 +3458,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (! result)
             return NS_ERROR_UNEXPECTED;
 
-        rv = result->SetDocument(this, PR_FALSE, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        result->SetDocument(this, PR_FALSE, PR_TRUE);
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;
@@ -3480,8 +3478,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (! result)
             return NS_ERROR_UNEXPECTED;
 
-        rv = result->SetDocument(this, PR_FALSE, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        result->SetDocument(this, PR_FALSE, PR_TRUE);
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;

@@ -63,8 +63,8 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
-  nsresult GetInnerHTML(nsAString& aInnerHTML);
-  nsresult SetInnerHTML(const nsAString& aInnerHTML);
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
 };
 
 nsresult
@@ -142,7 +142,7 @@ nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||
@@ -153,7 +153,7 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
   return nsGenericHTMLContainerElement::GetInnerHTML(aInnerHTML);  
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::xmp) ||

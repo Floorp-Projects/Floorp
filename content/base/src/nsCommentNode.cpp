@@ -66,11 +66,11 @@ public:
   virtual nsIAtom *Tag() const;
 
 #ifdef DEBUG
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
-                         PRBool aDumpAll = PR_TRUE) const
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
+                           PRBool aDumpAll = PR_TRUE) const
   {
-    return NS_OK;
+    return;
   }
 #endif
 
@@ -173,7 +173,7 @@ nsCommentNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsCommentNode::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(mDocument, "bad content");
@@ -188,6 +188,5 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
 
   fputs("-->\n", out);
-  return NS_OK;
 }
 #endif

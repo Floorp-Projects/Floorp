@@ -89,20 +89,20 @@ public:
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
 
-  NS_IMETHOD CreateShell(nsIPresContext* aContext,
-                         nsIViewManager* aViewManager,
-                         nsStyleSet* aStyleSet,
-                         nsIPresShell** aInstancePtrResult);
+  virtual nsresult CreateShell(nsIPresContext* aContext,
+                               nsIViewManager* aViewManager,
+                               nsStyleSet* aStyleSet,
+                               nsIPresShell** aInstancePtrResult);
 
-  NS_IMETHOD StartDocumentLoad(const char* aCommand,
-                               nsIChannel* aChannel,
-                               nsILoadGroup* aLoadGroup,
-                               nsISupports* aContainer,
-                               nsIStreamListener **aDocListener,
-                               PRBool aReset = PR_TRUE,
-                               nsIContentSink* aSink = nsnull);
+  virtual nsresult StartDocumentLoad(const char* aCommand,
+                                     nsIChannel* aChannel,
+                                     nsILoadGroup* aLoadGroup,
+                                     nsISupports* aContainer,
+                                     nsIStreamListener **aDocListener,
+                                     PRBool aReset = PR_TRUE,
+                                     nsIContentSink* aSink = nsnull);
 
-  NS_IMETHOD StopDocumentLoad();
+  virtual void StopDocumentLoad();
 
   virtual void EndLoad();
 
@@ -153,7 +153,7 @@ public:
   virtual void FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE,
                                          PRBool aUpdateViews = PR_FALSE);
 
-  NS_IMETHOD_(PRBool) IsCaseSensitive();
+  virtual PRBool IsCaseSensitive();
 
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
@@ -246,7 +246,7 @@ protected:
   static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
   static PRBool MatchFormControls(nsIContent* aContent, nsString* aData);
 
-  static nsresult GetSourceDocumentURL(nsIURI** sourceURL);
+  static nsresult GetSourceDocumentURI(nsIURI** sourceURI);
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 

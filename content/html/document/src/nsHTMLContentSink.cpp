@@ -51,7 +51,7 @@
 #include "nsParserUtils.h"
 #include "nsIScriptLoader.h"
 #include "nsIHTMLContent.h"
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -225,7 +225,7 @@ public:
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURL, nsISupports* aContainer,
+  nsresult Init(nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
   // nsISupports
@@ -1989,7 +1989,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
                       nsIDocument* aDoc,
-                      nsIURI* aURL,
+                      nsIURI* aURI,
                       nsISupports* aContainer,
                       nsIChannel* aChannel)
 {
@@ -2001,7 +2001,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(aDoc, aURL, aContainer, aChannel);
+  nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2120,7 +2120,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
-                      nsIURI* aURL,
+                      nsIURI* aURI,
                       nsISupports* aContainer,
                       nsIChannel* aChannel)
 {
@@ -2132,7 +2132,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   MOZ_TIMER_RESET(mWatch);
   MOZ_TIMER_START(mWatch);
 
-  nsresult rv = nsContentSink::Init(aDoc, aURL, aContainer, aChannel);
+  nsresult rv = nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
   if NS_FAILED(rv) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
@@ -2281,7 +2281,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
 #ifdef NS_DEBUG
   nsCAutoString spec;
-  (void)aURL->GetSpec(spec);
+  (void)aURI->GetSpec(spec);
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, spec.get()));
@@ -3805,7 +3805,7 @@ HTMLContentSink::StartLayout()
   // If the document we are loading has a reference or it is a
   // frameset document, disable the scroll bars on the views.
 
-  if (mDocumentURL) {
+  if (mDocumentURI) {
     nsCAutoString ref;
 
     // Since all URI's that pass through here aren't URL's we can't
@@ -3813,7 +3813,7 @@ HTMLContentSink::StartLayout()
     // finding the 'ref' part of the URI, we'll haveto revert to
     // string routines for finding the data past '#'
 
-    rv = mDocumentURL->GetSpec(ref);
+    rv = mDocumentURI->GetSpec(ref);
 
     nsReadingIterator<char> start, end;
 
@@ -3920,19 +3920,19 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 void
 HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
 {
-  //-- Make sure this page is allowed to load this URL
+  //-- Make sure this page is allowed to load this URI
   nsresult rv;
   nsCOMPtr<nsIURI> baseHrefURI;
   rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
   if (NS_FAILED(rv)) return;
 
-  // Setting "BASE URL" from the last BASE tag appearing in HEAD.
+  // Setting "BASE URI" from the last BASE tag appearing in HEAD.
   if (!mBody) {
     // The document checks if it is legal to set this base
-    rv = mDocument->SetBaseURL(baseHrefURI);
+    rv = mDocument->SetBaseURI(baseHrefURI);
 
     if (NS_SUCCEEDED(rv)) {
-      mDocumentBaseURL = mDocument->GetBaseURL();
+      mDocumentBaseURI = mDocument->GetBaseURI();
     }
   } else {
     // NAV compatibility quirk
@@ -3940,7 +3940,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
 
-    rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI,
+    rv = securityManager->CheckLoadURI(mDocumentBaseURI, baseHrefURI,
                                        nsIScriptSecurityManager::STANDARD);
     if (NS_FAILED(rv)) {
       return;
@@ -4662,20 +4662,19 @@ HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
 NS_IMETHODIMP
 HTMLContentSink::DumpContentModel()
 {
-  nsresult result = NS_OK;
   FILE* out = ::fopen("rtest_html.txt", "a");
   if (out) {
     if (mDocument) {
       nsIContent* root = mDocument->GetRootContent();
       if (root) {
-        if (mDocumentURL) {
+        if (mDocumentURI) {
           nsCAutoString buf;
-          mDocumentURL->GetSpec(buf);
+          mDocumentURI->GetSpec(buf);
           fputs(buf.get(), out);
         }
 
         fputs(";", out);
-        result = root->DumpContent(out, 0, PR_FALSE);
+        root->DumpContent(out, 0, PR_FALSE);
         fputs(";\n", out);
       }
     }
@@ -4683,7 +4682,7 @@ HTMLContentSink::DumpContentModel()
     fclose(out);
   }
 
-  return result;
+  return NS_OK;
 }
 #endif
 

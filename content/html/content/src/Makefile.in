@@ -117,7 +117,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS       = \
-nsIAttributeContent.h \
 nsIHTMLTableCellElement.h \
 nsIHTMLTableColElement.h \
 $(NULL)

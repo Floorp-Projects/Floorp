@@ -996,8 +996,7 @@ nsTransferableFactory::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
       if (value.Equals(NS_LITERAL_STRING("simple"))) {
         content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
         if (!value.IsEmpty()) {
-          nsCOMPtr<nsIURI> baseURI;
-          content->GetBaseURL(getter_AddRefs(baseURI));
+          nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
           if (baseURI) {
             nsCAutoString absoluteSpec;
             baseURI->Resolve(NS_ConvertUCS2toUTF8(value), absoluteSpec);

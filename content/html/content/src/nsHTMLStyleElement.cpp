@@ -76,97 +76,24 @@ public:
   // nsIDOMHTMLStyleElement
   NS_DECL_NSIDOMHTMLSTYLEELEMENT
 
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                           PRBool aDeepSetDocument)
-  {
-    nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                 PRBool aDeepSetDocument);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                           PRBool aCompileEventHandlers);
+  virtual nsresult SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify);
+  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument)
-  {
-    nsresult rv = nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
-
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                           PRBool aDeepSetDocument)
-  {
-    nsresult rv = nsGenericHTMLContainerElement::AppendChildTo(aKid, aNotify, aDeepSetDocument);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
-
-  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-  {
-    nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex, aNotify);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
-
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers) {
-    nsCOMPtr<nsIDocument> oldDoc = mDocument;
-    nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                                             aCompileEventHandlers);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet(oldDoc);
-    }
-    return rv;
-  }
- 
-  NS_IMETHOD SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify) {
-    nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
-                                                         aValue, aNotify);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue, PRBool aNotify) {
-    nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue,
-                                                         aNotify);
-
-    // nsGenericHTMLContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
-    //                                             const nsAString& aValue,
-    //                                             PRBool aNotify)
-    //
-    // calls
-    //
-    // SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-    //              const nsAString& aValue, PRBool aNotify)
-    //
-    // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
-    // here ourselves.
-
-    return rv;
-  }
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                            PRBool aNotify) {
-    nsresult rv = nsGenericHTMLContainerElement::UnsetAttr(aNameSpaceID,
-                                                           aAttribute,
-                                                           aNotify);
-    if (NS_SUCCEEDED(rv)) {
-      UpdateStyleSheet();
-    }
-    return rv;
-  }
-
-  nsresult GetInnerHTML(nsAString& aInnerHTML);
-  nsresult SetInnerHTML(const nsAString& aInnerHTML);
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
   void GetStyleSheetURL(PRBool* aIsInline,
@@ -294,12 +221,126 @@ NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
 nsresult
+nsHTMLStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv =
+    nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex, aNotify,
+                                                 aDeepSetDocument);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLStyleElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                   PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsresult rv =
+    nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex, aNotify,
+                                                  aDeepSetDocument);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLStyleElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                  PRBool aDeepSetDocument)
+{
+  nsresult rv =
+    nsGenericHTMLContainerElement::AppendChildTo(aKid, aNotify,
+                                                 aDeepSetDocument);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLStyleElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex, aNotify);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
+
+  return rv;
+}
+
+void
+nsHTMLStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                PRBool aCompileEventHandlers)
+{
+  nsCOMPtr<nsIDocument> oldDoc = mDocument;
+
+  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                             aCompileEventHandlers);
+
+  UpdateStyleSheet(oldDoc);
+}
+ 
+nsresult
+nsHTMLStyleElement::SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
+                            const nsAString& aValue, PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
+                                                       aValue, aNotify);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLStyleElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                            PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue,
+                                                       aNotify);
+
+  // nsGenericHTMLContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
+  //                                             const nsAString& aValue,
+  //                                             PRBool aNotify)
+  //
+  // calls
+  //
+  // SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+  //              const nsAString& aValue, PRBool aNotify)
+  //
+  // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
+  // here ourselves.
+
+  return rv;
+}
+
+nsresult
+nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                              PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLContainerElement::UnsetAttr(aNameSpaceID,
+                                                         aAttribute,
+                                                         aNotify);
+  if (NS_SUCCEEDED(rv)) {
+    UpdateStyleSheet();
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   SetEnableUpdates(PR_FALSE);

@@ -139,7 +139,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     if (mContent) {
       doc = mContent->GetDocument();
       if (doc) {
-        documentURI = doc->GetDocumentURL();
+        documentURI = doc->GetDocumentURI();
       }
     }
 
@@ -1632,7 +1632,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         if (mContent) {
           doc = mContent->GetDocument();
           if (doc) {
-            documentURI = doc->GetDocumentURL();
+            documentURI = doc->GetDocumentURI();
           }
         }
 

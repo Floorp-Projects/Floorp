@@ -336,8 +336,7 @@ inDeepTreeWalker::NextNode(nsIDOMNode **_retval)
 char* getURL(nsIDOMDocument* aDoc)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
+  nsIURI *uri = doc->GetDocumentURI();
   char* s;
   uri->GetSpec(&s);
   return s;

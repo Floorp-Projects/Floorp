@@ -568,10 +568,8 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
   {
     nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIURI> baseURL;
-
-    aContent->GetBaseURL(getter_AddRefs(baseURL));
-    rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURL);
+    nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
+    rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURI);
     if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
@@ -1021,20 +1019,19 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     nsCOMPtr<nsISupports>     container;
     nsCOMPtr<nsIPluginHost>   pluginHost;
-    nsCOMPtr<nsIURI> baseURL;
     nsCOMPtr<nsIURI> fullURL;
 
     nsAutoString classid;
 
-    mContent->GetBaseURL(getter_AddRefs(baseURL));
+    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
     nsAutoString codeBase;
     if ((NS_CONTENT_ATTR_HAS_VALUE ==
          mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
         !codeBase.IsEmpty()) {
       nsCOMPtr<nsIURI> codeBaseURL;
-      rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
+      rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURI);
       if (NS_SUCCEEDED(rv)) {
-        baseURL = codeBaseURL;
+        baseURI = codeBaseURL;
       }
     }
 
@@ -1046,9 +1043,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
       // if we find "java:" in the class id, we have a java applet
       if(bJavaObject) {
-        if (!baseURL) return NS_ERROR_FAILURE;
+        if (!baseURI) return NS_ERROR_FAILURE;
 
-        fullURL = baseURL;
+        fullURL = baseURI;
 
         // get the nsIPluginHost interface
         pluginHost = do_GetService(kCPluginManagerCID);
@@ -1069,9 +1066,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           // if we haven't matched to an internal type, check to see if
           // we have an ActiveX handler
           // if not, create the default plugin
-          if (!baseURL) return NS_ERROR_FAILURE;
+          if (!baseURI) return NS_ERROR_FAILURE;
 
-          fullURL = baseURL;
+          fullURL = baseURI;
 
           // get the nsIPluginHost interface
           pluginHost = do_GetService(kCPluginManagerCID);
@@ -1098,7 +1095,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     }
     else { // no clsid - the object is either an applet or a plugin
       nsAutoString    src;
-      if (!baseURL) return NS_ERROR_FAILURE;
+      if (!baseURI) return NS_ERROR_FAILURE;
 
       // get the nsIPluginHost interface
       pluginHost = do_GetService(kCPluginManagerCID);
@@ -1110,10 +1107,10 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       if (tag == nsHTMLAtoms::applet) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
           // Create an absolute URL
-          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
+          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
         }
         else
-          fullURL = baseURL;
+          fullURL = baseURI;
 
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
                                pluginHost, "application/x-java-vm", fullURL);
@@ -1135,19 +1132,19 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         
         if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
           // Create an absolute URL
-          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
+          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
           if (NS_FAILED(rv)) {
             // Failed to create URI, maybe because we didn't
             // reconize the protocol handler ==> treat like
             // no 'src'/'data' was specified in the embed/object tag
-            fullURL = baseURL;
+            fullURL = baseURI;
           }
         }
         else {
           // we didn't find a src or data param, so just set the url
           // to the base
 
-          fullURL = baseURL;
+          fullURL = baseURI;
         }
 
         // now try to instantiate a plugin instance based on a mime type
@@ -2315,7 +2312,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   if (NS_SUCCEEDED(rv) && doc) {
     // XXX should this really be the document base URL?  Or the
     // content's base URL?
-    baseURL = doc->GetBaseURL();  // gets the document's url
+    baseURL = doc->GetBaseURI();  // gets the document's url
   } else {
     mOwner->GetFullURL(*getter_AddRefs(baseURL)); // gets the plugin's content url
   }
@@ -2607,7 +2604,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
     nsCOMPtr<nsIDocument> doc;
     mContext->PresShell()->GetDocument(getter_AddRefs(doc));
 
-    rv = doc->GetBaseURL()->GetSpec(mDocumentBase);
+    rv = doc->GetBaseURI()->GetSpec(mDocumentBase);
   }
   if (rv == NS_OK)
     *result = ToNewCString(mDocumentBase);
@@ -2864,10 +2861,9 @@ void nsObjectFrame::FixUpURLS(const nsString &name, nsString &value)
   if (name.EqualsIgnoreCase("PLUGINURL") ||
       name.EqualsIgnoreCase("PLUGINSPAGE")) {        
     
-    nsCOMPtr<nsIURI> baseURL;
-    mContent->GetBaseURL(getter_AddRefs(baseURL));
+    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
     nsAutoString newURL;
-    NS_MakeAbsoluteURI(newURL, value, baseURL);
+    NS_MakeAbsoluteURI(newURL, value, baseURI);
     if (!newURL.IsEmpty())
       value = newURL;
   }

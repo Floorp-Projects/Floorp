@@ -117,7 +117,7 @@ nsImageLoader::Load(nsIURI *aURI)
   if (NS_FAILED(rv)) return rv;
 
   // XXX: initialDocumentURI is NULL!
-  return il->LoadImage(aURI, nsnull, doc->GetDocumentURL(), loadGroup,
+  return il->LoadImage(aURI, nsnull, doc->GetDocumentURI(), loadGroup,
                        this, 
                        doc, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull,
                        getter_AddRefs(mRequest));

@@ -462,7 +462,7 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
       if (!doc) return NS_ERROR_FAILURE;
 
-      nsIURI *uri = doc->GetDocumentURL();
+      nsIURI *uri = doc->GetDocumentURI();
       if (!uri) return NS_ERROR_FAILURE;
 
       return aParams->SetISupportsValue(STATE_DATA, (nsISupports*)uri);

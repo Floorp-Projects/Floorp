@@ -123,43 +123,43 @@ nsSVGElement::Init()
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGElement::CanContainChildren() const
 {
   return PR_TRUE;
 }
 
-NS_IMETHODIMP_(PRUint32)
+PRUint32
 nsSVGElement::GetChildCount() const
 {
   return mChildren.Count();
 }
 
-NS_IMETHODIMP_(nsIContent *)
+nsIContent *
 nsSVGElement::GetChildAt(PRUint32 aIndex) const
 {
   return (nsIContent *)mChildren.SafeElementAt(aIndex);
 }
 
-NS_IMETHODIMP_(PRInt32)
+PRInt32
 nsSVGElement::IndexOf(nsIContent* aPossibleChild) const
 {
   return mChildren.IndexOf(aPossibleChild);
 }
 
-NS_IMETHODIMP_(nsIAtom*)
+nsIAtom *
 nsSVGElement::GetIDAttributeName() const
 {
   return nsSVGAtoms::id;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
-nsSVGElement::GetExistingAttrNameFromQName(const nsAString& aStr)
+already_AddRefed<nsINodeInfo>
+nsSVGElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {
   return mAttributes->GetExistingAttrNameFromQName(aStr);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                       const nsAString& aValue,
                       PRBool aNotify)
@@ -171,7 +171,7 @@ nsSVGElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     return SetAttr(ni, aValue, aNotify);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGElement::SetAttr(nsINodeInfo* aNodeInfo,
                       const nsAString& aValue,
                       PRBool aNotify)
@@ -179,7 +179,7 @@ nsSVGElement::SetAttr(nsINodeInfo* aNodeInfo,
   return mAttributes->SetAttr(aNodeInfo, aValue, aNotify);  
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsAString& aResult) const
 {
@@ -187,7 +187,7 @@ nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return GetAttr(aNameSpaceID, aName, getter_AddRefs(prefix), aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                       nsIAtom** aPrefix,
                       nsAString& aResult) const
@@ -198,14 +198,14 @@ nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return mAttributes->GetAttr(aNameSpaceID, aName, aPrefix, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                         PRBool aNotify)
 {
   return mAttributes->UnsetAttr(aNameSpaceID, aName, aNotify);
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 {
   NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
@@ -213,7 +213,7 @@ nsSVGElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
   return mAttributes->HasAttr(aNameSpaceID, aName);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGElement::GetAttrNameAt(PRUint32 aIndex,
                             PRInt32* aNameSpaceID,
                             nsIAtom** aName,
@@ -222,27 +222,25 @@ nsSVGElement::GetAttrNameAt(PRUint32 aIndex,
   return mAttributes->GetAttrNameAt(aIndex, aNameSpaceID, aName, aPrefix);
 }
 
-NS_IMETHODIMP_(PRUint32)
+PRUint32
 nsSVGElement::GetAttrCount() const
 {
   return mAttributes->Count();
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsSVGElement::List(FILE* out, PRInt32 aIndent) const
 {
   // XXX
   fprintf(out, "some SVG element\n");
-  return NS_OK; 
 }
 
-NS_IMETHODIMP
+void
 nsSVGElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
 {
   // XXX
   fprintf(out, "some SVG element\n");
-  return NS_OK; 
 }
 #endif // DEBUG
 

@@ -1262,7 +1262,7 @@ nsHTMLEditor::UpdateBaseURL()
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
     if (!doc) return NS_ERROR_FAILURE;
 
-    return doc->SetBaseURL(doc->GetDocumentURL());
+    return doc->SetBaseURI(doc->GetDocumentURI());
   }
   return NS_OK;
 }

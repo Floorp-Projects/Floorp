@@ -1899,7 +1899,7 @@ END_COM_MAP()
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDOMDocument));
         if (doc)
         {
-            nsIURI *baseURI = doc->GetBaseURL();
+            nsIURI *baseURI = doc->GetBaseURI();
             nsCAutoString spec;
             if (baseURI &&
                 NS_SUCCEEDED(baseURI->GetSpec(spec)))

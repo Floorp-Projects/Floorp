@@ -118,8 +118,8 @@ nsXMLProcessingInstruction::Tag() const
   return nsLayoutAtoms::processingInstructionTagName;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags)
+PRBool
+nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~ePROCESSING_INSTRUCTION);
 }
@@ -167,7 +167,7 @@ nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(mDocument, "bad content");
@@ -183,12 +183,11 @@ nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
   fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
 
   fputs(">\n", out);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXMLProcessingInstruction::DumpContent(FILE* out, PRInt32 aIndent,
-                                        PRBool aDumpAll) const {
-  return NS_OK;
+                                        PRBool aDumpAll) const
+{
 }
 #endif

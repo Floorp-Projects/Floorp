@@ -53,13 +53,13 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINDOCUMENT
 
-  NS_IMETHOD StartDocumentLoad(const char*         aCommand,
-                               nsIChannel*         aChannel,
-                               nsILoadGroup*       aLoadGroup,
-                               nsISupports*        aContainer,
-                               nsIStreamListener** aDocListener,
-                               PRBool              aReset = PR_TRUE,
-                               nsIContentSink*     aSink = nsnull);
+  virtual nsresult StartDocumentLoad(const char*         aCommand,
+                                     nsIChannel*         aChannel,
+                                     nsILoadGroup*       aLoadGroup,
+                                     nsISupports*        aContainer,
+                                     nsIStreamListener** aDocListener,
+                                     PRBool              aReset = PR_TRUE,
+                                     nsIContentSink*     aSink = nsnull);
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
@@ -102,7 +102,7 @@ nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObje
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsPluginDocument::StartDocumentLoad(const char*         aCommand,
                                     nsIChannel*         aChannel,
                                     nsILoadGroup*       aLoadGroup,
@@ -192,7 +192,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
 
   // set URL
   nsCAutoString src;
-  mDocumentURL->GetSpec(src);
+  mDocumentURI->GetSpec(src);
 
   NS_ConvertUTF8toUCS2 srcString(src);
   nsHTMLValue val(srcString);

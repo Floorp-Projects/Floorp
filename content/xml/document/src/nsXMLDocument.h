@@ -71,12 +71,12 @@ public:
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
-  NS_IMETHOD StartDocumentLoad(const char* aCommand, nsIChannel* channel,
-                               nsILoadGroup* aLoadGroup,
-                               nsISupports* aContainer,
-                               nsIStreamListener **aDocListener,
-                               PRBool aReset = PR_TRUE,
-                               nsIContentSink* aSink = nsnull);
+  virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* channel,
+                                     nsILoadGroup* aLoadGroup,
+                                     nsISupports* aContainer,
+                                     nsIStreamListener **aDocListener,
+                                     PRBool aReset = PR_TRUE,
+                                     nsIContentSink* aSink = nsnull);
 
   virtual void EndLoad();
 

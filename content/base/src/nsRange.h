@@ -192,7 +192,7 @@ protected:
   
   nsresult      AddToListOf(nsIDOMNode* aNode);
   
-  nsresult      RemoveFromListOf(nsIDOMNode* aNode);
+  void          RemoveFromListOf(nsIDOMNode* aNode);
  
   nsresult      ContentOwnsUs(nsIDOMNode* domNode);
 

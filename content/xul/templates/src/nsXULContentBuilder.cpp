@@ -1079,8 +1079,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContainerElement,
 
         // Set its document to null so that it'll get knocked out of
         // the XUL doc's resource-to-element map.
-        rv = child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
         // Remove from the content support map.
         mContentSupportMap.Remove(child);
@@ -1515,9 +1514,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
 
-    rv = result->SetDocument(doc, PR_FALSE, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
-    if (NS_FAILED(rv)) return rv;
+    result->SetDocument(doc, PR_FALSE, PR_TRUE);
 
     *aResult = result;
     NS_ADDREF(*aResult);

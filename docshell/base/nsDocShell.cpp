@@ -4448,7 +4448,7 @@ nsDocShell::CreateAboutBlankContentViewer()
         Embed(viewer, "", 0);
         viewer->SetDOMDocument(domdoc);
 
-        SetCurrentURI(blankDoc->GetDocumentURL());
+        SetCurrentURI(blankDoc->GetDocumentURI());
         rv = NS_OK;
       }
     }
@@ -7126,7 +7126,7 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
         if (docViewer) {
             rv = docViewer->GetDocument(getter_AddRefs(document));
             if (document)
-                rv = document->SetBaseURL(baseURI);
+                rv = document->SetBaseURI(baseURI);
         }
     }
     return rv;

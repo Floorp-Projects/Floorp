@@ -2690,7 +2690,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 #ifdef NS_DEBUG
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
     if (mDocument) {
-      nsIURI *uri = mDocument->GetDocumentURL();
+      nsIURI *uri = mDocument->GetDocumentURI();
       if (uri) {
         nsCAutoString url;
         uri->GetSpec(url);
@@ -7291,7 +7291,7 @@ PresShell::DumpReflows()
   if (mReflowCountMgr) {
     nsCAutoString uriStr;
     if (mDocument) {
-      nsIURI *uri = mDocument->GetDocumentURL();
+      nsIURI *uri = mDocument->GetDocumentURI();
       if (uri) {
         uri->GetPath(uriStr);
       }

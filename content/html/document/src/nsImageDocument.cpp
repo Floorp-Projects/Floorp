@@ -87,13 +87,13 @@ public:
 
   virtual nsresult Init();
 
-  NS_IMETHOD StartDocumentLoad(const char*         aCommand,
-                               nsIChannel*         aChannel,
-                               nsILoadGroup*       aLoadGroup,
-                               nsISupports*        aContainer,
-                               nsIStreamListener** aDocListener,
-                               PRBool              aReset = PR_TRUE,
-                               nsIContentSink*     aSink = nsnull);
+  virtual nsresult StartDocumentLoad(const char*         aCommand,
+                                     nsIChannel*         aChannel,
+                                     nsILoadGroup*       aLoadGroup,
+                                     nsISupports*        aContainer,
+                                     nsIStreamListener** aDocListener,
+                                     PRBool              aReset = PR_TRUE,
+                                     nsIContentSink*     aSink = nsnull);
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
@@ -227,7 +227,7 @@ nsImageDocument::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsImageDocument::StartDocumentLoad(const char*         aCommand,
                                    nsIChannel*         aChannel,
                                    nsILoadGroup*       aLoadGroup,
@@ -494,7 +494,7 @@ nsImageDocument::CreateSyntheticDocument()
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
   nsCAutoString src;
-  mDocumentURL->GetSpec(src);
+  mDocumentURI->GetSpec(src);
 
   NS_ConvertUTF8toUCS2 srcString(src);
   // Make sure not to start the image load from here...

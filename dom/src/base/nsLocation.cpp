@@ -900,7 +900,7 @@ LocationImpl::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
   // could break if any of the connections along the way change.
   // I wish there were a better way.
 
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
 
   // We need to use the dynamically scoped global and assume that the
   // current JSContext is a DOM context with a nsIScriptGlobalObject so
@@ -910,20 +910,19 @@ LocationImpl::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
   nsCOMPtr<nsIScriptGlobalObject> nativeGlob;
   nsJSUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
 
-  if (nativeGlob) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob, &result);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob, &rv);
 
-    if (window) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      result = window->GetDocument(getter_AddRefs(domDoc));
-      if (domDoc) {
-        return CallQueryInterface(domDoc, aDocument);
-      }
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = window->GetDocument(getter_AddRefs(domDoc));
+    if (domDoc) {
+      return CallQueryInterface(domDoc, aDocument);
     }
   } else {
     *aDocument = nsnull;
   }
-  return result;
+
+  return rv;
 }
 
 nsresult
@@ -932,11 +931,11 @@ LocationImpl::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
   if (doc) {
-    NS_IF_ADDREF(*sourceURL = doc->GetBaseURL());
-    return NS_OK;
+    NS_IF_ADDREF(*sourceURL = doc->GetBaseURI());
+  } else {
+    *sourceURL = nsnull;
   }
 
-  *sourceURL = nsnull;
   return rv;
 }
 
@@ -946,7 +945,7 @@ LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURL)
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
   if (doc) {
-    NS_IF_ADDREF(*sourceURL = doc->GetDocumentURL());
+    NS_IF_ADDREF(*sourceURL = doc->GetDocumentURI());
   } else {
     *sourceURL = nsnull;
   }
