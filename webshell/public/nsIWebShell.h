@@ -380,6 +380,11 @@ public:
    */
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState) = 0;
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState) = 0;
+
+  /**
+   * Notify children to fire unload events before root data gone
+   */
+  NS_IMETHOD FireUnloadEvent(void) = 0;
 };
 
 extern "C" NS_WEB nsresult
