@@ -165,7 +165,7 @@ public:
   PRUint8             *mDstBytes;
   BITMAP              mSrcInfo,mDstInfo;
   HBITMAP             mTempB1,mTempB2;
-  HDC                 mSrcDC,mDstDC;
+  nsDrawingSurface    mSrcDC, mDstDC;
 
   PRInt32             mSRowBytes;
   PRInt32             mDRowBytes;

@@ -18,6 +18,7 @@
 
 #include <windows.h>
 #include "nsBlenderWin.h"
+#include "nsRenderingContextWin.h"
 
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 
@@ -61,11 +62,11 @@ HBITMAP             srcbits,dstbits;
   mSaveBytes = nsnull;
 
   // lets build some DIB's for the source and destination from the HDC's
-  srcdc = (HDC)aSrc;
-  dstdc = (HDC)aDst;
+  srcdc = ((nsDrawingSurfaceWin *)aSrc)->mDC;
+  dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
 
-  mSrcDC = srcdc;
-  mDstDC = dstdc;
+  mSrcDC = aSrc;
+  mDstDC = aDst;
 
   // source
   mTempB1 = CreateCompatibleBitmap(srcdc,3,3);
@@ -128,8 +129,8 @@ nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                      nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea)
 {
 nsresult            result = NS_ERROR_FAILURE;
-HDC                 dstdc,tb1;
-HBITMAP             dstbits;
+HDC                 dstdc;
+HBITMAP             dstbits, tb1;
 nsPoint             srcloc,maskloc;
 PRInt32             dlinespan,slinespan,mlinespan,numbytes,numlines,level,size,oldsize;
 PRUint8             *s1,*d1,*m1,*mask=NULL;
@@ -214,7 +215,7 @@ nsColorMap          *colormap;
         }
 
       // put the new bits in
-    dstdc = (HDC)aDst;
+    dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
     dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
     tb1 = ::SelectObject(dstdc,dstbits);
     ::DeleteObject(tb1);
@@ -232,8 +233,8 @@ PRBool    result = PR_FALSE;
 PRInt32   y,x;
 PRUint8   *saveptr,*savebyteptr;
 PRUint8   *orgptr,*orgbyteptr;
-HDC       dstdc,tb1;
-HBITMAP   dstbits;
+HDC       dstdc;
+HBITMAP   dstbits, tb1;
 
 
   if(mSaveBytes!=nsnull)
@@ -256,7 +257,7 @@ HBITMAP   dstbits;
       }
 
       // put the new bits in
-    dstdc = (HDC)aDst;
+    dstdc = ((nsDrawingSurfaceWin *)aDst)->mDC;
     dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
     tb1 = ::SelectObject(dstdc,dstbits);
     ::DeleteObject(tb1);
