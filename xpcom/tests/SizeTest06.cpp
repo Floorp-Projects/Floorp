@@ -60,7 +60,7 @@ Test06_raw( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 
 		nsIWebShell* rootWebShell = 0;
 		if ( webShell )
-			status = webShell->GetRootWebShellEvenIfChrome(rootWebShell);
+			//status = webShell->GetRootWebShellEvenIfChrome(rootWebShell);
 
 		nsIWebShellContainer* webShellContainer = 0;
 		if ( rootWebShell )
@@ -98,7 +98,7 @@ Test06_raw_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWin
 				if ( webShell )
 					{
 						nsIWebShell* rootWebShell;
-						status = webShell->GetRootWebShellEvenIfChrome(rootWebShell);
+				//		status = webShell->GetRootWebShellEvenIfChrome(rootWebShell);
 						if ( NS_SUCCEEDED(status) )
 							{
 								nsIWebShellContainer* webShellContainer;
@@ -136,7 +136,7 @@ Test06_nsCOMPtr_as_found( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>*
 
 		nsCOMPtr<nsIWebShell> rootWebShell;
 		if ( webShell )
-			webShell->GetRootWebShellEvenIfChrome( *getter_AddRefs(rootWebShell) );
+			//webShell->GetRootWebShellEvenIfChrome( *getter_AddRefs(rootWebShell) );
 
 		nsCOMPtr<nsIWebShellContainer> webShellContainer;
 		if ( rootWebShell )
@@ -162,7 +162,7 @@ Test06_nsCOMPtr00( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 
 		nsIWebShell* temp1 = 0;
 		if ( webShell )
-			status = webShell->GetRootWebShellEvenIfChrome(temp1);
+			//status = webShell->GetRootWebShellEvenIfChrome(temp1);
 		nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp1);
 
 		nsIWebShellContainer* temp2 = 0;
@@ -195,7 +195,7 @@ Test06_nsCOMPtr_optimized( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>
 
 		nsIWebShell* temp1 = 0;
 		if ( webShell )
-			status = webShell->GetRootWebShellEvenIfChrome(temp1);
+		//	status = webShell->GetRootWebShellEvenIfChrome(temp1);
 		nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp1);
 
 		nsIWebShellContainer* temp2 = 0;
@@ -226,7 +226,7 @@ Test06_nsCOMPtr02( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow
 
 				if ( webShell )
 					{
-						status = webShell->GetRootWebShellEvenIfChrome(temp0);
+					//	status = webShell->GetRootWebShellEvenIfChrome(temp0);
 						nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp0);
 
 						if ( rootWebShell )
@@ -263,7 +263,7 @@ Test06_nsCOMPtr03( nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIWebShellWindow>* aWebSh
 
 				if ( webShell )
 					{
-						status = webShell->GetRootWebShellEvenIfChrome(temp0);
+					//	status = webShell->GetRootWebShellEvenIfChrome(temp0);
 						nsCOMPtr<nsIWebShell> rootWebShell = dont_AddRef(temp0);
 
 						if ( rootWebShell )
@@ -295,7 +295,7 @@ Test06_nsIPtr( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShellWindow )
 
 		nsIWebShellPtr rootWebShell;
 		if ( webShell.IsNotNull() )
-			status = webShell->GetRootWebShellEvenIfChrome( rootWebShell.AssignRef() );
+		//	status = webShell->GetRootWebShellEvenIfChrome( rootWebShell.AssignRef() );
 
 		nsIWebShellContainerPtr webShellContainer;
 		if ( rootWebShell.IsNotNull() )
@@ -327,7 +327,7 @@ Test06_nsIPtr_optimized( nsIDOMWindow* aDOMWindow, nsIWebShellWindow** aWebShell
 
 		nsIWebShell* temp2 = 0;
 		if ( webShell.IsNotNull() )
-			status = webShell->GetRootWebShellEvenIfChrome(temp2);
+		//	status = webShell->GetRootWebShellEvenIfChrome(temp2);
 		nsIWebShellPtr rootWebShell = temp2;
 
 		nsIWebShellContainer* temp3 = 0;
