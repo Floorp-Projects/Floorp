@@ -53,7 +53,11 @@ instance specified by the single positional argument.  Login/password
 credentials are read from the calling user's <filename>~/.netrc</filename> 
 file.</para>
 
-<para>The program accepts the following options to set or override fields:</para>
+<para>bugzilla-submit accepts a single argument:
+<replaceable>bugzilla-url</replaceable>. Its value must match the
+relevant Bugzilla instance's base URL (technically, its
+<replaceable>urlbase</replaceable> param). The program also accepts the
+following options to set or override fields:</para>
 <variablelist>
 <varlistentry>
 <term>-b. --bug-status</term>
@@ -187,7 +191,23 @@ the bug is to be submitted.</para>
 <listitem><para>Must contain an entry in which the machine field is
 the Bugzilla instance URL, the login field is your ID on that host, and the 
 password field is the right password.  The URL in the machine field
-must be enclosed in double quotes.</para></listitem>
+must be enclosed in double quotes.</para>
+
+<para>For example, if your Bugzilla instance is at
+"http://landfill.bugzilla.org/bztest/", and your login and password
+there are "john@doe.com" and "foo", respectively, your
+<filename>.netrc</filename> entry should look something like:</para>
+
+<screen>
+machine "http://landfill.bugzilla.org/bztest/"
+login john@doe.com
+password foo
+</screen>
+
+Note that the machine entry should match exactly the instance URL
+specified to <application>bugzilla-submit</application>.
+
+</listitem>
 </varlistentry>
 </variablelist>
 
