@@ -474,6 +474,7 @@ public:
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
+  nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
 
   nsIForm* mForm;
 };
@@ -494,6 +495,7 @@ public:
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
+  nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
 
   nsIForm* mForm;
 };
