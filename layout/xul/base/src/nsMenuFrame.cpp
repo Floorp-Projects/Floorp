@@ -2024,6 +2024,20 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
       ibox->GetPrefSize(aState, tmpSize);
       aSize.width = tmpSize.width;
+
+      // We now need to ensure that aSize is within the min size - max size range.
+      // If we are using sizetopopup="always", we know the min size will be the same
+      // as the pref size, and do not need to call GetMinSize (in fact, doing so will
+      // result in infinite recursion).
+
+      nsSize minSize, maxSize;
+      if (IsSizedToPopup(mContent, PR_TRUE))
+        minSize = aSize;
+      else
+        GetMinSize(aState, minSize);
+
+      GetMaxSize(aState, maxSize);
+      BoundsCheck(minSize, aSize, maxSize);
     }
   }
 
