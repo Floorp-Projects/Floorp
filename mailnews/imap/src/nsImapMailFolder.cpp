@@ -2204,7 +2204,7 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
 {
   NS_ENSURE_ARG(keysOfMessagesToDownload);
 
-  nsresult rv;
+  nsresult rv = NS_ERROR_NULL_POINTER; // if mDatabase not set
 
   if (mDatabase)
   {
@@ -2235,7 +2235,7 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
       }
     }
   }
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
@@ -4838,13 +4838,6 @@ NS_IMETHODIMP nsImapMailFolder::GetCanIOpenThisFolder(PRBool *aBool)
 // This string is defined in the ACL RFC to be "anyone"
 #define IMAP_ACL_ANYONE_STRING "anyone"
 
-
-static int
-imap_hash_strcmp (const void *a, const void *b)
-{
-  return strcmp ((const char *) a, (const char *) b);
-}
-
 /* static */PRBool nsMsgIMAPFolderACL::FreeHashRights(nsHashKey *aKey, void *aData,
                                         void *closure)
 {
@@ -5472,7 +5465,8 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
     nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
     if (NS_FAILED(rv)) return rv;
     rv = InitCopyState(aSupport, messages, isMove, PR_FALSE, listener, msgWindow, allowUndo);
-    if(NS_FAILED(rv)) return rv;
+    if(NS_FAILED(rv)) 
+      return rv;
 
     m_copyState->m_streamCopy = PR_TRUE;
     m_copyState->m_isCrossServerOp = isCrossServerOp;
@@ -6057,6 +6051,11 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     }
 
 done:
+    if (NS_FAILED(rv) && isMove)
+    {
+      srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);  //enable message count notification 
+      NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+    }
     return rv;
 }
 
