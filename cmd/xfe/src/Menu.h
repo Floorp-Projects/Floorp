@@ -79,6 +79,7 @@ typedef struct MenuSpec {
 #define xfeMenuView "viewMenu"
 #define xfeMenuInsert "insertMenu"
 #define xfeMenuFormat "formatMenu"
+#define xfeMenuTable "tableMenu"
 #define xfeMenuTools "toolsMenu"
 #define xfeMenuGo "goMenu"
 #define xfeMenuItem "itemMenu"

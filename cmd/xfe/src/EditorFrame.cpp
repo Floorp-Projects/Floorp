@@ -282,6 +282,28 @@ MenuSpec XFE_EditorFrame::format_menu_spec[] = {
 	{ NULL }
 };
 
+MenuSpec XFE_EditorFrame::table_insert_delete_submenu_spec[] = {
+	{ NULL }
+};
+
+MenuSpec XFE_EditorFrame::table_menu_spec[] = {
+	{ "alignmentStyleMenu",	  CASCADEBUTTON,
+	  (MenuSpec*)&XFE_EditorFrame::alignment_style_menu_spec },
+	MENU_SEPARATOR,
+	{ "tableInsertMenu",	  CASCADEBUTTON,
+	  (MenuSpec*)&XFE_EditorFrame::table_insert_delete_submenu_spec },
+	{ "tableDeleteMenu",	  CASCADEBUTTON,
+	  (MenuSpec*)&XFE_EditorFrame::table_insert_delete_submenu_spec },
+	{ "tableSelectMenu",	  CASCADEBUTTON,
+	  (MenuSpec*)&XFE_EditorFrame::table_insert_delete_submenu_spec },
+	MENU_SEPARATOR,
+//	{ "join",	  PUSHBUTTON },
+//	{ "convertTextToTable",	  PUSHBUTTON },
+	MENU_SEPARATOR,
+	{ xfeCmdSetTableProperties,	  PUSHBUTTON },
+	{ NULL }
+};
+
 MenuSpec XFE_EditorFrame::tools_menu_spec[] = {
 	{ xfeCmdSpellCheck,	PUSHBUTTON },
 	{ NULL }
@@ -316,6 +338,8 @@ MenuSpec XFE_EditorFrame::menu_bar_spec[] = {
 	(MenuSpec*)&XFE_EditorFrame::insert_menu_spec },
   { xfeMenuFormat,  CASCADEBUTTON,
 	(MenuSpec*)&XFE_EditorFrame::format_menu_spec },
+  { xfeMenuTable,  CASCADEBUTTON,
+	(MenuSpec*)&XFE_EditorFrame::table_menu_spec },
   { xfeMenuTools, 	CASCADEBUTTON,
 	(MenuSpec*)&XFE_EditorFrame::tools_menu_spec },
   { xfeMenuWindow, 	CASCADEBUTTON, (MenuSpec*)&XFE_Frame::window_menu_spec },

@@ -70,6 +70,10 @@ public:
   static MenuSpec list_style_menu_spec[];
   static MenuSpec alignment_style_menu_spec[];
 
+  // Table menu & submenus
+  static MenuSpec table_menu_spec[];
+  static MenuSpec table_insert_delete_submenu_spec[];
+
   static MenuSpec tools_menu_spec[];
 
   static MenuSpec new_submenu_spec[];
