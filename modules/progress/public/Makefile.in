@@ -28,9 +28,9 @@ EXPORTS	= $(srcdir)/pw_public.h
 
 ifdef MOZ_SMOOTH_PROGRESS
 EXPORTS += \
-	nsITransferListener.h	\
-	nsProgressManager.h	\
-	progress.h		\
+	$(srcdir)/nsITransferListener.h	\
+	$(srcdir)/nsProgressManager.h	\
+	$(srcdir)/progress.h		\
 	$(NULL)
 endif
 
