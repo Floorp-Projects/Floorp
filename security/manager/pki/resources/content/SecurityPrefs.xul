@@ -1,13 +1,48 @@
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -  Bob Lord <lord@netscape.com>
+   -  Terry Hayes <thayes@netscape.com>
+   -  Javier Delgadillo <javi@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable 
+   - instead of those above.  If you wish to allow use of your 
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+  --> 
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pip/locale/SecurityPrefs.dtd">
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/SecurityPrefs.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        orient="vertical" title="Security Preferences"
-        onload="parent.initPanel('chrome://pip/content/SecurityPrefs.xul');" >
+        orient="vertical" title="&security.title;"
+        onload="onLoad();" >
 
   <!-- List elements to manage for prefs?? -->
   <script language="JavaScript">
@@ -15,42 +50,42 @@
     _elementIDs = [];
   ]]>
   </script>
+  <script src="chrome://global/content/strres.js" />
+  <script src="pippki.js" />
+  <script src="SecurityPrefs.js" />
             
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="Privacy/Security" 
-     description="Settings for Privacy/Security"/>
+  <box class="box-smallheader" title="&security.label;" 
+     description="&security.description;"/>
 
   <titledbox orient="vertical">
-    <title><text value="Reset Settings"/></title>
-<html>
-Use this button to reset Netscape's security preferences to their factory settings.
-</html>
+    <title><text value="&resetsettings.label;"/></title>
+<html id="resetsettings.text" />
     <!-- Prefs -->
     <box halign="left" autostretch="never">
-      <button class="dialog" value="Reset Preferences..." disabled="true"
+      <button class="dialog" value="&resetpreferences.label;" disabled="true"
         oncommand="alert('You FOOL! You'll get us ALL killed!');" />
 </box>
   </titledbox>
 
   <titledbox orient="vertical">
-    <title><text value="Manage Certificates"/></title>
+    <title><text value="&managecerts.label;"/></title>
 <html>
-Use the Certificate Manager to manage your personal certificates, as well as those of other people and certificate authorities.
+&managecerts.text;
 </html>
     <box halign="left" autostretch="never">
-      <button class="dialog" value="Manage Certificates..." disabled="true"
-        oncommand="window.openDialog('chrome://pip/content/cert_manager.xul', '',
-                       'modal=yes,resizable,chrome');" />
+      <button class="dialog" value="&managecerts.button;" disabled="false"
+        oncommand="openCertManager();" />
     </box>
   </titledbox>
 
   <titledbox orient="vertical">
-    <title><text value="Manage Security Devices"/></title>
+    <title><text value="&managedevices.label;"/></title>
 <html>
-Use this button to manage your security devices, such as smart cards.
+&managedevices.text;
 </html>
     <box halign="left" autostretch="never">
-      <button class="dialog" value="Manage Security Devices..." disabled="true"
+      <button class="dialog" value="&managedevices.button;" disabled="true"
         oncommand="window.openDialog('chrome://pip/content/device_manager.xul', '',
                        'modal=yes,resizable,chrome');" />
     </box>
