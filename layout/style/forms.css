@@ -397,6 +397,7 @@ input[type="submit"][disabled] {
 @media print {
   input, textarea, select, button {
     -moz-user-focus: none !important;
+    -moz-user-input: none !important;
   }
 
 }
