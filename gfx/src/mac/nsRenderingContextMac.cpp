@@ -690,13 +690,14 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 
   nsRegionMac *pRegion = (nsRegionMac *)&aRegion;
   
-  mregion = pRegion->GetRegion();
-  mrect = (**mregion).rgnBBox;
+  //pRegion->GetNativeRegion(&mregion);
+  //mrect = (**mregion).rgnBBox;
+  pRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
   
-  rect.x = mrect.left;
-  rect.y = mrect.top;
-  rect.width = mrect.right-mrect.left;
-  rect.height = mrect.bottom-mrect.top;
+  //rect.x = mrect.left;
+  //rect.y = mrect.top;
+  //rect.width = mrect.right-mrect.left;
+  //rect.height = mrect.bottom-mrect.top;
 
   SetClipRectInPixels(rect, aCombine, aClipEmpty);
 
