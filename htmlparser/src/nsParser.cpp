@@ -615,6 +615,7 @@ nsresult nsParser::Terminate(void){
  *  @return  current state
  */
 nsresult nsParser::EnableParser(PRBool aState){
+  NS_START_STOPWATCH(mTotalTime)
   nsIParser* me = nsnull;
 
   // If the stream has already finished, there's a good chance
@@ -638,6 +639,7 @@ nsresult nsParser::EnableParser(PRBool aState){
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
 
+  NS_STOP_STOPWATCH(mTotalTime)
   return result;
 }
 
@@ -666,6 +668,7 @@ nsParser::IsParserEnabled()
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,eParseMode aMode) {
+  NS_START_STOPWATCH(mTotalTime)
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   nsresult result=kBadURL;
@@ -677,7 +680,10 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
     const char* spec;
 #endif
     nsresult rv = aURL->GetSpec(&spec);
-    if (rv != NS_OK) return rv;
+    if (rv != NS_OK) {
+      NS_STOP_STOPWATCH(mTotalTime) 
+      return rv;
+    }
     nsAutoString theName(spec);
 #ifdef NECKO
     nsCRT::free(spec);
@@ -694,6 +700,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
       result=mInternalState=NS_ERROR_HTMLPARSER_BADCONTEXT;
     }
   }
+  NS_STOP_STOPWATCH(mTotalTime)
   return result;
 }
 
@@ -705,7 +712,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
  * @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
-
+  NS_START_STOPWATCH(mTotalTime)
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
 
@@ -728,6 +735,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   else{
     result=mInternalState=NS_ERROR_HTMLPARSER_BADCONTEXT;
   }
+  NS_STOP_STOPWATCH(mTotalTime)
   return result;
 }
 
@@ -746,6 +754,7 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
  
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!
+  NS_START_STOPWATCH(mTotalTime)
 
   nsresult result=NS_OK;
   nsParser* me = this;
@@ -768,6 +777,7 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
       } 
       else {
         NS_RELEASE(me);
+        NS_STOP_STOPWATCH(mTotalTime)
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -790,6 +800,7 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
     }//if
   }//if
   NS_RELEASE(me);
+  NS_STOP_STOPWATCH(mTotalTime)
   return result;
 }
 
@@ -889,7 +900,6 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
-  
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
@@ -904,6 +914,12 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
         if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
+          NS_STOP_STOPWATCH(mTotalTime);
+#ifdef RAPTOR_PERF_METRICS
+          printf("Total Time: ");
+          mTotalTime.Print();
+          printf("\n");
+#endif
           return mInternalState;
         }
         else {
@@ -922,6 +938,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
       mInternalState=result=NS_ERROR_HTMLPARSER_UNRESOLVEDDTD;
     }
   }//if
+
   return result;
 }
 
@@ -1223,6 +1240,15 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
 
   NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
 
+#ifdef RAPTOR_PERF_METRICS
+  if (0 == sourceOffset) {
+    NS_RESET_AND_START_STOPWATCH(mTotalTime);
+  }
+  else {
+    NS_START_STOPWATCH(mTotalTime);
+  }
+#endif
+
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
     if(mParserContext->mScanner) {
       mParserContext->mScanner->GetBuffer().Truncate();
@@ -1298,7 +1324,8 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
     theStartPos+=theNumRead;
   }//while
 
-  result=ResumeParse(); 
+  result=ResumeParse();   
+  NS_STOP_STOPWATCH(mTotalTime);
   return result;
 }
 
@@ -1317,8 +1344,10 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
 nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
-  nsresult result=NS_OK;
+  NS_START_STOPWATCH(mTotalTime)
 
+  nsresult result=NS_OK;
+  
   if(eOnStart==mParserContext->mStreamListenerState) {
     //If you're here, then OnDataAvailable() never got called. 
     //Prior to necko, we never dealt with this case, but the problem may have existed.
@@ -1336,6 +1365,8 @@ nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
 
   mParserContext->mScanner->SetIncremental(PR_FALSE);
   result=ResumeParse(nsnull, PR_TRUE);
+
+  NS_STOP_STOPWATCH(mTotalTime)
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
 
@@ -1477,4 +1508,3 @@ nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
     return NS_OK;
   return NS_ERROR_OUT_OF_MEMORY;
 }
-
