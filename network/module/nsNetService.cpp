@@ -198,7 +198,7 @@ nsNetlibService::nsNetlibService()
     char *ver = PR_GetEnv("NG_REQUEST_VER");
     /* Build up the appversion. */
     sprintf(buf, "%s [%s] (%s; I)",
-        (ver ? ver : "4.05"), 
+        (ver ? ver : "5.0"), 
         XP_AppLanguage, 
         XP_AppPlatform);
     if (XP_AppVersion)
