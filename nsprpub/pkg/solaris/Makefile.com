@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.3 2003/02/08 06:32:06 sonja.mirtitsch%sun.com Exp $"
+#ident	"$Id: Makefile.com,v 1.4 2003/02/08 22:43:37 sonja.mirtitsch%sun.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -20,7 +20,8 @@ FILES = $(DATAFILES) pkginfo prototype
 
 PACKAGE = $(shell basename `pwd`)
 
-PRODUCT_VERSION =  $(MOD_MAJOR_VERSION).$(MOD_MINOR_VERSION).$(MOD_REVISION_VERSION)
+PRODUCT_VERSION =  $(shell echo `grep PR_VERSION $(MOD_DEPTH)/dist/include/nspr/prinit.h \
+                       | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`)
 
 LN = /usr/bin/ln
 
@@ -29,3 +30,6 @@ CLOBBERFILES = $(FILES)
 include $(topsrcdir)/config/rules.mk
 
 # vim: ft=make
+
+
+
