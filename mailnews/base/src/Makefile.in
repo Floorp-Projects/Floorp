@@ -157,6 +157,12 @@ endif
 
 ifdef MOZ_THUNDERBIRD
 CPPSRCS		+= nsMsgContentPolicy.cpp 
+
+
+ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS		+= nsMessengerOSXIntegration.cpp 
+endif
+
 endif
 
 EXPORTS		= \
@@ -190,6 +196,11 @@ EXPORTS		= \
 
 ifdef MOZ_THUNDERBIRD
 EXPORTS		+= nsMsgContentPolicy.h 
+
+ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= nsMessengerOSXIntegration.h 
+endif
+
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
