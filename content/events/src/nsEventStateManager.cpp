@@ -1124,8 +1124,13 @@ nsEventStateManager :: FireContextClick ( )
         // dispatch to DOM
         lastContent->HandleDOMEvent(mEventPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         
-        // dispatch to the frame
-        mGestureDownFrame->HandleEvent(mEventPresContext, &event, &status);   
+        // Firing the DOM event could have caused mGestureDownFrame to
+        // be destroyed.  So, null-check it again.
+
+        if (mGestureDownFrame) {
+          // dispatch to the frame
+          mGestureDownFrame->HandleEvent(mEventPresContext, &event, &status);   
+        }
       }
     }
   }
