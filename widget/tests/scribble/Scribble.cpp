@@ -21,6 +21,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #include "nsXPComCIID.h"
 #include "nsIButton.h"
 #include "nsICheckButton.h"
@@ -93,6 +94,7 @@ static PRBool			gInstalledColorMap = PR_FALSE;
 void  MyLoadImage(char *aFileName);
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -467,6 +469,7 @@ nsresult CreateApplication(int * argc, char ** argv)
 
     // register xpcom classes
     nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
     // register graphics classes
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
