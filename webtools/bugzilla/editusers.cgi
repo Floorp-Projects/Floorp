@@ -19,7 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
-#                 Dave Miller <dave@intrec.com>
+#                 Dave Miller <justdave@syndicomm.com>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Dan Mosedale <dmose@mozilla.org>
 #

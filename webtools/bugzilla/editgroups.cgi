@@ -18,7 +18,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): Dave Miller <dave@intrec.com>
+# Contributor(s): Dave Miller <justdave@syndicomm.com>
 
 # Code derived from editowners.cgi and editusers.cgi
 

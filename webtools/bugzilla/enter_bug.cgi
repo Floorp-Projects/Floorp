@@ -18,7 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-#                 Dave Miller <dave@intrec.com>
+#                 Dave Miller <justdave@syndicomm.com>
 #                 Joe Robins <jmrobins@tgix.com>
 
 

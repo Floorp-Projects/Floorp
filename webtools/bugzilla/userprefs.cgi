@@ -16,7 +16,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Alan Raetz <al_raetz@yahoo.com>
-#                 David Miller <dave@intrec.com>
+#                 David Miller <justdave@syndicomm.com>
 #
 
 use diagnostics;

@@ -18,7 +18,7 @@
 # 
 # Contributor(s): Dan Mosedale <dmose@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
-#                 Dave Miller <dave@intrec.com>
+#                 Dave Miller <justdave@syndicomm.com>
 
 # This object models a set of relations between one item and a group
 # of other items.  An example is the set of relations between one bug

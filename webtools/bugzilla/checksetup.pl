@@ -21,7 +21,7 @@
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
-#                 Dave Miller <dave@intrec.com>
+#                 Dave Miller <justdave@syndicomm.com>
 #
 #
 # Direct any questions on this source code to
@@ -101,8 +101,8 @@ use strict;
 # This are the --LOCAL-- variables defined in 'localconfig'
 # 
 
-# 12/17/00 dave@intrec.com - removed declarations of the localconfig variables
-# from this location.  We don't want these declared here.  They'll
+# 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
+# variables from this location.  We don't want these declared here.  They'll
 # automatically get declared in the process of reading in localconfig, and
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
@@ -420,7 +420,7 @@ if ($newstuff ne "") {
     exit;
 }
 
-# 2000-Dec-18 - dave@intrec.com - see Bug 52921
+# 2000-Dec-18 - justdave@syndicomm.com - see Bug 52921
 # This is a hack to read in the values defined in localconfig without getting
 # them predeclared at compile time if they're missing from localconfig.
 # Ideas swiped from pp. 281-282, O'Reilly's "Programming Perl 2nd Edition"
@@ -575,8 +575,8 @@ if ($my_db_check) {
 
 # original DSN line was:
 #    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
-# removed the $db_name because we don't know it exists yet, and this will
-# fail if we request it here and it doesn't. - dave@intrec.com 2000/09/16
+# removed the $db_name because we don't know it exists yet, and this will fail
+# if we request it here and it doesn't. - justdave@syndicomm.com 2000/09/16
     my $dsn = "DBI:$db_base:;$my_db_host;$my_db_port";
     my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass);
     printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)");

@@ -20,7 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
-#                 Dave Miller <dave@intrec.com>
+#                 Dave Miller <justdave@syndicomm.com>
 
 use diagnostics;
 use strict;
