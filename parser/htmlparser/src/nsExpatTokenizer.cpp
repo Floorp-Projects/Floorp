@@ -551,13 +551,13 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   PRUint32               aCount = 1024,
                          bufsize = aCount*sizeof(PRUnichar);  
   nsIUnicharInputStream *uniIn = nsnull;
-  nsString *utf8 = new nsString("UTF-8");
+  nsAutoString utf8("UTF-8");
 
   nsresult res = NS_NewConverterStream(&uniIn,
                                        nsnull,
                                        in,
                                        aCount,
-                                       utf8);
+                                       &utf8);
   if (NS_FAILED(res)) return res;
 
   PRUint32 aReadCount = 0;
