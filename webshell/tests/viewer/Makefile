@@ -37,6 +37,7 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libraptorgfx.so \
 	$(DIST)/bin/libraptorhtml.so \
+	$(DIST)/bin/libgmbaseunix.so \
 	$(DIST)/bin/libraptorhtmlbase_s.so \
 	$(DIST)/bin/libraptorhtmldoc_s.so \
 	$(DIST)/bin/libraptorhtmlforms_s.so \
