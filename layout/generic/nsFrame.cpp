@@ -62,6 +62,10 @@
 #include "nsITableCellLayout.h"//  "
 #include "nsIGfxTextControlFrame.h"
 
+// For triple-click pref
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);//for tripple click pref
 
 
 // Some Misc #defines
@@ -1075,94 +1079,144 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 }
  
 /**
-  * Handles the Multiple Mouse Press Event for the frame
+  * Multiple Mouse Press -- line or paragraph selection -- for the frame.
+  * Wouldn't it be nice if this didn't have to be hardwired into Frame code?
  */
 NS_IMETHODIMP
 nsFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
                              nsEventStatus*  aEventStatus)
 {
+  nsresult rv;
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
+
+  // Find out whether we're doing line or paragraph selection.
+  // Currently, triple-click selects line unless the user sets
+  // browser.triple_click_selects_paragraph; quadruple-click
+  // selects paragraph, if any platform actually implements it.
+  PRBool selectPara = PR_FALSE;
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
-  if (me->clickCount <3 )
+  if (!me) return NS_OK;
+
+  if (me->clickCount == 4)
+    selectPara = PR_TRUE;
+  else if (me->clickCount == 3)
+  {
+    nsCOMPtr<nsIPref> mPrefs;
+    rv = nsServiceManager::GetService(kPrefCID,
+                                      NS_GET_IID(nsIPref),
+                                      (nsISupports**)&mPrefs);
+
+    if (NS_SUCCEEDED(rv) && mPrefs)
+      mPrefs->GetBoolPref("browser.triple_click_selects_paragraph",
+                          &selectPara);
+  }
+  else
     return NS_OK;
+#ifdef DEBUG_akkana
+  if (selectPara) printf("Selecting Paragraph\n");
+  else printf("Selecting Line\n");
+#endif
+
+  // Line or paragraph selection:
+  PRInt32 startPos = 0;
+  PRInt32 contentOffsetEnd = 0;
+  nsCOMPtr<nsIContent> newContent;
+  PRBool beginContent = PR_FALSE;
+  rv = GetContentAndOffsetsFromPoint(aPresContext,
+                                     aEvent->point,
+                                     getter_AddRefs(newContent),
+                                     startPos,
+                                     contentOffsetEnd,
+                                     beginContent);
+  if (NS_FAILED(rv)) return rv;
+
+  return PeekBackwardAndForward(selectPara ? eSelectParagraph
+                                           : eSelectBeginLine,
+                                selectPara ? eSelectParagraph
+                                           : eSelectEndLine,
+                                startPos, aPresContext, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
+                                nsSelectionAmount aAmountForward,
+                                PRInt32 aStartPos,
+                                nsIPresContext* aPresContext,
+                                PRBool aJumpLines)
+{
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsISelectionController> selcon;
   if (NS_SUCCEEDED(rv))
-  {
     rv = GetSelectionController(aPresContext, getter_AddRefs(selcon));
-  }
+  if (NS_FAILED(rv)) return rv;
+  if (!shell || !selcon)
+    return NS_ERROR_NOT_INITIALIZED;
 
-  if (NS_SUCCEEDED(rv) && shell && selcon) {
-    nsCOMPtr<nsIRenderingContext> acx;      
-    nsCOMPtr<nsIFocusTracker> tracker;
-    tracker = do_QueryInterface(shell, &rv);
-    if (NS_FAILED(rv) || !tracker)
+#ifdef USE_RENDERING_CONTEXT
+  // Why do we need to create a rendering context that we never use?
+  nsCOMPtr<nsIRenderingContext> acx;
+  rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+  if (NS_FAILED(rv))
+    return rv;
+#endif /* USE_RENDERING_CONTEXT */
+
+  nsCOMPtr<nsIFocusTracker> tracker;
+  tracker = do_QueryInterface(shell, &rv);
+  if (NS_FAILED(rv) || !tracker)
+    return rv;
+
+  // Use peek offset one way then the other:
+  nsCOMPtr<nsIContent> startContent;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIContent> endContent;
+  nsCOMPtr<nsIDOMNode> endNode;
+  nsPeekOffsetStruct startpos;
+  startpos.SetData(tracker, 
+                   0, 
+                   aAmountBack,
+                   eDirPrevious,
+                   aStartPos,
+                   PR_FALSE,
+                   PR_TRUE,
+                   aJumpLines);
+  rv = PeekOffset(aPresContext, &startpos);
+  if (NS_FAILED(rv))
+    return rv;
+  nsPeekOffsetStruct endpos;
+  endpos.SetData(tracker, 
+                 0, 
+                 aAmountForward,
+                 eDirNext,
+                 aStartPos,
+                 PR_FALSE,
+                 PR_FALSE,
+                 aJumpLines);
+  rv = PeekOffset(aPresContext, &endpos);
+  if (NS_FAILED(rv))
+    return rv;
+
+  endNode = do_QueryInterface(endpos.mResultContent,&rv);
+  if (NS_FAILED(rv))
+    return rv;
+  startNode = do_QueryInterface(startpos.mResultContent,&rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  if (NS_SUCCEEDED(selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                        getter_AddRefs(selection)))){
+    rv = selection->Collapse(startNode,startpos.mContentOffset);
+    if (NS_FAILED(rv))
       return rv;
-    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
-    if (NS_SUCCEEDED(rv)){
-      PRInt32 startPos = 0;
-      PRInt32 contentOffsetEnd = 0;
-      nsCOMPtr<nsIContent> newContent;
-      PRBool beginContent = PR_FALSE;
-      if (NS_SUCCEEDED(GetContentAndOffsetsFromPoint(aPresContext, aEvent->point,
-                                   getter_AddRefs(newContent),
-                                   startPos, contentOffsetEnd,beginContent))) {
-        // find which word needs to be selected! use peek offset one
-        // way then the other
-        nsCOMPtr<nsIContent> startContent;
-        nsCOMPtr<nsIDOMNode> startNode;
-        nsCOMPtr<nsIContent> endContent;
-        nsCOMPtr<nsIDOMNode> endNode;
-        //peeks{}
-        nsPeekOffsetStruct startpos;
-        startpos.SetData(tracker, 
-                        0, 
-                        eSelectBeginLine,
-                        eDirPrevious,
-                        startPos,
-                        PR_FALSE,
-                        PR_TRUE,
-                        PR_TRUE);
-        rv = PeekOffset(aPresContext, &startpos);
-        if (NS_FAILED(rv))
-          return rv;
-        nsPeekOffsetStruct endpos;
-        endpos.SetData(tracker, 
-                        0, 
-                        eSelectEndLine,
-                        eDirNext,
-                        startPos,
-                        PR_FALSE,
-                        PR_FALSE,
-                        PR_TRUE);
-        rv = PeekOffset(aPresContext, &endpos);
-        if (NS_FAILED(rv))
-          return rv;
-
-        endNode = do_QueryInterface(endpos.mResultContent,&rv);
-        if (NS_FAILED(rv))
-          return rv;
-        startNode = do_QueryInterface(startpos.mResultContent,&rv);
-        if (NS_FAILED(rv))
-          return rv;
-
-        nsCOMPtr<nsIDOMSelection> selection;
-        if (NS_SUCCEEDED(selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection)))){
-          rv = selection->Collapse(startNode,startpos.mContentOffset);
-          if (NS_FAILED(rv))
-            return rv;
-          rv = selection->Extend(endNode,endpos.mContentOffset);
-          if (NS_FAILED(rv))
-            return rv;
-        }
-        //no release 
-      }
-    }
+    rv = selection->Extend(endNode,endpos.mContentOffset);
+    if (NS_FAILED(rv))
+      return rv;
   }
+  //no release 
   return NS_OK;
 }
 
@@ -2350,6 +2404,14 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, P
   return NS_OK;
 }
 
+//
+// What I've pieced together about this routine:
+// Starting with a block frame (from which a line frame can be gotten)
+// and a line number, drill down and get the first/last selectable
+// frame on that line, depending on aPos->mDirection.
+// aOutSideLimit != 0 means ignore aLineStart, instead work from
+// the end (if > 0) or beginning (if < 0).
+//
 nsresult
 nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                                         nsPeekOffsetStruct *aPos,
@@ -2565,6 +2627,216 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+// Get a frame which can contain a line iterator
+// (which generally means it's a block frame).
+static nsILineIterator*
+GetBlockFrameAndLineIter(nsIFrame* aFrame, nsIFrame** aBlockFrame)
+{
+  nsILineIterator* it;
+  nsIFrame *blockFrame = aFrame;
+  nsIFrame *thisBlock = aFrame;
+
+  nsresult result = blockFrame->GetParent(&blockFrame);
+  if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
+    return 0;
+  result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&it);
+  if (NS_SUCCEEDED(result) && it)
+  {
+    if (aBlockFrame)
+      *aBlockFrame = blockFrame;
+    return it;
+  }
+
+  while (blockFrame)
+  {
+    thisBlock = blockFrame;
+    result = blockFrame->GetParent(&blockFrame);
+    if (NS_SUCCEEDED(result) && blockFrame){
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),
+                                          (void**)&it);
+      if (NS_SUCCEEDED(result) && it)
+      {
+        if (aBlockFrame)
+          *aBlockFrame = blockFrame;
+        return it;
+      }
+    }
+  }
+  return 0;
+}
+
+nsresult
+nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
+                             nsPeekOffsetStruct *aPos)
+{
+#ifdef DEBUG_paragraph
+  printf("Selecting paragraph\n");
+#endif
+  nsIFrame* blockFrame;
+  nsCOMPtr<nsILineIterator> iter (getter_AddRefs(GetBlockFrameAndLineIter(this, &blockFrame)));
+  if (!blockFrame || !iter)
+    return NS_ERROR_UNEXPECTED;
+
+  PRInt32 thisLine;
+  nsresult result = iter->FindLineContaining(this, &thisLine);
+#ifdef DEBUG_paragraph
+  printf("Looping %s from line %d\n",
+         aPos->mDirection == eDirPrevious ? "back" : "forward",
+         thisLine);
+#endif
+  if (NS_FAILED(result) || thisLine < 0)
+    return result ? result : NS_ERROR_UNEXPECTED;
+
+  // Now, theoretically, we should be able to loop over lines
+  // looking for lines that end in breaks.
+  PRInt32 di = (aPos->mDirection == eDirPrevious ? -1 : 1);
+  for (PRInt32 i = thisLine; ; i += di)
+  {
+    nsIFrame* firstFrameOnLine;
+    PRInt32 numFramesOnLine;
+    nsRect lineBounds;
+    PRUint32 lineFlags;
+    if (i >= 0)
+    {
+      result = iter->GetLine(i, &firstFrameOnLine, &numFramesOnLine,
+                             lineBounds, &lineFlags);
+      if (NS_FAILED(result) || !firstFrameOnLine || !numFramesOnLine)
+      {
+#ifdef DEBUG_paragraph
+        printf("End loop at line %d\n", i);
+#endif
+        break;
+      }
+    }
+    if (lineFlags & NS_LINE_FLAG_ENDS_IN_BREAK || i < 0)
+    {
+      // Fill in aPos with the info on the new position
+#ifdef DEBUG_paragraph
+      printf("Found a paragraph break at line %d\n", i);
+#endif
+
+      // Save the old direction, but now go one line back the other way
+      nsDirection oldDirection = aPos->mDirection;
+      if (oldDirection == eDirPrevious)
+        aPos->mDirection = eDirNext;
+      else
+        aPos->mDirection = eDirPrevious;
+#ifdef SIMPLE /* nope */
+      result = GetNextPrevLineFromeBlockFrame(aPresContext,
+                                              aPos,
+                                              blockFrame,
+                                              i,
+                                              0);
+      if (NS_FAILED(result))
+        printf("GetNextPrevLineFromeBlockFrame failed\n");
+
+#else /* SIMPLE -- alas, nope */
+      int edgeCase = 0;//no edge case. this should look at thisLine
+      PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
+      //this part will find a frame or a block frame. if its a block frame
+      //it will "drill down" to find a viable frame or it will return an error.
+      do {
+        result = GetNextPrevLineFromeBlockFrame(aPresContext,
+                                                aPos, 
+                                                blockFrame, 
+                                                thisLine, 
+                                                edgeCase //start from thisLine
+          );
+        if (aPos->mResultFrame == this)//we came back to same spot! keep going
+        {
+          aPos->mResultFrame = nsnull;
+          if (aPos->mDirection == eDirPrevious)
+            thisLine--;
+          else
+            thisLine++;
+        }
+        else
+          doneLooping = PR_TRUE; //do not continue with while loop
+        if (NS_SUCCEEDED(result) && aPos->mResultFrame)
+        {
+          result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),
+                                                      getter_AddRefs(iter));
+          if (NS_SUCCEEDED(result) && iter)//we've struck another block element!
+          {
+            doneLooping = PR_FALSE;
+            if (aPos->mDirection == eDirPrevious)
+              edgeCase = 1;//far edge, search from end backwards
+            else
+              edgeCase = -1;//near edge search from beginning onwards
+            thisLine=0;//this line means nothing now.
+            //everything else means something so keep looking "inside" the block
+            blockFrame = aPos->mResultFrame;
+
+          }
+          else
+            result = NS_OK;//THIS is to mean that everything is ok to the containing while loop
+        }
+      } while (!doneLooping);
+
+#endif /* SIMPLE -- alas, nope */
+
+      // Restore old direction before returning:
+      aPos->mDirection = oldDirection;
+      return result;
+    }
+  }
+
+  return NS_OK;
+}
+
+// Line and paragraph selection (and probably several other cases)
+// can get a containing frame from a line iterator, but then need
+// to "drill down" to get the content and offset corresponding to
+// the last child subframe.  Hence:
+// Alas, this doesn't entirely work; it's blocked by some style changes.
+static nsresult
+DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
+                     nsRect& aUsedRect,
+                     nsIPresContext* aPresContext, nsPeekOffsetStruct* aPos)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  PRBool found = PR_FALSE;
+  while (!found)  // I have no idea why this loop exists.  Mike?
+  {
+    nsIFrame *nextFrame = aFrame;
+    PRInt32 i;
+    for (i=1; i<aLineFrameCount && nextFrame; i++) //already have 1st frame
+      // If we do GetNextSibling, we don't go far enough
+      // (is aLineFrameCount too small?)
+      // If we do GetNextInFlow, we hit a null.
+      nextFrame->GetNextSibling(&nextFrame);
+
+    nsPoint offsetPoint; //used for offset of result frame
+    nsIView * view; //used for call of get offset from view
+    nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
+
+    offsetPoint.x += 2* aUsedRect.width; //2* just to be sure we are off the edge
+    // This doesn't seem very efficient since GetPosition
+    // has to do a binary search.
+
+    nsCOMPtr<nsIPresContext> context;
+    rv = aPos->mTracker->GetPresContext(getter_AddRefs(context));
+    if (NS_FAILED(rv)) return rv;
+    PRInt32 endoffset;
+    rv = nextFrame->GetContentAndOffsetsFromPoint(context,
+                                                  offsetPoint,
+                                                  getter_AddRefs(aPos->mResultContent),
+                                                  aPos->mContentOffset,
+                                                  endoffset,
+                                                  aPos->mPreferLeft);
+    if (NS_SUCCEEDED(rv))
+      return PR_TRUE;
+
+#ifdef DEBUG_paragraph
+    NS_ASSERTION(PR_FALSE, "Looping around in PeekOffset\n");
+#endif
+    aLineFrameCount--;
+    if (aLineFrameCount == 0)
+      break;//just fail out
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
@@ -2697,13 +2969,16 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       }
       break;
     }
+
+    case eSelectParagraph:
+      return PeekOffsetParagraph(aPresContext, aPos);
+
     case eSelectBeginLine:
     case eSelectEndLine:
     {
       nsCOMPtr<nsILineIteratorNavigator> it; 
       nsIFrame *blockFrame = this;
       nsIFrame *thisBlock = this;
-      PRInt32   thisLine;
       result = blockFrame->GetParent(&blockFrame);
       if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
         return result;
@@ -2716,24 +2991,29 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
         }
       }
-      //this block is now one child down from blockframe
       if (NS_FAILED(result) || !it || !blockFrame || !thisBlock)
         return result;
+      //this block is now one child down from blockframe
+
+      PRInt32   thisLine;
       result = it->FindLineContaining(thisBlock, &thisLine);
       if (NS_FAILED(result) || thisLine < 0 )
         return result;
-      nsCOMPtr<nsIPresContext> context;
-      result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
-      if (NS_FAILED(result) || !context)
-        return result;
+
       PRInt32 lineFrameCount;
       nsIFrame *firstFrame;
       nsRect  usedRect; 
       PRUint32 lineFlags;
       result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,usedRect,
                            &lineFlags);
+
       if (eSelectBeginLine == aPos->mAmount)
       {
+        nsCOMPtr<nsIPresContext> context;
+        result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
+        if (NS_FAILED(result) || !context)
+          return result;
+
         if (firstFrame)
         {
           nsPoint offsetPoint; //used for offset of result frame
@@ -2747,43 +3027,20 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                                            aPos->mContentOffset,
                                            endoffset,
                                            aPos->mPreferLeft);
+          return result;
         }
       }
-      else
+      else  // eSelectEndLine
       {
-        if (firstFrame)
-        {
-          PRBool found = PR_FALSE;
-          while(!found)
-          {
-            nsIFrame *nextFrame = firstFrame;;
-            for (PRInt32 i=1;i<lineFrameCount;i++)//allready have 1st frame
-              nextFrame->GetNextSibling(&nextFrame);
-
-            nsPoint offsetPoint; //used for offset of result frame
-            nsIView * view; //used for call of get offset from view
-            nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
-
-            offsetPoint.x += 2* usedRect.width; //2* just to be sure we are off the edge
-
-            result = nextFrame->GetContentAndOffsetsFromPoint(context,
-                                            offsetPoint,
-                                            getter_AddRefs(aPos->mResultContent),
-                                            aPos->mContentOffset,
-                                            endoffset,
-                                            aPos->mPreferLeft);
-            if (NS_SUCCEEDED(result))
-              found = PR_TRUE;
-            else
-            {
-              lineFrameCount--;
-              if (lineFrameCount == 0)
-                break;//just fail out
-            }
-          }
-        }
+        // We have the last frame, but we need to drill down
+        // to get the last offset in the last content represented
+        // by that frame.
+        return DrillDownToEndOfLine(firstFrame, thisLine, lineFrameCount,
+                                    usedRect, aPresContext, aPos);
       }
-    }break;
+      return result;
+    }
+    break;
 
     default: 
     {

@@ -64,7 +64,6 @@
 
 #include "nsILineIterator.h"
 
-//tripple click includes
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
@@ -73,7 +72,7 @@
 #endif
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);//for tripple click pref
+static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -1838,7 +1837,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
       //while we have substrings...
-      PRBool drawn = PR_FALSE;
+      //PRBool drawn = PR_FALSE;
       DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue);
       if (!iter.IsDone() && iter.First())
       {
@@ -1848,7 +1847,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         {
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
-          TextStyle &currentStyle = iter.CurrentStyle();
+          //TextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor = iter.CurrentForeGroundColor();
           nscolor    currentBKColor;
 
@@ -2362,7 +2361,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 	      {
 	      PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
 	      PRUint32   currentlength= iter.CurrentLength();
-	      TextStyle &currentStyle = iter.CurrentStyle();
+	      //TextStyle &currentStyle = iter.CurrentStyle();
 	      nscolor    currentFGColor = iter.CurrentForeGroundColor();
 	      nscolor    currentBKColor;
 	      GetWidth(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newWidth);
@@ -2560,7 +2559,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         {
           char *currenttext  = iter.CurrentTextCStrPtr();
           PRUint32   currentlength= iter.CurrentLength();
-          TextStyle &currentStyle = iter.CurrentStyle();
+          //TextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor = iter.CurrentForeGroundColor();
           nscolor    currentBKColor;
 
@@ -3139,7 +3138,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   }
  
   if (aPos->mAmount == eSelectLine || aPos->mAmount == eSelectBeginLine 
-      || aPos->mAmount == eSelectEndLine)
+      || aPos->mAmount == eSelectEndLine || aPos->mAmount == eSelectParagraph)
   {
       return nsFrame::PeekOffset(aPresContext, aPos);
   }
@@ -3409,160 +3408,32 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
 NS_IMETHODIMP
 nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus*  aEventStatus)
+                                 nsGUIEvent*     aEvent,
+                                 nsEventStatus*  aEventStatus)
 {
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
-  
+
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsISelectionController> selCon;
-  rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-  if (NS_FAILED(rv) || !selCon)
-    return rv?rv:NS_ERROR_FAILURE;
-  if (me->clickCount > 2)//triple clicking
-  {
-    nsCOMPtr<nsIPref>     mPrefs;
-    PRInt32 prefInt = 0;
-    rv = nsServiceManager::GetService(kPrefCID, 
-                                               NS_GET_IID(nsIPref), 
-                                               (nsISupports**)&mPrefs); 
+  if (!me) return NS_OK;
 
-    if (NS_SUCCEEDED(rv) && mPrefs) 
-    { 
-      if (NS_FAILED(mPrefs->GetIntPref("browser.triple_click_style", &prefInt)) || !prefInt)
-        return nsFrame::HandleMultiplePress(aPresContext, aEvent, aEventStatus);
-    }
-    //THIS NEXT CODE IS FOR PARAGRAPH
-    nsCOMPtr<nsIDOMNode> startNode;
-    nsCOMPtr<nsIDOMNode> endNode;
+  // Triple- and greater click counts are handled by nsFrame.
+  if (me->clickCount > 2)
+    return nsFrame::HandleMultiplePress(aPresContext, aEvent, aEventStatus);
 
-    nsIFrame *currentFrame = this;
-    nsIFrame *prevFrame;
-     
-    GetPrevInFlow(&prevFrame);
-    while(prevFrame){
-      currentFrame = prevFrame;
-      currentFrame->GetPrevInFlow(&prevFrame);
-      if (NS_FAILED(rv))
-        break;
-    }
-    prevFrame = currentFrame;
-    currentFrame = this;
-    nsIFrame *nextFrame;
-    GetNextInFlow(&nextFrame);
+  // Double-click: word selection, handled here:
+  PRInt32 startPos = 0;
+  PRInt32 contentOffsetEnd = 0;
+  nsCOMPtr<nsIContent> newContent;
+  nsresult rv = GetPosition(aPresContext, aEvent->point,
+                            getter_AddRefs(newContent), startPos,
+                            contentOffsetEnd);
+  if (NS_FAILED(rv))
+    return rv;
 
-    while (nextFrame){
-      currentFrame = nextFrame;
-      currentFrame->GetNextInFlow(&nextFrame);
-      if (NS_FAILED(rv))
-        break;
-    }
-    nextFrame = currentFrame;
-    nsCOMPtr<nsIContent> content;
-    if (prevFrame)
-      prevFrame->GetContent(getter_AddRefs(content));
-
-    startNode = do_QueryInterface(content,&rv);
-    if (NS_FAILED(rv) || !startNode)
-      return rv?rv:NS_ERROR_FAILURE;
-
-    nextFrame->GetContent(getter_AddRefs(content));
-
-    endNode = do_QueryInterface(content,&rv);
-    if (NS_FAILED(rv) || !endNode)
-      return rv?rv:NS_ERROR_FAILURE;
-    
-    PRInt32 startOffset;
-    PRInt32 endOffset;
-    PRInt32 unusedOffset;
-
-    rv = prevFrame->GetOffsets(startOffset,unusedOffset);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = nextFrame->GetOffsets(unusedOffset,endOffset);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIDOMSelection> selection;
-    if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection)))){
-      rv = selection->Collapse(startNode, startOffset);
-      if (NS_FAILED(rv))
-        return rv;
-      rv = selection->Extend(endNode, endOffset);
-      if (NS_FAILED(rv))
-        return rv;
-    }
-  }
-  else if (NS_SUCCEEDED(rv) && shell) {
-    nsCOMPtr<nsIRenderingContext> acx;      
-    nsCOMPtr<nsIFocusTracker> tracker;
-    tracker = do_QueryInterface(shell, &rv);
-    if (NS_FAILED(rv) || !tracker)
-      return rv?rv:NS_ERROR_FAILURE;
-
-    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
-    if (NS_SUCCEEDED(rv)){
-      PRInt32 startPos = 0;
-      PRInt32 contentOffsetEnd = 0;
-      nsCOMPtr<nsIContent> newContent;
-      //find which word needs to be selected! use peek offset one way then the other
-      nsCOMPtr<nsIDOMNode> startNode;
-      nsCOMPtr<nsIDOMNode> endNode;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point,
-                       getter_AddRefs(newContent), startPos, contentOffsetEnd))){
-        //peeks{}
-        nsPeekOffsetStruct startpos;
-        startpos.SetData(tracker, 
-                        0, 
-                        eSelectWord,
-                        eDirPrevious,
-                        startPos,
-                        PR_FALSE,
-                        PR_TRUE,
-                        PR_FALSE);
-        rv = PeekOffset(aPresContext, &startpos);
-        if (NS_FAILED(rv))
-          return rv;
-        nsPeekOffsetStruct endpos;
-        endpos.SetData(tracker, 
-                        0, 
-                        eSelectWord,
-                        eDirNext,
-                        startPos,
-                        PR_FALSE,
-                        PR_FALSE,
-                        PR_FALSE);
-        rv = PeekOffset(aPresContext, &endpos);
-        if (NS_FAILED(rv))
-          return rv;
-
-        endNode = do_QueryInterface(endpos.mResultContent,&rv);
-        if (NS_FAILED(rv))
-          return rv;
-        startNode = do_QueryInterface(startpos.mResultContent,&rv);
-        if (NS_FAILED(rv))
-          return rv;
-
-        nsCOMPtr<nsIDOMSelection> selection;
-        if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection)))){
-          rv = selection->Collapse(startNode,startpos.mContentOffset);
-          if (NS_FAILED(rv))
-            return rv;
-          rv = selection->Extend(endNode,endpos.mContentOffset);
-          if (NS_FAILED(rv))
-            return rv;
-        }
-        //no release 
-      }
-    }
-  }
-  return NS_OK;
-
+  return PeekBackwardAndForward(eSelectWord, eSelectWord, startPos,
+                                aPresContext, PR_FALSE);
 }
 
 
@@ -4227,7 +4098,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   if (NS_OK != rv) {
     return rv;
   }
-  PRInt32 contentLength = tx.GetContentLength();
+  //PRInt32 contentLength = tx.GetContentLength();
 
   // Set inWord to true if we are part of a previous piece of text's word. This
   // is only valid for one pass through the measuring loop.

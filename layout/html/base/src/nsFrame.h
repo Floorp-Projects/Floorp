@@ -262,6 +262,8 @@ public:
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
+  NS_IMETHOD  PeekOffsetParagraph(nsIPresContext* aPresContext,
+                                  nsPeekOffsetStruct *aPos);
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
@@ -305,6 +307,11 @@ public:
                                            PRInt32&        aContentOffset,
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent);
+  NS_IMETHOD PeekBackwardAndForward(nsSelectionAmount aAmountBack,
+                                    nsSelectionAmount aAmountForward,
+                                    PRInt32 aStartPos,
+                                    nsIPresContext* aPresContext,
+                                    PRBool aJumpLines);
 
 
   //--------------------------------------------------
