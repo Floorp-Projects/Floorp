@@ -82,7 +82,6 @@
 	  <rule nc:CanCreateSubfolders="false" iscontainer="true" isempty="true">
             <menupopup>
                         <menuitem disabled="true" uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
-                                oncommand="PickedMsgFolder(event.target,'msgNewFolderPicker')"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -140,6 +139,17 @@
               </menu>
             </menupopup>
           </rule>
+	  <!-- this makes the special folders that you can't rename
+		like TRASH and INBOX show up, but they are disabled -->
+	  <rule nc:CanRename="false" iscontainer="true" isempty="true">
+            <menupopup>
+                        <menuitem disabled="true" uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+            </menupopup>
+          </rule>
           <rule nc:CanRename="true">
             <menupopup>
                         <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
@@ -176,7 +186,7 @@
               </menu>
             </menupopup>
           </rule>
-	  <rule nc:CanRename="false" nc:ServerType="nntp">
+	  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
                 <!-- don't show nntp servers in the file picker -->
           </rule>
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
@@ -226,7 +236,7 @@
               </menu>
             </menupopup>
           </rule>
-	  <rule nc:CanRename="false" nc:ServerType="nntp">
+	  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
                 <!-- don't show nntp servers in the file picker -->
           </rule>
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
@@ -276,7 +286,7 @@
               </menu>
             </menupopup>
           </rule>
-	  <rule nc:CanRename="false" nc:ServerType="nntp">
+	  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
                 <!-- don't show nntp servers in the file picker -->
           </rule>
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
@@ -326,7 +336,7 @@
               </menu>
             </menupopup>
           </rule>
-	  <rule nc:CanRename="false" nc:ServerType="nntp">
+	  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
                 <!-- don't show nntp servers in the file picker -->
           </rule>
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
