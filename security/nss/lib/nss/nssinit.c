@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.45 2002/05/01 01:04:41 jpierre%netscape.com Exp $
+ # $Id: nssinit.c,v 1.46 2002/05/03 20:59:50 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -298,16 +298,17 @@ static void nss_FindExternalRootPaths(const char *dbpath, const char* secmodpref
     if (path[path_len-1] != FILE_SEP) {
         path[path_len++] = FILE_SEP;
     }
-    PORT_Strcpy(oldpath, path);
+    PORT_Memcpy(oldpath,path,path_len);
     PORT_Strcpy(&path[path_len],dllname);
     if (secmodprefix) {
         lastsep = PORT_Strrchr(secmodprefix, FILE_SEP);
         if (lastsep) {
-            PORT_Strncpy(&oldpath[path_len],secmodprefix,
-                         lastsep-secmodprefix+1); /* FILE_SEP */
+            int secmoddir_len = lastsep-secmodprefix+1; /* FILE_SEP */
+            PORT_Memcpy(&oldpath[path_len],secmodprefix,secmoddir_len);
+            path_len += secmoddir_len;
         }
     }
-    PORT_Strcat(oldpath, dllname);
+    PORT_Strcpy(&oldpath[path_len],dllname);
     *retoldpath = oldpath;
     *retnewpath = path;
     return;
@@ -328,6 +329,12 @@ nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
 {
 	char *path = NULL;
         char *oldpath = NULL;
+
+        /*
+         * 'oldpath' is the external root path in NSS 3.3.x or older.
+         * For backward compatibility we try to load the root certs
+         * module with the old path first.
+         */
         nss_FindExternalRootPaths(dbpath, secmodprefix, &oldpath, &path);
         if (oldpath) {
             (void) SECMOD_AddNewModule("Root Certs",oldpath, 0, 0);
