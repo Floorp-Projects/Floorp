@@ -73,7 +73,7 @@ enum nsXFormsModelEvent {
   eEvent_BindingException,
   eEvent_LinkException,
   eEvent_LinkError,
-  eEvent_ComputeExeception
+  eEvent_ComputeException
 };
 
 class nsXFormsModelElement : public nsXFormsElement,
