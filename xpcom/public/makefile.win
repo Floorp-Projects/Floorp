@@ -39,11 +39,12 @@ EXPORTS = \
 	nsTraceRefcnt.h		\
 	nsVector.h		\
 	plvector.h		\
-        nsXPComFactory.h        \
-        nsXPComCIID.h           \
-        nsIEventQueueService.h  \
-        nsIAllocator.h          \
-        nsIRegistry.h  \
+    nsXPComFactory.h        \
+    nsXPComCIID.h           \
+    nsIEventQueueService.h  \
+    nsIAllocator.h          \
+    nsIRegistry.h  \
+    nsIGenericFactory.h \
 	$(NULL)			
 
 MODULE = xpcom 
