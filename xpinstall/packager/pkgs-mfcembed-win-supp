@@ -9,5 +9,4 @@
 ;
 
 [gre_app_support]
-mfcembed.exe
-mfcEmbedComponents.dll
+chrome\installed-chrome.txt
