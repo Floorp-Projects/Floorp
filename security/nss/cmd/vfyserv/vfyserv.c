@@ -308,6 +308,10 @@ do_connects(void *a, int connection)
 	if (secStatus != SECSuccess) {
 		/* error already printed out in handle_connection */
 		/* errWarn("handle_connection"); */
+		prStatus = PR_Close(sslSocket);
+		if (prStatus != PR_SUCCESS) {
+			errWarn("PR_Close");
+		}
 		return secStatus;
 	}
 
