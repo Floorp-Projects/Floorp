@@ -38,7 +38,6 @@
 #include "nsIPresShell.h"
 #include "nsGenericHTMLElement.h"
 #include "nsCSSRendering.h"
-#include "nsISelfScrollingFrame.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsISVGFrame.h"
