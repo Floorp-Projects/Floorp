@@ -80,6 +80,9 @@ pref("mail.auth_login", true);
 pref("mail.default_drafts", "");    // empty string use default Drafts name;
 pref("mail.default_templates", ""); // empty string use default Templates name
 
+// check all folders for new mail
+pref("mail.check_all_imap_folders_for_new", false);
+
 pref("mail.imap.server_sub_directory",      "");
 pref("mail.imap.max_cached_connections",    10);
 pref("mail.imap.fetch_by_chunks",           true);
