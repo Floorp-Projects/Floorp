@@ -17,6 +17,11 @@
 #undef _POSIX_SOURCE
 #endif
 
+// Some versions of glibc (i.e., the one that comes with RedHat 6.0 rather
+// than 6.1) seem to do things a bit differently when libpthread is involved.
+// If things don't work for you, try defining this:
+//#define JPROF_PTHREAD_HACK
+
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
@@ -72,15 +77,23 @@ static void CrawlStack(malloc_log_entry* me, jmp_buf jb, char* first)
 #endif
   u_long numpcs = 0;
 
+#ifdef JPROF_PTHREAD_HACK
+  int skip = 3;
+#else
   // This is a linux hack we have to do to figure out where the signal was
   // called from
   me->pcs[numpcs++] = first;
 
   int skip = 3;
+#endif
   while (numpcs < MAX_STACK_CRAWL) {
     u_long* nextbp = (u_long*) *bp++;
     u_long pc = *bp;
+#ifdef JPROF_PTHREAD_HACK
+    if ((pc < 0x08000000) || ((pc > 0x7fffffff) && (skip <= 0)) || (nextbp < bp)) {
+#else
     if ((pc < 0x08000000) || (pc > 0x7fffffff) || (nextbp < bp)) {
+#endif
       break;
     }
     if (--skip < 0) {
@@ -179,10 +192,16 @@ void *mystry)
 	milisec = static_cast<size_t>(usec*1e-3);
     }
 
+#ifdef JPROF_PTHREAD_HACK
+    Log(milisec, NULL);
+#else
     // The mystry[19] thing is a hack to figure out where we were called from.
     // By playing around with the debugger it looks like [19] contains the
     // information I need.
+    // it's really ((ucontext_t *)mystry)->uc_mcontext.gregs[14] which is
+    // the EIP register when the handler was called
     Log(milisec, ((char**)mystry)[19]);
+#endif
     startSignalCounter(timerMiliSec);
 }
 
