@@ -97,25 +97,6 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
                                          const nsAString& aData);
 
 nsresult
-NS_NewXMLEntity(nsIContent** aInstancePtrResult,
-                const nsAString& aName,
-                const nsAString& aPublicId,
-                const nsAString& aSystemId,
-                const nsAString& aNotationName);
-
-nsresult
-NS_NewXMLNotation(nsIContent** aInstancePtrResult,
-                  const nsAString& aName,
-                  const nsAString& aPublicId,
-                  const nsAString& aSystemId);
-
-class nsIDOMNamedNodeMap;
-
-nsresult
-NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
-                      nsISupportsArray *aArray);
-
-nsresult
 NS_NewXMLCDATASection(nsIContent** aInstancePtrResult);
 
 #endif // nsIXMLContent_h___

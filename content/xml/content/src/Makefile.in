@@ -49,9 +49,6 @@ CPPSRCS		= \
 		nsXMLElement.cpp \
 		nsXMLCDATASection.cpp \
 		nsXMLProcessingInstruction.cpp \
-		nsXMLEntity.cpp \
-		nsXMLNotation.cpp \
-		nsXMLNamedNodeMap.cpp \
 		nsXMLStylesheetPI.cpp \
 		$(NULL)
 

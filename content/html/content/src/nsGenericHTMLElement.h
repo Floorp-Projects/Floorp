@@ -1329,9 +1329,6 @@ nsresult
 NS_NewHTMLMetaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLModElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
 NS_NewHTMLOListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
