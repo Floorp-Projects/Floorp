@@ -39,6 +39,7 @@
 #define __nsProxyEvent_h_
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
@@ -86,21 +87,16 @@ class nsProxyObjectCallInfo;
 
 
 
-// Using the ISupports interface just for addrefing.  
-
-class nsProxyObject : public nsISupports  
+class nsProxyObject
 {
 public:
-                        
-    NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
-    	// wierd, but it shouldn't break.  Need to discuss this with dougt
-
-    nsProxyObject();
     nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject);
     nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
 
-    virtual             ~nsProxyObject();
+    void AddRef();
+    void Release();
+
+                        ~nsProxyObject();
 
     nsresult            Post( PRUint32            methodIndex, 
                               nsXPTMethodInfo   * info, 
@@ -108,13 +104,15 @@ public:
                               nsIInterfaceInfo  * interfaceInfo);
     
     nsresult            PostAndWait(nsProxyObjectCallInfo *proxyInfo);
-    nsISupports*        GetRealObject() const;
-    nsIEventQueue*      GetQueue() const;
+    nsISupports*        GetRealObject() const { return mRealObject; }
+    nsIEventQueue*      GetQueue() const { return mDestQueue; }
     PRInt32             GetProxyType() const { return mProxyType; }
 
     friend class nsProxyEventObject;
 private:
     
+    nsAutoRefCnt              mRefCnt;
+
     PRInt32                   mProxyType;
     
     nsCOMPtr<nsIEventQueue>   mDestQueue;        /* destination queue */
@@ -142,8 +140,8 @@ public:
                           PRUint32 parameterCount, 
                           PLEvent *event);
 
-    virtual ~nsProxyObjectCallInfo();
-    
+    ~nsProxyObjectCallInfo();
+
     PRUint32            GetMethodIndex() const { return mMethodIndex; }
     nsXPTCVariant*      GetParameterList() const { return mParameterList; }
     PRUint32            GetParameterCount() const { return mParameterCount; }
@@ -174,7 +172,7 @@ private:
                                                     when we are done invoking the method (only PROXY_SYNC). 
                                                   */
 
-    nsCOMPtr<nsProxyObject>   mOwner;            /* this is the strong referenced nsProxyObject */
+    nsRefPtr<nsProxyObject>   mOwner;            /* this is the strong referenced nsProxyObject */
    
     void RefCountInInterfacePointers(PRBool addRef);
     void CopyStrings(PRBool copy);
