@@ -1435,13 +1435,18 @@ nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+nsBrowserWindow::ProgressLoadURL(nsIWebShell* aShell,
+                                 const PRUnichar* aURL,
+                                 PRInt32 aProgress,
+                                 PRInt32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
+nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
+                            const PRUnichar* aURL,
+                            PRInt32 aStatus)
 {
   if (mThrobber) {
     mThrobber->Stop();
@@ -1453,6 +1458,9 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
     msg.Append(" done.");
 
     mStatus->SetText(msg, size);
+  }
+  if (nsnull != mApp) {
+    mApp->EndLoadURL(aShell, aURL, aStatus);
   }
   return NS_OK;
 }
@@ -1584,8 +1592,8 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 nsBrowserWindow::OnStopBinding(nsIURL* aURL,
-			       PRInt32 status,
-			       const nsString& aMsg)
+                               PRInt32 status,
+                               const nsString& aMsg)
 {
   if (mStatus) {
     nsAutoString url;
