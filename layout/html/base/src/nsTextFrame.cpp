@@ -389,9 +389,6 @@ public:
   nsTextFrame();
 
   // nsIFrame
-  NS_IMETHOD QueryInterface(const nsIID& aIID,
-                            void** aInstancePtrResult);
-
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const                nsRect& aDirtyRect,
@@ -825,17 +822,6 @@ PRPackedBool nsTextFrame::sWordSelectEatSpaceAfter = PR_TRUE;
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
-                                     void** aInstancePtrResult)
-{
-
-  NS_PRECONDITION(aInstancePtrResult, "null pointer");
-  if (!aInstancePtrResult)
-  return NS_ERROR_NULL_POINTER;
-
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
-}
-
 NS_IMETHODIMP
 nsTextFrame::Destroy(nsIPresContext* aPresContext)
 {
