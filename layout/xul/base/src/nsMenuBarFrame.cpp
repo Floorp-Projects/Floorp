@@ -649,6 +649,8 @@ nsMenuBarFrame::Enter()
   if (!mCurrentMenu)
     return NS_OK;
 
+  ClearRecentlyRolledUp();
+
   // See if our menu is open.
   PRBool isOpen = PR_FALSE;
   mCurrentMenu->MenuIsOpen(isOpen);
@@ -666,6 +668,27 @@ nsMenuBarFrame::Enter()
 }
 
 NS_IMETHODIMP
+nsMenuBarFrame::ClearRecentlyRolledUp()
+{
+  // We're no longer in danger of popping down a menu from the same 
+  // click on the menubar, which was supposed to toggle the menu closed
+  mRecentRollupMenu = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBarFrame::RecentlyRolledUp(nsIMenuFrame *aMenuFrame, PRBool *aJustRolledUp)
+{
+  // Don't let a click reopen a menu that was just rolled up
+  // from the same click. Otherwise, the user can't click on
+  // a menubar item to toggle its submenu closed.
+  *aJustRolledUp = (mRecentRollupMenu == aMenuFrame);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMenuBarFrame::HideChain()
 {
   // Stop capturing rollups
@@ -674,10 +697,13 @@ nsMenuBarFrame::HideChain()
   if (nsMenuFrame::sDismissalListener)
     nsMenuFrame::sDismissalListener->Unregister();
 
+  ClearRecentlyRolledUp();
   if (mCurrentMenu) {
     mCurrentMenu->ActivateMenu(PR_FALSE);
     mCurrentMenu->SelectMenu(PR_FALSE);
+    mRecentRollupMenu = mCurrentMenu;
   }
+
   return NS_OK;
 }
 
