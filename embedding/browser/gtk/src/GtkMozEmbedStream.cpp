@@ -75,11 +75,36 @@ NS_IMETHODIMP GtkMozEmbedStream::Read(char * aBuf, PRUint32 aCount, PRUint32 *_r
   return mInputStream->Read(aBuf, aCount, _retval);
 }
 
-// nsIBaseStream interface
-
 NS_IMETHODIMP GtkMozEmbedStream::Close(void)
 {
   return mInputStream->Close();
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GtkMozEmbedStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    NS_NOTREACHED("ReadSegments");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedStream::GetNonBlocking(PRBool *aNonBlocking)
+{
+    NS_NOTREACHED("GetNonBlocking");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedStream::GetObserver(nsIInputStreamObserver * *aObserver)
+{
+    NS_NOTREACHED("GetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedStream::SetObserver(nsIInputStreamObserver * aObserver)
+{
+    NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
