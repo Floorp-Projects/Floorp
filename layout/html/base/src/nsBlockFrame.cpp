@@ -4265,11 +4265,11 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     addedBullet = PR_TRUE;
   }
   nsSize maxElementSize;
-  nscoord lineAscent;
-  aLineLayout.VerticalAlignLine(aLine, maxElementSize, lineAscent);
-  // Our ascent is the ascent of our first line
+  aLineLayout.VerticalAlignLine(aLine, maxElementSize);
+  // Our ascent is the ascent of our first line (but if this line is all
+  // whitespace we'll correct things in |ReflowBlockFrame|).
   if (aLine == mLines.front()) {
-    mAscent = lineAscent;
+    mAscent = aLine->mBounds.y + aLine->GetAscent();
   }
 
   // See if we're shrink wrapping the width
@@ -5673,6 +5673,24 @@ nsBlockFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   return rv;
 }
 
+/* virtual */ void
+nsBlockFrame::PaintTextDecorationLines(nsIRenderingContext& aRenderingContext, 
+                                       nscolor aColor, 
+                                       nscoord aOffset, 
+                                       nscoord aAscent, 
+                                       nscoord aSize) 
+{
+  aRenderingContext.SetColor(aColor);
+  for (nsLineList::iterator line = begin_lines(), line_end = end_lines(); 
+       line != line_end; ++line) {
+    if (!line->IsBlock()) {
+      aRenderingContext.FillRect(line->mBounds.x, 
+                                 line->mBounds.y + line->GetAscent() - aOffset, 
+                                 line->mBounds.width, aSize);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsBlockFrame::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
@@ -5700,33 +5718,8 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif  
 
-  PRBool isVisible;
-  if (NS_FAILED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Only paint the border and background if we're visible
-  if (isVisible && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
-      (0 != mRect.width) && (0 != mRect.height)) {
-    PRIntn skipSides = GetSkipSides();
-    const nsStyleBorder* border = (const nsStyleBorder*)
-      mStyleContext->GetStyleData(eStyleStruct_Border);
-    const nsStylePadding* padding = (const nsStylePadding*)
-      mStyleContext->GetStyleData(eStyleStruct_Padding);
-    const nsStyleOutline* outline = (const nsStyleOutline*)
-      mStyleContext->GetStyleData(eStyleStruct_Outline);
-
-    // Paint background, border and outline
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *border, *padding,
-                                    0, 0);
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *border, mStyleContext,
-                                skipSides);
-    nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                 aDirtyRect, rect, *border, *outline,
-                                 mStyleContext, 0);
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
   }
 
   PRBool paintingSuppressed = PR_FALSE;  
@@ -5752,7 +5745,9 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_FLOATERS == aWhichLayer) {
     PaintFloaters(aPresContext, aRenderingContext, aDirtyRect);
   }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  PaintDecorationsAndChildren(aPresContext, aRenderingContext,
+                              aDirtyRect, aWhichLayer, PR_TRUE);
 
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     PRBool clipState;

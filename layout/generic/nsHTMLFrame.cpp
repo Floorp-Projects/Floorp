@@ -388,6 +388,22 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags)
 {
+  // We are wrapping the root frame of a document. We
+  // need to check the pres shell to find out if painting is locked
+  // down (because we're still in the early stages of document
+  // and frame construction.  If painting is locked down, then we
+  // do not paint our children.  
+  PRBool paintingSuppressed = PR_FALSE;
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->IsPaintingSuppressed(&paintingSuppressed);
+  if (paintingSuppressed) {
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
+    }
+    return NS_OK;
+  }
+
   nsresult rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {

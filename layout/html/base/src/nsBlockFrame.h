@@ -212,6 +212,16 @@ protected:
 
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
 
+  /*
+   * Overides member function of nsHTMLContainerFrame. Needed to handle the 
+   * lines in a nsBlockFrame properly.
+   */
+  virtual void PaintTextDecorationLines(nsIRenderingContext& aRenderingContext,
+                                        nscolor aColor,
+                                        nscoord aOffset,
+                                        nscoord aAscent,
+                                        nscoord aSize);
+
   /**
    * GetClosestLine will return the line that VERTICALLY owns the point closest to aPoint.y
    * aOrigin is the offset for this block frame to its frame.

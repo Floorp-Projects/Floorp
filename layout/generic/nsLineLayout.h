@@ -110,8 +110,7 @@ public:
   }
 
   void VerticalAlignLine(nsLineBox* aLineBox,
-                         nsSize& aMaxElementSizeResult,
-                         nscoord& aLineBoxAscent);
+                         nsSize& aMaxElementSizeResult);
 
   PRBool TrimTrailingWhiteSpace();
 

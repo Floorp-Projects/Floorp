@@ -324,6 +324,37 @@ nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
 }
 
 
+NS_IMETHODIMP
+nsInlineFrame::Paint(nsIPresContext*      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer,
+                     PRUint32             aFlags)
+{
+  if (NS_FRAME_IS_UNFLOWABLE & mState) {
+    return NS_OK;
+  }
+
+  // Paint inline element backgrounds in the foreground layer (bug 36710).
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
+  }
+    
+  // The sole purpose of this is to trigger display of the selection
+  // window for Named Anchors, which don't have any children and
+  // normally don't have any size, but in Editor we use CSS to display
+  // an image to represent this "hidden" element.
+  if (!mFrames.FirstChild()) {
+    nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                   aWhichLayer, aFlags);
+  }
+
+  PaintDecorationsAndChildren(aPresContext, aRenderingContext,
+                              aDirtyRect, aWhichLayer, PR_FALSE,
+                              aFlags);
+  return NS_OK;
+}
+
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
