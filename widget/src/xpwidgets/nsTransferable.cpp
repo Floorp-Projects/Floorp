@@ -101,6 +101,10 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   */
 NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsVoidArray ** aDataFlavorList)
 {
+  if (nsnull == aDataFlavorList) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsVoidArray * array = new nsVoidArray();
   if (nsnull != array) {
     PRInt32 i;
@@ -121,6 +125,9 @@ NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsVoidArray ** aDataFlavorL
   */
 NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
 {
+  if (nsnull == aDataFlavor || nsnull == aData || nsnull == aDataLen) {
+    return NS_ERROR_FAILURE;
+  }
 
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
@@ -147,12 +154,36 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aD
 }
 
 /**
+  * The transferable owns the data (memory) and only gives the aData a copy of the pointer address to it.
+  *
+  */
+NS_IMETHODIMP nsTransferable::GetAnyTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
+{
+  if (nsnull == aDataFlavor || nsnull == aData || nsnull == aDataLen) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    if (nsnull != data->mData && data->mDataLen > 0) {
+      *aDataFlavor = *data->mFlavor;
+      *aData      = data->mData;
+      *aDataLen  = data->mDataLen;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/**
   * The transferable now owns the data (the memory pointing to it)
   *
   */
 NS_IMETHODIMP nsTransferable::SetTransferData(nsString * aDataFlavor, void * aData, PRUint32 aDataLen)
 {
-  if (aData == nsnull) {
+  if (nsnull == aDataFlavor) {
     return NS_ERROR_FAILURE;
   }
 

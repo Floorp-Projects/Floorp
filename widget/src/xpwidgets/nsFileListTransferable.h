@@ -53,6 +53,7 @@ public:
 
    // Transferable still owns |aData|. Do not delete it.
   NS_IMETHOD GetTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen);
+  NS_IMETHOD GetAnyTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen);
   NS_IMETHOD_(PRBool) IsLargeDataSet();
 
   //////////////////////////

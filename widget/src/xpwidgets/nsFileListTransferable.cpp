@@ -99,9 +99,14 @@ NS_IMETHODIMP nsFileListTransferable::GetTransferDataFlavors(nsVoidArray ** aDat
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFileListTransferable::GetTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
 {
+  if (nsnull != aDataFlavor) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (nsnull != mFileList && mFileListDataFlavor.Equals(*aDataFlavor)) {
     *aData    = mFileList;
     *aDataLen = mFileList->Count();
+    return NS_OK;
   } else {
     *aData   = nsnull;
     aDataLen = 0;
@@ -110,6 +115,19 @@ NS_IMETHODIMP nsFileListTransferable::GetTransferData(nsString * aDataFlavor, vo
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsFileListTransferable::GetAnyTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
+{
+  if (nsnull != aDataFlavor) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aData       = mFileList;
+  *aDataLen    = mFileList->Count();
+  *aDataFlavor = mFileListDataFlavor;
+
+  return NS_OK;
+
+}
 //---------------------------------------------------
 // remove all the items and delete them
 //---------------------------------------------------
