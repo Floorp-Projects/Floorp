@@ -2720,3 +2720,4 @@ nsParser::GetDTD(nsIDTD** aDTD)
   
   return NS_OK;
 }
+
