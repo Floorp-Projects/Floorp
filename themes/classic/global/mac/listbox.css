@@ -30,6 +30,7 @@
 /* ::::: listbox ::::: */
 
 listbox {
+  -moz-appearance: listbox;
   margin: 2px 4px;
   border-top: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
