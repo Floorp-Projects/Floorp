@@ -146,7 +146,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  result = mRules->WillInsertBreak(selection, &cancel);
+  result = mRules->WillDoAction(nsHTMLEditRules::kInsertBreak, selection, nsnull, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     // create the new BR node
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
       }
     }
     // post-process, always called if WillInsertBreak didn't return cancel==PR_TRUE
-    result = mRules->DidInsertBreak(selection, result);
+    result = mRules->DidDoAction(nsHTMLEditRules::kInsertBreak, selection, nsnull, result);
   }
   nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
   NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
