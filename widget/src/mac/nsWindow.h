@@ -136,8 +136,7 @@ public:
     void SetResizeRect(nsRect& aRect);
     void SetResized(PRBool aResized);
     void GetResizeRect(nsRect* aRect);
-    PRBool GetResized();
-    
+    PRBool GetResized();    
     nsWindow* FindWidgetHit(Point aThePoint);
     ptInWindow(PRInt32 aX,PRInt32 aY);
 

@@ -237,7 +237,7 @@ Rect		bounds;
 // Create a nsWindow, a WindowPtr will not be created here
 //
 //-------------------------------------------------------------------------
-void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent, 
+void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent, 
                       nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -264,6 +264,9 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 		aWidgetParent->AddChild(this);
 		mWindowRecord = (WindowRecord*)aNativeParent;
 		mWindowPtr = (WindowPtr)aNativeParent;
+		
+		mWindowRegion = NewRgn();
+		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		
 		}
   
   InitDeviceContext(aContext,aNativeParent);
@@ -682,9 +685,12 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
   	{
 		case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
-    case NS_NATIVE_DISPLAY:
     case NS_NATIVE_GRAPHIC:
+    case NS_NATIVE_DISPLAY:
       return (void*)mWindowPtr;
+    	break;
+    case NS_NATIVE_REGION:
+    	return (void*) mWindowRegion;
     	break;
     case NS_NATIVE_COLORMAP:
     default:
@@ -711,10 +717,14 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
-    //res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
+    res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
     
     if (NS_OK == res)
+    	{
       ctx->Init(mContext, this);
+      
+      //ctx->SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
+      }
     
     NS_ASSERTION(NULL != ctx, "Null rendering context");
   	}
@@ -853,18 +863,18 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
+
   PRBool result = PR_FALSE;
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
     return result;
   }
 
-
   // call the event callback 
-  if (nsnull != mEventCallback) {
+  if (nsnull != mEventCallback) 
+  	{
     result = DispatchEvent(&aEvent);
-
     return result;
-  }
+  	}
 
   if (nsnull != mMouseListener) {
     switch (aEvent.message) {
@@ -1137,9 +1147,10 @@ nsWindow::FindWidgetHit(Point aThePoint)
 {
 nsWindow	*child = this;
 nsWindow	*deeperWindow;
+nsRect		rect;
 
 	if (this->ptInWindow(aThePoint.h,aThePoint.v))
-	{
+		{
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
 		if (mChildren) 
 			{
@@ -1147,10 +1158,9 @@ nsWindow	*deeperWindow;
 	    child = (nsWindow*)mChildren->Previous();
 	    while(child)
 	    	{
-	    	nsRect rect;
 	    	GetBounds(rect);
-	    	aThePoint.h += rect.x;
-	    	aThePoint.v += rect.y;
+	    	aThePoint.h -= rect.x;
+	    	aThePoint.v -= rect.y;
 		    if (child->ptInWindow(aThePoint.h,aThePoint.v) ) 
 		    	{
 		    	// go down this windows list
@@ -1164,7 +1174,7 @@ nsWindow	*deeperWindow;
 		    }
 			}
 			return this;
-	}
+		}
 	return nsnull;
 }
 
