@@ -552,7 +552,7 @@ NS_IMETHODIMP nsMsgProtocol::GetContentCharset(nsACString &aContentCharset)
 
 NS_IMETHODIMP nsMsgProtocol::SetContentCharset(const nsACString &aContentCharset)
 {
-  NS_NOTREACHED("nsMsgProtocol::SetContentCharset");
+  NS_WARNING("nsMsgProtocol::SetContentCharset() not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
