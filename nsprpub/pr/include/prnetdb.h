@@ -92,6 +92,49 @@ PR_EXTERN(PRStatus) PR_GetHostByName(
 
 /***********************************************************************
 ** FUNCTION:	
+** DESCRIPTION:	PR_GetIPNodeByName()
+** Lookup a host by name. Equivalent to getipnodebyname(AI_DEFAULT)
+** of RFC 2553.
+**
+** INPUTS:
+**  char *hostname      Character string defining the host name of interest
+**  PRUint16 af         Address family (either PR_AF_INET or PR_AF_INET6)
+**  PRIntn flags        Specifies the types of addresses that are searched
+**                      for and the types of addresses that are returned.
+**                      The only supported flag is PR_AI_DEFAULT.
+**  char *buf           A scratch buffer for the runtime to return result.
+**                      This buffer is allocated by the caller.
+**  PRIntn bufsize      Number of bytes in 'buf'. A recommnded value to
+**                      use is PR_NETDB_BUF_SIZE.
+** OUTPUTS:
+**  PRHostEnt *hostentry
+**                      This structure is filled in by the runtime if
+**                      the function returns PR_SUCCESS. This structure
+**                      is allocated by the caller.
+** RETURN:
+**  PRStatus            PR_SUCCESS if the lookup succeeds. If it fails
+**                      the result will be PR_FAILURE and the reason
+**                      for the failure can be retrieved by PR_GetError().
+***********************************************************************/
+
+/*
+ * #define PR_AI_ALL        0x08
+ * #define PR_AI_V4MAPPED   0x10
+ * #define PR_AI_ADDRCONFIG 0x20
+ * #define PR_AI_DEFAULT    (PR_AI_V4MAPPED | PR_AI_ADDRCONFIG)
+ */
+#define PR_AI_DEFAULT 0x30
+
+PR_EXTERN(PRStatus) PR_GetIPNodeByName(
+    const char *hostname,
+    PRUint16 af,
+    PRIntn flags,
+    char *buf,
+    PRIntn bufsize,
+    PRHostEnt *hostentry);
+
+/***********************************************************************
+** FUNCTION:	
 ** DESCRIPTION:	PR_GetHostByAddr()
 ** Lookup a host entry by its network address.
 **
@@ -160,7 +203,7 @@ PR_EXTERN(PRIntn) PR_EnumerateHostEnt(
 **                      special well known values that are equivalent to
 **                      INADDR_ANY and INADDR_LOOPBACK.
 **
-**  PRUInt16 port       The port number to be assigned in the structure.
+**  PRUint16 port       The port number to be assigned in the structure.
 **
 ** OUTPUTS:
 **  PRNetAddr *addr     The address to be manipulated.
@@ -179,6 +222,80 @@ typedef enum PRNetAddrValue
 
 PR_EXTERN(PRStatus) PR_InitializeNetAddr(
     PRNetAddrValue val, PRUint16 port, PRNetAddr *addr);
+
+/***********************************************************************
+** FUNCTION: PR_SetNetAddr(), 
+** DESCRIPTION:
+**  Set the fields of a PRNetAddr, assigning well known values as
+**  appropriate. This function is similar to PR_InitializeNetAddr
+**  but differs in that the address family is specified.
+**
+** INPUTS
+**  PRNetAddrValue val  The value to be assigned to the IP Address portion
+**                      of the network address. This can only specify the
+**                      special well known values that are equivalent to
+**                      INADDR_ANY and INADDR_LOOPBACK.
+**
+**  PRUint16 af         The address family (either PR_AF_INET or PR_AF_INET6)
+**
+**  PRUint16 port       The port number to be assigned in the structure.
+**
+** OUTPUTS:
+**  PRNetAddr *addr     The address to be manipulated.
+**
+** RETURN:
+**  PRStatus            To indicate success or failure. If the latter, the
+**                      reason for the failure can be retrieved by calling
+**                      PR_GetError();
+***********************************************************************/
+PR_EXTERN(PRStatus) PR_SetNetAddr(
+    PRNetAddrValue val, PRUint16 af, PRUint16 port, PRNetAddr *addr);
+
+/***********************************************************************
+** FUNCTION:	
+** DESCRIPTION:	PR_IsNetAddrType()
+** Determine if the network address is of the specified type.
+**
+** INPUTS:
+**  const PRNetAddr *addr   A network address.
+**  PRNetAddrValue          The type of network address 
+**
+** RETURN:
+**  PRBool                  PR_TRUE if the network address is of the
+**                          specified type, else PR_FALSE.
+***********************************************************************/
+PR_EXTERN(PRBool) PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val);
+
+/***********************************************************************
+** MACRO:	
+** DESCRIPTION:	PR_NetAddrFamily()
+** Get the 'family' field of a PRNetAddr union.
+**
+** INPUTS:
+**  const PRNetAddr *addr   A network address.
+**
+** RETURN:
+**  PRUint16                The 'family' field of 'addr'.
+***********************************************************************/
+#define PR_NetAddrFamily(addr) ((addr)->raw.family)
+
+/***********************************************************************
+** MACRO:	
+** DESCRIPTION:	PR_NetAddrInetPort()
+** Get the 'port' field of a PRNetAddr union.
+**
+** INPUTS:
+**  const PRNetAddr *addr   A network address.
+**
+** RETURN:
+**  PRUint16                The 'port' field of 'addr'.
+***********************************************************************/
+#ifdef _PR_INET6
+#define PR_NetAddrInetPort(addr) \
+    ((addr)->raw.family == PR_AF_INET6 ? (addr)->ipv6.port : (addr)->inet.port)
+#else
+#define PR_NetAddrInetPort(addr) ((addr)->inet.port)
+#endif
 
 /***********************************************************************
 ** FUNCTION:	

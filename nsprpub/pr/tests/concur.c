@@ -158,6 +158,7 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
 
     PR_DestroyLock(context.ml);
     PR_DestroyCondVar(context.cv);
+    PR_DELETE(threads);
 
     PR_fprintf(PR_STDERR, "PASSED\n");
 

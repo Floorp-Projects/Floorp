@@ -98,9 +98,6 @@ endif
 ifneq ($(OS_RELEASE),V2.0)
 OS_LIBS		+= -lc_r
 endif
-ifeq ($(USE_IPV6), 1)
-OS_LIBS		+= -lip6
-endif
 endif
 
 ifeq ($(OS_ARCH),Linux)
@@ -116,7 +113,7 @@ ifeq ($(USE_PTHREADS), 1)
 ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
 OS_LIBS 	= -ldce
 else
-OS_LIBS 	= -lpthread
+OS_LIBS 	= -lpthread -lrt
 endif
 endif
 ifeq ($(PTHREADS_USER), 1)
@@ -171,6 +168,8 @@ OBJS = \
     malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
     malloc/$(OBJDIR)/prmem.$(OBJ_SUFFIX) \
     md/$(OBJDIR)/prosdep.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prshm.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prshma.$(OBJ_SUFFIX) \
     memory/$(OBJDIR)/prseg.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/pralarm.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/pratom.$(OBJ_SUFFIX) \
@@ -182,6 +181,7 @@ OBJS = \
     misc/$(OBJDIR)/prerrortable.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prinit.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prinrval.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pripc.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
@@ -202,7 +202,8 @@ OBJS += \
     io/$(OBJDIR)/prdir.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prfile.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prio.$(OBJ_SUFFIX) \
-    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX)
+    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pripcsem.$(OBJ_SUFFIX)
 
 ifndef USE_BTHREADS
 OBJS += \
@@ -283,7 +284,9 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)	\
+	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
 else
 ifeq ($(OS_TARGET),OS2)
@@ -306,6 +309,8 @@ OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 endif
 endif

@@ -17,6 +17,7 @@ prinet.h
 prinit.h
 prinrval.h
 prio.h
+pripcsem.h
 prlink.h
 prlock.h
 prlog.h
@@ -30,6 +31,8 @@ prpdce.h
 prprf.h
 prproces.h
 prrwlock.h
+prshm.h
+prshma.h
 prsystem.h
 prthread.h
 prtime.h

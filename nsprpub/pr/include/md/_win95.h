@@ -38,6 +38,7 @@
 #define HAVE_SOCKET_REUSEADDR
 #define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
+#define PR_HAVE_WIN32_NAMED_SHARED_MEMORY
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
@@ -240,7 +241,6 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_ATOMIC_SET(x,y)           InterlockedExchange((PLONG)x, (LONG)y)
 
 #define _MD_INIT_IO                   _PR_MD_INIT_IO
-#define _MD_TRANSMITFILE              _PR_MD_TRANSMITFILE
 
 
 /* win95 doesn't have async IO */
@@ -435,5 +435,13 @@ extern PRStatus _MD_MemUnmap(void *addr, PRUint32 size);
 
 extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
+
+/* --- Named semaphores stuff --- */
+#define _PR_HAVE_NAMED_SEMAPHORES
+#define _MD_OPEN_SEMAPHORE            _PR_MD_OPEN_SEMAPHORE
+#define _MD_WAIT_SEMAPHORE            _PR_MD_WAIT_SEMAPHORE
+#define _MD_POST_SEMAPHORE            _PR_MD_POST_SEMAPHORE
+#define _MD_CLOSE_SEMAPHORE           _PR_MD_CLOSE_SEMAPHORE
+#define _MD_DELETE_SEMAPHORE(name)    PR_SUCCESS  /* no op */
 
 #endif /* nspr_win32_defs_h___ */

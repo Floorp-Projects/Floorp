@@ -19,7 +19,6 @@
 /*
 ** File:   ptio.c
 ** Descritpion:  Implemenation of I/O methods for pthreads
-** Exports:   ptio.h
 */
 
 #if defined(_PR_PTHREADS)
@@ -55,7 +54,7 @@
  * The send_file() system call is available in AIX 4.3.2 or later.
  * If this file is compiled on an older AIX system, it attempts to
  * look up the send_file symbol at run time to determine whether
- * we can use the faster PR_TransmitFile implementation based on
+ * we can use the faster PR_SendFile/PR_TransmitFile implementation based on
  * send_file().  On AIX 4.3.2 or later, we can safely skip this
  * runtime function dispatching and just use the send_file based
  * implementation.
@@ -240,7 +239,11 @@ struct pt_Continuation
         /*
          * For sendfile()
          */
-        off_t offset;                       /* offset in file to send */
+		struct file_spec {		
+        	off_t offset;                       /* offset in file to send */
+        	size_t nbytes;                      /* length of file data to send */
+        	size_t st_size;                     /* file size */
+		} file_spec;
 #endif
     } arg3;
     union { PRIntn flags; } arg4;           /* #4 - read/write flags */
@@ -269,6 +272,7 @@ struct pt_Continuation
     PRIntn syserrno;                        /* in case it failed, why (errno) */
     pr_ContuationStatus status;             /* the status of the operation */
     PRCondVar *complete;                    /* to notify the initiating thread */
+	PRIntn io_tq_index;                     /* io-queue index */
 };
 
 static struct pt_TimedQueue
@@ -279,7 +283,14 @@ static struct pt_TimedQueue
     pt_Continuation *head, *tail;           /* head/tail of list of operations */
 
     pt_Continuation *op;                    /* timed operation furthest in future */
-} pt_tq;
+    struct pollfd *pollingList;             /* list built for polling */
+    PRIntn pollingSlotsAllocated;           /* # entries available in list */
+    pt_Continuation **pollingOps;           /* list paralleling polling list */
+} *pt_tqp;  /* an array */
+
+static PRIntn _pt_num_cpus;
+PRIntn _pt_tq_count;                        /* size of the pt_tqp array */
+static PRInt32 _pt_tq_index;                /* atomically incremented */
 
 #if defined(DEBUG)
 
@@ -332,7 +343,7 @@ PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 
 /*
  * The following two functions, pt_InsertTimedInternal and
- * pt_FinishTimedInternal, are always called with the pt_tq.ml
+ * pt_FinishTimedInternal, are always called with the tqp->ml
  * lock held.  The "internal" in the functions' names come from
  * the Mesa programming language.  Internal functions are always
  * called from inside a monitor.
@@ -342,28 +353,34 @@ static void pt_InsertTimedInternal(pt_Continuation *op)
 {
     pt_Continuation *t_op = NULL;
     PRIntervalTime now = PR_IntervalNow();
+	struct pt_TimedQueue *tqp = &pt_tqp[op->io_tq_index];
 
 #if defined(DEBUG)
     {
         PRIntn count;
         pt_Continuation *tmp;
-        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.tail == NULL));
-        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.op_count == 0));
-        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
-        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
+        PRThread *self = PR_GetCurrentThread();
+
+        PR_ASSERT(tqp == &pt_tqp[self->io_tq_index]);
+        PR_ASSERT((tqp->head == NULL) == (tqp->tail == NULL));
+        PR_ASSERT((tqp->head == NULL) == (tqp->op_count == 0));
+        for (tmp = tqp->head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == tqp->op_count);
+        for (tmp = tqp->tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == tqp->op_count);
+        for (tmp = tqp->head; tmp != NULL; tmp = tmp->next)
+            PR_ASSERT(tmp->io_tq_index == op->io_tq_index);
     }
 #endif /* defined(DEBUG) */
 
     /*
      * If this element operation isn't timed, it gets queued at the
-     * end of the list (just after pt_tq.tail) and we're
+     * end of the list (just after tqp->tail) and we're
      * finishd early.
      */
     if (PR_INTERVAL_NO_TIMEOUT == op->timeout)
     {
-        t_op = pt_tq.tail;  /* put it at the end */
+        t_op = tqp->tail;  /* put it at the end */
         goto done;
     }
 
@@ -371,7 +388,7 @@ static void pt_InsertTimedInternal(pt_Continuation *op)
      * The portion of this routine deals with timed ops.
      */
     op->absolute = now + op->timeout;  /* absolute ticks */
-    if (NULL == pt_tq.op) pt_tq.op = op;
+    if (NULL == tqp->op) tqp->op = op;
     else
     {
         /*
@@ -383,14 +400,14 @@ static void pt_InsertTimedInternal(pt_Continuation *op)
          * This should be easy!
          */
 
-        for (t_op = pt_tq.op; NULL != t_op; t_op = t_op->prev)
+        for (t_op = tqp->op; NULL != t_op; t_op = t_op->prev)
         {
             /*
              * If 'op' expires later than t_op, then insert 'op' just
              * ahead of t_op. Otherwise, compute when operation[n-1]
              * expires and try again.
              *
-             * The actual different between the expiriation of 'op'
+             * The actual difference between the expiriation of 'op'
              * and the current operation what becomes the new operaton's
              * timeout interval. That interval is also subtracted from
              * the interval of the operation immediately following where
@@ -400,7 +417,7 @@ static void pt_InsertTimedInternal(pt_Continuation *op)
              */
             if ((PRInt32)(op->absolute - t_op->absolute) >= 0)
             {
-                if (t_op == pt_tq.op) pt_tq.op = op;
+                if (t_op == tqp->op) tqp->op = op;
                 break;
             }
         }
@@ -414,11 +431,11 @@ done:
      *
      * We need to set up the 'next' and 'prev' pointers of 'op'
      * correctly before inserting 'op' into the queue.  Also, we insert
-     * 'op' by updating pt_tq.head or op->prev->next first, and then
+     * 'op' by updating tqp->head or op->prev->next first, and then
      * updating op->next->prev.  We want to make sure that the 'next'
      * pointers are linked up correctly at all times so that we can
-     * traverse the queue by starting with pt_tq.head and following
-     * the 'next' pointers, without having to acquire the pt_tq.ml lock.
+     * traverse the queue by starting with tqp->head and following
+     * the 'next' pointers, without having to acquire the tqp->ml lock.
      * (we do that in pt_ContinuationThreadInternal).  We traverse the 'prev'
      * pointers only in this function, which is called with the lock held.
      *
@@ -428,9 +445,9 @@ done:
     if (NULL == t_op)
     {
         op->prev = NULL;
-        op->next = pt_tq.head;
-        pt_tq.head = op;
-        if (NULL == pt_tq.tail) pt_tq.tail = op;
+        op->next = tqp->head;
+        tqp->head = op;
+        if (NULL == tqp->tail) tqp->tail = op;
         else op->next->prev = op;
     }
     else
@@ -441,35 +458,35 @@ done:
             op->prev->next = op;
         if (NULL != op->next)
             op->next->prev = op;
-        if (t_op == pt_tq.tail)
-            pt_tq.tail = op;
+        if (t_op == tqp->tail)
+            tqp->tail = op;
     }
 
-    pt_tq.op_count += 1;
+    tqp->op_count += 1;
 
 #if defined(DEBUG)
     {
         PRIntn count;
         pt_Continuation *tmp;
-        PR_ASSERT(pt_tq.head != NULL);
-        PR_ASSERT(pt_tq.tail != NULL);
-        PR_ASSERT(pt_tq.op_count != 0);
-        PR_ASSERT(pt_tq.head->prev == NULL);
-        PR_ASSERT(pt_tq.tail->next == NULL);
-        if (pt_tq.op_count > 1)
+        PR_ASSERT(tqp->head != NULL);
+        PR_ASSERT(tqp->tail != NULL);
+        PR_ASSERT(tqp->op_count != 0);
+        PR_ASSERT(tqp->head->prev == NULL);
+        PR_ASSERT(tqp->tail->next == NULL);
+        if (tqp->op_count > 1)
         {
-            PR_ASSERT(pt_tq.head->next != NULL);
-            PR_ASSERT(pt_tq.tail->prev != NULL);
+            PR_ASSERT(tqp->head->next != NULL);
+            PR_ASSERT(tqp->tail->prev != NULL);
         }
         else
         {
-            PR_ASSERT(pt_tq.head->next == NULL);
-            PR_ASSERT(pt_tq.tail->prev == NULL);
+            PR_ASSERT(tqp->head->next == NULL);
+            PR_ASSERT(tqp->tail->prev == NULL);
         }
-        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
-        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
+        for (tmp = tqp->head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == tqp->op_count);
+        for (tmp = tqp->tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == tqp->op_count);
     }
 #endif /* defined(DEBUG) */
 
@@ -486,47 +503,48 @@ done:
 static pt_Continuation *pt_FinishTimedInternal(pt_Continuation *op)
 {
     pt_Continuation *next;
+	struct pt_TimedQueue *tqp = &pt_tqp[op->io_tq_index];
 
 #if defined(DEBUG)
     {
         PRIntn count;
         pt_Continuation *tmp;
-        PR_ASSERT(pt_tq.head != NULL);
-        PR_ASSERT(pt_tq.tail != NULL);
-        PR_ASSERT(pt_tq.op_count != 0);
-        PR_ASSERT(pt_tq.head->prev == NULL);
-        PR_ASSERT(pt_tq.tail->next == NULL);
-        if (pt_tq.op_count > 1)
+        PR_ASSERT(tqp->head != NULL);
+        PR_ASSERT(tqp->tail != NULL);
+        PR_ASSERT(tqp->op_count != 0);
+        PR_ASSERT(tqp->head->prev == NULL);
+        PR_ASSERT(tqp->tail->next == NULL);
+        if (tqp->op_count > 1)
         {
-            PR_ASSERT(pt_tq.head->next != NULL);
-            PR_ASSERT(pt_tq.tail->prev != NULL);
+            PR_ASSERT(tqp->head->next != NULL);
+            PR_ASSERT(tqp->tail->prev != NULL);
         }
         else
         {
-            PR_ASSERT(pt_tq.head->next == NULL);
-            PR_ASSERT(pt_tq.tail->prev == NULL);
+            PR_ASSERT(tqp->head->next == NULL);
+            PR_ASSERT(tqp->tail->prev == NULL);
         }
-        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
-        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
+        for (tmp = tqp->head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == tqp->op_count);
+        for (tmp = tqp->tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == tqp->op_count);
     }
 #endif /* defined(DEBUG) */
 
     /* remove this one from the list */
-    if (NULL == op->prev) pt_tq.head = op->next;
+    if (NULL == op->prev) tqp->head = op->next;
     else op->prev->next = op->next;
-    if (NULL == op->next) pt_tq.tail = op->prev;
+    if (NULL == op->next) tqp->tail = op->prev;
     else op->next->prev = op->prev;
 
     /* did we happen to hit the timed op? */
-    if (op == pt_tq.op) pt_tq.op = op->prev;
+    if (op == tqp->op) tqp->op = op->prev;
 
     next = op->next;
     op->next = op->prev = NULL;
     op->status = pt_continuation_done;
 
-    pt_tq.op_count -= 1;
+    tqp->op_count -= 1;
 
 #if defined(DEBUG)
     pt_debug.continuationsServed += 1;
@@ -537,12 +555,12 @@ static pt_Continuation *pt_FinishTimedInternal(pt_Continuation *op)
     {
         PRIntn count;
         pt_Continuation *tmp;
-        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.tail == NULL));
-        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.op_count == 0));
-        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
-        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
-        PR_ASSERT(count == pt_tq.op_count);
+        PR_ASSERT((tqp->head == NULL) == (tqp->tail == NULL));
+        PR_ASSERT((tqp->head == NULL) == (tqp->op_count == 0));
+        for (tmp = tqp->head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == tqp->op_count);
+        for (tmp = tqp->tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == tqp->op_count);
     }
 #endif /* defined(DEBUG) */
 
@@ -556,14 +574,16 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
     PRThreadPriority priority;              /* used to save caller's prio */
     PRIntn pollingListUsed;                 /* # entries used in the list */
     PRIntn pollingListNeeded;               /* # entries needed this time */
-    static struct pollfd *pollingList = 0;  /* list built for polling */
-    static PRIntn pollingSlotsAllocated = 0;/* # entries available in list */
-    static pt_Continuation **pollingOps = 0;/* list paralleling polling list */
+    PRIntn io_tq_index = my_op->io_tq_index;
+    struct pt_TimedQueue *tqp = &pt_tqp[my_op->io_tq_index];
+    struct pollfd *pollingList = tqp->pollingList;
+    PRIntn pollingSlotsAllocated = tqp->pollingSlotsAllocated;
+    pt_Continuation **pollingOps = tqp->pollingOps;
     
-    PR_Unlock(pt_tq.ml);  /* don't need that silly lock for a bit */
+    PR_Unlock(tqp->ml);  /* don't need that silly lock for a bit */
 
-    priority = PR_GetThreadPriority(pt_tq.thread);
-    PR_SetThreadPriority(pt_tq.thread, PR_PRIORITY_HIGH);
+    priority = PR_GetThreadPriority(tqp->thread);
+    PR_SetThreadPriority(tqp->thread, PR_PRIORITY_HIGH);
 
     mx_poll_ticks = (PRInt32)PR_MillisecondsToInterval(PT_DEFAULT_POLL_MSEC);
 
@@ -576,12 +596,12 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
         PRIntervalTime now;
         pt_Continuation *op, *next_op;
 
-        PR_ASSERT(NULL != pt_tq.head);
+        PR_ASSERT(NULL != tqp->head);
 
-        pollingListNeeded = pt_tq.op_count;
+        pollingListNeeded = tqp->op_count;
 
     /*
-     * We are not holding the pt_tq.ml lock now, so more items may
+     * We are not holding the tqp->ml lock now, so more items may
      * get added to pt_tq during this window of time.  We hope
      * that 10 more spaces in the polling list should be enough.
      *
@@ -598,9 +618,12 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                 sizeof(pt_Continuation**) + pollingListNeeded * 
                     (sizeof(struct pollfd) + sizeof(pt_Continuation*)));
             PR_ASSERT(NULL != pollingOps);
+			tqp->pollingOps = pollingOps;
             pollingSlotsAllocated = pollingListNeeded;
+			tqp->pollingSlotsAllocated = pollingSlotsAllocated;
             pollingOps[pollingSlotsAllocated] = (pt_Continuation*)-1;
             pollingList = (struct pollfd*)(&pollingOps[pollingSlotsAllocated + 1]);
+			tqp->pollingList = pollingList;
             
         }
 
@@ -619,10 +642,10 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
         ** (perhaps) resetting it are safe 'cause it's the only modifiable
         ** bit in that word.
         */
-        if (pt_tq.thread->state & PT_THREAD_ABORTED)
+        if (tqp->thread->state & PT_THREAD_ABORTED)
         {
             my_op->status = pt_continuation_abort;
-            pt_tq.thread->state &= ~PT_THREAD_ABORTED;
+            tqp->thread->state &= ~PT_THREAD_ABORTED;
         }
 
 
@@ -633,9 +656,9 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
          * There is an assertion that the operation is in progress.
          */
         pollingListUsed = 0;
-        PR_Lock(pt_tq.ml);
+        PR_Lock(tqp->ml);
 
-        for (op = pt_tq.head; NULL != op;)
+        for (op = tqp->head; NULL != op;)
         {
             if (pt_continuation_abort == op->status)
             {
@@ -644,7 +667,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                 next_op = pt_FinishTimedInternal(op);
                 if (op == my_op) goto recycle;
                 else op = next_op;
-                PR_ASSERT(NULL != pt_tq.head);
+                PR_ASSERT(NULL != tqp->head);
             }
             else
             {
@@ -657,7 +680,13 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                     break;
                 }
                 PR_ASSERT((pt_Continuation*)-1 == pollingOps[pollingSlotsAllocated]);
-                op->fd->secret->eventMask = 0xffff;
+                /*
+                 * eventMask bitmasks are declared as PRIntn so that
+                 * each bitmask can be updated individually without
+                 * disturbing adjacent memory, but only the lower 16
+                 * bits of a bitmask are used.
+                 */
+                op->fd->secret->eventMask[io_tq_index] = 0xffff;
                 pollingOps[pollingListUsed] = op;
                 pollingList[pollingListUsed].revents = 0;
                 pollingList[pollingListUsed].fd = op->arg1.osfd;
@@ -674,17 +703,17 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
          * should persist forever. But they may be aborted. That's
          * what this anxiety is all about.
          */
-        if (PR_INTERVAL_NO_TIMEOUT == pt_tq.head->timeout)
+        if (PR_INTERVAL_NO_TIMEOUT == tqp->head->timeout)
             msecs = PT_DEFAULT_POLL_MSEC;
         else
         {
-            timeout = pt_tq.head->absolute - PR_IntervalNow();
+            timeout = tqp->head->absolute - PR_IntervalNow();
             if (timeout <= 0) msecs = 0;  /* already timed out */
             else if (timeout >= mx_poll_ticks) msecs = PT_DEFAULT_POLL_MSEC;
             else msecs = (PRInt32)PR_IntervalToMilliseconds(timeout);
         }
 
-        PR_Unlock(pt_tq.ml);
+        PR_Unlock(tqp->ml);
 
         /*
          * If 'op' isn't NULL at this point, then we didn't get to
@@ -731,15 +760,15 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                 if ((revents & POLLNVAL)  /* busted in all cases */
                 || ((events & POLLOUT) && (revents & POLLHUP)))  /* write op & hup */
                 {
-                    PR_Lock(pt_tq.ml);
+                    PR_Lock(tqp->ml);
                     op->result.code = -1;
                     if (POLLNVAL & revents) op->syserrno = EBADF;
                     else if (POLLHUP & revents) op->syserrno = EPIPE;
                     (void)pt_FinishTimedInternal(op);
                     if (op == my_op) goto recycle;
-                    PR_Unlock(pt_tq.ml);
+                    PR_Unlock(tqp->ml);
                 }
-                else if ((0 != (revents & op->fd->secret->eventMask))
+                else if ((0 != (revents & op->fd->secret->eventMask[io_tq_index]))
                 && (pt_continuation_pending == op->status))
                 {
                 /*
@@ -751,10 +780,10 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
 
                     if (op->function(op, revents))
                     {
-                        PR_Lock(pt_tq.ml);
+                        PR_Lock(tqp->ml);
                         (void)pt_FinishTimedInternal(op);
                         if (op == my_op) goto recycle;
-                        PR_Unlock(pt_tq.ml);
+                        PR_Unlock(tqp->ml);
                     }
                     else
                     {
@@ -773,7 +802,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                          * we won't invoke the continuation
                          * function again.
                          */
-                        op->fd->secret->eventMask &= ~revents;
+                        op->fd->secret->eventMask[io_tq_index] &= ~revents;
                     }
                 }
             }
@@ -785,11 +814,11 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
          * wire are lucky, but none the less, valid.
          */
         now = PR_IntervalNow();
-        PR_Lock(pt_tq.ml);
-        while ((NULL != pt_tq.head)
-        && (PR_INTERVAL_NO_TIMEOUT != pt_tq.head->timeout))
+        PR_Lock(tqp->ml);
+        while ((NULL != tqp->head)
+        && (PR_INTERVAL_NO_TIMEOUT != tqp->head->timeout))
         {
-            op = pt_tq.head;  /* get a copy of this before finishing it */
+            op = tqp->head;  /* get a copy of this before finishing it */
             if ((PRInt32)(op->absolute - now) > 0) break;
             /* 
              * The head element of the timed queue has timed out. Record
@@ -806,7 +835,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
              */
             if (op == my_op) goto recycle;  /* exit w/o unlocking */
         }
-        PR_Unlock(pt_tq.ml);
+        PR_Unlock(tqp->ml);
     }
 
     PR_NOT_REACHED("This is a while(true) loop /w no breaks");
@@ -822,7 +851,7 @@ recycle:
     ** to 'recycle' and notifying the condition.
     **
     ** Selecting a likely thread seems like magic. I'm going to try
-    ** using one that has the longest (or no) timeout, pt_tq.tail.
+    ** using one that has the longest (or no) timeout, tqp->tail.
     ** If that slot's empty, then there's no outstanding I/O and we
     ** don't need a thread at all.
     **
@@ -831,19 +860,19 @@ recycle:
     */
 
     /* $$$ should this be called with the lock held? $$$ */
-    PR_SetThreadPriority(pt_tq.thread, priority);  /* reset back to caller's */
+    PR_SetThreadPriority(tqp->thread, priority);  /* reset back to caller's */
 
-    PR_ASSERT((NULL == pt_tq.head) == (0 == pt_tq.op_count));
-    PR_ASSERT((NULL == pt_tq.head) == (NULL == pt_tq.tail));
+    PR_ASSERT((NULL == tqp->head) == (0 == tqp->op_count));
+    PR_ASSERT((NULL == tqp->head) == (NULL == tqp->tail));
     PR_ASSERT(pt_continuation_done == my_op->status);
     
-    if (NULL != pt_tq.tail)
+    if (NULL != tqp->tail)
     {
-        if (pt_tq.tail->status != pt_continuation_abort)
+        if (tqp->tail->status != pt_continuation_abort)
         {
-            pt_tq.tail->status = pt_continuation_recycle;
+            tqp->tail->status = pt_continuation_recycle;
         }
-        PR_NotifyCondVar(pt_tq.tail->complete);
+        PR_NotifyCondVar(tqp->tail->complete);
 #if defined(DEBUG)
         pt_debug.recyclesNeeded += 1;
 #endif
@@ -858,13 +887,25 @@ static PRIntn pt_Continue(pt_Continuation *op)
 {
     PRStatus rv;
     PRThread *self = PR_GetCurrentThread();
+    struct pt_TimedQueue *tqp;
+
+    /* lazy assignment of the thread's ioq */
+    if (-1 == self->io_tq_index)
+    {
+        self->io_tq_index = (PR_AtomicIncrement(&_pt_tq_index)-1) % _pt_tq_count;
+    }
+
+    PR_ASSERT(self->io_tq_index >= 0);
+    tqp = &pt_tqp[self->io_tq_index];
+
     /* lazy allocation of the thread's cv */
     if (NULL == self->io_cv)
-        self->io_cv = PR_NewCondVar(pt_tq.ml);
+        self->io_cv = PR_NewCondVar(tqp->ml);
     /* Finish filling in the blank slots */
     op->complete = self->io_cv;
     op->status = pt_continuation_pending;  /* set default value */
-    PR_Lock(pt_tq.ml);  /* we provide the locking */
+	op->io_tq_index = self->io_tq_index;
+    PR_Lock(tqp->ml);  /* we provide the locking */
 
     pt_InsertTimedInternal(op);  /* insert in the structure */
 
@@ -874,7 +915,7 @@ static PRIntn pt_Continue(pt_Continuation *op)
     */
     do
     {
-        if (NULL == pt_tq.thread)
+        if (NULL == tqp->thread)
         {
             /*
             ** We're the one. Call the processing function with the lock
@@ -882,10 +923,10 @@ static PRIntn pt_Continue(pt_Continuation *op)
             ** will certainly be times within the function when it gets
             ** released.
             */
-            pt_tq.thread = self;  /* I'm taking control */
+            tqp->thread = self;  /* I'm taking control */
             pt_ContinuationThreadInternal(op); /* go slash and burn */
             PR_ASSERT(pt_continuation_done == op->status);
-            pt_tq.thread = NULL;  /* I'm abdicating my rule */
+            tqp->thread = NULL;  /* I'm abdicating my rule */
         }
         else
         {
@@ -938,7 +979,7 @@ static PRIntn pt_Continue(pt_Continuation *op)
     } while (pt_continuation_done != op->status);
 
 
-    PR_Unlock(pt_tq.ml);  /* we provided the locking */
+    PR_Unlock(tqp->ml);  /* we provided the locking */
 
     return op->result.code;  /* and the primary answer */
 }  /* pt_Continue */
@@ -1151,16 +1192,33 @@ static PRBool pt_recvfrom_cont(pt_Continuation *op, PRInt16 revents)
 }  /* pt_recvfrom_cont */
 
 #ifdef AIX
-static PRBool pt_aix_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
+static PRBool pt_aix_sendfile_cont(pt_Continuation *op, PRInt16 revents)
 {
     struct sf_parms *sf_struct = (struct sf_parms *) op->arg2.buffer;
     int rv;
+	long long saved_file_offset;
+	long long saved_file_bytes;
 
+	saved_file_offset = sf_struct->file_offset;
+	saved_file_bytes = sf_struct->file_bytes;
+	sf_struct->bytes_sent = 0;
+
+	if ((sf_struct->file_bytes > 0) && (sf_struct->file_size > 0))
+	PR_ASSERT((sf_struct->file_bytes + sf_struct->file_offset) <=
+									sf_struct->file_size);
     rv = AIX_SEND_FILE(&op->arg1.osfd, sf_struct, op->arg4.flags);
     op->syserrno = errno;
 
     if (rv != -1) {
         op->result.code += sf_struct->bytes_sent;
+		/*
+		 * A bug in AIX 4.3.2 prevents the 'file_bytes' field from
+		 * being updated. So, 'file_bytes' is maintained by NSPR to
+		 * avoid conflict when this bug is fixed in AIX, in the future.
+		 */
+		if (saved_file_bytes != -1)
+			saved_file_bytes -= (sf_struct->file_offset - saved_file_offset);
+		sf_struct->file_bytes = saved_file_bytes;
     } else if (op->syserrno != EWOULDBLOCK && op->syserrno != EAGAIN) {
         op->result.code = -1;
     } else {
@@ -1176,13 +1234,13 @@ static PRBool pt_aix_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
 #endif  /* AIX */
 
 #ifdef HPUX11
-static PRBool pt_hpux_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
+static PRBool pt_hpux_sendfile_cont(pt_Continuation *op, PRInt16 revents)
 {
     struct iovec *hdtrl = (struct iovec *) op->arg2.buffer;
     int count;
 
-    count = sendfile(op->arg1.osfd, op->filedesc, op->arg3.offset, 0,
-            hdtrl, op->arg4.flags);
+    count = sendfile(op->arg1.osfd, op->filedesc, op->arg3.file_spec.offset,
+			op->arg3.file_spec.nbytes, hdtrl, op->arg4.flags);
     PR_ASSERT(count <= op->nbytes_to_send);
     op->syserrno = errno;
 
@@ -1193,20 +1251,41 @@ static PRBool pt_hpux_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
     } else {
         return PR_FALSE;
     }
-
     if (count != -1 && count < op->nbytes_to_send) {
-        if (hdtrl[0].iov_len == 0) {
-            PR_ASSERT(hdtrl[0].iov_base == NULL);
-            op->arg3.offset += count;
-        } else if (count < hdtrl[0].iov_len) {
-            PR_ASSERT(op->arg3.offset == 0);
-            hdtrl[0].iov_base = (char *) hdtrl[0].iov_base + count;
+        if (count < hdtrl[0].iov_len) {
+			/* header not sent */
+
+            hdtrl[0].iov_base = ((char *) hdtrl[0].iov_len) + count;
             hdtrl[0].iov_len -= count;
-        } else {
-            op->arg3.offset = count - hdtrl[0].iov_len;
+
+        } else if (count < (hdtrl[0].iov_len + op->arg3.file_spec.nbytes)) {
+			/* header sent, file not sent */
+            PRUint32 file_nbytes_sent = count - hdtrl[0].iov_len;
+
             hdtrl[0].iov_base = NULL;
             hdtrl[0].iov_len = 0;
-        }
+
+            op->arg3.file_spec.offset += file_nbytes_sent;
+            op->arg3.file_spec.nbytes -= file_nbytes_sent;
+        } else if (count < (hdtrl[0].iov_len + op->arg3.file_spec.nbytes +
+											hdtrl[1].iov_len)) {
+            PRUint32 trailer_nbytes_sent = count - (hdtrl[0].iov_len +
+                                         op->arg3.file_spec.nbytes);
+
+			/* header sent, file sent, trailer not sent */
+
+            hdtrl[0].iov_base = NULL;
+            hdtrl[0].iov_len = 0;
+			/*
+			 * set file offset and len so that no more file data is
+			 * sent
+			 */
+            op->arg3.file_spec.offset = op->arg3.file_spec.st_size;
+            op->arg3.file_spec.nbytes = 0;
+
+            hdtrl[1].iov_base =((char *) hdtrl[1].iov_base)+ trailer_nbytes_sent;
+            hdtrl[1].iov_len -= trailer_nbytes_sent;
+		}
         op->nbytes_to_send -= count;
         return PR_FALSE;
     }
@@ -1215,17 +1294,56 @@ static PRBool pt_hpux_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
 }
 #endif  /* HPUX11 */
 
+#define _MD_CPUS_ONLINE 2
+
 void _PR_InitIO()
 {
-    pt_tq.ml = PR_NewLock();
-    PR_ASSERT(NULL != pt_tq.ml);
+    PRIntn index;
+    char *num_io_queues;
+
+    if (num_io_queues = getenv("NSPR_NUM_IO_QUEUES"))
+    {
+        _pt_tq_count = atoi(num_io_queues);
+    }
+    else
+    {
+        /*
+         * Get the number of CPUs if the pthread
+         * library has kernel-scheduled entities that
+         * can run on multiple CPUs.
+         */
+#ifdef HPUX11
+        _pt_num_cpus = pthread_num_processors_np();
+#elif defined(IRIX) || defined(OSF1)
+        _pt_num_cpus = sysconf(_SC_NPROC_ONLN);
+#elif defined(AIX) || defined(LINUX) || defined(SOLARIS)
+        _pt_num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+        /*
+         * A pure user-level (Mx1) pthread library can
+         * only use one CPU, even on a multiprocessor.
+         */
+        _pt_num_cpus = 1;
+#endif
+        if (_pt_num_cpus < 0)
+            _pt_num_cpus = _MD_CPUS_ONLINE;
+        _pt_tq_count = _pt_num_cpus;
+    }
+
+    pt_tqp = (struct pt_TimedQueue *)
+        PR_CALLOC(_pt_tq_count * sizeof(struct pt_TimedQueue));
+    PR_ASSERT(NULL != pt_tqp);
+
+    for (index = 0; index < _pt_tq_count; index++)
+    {
+        pt_tqp[index].ml = PR_NewLock();
+        PR_ASSERT(NULL != pt_tqp[index].ml);
+    }
 
 #if defined(DEBUG)
     memset(&pt_debug, 0, sizeof(PTDebug));
     pt_debug.timeStarted = PR_Now();
 #endif
-
-    pt_tq.thread = NULL;
 
     _pr_flock_lock = PR_NewLock();
     PR_ASSERT(NULL != _pr_flock_lock);
@@ -1384,79 +1502,80 @@ static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
 static PRInt32 pt_Writev(
     PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_len, PRIntervalTime timeout)
 {
-    PRIntn iov_index = 0;
+    PRIntn iov_index;
     PRBool fNeedContinue = PR_FALSE;
-    PRInt32 syserrno, bytes = -1, rv = -1;
+    PRInt32 syserrno, bytes, rv = -1;
+    struct iovec osiov_local[PR_MAX_IOVECTOR_SIZE], *osiov;
+    int osiov_len;
 
     if (pt_TestAbort()) return rv;
 
+    /* Ensured by PR_Writev */
+    PR_ASSERT(iov_len <= PR_MAX_IOVECTOR_SIZE);
+
     /*
-     * The first shot at this can use the client's iov directly.
-     * Only if we have to continue the operation do we have to
-     * make a copy that we can modify.
+     * We can't pass iov to writev because PRIOVec and struct iovec
+     * may not be binary compatible.  Make osiov a copy of iov and
+     * pass osiov to writev.  We can modify osiov if we need to
+     * continue the operation.
      */
-    rv = bytes = writev(fd->secret->md.osfd, (const struct iovec*)iov, iov_len);
+    osiov = osiov_local;
+    osiov_len = iov_len;
+    for (iov_index = 0; iov_index < osiov_len; iov_index++)
+    {
+        osiov[iov_index].iov_base = iov[iov_index].iov_base;
+        osiov[iov_index].iov_len = iov[iov_index].iov_len;
+    }
+
+    rv = bytes = writev(fd->secret->md.osfd, osiov, osiov_len);
     syserrno = errno;
 
-    /*
-     * If we moved some bytes (ie., bytes > 0) how does that implicate
-     * the i/o vector list. In other words, exactly where are we within
-     * that array? What are the parameters for resumption? Maybe we're
-     * done!
-     */
-    if ((bytes > 0) && (!fd->secret->nonblocking))
+    if (!fd->secret->nonblocking)
     {
-        for (iov_index = 0; iov_index < iov_len; ++iov_index)
+        if (bytes >= 0)
         {
-            if (bytes < iov[iov_index].iov_len) break; /* continue w/ what's left */
-            bytes -= iov[iov_index].iov_len;  /* this one's done cooked */
+            /*
+             * If we moved some bytes, how does that implicate the
+             * i/o vector list?  In other words, exactly where are
+             * we within that array?  What are the parameters for
+             * resumption?  Maybe we're done!
+             */
+            for ( ;osiov_len > 0; osiov++, osiov_len--)
+            {
+                if (bytes < osiov->iov_len)
+                {
+                    /* this one's not done yet */
+                    osiov->iov_base = (char*)osiov->iov_base + bytes;
+                    osiov->iov_len -= bytes;
+                    break;  /* go off and do that */
+                }
+                bytes -= osiov->iov_len;  /* this one's done cooked */
+            }
+            PR_ASSERT(osiov_len > 0 || bytes == 0);
+            if (osiov_len > 0)
+            {
+                if (PR_INTERVAL_NO_WAIT == timeout)
+                {
+                    rv = -1;
+                    syserrno = ETIMEDOUT;
+                }
+                else fNeedContinue = PR_TRUE;
+            }
         }
-    }
-
-    if ((bytes >= 0) && (iov_index < iov_len) && (!fd->secret->nonblocking))
-    {
-        if (PR_INTERVAL_NO_WAIT == timeout)
+        else if (syserrno == EWOULDBLOCK || syserrno == EAGAIN)
         {
-            rv = -1;
-            syserrno = ETIMEDOUT;
-        }
-        else fNeedContinue = PR_TRUE;
-    }
-    else if ((bytes == -1) && (syserrno == EWOULDBLOCK || syserrno == EAGAIN)
-        && (!fd->secret->nonblocking))
-    {
-        if (PR_INTERVAL_NO_WAIT == timeout) syserrno = ETIMEDOUT;
-        else
-        {
-            rv = bytes = 0;
-            fNeedContinue = PR_TRUE;
+            if (PR_INTERVAL_NO_WAIT == timeout) syserrno = ETIMEDOUT;
+            else
+            {
+                rv = 0;
+                fNeedContinue = PR_TRUE;
+            }
         }
     }
 
     if (fNeedContinue == PR_TRUE)
     {
         pt_Continuation op;
-        /*
-         * Okay. Now we need a modifiable copy of the array.
-         * Allocate some storage and copy the (already) modified
-         * bits into the new vector. The is copying only the
-         * part of the array that's still valid. The array may
-         * have a new length and the first element of the array may
-         * have different values.
-         */
-        struct iovec *osiov = NULL, *tiov;
-        PRIntn osiov_len = iov_len - iov_index;  /* recompute */
-        osiov = (struct iovec*)PR_MALLOC(osiov_len * sizeof(struct iovec));
-        PR_ASSERT(NULL != osiov);
-        for (tiov = osiov; iov_index < iov_len; ++iov_index)
-        {
-            tiov->iov_base = iov[iov_index].iov_base;
-            tiov->iov_len = iov[iov_index].iov_len;
-            tiov += 1;
-        }
-        osiov->iov_len -= bytes;  /* that may be partially done */
-        /* so advance the description */
-        osiov->iov_base = (char*)osiov->iov_base + bytes;
 
         op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
@@ -1468,7 +1587,6 @@ static PRInt32 pt_Writev(
         op.event = POLLOUT | POLLPRI;
         rv = pt_Continue(&op);
         syserrno = op.syserrno;
-        PR_DELETE(osiov);
     }
     if (rv == -1) pt_MapError(_PR_MD_MAP_WRITEV_ERROR, syserrno);
     return rv;
@@ -2037,11 +2155,10 @@ static void pt_aix_sendfile_init_routine(void)
 }
 
 /* 
- * pt_AIXDispatchTransmitFile
+ * pt_AIXDispatchSendFile
  */
-static PRInt32 pt_AIXDispatchTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
-      const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
-      PRIntervalTime timeout)
+static PRInt32 pt_AIXDispatchSendFile(PRFileDesc *sd, PRSendFileData *sfd,
+	  PRTransmitFileFlags flags, PRIntervalTime timeout)
 {
     int rv;
 
@@ -2049,18 +2166,19 @@ static PRInt32 pt_AIXDispatchTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
             pt_aix_sendfile_init_routine);
     PR_ASSERT(0 == rv);
     if (pt_aix_sendfile_fptr) {
-        return pt_AIXTransmitFile(sd, fd, headers, hlen, flags, timeout);
+        return pt_AIXSendFile(sd, sfd, flags, timeout);
     } else {
-        return _PR_UnixTransmitFile(sd, fd, headers, hlen, flags, timeout);
+        return _PR_UnixSendFile(sd, sfd, flags, timeout);
     }
 }
 #endif /* !HAVE_SEND_FILE */
 
+
 /*
- * pt_AIXTransmitFile
+ * pt_AIXSendFile
  *
- *    Send file fd across socket sd. If headers is non-NULL, 'hlen'
- *    bytes of headers is sent before sending the file.
+ *    Send file sfd->fd across socket sd. If specified, header and trailer
+ *    buffers are sent before and after the file, respectively. 
  *
  *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
  *    
@@ -2070,27 +2188,34 @@ static PRInt32 pt_AIXDispatchTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
  *      call available in AIX 4.3.2.
  */
 
-static PRInt32 pt_AIXTransmitFile(PRFileDesc *sd, PRFileDesc *fd, 
-        const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
-        PRIntervalTime timeout)
+static PRInt32 pt_AIXSendFile(PRFileDesc *sd, PRSendFileData *sfd, 
+		PRTransmitFileFlags flags, PRIntervalTime timeout)
 {
     struct sf_parms sf_struct;
     uint_t send_flags;
     ssize_t rv;
     int syserrno;
     PRInt32 count;
+	long long saved_file_offset;
+	long long saved_file_bytes;
 
-    sf_struct.header_data = (void *) headers;  /* cast away the 'const' */
-    sf_struct.header_length = hlen;
-    sf_struct.file_descriptor = fd->secret->md.osfd;
+    sf_struct.header_data = (void *) sfd->header;  /* cast away the 'const' */
+    sf_struct.header_length = sfd->hlen;
+    sf_struct.file_descriptor = sfd->fd->secret->md.osfd;
     sf_struct.file_size = 0;
-    sf_struct.file_offset = 0;
-    sf_struct.file_bytes = -1;
-    sf_struct.trailer_data = NULL;
-    sf_struct.trailer_length = 0;
+    sf_struct.file_offset = sfd->file_offset;
+    if (sfd->file_nbytes == 0)
+    	sf_struct.file_bytes = -1;
+	else
+    	sf_struct.file_bytes = sfd->file_nbytes;
+    sf_struct.trailer_data = (void *) sfd->trailer;
+    sf_struct.trailer_length = sfd->tlen;
     sf_struct.bytes_sent = 0;
 
-    send_flags = 0;
+	saved_file_offset = sf_struct.file_offset;
+    saved_file_bytes = sf_struct.file_bytes;
+
+    send_flags = 0;			/* flags processed at the end */
 
     do {
         rv = AIX_SEND_FILE(&sd->secret->md.osfd, &sf_struct, send_flags);
@@ -2104,6 +2229,14 @@ static PRInt32 pt_AIXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
         }
     } else {
         count = sf_struct.bytes_sent;
+		/*
+		 * A bug in AIX 4.3.2 prevents the 'file_bytes' field from
+		 * being updated. So, 'file_bytes' is maintained by NSPR to
+		 * avoid conflict when this bug is fixed in AIX, in the future.
+		 */
+		if (saved_file_bytes != -1)
+			saved_file_bytes -= (sf_struct.file_offset - saved_file_offset);
+		sf_struct.file_bytes = saved_file_bytes;
     }
 
     if ((rv == 1) || ((rv == -1) && (count == 0))) {
@@ -2115,7 +2248,7 @@ static PRInt32 pt_AIXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
         op.arg4.flags = send_flags;
         op.result.code = count;
         op.timeout = timeout;
-        op.function = pt_aix_transmitfile_cont;
+        op.function = pt_aix_sendfile_cont;
         op.event = POLLOUT | POLLPRI;
         count = pt_Continue(&op);
         syserrno = op.syserrno;
@@ -2128,16 +2261,20 @@ static PRInt32 pt_AIXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
         PR_Close(sd);
     }
+	PR_ASSERT(count == (sfd->hlen + sfd->tlen +
+						((sfd->file_nbytes ==  0) ?
+						sf_struct.file_size - sfd->file_offset :
+						sfd->file_nbytes)));
     return count;
 }
 #endif /* AIX */
 
 #ifdef HPUX11
 /*
- * pt_HPUXTransmitFile
+ * pt_HPUXSendFile
  *
- *    Send file fd across socket sd. If headers is non-NULL, 'hlen'
- *    bytes of headers is sent before sending the file.
+ *    Send file sfd->fd across socket sd. If specified, header and trailer
+ *    buffers are sent before and after the file, respectively.
  *
  *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
  *    
@@ -2147,28 +2284,30 @@ static PRInt32 pt_AIXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
  *      call available in HP-UX B.11.00.
  */
 
-static PRInt32 pt_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd, 
-        const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
-        PRIntervalTime timeout)
+static PRInt32 pt_HPUXSendFile(PRFileDesc *sd, PRSendFileData *sfd, 
+		PRTransmitFileFlags flags, PRIntervalTime timeout)
 {
     struct stat statbuf;
-    size_t nbytes_to_send;
+    size_t nbytes_to_send, file_nbytes_to_send;
     struct iovec hdtrl[2];  /* optional header and trailer buffers */
     int send_flags;
     PRInt32 count;
     int syserrno;
 
     /* Get file size */
-    if (fstat(fd->secret->md.osfd, &statbuf) == -1) {
+    if (fstat(sfd->fd->secret->md.osfd, &statbuf) == -1) {
         _PR_MD_MAP_FSTAT_ERROR(errno);
         return -1;
     }
-    nbytes_to_send = hlen + statbuf.st_size;
+	file_nbytes_to_send = (sfd->file_nbytes ==  0) ?
+						statbuf.st_size - sfd->file_offset :
+						sfd->file_nbytes;
+    nbytes_to_send = sfd->hlen + sfd->tlen + file_nbytes_to_send;
 
-    hdtrl[0].iov_base = (void *) headers;  /* cast away the 'const' */
-    hdtrl[0].iov_len = hlen;
-    hdtrl[1].iov_base = NULL;
-    hdtrl[1].iov_base = 0;
+    hdtrl[0].iov_base = (void *) sfd->header;  /* cast away the 'const' */
+    hdtrl[0].iov_len = sfd->hlen;
+    hdtrl[1].iov_base = (void *) sfd->trailer;
+    hdtrl[1].iov_len = sfd->tlen;
     /*
      * SF_DISCONNECT seems to close the socket even if sendfile()
      * only does a partial send on a nonblocking socket.  This
@@ -2178,9 +2317,8 @@ static PRInt32 pt_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
     send_flags = 0;
 
     do {
-        count = sendfile(sd->secret->md.osfd, fd->secret->md.osfd,
-                0, 0, hdtrl, send_flags);
-        PR_ASSERT(count <= nbytes_to_send);
+        count = sendfile(sd->secret->md.osfd, sfd->fd->secret->md.osfd,
+                sfd->file_offset, file_nbytes_to_send, hdtrl, send_flags);
     } while (count == -1 && (syserrno = errno) == EINTR);
 
     if (count == -1 && (syserrno == EAGAIN || syserrno == EWOULDBLOCK)) {
@@ -2189,25 +2327,50 @@ static PRInt32 pt_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
     if (count != -1 && count < nbytes_to_send) {
         pt_Continuation op;
 
-        if (count < hlen) {
-            hdtrl[0].iov_base = ((char *) headers) + count;
-            hdtrl[0].iov_len = hlen - count;
-            op.arg3.offset = 0;
-        } else {
+        if (count < sfd->hlen) {
+			/* header not sent */
+
+            hdtrl[0].iov_base = ((char *) sfd->header) + count;
+            hdtrl[0].iov_len = sfd->hlen - count;
+            op.arg3.file_spec.offset = sfd->file_offset;
+            op.arg3.file_spec.nbytes = file_nbytes_to_send;
+        } else if (count < (sfd->hlen + file_nbytes_to_send)) {
+			/* header sent, file not sent */
+
             hdtrl[0].iov_base = NULL;
             hdtrl[0].iov_len = 0;
-            op.arg3.offset = count - hlen;
-        }
+
+            op.arg3.file_spec.offset = sfd->file_offset + count - sfd->hlen;
+            op.arg3.file_spec.nbytes = file_nbytes_to_send - (count - sfd->hlen);
+        } else if (count < (sfd->hlen + file_nbytes_to_send + sfd->tlen)) {
+			PRUint32 trailer_nbytes_sent;
+
+			/* header sent, file sent, trailer not sent */
+
+            hdtrl[0].iov_base = NULL;
+            hdtrl[0].iov_len = 0;
+			/*
+			 * set file offset and len so that no more file data is
+			 * sent
+			 */
+            op.arg3.file_spec.offset = statbuf.st_size;
+            op.arg3.file_spec.nbytes = 0;
+
+			trailer_nbytes_sent = count - sfd->hlen - file_nbytes_to_send;
+            hdtrl[1].iov_base = ((char *) sfd->trailer) + trailer_nbytes_sent;
+            hdtrl[1].iov_len = sfd->tlen - trailer_nbytes_sent;
+		}
 
         op.fd = sd;
         op.arg1.osfd = sd->secret->md.osfd;
-        op.filedesc = fd->secret->md.osfd;
+        op.filedesc = sfd->fd->secret->md.osfd;
         op.arg2.buffer = hdtrl;
+        op.arg3.file_spec.st_size = statbuf.st_size;
         op.arg4.flags = send_flags;
         op.nbytes_to_send = nbytes_to_send - count;
         op.result.code = count;
         op.timeout = timeout;
-        op.function = pt_hpux_transmitfile_cont;
+        op.function = pt_hpux_sendfile_cont;
         op.event = POLLOUT | POLLPRI;
         count = pt_Continue(&op);
         syserrno = op.syserrno;
@@ -2220,33 +2383,27 @@ static PRInt32 pt_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
         PR_Close(sd);
     }
+    PR_ASSERT(count == nbytes_to_send);
     return count;
 }
+
 #endif  /* HPUX11 */
 
 static PRInt32 pt_TransmitFile(
     PRFileDesc *sd, PRFileDesc *fd, const void *headers,
     PRInt32 hlen, PRTransmitFileFlags flags, PRIntervalTime timeout)
 {
-    if (pt_TestAbort()) return -1;
-    /* The socket must be in blocking mode. */
-    if (sd->secret->nonblocking)
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return -1;
-    }
+	PRSendFileData sfd;
 
-#ifdef HPUX11
-    return pt_HPUXTransmitFile(sd, fd, headers, hlen, flags, timeout);
-#elif defined(AIX)
-#ifdef HAVE_SEND_FILE
-    return pt_AIXTransmitFile(sd, fd, headers, hlen, flags, timeout);
-#else
-    return pt_AIXDispatchTransmitFile(sd, fd, headers, hlen, flags, timeout);
-#endif /* HAVE_SEND_FILE */
-#else
-    return _PR_UnixTransmitFile(sd, fd, headers, hlen, flags, timeout);
-#endif
+	sfd.fd = fd;
+	sfd.file_offset = 0;
+	sfd.file_nbytes = 0;
+	sfd.header = headers;
+	sfd.hlen = hlen;
+	sfd.trailer = NULL;
+	sfd.tlen = 0;
+
+	return(PR_SendFile(sd, &sfd, flags, timeout));
 }  /* pt_TransmitFile */
 
 /*
@@ -2831,7 +2988,15 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
         fd->secret->md.osfd = osfd;
         fd->secret->state = _PR_FILEDESC_OPEN;
         /* By default, a Unix fd is not closed on exec. */
-        PR_ASSERT(0 == fcntl(osfd, F_GETFD, 0));
+#ifdef DEBUG
+        /*
+         * Ignore EBADF error on fd's 0, 1, 2 because they are
+         * not open in all processes.
+         */
+        flags = fcntl(osfd, F_GETFD, 0);
+        PR_ASSERT((0 == flags) || (-1 == flags
+            && (0 <= osfd && osfd <= 2) && errno == EBADF));
+#endif
         fd->secret->inheritable = PR_TRUE;
         switch (type)
         {
@@ -3421,55 +3586,34 @@ PR_IMPLEMENT(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags)
 
 PR_IMPLEMENT(PRFileDesc*) PR_NewUDPSocket()
 {
-    PRFileDesc *fd = NULL;
-    PRIntn osfd = -1, syserrno;
     PRIntn domain = PF_INET;
-
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-
-    if (pt_TestAbort()) return NULL;
 
 #if defined(_PR_INET6)
     if (_pr_ipv6_enabled)
         domain = PF_INET6;
 #endif
-    osfd = socket(domain, SOCK_DGRAM, 0);
-    syserrno = errno;
-
-    if (osfd == -1)
-        pt_MapError(_PR_MD_MAP_SOCKET_ERROR, syserrno);
-    else
-    {
-        fd = pt_SetMethods(osfd, PR_DESC_SOCKET_UDP);
-        if (fd == NULL) close(osfd);
-    }
-    return fd;
+    return PR_Socket(domain, SOCK_DGRAM, 0);
 }  /* PR_NewUDPSocket */
 
 PR_IMPLEMENT(PRFileDesc*) PR_NewTCPSocket()
 {
-    PRIntn osfd = -1;
-    PRFileDesc *fd = NULL;
     PRIntn domain = PF_INET;
-
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-
-    if (pt_TestAbort()) return NULL;
 
 #if defined(_PR_INET6)
     if (_pr_ipv6_enabled)
         domain = PF_INET6;
 #endif
-    osfd = socket(domain, SOCK_STREAM, 0);
+    return PR_Socket(domain, SOCK_STREAM, 0);
+}  /* PR_NewTCPSocket */
 
-    if (osfd == -1)
-        pt_MapError(_PR_MD_MAP_SOCKET_ERROR, errno);
-    else
-    {
-        fd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP);
-        if (fd == NULL) close(osfd);
-    }
-    return fd;
+PR_IMPLEMENT(PRFileDesc*) PR_OpenUDPSocket(PRIntn af)
+{
+    return PR_Socket(af, SOCK_DGRAM, 0);
+}  /* PR_NewUDPSocket */
+
+PR_IMPLEMENT(PRFileDesc*) PR_OpenTCPSocket(PRIntn af)
+{
+    return PR_Socket(af, SOCK_STREAM, 0);
 }  /* PR_NewTCPSocket */
 
 PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2])
@@ -3970,6 +4114,44 @@ retry:
     return rv;
 }
 
+#ifdef AIX
+extern	int _pr_aix_send_file_use_disabled;
+#endif
+
+PR_IMPLEMENT(PRInt32) PR_SendFile(
+    PRFileDesc *sd, PRSendFileData *sfd,
+    PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    if (pt_TestAbort()) return -1;
+    /* The socket must be in blocking mode. */
+    if (sd->secret->nonblocking)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return -1;
+    }
+#ifdef HPUX11
+    return(pt_HPUXSendFile(sd, sfd, flags, timeout));
+#elif defined(AIX)
+#ifdef HAVE_SEND_FILE
+	/*
+	 * A bug in AIX 4.3.2 results in corruption of data transferred by
+	 * send_file(); AIX patch PTF U463956 contains the fix.  A user can
+	 * disable the use of send_file function in NSPR, when this patch is
+	 * not installed on the system, by setting the envionment variable
+	 * NSPR_AIX_SEND_FILE_USE_DISABLED to 1.
+	 */
+	if (_pr_aix_send_file_use_disabled)
+		return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+	else
+    	return(pt_AIXSendFile(sd, sfd, flags, timeout));
+#else
+	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+    /* return(pt_AIXDispatchSendFile(sd, sfd, flags, timeout));*/
+#endif /* HAVE_SEND_FILE */
+#else
+	return(_PR_UnixSendFile(sd, sfd, flags, timeout));
+#endif
+}
 #endif /* defined(_PR_PTHREADS) */
 
 /* ptio.c */

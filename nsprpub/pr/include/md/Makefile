@@ -51,7 +51,11 @@ ifeq ($(OS_ARCH),AIX)
 ifeq ($(USE_64),1)
 MDCPUCFG_H = _aix64.cfg
 else
+ifeq ($(USE_IPV6),1)
+MDCPUCFG_H = _aix32in6.cfg
+else
 MDCPUCFG_H = _aix32.cfg
+endif
 endif
 endif
 
@@ -95,7 +99,11 @@ ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1.3_U1)
 MDCPUCFG_H = _sunos4.cfg
 else
-MDCPUCFG_H = _solaris.cfg
+ifeq ($(USE_64),1)
+MDCPUCFG_H = _solaris64.cfg
+else
+MDCPUCFG_H = _solaris32.cfg
+endif
 endif
 endif
 

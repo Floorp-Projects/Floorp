@@ -649,6 +649,319 @@ PR_IMPLEMENT(PRSemaphore*) PR_NewSem(PRUintn value)
     return NULL;
 }
 
+#ifdef _PR_HAVE_POSIX_SEMAPHORES
+#include <fcntl.h>
+
+PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
+    const char *name,
+    PRIntn flags,
+    PRIntn mode,
+    PRUintn value)
+{
+    PRSem *sem;
+    char osname[PR_IPC_NAME_SIZE];
+
+    if (_PR_MakeNativeIPCName(name, osname, sizeof(osname), _PRIPCSem)
+        == PR_FAILURE)
+    {
+        return NULL;
+    }
+
+    sem = PR_NEW(PRSem);
+    if (NULL == sem)
+    {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+
+    if (flags & PR_SEM_CREATE)
+    {
+        int oflag = O_CREAT;
+
+        if (flags & PR_SEM_EXCL) oflag |= O_EXCL;
+        sem->sem = sem_open(osname, oflag, mode, value);
+    }
+    else
+    {
+        sem->sem = sem_open(osname, 0);
+    }
+    if ((sem_t *) -1 == sem->sem)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        PR_DELETE(sem);
+        return NULL;
+    }
+    return sem;
+}
+
+PR_IMPLEMENT(PRStatus) PR_WaitSemaphore(PRSem *sem)
+{
+    int rv;
+    rv = sem_wait(sem->sem);
+    if (0 != rv)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus) PR_PostSemaphore(PRSem *sem)
+{
+    int rv;
+    rv = sem_post(sem->sem);
+    if (0 != rv)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus) PR_CloseSemaphore(PRSem *sem)
+{
+    int rv;
+    rv = sem_close(sem->sem);
+    if (0 != rv)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    PR_DELETE(sem);
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
+{
+    int rv;
+    char osname[PR_IPC_NAME_SIZE];
+
+    if (_PR_MakeNativeIPCName(name, osname, sizeof(osname), _PRIPCSem)
+        == PR_FAILURE)
+    {
+        return PR_FAILURE;
+    }
+    rv = sem_unlink(osname);
+    if (0 != rv)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+    
+#endif /* _PR_HAVE_POSIX_SEMAPHORES */
+
+#ifdef _PR_HAVE_SYSV_SEMAPHORES
+
+#include <fcntl.h>
+#include <sys/sem.h>
+
+/*
+ * From the semctl(2) man page in glibc 2.0
+ */
+#if defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
+/* union semun is defined by including <sys/sem.h> */
+#else
+/* according to X/OPEN we have to define it ourselves */
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short  *array;
+};
+#endif
+
+/*
+ * 'a' (97) is the final closing price of NSCP stock.
+ */
+#define NSPR_IPC_KEY_ID 'a'  /* the id argument for ftok() */
+
+#define NSPR_SEM_MODE 0666
+
+PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
+    const char *name,
+    PRIntn flags,
+    PRIntn mode,
+    PRUintn value)
+{
+    PRSem *sem;
+    key_t key;
+    union semun arg;
+    struct sembuf sop;
+    struct semid_ds seminfo;
+#define MAX_TRIES 60
+    PRIntn i;
+    char osname[PR_IPC_NAME_SIZE];
+
+    if (_PR_MakeNativeIPCName(name, osname, sizeof(osname), _PRIPCSem)
+        == PR_FAILURE)
+    {
+        return NULL;
+    }
+
+    /* Make sure the file exists before calling ftok. */
+    if (flags & PR_SEM_CREATE)
+    {
+        int osfd = open(osname, O_RDWR|O_CREAT, mode);
+        if (-1 == osfd)
+        {
+            _PR_MD_MAP_OPEN_ERROR(errno);
+            return NULL;
+        }
+        if (close(osfd) == -1)
+        {
+            _PR_MD_MAP_CLOSE_ERROR(errno);
+            return NULL;
+        }
+    }
+    key = ftok(osname, NSPR_IPC_KEY_ID);
+    if ((key_t)-1 == key)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return NULL;
+    }
+
+    sem = PR_NEW(PRSem);
+    if (NULL == sem)
+    {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+
+    if (flags & PR_SEM_CREATE)
+    {
+        sem->semid = semget(key, 1, mode|IPC_CREAT|IPC_EXCL);
+        if (sem->semid >= 0)
+        {
+            /* creator of a semaphore is responsible for initializing it */
+            arg.val = 0;
+            if (semctl(sem->semid, 0, SETVAL, arg) == -1)
+            {
+                _PR_MD_MAP_DEFAULT_ERROR(errno);
+                PR_DELETE(sem);
+                return NULL;
+            }
+            /* call semop to set sem_otime to nonzero */
+            sop.sem_num = 0;
+            sop.sem_op = value;
+            sop.sem_flg = 0;
+            if (semop(sem->semid, &sop, 1) == -1)
+            {
+                _PR_MD_MAP_DEFAULT_ERROR(errno);
+                PR_DELETE(sem);
+                return NULL;
+            }
+            return sem;
+        }
+
+        if (errno != EEXIST || flags & PR_SEM_EXCL)
+        {
+            _PR_MD_MAP_DEFAULT_ERROR(errno);
+            PR_DELETE(sem);
+            return NULL;
+        }
+    }
+
+    sem->semid = semget(key, 1, NSPR_SEM_MODE);
+    if (sem->semid == -1)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        PR_DELETE(sem);
+        return NULL;
+    }
+    for (i = 0; i < MAX_TRIES; i++)
+    {
+        arg.buf = &seminfo;
+        semctl(sem->semid, 0, IPC_STAT, arg);
+        if (seminfo.sem_otime != 0) break;
+        sleep(1);
+    }
+    if (i == MAX_TRIES)
+    {
+        PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+        PR_DELETE(sem);
+        return NULL;
+    }
+    return sem;
+}
+
+PR_IMPLEMENT(PRStatus) PR_WaitSemaphore(PRSem *sem)
+{
+    struct sembuf sop;
+
+    sop.sem_num = 0;
+    sop.sem_op = -1;
+    sop.sem_flg = 0;
+    if (semop(sem->semid, &sop, 1) == -1)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus) PR_PostSemaphore(PRSem *sem)
+{
+    struct sembuf sop;
+
+    sop.sem_num = 0;
+    sop.sem_op = 1;
+    sop.sem_flg = 0;
+    if (semop(sem->semid, &sop, 1) == -1)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus) PR_CloseSemaphore(PRSem *sem)
+{
+    PR_DELETE(sem);
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
+{
+    key_t key;
+    int semid;
+    /* On some systems (e.g., glibc 2.0) semctl requires a fourth argument */
+    union semun unused;
+    char osname[PR_IPC_NAME_SIZE];
+
+    if (_PR_MakeNativeIPCName(name, osname, sizeof(osname), _PRIPCSem)
+        == PR_FAILURE)
+    {
+        return PR_FAILURE;
+    }
+    key = ftok(osname, NSPR_IPC_KEY_ID);
+    if ((key_t) -1 == key)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    if (unlink(osname) == -1)
+    {
+        _PR_MD_MAP_UNLINK_ERROR(errno);
+        return PR_FAILURE;
+    }
+    semid = semget(key, 1, NSPR_SEM_MODE);
+    if (-1 == semid)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    unused.val = 0;
+    if (semctl(semid, 0, IPC_RMID, unused) == -1)
+    { 
+        _PR_MD_MAP_DEFAULT_ERROR(errno);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
+#endif /* _PR_HAVE_SYSV_SEMAPHORES */
+
 /**************************************************************/
 /**************************************************************/
 /******************ROUTINES FOR DCE EMULATION******************/

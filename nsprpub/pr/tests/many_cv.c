@@ -110,6 +110,8 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     for (index = 0; index < cvs; ++index)
         PR_DestroyCondVar(cv[index]);
 
+    PR_DELETE(cv);
+
     PR_DestroyLock(ml);
     
     printf("PASS\n");

@@ -24,8 +24,8 @@
 
 PR_BEGIN_EXTERN_C
 
-PR_EXTERN(PRStatus) _MD_gethostname(char *name, PRUint32 namelen);
-#define _MD_GETHOSTNAME		_MD_gethostname
+PR_EXTERN(void) _MD_unix_map_default_error(int err);
+#define	_PR_MD_MAP_DEFAULT_ERROR	_MD_unix_map_default_error
 
 PR_EXTERN(void) _MD_unix_map_opendir_error(int err);
 #define	_PR_MD_MAP_OPENDIR_ERROR	_MD_unix_map_opendir_error

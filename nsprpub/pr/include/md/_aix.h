@@ -54,6 +54,11 @@
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
+#ifdef _PR_INET6
+#define _PR_HAVE_GETHOSTBYNAME2
+#endif
+#define _PR_HAVE_SYSV_SEMAPHORES
+#define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 
 /* Timer operations */
 #if defined(AIX_TIMERS)
@@ -72,7 +77,9 @@ extern PRIntervalTime _MD_AixIntervalPerSec(void);
 /* The atomic operations */
 #include <sys/atomic_op.h>
 #define _PR_HAVE_ATOMIC_OPS
+#ifndef IS_64
 #define _PR_HAVE_ATOMIC_CAS
+#endif
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val)   ((PRInt32)fetch_and_add((atomic_p)val, 1) + 1)
 #define _MD_ATOMIC_ADD(ptr, val)   ((PRInt32)fetch_and_add((atomic_p)ptr, val) + val)

@@ -22,10 +22,8 @@
 typedef MPARAM WPARAM,LPARAM;
 #endif /* XP_OS2 */
 
+#include "primpl.h"
 #include "plevent.h"
-#include "prmem.h"
-#include "prcmon.h"
-#include "prlog.h"
 
 #if !defined(WIN32)
 #include <errno.h>
@@ -43,11 +41,6 @@ typedef MPARAM WPARAM,LPARAM;
 
 #if defined(XP_MAC)
 #include <AppleEvents.h>
-#include "pprthred.h"
-#include "primpl.h"
-#else
-#include "private/pprthred.h"
-#include "private/primpl.h"
 #endif /* XP_MAC */
 
 #if defined(VMS)

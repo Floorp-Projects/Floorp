@@ -369,11 +369,20 @@ _PR_MD_PAUSE_CPU(PRIntervalTime ticks)
 
                             _PR_THREAD_UNLOCK(completed_io);
 
-                            completed_io->cpu = lockedCPU;
+						/*
+						 * If an I/O operation is suspended, the thread
+						 * must be running on the same cpu on which the
+						 * I/O operation was issued.
+						 */
+						PR_ASSERT(!completed_io->md.thr_bound_cpu ||
+					(completed_io->cpu == completed_io->md.thr_bound_cpu));
+
+							if (!completed_io->md.thr_bound_cpu)
+                            	completed_io->cpu = lockedCPU;
                             completed_io->state = _PR_RUNNABLE;
-                            _PR_RUNQ_LOCK(lockedCPU);
-                            _PR_ADD_RUNQ(completed_io, lockedCPU, pri);
-                            _PR_RUNQ_UNLOCK(lockedCPU);
+                            _PR_RUNQ_LOCK(completed_io->cpu);
+                            _PR_ADD_RUNQ(completed_io, completed_io->cpu, pri);
+                            _PR_RUNQ_UNLOCK(completed_io->cpu);
                         } else {
                             _PR_THREAD_UNLOCK(completed_io);
                         }
@@ -382,9 +391,6 @@ _PR_MD_PAUSE_CPU(PRIntervalTime ticks)
                     }
                 }
             } else {
-                int old_count;
-                PRBool fNeedRelease = PR_FALSE;
-
                 /* For native threads, they are only notified through this loop
                  * when completing IO.  So, don't worry about this being a CVAR
                  * notification, because that is not possible.
@@ -393,13 +399,12 @@ _PR_MD_PAUSE_CPU(PRIntervalTime ticks)
                 completed_io->io_pending = PR_FALSE;
                 if (completed_io->io_suspended == PR_FALSE) {
                     completed_io->state = _PR_RUNNABLE;
-                    fNeedRelease = PR_TRUE;
-                }
-                _PR_THREAD_UNLOCK(completed_io);
-                if (fNeedRelease) {
+                    _PR_THREAD_UNLOCK(completed_io);
                     rv = ReleaseSemaphore(completed_io->md.blocked_sema,
-                            1, &old_count);
+                            1, NULL);
                     PR_ASSERT(0 != rv);
+                } else {
+                    _PR_THREAD_UNLOCK(completed_io);
                 }
             }
         }
@@ -412,11 +417,57 @@ _PR_MD_PAUSE_CPU(PRIntervalTime ticks)
     return 0;
 }
 
+static PRStatus
+_native_thread_md_wait(PRThread *thread, PRIntervalTime ticks)
+{
+    DWORD rv;
+	PRUint32 msecs = (ticks == PR_INTERVAL_NO_TIMEOUT) ?
+		INFINITE : PR_IntervalToMilliseconds(ticks);
+
+	/*
+	 * thread waiting for a cvar or a joining thread
+	 */
+	rv = WaitForSingleObject(thread->md.blocked_sema, msecs);
+	switch(rv) {
+		case WAIT_OBJECT_0:
+			return PR_SUCCESS;
+			break;
+		case WAIT_TIMEOUT:
+			_PR_THREAD_LOCK(thread);
+			PR_ASSERT (thread->state != _PR_IO_WAIT);
+			if (thread->wait.cvar != NULL) {
+				PR_ASSERT(thread->state == _PR_COND_WAIT);
+				thread->wait.cvar = NULL;
+				thread->state = _PR_RUNNING;
+				_PR_THREAD_UNLOCK(thread);
+			} else {
+				/* The CVAR was notified just as the timeout
+				 * occurred.  This left the semaphore in the
+				 * signaled state.  Call WaitForSingleObject()
+				 * to clear the semaphore.
+				 */
+				_PR_THREAD_UNLOCK(thread);
+				rv = WaitForSingleObject(thread->md.blocked_sema, INFINITE);
+				PR_ASSERT(rv == WAIT_OBJECT_0);
+			}
+			return PR_SUCCESS;
+			break;
+		default:
+			return PR_FAILURE;
+			break;
+	}
+
+    return PR_SUCCESS;
+}
+
 PRStatus
 _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
 {
     DWORD rv;
 
+	if (_native_threads_only) {
+		return(_native_thread_md_wait(thread, ticks));
+	}
     if ( thread->flags & _PR_GLOBAL_SCOPE ) {
         PRUint32 msecs = (ticks == PR_INTERVAL_NO_TIMEOUT) ?
             INFINITE : PR_IntervalToMilliseconds(ticks);
@@ -429,12 +480,14 @@ _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
                 _PR_THREAD_LOCK(thread);
                 if (thread->state == _PR_IO_WAIT) {
                     if (thread->io_pending == PR_TRUE) {
+                        thread->state = _PR_RUNNING;
                         thread->io_suspended = PR_TRUE;
                         _PR_THREAD_UNLOCK(thread);
                     } else {
                         /* The IO completed just at the same time the timeout
-                         * occurred.  This led to us being notified twice.
-                         * call WaitForSingleObject() to clear the semaphore.
+                         * occurred.  This left the semaphore in the signaled
+                         * state.  Call WaitForSingleObject() to clear the
+                         * semaphore.
                          */
                         _PR_THREAD_UNLOCK(thread);
                         rv = WaitForSingleObject(thread->md.blocked_sema, INFINITE);
@@ -442,13 +495,15 @@ _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
                     }
                 } else {
                     if (thread->wait.cvar != NULL) {
+                        PR_ASSERT(thread->state == _PR_COND_WAIT);
                         thread->wait.cvar = NULL;
                         thread->state = _PR_RUNNING;
                         _PR_THREAD_UNLOCK(thread);
                     } else {
                         /* The CVAR was notified just as the timeout
-                         * occurred.  This led to us being notified twice.
-                         * call WaitForSingleObject() to clear the semaphore.
+                         * occurred.  This left the semaphore in the
+                         * signaled state.  Call WaitForSingleObject()
+                         * to clear the semaphore.
                          */
                         _PR_THREAD_UNLOCK(thread);
                         rv = WaitForSingleObject(thread->md.blocked_sema, INFINITE);
@@ -471,11 +526,150 @@ _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
     return PR_SUCCESS;
 }
 
+static void
+_native_thread_io_nowait(
+    PRThread *thread,
+    int rv,
+    int bytes)
+{
+    int rc;
+
+    PR_ASSERT(rv != 0);
+    _PR_THREAD_LOCK(thread);
+    if (thread->state == _PR_IO_WAIT) {
+        PR_ASSERT(thread->io_suspended == PR_FALSE);
+        PR_ASSERT(thread->io_pending == PR_TRUE);
+        thread->state = _PR_RUNNING;
+        thread->io_pending = PR_FALSE;
+        _PR_THREAD_UNLOCK(thread);
+    } else {
+        /* The IO completed just at the same time the
+         * thread was interrupted. This left the semaphore
+         * in the signaled state. Call WaitForSingleObject()
+         * to clear the semaphore.
+         */
+        PR_ASSERT(thread->io_suspended == PR_TRUE);
+        PR_ASSERT(thread->io_pending == PR_TRUE);
+        thread->io_pending = PR_FALSE;
+        _PR_THREAD_UNLOCK(thread);
+        rc = WaitForSingleObject(thread->md.blocked_sema, INFINITE);
+        PR_ASSERT(rc == WAIT_OBJECT_0);
+    }
+
+    thread->md.blocked_io_status = rv;
+    thread->md.blocked_io_bytes = bytes;
+    rc = ResetEvent(thread->md.thr_event);
+    PR_ASSERT(rc != 0);
+    return;
+}
+
+static PRStatus
+_native_thread_io_wait(PRThread *thread, PRIntervalTime ticks)
+{
+    DWORD rv, bytes;
+#define _NATIVE_IO_WAIT_HANDLES		2
+#define _NATIVE_WAKEUP_EVENT_INDEX	0
+#define _NATIVE_IO_EVENT_INDEX		1
+
+	HANDLE wait_handles[_NATIVE_IO_WAIT_HANDLES];
+
+	PRUint32 msecs = (ticks == PR_INTERVAL_NO_TIMEOUT) ?
+		INFINITE : PR_IntervalToMilliseconds(ticks);
+
+    PR_ASSERT(thread->flags & _PR_GLOBAL_SCOPE);
+
+	wait_handles[0] = thread->md.blocked_sema;
+	wait_handles[1] = thread->md.thr_event;
+	rv = WaitForMultipleObjects(_NATIVE_IO_WAIT_HANDLES, wait_handles,
+										FALSE, msecs);
+
+	switch(rv) {
+		case WAIT_OBJECT_0 + _NATIVE_IO_EVENT_INDEX:
+			/*
+			 * I/O op completed
+			 */
+			_PR_THREAD_LOCK(thread);
+			if (thread->state == _PR_IO_WAIT) {
+
+				PR_ASSERT(thread->io_suspended == PR_FALSE);
+				PR_ASSERT(thread->io_pending == PR_TRUE);
+				thread->state = _PR_RUNNING;
+				thread->io_pending = PR_FALSE;
+				_PR_THREAD_UNLOCK(thread);
+			} else {
+				/* The IO completed just at the same time the
+				 * thread was interrupted. This led to us being
+				 * notified twice. Call WaitForSingleObject()
+				 * to clear the semaphore.
+				 */
+				PR_ASSERT(thread->io_suspended == PR_TRUE);
+				PR_ASSERT(thread->io_pending == PR_TRUE);
+				thread->io_pending = PR_FALSE;
+				_PR_THREAD_UNLOCK(thread);
+				rv = WaitForSingleObject(thread->md.blocked_sema,
+							INFINITE);
+				PR_ASSERT(rv == WAIT_OBJECT_0);
+			}
+
+			rv = GetOverlappedResult((HANDLE) thread->io_fd,
+				&thread->md.overlapped.overlapped, &bytes, FALSE);
+
+			thread->md.blocked_io_status = rv;
+			if (rv != 0) {
+				thread->md.blocked_io_bytes = bytes;
+			} else {
+				thread->md.blocked_io_error = GetLastError();
+				PR_ASSERT(ERROR_IO_PENDING != thread->md.blocked_io_error);
+			}
+			rv = ResetEvent(thread->md.thr_event);
+			PR_ASSERT(rv != 0);
+			break;
+		case WAIT_OBJECT_0 + _NATIVE_WAKEUP_EVENT_INDEX:
+			/*
+			 * I/O interrupted; 
+			 */
+#ifdef DEBUG
+			_PR_THREAD_LOCK(thread);
+			PR_ASSERT(thread->io_suspended == PR_TRUE);
+			_PR_THREAD_UNLOCK(thread);
+#endif
+			break;
+		case WAIT_TIMEOUT:
+			_PR_THREAD_LOCK(thread);
+			if (thread->state == _PR_IO_WAIT) {
+				thread->state = _PR_RUNNING;
+				thread->io_suspended = PR_TRUE;
+				_PR_THREAD_UNLOCK(thread);
+			} else {
+				/*
+				 * The thread was interrupted just as the timeout
+				 * occurred. This left the semaphore in the signaled
+				 * state. Call WaitForSingleObject() to clear the
+				 * semaphore.
+				 */
+				PR_ASSERT(thread->io_suspended == PR_TRUE);
+				_PR_THREAD_UNLOCK(thread);
+				rv = WaitForSingleObject(thread->md.blocked_sema, INFINITE);
+				PR_ASSERT(rv == WAIT_OBJECT_0);
+			}
+			break;
+		default:
+			return PR_FAILURE;
+			break;
+	}
+
+    return PR_SUCCESS;
+}
+
+
 static PRStatus
 _NT_IO_WAIT(PRThread *thread, PRIntervalTime timeout)
 {
     PRBool fWait = PR_TRUE;
 
+	if (_native_threads_only) {
+		return(_native_thread_io_wait(thread, timeout));
+	}
     if (!_PR_IS_NATIVE_THREAD(thread))  {
 
         _PR_THREAD_LOCK(thread);
@@ -510,6 +704,16 @@ void _PR_Unblock_IO_Wait(PRThread *thr)
     _PRCPU *cpu = thr->cpu;
  
     PR_ASSERT(thr->state == _PR_IO_WAIT);
+	/*
+	 * A thread for which an I/O timed out or was interrupted cannot be
+	 * in an IO_WAIT state except as a result of calling PR_Close or
+	 * PR_NT_CancelIo for the FD. For these two cases, _PR_IO_WAIT state
+	 * is not interruptible
+	 */
+	if (thr->md.interrupt_disabled == PR_TRUE) {
+    	_PR_THREAD_UNLOCK(thr);
+		return;
+	}
     thr->io_suspended = PR_TRUE;
     thr->state = _PR_RUNNABLE;
 
@@ -519,6 +723,11 @@ void _PR_Unblock_IO_Wait(PRThread *thr)
         _PR_SLEEPQ_LOCK(cpu);
         _PR_DEL_SLEEPQ(thr, PR_TRUE);
         _PR_SLEEPQ_UNLOCK(cpu);
+		/*
+		 * this thread will continue to run on the same cpu until the
+		 * I/O is aborted by closing the FD or calling CancelIO
+		 */
+		thr->md.thr_bound_cpu = me->cpu;
 
         PR_ASSERT(!(thr->flags & _PR_IDLE_THREAD));
         _PR_AddThreadToRunQ(me, thr);
@@ -555,8 +764,12 @@ _NT_ResumeIO(PRThread *thread, PRIntervalTime ticks)
      */
     thread->sleep = ticks;
 
-    if (fWait)
-        return _PR_MD_WAIT(thread, ticks);
+    if (fWait) {
+        if (!_PR_IS_NATIVE_THREAD(thread))
+            return _PR_MD_WAIT(thread, ticks);
+        else
+            return _NT_IO_WAIT(thread, ticks);
+    }
     return PR_SUCCESS;
 }
 
@@ -738,13 +951,17 @@ _md_Associate(HANDLE file)
 {
     HANDLE port;
 
-    port = CreateIoCompletionPort((HANDLE)file, 
-                                    _pr_completion_port, 
-                                    KEY_IO,
-                                    0);
+	if (!_native_threads_only) {
+		port = CreateIoCompletionPort((HANDLE)file, 
+										_pr_completion_port, 
+										KEY_IO,
+										0);
 
-    /* XXX should map error codes on failures */
-    return (port == _pr_completion_port);
+		/* XXX should map error codes on failures */
+		return (port == _pr_completion_port);
+	} else {
+		return 1;
+	}
 }
 
 /*
@@ -1114,10 +1331,21 @@ _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
         return -1;
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
- 
+	if (_native_threads_only)
+		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
+
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
-    me->io_fd = osfd;
     me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+    me->io_fd = osfd;
+
     rv = AcceptEx((SOCKET)osfd,
                   accept_sock,
                   me->md.acceptex_buf,
@@ -1129,13 +1357,24 @@ _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 
     if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING))  {
         /* Argh! The IO failed */
-        me->io_pending = PR_FALSE;
-        me->state = _PR_RUNNING;
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return -1;
+		}
+		_PR_THREAD_UNLOCK(me);
+
 		_PR_MD_MAP_ACCEPTEX_ERROR(err);
         return -1;
     }
 
-    if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
+    if (_native_threads_only && rv) {
+        _native_thread_io_nowait(me, rv, bytes);
+    } else if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
         PR_ASSERT(0);
         return -1;
     }
@@ -1225,10 +1464,21 @@ _PR_MD_FAST_ACCEPT_READ(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr,
         return -1;
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
- 
+	if (_native_threads_only)
+		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
+
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
-    me->io_fd = sock;
     me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+    me->io_fd = sock;
+
     rv = AcceptEx((SOCKET)sock,
                   *newSock,
                   buf,
@@ -1239,13 +1489,24 @@ _PR_MD_FAST_ACCEPT_READ(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr,
                   &(me->md.overlapped.overlapped));
 
     if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING)) {
-        me->io_pending = PR_FALSE;
-        me->state = _PR_RUNNING;
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return -1;
+		}
+		_PR_THREAD_UNLOCK(me);
+
 		_PR_MD_MAP_ACCEPTEX_ERROR(err);
         return -1;
     }
 
-    if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
+    if (_native_threads_only && rv) {
+        _native_thread_io_nowait(me, rv, bytes);
+    } else if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
         PR_ASSERT(0);
         return -1;
     }
@@ -1343,8 +1604,8 @@ retry:
 }
 
 PRInt32
-_PR_MD_TRANSMITFILE(PRFileDesc *sock, PRFileDesc *file, const void *headers, PRInt32 hlen, 
-                    PRInt32 flags, PRIntervalTime timeout)
+_PR_MD_SENDFILE(PRFileDesc *sock, PRSendFileData *sfd,
+					PRInt32 flags, PRIntervalTime timeout)
 {
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRInt32 tflags;
@@ -1356,7 +1617,7 @@ _PR_MD_TRANSMITFILE(PRFileDesc *sock, PRFileDesc *file, const void *headers, PRI
             PR_ASSERT(0 != rv);
             sock->secret->md.io_model_committed = PR_TRUE;
         }
-        return _PR_EmulateTransmitFile(sock, file, headers, hlen, flags, timeout);
+        return _PR_EmulateSendFile(sock, sfd, flags, timeout);
     }
 
     if (me->io_suspended) {
@@ -1376,30 +1637,51 @@ _PR_MD_TRANSMITFILE(PRFileDesc *sock, PRFileDesc *file, const void *headers, PRI
             return -1;
         }
     }
-    me->md.xmit_bufs->Head       = (void *)headers;
-    me->md.xmit_bufs->HeadLength = hlen;
-    me->md.xmit_bufs->Tail       = (void *)NULL;
-    me->md.xmit_bufs->TailLength = 0;
+    me->md.xmit_bufs->Head       = (void *)sfd->header;
+    me->md.xmit_bufs->HeadLength = sfd->hlen;
+    me->md.xmit_bufs->Tail       = (void *)sfd->trailer;
+    me->md.xmit_bufs->TailLength = sfd->tlen;
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
+    me->md.overlapped.overlapped.Offset = sfd->file_offset;
+	if (_native_threads_only)
+		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
 
     tflags = 0;
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET)
         tflags = TF_DISCONNECT | TF_REUSE_SOCKET;
 
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
-    me->io_fd = sock->secret->md.osfd;
     me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+    me->io_fd = sock->secret->md.osfd;
+
     rv = TransmitFile((SOCKET)sock->secret->md.osfd,
-                      (HANDLE)file->secret->md.osfd,
-                      (DWORD)0,
+                      (HANDLE)sfd->fd->secret->md.osfd,
+                      (DWORD)sfd->file_nbytes,
                       (DWORD)0,
                       (LPOVERLAPPED)&(me->md.overlapped.overlapped),
                       (TRANSMIT_FILE_BUFFERS *)me->md.xmit_bufs,
                       (DWORD)tflags);
     if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
-        me->io_pending = PR_FALSE;
-        me->state = _PR_RUNNING;
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return -1;
+		}
+		_PR_THREAD_UNLOCK(me);
+
 		_PR_MD_MAP_TRANSMITFILE_ERROR(err);
         return -1;
     }
@@ -1465,25 +1747,47 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
     }
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
+	if (_native_threads_only)
+		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
 
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
-    me->io_fd = osfd;
     me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+    me->io_fd = osfd;
+
     rv = ReadFile((HANDLE)osfd,
                   buf, 
                   amount,
                   &bytes,
                   &(me->md.overlapped.overlapped));
     if ( (rv == 0) && (GetLastError() != ERROR_IO_PENDING) ) {
+    	_PR_THREAD_LOCK(me);
         me->io_pending = PR_FALSE;
         me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return -1;
+		}
+		_PR_THREAD_UNLOCK(me);
+
         if ((err = GetLastError()) == ERROR_HANDLE_EOF)
             return 0;
 		_PR_MD_MAP_READ_ERROR(err);
         return -1;
     }
 
-    if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
+    if (_native_threads_only && rv) {
+        _native_thread_io_nowait(me, rv, bytes);
+    } else if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
         PR_ASSERT(0);
         return -1;
     }
@@ -1542,23 +1846,45 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     }
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
+	if (_native_threads_only)
+		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
 
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
-    me->io_fd = osfd;
     me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+    me->io_fd = osfd;
+
     rv = WriteFile((HANDLE)osfd,
                    buf, 
                    amount,
                    &bytes,
                    &(me->md.overlapped.overlapped));
     if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
+    	_PR_THREAD_LOCK(me);
         me->io_pending = PR_FALSE;
         me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return -1;
+		}
+		_PR_THREAD_UNLOCK(me);
+
 		_PR_MD_MAP_WRITE_ERROR(err);
         return -1;
     }
 
-    if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
+    if (_native_threads_only && rv) {
+        _native_thread_io_nowait(me, rv, bytes);
+    } else if (_NT_IO_WAIT(me, timeout) == PR_FAILURE) {
         PR_ASSERT(0);
         return -1;
     }
@@ -1845,7 +2171,6 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode)
             return -1; 
         }
 
-        /* Note: we didn't bother putting it in nonblocking mode */
         return (PRInt32)file;
     }
 }
@@ -1902,17 +2227,38 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
                 fd->secret->md.io_model_committed = PR_TRUE;
             }
 
-            me->io_pending = PR_TRUE;
-            me->io_fd = f;
-            me->state = _PR_IO_WAIT;
+			if (_native_threads_only)
+        		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
+
+			_PR_THREAD_LOCK(me);
+			if (_PR_PENDING_INTERRUPT(me)) {
+				me->flags &= ~_PR_INTERRUPT;
+				PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+				_PR_THREAD_UNLOCK(me);
+				return -1;
+			}
+			me->io_pending = PR_TRUE;
+			me->state = _PR_IO_WAIT;
+			_PR_THREAD_UNLOCK(me);
+			me->io_fd = f;
+
             rv = ReadFile((HANDLE)f, 
                           (LPVOID)buf, 
                           len, 
                           &bytes, 
                           &me->md.overlapped.overlapped);
             if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
-                me->io_pending = PR_FALSE;
-                me->state = _PR_RUNNING;
+				_PR_THREAD_LOCK(me);
+				me->io_pending = PR_FALSE;
+				me->state = _PR_RUNNING;
+				if (_PR_PENDING_INTERRUPT(me)) {
+					me->flags &= ~_PR_INTERRUPT;
+					PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+					_PR_THREAD_UNLOCK(me);
+					return -1;
+				}
+				_PR_THREAD_UNLOCK(me);
+
                 if (err == ERROR_HANDLE_EOF) {
                     return 0;
                 }
@@ -1920,7 +2266,9 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
                 return -1;
             }
 
-            if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
+            if (_native_threads_only && rv) {
+                _native_thread_io_nowait(me, rv, bytes);
+            } else if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
                 PR_ASSERT(0);
                 return -1;
             }
@@ -2020,23 +2368,45 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
                 PR_ASSERT(rv != 0);
                 fd->secret->md.io_model_committed = PR_TRUE;
             }
+			if (_native_threads_only)
+        		me->md.overlapped.overlapped.hEvent = me->md.thr_event;
 
-            me->io_pending = PR_TRUE;
-            me->io_fd = f;
-            me->state = _PR_IO_WAIT;
+			_PR_THREAD_LOCK(me);
+			if (_PR_PENDING_INTERRUPT(me)) {
+				me->flags &= ~_PR_INTERRUPT;
+				PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+				_PR_THREAD_UNLOCK(me);
+				return -1;
+			}
+			me->io_pending = PR_TRUE;
+			me->state = _PR_IO_WAIT;
+			_PR_THREAD_UNLOCK(me);
+			me->io_fd = f;
+
             rv = WriteFile((HANDLE)f, 
                            buf, 
                            len, 
                            &bytes, 
                            &(me->md.overlapped.overlapped));
             if ( (rv == 0) && ((err = GetLastError()) != ERROR_IO_PENDING) ) {
-                me->io_pending = PR_FALSE;
-                me->state = _PR_RUNNING;
+				_PR_THREAD_LOCK(me);
+				me->io_pending = PR_FALSE;
+				me->state = _PR_RUNNING;
+				if (_PR_PENDING_INTERRUPT(me)) {
+					me->flags &= ~_PR_INTERRUPT;
+					PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+					_PR_THREAD_UNLOCK(me);
+					return -1;
+				}
+				_PR_THREAD_UNLOCK(me);
+
                 _PR_MD_MAP_WRITE_ERROR(err);
                 return -1;
             }
 
-            if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
+            if (_native_threads_only && rv) {
+                _native_thread_io_nowait(me, rv, bytes);
+            } else if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
                 PR_ASSERT(0);
                 return -1;
             }
@@ -2192,52 +2562,52 @@ PRInt32
 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket)
 {
     PRInt32 rv;
-    PRInt32 err;
     if (_nt_use_async) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
 
         if (socket)  {
             rv = closesocket((SOCKET)osfd);
 			if (rv < 0)
-				err = WSAGetLastError();
+				_PR_MD_MAP_CLOSE_ERROR(WSAGetLastError());
         } else {
             rv = CloseHandle((HANDLE)osfd)?0:-1;
 			if (rv < 0)
-				err = GetLastError();
+				_PR_MD_MAP_CLOSE_ERROR(GetLastError());
 		}
 
-        if (rv == 0 && me->io_pending) {
+        if (rv == 0 && me->io_suspended) {
             if (me->io_fd == osfd) {
                 PRBool fWait;
 
-                PR_ASSERT(me->io_suspended == PR_TRUE);
                 _PR_THREAD_LOCK(me);
                 me->state = _PR_IO_WAIT;
                 /* The IO could have completed on another thread just after
                  * calling closesocket while the io_suspended flag was true.  
                  * So we now grab the lock to do a safe check on io_pending to
-                 * see if we need to wait or not.  At this point we can check
-                 * io_pending safely because we've reset io_suspended to FALSE.  
-                 * XXXMB - 1-15-97 this seems fishy and begging for a race...
+                 * see if we need to wait or not.
                  */
                 fWait = me->io_pending;
                 me->io_suspended = PR_FALSE;
+                me->md.interrupt_disabled = PR_TRUE;
                 _PR_THREAD_UNLOCK(me);
 
                 if (fWait)
                     _NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
                 PR_ASSERT(me->io_suspended ==  PR_FALSE);
                 PR_ASSERT(me->io_pending ==  PR_FALSE);
+				/*
+				 * I/O operation is no longer pending; the thread can now
+				 * run on any cpu
+				 */
+                _PR_THREAD_LOCK(me);
+                me->md.interrupt_disabled = PR_FALSE;
+				me->md.thr_bound_cpu = NULL;
                 me->io_suspended = PR_FALSE;
                 me->io_pending = PR_FALSE;
                 me->state = _PR_RUNNING;
+                _PR_THREAD_UNLOCK(me);
             }
-            } else {
-                me->io_suspended = PR_FALSE;
-			if (rv < 0)
-				_PR_MD_MAP_CLOSE_ERROR(err);
         }
-        return rv;
     } else { 
         if (socket) {
             rv = closesocket((SOCKET)osfd);
@@ -2249,6 +2619,7 @@ _PR_MD_CLOSE(PRInt32 osfd, PRBool socket)
 				_PR_MD_MAP_CLOSE_ERROR(GetLastError());
 		}
     }
+    return rv;
 }
 
 PRStatus
@@ -2804,14 +3175,44 @@ _PR_MD_LOCKFILE(PRInt32 f)
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
 
-    me->state = _PR_IO_WAIT;
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
+    me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+
     rv = LockFileEx((HANDLE)f, 
                     LOCKFILE_EXCLUSIVE_LOCK,
                     0,
                     0x7fffffff,
                     0,
                     &me->md.overlapped.overlapped);
+
+    if (_native_threads_only) {
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return PR_FAILURE;
+		}
+		_PR_THREAD_UNLOCK(me);
+
+        if (rv == FALSE) {
+            err = GetLastError();
+            PR_ASSERT(err != ERROR_IO_PENDING);
+            _PR_MD_MAP_LOCKF_ERROR(err);
+            return PR_FAILURE;
+        }
+        return PR_SUCCESS;
+    }
 
     /* HACK AROUND NT BUG
      * NT 3.51 has a bug.  In NT 3.51, if LockFileEx returns true, you
@@ -2835,8 +3236,17 @@ _PR_MD_LOCKFILE(PRInt32 f)
      */
 
     if ( rv == FALSE && ((err = GetLastError()) != ERROR_IO_PENDING)) {
-        me->io_pending = PR_FALSE;
-        me->state = _PR_RUNNING;
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return PR_FAILURE;
+		}
+		_PR_THREAD_UNLOCK(me);
+
 		_PR_MD_MAP_LOCKF_ERROR(err);
         return PR_FAILURE;
     }
@@ -2856,8 +3266,10 @@ _PR_MD_LOCKFILE(PRInt32 f)
 #endif /* _NEED_351_FILE_LOCKING_HACK */
 
     if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
+		_PR_THREAD_LOCK(me);
         me->io_pending = PR_FALSE;
         me->state = _PR_RUNNING;
+		_PR_THREAD_UNLOCK(me);
         return PR_FAILURE;
     }
 
@@ -2882,18 +3294,56 @@ _PR_MD_TLOCKFILE(PRInt32 f)
 
     memset(&(me->md.overlapped.overlapped), 0, sizeof(OVERLAPPED));
 
-    me->state = _PR_IO_WAIT;
+    _PR_THREAD_LOCK(me);
+	if (_PR_PENDING_INTERRUPT(me)) {
+		me->flags &= ~_PR_INTERRUPT;
+		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+    	_PR_THREAD_UNLOCK(me);
+		return -1;
+	}
     me->io_pending = PR_TRUE;
+    me->state = _PR_IO_WAIT;
+    _PR_THREAD_UNLOCK(me);
+
     rv = LockFileEx((HANDLE)f, 
                     LOCKFILE_FAIL_IMMEDIATELY|LOCKFILE_EXCLUSIVE_LOCK,
                     0,
                     0x7fffffff,
                     0,
                     &me->md.overlapped.overlapped);
+    if (_native_threads_only) {
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return PR_FAILURE;
+		}
+		_PR_THREAD_UNLOCK(me);
+
+        if (rv == FALSE) {
+            err = GetLastError();
+            PR_ASSERT(err != ERROR_IO_PENDING);
+            _PR_MD_MAP_LOCKF_ERROR(err);
+            return PR_FAILURE;
+        }
+        return PR_SUCCESS;
+    }
     if ( rv == FALSE && ((err = GetLastError()) != ERROR_IO_PENDING)) {
-        me->io_pending = PR_FALSE;
-        me->state = _PR_RUNNING;
-		_PR_MD_MAP_LOCKF_ERROR(me->md.blocked_io_error);
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return PR_FAILURE;
+		}
+		_PR_THREAD_UNLOCK(me);
+
+        _PR_MD_MAP_LOCKF_ERROR(err);
         return PR_FAILURE;
     }
 #ifdef _NEED_351_FILE_LOCKING_HACK
@@ -2903,8 +3353,17 @@ _PR_MD_TLOCKFILE(PRInt32 f)
          */
         if (_nt_version_gets_lockfile_completion == PR_FALSE) {
             if ( IsFileLocal((HANDLE)f) == _PR_LOCAL_FILE) {
-                me->io_pending = PR_FALSE;
-                me->state = _PR_RUNNING;
+				_PR_THREAD_LOCK(me);
+				me->io_pending = PR_FALSE;
+				me->state = _PR_RUNNING;
+				if (_PR_PENDING_INTERRUPT(me)) {
+					me->flags &= ~_PR_INTERRUPT;
+					PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+					_PR_THREAD_UNLOCK(me);
+					return PR_FAILURE;
+				}
+				_PR_THREAD_UNLOCK(me);
+
                 return PR_SUCCESS; 
             }
         }
@@ -2912,8 +3371,17 @@ _PR_MD_TLOCKFILE(PRInt32 f)
 #endif /* _NEED_351_FILE_LOCKING_HACK */
 
     if (_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
-        me->io_pending = PR_FALSE;
-        me->state = _PR_RUNNING;
+		_PR_THREAD_LOCK(me);
+		me->io_pending = PR_FALSE;
+		me->state = _PR_RUNNING;
+		if (_PR_PENDING_INTERRUPT(me)) {
+			me->flags &= ~_PR_INTERRUPT;
+			PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+			_PR_THREAD_UNLOCK(me);
+			return PR_FAILURE;
+		}
+		_PR_THREAD_UNLOCK(me);
+
         return PR_FAILURE;
     }
 
@@ -3180,6 +3648,49 @@ PR_IMPLEMENT(void) PR_NT_UseNonblock()
     _nt_use_async = 0;
 }
 
+PR_IMPLEMENT(PRStatus) PR_NT_CancelIo(PRFileDesc *fd)
+{
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+	PRBool fWait;
+	PRFileDesc *bottom;
+
+	bottom = PR_GetIdentitiesLayer(fd, PR_NSPR_IO_LAYER);
+    if (!me->io_suspended || (NULL == bottom) ||
+					(me->io_fd != bottom->secret->md.osfd)) {
+        PR_SetError(PR_INVALID_STATE_ERROR, 0);
+        return PR_FAILURE;
+    }
+	/*
+	 * The CancelIO operation has to be issued by the same NT thread that
+	 * issued the I/O operation
+	 */
+	PR_ASSERT(_PR_IS_NATIVE_THREAD(me) || (me->cpu == me->md.thr_bound_cpu));
+	if (me->io_pending) {
+		if (!CancelIo((HANDLE)bottom->secret->md.osfd)) {
+			PR_SetError(PR_INVALID_STATE_ERROR, GetLastError());
+			return PR_FAILURE;
+		}
+	}
+	_PR_THREAD_LOCK(me);
+	fWait = me->io_pending;
+	me->io_suspended = PR_FALSE;
+	me->state = _PR_IO_WAIT;
+	me->md.interrupt_disabled = PR_TRUE;
+	_PR_THREAD_UNLOCK(me);
+	if (fWait)
+		_NT_IO_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
+	me->md.thr_bound_cpu = NULL;
+	PR_ASSERT(me->io_suspended ==  PR_FALSE);
+	PR_ASSERT(me->io_pending ==  PR_FALSE);
+
+	_PR_THREAD_LOCK(me);
+	me->md.interrupt_disabled = PR_FALSE;
+    me->io_suspended = PR_FALSE;
+    me->io_pending = PR_FALSE;
+	me->state = _PR_RUNNING;
+	_PR_THREAD_UNLOCK(me);
+	return PR_SUCCESS;
+}
 
 PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr_in *addr, int *len, PRIntervalTime timeout)
 {

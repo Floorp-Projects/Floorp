@@ -102,11 +102,7 @@ static void CauseTimeout(const Shared *shared)
 static PRStatus MakeReceiver(Shared *shared)
 {
     PRStatus rv = PR_FAILURE;
-#if defined(_PR_INET6)
-    if (IN6_IS_ADDR_LOOPBACK(&shared->serverAddress.ipv6.ip))
-#else
-    if (PR_htonl(PR_INADDR_LOOPBACK) == shared->serverAddress.inet.ip)
-#endif
+    if (PR_IsNetAddrType(&shared->serverAddress, PR_IpAddrLoopback))
     {
         char *argv[3];
         char path[1024 + sizeof("/tmoacc")];
@@ -183,7 +179,12 @@ static void Connect(void *arg)
              */
 
             PR_Sleep(shared->dally);
-            if (shared->debug > 1) PR_fprintf(debug_out, "connecting ... ");
+            if (shared->debug > 1)
+            {
+                char buf[128];
+                PR_NetAddrToString(&shared->serverAddress, buf, sizeof(buf));
+                PR_fprintf(debug_out, "connecting to %s ... ", buf);
+            }
             rv = PR_Connect(
                 clientSock, &shared->serverAddress, Timeout(shared));
             if (PR_SUCCESS == rv)
@@ -252,55 +253,6 @@ static void Connect(void *arg)
     PR_DELETE(buffer);
 }  /* Connect */
 
-#ifdef _PR_INET6
-
-/*
- * Below are some of the IPv6 hosts at Netscape and their IPv4
- * addresses.  We will use their IPv4-compatible IPv6 addresses
- * for automatic tunneling.
- */
-
-static const char *ipv6_host[] = {
-    "dijkstra",
-    "wirth",
-    "gandalf",
-    "raven"
-};
-
-static const unsigned char ipv6_host_ipv4_addr[] = {
-    208, 12, 62, 49,
-    208, 12, 62, 98,
-    208, 12, 62, 55,
-    206, 222, 228, 80
-};
-
-/*
- * Return PR_TRUE if 'host' is an IPv6 host at Netscape in the table
- * above, and fill 'addr->ipv6.ip' with its IPv4-compatible IPv6 address
- * for automatic tunneling.
- */
-
-static PRBool
-IPv6AutoTunnelHost(const char *host, PRNetAddr *addr)
-{
-    int nHosts = sizeof(ipv6_host) / sizeof(ipv6_host[0]);
-    int i;
-
-    for (i = 0; i < nHosts; i++)
-    {
-        if (strcmp(host, ipv6_host[i]) == 0)
-        {
-            memset(&addr->ipv6.ip, 0, 12);
-            memcpy(((unsigned char *) &addr->ipv6.ip) + 12,
-                &ipv6_host_ipv4_addr[4 * i], 4);
-            PR_ASSERT(IN6_IS_ADDR_V4COMPAT(&addr->ipv6.ip));
-            return PR_TRUE;
-        }
-    }
-    return PR_FALSE;
-}
-#endif /* _PR_INET6 */
-
 int Tmocon(int argc, char **argv)
 {
     /*
@@ -319,6 +271,7 @@ int Tmocon(int argc, char **argv)
      */
 
     PRStatus rv;
+    int exitStatus;
     PLOptStatus os;
     Shared *shared = NULL;
     PRThread **thread = NULL;
@@ -330,7 +283,7 @@ int Tmocon(int argc, char **argv)
 #ifdef _PR_INET6
     PR_SetIPv6Enable(PR_TRUE);
 #endif
-    shared = PR_NEWZAP(Shared);  /* this is leaked */
+    shared = PR_NEWZAP(Shared);
 
     shared->debug = 0;
     shared->failed = PR_FALSE;
@@ -339,6 +292,7 @@ int Tmocon(int argc, char **argv)
     shared->message_length = DEFAULT_MESSAGESIZE;
 
     PR_STDIO_INIT();
+    memset(&shared->serverAddress, 0, sizeof(shared->serverAddress));
     rv = PR_InitializeNetAddr(PR_IpAddrLoopback, BASE_PORT, &shared->serverAddress);
     PR_ASSERT(PR_SUCCESS == rv);
     
@@ -364,21 +318,14 @@ int Tmocon(int argc, char **argv)
             break;
         case 'h':  /* the value for backlock */
             {
-#ifdef _PR_INET6
-                if (!IPv6AutoTunnelHost(opt->value, &shared->serverAddress))
-                {
-#endif
-                    PRIntn es = 0;
-                    PRHostEnt host;
-                    char buffer[1024];
-                    (void)PR_GetHostByName(
-                        opt->value, buffer, sizeof(buffer), &host);
-                    es = PR_EnumerateHostEnt(
-                        es, &host, BASE_PORT, &shared->serverAddress);
-                    PR_ASSERT(es > 0);
-#ifdef _PR_INET6
-                }
-#endif
+                PRIntn es = 0;
+                PRHostEnt host;
+                char buffer[1024];
+                (void)PR_GetHostByName(
+                    opt->value, buffer, sizeof(buffer), &host);
+                es = PR_EnumerateHostEnt(
+                    es, &host, BASE_PORT, &shared->serverAddress);
+                PR_ASSERT(es > 0);
             }
             break;
         case 'm':  /* number of messages to send */
@@ -425,7 +372,9 @@ int Tmocon(int argc, char **argv)
     PR_fprintf(
         PR_GetSpecialFD(PR_StandardError), "%s\n",
         ((shared->failed) ? "FAILED" : "PASSED"));
-    return (shared->failed) ? 1 : 0;
+    exitStatus = (shared->failed) ? 1 : 0;
+    PR_DELETE(shared);
+    return exitStatus;
 }
 
 int main(int argc, char **argv)

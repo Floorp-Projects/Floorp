@@ -118,6 +118,7 @@ ClientThread(void *_action)
         PRInt32 rv;
         char buf[CLIENT_DATA];
 
+        memset(buf, 0xaf, sizeof(buf)); /* initialize with arbitrary data */
         sock = PR_NewTCPSocket();
         if (!sock) {
             if (!debug_mode)

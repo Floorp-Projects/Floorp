@@ -577,12 +577,6 @@ _MD_accept_read (PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr,
 }
 
 PRInt32
-_MD_transmitfile (PRFileDesc *sock, PRFileDesc *file, const void *headers, PRInt32 hlen, PRInt32 flags, PRIntervalTime timeout)
-{
-    return PR_NOT_IMPLEMENTED_ERROR;
-}
-
-PRInt32
 _MD_socket (int af, int type, int flags)
 {
     PRInt32 osfd, err;

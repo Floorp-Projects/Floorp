@@ -324,8 +324,7 @@ extern PRInt32	_MD_mkdir(const char *name, PRIntn mode);
 extern PRInt32	_MD_rmdir(const char *name);
 extern PRInt32	_MD_accept_read(PRInt32 sock, PRInt32 *newSock,
 				PRNetAddr **raddr, void *buf, PRInt32 amount);
-extern PRInt32 	_PR_UnixTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
-			const void *headers, PRInt32 hlen,
+extern PRInt32 	_PR_UnixSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 			PRTransmitFileFlags flags, PRIntervalTime timeout);
 
 extern PRStatus _MD_LockFile(PRInt32 osfd);
@@ -446,6 +445,7 @@ extern int _MD_unix_get_nonblocking_connect_error(int osfd);
 struct _MDFileMap {
     PRIntn prot;
     PRIntn flags;
+    PRBool isAnonFM; /* when true, PR_CloseFileMap() must close the related fd */
 };
 
 extern PRStatus _MD_CreateFileMap(struct PRFileMap *fmap, PRInt64 size);

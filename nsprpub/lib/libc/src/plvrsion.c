@@ -36,6 +36,11 @@
 #if !defined(_PRODUCTION)
 #define _PRODUCTION ""
 #endif
+#if defined(DEBUG)
+#define _DEBUG_STRING " (debug)"
+#else
+#define _DEBUG_STRING ""
+#endif
 
 static PRVersionDescription prVersionDescription_libplc3 =
 {
@@ -65,8 +70,10 @@ static PRVersionDescription prVersionDescription_libplc3 =
 /*
  * Version information for the 'ident' and 'what commands
  */
-static char rcsid[] = "$Version: NSPR " PR_VERSION "  " _BUILD_STRING " $";
-static char sccsid[] = "@(#)NSPR " PR_VERSION "  " _BUILD_STRING;
+static char rcsid[] = "$Version: NSPR " PR_VERSION _DEBUG_STRING
+        "  " _BUILD_STRING " $";
+static char sccsid[] = "@(#)NSPR " PR_VERSION _DEBUG_STRING
+        "  " _BUILD_STRING;
 
 #endif /* XP_UNIX */
 

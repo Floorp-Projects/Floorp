@@ -134,12 +134,6 @@ endif
 # -rdata_shared is an ld option that puts string constants and
 # const data into the text segment, where they will be shared
 # across processes and be read-only.
-MKSHLIB			= $(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(@:$(OBJDIR)/%.so=%.so)
-
-HAVE_PURIFY		= 1
+MKSHLIB			= $(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(notdir $@)
 
 DSO_LDOPTS		= -elf -shared -all
-
-ifdef DSO_BACKEND
-DSO_LDOPTS		+= -soname $(DSO_NAME)
-endif

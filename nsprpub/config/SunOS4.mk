@@ -45,8 +45,6 @@ endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
-HAVE_PURIFY		= 1
-
 NOSUCHFILE		= /no-such-file
 
 DSO_LDOPTS		=

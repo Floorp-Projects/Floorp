@@ -45,8 +45,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,2,0,0
- PRODUCTVERSION 3,1,0,0
+ FILEVERSION 3,5,0,0
+ PRODUCTVERSION 3,5,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -54,7 +54,7 @@ VS_VERSION_INFO VERSIONINFO
  FILEFLAGS 0x0L
 #endif
  FILEOS 0x40004L
- FILETYPE 0x1L
+ FILETYPE 0x2L
  FILESUBTYPE 0x0L
 
 // end win16
@@ -67,7 +67,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Netscape Communications Corporation\0"
             VALUE "FileDescription", "Netscape Portable Run Time\0"
-            VALUE "FileVersion", "3, 1, 0, 0\0"
+            VALUE "FileVersion", "3.5\0"
 #ifdef WINNT
             VALUE "InternalName", "libnspr3\0"
             VALUE "OriginalFilename", "libnspr3.dll\0"
@@ -77,7 +77,7 @@ BEGIN
 #endif
             VALUE "LegalCopyright", "Copyright © 1996\0"
             VALUE "ProductName", "Netscape Communication Corporation NSPR20\0"
-            VALUE "ProductVersion", "3, 1, 0, 0\0"
+            VALUE "ProductVersion", "3.5\0"
         END
     END
     BLOCK "VarFileInfo"

@@ -18,6 +18,16 @@
 
 #include "primpl.h"
 
+#if defined(WIN95)
+/*
+** Some local variables report warnings on Win95 because the code paths 
+** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
+** The pragma suppresses the warning.
+** 
+*/
+#pragma warning(disable : 4101)
+#endif
+
 
 void _PR_InitLocks(void)
 {
@@ -221,6 +231,13 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     return;
 #else  /* _PR_GLOBAL_THREADS_ONLY */
 
+	if (_native_threads_only) {
+		PR_ASSERT(lock->owner != me);
+		_PR_MD_LOCK(&lock->ilock);
+		lock->owner = me;
+		return;
+	}
+
     if (!_PR_IS_NATIVE_THREAD(me))
     	_PR_INTSOFF(is);
 
@@ -331,6 +348,12 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
     return PR_SUCCESS;
 #else  /* _PR_GLOBAL_THREADS_ONLY */
 
+	if (_native_threads_only) {
+		lock->owner = 0;
+		_PR_MD_UNLOCK(&lock->ilock);
+		return PR_SUCCESS;
+	}
+
     if (!_PR_IS_NATIVE_THREAD(me))
     	_PR_INTSOFF(is);
     _PR_LOCK_LOCK(lock);
@@ -398,6 +421,17 @@ PR_IMPLEMENT(PRBool) PR_TestAndLock(PRLock *lock)
     }
     return PR_FALSE;
 #else  /* _PR_GLOBAL_THREADS_ONLY */
+
+#ifndef _PR_LOCAL_THREADS_ONLY
+	if (_native_threads_only) {
+		is = _PR_MD_TEST_AND_LOCK(&lock->ilock);
+		if (is == 0) {
+			lock->owner = me;
+			return PR_TRUE;
+		}
+    	return PR_FALSE;
+	}
+#endif
 
     if (!_PR_IS_NATIVE_THREAD(me))
     	_PR_INTSOFF(is);

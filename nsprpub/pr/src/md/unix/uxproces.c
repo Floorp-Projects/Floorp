@@ -716,6 +716,7 @@ PRStatus _MD_DetachUnixProcess(PRProcess *process)
 	    PR_DELETE(pRec);
 	}
     }
+    PR_DELETE(process);
 
 done:
     PR_Unlock(pr_wp.ml);
@@ -775,6 +776,7 @@ PRStatus _MD_WaitUnixProcess(
         }
 	PR_DELETE(pRec);
     }
+    PR_DELETE(process);
 
 done:
     PR_Unlock(pr_wp.ml);

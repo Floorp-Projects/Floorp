@@ -59,7 +59,7 @@ static void _MD_win32_map_default_errno(PRInt32 err)
     PR_SetError(prError, err);
 }
 
-static void _MD_win32_map_default_error(PRInt32 err)
+void _MD_win32_map_default_error(PRInt32 err)
 {
     PRErrorCode prError;
 

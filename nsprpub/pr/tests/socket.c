@@ -38,11 +38,12 @@
 #include <pthread.h>
 #endif
 
-#ifdef WINNT
+#ifdef WIN32
 #include <process.h>
 #endif
 
 static int _debug_on = 0;
+static int test_cancelio = 0;
 
 #ifdef XP_MAC
 #include "prlog.h"
@@ -73,9 +74,25 @@ char *TEST_DIR = "/tmp/prsocket_test_dir";
 char *SMALL_FILE_NAME = "/tmp/prsocket_test_dir/small_file";
 char *LARGE_FILE_NAME = "/tmp/prsocket_test_dir/large_file";
 #endif
-#define SMALL_FILE_SIZE        (8 * 1024)        /* 8 KB        */
-#define SMALL_FILE_HEADER_SIZE    (64)            /* 64 bytes    */
-#define LARGE_FILE_SIZE        (3 * 1024 * 1024)    /* 3 MB        */
+#define SMALL_FILE_SIZE				(3 * 1024)        /* 3 KB        */
+#define SMALL_FILE_OFFSET_1			(512)
+#define SMALL_FILE_LEN_1			(1 * 1024)        /* 1 KB        */
+#define SMALL_FILE_OFFSET_2			(75)
+#define SMALL_FILE_LEN_2			(758)
+#define SMALL_FILE_OFFSET_3			(1024)
+#define SMALL_FILE_LEN_3			(SMALL_FILE_SIZE - SMALL_FILE_OFFSET_3)
+#define SMALL_FILE_HEADER_SIZE    	(64)            /* 64 bytes    */
+#define SMALL_FILE_TRAILER_SIZE   	(128)           /* 128 bytes    */
+
+#define LARGE_FILE_SIZE				(3 * 1024 * 1024)    /* 3 MB        */
+#define LARGE_FILE_OFFSET_1			(0)
+#define LARGE_FILE_LEN_1			(2 * 1024 * 1024)    /* 2 MB        */
+#define LARGE_FILE_OFFSET_2			(64)
+#define LARGE_FILE_LEN_2			(1 * 1024 * 1024 + 75)
+#define LARGE_FILE_OFFSET_3			(2 * 1024 * 1024 - 128)
+#define LARGE_FILE_LEN_3			(LARGE_FILE_SIZE - LARGE_FILE_OFFSET_3)
+#define LARGE_FILE_HEADER_SIZE    	(512)
+#define LARGE_FILE_TRAILER_SIZE   	(64)
 
 #define    BUF_DATA_SIZE    (2 * 1024)
 #define TCP_MESG_SIZE    1024
@@ -84,7 +101,7 @@ char *LARGE_FILE_NAME = "/tmp/prsocket_test_dir/large_file";
  * local host will not be lost
  */
 #define UDP_DGRAM_SIZE            128
-#define NUM_TCP_CLIENTS            10
+#define NUM_TCP_CLIENTS            5	/* for a listen queue depth of 5 */
 #define NUM_UDP_CLIENTS            10
 
 #ifndef XP_MAC
@@ -150,16 +167,33 @@ readn(PRFileDesc *sockfd, char *buf, int len)
     int rem;
     int bytes;
     int offset = 0;
+	int err, oserr;
+	PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
+
+	if (test_cancelio)
+		timeout = PR_SecondsToInterval(2);
 
     for (rem=len; rem; offset += bytes, rem -= bytes) {
         DPRINTF(("thread = 0x%lx: calling PR_Recv, bytes = %d\n",
             PR_GetCurrentThread(), rem));
+retry:
         bytes = PR_Recv(sockfd, buf + offset, rem, 0,
-            PR_INTERVAL_NO_TIMEOUT);
+            	timeout);
         DPRINTF(("thread = 0x%lx: returning from PR_Recv, bytes = %d\n",
             PR_GetCurrentThread(), bytes));
-        if (bytes <= 0)
-            return -1;
+        if (bytes < 0) {
+#ifdef WINNT
+			printf("PR_Recv: error = %d oserr = %d\n",(err = PR_GetError()),
+									PR_GetOSError());
+			if ((test_cancelio) && (err == PR_IO_TIMEOUT_ERROR)) {
+				if (PR_NT_CancelIo(sockfd) != PR_SUCCESS)
+					printf("PR_NT_CancelIO: error = %d\n",PR_GetError());
+				timeout = PR_INTERVAL_NO_TIMEOUT;
+				goto retry;
+			}
+#endif
+			return -1;
+		}	
     }
     return len;
 }
@@ -262,7 +296,7 @@ PRThread* create_new_thread(PRThreadType type,
 PRInt32 native_thread = 0;
 
 	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
-#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WINNT) || defined(WIN95)
+#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WIN32)
 	switch(index %  4) {
 		case 0:
 			scope = (PR_LOCAL_THREAD);
@@ -289,6 +323,7 @@ PRInt32 native_thread = 0;
 			return (NULL);
 #else
 		HANDLE thandle;
+		unsigned tid;
 		
 		thandle = (HANDLE) _beginthreadex(
 						NULL,
@@ -296,7 +331,7 @@ PRInt32 native_thread = 0;
 						(unsigned (__stdcall *)(void *))start,
 						arg,
 						0,
-						NULL);		
+						&tid);		
 		return((PRThread *) thandle);
 #endif
 	} else {
@@ -474,13 +509,6 @@ UDP_Server(void *arg)
         failed_already=1;
         return;
     }
-    if (netaddr.inet.port != PR_htons(UDP_SERVER_PORT)) {
-        fprintf(stderr,"prsocket_test: ERROR - tried to bind to UDP "
-            "port %hu, but was bound to port %hu\n",
-            UDP_SERVER_PORT, PR_ntohs(netaddr.inet.port));
-        failed_already=1;
-        return;
-    }
 
     DPRINTF(("PR_Bind: UDP Server netaddr.inet.ip = 0x%lx, netaddr.inet.port = %d\n",
         netaddr.inet.ip, netaddr.inet.port));
@@ -533,6 +561,7 @@ UDP_Server(void *arg)
     }
 
     PR_DELETE(in_buf);
+    PR_Close(sockfd);
 
     /*
      * Decrement exit_counter and notify parent thread
@@ -580,14 +609,15 @@ TCP_Client(void *arg)
     netaddr.inet.ip = cp->server_addr.inet.ip;
 
     for (i = 0; i < num_tcp_connections_per_client; i++) {
-        if ((sockfd = PR_NewTCPSocket()) == NULL) {
-            fprintf(stderr,"prsocket_test: PR_NewTCPSocket failed\n");
+        if ((sockfd = PR_OpenTCPSocket(PR_AF_INET)) == NULL) {
+            fprintf(stderr,"prsocket_test: PR_OpenTCPSocket failed\n");
             failed_already=1;
             return;
         }
 
         if (PR_Connect(sockfd, &netaddr,PR_INTERVAL_NO_TIMEOUT) < 0){
-            fprintf(stderr,"prsocket_test: PR_Connect failed\n");
+        	fprintf(stderr, "PR_Connect failed: (%ld, %ld)\n",
+            		PR_GetError(), PR_GetOSError());
             failed_already=1;
             return;
         }
@@ -599,6 +629,10 @@ TCP_Client(void *arg)
             /*
              * write to server
              */
+#ifdef WINNT
+			if (test_cancelio && (j == 0))
+				PR_Sleep(PR_SecondsToInterval(12));
+#endif
             if (writen(sockfd, out_buf->data, bytes) < bytes) {
                 fprintf(stderr,"prsocket_test: ERROR - TCP_Client:writen\n");
                 failed_already=1;
@@ -676,8 +710,8 @@ UDP_Client(void *arg)
         failed_already=1;
         return;
     }
-    if ((sockfd = PR_NewUDPSocket()) == NULL) {
-        fprintf(stderr,"prsocket_test: PR_NewUDPSocket failed\n");
+    if ((sockfd = PR_OpenUDPSocket(PR_AF_INET)) == NULL) {
+        fprintf(stderr,"prsocket_test: PR_OpenUDPSocket failed\n");
         failed_already=1;
         return;
     }
@@ -1023,6 +1057,7 @@ UDP_Socket_Client_Server_Test(void)
 
 static PRFileDesc *small_file_fd, *large_file_fd;
 static void *small_file_addr, *small_file_header, *large_file_addr;
+static void *small_file_trailer, *large_file_header, *large_file_trailer;
 /*
  * TransmitFile_Client
  *    Client Thread
@@ -1034,14 +1069,17 @@ TransmitFile_Client(void *arg)
     union PRNetAddr netaddr;
     char *small_buf, *large_buf;
     Client_Param *cp = (Client_Param *) arg;
+	PRInt32 rlen;
 
-    small_buf = (char*)PR_Malloc(SMALL_FILE_SIZE + SMALL_FILE_HEADER_SIZE);
+    small_buf = (char*)PR_Malloc(SMALL_FILE_SIZE + SMALL_FILE_HEADER_SIZE +
+										SMALL_FILE_TRAILER_SIZE);
     if (small_buf == NULL) {
         fprintf(stderr,"prsocket_test: failed to alloc buffer\n");
         failed_already=1;
         return;
     }
-    large_buf = (char*)PR_Malloc(LARGE_FILE_SIZE);
+    large_buf = (char*)PR_Malloc(LARGE_FILE_SIZE + LARGE_FILE_HEADER_SIZE +
+												LARGE_FILE_TRAILER_SIZE);
     if (large_buf == NULL) {
         fprintf(stderr,"prsocket_test: failed to alloc buffer\n");
         failed_already=1;
@@ -1103,9 +1141,224 @@ TransmitFile_Client(void *arg)
         failed_already=1;
     }
 #endif
+
+
+	/*
+	 * receive data from PR_SendFile
+	 */
+	/*
+	 * case 1: small file with header and trailer
+	 */
+    rlen = SMALL_FILE_SIZE + SMALL_FILE_HEADER_SIZE +
+									SMALL_FILE_TRAILER_SIZE;
+    if (readn(sockfd, small_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(small_file_header, small_buf, SMALL_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 1. ERROR - small file header corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp(small_file_addr, small_buf + SMALL_FILE_HEADER_SIZE,
+        								SMALL_FILE_SIZE) != 0) {
+        fprintf(stderr,
+            "SendFile 1. ERROR - small file data corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp(small_file_trailer,
+				small_buf + SMALL_FILE_HEADER_SIZE + SMALL_FILE_SIZE,
+        				SMALL_FILE_TRAILER_SIZE) != 0) {
+        fprintf(stderr,
+            "SendFile 1. ERROR - small file trailer corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 2: partial large file at zero offset, file with header and trailer
+	 */
+    rlen = LARGE_FILE_LEN_1 + LARGE_FILE_HEADER_SIZE +
+									LARGE_FILE_TRAILER_SIZE;
+    if (readn(sockfd, large_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(large_file_header, large_buf, LARGE_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 2. ERROR - large file header corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp(large_file_addr, large_buf + LARGE_FILE_HEADER_SIZE,
+        								LARGE_FILE_LEN_1) != 0) {
+        fprintf(stderr,
+            "SendFile 2. ERROR - large file data corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp(large_file_trailer,
+				large_buf + LARGE_FILE_HEADER_SIZE + LARGE_FILE_LEN_1,
+        				LARGE_FILE_TRAILER_SIZE) != 0) {
+        fprintf(stderr,
+            "SendFile 2. ERROR - large file trailer corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 3: partial small file at non-zero offset, with header
+	 */
+    rlen = SMALL_FILE_LEN_1 + SMALL_FILE_HEADER_SIZE;
+    if (readn(sockfd, small_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(small_file_header, small_buf, SMALL_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 3. ERROR - small file header corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp((char *) small_file_addr + SMALL_FILE_OFFSET_1,
+				small_buf + SMALL_FILE_HEADER_SIZE, SMALL_FILE_LEN_1) != 0) {
+        fprintf(stderr,
+            "SendFile 3. ERROR - small file data corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 4: partial small file at non-zero offset, with trailer
+	 */
+    rlen = SMALL_FILE_LEN_2 + SMALL_FILE_TRAILER_SIZE;
+    if (readn(sockfd, small_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp((char *) small_file_addr + SMALL_FILE_OFFSET_2, small_buf,
+        								SMALL_FILE_LEN_2) != 0) {
+        fprintf(stderr,
+            "SendFile 4. ERROR - small file data corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp(small_file_trailer, small_buf + SMALL_FILE_LEN_2,
+        				SMALL_FILE_TRAILER_SIZE) != 0) {
+        fprintf(stderr,
+            "SendFile 4. ERROR - small file trailer corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 5: partial large file at non-zero offset, file with header
+	 */
+    rlen = LARGE_FILE_LEN_2 + LARGE_FILE_HEADER_SIZE;
+    if (readn(sockfd, large_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(large_file_header, large_buf, LARGE_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 5. ERROR - large file header corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp((char *)large_file_addr + LARGE_FILE_OFFSET_2,
+					large_buf + LARGE_FILE_HEADER_SIZE,
+        								LARGE_FILE_LEN_2) != 0) {
+        fprintf(stderr,
+            "SendFile 5. ERROR - large file data corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 6: partial small file at non-zero offset, with header
+	 */
+    rlen = SMALL_FILE_LEN_3 + SMALL_FILE_HEADER_SIZE;
+    if (readn(sockfd, small_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(small_file_header, small_buf, SMALL_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 6. ERROR - small file header corruption\n");
+        return;
+    }
+    if (memcmp((char *) small_file_addr + SMALL_FILE_OFFSET_3,
+				small_buf + SMALL_FILE_HEADER_SIZE, SMALL_FILE_LEN_3) != 0) {
+#if 0
+		char *i, *j;
+		int k;
+
+		i = (char *) small_file_addr + SMALL_FILE_OFFSET_3;
+		j = small_buf + SMALL_FILE_HEADER_SIZE;
+		k = SMALL_FILE_LEN_3;
+		while (k-- > 0) {
+			if (*i++ != *j++)
+			printf("i = %d j = %d\n",
+				(int) (i - ((char *) small_file_addr + SMALL_FILE_OFFSET_3)),
+				(int) (j - (small_buf + SMALL_FILE_HEADER_SIZE)));
+		}
+#endif
+        fprintf(stderr,
+            "SendFile 6. ERROR - small file data corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 7: partial large file at non-zero offset, with trailer
+	 */
+    rlen = LARGE_FILE_LEN_3 + LARGE_FILE_HEADER_SIZE;
+    if (readn(sockfd, large_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(large_file_header, large_buf, LARGE_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 7. ERROR - large file header corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp((char *)large_file_addr + LARGE_FILE_OFFSET_3,
+					large_buf + LARGE_FILE_HEADER_SIZE,
+        								LARGE_FILE_LEN_3) != 0) {
+        fprintf(stderr,
+            "SendFile 7. ERROR - large file data corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
     PR_DELETE(small_buf);
     PR_DELETE(large_buf);
     PR_Close(sockfd);
+
 
     /*
      * Decrement exit_counter and notify parent thread
@@ -1132,6 +1385,8 @@ Serve_TransmitFile_Client(void *arg)
     PRInt32 bytes;
     PRFileDesc *local_small_file_fd=NULL;
     PRFileDesc *local_large_file_fd=NULL;
+	PRSendFileData sfd;
+	PRInt32 slen;
 
     sockfd = scp->sockfd;
     local_small_file_fd = PR_Open(SMALL_FILE_NAME, PR_RDONLY,0);
@@ -1160,10 +1415,172 @@ Serve_TransmitFile_Client(void *arg)
         failed_already=1;
     }
     bytes = PR_TransmitFile(sockfd, local_large_file_fd, NULL, 0,
-        PR_TRANSMITFILE_CLOSE_SOCKET, PR_INTERVAL_NO_TIMEOUT);
+        PR_TRANSMITFILE_KEEP_OPEN, PR_INTERVAL_NO_TIMEOUT);
     if (bytes != LARGE_FILE_SIZE) {
         fprintf(stderr,
             "prsocket_test: PR_TransmitFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+
+	/*
+	 * PR_SendFile test cases
+	 */
+
+	/*
+	 * case 1: small file with header and trailer
+	 */
+	sfd.fd = local_small_file_fd;
+	sfd.file_offset = 0;
+	sfd.file_nbytes = 0;
+	sfd.header = small_file_header;
+	sfd.hlen = SMALL_FILE_HEADER_SIZE;
+	sfd.trailer = small_file_trailer;
+	sfd.tlen = SMALL_FILE_TRAILER_SIZE;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = SMALL_FILE_SIZE+ SMALL_FILE_HEADER_SIZE +
+						SMALL_FILE_TRAILER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 1. PR_SendFile  send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+
+	/*
+	 * case 2: partial large file at zero offset, file with header and trailer
+	 */
+	sfd.fd = local_large_file_fd;
+	sfd.file_offset = 0;
+	sfd.file_nbytes = LARGE_FILE_LEN_1;
+	sfd.header = large_file_header;
+	sfd.hlen = LARGE_FILE_HEADER_SIZE;
+	sfd.trailer = large_file_trailer;
+	sfd.tlen = LARGE_FILE_TRAILER_SIZE;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = LARGE_FILE_LEN_1 + LARGE_FILE_HEADER_SIZE +
+						LARGE_FILE_TRAILER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 2. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+	/*
+	 * case 3: partial small file at non-zero offset, with header
+	 */
+	sfd.fd = local_small_file_fd;
+	sfd.file_offset = SMALL_FILE_OFFSET_1;
+	sfd.file_nbytes = SMALL_FILE_LEN_1;
+	sfd.header = small_file_header;
+	sfd.hlen = SMALL_FILE_HEADER_SIZE;
+	sfd.trailer = NULL;
+	sfd.tlen = 0;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = SMALL_FILE_LEN_1 + SMALL_FILE_HEADER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 3. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+	/*
+	 * case 4: partial small file at non-zero offset, with trailer
+	 */
+	sfd.fd = local_small_file_fd;
+	sfd.file_offset = SMALL_FILE_OFFSET_2;
+	sfd.file_nbytes = SMALL_FILE_LEN_2;
+	sfd.header = NULL;
+	sfd.hlen = 0;
+	sfd.trailer = small_file_trailer;
+	sfd.tlen = SMALL_FILE_TRAILER_SIZE;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = SMALL_FILE_LEN_2 + SMALL_FILE_TRAILER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 4. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+	/*
+	 * case 5: partial large file at non-zero offset, file with header
+	 */
+	sfd.fd = local_large_file_fd;
+	sfd.file_offset = LARGE_FILE_OFFSET_2;
+	sfd.file_nbytes = LARGE_FILE_LEN_2;
+	sfd.header = large_file_header;
+	sfd.hlen = LARGE_FILE_HEADER_SIZE;
+	sfd.trailer = NULL;
+	sfd.tlen = 0;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = LARGE_FILE_LEN_2 + LARGE_FILE_HEADER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 5. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+	/*
+	 * case 6: partial small file from non-zero offset till end of file, with header
+	 */
+	sfd.fd = local_small_file_fd;
+	sfd.file_offset = SMALL_FILE_OFFSET_3;
+	sfd.file_nbytes = 0;				/* data from offset to end-of-file */
+	sfd.header = small_file_header;
+	sfd.hlen = SMALL_FILE_HEADER_SIZE;
+	sfd.trailer = NULL;
+	sfd.tlen = 0;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = SMALL_FILE_LEN_3 + SMALL_FILE_HEADER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 6. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+	/*
+	 * case 7: partial large file at non-zero offset till end-of-file, with header
+	 */
+	sfd.fd = local_large_file_fd;
+	sfd.file_offset = LARGE_FILE_OFFSET_3;
+	sfd.file_nbytes = 0;				/* data until end-of-file */
+	sfd.header = large_file_header;
+	sfd.hlen = LARGE_FILE_HEADER_SIZE;
+	sfd.trailer = NULL;
+	sfd.tlen = 0;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_CLOSE_SOCKET,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = LARGE_FILE_LEN_3 + LARGE_FILE_HEADER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 7. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
             PR_GetError(), PR_GetOSError());
         failed_already=1;
     }
@@ -1199,8 +1616,8 @@ TransmitFile_Server(void *arg)
     /*
      * Create a tcp socket
      */
-    if ((sockfd = PR_NewTCPSocket()) == NULL) {
-        fprintf(stderr,"prsocket_test: PR_NewTCPSocket failed\n");
+    if ((sockfd = PR_OpenTCPSocket(PR_AF_INET)) == NULL) {
+        fprintf(stderr,"prsocket_test: PR_OpenTCPSocket failed\n");
         failed_already=1;
         goto exit;
     }
@@ -1392,7 +1809,7 @@ Socket_Misc_Test(void)
      * map the small file; used in checking for data corruption
      */
     small_file_addr = mmap(0, SMALL_FILE_SIZE, PROT_READ,
-        MAP_PRIVATE, small_file_fd->secret->md.osfd, 0);
+        MAP_SHARED, small_file_fd->secret->md.osfd, 0);
     if (small_file_addr == (void *) -1) {
         fprintf(stderr,"prsocket_test failed to mmap file %s\n",
             SMALL_FILE_NAME);
@@ -1413,6 +1830,18 @@ Socket_Misc_Test(void)
     }
     memset(small_file_header, (int) PR_IntervalNow(),
         SMALL_FILE_HEADER_SIZE);
+    /*
+     * trailer for small file
+     */
+    small_file_trailer = PR_MALLOC(SMALL_FILE_TRAILER_SIZE);
+    if (small_file_trailer == NULL) {
+        fprintf(stderr,"prsocket_test failed to malloc header trailer\n");
+        failed_already=1;
+        rv = -1;
+        goto done;
+    }
+    memset(small_file_trailer, (int) PR_IntervalNow(),
+        SMALL_FILE_TRAILER_SIZE);
     /*
      * setup large file
      */
@@ -1452,7 +1881,7 @@ Socket_Misc_Test(void)
      * map the large file; used in checking for data corruption
      */
     large_file_addr = mmap(0, LARGE_FILE_SIZE, PROT_READ,
-        MAP_PRIVATE, large_file_fd->secret->md.osfd, 0);
+        MAP_SHARED, large_file_fd->secret->md.osfd, 0);
     if (large_file_addr == (void *) -1) {
         fprintf(stderr,"prsocket_test failed to mmap file %s\n",
             LARGE_FILE_NAME);
@@ -1461,6 +1890,31 @@ Socket_Misc_Test(void)
         goto done;
     }
 #endif
+    /*
+     * header for large file
+     */
+    large_file_header = PR_MALLOC(LARGE_FILE_HEADER_SIZE);
+    if (large_file_header == NULL) {
+        fprintf(stderr,"prsocket_test failed to malloc header file\n");
+        failed_already=1;
+        rv = -1;
+        goto done;
+    }
+    memset(large_file_header, (int) PR_IntervalNow(),
+        LARGE_FILE_HEADER_SIZE);
+    /*
+     * trailer for large file
+     */
+    large_file_trailer = PR_MALLOC(LARGE_FILE_TRAILER_SIZE);
+    if (large_file_trailer == NULL) {
+        fprintf(stderr,"prsocket_test failed to malloc header trailer\n");
+        failed_already=1;
+        rv = -1;
+        goto done;
+    }
+    memset(large_file_trailer, (int) PR_IntervalNow(),
+        LARGE_FILE_TRAILER_SIZE);
+
     datalen = tcp_mesg_size;
     thread_count = 0;
     /*
@@ -1629,6 +2083,7 @@ main(int argc, char **argv)
         goto done;
     } else
         printf("TCP_Socket_Client_Server_Test Passed\n");
+	test_cancelio = 0;
     /*
      * run client-server test with UDP
      */

@@ -82,7 +82,7 @@ static PRLock *_pr_logLock;
 /* Macros used to reduce #ifdef pollution */
 
 #if defined(_PR_USE_STDIO_FOR_LOGGING)
-#define _PUT_LOG(fd, buf, nb) fputs(buf, fd)
+#define _PUT_LOG(fd, buf, nb) {fputs(buf, fd); fflush(fd);}
 #elif defined(_PR_PTHREADS)
 #define _PUT_LOG(fd, buf, nb) PR_Write(fd, buf, nb)
 #elif defined(XP_MAC)
@@ -198,19 +198,6 @@ void _PR_InitLog(void)
                         break;
                     }
                     lm = lm->next;
-                }
-                if (( PR_FALSE == skip_modcheck) && (NULL == lm)) {
-#ifdef XP_PC
-                    char* str = PR_smprintf("Unrecognized NSPR_LOG_MODULE: %s=%d\n",
-                                            module, level);
-                    if (str) {
-                        OutputDebugString(str);
-                        PR_smprintf_free(str);
-                    }
-#else
-                    fprintf(stderr, "Unrecognized NSPR_LOG_MODULE: %s=%d\n",
-                            module, level);
-#endif
                 }
             }
             /*found:*/

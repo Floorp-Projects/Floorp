@@ -81,10 +81,12 @@ PRIntervalTime _MD_AixIntervalPerSec(void)
 #include <dlfcn.h>
 
 int (*_PT_aix_yield_fcn)() = NULL;
+int _pr_aix_send_file_use_disabled = 0;
 
 void _MD_EarlyInit(void)
 {
     void *main_app_handle;
+	char *evp;
 
     main_app_handle = dlopen(NULL, RTLD_NOW);
     PR_ASSERT(NULL != main_app_handle);
@@ -95,6 +97,11 @@ void _MD_EarlyInit(void)
         PR_ASSERT(NULL != _PT_aix_yield_fcn);
     }
     dlclose(main_app_handle);
+
+	if (evp = getenv("NSPR_AIX_SEND_FILE_USE_DISABLED")) {
+		if (1 == atoi(evp))
+			_pr_aix_send_file_use_disabled = 1;
+	}
 
 #if defined(AIX_TIMERS)
     _MD_AixIntervalInit();

@@ -51,6 +51,16 @@
 
 #include <string.h>
 
+#if defined(WIN95)
+/*
+** Some local variables report warnings on Win95 because the code paths 
+** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
+** The pragma suppresses the warning.
+** 
+*/
+#pragma warning(disable : 4101)
+#endif
+
 #define _PR_TPD_MODULO 8                /* vectors are extended by this much */
 #define _PR_TPD_LIMIT 128               /* arbitary limit on the TPD slots */
 static PRInt32 _pr_tpd_length = 0;      /* current length of destructor vector */
@@ -158,7 +168,7 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn his, void *priv)
     }
     else
     {
-        if ((NULL == self->privateData) || (self->tpdLength <= index))
+        if ((NULL == self->privateData) || (self->tpdLength <= (PRUint32)index))
         {
             void *extension = PR_CALLOC(_pr_tpd_length * sizeof(void*));
             PR_ASSERT(
@@ -212,7 +222,7 @@ PR_IMPLEMENT(void*) PR_GetThreadPrivate(PRUintn his)
 {
     PRInt32 index = (PRInt32)his;
     PRThread *self = PR_GetCurrentThread();
-    void *tpd = ((NULL == self->privateData) || (index >= self->tpdLength)) ?
+    void *tpd = ((NULL == self->privateData) || ((PRUint32)index >= self->tpdLength)) ?
         NULL : self->privateData[index];
 
     return tpd;
@@ -232,7 +242,7 @@ void _PR_DestroyThreadPrivate(PRThread* self)
         PR_ASSERT(0 != self->tpdLength);
         do
         {
-            for (index = 0; index < self->tpdLength; ++index)
+            for (index = 0; (PRUint32)index < self->tpdLength; ++index)
             {
                 void *priv = self->privateData[index];  /* extract */
                 if (NULL != priv)  /* we have data at this index */

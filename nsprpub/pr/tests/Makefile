@@ -39,7 +39,9 @@ endif
 CSRCS =             \
 	accept.c		\
 	acceptread.c	\
+	affinity.c		\
 	alarm.c			\
+	anonfm.c		\
 	atomic.c		\
 	attach.c		\
 	bigfile.c		\
@@ -59,6 +61,7 @@ CSRCS =             \
 	foreign.c	    \
 	forktest.c	    \
 	fsync.c	        \
+	gethost.c		\
 	getproto.c		\
 	i2l.c		    \
 	initclk.c		\
@@ -82,6 +85,7 @@ CSRCS =             \
 	multiacc.c		\
 	multiwait.c		\
 	many_cv.c		\
+	nameshm1.c      \
 	nbconn.c		\
 	nblayer.c		\
 	nonblock.c		\
@@ -113,6 +117,11 @@ CSRCS =             \
 	selct_to.c	    \
 	select2.c  		\
 	sem.c 	  		\
+	sema.c 	  		\
+	semaerr.c 		\
+	semaerr1.c 		\
+	semaping.c 		\
+	semapong.c 		\
 	server_test.c	\
 	servr_kk.c		\
 	servr_ku.c		\
@@ -148,6 +157,7 @@ CSRCS =             \
 	writev.c        \
 	xnotify.c       \
 	y2k.c           \
+	y2ktmo.c        \
 	$(NULL)
 
 ifeq ($(OS_TARGET),OS2)

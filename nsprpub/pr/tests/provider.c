@@ -1372,6 +1372,7 @@ PRIntn main(PRIntn argc, char** argv)
     PT_FPrintStats(debug_out, thread_type);
 
     TimeOfDayMessage("Test exiting at", PR_CurrentThread());
+    PR_Cleanup();
     return 0;
 }  /* main */
 

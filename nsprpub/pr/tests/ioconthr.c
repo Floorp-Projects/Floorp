@@ -42,6 +42,11 @@ void ThreadFunc(void *arg)
                     err, PR_GetOSError());
             PR_ProcessExit(1);
         }
+        /*
+         * After getting an I/O interrupt, this thread must
+         * close the fd before it exits due to a limitation
+         * of our NT implementation.
+         */
         if (PR_Close(fd) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             PR_ProcessExit(1);
@@ -59,28 +64,20 @@ int main(int argc, char **argv)
     PRIntervalTime start, elapsed;
     int index;
 
-    fds = (PRFileDesc **) PR_MALLOC(num_threads * sizeof(PRFileDesc *));
+    fds = (PRFileDesc **) PR_MALLOC(2 * num_threads * sizeof(PRFileDesc *));
     PR_ASSERT(fds != NULL);
     threads = (PRThread **) PR_MALLOC(num_threads * sizeof(PRThread *));
     PR_ASSERT(threads != NULL);
 
-    for (index = 0; index < (num_threads / 2); index++) {
+    for (index = 0; index < num_threads; index++) {
         if (PR_NewTCPSocketPair(&fds[2 * index]) == PR_FAILURE) {
             fprintf(stderr, "PR_NewTCPSocket failed\n");
             PR_ProcessExit(1);
         }
-
-        threads[2 * index] = PR_CreateThread(
+        threads[index] = PR_CreateThread(
                 PR_USER_THREAD, ThreadFunc, fds[2 * index],
                 PR_PRIORITY_NORMAL, thread_scope, PR_JOINABLE_THREAD, 0);
-        if (NULL == threads[2 * index]) {
-            fprintf(stderr, "PR_CreateThread failed\n");
-            PR_ProcessExit(1);
-        }
-        threads[2 * index + 1] = PR_CreateThread(
-                PR_USER_THREAD, ThreadFunc, fds[2 * index + 1],
-                PR_PRIORITY_NORMAL, thread_scope, PR_JOINABLE_THREAD, 0);
-        if (NULL == threads[2 * index + 1]) {
+        if (NULL == threads[index]) {
             fprintf(stderr, "PR_CreateThread failed\n");
             PR_ProcessExit(1);
         }
@@ -115,6 +112,13 @@ int main(int argc, char **argv)
         PR_ProcessExit(1);
     }
 
+    for (index = 0; index < num_threads; index++) {
+        /* fds[2 * index] was passed to and closed by threads[index]. */
+        if (PR_Close(fds[2 * index + 1]) == PR_FAILURE) {
+            fprintf(stderr, "PR_Close failed\n");
+            PR_ProcessExit(1);
+        }
+    }
     PR_DELETE(threads);
     PR_DELETE(fds);
     printf("PASS\n");

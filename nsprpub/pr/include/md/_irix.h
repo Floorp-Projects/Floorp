@@ -58,6 +58,8 @@
 #define _PR_STAT_HAS_ST_ATIM
 #define _PR_HAVE_OFF64_T
 #define HAVE_POINTER_LOCALTIME_R
+#define _PR_HAVE_POSIX_SEMAPHORES
+#define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 
 /* Initialization entry points */
 PR_EXTERN(void) _MD_EarlyInit(void);

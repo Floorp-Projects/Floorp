@@ -318,7 +318,6 @@ struct protoent* getprotobynumber(int number);
 #define _MD_RECV _MD_recv
 #define _MD_SEND _MD_send
 #define _MD_ACCEPT_READ _MD_accept_read
-#define _MD_TRANSMITFILE _MD_transmitfile
 #define _MD_GETSOCKNAME _MD_getsockname
 #define _MD_GETPEERNAME _MD_getpeername
 #define _MD_GETSOCKOPT _MD_getsockopt
@@ -514,7 +513,6 @@ PR_EXTERN(PRInt32) _MD_accept_read(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr *
 // PR_EXTERN(PRInt32) _MD_fast_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout, PRBool fast, _PR_AcceptTimeoutCallback callback, void *callbackArg);
 // PR_EXTERN(PRInt32) _MD_fast_accept_read(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout, PRBool fast, _PR_AcceptTimeoutCallback callback, void *callbackArg);
 // PR_EXTERN(void) _MD_update_accept_context(PRInt32 s, PRInt32 ls);
-PR_EXTERN(PRInt32) _MD_transmitfile(PRFileDesc *sock, PRFileDesc *file, const void *headers, PRInt32 hlen, PRInt32 flags, PRIntervalTime timeout);
 PR_EXTERN(PRStatus) _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
 PR_EXTERN(PRStatus) _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
 PR_EXTERN(PRStatus) _MD_getsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, char* optval, PRInt32* optlen);

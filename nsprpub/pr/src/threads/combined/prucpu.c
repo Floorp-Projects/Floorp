@@ -42,6 +42,7 @@ PRInt32 _pr_cpu_affinity_mask = 0;
 static PRUintn _pr_cpuID;
 
 static void PR_CALLBACK _PR_CPU_Idle(void *);
+
 static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue);
 
 void  _PR_InitCPUs()
@@ -57,7 +58,8 @@ void  _PR_InitCPUs()
 #endif
 
 #ifdef HAVE_CUSTOM_USER_THREADS
-    _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(me);
+	if (!_native_threads_only)
+    	_PR_MD_CREATE_PRIMORDIAL_USER_THREAD(me);
 #endif
 
     /* Now start the first CPU. */
@@ -111,7 +113,6 @@ static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
     */
     cpu = PR_NEWZAP(_PRCPU);
     if (cpu) {
-
         cpu->last_clock = PR_IntervalNow();
 
         if (needQueue == PR_TRUE)
@@ -131,23 +132,26 @@ static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
         _PR_MD_INIT_RUNNING_CPU(cpu);
         thread->cpu = cpu;
 
-        cpu->idle_thread = _PR_CreateThread(PR_SYSTEM_THREAD,
-                                           _PR_CPU_Idle,
-                                           (void *)cpu,
-                                           PR_PRIORITY_NORMAL,
-                                           PR_LOCAL_THREAD,
-                                           PR_UNJOINABLE_THREAD,
-                                           0,
-                              		   	   _PR_IDLE_THREAD);
+		if (!_native_threads_only) {
+			
+			cpu->idle_thread = _PR_CreateThread(PR_SYSTEM_THREAD,
+											   _PR_CPU_Idle,
+											   (void *)cpu,
+											   PR_PRIORITY_NORMAL,
+											   PR_LOCAL_THREAD,
+											   PR_UNJOINABLE_THREAD,
+											   0,
+											   _PR_IDLE_THREAD);
 
-        if (!cpu->idle_thread) {
-            /* didn't clean up CPU queue XXXMB */
-            PR_DELETE(cpu);
-            return NULL;
-        } 
-        cpu->idle_thread->cpu = cpu;
+			if (!cpu->idle_thread) {
+				/* didn't clean up CPU queue XXXMB */
+				PR_DELETE(cpu);
+				return NULL;
+			} 
+			cpu->idle_thread->cpu = cpu;
 
-        cpu->idle_thread->no_sched = 0;
+			cpu->idle_thread->no_sched = 0;
+		}
 
         cpu->thread = thread;
 
@@ -178,12 +182,32 @@ static void _PR_RunCPU(void *unused)
 
     PR_ASSERT(NULL != me);
 
+    /*
+     * _PR_CreateCPU calls _PR_CreateThread to create the
+     * idle thread.  Because _PR_CreateThread calls PR_Lock,
+     * the current thread has to remain a global thread
+     * during the _PR_CreateCPU call so that it can wait for
+     * the lock if the lock is held by another thread.  If
+     * we clear the _PR_GLOBAL_SCOPE flag in
+     * _PR_MD_CREATE_PRIMORDIAL_THREAD, the current thread
+     * will be treated as a local thread and have trouble
+     * waiting for the lock because the CPU is not fully
+     * constructed yet.
+     *
+     * After the CPU is created, it is safe to mark the
+     * current thread as a local thread.
+     */
+
 #ifdef HAVE_CUSTOM_USER_THREADS
     _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(me);
 #endif
 
     me->no_sched = 1;
     cpu = _PR_CreateCPU(me, PR_TRUE);
+
+#ifdef HAVE_CUSTOM_USER_THREADS
+    me->flags &= (~_PR_GLOBAL_SCOPE);
+#endif
 
     _PR_MD_SET_CURRENT_CPU(cpu);
     _PR_MD_SET_CURRENT_THREAD(cpu->thread);
@@ -212,7 +236,6 @@ static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
     while(1) {
         PRInt32 is;
         PRIntervalTime timeout;
-
         if (!_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
 
         _PR_RUNQ_LOCK(cpu);
@@ -243,9 +266,9 @@ static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
             _PR_SLEEPQ_UNLOCK(cpu);
         }
 
-
         /* Wait for an IO to complete */
         (void)_PR_MD_PAUSE_CPU(timeout);
+
 
 #if !defined(_PR_LOCAL_THREADS_ONLY) && !defined(_PR_GLOBAL_THREADS_ONLY)
 #ifdef _PR_HAVE_ATOMIC_OPS
@@ -257,18 +280,17 @@ static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
 #endif /* _PR_HAVE_ATOMIC_OPS */
 #endif
 
-        _PR_ClockInterrupt();
+		_PR_ClockInterrupt();
 
-        /* Now schedule any thread that is on the runq
-         * INTS must be OFF when calling PR_Schedule()
-         */
-        me->state = _PR_RUNNABLE;
-        _PR_MD_SWITCH_CONTEXT(me);
-        if (!_PR_IS_NATIVE_THREAD(me)) _PR_FAST_INTSON(is);
+		/* Now schedule any thread that is on the runq
+		 * INTS must be OFF when calling PR_Schedule()
+		 */
+		me->state = _PR_RUNNABLE;
+		_PR_MD_SWITCH_CONTEXT(me);
+		if (!_PR_IS_NATIVE_THREAD(me)) _PR_FAST_INTSON(is);
     }
 }
 #endif /* _PR_GLOBAL_THREADS_ONLY */
-
 
 PR_IMPLEMENT(void) PR_SetConcurrency(PRUintn numCPUs)
 {
@@ -284,7 +306,11 @@ PR_IMPLEMENT(void) PR_SetConcurrency(PRUintn numCPUs)
     PRUintn newCPU;
     PRThread *cpu;
 
+
     if (!_pr_initialized) _PR_ImplicitInitialization();
+
+	if (_native_threads_only)
+		return;
     
     _PR_CPU_LIST_LOCK();
     if (_pr_numCPU < numCPUs) {

@@ -59,7 +59,7 @@ PRIntn debug_mode;
 
 int main(int argc, char **argv)
 {
-    PRFileDesc *listenSock1, *listenSock2;
+    PRFileDesc *listenSock1 = NULL, *listenSock2 = NULL;
     PRUint16 listenPort1, listenPort2;
     PRNetAddr addr;
     char buf[128];
@@ -177,9 +177,17 @@ int main(int argc, char **argv)
     }
     if (debug_mode) printf("PR_Poll timed out.  Test passed.\n\n");
 
-    PR_Cleanup();
-	goto exit_now;
 exit_now:
+
+    if (listenSock1) {
+        PR_Close(listenSock1);
+    }
+    if (listenSock2) {
+        PR_Close(listenSock2);
+    }
+
+    PR_Cleanup();
+
 	if(failed_already)	
 		return 1;
 	else

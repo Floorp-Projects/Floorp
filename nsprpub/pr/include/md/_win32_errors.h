@@ -24,6 +24,9 @@
 #include <errno.h>
 
 
+extern void _MD_win32_map_default_error(PRInt32 err);
+#define _PR_MD_MAP_DEFAULT_ERROR	_MD_win32_map_default_error
+
 extern void _MD_win32_map_opendir_error(PRInt32 err);
 #define	_PR_MD_MAP_OPENDIR_ERROR	_MD_win32_map_opendir_error
 

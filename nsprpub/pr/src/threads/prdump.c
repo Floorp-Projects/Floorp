@@ -18,6 +18,16 @@
 
 #include "primpl.h"
 
+#if defined(WIN95)
+/*
+** Some local variables report warnings on Win95 because the code paths 
+** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
+** The pragma suppresses the warning.
+** 
+*/
+#pragma warning(disable : 4101)
+#endif
+
 /* XXX use unbuffered nspr stdio */
 
 PRFileDesc *_pr_dumpOut;

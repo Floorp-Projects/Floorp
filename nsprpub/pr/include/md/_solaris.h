@@ -44,16 +44,34 @@
 #define	USE_DLFCN
 #define NEED_STRFTIME_LOCK
 
-#ifdef _PR_LOCAL_THREADS_ONLY
-#undef _PR_HAVE_ATOMIC_OPS
-#else
+/*
+ * Sparc v8 does not have instructions to efficiently implement
+ * atomic increment/decrement operations.  In the local threads
+ * only and pthreads versions, we use the default atomic routine
+ * implementation in pratom.c.  The obsolete global threads only
+ * version uses a global mutex_t to implement the atomic routines
+ * in solaris.c, which is actually equivalent to the default
+ * implementation.
+ */
+#ifdef _PR_GLOBAL_THREADS_ONLY
 #define _PR_HAVE_ATOMIC_OPS
+#endif
+
+#if defined(_PR_GLOBAL_THREADS_ONLY) || defined(_PR_PTHREADS)
+/*
+ * We have assembly language implementation of atomic
+ * stacks for the 32-bit sparc and x86 architectures only.
+ */
+#if !defined(sparc) || !defined(IS_64)
 #define _PR_HAVE_ATOMIC_CAS
+#endif
 #endif
 
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ST_ATIM
+#define _PR_HAVE_POSIX_SEMAPHORES
+#define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 
 #include "prinrval.h"
 PR_EXTERN(PRIntervalTime) _MD_Solaris_GetInterval(void);

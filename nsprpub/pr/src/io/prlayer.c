@@ -443,8 +443,8 @@ PR_IMPLEMENT(PRStatus) PR_PushIOLayer(
         fd->lower = insert;
         fd->higher = insert->higher;
 
-        insert->higher = fd;
         insert->higher->lower = fd;
+        insert->higher = fd;
     }
 
     return PR_SUCCESS;

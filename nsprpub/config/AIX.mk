@@ -57,6 +57,11 @@ else
 endif
 endif
 
+# IPv6 support part of the standard AIX 4.3 release.
+ifneq (,$(filter-out 3.2 4.1 4.2,$(OS_RELEASE)))
+USE_IPV6 = 1
+endif
+
 ifeq ($(CLASSIC_NSPR),1)
 CC		= xlC
 CCC		= xlC

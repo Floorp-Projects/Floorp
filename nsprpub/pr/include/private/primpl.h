@@ -60,6 +60,12 @@ typedef struct PRSegment PRSegment;
 #include "obsolete/probslet.h"
 #endif  /* XP_MAC */
 
+#ifdef _PR_HAVE_POSIX_SEMAPHORES
+#include <semaphore.h>
+#elif defined(_PR_HAVE_SYSV_SEMAPHORES)
+#include <sys/sem.h>
+#endif
+
 /*************************************************************************
 *****  A Word about Model Dependent Function Naming Convention ***********
 *************************************************************************/
@@ -306,6 +312,8 @@ PR_EXTERN(PRInt32)                      _pr_intsOff;
 #define _PR_UNLOCK_HEAP() if (_pr_currentCPU) _PR_INTSON(_is); }
 
 #endif /* _PR_LOCAL_THREADS_ONLY */
+
+extern PRInt32                  _native_threads_only;
 
 #if defined(_PR_GLOBAL_THREADS_ONLY)
 
@@ -973,6 +981,23 @@ extern char * _PR_MD_READ_DIR(_MDDir *md, PRIntn flags);
 extern PRInt32 _PR_MD_CLOSE_DIR(_MDDir *md);
 #define    _PR_MD_CLOSE_DIR _MD_CLOSE_DIR
 
+/* Named semaphores related */
+extern PRSem * _PR_MD_OPEN_SEMAPHORE(
+    const char *osname, PRIntn flags, PRIntn mode, PRUintn value);
+#define    _PR_MD_OPEN_SEMAPHORE _MD_OPEN_SEMAPHORE
+
+extern PRStatus _PR_MD_WAIT_SEMAPHORE(PRSem *sem);
+#define    _PR_MD_WAIT_SEMAPHORE _MD_WAIT_SEMAPHORE
+
+extern PRStatus _PR_MD_POST_SEMAPHORE(PRSem *sem);
+#define    _PR_MD_POST_SEMAPHORE _MD_POST_SEMAPHORE
+
+extern PRStatus _PR_MD_CLOSE_SEMAPHORE(PRSem *sem);
+#define    _PR_MD_CLOSE_SEMAPHORE _MD_CLOSE_SEMAPHORE
+
+extern PRStatus _PR_MD_DELETE_SEMAPHORE(const char *osname);
+#define    _PR_MD_DELETE_SEMAPHORE _MD_DELETE_SEMAPHORE
+
 /* I/O related */
 extern void _PR_MD_INIT_FILEDESC(PRFileDesc *fd);
 #define    _PR_MD_INIT_FILEDESC _MD_INIT_FILEDESC
@@ -1084,14 +1109,12 @@ extern void _PR_MD_UPDATE_ACCEPT_CONTEXT(PRInt32 s, PRInt32 ls);
 #define _PR_MD_UPDATE_ACCEPT_CONTEXT _MD_UPDATE_ACCEPT_CONTEXT
 #endif /* WIN32 */
 
-extern PRInt32 _PR_MD_TRANSMITFILE(
-    PRFileDesc *sock, PRFileDesc *file, 
-    const void *headers, PRInt32 hlen, PRInt32 flags,
-    PRIntervalTime timeout);
-#define _PR_MD_TRANSMITFILE _MD_TRANSMITFILE
-extern PRInt32 _PR_EmulateTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
-              const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
-              PRIntervalTime timeout);
+extern PRInt32 _PR_MD_SENDFILE(
+    PRFileDesc *sock, PRSendFileData *sfd, 
+	PRInt32 flags, PRIntervalTime timeout);
+#define _PR_MD_SENDFILE _MD_SENDFILE
+extern PRInt32 _PR_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd,
+			  PRTransmitFileFlags flags, PRIntervalTime timeout);
 
 extern PRStatus _PR_MD_GETSOCKNAME(
     PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen);
@@ -1294,6 +1317,20 @@ struct PRSemaphore {
 
 PR_EXTERN(void) _PR_InitSem(void);
 
+/*************************************************************************/
+
+struct PRSem {
+#ifdef _PR_HAVE_POSIX_SEMAPHORES
+    sem_t *sem;
+#elif defined(_PR_HAVE_SYSV_SEMAPHORES)
+    int semid;
+#elif defined(WIN32)
+    HANDLE sem;
+#else
+    PRInt8 notused;
+#endif
+};
+
 /************************************************************************/
 
 /* XXX this needs to be exported (sigh) */
@@ -1355,6 +1392,7 @@ struct PRThread {
     PRBool okToDelete;              /* ok to delete the PRThread struct? */
     PRCondVar *io_cv;               /* a condition used to run i/o */
     PRCondVar *waiting;             /* where the thread is waiting | NULL */
+	PRIntn io_tq_index;             /* the io-queue index for this thread */
     void *sp;                       /* recorded sp for garbage collection */
     PRThread *next, *prev;          /* simple linked list of all threads */
     PRUint32 suspend;               /* used to store suspend and resume flags */
@@ -1462,19 +1500,38 @@ struct PRFilePrivate {
     PRInt32 state;
     PRBool nonblocking;
     PRBool inheritable;
-#if defined(_PR_PTHREADS)
-    PRInt16 eventMask;  /* A bitmask in which a 0 means
-                         * the event should be ignored in
-                         * the revents returned by poll.
-                         * The eventMask field is only
-                         * accessed by the i/o continuation
-                         * thread.
-                         */
-#endif
     PRFileDesc *next;
     PRIntn lockCount;
     _MDFileDesc md;
+#ifdef _PR_PTHREADS
+    PRIntn eventMask[1];   /* An array of _pt_tq_count bitmasks.
+                            * eventMask[i] is only accessed by
+                            * the i-th i/o continuation thread.
+                            * A 0 in a bitmask means the event
+                            * should be igored in the revents
+                            * bitmask returned by poll.
+                            *
+                            * poll's revents bitmask is a short,
+                            * but we need to declare eventMask
+                            * as an array of PRIntn's so that
+                            * each bitmask can be updated
+                            * individually without disturbing
+                            * adjacent memory.  Only the lower
+                            * 16 bits of each PRIntn are used. */
+#endif
+/* IMPORTANT: eventMask MUST BE THE LAST FIELD OF THIS STRUCTURE */
 };
+
+/*
+ * The actual size of the PRFilePrivate structure,
+ * including the eventMask array at the end
+ */
+#ifdef _PR_PTHREADS
+extern PRIntn _pt_tq_count;
+#define PRFILEPRIVATE_SIZE (sizeof(PRFilePrivate) + (_pt_tq_count-1) * sizeof(PRIntn))
+#else
+#define PRFILEPRIVATE_SIZE sizeof(PRFilePrivate)
+#endif
 
 struct PRDir {
     PRDirEntry d;
@@ -1711,6 +1768,97 @@ extern PRStatus _PR_MD_MEM_UNMAP(void *addr, PRUint32 size);
 
 extern PRStatus _PR_MD_CLOSE_FILE_MAP(PRFileMap *fmap);
 #define _PR_MD_CLOSE_FILE_MAP _MD_CLOSE_FILE_MAP
+
+/* Named Shared Memory */
+
+/*
+** Declare PRSharedMemory.
+*/
+struct PRSharedMemory 
+{
+    char        *ipcname; /* after conversion to native */
+    PRSize      size;  /* from open */
+    PRIntn      mode;  /* from open */
+    PRIntn      flags; /* from open */
+#if defined(PR_HAVE_POSIX_NAMED_SHARED_MEMORY)
+    int         id;
+#elif defined(PR_HAVE_SYSV_NAMED_SHARED_MEMORY)
+    int         id;
+#elif defined(PR_HAVE_WIN32_NAMED_SHARED_MEMORY)
+    HANDLE      handle;
+#else
+    PRUint32    nothing; /* placeholder, nothing behind here */
+#endif
+    PRUint32    ident; /* guard word at end of struct */
+#define _PR_SHM_IDENT 0xdeadbad
+};
+                                                      
+extern PRSharedMemory * _MD_OpenSharedMemory( 
+    const char *name,
+    PRSize      size,
+    PRIntn      flags,
+    PRIntn      mode
+);
+#define _PR_MD_OPEN_SHARED_MEMORY _MD_OpenSharedMemory
+
+extern void * _MD_AttachSharedMemory( PRSharedMemory *shm, PRIntn flags );
+#define _PR_MD_ATTACH_SHARED_MEMORY _MD_AttachSharedMemory
+
+extern PRStatus _MD_DetachSharedMemory( PRSharedMemory *shm, void *addr );
+#define _PR_MD_DETACH_SHARED_MEMORY _MD_DetachSharedMemory
+
+extern PRStatus _MD_CloseSharedMemory( PRSharedMemory *shm );
+#define _PR_MD_CLOSE_SHARED_MEMORY _MD_CloseSharedMemory
+
+extern PRStatus _MD_DeleteSharedMemory( const char *name );
+#define _PR_MD_DELETE_SHARED_MEMORY  _MD_DeleteSharedMemory
+
+extern PRFileMap* _md_OpenAnonFileMap( 
+    const char *dirName,
+    PRSize      size,
+    PRFileMapProtect prot
+);
+#define _PR_MD_OPEN_ANON_FILE_MAP _md_OpenAnonFileMap
+
+extern PRStatus _md_ExportFileMapAsString(
+    PRFileMap *fm,
+    PRSize    bufSize,
+    char      *buf
+);
+#define _PR_MD_EXPORT_FILE_MAP_AS_STRING _md_ExportFileMapAsString
+
+extern PRFileMap * _md_ImportFileMapFromString(
+    const char *fmstring
+);
+#define _PR_MD_IMPORT_FILE_MAP_FROM_STRING _md_ImportFileMapFromString
+
+
+
+/* Interprocess communications (IPC) */
+
+/*
+ * The maximum length of an NSPR IPC name, including the
+ * terminating null byte.
+ */
+#define PR_IPC_NAME_SIZE 1024
+
+/*
+ * Types of NSPR IPC objects
+ */
+typedef enum {
+    _PRIPCSem,  /* semaphores */
+    _PRIPCShm   /* shared memory segments */
+} _PRIPCType;
+
+/*
+ * Make a native IPC name from an NSPR IPC name.
+ */
+extern PRStatus _PR_MakeNativeIPCName(
+    const char *name,  /* NSPR IPC name */
+    char *result,      /* result buffer */
+    PRIntn size,       /* size of result buffer */
+    _PRIPCType type    /* type of IPC object */
+);
 
 /* Socket call error code */
 

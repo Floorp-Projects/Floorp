@@ -156,6 +156,7 @@ union PRNetAddr {
         PRUint16 port;                  /* port number */
         PRUint32 flowinfo;              /* routing information */
         PRIPv6Addr ip;                  /* the actual 128 bits of address */
+        PRUint32 scope_id;              /* set of interfaces for a scope */
     } ipv6;
 #endif /* defined(_PR_INET6) */
 #if defined(XP_UNIX)
@@ -1044,7 +1045,7 @@ PR_EXTERN(PRUintn) PR_NetAddrSize(const PRNetAddr* addr);
  *************************************************************************
  * FUNCTION: PR_NewUDPSocket
  * DESCRIPTION:
- *     Create a new UDP network connection.
+ *     Create a new UDP socket.
  * INPUTS:
  *     None
  * OUTPUTS:
@@ -1052,7 +1053,7 @@ PR_EXTERN(PRUintn) PR_NetAddrSize(const PRNetAddr* addr);
  * RETURN: PRFileDesc*
  *     Upon successful completion, PR_NewUDPSocket returns a pointer
  *     to the PRFileDesc created for the newly opened UDP socket.
- *     Returns a NULL pointer if the create of a new UDP connection failed.
+ *     Returns a NULL pointer if the creation of a new UDP socket failed.
  *
  **************************************************************************
  */
@@ -1063,7 +1064,7 @@ PR_EXTERN(PRFileDesc*)    PR_NewUDPSocket(void);
  *************************************************************************
  * FUNCTION: PR_NewTCPSocket
  * DESCRIPTION:
- *     Create a new TCP network connection.
+ *     Create a new TCP socket.
  * INPUTS:
  *     None
  * OUTPUTS:
@@ -1071,12 +1072,52 @@ PR_EXTERN(PRFileDesc*)    PR_NewUDPSocket(void);
  * RETURN: PRFileDesc*
  *     Upon successful completion, PR_NewTCPSocket returns a pointer
  *     to the PRFileDesc created for the newly opened TCP socket.
- *     Returns a NULL pointer if the create of a new TCP connection failed.
+ *     Returns a NULL pointer if the creation of a new TCP socket failed.
  *
  **************************************************************************
  */
 
 PR_EXTERN(PRFileDesc*)    PR_NewTCPSocket(void);
+
+/*
+ *************************************************************************
+ * FUNCTION: PR_OpenUDPSocket
+ * DESCRIPTION:
+ *     Create a new UDP socket of the specified address family.
+ * INPUTS:
+ *     PRIntn af
+ *       Address family
+ * OUTPUTS:
+ *     None
+ * RETURN: PRFileDesc*
+ *     Upon successful completion, PR_OpenUDPSocket returns a pointer
+ *     to the PRFileDesc created for the newly opened UDP socket.
+ *     Returns a NULL pointer if the creation of a new UDP socket failed.
+ *
+ **************************************************************************
+ */
+
+PR_EXTERN(PRFileDesc*)    PR_OpenUDPSocket(PRIntn af);
+
+/*
+ *************************************************************************
+ * FUNCTION: PR_OpenTCPSocket
+ * DESCRIPTION:
+ *     Create a new TCP socket of the specified address family.
+ * INPUTS:
+ *     PRIntn af
+ *       Address family
+ * OUTPUTS:
+ *     None
+ * RETURN: PRFileDesc*
+ *     Upon successful completion, PR_NewTCPSocket returns a pointer
+ *     to the PRFileDesc created for the newly opened TCP socket.
+ *     Returns a NULL pointer if the creation of a new TCP socket failed.
+ *
+ **************************************************************************
+ */
+
+PR_EXTERN(PRFileDesc*)    PR_OpenTCPSocket(PRIntn af);
 
 /*
  *************************************************************************
@@ -1402,6 +1443,58 @@ PR_EXTERN(PRInt32) PR_TransmitFile(
     PRFileDesc *networkSocket, PRFileDesc *sourceFile,
     const void *headers, PRInt32 hlen, PRTransmitFileFlags flags,
     PRIntervalTime timeout);
+
+/*
+*************************************************************************
+** FUNCTION: PR_SendFile
+** DESCRIPTION:
+**    PR_SendFile sends data from a file (sendData->fd) across a socket 
+**    (networkSocket).  If specified, a header and/or trailer buffer are sent
+**	  before and after the file, respectively. The file offset, number of bytes
+** 	  of file data to send, the header and trailer buffers are specified in the
+**	  sendData argument.
+** 
+**    Optionally, if the PR_TRANSMITFILE_CLOSE_SOCKET flag is passed, the
+**    socket is closed after successfully sending the data.
+**
+** INPUTS:
+**    PRFileDesc *networkSocket
+**        The socket to send data over
+**    PRSendFileData *sendData
+**        Contains the FD, file offset and length, header and trailer
+**		  buffer specifications.
+**    PRTransmitFileFlags       flags
+**        If the flags indicate that the connection should be closed,
+**        it will be done immediately after transferring the file, unless
+**        the operation is unsuccessful. 
+.*     PRIntervalTime timeout
+ *        Time limit for completion of the send operation.
+**
+** RETURNS:
+**    Returns the number of bytes written or -1 if the operation failed.
+**    If an error occurs while sending the file, the PR_TRANSMITFILE_CLOSE_
+**    SOCKET flag is ignored. The reason for the failure is obtained
+**    by calling PR_GetError().
+**************************************************************************
+*/
+
+typedef struct PRSendFileData {
+	PRFileDesc	*fd;			/* file to send							*/
+	PRUint32	file_offset;	/* file offset							*/
+	PRSize		file_nbytes;	/* number of bytes of file data to send	*/
+								/* if 0, send data from file_offset to	*/
+								/* end-of-file.							*/
+	const void	*header;		/* header buffer						*/
+	PRInt32		hlen;			/* header len							*/
+	const void	*trailer;		/* trailer buffer						*/
+	PRInt32		tlen;			/* trailer len							*/
+} PRSendFileData;
+
+
+PR_EXTERN(PRInt32) PR_SendFile(
+    PRFileDesc *networkSocket, PRSendFileData *sendData,
+	PRTransmitFileFlags flags, PRIntervalTime timeout);
+
 /*
 *************************************************************************
 ** FUNCTION: PR_AcceptRead
