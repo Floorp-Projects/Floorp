@@ -18,6 +18,7 @@
 
 #include "nsMacMessagePump.h"
 #include "nsWindow.h"
+#include "net.h"	//¥¥¥TEMPORARY
 
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
@@ -71,6 +72,8 @@ unsigned char	evtype;
 	while(mRunning && stillrunning)
 		{			
 		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,0l);
+
+		NET_PollSockets();	//¥¥¥TEMPORARY
 
 		if(haveevent)
 			{
