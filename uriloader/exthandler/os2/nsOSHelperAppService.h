@@ -33,15 +33,13 @@
 
 class nsHashtable;
 class nsILineInputStream;
+class nsMIMEInfoOS2;
 
 class nsOSHelperAppService : public nsExternalHelperAppService
 {
 public:
   nsOSHelperAppService();
   virtual ~nsOSHelperAppService();
-
-  // override nsIExternalHelperAppService methods....
-  NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
   // method overrides for mime.types and mime.info look up steps
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMimeType,
@@ -59,8 +57,8 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
   
 protected:
-  already_AddRefed<nsIMIMEInfo> GetFromType(const char *aMimeType);
-  already_AddRefed<nsIMIMEInfo> GetFromExtension(const char *aFileExt);
+  already_AddRefed<nsMIMEInfoOS2> GetFromType(const char *aMimeType);
+  already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const char *aFileExt);
 
 private:
   // Helper methods which have to access static members
@@ -73,9 +71,9 @@ private:
                                   const char* aEnvVarName,
                                   PRUnichar** aFileLocation);
   static nsresult LookUpTypeAndDescription(const nsAString& aFileExtension,
-                                    nsAString& aMajorType,
-                                    nsAString& aMinorType,
-                                    nsAString& aDescription);
+                                           nsAString& aMajorType,
+                                           nsAString& aMinorType,
+                                           nsAString& aDescription);
   static nsresult CreateInputStream(const nsAString& aFilename,
                                     nsIFileInputStream ** aFileInputStream,
                                     nsILineInputStream ** aLineInputStream,

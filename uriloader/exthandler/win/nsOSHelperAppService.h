@@ -32,14 +32,13 @@
 #include "nsCOMPtr.h"
 #include <windows.h>
 
+class nsMIMEInfoWin;
+
 class nsOSHelperAppService : public nsExternalHelperAppService
 {
 public:
   nsOSHelperAppService();
   virtual ~nsOSHelperAppService();
-
-  // override nsIExternalHelperAppService methods....
-  NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
@@ -56,7 +55,7 @@ public:
   
 protected:
   // Lookup a mime info by extension, using an optional type hint
-  already_AddRefed<nsIMIMEInfo> GetByExtension(const char *aFileExt, const char *aTypeHint = nsnull);
+  already_AddRefed<nsMIMEInfoWin> GetByExtension(const char *aFileExt, const char *aTypeHint = nsnull);
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 
   /** Whether we're running on an OS that supports the *W registry functions */

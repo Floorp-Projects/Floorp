@@ -607,12 +607,6 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const char *
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMimeInfo, nsIFile * aTempFile)
-{
-  // this method should only be implemented by each OS specific implementation of this service.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, 
                                                                             const char * aTempFileExtension,
                                                                             const nsAString& aFileName,
@@ -1060,10 +1054,10 @@ nsExternalAppHandler::~nsExternalAppHandler()
 
 NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData )
 {
-  if (PL_strcmp(aTopic, "oncancel") == 0)
+  if (strcmp(aTopic, "oncancel") == 0)
   {
     // User pressed cancel button on dialog.
-    return this->Cancel();
+    return Cancel();
   }
   return NS_OK;
 }
@@ -1703,7 +1697,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
         // Source and dest dirs should be == so this should just do a rename
         rv = MoveFile(mFinalFileDestination);
         if (NS_SUCCEEDED(rv))
-          rv = OpenWithApplication(nsnull);
+          rv = OpenWithApplication();
       }
     }
     else // Various unknown actions go here too
@@ -1986,7 +1980,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
 }
 
 
-nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
+nsresult nsExternalAppHandler::OpenWithApplication()
 {
   nsresult rv = NS_OK;
   if (mCanceled)
@@ -1998,8 +1992,7 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
-    NS_ASSERTION(mHelperAppService, "Not initialized");
-    rv = mHelperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
+    rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);
     if (NS_FAILED(rv))
     {
       // Send error notification.
@@ -2011,6 +2004,7 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
     else
     {
 #if !defined(XP_MAC) && !defined (XP_MACOSX)
+      NS_ASSERTION(mHelperAppService, "Not initialized");
       // Mac users have been very verbal about temp files being deleted on app exit - they
       // don't like it - but we'll continue to do this on other platforms for now
       mHelperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
@@ -2050,8 +2044,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 
     if (NS_SUCCEEDED(rv))
     {
-      NS_ASSERTION(mHelperAppService, "Not initialized");
-      rv = mHelperAppService->LaunchAppWithTempFile(mMimeInfo, file);
+      rv = mMimeInfo->LaunchWithFile(file);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
     }

@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */ 
 
 #include "nsOSHelperAppService.h"
+#include "nsMIMEInfoBeOS.h"
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -60,55 +61,6 @@ nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
-
-NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
-{
-	nsresult rv = NS_OK;
-
-	LOG(("nsOSHelperAppService::LaunchAppWithTempFile\n"));
-
-	if (aMIMEInfo)
-	{
-		nsCOMPtr<nsIFile> application;
-		nsCAutoString path;
-		aTempFile->GetNativePath(path);
-
-		nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
-		aMIMEInfo->GetPreferredAction(&action);
-
-		aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-		if (application && action == nsIMIMEInfo::useHelperApp)
-		{
-			// if we were given an application to use then use it....otherwise
-			// make the registry call to launch the app
-			const char * strPath = path.get();
-			nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
-			nsresult rv;
-			if (NS_FAILED(rv = process->Init(application)))
-				return rv;
-			PRUint32 pid;
-			if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
-				return rv;
-		}
-		else // use the system default
-		{
-			// Launch the temp file, unless it is an executable.
-			nsCOMPtr<nsILocalFile> local(do_QueryInterface(aTempFile));
-			if (!local)
-				return NS_ERROR_FAILURE;
-
-			PRBool executable = PR_TRUE;
-			local->IsExecutable(&executable);
-			if (executable)
-				return NS_ERROR_FAILURE;
-			
-			rv = local->Launch();
-		}
-	}
-
-	return rv;
-}
-
 
 NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
@@ -160,8 +112,9 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 
 	nsresult rv = NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIMIMEInfo> mimeInfo = new nsMIMEInfoImpl();
+	nsMIMEInfoBeOS* mimeInfo = new nsMIMEInfoBeOS();
 	if (mimeInfo) {
+		NS_ADDREF(mimeInfo);
 		BMimeType mimeType(aMIMEType);
 		BMessage data;
 		mimeInfo->SetMIMEType(aMIMEType);
@@ -211,7 +164,7 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 				rv = GetFileTokenForPath(NS_ConvertUTF8toUCS2(path.Path()).get(), getter_AddRefs(handlerFile));
 
 				if (NS_SUCCEEDED(rv)) {
-					mimeInfo->SetDefaultApplicationHandler(handlerFile);
+					mimeInfo->SetDefaultApplication(handlerFile);
 					mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 					mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(path.Leaf()).get());
 					LOG(("    Preferred App: %s\n",path.Leaf()));
@@ -225,7 +178,6 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 		}
 
 		*_retval = mimeInfo;
-		NS_ADDREF(*_retval);
 		rv = NS_OK;
 	}
 	else
@@ -327,7 +279,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFile
     return mi;
 
   *aFound = PR_FALSE;
-  mi = new nsMIMEInfoImpl();
+  mi = new nsMIMEInfoBeOS();
   if (!mi)
     return nsnull;
   NS_ADDREF(mi);

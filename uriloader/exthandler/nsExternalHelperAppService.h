@@ -234,7 +234,6 @@ protected:
   nsresult GetMIMEInfoForExtensionFromExtras(const char * aExtension,
                                              nsIMIMEInfo * aMIMEInfo);
 
-protected:
 #ifdef PR_LOGGING
   /**
    * NSPR Logging Module. Usage: set NSPR_LOG_MODULES=HelperAppService:level,
@@ -246,6 +245,7 @@ protected:
   // friend, so that it can access the nspr log module
   friend class nsExternalAppHandler;
 #endif
+
   /**
    * Functions related to the tempory file cleanup service provided by
    * nsExternalHelperAppService
@@ -370,8 +370,9 @@ protected:
   /**
    * An internal method used to actually launch a helper app given the temp file
    * once we are done receiving data AND have showed the progress dialog.
+   * Uses the application specified in the mime info.
    */
-  nsresult OpenWithApplication(nsIFile * aApplication);
+  nsresult OpenWithApplication();
   
   /**
    * Helper routine which peaks at the mime action specified by mMimeInfo

@@ -11,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the GNOME helper app implementation.
+ * The Original Code is the Windows MIME Info Implementation.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Christian Biesinger <cbiesinger@web.de>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,21 +34,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIURI.h"
-#include "nsCOMPtr.h"
+#ifndef nsMIMEInfoWin_h_
+#define nsMIMEInfoWin_h_
 
-class nsMIMEInfoBase;
+#include "nsMIMEInfoImpl.h"
 
-class nsGNOMERegistry
-{
- public:
-  static void Startup();
+class nsMIMEInfoWin : public nsMIMEInfoBase {
+  public:
+    nsMIMEInfoWin();
+    nsMIMEInfoWin(const char* aType);
+    virtual ~nsMIMEInfoWin();
 
-  static PRBool HandlerExists(const char *aProtocolScheme);
-
-  static nsresult LoadURL(nsIURI *aURL);
-
-  static already_AddRefed<nsMIMEInfoBase> GetFromExtension(const char *aFileExt);
-
-  static already_AddRefed<nsMIMEInfoBase> GetFromType(const char *aMIMEType);
+    NS_IMETHOD GetHasDefaultHandler(PRBool * _retval);
+  protected:
+    virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);
 };
+
+#endif

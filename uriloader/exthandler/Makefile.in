@@ -79,14 +79,28 @@ OSHELPER	= nsOSHelperAppService.cpp
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 OSHELPER		+= nsInternetConfig.cpp \
 			nsInternetConfigService.cpp \
+			nsMIMEInfoMac.cpp \
 			$(NULL)
 endif
+
+LOCAL_INCLUDES = -I$(srcdir)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OSHELPER	+= nsGNOMERegistry.cpp
 endif
 
-LOCAL_INCLUDES = -I$(srcdir)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+OSHELPER  += nsMIMEInfoBeOS.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OSHELPER  += nsMIMEInfoWin.cpp
+LOCAL_INCLUDES += -I$(srcdir)/win
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+OSHELPER  += nsMIMEInfoOS2.cpp
+endif
 
 EXPORTS = \
 		$(OSDIR)/nsOSHelperAppService.h \
@@ -111,7 +125,8 @@ CPPSRCS	= \
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= shell32.lib
-GARBAGE		+= nsOSHelperAppService.cpp $(srcdir)/nsOSHelperAppService.cpp
+GARBAGE		+= nsOSHelperAppService.cpp $(srcdir)/nsOSHelperAppService.cpp \
+             nsMIMEInfoWin.cpp $(srcdir)/nsMIMEInfoWin.cpp
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -125,6 +140,6 @@ endif
 
 # the use of multiple VPATH dirs is broken in cygwin make
 ifeq ($(OS_ARCH),WINNT)
-export:: $(OSDIR)/nsOSHelperAppService.cpp
+export:: $(OSDIR)/nsOSHelperAppService.cpp $(OSDIR)/nsMIMEInfoWin.cpp
 	$(INSTALL) $^ .
 endif
