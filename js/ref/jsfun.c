@@ -1074,6 +1074,11 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		return JS_FALSE;
 	}
 	*objp = fun->object;
+        if (!OBJ_DEFINE_PROPERTY(xdr->cx, xdr->cx->globalObject,
+                                 (jsid)fun->atom, OBJECT_TO_JSVAL(*objp),
+                                 NULL, NULL, JSPROP_ENUMERATE,
+                                 (JSProperty **)&sprop))
+            return JS_FALSE;
     }
 
     return JS_TRUE;
