@@ -228,7 +228,7 @@ PluginTypes.prototype = {
     case "fileExtension":
       return aObject.MIMEInfo.primaryExtension.toLowerCase();
     case "fileType":
-      var desc = aObject.MIMEInfo.Description;
+      var desc = aObject.MIMEInfo.description;
       // XXXben localize
       return desc || aObject.MIMEInfo.primaryExtension.toUpperCase() + " file";
     case "pluginEnabled":
@@ -276,7 +276,7 @@ PluginTypes.prototype = {
     var mimeInfo = this._pluginTypes[aRow].MIMEInfo;
     
     if (aCol.id == "fileType") {
-      var desc = mimeInfo.Description;
+      var desc = mimeInfo.description;
       // XXXben localize
       return desc || mimeInfo.primaryExtension.toUpperCase() + " file";
     }

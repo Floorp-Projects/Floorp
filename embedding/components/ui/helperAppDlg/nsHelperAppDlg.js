@@ -295,7 +295,7 @@ nsHelperAppDialog.prototype = {
     // initIntro:
     initIntro: function(url, filename) {
         var intro = this.dialogElement( "intro" );
-        var desc = this.mLauncher.MIMEInfo.Description;
+        var desc = this.mLauncher.MIMEInfo.description;
         var modified;
         if ( this.mForced && desc )
         {

@@ -67,7 +67,7 @@ interface nsIMIMEInfo : nsISupports {
     /**
      * Set File Extensions. Input is a comma delimited list of extensions.
      */
-    void SetFileExtensions(in ACString aExtensions);
+    void setFileExtensions(in ACString aExtensions);
  
     /**
      * Returns whether or not the given extension is
@@ -75,12 +75,12 @@ interface nsIMIMEInfo : nsISupports {
      *
      * @return TRUE if the association exists. 
      */
-    boolean ExtensionExists(in ACString aExtension);
+    boolean extensionExists(in ACString aExtension);
 
     /**
      * Append a given extension to the set of extensions
      */
-    void AppendExtension(in ACString aExtension);
+    void appendExtension(in ACString aExtension);
 
     /**
      * Returns the first extension association in
@@ -102,13 +102,13 @@ interface nsIMIMEInfo : nsISupports {
      *
      * @return The description
      */
-    attribute AString Description;
+    attribute AString description;
 
     /**
      * Mac Type and creator types
      */
-    attribute PRUint32 MacType;
-    attribute PRUint32 MacCreator;
+    attribute PRUint32 macType;
+    attribute PRUint32 macCreator;
 
     /**
      * Returns whether or not these two MIME infos are logically
@@ -117,7 +117,7 @@ interface nsIMIMEInfo : nsISupports {
      *
      * @returns TRUE if the two are considered equal
      */
-    boolean Equals(in nsIMIMEInfo aMIMEInfo);
+    boolean equals(in nsIMIMEInfo aMIMEInfo);
 
     /**
      * Returns a nsIFile that points to the application the user has said
