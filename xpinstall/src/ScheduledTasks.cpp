@@ -228,6 +228,10 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         doomedFile->Clone(getter_AddRefs(tmpFile));  // recreate the tmpFile as a doomedFile
         tmpFile->MoveTo(parent, leafname);
         
+        tmpFile = parent;              //MoveTo on Mac doesn't reset the tmpFile object to 
+        tmpFile->Append(leafname);     //the new name or location. That's why there's this 
+                                       //explict assignment and Append call.
+
         if (leafname) nsCRT::free( leafname );
     }
 
