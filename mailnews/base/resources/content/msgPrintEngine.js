@@ -73,6 +73,8 @@ function showPrintPreviewToolbar()
 
 function BrowserExitPrintPreview()
 {
+  var webBrowserPrint = printEngine.webBrowserPrint;
+  webBrowserPrint.exitPrintPreview(); 
   window.close();
 }
 
