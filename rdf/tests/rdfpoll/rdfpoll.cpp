@@ -213,7 +213,7 @@ rdf_WriteOp(const char* aOp,
         
         printf("       ->\"%s\"\n", p);
 
-        delete[] p;
+        nsCRT::free(p);
     }
 
     printf("\n");
