@@ -86,7 +86,7 @@ class nsPrefMigration: public nsIPrefMigration
 
       enum
       {
-            NOT_ENOUGH_SPACE            = 200,
+            NOT_ENOUGH_SPACE            = 200
       };
 
     private:
