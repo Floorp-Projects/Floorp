@@ -31,15 +31,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIClipView.h"
 
-static inline PRBool
-ViewIsShowing(nsIView *aView)
-{
-  nsViewVisibility  visibility;
-
-  aView->GetVisibility(visibility);
-  return nsViewVisibility_kShow == visibility;
-}
-
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
@@ -57,13 +48,33 @@ public:
 
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
 
+  // Do not set the visibility of the ScrollbarView using SetVisibility. Instead it 
+  // must be marked as visible or hidden using SetEnabled. 
+  // The nsScrollingView::UpdateComponentVisibility looks at both the enabled flag and the 
+  // scrolling views visibility to determine if the ScrollBarView is visible or hidden and calls
+  // SetVisibility. KMM
+ 
+  void SetEnabled(PRBool aEnabled);
+  PRBool GetEnabled();
+
 public:
   nsScrollingView *mScrollingView;
+
+protected:
+  PRBool mEnabled;
+
 };
+
+static inline PRBool
+ViewIsShowing(ScrollBarView *aView)
+{
+  return(aView->GetEnabled());
+}
 
 ScrollBarView :: ScrollBarView(nsScrollingView *aScrollingView)
 {
   mScrollingView = aScrollingView;
+  mEnabled = PR_FALSE;
 }
 
 ScrollBarView :: ~ScrollBarView()
@@ -93,6 +104,16 @@ NS_IMETHODIMP ScrollBarView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFl
   }
 
   return NS_OK;
+}
+
+void ScrollBarView :: SetEnabled(PRBool aEnabled) 
+{
+  mEnabled = aEnabled;
+}
+
+PRBool ScrollBarView :: GetEnabled()
+{
+  return(mEnabled);
 }
 
 class CornerView : public nsView
@@ -443,10 +464,10 @@ NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PR
 #endif
 
   // Determine how much space is actually taken up by the scrollbars
-  if (mHScrollBarView && ViewIsShowing(mHScrollBarView))
+  if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView))
     showHorz = NSToCoordRound(scrollHeight);
 
-  if (mVScrollBarView && ViewIsShowing(mVScrollBarView))
+  if (mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView))
     showVert = NSToCoordRound(scrollWidth);
 
   // Compute the clip view rect
@@ -506,6 +527,87 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
   }
   return NS_OK;
 }
+
+nsresult
+nsScrollingView :: SetComponentVisibility(nsIView* aView, nsViewVisibility aViewVisibility) 
+{
+  nsresult rv = NS_OK;
+  if (nsnull != aView) {
+      // Only set visibility if it's not currently set.
+    nsViewVisibility componentVisibility;
+    aView->GetVisibility(componentVisibility);
+    if (aViewVisibility != componentVisibility) {
+      rv = aView->SetVisibility(aViewVisibility);
+    }
+  }
+
+  return rv;
+}
+
+// Set the visibility of the scrolling view's components (ClipView, CornerView, ScrollBarView's)
+
+nsresult
+nsScrollingView :: UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibility)
+{
+  nsresult rv = NS_OK;
+  if (nsViewVisibility_kHide == aScrollingViewVisibility) {
+
+     // Hide Clip View 
+    rv = SetComponentVisibility(mClipView, nsViewVisibility_kHide);
+
+     // Hide horizontal scrollbar
+    if (NS_SUCCEEDED(rv)) {
+      rv = SetComponentVisibility(mHScrollBarView, nsViewVisibility_kHide);
+    }
+   
+    // Hide vertical scrollbar
+    if (NS_SUCCEEDED(rv)) {
+      rv = SetComponentVisibility(mVScrollBarView, nsViewVisibility_kHide);
+    }
+   
+    // Hide the corner view
+    if (NS_SUCCEEDED(rv)) { 
+      rv = SetComponentVisibility(mCornerView, nsViewVisibility_kHide);
+    }
+
+  } else if (nsViewVisibility_kShow == aScrollingViewVisibility) {
+      // Show clip view if if the scrolling view is visible
+     rv = SetComponentVisibility(mClipView, nsViewVisibility_kShow);
+    
+     PRBool horizEnabled = PR_FALSE; 
+     PRBool vertEnabled = PR_FALSE; 
+
+     // Show horizontal scrollbar if it is enabled otherwise hide it
+     if ((NS_SUCCEEDED(rv)) && (nsnull != mHScrollBarView)) {
+       horizEnabled = ((ScrollBarView *)mHScrollBarView)->GetEnabled();
+       rv = SetComponentVisibility(mHScrollBarView, horizEnabled ? nsViewVisibility_kShow : nsViewVisibility_kHide);
+     }
+      
+     // Show vertical scrollbar view if it is enabled otherwise hide it
+     if ((NS_SUCCEEDED(rv)) &&  (nsnull != mVScrollBarView)) {
+       vertEnabled = ((ScrollBarView *)mVScrollBarView)->GetEnabled(); 
+       rv = SetComponentVisibility(mVScrollBarView, vertEnabled ? nsViewVisibility_kShow : nsViewVisibility_kHide);
+     }
+
+     // Show the corner view if both the horizontal and vertical scrollbars are enabled otherwise hide it
+     if (NS_SUCCEEDED(rv)) {
+       rv = SetComponentVisibility(mCornerView, (horizEnabled && vertEnabled) ? nsViewVisibility_kShow : nsViewVisibility_kHide);
+     }
+   }
+
+   return rv;
+}
+
+
+NS_IMETHODIMP nsScrollingView :: SetVisibility(nsViewVisibility aVisibility)
+{
+  nsresult rv = UpdateComponentVisibility(aVisibility);
+  if (NS_SUCCEEDED(rv)) {
+    rv = nsView::SetVisibility(aVisibility);
+  }
+  return rv;
+}
+
 
 void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
@@ -966,7 +1068,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
         {
           //we need to be able to scroll
 
-          mVScrollBarView->SetVisibility(nsViewVisibility_kShow);
+          ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_TRUE);
           win->Enable(PR_TRUE);
 
           //now update the scroller position for the new size
@@ -1013,12 +1115,12 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
 
           if (mScrollPref == nsScrollPreference_kAlwaysScroll)
           {
-            mVScrollBarView->SetVisibility(nsViewVisibility_kShow);
+            ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_TRUE);
             win->Enable(PR_FALSE);
           }
           else
           {
-            mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
+            ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_FALSE);
             win->Enable(PR_TRUE);
             NS_RELEASE(scrollv);
           }
@@ -1045,7 +1147,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
         {
           //we need to be able to scroll
 
-          mHScrollBarView->SetVisibility(nsViewVisibility_kShow);
+          ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_TRUE);
           win->Enable(PR_TRUE);
 
           //now update the scroller position for the new size
@@ -1092,12 +1194,12 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
 
           if (mScrollPref == nsScrollPreference_kAlwaysScroll)
           {
-            mHScrollBarView->SetVisibility(nsViewVisibility_kShow);
+            ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_TRUE);
             win->Enable(PR_FALSE);
           }
           else
           {
-            mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
+            ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_FALSE);
             win->Enable(PR_TRUE);
           }
         }
@@ -1110,10 +1212,10 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
 
     // Adjust the size of the clip view to account for scrollbars that are
     // showing
-    if (mHScrollBarView && ViewIsShowing(mHScrollBarView))
+    if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView))
       controlRect.height -= hheight;
 
-    if (mVScrollBarView && ViewIsShowing(mVScrollBarView))
+    if (mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView))
       controlRect.width -= vwidth;
 
     mClipView->SetDimensions(controlRect.width, controlRect.height, PR_FALSE);
@@ -1123,8 +1225,8 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
 
     if (mCornerView)
     {
-      if (mHScrollBarView && ViewIsShowing(mHScrollBarView) &&
-          mVScrollBarView && ViewIsShowing(mVScrollBarView))
+      if (mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView) &&
+          mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView))
         ((CornerView *)mCornerView)->Show(PR_TRUE, PR_FALSE);
       else
         ((CornerView *)mCornerView)->Show(PR_FALSE, PR_FALSE);
@@ -1144,7 +1246,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
     // There's no scrolled view so hide the scrollbars and corner view
     if (nsnull != mHScrollBarView)
     {
-      mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
+      ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_FALSE);
 
       mHScrollBarView->GetWidget(win);
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh))
@@ -1157,7 +1259,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
 
     if (nsnull != mVScrollBarView)
     {
-      mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
+      ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_FALSE);
 
       mVScrollBarView->GetWidget(win);
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
@@ -1349,8 +1451,8 @@ NS_IMETHODIMP nsScrollingView :: GetControlInsets(nsMargin &aInsets) const
 NS_IMETHODIMP nsScrollingView :: GetScrollbarVisibility(PRBool *aVerticalVisible,
                                                         PRBool *aHorizontalVisible) const
 {
-  *aVerticalVisible = mVScrollBarView && ViewIsShowing(mVScrollBarView);
-  *aHorizontalVisible = mHScrollBarView && ViewIsShowing(mHScrollBarView);
+  *aVerticalVisible = mVScrollBarView && ViewIsShowing((ScrollBarView *)mVScrollBarView);
+  *aHorizontalVisible = mHScrollBarView && ViewIsShowing((ScrollBarView *)mHScrollBarView);
   return NS_OK;
 }
 
@@ -1419,33 +1521,31 @@ void nsScrollingView :: UpdateScrollControls(PRBool aPaint)
   nsSize  cornerSize = nsSize(0, 0);
   nsSize  visCornerSize = nsSize(0, 0);
   nsPoint cornerPos = nsPoint(0, 0);
-  nsViewVisibility  vertVis = nsViewVisibility_kHide;
-  nsViewVisibility  horzVis = nsViewVisibility_kHide;
+  PRBool  vertVis = PR_FALSE;
+  PRBool  horzVis = PR_FALSE;
 
   if (nsnull != mClipView)
   {
     mClipView->GetBounds(clipRect);
 
     if (nsnull != mVScrollBarView)
-      mVScrollBarView->GetVisibility(vertVis);
+      vertVis = ((ScrollBarView *)mVScrollBarView)->GetEnabled();
 
     if (nsnull != mHScrollBarView)
-      mHScrollBarView->GetVisibility(horzVis);
+      horzVis = ((ScrollBarView *)mHScrollBarView)->GetEnabled();
 
     if (nsnull != mCornerView)
     {
-      nsViewVisibility  cornerVis;
-
       mCornerView->GetDimensions(&cornerSize.width, &cornerSize.height);
-      mCornerView->GetVisibility(cornerVis);
-
-      if (cornerVis == nsViewVisibility_kShow)
+ 
+        // If both the vertical and horizontal scrollbars are enabled, so is the corner view.
+      if (vertVis && horzVis)
         visCornerSize = cornerSize;
 
-      if (vertVis == nsViewVisibility_kShow)
+      if (PR_TRUE == vertVis)
         visCornerSize.width = 0;
 
-      if (horzVis == nsViewVisibility_kShow)
+      if (PR_TRUE == horzVis)
         visCornerSize.height = 0;
     }
 
@@ -1483,6 +1583,11 @@ void nsScrollingView :: UpdateScrollControls(PRBool aPaint)
     if (nsnull != mCornerView)
       mCornerView->SetPosition(cornerPos.x, cornerPos.y);
   }
+
+   // Update the visibility of all of the ScrollingView's components
+  nsViewVisibility scrollingViewVisibility;
+  GetVisibility(scrollingViewVisibility);
+  UpdateComponentVisibility(scrollingViewVisibility);
 }
 
 NS_IMETHODIMP nsScrollingView :: SetScrolledView(nsIView *aScrolledView)
