@@ -668,7 +668,14 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
 
 #pragma warning(disable: 4035)
 PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
-{
+{    
+#if defined(__GNUC__)
+  PRInt32 result;
+  asm volatile ("lock ; xadd %0, %1" 
+                : "=r"(result), "=m"(*val)
+                : "0"(1), "m"(*val));
+  return result + 1;
+#else
     __asm
     {
         mov ecx, val
@@ -676,12 +683,21 @@ PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
         lock xadd dword ptr [ecx], eax
         inc eax
     }
+#endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)
 
 #pragma warning(disable: 4035)
 PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 {
+#if defined(__GNUC__)
+  PRInt32 result;
+  asm volatile ("lock ; xadd %0, %1" 
+                : "=r"(result), "=m"(*val)
+                : "0"(1), "m"(*val));
+  //asm volatile("lock ; xadd %0, %1" : "=m" (val), "=a" (result) : "-1" (1));
+  return result - 1;
+#else
     __asm
     {
         mov ecx, val
@@ -689,12 +705,21 @@ PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
         lock xadd dword ptr [ecx], eax
         dec eax
     }
+#endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)
 
 #pragma warning(disable: 4035)
 PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
 {
+#if defined(__GNUC__)
+  PRInt32 result;
+  //asm volatile("lock ; xadd %1, %0" : "=m" (intp), "=a" (result) : "1" (val));
+  asm volatile ("lock ; xadd %0, %1" 
+                : "=r"(result), "=m"(intp)
+                : "0"(val), "m"(intp));
+  return result + val;
+#else
     __asm
     {
         mov ecx, intp
@@ -703,6 +728,7 @@ PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
         lock xadd dword ptr [ecx], eax
         add eax, ebx
     }
+#endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)
 
@@ -712,6 +738,25 @@ PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
 void 
 PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
 {
+#if defined(__GNUC__)
+  void **tos = (void **) stack;
+  void *tmp;
+  
+ retry:
+  if (*tos == (void *) -1)
+    goto retry;
+  
+  __asm__("lock xchg %0,%1"
+          : "=r" (tmp), "=m"(*tos)
+          : "0" (-1), "m"(*tos));
+  
+  if (tmp == (void *) -1)
+    goto retry;
+  
+  *(void **)stack_elem = tmp;
+  __asm__("" : : : "memory");
+  *tos = stack_elem;
+#else
     __asm
     {
 	mov ebx, stack
@@ -726,6 +771,7 @@ retry:	mov eax,[ebx]
 	mov [ecx],eax
 	mov [ebx],ecx
     }
+#endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)
 
@@ -733,6 +779,32 @@ retry:	mov eax,[ebx]
 PRStackElem * 
 PR_StackPop(PRStack *stack)
 {
+#if defined(__GNUC__)
+  void **tos = (void **) stack;
+  void *tmp;
+  
+ retry:
+  if (*tos == (void *) -1)
+    goto retry;
+  
+  __asm__("lock xchg %0,%1"
+          : "=r" (tmp), "=m"(*tos)
+          : "0" (-1), "m"(*tos));
+
+  if (tmp == (void *) -1)
+    goto retry;
+  
+  if (tmp != (void *) 0)
+    {
+      void *next = *(void **)tmp;
+      *tos = next;
+      *(void **)tmp = 0;
+    }
+  else
+    *tos = tmp;
+  
+  return tmp;
+#else
     __asm
     {
 	mov ebx, stack
@@ -753,6 +825,7 @@ empty:
 	mov [ebx],eax
 done:	
 	}
+#endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)
 

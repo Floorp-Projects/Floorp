@@ -100,7 +100,11 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
     thread->md.handle = (HANDLE) _beginthreadex(
                     NULL,
                     thread->stack->stackSize,
+#if defined(__MINGW32__)
+                    (void *)start,
+#else
                     (unsigned (__stdcall *)(void *))start,
+#endif
                     (void *)thread,
                     CREATE_SUSPENDED,
                     &(thread->id));

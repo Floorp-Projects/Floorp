@@ -1,0 +1,615 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ(2.12)
+AC_INIT(config/libc_r.h)
+
+d=`pwd`
+if test "${srcdir}" = "$d" || test "${srcdir}" = "."  ; then
+   echo "Do not build in the srcdir as it will override Makefiles used by non-autoconf build."
+   exit 1;
+fi
+
+AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
+AC_CANONICAL_SYSTEM
+AC_VALIDATE_CACHED_SYSTEM_TUPLE
+AC_PREFIX_DEFAULT(\${MOD_DEPTH}/dist)
+
+dnl Set this define to make fixes w/o breaking anything else.
+AC_DEFINE(USE_AUTOCONF)
+
+dnl ========================================================
+dnl = Version defaults
+dnl ========================================================
+NSPR_VERSION=3
+NSPR_MODNAME=nspr20
+_HAVE_PTHREADS=
+USE_PTHREADS=
+USE_USER_PTHREADS=
+USE_NSPR_THREADS=
+
+dnl ========================================================
+dnl =
+dnl = Dont change the following lines.  Doing so breaks:
+dnl =
+dnl = CFLAGS="-foo" ./configure
+dnl =
+dnl ========================================================
+CFLAGS="${CFLAGS=}"
+CXXFLAGS="${CXXFLAGS=}"
+LDFLAGS="${LDFLAGS=}"
+HOST_CFLAGS="${HOST_CFLAGS=}"
+HOST_LDFLAGS="${HOST_LDFLAGS=}"
+
+dnl ========================================================
+dnl =
+dnl = Check options that may affect the compiler
+dnl =
+dnl ========================================================
+MOZ_DEBUG=1
+AC_ARG_ENABLE(debug,
+    [  --disable-debug         Do not compile in debugging symbols],
+    [	if test "$enableval" = "no"; then
+    	    MOZ_DEBUG=
+	fi])
+
+AC_ARG_ENABLE(shared,
+    [  --disable-shared        Do not compile into shared libraries])
+
+AC_ARG_ENABLE(target,
+    [  --enable-target=\$t      Turn on features for target \$t when build has multiple targets],
+    MOZ_TARGET=`echo $enableval | tr a-z A-Z`,
+    MOZ_TARGET=)
+
+if test -n "$MOZ_DEBUG"; then
+    CFLAGS="$CFLAGS -g"
+    CXXFLAGS="$CXXFLAGS -g"
+fi
+
+dnl ========================================================
+dnl Checks for compilers.
+dnl ========================================================
+if test "$target" != "$host"; then
+    echo "cross compiling from $host to $target"
+    cross_compiling=yes
+
+    _SAVE_CC="$CC"
+    _SAVE_CFLAGS="$CFLAGS"
+    _SAVE_LDFLAGS="$LDFLAGS"
+
+    AC_MSG_CHECKING([for $host compiler])
+    if test -z "$HOST_CC"; then
+	AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc, "")
+	if test -z "$HOST_CC"; then
+	    AC_MSG_ERROR([no acceptable cc found in \$PATH])
+	fi
+    fi
+    AC_MSG_RESULT([$HOST_CC])
+    if test -z "$HOST_CFLAGS"; then
+	HOST_CFLAGS="$CFLAGS"
+    fi
+    if test -z "$HOST_LDFLAGS"; then
+	HOST_LDFLAGS="$LDFLAGS"
+    fi
+
+    CC="$HOST_CC"
+    CFLAGS="$HOST_CFLAGS"
+    LDFLAGS="$HOST_LDFLAGS"
+
+    AC_MSG_CHECKING([whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
+    AC_TRY_COMPILE([], [return(0);], 
+	[ac_cv_prog_host_cc_works=1 AC_MSG_RESULT([yes])],
+	AC_MSG_ERROR([installation or configuration problem: $host compiler $HOST_CC cannot create executables.]) )
+    
+    CC=$_SAVE_CC
+    CFLAGS=$_SAVE_CFLAGS
+    LDFLAGS=$_SAVE_LDFLAGS
+
+    if test -z "$CC"; then
+	AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
+    fi
+    unset ac_cv_prog_CC
+    AC_PROG_CC
+    if test -z "$CXX"; then
+	AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
+    fi
+    unset ac_cv_prog_CXX
+    AC_PROG_CXX
+    if test -z "$RANLIB"; then
+	AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
+    fi
+    if test -z "$AR"; then
+	AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
+    fi
+    if test -z "$AS"; then
+	AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
+    fi
+    if test -z "$DLLTOOL"; then
+	AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
+    fi
+    if test -z "$WINDRES"; then
+	AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
+    fi
+else
+    AC_PROG_CC
+    AC_PROG_CXX
+    AC_PROG_RANLIB
+    AC_PATH_PROGS(AS, as, $CC)
+    AC_PATH_PROGS(AR, ar, :)
+    AC_PATH_PROGS(DLLTOOL, dlltool, :)
+    AC_PATH_PROGS(WINDRES, windres, :)
+    if test -z "$HOST_CC"; then
+	HOST_CC="$CC"
+    fi
+    if test -z "$HOST_CFLAGS"; then
+	HOST_CFLAGS="$CFLAGS"
+    fi
+fi
+
+if test "$GCC" = "yes"; then
+    GNU_CC=1
+fi
+
+dnl ========================================================
+dnl Checks for programs.
+dnl ========================================================
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PATH_PROGS(PERL, perl5 perl, :)
+
+dnl ========================================================
+dnl Default platform specific options
+dnl ========================================================
+OBJ_SUFFIX=o
+LIB_SUFFIX=a
+DLL_SUFFIX=so
+MKSHLIB='$(CCC) -shared -o $@'
+PR_MD_ASFILES=
+PR_MD_CSRCS=
+
+dnl ========================================================
+dnl Override of system specific host options
+dnl ========================================================
+case "$host" in
+*-mingw*)
+    ;;
+*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
+    ;;
+esac
+
+dnl ========================================================
+dnl Override of system specific target options
+dnl ========================================================
+case "$target" in
+*-beos*)
+    AC_DEFINE(XP_BEOS)
+    AC_DEFINE(BeOS)
+    AC_DEFINE(BEOS)
+    ;;
+
+*-linux*)
+    AC_DEFINE(XP_UNIX)
+    MDCPUCFG_H=_linux.cfg
+    PR_MD_CSRCS=linux.c
+    PR_MD_ARCH_DIR=unix
+    case "${target_cpu}" in
+    alpha*)
+	AC_DEFINE(XP_UNIX)
+	AC_DEFINE(_POSIX_SOURCE)
+	AC_DEFINE(_BSD_SOURCE)
+	;;
+    esac
+    ;;
+
+*-irix*)
+    AC_DEFINE(XP_UNIX)
+    MDCPUCFG_H=_irix32.cfg
+    PR_MD_CSRCS=irix.c
+    AS="as -D_ASM $(INCLUDES) -n32"
+    PR_MD_ASFILES=os_Irix.s
+    PR_MD_ARCH_DIR=unix
+    case "${target_cpu}" in
+    alpha*)
+	AC_DEFINE(_POSIX_SOURCE)
+	AC_DEFINE(_BSD_SOURCE)
+	;;
+    esac
+    ;;
+
+*-mingw*)
+    AC_DEFINE(XP_PC)
+    PR_MD_ARCH_DIR=windows
+    if test -z "$GNU_CC"; then
+	OBJ_SUFFIX=obj
+	LIB_SUFFIX=lib
+	DLL_SUFFIX=dll
+    fi
+    MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $*.dll --output-lib $@'
+
+    case "$MOZ_TARGET" in
+    WINNT)
+	DEFINES="$DEFINES -DWIN32 -DWINNT -DWin32_Winsock"
+	MDCPUCFG_H=_winnt.cfg
+	;;
+    WIN95)
+	DEFINES="$DEFINES -UWINNT -DWIN32 -DWIN95 -DWin32_Winsock -D_PR_GLOBAL_THREADS_ONLY"
+	MDCPUCFG_H=_win95.cfg
+	;;
+    WIN16)
+	DEFINES="$DEFINES -UWINNT"
+	MDCPUCFG_H=_win16.cfg
+	;;
+    *)
+	AC_MSG_ERROR([Missing MOZ_TARGET for ${target}.  Use --enable-target to set.])
+   	;;
+    esac
+
+    case "$target" in
+    i?86-*)
+	AC_DEFINE(_X86_)
+        ;;
+    alpha-*)
+	AC_DEFINE(_ALPHA_)
+   	;;
+    mips-*)
+	AC_DEFINE(_MIPS_)
+	;;
+    *)
+	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
+	;;
+    esac
+    ;;
+esac
+
+dnl Turn off shared libraries if asked to do so.
+if test "$enable_shared" = no; then
+    MKSHLIB=
+fi
+
+dnl ========================================================
+dnl Check for system libraries
+dnl ========================================================
+dnl AC_CHECK_LIB(C, main)
+dnl AC_CHECK_LIB(C_r, main)
+dnl AC_CHECK_LIB(c, main)
+dnl AC_CHECK_LIB(c_r, main)
+dnl AC_CHECK_LIB(dce, main)
+dnl AC_CHECK_LIB(dl, main)
+dnl AC_CHECK_LIB(dld, main)
+dnl AC_CHECK_LIB(gen, main)
+dnl AC_CHECK_LIB(ip6, main)
+dnl AC_CHECK_LIB(l, main)
+dnl AC_CHECK_LIB(m, main)
+dnl AC_CHECK_LIB(nsl, main)
+dnl AC_CHECK_LIB(posix4, main)
+dnl AC_CHECK_LIB(prstrms, main)
+dnl AC_CHECK_LIB(prstrms_shr, main)
+dnl AC_CHECK_LIB(pthread, main)
+dnl AC_CHECK_LIB(pthreads, main)
+dnl AC_CHECK_LIB(resolv, main)
+dnl AC_CHECK_LIB(rt, main)
+dnl AC_CHECK_LIB(socket, main)
+dnl AC_CHECK_LIB(svld, main)
+dnl AC_CHECK_LIB(thread, main)
+dnl AC_CHECK_LIB(vms_jackets, main)
+
+dnl ========================================================
+dnl Check for system header files.
+dnl ========================================================
+dnl AC_HEADER_DIRENT
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h limits.h sys/file.h sys/ioctl.h sys/time.h unistd.h)
+
+dnl ========================================================
+dnl Check for typedefs and structs
+dnl ========================================================
+dnl AC_C_CONST
+dnl AC_TYPE_UID_T
+dnl AC_TYPE_MODE_T
+dnl AC_TYPE_OFF_T
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_STRUCT_ST_BLKSIZE
+dnl AC_STRUCT_ST_BLOCKS
+dnl AC_STRUCT_ST_RDEV
+dnl AC_HEADER_TIME
+dnl AC_STRUCT_TM
+
+dnl ========================================================
+dnl Checks for library functions.
+dnl ========================================================
+AC_PROG_GCC_TRADITIONAL
+AC_CHECK_FUNCS(lchown strerror)
+
+dnl AC_FUNC_MEMCMP
+dnl AC_FUNC_MMAP
+dnl AC_FUNC_SETVBUF_REVERSED
+dnl AC_FUNC_STRCOLL
+dnl AC_FUNC_STRFTIME
+dnl AC_FUNC_UTIME_NULL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(ftime getcwd gethostname gettimeofday getwd mkdir mktime putenv rmdir select socket strdup strerror strstr strtol strtoul uname)
+
+dnl ========================================================
+dnl Check options
+dnl ========================================================
+
+OS_LIBS=
+
+dnl Check if NSPR is being compiled for Mozilla
+dnl Let --with-arg override environment setting
+dnl
+AC_ARG_WITH(mozilla,
+    [  --with-mozilla          Compile NSPR with Mozilla support],
+    [	if test "$withval" = "yes"; then
+	    AC_DEFINE(MOZILLA_CLIENT)
+	else
+	    MOZILLA_CLIENT=
+	fi],
+    [	if test -n "$MOZILLA_CLIENT"; then
+	    AC_DEFINE(MOZILLA_CLIENT)
+	fi])
+
+AC_CHECK_LIB(pthread, pthread_attr_init, 
+             _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread")
+
+dnl 
+dnl If the above test failed, try lib c_r
+dnl 
+if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
+"x$ac_cv_lib_c_r_gethostbyname_r" = "xno"
+then
+  AC_CHECK_LIB(c_r, pthread_attr_init,
+               _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r")
+fi
+
+AC_ARG_WITH(pthreads,
+    [  --with-pthreads         Use system pthreads library as thread subsystem],
+    [	if test "$withval" = "yes"; then
+	    if test -n "$_HAVE_PTHREADS"; then
+		USE_PTHREADS=1 
+		USE_USER_PTHREADS=
+		USE_NSPR_THREADS=
+	    else
+		AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support ]);
+	    fi
+	else
+	    USE_PTHREADS=
+	    _PTHREAD_LDFLAGS=
+	fi],
+	[ if test -n "$_HAVE_PTHREADS"; then
+	    USE_PTHREADS=1
+	    USE_USER_PTHREADS=
+	    USE_NSPR_THREADS=
+	  fi])
+
+AC_ARG_ENABLE(user-pthreads,
+    [  --enable-user-pthreads  Build using userland pthreads],
+    [	if test "$enableval" = "yes"; then
+	    if test -n "$_HAVE_PTHREADS"; then
+		USE_PTHREADS=
+		USE_USER_PTHREADS=1
+		USE_NSPR_THREADS=
+	    else
+		AC_MSG_ERROR([ --enable-user-pthreads specified for a system without pthread support ]);
+	    fi
+	fi])
+
+AC_ARG_ENABLE(nspr-threads,
+    [  --enable-nspr-threads   Build using classic nspr threads],
+    [	if test "$enableval" = "yes"; then
+	    USE_PTHREADS=
+	    USE_USER_PTHREADS=
+	    USE_NSPR_THREADS=1
+	fi])
+
+case "$target" in
+*-beos*)
+    AC_ARG_WITH(bthreads,
+    [  --with-bthreads         Use system bthreads library as thread subsystem (BeOS only)],
+    [	if test "$withval" = "yes"; then
+    	    USE_BTHREADS=1
+	    USE_USER_PTHREADS=
+	    USE_PTHREADS=
+	fi])
+    ;;
+
+*-solaris*)
+    AC_ARG_WITH(native-threads,
+    [  --with-native-threads   Use native system threads as thread subsystem (Solaris only)],
+    [	if test "$withval" = "yes"; then
+	    USE_NATIVE_THREADS=1
+	    USE_USER_PTHREADS=
+	    USE_PTHREADS=
+	fi])
+    ;;
+esac
+
+USE_CPLUS=
+AC_ARG_ENABLE(cplus,
+    [  --enable-cplus          Use cplus for whatever reason],
+    [ if test "$enableval" = "yes"; then
+	USE_CPLUS=1
+      fi]) 
+
+USE_IPV6=
+AC_ARG_ENABLE(ipv6,
+    [  --enable-ipv6           Compile ipv6 support],
+    [ if test "$enableval" = "yes"; then
+	USE_IPV6=1
+      fi])
+
+if test -n "$USE_PTHREADS"; then
+   dnl See if -pthread is supported.
+   rm -f conftest*
+   ac_cv_have_dash_pthread=no
+   AC_MSG_CHECKING(whether ${CC-cc} accepts -pthread)
+   echo 'int main() { return 0; }' | cat > conftest.c
+   ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
+   if test $? -eq 0; then
+	if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`" && test -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
+	    ac_cv_have_dash_pthread=yes
+	    CFLAGS="$CFLAGS -pthread"
+	    CXXFLAGS="$CXXFLAGS -pthread"
+	fi
+    fi
+    rm -f conftest*
+    AC_MSG_RESULT($ac_cv_have_dash_pthread)
+
+    case "$target" in
+    *-mingw*|*-cygwin*|*-uwin*)
+	;;
+    *-solaris*)
+	AC_DEFINE(_REENTRANT)
+	if test -n "$GNU_CC"; then
+	    CFLAGS="$CFLAGS -mt"
+	    CXXFLAGS="$CXXFLAGS -mt"
+	fi
+	;;
+    *-freebsd*)
+	AC_DEFINE(_REENTRANT)
+	AC_DEFINE(_THREAD_SAFE)
+	 dnl -pthread links in -lc_r, so don't specify it explicitly.
+	if test "$ac_cv_have_dash_pthread" = "yes"; then
+	    PTHREAD_LDFLAGS=
+	fi
+	;;
+    *)
+	AC_DEFINE(_REENTRANT)
+	;;
+    esac
+
+    AC_CHECK_FUNC(pthread_create,,[
+       AC_CHECK_LIB(pthread, pthread_create, [OS_LIBS="-lpthread $OS_LIBS"])
+    ])
+
+else 
+    if test -n "$USE_USER_PTHREADS"; then
+	USE_PTHREADS=
+	USE_NSPR_THREADS=
+    else
+	USE_NSPR_THREADS=1
+	dnl AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+    fi
+fi
+dnl Special thread exceptions
+
+case "$target" in
+    *-mingw*|*-cygwin*|*-uwin*)
+	# win32 does not use pthreads
+	USE_PTHREADS=
+	PTHREAD_LDFLAGS=
+	USE_USER_PTHREADS=
+	;;
+    *-solaris*)
+	if test -n "$USE_NATIVE_THREADS"; then
+	    AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
+	else
+	    AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+	fi
+	;;
+esac
+
+AC_CHECK_FUNC(dlopen,,[
+    AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
+])
+
+EXTRA_LIBS=
+if test "$enable_shared" = no; then
+  EXTRA_LIBS="$OS_LIBS"
+fi
+
+dnl ========================================================
+dnl Substitution of found variables.
+dnl ========================================================
+AC_SUBST(MOZILLA_CLIENT)
+AC_SUBST(CC)
+AC_SUBST(CXX)
+AC_SUBST(CFLAGS)
+AC_SUBST(CXXFLAGS)
+AC_SUBST(HOST_CC)
+AC_SUBST(HOST_CFLAGS)
+AC_SUBST(GNU_CC)
+
+AC_SUBST(USE_PTHREADS)
+AC_SUBST(USE_BTHREADS)
+AC_SUBST(USE_CPLUS)
+AC_SUBST(USE_IPV6)
+AC_SUBST(USE_USER_PTHREADS)
+AC_SUBST(USE_NATIVE_THREADS)
+AC_SUBST(USE_NSPR_THREADS)
+
+AC_SUBST(NSPR_VERSION)
+AC_SUBST(NSPR_MODNAME)
+AC_SUBST(MDCPUCFG_H)
+AC_SUBST(MOZ_TARGET)
+AC_SUBST(PR_MD_CSRCS)
+AC_SUBST(PR_MD_ASFILES)
+AC_SUBST(PR_MD_ARCH_DIR)
+
+AC_SUBST(OBJ_SUFFIX)
+AC_SUBST(LIB_SUFFIX)
+AC_SUBST(DLL_SUFFIX)
+AC_SUBST(MKSHLIB)
+
+AC_SUBST(DEFINES)
+AC_SUBST(DEFS)
+AC_SUBST(AR)
+AC_SUBST(DLLTOOL)
+AC_SUBST(WINDRES)
+AC_SUBST(RANLIB)
+AC_SUBST(PERL)
+
+AC_SUBST(OS_LIBS)
+AC_SUBST(EXTRA_LIBS)
+
+dnl ========================================================
+dnl Generate output files.
+dnl ========================================================
+AC_OUTPUT([
+Makefile 
+config/Makefile
+config/autoconf.mk
+config/nsprincl.mk
+config/nsprincl.sh
+lib/Makefile 
+lib/ds/Makefile 
+lib/libc/Makefile 
+lib/libc/include/Makefile 
+lib/libc/src/Makefile 
+lib/msgc/Makefile 
+lib/msgc/include/Makefile 
+lib/msgc/src/Makefile 
+lib/msgc/tests/Makefile
+lib/prstreams/Makefile 
+lib/tests/Makefile 
+pr/Makefile 
+pr/include/Makefile 
+pr/include/md/Makefile 
+pr/include/obsolete/Makefile 
+pr/include/private/Makefile 
+pr/src/Makefile 
+pr/src/bthreads/Makefile 
+pr/src/cplus/Makefile 
+pr/src/cplus/tests/Makefile 
+pr/src/io/Makefile 
+pr/src/linking/Makefile 
+pr/src/malloc/Makefile 
+pr/src/md/Makefile 
+pr/src/md/beos/Makefile 
+pr/src/md/os2/Makefile 
+pr/src/md/unix/Makefile 
+pr/src/md/windows/Makefile 
+pr/src/memory/Makefile 
+pr/src/misc/Makefile 
+pr/src/pthreads/Makefile 
+pr/src/threads/Makefile 
+pr/src/threads/combined/Makefile 
+pr/tests/Makefile 
+pr/tests/dll/Makefile 
+pr/tests/w16gui/Makefile 
+tools/Makefile 
+])
+
+dnl lib/prstreams/tests/testprstrm/Makefile 
+dnl lib/tests/windows/makefile 

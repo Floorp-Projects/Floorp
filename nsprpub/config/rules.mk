@@ -48,8 +48,25 @@
 #
 ################################################################################
 
+ifndef topsrcdir
+topsrcdir=$(MOD_DEPTH)
+endif
+
+ifndef srcdir
+srcdir=.
+endif
+
 ifndef NSPR_CONFIG_MK
-include $(MOD_DEPTH)/config/config.mk
+include $(topsrcdir)/config/config.mk
+endif
+
+ifdef USE_AUTOCONF
+ifdef INTERNAL_TOOLS
+CC=$(HOST_CC)
+CCC=$(HOST_CXX)
+CFLAGS=$(HOST_CFLAGS)
+CXXFLAGS=$(HOST_CXXFLAGS)
+endif
 endif
 
 #
@@ -127,6 +144,14 @@ ifeq ($(OS_TARGET), WIN16)
 	W16DEF = $(notdir $(basename $(SHARED_LIBRARY))).DEF
 endif
 
+ifdef RES
+OBJS += $(RES)
+endif
+
+ifdef RESOBJ
+#OBJS += $(RESOBJ)
+endif
+
 ifeq ($(OS_ARCH), WINNT)
 ifneq ($(OS_TARGET), WIN16)
 ifneq ($(OS_TARGET), OS2)
@@ -135,7 +160,7 @@ endif
 endif
 endif
 
-ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
+ALL_TRASH		= $(TARGETS) $(OBJS) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
 			  so_locations
 
@@ -171,7 +196,7 @@ clean::
 	+$(LOOP_OVER_DIRS)
 
 clobber::
-	rm -rf $(OBJS) $(TARGETS) $(OBJDIR) $(GARBAGE) so_locations $(NOSUCHFILE)
+	rm -rf $(OBJS) $(TARGETS) $(filter-out . ..,$(OBJDIR)) $(GARBAGE) so_locations $(NOSUCHFILE)
 	+$(LOOP_OVER_DIRS)
 
 realclean clobber_all::
@@ -268,6 +293,9 @@ endif
 $(SHARED_LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
+ifdef USE_AUTOCONF
+	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
+else
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	echo "#!" > $(OBJDIR)/lib$(LIBRARY_NAME)_syms
 	nm -B -C -g $(OBJS) \
@@ -322,6 +350,18 @@ else	# OpenVMS
 endif	# OpenVMS
 endif	# WINNT
 endif	# AIX 4.1
+endif   # USE_AUTOCONF
+
+$(PURE_LIBRARY):
+	rm -f $@
+ifneq ($(OS_ARCH), WINNT)
+	$(AR) $(OBJS)
+endif
+	$(RANLIB) $@
+
+
+$(RESOBJ): $(RESNAME)
+	$(RC) -F$(OBJ_SUFFIX) $< $@
 
 ifeq ($(OS_ARCH), WINNT)
 $(RES): $(RESNAME)
@@ -363,24 +403,24 @@ ifeq ($(OS_TARGET), WIN16)
 	rm w16wccf
 else
 ifndef XP_OS2_EMX
-	$(CC) -Fo$@ -c $(CFLAGS) $*.c
+	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CC) -o $@ -c $(CFLAGS) $*.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 endif
 else
-	$(CC) -o $@ -c $(CFLAGS) $*.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $*.s
+	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 
 %: %.pl
-	rm -f $@; cp $*.pl $@; chmod +x $@
+	rm -f $@; cp $< $@; chmod +x $@
 
 ################################################################################
 # Special gmake rules.

@@ -60,7 +60,7 @@ PR_EXTERN(PRInt64) LL_Zero(void);
 
 #if PR_BYTES_PER_LONG == 8
 #define LL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
-#elif defined(WIN32) || defined(WIN16)
+#elif (defined(WIN32) || defined(WIN16)) && !defined(__GNUC__)
 #define LL_INIT(hi, lo)  ((hi ## i64 << 32) + lo ## i64)
 #else
 #define LL_INIT(hi, lo)  ((hi ## LL << 32) + lo ## LL)

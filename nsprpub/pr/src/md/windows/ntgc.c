@@ -88,7 +88,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 void *
 GetMyFiberID()
 {
-#if defined(_X86_)
+#if defined(_X86_) && !defined(__MINGW32__)
     void *fiberData;
 
     /* A pointer to our tib entry is found at FS:[18]
