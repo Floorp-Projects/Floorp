@@ -98,7 +98,7 @@ nsPoint *pointlist;
   nsIDeviceContext* deviceContext;
   aSurface->GetDeviceContext(deviceContext);
   float p2t; // pixel to twips conversion
-  deviceContext->GetDevUnitsToAppUnits(p2t);
+  p2t = deviceContext->DevUnitsToAppUnits();
   NS_RELEASE(deviceContext);
 
   font = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,NS_FONT_WEIGHT_BOLD,0,12);

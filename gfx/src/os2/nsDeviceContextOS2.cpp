@@ -154,18 +154,18 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   mPixelsToTwips = ((float)NSIntPointsToTwips(72)) / ((float)dpi);
   mTwipsToPixels = 1.0 / mPixelsToTwips;
 
-  GetTwipsToDevUnits(newscale);
+  newscale = TwipsToDevUnits();
 // On OS/2, origscale can be different based on the video resolution.
 // On 640x480, it's 1/15, on everything else it is 1/12.
 // For consistent printing, 1/15 is the correct value to use.
 // It is the closest to 4.x and to Windows.
-//  aOrigContext->GetTwipsToDevUnits( origscale);
+//  origscale = aOrigContext->TwipsToDevUnits();
   origscale = 1.0/15.0;
 
   mCPixelScale = newscale / origscale;
 
-  aOrigContext->GetTwipsToDevUnits(t2d);
-  aOrigContext->GetAppUnitsToDevUnits(a2d);
+  t2d = aOrigContext->TwipsToDevUnits();
+  a2d = aOrigContext->AppUnitsToDevUnits();
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;

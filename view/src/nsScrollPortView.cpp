@@ -346,8 +346,8 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
   nsCOMPtr<nsIDeviceContext> dev;
   mViewManager->GetDeviceContext(*getter_AddRefs(dev));
   float p2t, t2p;
-  dev->GetDevUnitsToAppUnits(p2t); 
-  dev->GetAppUnitsToDevUnits(t2p);
+  p2t = dev->DevUnitsToAppUnits(); 
+  t2p = dev->AppUnitsToDevUnits();
 
   // compute velocity vectors
   ComputeVelocities(currentVelocityX, mOffsetX,
@@ -584,8 +584,8 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   float             p2t;
 
   mViewManager->GetDeviceContext(dev);
-  dev->GetAppUnitsToDevUnits(t2p); 
-  dev->GetDevUnitsToAppUnits(p2t);
+  t2p = dev->AppUnitsToDevUnits(); 
+  p2t = dev->DevUnitsToAppUnits();
   
   NS_RELEASE(dev);
 

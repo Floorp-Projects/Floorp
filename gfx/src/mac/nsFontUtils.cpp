@@ -69,7 +69,7 @@ nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 	inMetrics.GetFontHandle(fontNum);
 	
 	float  dev2app;
-	inDevContext.GetDevUnitsToAppUnits(dev2app);
+	dev2app = inDevContext.DevUnitsToAppUnits();
 	short		textSize = float(aFont->size) / dev2app;
 
 	if (textSize < 9 && !nsFontUtils::DisplayVerySmallFonts())

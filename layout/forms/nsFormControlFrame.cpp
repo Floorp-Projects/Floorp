@@ -878,7 +878,7 @@ nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext,
     context->GetClientRect(screen);
       
   float devUnits;
-  context->GetDevUnitsToAppUnits(devUnits);
+  devUnits = context->DevUnitsToAppUnits();
   aHeight = NSToIntRound(float(screen.height) / devUnits );
   return NS_OK;
 }

@@ -143,7 +143,7 @@ NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
   aRenderingContext.GetDeviceContext(context);
 
   context->GetCanonicalPixelScale(scale);
-  context->GetDevUnitsToAppUnits(appUnits);
+  appUnits = context->DevUnitsToAppUnits();
 
   GetBoundsAppUnits(rect, appUnits);
 

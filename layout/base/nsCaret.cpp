@@ -1030,7 +1030,7 @@ void nsCaret::GetCaretRectAndInvert()
     if (mCaretTwipsWidth < 0)    // need to re-compute the pixel width
     {
       float tDevUnitsToTwips;
-      presContext->DeviceContext()->GetDevUnitsToTwips(tDevUnitsToTwips);
+      tDevUnitsToTwips = presContext->DeviceContext()->DevUnitsToTwips();
       mCaretTwipsWidth  = (nscoord)(tDevUnitsToTwips * (float)mCaretPixelsWidth);
     }
     caretRect.width = mCaretTwipsWidth;

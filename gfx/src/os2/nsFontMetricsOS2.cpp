@@ -390,7 +390,7 @@ void
 nsFontMetricsOS2::SetFontHandle(HPS aPS, nsFontOS2* aFont)
 {
   float app2dev, reqEmHeight;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  app2dev = mDeviceContext->AppUnitsToDevUnits();
   reqEmHeight = mFont.size * app2dev;
 
   FATTRS* fattrs = &(aFont->mFattrs);
@@ -1481,7 +1481,7 @@ nsFontMetricsOS2::RealizeFont()
   fm.lInternalLeading = (signed short)fm.lInternalLeading;
 
   float dev2app;
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mDeviceContext->DevUnitsToAppUnits();
   
   mMaxAscent  = NSToCoordRound( (fm.lMaxAscender-1) * dev2app );
   mMaxDescent = NSToCoordRound( (fm.lMaxDescender+1) * dev2app );

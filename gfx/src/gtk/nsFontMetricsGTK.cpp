@@ -1451,7 +1451,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mDeviceContext = aContext;
 
   float app2dev;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  app2dev = mDeviceContext->AppUnitsToDevUnits();
 
   mPixelSize = NSToIntRound(app2dev * mFont->size);
   // Make sure to clamp the pixel size to something reasonable so we
@@ -1550,7 +1550,7 @@ NS_IMETHODIMP  nsFontMetricsGTK::Destroy()
 void nsFontMetricsGTK::RealizeFont()
 {
   float f;
-  mDeviceContext->GetDevUnitsToAppUnits(f);
+  f = mDeviceContext->DevUnitsToAppUnits();
 
   if (mWesternFont->IsFreeTypeFont()) {
     nsFreeTypeFont *ft = (nsFreeTypeFont *)mWesternFont;
@@ -1636,7 +1636,7 @@ void nsFontMetricsGTK::RealizeFont()
   }
   nsXFont *xFont = mWesternFont->GetXFont();
   XFontStruct *fontInfo = xFont->GetXFontStruct();
-  mDeviceContext->GetDevUnitsToAppUnits(f);
+  f = mDeviceContext->DevUnitsToAppUnits();
 
   nscoord lineSpacing = nscoord((fontInfo->ascent + fontInfo->descent) * f);
   mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
@@ -3488,7 +3488,7 @@ nsFontMetricsGTK::GetWidth  (const char* aString, PRUint32 aLength,
     }
 
     float f;
-    mDeviceContext->GetDevUnitsToAppUnits(f);
+    f = mDeviceContext->DevUnitsToAppUnits();
     aWidth = NSToCoordRound(rawWidth * f);
 
     return NS_OK;
@@ -3553,7 +3553,7 @@ nsFontMetricsGTK::GetWidth  (const PRUnichar* aString, PRUint32 aLength,
     }
 
     float f;
-    mDeviceContext->GetDevUnitsToAppUnits(f);
+    f = mDeviceContext->DevUnitsToAppUnits();
     aWidth = NSToCoordRound(rawWidth * f);
 
     if (nsnull != aFontID)
@@ -3842,7 +3842,7 @@ nsFontMetricsGTK::GetBoundingMetrics(const char *aString, PRUint32 aLength,
     }
 
     float P2T;
-    mDeviceContext->GetDevUnitsToAppUnits(P2T);
+    P2T = mDeviceContext->DevUnitsToAppUnits();
 
     aBoundingMetrics.leftBearing =
         NSToCoordRound(aBoundingMetrics.leftBearing * P2T);
@@ -3932,7 +3932,7 @@ nsFontMetricsGTK::GetBoundingMetrics(const PRUnichar *aString,
 
     // convert to app units
     float P2T;
-    mDeviceContext->GetDevUnitsToAppUnits(P2T);
+    P2T = mDeviceContext->DevUnitsToAppUnits();
 
     aBoundingMetrics.leftBearing =
         NSToCoordRound(aBoundingMetrics.leftBearing * P2T);
@@ -4020,7 +4020,7 @@ nsFontMetricsGTK::GetTextDimensions (const PRUnichar* aString,
     }
 
     float P2T;
-    mDeviceContext->GetDevUnitsToAppUnits(P2T);
+    P2T = mDeviceContext->DevUnitsToAppUnits();
 
     aDimensions.width = NSToCoordRound(rawWidth * P2T);
     aDimensions.ascent = NSToCoordRound(rawAscent * P2T);
@@ -4450,7 +4450,7 @@ nsFontMetricsGTK::GetTextDimensions (const PRUnichar*    aString,
     offsets.AppendElement((void*)aString);
 
     float f;
-    mDeviceContext->GetDevUnitsToAppUnits(f);
+    f = mDeviceContext->DevUnitsToAppUnits();
     BreakGetTextDimensionsData data = { f, aAvailWidth,
                                         aBreaks, aNumBreaks,
                                         spaceWidth, aveCharWidth,

@@ -850,7 +850,7 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
   aRenderingContext.GetDeviceContext(context);
 
   context->GetCanonicalPixelScale(scale);
-  context->GetDevUnitsToAppUnits(appUnits);
+  appUnits = context->DevUnitsToAppUnits();
 
   GetBoundsAppUnits(rect, appUnits);
   aRenderingContext.SetColor(NS_RGB(0,0,0));

@@ -4392,10 +4392,10 @@ nsDocShell::EnsureDeviceContext()
 
     mDeviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
     float dev2twip;
-    mDeviceContext->GetDevUnitsToTwips(dev2twip);
+    dev2twip = mDeviceContext->DevUnitsToTwips();
     mDeviceContext->SetDevUnitsToAppUnits(dev2twip);
     float twip2dev;
-    mDeviceContext->GetTwipsToDevUnits(twip2dev);
+    twip2dev = mDeviceContext->TwipsToDevUnits();
     mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
 
     return NS_OK;

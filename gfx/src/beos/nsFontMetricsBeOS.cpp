@@ -122,8 +122,8 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     return NS_ERROR_OUT_OF_MEMORY;
 
   float       app2dev, app2twip;
-  aContext->GetAppUnitsToDevUnits(app2dev);
-  aContext->GetDevUnitsToTwips(app2twip);
+  app2dev = aContext->AppUnitsToDevUnits();
+  app2twip = aContext->DevUnitsToTwips();
 
   app2twip *= app2dev;
   float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
@@ -244,7 +244,7 @@ NS_IMETHODIMP  nsFontMetricsBeOS::Destroy()
 void nsFontMetricsBeOS::RealizeFont(nsIDeviceContext* aContext)
 {
   float f;
-  aContext->GetDevUnitsToAppUnits(f);
+  f = aContext->DevUnitsToAppUnits();
   
   struct font_height height;
   mFontHandle.GetHeight( &height );

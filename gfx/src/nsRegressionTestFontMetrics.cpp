@@ -113,7 +113,7 @@ void
 nsRegressionTestFontMetrics::RealizeFont()
 {
   float dev2app;
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mDeviceContext->DevUnitsToAppUnits();
   nscoord onepixel = NSToCoordRound(1 * dev2app);
   PRUint32 fontsize = mFont->size;
  

@@ -829,11 +829,11 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
           // DEVICE CONTEXT INFORMATION from PresContext
           nsIDeviceContext *dx = mPresContext->DeviceContext();
           printf("DeviceContext of Presentation Context(%x)\n", dx);
-          dx->GetDevUnitsToTwips(a1);
-          dx->GetTwipsToDevUnits(a2);
+          a1 = dx->DevUnitsToTwips();
+          a2 = dx->TwipsToDevUnits();
           printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-          dx->GetAppUnitsToDevUnits(a1);
-          dx->GetDevUnitsToAppUnits(a2);
+          a1 = dx->AppUnitsToDevUnits();
+          a2 = dx->DevUnitsToAppUnits();
           printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
           dx->GetCanonicalPixelScale(a1);
           printf("    GetCanonicalPixelScale = %f\n",a1);
@@ -849,11 +849,11 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
 
           // DEVICE CONTEXT INFORMATION
           printf("DeviceContext created for print(%x)\n",mPrt->mPrintDC);
-          mPrt->mPrintDC->GetDevUnitsToTwips(a1);
-          mPrt->mPrintDC->GetTwipsToDevUnits(a2);
+          a1 = mPrt->mPrintDC->DevUnitsToTwips();
+          a2 = mPrt->mPrintDC->TwipsToDevUnits();
           printf("    DevToTwips = %f TwipToDev = %f\n",a1,a2);
-          mPrt->mPrintDC->GetAppUnitsToDevUnits(a1);
-          mPrt->mPrintDC->GetDevUnitsToAppUnits(a2);
+          a1 = mPrt->mPrintDC->AppUnitsToDevUnits();
+          a2 = mPrt->mPrintDC->DevUnitsToAppUnits();
           printf("    AppUnitsToDev = %f DevUnitsToApp = %f\n",a1,a2);
           mPrt->mPrintDC->GetCanonicalPixelScale(a1);
           printf("    GetCanonicalPixelScale = %f\n",a1);

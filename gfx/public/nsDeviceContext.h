@@ -100,15 +100,6 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext);
 
-  NS_IMETHOD  GetDevUnitsToTwips(float &aDevUnitsToTwips) const;
-  NS_IMETHOD  GetTwipsToDevUnits(float &aTwipsToDevUnits) const;
-
-  NS_IMETHOD  SetAppUnitsToDevUnits(float aAppUnits);
-  NS_IMETHOD  SetDevUnitsToAppUnits(float aDevUnits);
-
-  NS_IMETHOD  GetAppUnitsToDevUnits(float &aAppUnits) const;
-  NS_IMETHOD  GetDevUnitsToAppUnits(float &aDevUnits) const;
-
   NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
   NS_IMETHOD  SetCanonicalPixelScale(float aScale);
 
@@ -161,10 +152,6 @@ protected:
                      PRBool aForceAlias);
   void GetLocaleLangGroup(void);
 
-  float             mTwipsToPixels;
-  float             mPixelsToTwips;
-  float             mAppUnitsToDevUnits;
-  float             mDevUnitsToAppUnits;
   nsFontCache       *mFontCache;
   nsCOMPtr<nsIAtom> mLocaleLangGroup; // XXX temp fix for performance bug - erik
   float             mZoom;

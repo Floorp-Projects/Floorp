@@ -2318,7 +2318,7 @@ nsChildView::Idle()
 
   // convert to the nsIView coordinates
   float mPixelsToTwips = 1.0;
-  mGeckoChild->GetDeviceContext()->GetDevUnitsToAppUnits(mPixelsToTwips);
+  mPixelsToTwips = mGeckoChild->GetDeviceContext()->DevUnitsToAppUnits();
   nscoord newX = mHandScrollStartScrollX +
     NSIntPixelsToTwips(deltaX, mPixelsToTwips);
   nscoord newY = mHandScrollStartScrollY +

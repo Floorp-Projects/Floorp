@@ -1586,8 +1586,8 @@ nsIFontMetrics *nsWindow::GetFont(void)
       if( 2 == sscanf( buf[0], "%d.%s", &ptSize, buf[1])) // mmm, scanf()...
       {
          float twip2dev, twip2app;
-         mContext->GetTwipsToDevUnits( twip2dev);
-         mContext->GetDevUnitsToAppUnits( twip2app);
+         twip2dev = mContext->TwipsToDevUnits();
+         twip2app = mContext->DevUnitsToAppUnits();
          twip2app *= twip2dev;
    
          nscoord appSize = (nscoord) (twip2app * ptSize * 20);
@@ -1614,8 +1614,8 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       // jump through hoops to convert the size in the font (in app units)
       // into points. 
       float dev2twip, app2twip;
-      mContext->GetDevUnitsToTwips( dev2twip);
-      mContext->GetAppUnitsToDevUnits( app2twip);
+      dev2twip = mContext->DevUnitsToTwips();
+      app2twip = mContext->AppUnitsToDevUnits();
       app2twip *= dev2twip;
    
       int points = NSTwipsToFloorIntPoints( nscoord( aFont.size * app2twip));

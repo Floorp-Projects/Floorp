@@ -911,7 +911,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     
   nsCOMPtr<nsIDeviceContext> dx;
   viewManager->GetDeviceContext(*getter_AddRefs(dx));
-  dx->GetAppUnitsToDevUnits(t2p);
+  t2p = dx->AppUnitsToDevUnits();
 
   // get the document and the global script object
   nsIPresShell *presShell = aPresContext->PresShell();

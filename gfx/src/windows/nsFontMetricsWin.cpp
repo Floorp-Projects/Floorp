@@ -500,9 +500,9 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
   PRBool aSizeOnly)
 {
   float app2dev, app2twip, scale;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  app2dev = mDeviceContext->AppUnitsToDevUnits();
   if (nsDeviceContextWin::gRound) {
-    mDeviceContext->GetDevUnitsToTwips(app2twip);
+    app2twip = mDeviceContext->DevUnitsToTwips();
     mDeviceContext->GetCanonicalPixelScale(scale);
     app2twip *= app2dev * scale;
 
@@ -2283,7 +2283,7 @@ void
 nsFontMetricsWin::InitMetricsFor(HDC aDC, nsFontWin* aFont)
 {
   float dev2app;
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mDeviceContext->DevUnitsToAppUnits();
 
   TEXTMETRIC metrics;
   ::GetTextMetrics(aDC, &metrics);
@@ -2338,7 +2338,7 @@ nsFontMetricsWin::CreateFontAdjustHandle(HDC aDC, LOGFONT* aLogFont)
     if (::GetTextFace(aDC, sizeof(name), name) &&
         !strcmpi(name, aLogFont->lfFaceName)) {
       float dev2app;
-      mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+      dev2app = mDeviceContext->DevUnitsToAppUnits();
 
       // Get the x-height
       nscoord xheight72;
@@ -3667,7 +3667,7 @@ nsFontMetricsWin::RealizeFont()
 
   // Get font metrics
   float dev2app;
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mDeviceContext->DevUnitsToAppUnits();
   OUTLINETEXTMETRIC oMetrics;
   TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
   nscoord onePixel = NSToCoordRound(1 * dev2app);

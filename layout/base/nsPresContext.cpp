@@ -937,7 +937,7 @@ nsPresContext::GetPixelsToTwips(float* aResult) const
   NS_PRECONDITION(aResult, "null out param");
 
   float p2t;
-  mDeviceContext->GetDevUnitsToAppUnits(p2t);
+  p2t = mDeviceContext->DevUnitsToAppUnits();
   *aResult = p2t;
   return NS_OK;
 }
@@ -947,7 +947,7 @@ nsPresContext::GetTwipsToPixels(float* aResult) const
 {
   NS_PRECONDITION(aResult, "null out param");
 
-  mDeviceContext->GetAppUnitsToDevUnits(*aResult);
+  *aResult = mDeviceContext->AppUnitsToDevUnits();
   return NS_OK;
 }
 
@@ -968,12 +968,12 @@ nsPresContext::GetTwipsToPixelsForFonts(float* aResult) const
   nsCOMPtr<nsIDeviceContext> altDC;
   mDeviceContext->GetAltDevice(getter_AddRefs(altDC));
   if (altDC) {
-    altDC->GetAppUnitsToDevUnits(app2dev);
+    app2dev = altDC->AppUnitsToDevUnits();
   } else {
-    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+    app2dev = mDeviceContext->AppUnitsToDevUnits();
   }
 #else
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  app2dev = mDeviceContext->AppUnitsToDevUnits();
 #endif
   *aResult = app2dev;
   return NS_OK;
@@ -989,7 +989,7 @@ nsPresContext::GetScaledPixelsToTwips(float* aResult) const
   float scale;
   float p2t;
 
-  mDeviceContext->GetDevUnitsToAppUnits(p2t);
+  p2t = mDeviceContext->DevUnitsToAppUnits();
   mDeviceContext->GetCanonicalPixelScale(scale);
   scale = p2t * scale;
 

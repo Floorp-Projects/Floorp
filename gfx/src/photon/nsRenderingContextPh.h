@@ -379,9 +379,9 @@ private:
 	inline NS_IMETHODIMP CommonInit()
 		{
 		if( mContext && mTranMatrix ) {
-		  mContext->GetDevUnitsToAppUnits(mP2T);
+		  mP2T = mContext->DevUnitsToAppUnits();
 		  float app2dev;
-		  mContext->GetAppUnitsToDevUnits(app2dev);
+		  app2dev = mContext->AppUnitsToDevUnits();
 		  mTranMatrix->AddScale(app2dev, app2dev);
 		  }
 		return NS_OK;

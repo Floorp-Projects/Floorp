@@ -322,7 +322,7 @@ void nsView::ResetWidgetPosition(PRBool aRecurse) {
     float             scale;
   
     mViewManager->GetDeviceContext(dx);
-    dx->GetAppUnitsToDevUnits(scale);
+    scale = dx->AppUnitsToDevUnits();
     NS_RELEASE(dx);
 
     nsPoint offset(0, 0);
@@ -349,7 +349,7 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
     float             t2p;
 
     mViewManager->GetDeviceContext(dx);
-    dx->GetAppUnitsToDevUnits(t2p);
+    t2p = dx->AppUnitsToDevUnits();
     NS_RELEASE(dx);
     // if we just resized do it
     if (mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED) 
@@ -422,7 +422,7 @@ void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint)
     float             t2p;
   
     mViewManager->GetDeviceContext(dx);
-    dx->GetAppUnitsToDevUnits(t2p);
+    t2p = dx->AppUnitsToDevUnits();
 
     if (needToMoveWidget) {
       NS_ASSERTION(GetParent(), "Don't try to move the root widget, dude");
@@ -562,7 +562,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
   NS_IF_RELEASE(mWindow);
 
   mViewManager->GetDeviceContext(dx);
-  dx->GetAppUnitsToDevUnits(scale);
+  scale = dx->AppUnitsToDevUnits();
 
   trect *= scale;
 
@@ -671,7 +671,7 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
     float p2t;
     nsIDeviceContext *dx;
     mViewManager->GetDeviceContext(dx);
-    dx->GetDevUnitsToAppUnits(p2t);
+    p2t = dx->DevUnitsToAppUnits();
     NS_RELEASE(dx);
     mWindow->GetClientBounds(windowBounds);
     windowBounds *= p2t;
