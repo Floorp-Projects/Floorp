@@ -36,7 +36,7 @@ use Mac::Events;
 use Mac::Processes;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -365,6 +365,45 @@ sub InstallFromManifest($;$)
 				MakeAlias("$source_dir$file", "$dest_dir$subdir");
 			}
 	}
+
+
+=pod
+
+C<InstallResources()>
+
+=cut
+
+# parameters are path to MANIFEST file, destination dir, true (to make copies) or false (to make aliases)
+sub InstallResources($;$;$)
+	{
+		my ($manifest_file, $dest_dir, $copy_files) = @_;
+
+		$dest_dir ||= ":";
+
+		$manifest_file =~ m/(.+):/;
+		my $source_dir =  $1;
+
+		chop($dest_dir) if $dest_dir =~ m/:$/;
+
+		WaitNextEvent();
+		print "Installing resources from \"$manifest_file\"\n" unless $QUIET;
+		
+		my $read = maniread(full_path_to($manifest_file));
+		foreach $file (keys %$read)
+			{
+				next unless $file;
+				
+				if ($copy_files)
+					{
+						print "Implement this if you need it";
+					}
+				else
+					{
+						MakeAlias("$source_dir:$file", "$dest_dir:$file");
+					}
+			}
+	}
+
 
  sub SetBuildNumber
  {
