@@ -33,7 +33,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/justify.gif \
 		$(srcdir)/images/copy.gif \
 		$(srcdir)/images/cut.gif \
-		$(srcdir)/images/outdent.dif \
+		$(srcdir)/images/outdent.gif \
 		$(srcdir)/images/find.gif \
 		$(srcdir)/images/hline.gif \
 		$(srcdir)/images/image.gif \
