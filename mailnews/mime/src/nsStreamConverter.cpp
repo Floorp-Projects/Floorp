@@ -136,7 +136,6 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
         // if the pref says always override and no manual override then set the folder charset to override
         // in future, the override flag to be per folder instead of a global pref
         if (charset.IsEmpty()) {
-          nsresult rv;
           nsCOMPtr <nsIPref> prefs = do_GetService(kPrefCID, &rv);
           if (NS_SUCCEEDED(rv) && prefs) 
           {
@@ -145,7 +144,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
             if (NS_SUCCEEDED(rv) && force_override) 
             {
               i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
-              nsAutoString charset(uniCharset);
+              charset.Assign(uniCharset);
               if (!charset.IsEmpty())
                 msd->options->override_charset = charset.ToNewCString();
             }
