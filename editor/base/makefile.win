@@ -115,7 +115,7 @@ LLIBS=				\
  $(DIST)\lib\libplc21.lib       \
  $(DIST)\lib\raptorbase.lib       \
  $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\raptorwidget_s.lib		\
+ $(DIST)\lib\raptorwidget.lib		\
  $(LIBNSPR)  
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
