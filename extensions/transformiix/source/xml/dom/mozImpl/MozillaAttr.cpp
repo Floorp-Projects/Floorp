@@ -52,9 +52,9 @@ Attr::Attr(nsIDOMAttr* aAttr, Document* aOwner) : Node(aAttr, aOwner)
     aAttr->GetNamespaceURI(ns);
     mNamespaceID = kNameSpaceID_None;
     if (!ns.IsEmpty()) {
-        NS_ASSERTION(gNameSpaceManager,"No namespace manager");
-        if (gNameSpaceManager) {
-            gNameSpaceManager->GetNameSpaceID(ns, mNamespaceID);
+        NS_ASSERTION(gTxNameSpaceManager,"No namespace manager");
+        if (gTxNameSpaceManager) {
+            gTxNameSpaceManager->GetNameSpaceID(ns, mNamespaceID);
         }
     }
     mNSId = mNamespaceID;
