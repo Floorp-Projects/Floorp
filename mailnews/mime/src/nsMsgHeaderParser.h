@@ -27,6 +27,7 @@
 
 #include "msgCore.h"
 #include "nsIMsgHeaderParser.h" /* include the interface we are going to support */
+#include "comi18n.h"
 
  /* 
   * RFC-822 parser
@@ -116,7 +117,10 @@
 	   names to users. e.g. summary file, address book
 	 */
 	NS_IMETHOD UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout);
-
+	
+	MimeCharsetConverterClass *GetUSAsciiToUtf8CharsetConverter();
+	protected:
+		MimeCharsetConverterClass *m_USAsciiToUtf8CharsetConverter;
 	private:
  }; 
 

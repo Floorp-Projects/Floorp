@@ -36,6 +36,7 @@
 #define COPY_CHAR(_D,_S)            do { if (!_S || !*_S) { *_D++ = 0; }\
                                          else { int _LEN = NextChar_UTF8((char *)_S) - _S;\
                                                 nsCRT::memcpy(_D,_S,_LEN); _D += _LEN; } } while (0)
+//#define NEXT_CHAR(_STR)             (_STR = (* (char *) _STR < 128) ? (char *) _STR + 1 : NextChar_UTF8((char *)_STR))
 #define NEXT_CHAR(_STR)             (_STR = NextChar_UTF8((char *)_STR))
 #define TRIM_WHITESPACE(_S,_E,_T)   do { while (_E > _S && IS_SPACE(_E[-1])) _E--;\
                                          *_E++ = _T; } while (0)
@@ -71,19 +72,38 @@ nsMsgHeaderParser::nsMsgHeaderParser()
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
+  m_USAsciiToUtf8CharsetConverter = nsnull;
+
 }
 
 nsMsgHeaderParser::~nsMsgHeaderParser()
-{}
+{
+	delete m_USAsciiToUtf8CharsetConverter;
+}
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgHeaderParser)
 NS_IMPL_RELEASE(nsMsgHeaderParser)
 NS_IMPL_QUERY_INTERFACE(nsMsgHeaderParser, nsIMsgHeaderParser::GetIID()); /* we need to pass in the interface ID of this interface */
 
+MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
+{
+	if (!m_USAsciiToUtf8CharsetConverter)
+	{
+		m_USAsciiToUtf8CharsetConverter = new MimeCharsetConverterClass;
+		if (m_USAsciiToUtf8CharsetConverter)
+		{
+			nsresult rv = m_USAsciiToUtf8CharsetConverter->Initialize("us-ascii","utf-8", PR_FALSE);
+		}
+	}
+	return m_USAsciiToUtf8CharsetConverter;
+}
+
 nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses)
 {
   char *utf8Str, *outStrings;
+  MimeCharsetConverterClass *converter = nsnull;
+  nsresult rv;
 
   if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
     utf8Str = nsnull;
@@ -102,8 +122,19 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
       s += len;
     }
     // convert array of strings
-    if (MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
-                            len_all, &outStrings, &outStrLen, NULL) == 0) {
+	if (!charset)
+	{
+		converter = GetUSAsciiToUtf8CharsetConverter();
+		if (converter)
+			rv = converter->Convert(*names, len_all, &outStrings, &outStrLen, nsnull);
+	}
+	if (!converter)
+	{
+		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
+                            len_all, &outStrings, &outStrLen, NULL) ; 
+	}
+	if (NS_SUCCEEDED(rv))
+	{
       PR_Free(*names);
       *names = outStrings;
     }
@@ -117,8 +148,21 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
       s += len;
     }
     // convert array of strings
-    if (MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
-                            len_all, &outStrings, &outStrLen, NULL) == 0) {
+	if (!charset)
+	{
+		converter = GetUSAsciiToUtf8CharsetConverter();
+		if (converter)
+			rv = converter->Convert(*addresses, 
+                            len_all, &outStrings, &outStrLen, nsnull);
+	}
+	// if non null charset, or couldn't get a converter, use MIME_ function.
+	if (!converter)
+	{
+		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
+                            len_all, &outStrings, &outStrLen, NULL);
+	}
+	if (NS_SUCCEEDED(rv))
+	{
       PR_Free(*addresses);
       *addresses = outStrings;
     }

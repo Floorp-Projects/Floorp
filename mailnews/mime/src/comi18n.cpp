@@ -568,13 +568,13 @@ static PRBool intlmime_only_ascii_str(const char *s)
 
 static unsigned char * utf8_nextchar(unsigned char *str)
 {
-  int len = PL_strlen((char *) str);
   if (*str < 128) {
     return (str+1);
   }
+  int len = PL_strlen((char *) str);
   // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
   // but I think we won't encounter those cases as long as we're supporting UCS-2 and no surrogate.
-  else if ((len >= 3) && (*str >= 0xE0)) {
+  if ((len >= 3) && (*str >= 0xE0)) {
     return (str+3);
   }
   else if ((len >= 2) && (*str >= 0xC0)) {
@@ -1268,41 +1268,6 @@ static PRInt32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBu
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-class MimeCharsetConverterClass {
-public:
-  MimeCharsetConverterClass();
-  virtual ~MimeCharsetConverterClass();
-
-  // Initialize converters for charsets, fails if converter not available.
-  // 
-  PRInt32 Initialize(const char* from_charset, const char* to_charset, 
-                     const PRBool autoDetect=PR_FALSE, const PRInt32 maxNumCharsDetect=-1);
-
-  // Converts input buffer or duplicates input if converters not available (and returns 0).
-  // Also duplicates input if convertion not needed.
-  // C string is generated for converted string.
-  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, 
-                  char** outBuffer, PRInt32* outLength,
-                  PRInt32* numUnConverted);
-
-protected:
-  nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
-  nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
-  PRBool NeedCharsetConversion(const nsString& from_charset, const nsString& to_charset);
-
-private:
-  nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
-  nsIUnicodeEncoder *mEncoder;          // encoder (convert from unicode)
-  nsIUnicodeDecoder *mDecoderDetected;  // decoder of detected charset (after when auto detection succeeded)
-  PRInt32 mMaxNumCharsDetect;           // maximum number of characters in bytes to abort auto detection 
-                                        // (-1 for no limit)
-  PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
-  PRBool mAutoDetect;                   // true if apply auto detection
-  nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
-  nsString mOutputCharset;              // output charset for need conversion check
-  nsIStringCharsetDetector *mDetector;  // charset detector
-};
-
 MimeCharsetConverterClass::MimeCharsetConverterClass()
 {
   mDecoder = NULL;
@@ -1583,16 +1548,17 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted)
 {
-  char srcCharset[kMAX_CSNAME+1], dstCharset[kMAX_CSNAME+1];
+//  char srcCharset[kMAX_CSNAME+1], dstCharset[kMAX_CSNAME+1];
   MimeCharsetConverterClass aMimeCharsetConverterClass;
   PRInt32 res;
 
-  srcCharset[0] = '\0';
-  dstCharset[0] = '\0';
-  PL_strcpy(srcCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
-  PL_strcpy(dstCharset, PL_strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
+  // commenting out per Naoki's instructions.
+//  srcCharset[0] = '\0';
+//  dstCharset[0] = '\0';
+//  PL_strcpy(srcCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
+//  PL_strcpy(dstCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
 
-  res = aMimeCharsetConverterClass.Initialize(srcCharset, dstCharset, autoDetection, -1);
+  res = aMimeCharsetConverterClass.Initialize(from_charset, from_charset, autoDetection, -1);
 
   if (res != -1) {
     res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength, NULL);

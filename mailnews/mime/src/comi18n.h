@@ -15,7 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef _COMI18N_LOADED_H_
+#define _COMI18N_LOADED_H_
 
+#include "msgCore.h"
 
 #ifndef kMIME_ENCODED_WORD_SIZE
 #define kMIME_ENCODED_WORD_SIZE 75
@@ -25,7 +28,47 @@
 #define kMAX_CSNAME 64
 #endif
 
+class nsIUnicodeDecoder;
+class nsIUnicodeEncoder;
+class nsIStringCharsetDetector;
+
+class MimeCharsetConverterClass {
+public:
+  MimeCharsetConverterClass();
+  virtual ~MimeCharsetConverterClass();
+
+  // Initialize converters for charsets, fails if converter not available.
+  // 
+  PRInt32 Initialize(const char* from_charset, const char* to_charset, 
+                     const PRBool autoDetect=PR_FALSE, const PRInt32 maxNumCharsDetect=-1);
+
+  // Converts input buffer or duplicates input if converters not available (and returns 0).
+  // Also duplicates input if convertion not needed.
+  // C string is generated for converted string.
+  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, 
+                  char** outBuffer, PRInt32* outLength,
+                  PRInt32* numUnConverted);
+
+protected:
+  nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
+  nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
+  PRBool NeedCharsetConversion(const nsString& from_charset, const nsString& to_charset);
+
+private:
+  nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
+  nsIUnicodeEncoder *mEncoder;          // encoder (convert from unicode)
+  nsIUnicodeDecoder *mDecoderDetected;  // decoder of detected charset (after when auto detection succeeded)
+  PRInt32 mMaxNumCharsDetect;           // maximum number of characters in bytes to abort auto detection 
+                                        // (-1 for no limit)
+  PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
+  PRBool mAutoDetect;                   // true if apply auto detection
+  nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
+  nsString mOutputCharset;              // output charset for need conversion check
+  nsIStringCharsetDetector *mDetector;  // charset detector
+};
+
   
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -145,3 +188,6 @@ char *INTL_EncodeMimePartIIStr_VarLen(char *subject, PRInt16 wincsid, PRBool bUs
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
+
+#endif // _COMI18N_LOADED_H_
+
