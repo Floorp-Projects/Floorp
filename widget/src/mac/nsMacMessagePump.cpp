@@ -64,6 +64,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIFileTransportService.h"
 
+
 #ifndef topLeft
 #define topLeft(r)	(((Point *) &(r))[0])
 #endif
@@ -87,6 +88,11 @@ NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWind
 
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget				 * gRollupWidget;
+
+
+// A class encapsulating our VBL task to spin the watch cursor if we're
+// away from WNE for too long
+WatchTask gWatchTask;
 
 
 //======================================================================================
@@ -130,6 +136,7 @@ extern nsIWidget				 * gRollupWidget;
 #include "ProfilerUtils.h"
 #endif //PROFILE
 #endif //DEBUG
+
 
 //======================================================================================
 
@@ -319,7 +326,7 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 	
 	::SetEventMask(everyEvent); // we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mMouseRgn);
-
+  
 	sNextWNECall = ::TickCount() + kWNECallIntervalTicks;
 
 #if !TARGET_CARBON
@@ -327,6 +334,8 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 		haveEvent = PR_FALSE;
 #endif
 
+  gWatchTask.EventLoopReached();
+  
 	return haveEvent;
 }
 
@@ -419,8 +428,11 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 // DoUpdate
 //
 //-------------------------------------------------------------------------
+//#include "ProfilerUtils.h"
 void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 {
+//INST_TRACE("nsMacMessagePump:DoUpdate");
+
 	WindowPtr whichWindow = reinterpret_cast<WindowPtr>(anEvent.message);
 	
 	StPortSetter portSetter(whichWindow);
@@ -429,6 +441,7 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 	// The app can do its own updates here
 	DispatchOSEventToRaptor(anEvent, whichWindow);
 	::EndUpdate(whichWindow);
+
 }
 
 
@@ -463,13 +476,16 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				}
 				else
 				{
+			    gWatchTask.Suspend();			  
 					long menuResult = ::MenuSelect(anEvent.where);
+					gWatchTask.Resume();
 					if (HiWord(menuResult) != 0)
 					{
 						menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 						DoMenu(anEvent, menuResult);
 					}
 				}
+				
 				break;
 			}
 
@@ -493,8 +509,10 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				// grrr... DragWindow calls SelectWindow, no way to stop it. For now,
 				// we'll just let it come to the front and then push it back if necessary.
 				Rect screenRect;
+			  gWatchTask.Suspend();			  
 				::GetRegionBounds(::GetGrayRgn(), &screenRect);
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
+			  gWatchTask.Resume();			  
 
         // only activate if the command key is not down
         if (!(anEvent.modifiers & cmdKey))
@@ -584,7 +602,9 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					
 					sizeRect.top = kMinWindowHeight;
 					sizeRect.left = kMinWindowWidth;
+			    gWatchTask.Suspend();			  
 					long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
+			    gWatchTask.Resume();			  
 					if (newSize != 0)
 						::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
 					::DrawGrowIcon(whichWindow);
@@ -600,14 +620,19 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inGoAway:
 			{
+			  gWatchTask.Suspend();			  
 				::SetPortWindowPort(whichWindow);
-				if (::TrackGoAway(whichWindow, anEvent.where))
+				if (::TrackGoAway(whichWindow, anEvent.where)) {
+				  gWatchTask.Resume();			  
 					DispatchOSEventToRaptor(anEvent, whichWindow);
+			  }
+			  gWatchTask.Resume();			  
 				break;
 			}
 
 			case inZoomIn:
 			case inZoomOut:
+			  gWatchTask.Suspend();			  
 				if (::TrackBox(whichWindow, anEvent.where, partCode)) {
 					GrafPtr		savePort;
 					GDHandle	gdNthDevice;
@@ -619,6 +644,8 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					long		sectArea, greatestArea = 0;
 					Boolean		sectFlag;
 					
+					gWatchTask.Resume();			  
+
 					GetPort(&savePort);
 					::SetPortWindowPort(whichWindow);
 					Rect windRect;
@@ -663,7 +690,8 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 							tempRect.bottom - 3);
 						::SetWindowStandardState ( whichWindow, &zoomRect );
 					}
-				
+					gWatchTask.Resume();
+
 					SetPort(savePort);
 					
 					// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
@@ -839,6 +867,8 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 //-------------------------------------------------------------------------
 void	nsMacMessagePump::DoActivate(EventRecord &anEvent)
 {
+//INST_TRACE("nsMacMessagePump:DoActivate");
+
 	WindowPtr whichWindow = (WindowPtr)anEvent.message;
 	::SetPortWindowPort(whichWindow);
 	if (anEvent.modifiers & activeFlag)
@@ -916,4 +946,88 @@ PRBool nsMacMessagePump::DispatchMenuCommandToRaptor(
 		handled = mMessageSink->DispatchMenuCommand(anEvent, menuResult);
 
 	return handled;
+}
+
+
+#pragma mark -
+
+
+WatchTask :: WatchTask ( )
+  : mChecksum('mozz'), mSelf(this), mTicks(::TickCount()), mBusy(PR_FALSE), mSuspended(PR_FALSE),
+     mInstallSucceeded(PR_FALSE), mAnimation(0)
+{
+  // setup the task
+  mTask.qType = vType;
+	mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
+  mTask.vblCount = kRepeatInterval;
+  mTask.vblPhase = 0;
+  
+  // install it
+  mInstallSucceeded = ::VInstall((QElemPtr)&mTask) == noErr;
+}
+
+
+WatchTask :: ~WatchTask ( ) 
+{
+  if ( mInstallSucceeded )
+    ::VRemove ( (QElemPtr)&mTask );
+  InitCursor();
+}
+
+
+//
+// DoWatchTask
+//
+// Called at vertical retrace. If we haven't been to the event loop for
+// |kTicksToShowWatch| ticks, animate the cursor.
+//
+// Note: assumes that the VBLTask, mTask, is the first member variable, so
+// that we can piggy-back off the pointer to get to the rest of our data.
+//
+// (Do we still need the check for LMGetCrsrBusy()? It's not in carbon...)
+//
+pascal void
+WatchTask :: DoWatchTask ( WatchTask* inSelf )
+{
+  if ( inSelf->mChecksum == 'mozz' ) {
+    if ( !inSelf->mSuspended  ) {
+      if ( !inSelf->mBusy && !LMGetCrsrBusy() ) {
+        if ( ::TickCount() - inSelf->mTicks > kTicksToShowWatch ) {
+          ::SetAnimatedThemeCursor(kThemeWatchCursor, inSelf->mAnimation);
+          inSelf->mBusy = PR_TRUE;
+        }
+      }
+      else
+        ::SetAnimatedThemeCursor(kThemeWatchCursor, inSelf->mAnimation);
+      
+      // next frame in cursor animation    
+      ++inSelf->mAnimation;
+    }
+    
+    // reset the task to fire again
+    inSelf->mTask.vblCount = kRepeatInterval;
+    
+  } // if valid checksum
+  
+} // DoWatchTask
+
+
+//
+// EventLoopReached
+//
+// Called every time we reach the event loop (or an event loop), this tickles
+// our internal tick count to reset the time since our last visit to WNE and
+// if we were busy, we're not any more.
+//
+void
+WatchTask :: EventLoopReached ( )
+{
+  // reset the cursor if we were animating it
+  if ( mBusy )
+    ::InitCursor();
+ 
+  mBusy = PR_FALSE;
+  mTicks = ::TickCount();
+  mAnimation = 0;
+
 }
