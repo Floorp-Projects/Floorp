@@ -8,6 +8,7 @@
 <!ENTITY newCard.label                                  "Address Book Card...">
 <!-- LOCALIZATION NOTE (newCard.accesskey) : DONT_TRANSLATE -->
 <!ENTITY newCard.accesskey                              "C">
+<!ENTITY newCard.key                                    "N">
 <!ENTITY newListCmd.label                               "Mailing List...">
 <!-- LOCALIZATION NOTE (newListCmd.accesskey) : DONT_TRANSLATE -->
 <!ENTITY newListCmd.accesskey                           "L">
