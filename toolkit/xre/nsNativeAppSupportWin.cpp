@@ -527,6 +527,10 @@ struct MessageWindow {
         COPYDATASTRUCT cds = { 0, ::strlen( cmd ) + 1, (void*)cmd };
         HWND newWin = (HWND)::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
         if ( newWin ) {
+            // Restore the window if it is minimized.
+            if ( ::IsIconic( newWin ) ) {
+                ::ShowWindow( newWin, SW_RESTORE );
+            }
             ::SetForegroundWindow( newWin );
         }
         return NS_OK;
