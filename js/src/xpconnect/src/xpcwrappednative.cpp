@@ -2200,7 +2200,11 @@ NS_IMETHODIMP XPCWrappedNative::GetJSObject(JSObject * *aJSObject)
 /* readonly attribute nsISupports Native; */
 NS_IMETHODIMP XPCWrappedNative::GetNative(nsISupports * *aNative)
 {
-    return mIdentity->QueryInterface(NS_GET_IID(nsISupports), (void**)aNative);
+    // No need to QI here, we already have the correct nsISupports
+    // vtable.
+    *aNative = mIdentity;
+    NS_ADDREF(*aNative);
+    return NS_OK;
 }
 
 /* readonly attribute JSObjectPtr JSObjectPrototype; */
