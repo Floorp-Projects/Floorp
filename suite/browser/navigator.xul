@@ -317,11 +317,6 @@ Contributor(s): ______________________________________. -->
 
       <titledbutton id="forward-button" class="button32" crop="right" align="top" observes="canGoForward" />
     
-      <titledbutton id="stop-button" class="button32" crop="right" align="top" onclick="BrowserStop()">
-        <observes element="canStop" attribute="disabled"
-                  onbroadcast="BrowserCanStop()"/>
-      </titledbutton>
-
       <!-- Right now only regular reload is supported.  When the
       functionality is available, look for 'Shift' key pressed state
       and pass on appropriate reload type. (The shift functionality
@@ -329,6 +324,11 @@ Contributor(s): ______________________________________. -->
       -->
       <titledbutton id="reload-button" class="button32" crop="right" align="top" observes="canReload"/>
    
+      <titledbutton id="stop-button" class="button32" crop="right" align="top" onclick="BrowserStop()">
+        <observes element="canStop" attribute="disabled"
+                  onbroadcast="BrowserCanStop()"/>
+      </titledbutton>
+
           <!-- changed : the url field is now grouped with search -->
           <box align="vertical" flex="100%">
             <spring style="height: 4px;"/>
