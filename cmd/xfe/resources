@@ -5279,6 +5279,7 @@ from the network, or save to a file and then play from the file?
 !	EUC-KR
 !	iso-2022-kr
 !	koi8-r
+!	windows-1251
 !	iso-8859-5
 !	iso-8859-7
 !	iso-8859-9
@@ -5293,6 +5294,7 @@ from the network, or save to a file and then play from the file?
 !*defaultCharset:	EUC-KR
 !*defaultCharset:	iso-2022-kr
 !*defaultCharset:	koi8-r
+!*defaultCharset:	windows-1251
 !*defaultCharset:	iso-8859-5
 !*defaultCharset:	iso-8859-7
 !*defaultCharset:	iso-8859-9
@@ -5381,6 +5383,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charsetlang*jis_x0208-1983:		Japanese
 *documentFonts.charsetlang*jis_x0212-1990:		Japanese
 *documentFonts.charsetlang*koi8-r:			Cyrillic
+*documentFonts.charsetlang*windows-1251:		Cyrillic
 *documentFonts.charsetlang*ks_c_5601-1987:		Korean
 *documentFonts.charsetlang*x-cns11643-1110:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-1:		Traditional Chinese
