@@ -156,7 +156,7 @@ BAIL:
 }
 
 int 
-nsXInstaller::RunWizard()
+nsXInstaller::RunWizard(int argc, char **argv)
 {
   int err = OK;
 
@@ -164,6 +164,7 @@ nsXInstaller::RunWizard()
 
   // create the dialog window
   if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT) {
+    gtk_init(&argc, &argv);
     gCtx->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     XI_VERIFY(gCtx->window);
 
@@ -407,15 +408,13 @@ main(int argc, char **argv)
     goto out;
   }
 
-  if ((err = installer->ParseArgs(argc, argv)) != OK)
-    goto out;
-
-  gtk_init(&argc, &argv);
-
   if ((err = installer->ParseConfig()) != OK)
     goto out;
 
-  err = installer->RunWizard();
+  if ((err = installer->ParseArgs(argc, argv)) != OK)
+    goto out;
+
+  err = installer->RunWizard(argc, argv);
 
  out:
   XI_IF_DELETE(installer);
@@ -447,7 +446,9 @@ ErrorHandler(int aErr, const char* aErrMsg)
     sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, gCtx->Res(errStr));
   }
     
-  if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT) {
+  // lack of gCtx->window indicates we have not yet run RunWizard
+  // and gtk_init
+  if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT || !gCtx->window) {
     fprintf (stderr, "%s\n", msg);
     return aErr;
   }

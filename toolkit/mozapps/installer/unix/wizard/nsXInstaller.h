@@ -42,7 +42,7 @@ public:
 
     int ParseArgs(int aArgc, char **aArgv);
     int ParseConfig();
-    int RunWizard();
+    int RunWizard(int argc, char **argv);
     int ParseGeneral(nsINIParser *aParser);
 
     static gint Kill(GtkWidget *widget, GdkEvent *event, gpointer data);
