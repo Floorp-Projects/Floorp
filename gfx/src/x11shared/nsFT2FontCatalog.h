@@ -44,6 +44,7 @@
 #include "nsString.h"
 #include "nsIPref.h"
 #include "nsNameValuePairDB.h"
+#include "nsICharsetConverterManager2.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
 class nsFT2FontCatalog {
@@ -63,7 +64,7 @@ typedef unsigned short FT_UShort;
 
 class  nsFontNodeArray;
 
-#define PUBLIC_FONT_SUMMARY_NAME "mozilla_font_summary.ndb"
+#define PUBLIC_FONT_SUMMARY_NAME ".mozilla_font_summary.ndb"
 #define FONT_SUMMARIES_SUBDIR "catalog"
 #define FONT_DOWNLOAD_SUBDIR "fonts"
 #define FONT_SUMMARIES_EXTENSION ".ndb"
@@ -79,18 +80,35 @@ class  nsFontNodeArray;
 
 #define STRMATCH(s1,s2) (strcmp((s1),(s2))==0)
 #define STRNMATCH(s1,s2,l) (strncmp((s1),(s2),(l))==0)
+#define STRCASEMATCH(s1,s2) (strcasecmp((s1),(s2))==0)
 
 #define FREE_IF(x) if(x) free((void*)x)
+
+typedef struct {
+  const char             *mConverterName;
+  PRUint8                 mCmapPlatformID;
+  PRUint8                 mCmapEncoding;
+  nsIUnicodeEncoder*      mConverter;
+} nsTTFontEncoderInfo;
+
+typedef struct nsTTFontFamilyEncoderInfo {
+  const char                *mFamilyName;
+  nsTTFontEncoderInfo *mEncodingInfo;
+} nsTTFontFamilyEncoderInfo;
 
 typedef struct {
   const char   *mDirName;
 } nsDirCatalogEntry;
 
 
+#define FCE_FLAGS_ISVALID 0x01
+#define FCE_FLAGS_UNICODE 0x02
+#define FCE_FLAGS_SYMBOL  0x04
+
 typedef struct {
   const char   *mFontFileName;
   time_t        mMTime;
-  PRBool        mIsValid;
+  PRUint32      mFlags;
   const char   *mFontType;
   int           mFaceIndex;
   int           mNumFaces;
@@ -140,7 +158,10 @@ public:
   static void        GetFontNames(const char* aPattern, 
                                   nsFontNodeArray* aNodes);
   static PRUint16*   GetCCMap(nsFontCatalogEntry *aFce);
+  static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(const char *);
+  static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(nsFontCatalogEntry *);
   static const char* GetFileName(nsFontCatalogEntry *aFce);
+  static const char* GetFamilyName(nsFontCatalogEntry *aFce);
   static PRInt32*    GetEmbeddedBitmapHeights(nsFontCatalogEntry *aFce);
   static PRInt32     GetFaceIndex(nsFontCatalogEntry *aFce);
   static PRInt32     GetNumEmbeddedBitmaps(nsFontCatalogEntry *aFce);
@@ -160,6 +181,7 @@ protected:
   void   FreeFontCatalog(nsFontCatalog *fc);
   void   FreeFontCatalogEntry(nsFontCatalogEntry *);
   void   doFreeGlobals();
+  static nsICharsetConverterManager2* GetCharSetManager();
   static void GetDirsPrefEnumCallback(const char* aName, void* aClosure);
   void   doGetDirsPrefEnumCallback(const char* aName, void* aClosure);
   int    GetFontCatalog(FT_LibraryRec_*, nsFontCatalog *, nsDirCatalog *);
@@ -189,13 +211,15 @@ protected:
   void   PrintPageBits(nsNameValuePairDB*,PRUint16*,PRUint32);
   int    ReadFontSummaries(nsHashtable*, nsNameValuePairDB *);
 
-  nsIPref*       mPref;
+  nsCOMPtr<nsIPref> mPref;
   nsFontCatalog *mFontCatalog;
   nsHashtable   *mFreeTypeNodes;
+  nsHashtable   *mFontFamilies;
   PRPackedBool   mIsNewCatalog;
   nsHashtable   *mVendorNames;
   nsHashtable   *mRange1CharSetNames;
   nsHashtable   *mRange2CharSetNames;
+  static nsICharsetConverterManager2* sCharSetManager;
 };
 #endif
 

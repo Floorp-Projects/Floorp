@@ -197,6 +197,7 @@ PRInt32 gEmbeddedBitmapMaximumHeight = 1000000;
 PRBool  gEnableFreeType2 = PR_TRUE;
 PRBool  gFreeType2Autohinted = PR_FALSE;
 PRBool  gFreeType2Unhinted = PR_TRUE;
+char*   gFreeType2SharedLibraryName = nsnull;
 PRUint8 gAATTDarkTextMinValue = 64;
 double  gAATTDarkTextGain = 0.8;
 
@@ -502,6 +503,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "sun-fontspecific",   &FLG_NONE,    &Unknown       },
   { "sunolcursor-1",      &FLG_NONE,    &Unknown       },
   { "sunolglyph-1",       &FLG_NONE,    &Unknown       },
+  { "symbol-fontspecific",&FLG_NONE,    &Special       },
   { "tis620.2529-1",      &FLG_NONE,    &TIS620        },
   { "tis620.2533-0",      &FLG_NONE,    &TIS620        },
   { "tis620.2533-1",      &FLG_NONE,    &TIS620        },
@@ -717,6 +719,10 @@ FreeGlobals(void)
   gInitialized = 0;
 
   nsFreeTypeFreeGlobals();
+  if (gFreeType2SharedLibraryName) {
+    free(gFreeType2SharedLibraryName);
+    gFreeType2SharedLibraryName = nsnull;
+  }
 
 #ifdef ENABLE_X_FONT_BANNING
   if (gFontRejectRegEx) {
@@ -932,6 +938,15 @@ InitGlobals(void)
   if (NS_SUCCEEDED(rv)) {
     gEnableFreeType2 = enable_freetype2;
     FREETYPE_FONT_PRINTF(("gEnableFreeType2 = %d", gEnableFreeType2));
+  }
+
+  rv = gPref->GetCharPref("font.freetype2.shared-library", 
+                          &gFreeType2SharedLibraryName);
+  if (NS_FAILED(rv)) {
+    enable_freetype2 = PR_FALSE;
+    FREETYPE_FONT_PRINTF((
+                   "gFreeType2SharedLibraryName missing, FreeType2 disabled"));
+    gFreeType2SharedLibraryName = nsnull;
   }
 
   PRBool freetype2_autohinted = PR_FALSE;
