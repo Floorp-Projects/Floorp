@@ -1768,6 +1768,8 @@ GenerateFileNameFromURI(nsIURI *aURL)
         return returnString;
       }
     }
+    else
+      return nsnull;
   }
 
   cp = nsnull;
@@ -1792,7 +1794,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
 
     char *hostStr = nsMsgParseURLHost(cp2);
     if (!hostStr)
-      hostStr = cp2;
+      hostStr = PL_strdup(cp2);
 
     PRBool isHTTP = PR_FALSE;
     if (NS_SUCCEEDED(aURL->SchemeIs("http", &isHTTP)) && isHTTP)
