@@ -4032,7 +4032,7 @@ else
 fi
 _MOZ_CPP_EXCEPTIONS=1 ])
 
-if test "$_MOZ_CPP_EXCEPTIONS"; then
+if test "$_MOZ_CPP_EXCEPTIONS" -o -z "$GNU_CC"; then
     AC_DEFINE(CPP_THROW_NEW, [])
 else
     AC_DEFINE(CPP_THROW_NEW, [throw()])
