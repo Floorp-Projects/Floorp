@@ -62,6 +62,10 @@
 
 #include "nsIFormSubmitObserver.h"
 
+#include "cmtcmn.h"
+#include "rsrcids.h"
+#include "nsSSLIOLayer.h"
+
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -70,6 +74,9 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define LEAVE_SITE_PREF      "security.warn_leaving_secure"
 #define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
+
+#define CERT_PREFIX_STR "Signed by "
+#define CERT_PREFIX_STR_LENGTH 10
 
 #if defined(PR_LOGGING)
 //
@@ -340,12 +347,47 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                 PR_FREEIF(mLastPSMStatus);
                 res = psmInfo->GetPickledStatus(&mLastPSMStatus);
 
-                if (NS_SUCCEEDED(res)) {
+                if (NS_SUCCEEDED(res))
+                {
                     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
                     res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("high") );
                     // Do we really need to look at res here? What happens if there's an error?
                     // We should still set the certificate authority display.
-                    res = mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("<CA Info goes here>") );
+                    CMTItem caName;
+                    CMT_CONTROL *control;
+                    CMTItem pickledResource = {0, NULL, 0};
+                    CMUint32 socketStatus = 0;
+
+                    pickledResource.len = *(int*)(mLastPSMStatus);
+                    pickledResource.data = NS_REINTERPRET_POINTER_CAST(unsigned char*,nsMemory::Alloc(SSMSTRING_PADDED_LENGTH(pickledResource.len)));
+
+                    if (! pickledResource.data) return PR_FAILURE;
+                    
+                    memcpy(pickledResource.data, mLastPSMStatus+sizeof(int), pickledResource.len);
+                    
+                    psmInfo->GetControlPtr(&control);
+                    if (CMT_UnpickleResource( control, 
+                          SSM_RESTYPE_SSL_SOCKET_STATUS,
+                          pickledResource, 
+                          &socketStatus) == CMTSuccess)
+                    {
+                        if (CMT_GetStringAttribute(control, socketStatus, SSM_FID_SSS_CA_NAME, &caName) == CMTSuccess)
+                        {
+                            // Create space for "Signed by %s" display string
+                            char *str = NS_REINTERPRET_POINTER_CAST(char*, nsMemory::Alloc(CERT_PREFIX_STR_LENGTH + 1 + caName.len));
+                            if (str)
+                            {
+                                *str = '\0';
+                                strcat(str, CERT_PREFIX_STR);
+                                // will memcpy just return if size == 0?
+                                memcpy(str + CERT_PREFIX_STR_LENGTH, caName.data, caName.len);
+                                *(str + CERT_PREFIX_STR_LENGTH + caName.len) = '\0';
+                                res = mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2(str) );
+                                nsMemory::Free(str);
+                            }
+                        }
+                    }
+                    nsMemory::Free(pickledResource.data);
                     return res;
                 }
             }
