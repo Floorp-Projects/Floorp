@@ -599,9 +599,9 @@ struct png_struct_def
    png_byte background_gamma_type;
    float background_gamma;
    png_color_16 background;   /* background color in screen gamma space */
-//#if defined(PNG_READ_GAMMA_SUPPORTED)
+/*#if defined(PNG_READ_GAMMA_SUPPORTED)*/
    png_color_16 background_1; /* background normalized to gamma 1.0 */
-//#endif /* PNG_READ_GAMMA && PNG_READ_bKGD_SUPPORTED */
+/*#endif*/ /* PNG_READ_GAMMA && PNG_READ_bKGD_SUPPORTED */
 #endif /* PNG_READ_bKGD_SUPPORTED */
 #if defined(PNG_WRITE_FLUSH_SUPPORTED)
    png_flush_ptr output_flush_fn;/* Function for flushing output */
