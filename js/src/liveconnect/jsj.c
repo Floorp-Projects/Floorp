@@ -480,10 +480,10 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
     if (!init_java_VM_reflection(jsjava_vm, jEnv) || 
         !jsj_InitJavaObjReflectionsTable()) {
         jsj_LogError("LiveConnect was unable to reflect one or more components of the Java runtime.\nGo to http://bugzilla.mozilla.org/show_bug.cgi?id=5369 for details.\n");
-		// This function crashes when called from here.
-		// Check that all the preconditions for this
-		// call are satisfied before making it. [jd]
-        JSJ_DisconnectFromJavaVM(jsjava_vm);
+        /* This function crashes when called from here.
+           Check that all the preconditions for this
+           call are satisfied before making it. [jd]
+           JSJ_DisconnectFromJavaVM(jsjava_vm); */
         return NULL;
     }
    
@@ -600,7 +600,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
             break;
         }
     }
-    JS_ASSERT(j); // vm not found in list
+    JS_ASSERT(j); /* vm not found in list */
 
 #ifdef JSJ_THREADSAFE
     if (jsjava_vm_list == NULL) {
