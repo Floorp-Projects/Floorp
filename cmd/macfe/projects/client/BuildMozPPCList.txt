@@ -15,6 +15,7 @@
 # Reserved.
 #
 
+NOLIBALIASES
 :mozilla:lib:mac:NSStdLib:NSStdLib.mcp               "Stub Library"
 :mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp "Stub Library"
 :mozilla:cmd:macfe:projects:client:Navigator.mcp     "Stub Library"
@@ -39,6 +40,7 @@
 :mozilla:modules:xml:macbuild:XML.mcp                "PPC Shared Library"
 :mozilla:modules:libfont:macbuild:FontBroker.mcp     "PPC Library"
 :mozilla:modules:schedulr:macbuild:Schedulr.mcp		"PPC Shared Library"
+:mozilla:network:macbuild:network.mcp				 "PPC Library (Moz)"
 :mozilla:cmd:macfe:Composer:build:Composer.mcp       "PPC Library"
 :mozilla:cmd:macfe:projects:client:Navigator.mcp     "Moz PPC App"
 

@@ -40,5 +40,6 @@ DOLIBALIASES
 :mozilla:modules:xml:macbuild:XML.mcp                "PPC Shared Library (Debug)"
 :mozilla:modules:libfont:macbuild:FontBroker.mcp     "PPC Library (Debug)"
 :mozilla:modules:schedulr:macbuild:Schedulr.mcp      "PPC Shared Library (Debug)"
+:mozilla:network:macbuild:network.mcp				 "PPC Library (Debug Comm)"
 :mozilla:cmd:macfe:projects:client:Navigator.mcp     "Nav PPC App (Debug)"
 
