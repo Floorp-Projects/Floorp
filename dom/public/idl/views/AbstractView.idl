@@ -1,7 +1,0 @@
-// Introduced in DOM Level 2:
-interface AbstractView {
-/* IID: { 0xbd03ed0c, 0x1dd1, 0x11b2, \
-  { 0x9c, 0x1e, 0x91, 0x8c, 0xf7, 0xee, 0x70, 0x75 } } */
-
-  readonly attribute DocumentView     document;
-};
