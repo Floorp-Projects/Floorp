@@ -814,6 +814,7 @@ MAKEFILES_minimo="
 embedding/minimo/Makefile
 embedding/minimo/app/Makefile
 embedding/minimo/chromelite/Makefile
+embedding/minimo/popuplite/Makefile
 "
 
 MAKEFILES_psm2="
