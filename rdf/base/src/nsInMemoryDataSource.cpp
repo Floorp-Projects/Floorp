@@ -20,6 +20,15 @@
 
   Implementation for an in-memory RDF data store.
 
+  TO DO
+
+  1) Instrument this code to gather space and time performance
+     characteristics.
+
+  2) If/when RDF containers become commonplace, consider implementing
+     a special case for them to improve access time to individual
+     elements.
+
  */
 
 #include "nscore.h"
@@ -53,6 +62,8 @@ enum Direction {
     eDirectionReverse
 };
 
+// This struct is used as the slot value in the forward and reverse
+// arcs hash tables.
 struct Assertion 
 {
     nsIRDFResource* mSource;
@@ -64,6 +75,7 @@ struct Assertion
 };
     
 ////////////////////////////////////////////////////////////////////////
+// Utility routines
 
 static PLHashNumber
 rdf_HashPointer(const void* key)
@@ -130,7 +142,11 @@ class InMemoryDataSource : public nsIRDFDataSource,
 protected:
     char*        mURL;
 
-
+    // These hash tables are keyed on pointers to nsIRDFResource
+    // objects (the nsIRDFService ensures that there is only ever one
+    // nsIRDFResource object per unique URI). The value of an entry is
+    // an Assertion struct, which is a linked list of (subject
+    // predicate object) triples.
     PLHashTable* mForwardArcs; 
     PLHashTable* mReverseArcs; 
 
@@ -306,10 +322,6 @@ NS_IMPL_ISUPPORTS(InMemoryAssertionCursor, kIRDFAssertionCursorIID);
 NS_IMETHODIMP
 InMemoryAssertionCursor::Advance(void)
 {
-    // XXX I don't think that the semantics of this are quite right:
-    // specifically, I think that the initial Advance() will skip the
-    // first element...
-    // Guha --- I am pretty sure it won't
     nsresult rv;
 
     NS_IF_RELEASE(mValue);
@@ -443,7 +455,7 @@ InMemoryAssertionCursor::GetTruthValue(PRBool* aTruthValue)
  * <tt>nsIRDFArcsOutCursor</tt> and <tt>nsIRDFArcsInCursor</tt> interfaces.
  * Because the structure of the in-memory graph is pretty flexible, it's
  * fairly easy to parameterize this class. The only funky thing to watch
- * out for is the mutliple inheiritance.
+ * out for is the mutliple inheiritance clashes.
  */
 
 class InMemoryArcsCursor : public nsIRDFArcsOutCursor,
@@ -494,9 +506,9 @@ InMemoryArcsCursor::InMemoryArcsCursor(InMemoryDataSource* ds,
 {
     NS_ADDREF(mDataSource);
 
-    // Hopefully this won't suck too much, because most arcs will have
+    // Hopefully this won't suck too much because most arcs will have
     // a small number of properties; or at worst, a small number of
-    // unique properties in the case of multiattributes. This breaks
+    // unique properties in the case of multi-attributes. This breaks
     // for RDF container elements, which we should eventually special
     // case.
 
@@ -1139,7 +1151,36 @@ InMemoryDataSource::Flush()
 //
 // It should really do this by looking at some feature of the document
 // or something. The stuff it spits out is valid, but probably pretty
-// damn illegible and verbose.
+// damn illegible and verbose. It generates a new, unique namespace
+// identifier for every qualified name.
+//
+// How To Fix It.
+//
+// 1) We could improve this by refactoring the code between
+// nsRDFDocument, nsRDFContentSink, and nsMemoryDataSource: this is
+// probably The Right Thing To Do, but it's a lot of work and may even
+// involve writing an RDF DTD processer in mozilla/htmlparser. At a
+// minimum, it involves keeping track of namespace URIs and
+// identifiers as they appear in the document, and maybe even
+// implementing an nsIRDFProperty subclass that can tell you the
+// difference between a the namespace URI and the unqualified
+// property.
+//
+// 2) Alternatively, we could do a quick n' dirty hack where we grovel
+// through all the properties in the data source, guess what the
+// namespace URI prefixes are, sort-unique on the namespace prefixes,
+// assign unique namespace identifiers to each, and then make a second
+// pass where we write everything out.
+//
+// 3) Even worse, we could just hard-code in a couple of well-known
+// namespaces (e.g., the Netscape vocabulary), and punt on all the
+// rest.
+//
+// 4) Another idea might be to pass in a "namespace identifier set" to
+// the Serialize() method. Then, any namespace prefix that you find in
+// the set can be written up-front, and any namespace prefix that you
+// don't find, you just generate. This is probably the easiest thing
+// to do...
 
 static void
 rdf_MakeQName(nsIRDFResource* resource,
@@ -1225,7 +1266,7 @@ rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
     const char* s;
     node->GetValue(&s);
 
-    static const char kRDFDescription1[] = "  <RDF:Description about=\"";
+    static const char kRDFDescription1[] = "  <RDF:Description RDF:about=\"";
     static const char kRDFDescription2[] = "\">\n";
  
     nsAutoString escaped(s);
