@@ -1391,8 +1391,8 @@ PRBool
 HTMLStyleSheetImpl::IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay)
 {
   // For the time being it's scrollable if the overflow property is auto or
-  // scroll, regardless of whether the width  or height is fixed in size
-  PRInt32 scrolling    = -1;
+  // scroll, regardless of whether the width or height is fixed in size
+  PRInt32 scrolling = -1;
   nsISupports* container;
   if (nsnull != aPresContext) {
     aPresContext->GetContainer(&container);
