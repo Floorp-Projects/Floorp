@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.32 2001/12/07 01:36:22 relyea%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.33 2001/12/12 21:44:04 jpierre%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -6416,8 +6416,6 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	errCode = SSL_ERROR_RX_UNEXPECTED_CERTIFICATE;
 	goto alert_loser;
     }
-
-    PORT_Assert(ssl3->peerCertArena == NULL);
 
     if (sec->peerCert != NULL) {
 	if (sec->peerKey) {
