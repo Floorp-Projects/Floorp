@@ -50,7 +50,7 @@ sub RegisterConfig {
         ['veryowIndex', 1, 1, 0],
         ['hit', 1, 1, ['/me smacks %target', '/me hits %target over the head with a hammer', '/me trips %target up and laughs', '%target! look over there! *smack*', '/me pokes %target in the ribs']],
         ['hitIndex', 1, 1, 0],
-        ['hitProtected', 1, 1, {'hixie' => '%target: %source wanted me to hurt you but don\'t worry, i wuv you, i\'d never hurt you...', 'me' => '/me wacks %source in the legs with a crowbar', '' => '%source: Oh you\'d like that, wouldn\'t you, you sadist pervert.', 'yourself' => 'hey look everyone! %source likes to see others hurt themselves!'}],
+        ['hitProtected', 1, 1, {'hixie' => '%target: %source wanted me to hurt you but don\'t worry, i wuv you, i\'d never hurt you...', 'me' => '/me wacks %source in the legs with a crowbar', '' => '%source: Oh you\'d like that, wouldn\'t you, you sadist pervert.', 'yourself' => 'hey look everyone! %source likes to see others hurt themselves!', 'urself' => 'oh my! %source can\'t even spell! It\'s written "yourself", moron!'}],
         ['hitEnabled', 1, 1, 1], # set to 0 to disable hitting
         ['yousuck', 1, 1, ['%: no, *you* suck!', '/me pouts', '/me cries', '/me . o O ( now what have i done... )']],
         ['yousuckIndex', 1, 1, 0],
@@ -58,16 +58,18 @@ sub RegisterConfig {
         ['thanksIndex', 1, 1, 0],
         ['listen', 1, 1, ['(*', '%: I\'m listening.', '%?']],
         ['listenIndex', 1, 1, 0],
-        ['unhappy', 1, 1, [':)', '/me cries', 'but... but...', '/me is all sad', ':(']],
-        ['unhappyIndex', 1, 1, 0],
         ['happy', 1, 1, [':)', '/me smiles', 'yay', '/me beams']],
         ['happyIndex', 1, 1, 0],
-        ['unhappy', 1, 1, [':(', '/me sobs', '/me cries', '*sniff*']],
+        ['unhappy', 1, 1, [':(', '/me sobs', '/me cries', '*sniff*', 'but... but...', '/me is all sad']],
         ['unhappyIndex', 1, 1, 0],
         ['vhappy', 1, 1, ['OOoh! %!', 'I love you too, %.']],
         ['vhappyIndex', 1, 1, 0],
         ['kinky', 1, 1, ['eep!', 'me-ow!', 'oh yeah! spank me baby!', '/me tickles %', 'he-llo, baby!']],
         ['kinkyIndex', 1, 1, 0],
+        ['tickle', 1, 1, ['eep!', 'iiiih!', 'meep!', '/me tickles % back', 'yelp!']],
+        ['tickleIndex', 1, 1, 0],
+        ['apology', 1, 1, ['Apology accepted.', 'thanks', 's\'ok', 'heh', 'that\'s ok']],
+        ['apologyIndex', 1, 1, 0],
         ['whoami', 1, 1, 'I am a bot. /msg me the word \'help\' for a list of commands.'],
         ['lastrheet', 0, 0, 0], # time of last rheet
         ['rheetbuffer', 1, 1, 10], # max of 1 rheet per this many seconds 
@@ -111,20 +113,38 @@ sub Told {
         } else {
             $self->say($event, "$1");
         }
-    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+(?:an?\s+)?(?:really\s+)?(?:idiot|stupid|dumb)(?:\s+bot)?|i\s+hate\s+you|bi+tch)[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*
+                              (?:  (?:you|u)  \s+
+                                   (?:really\s+)?
+                                   suck
+                                   (?:  \s+hard
+                                     |  (?:\s+big)? \s+ rocks)?
+                                |  (?:you|u) \s+
+                                   (?:smell|stick)
+                                |  (?:you|u)
+                                   (?:\s+are|\s+r|'re|r) \s+
+                                   (?:an?\s+)?
+                                   (?:really\s+)?
+                                   (?:idiot|stupid|dumb|moron|moronic)
+                                   (?:\s+bot)?
+                                |  i \s+ hate \s+ (?:you|u)
+                                |  bi+tch)
+                            [?!1.\s]*$/osix) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:oh[!1?.,\s]*)?(?:thanks|thank\s+you|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'thanks');
-    } elsif ($message =~ /^\s*(?:good\s+bot[.!1\s]*|you\s+rock|:-?\)|(?:have\s+a\s+)?bot\s*snack[.!1\s]*)\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
+    } elsif ($message =~ /^\s*(?:good\s+bot[.!1\s]*|(?:you|u)\s+rock(?:\s+bot)?|:-?\)|(?:have\s+a\s+)?bot\s*snack[.!1\s]*)\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'happy');
-    } elsif ($message =~ /^\s*(?:i|we)\s+love\s+you[.!1\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
+    } elsif ($message =~ /^\s*(?:i|we)\s+love\s+(?:you|u)[.!1\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:please[\s,.]+)?(?:(?:would|will)\s+you\s+)?(?:hit|kick|slap|smack)\s+(\S+?)(?:[\s,.]+please)?[.!?\s]*\s*$/osi) {
         if ($self->{'hitEnabled'}) {
             $self->PerformOnOther($event, 'hit', $1);
         }
-    } elsif ($message =~ /^\s*die[!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:die|get\s+a\s+life|kiss\s+my\s+ass)[!1.\s]*$/osi) {
         $self->Perform($event, 'unhappy');
+    } elsif ($message =~ /^\s*sorry\b/osi) { # note that any trailing text is ignored
+        $self->Perform($event, 'apology');
     } elsif ($message =~ /^\s*(?:how\s+are\s+you|how\s+do\s+you\s+do|how\'?s\s+things|are\s+you\s+ok)(?:[?!1.,\s]+$expandedme)?\s*[?!1.\s]*$/osi) {
         $uptime = $self->days($^T);
         $self->say($event, "$event->{'from'}: fine thanks! I've been up $uptime so far!");
@@ -171,14 +191,30 @@ sub Heard {
         $self->Perform($event, 'thanks');
     } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'happy');
-    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot|dumb\s+bot)[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
+    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot|dumb\s+bot|moron|moronic\s+bot)[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
     } elsif (($message =~ /^\s*bad\s*$me[!.\s]*$/si) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
-    } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+(?:an?\s+)?(?:really\s+)?(?:idiot|stupid|dumb)(?:\s+bot)?|i\s+hate\s+you|bi+tch)[?!1.\s]*$/osi) and
+    } elsif (($message =~ /^\s*
+                              (?:  (?:you|u)  \s+
+                                   (?:really\s+)?
+                                   suck
+                                   (?:  \s+hard
+                                     |  (?:\s+big)? \s+ rocks)?
+                                |  (?:you|u) \s+
+                                   (?:smell|stick)
+                                |  (?:you|u)
+                                   (?:\s+are|\s+r|'re|r) \s+
+                                   (?:an?\s+)?
+                                   (?:really\s+)?
+                                   (?:idiot|stupid|dumb|moron|moronic)
+                                   (?:\s+bot)?
+                                |  i \s+ hate \s+ (?:you|u)
+                                |  bi+tch)
+                            [?!1.\s]*$/osix) and
              ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'yousuck');
-    } elsif ($message =~ /^\s*(?:good(?:\s$me)?|yay[\s!1.]*|i\s+love\s+you)\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
+    } elsif ($message =~ /^\s*(?:good(?:\s$me)?|yay[\s!1.]*|i\s+love\s+(?:you|u))\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:$me\s*[.?\/]+)\s*$/si) {
         $self->Perform($event, 'listen');
@@ -212,7 +248,9 @@ sub Felt {
         $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
-    if ($message =~ /^\s*(?:pokes|prods)\s+$me(?:[,\s]+too|\s+as\s+well)?[\s!1.]*$/si) {
+    if ($message =~ /^\s*(?:greets\s+$me|shakes\s+$me'?s\s+hand)[\s!1.]*$/si) {
+        $self->Perform($event, 'greetings');
+    } elsif ($message =~ /^\s*(?:pokes|prods)\s+$me(?:[,\s]+too|\s+as\s+well)?[\s!1.]*$/si) {
         $self->Perform($event, 'ow');
     } elsif ($message =~ /^\s*(?:stabs|slaps|kicks|kills|hits|punches)\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'veryow');
@@ -230,6 +268,8 @@ sub Felt {
         $self->Perform($event, 'vhappy');
     } elsif ($message =~ /^\s*(?:bites|spanks)\s+$me[\s.]*$/si) {
         $self->Perform($event, 'kinky');
+    } elsif ($message =~ /^\s*(?:tickles)\s+$me[\s.]*$/si) {
+        $self->Perform($event, 'tickle');
     } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+(?:bot\s*)?(?:snack|cookie)|a\s+present|cash|congratulations|applause|praise)[\s!1.]*$/si) {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+hot\s+date)[\s!1.]*$/si) {
@@ -342,7 +382,7 @@ sub PerformOnOther {
     my $self = shift;
     my ($event, $list, $other) = @_;
     my $data;
-    my $me = quotemeta($event->{'bot'}->nick);
+    my $me = quotemeta($event->{'nick'});
     if ($other =~ m/^$me$/si and
         defined $self->{"${list}Protected"}->{''}) {
         $data = $self->{"${list}Protected"}->{''};
