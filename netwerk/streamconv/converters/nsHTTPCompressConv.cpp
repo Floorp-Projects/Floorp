@@ -28,9 +28,6 @@
 #include "nsCOMPtr.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIStringStream.h"
-#include "zlib.h"
-
-#include <ctype.h>
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS2 (nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener);
@@ -40,7 +37,10 @@ nsHTTPCompressConv::nsHTTPCompressConv ()
     :   mListener (nsnull),
         mInpBuffer  (NULL), mInpBufferLen (0),
         mOutBuffer  (NULL), mOutBufferLen (0),
-        mMode (HTTP_COMPRESS_IDENTITY)
+        mMode (HTTP_COMPRESS_IDENTITY),
+        mCheckHeaderDone (PR_FALSE),
+        mGzipStreamInitialized (PR_FALSE), mGzipStreamEnded (PR_FALSE),
+        hMode (0), mLen (0), mSkipCount (0), mFlags (0)
 {
     NS_INIT_ISUPPORTS ();
 }
@@ -121,19 +121,27 @@ nsHTTPCompressConv::OnDataAvailable (
     if (NS_FAILED (rv))
 		return rv;
 
-	if (streamLen == 0)
+	if (streamLen == 0 || mGzipStreamEnded)
 		return NS_OK;
 
     switch (mMode)
     {
-        case HTTP_COMPRESS_DEFLATE :
         case HTTP_COMPRESS_GZIP    :
+            streamLen = check_header (iStr, streamLen, &rv);
+
+            if (rv != NS_OK)
+                return rv;
+
+            if (streamLen == 0)
+                return NS_OK;
+
         case HTTP_COMPRESS_COMPRESS:
+        case HTTP_COMPRESS_DEFLATE :
 
             if (mInpBuffer != NULL && streamLen > mInpBufferLen)
             {
                 mInpBuffer = (unsigned char *) nsAllocator::Realloc (mInpBuffer, mInpBufferLen = streamLen);
-                
+               
                 if (mOutBufferLen < streamLen * 2)
                     mInpBuffer = (unsigned char *) nsAllocator::Realloc (mOutBuffer, mInpBufferLen = streamLen * 3);
 
@@ -176,35 +184,61 @@ nsHTTPCompressConv::OnDataAvailable (
 
             }
             else
-            {    
-                z_stream d_stream;
-                memset (&d_stream, 0, sizeof (d_stream));
+            {
+                if (!mGzipStreamInitialized)
+                {
+                    memset (&d_stream, 0, sizeof (d_stream));
+                
+                    if (inflateInit (&d_stream) != Z_OK)
+                        return NS_ERROR_FAILURE;
 
-                if (inflateInit (&d_stream) != Z_OK)
-                    return NS_ERROR_FAILURE;
+                    mGzipStreamInitialized = PR_TRUE;
+                }
 
                 d_stream.next_in  = mInpBuffer;
-                d_stream.avail_in = (uInt)mInpBufferLen;
+                d_stream.avail_in = (uInt)streamLen;
 
                 for ( ; ; )
                 {
                     d_stream.next_out  = mOutBuffer;
-	                d_stream.avail_out = (uInt)mOutBufferLen;
-
+                    d_stream.avail_out = (uInt)mOutBufferLen;
+ 
                     int code = inflate  (&d_stream, Z_NO_FLUSH);
+                    unsigned bytesWritten = (uInt)mOutBufferLen - d_stream.avail_out;
+
                     if (code == Z_STREAM_END)
                     {
-                        rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, d_stream.total_out);
-                        if (NS_FAILED (rv))
-                            return rv;
+                        if (bytesWritten)
+                        {
+                            rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
+                            if (NS_FAILED (rv))
+                                return rv;
+                        }
+                        
+                        inflateEnd (&d_stream);
+                        mGzipStreamEnded = PR_TRUE;
                         break;
                     }
                     else
                     if (code == Z_OK)
                     {
-                        rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, d_stream.total_out);
-                        if (NS_FAILED (rv))
-                            return rv;
+                        if (bytesWritten)
+                        {
+                            rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
+                            if (NS_FAILED (rv))
+                                return rv;
+                        }
+                    }
+                    else
+                    if (code == Z_BUF_ERROR)
+                    {
+                        if (bytesWritten)
+                        {
+                            rv = do_OnDataAvailable (aChannel, aContext, aSourceOffset, (char *)mOutBuffer, bytesWritten);
+                            if (NS_FAILED (rv))
+                                return rv;
+                        }
+                        break;
                     }
                     else
                         return NS_ERROR_FAILURE;
@@ -273,4 +307,158 @@ nsHTTPCompressConv::do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aCont
 	rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, aCount);
 
     return rv;
+}
+
+#define ASCII_FLAG   0x01 /* bit 0 set: file probably ascii text */
+#define HEAD_CRC     0x02 /* bit 1 set: header CRC present */
+#define EXTRA_FIELD  0x04 /* bit 2 set: extra field present */
+#define ORIG_NAME    0x08 /* bit 3 set: original file name present */
+#define COMMENT      0x10 /* bit 4 set: file comment present */
+#define RESERVED     0xE0 /* bits 5..7: reserved */
+
+static unsigned gz_magic[2] = {0x1f, 0x8b}; /* gzip magic header */
+
+PRUint32
+nsHTTPCompressConv::check_header (nsIInputStream *iStr, PRUint32 streamLen, nsresult *rs)
+{
+    nsresult rv;
+    enum  { GZIP_INIT = 0, GZIP_OS, GZIP_EXTRA0, GZIP_EXTRA1, GZIP_EXTRA2, GZIP_ORIG, GZIP_COMMENT, GZIP_CRC };
+    char c;
+
+    *rs = NS_OK;
+
+    if (mCheckHeaderDone)
+        return streamLen;
+
+    while (streamLen)
+    {
+        switch (hMode)
+        {
+            case GZIP_INIT:
+                iStr -> Read (&c, 1, &rv);
+                streamLen--;
+                
+                if (mSkipCount == 0 && ((unsigned)c & 0377) != gz_magic[0])
+                {
+                    *rs = NS_ERROR_FAILURE;
+                    return 0;
+                }
+
+                if (mSkipCount == 1 && ((unsigned)c & 0377) != gz_magic[1])
+                {
+                    *rs = NS_ERROR_FAILURE;
+                    return 0;
+                }
+
+                if (mSkipCount == 2 && ((unsigned)c & 0377) != Z_DEFLATED)
+                {
+                    *rs = NS_ERROR_FAILURE;
+                    return 0;
+                }
+
+                mSkipCount++;
+                if (mSkipCount == 4)
+                {
+                    mFlags = (unsigned) c & 0377;
+                    if (mFlags & RESERVED)
+                    {
+                        *rs = NS_ERROR_FAILURE;
+                        return 0;
+                    }
+                    hMode = GZIP_OS;
+                    mSkipCount = 0;
+                }
+                break;
+
+            case GZIP_OS  :
+                iStr -> Read (&c, 1, &rv);
+                streamLen--;
+                mSkipCount++;
+
+                if (mSkipCount == 6)
+                    hMode = GZIP_EXTRA0;
+                break;
+        
+            case GZIP_EXTRA0:
+                if (mFlags & EXTRA_FIELD)
+                {
+                    iStr -> Read (&c, 1, &rv);
+                    streamLen--;
+                    mLen = (uInt) c & 0377;
+                    hMode = GZIP_EXTRA1;
+                }
+                else
+                    hMode = GZIP_ORIG;
+                break;
+
+            case GZIP_EXTRA1:
+                iStr -> Read (&c, 1, &rv);
+                streamLen--;
+                mLen = ((uInt) c & 0377) << 8;
+                mSkipCount = 0;
+                hMode = GZIP_EXTRA2;
+                break;
+
+            case GZIP_EXTRA2:
+                if (mSkipCount == mLen)
+                    hMode = GZIP_ORIG;
+                else
+                {
+                    iStr -> Read (&c, 1, &rv);
+                    streamLen--;
+                    mSkipCount++;
+                }
+                break;
+
+            case GZIP_ORIG:
+                if (mFlags & ORIG_NAME)
+                {
+                    iStr -> Read (&c, 1, &rv);
+                    streamLen--;
+                    if (c == 0)
+                        hMode = GZIP_COMMENT;
+                }
+                else
+                    hMode = GZIP_COMMENT;
+                break;
+
+            case GZIP_COMMENT:
+                if (mFlags & GZIP_COMMENT)
+                {
+                    iStr -> Read (&c, 1, &rv);
+                    streamLen--;
+                    if (c == 0)
+                    {
+                        hMode = GZIP_CRC;
+                        mSkipCount = 0;
+                    }
+                }
+                else
+                {
+                    hMode = GZIP_CRC;
+                    mSkipCount = 0;
+                }
+                break;
+
+           case GZIP_CRC:
+                if (mFlags & HEAD_CRC)
+                {
+                    iStr -> Read (&c, 1, &rv);
+                    streamLen--;
+                    mSkipCount++;
+                    if (mSkipCount == 2)
+                    {
+                        mCheckHeaderDone = PR_TRUE;
+                        return streamLen;
+                    }
+                }
+                else
+                {
+                    mCheckHeaderDone = PR_TRUE;
+                    return streamLen;
+                }
+            break;
+        }
+    }
+    return streamLen;
 }
