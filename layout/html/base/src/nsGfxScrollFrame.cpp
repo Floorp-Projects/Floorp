@@ -1262,6 +1262,9 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
     if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
+      // If we just return early here, we'll never create content or
+      // frames an |mHScrollbarBox| and |mVScrollbarBox| will always be
+      // null.
       return;
     }
   }
