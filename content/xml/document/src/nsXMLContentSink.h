@@ -139,8 +139,9 @@ protected:
                          nsIContent* aContent,
                          PRBool aIsHTML);
   nsresult AddContentAsLeaf(nsIContent *aContent);
-  void    PushNameSpacesFrom(const nsIParserNode& aNode);
-  nsIAtom*  CutNameSpacePrefix(nsString& aString);
+  void PushNameSpacesFrom(const nsIParserNode& aNode);
+  static void SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
+                           nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
   nsINameSpace*    PopNameSpaces();
   PRBool  IsHTMLNameSpace(PRInt32 aId);
