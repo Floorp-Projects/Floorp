@@ -1029,26 +1029,29 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           // before we could read any data from it
           errorStr = "netReset";
           break;
+        case NS_BINDING_ABORTED:
+          break;
         default:
-          NS_NOTREACHED("would be nice to add an alert here");
           errorStr = "unknownError";
           break;
       }
-      nsCOMPtr<nsIPrompt> prompter;
-      nsCOMPtr<nsIStringBundle> stringBundle;
+      if (errorStr) {
+        nsCOMPtr<nsIPrompt> prompter;
+        nsCOMPtr<nsIStringBundle> stringBundle;
 
-      rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                    getter_AddRefs(stringBundle));
-      if (!stringBundle) {
-        return rv;
+        rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
+                                      getter_AddRefs(stringBundle));
+        if (!stringBundle) {
+          return rv;
+        }
+
+        nsXPIDLString messageStr;
+        rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(errorStr).get(),
+                                             getter_Copies(messageStr));
+        if (NS_FAILED(rv)) return rv;
+
+        prompter->Alert(nsnull, messageStr);
       }
-
-      nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(errorStr).get(),
-                                           getter_Copies(messageStr));
-      if (NS_FAILED(rv)) return rv;
-
-      prompter->Alert(nsnull, messageStr);
     }
   } // if we have a host
 
