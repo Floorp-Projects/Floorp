@@ -31,6 +31,16 @@
     <handler type="keypress" id="key_undo" key="z" primary="true" 
         command="cmd_undo"/>
 
+    <!-- Cut/copy/paste/undo -->
+    <handler type="keypress" id="key_copy" key="c" primary="true"
+        command="cmd_copy"/>
+    <handler type="keypress" id="key_cut" key="x" primary="true"
+        command="cmd_cut"/>
+    <handler type="keypress" id="key_paste" key="v" primary="true"
+        command="cmd_paste"/>
+    <handler type="keypress" id="key_undo" key="z" primary="true" 
+        command="cmd_undo"/>
+
     </handlers>
   </binding>
 
@@ -58,6 +68,16 @@
     <handler type="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
         command="cmd_scrollPageDown"/>
     <handler type="keypress" id="key_undo" key="z" primary="true"
+        command="cmd_undo"/>
+
+    <!-- Cut/copy/paste/undo -->
+    <handler type="keypress" id="key_copy" key="c" primary="true"
+        command="cmd_copy"/>
+    <handler type="keypress" id="key_cut" key="x" primary="true"
+        command="cmd_cut"/>
+    <handler type="keypress" id="key_paste" key="v" primary="true"
+        command="cmd_paste"/>
+    <handler type="keypress" id="key_undo" key="z" primary="true" 
         command="cmd_undo"/>
 
     </handlers>
