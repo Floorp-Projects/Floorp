@@ -1332,17 +1332,24 @@ var nsJoinTableCellsCommand =
       // We need a cell and either > 1 selected cell or a cell to the right
       //  (this cell may originate in a row spanned from above current row)
       // Note that editorShell returns "td" for "th" also.
-      // (tis is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
+      // (this is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
       if( cell && (tagNameObj.value == "td"))
       {
         // Selected cells
         if (countObj.value > 1) return true;
 
         var colSpan = cell.getAttribute("colspan");
-        if (!colSpan) colSpan = 1;
 
-        // cells with 0 span should never have cells to the right
-        // (if there is, user can select the 2 cells to join them)
+        // getAttribute returns string, we need number
+        // no attribute means colspan = 1
+        if (!colSpan)
+          colSpan = Number(1);
+        else
+          colSpan = Number(colSpan);
+
+        // Test if cell exists to the right of current cell
+        // (cells with 0 span should never have cells to the right
+        //  if there is, user can select the 2 cells to join them)
         return (colSpan != 0 &&
                 window.editorShell.GetCellAt(null, 
                                    window.editorShell.GetRowIndex(cell), 
