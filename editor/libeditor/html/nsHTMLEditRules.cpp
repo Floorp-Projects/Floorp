@@ -223,8 +223,12 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       }
       
       // replace newlines that are preformatted
+      // MOOSE:  This is buttUgly.  A better way to 
+      // organize the action enum is in order.
       if ((action == nsEditor::kOpInsertText) || 
           (action == nsEditor::kOpInsertIMEText) ||
+          (action == nsHTMLEditor::kOpInsertElement) ||
+          (action == nsHTMLEditor::kOpInsertQuotation) ||
           (action == nsEditor::kOpInsertNode))
       {
         res = ReplaceNewlines(mDocChangeRange);
