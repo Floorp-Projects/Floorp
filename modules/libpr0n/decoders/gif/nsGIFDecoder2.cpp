@@ -42,13 +42,31 @@
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsMemory.h"
+#include "nsRecyclingAllocator.h"
 
 #include "imgIContainerObserver.h"
 
 #include "imgILoad.h"
 
-#include "nsRect.h"
+
+/*******************************************************************************
+ * Gif decoder allocator
+ *
+ * For every image that gets loaded, we allocate a 'gif_struct'
+ * This allocator tries to keep one set of these around
+ * and reuses them; automatically fails over to use calloc/free when all
+ * buckets are full.
+ */
+const int kGifAllocatorNBucket = 3;
+static nsRecyclingAllocator *gGifAllocator = nsnull;
+
+void nsGifShutdown()
+{
+  // Release cached buffers from zlib allocator
+  delete gGifAllocator;
+  gGifAllocator = nsnull;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
@@ -62,6 +80,8 @@ nsGIFDecoder2::nsGIFDecoder2()
   , mGIFStruct(nsnull)
   , mAlphaLine(nsnull)
   , mRGBLine(nsnull)
+  , mAlphaLineMaxSize(0)
+  , mRGBLineMaxSize(0)
   , mBackgroundRGBIndex(0)
   , mCurrentPass(0)
   , mLastFlushedPass(0)
@@ -71,16 +91,7 @@ nsGIFDecoder2::nsGIFDecoder2()
 
 nsGIFDecoder2::~nsGIFDecoder2(void)
 {
-  if (mAlphaLine)
-    nsMemory::Free(mAlphaLine);
-
-  if (mRGBLine)
-    nsMemory::Free(mRGBLine);
-
-  if (mGIFStruct) {
-    gif_destroy(mGIFStruct);
-    mGIFStruct = nsnull;
-  }
+  Close();
 }
 
 //******************************************************************************
@@ -96,10 +107,13 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
   mImageContainer = do_CreateInstance("@mozilla.org/image/container;1?type=image/gif");
   aLoad->SetImage(mImageContainer);
   
-  /* do gif init stuff */
-  /* Always decode to 24 bit pixdepth */
-  
-  mGIFStruct = (gif_struct *)PR_CALLOC(sizeof(gif_struct));
+  if (!gGifAllocator) {
+    gGifAllocator = new nsRecyclingAllocator(kGifAllocatorNBucket,
+                                             NS_DEFAULT_RECYCLE_TIMEOUT, "gif");
+    if (!gGifAllocator)
+      return NS_ERROR_FAILURE;
+  }
+  mGIFStruct = (gif_struct *)gGifAllocator->Malloc(sizeof(gif_struct));
   NS_ASSERTION(mGIFStruct, "gif_create failed");
   if (!mGIFStruct)
     return NS_ERROR_FAILURE;
@@ -109,8 +123,6 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
 
   return NS_OK;
 }
-
-
 
 
 //******************************************************************************
@@ -128,9 +140,14 @@ NS_IMETHODIMP nsGIFDecoder2::Close()
                     mGIFStruct->delay_time);
     if (decoder->mGIFOpen)
       EndGIF(mGIFStruct->clientptr, mGIFStruct->loop_count);
+
     gif_destroy(mGIFStruct);
+    if (gGifAllocator)
+      gGifAllocator->Free(mGIFStruct);
     mGIFStruct = nsnull;
   }
+  PR_FREEIF(mAlphaLine);
+  PR_FREEIF(mRGBLine);
 
   return NS_OK;
 }
@@ -386,7 +403,6 @@ int nsGIFDecoder2::EndImageFrame(
   }
 
   decoder->mImageFrame = nsnull;
-  PR_FREEIF(decoder->mGIFStruct->local_colormap);
   decoder->mGIFStruct->is_transparent = PR_FALSE;
   return 0;
 }
@@ -436,10 +452,16 @@ int nsGIFDecoder2::HaveDecodedRow(
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
     decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
 
-    decoder->mRGBLine = (PRUint8 *)nsMemory::Realloc(decoder->mRGBLine, bpr);
+    if (bpr > decoder->mRGBLineMaxSize) {
+      decoder->mRGBLine = (PRUint8 *)PR_REALLOC(decoder->mRGBLine, bpr);
+      decoder->mRGBLineMaxSize = bpr;
+    }
 
     if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) {
-      decoder->mAlphaLine = (PRUint8 *)nsMemory::Realloc(decoder->mAlphaLine, abpr);
+      if (abpr > decoder->mAlphaLineMaxSize) {
+        decoder->mAlphaLine = (PRUint8 *)PR_REALLOC(decoder->mAlphaLine, abpr);
+        decoder->mAlphaLineMaxSize = abpr;
+      }
     }
   } else {
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);

@@ -37,6 +37,11 @@
 #ifndef _GIF_H_
 #define _GIF_H_
 
+#define MAX_LZW_BITS          12
+#define MAX_BITS            4097 /* 2^MAX_LZW_BITS+1 */
+#define MINIMUM_DELAY_TIME   100
+#define MAX_COLORS           256
+
 /* gif2.h  
    The interface for the GIF87/89a decoder. 
 */
@@ -68,7 +73,6 @@ typedef enum {
     gif_consume_netscape_extension,
     gif_consume_comment,
     gif_delay,
-    gif_wait_for_buffer_full,
     gif_stop_animating   //added for animation stop 
 } gstate;
 
@@ -87,18 +91,14 @@ typedef struct gif_struct {
     void* clientptr;
     /* Parsing state machine */
     gstate state;               /* Curent decoder master state */
-    PRUint8 *hold;                /* Accumulation buffer */
-    PRUint8 *gather_head;         /* Next byte to read in accumulation buffer */
+    PRUint8 *hold;              /* Accumulation buffer */
+    PRUint8 *gather_head;       /* Next byte to read in accumulation buffer */
     int32 gather_request_size;  /* Number of bytes to accumulate */
     int32 gathered;             /* bytes accumulated so far*/
     gstate post_gather_state;   /* State after requested bytes accumulated */
-    int32 requested_buffer_fullness; /* For netscape application extension */
 
     /* LZW decoder state machine */
-    PRUint8 *stack;               /* Base of decoder stack */
     PRUint8 *stackp;              /* Current stack pointer */
-    PRUint16 *prefix;
-    PRUint8 *suffix;
     int datasize;
     int codesize;
     int codemask;
@@ -121,11 +121,7 @@ typedef struct gif_struct {
     /* Parameters for image frame currently being decoded*/
     PRUintn x_offset, y_offset;    /* With respect to "screen" origin */
     PRUintn height, width;
-    int interlaced;             /* TRUE, if scanlines arrive interlaced order */
     int tpixel;                 /* Index of transparent pixel */
-    int is_transparent;         /* TRUE, if tpixel is valid */
-    int control_extension;      /* TRUE, if image control extension present */
-    int is_local_colormap_defined;
     gdispose disposal_method;   /* Restore to background, leave in place, etc.*/
     PRUint8 *local_colormap;    /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
@@ -137,12 +133,21 @@ typedef struct gif_struct {
     int version;                /* Either 89 for GIF89 or 87 for GIF87 */
     PRUintn screen_width;       /* Logical screen width & height */
     PRUintn screen_height;
-    PRUint8 *global_colormap;   /* Default colormap if local not supplied  */
     int global_colormap_size;   /* Size of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
-    int progressive_display;    /* If TRUE, do Haeberli interlace hack */
     int loop_count;             /* Netscape specific extension block to control
                                    the number of animation loops a GIF renders. */
+
+    PRPackedBool progressive_display;    /* If TRUE, do Haeberli interlace hack */
+    PRPackedBool interlaced;             /* TRUE, if scanlines arrive interlaced order */
+    PRPackedBool is_transparent;         /* TRUE, if tpixel is valid */
+    PRPackedBool is_local_colormap_defined;
+
+    PRUint16  prefix[MAX_BITS];          /* LZW decoding tables */
+    PRUint8   global_colormap[3*MAX_COLORS];   /* Default colormap if local not supplied, 3 bytes for each color  */
+    PRUint8   suffix[MAX_BITS];          /* LZW decoding tables */
+    PRUint8   stack[MAX_BITS];           /* Base of LZW decoder stack */
+
 } gif_struct;
 
 
