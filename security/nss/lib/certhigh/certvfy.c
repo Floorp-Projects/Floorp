@@ -421,6 +421,9 @@ loser:
 	    return STAN_GetCERTCertificate(chain[1]); /* return the 2nd */
 	}
     } else {
+	if (chain[0]) {
+	    CERT_DestroyCertificate(cert);
+	}
 	PORT_SetError (SEC_ERROR_UNKNOWN_ISSUER);
     }
     return NULL;
