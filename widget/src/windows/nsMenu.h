@@ -25,12 +25,13 @@
 
 #include "nsIMenu.h"
 #include "nsVoidArray.h"
+#include "nsIMenuListener.h"
 
 /**
  * Native Win32 button wrapper
  */
 
-class nsMenu : public nsIMenu
+class nsMenu : public nsIMenu, public nsIMenuListener
 {
 
 public:
@@ -38,6 +39,9 @@ public:
   virtual ~nsMenu();
 
   NS_DECL_ISUPPORTS
+  
+  //nsIMenuListener interface
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   
   NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
