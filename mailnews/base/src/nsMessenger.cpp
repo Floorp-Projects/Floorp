@@ -62,8 +62,6 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsICopyMessageListener.h"
 
-#include "nsIMessageView.h"
-
 #include "nsMsgUtils.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
@@ -114,7 +112,7 @@ public:
   NS_IMETHOD GetTransactionManager(nsITransactionManager * *aTxnMgr);
   NS_IMETHOD Open3PaneWindow();
   NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
-  NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
+  NS_IMETHOD SetWindow(nsIDOMWindow *ptr, nsIMsgStatusFeedback *statusFeedback);
   NS_IMETHOD OpenURL(const char * url);
   NS_IMETHOD DoPrint();
   NS_IMETHOD DoPrintPreview();
@@ -129,9 +127,6 @@ public:
   NS_IMETHOD Exit();
   NS_IMETHOD Close();
   NS_IMETHOD OnUnload();
-  NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
-  NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
-  NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
   NS_IMETHOD MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead);
   NS_IMETHOD MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead);
   NS_IMETHOD MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *folder);
@@ -212,46 +207,6 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 	return rv;
 }
 
-static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **messageView)
-{
-	if(!messageView || !database)
-		return NS_ERROR_NULL_POINTER;
-
-	nsIRDFDataSource *view, *datasource;
-	nsresult rv;
-	NS_WITH_SERVICE(nsIRDFService, gRDFService, kRDFServiceCID, &rv);
-
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = gRDFService->GetDataSource("rdf:mail-messageview", &view);
-		rv = NS_SUCCEEDED(rv) && gRDFService->GetDataSource("rdf:mailnewsfolders", &datasource);
-	}
-
-	if(!NS_SUCCEEDED(rv))
-		return rv;
-
-	database->RemoveDataSource(datasource);
-	//This is a hack until I have the ability to save off my current view some place.
-	//In case it's already been added, remove it.  We'll need to do the same for the
-	//thread view.
-	database->RemoveDataSource(view);
-	database->AddDataSource(view); 
-
-			//add the datasource
-		//return the view as an nsIMessageView
-	nsIRDFCompositeDataSource *viewCompositeDataSource;
-	if(NS_SUCCEEDED(view->QueryInterface(nsCOMTypeInfo<nsIRDFCompositeDataSource>::GetIID(), (void**)&viewCompositeDataSource)))
-	{
-		viewCompositeDataSource->AddDataSource(datasource);
-		NS_IF_RELEASE(viewCompositeDataSource);
-	}
-	rv = view->QueryInterface(nsCOMTypeInfo<nsIMessageView>::GetIID(), (void**)messageView);
-
-	NS_IF_RELEASE(view);
-	NS_IF_RELEASE(datasource);
-
-	return rv;
-}
 
 //
 // nsMessenger
@@ -350,7 +305,7 @@ NS_NewMessenger(const nsIID &aIID, void **aResult)
 
 
 NS_IMETHODIMP    
-nsMessenger::SetWindow(nsIDOMWindow* aWin)
+nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgStatusFeedback *aStatusFeedback)
 {
 	if(!aWin)
 		return NS_ERROR_NULL_POINTER;
@@ -392,19 +347,14 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
 #endif
 	if (mWebShell)
 	{
-		nsMsgStatusFeedback *docLoaderListener = new nsMsgStatusFeedback;
-		if (docLoaderListener)
+		if (aStatusFeedback)
 		{
-			nsIMsgStatusFeedback *iMsgStatusFeedback = docLoaderListener;
-			m_docLoaderObserver = do_QueryInterface(iMsgStatusFeedback);
-			docLoaderListener->SetWebShell(mWebShell, mWindow);
+			m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
+			aStatusFeedback->SetWebShell(mWebShell, mWindow);
 			mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
-
-			NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
-
-			if(NS_SUCCEEDED(rv))
-				mailSession->SetTemporaryMsgStatusFeedback(iMsgStatusFeedback);
-
+            NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+            if(NS_SUCCEEDED(rv))
+	            mailSession->SetTemporaryMsgStatusFeedback(aStatusFeedback);
 		}
 	}
     NS_RELEASE(rootWebShell);
@@ -813,49 +763,6 @@ nsMessenger::Close()
     return rv;
 }
 
-NS_IMETHODIMP
-nsMessenger::ViewAllMessages(nsIRDFCompositeDataSource *database)
-{
-	nsIMessageView *messageView;
-	if(NS_SUCCEEDED(AddView(database, &messageView)))
-	{
-		messageView->SetShowAll();
-		messageView->SetShowThreads(PR_FALSE);
-		NS_IF_RELEASE(messageView);
-	}
-
-	return NS_OK;
-
-}
-
-NS_IMETHODIMP
-nsMessenger::ViewUnreadMessages(nsIRDFCompositeDataSource *database)
-{
-	nsIMessageView *messageView;
-	if(NS_SUCCEEDED(AddView(database, &messageView)))
-	{
-		messageView->SetShowUnread();
-		messageView->SetShowThreads(PR_FALSE);
-		NS_IF_RELEASE(messageView);
-	}
-
-	return NS_OK;
-
-}
-
-NS_IMETHODIMP
-nsMessenger::ViewAllThreadMessages(nsIRDFCompositeDataSource *database)
-{
-	nsIMessageView *messageView;
-	if(NS_SUCCEEDED(AddView(database, &messageView)))
-	{
-		messageView->SetShowAll();
-		messageView->SetShowThreads(PR_TRUE);
-		NS_IF_RELEASE(messageView);
-	}
-
-	return NS_OK;
-}
 
 NS_IMETHODIMP
 nsMessenger::MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead)
