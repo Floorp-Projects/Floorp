@@ -233,6 +233,9 @@ protected:
 	PRBool           mIsTopWidgetWindow;
 	BView           *mBorderlessParent;
 
+	// I would imagine this would be in nsBaseWidget, but alas, it is not
+	PRBool           mIsMetaDown;
+
 	PRBool           mIsDestroying;
 	PRBool           mOnDestroyCalled;
 	PRBool           mIsVisible;

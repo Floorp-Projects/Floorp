@@ -1775,7 +1775,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			scrollEvent.isControl = mod & B_CONTROL_KEY;
 			scrollEvent.isShift = mod & B_SHIFT_KEY;
 			scrollEvent.isAlt   = mod & B_COMMAND_KEY;
-			scrollEvent.isMeta  = PR_FALSE;
+			scrollEvent.isMeta  = mod & B_OPTION_KEY;
 
 			nsEventStatus rv;
 			DispatchEvent (&scrollEvent, rv);
@@ -1918,6 +1918,10 @@ struct nsKeyConverter nsKeycodesBeOS[] = {
 	        { NS_VK_INSERT,     0x1f },
 	        { NS_VK_DELETE,     0x34 },
 
+	        // The "Windows Key"
+	        { NS_VK_META,       0x66 },
+	        { NS_VK_META,       0x67 },
+
 	        // keypad keys (constant keys)
 	        { NS_VK_MULTIPLY,   0x24 },
 	        { NS_VK_ADD,        0x3a },
@@ -2033,7 +2037,9 @@ struct nsKeyConverter nsKeycodesBeOSNoNumLock[] = {
 
 static int TranslateBeOSKeyCode(int32 bekeycode, bool isnumlock)
 {
-	//printf("bekeycode=%x\n",bekeycode);
+#ifdef KB_DEBUG
+	printf("TranslateBeOSKeyCode: bekeycode = 0x%x\n",bekeycode);
+#endif
 	int i;
 	int length = sizeof(nsKeycodesBeOS) / sizeof(struct nsKeyConverter);
 	int length_numlock = sizeof(nsKeycodesBeOSNumLock) / sizeof(struct nsKeyConverter);
@@ -2056,6 +2062,9 @@ static int TranslateBeOSKeyCode(int32 bekeycode, bool isnumlock)
 				return(nsKeycodesBeOSNoNumLock[i].vkCode);
 		}
 	}
+#ifdef KB_DEBUG
+	printf("TranslateBeOSKeyCode: ####### Translation not Found #######\n");
+#endif
 	return((int)0);
 }
 
@@ -2073,6 +2082,7 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 	mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
 	mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
 	mIsAltDown     = (mod & B_COMMAND_KEY) ? PR_TRUE : PR_FALSE;
+	mIsMetaDown    = (mod & B_OPTION_KEY) ? PR_TRUE : PR_FALSE;	
 	bool IsNumLocked = ((mod & B_NUM_LOCK) != 0);
 
 	aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
@@ -2087,7 +2097,7 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 	// ------------  On Char  ------------
 	PRUint32	uniChar;
 
-	if ((mIsControlDown || mIsAltDown) && rawcode >= 'a' && rawcode <= 'z') {
+	if ((mIsControlDown || mIsAltDown || mIsMetaDown) && rawcode >= 'a' && rawcode <= 'z') {
 		if (mIsShiftDown)
 			uniChar = rawcode + 'A' - 'a';
 		else
@@ -2166,6 +2176,7 @@ PRBool nsWindow::OnKeyUp(PRUint32 aEventType, const char *bytes,
 	mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
 	mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
 	mIsAltDown     = (mod & B_COMMAND_KEY) ? PR_TRUE : PR_FALSE;
+	mIsMetaDown    = (mod & B_OPTION_KEY) ? PR_TRUE : PR_FALSE;	
 
 	aTranslatedKeyCode = TranslateBeOSKeyCode(bekeycode, IsNumLocked);
 
@@ -2199,12 +2210,16 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
 	printf("%d DispatchKE Type: %s charCode 0x%x  keyCode 0x%x ", cnt++,
 	       (NS_KEY_PRESS == aEventType)?"PRESS":(aEventType == NS_KEY_UP?"Up":"Down"),
 	       event.charCode, event.keyCode);
-	printf("Shift: %s Control %s Alt: %s \n",  (mIsShiftDown?"D":"U"), (mIsControlDown?"D":"U"), (mIsAltDown?"D":"U"));
+	printf("Shift: %s Control %s Alt: %s Meta: %s\n",  
+	       (mIsShiftDown?"D":"U"), 
+	       (mIsControlDown?"D":"U"), 
+	       (mIsAltDown?"D":"U"),
+	       (mIsMetaDown?"D":"U"));
 #endif
 
 	event.isShift   = mIsShiftDown;
 	event.isControl = mIsControlDown;
-	event.isMeta   =  PR_FALSE;
+	event.isMeta   =  mIsMetaDown;
 	event.isAlt     = mIsAltDown;
 	event.eventStructType = NS_KEY_EVENT;
 
@@ -2648,7 +2663,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 		event.isShift   = mod & B_SHIFT_KEY;
 		event.isControl = mod & B_CONTROL_KEY;
 		event.isAlt     = mod & B_COMMAND_KEY;
-		event.isMeta     = PR_FALSE;
+		event.isMeta     = mod & B_OPTION_KEY;
 		event.clickCount = clicks;
 		event.eventStructType = NS_MOUSE_EVENT;
 
