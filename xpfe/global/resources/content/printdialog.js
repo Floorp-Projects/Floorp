@@ -220,6 +220,7 @@ function displayPropertiesDialog()
                                                  .getService(Components.interfaces.nsIPrintingPromptService);
     if (printingPromptService) {
       printingPromptService.showPrinterProperties(null, dialog.printerList.value, gPrintSettings);
+      dialog.numCopiesInput.value = gPrintSettings.numCopies;
     }
   } catch(e) {
     dump("problems getting printingPromptService\n");
