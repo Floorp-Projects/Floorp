@@ -59,7 +59,7 @@
 <!ENTITY selectAllCmd.accesskey				"a"> 
 <!ENTITY preferencesCmd.label				"Preferences...">
 <!ENTITY preferencesCmd.key					"E">  
-<!ENTITY preferencesCmd.accesskey			"f"> 
+<!ENTITY preferencesCmd.accesskey			"e"> 
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 
