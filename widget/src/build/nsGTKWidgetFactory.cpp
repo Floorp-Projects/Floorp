@@ -50,6 +50,8 @@
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsDataFlavor.h"
+#include "nsXIFFormatConverter.h"
+
 // #include "nsDragService.h"
 // #include "nsDragSource.h"
 // #include "nsDragTarget.h"
@@ -79,13 +81,14 @@ static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
-static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
 
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 static NS_DEFINE_IID(kCDragSource,    NS_DRAGSOURCE_CID);
 static NS_DEFINE_IID(kCDragTarget,    NS_DRAGTARGET_CID);
@@ -253,6 +256,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)new nsClipboard();
     } 
+    else if (mClassID.Equals(kCXIFFormatConverter)) {
+        inst = (nsISupports*)new nsXIFFormatConverter();
+    }
 #if 0
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)new nsDragService();
