@@ -481,12 +481,18 @@ NS_IMETHODIMP nsAccessible::GetChildCount(PRInt32 *aAccChildCount)
 NS_IMETHODIMP nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
 {
   *aIndexInParent = -1;
-  if (!mParent || !mWeakShell) {
+  if (!mWeakShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIAccessible> parent;
+  GetParent(getter_AddRefs(parent));
+  if (!parent) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIAccessible> sibling;
-  mParent->GetFirstChild(getter_AddRefs(sibling));
+  parent->GetFirstChild(getter_AddRefs(sibling));
   if (!sibling) {
     return NS_ERROR_FAILURE;
   }

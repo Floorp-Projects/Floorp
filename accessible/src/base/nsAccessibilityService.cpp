@@ -81,7 +81,7 @@
 #include "nsXULFormControlAccessible.h"
 #include "nsXULMenuAccessibleWrap.h"
 #include "nsXULSelectAccessible.h"
-#include "nsXULTabAccessibleWrap.h"
+#include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessibleWrap.h"
 #endif
@@ -1377,7 +1377,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTabAccessible(nsIDOMNode *aNode, 
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULTabAccessibleWrap(aNode, weakShell);
+  *_retval = new nsXULTabAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

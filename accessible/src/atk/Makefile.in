@@ -99,7 +99,6 @@ EXPORTS = \
   nsRootAccessibleWrap.h \
   nsTextAccessibleWrap.h \
   nsXULMenuAccessibleWrap.h \
-  nsXULTabAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
   nsAccessibleText.h \
   $(NULL)
