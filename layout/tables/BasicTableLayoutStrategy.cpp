@@ -232,6 +232,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     nscoord maxColWidth = 0;
     nscoord effectiveMinColumnWidth = 0;  // min col width ignoring cells with colspans
     nscoord effectiveMaxColumnWidth = 0;  // max col width ignoring cells with colspans
+    nscoord specifiedFixedColWidth = 0;   // the width of the column if given stylistically (or via cell Width attribute)
 
     // Get column information
     nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
@@ -243,7 +244,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
 
     // Get fixed column width if it has one
     PRBool haveColWidth = PR_FALSE;
-    nscoord specifiedFixedColWidth=0;
     if (eStyleUnit_Coord==colPosition->mWidth.GetUnit()) 
     {
       haveColWidth = PR_TRUE;
@@ -375,7 +375,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     // keep a running total of the amount of space taken up by all fixed-width columns
     if (PR_TRUE==haveColWidth)
     {
-      mFixedTableWidth += maxColWidth + colInset;
+      mFixedTableWidth += specifiedFixedColWidth + colInset;
       if (0==colIndex)
         mFixedTableWidth += colInset;
     }
@@ -388,7 +388,10 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     colFrame->SetMaxColWidth(effectiveMaxColumnWidth);
     colFrame->SetEffectiveMinColWidth(effectiveMinColumnWidth);
     colFrame->SetEffectiveMaxColWidth(effectiveMaxColumnWidth);
-    mTableFrame->SetColumnWidth(colIndex, effectiveMaxColumnWidth);
+    if (PR_TRUE==haveColWidth)
+      mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);
+    else
+      mTableFrame->SetColumnWidth(colIndex, effectiveMaxColumnWidth);
 
     // add col[i] metrics to the running totals for the table min/max width
     if (NS_UNCONSTRAINEDSIZE!=mMinTableWidth)
