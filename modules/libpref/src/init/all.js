@@ -83,6 +83,7 @@ pref("browser.toolbars.showbutton.search",  true);
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
+pref("accessibility.accesskeycausesactivation", true);
 
 // Dialog modality issues
 pref("browser.prefWindowModal", true);

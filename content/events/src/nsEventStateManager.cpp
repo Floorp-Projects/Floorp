@@ -736,18 +736,27 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             //A) Set focus
             ChangeFocus(content, nsnull, PR_TRUE);
 
-            //B) Click on it.
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_MOUSE_EVENT;
-            event.message = NS_MOUSE_LEFT_CLICK;
-            event.isShift = PR_FALSE;
-            event.isControl = PR_FALSE;
-            event.isAlt = PR_FALSE;
-            event.isMeta = PR_FALSE;
-            event.clickCount = 0;
-            event.widget = nsnull;
-            content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            nsresult rv = getPrefService();
+            PRBool activate = PR_TRUE;
+
+            if (NS_SUCCEEDED(rv)) {
+              mPrefService->GetBoolPref("accessibility.accesskeycausesactivation", &activate);
+            }
+
+            if (activate) {
+              //B) Click on it if the users prefs indicate to do so.
+              nsEventStatus status = nsEventStatus_eIgnore;
+              nsMouseEvent event;
+              event.eventStructType = NS_MOUSE_EVENT;
+              event.message = NS_MOUSE_LEFT_CLICK;
+              event.isShift = PR_FALSE;
+              event.isControl = PR_FALSE;
+              event.isAlt = PR_FALSE;
+              event.isMeta = PR_FALSE;
+              event.clickCount = 0;
+              event.widget = nsnull;
+              content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            }
 
             *aStatus = nsEventStatus_eConsumeNoDefault;
           }
