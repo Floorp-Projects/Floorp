@@ -518,13 +518,11 @@ sub DataDir {
      }
 
      # Make sure it exists...
-     unless (-d $dir) {
-         rmtree([$dir], 1, 1);
-         mkpath([$dir], 0, 0777);
-         die "Couldn't create '$dir'\n"
-             unless (-d $dir);
+     if (! -d $dir) {
+         print STDERR "No data dir for Tree \"" . &shell_escape($::TreeID) . 
+             "\".\n";
+         die "Tree is not configured.\n";
      }
-
      return $dir;
 }
 
