@@ -5451,6 +5451,11 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 {
     nsresult rv;
 
+    // This'll get set to PR_TRUE if a new 'datasources' attribute is
+    // set on the element. In which case, we need to add a template
+    // builder.
+    PRBool datasources = PR_FALSE;
+
     {
         // Whack the attributes from aOverlayNode onto aTargetNode
         PRInt32 count;
@@ -5459,19 +5464,23 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
         for (PRInt32 i = 0; i < count; ++i) {
             PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> tag;
-            rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(tag));
+            nsCOMPtr<nsIAtom> attr;
+            rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
             if (NS_FAILED(rv)) return rv;
 
-            if (nameSpaceID == kNameSpaceID_None && tag.get() == kIdAtom)
+            if (nameSpaceID == kNameSpaceID_None && attr.get() == kIdAtom)
                 continue;
 
             nsAutoString value;
-            rv = aOverlayNode->GetAttribute(nameSpaceID, tag, value);
+            rv = aOverlayNode->GetAttribute(nameSpaceID, attr, value);
             if (NS_FAILED(rv)) return rv;
 
-            rv = aTargetNode->SetAttribute(nameSpaceID, tag, value, PR_FALSE);
+            rv = aTargetNode->SetAttribute(nameSpaceID, attr, value, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
+
+            if (/* ignore namespace && */ attr.get() == kDataSourcesAtom) {
+                datasources = PR_TRUE;
+            }
         }
     }
 
@@ -5494,13 +5503,16 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             rv = InsertElement(aTargetNode, child);
             if (NS_FAILED(rv)) return rv;
         }
+    }
 
-        // Add child and any descendants to the element map
-        rv = mDocument->AddSubtreeToDocument(aTargetNode);
-        if (NS_FAILED(rv)) return rv;
+    // Add child and any descendants to the element map
+    rv = mDocument->AddSubtreeToDocument(aTargetNode);
+    if (NS_FAILED(rv)) return rv;
 
-        // Now check for a 'datasources' attribute, and build a
-        // template builder if necessary.
+    if (datasources) {
+        // If a new 'datasources' attribute was added via the
+        // overlay, then initialize the <template> builder on the
+        // element.
         rv = CheckTemplateBuilder(aTargetNode);
         if (NS_FAILED(rv)) return rv;
     }
