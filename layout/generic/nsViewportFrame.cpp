@@ -186,9 +186,8 @@ ViewportFrame::GetFirstChild(nsIAtom* aListName) const
   return nsContainerFrame::GetFirstChild(aListName);
 }
 
-void
-ViewportFrame::AdjustReflowStateForScrollbars(nsIPresContext*    aPresContext,
-                                              nsHTMLReflowState& aReflowState) const
+nsPoint
+ ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const
 {
   // Calculate how much room is available for fixed frames. That means
   // determining if the viewport is scrollable and whether the vertical and/or
@@ -199,18 +198,14 @@ ViewportFrame::AdjustReflowStateForScrollbars(nsIPresContext*    aPresContext,
   nsCOMPtr<nsIScrollableFrame> scrollingFrame(do_QueryInterface(kidFrame));
 
   if (scrollingFrame) {
-    nscoord sbWidth = 0, sbHeight = 0;
-    PRBool sbHVisible = PR_FALSE, sbVVisible = PR_FALSE;
-    scrollingFrame->GetScrollbarSizes(aPresContext, &sbWidth, &sbHeight);
-    scrollingFrame->GetScrollbarVisibility(aPresContext, &sbVVisible, &sbHVisible);
-    if (sbVVisible) {
-      aReflowState.mComputedWidth -= sbWidth;
-      aReflowState.availableWidth -= sbWidth;
-    }
-    if (sbHVisible) {
-      aReflowState.mComputedHeight -= sbHeight;
-    }
+    nsMargin scrollbars = scrollingFrame->GetActualScrollbarSizes();
+    aReflowState->mComputedWidth -= scrollbars.left + scrollbars.right;
+    aReflowState->availableWidth -= scrollbars.left + scrollbars.right;
+    aReflowState->mComputedHeight -= scrollbars.top + scrollbars.bottom;
+    // XXX why don't we also adjust "aReflowState->availableHeight"?
+    return nsPoint(scrollbars.left, scrollbars.top);
   }
+  return nsPoint(0, 0);
 }
 
 NS_IMETHODIMP
@@ -280,8 +275,16 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   // Make a copy of the reflow state and change the computed width and height
   // to reflect the available space for the fixed items
   nsHTMLReflowState reflowState(aReflowState);
-  AdjustReflowStateForScrollbars(aPresContext, reflowState);
+  nsPoint offset = AdjustReflowStateForScrollbars(&reflowState);
   
+#ifdef DEBUG
+  nsIFrame* f;
+  mFixedContainer.FirstChild(this, nsLayoutAtoms::fixedList, &f);
+  NS_ASSERTION(!f || (offset.x == 0 && offset.y == 0),
+               "We don't handle correct positioning of fixed frames with "
+               "scrollbars in odd positions");
+#endif
+
   nsReflowType reflowType = eReflowType_ContentChanged;
   if (aReflowState.path) {
     // XXXwaterson this is more restrictive than the previous code

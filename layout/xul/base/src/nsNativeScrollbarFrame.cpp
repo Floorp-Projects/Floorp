@@ -168,6 +168,26 @@ nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNativeScrollbarFrame::Reflow(nsIPresContext*          aPresContext,
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsReflowStatus&          aStatus)
+{
+  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // nsGfxScrollFrame may have told us to shrink to nothing. If so, make sure our
+  // desired size agrees.
+  if (aReflowState.availableWidth == 0) {
+    aDesiredSize.width = 0;
+  }
+  if (aReflowState.availableHeight == 0) {
+    aDesiredSize.height = 0;
+  }
+
+  return NS_OK;
+}
 
 //
 // AttributeChanged

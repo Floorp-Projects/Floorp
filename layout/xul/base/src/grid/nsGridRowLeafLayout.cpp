@@ -322,13 +322,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
        
        nsCOMPtr<nsIScrollableFrame> scrollable = do_QueryInterface(scrollbox);
        if (scrollable) {
-
-          // get the clip rect and compare its size to the scrollframe.
-          // we just need to subtract out the difference. 
-          nsSize clipSize(0,0);
-          scrollable->GetClipSize(nsnull, &clipSize.width, &clipSize.height);
-
-          nscoord diff = 0;
+          nsMargin scrollbarSizes = scrollable->GetActualScrollbarSizes();
 
           nsRect ourRect;
           nsMargin padding(0,0,0,0);
@@ -338,10 +332,11 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
           scrollbox->GetInset(padding);
           ourRect.Deflate(padding);
 
+          nscoord diff;
           if (isHorizontal) {
-            diff = ourRect.width - clipSize.width;
+            diff = scrollbarSizes.left + scrollbarSizes.right;
           } else {
-            diff = ourRect.height - clipSize.height;
+            diff = scrollbarSizes.top + scrollbarSizes.bottom;
           }
 
           if (diff > 0) {
