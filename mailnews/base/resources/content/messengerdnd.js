@@ -63,6 +63,7 @@ function DragOverTree(event)
     if (!targetNode)	return(false);
     var targetFolder = targetNode.QueryInterface(Components.interfaces.nsIMsgFolder);
     var targetServer = targetFolder.server;
+    var sourceServer;
 
     trans.addDataFlavor("text/nsmessageOrfolder");
    
@@ -125,7 +126,7 @@ function DragOverTree(event)
        // we should only get here if we are dragging and dropping folders
        var sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
   	   var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-       var sourceServer = sourceFolder.server;
+       sourceServer = sourceFolder.server;
 
        if (targetID == sourceID)	
           return (false);
@@ -160,11 +161,19 @@ function DragOverTree(event)
           return(false);
        }
        var serverType = treeItem.getAttribute('ServerType');
-       if ( serverType != "none" && gSrcCanRename == "false")
-       {                               //folders that cannot be renamed can be dropped only on local folders.
-         return(false);
-	   }
 
+       // if we've got a folder that can't be renamed
+       // allow us to drop it if we plan on dropping it on "Local Folders"
+       // (but not within the same server, to prevent renaming folders on "Local Folders" that
+       // should not be renamed)
+       if (gSrcCanRename == "false") {
+          if (sourceServer == targetServer) {
+            return(false);
+          }
+          if (serverType != "none") {
+            return(false);
+          }
+	   }
     }
 
 	//XXX other flavors here...
