@@ -77,6 +77,8 @@ interface DocumentXBL {
   { 0x9f, 0x2c, 0xc1, 0x8d, 0xeb, 0x62, 0xee, 0x8b } } */
 
   NodeList getAnonymousNodes(in Element elt);
+  Element getAnonymousElementByAttribute(in DOMString attrName, in DOMString attrValue);
+
   void addBinding(in Element elt, in DOMString bindingURL);
   void removeBinding(in Element elt, in DOMString bindingURL);
 
@@ -88,12 +90,16 @@ interface NSDocument {
 /* IID: { 0xa6cf90cd, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} } */
 
-     readonly attribute DOMString characterSet;
-     readonly attribute PluginArray plugins;
+   readonly attribute DOMString characterSet;
+   readonly attribute PluginArray plugins;
 
-	      attribute jsval location;
+   attribute jsval location;
 
 	 Range                     createRange();
 	 void                      load(in DOMString url);
+
+   xpidl nsIBoxObject getBoxObjectFor(in Element elt);
+   void setBoxObjectFor(in Element elt, in xpidl nsIBoxObject boxObject);
+
 };
 

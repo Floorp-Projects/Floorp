@@ -257,6 +257,7 @@
     "documenttype.systemid", \
     "documentview.defaultview", \
     "documentxbl.addbinding", \
+    "documentxbl.getanonymouselementbyattribute", \
     "documentxbl.getanonymousnodes", \
     "documentxbl.getbindingparent", \
     "documentxbl.loadbindingdocument", \
@@ -765,9 +766,11 @@
     "notation.systemid", \
     "nsdocument.characterset", \
     "nsdocument.createrange", \
+    "nsdocument.getboxobjectfor", \
     "nsdocument.load", \
     "nsdocument.location", \
     "nsdocument.plugins", \
+    "nsdocument.setboxobjectfor", \
     "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \
     "nshtmlanchorelement.hostname", \

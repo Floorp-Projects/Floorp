@@ -54,6 +54,7 @@
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMEntityReference.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIBoxObject.h"
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocumentFragment.h"
@@ -84,6 +85,7 @@ static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 static NS_DEFINE_IID(kIStyleSheetListIID, NS_IDOMSTYLESHEETLIST_IID);
 static NS_DEFINE_IID(kIEntityReferenceIID, NS_IDOMENTITYREFERENCE_IID);
 static NS_DEFINE_IID(kINSDocumentIID, NS_IDOMNSDOCUMENT_IID);
+static NS_DEFINE_IID(kIBoxObjectIID, NS_IBOXOBJECT_IID);
 static NS_DEFINE_IID(kIDocumentStyleIID, NS_IDOMDOCUMENTSTYLE_IID);
 static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
@@ -1127,6 +1129,55 @@ DocumentXBLGetAnonymousNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 
 //
+// Native method GetAnonymousElementByAttribute
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentXBLGetAnonymousElementByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMDocumentXBL> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIDocumentXBLIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTXBL_GETANONYMOUSELEMENTBYATTRIBUTE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    result = nativeThis->GetAnonymousElementByAttribute(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method AddBinding
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1421,6 +1472,117 @@ NSDocumentLoad(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 }
 
 
+//
+// Native method GetBoxObjectFor
+//
+PR_STATIC_CALLBACK(JSBool)
+NSDocumentGetBoxObjectFor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSDocument> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIBoxObject* nativeRet;
+  nsCOMPtr<nsIDOMElement> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_GETBOXOBJECTFOR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIElementIID,
+                                           NS_ConvertASCIItoUCS2("Element"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->GetBoxObjectFor(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    // n.b., this will release nativeRet
+    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, NS_GET_IID(nsIBoxObject), cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetBoxObjectFor
+//
+PR_STATIC_CALLBACK(JSBool)
+NSDocumentSetBoxObjectFor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSDocument> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsCOMPtr<nsIDOMElement> b0;
+  nsCOMPtr<nsIBoxObject> b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_SETBOXOBJECTFOR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIElementIID,
+                                           NS_ConvertASCIItoUCS2("Element"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRefs(b1),
+                                           kIBoxObjectIID, cx, argv[1])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
+    }
+
+    result = nativeThis->SetBoxObjectFor(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Document
@@ -1463,12 +1625,15 @@ static JSFunctionSpec DocumentMethods[] =
   {"getOverrideStyle",          DocumentCSSGetOverrideStyle,     2},
   {"createEvent",          DocumentEventCreateEvent,     1},
   {"getAnonymousNodes",          DocumentXBLGetAnonymousNodes,     1},
+  {"getAnonymousElementByAttribute",          DocumentXBLGetAnonymousElementByAttribute,     2},
   {"addBinding",          DocumentXBLAddBinding,     2},
   {"removeBinding",          DocumentXBLRemoveBinding,     2},
   {"getBindingParent",          DocumentXBLGetBindingParent,     1},
   {"loadBindingDocument",          DocumentXBLLoadBindingDocument,     1},
   {"createRange",          NSDocumentCreateRange,     0},
   {"load",          NSDocumentLoad,     1},
+  {"getBoxObjectFor",          NSDocumentGetBoxObjectFor,     1},
+  {"setBoxObjectFor",          NSDocumentSetBoxObjectFor,     2},
   {0}
 };
 

@@ -29,7 +29,9 @@
 #include "nsIScriptContext.h"
 #include "jsapi.h"
 
+class nsIDOMElement;
 class nsIDOMPluginArray;
+class nsIBoxObject;
 class nsIDOMRange;
 
 #define NS_IDOMNSDOCUMENT_IID \
@@ -50,6 +52,10 @@ public:
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
 
   NS_IMETHOD    Load(const nsAReadableString& aUrl)=0;
+
+  NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElt, nsIBoxObject** aReturn)=0;
+
+  NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElt, nsIBoxObject* aBoxObject)=0;
 };
 
 
@@ -60,6 +66,8 @@ public:
   NS_IMETHOD    SetLocation(jsval aLocation);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
   NS_IMETHOD    Load(const nsAReadableString& aUrl);  \
+  NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElt, nsIBoxObject** aReturn);  \
+  NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElt, nsIBoxObject* aBoxObject);  \
 
 
 
@@ -70,6 +78,8 @@ public:
   NS_IMETHOD    SetLocation(jsval aLocation) { return _to SetLocation(aLocation); } \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
   NS_IMETHOD    Load(const nsAReadableString& aUrl) { return _to Load(aUrl); }  \
+  NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElt, nsIBoxObject** aReturn) { return _to GetBoxObjectFor(aElt, aReturn); }  \
+  NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElt, nsIBoxObject* aBoxObject) { return _to SetBoxObjectFor(aElt, aBoxObject); }  \
 
 
 #endif // nsIDOMNSDocument_h__
