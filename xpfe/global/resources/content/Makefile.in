@@ -27,6 +27,10 @@ include $(topsrcdir)/config/rules.mk
 EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/globalOverlay.xul \
 	$(srcdir)/globalOverlay.js \
+	$(srcdir)/tasksOverlay.xul \
+	$(srcdir)/tasksOverlay.js \
+	$(srcdir)/dialogOverlay.xul \
+	$(srcdir)/dialogOverlay.js \
 	$(NULL)
 
 install:: 
