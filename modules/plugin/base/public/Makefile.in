@@ -46,7 +46,6 @@ EXPORTS		= \
 		nsIPluginTagInfo2.h \
 		nsIWindowlessPlugInstPeer.h \
 		nsIPluginInputStream.h \
-		nsIPluginInputStream2.h \
 		nsIPluginStreamListener.h \
 		nsIPluginStreamListener2.h \
 		nsIPluginStreamInfo.h \

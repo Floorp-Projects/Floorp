@@ -38,26 +38,22 @@
 #ifndef ns4xPluginStreamListener_h__
 #define ns4xPluginStreamListener_h__
 
-#include "nsIPluginStreamListener2.h"
+#include "nsIPluginStreamListener.h"
 #include "nsIPluginStreamInfo.h"
 
 #define MAX_PLUGIN_NECKO_BUFFER 16384
 
-class ns4xPluginStreamListener : public nsIPluginStreamListener2 
+class ns4xPluginStreamListener : public nsIPluginStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
 
   // from nsIPluginStreamListener:
   NS_IMETHOD OnStartBinding(nsIPluginStreamInfo* pluginInfo);
-  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length, PRUint32 offset);
+  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length);
   NS_IMETHOD OnFileAvailable( nsIPluginStreamInfo* pluginInfo, const char* fileName);
   NS_IMETHOD OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
   NS_IMETHOD GetStreamType(nsPluginStreamType *result);
-
-  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
-                                          nsIInputStream* input,
-                                          PRUint32 length);
 
   // ns4xPluginStreamListener specific methods:
   ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
@@ -73,7 +69,7 @@ protected:
   ns4xPluginInstance* mInst;
   NPStream mNPStream;
   PRUint32 mPosition;
-  PRUint32 mCurrentStreamOffset;
+  PRUint32 mStreamBufferSize;
   nsPluginStreamType mStreamType;
   PRBool mStreamStarted;
   PRBool mStreamCleanedUp;

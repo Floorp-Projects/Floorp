@@ -65,7 +65,6 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIPluginStreamListener2.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -1140,6 +1139,12 @@ public:
 
   NS_IMETHOD
   RequestRead(nsByteRange* rangeList);
+    
+  NS_IMETHOD
+  GetStreamOffset(PRInt32 *result);
+
+  NS_IMETHOD
+  SetStreamOffset(PRInt32 result);
 
   // local methods
 
@@ -1191,6 +1196,7 @@ private:
   nsPluginStreamListenerPeer * mPluginStreamListenerPeer;
   nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
   PRBool mLocallyCached;
+  PRInt32 mStreamOffset;
 };
 
 
@@ -1286,6 +1292,7 @@ nsPluginStreamInfo::nsPluginStreamInfo()
   mLength = 0;
   mModified = 0;
   mLocallyCached = PR_FALSE;
+  mStreamOffset = 0;
 }
 
 
@@ -1296,6 +1303,11 @@ nsPluginStreamInfo::~nsPluginStreamInfo()
   PL_strfree(mContentType);
   if(mURL != nsnull)
     PL_strfree(mURL);
+
+  // close FD of mFileCacheOutputStream if it's still open
+  // or we won't be able to remove the cache file
+  if (mFileCacheOutputStream)
+    mFileCacheOutputStream->Close();
 
   // ONLY delete our cached file if we created it
   if(mLocallyCached && mFilePath)
@@ -1431,8 +1443,14 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, nsACString &ran
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
-{
-  mPluginStreamListenerPeer->mAbort = PR_TRUE;
+{    
+  nsCAutoString rangeString;
+  PRInt32 numRequests;
+
+  MakeByteRangeString(rangeList, rangeString, &numRequests);
+  
+  if(numRequests == 0)
+    return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> url;
@@ -1448,18 +1466,12 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
   if(!httpChannel)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString rangeString;
-  PRInt32 numRequests;
-
-  MakeByteRangeString(rangeList, rangeString, &numRequests);
-  
-  if(rangeString.IsEmpty())
-    return NS_ERROR_FAILURE;
 
   httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString);
+  
 
-  // instruct old stream listener to cancel the request on the next
-  // attempt to write. 
+  mPluginStreamListenerPeer->mAbort = PR_TRUE; // instruct old stream listener to cancel
+                                               // the request on the next ODA. 
 
   nsCOMPtr<nsIStreamListener> converter = mPluginStreamListenerPeer;
 
@@ -1477,6 +1489,11 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
         return rv;
   }
 
+  // set current stream offset equal to the first offset in the range list
+  // it will work for single byte range request
+  // for multy range we'll reset it in ODA 
+  SetStreamOffset(rangeList->offset);
+
   mPluginStreamListenerPeer->mPendingRequests += numRequests;
 
    nsCOMPtr<nsISupportsPRUint32> container = do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
@@ -1487,6 +1504,20 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
    return channel->AsyncOpen(converter, container);
 }
 
+NS_IMETHODIMP
+nsPluginStreamInfo::GetStreamOffset(PRInt32 *result)
+{
+  *result = mStreamOffset;
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsPluginStreamInfo::SetStreamOffset(PRInt32 offset)
+{ 
+  mStreamOffset = offset;
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 void
@@ -1981,6 +2012,11 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
     nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel, &rv);
     if (cacheChannel)
       rv = cacheChannel->SetCacheAsFile(PR_TRUE);
+    else {
+      // do not cache if this is a file channel,
+      // just overwrite rv here
+      nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel, &rv);
+    }
   }
 
   if (!useCacheAsFile || NS_FAILED(rv)) {
@@ -2142,7 +2178,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
       }
   }
 
-
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> aURL;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2184,6 +2219,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
             amtForwardToPlugin = NS_PTR_TO_INT32(mDataForwardToRequest->Remove(&key));
     
         mDataForwardToRequest->Put(&key, (void*) (amtForwardToPlugin+aLength));
+        mPluginStreamInfo->SetStreamOffset(absoluteOffset + amtForwardToPlugin);
     }
 
     nsCOMPtr<nsIInputStream> stream = aIStream;
@@ -2200,14 +2236,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
             return rv;
     }
 
-    nsCOMPtr<nsIPluginStreamListener2> PStreamListener2 = do_QueryInterface(mPStreamListener);
-    if (PStreamListener2 && brr)
-      rv =  PStreamListener2->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
-                                            stream, 
-                                            absoluteOffset+amtForwardToPlugin, 
-                                            aLength);
-    else
-      rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
+    rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
                                               stream, 
                                               aLength);
 
@@ -2240,48 +2269,36 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
                                                         nsresult aStatus)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
-  nsCOMPtr<nsIFile> localFile;
-  nsXPIDLCString pathAndFilename;
-
-  // doing multiple requests, the main url load (the cacheable entry) could come
-  // out of order.  Here we will check to see if the request is main url load.
-
-  mPluginStreamInfo->GetLocalCachedFile(getter_Copies(pathAndFilename));
-
-  if (!pathAndFilename && cacheChannel) {
-    rv = cacheChannel->GetCacheFile(getter_AddRefs(localFile));
-    if (NS_SUCCEEDED(rv)) {
-        localFile->GetPath(getter_Copies(pathAndFilename));
-        mPluginStreamInfo->SetLocalCachedFile(pathAndFilename);
-    }
-  }
 
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
-  ("nsPluginStreamListenerPeer::OnStopRequest this=%p aStatus=%d request=%p, cachefile=%s\n",
-  this, aStatus, request, pathAndFilename.get()));
-
-  // If we are writting the stream to disk ourselves, lets close it
-  nsCOMPtr<nsIOutputStream> outStream;
-  mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-  if (outStream) {
-     outStream->Close();
-  }
-
-  // remove the request from our data forwarding count hash.
+  ("nsPluginStreamListenerPeer::OnStopRequest this=%p aStatus=%d request=%p\n",
+  this, aStatus, request));
+  
+  // for ByteRangeRequest we're just updating the mDataForwardToRequest hash and return.
   nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);
   if (brr) {
     PRInt32 absoluteOffset = 0;
     brr->GetStartRange(&absoluteOffset);
     
     nsPRUintKey key(absoluteOffset);
-
-    if (!mDataForwardToRequest)
-        return NS_ERROR_FAILURE;
     
+    // remove the request from our data forwarding count hash.    
     (void) mDataForwardToRequest->Remove(&key);
-  }
+  
 
+    PLUGIN_LOG(PLUGIN_LOG_NOISY,
+    ("                          ::OnStopRequest for ByteRangeRequest Started=%d\n",
+    absoluteOffset));
+  } else {
+    // if this is not byte range request and
+    // if we are writting the stream to disk ourselves, lets close it
+    nsCOMPtr<nsIOutputStream> outStream;
+    mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
+    if (outStream) {
+       outStream->Close();
+      mPluginStreamInfo->SetLocalCachedFileStream(nsnull);
+    }
+  }
 
   // if we still have pending stuff to do, lets not close the plugin socket.
   if (--mPendingRequests > 0)
@@ -2301,21 +2318,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   
   if(!mPStreamListener)
       return NS_ERROR_FAILURE;
-
-  if (!pathAndFilename) {
-    // see if it is a file channel.
-    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
-    if (fileChannel) {
-      fileChannel->GetFile(getter_AddRefs(localFile));
-      if (localFile) {
-        localFile->GetPath(getter_Copies(pathAndFilename));
-        mPluginStreamInfo->SetLocalCachedFile(pathAndFilename);
-      }
-    }
-  }
-
-  if (pathAndFilename && *pathAndFilename)
-    OnFileAvailable(pathAndFilename);
   
   nsCOMPtr<nsIURI> aURL;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2344,8 +2346,38 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (mRequestFailed)
     aStatus = NS_ERROR_FAILURE;
 
-  // on error status cleanup the stream
-  if (mStartBinding || NS_FAILED(aStatus))
+  if (NS_FAILED(aStatus)) {
+    // on error status cleanup the stream 
+    // and return w/o OnFileAvailable()
+    mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    return NS_OK;
+  }
+
+  nsXPIDLCString pathAndFilename;
+  mPluginStreamInfo->GetLocalCachedFile(getter_Copies(pathAndFilename));
+
+  if (!pathAndFilename) {
+    nsCOMPtr<nsIFile> localFile;
+    nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
+    if (cacheChannel) {
+      cacheChannel->GetCacheFile(getter_AddRefs(localFile));
+    } else {
+      // see if it is a file channel.
+      nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
+      if (fileChannel) {
+        fileChannel->GetFile(getter_AddRefs(localFile));
+      }
+    }
+    if (localFile) {
+      localFile->GetPath(getter_Copies(pathAndFilename));
+    }
+  }
+  
+  if (pathAndFilename && *pathAndFilename) {
+    OnFileAvailable(pathAndFilename);
+  }
+
+  if (mStartBinding)
   {
     // On start binding has been called
     mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
