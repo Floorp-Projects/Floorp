@@ -47,8 +47,8 @@ static NS_DEFINE_IID(kICaretID, NS_ICARET_IID);
 //-----------------------------------------------------------------------------
 nsCaret::nsCaret()
 :	mPresShell(nsnull)
-,	mBlinkRate(500)
 ,	mBlinkTimer(nsnull)
+,	mBlinkRate(500)
 , mVisible(PR_TRUE)
 , mReadOnly(PR_TRUE)
 , mDrawn(PR_FALSE)
@@ -147,7 +147,6 @@ NS_METHOD nsCaret::SetCaretVisible(PRBool inMakeVisible)
 NS_METHOD nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 {
 	mReadOnly = inMakeReadonly;
-	nsresult	err = NS_OK;
 	return NS_OK;
 }
 
