@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:23:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -959,11 +959,11 @@ nssCKFWInstance_GetManufacturerID
         goto done;
       }
     } else {
-      fwInstance->manufacturerID = "";
+      fwInstance->manufacturerID = (NSSUTF8 *) "";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwInstance->manufacturerID, manufacturerID, 32, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwInstance->manufacturerID, (char *)manufacturerID, 32, ' ');
   error = CKR_OK;
 
  done:
@@ -1028,11 +1028,11 @@ nssCKFWInstance_GetLibraryDescription
         goto done;
       }
     } else {
-      fwInstance->libraryDescription = "";
+      fwInstance->libraryDescription = (NSSUTF8 *) "";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwInstance->libraryDescription, libraryDescription, 32, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwInstance->libraryDescription, (char *)libraryDescription, 32, ' ');
   error = CKR_OK;
 
  done:

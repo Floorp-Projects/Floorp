@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.4 $ $Date: 2000/04/20 03:14:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.5 $ $Date: 2000/09/06 22:23:56 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1012,6 +1012,7 @@ nssCKMDFindSessionObjects_Create
     return (NSSCKMDFindObjects *)NULL;
   }
 #endif /* DEBUG */    
+  mdfso->arena = arena;
 
   return rv;
 }
@@ -1038,7 +1039,7 @@ nss_ckmdFindSessionObjects_Final
 #endif /* NSSDEBUG */
 
   mdfso = (nssCKMDFindSessionObjects *)mdFindObjects->etc;
-  NSSArena_Destroy(mdfso->arena);
+  if (mdfso->arena) NSSArena_Destroy(mdfso->arena);
 
 #ifdef DEBUG
   (void)nss_ckmdFindSessionObjects_remove_pointer(mdFindObjects);

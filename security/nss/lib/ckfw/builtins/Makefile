@@ -30,14 +30,65 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:46 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:23:59 $ $Name:  $"
 
 include manifest.mn
 include config.mk
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+ifeq ($(OS_ARCH), WINNT)
+
+EXTRA_LIBS = \
+        $(DIST)/lib/nssckfw.lib \
+        $(DIST)/lib/nssb.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
+	wsock32.lib \
+	winmm.lib \
+	$(NULL)
+
+else
+
+# OSF 1 linker is very agressive. It includes the entire archive,
+# not just the .o's that we need from that archive.
+#
+ifneq ($(OS_ARCH), OSF1)
+
+EXTRA_LIBS += \
+        $(DIST)/lib/libnssckfw.a \
+        $(DIST)/lib/libnssb.a \
+	$(DIST)/lib/libplc4.a \
+	$(DIST)/lib/libplds4.a \
+	$(NULL)
+
+endif
+endif
+
+
+
 include $(CORE_DEPTH)/coreconf/config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
 
-# This'll need some help from a build person.
-
 certdata.c: certdata.txt certdata.perl
 	perl certdata.perl < certdata.txt
+
+# This'll need some help from a build person.
+
+
+ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
+DSO_LDOPTS              = -bM:SRE -bh:4 -bnoentry
+EXTRA_DSO_LDOPTS        = -lc
+MKSHLIB                 = xlC $(DSO_LDOPTS)
+
+$(SHARED_LIBRARY): $(OBJS)
+	@$(MAKE_OBJDIR)
+	rm -f $@
+	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(EXTRA_DSO_LDOPTS)
+	chmod +x $@
+
+endif
+
+ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.2)
+LD      += -G
+endif 
+
+

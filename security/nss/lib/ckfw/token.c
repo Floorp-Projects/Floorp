@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.3 $ $Date: 2000/04/20 03:14:41 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.4 $ $Date: 2000/09/06 22:23:57 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -510,7 +510,7 @@ nssCKFWToken_InitToken
   }
 
   if( (NSSUTF8 *)NULL == label ) {
-    label = "";
+    label = (NSSUTF8 *) "";
   }
 
   error = fwToken->mdToken->InitToken(fwToken->mdToken, fwToken,
@@ -558,11 +558,11 @@ nssCKFWToken_GetLabel
         goto done;
       }
     } else {
-      fwToken->label = "";
+      fwToken->label = (NSSUTF8 *) "";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->label, label, 32, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->label, (char *)label, 32, ' ');
   error = CKR_OK;
 
  done:
@@ -607,11 +607,11 @@ nssCKFWToken_GetManufacturerID
         goto done;
       }
     } else {
-      fwToken->manufacturerID = "";
+      fwToken->manufacturerID = (NSSUTF8 *)"";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->manufacturerID, manufacturerID, 32, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->manufacturerID, (char *)manufacturerID, 32, ' ');
   error = CKR_OK;
 
  done:
@@ -656,11 +656,11 @@ nssCKFWToken_GetModel
         goto done;
       }
     } else {
-      fwToken->model = "";
+      fwToken->model = (NSSUTF8 *)"";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->model, model, 16, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->model, (char *)model, 16, ' ');
   error = CKR_OK;
 
  done:
@@ -705,11 +705,11 @@ nssCKFWToken_GetSerialNumber
         goto done;
       }
     } else {
-      fwToken->serialNumber = "";
+      fwToken->serialNumber = (NSSUTF8 *)"";
     }
   }
 
-  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->serialNumber, serialNumber, 16, ' ');
+  (void)nssUTF8_CopyIntoFixedBuffer(fwToken->serialNumber, (char *)serialNumber, 16, ' ');
   error = CKR_OK;
 
  done:
@@ -1218,7 +1218,7 @@ nssCKFWToken_GetUTCTime
 
   if( CK_TRUE != nssCKFWToken_GetHasClockOnToken(fwToken) ) {
     /* return CKR_DEVICE_ERROR; */
-    (void)nssUTF8_CopyIntoFixedBuffer((NSSUTF8 *)NULL, utcTime, 16, ' ');
+    (void)nssUTF8_CopyIntoFixedBuffer((NSSUTF8 *)NULL, (char *)utcTime, 16, ' ');
     return CKR_OK;
   }
 

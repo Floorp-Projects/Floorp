@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:32:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:23:57 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -150,6 +150,11 @@ NSSCKFWC_Initialize
     error = CKR_GENERAL_ERROR;
     goto loser;
   }
+
+  /* remember the locking args for those times we need to get a lock in code
+   * outside the framework.
+   */
+  nssSetLockArgs(pInitArgs);
 
   *pFwInstance = nssCKFWInstance_Create(pInitArgs, mdInstance, &error);
   if( (NSSCKFWInstance *)NULL == *pFwInstance ) {

@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:09 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:23:55 $ $Name:  $"
 
 include manifest.mn
 include config.mk
@@ -42,5 +42,8 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 nssckepv.h: ck.api ckapi.perl
 nssckft.h: ck.api ckapi.perl
 nssckg.h: ck.api ckapi.perl
+nssck.api: ck.api ckapi.perl
 	perl ckapi.perl < ck.api
+
+export:: private_export
 
