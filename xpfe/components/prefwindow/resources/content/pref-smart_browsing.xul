@@ -45,54 +45,13 @@
   <script type="application/x-javascript">
   <![CDATA[
   
-  var _elementIDs = ["browserRelatedDisabledForDomains", "addDomain",
-                     "browserGoBrowsingEnabled", "browserAutoCompleteEnabled",
+  var _elementIDs = ["browserGoBrowsingEnabled", "browserAutoCompleteEnabled",
                      "browserUrlbarAutoFill", "browserUrlbarShowPopup", "browserUrlbarShowSearch",
                      "browserUrlbarMatchOnlyTyped"];
   
   ]]>
   </script>
         
-  <groupbox flex="1">
-    <caption label="&whatsRelated.label;"/>
-
-    <description id="doNotAcceptText">&doNotDecp.label;</description>
-    <separator class="thin"/>
-    <grid flex="1">
-      <columns>
-        <column flex="5"/>
-        <column/>
-      </columns>
-      <rows>
-        <row>
-          <hbox align="center">
-            <label id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" control="addDomain"/>
-            <textbox id="addDomain" flex="1" oninput="doButtonEnabling();" preftype="bool"
-                     prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
-          </hbox>
-          <vbox align="center">
-            <button disabled="true" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
-                    oncommand="addDomain();" prefstring="pref.browser.smartbrowsing.disable_button.add"/>
-          </vbox>
-        </row>
-        <separator class="thin"/>
-        <row flex="1">
-          <listbox id="disabledDomains" seltype="multiple"
-                   onkeyup="listboxHandleEvent(event)" style="height: 0px; width: 0px;" flex="1"/>
-          <vbox align="center">
-            <button id="removeDomain" label="&removeDomain.label;" 
-                    accesskey="&removeDomain.accesskey;" disabled="true"
-                    oncommand="removeDomain();" prefstring="pref.browser.smartbrowsing.disable_button.remove"/>
-          </vbox>
-        </row>
-      </rows>
-    </grid>
-
-    <data id="browserRelatedDisabledForDomains" preftype="string" 
-                 prefstring="browser.related.disabledForDomains" prefattribute="value" wsm_attributes="value"/>
-
-  </groupbox>
-
   <groupbox>
     <caption label="&internetKeywordsHeader.label;"/>
 
