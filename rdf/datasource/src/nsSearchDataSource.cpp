@@ -2218,16 +2218,16 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		href = nsnull;
 		if (NS_FAILED(rv))	continue;
 		
-		// set HTML chunk
-		const PRUnichar	*htmlUni = resultItem.GetUnicode();
-		if (htmlUni)
+		// set HTML response chunk
+		const PRUnichar	*htmlResponseUni = resultItem.GetUnicode();
+		if (htmlResponseUni)
 		{
-			nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
+			nsCOMPtr<nsIRDFLiteral>	htmlResponseLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlResponseUni, getter_AddRefs(htmlResponseLiteral))))
 			{
-				if (htmlLiteral)
+				if (htmlResponseLiteral)
 				{
-					mDataSource->Assert(res, kNC_HTML, htmlLiteral, PR_TRUE);
+					mDataSource->Assert(res, kNC_HTML, htmlResponseLiteral, PR_TRUE);
 				}
 			}
 		}
