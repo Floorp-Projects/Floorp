@@ -12,6 +12,16 @@ This directory includes:
    mysqld-watcher.pl --  This script can be installed as a frequent cron 
                          job to clean up stalled/dead queries.
 
+       sendbugmail.pl -- This script is a drop-in replacement for the
+                         'processmail' script which used to be shipped
+                         with Bugzilla, but was replaced by the
+                         Bugzilla/BugMail.pm Perl module.  You can use
+                         this script if you were previously calling
+                         processmail from other scripts external to
+                         Bugzilla.  See the comments at the top of
+                         the file for usage information.  Contributed
+                         by Nick Barnes of Ravenbrook Limited.
+
          gnatsparse/ --  A Python script used to import a GNATS database
                          into Bugzilla.
 
