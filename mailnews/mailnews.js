@@ -187,7 +187,8 @@ pref("mailnews.reply_header_type",          1);
 // locale which affects date format, set empty string to use application default locale
 pref("mailnews.reply_header_locale",        "");
 pref("mailnews.reply_header_authorwrote",   "chrome://messenger/locale/messengercompose/composeMsgs.properties");
-pref("mailnews.reply_header_ondate",        "On %s");
+pref("mailnews.reply_header_ondate",        "chrome://messenger/locale/messengercompose/composeMsgs.properties");
+
 // separator to separate between date and author
 pref("mailnews.reply_header_separator",     ", ");
 pref("mailnews.reply_header_colon",         ":");

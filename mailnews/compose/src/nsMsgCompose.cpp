@@ -147,7 +147,7 @@ static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type,
     if (NS_FAILED(rv) || !*reply_header_authorwrote)
       *reply_header_authorwrote = nsCRT::strdup(NS_LITERAL_STRING("%s wrote").get());
 
-    rv = prefs->CopyUnicharPref("mailnews.reply_header_ondate", reply_header_ondate);
+    rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_ondate", reply_header_ondate);
     if (NS_FAILED(rv) || !*reply_header_ondate)
       *reply_header_ondate = nsCRT::strdup(NS_LITERAL_STRING("On %s").get());
 
