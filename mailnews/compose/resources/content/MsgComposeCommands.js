@@ -18,6 +18,8 @@
  * Rights Reserved.
  */
 
+var mailSessionProgID      = "component://netscape/messenger/services/session";
+var msgService = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
 var msgComposeService = Components.classes["component://netscape/messengercompose"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
@@ -238,9 +240,35 @@ function ComposeStartup()
 	}
 }
 
+function MsgAccountWizard()
+{
+    window.openDialog("chrome://messenger/content/AccountWizard.xul",
+                      "AccountWizard", "chrome,modal", result);
+}
+
+function MigratePrefsIfNecessary()
+{
+        var accountManager = msgService.accountManager;
+        var accounts = accountManager.accounts;
+
+        // as long as we have some accounts, we're fine.
+        if (accounts.Count() > 0) return;
+
+        try {
+            accountManager.UpgradePrefs(); 
+	}
+	catch (ex) {
+		alert("You don't have any email identities yet.   Create one with the Account Wizard.");
+		MsgAccountWizard();
+	}
+}
+
 function ComposeLoad()
 {
 	dump("\nComposeLoad from XUL\n");
+
+	MigratePrefsIfNecessary();
+
 	var selectNode = document.getElementById('msgRecipientType#1');
 
 	if (other_header != "") {
@@ -463,8 +491,6 @@ function queryISupportsArray(supportsArray, iid) {
 
 function GetIdentities()
 {
-    var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
-
     var accountManager = msgService.accountManager;
 
     var idSupports = accountManager.allIdentities;
@@ -493,7 +519,6 @@ function fillIdentitySelect(selectElement)
 
 function getCurrentIdentity()
 {
-    var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
     var accountManager = msgService.accountManager;
 
     // fill in Identity combobox
@@ -507,7 +532,6 @@ function getCurrentIdentity()
 
 function getIdentityForKey(key)
 {
-    var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
     var accountManager = msgService.accountManager;
 
     return accountManager.getIdentity(key);
