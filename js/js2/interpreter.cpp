@@ -36,30 +36,33 @@
 #include "vmtypes.h"
 
 namespace JavaScript {
-    // operand access macros.
+namespace Interpreter {
+
+// operand access macros.
 #define op1(i) (i->o1())
 #define op2(i) (i->o2())
 #define op3(i) (i->o3())
 
-    // mnemonic names for operands.
+// mnemonic names for operands.
 #define dst(i)  op1(i)
 #define src1(i) op2(i)
 #define src2(i) op3(i)
 #define ofs(i)  (i->getOffset())
 
-    using namespace ICG;
-    using namespace JSTypes;
+using namespace ICG;
+using namespace JSTypes;
     
 // These classes are private to the JS interpreter.
 
 /**
  * Represents the current function's invocation state.
  */
-struct JSActivation : public gc_base {
+struct Activation : public gc_base {
     JSValues mRegisters;
+    ICodeModule* mICode;
         
-    JSActivation(ICodeModule* iCode, const JSValues& args)
-        : mRegisters(iCode->itsMaxRegister + 1) 
+    Activation(ICodeModule* iCode, const JSValues& args)
+        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
         // copy arg list to initial registers.
         JSValues::iterator dest = mRegisters.begin();
@@ -69,9 +72,9 @@ struct JSActivation : public gc_base {
         }
     }
 
-    JSActivation(ICodeModule* iCode, JSActivation* caller, 
+    Activation(ICodeModule* iCode, Activation* caller, 
                  const RegisterList& list)
-        : mRegisters(iCode->itsMaxRegister + 1)
+        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
         // copy caller's parameter list to initial registers.
         JSValues::iterator dest = mRegisters.begin();
@@ -87,25 +90,34 @@ struct JSActivation : public gc_base {
  * Stores saved state from the *previous* activation, the current
  * activation is alive and well in locals of the interpreter loop.
  */
-struct JSLinkage : public gc_base {
-    JSLinkage*          mPrevious;          // previous linkage in linkage stack.
+struct Linkage : public gc_base, public Context::Frame {
+    Linkage*            mNext;              // next linkage in linkage stack.
     InstructionIterator mReturnPC;
     InstructionIterator mBasePC;
-    JSActivation*       mActivation;        // caller's activation.
+    Activation*         mActivation;        // caller's activation.
     Register            mResult;            // the desired target register for the return value
 
-    JSLinkage(JSLinkage* previous, InstructionIterator returnPC, InstructionIterator basePC,
-            JSActivation* activation, Register result) 
-        :   mPrevious(previous), mReturnPC(returnPC), mBasePC(basePC),
+    Linkage(Linkage* linkage, InstructionIterator returnPC, InstructionIterator basePC,
+            Activation* activation, Register result) 
+        :   mNext(linkage), mReturnPC(returnPC), mBasePC(basePC),
             mActivation(activation), mResult(result)
     {
+    }
+    
+    Frame* getNext() { return mNext; }
+    
+    void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode)
+    {
+        pc = mReturnPC;
+        registers = &mActivation->mRegisters;
+        iCode = mActivation->mICode;
     }
 };
 
 JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 {
     // initial activation.
-    JSActivation* activation = new JSActivation(iCode, args);
+    Activation* activation = new Activation(iCode, args);
     JSValues* registers = &activation->mRegisters;
 
     InstructionIterator begin_pc = iCode->its_iCode->begin();
@@ -114,16 +126,21 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
     std::vector<InstructionIterator> catchStack;     // <-- later will need to restore scope, other 'global' values
     while (true) {
         try {
+            // tell any listeners about the current execution state.
+            // XXX should only do this if we're single stepping/tracing.
+            if (mListeners.size()) {
+                broadcast(pc, registers, activation->mICode);
+            }
             Instruction* instruction = *pc;
             switch (instruction->op()) {
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
-                    mLinkage = new JSLinkage(mLinkage, ++pc, begin_pc, activation,
+                    mLinkage = new Linkage(mLinkage, ++pc, begin_pc, activation,
                                             op1(call));
                     ICodeModule* target = 
                         (*registers)[op2(call)].function->getICode();
-                    activation = new JSActivation(target, activation, op3(call));
+                    activation = new Activation(target, activation, op3(call));
                     registers = &activation->mRegisters;
                     begin_pc = pc = target->its_iCode->begin();
                 }
@@ -132,10 +149,10 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case RETURN_VOID:
                 {
                     JSValue result(NotARegister);
-                    JSLinkage *linkage = mLinkage;
+                    Linkage *linkage = mLinkage;
                     if (!linkage)
                         return result;
-                    mLinkage = linkage->mPrevious;
+                    mLinkage = linkage->mNext;
                     activation = linkage->mActivation;
                     registers = &activation->mRegisters;
                     (*registers)[linkage->mResult] = result;
@@ -150,10 +167,10 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue result(NotARegister);
                     if (op1(ret) != NotARegister) 
                         result = (*registers)[op1(ret)];
-                    JSLinkage* linkage = mLinkage;
+                    Linkage* linkage = mLinkage;
                     if (!linkage)
                         return result;
-                    mLinkage = linkage->mPrevious;
+                    mLinkage = linkage->mNext;
                     activation = linkage->mActivation;
                     registers = &activation->mRegisters;
                     (*registers)[linkage->mResult] = result;
@@ -382,4 +399,35 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
     }
 } /* interpret */
 
+void Context::addListener(Listener* listener)
+{
+    mListeners.push_back(listener);
+}
+
+typedef std::vector<Context::Listener*>::iterator ListenerIterator;
+
+void Context::removeListener(Listener* listener)
+{   
+    for (ListenerIterator i = mListeners.begin(), e = mListeners.end(); i != e; ++i) {
+        if (*i == listener) {
+            mListeners.erase(i);
+            break;
+        }
+    }
+}
+
+void Context::broadcast(InstructionIterator pc, JSValues* registers, ICodeModule* iCode)
+{
+    for (ListenerIterator i = mListeners.begin(), e = mListeners.end(); i != e; ++i) {
+        Listener* listener = *i;
+        listener->listen(this, pc, registers, iCode);
+    }
+}
+
+Context::Frame* Context::getFrames()
+{
+    return mLinkage;
+}
+
+} /* namespace Interpreter */
 } /* namespace JavaScript */
