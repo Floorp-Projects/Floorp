@@ -38,8 +38,10 @@
 #include "addrbook.h"
 #include "msgcom.h"
 #include "msgnet.h"
+#if 0
 #include "msgpane.h"
 #include "msgurlq.h"
+#endif
 #include "dirprefs.h"
 #include "net.h"
 #include "xp_str.h"
@@ -47,8 +49,9 @@
 #include "secnav.h"
 #include "libi18n.h"
 #include "intl_csi.h"
+#if 0
 #include "pw_public.h"
-
+#endif
 
 #ifdef MOZ_LDAP
   #ifdef MOZ_LI
