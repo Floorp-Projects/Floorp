@@ -31,7 +31,14 @@
  * GPL.
  */
 
+// so g++ doesn't whine about one of the files included by ldap.h
+//
+#ifdef linux
+#define __STRICT_ANSI__
+#endif
+
 #include "nsLDAP.h"
+#include "ldap.h"
 #include "nsILDAPURL.h"
 #include "nsString.h"
 
