@@ -559,6 +559,7 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
   //
   if (mIsLoadingDocument) {
     PRUint32 count;
+    PRBool bFireTransferring = PR_FALSE;
 
     //
     // Set the Maximum progress to the same value as the current progress.
@@ -580,6 +581,68 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
       if ((oldMax < 0) && (mMaxSelfProgress < 0)) {
         CalculateMaxProgress(&mMaxSelfProgress);
       }
+
+      //
+      // Determine whether a STATE_TRANSFERRING notification should be 
+      // 'synthesized'.
+      //
+      // If nsRequestInfo::mMaxProgress (as stored in oldMax) and
+      // nsRequestInfo::mCurrentProgress are both 0, then the
+      // STATE_TRANSFERRING notification has not been fired yet...
+      //
+      if ((oldMax == 0) && (info->mCurrentProgress == 0)) {
+        nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+
+        // Only fire a TRANSFERRING notification if the request is also a
+        // channel -- data transfer requires a nsIChannel!
+        //
+        if (channel) {
+          if (NS_SUCCEEDED(aStatus)) {
+            bFireTransferring = PR_TRUE;
+          } 
+          //
+          // If the request failed (for any reason other than being
+          // redirected), the TRANSFERRING notification can still be fired
+          // if a HTTP connection was established to a server.
+          //
+          else if (aStatus != NS_BINDING_REDIRECTED) {
+            nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+
+            if (httpChannel) {
+              PRUint32 responseCode;
+
+              rv = httpChannel->GetResponseStatus(&responseCode);
+              if (NS_SUCCEEDED(rv)) {
+                //
+                // A valid server status indicates that a connection was
+                // established to the server... So, fire the notification
+                // even though a failure occurred later...
+                //
+                bFireTransferring = PR_TRUE;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (bFireTransferring) {
+      // Send a STATE_TRANSFERRING notification for the request.
+      PRInt32 flags;
+    
+      flags = nsIWebProgressListener::STATE_TRANSFERRING | 
+              nsIWebProgressListener::STATE_IS_REQUEST;
+      //
+      // Move the WebProgress into the STATE_TRANSFERRING state if necessary...
+      //
+      if (mProgressStateFlags & nsIWebProgressListener::STATE_START) {
+        mProgressStateFlags = nsIWebProgressListener::STATE_TRANSFERRING;
+
+        // Send STATE_TRANSFERRING for the document too...
+        flags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
+      }
+
+      FireOnStateChange(this, aRequest, flags, NS_OK);
     }
 
     //
@@ -905,7 +968,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *aRequest, nsISupports* ctx
   PRInt32 progressDelta = 0;
 
   //
-  // Update the RequsetInfo entry with the new progress data
+  // Update the RequestInfo entry with the new progress data
   //
   info = GetRequestInfo(aRequest);
   if (info) {
