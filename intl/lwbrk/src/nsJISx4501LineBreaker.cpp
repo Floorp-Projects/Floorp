@@ -327,6 +327,8 @@ PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
          if( (IS_ASCII_DIGIT (prev) || (0x0020 == prev) )&& 
              IS_ASCII_DIGIT (next) )
            return NUMERIC_CLASS;
+         if( U_SPACE != next )
+           return CHARACTER_CLASS;
    }
    else if(  U_RIGHT_SINGLE_QUOTATION_MARK == cur)
    {
