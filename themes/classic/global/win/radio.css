@@ -10,10 +10,10 @@
 
   .radio-checkmark-box-1
     {
-      border-top          : 1px solid threedshadow;
-      border-left         : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
+      border-top          : 1px solid ThreeDShadow;
+      border-left         : 1px solid ThreeDShadow;
+      border-right        : 1px solid ThreeDHighlight;
+      border-bottom       : 1px solid ThreeDHighlight;
       background-color    : window;
       -moz-border-radius  : 50%;
       margin              : 2px 2px 0px 0px;
@@ -23,15 +23,15 @@
 
   .radio-checkmark-box-1[disabled="true"]
     {
-      background-color    : threedface;
+      background-color    : ThreeDFace;
     }
 
   .radio-checkmark-box-2
     {
-      border-left         : 1px solid threeddarkshadow;
-      border-top          : 1px solid threeddarkshadow;
-      border-right        : 1px solid threedface;
-      border-bottom       : 1px solid threedface;
+      border-left         : 1px solid ThreeDDarkShadow;
+      border-top          : 1px solid ThreeDDarkShadow;
+      border-right        : 1px solid ThreeDLightShadow;
+      border-bottom       : 1px solid ThreeDLightShadow;
       -moz-border-radius  : 50%;
       padding             : 2px;
       width               : 10px;
@@ -56,14 +56,13 @@
 
   radio:hover:active > .radio-internal-box > .radio-checkmark-box-1
     {
-      background-color    : threedface;
+      background-color    : ThreeDFace;
     }
 
 /* text/icon frames */
   .radio-text
     {
       margin              : 0px 0px 0px 2px;
-      padding             : 1px;
     }
 
   .radio-icon 
@@ -73,15 +72,19 @@
     
   .radio-text[disabled="true"]
     {
-      color               : graytext;
+      color               : GrayText;
     }
   
-  radio[focused="true"] > .radio-internal-box > .radio-text
+  radio[focused="true"] > .radio-internal-box > .radio-text-container
     { 
-      border              : 1px dotted threeddarkshadow;
-      padding             : 0px;
+      border              : 1px dotted ThreeDDarkShadow;
     }
-    
+  
+  .radio-text-container
+    {
+      border              : 1px solid transparent;
+    }
+  
   .radio-internal-box
     {
       -moz-user-focus     : ignore;

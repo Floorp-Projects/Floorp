@@ -40,10 +40,12 @@
             <xul:image class="radio-check" inherits="checked,disabled"/>
           </xul:box>
         </xul:box>
-        <xul:image class="radio-icon" inherits="src,disabled"/>
-        <xul:html class="radio-text" inherits="value,accesskey,crop,disabled" flex="1">
-          <children/>
-        </xul:html>
+        <xul:box class="radio-text-container">
+          <xul:image class="radio-icon" inherits="src,disabled"/>
+          <xul:html class="radio-text" inherits="value,accesskey,crop,disabled" flex="1">
+            <children/>
+          </xul:html>
+        </xul:box>          
       </xul:box>
     </content>
   </binding>
