@@ -274,8 +274,6 @@ Rights Reserved.
 <!ENTITY searchInternetCmd.accesskey "w">
 <!ENTITY searchMailCmd.label "Search Mail/News Messages">
 <!ENTITY searchMailCmd.accesskey "m">
-<!ENTITY searchBookmarksCmd.label "Search Bookmarks/History">
-<!ENTITY searchBookmarksCmd.accesskey "b">
 
 <!-- Go Menu -->
 
