@@ -2876,7 +2876,7 @@ FE_AboutData (const char *which,
               /* These strings are for display in the about: page */
 	      char *s0 = XP_GetString(XFE_SECURITY_WITH);
 	      char *s1 = SECNAV_SecurityVersion(PR_TRUE);
-	      char *s2 = SECNAV_SecurityCapabilities();
+	      char *s2 = SECNAV_SSLCapabilities();
 	      char *ss;
 	      len = strlen(s0)+strlen(s1)+strlen(s2);
 	      ss = (char*) malloc(len);
