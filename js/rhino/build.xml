@@ -106,17 +106,12 @@ Requires Ant version 1.2
   <target name="javadoc" depends="compile,copy-docs">
     <javadoc sourcefiles="${apiClasses}"
              sourcepath="${src.dir}"
-             destdir="${dist.apidocs}"/>
-             <!--
-    javadoc sourcefiles="${apiClasses}"
-             sourcepath="${src.dir}"
              destdir="${dist.apidocs}"
              overview="${dist.docs}/api.html"
              version="true"
              author="true"
              public="true"
-             windowtitle="${Name}" 
-             -->
+             windowtitle="${Name}" />
   </target>
 
   <target name="dist" depends="copy-all,javadoc,jar">
