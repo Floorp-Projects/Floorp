@@ -41,6 +41,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsVoidArray.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
 
@@ -504,7 +505,32 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       }
 
       case NS_MOUSE_ACTIVATE:
-      case NS_ACTIVATE:
+      case NS_ACTIVATE: {
+        void* data;
+        aEvent->widget->GetClientData(data);
+        if (data) {
+          nsCOMPtr<nsIDOMWindow> domWindow;
+          nsCOMPtr<nsIWebShell> contentShell;
+          ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+          if (contentShell) {
+            
+            if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+                ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
+              nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+              if(privateDOMWindow)
+                privateDOMWindow->Activate();
+            }
+          }
+          else if (webShell && NS_SUCCEEDED(((nsWebShellWindow *)data)->
+                ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow)))) {
+              nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+              if(privateDOMWindow)
+                privateDOMWindow->Activate();
+          }
+        }
+        break;
+      }
+      
       case NS_GOTFOCUS: {
         void* data;
         aEvent->widget->GetClientData(data);
@@ -524,7 +550,35 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
               domWindow->Focus();
           }
         }
+        break;
       }
+      
+      case NS_DEACTIVATE: {
+        void* data;
+        aEvent->widget->GetClientData(data);
+        if (data) {
+          nsCOMPtr<nsIDOMWindow> domWindow;
+          nsCOMPtr<nsIWebShell> contentShell;
+          ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+          if (contentShell) {
+            
+            if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+                ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
+              nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+              if(privateDOMWindow)
+                privateDOMWindow->Deactivate();
+            }
+          }
+          else if (webShell && NS_SUCCEEDED(((nsWebShellWindow *)data)->
+                ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow)))) {
+              nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+              if(privateDOMWindow)
+                privateDOMWindow->Deactivate();
+          }
+        }
+        break;
+      }
+      
       default:
         break;
 
