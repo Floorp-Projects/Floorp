@@ -132,7 +132,7 @@ NextNonEmptyCCMapPage(const PRUint16* aCCMap, PRUint32 *aPageStart)
   // checking each plane
   for(l=planestart; l<=planeend; l++, pagestart = CCMAP_BEGIN_AT_START_OF_MAP) {
 
-    if(CCMAP_FLAG(aCCMap) & CCMAP_SURROGATE_FLAG) {
+    if(l != 0 && CCMAP_FLAG(aCCMap) & CCMAP_SURROGATE_FLAG) {
       // for SURROGATE - get ccmap per plane
       ccmap = CCMAP_FOR_PLANE_EXT(aCCMap, l);
     } else {
