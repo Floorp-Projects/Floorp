@@ -389,13 +389,13 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 }
 
 nsresult
-nsGenericHTMLElement::GetTagName(nsAWritableString& aTagName)
+nsGenericHTMLElement::GetTagName(nsAString& aTagName)
 {
   return GetNodeName(aTagName);
 }
 
 nsresult
-nsGenericHTMLElement::GetNodeName(nsAWritableString& aNodeName)
+nsGenericHTMLElement::GetNodeName(nsAString& aNodeName)
 {
   nsresult rv = mNodeInfo->GetQualifiedName(aNodeName);
 
@@ -406,7 +406,7 @@ nsGenericHTMLElement::GetNodeName(nsAWritableString& aNodeName)
 }
 
 nsresult
-nsGenericHTMLElement::GetLocalName(nsAWritableString& aLocalName)
+nsGenericHTMLElement::GetLocalName(nsAString& aLocalName)
 {
   mNodeInfo->GetLocalName(aLocalName);
 
@@ -421,7 +421,7 @@ nsGenericHTMLElement::GetLocalName(nsAWritableString& aLocalName)
 }
 
 nsresult
-nsGenericHTMLElement::GetElementsByTagName(const nsAReadableString& aTagname,
+nsGenericHTMLElement::GetElementsByTagName(const nsAString& aTagname,
                                            nsIDOMNodeList** aReturn)
 {
   nsAutoString tagName(aTagname);
@@ -436,42 +436,42 @@ nsGenericHTMLElement::GetElementsByTagName(const nsAReadableString& aTagname,
 
 // Implementation for nsIDOMHTMLElement
 nsresult
-nsGenericHTMLElement::GetId(nsAWritableString& aId)
+nsGenericHTMLElement::GetId(nsAString& aId)
 {
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, aId);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::SetId(const nsAReadableString& aId)
+nsGenericHTMLElement::SetId(const nsAString& aId)
 {
   SetAttr(kNameSpaceID_None, nsHTMLAtoms::id, aId, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::GetTitle(nsAWritableString& aTitle)
+nsGenericHTMLElement::GetTitle(nsAString& aTitle)
 {
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, aTitle);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::SetTitle(const nsAReadableString& aTitle)
+nsGenericHTMLElement::SetTitle(const nsAString& aTitle)
 {
   SetAttr(kNameSpaceID_None, nsHTMLAtoms::title, aTitle, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::GetLang(nsAWritableString& aLang)
+nsGenericHTMLElement::GetLang(nsAString& aLang)
 {
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::lang, aLang);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::SetLang(const nsAReadableString& aLang)
+nsGenericHTMLElement::SetLang(const nsAString& aLang)
 {
   SetAttr(kNameSpaceID_None, nsHTMLAtoms::lang, aLang, PR_TRUE);
   return NS_OK;
@@ -484,7 +484,7 @@ static nsGenericHTMLElement::EnumTable kDirTable[] = {
 };
 
 nsresult
-nsGenericHTMLElement::GetDir(nsAWritableString& aDir)
+nsGenericHTMLElement::GetDir(nsAString& aDir)
 {
   nsHTMLValue value;
   nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
@@ -497,21 +497,21 @@ nsGenericHTMLElement::GetDir(nsAWritableString& aDir)
 }
 
 nsresult
-nsGenericHTMLElement::SetDir(const nsAReadableString& aDir)
+nsGenericHTMLElement::SetDir(const nsAString& aDir)
 {
   SetAttr(kNameSpaceID_None, nsHTMLAtoms::dir, aDir, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::GetClassName(nsAWritableString& aClassName)
+nsGenericHTMLElement::GetClassName(nsAString& aClassName)
 {
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass, aClassName);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::SetClassName(const nsAReadableString& aClassName)
+nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 {
   SetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass, aClassName, PR_TRUE);
   return NS_OK;
@@ -866,7 +866,7 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
 }
 
 nsresult
-nsGenericHTMLElement::GetInnerHTML(nsAWritableString& aInnerHTML)
+nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   aInnerHTML.Truncate();
 
@@ -901,7 +901,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAWritableString& aInnerHTML)
 }
 
 nsresult
-nsGenericHTMLElement::SetInnerHTML(const nsAReadableString& aInnerHTML)
+nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   nsresult rv = NS_OK;
 
@@ -1572,7 +1572,7 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
 }
 
 nsresult
-nsGenericHTMLElement::NormalizeAttrString(const nsAReadableString& aStr,
+nsGenericHTMLElement::NormalizeAttrString(const nsAString& aStr,
                                           nsINodeInfo*& aNodeInfo)
 {
   // XXX need to validate/strip namespace prefix
@@ -1589,7 +1589,7 @@ nsGenericHTMLElement::NormalizeAttrString(const nsAReadableString& aStr,
 nsresult
 nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              const nsAReadableString& aValue,
+                              const nsAString& aValue,
                               PRBool aNotify)
 {
   nsresult  result = NS_OK;
@@ -1732,7 +1732,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
-                              const nsAReadableString& aValue,
+                              const nsAString& aValue,
                               PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -2029,7 +2029,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBoo
 
 nsresult
 nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                              nsIAtom*& aPrefix, nsAWritableString& aResult) const
+                              nsIAtom*& aPrefix, nsAString& aResult) const
 {
   aPrefix = nsnull;
 
@@ -2038,7 +2038,7 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
 
 nsresult
 nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                              nsAWritableString& aResult) const
+                              nsAString& aResult) const
 {
   aResult.SetLength(0);
 
@@ -2284,7 +2284,7 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
 }
 
 nsresult
-nsGenericHTMLElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
+nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   nsresult  result = NS_OK;
 
@@ -2456,7 +2456,7 @@ nsGenericHTMLElement::BaseSizeOf(nsISizeOfHandler* aSizer) const
 nsresult
 nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
                                         const nsHTMLValue& aValue,
-                                        nsAWritableString& aResult) const
+                                        nsAString& aResult) const
 {
   if (nsHTMLAtoms::style == aAttribute) {
     if (eHTMLUnit_ISupports == aValue.GetUnit()) {
@@ -2532,7 +2532,7 @@ nsGenericHTMLElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMa
 }
 
 PRBool
-nsGenericHTMLElement::ParseEnumValue(const nsAReadableString& aValue,
+nsGenericHTMLElement::ParseEnumValue(const nsAString& aValue,
                                      EnumTable* aTable,
                                      nsHTMLValue& aResult)
 {
@@ -2548,7 +2548,7 @@ nsGenericHTMLElement::ParseEnumValue(const nsAReadableString& aValue,
 }
 
 PRBool
-nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsAReadableString& aValue,
+nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsAString& aValue,
                                                   EnumTable* aTable,
                                                   nsHTMLValue& aResult)
 {
@@ -2566,7 +2566,7 @@ nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsAReadableString& aValu
 PRBool
 nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
                                         EnumTable* aTable,
-                                        nsAWritableString& aResult)
+                                        nsAString& aResult)
 {
   if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
     PRInt32 v = aValue.GetIntValue();
@@ -2584,7 +2584,7 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
 }
 
 PRBool
-nsGenericHTMLElement::ParseValueOrPercent(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseValueOrPercent(const nsAString& aString,
                                           nsHTMLValue& aResult,
                                           nsHTMLUnit aValueUnit)
 {
@@ -2616,7 +2616,7 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsAReadableString& aString,
  *   or proportional (n*)
  */
 PRBool
-nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAString& aString,
                                                         nsHTMLValue& aResult,
                                                         nsHTMLUnit aValueUnit)
 {
@@ -2654,7 +2654,7 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString&
 
 PRBool
 nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
-                                             nsAWritableString& aResult)
+                                             nsAString& aResult)
 {
   nsAutoString intStr;
   aResult.Truncate(0);
@@ -2683,7 +2683,7 @@ nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
 
 PRBool
 nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
-                                                           nsAWritableString& aResult)
+                                                           nsAString& aResult)
 {
   nsAutoString intStr;
   aResult.Truncate(0);
@@ -2716,7 +2716,7 @@ nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aV
 }
 
 PRBool
-nsGenericHTMLElement::ParseValue(const nsAReadableString& aString, PRInt32 aMin,
+nsGenericHTMLElement::ParseValue(const nsAString& aString, PRInt32 aMin,
                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
   nsAutoString str(aString);
@@ -2736,7 +2736,7 @@ nsGenericHTMLElement::ParseValue(const nsAReadableString& aString, PRInt32 aMin,
 }
 
 PRBool
-nsGenericHTMLElement::ParseValue(const nsAReadableString& aString, PRInt32 aMin,
+nsGenericHTMLElement::ParseValue(const nsAString& aString, PRInt32 aMin,
                                  PRInt32 aMax,
                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit)
 {
@@ -2758,7 +2758,7 @@ nsGenericHTMLElement::ParseValue(const nsAReadableString& aString, PRInt32 aMin,
 }
 
 PRBool
-nsGenericHTMLElement::ParseColor(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseColor(const nsAString& aString,
                                  nsIDocument* aDocument,
                                  nsHTMLValue& aResult)
 {
@@ -2833,7 +2833,7 @@ nsGenericHTMLElement::ParseColor(const nsAReadableString& aString,
 
 PRBool
 nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
-                                    nsAWritableString& aResult)
+                                    nsAString& aResult)
 {
   if (aValue.GetUnit() == eHTMLUnit_Color) {
     nscolor v = aValue.GetColorValue();
@@ -3025,7 +3025,7 @@ static nsGenericHTMLElement::EnumTable kTableVAlignTable[] = {
 
 PRBool
 nsGenericHTMLElement::ParseCommonAttribute(nsIAtom* aAttribute,
-                                           const nsAReadableString& aValue,
+                                           const nsAString& aValue,
                                            nsHTMLValue& aResult)
 {
   if (nsHTMLAtoms::dir == aAttribute) {
@@ -3039,7 +3039,7 @@ nsGenericHTMLElement::ParseCommonAttribute(nsIAtom* aAttribute,
 }
 
 PRBool
-nsGenericHTMLElement::ParseAlignValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                       nsHTMLValue& aResult)
 {
   return ParseEnumValue(aString, kAlignTable, aResult);
@@ -3071,7 +3071,7 @@ static nsGenericHTMLElement::EnumTable kCompatTableHAlignTable[] = {
 };
 
 PRBool
-nsGenericHTMLElement::ParseTableHAlignValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsHTMLValue& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
@@ -3082,7 +3082,7 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAReadableString& aString,
 
 PRBool
 nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
-                                               nsAWritableString& aResult) const
+                                               nsAString& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
     return EnumValueToString(aValue, kCompatTableHAlignTable, aResult);
@@ -3120,7 +3120,7 @@ static nsGenericHTMLElement::EnumTable kCompatTableCellHAlignTable[] = {
 };
 
 PRBool
-nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsHTMLValue& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
@@ -3131,7 +3131,7 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAReadableString& aString
 
 PRBool
 nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
-                                                   nsAWritableString& aResult) const
+                                                   nsAString& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
     return EnumValueToString(aValue, kCompatTableCellHAlignTable, aResult);
@@ -3142,7 +3142,7 @@ nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
 //----------------------------------------
 
 PRBool
-nsGenericHTMLElement::ParseTableVAlignValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
                                             nsHTMLValue& aResult)
 {
   return ParseEnumValue(aString, kTableVAlignTable, aResult);
@@ -3150,27 +3150,27 @@ nsGenericHTMLElement::ParseTableVAlignValue(const nsAReadableString& aString,
 
 PRBool
 nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
-                                         nsAWritableString& aResult)
+                                         nsAString& aResult)
 {
   return EnumValueToString(aValue, kAlignTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::VAlignValueToString(const nsHTMLValue& aValue,
-                                         nsAWritableString& aResult)
+                                         nsAString& aResult)
 {
   return EnumValueToString(aValue, kVAlignTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::TableVAlignValueToString(const nsHTMLValue& aValue,
-                                               nsAWritableString& aResult)
+                                               nsAString& aResult)
 {
   return EnumValueToString(aValue, kTableVAlignTable, aResult);
 }
 
 PRBool
-nsGenericHTMLElement::ParseDivAlignValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
                                          nsHTMLValue& aResult) const
 {
   return ParseEnumValue(aString, kDivAlignTable, aResult);
@@ -3178,14 +3178,14 @@ nsGenericHTMLElement::ParseDivAlignValue(const nsAReadableString& aString,
 
 PRBool
 nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
-                                            nsAWritableString& aResult) const
+                                            nsAString& aResult) const
 {
   return EnumValueToString(aValue, kDivAlignTable, aResult);
 }
 
 PRBool
 nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
-                                          const nsAReadableString& aString,
+                                          const nsAString& aString,
                                           nsHTMLValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
@@ -3203,7 +3203,7 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
 PRBool
 nsGenericHTMLElement::ImageAttributeToString(nsIAtom* aAttribute,
                                              const nsHTMLValue& aValue,
-                                             nsAWritableString& aResult)
+                                             nsAString& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height) ||
@@ -3216,7 +3216,7 @@ nsGenericHTMLElement::ImageAttributeToString(nsIAtom* aAttribute,
 }
 
 PRBool
-nsGenericHTMLElement::ParseFrameborderValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
                                             nsHTMLValue& aResult)
 {
   return ParseEnumValue(aString, kFrameborderTable, aResult);
@@ -3224,13 +3224,13 @@ nsGenericHTMLElement::ParseFrameborderValue(const nsAReadableString& aString,
 
 PRBool
 nsGenericHTMLElement::FrameborderValueToString(const nsHTMLValue& aValue,
-                                               nsAWritableString& aResult)
+                                               nsAString& aResult)
 {
   return EnumValueToString(aValue, kFrameborderTable, aResult);
 }
 
 PRBool
-nsGenericHTMLElement::ParseScrollingValue(const nsAReadableString& aString,
+nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
                                           nsHTMLValue& aResult)
 {
   return ParseEnumValue(aString, kScrollingTable, aResult);
@@ -3238,7 +3238,7 @@ nsGenericHTMLElement::ParseScrollingValue(const nsAReadableString& aString,
 
 PRBool
 nsGenericHTMLElement::ScrollingValueToString(const nsHTMLValue& aValue,
-                                             nsAWritableString& aResult)
+                                             nsAString& aResult)
 {
   return EnumValueToString(aValue, kScrollingTable, aResult);
 }
@@ -3262,7 +3262,7 @@ nsGenericHTMLElement::ReparseStyleAttribute(void)
 }
 
 nsresult
-nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTMLValue& aResult)
+nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& aResult)
 {
   nsresult result = NS_OK;
 
@@ -4169,7 +4169,7 @@ nsresult
 nsGenericHTMLElement::SetFormControlAttribute(nsIForm* aForm,
                                               PRInt32 aNameSpaceID,
                                               nsIAtom* aName,
-                                              const nsAReadableString& aValue,
+                                              const nsAString& aValue,
                                               PRBool aNotify)
 {
   nsCOMPtr<nsIFormControl> thisControl;
@@ -4235,7 +4235,7 @@ nsGenericHTMLElement::SetFormControlAttribute(nsIForm* aForm,
 NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetAttr(PRInt32 aNameSpaceID,
                                            nsIAtom* aName,
-                                           const nsAReadableString& aVal,
+                                           const nsAString& aVal,
                                            PRBool aNotify)
 {
   return SetFormControlAttribute(mForm, aNameSpaceID, aName, aVal, aNotify);
@@ -4243,7 +4243,7 @@ nsGenericHTMLContainerFormElement::SetAttr(PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetAttr(nsINodeInfo* aNodeInfo,
-                                           const nsAReadableString& aValue,
+                                           const nsAString& aValue,
                                            PRBool aNotify)
 {
   return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
@@ -4412,7 +4412,7 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
 NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetAttr(PRInt32 aNameSpaceID,
                                       nsIAtom* aName,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       PRBool aNotify)
 {
   return SetFormControlAttribute(mForm, aNameSpaceID, aName, aValue, aNotify);
@@ -4420,7 +4420,7 @@ nsGenericHTMLLeafFormElement::SetAttr(PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetAttr(nsINodeInfo* aNodeInfo,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       PRBool aNotify)
 {
   return nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue, aNotify);
@@ -4470,9 +4470,9 @@ nsGenericHTMLElement::HandleFrameOnloadEvent(nsIDOMEvent* aEvent)
 
 // static
 nsresult
-nsGenericHTMLElement::SetProtocolInHrefString(const nsAReadableString &aHref,
-                                              const nsAReadableString &aProtocol,
-                                              nsAWritableString &aResult)
+nsGenericHTMLElement::SetProtocolInHrefString(const nsAString &aHref,
+                                              const nsAString &aProtocol,
+                                              nsAString &aResult)
 {
   aResult.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4497,9 +4497,9 @@ nsGenericHTMLElement::SetProtocolInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::SetHostnameInHrefString(const nsAReadableString &aHref,
-                                              const nsAReadableString &aHostname,
-                                              nsAWritableString &aResult)
+nsGenericHTMLElement::SetHostnameInHrefString(const nsAString &aHref,
+                                              const nsAString &aHostname,
+                                              nsAString &aResult)
 {
   aResult.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4519,9 +4519,9 @@ nsGenericHTMLElement::SetHostnameInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::SetPathnameInHrefString(const nsAReadableString &aHref,
-                                              const nsAReadableString &aPathname,
-                                              nsAWritableString &aResult)
+nsGenericHTMLElement::SetPathnameInHrefString(const nsAString &aHref,
+                                              const nsAString &aPathname,
+                                              nsAString &aResult)
 {
   aResult.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4544,9 +4544,9 @@ nsGenericHTMLElement::SetPathnameInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::SetHostInHrefString(const nsAReadableString &aHref,
-                                          const nsAReadableString &aHost,
-                                          nsAWritableString &aResult)
+nsGenericHTMLElement::SetHostInHrefString(const nsAString &aHref,
+                                          const nsAString &aHost,
+                                          nsAString &aResult)
 {
   // Can't simply call nsURI::SetHost, because that would treat the name as an
   // IPv6 address (like http://[server:443]/)
@@ -4573,9 +4573,9 @@ nsGenericHTMLElement::SetHostInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::SetSearchInHrefString(const nsAReadableString &aHref,
-                                            const nsAReadableString &aSearch,
-                                            nsAWritableString &aResult)
+nsGenericHTMLElement::SetSearchInHrefString(const nsAString &aHref,
+                                            const nsAString &aSearch,
+                                            nsAString &aResult)
 {
   aResult.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4599,9 +4599,9 @@ nsGenericHTMLElement::SetSearchInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::SetHashInHrefString(const nsAReadableString &aHref,
-                                          const nsAReadableString &aHash,
-                                          nsAWritableString &aResult)
+nsGenericHTMLElement::SetHashInHrefString(const nsAString &aHref,
+                                          const nsAString &aHash,
+                                          nsAString &aResult)
 {
   aResult.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4625,9 +4625,9 @@ nsGenericHTMLElement::SetHashInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
-                                          const nsAReadableString &aPort,
-                                          nsAWritableString &aResult)
+nsGenericHTMLElement::SetPortInHrefString(const nsAString &aHref,
+                                          const nsAString &aPort,
+                                          nsAString &aResult)
 {
   aResult.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4652,8 +4652,8 @@ nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
-                                                nsAWritableString& aProtocol,
+nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
+                                                nsAString& aProtocol,
                                                 nsIDocument *aDocument)
 {
   aProtocol.Truncate();
@@ -4699,8 +4699,8 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aHref,
-                                            nsAWritableString& aHost)
+nsGenericHTMLElement::GetHostFromHrefString(const nsAString& aHref,
+                                            nsAString& aHost)
 {
   aHost.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4719,8 +4719,8 @@ nsGenericHTMLElement::GetHostFromHrefString(const nsAReadableString& aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
-                                                nsAWritableString& aHostname)
+nsGenericHTMLElement::GetHostnameFromHrefString(const nsAString& aHref,
+                                                nsAString& aHostname)
 {
   aHostname.Truncate();
   nsCOMPtr<nsIURI> url;
@@ -4741,8 +4741,8 @@ nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
-                                                nsAWritableString& aPathname)
+nsGenericHTMLElement::GetPathnameFromHrefString(const nsAString& aHref,
+                                                nsAString& aPathname)
 {
   aPathname.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4766,8 +4766,8 @@ nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
-                                              nsAWritableString& aSearch)
+nsGenericHTMLElement::GetSearchFromHrefString(const nsAString& aHref,
+                                              nsAString& aSearch)
 {
   aSearch.Truncate();
   nsCOMPtr<nsIURI> uri;
@@ -4793,8 +4793,8 @@ nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetPortFromHrefString(const nsAReadableString& aHref,
-                                            nsAWritableString& aPort)
+nsGenericHTMLElement::GetPortFromHrefString(const nsAString& aHref,
+                                            nsAString& aPort)
 {
   aPort.Truncate();
   nsCOMPtr<nsIURI> url;
@@ -4821,8 +4821,8 @@ nsGenericHTMLElement::GetPortFromHrefString(const nsAReadableString& aHref,
 
 // static
 nsresult
-nsGenericHTMLElement::GetHashFromHrefString(const nsAReadableString& aHref,
-                                            nsAWritableString& aHash)
+nsGenericHTMLElement::GetHashFromHrefString(const nsAString& aHref,
+                                            nsAString& aHash)
 {
   aHash.Truncate();
   nsCOMPtr<nsIURI> uri;

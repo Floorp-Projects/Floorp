@@ -93,43 +93,43 @@ public:
                         PRBool aDeep);
 
   // Implementation for nsIDOMNode
-  NS_METHOD GetNodeName(nsAWritableString& aNodeName);
-  NS_METHOD GetLocalName(nsAWritableString& aLocalName);
+  NS_METHOD GetNodeName(nsAString& aNodeName);
+  NS_METHOD GetLocalName(nsAString& aLocalName);
 
   // Implementation for nsIDOMElement
-  NS_METHOD GetAttribute(const nsAReadableString& aName,
-                         nsAWritableString& aReturn) 
+  NS_METHOD GetAttribute(const nsAString& aName,
+                         nsAString& aReturn) 
   {
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
-  NS_METHOD SetAttribute(const nsAReadableString& aName,
-                         const nsAReadableString& aValue)
+  NS_METHOD SetAttribute(const nsAString& aName,
+                         const nsAString& aValue)
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
-  NS_METHOD GetTagName(nsAWritableString& aTagName);
-  NS_METHOD GetElementsByTagName(const nsAReadableString& aTagname,
+  NS_METHOD GetTagName(nsAString& aTagName);
+  NS_METHOD GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn);
 
   // Implementation for nsIDOMHTMLElement
-  nsresult GetId(nsAWritableString& aId);
-  nsresult SetId(const nsAReadableString& aId);
-  nsresult GetTitle(nsAWritableString& aTitle);
-  nsresult SetTitle(const nsAReadableString& aTitle);
-  nsresult GetLang(nsAWritableString& aLang);
-  nsresult SetLang(const nsAReadableString& aLang);
-  nsresult GetDir(nsAWritableString& aDir);
-  nsresult SetDir(const nsAReadableString& aDir);
-  nsresult GetClassName(nsAWritableString& aClassName);
-  nsresult SetClassName(const nsAReadableString& aClassName);
+  nsresult GetId(nsAString& aId);
+  nsresult SetId(const nsAString& aId);
+  nsresult GetTitle(nsAString& aTitle);
+  nsresult SetTitle(const nsAString& aTitle);
+  nsresult GetLang(nsAString& aLang);
+  nsresult SetLang(const nsAString& aLang);
+  nsresult GetDir(nsAString& aDir);
+  nsresult SetDir(const nsAString& aDir);
+  nsresult GetClassName(nsAString& aClassName);
+  nsresult SetClassName(const nsAString& aClassName);
   nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
   nsresult GetOffsetTop(PRInt32* aOffsetTop);
   nsresult GetOffsetLeft(PRInt32* aOffsetLeft);
   nsresult GetOffsetWidth(PRInt32* aOffsetWidth);
   nsresult GetOffsetHeight(PRInt32* aOffsetHeight);
   nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
-  nsresult GetInnerHTML(nsAWritableString& aInnerHTML);
-  nsresult SetInnerHTML(const nsAReadableString& aInnerHTML);
+  nsresult GetInnerHTML(nsAString& aInnerHTML);
+  nsresult SetInnerHTML(const nsAString& aInnerHTML);
   nsresult GetScrollTop(PRInt32* aScrollTop);
   nsresult SetScrollTop(PRInt32 aScrollTop);
   nsresult GetScrollLeft(PRInt32* aScrollLeft);
@@ -149,18 +149,18 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo*& aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                           PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsAWritableString& aResult) const;
+                     nsAString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+                     nsIAtom*& aPrefix, nsAString& aResult) const;
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        PRBool aNotify);
@@ -192,12 +192,12 @@ public:
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD WalkInlineStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const;
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const;
+  NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   //----------------------------------------
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
@@ -226,100 +226,100 @@ public:
     PRInt32 value;
   };
 
-  static PRBool ParseEnumValue(const nsAReadableString& aValue,
+  static PRBool ParseEnumValue(const nsAString& aValue,
                                EnumTable* aTable,
                                nsHTMLValue& aResult);
 
-  static PRBool ParseCaseSensitiveEnumValue(const nsAReadableString& aValue,
+  static PRBool ParseCaseSensitiveEnumValue(const nsAString& aValue,
                                             EnumTable* aTable,
                                             nsHTMLValue& aResult);
 
   static PRBool EnumValueToString(const nsHTMLValue& aValue,
                                   EnumTable* aTable,
-                                  nsAWritableString& aResult);
+                                  nsAString& aResult);
 
-  static PRBool ParseValueOrPercent(const nsAReadableString& aString,
+  static PRBool ParseValueOrPercent(const nsAString& aString,
                                     nsHTMLValue& aResult,
                                     nsHTMLUnit aValueUnit);
 
-  static PRBool ParseValueOrPercentOrProportional(const nsAReadableString& aString,
+  static PRBool ParseValueOrPercentOrProportional(const nsAString& aString,
                                                   nsHTMLValue& aResult, 
                                                   nsHTMLUnit aValueUnit);
 
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult);
+                                       nsAString& aResult);
 
   static PRBool ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
-                                                     nsAWritableString& aResult);
+                                                     nsAString& aResult);
 
-  static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin,
+  static PRBool ParseValue(const nsAString& aString, PRInt32 aMin,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
-  static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin,
+  static PRBool ParseValue(const nsAString& aString, PRInt32 aMin,
                            PRInt32 aMax, nsHTMLValue& aResult,
                            nsHTMLUnit aValueUnit);
 
-  static PRBool ParseColor(const nsAReadableString& aString,
+  static PRBool ParseColor(const nsAString& aString,
                            nsIDocument* aDocument, nsHTMLValue& aResult);
 
   static PRBool ColorToString(const nsHTMLValue& aValue,
-                              nsAWritableString& aResult);
+                              nsAString& aResult);
 
   static PRBool ParseCommonAttribute(nsIAtom* aAttribute, 
-                                     const nsAReadableString& aValue, 
+                                     const nsAString& aValue, 
                                      nsHTMLValue& aResult);
-  static PRBool ParseAlignValue(const nsAReadableString& aString,
+  static PRBool ParseAlignValue(const nsAString& aString,
                                 nsHTMLValue& aResult);
 
-  PRBool ParseDivAlignValue(const nsAReadableString& aString,
+  PRBool ParseDivAlignValue(const nsAString& aString,
                             nsHTMLValue& aResult) const;
   PRBool DivAlignValueToString(const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
 
-  PRBool ParseTableHAlignValue(const nsAReadableString& aString,
+  PRBool ParseTableHAlignValue(const nsAString& aString,
                                nsHTMLValue& aResult) const;
   PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
-                                  nsAWritableString& aResult) const;
+                                  nsAString& aResult) const;
 
-  PRBool ParseTableCellHAlignValue(const nsAReadableString& aString,
+  PRBool ParseTableCellHAlignValue(const nsAString& aString,
                                    nsHTMLValue& aResult) const;
   PRBool TableCellHAlignValueToString(const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const;
+                                      nsAString& aResult) const;
 
-  static PRBool ParseTableVAlignValue(const nsAReadableString& aString,
+  static PRBool ParseTableVAlignValue(const nsAString& aString,
                                       nsHTMLValue& aResult);
 
   static PRBool TableVAlignValueToString(const nsHTMLValue& aValue,
-                                         nsAWritableString& aResult);
+                                         nsAString& aResult);
 
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
-                                   nsAWritableString& aResult);
+                                   nsAString& aResult);
 
   static PRBool VAlignValueToString(const nsHTMLValue& aValue,
-                                    nsAWritableString& aResult);
+                                    nsAString& aResult);
 
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
-                                    const nsAReadableString& aString,
+                                    const nsAString& aString,
                                     nsHTMLValue& aResult);
 
   static PRBool ImageAttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult);
+                                       nsAString& aResult);
 
-  static PRBool ParseFrameborderValue(const nsAReadableString& aString,
+  static PRBool ParseFrameborderValue(const nsAString& aString,
                                       nsHTMLValue& aResult);
 
   static PRBool FrameborderValueToString(const nsHTMLValue& aValue,
-                                         nsAWritableString& aResult);
+                                         nsAString& aResult);
 
-  static PRBool ParseScrollingValue(const nsAReadableString& aString,
+  static PRBool ParseScrollingValue(const nsAString& aString,
                                     nsHTMLValue& aResult);
 
   static PRBool ScrollingValueToString(const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult);
+                                       nsAString& aResult);
 
   nsresult  ReparseStyleAttribute(void);
-  nsresult  ParseStyleAttribute(const nsAReadableString& aValue,
+  nsresult  ParseStyleAttribute(const nsAString& aValue,
                                 nsHTMLValue& aResult);
 
   /** Attribute Mapping Helpers
@@ -377,61 +377,61 @@ public:
 
   nsresult SetFormControlAttribute(nsIForm* aForm, PRInt32 aNameSpaceID,
                                    nsIAtom* aName,
-                                   const nsAReadableString& aValue,
+                                   const nsAString& aValue,
                                    PRBool aNotify);
 
   nsIHTMLAttributes* mAttributes;
 
   // Helper functions for <a> and <area>
-  static nsresult SetProtocolInHrefString(const nsAReadableString &aHref,
-                                          const nsAReadableString &aProtocol,
-                                          nsAWritableString &aResult);
+  static nsresult SetProtocolInHrefString(const nsAString &aHref,
+                                          const nsAString &aProtocol,
+                                          nsAString &aResult);
 
-  static nsresult SetHostInHrefString(const nsAReadableString &aHref,
-                                      const nsAReadableString &aHost,
-                                      nsAWritableString &aResult);
+  static nsresult SetHostInHrefString(const nsAString &aHref,
+                                      const nsAString &aHost,
+                                      nsAString &aResult);
 
-  static nsresult SetHostnameInHrefString(const nsAReadableString &aHref,
-                                          const nsAReadableString &aHostname,
-                                          nsAWritableString &aResult);
+  static nsresult SetHostnameInHrefString(const nsAString &aHref,
+                                          const nsAString &aHostname,
+                                          nsAString &aResult);
 
-  static nsresult SetPathnameInHrefString(const nsAReadableString &aHref,
-                                          const nsAReadableString &aHostname,
-                                          nsAWritableString &aResult);
+  static nsresult SetPathnameInHrefString(const nsAString &aHref,
+                                          const nsAString &aHostname,
+                                          nsAString &aResult);
 
-  static nsresult SetSearchInHrefString(const nsAReadableString &aHref,
-                                        const nsAReadableString &aSearch,
-                                        nsAWritableString &aResult);
+  static nsresult SetSearchInHrefString(const nsAString &aHref,
+                                        const nsAString &aSearch,
+                                        nsAString &aResult);
   
-  static nsresult SetHashInHrefString(const nsAReadableString &aHref,
-                                      const nsAReadableString &aHash,
-                                      nsAWritableString &aResult);
+  static nsresult SetHashInHrefString(const nsAString &aHref,
+                                      const nsAString &aHash,
+                                      nsAString &aResult);
 
-  static nsresult SetPortInHrefString(const nsAReadableString &aHref,
-                                      const nsAReadableString &aPort,
-                                      nsAWritableString &aResult);
+  static nsresult SetPortInHrefString(const nsAString &aHref,
+                                      const nsAString &aPort,
+                                      nsAString &aResult);
 
-  static nsresult GetProtocolFromHrefString(const nsAReadableString &aHref,
-                                            nsAWritableString& aProtocol,
+  static nsresult GetProtocolFromHrefString(const nsAString &aHref,
+                                            nsAString& aProtocol,
                                             nsIDocument *aDocument);
 
-  static nsresult GetHostFromHrefString(const nsAReadableString &aHref,
-                                        nsAWritableString& aHost);
+  static nsresult GetHostFromHrefString(const nsAString &aHref,
+                                        nsAString& aHost);
 
-  static nsresult GetHostnameFromHrefString(const nsAReadableString &aHref,
-                                            nsAWritableString& aHostname);
+  static nsresult GetHostnameFromHrefString(const nsAString &aHref,
+                                            nsAString& aHostname);
 
-  static nsresult GetPathnameFromHrefString(const nsAReadableString &aHref,
-                                            nsAWritableString& aPathname);
+  static nsresult GetPathnameFromHrefString(const nsAString &aHref,
+                                            nsAString& aPathname);
 
-  static nsresult GetSearchFromHrefString(const nsAReadableString &aHref,
-                                          nsAWritableString& aSearch);
+  static nsresult GetSearchFromHrefString(const nsAString &aHref,
+                                          nsAString& aSearch);
 
-  static nsresult GetPortFromHrefString(const nsAReadableString &aHref,
-                                        nsAWritableString& aPort);
+  static nsresult GetPortFromHrefString(const nsAString &aHref,
+                                        nsAString& aPort);
 
-  static nsresult GetHashFromHrefString(const nsAReadableString &aHref,
-                                        nsAWritableString& aHash);
+  static nsresult GetHashFromHrefString(const nsAString &aHref,
+                                        nsAString& aHash);
 protected:
   nsresult SetElementFocus(PRBool aDoFocus);
 
@@ -604,15 +604,15 @@ public:
                          PRBool aCompileEventHandlers);
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue, PRBool aNotify);
+                     const nsAString& aValue, PRBool aNotify);
 
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
 
 
-  NS_METHOD SetAttribute(const nsAReadableString& aName,
-                         const nsAReadableString& aValue)
+  NS_METHOD SetAttribute(const nsAString& aName,
+                         const nsAString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
@@ -653,15 +653,15 @@ public:
                          PRBool aCompileEventHandlers);
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue, PRBool aNotify);
+                     const nsAString& aValue, PRBool aNotify);
 
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
 
 
-  NS_METHOD SetAttribute(const nsAReadableString& aName,
-                         const nsAReadableString& aValue)
+  NS_METHOD SetAttribute(const nsAString& aName,
+                         const nsAString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
@@ -688,7 +688,7 @@ protected:
  */
 #define NS_IMPL_STRING_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                      \
-  _class::Get##_method(nsAWritableString& aValue)                    \
+  _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
     nsresult rv = GetAttr(kNameSpaceID_HTML,                         \
                           nsHTMLAtoms::_atom, aValue);               \
@@ -698,7 +698,7 @@ protected:
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
-  _class::Set##_method(const nsAReadableString& aValue)              \
+  _class::Set##_method(const nsAString& aValue)                      \
   {                                                                  \
     return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue,    \
                    PR_TRUE);                                         \

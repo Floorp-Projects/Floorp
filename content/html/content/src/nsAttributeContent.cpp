@@ -114,7 +114,7 @@ public:
   }
 
 
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr, 
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
                                  nsINodeInfo*& aNodeInfo) { 
     aNodeInfo = nsnull;
     return NS_OK; 
@@ -139,13 +139,13 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAString& aValue,
                      PRBool aNotify) {  return NS_OK; }
-  NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAString& aValue,
                      PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const {
     return PR_FALSE;
   }
@@ -200,11 +200,11 @@ public:
   // Implementation for nsITextContent
   NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult);
-  NS_IMETHOD CopyText(nsAWritableString& aResult);
+  NS_IMETHOD CopyText(nsAString& aResult);
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
-  NS_IMETHOD SetText(const nsAReadableString& aStr,
+  NS_IMETHOD SetText(const nsAString& aStr,
                      PRBool aNotify);
   NS_IMETHOD SetText(const char* aBuffer,
                    PRInt32 aLength,
@@ -216,7 +216,7 @@ public:
 
   void ValidateTextFragment();
 
-  void ToCString(nsAWritableString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
+  void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
@@ -308,7 +308,7 @@ NS_IMPL_RELEASE(nsAttributeContent)
 
 
 void
-nsAttributeContent::ToCString(nsAWritableString& aBuf, PRInt32 aOffset,
+nsAttributeContent::ToCString(nsAString& aBuf, PRInt32 aOffset,
                                 PRInt32 aLen) const
 {
 }
@@ -424,7 +424,7 @@ nsAttributeContent::GetTextLength(PRInt32* aLengthResult)
 }
 
 nsresult
-nsAttributeContent::CopyText(nsAWritableString& aResult)
+nsAttributeContent::CopyText(nsAString& aResult)
 {
   ValidateTextFragment();
   if (mText.Is2b()) {
@@ -458,7 +458,7 @@ nsAttributeContent::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
 }
 
 NS_IMETHODIMP 
-nsAttributeContent::SetText(const nsAReadableString& aStr,
+nsAttributeContent::SetText(const nsAString& aStr,
                             PRBool aNotify)
 {
   mText = aStr;

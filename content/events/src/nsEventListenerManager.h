@@ -113,15 +113,15 @@ public:
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                       const nsIID& aIID, PRInt32 aFlags);
   NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
-                                    const nsAReadableString& type,
+                                    const nsAString& type,
                                     PRInt32 aFlags);
   NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
-                                       const nsAReadableString& type,
+                                       const nsAString& type,
                                        PRInt32 aFlags) ;
   NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
                                     nsISupports *aObject,
                                     nsIAtom *aName,
-                                    const nsAReadableString& aFunc,
+                                    const nsAString& aFunc,
                                     PRBool aDeferCompilation); 
   NS_IMETHOD RegisterScriptEventListener(nsIScriptContext *aContext,
                                          nsISupports *aObject,
@@ -143,7 +143,7 @@ public:
 
   NS_IMETHOD CreateEvent(nsIPresContext* aPresContext, 
                          nsEvent* aEvent,
-                         const nsAReadableString& aEventType,
+                         const nsAString& aEventType,
                          nsIDOMEvent** aDOMEvent);
 
   NS_IMETHOD RemoveAllListeners(PRBool aScriptOnly);
@@ -162,10 +162,10 @@ public:
                                         PRInt32* aSubType);
 
   // nsIDOMEventTarget interface
-  NS_IMETHOD AddEventListener(const nsAReadableString& aType, 
+  NS_IMETHOD AddEventListener(const nsAString& aType, 
                               nsIDOMEventListener* aListener, 
                               PRBool aUseCapture);
-  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType, 
+  NS_IMETHOD RemoveEventListener(const nsAString& aType, 
                                  nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);

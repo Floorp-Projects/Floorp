@@ -120,7 +120,7 @@ public:
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-             const nsAReadableString& aEventType);
+             const nsAString& aEventType);
   virtual ~nsDOMEvent();
 
   NS_DECL_ISUPPORTS
@@ -147,7 +147,7 @@ public:
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
-  NS_IMETHOD    InitMouseEvent(const nsAReadableString & aTypeArg, 
+  NS_IMETHOD    InitMouseEvent(const nsAString & aTypeArg, 
                                PRBool aCanBubbleArg, PRBool aCancelableArg, 
                                nsIDOMAbstractView *aViewArg, PRInt32 aDetailArg, 
                                PRInt32 aScreenXArg, PRInt32 aDcreenYArg, 
@@ -155,7 +155,7 @@ public:
                                PRBool aCtrlKeyArg, PRBool aAltKeyArg, 
                                PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
                                PRUint16 aButtonArg, nsIDOMEventTarget *aRelatedTargetArg);
-  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg,
+  NS_IMETHOD    InitKeyEvent(const nsAString& aTypeArg,
                              PRBool aCanBubbleArg, PRBool aCancelableArg,
                              nsIDOMAbstractView* aViewArg, 
                              PRBool aCtrlKeyArg, PRBool aAltKeyArg,
@@ -224,7 +224,7 @@ protected:
   //Internal helper funcs
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                          float* aT2P);
-  nsresult SetEventType(const nsAReadableString& aEventTypeArg);
+  nsresult SetEventType(const nsAString& aEventTypeArg);
   const char* GetEventName(PRUint32 aEventType);
 
   nsEvent* mEvent;

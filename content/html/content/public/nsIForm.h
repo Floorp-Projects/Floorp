@@ -39,7 +39,7 @@
 #define nsIForm_h___
 
 #include "nsISupports.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 
 class nsIFormControl;
 class nsISizeOfHandler;
@@ -87,7 +87,7 @@ public:
    * are used as a key into the table.
    */
   NS_IMETHOD AddElementToTable(nsIFormControl* aElement,
-                               const nsAReadableString& aName) = 0;
+                               const nsAString& aName) = 0;
 
   /**
    * Get the element at a specified index position
@@ -126,7 +126,7 @@ public:
    * @return NS_OK if the element was successfully removed.
    */
   NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
-                                    const nsAReadableString& aName) = 0;
+                                    const nsAString& aName) = 0;
 
   /**
    * Resolve a name in the scope of the form object, this means find
@@ -137,7 +137,7 @@ public:
    * @param aName the name or id of the element to remove
    * @return NS_OK if the element was successfully removed.
    */
-  NS_IMETHOD ResolveName(const nsAReadableString& aName,
+  NS_IMETHOD ResolveName(const nsAString& aName,
                          nsISupports **aResult) = 0;
 
   /**

@@ -117,11 +117,11 @@ public:
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aTarget);
-  NS_IMETHOD SetBaseTarget(const nsAReadableString& aTarget);
+  NS_IMETHOD GetBaseTarget(nsAString& aTarget);
+  NS_IMETHOD SetBaseTarget(const nsAString& aTarget);
 
-  NS_IMETHOD SetLastModified(const nsAReadableString& aLastModified);
-  NS_IMETHOD SetReferrer(const nsAReadableString& aReferrer);
+  NS_IMETHOD SetLastModified(const nsAString& aLastModified);
+  NS_IMETHOD SetReferrer(const nsAString& aReferrer);
 
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
@@ -170,7 +170,7 @@ public:
    */
   NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet);
 
-  NS_IMETHOD ResolveName(const nsAReadableString& aName,
+  NS_IMETHOD ResolveName(const nsAString& aName,
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
 
@@ -193,7 +193,7 @@ protected:
   void InvalidateHashTables();
   nsresult PrePopulateHashTables();
 
-  nsIContent *MatchId(nsIContent *aContent, const nsAReadableString& aId);
+  nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
                                      PRUint32 aFlags);
@@ -212,7 +212,7 @@ protected:
 
   NS_IMETHOD GetDomainURI(nsIURI **uri);
 
-  nsresult WriteCommon(const nsAReadableString& aText,
+  nsresult WriteCommon(const nsAString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(PRBool aNewlineTerminate);
   nsresult OpenCommon(nsIURI* aUrl);

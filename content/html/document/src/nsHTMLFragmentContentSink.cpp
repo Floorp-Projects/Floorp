@@ -111,7 +111,7 @@ public:
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) { return NS_OK; }
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
@@ -133,7 +133,7 @@ public:
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent);
 
-  nsresult AddText(const nsAReadableString& aString);
+  nsresult AddText(const nsAString& aString);
   nsresult AddTextToContent(nsIHTMLContent* aContent,const nsString& aText);
   nsresult FlushText();
 
@@ -767,7 +767,7 @@ nsHTMLFragmentContentSink::PopContent()
 #define NS_ACCUMULATION_BUFFER_SIZE 4096
 
 nsresult
-nsHTMLFragmentContentSink::AddText(const nsAReadableString& aString)
+nsHTMLFragmentContentSink::AddText(const nsAString& aString)
 {
   PRInt32 addLen = aString.Length();
   if (0 == addLen) {
@@ -903,7 +903,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
+    const nsAString& key = aNode.GetKeyAt(i);
     k.Assign(key);
     ToLowerCase(k);
 
