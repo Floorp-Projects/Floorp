@@ -61,7 +61,18 @@ var N = 10000;
 var left = repeat_str('(1&', N);
 var right = repeat_str(')', N);
 var str = 'actual = '.concat(left, '1', right, ';');
-eval(str);
+try
+{
+  eval(str);
+}
+catch (e)
+{
+  /*
+   * An exception during this eval is OK, as the runtime can throw one
+   * in response to too deep recursion. We haven't crashed; good!
+   */
+  actual = 1;
+}
 expect = 1;
 addThis();
 
