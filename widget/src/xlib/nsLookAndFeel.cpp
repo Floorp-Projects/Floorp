@@ -17,6 +17,7 @@
  */
 
 #include "nsLookAndFeel.h"
+#include "nsWidget.h"
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
@@ -26,34 +27,23 @@ nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 {
     NS_INIT_REFCNT();
 
-#ifdef XLIB_WIDGET_NOISY
-    printf("nsLookAndFeel::nsLookAndFeel()\n");
-#endif
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::nsLookAndFeel()\n"));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-#ifdef XLIB_WIDGET_NOISY
-    printf("nsLookAndFeel::~nsLookAndFeel()\n");
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::~nsLookAndFeel()\n"));
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
-#ifdef XLIB_WIDGET_NOISY
-    printf("nsLookAndFeel::GetColor()\n");
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor()\n"));
     return NS_OK;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
-#ifdef XLIB_WIDGET_NOISY
-    printf("nsLookAndFeel::GetMetric()\n");
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric()\n"));
     // XXX These are not complete!
     nsresult res = NS_OK;
     switch (aID) { 
@@ -117,9 +107,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
-#ifdef XLIB_WIDGET_NOISY
-    printf("nsLookAndFeel::GetMetric()\n");
-#endif
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric()\n"));
 
     // XXX this is not complete
     nsresult res = NS_OK;

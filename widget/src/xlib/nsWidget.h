@@ -24,6 +24,7 @@
 #include <X11/Xos.h>
 #include "nsBaseWidget.h"
 #include "nsHashtable.h"
+#include "prlog.h"
 
 #ifdef DEBUG_blizzard
 #define XLIB_WIDGET_NOISY
@@ -132,11 +133,14 @@ protected:
   void WidgetMove       (nsWidget *aWidget);
   void WidgetMoveResize (nsWidget *aWidget);
   void WidgetResize     (nsWidget *aWidget);
+  void WidgetShow       (nsWidget *aWidget);
+  // check to see whether or not a rect will intersect with the current scrolled area
+  PRBool WidgetVisible  (nsRect   &aBounds);
 
   PRUint32       mScrollX;
   PRUint32       mScrollY;
 
-  PRBool         mIsShown;
+  PRBool         mIsVisible;
 
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
@@ -154,8 +158,9 @@ protected:
   unsigned long  mBorderPixel;
   GC             mGC;             // until we get gc pooling working...
   nsString       mName;           // name of the type of widget
-
 };
+
+extern PRLogModuleInfo *XlibWidgetsLM;
 
 #endif
 

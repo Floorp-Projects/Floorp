@@ -21,6 +21,8 @@
 
 #include "xlibrgb.h"
 
+PRLogModuleInfo *XlibWidgetsLM = PR_NewLogModule("XlibWidgets");
+
 // set up our static members here.
 nsHashtable *nsWidget::window_list = nsnull;
 
@@ -70,7 +72,7 @@ nsWidget::nsWidget() : nsBaseWidget()
   mName = "unnamed";
   mScrollX = 0;
   mScrollY = 0;
-  mIsShown = PR_FALSE;
+  mIsVisible = PR_FALSE;
 }
 
 nsWidget::~nsWidget()
@@ -164,27 +166,18 @@ NS_IMETHODIMP nsWidget::Destroy()
 
 NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::Move(x, y)\n");
-#endif
+
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Move(x, y)\n"));
 
   if (aX < 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** x is %d, fixing.\n", aX);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** x is %d, fixing.\n", aX));
     aX = 0;
   }
   if (aY < 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** y is %d, fixing.\n", aY);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** y is %d, fixing.\n", aY));
     aY = 0;
   }
-#ifdef XLIB_WIDGET_NOISY
-  printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
   mBounds.x = aX;
   mBounds.y = aY;
   if (mParentWidget) {
@@ -199,27 +192,17 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::Resize(width, height)\n");
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Resize(width, height)\n"));
 
   if (aWidth <= 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** width is %d, fixing.\n", aWidth);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** width is %d, fixing.\n", aWidth));
     aWidth = 1;
   }
   if (aHeight <= 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** height is %d, fixing.\n", aHeight);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** height is %d, fixing.\n", aHeight));
     aHeight = 1;
   }
-#ifdef XLIB_WIDGET_NOISY
-  printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
   mBounds.width = aWidth;
   mBounds.height = aHeight;
   if (mParentWidget) {
@@ -236,42 +219,28 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::Resize(x, y, width, height)\n");
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Resize(x, y, width, height)\n"));
 
   if (aWidth <= 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** width is %d, fixing.\n", aWidth);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** width is %d, fixing.\n", aWidth));
     aWidth = 1;
   }
   if (aHeight <= 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** height is %d, fixing.\n", aHeight);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** height is %d, fixing.\n", aHeight));
     aHeight = 1;
   }
   if (aX < 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** x is %d, fixing.\n", aX);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** x is %d, fixing.\n", aX));
     aX = 0;
   }
   if (aY < 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** y is %d, fixing.\n", aY);
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** y is %d, fixing.\n", aY));
     aY = 0;
   }
-#ifdef XLIB_WIDGET_NOISY
-  printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
-  printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG,
+         ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
+         ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
   mBounds.x = aX;
   mBounds.y = aY;
   mBounds.width = aWidth;
@@ -296,19 +265,13 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::Invalidate(sync)\n");
-#endif
-
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Invalidate(sync)\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::Invalidate(rect, sync)\n");
-#endif
-
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Invalidate(rect, sync)\n"));
   return NS_OK;
 }
 
@@ -402,10 +365,25 @@ NS_IMETHODIMP nsWidget::SetColorMap(nsColorMap *aColorMap)
 
 NS_IMETHODIMP nsWidget::Show(PRBool bState)
 {
-  if (mBaseWindow) {
-    XMapWindow(mDisplay, mBaseWindow);
+  if (bState) {
+    if (mParentWidget) {
+      ((nsWidget *)mParentWidget)->WidgetShow(this);
+    }
+    else {
+      if (mBaseWindow) {
+        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Mapping window...\n"));
+        XMapWindow(mDisplay, mBaseWindow);
+      }
+    }
+    mIsVisible = PR_TRUE;
   }
-  mIsShown = PR_TRUE;
+  else {
+    if (mBaseWindow) {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unmapping window...\n"));
+      XUnmapWindow(mDisplay, mBaseWindow);
+    }
+    mIsVisible = PR_FALSE;
+  }
   return NS_OK;
 }
 
@@ -421,18 +399,13 @@ NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 
 NS_IMETHODIMP nsWidget::Update()
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::Update()\n");
-#endif
-
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Update()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget::SetBackgroundColor()\n");
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetBackgroundColor()\n"));
 
   nsBaseWidget::SetBackgroundColor(aColor);
   mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
@@ -501,35 +474,26 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
   int width;
   int height;
 
-#ifdef XLIB_WIDGET_NOISY
-  printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
-         (const char *) nsAutoCString(mName));
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
+         ("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
+          (const char *) nsAutoCString(mName)));
 
   if (mName == "unnamed") {
-    printf("What freaking widget is this, anyway?\n");
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG,
+           ("What freaking widget is this, anyway?\n"));
   }
-#endif
-
-#ifdef XLIB_WIDGET_NOISY
-  printf("Creating XWindow: x %d y %d w %d h %d\n",
-         aRect.x, aRect.y, aRect.width, aRect.height);
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Creating XWindow: x %d y %d w %d h %d\n",
+                                       aRect.x, aRect.y, aRect.width, aRect.height));
 
   if (aRect.width <= 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** Fixing width...\n");
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** Fixing width...\n"));
     width = 1;
   }
   else {
     width = aRect.width;
   }
   if (aRect.height <= 0) {
-#ifdef XLIB_WIDGET_NOISY
-    printf("*** Fixing height...\n");
-#endif
-
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("*** Fixing height...\n"));
     height = 1;
   }
   else {
@@ -547,11 +511,9 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                               aMask,
                               &aAttr);
 
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWidget: Created window 0x%lx with parent 0x%lx\n",
-         mBaseWindow, aParent);
-#endif
-
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
+         ("nsWidget: Created window 0x%lx with parent 0x%lx\n",
+          mBaseWindow, aParent));
   // XXX when we stop getting lame values for this remove it.
   // sometimes the dimensions have been corrected by the code above.
   mBounds.height = height;
@@ -720,19 +682,79 @@ void nsWidget::WidgetPut(nsWidget *aWidget)
 
 void nsWidget::WidgetMove(nsWidget *aWidget)
 {
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::WidgetMove()\n"));
   XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-              aWidget->mBounds.x, aWidget->mBounds.y);
+              aWidget->mBounds.x - mScrollX,
+              aWidget->mBounds.y - mScrollY);
+  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
+    if (aWidget->mIsVisible == PR_FALSE) {
+      aWidget->Show(PR_TRUE);
+    }
+  }
+  else {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
+    aWidget->Show(PR_FALSE);
+  }
 }
 
 void nsWidget::WidgetResize(nsWidget *aWidget)
 {
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::WidgetResize()\n"));
+  // note that we do the resize before a map.
   XResizeWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                aWidget->mBounds.width, aWidget->mBounds.height);
+                aWidget->mBounds.width,
+                aWidget->mBounds.height);
+  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
+    if (aWidget->mIsVisible == PR_FALSE) {
+      aWidget->Show(PR_TRUE);
+    }
+  }
+  else {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
+    aWidget->Show(PR_FALSE);
+  }
 }
 
 void nsWidget::WidgetMoveResize(nsWidget *aWidget)
 {
-  XMoveResizeWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                    aWidget->mBounds.x, aWidget->mBounds.y,
-                    aWidget->mBounds.width, aWidget->mBounds.height);
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::WidgetMoveResize()\n"));
+  XResizeWindow(aWidget->mDisplay,
+                aWidget->mBaseWindow,
+                aWidget->mBounds.width, aWidget->mBounds.height);
+  XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
+              aWidget->mBounds.x - mScrollX,
+              aWidget->mBounds.y - mScrollY);
+  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
+    if (aWidget->mIsVisible == PR_FALSE) {
+      aWidget->Show(PR_TRUE);
+    }
+  }
+  else {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
+    aWidget->Show(PR_FALSE);
+  }
+}
+
+void nsWidget::WidgetShow(nsWidget *aWidget)
+{
+  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+    XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
+    mIsVisible = PR_TRUE;
+  }
+}
+
+PRBool nsWidget::WidgetVisible(nsRect &aBounds)
+{
+  nsRect mScrollArea;
+  mScrollArea.x = mScrollX;
+  mScrollArea.y = mScrollY;
+  mScrollArea.width = mBounds.width + mScrollX;
+  mScrollArea.height = mBounds.height + mScrollY;
+  if (mScrollArea.Intersects(aBounds)) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }

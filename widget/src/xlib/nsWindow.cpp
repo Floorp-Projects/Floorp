@@ -73,9 +73,7 @@ void nsWindow::CreateNative(Window aParent, nsRect aRect)
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWindow::Invalidate(sync)\n");
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Invalidate(sync)\n"));
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = this;
@@ -93,9 +91,7 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWindow::Invalidate(rect, sync)\n");
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Invalidate(rect, sync)\n"));
 
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
@@ -114,9 +110,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWindow::Update()
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWindow::Update()\n");
-#endif
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Update()\n"));
 
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
@@ -135,10 +129,33 @@ NS_IMETHODIMP nsWindow::Update()
 
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-#ifdef XLIB_WIDGET_NOISY
-  printf("nsWindow::Scroll()\n");
-#endif
-
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Scroll()\n"));
+  mScrollX += aDx;
+  mScrollY += aDy;
+  
+  //--------
+  // Scroll the children
+  nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
+  if (children)
+    {
+      children->First();
+      do
+        {
+          nsISupports* child;
+          if (NS_SUCCEEDED(children->CurrentItem(&child)))
+            {
+              nsWindow* childWindow = static_cast<nsWindow*>(child);
+              NS_RELEASE(child);
+              
+              nsRect bounds;
+              childWindow->GetBounds(bounds);
+              bounds.x += aDx;
+              bounds.y += aDy;
+              childWindow->Move(bounds.x, bounds.y);
+            }
+        } while (NS_SUCCEEDED(children->Next()));                       
+    }
+  
   if (aClipRect)
     Invalidate(*aClipRect, PR_TRUE);
   else 
