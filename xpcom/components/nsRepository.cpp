@@ -19,9 +19,9 @@
 #include <stdlib.h>
 
 #ifndef XP_MAC
-	// including this on mac causes odd link errors in static initialization stuff that we
-	// (pinkerton & scc) don't yet understand. If you want to turn this on for mac, talk
-	// to one of us.
+	// including this on mac causes odd link errors in static initialization
+	// stuff that we (pinkerton & scc) don't yet understand. If you want to
+	// turn this on for mac, talk to one of us.
 	#include <iostream.h>
 #endif
 
@@ -46,10 +46,12 @@
 #endif
 #endif
 
+#include "xcDllStore.h"
 #include "nsIServiceManager.h"
 
 nsHashtable *nsRepository::factories = NULL;
 PRMonitor *nsRepository::monitor = NULL;
+DllStore *nsRepository::dllStore = NULL;
 
 static PRLogModuleInfo *logmodule = NULL;
 
@@ -60,29 +62,81 @@ public:
   nsCID cid;
   nsIFactory *factory;
   char *library;
-  PRLibrary *instance;
+  
+  // DO NOT DELETE THIS. Many FactoryEntry(s) could be sharing the same Dll.
+  // This gets deleted from the dllStore going away.
+  Dll *dll;	
 
-  FactoryEntry(const nsCID &aClass, nsIFactory *aFactory, 
-               const char *aLibrary) {
-    cid = aClass;
-    factory = aFactory;
-    if (aLibrary != NULL) {
+  FactoryEntry(const nsCID &aClass, nsIFactory *aFactory,
+	  const char *aLibrary)
+	  : cid(aClass), factory(aFactory), library(NULL), dll(NULL)
+  {
+	  DllStore *dllCollection = nsRepository::dllStore;
+
+	  if (aLibrary == NULL)
+	  {
+		  return;
+	  }
+
       library = PL_strdup(aLibrary);
-    } else {
-      library = NULL;
-    }
-    instance = NULL;
+	  if (library == NULL)
+	  {
+		  // No memory
+		  return;
+	  }
+
+	  // If dll not already in dllCollection, add it.
+	  dll = dllCollection->Get(library);
+	  if (dll == NULL)
+	  {
+		  // Add a new Dll into the DllStore
+		  dll = new Dll(library);
+		  if (dll->GetStatus() != DLL_OK)
+		  {
+			  // Cant create a DllInfo. Backoff.
+			  delete dll;
+			  dll = NULL;
+			  PL_strfree(library);
+			  library = NULL;
+		  }
+		  else
+		  {
+			  dllCollection->Put(library, dll);
+		  }
+	  }
   }
-  ~FactoryEntry(void) {
-    if (library != NULL) {
-      free(library);
-    }
-    if (instance != NULL) {
-      PR_UnloadLibrary(instance);
-    }
-    if (factory != NULL) {
-      factory->Release();
-    }
+
+  ~FactoryEntry(void)
+  {
+	  if (library != NULL) {
+		  free(library);
+	  }
+	  if (factory != NULL) {
+		  factory->Release();
+	  }
+	  // DO NOT DELETE Dll *dll;
+  }
+};
+
+class IDKey: public nsHashKey {
+private:
+  nsID id;
+  
+public:
+  IDKey(const nsID &aID) {
+    id = aID;
+  }
+  
+  PRUint32 HashValue(void) const {
+    return id.m0;
+  }
+
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (id.Equals(((const IDKey *) aKey)->id));
+  }
+
+  nsHashKey *Clone(void) const {
+    return new IDKey(id);
   }
 };
 
@@ -143,7 +197,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
                                  
       delete [] cidString;
       if (err == REGERR_OK) {
-        res = new FactoryEntry(aCID, NULL, library);
+		  res = new FactoryEntry(aCID, NULL, library);
       }
     }
     NR_RegClose(hreg);
@@ -212,39 +266,44 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
                                    nsIFactory **aFactory)
 {
-  if (aFactory == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aFactory = NULL;
+	if (aFactory == NULL)
+	{
+		return NS_ERROR_NULL_POINTER;
+	}
+	*aFactory = NULL;
+	
+	if (aEntry->dll->IsLoaded() == PR_FALSE)
+	{
+		// Load the dll
+		PR_LOG(logmodule, PR_LOG_ALWAYS, 
+			("nsRepository: + Loading \"%s\".", aEntry->library));
+		if (aEntry->dll->Load() == PR_FALSE)
+		{
+			PR_LOG(logmodule, PR_LOG_ERROR,
+				("nsRepository: Library load unsuccessful."));
+			return (NS_ERROR_FAILURE);
+		}
+	}
 
-  if (aEntry->instance == NULL) {
-    PR_LOG(logmodule, PR_LOG_ALWAYS, 
-           ("nsRepository: + Loading \"%s\".", aEntry->library));
-    aEntry->instance = PR_LoadLibrary(aEntry->library);
-  }
-  if (aEntry->instance != NULL) {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-    // Inform refcnt tracer of new library so that calls through the
-    // new library can be traced.
-    nsTraceRefcnt::LoadLibrarySymbols(aEntry->library, aEntry->instance);
+	// Inform refcnt tracer of new library so that calls through the
+	// new library can be traced.
+	nsTraceRefcnt::LoadLibrarySymbols(aEntry->library, aEntry->dll->GetInstance());
 #endif
-    nsFactoryProc proc = (nsFactoryProc) PR_FindSymbol(aEntry->instance,
-                                                       "NSGetFactory");
-    if (proc != NULL) {
-      nsIServiceManager* serviceMgr = NULL;
-      nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-      if (res == NS_OK) {
-        res = proc(aEntry->cid, serviceMgr, aFactory);
-      }
-      return res;
-    }
-    PR_LOG(logmodule, PR_LOG_ERROR, 
-           ("nsRepository: NSGetFactory entrypoint not found."));
-  }
-
-  PR_LOG(logmodule, PR_LOG_ERROR,
-         ("nsRepository: Library load unsuccessful."));
-  return NS_ERROR_FACTORY_NOT_LOADED;
+	nsFactoryProc proc = (nsFactoryProc) aEntry->dll->FindSymbol("NSGetFactory");
+	if (proc != NULL)
+	{
+		nsIServiceManager* serviceMgr = NULL;
+		nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+		if (res == NS_OK)
+		{
+			res = proc(aEntry->cid, serviceMgr, aFactory);
+		}
+		return res;
+	}
+	PR_LOG(logmodule, PR_LOG_ERROR, 
+		("nsRepository: NSGetFactory entrypoint not found."));
+	return NS_ERROR_FACTORY_NOT_LOADED;
 }
 
 nsresult nsRepository::FindFactory(const nsCID &aClass,
@@ -319,6 +378,9 @@ nsresult nsRepository::Initialize(void)
   }
   if (logmodule == NULL) {
     logmodule = PR_NewLogModule("nsRepository");
+  }
+  if (dllStore == NULL) {
+    dllStore = new DllStore();
   }
 
   PR_LOG(logmodule, PR_LOG_ALWAYS, 
@@ -574,16 +636,14 @@ static PRBool freeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
 {
   FactoryEntry *entry = (FactoryEntry *) aData;
 
-  if (entry->instance != NULL) {
-    nsCanUnloadProc proc = (nsCanUnloadProc) PR_FindSymbol(entry->instance,
-                                                           "NSCanUnload");
+  if (entry->dll->IsLoaded() == PR_TRUE) {
+    nsCanUnloadProc proc = (nsCanUnloadProc) entry->dll->FindSymbol("NSCanUnload");
     if (proc != NULL) {
       PRBool res = proc();
       if (res) {
         PR_LOG(logmodule, PR_LOG_ALWAYS, 
                ("nsRepository: + Unloading \"%s\".", entry->library));
-        PR_UnloadLibrary(entry->instance);
-        entry->instance = NULL;
+        entry->dll->Unload();
       }
     }    
   }

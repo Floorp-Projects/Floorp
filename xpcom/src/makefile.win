@@ -61,6 +61,8 @@ CPPSRCS =			\
         nsXPComFactory.cpp      \
         nsEventQueueService.cpp \
         nsAllocator.cpp         \
+	xcDll.cpp \
+	xcDllStore.cpp \
 	$(NULL)
 
 CPP_OBJS = \
@@ -75,6 +77,8 @@ CPP_OBJS = \
         .\$(OBJDIR)\nsXPComFactory.obj          \
         .\$(OBJDIR)\nsEventQueueService.obj     \
         .\$(OBJDIR)\nsAllocator.obj             \
+    .\$(OBJDIR)\xcDll.obj \
+	.\$(OBJDIR)\xcDllStore.obj \
 	$(NULL)
 
 MODULE = xpcom 
