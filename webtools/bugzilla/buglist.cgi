@@ -1548,8 +1548,8 @@ if($::usergroupset ne '0') {
         print "
 <INPUT TYPE=radio NAME=knob VALUE=confirm>
         Confirm bugs (change status to <b>NEW</b>)<br>";
+        $knum++;
     }
-    $knum++;
     print "
 <INPUT TYPE=radio NAME=knob VALUE=accept>
         Accept bugs (change status to <b>ASSIGNED</b>)<br>";
