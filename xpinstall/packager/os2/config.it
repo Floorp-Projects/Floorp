@@ -601,22 +601,12 @@ Message=
 
 
 ;Copy FileX sections
-;Copy the uninstaller to the [Setup Path]\Uninstall folder.
-;This copy is to be used when the user installed on a system with
-;restricted access.
-;[Copy File0]
-;Timing=post smartupdate
-;Source=[WINDIR]\$UninstallFile$
-;Destination=[SETUP PATH]\Uninstall
-;Fail If Exists=FALSE
-;Do Not Uninstall=FALSE
-
-;[Copy File1]
-;Timing=post smartupdate
-;Source=[XPI PATH]\$UninstallFile$
-;Destination=[WINDIR]
-;Fail If Exists=FALSE
-;Do Not Uninstall=TRUE
+[Copy File0]
+Timing=post smartupdate
+Source=[XPI PATH]\$MainIcoFile$
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
 
 
 ;Copy File SequentialX sections
@@ -671,6 +661,65 @@ Decrypt App=FALSE
 Decrypt Key=FALSE
 Decrypt Key Value=TRUE
 Timing=pre smartupdate
+
+[OS2 INI1]
+App=$ProductName$ $UserAgent$
+Key=Install Directory
+Key Value=[SETUP PATH]
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
+[OS2 INI2]
+App=$ProductName$ $UserAgent$
+Key=Uninstall Log Folder
+Key Value=[SETUP PATH]\Uninstall
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
+[OS2 INI3]
+App=$ProductName$
+Key=Current Version
+Key Value=$ProductName$ $UserAgent$
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
+[OS2 INI4]
+App=$ProductName$ $UserAgent$
+Key=Plugins
+Key Value=[SETUP PATH]\Plugins
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
+[OS2 INI5]
+App=Mozilla 1.0 (en)
+Key=Components
+Key Value=[SETUP PATH]\Components
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
+[OS2 INI6]
+App=$ProductName$ $UserAgent$
+Key=PathToExe
+Key Value=[SETUP PATH]\$MainExeFile$
+Decrypt App=FALSE
+Decrypt Key=FALSE
+Decrypt Key Value=TRUE
+Timing=pre smartupdate
+
+[Cleanup Previous Product RegKeys]
+Product Name0=Mozilla
+Product Reg Key0=Software\Mozilla.org\Mozilla
+Current Version0=1.0 (en)
 
 [Cleanup Previous Product RegKeys]
 Product Name0=Mozilla
