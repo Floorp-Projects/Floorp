@@ -589,7 +589,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                 blendFunction.BlendFlags = 0;
                 blendFunction.SourceConstantAlpha = 255;
                 blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
-                gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy, aSWidth, aSHeight, blendFunction);
+                gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY, aSWidth, aSHeight, blendFunction);
               } else {
                 ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,aSWidth, aSHeight, rop);
               }
@@ -607,7 +607,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
             blendFunction.BlendFlags = 0;
             blendFunction.SourceConstantAlpha = 255;
             blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
-            gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy, aSWidth, aSHeight, blendFunction);
+            gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY, aSWidth, aSHeight, blendFunction);
           } else {
             ::StretchBlt(TheHDC,aDX,aDY,aDWidth,aDHeight,srcDC,aSX,aSY,aSWidth,aSHeight,rop);
           }
