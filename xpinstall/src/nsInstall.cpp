@@ -1168,7 +1168,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     nsIStringBundleService* service = nsnull;
     nsIEventQueueService* pEventQueueService = nsnull;
     nsIStringBundle* bundle = nsnull;
-    nsIBidirectionalEnumerator* propEnum = nsnull;
+    nsCOMPtr<nsISimpleEnumerator> propEnum;
     *aReturn = JSVAL_NULL;
     jsval v = JSVAL_NULL;
 
@@ -1207,7 +1207,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 #if 1
     {
       nsXPIDLCString spec;
-      ret = resFile->GetURL(getter_Copies(spec));
+      NS_GetURLFromFile(resFile, getter_Copies(spec));
       if (NS_FAILED(ret)) {
         NS_WARNING("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
@@ -1220,21 +1220,24 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 #endif
     if (NS_FAILED(ret)) 
         goto cleanup;
-    ret = bundle->GetEnumeration(&propEnum);
+    ret = bundle->GetSimpleEnumeration(getter_AddRefs(propEnum));
     if (NS_FAILED(ret))
         goto cleanup;
 
     // set the variables of the JSObject to return using the StringBundle's
     // enumeration service
-    ret = propEnum->First();
-    if (NS_FAILED(ret))
-        goto cleanup;
-    while (NS_SUCCEEDED(ret))
+    PRBool hasMore;
+    while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore)
     {
-        nsIPropertyElement* propElem = nsnull;
-        ret = propEnum->CurrentItem((nsISupports**)&propElem);
+        nsCOMPtr<nsISupports> nextProp;
+        ret = propEnum->GetNext(getter_AddRefs(nextProp));
         if (NS_FAILED(ret))
             goto cleanup;
+        
+        nsCOMPtr<nsIPropertyElement> propElem =
+            do_QueryInterface(nextProp);
+        if (!propElem)
+            continue;
 
         nsXPIDLString pKey;
         nsXPIDLString pVal;
@@ -1255,7 +1258,6 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
             jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
             JS_SetProperty(cx, res, keyCStr.get(), &propValJSVal);
         }
-        ret = propEnum->Next();
     }
 	 
     *aReturn = OBJECT_TO_JSVAL(res);
@@ -1271,7 +1273,6 @@ cleanup:
     // release file, URL, StringBundle, Enumerator
     NS_IF_RELEASE( url );
     NS_IF_RELEASE( bundle );
-    NS_IF_RELEASE( propEnum );
 
     return NS_OK;
 }
