@@ -310,12 +310,17 @@ nsresult nsComponentManagerImpl::Init(void)
         return rv;
     }
 
-	rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &mClassesKey);
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &mClassesKey);
     if (NS_FAILED(rv))
     {        
         return rv;
     }
 
+    rv = mRegistry->AddSubtree(nsIRegistry::Common, classIDKeyName, &mCLSIDKey);
+    if (NS_FAILED(rv))
+    {
+        return rv;
+    }
 
 #endif
 
@@ -561,12 +566,8 @@ nsComponentManagerImpl::PlatformRegister(QuickRegisterData* regd, nsDll *dll)
 
     nsresult rv;
     
-    nsIRegistry::Key clsIDkey;
-    rv = mRegistry->AddSubtree(mClassesKey, classIDKeyName, &clsIDkey);
-    if (NS_FAILED(rv)) return (rv);
-
     nsIRegistry::Key IDkey;
-    rv = mRegistry->AddSubtreeRaw(clsIDkey, regd->CIDString, &IDkey);
+    rv = mRegistry->AddSubtreeRaw(mCLSIDKey, regd->CIDString, &IDkey);
     if (NS_FAILED(rv)) return (rv);
 
 
@@ -613,12 +614,8 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     
     nsresult rv;
 
-    nsIRegistry::Key clsIDKey;
-    rv = mRegistry->AddSubtree(mClassesKey, classIDKeyName, &clsIDKey);
-    if(NS_FAILED(rv)) return rv;
-    	
     nsIRegistry::Key cidKey;
-    rv = mRegistry->AddSubtreeRaw(clsIDKey,regd->CIDString, &cidKey);
+    rv = mRegistry->AddSubtreeRaw(mCLSIDKey,regd->CIDString, &cidKey);
 
     char *progID = NULL;
     rv = mRegistry->GetString(cidKey, progIDValueName, &progID);
@@ -629,7 +626,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
         PR_FREEIF(progID);
     }
 
-    mRegistry->RemoveSubtree(clsIDKey, regd->CIDString);
+    mRegistry->RemoveSubtree(mCLSIDKey, regd->CIDString);
     	
     nsIRegistry::Key libKey;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey,aLibrary, &libKey);
@@ -662,13 +659,9 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 
     nsresult rv;
 
-    nsIRegistry::Key clsIDKey;
-    rv = mRegistry->AddSubtree(mClassesKey, classIDKeyName, &clsIDKey);
-    if (NS_FAILED(rv)) return rv;
-
     char *cidString = aCID.ToString();
     nsIRegistry::Key cidKey;
-    rv = mRegistry->GetSubtreeRaw(clsIDKey, cidString, &cidKey);
+    rv = mRegistry->GetSubtreeRaw(mCLSIDKey, cidString, &cidKey);
     delete [] cidString;
 
     if (NS_FAILED(rv)) return rv;
