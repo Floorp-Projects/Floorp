@@ -49,6 +49,12 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
+
+
 /* Network */
 
 #include "net.h"
@@ -202,6 +208,8 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 nsPrefMigration* nsPrefMigration::mInstance = nsnull;
 
@@ -1936,4 +1944,190 @@ nsPrefMigration::ShowPMDialogEngine(nsIDialogParamBlock *ioParamBlock, const cha
  }
 
 #endif /* 0 */
+
+
+// This is to be called per string pref to check whether the input pref needs
+// charset conversion (from platform charset to UTF-8) for the pref migration.
+PRBool
+nsPrefMigration::PrefStringNeedsCharsetConversion(const char* prefName)
+{
+  //TODO: we need a complete list of 4.x prefs which are saved as the platform charset.
+  // also may need an extensibility in addition to the hard coded names.
+  const char *names[] = {
+    "mail.identity.username",
+     ""
+  };
+
+  for (int i = 0; names[i][0]; i++) {
+    if (!nsCRT::strcasecmp(prefName, names[i]))
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+// for UTF-8 detection
+#define kLeft1BitMask  0x80
+#define kLeft2BitsMask 0xC0
+#define kLeft3BitsMask 0xE0
+#define kLeft4BitsMask 0xF0
+#define kLeft5BitsMask 0xF8
+#define kLeft6BitsMask 0xFC
+#define kLeft7BitsMask 0xFE
+
+#define k2BytesLeadByte kLeft2BitsMask
+#define k3BytesLeadByte kLeft3BitsMask
+#define k4BytesLeadByte kLeft4BitsMask
+#define k5BytesLeadByte kLeft5BitsMask
+#define k6BytesLeadByte kLeft6BitsMask
+#define kTrialByte      kLeft1BitMask
+
+#define UTF8_1Byte(c) ( 0 == ((c) & kLeft1BitMask))
+#define UTF8_2Bytes(c) ( k2BytesLeadByte == ((c) & kLeft3BitsMask))
+#define UTF8_3Bytes(c) ( k3BytesLeadByte == ((c) & kLeft4BitsMask))
+#define UTF8_4Bytes(c) ( k4BytesLeadByte == ((c) & kLeft5BitsMask))
+#define UTF8_5Bytes(c) ( k5BytesLeadByte == ((c) & kLeft6BitsMask))
+#define UTF8_6Bytes(c) ( k6BytesLeadByte == ((c) & kLeft7BitsMask))
+#define UTF8_ValidTrialByte(c) ( kTrialByte == ((c) & kLeft2BitsMask))
+
+// Check if the given C string is UTF-8 or not.
+PRBool
+nsPrefMigration::IsUTF8String(const unsigned char* utf8)
+{
+  if(NULL == utf8)
+    return PR_TRUE;
+  return IsUTF8Text(utf8, nsCRT::strlen((char *)utf8));}
+
+// Check if the given buffer is UTF-8 or not.
+PRBool
+nsPrefMigration::IsUTF8Text(const unsigned char* utf8, PRInt32 len)
+{
+   PRInt32 i;
+   PRInt32 j;
+   PRInt32 clen;
+   for(i =0; i < len; i += clen)
+   {
+      if(UTF8_1Byte(utf8[i]))
+      {
+        clen = 1;
+      } else if(UTF8_2Bytes(utf8[i])) {
+        clen = 2;
+        /* No enough trail bytes */
+        if( (i + clen) > len) 
+          return PR_FALSE;
+        /* 0000 0000 - 0000 007F : should encode in less bytes */
+        if(0 ==  (utf8[i] & 0x1E )) 
+          return PR_FALSE;
+      } else if(UTF8_3Bytes(utf8[i])) {
+        clen = 3;
+        /* No enough trail bytes */
+        if( (i + clen) > len) 
+          return PR_FALSE;
+        /* a single Surrogate should not show in 3 bytes UTF8, instead, the pair 
+           should be intepreted
+           as one single UCS4 char and encoded UTF8 in 4 bytes */
+        if((0xED == utf8[i] ) && (0xA0 ==  (utf8[i+1] & 0xA0 ) )) 
+          return PR_FALSE;
+        /* 0000 0000 - 0000 07FF : should encode in less bytes */
+        if((0 ==  (utf8[i] & 0x0F )) && (0 ==  (utf8[i+1] & 0x20 ) )) 
+          return PR_FALSE;
+      } else if(UTF8_4Bytes(utf8[i])) {
+        clen = 4;
+        /* No enough trail bytes */
+        if( (i + clen) > len) 
+          return PR_FALSE;
+        /* 0000 0000 - 0000 FFFF : should encode in less bytes */
+        if((0 ==  (utf8[i] & 0x07 )) && (0 ==  (utf8[i+1] & 0x30 )) ) 
+          return PR_FALSE;
+      } else if(UTF8_5Bytes(utf8[i])) {
+        clen = 5;
+        /* No enough trail bytes */
+        if( (i + clen) > len) 
+          return FALSE;
+        /* 0000 0000 - 001F FFFF : should encode in less bytes */
+        if((0 ==  (utf8[i] & 0x03 )) && (0 ==  (utf8[i+1] & 0x38 )) ) 
+          return PR_FALSE;
+      } else if(UTF8_6Bytes(utf8[i])) {
+        clen = 6;
+        /* No enough trail bytes */
+        if( (i + clen) > len) 
+          return PR_FALSE;
+        /* 0000 0000 - 03FF FFFF : should encode in less bytes */
+        if((0 ==  (utf8[i] & 0x01 )) && (0 ==  (utf8[i+1] & 0x3E )) ) 
+          return PR_FALSE;
+      } else {
+        return PR_FALSE;
+      }
+      for(j = 1; j<clen ;j++)
+      {
+        if(! UTF8_ValidTrialByte(utf8[i+j])) /* Trail bytes invalid */
+          return PR_FALSE;
+      }
+   }
+   return PR_TRUE;
+}
+
+// A wrapper function to call the interface to get a platform file charset.
+nsresult 
+nsPrefMigration::GetPlatformCharset(nsAutoString& aCharset)
+{
+  nsresult rv;
+
+  // we may cache it since the platform charset will not change through application life
+  nsCOMPtr <nsIPlatformCharset> platformCharset;
+  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                         NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+  if (NS_SUCCEEDED(rv)) {
+   rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+  }
+  if (NS_FAILED(rv)) {
+   aCharset.SetString("ISO-8859-1");  // use ISO-8859-1 in case of any error
+  }
+ 
+  return rv;
+}
+
+// Apply a charset conversion from the given charset to UTF-8 for the input C string.
+nsresult 
+nsPrefMigration::ConvertStringToUTF8(nsAutoString& aCharset, const char* inString, char** outString)
+{
+  if (nsnull == outString)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv;
+  // convert result to unicode
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
+
+  if(NS_SUCCEEDED(rv)) {
+    nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached
+
+    rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+    if(NS_SUCCEEDED(rv) && decoder) {
+      PRInt32 uniLength = 0;
+      PRInt32 srcLength = nsCRT::strlen(inString);
+      rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
+      if (NS_SUCCEEDED(rv)) {
+        PRUnichar *unichars = new PRUnichar [uniLength];
+
+        if (nsnull != unichars) {
+          // convert to unicode
+          rv = decoder->Convert(inString, &srcLength, unichars, &uniLength);
+          if (NS_SUCCEEDED(rv)) {
+            nsAutoString aString;
+            aString.SetString(unichars, uniLength);
+            // convert to UTF-8
+            *outString = aString.ToNewUTF8String();
+          }
+          delete [] unichars;
+        }
+        else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+    }    
+  }
+
+  return rv;
+}
+
 
