@@ -1057,7 +1057,8 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 #ifdef  RICKG_DEBUG
 void WriteTokenToLog(CToken* aToken) {
 
-  static fstream outputStream("c:/temp/tokenlog.html",ios::out);
+  static nsFileSpec fileSpec("c:\\temp\\tokenlog.html");
+  static nsOutputFileStream outputStream(fileSpec);
   aToken->DebugDumpSource(outputStream); //write token without close bracket...
 }
 #endif

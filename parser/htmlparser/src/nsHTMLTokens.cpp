@@ -250,7 +250,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @param   out -- ostream to output content
  *  @return  
  */
-void CStartToken::DebugDumpSource(ostream& out) {
+void CStartToken::DebugDumpSource(nsOutputStream& out) {
   char buffer[1000];
   mTextValue.ToCString(buffer,sizeof(buffer));
   out << "<" << buffer;
@@ -376,7 +376,7 @@ PRInt32 CEndToken::GetTokenType(void) {
  *  @param   out -- ostream to output content
  *  @return  
  */
-void CEndToken::DebugDumpSource(ostream& out) {
+void CEndToken::DebugDumpSource(nsOutputStream& out) {
   char buffer[1000];
   mTextValue.ToCString(buffer,sizeof(buffer));
   out << "</" << buffer << ">";
@@ -1085,12 +1085,12 @@ void CAttributeToken::SanitizeKey() {
  *  @param   out -- ostream to output content
  *  @return  
  */
-void CAttributeToken::DebugDumpToken(ostream& out) {
+void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
   char buffer[200];
   mTextKey.ToCString(buffer,sizeof(buffer));
   out << "[" << GetClassName() << "] " << buffer << "=";
   mTextValue.ToCString(buffer,sizeof(buffer));
-  out << buffer << ": " << mTypeID << endl;
+  out << buffer << ": " << mTypeID << nsEndl;
 }
  
 /*
@@ -1287,7 +1287,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @param   out -- ostream to output content
  *  @return  
  */
-void CAttributeToken::DebugDumpSource(ostream& out) {
+void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
   static char buffer[1000];
   mTextKey.ToCString(buffer,sizeof(buffer));
   out << " " << buffer;
@@ -1583,7 +1583,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
  *  @param   out -- ostream to output content
  *  @return  
  */
-void CEntityToken::DebugDumpSource(ostream& out) {
+void CEntityToken::DebugDumpSource(nsOutputStream& out) {
   char* cp=mTextValue.ToNewCString();
   out << "&" << *cp;
   delete[] cp;
@@ -1771,7 +1771,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
  *  @param   out -- ostream to output content
  *  @return  
  */
-void CSkippedContentToken::DebugDumpSource(ostream& out) {
+void CSkippedContentToken::DebugDumpSource(nsOutputStream& out) {
   static char buffer[1000];
   mTextKey.ToCString(buffer,sizeof(buffer));
   out << " " << buffer;
@@ -1893,6 +1893,10 @@ const nsParserError * CErrorToken::GetError(void)
 // Doctype decl token
 
 CDoctypeDeclToken::CDoctypeDeclToken() : CHTMLToken(eHTMLTag_unknown) {
+}
+
+nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+ return ConsumeComment(aChar,aScanner,mTextValue);
 }
 
 const char*  CDoctypeDeclToken::GetClassName(void) {

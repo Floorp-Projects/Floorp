@@ -235,7 +235,7 @@ friend class CTokenHandler;
      */
     virtual nsresult ResumeParse(nsIDTD* mDefaultDTD=0, PRBool aIsFinalChunk=PR_FALSE);
 
-    void  DebugDumpSource(ostream& anOutput);
+    void  DebugDumpSource(nsOutputStream& anOutput);
 
      //*********************************************
       // These methods are callback methods used by
