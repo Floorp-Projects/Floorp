@@ -161,18 +161,11 @@ BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
     mLine.Truncate();
 
     nsresult rv;
-    nsIRDFNode* bookmarks;
-    if (NS_SUCCEEDED(rv = mResourceMgr->GetNode(kURI_bookmarks, bookmarks))) {
-        mStack.AppendElement(bookmarks);
+    char buf[1024];
+    PRInt32 len;
 
-        char buf[1024];
-        PRInt32 len;
-
-        while ((len = PR_Read(file, buf, sizeof(buf))) > 0)
-            Tokenize(buf, len);
-
-        NS_RELEASE(bookmarks);
-    }
+    while ((len = PR_Read(file, buf, sizeof(buf))) > 0)
+        Tokenize(buf, len);
 
     NS_IF_RELEASE(mLastItem);
 
@@ -207,7 +200,6 @@ BookmarkParser::AddColumns(void)
         kURIWEB_LastModifiedDate,
         nsnull
     };
-
 
     const char* const* columnTitle = gColumnTitles;
     const char* const* columnURI   = gColumnURIs;
@@ -274,24 +266,29 @@ BookmarkParser::NextToken(void)
         return;
     }
 
-    /* ok, we have a piece of content. can be the title, or a description */
+    // ok, we have a piece of content. can be the title, or a
+    // description
     if ((mState == eBookmarkParserState_InTitle) ||
         (mState == eBookmarkParserState_InH3)) {
-        // Create a new folder
-        nsAutoString folderURI(kURI_bookmarks);
-        folderURI.Append('#');
-        folderURI.Append(++mCounter, 10);
-
-        nsIRDFNode* parent = (nsIRDFNode*) mStack[mStack.Count() - 1];
-        PR_ASSERT(parent);
-        if (! parent)
-            return;
-
         nsIRDFNode* folder;
-        if (NS_FAILED(mResourceMgr->GetNode(folderURI, folder)))
-            return;
 
-        rdf_Assert(mResourceMgr, mDataSource, parent, kURINC_Folder, folder);
+        if (mStack.Count() > 0) {
+            // a regular old folder
+            nsAutoString folderURI(kURI_bookmarks);
+            folderURI.Append('#');
+            folderURI.Append(++mCounter, 10);
+
+            if (NS_FAILED(mResourceMgr->GetNode(folderURI, folder)))
+                return;
+
+            nsIRDFNode* parent = (nsIRDFNode*) mStack[mStack.Count() - 1];
+            rdf_Assert(mResourceMgr, mDataSource, parent, kURINC_Folder, folder);
+        }
+        else {
+            // it's the root
+            if (NS_FAILED(mResourceMgr->GetNode(kURI_bookmarks, folder)))
+                return;
+        }
 
         if (mFolderDate.Length()) {
             AssertTime(folder, kURINC_BookmarkAddDate, mFolderDate);
@@ -432,6 +429,7 @@ BookmarkParser::CreateBookmark(void)
     if (values[eBmkAttribute_LastModified].Length() > 0)
         AssertTime(bookmark, kURIWEB_LastModifiedDate, values[eBmkAttribute_LastModified]);
 
+    NS_IF_RELEASE(mLastItem);
     mLastItem = bookmark;
 }
 
