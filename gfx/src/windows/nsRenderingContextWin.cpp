@@ -1151,8 +1151,13 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOut(mDC,x,y,0,NULL,aString,aLength,NULL);
 
-  if (GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
-    DrawLine(aX, aY, aX + aWidth, aY);
+  PRUint8 decorations = GetFont().decorations;
+  if (decorations & NS_FONT_DECORATION_OVERLINE) {
+    nscoord offset;
+    nscoord size;
+    mFontMetrics->GetUnderline(offset, size);
+    FillRect(aX, aY, aWidth, size);
+  }
 }
 
 void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
@@ -1165,8 +1170,13 @@ void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLen
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOutW(mDC,x,y,0,NULL,aString,aLength,NULL);
 
-  if (GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
-    DrawLine(aX, aY, aX + aWidth, aY);
+  PRUint8 decorations = GetFont().decorations;
+  if (decorations & NS_FONT_DECORATION_OVERLINE) {
+    nscoord offset;
+    nscoord size;
+    mFontMetrics->GetUnderline(offset, size);
+    FillRect(aX, aY, aWidth, size);
+  }
 }
 
 void nsRenderingContextWin :: DrawString(const nsString& aString,
