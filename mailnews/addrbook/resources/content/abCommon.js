@@ -184,15 +184,7 @@ var DirPaneController =
         else
           return false;
       case "button_edit":
-        selectedDir = GetSelectedDirectory();
-        if (selectedDir) {
-          var directory = GetDirectoryFromURI(selectedDir);
-          var properties = directory.directoryProperties;
-          if ((directory.isMailList) || 
-              (properties.dirType == kLDAPDirectory || properties.dirType == kPABDirectory))
-             return true;
-        }
-        return false;
+        return (GetSelectedDirectory() != null);
       default:
         return false;
     }
