@@ -43,6 +43,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   // nsIHTMLReflow
