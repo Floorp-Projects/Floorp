@@ -36,8 +36,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
-#include "nsAutoLock.h"
-
 #include "nsIAtom.h"  //hack!  Need a way to define a component as threadsafe (ie. sta).
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -440,7 +438,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
 
 
 
-void DestroyHandler(PLEvent *self) 
+static void DestroyHandler(PLEvent *self) 
 {
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     nsProxyObject* proxyObject = owner->GetProxyObject();
@@ -459,7 +457,7 @@ void DestroyHandler(PLEvent *self)
 
 }
 
-void* EventHandler(PLEvent *self) 
+static void* EventHandler(PLEvent *self) 
 {
     nsProxyObjectCallInfo *info = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     NS_ASSERTION(info, "No nsProxyObjectCallInfo!");
@@ -468,8 +466,6 @@ void* EventHandler(PLEvent *self)
         
     if (proxyObject)
     {
-        nsAutoLock lock(proxyObject->GetLock());
-        
         // invoke the magic of xptc...
         nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
                                           info->GetMethodIndex(),
@@ -484,11 +480,11 @@ void* EventHandler(PLEvent *self)
     return NULL;
 }
 
-void CompletedDestroyHandler(PLEvent *self) 
+static void CompletedDestroyHandler(PLEvent *self) 
 {
 }
 
-void* CompletedEventHandler(PLEvent *self) 
+static void* CompletedEventHandler(PLEvent *self) 
 {
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     owner->SetCompleted();
