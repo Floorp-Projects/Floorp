@@ -25,7 +25,7 @@
    -    Sammy Ford
   -->
 
-<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
@@ -129,7 +129,7 @@
 <toolbox id="EditorToolbox">
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar id="EditToolbar" class="standard chromeclass-toolbar" persist="collapsed">
+  <toolbar class="toolbar-primary chromeclass-toolbar" id="EditToolbar" persist="collapsed">
     <button id="newButton"/>
     <button id="openButton"/>
     <button id="saveButton"/>
@@ -145,13 +145,10 @@
     <button id="namedAnchorButton"/>
     <spring flex="1"/>
 
-	  <box id="toolbar_throbber_box" align="vertical">
-			<titledbutton id="Throbber" oncommand='goClickThrobber("editor.throbber.url")'>
-        <observes element="Editor:Throbber" attribute="busy"/>
-			</titledbutton>
-	  </box>
+    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("editor.throbber.url")'>
+      <observes element="Editor:Throbber" attribute="busy"/>
+    </button>
   </toolbar>
-
   <toolbar id="FormatToolbar" class="chromeclass-toolbar" persist="collapsed">
   <!-- We need this else menulists get stretched -->
   <box autostretch="never">
@@ -189,7 +186,6 @@
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome"/>
 
   <box id="appcontent" orient="vertical" flex="1">
-  
     <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
 
     <toolbar id="EditModeToolbar" chromeclass="extrachrome" persist="collapsed">

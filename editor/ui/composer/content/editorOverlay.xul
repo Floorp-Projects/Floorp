@@ -622,19 +622,19 @@
 
   <!-- Editor toolbar items -->
   <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
-  <button class="key-toolbar left" orient="vertical" id="newButton" observes="cmd_newEditor" value="&newMenu.label;" />
-  <button class="key-toolbar left" orient="vertical" id="openButton" observes="Editor:Open" value="&openToolbarCmd.label;"/>
-  <button class="key-toolbar left" orient="vertical" id="saveButton" observes="Editor:Save"/>
-  <button class="key-toolbar left" orient="vertical" id="previewButton" observes="Editor:Preview" value="&previewToolbarCmd.label;"/>
-  <button class="toolbar left" orient="vertical" id="printButton" observes="Editor:Print" value="&printToolbarCmd.label;"/>
-  <button class="toolbar left" orient="vertical" id="findButton" observes="cmd_find" value="&findToolbarCmd.label;"/>
-  <button class="toolbar left" orient="vertical" id="spellingButton" value="&spellToolbarCmd.label;" oncommand="CheckSpelling()"/>
+  <button class="button-toolbar-2 top" id="newButton" observes="cmd_newEditor" value="&newMenu.label;" />
+  <button class="button-toolbar-2 top" id="openButton" observes="Editor:Open" value="&openToolbarCmd.label;"/>
+  <button class="button-toolbar-2 top" id="saveButton" observes="Editor:Save"/>
+  <button class="button-toolbar-2 top" id="previewButton" observes="Editor:Preview" value="&previewToolbarCmd.label;"/>
+  <button class="button-toolbar-2 top" id="printButton" observes="Editor:Print" value="&printToolbarCmd.label;"/>
+  <button class="button-toolbar-2 top" id="findButton" observes="cmd_find" value="&findToolbarCmd.label;"/>
+  <button class="button-toolbar-2 top" id="spellingButton" value="&spellToolbarCmd.label;" oncommand="CheckSpelling()"/>
 
-  <button class="toolbar left" orient="vertical" id="imageButton" value="&imageToolbarCmd.label;" oncommand="EditorInsertOrEditImage()"/>
-  <button class="toolbar left" orient="vertical" id="hlineButton" value="&hruleToolbarCmd.label;" oncommand="EditorInsertOrEditHLine()"/>
-  <button class="toolbar left" orient="vertical" id="tableButton" value="&tableToolbarCmd.label;" oncommand="EditorInsertOrEditTable(true)"/>
-  <button class="toolbar left" orient="vertical" id="linkButton" value="&linkToolbarCmd.label;" oncommand="EditorInsertOrEditLink()"/>
-  <button class="toolbar left" orient="vertical" id="namedAnchorButton" value="&anchorToolbarCmd.label;" oncommand="EditorInsertOrEditNamedAnchor()"/>
+  <button class="button-toolbar-2 top" id="imageButton" value="&imageToolbarCmd.label;" oncommand="EditorInsertOrEditImage()"/>
+  <button class="button-toolbar-2 top" id="hlineButton" value="&hruleToolbarCmd.label;" oncommand="EditorInsertOrEditHLine()"/>
+  <button class="button-toolbar-2 top" id="tableButton" value="&tableToolbarCmd.label;" oncommand="EditorInsertOrEditTable(true)"/>
+  <button class="button-toolbar-2 top" id="linkButton" value="&linkToolbarCmd.label;" oncommand="EditorInsertOrEditLink()"/>
+  <button class="button-toolbar-2 top" id="namedAnchorButton" value="&anchorToolbarCmd.label;" oncommand="EditorInsertOrEditNamedAnchor()"/>
 
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
   <menulist id="ParagraphSelect">
