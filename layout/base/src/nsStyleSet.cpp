@@ -35,6 +35,8 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nsLayoutAtoms.h"
 #include "nsTimer.h"
+#include "nsICSSStyleSheet.h"
+#include "nsNetUtil.h"
 #ifdef MOZ_PERF_METRICS
   #include "nsITimeRecorder.h"
   #define STYLESET_START_TIMER(a) \
@@ -86,6 +88,8 @@ public:
   virtual PRInt32 GetNumberOfBackstopStyleSheets();
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex);
   virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets);
+
+  NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable);
 
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
@@ -223,6 +227,8 @@ protected:
 
   nsIStyleFrameConstruction* mFrameConstructor;
 
+  nsIStyleSheet*    mQuirkStyleSheet; // cached instance for enabling/disabling
+
 #ifdef DEBUG_SC_SHARING
   nsVoidArray       mStyleContextCache; // a cache of all style contexts for faster searching
                                         // when we want to find style contexts in GetContext
@@ -242,6 +248,7 @@ StyleSetImpl::StyleSetImpl()
     mBackstopSheets(nsnull),
     mRuleProcessors(nsnull),
     mRecycler(nsnull),
+    mQuirkStyleSheet(nsnull),
     mFrameConstructor(nsnull)
 #ifdef DEBUG_SC_SHARING
     ,mStyleContextCache(0)
@@ -261,6 +268,7 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mRuleProcessors);
   NS_IF_RELEASE(mFrameConstructor);
   NS_IF_RELEASE(mRecycler);
+  NS_IF_RELEASE(mQuirkStyleSheet);
 #ifdef DEBUG_SC_SHARING
   NS_ASSERTION( mStyleContextCache.Count() == 0, "StyleContextCache is not empty: leaking style context?");
 #endif
@@ -550,6 +558,47 @@ PRInt32 StyleSetImpl::GetNumberOfBackstopStyleSheets()
     return cnt;
   }
   return 0;
+}
+
+NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
+{
+  const char kQuirk_href[] = "resource:/res/quirk.css";
+  nsresult rv = NS_OK;
+
+  if (nsnull == mQuirkStyleSheet) {
+    // first find the quirk sheet:
+    // - run through all of the backstop sheets and check for a CSSStyleSheet that
+    //   has the URL we want
+    PRUint32 i, nSheets = GetNumberOfBackstopStyleSheets();
+    for (i=0; i< nSheets; i++) {
+      nsCOMPtr<nsIStyleSheet> sheet;
+      sheet = getter_AddRefs(GetBackstopStyleSheetAt(i));
+      if (sheet) {
+        nsCOMPtr<nsICSSStyleSheet> cssSheet;
+        sheet->QueryInterface(nsICSSStyleSheet::GetIID(), getter_AddRefs(cssSheet));
+        if (cssSheet) {
+          static nsIURI *url = nsnull;
+          if (url == nsnull) NS_NewURI(&url, kQuirk_href);
+          nsCOMPtr<nsIStyleSheet> quirkSheet;
+          PRBool bHasSheet = PR_FALSE;
+          if (NS_SUCCEEDED(cssSheet->ContainsStyleSheet(url, bHasSheet, getter_AddRefs(quirkSheet))) && url && bHasSheet) {
+            NS_ASSERTION(quirkSheet, "QuirkSheet must be set: ContainsStyleSheet is hosed");
+            // cache the sheet for faster lookup next time
+            mQuirkStyleSheet = quirkSheet.get();
+            // addref for our cached reference
+            NS_ADDREF(mQuirkStyleSheet);
+          }
+        }
+      }
+    }
+  }
+  if (mQuirkStyleSheet) {
+#ifdef DEBUG
+    printf( "%s Quirk StyleSheet\n", aEnable ? "Enabling" : "Disabling" );
+#endif
+    mQuirkStyleSheet->SetEnabled(aEnable);
+  }
+  return rv;
 }
 
 nsIStyleSheet* StyleSetImpl::GetBackstopStyleSheetAt(PRInt32 aIndex)
@@ -1456,7 +1505,10 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   if (mRecycler && uniqueItems->AddItem(mRecycler)){
     aSize += sizeof(*mRecycler);
   }
-    ///////////////////////////////////////////////
+  if (mQuirkStyleSheet) {
+    aSize += sizeof(mQuirkStyleSheet);  // just the pointer: the sheet is counted elsewhere
+  }
+  ///////////////////////////////////////////////
   // now the FrameConstructor
   if(mFrameConstructor && uniqueItems->AddItem((void*)mFrameConstructor)){
     aSize += sizeof(mFrameConstructor);

@@ -38,7 +38,7 @@ class nsICSSStyleSheet : public nsIStyleSheet {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_SHEET_IID; return iid; }
 
-  NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL) const = 0;
+  NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild=nsnull) = 0;
 
   NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
   NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;

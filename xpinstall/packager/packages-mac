@@ -191,6 +191,7 @@ viewer:res:URLFieldSchema.tbl
 viewer:res:DistinguishedSchema.tbl
 viewer:res:html:*
 viewer:res:html.css
+viewer:res:quirk.css
 viewer:res:maccharset.properties 
 viewer:res:rdf:article.gif
 viewer:res:rdf:collapser.gif

@@ -67,8 +67,8 @@ INCLUDES	+= \
 		-I$(DIST)/public/raptor \
 		$(NULL)
 
-GARBAGE		+= $(DIST)/bin/res/ua.css $(DIST)/bin/res/html.css $(DIST)/bin/res/arrow.gif
+GARBAGE		+= $(DIST)/bin/res/ua.css $(DIST)/bin/res/html.css $(DIST)/bin/res/quirk.css $(DIST)/bin/res/arrow.gif
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/ua.css $(srcdir)/html.css $(srcdir)/arrow.gif $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/ua.css $(srcdir)/html.css $(srcdir)/quirk.css $(srcdir)/arrow.gif $(DIST)/bin/res
 
