@@ -93,11 +93,10 @@ function nsWidgetStateManager ( aFrameID )
   
 nsWidgetStateManager.prototype = 
   {
-    contentArea getter: 
-      function() 
-        { 
-          return window.frames[ this.contentID ]; 
-        },
+    get contentArea()
+      { 
+        return window.frames[ this.contentID ]; 
+      },
 
     savePageData: 
       function ( aPageTag )
