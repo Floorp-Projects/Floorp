@@ -74,33 +74,34 @@ sub AlertBadVoteCache {
 sub CrossCheck {
     my $table = shift @_;
     my $field = shift @_;
+
     Status("Checking references to $table.$field");
-    SendSQL("SELECT DISTINCT $field FROM $table");
-    my %valid;
-    while (MoreSQLData()) {
-        $valid{FetchOneColumn()} = 1;
-    }
+
     while (@_) {
         my $ref = shift @_;
-        my ($t2, $f2, $key2, $exceptions) = @$ref;
+        my ($refertable, $referfield, $keyname, $exceptions) = @$ref;
 
         $exceptions ||= [];
         my %exceptions = map { $_ => 1 } @$exceptions;
 
-        Status("... from $t2.$f2");
+        Status("... from $refertable.$referfield");
         
-        SendSQL("SELECT DISTINCT $f2" . ($key2 ? ", $key2" : '') ." FROM $t2 "
-                . "WHERE $f2 IS NOT NULL");
+        SendSQL("SELECT DISTINCT $refertable.$referfield" . ($keyname ? ", $refertable.$keyname" : '') . " " .
+                "FROM   $refertable LEFT JOIN $table " .
+                "  ON   $refertable.$referfield = $table.$field " .
+                "WHERE  $table.$field IS NULL " .
+                "  AND  $refertable.$referfield IS NOT NULL");
+
         while (MoreSQLData()) {
             my ($value, $key) = FetchSQLData();
-            if (!$valid{$value} && !$exceptions{$value}) {
-                my $alert = "Bad value $value found in $t2.$f2";
-                if ($key2) {
-                    if ($key2 eq 'bug_id') {
-                        $alert .= qq{ (<a href="show_bug.cgi?id=$key">bug $key</a>)};
+            if (!$exceptions{$value}) {
+                my $alert = "Bad value $value found in $refertable.$referfield";
+                if ($keyname) {
+                    if ($keyname eq 'bug_id') {
+                        $alert .= ' (bug ' . BugLink($key) . ')';
                     }
                     else {
-                        $alert .= " ($key2 == '$key')";
+                        $alert .= " ($keyname == '$key')";
                     }
                 }
                 Alert($alert);
