@@ -377,8 +377,9 @@ public static class Template implements ASN1Template {
                     // use the default
                     seq.addElement( e.getDefault() );
                 } else {
-                    throw new InvalidBERException("Missing item #"+index+
-                        " need tag " + lookAhead.getTag() + " element tag " + e.getImplicitTag() + " in SEQUENCE");
+                    throw new InvalidBERException("Missing item #" + index +
+                        ": expecting " + lookAhead.getTag() + ", found"
+                        + e.getImplicitTag() );
                 }
                 continue;
             }
