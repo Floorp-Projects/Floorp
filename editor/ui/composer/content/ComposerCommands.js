@@ -583,7 +583,7 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
   } 
 
   // check if there is a title we can use
-  var title = aHTMLDoc.title;
+  var title = Components.lookupMethod(aHTMLDoc, 'title').call(aHTMLDoc);
   if (title.length > 0) // we have a title; let's see if it's usable
   {
     // clean up the title to make it a usable filename
@@ -686,7 +686,7 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
 {
   if (!aHTMLDoc) throw NS_ERROR_NULL_POINTER;
 
-  var title = aHTMLDoc.title;
+  var title = Components.lookupMethod(aHTMLDoc, 'title').call(aHTMLDoc);
   if (title.length > 0) // we have a title; no need to prompt!
     return true;
 
@@ -1939,16 +1939,17 @@ var nsSendPageCommand =
 
   doCommand: function(aCommand)
   {
-	  // Don't continue if user canceled during prompt for saving
+    // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
     if (!CheckAndSaveDocument("cmd_editSendPage", DocumentHasBeenSaved()))
 	    return;
 
     // Check if we saved again just in case?
-	  if (DocumentHasBeenSaved())
+    if (DocumentHasBeenSaved())
     {
       // Launch Messenger Composer window with current page as contents
-      var pageTitle = window.editorShell.editorDocument.title;
+      var pageDoc = window.editorShell.editorDocument;
+      var pageTitle = Components.lookupMethod(pageDoc, 'title').call(pageDoc);
       var pageUrl = GetDocumentUrl();
       try
       {

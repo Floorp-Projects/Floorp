@@ -86,7 +86,7 @@
         aDocument = window._content.document;
         
       var pageUrl = aDocument.URL;
-      var pageTitle = aDocument.title;
+      var pageTitle = Components.lookupMethod(aDocument, 'title').call(aDocument);
 
       try {
         openComposeWindow(pageUrl, pageTitle, 1);
@@ -119,7 +119,9 @@
   <!-- navigator specific commands -->
   <commandset id="tasksCommands">
     <command id="cmd_sendPage" oncommand="sendPage();"/>
-    <command id="Browser:SendLink" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
+    <command id="Browser:SendLink"
+             oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
+                                 Components.lookupMethod(window._content.document, 'title').call(window._content.document);"/>
   </commandset>
          
   <!-- navigator specific UI items -->
