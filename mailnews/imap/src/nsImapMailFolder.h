@@ -42,11 +42,6 @@ class nsImapMoveCoalescer;
 
 #endif
 
-/* fa32d000-f6a0-11d2-af8d-001083002da8 */
-#define NS_IMAPRESOURCE_CID \
-{ 0xfa32d000, 0xf6a0, 0x11d2, \
-    { 0xaf, 0x8d, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
-
 class nsImapMailFolder : public nsMsgDBFolder, 
                          public nsIMsgImapMailFolder,
                          public nsIImapMailFolderSink,
