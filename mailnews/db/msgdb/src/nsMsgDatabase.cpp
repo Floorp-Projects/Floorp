@@ -742,6 +742,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 	if (err == NS_OK && m_mdbStore /* && hasOid */)
 	{
 		nsIMdbRow *hdrRow;
+#if 0
         nsIMdbTableRowCursor* rowCursor;                                        
         mdb_pos rowPos = -1;                                                            
                                                                                                                                              
@@ -766,7 +767,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
              while (TRUE);                                                       
              NS_RELEASE(rowCursor);                                              
 		}
-#if 0
+#else
 		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &hdrRow);
 
 		if (err == NS_OK && hdrRow)
