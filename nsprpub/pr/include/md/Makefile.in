@@ -31,7 +31,6 @@
 # GPL.
 # 
 
-
 #! gmake
 
 MOD_DEPTH	= ../../..
@@ -46,163 +45,22 @@ CONFIGS = $(wildcard $(srcdir)/*.cfg)
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef USE_AUTOCONF
-
-ifeq ($(OS_ARCH),IRIX)
-ifeq ($(USE_64), 1)
-MDCPUCFG_H = _irix64.cfg
-else
-MDCPUCFG_H = _irix32.cfg
-endif
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-ifeq ($(OS_TARGET), WIN95)
-MDCPUCFG_H = _win95.cfg
-else
-ifeq ($(OS_TARGET), WIN16)
-MDCPUCFG_H = _win16.cfg
-else
-MDCPUCFG_H = _winnt.cfg
-endif
-endif
-endif
-
-ifeq ($(OS_ARCH),OS2)
-MDCPUCFG_H = _os2.cfg
-endif
-
-ifeq ($(OS_ARCH),AIX)
-ifeq ($(USE_64),1)
-MDCPUCFG_H = _aix64.cfg
-else
-ifeq ($(USE_IPV6),1)
-MDCPUCFG_H = _aix32in6.cfg
-else
-MDCPUCFG_H = _aix32.cfg
-endif
-endif
-endif
-
-ifeq ($(OS_ARCH),BSD_OS)
-MDCPUCFG_H = _bsdi.cfg
-endif
-
-ifeq ($(OS_ARCH),FreeBSD)
-MDCPUCFG_H = _freebsd.cfg
-endif
-
-ifeq ($(OS_ARCH),OpenBSD)
-MDCPUCFG_H = _openbsd.cfg
-endif
-
-ifeq ($(OS_ARCH),OpenVMS)
-MDCPUCFG_H = _openvms.cfg
-endif
-
-ifeq ($(OS_ARCH),NetBSD)
-MDCPUCFG_H = _netbsd.cfg
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-ifeq ($(USE_64), 1)
-MDCPUCFG_H = _hpux64.cfg
-else
-MDCPUCFG_H = _hpux32.cfg
-endif
-endif
-
-ifeq ($(OS_ARCH),Linux)
-MDCPUCFG_H = _linux.cfg
-endif
-
-ifeq ($(OS_ARCH),OSF1)
-MDCPUCFG_H = _osf1.cfg
-endif
-
-ifeq ($(OS_ARCH),SunOS)
-ifeq ($(OS_RELEASE),4.1.3_U1)
-MDCPUCFG_H = _sunos4.cfg
-else
-ifeq ($(USE_64),1)
-MDCPUCFG_H = _solaris64.cfg
-else
-MDCPUCFG_H = _solaris32.cfg
-endif
-endif
-endif
-
-ifeq ($(OS_ARCH),SINIX)
-MDCPUCFG_H = _reliantunix.cfg
-endif
-
-ifeq ($(OS_ARCH),Rhapsody)
-MDCPUCFG_H = _rhapsody.cfg
-endif
-
-ifeq ($(OS_ARCH),NEXTSTEP)
-MDCPUCFG_H = _nextstep.cfg
-endif
-
-ifeq ($(OS_ARCH),NEWS-OS)
-MDCPUCFG_H = _sony.cfg
-endif
-
-ifeq ($(OS_ARCH),NEC)
-MDCPUCFG_H = _nec.cfg
-endif
-
-ifeq ($(OS_ARCH),SCOOS)
-MDCPUCFG_H = _scoos.cfg
-endif
-
-ifeq ($(OS_ARCH),UNIXWARE)
-ifeq (,$(filter-out 2.1,$(OS_RELEASE)))
-MDCPUCFG_H = _unixware.cfg
-else
-MDCPUCFG_H = _unixware7.cfg
-endif
-endif
-
-ifeq ($(OS_ARCH),NCR)
-MDCPUCFG_H = _ncr.cfg
-endif
-
-ifeq ($(OS_ARCH),DGUX)
-MDCPUCFG_H = _dgux.cfg
-endif
-
-ifeq ($(OS_ARCH),QNX)
-MDCPUCFG_H = _qnx.cfg
-endif
-
-ifeq ($(OS_TARGET),NTO)
-MDCPUCFG_H = _nto.cfg
-endif
-
-ifeq ($(OS_ARCH),BeOS)
-MDCPUCFG_H = _beos.cfg
-endif
-
-endif # ! USE_AUTOCONF
-
 export:: $(MDCPUCFG_H)
-ifeq ($(MOZ_BITS),16)
-	cp $(includedir)/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
-	$(INSTALL) -m 444 $(MDCPUCFG_H) $(MOZ_INCL)
-	mv -f $(includedir)/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
-else
-	$(INSTALL) -m 444 $(CONFIGS) $(includedir)/md
-	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(includedir)
+	$(INSTALL) -m 444 $(CONFIGS) $(dist_includedir)/md
+	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)
 ifneq ($(OS_ARCH),OpenVMS)
-	mv -f $(includedir)/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
+	mv -f $(dist_includedir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
 else
 # mv'ing a link causes the file itself to move, not the link.
-	rm -f $(includedir)/$(MDCPUCFG_H)
-	rm -f $(includedir)/prcpucfg.h
-	ln -fs $(srcdir)/$(MDCPUCFG_H) $(includedir)/prcpucfg.h
+	rm -f $(dist_includedir)/$(MDCPUCFG_H)
+	rm -f $(dist_includedir)/prcpucfg.h
+	ln -fs $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
 endif
-endif
+
+real_install::
+	$(NSINSTALL) -D $(DESTDIR)$(includedir)/md
+	cp $(srcdir)/$(MDCPUCFG_H) $(DESTDIR)$(includedir)/prcpucfg.h
+	$(NSINSTALL) -t -m 644 $(CONFIGS) $(HEADERS) $(DESTDIR)$(includedir)/md
 
 release:: export
 	@echo "Copying machine-dependent prcpucfg.h"
