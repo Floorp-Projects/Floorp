@@ -213,6 +213,22 @@ resource 'CURS' (149, locked, preload) {
 	{1, 1}
 };
 
+resource 'CURS' (150, locked, preload) {
+    $"0F00 30C0 4020 4620 8610 9F90 9F90 8610"
+    $"4620 4020 30F0 0F38 001C 000E 0007 0002",
+    $"0F00 3FC0 7FE0 7FE0 FFF0 FFF0 FFF0 FFF0"
+    $"7FE0 7FE0 3FF0 0F38 001C 000E 0007 0002",
+    {6, 6}
+};
+
+resource 'CURS' (151, locked, preload) {
+    $"0F00 30C0 4020 4020 8010 9F90 9F90 8010"
+    $"4020 4020 30F0 0F38 001C 000E 0007 0002",
+    $"0F00 3FC0 7FE0 7FE0 FFF0 FFF0 FFF0 FFF0"
+    $"7FE0 7FE0 3FF0 0F38 001C 000E 0007 0002",
+    {6, 6}
+};
+
 data 'TMPL' (129, "ldes") {
 	$"0756 6572 7369 6F6E 4457 5244 0452 6F77"            /* .VersionDWRD.Row */
 	$"7344 5752 4407 436F 6C75 6D6E 7344 5752"            /* sDWRD.ColumnsDWR */
