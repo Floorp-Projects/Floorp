@@ -58,11 +58,21 @@ public:
 
   NS_IMETHOD    SetParagraphFormat(const nsString& aValue)=0;
 
+  NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
+
+  NS_IMETHOD    NewWindow()=0;
+
+  NS_IMETHOD    Open()=0;
+
   NS_IMETHOD    Save()=0;
 
   NS_IMETHOD    SaveAs()=0;
 
   NS_IMETHOD    CloseWindow()=0;
+
+  NS_IMETHOD    Print()=0;
+
+  NS_IMETHOD    Exit()=0;
 
   NS_IMETHOD    Undo()=0;
 
@@ -96,8 +106,6 @@ public:
 
   NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
 
-  NS_IMETHOD    Exit()=0;
-
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
@@ -117,9 +125,14 @@ public:
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr);  \
   NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas);  \
   NS_IMETHOD    SetParagraphFormat(const nsString& aValue);  \
+  NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
+  NS_IMETHOD    NewWindow();  \
+  NS_IMETHOD    Open();  \
   NS_IMETHOD    Save();  \
   NS_IMETHOD    SaveAs();  \
   NS_IMETHOD    CloseWindow();  \
+  NS_IMETHOD    Print();  \
+  NS_IMETHOD    Exit();  \
   NS_IMETHOD    Undo();  \
   NS_IMETHOD    Redo();  \
   NS_IMETHOD    Cut();  \
@@ -129,7 +142,6 @@ public:
   NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown);  \
   NS_IMETHOD    BeginBatchChanges();  \
   NS_IMETHOD    EndBatchChanges();  \
-  NS_IMETHOD    ShowClipboard();  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
   NS_IMETHOD    InsertLink();  \
   NS_IMETHOD    InsertImage();  \
@@ -137,7 +149,6 @@ public:
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);  \
   NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);  \
   NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);  \
-  NS_IMETHOD    Exit();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
@@ -155,9 +166,14 @@ public:
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr) { return _to RemoveTextProperty(aProp, aAttr); }  \
   NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas) { return _to GetTextProperty(aProp, aAttr, aValue, aFirstHas, aAnyHas, aAllHas); }  \
   NS_IMETHOD    SetParagraphFormat(const nsString& aValue) { return _to SetParagraphFormat(aValue); }  \
+  NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
+  NS_IMETHOD    NewWindow() { return _to NewWindow(); }  \
+  NS_IMETHOD    Open() { return _to Open(); }  \
   NS_IMETHOD    Save() { return _to Save(); }  \
   NS_IMETHOD    SaveAs() { return _to SaveAs(); }  \
   NS_IMETHOD    CloseWindow() { return _to CloseWindow(); }  \
+  NS_IMETHOD    Print() { return _to Print(); }  \
+  NS_IMETHOD    Exit() { return _to Exit(); }  \
   NS_IMETHOD    Undo() { return _to Undo(); }  \
   NS_IMETHOD    Redo() { return _to Redo(); }  \
   NS_IMETHOD    Cut() { return _to Cut(); }  \
@@ -174,7 +190,6 @@ public:
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn) { return _to CreateElementWithDefaults(aTagName, aReturn); }  \
   NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn) { return _to InsertElement(aElement, aDeleteSelection, aReturn); }  \
   NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement) { return _to InsertLinkAroundSelection(aAnchorElement); }  \
-  NS_IMETHOD    Exit() { return _to Exit(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to SetWebShellWindow(aWin); }  \

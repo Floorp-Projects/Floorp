@@ -22,6 +22,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
+#include "prprf.h"
 #include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
@@ -31,6 +32,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
+#include "nsIDiskDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 
@@ -140,8 +142,6 @@ nsEditorAppCore::nsEditorAppCore()
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
-  //mCurrentNode          = nsnull;
-  //mDomDoc               = nsnull;
   mEditor               = nsnull;
 
   IncInstanceCount();
@@ -295,8 +295,11 @@ nsEditorAppCore::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShel
 {
 	NS_PRECONDITION(aDoc && aPresShell, "null ptr");
 	if (!aDoc || !aPresShell)
-	    return NS_ERROR_NULL_POINTER;
+		return NS_ERROR_NULL_POINTER;
 
+	if (mEditor)
+		return NS_ERROR_ALREADY_INITIALIZED;
+    
 	nsresult err = NS_OK;
 	
 	if (mEditorTypeString == "text")
@@ -357,7 +360,7 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 {
 	nsresult	err = NS_OK;
 	
-	NS_PRECONDITION(aWebShell, "null ptr");
+	NS_PRECONDITION(aWebShell, "Need a webshell here");
 	if (!aWebShell)
 	    return NS_ERROR_NULL_POINTER;
 
@@ -375,12 +378,11 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 				nsCOMPtr<nsIDOMDocument> aDOMDoc;
 				if (NS_SUCCEEDED(aDoc->QueryInterface(kIDOMDocumentIID, (void**)getter_AddRefs(aDOMDoc))))
 				{
-					nsIPresShell* presShell = GetPresShellFor(aWebShell);
+					nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(GetPresShellFor(aWebShell));
 					if( presShell )
 					{
 						err = InstantiateEditor(aDOMDoc, presShell);
 					}
-					NS_IF_RELEASE(presShell);
 				}
 			}
 		}
@@ -605,7 +607,44 @@ nsEditorAppCore::SetEnableCallback(const nsString& aScript)
 NS_IMETHODIMP    
 nsEditorAppCore::LoadUrl(const nsString& aUrl)
 {
+  char *urlstr = aUrl.ToNewCString();
+
+  if (!urlstr)
+    return NS_OK;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
+	if (globalObj)
+	{
+	  nsCOMPtr<nsIWebShell> webShell;
+	  globalObj->GetWebShell(getter_AddRefs(webShell));
+	  if (webShell)
+		  webShell->LoadURL(nsString(urlstr).GetUnicode());
+	}
+	
+  delete[] urlstr;
+
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::MakeEditor()
+{
+	NS_PRECONDITION(mContentWindow, "Content window not set yet");
+	if (!mContentWindow)
+		return NS_ERROR_NOT_INITIALIZED;
+		
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (webShell) {
+    DoEditorMode(webShell);
+  }
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -632,16 +671,16 @@ nsEditorAppCore::SetContentWindow(nsIDOMWindow* aWin)
   mContentWindow = aWin;
   NS_ADDREF(aWin);
   mContentScriptContext = GetScriptContext(aWin);
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
-  if (!globalObj) {
-    return NS_ERROR_FAILURE;
-  }
 
-  nsIWebShell * webShell;
-  globalObj->GetWebShell(&webShell);
-  if (nsnull != webShell) {
-    DoEditorMode(webShell);
-    NS_RELEASE(webShell);
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
+  if (!globalObj)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (webShell)
+  {
+    webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
   }
 
   return NS_OK;
@@ -690,13 +729,83 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsEditorAppCore::NewWindow()
-{  
-  return NS_ERROR_NOT_IMPLEMENTED;
+NS_IMETHODIMP
+nsEditorAppCore::CreateWindowWithURL(const char* urlStr)
+{
+  nsresult rv = NS_OK;
+  
+  /*
+   * Create the Application Shell instance...
+   */
+  nsIAppShellService* appShell = nsnull;
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&appShell);
+  if (NS_FAILED(rv))
+  	return rv;
+
+  nsCOMPtr<nsIURL> url = nsnull;
+  nsIWebShellWindow* newWindow = nsnull;
+  
+  rv = NS_NewURL(getter_AddRefs(url), urlStr);
+  if (NS_FAILED(rv) || !url)
+    goto done;
+
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
+              nsnull, nsnull, 615, 480);
+  
+done:
+  /* Release the shell... */
+  if (nsnull != appShell) {
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  }
+
+	return rv;
 }
 
 NS_IMETHODIMP    
+nsEditorAppCore::NewWindow()
+{  
+  return CreateWindowWithURL("chrome://editor/content/");
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::Open()
+{
+	nsresult	rv;
+	
+	nsFileSpec docFileSpec;
+	
+	nsCOMPtr<nsIFileWidget>	fileWidget;
+
+static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
+
+	rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, getter_AddRefs(fileWidget));
+	if (NS_FAILED(rv) || !fileWidget)
+		return rv;
+		
+	nsAutoString  promptString("Open document to edit");			// XXX i18n, l10n
+	nsAutoString titles[] = {"HTML Files"};
+	nsAutoString filters[] = {"*.htm; *.html"};
+  fileWidget->SetFilterList(1, titles, filters);
+
+	nsFileDlgResults dialogResult;
+	dialogResult = fileWidget->GetFile(nsnull, promptString, docFileSpec);
+	if (dialogResult == nsFileDlgResults_Cancel)
+		return NS_OK;
+ 
+ 	// stolen from browser app core.
+  nsFileURL fileURL(docFileSpec);
+  char buffer[1024];
+  const nsAutoCString cstr(fileURL.GetAsString());
+  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
+  ExecuteScript( mToolbarScriptContext, buffer );
+  
+  return rv;
+}
+
+NS_IMETHODIMP
 nsEditorAppCore::Save()
 {
 	nsresult	err = NS_NOINTERFACE;
@@ -755,8 +864,59 @@ nsEditorAppCore::SaveAs()
 NS_IMETHODIMP    
 nsEditorAppCore::CloseWindow()
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIDOMDocument>  theDoc;
+	if (NS_SUCCEEDED(GetEditorDocument(getter_AddRefs(theDoc))) && theDoc)
+	{
+ 	  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc);
+	  if (diskDoc)
+	  {
+	    PRInt32  modCount = 0;
+	    diskDoc->GetModCount(&modCount);
+	  
+	    if (modCount > 0)
+	    {
+	      // Show the Save/Dont save dialog, somehow.
+	    
+	    }
+	  }
+	
+	}
+
+  return rv;
 }
+
+NS_IMETHODIMP    
+nsEditorAppCore::Print()
+{ 
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::PrintPreview()
+{ 
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::Exit()
+{  
+  nsIAppShellService* appShell = nsnull;
+
+  /*
+   * Create the Application Shell instance...
+   */
+  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                             kIAppShellServiceIID,
+                                             (nsISupports**)&appShell);
+  if (NS_SUCCEEDED(rv)) {
+    appShell->Shutdown();
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  } 
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP    
 nsEditorAppCore::Undo()
@@ -1417,39 +1577,6 @@ void nsEditorAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, 
 
 }
 
-
-NS_IMETHODIMP    
-nsEditorAppCore::PrintPreview()
-{ 
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsEditorAppCore::Close()
-{  
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP    
-nsEditorAppCore::Exit()
-{  
-  nsIAppShellService* appShell = nsnull;
-
-  /*
-   * Create the Application Shell instance...
-   */
-  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                             kIAppShellServiceIID,
-                                             (nsISupports**)&appShell);
-  if (NS_SUCCEEDED(rv)) {
-    appShell->Shutdown();
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  } 
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP    
 nsEditorAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)
 {
@@ -1469,24 +1596,59 @@ nsEditorAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScr
   return NS_OK;
 }
 
-
-//static nsIDOMDocument* mDomDoc;
-//static nsIDOMNode* mCurrentNode;
-
-//static nsIEditor *gEditor;
-
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
-static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
-
-#ifdef XP_PC
-#define EDITOR_DLL "ender.dll"
-#else
 #ifdef XP_MAC
-#define EDITOR_DLL "ENDER_DLL"
-#else // XP_UNIX
-#define EDITOR_DLL "libender.so"
-#endif
+#pragma mark -
 #endif
 
+// nsIDocumentLoaderObserver methods
+NS_IMETHODIMP
+nsEditorAppCore::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand)
+{
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
+{
+   return MakeEditor();
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIURL* aURL, const char* aContentType,
+                                 nsIContentViewer* aViewer)
+{
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIURL* aURL, PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIURL* aURL, nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIURL* aURL, PRInt32 aStatus)
+{
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIURL *aURL,
+                                           const char *aContentType,
+                                           const char *aCommand )
+{
+   return NS_OK;
+}

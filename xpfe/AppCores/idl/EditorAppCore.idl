@@ -20,10 +20,15 @@ interface EditorAppCore : BaseAppCore
 	
   void setParagraphFormat(in DOMString value);
 
+	void loadUrl(in DOMString url);
+	
+	void newWindow();
+	void open();
 	void save();
 	void saveAs();
-	
 	void closeWindow();
+	void print();
+	void exit();
 	
 	void undo();
 	void redo();
@@ -49,8 +54,6 @@ interface EditorAppCore : BaseAppCore
   Element insertElement(in Element element, in boolean deleteSelection);
 	void    insertLinkAroundSelection(in Element anchorElement);
   
-	void exit();
-
 	void setToolbarWindow(in Window win);
 	void setContentWindow(in Window win);
 	void setWebShellWindow(in Window win);

@@ -25,6 +25,7 @@
 #include "nsISupports.h"
 
 #include "nsIDOMEditorAppCore.h"
+#include "nsIDocumentLoaderObserver.h"
 #include "nsBaseAppCore.h"
 #include "nsINetSupport.h"
 #include "nsIStreamObserver.h"
@@ -47,7 +48,8 @@ class nsIOutputStream;
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEditorAppCore : public nsBaseAppCore, 
-                        public nsIDOMEditorAppCore
+                        public nsIDOMEditorAppCore,
+                        public nsIDocumentLoaderObserver
 {
   public:
 
@@ -89,9 +91,14 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
 
+	  NS_IMETHOD    NewWindow();
+	  NS_IMETHOD    Open();
 	  NS_IMETHOD    Save();
   	NS_IMETHOD    SaveAs();
   	NS_IMETHOD    CloseWindow();
+    NS_IMETHOD    PrintPreview();
+	  NS_IMETHOD    Print();
+    NS_IMETHOD    Exit();
 
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
@@ -121,12 +128,19 @@ class nsEditorAppCore : public nsBaseAppCore,
 	  NS_IMETHOD    BeginBatchChanges();
 	  NS_IMETHOD    EndBatchChanges();
 
-    NS_IMETHOD    NewWindow();
-    NS_IMETHOD    PrintPreview();
-    NS_IMETHOD    Close();
-    NS_IMETHOD    Exit();
-
-
+    // nsIDocumentLoaderObserver
+    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus);
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, 
+                           		 nsIContentViewer* aViewer);
+    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRInt32 aStatus);
+    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
+                                        nsIURL *aURL,
+                                        const char *aContentType,
+                                        const char *aCommand );
   protected:
   
   	typedef enum {
@@ -140,6 +154,8 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
     NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
+		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
+		NS_IMETHOD  	  MakeEditor();
 		
     nsString            mEnableScript;     
     nsString            mDisableScript;     
