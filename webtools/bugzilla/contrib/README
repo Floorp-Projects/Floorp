@@ -12,6 +12,9 @@ This directory includes:
    mysqld-watcher.pl --  This script can be installed as a frequent cron 
                          job to clean up stalled/dead queries.
 
+         gnatsparse/ --  A Python script used to import a GNATS database
+                         into Bugzilla.
+
          gnats2bz.pl --  A perl script to help import bugs from a GNATS 
                          database into a Bugzilla database.  Contributed by
                          Tom Schutter <tom@platte.com>
