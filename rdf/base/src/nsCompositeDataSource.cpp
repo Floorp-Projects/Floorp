@@ -126,8 +126,6 @@ protected:
     nsISimpleEnumerator* mCurrent;
     nsIRDFNode*       mResult;
     PRInt32           mNext;
-
-    nsVoidArray mAlreadyReturned;
 };
 
         
@@ -144,10 +142,6 @@ CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompo
 
 CompositeEnumeratorImpl::~CompositeEnumeratorImpl(void)
 {
-    for (PRInt32 i = mAlreadyReturned.Count() - 1; i >= 0; --i) {
-        nsIRDFNode* node = (nsIRDFNode*) mAlreadyReturned[i];
-        NS_RELEASE(node);
-    }
 
     NS_IF_RELEASE(mCurrent);
     NS_IF_RELEASE(mResult);
@@ -247,34 +241,13 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
             }
 
 
-            // Now see if we've returned it once already.
-            // XXX N.B. performance here...may want to hash if things get large?
-            PRBool alreadyReturned = PR_FALSE;
-            for (i = mAlreadyReturned.Count() - 1; i >= 0; --i) {
-                if (mAlreadyReturned[i] == mResult) {
-                    alreadyReturned = PR_TRUE;
-                    break;
-                }
-            }
 
-            if (alreadyReturned) {
-                NS_RELEASE(mResult);
-                continue;
-            }
 
             // If we get here, then we've really found one. It'll
             // remain cached in mResult until GetNext() sucks it out.
             *aResult = PR_TRUE;
 
-            // Remember that we returned it, so we don't return
-            // duplicates.
-
-            // XXX I wonder if we should make unique-checking be
-            // optional. This could get to be pretty expensive (this
-            // implementation turns iteration into O(n^2)).
-            mAlreadyReturned.AppendElement(mResult);
-            NS_ADDREF(mResult);
-
+ 
             return NS_OK;
         } while (1);
 
