@@ -32,6 +32,8 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
+static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
 const PRInt16 kMacMenuID = 1;
 PRInt16 nsMenu::mMacMenuIDCount = kMacMenuID;
@@ -99,20 +101,30 @@ nsMenu::~nsMenu()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
+NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
 {
-  mMenuBarParent = aParent;
-  NS_ADDREF(mMenuBarParent);
-    
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
-{
-  mMenuParent = aParent;
-  NS_ADDREF(mMenuParent);
-
+  if(aParent)
+  {
+    nsIMenuBar * menubar = nsnull;
+    aParent->QueryInterface(kIMenuBarIID, (void**) &menubar);
+    if(menubar)
+    {
+      mMenuBarParent = menubar;
+      NS_ADDREF(mMenuBarParent);
+      NS_RELEASE(menubar); // Balance the QI
+    }
+    else
+    {
+      nsIMenu * menu = nsnull;
+      aParent->QueryInterface(kIMenuIID, (void**) &menu);
+      {
+      	mMenuParent = menu;
+      	NS_ADDREF(mMenuParent);
+      	NS_RELEASE(menu); // Balance the QI
+      }
+    }
+  }
+  
   return NS_OK;
 }
 
@@ -138,9 +150,9 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetLabel(nsString &aText)
+NS_METHOD nsMenu::SetLabel(const nsString &aText)
 {
-   mLabel = aText;
+  mLabel = aText;
    
   mMacMenuHandle = nsnull;
 
@@ -152,8 +164,31 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(const nsString &aText)
+NS_METHOD nsMenu::AddItem(nsISupports* aItem)
 {
+  if(aItem)
+  {
+    // Figure out what we're adding
+    nsIMenuItem * menuitem = nsnull;
+    aItem->QueryInterface(kIMenuItemIID, (void**) &menuitem);  
+    if(menuitem)
+    {
+      // case menuitem
+      AddMenuItem(menuitem);
+      NS_RELEASE(menuitem);
+    }
+    else
+    {
+	  nsIMenu * menu = nsnull;
+	  aItem->QueryInterface(kIMenuIID, (void**) &menu);
+	  if(menu)
+	  {
+	    // case menu
+	    AddMenu(menu);
+	    NS_RELEASE(menu);
+	  }
+	}
+  }
   return NS_OK;
 }
 
@@ -183,9 +218,9 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   mNumMenuItems++;
   ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems);
   
-  void * menuHandle;
-  aMenu->GetNativeData(menuHandle);
-  ::InsertMenu((MenuHandle)menuHandle, hierMenu);
+  MenuHandle menuHandle;
+  aMenu->GetNativeData((void**)&menuHandle);
+  ::InsertMenu(menuHandle, hierMenu);
   PRInt16 temp = mMacMenuIDCount;
   ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --temp);
  
@@ -222,12 +257,6 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertSeparator(const PRUint32 aPos)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 {
   return NS_OK;
@@ -240,9 +269,9 @@ NS_METHOD nsMenu::RemoveAll()
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetNativeData(void *& aData)
+NS_METHOD nsMenu::GetNativeData(void ** aData)
 {
-  aData = (void*) mMacMenuHandle;
+  *aData = mMacMenuHandle;
   return NS_OK;
 }
 

@@ -174,7 +174,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   mMenuVoidArray.AppendElement( aMenu );
   
   MenuHandle menuHandle = nsnull;
-  aMenu->GetNativeData(menuHandle);
+  aMenu->GetNativeData(&menuHandle);
   
   mNumMenus++;
   ::InsertMenu(menuHandle, 0);
