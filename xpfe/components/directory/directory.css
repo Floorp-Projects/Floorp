@@ -40,11 +40,24 @@ treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-icon > .
   list-style-image: url("resource:/res/rdf/loading.gif");
 }
 
+/* Show an animated icon when a symbolic link is loading */
+treeitem[type="SYM-LINK"][loading="true"] > treerow > treecell > .tree-icon > .twisty {
+  list-style-image: url("resource:/res/rdf/loading.gif");
+}
+
 /* Make a file look like a link */
 treeitem[type="FILE"] > treerow > treecell.filename {
   color: #666699;
   text-decoration: underline;
 }
+
+/* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
+treeitem[type="SYM-LINK"] > treerow > treecell.filename {
+  color: #666699;
+  text-decoration: underline;
+  font-style: italic;
+}
+  
 
 treeitem[type="FILE"] > treerow > treecell.filename:hover {
   color: #333366;
