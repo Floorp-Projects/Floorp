@@ -22,6 +22,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
                      
