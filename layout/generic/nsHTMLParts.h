@@ -30,14 +30,15 @@ class nsIHTMLContentSink;
 class nsITextContent;
 class nsIURL;
 class nsString;
-class nsIWebWidget;
+class nsIWebShell;
 
 // XXX naming consistency puhleeze!
 
+// XXX passing aWebShell into this is wrong
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
                                       nsIURL* aURL,
-                                      nsIWebWidget* aWebWidget);
+                                      nsIWebShell* aWebShell);
 
 /**
  * Create a new content object for the given tag.

@@ -23,7 +23,7 @@
 #include "nsIHTMLDocument.h"
 
 class nsIHTMLStyleSheet;
-class nsIViewerContainer;
+class nsIContentViewerContainer;
 
 class nsHTMLDocument : public nsMarkupDocument {
 public:
@@ -33,7 +33,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   NS_IMETHOD StartDocumentLoad(nsIURL* aUrl, 
-                               nsIViewerContainer* aContainer,
+                               nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener);
 
   NS_IMETHOD SetTitle(const nsString& aTitle);

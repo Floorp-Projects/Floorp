@@ -41,10 +41,11 @@
 #include "nsIImageMap.h"
 
 #include "nsRepository.h"
-#include "nsIWebWidget.h"
 
+#include "nsIWebShell.h"
 extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                                 nsIAtom* aTag, nsIWebWidget* aWebWidget);  // XXX move
+                                 nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
+
 // XXX attribute values have entities in them - use the parsers expander!
 
 // XXX Go through a factory for this one
@@ -102,7 +103,9 @@ public:
     return (void*) rv;
   }
 
-  nsresult Init(nsIDocument* aDoc, nsIURL* aURL, nsIWebWidget* aWebWidget);
+  nsresult Init(nsIDocument* aDoc,
+                nsIURL* aURL,
+                nsIWebShell* aContainer);
   nsIHTMLContent* GetCurrentContainer(eHTMLTags* aType);
   nsIHTMLContent* GetTableParent();
 
@@ -229,7 +232,7 @@ protected:
   PRTime mUpdateDelta;
   PRBool mLayoutStarted;
   PRInt32 mInMonolithicContainer;
-  nsIWebWidget* mWebWidget;
+  nsIWebShell* mWebShell;
 };
 
 // Note: operator new zeros our memory
@@ -257,7 +260,7 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mCurrentSelect);
   NS_IF_RELEASE(mCurrentOption);
-  NS_IF_RELEASE(mWebWidget);
+  NS_IF_RELEASE(mWebShell);
 
   if (nsnull != mTitle) {
     delete mTitle;
@@ -267,7 +270,7 @@ HTMLContentSink::~HTMLContentSink()
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURL* aDocURL,
-                      nsIWebWidget* aWebWidget)
+                      nsIWebShell* aWebShell)
 {
   NS_IF_RELEASE(mDocument);
   mDocument = aDoc;
@@ -277,9 +280,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mDocumentURL = aDocURL;
   NS_IF_ADDREF(mDocumentURL);
 
-  NS_IF_RELEASE(mWebWidget);
-  mWebWidget = aWebWidget;
-  NS_IF_ADDREF(mWebWidget);
+  NS_IF_RELEASE(mWebShell);
+  mWebShell = aWebShell;
+  NS_IF_ADDREF(mWebShell);
 
   // Make root part
   NS_IF_RELEASE(mRoot);
@@ -1846,7 +1849,7 @@ HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
   nsAutoString tmp("IFRAME");
   nsIAtom* atom = NS_NewAtom(tmp);
 
-  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebWidget);
+  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebShell);
 
   NS_RELEASE(atom);
   return rv;
@@ -1871,7 +1874,7 @@ nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
 nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                nsIDocument* aDoc,
                                nsIURL* aURL,
-                               nsIWebWidget* aWebWidget)
+                               nsIWebShell* aWebShell)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -1881,7 +1884,7 @@ nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult rv = it->Init(aDoc, aURL, aWebWidget);
+  nsresult rv = it->Init(aDoc, aURL, aWebShell);
   if (NS_OK != rv) {
     delete it;
     return rv;

@@ -20,7 +20,8 @@
 
 #include "nsCom.h"
 #include "nsISupports.h"
-#include "nsIWebWidget.h"
+
+class nsIWebShell;
 
 // IID for the nsIWebFrame interface
 #define NS_IWEBFRAME_IID      \
@@ -28,16 +29,16 @@
    { 0x80, 0x34, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
 
 /**
- * Interface used for distinguishing frames that have web widgets associated
+ * Interface used for distinguishing frames that have nsIWebShell's associated
  * with them (i.e. <iframe>, <frame>)
  */
-class nsIWebFrame : public nsISupports {
+class nsIWebFrame {
 public:
   /**
-    * Get the associated web widget and increment the ref count.
+    * Get the associated web shell and increment the ref count.
     */
-  virtual nsIWebWidget* GetWebWidget() = 0;
+  NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 };
 
 
-#endif /* nsIWebWidget_h___ */
+#endif /* nsIWebFrame_h___ */

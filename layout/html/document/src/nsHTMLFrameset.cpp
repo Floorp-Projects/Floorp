@@ -20,7 +20,7 @@
 #include "nsHTMLContainer.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIWebWidget.h"
+#include "nsIWebShell.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
@@ -43,15 +43,16 @@
 class nsHTMLIFrame;
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
-static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
+static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 
-static NS_DEFINE_IID(kIViewerContainerIID, NS_IVIEWERCONTAINER_IID);
+static NS_DEFINE_IID(kIContentViewerContainerIID,
+                     NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 
@@ -413,14 +414,14 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
 /*******************************************************************************
  * nsHTMLFrameset
  ******************************************************************************/
-nsHTMLFrameset::nsHTMLFrameset(nsIAtom* aTag, nsIWebWidget* aParentWebWidget)
-  : nsHTMLContainer(aTag), mParentWebWidget(aParentWebWidget)
+nsHTMLFrameset::nsHTMLFrameset(nsIAtom* aTag, nsIWebShell* aParentWebShell)
+  : nsHTMLContainer(aTag), mParentWebShell(aParentWebShell)
 {
 }
 
 nsHTMLFrameset::~nsHTMLFrameset()
 {
-  mParentWebWidget = nsnull;
+  mParentWebShell = nsnull;
 }
 
 void nsHTMLFrameset::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
@@ -457,14 +458,14 @@ nsHTMLFrameset::CreateFrame(nsIPresContext*  aPresContext,
 
 nsresult
 NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
-                   nsIAtom* aTag, nsIWebWidget* aWebWidget)
+                   nsIAtom* aTag, nsIWebShell* aWebShell)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* it = new nsHTMLFrameset(aTag, aWebWidget);
+  nsIHTMLContent* it = new nsHTMLFrameset(aTag, aWebShell);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

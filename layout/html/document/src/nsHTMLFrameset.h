@@ -31,7 +31,7 @@ struct nsRect;
 struct nsReflowState;
 struct nsSize;
 class  nsIAtom;
-class  nsIWebWidget;
+class  nsIWebShell;
 
 enum nsFramesetUnit {
   eFramesetUnit_Free = 0,
@@ -107,18 +107,15 @@ public:
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
 protected:
-  nsHTMLFrameset(nsIAtom* aTag, nsIWebWidget* aParentWebWidget);
+  nsHTMLFrameset(nsIAtom* aTag, nsIWebShell* aParentWebShell);
   virtual  ~nsHTMLFrameset();
 
   friend nsresult NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
-                                     nsIAtom* aTag, nsIWebWidget* aWebWidget);
+                                     nsIAtom* aTag, nsIWebShell* aWebShell);
   //friend class nsHTMLFramesetFrame;
 
   // this is held for a short time until the frame uses it, so it is not ref counted
-  nsIWebWidget*    mParentWebWidget; 
+  nsIWebShell*    mParentWebShell; 
 };
 
-
 #endif
-
-
