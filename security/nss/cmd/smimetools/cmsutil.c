@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.34 2002/09/06 00:27:23 wtc%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.35 2002/12/05 22:16:22 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -959,17 +959,6 @@ loser:
 
 typedef enum { UNKNOWN, DECODE, SIGN, ENCRYPT, ENVELOPE, CERTSONLY } Mode;
 
-#if 0
-void
-parse_message_for_recipients(PRFileDesc *inFile, 
-                             struct envelopeOptionsStr *envelopeOptions)
-{
-    SECItem filedata;
-    SECStatus rv;
-    rv = SECU_FileToItem(&filedata, inFile);
-}
-#endif
-
 int
 main(int argc, char **argv)
 {
@@ -1170,13 +1159,6 @@ main(int argc, char **argv)
 	    break;
 
 	case 'o':
-#if 0
-	    if (mode == DECODE) {
-		outFile = fopen(optstate->value, "w");
-	    } else {
-		outFile = fopen(optstate->value, "wb");
-	    }
-#endif
 	    outFile = fopen(optstate->value, "wb");
 	    if (outFile == NULL) {
 		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
@@ -1191,9 +1173,6 @@ main(int argc, char **argv)
 		Usage(progName);
 		exit(1);
 	    }
-#if 0
-	    fprintf(stderr, "recipient = %s\n", optstate->value);
-#endif
 	    envelopeOptions.recipients = ptrarray;
 	    str = (char *)optstate->value;
 	    do {
@@ -1260,7 +1239,6 @@ main(int argc, char **argv)
     }
 
 #if defined(_WIN32)
-    /*if (outFile == stdout && mode != DECODE) {*/
     if (outFile == stdout) {
 	/* If we're going to write binary data to stdout, we must put stdout
 	** into O_BINARY mode or else outgoing \n's will become \r\n's.
@@ -1356,10 +1334,6 @@ main(int argc, char **argv)
 	break;
     case ENVELOPE:
 	envelopeOptions.options = &options;
-#if 0
-	if (!envelopeOptions.recipients)
-	    parse_message_for_recipients(myIn, &envelopeOptions);
-#endif
 	cmsg = enveloped_data(&envelopeOptions);
 	if (!cmsg) {
 	    SECU_PrintError(progName, "problem enveloping");
