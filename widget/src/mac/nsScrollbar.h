@@ -74,20 +74,24 @@ public:
 	 *	@return NS_OK if the position is valid
 	 */
 	NS_IMETHOD		 			SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-								PRUint32 aPosition, PRUint32 aLineIncrement);
+														PRUint32 aPosition, PRUint32 aLineIncrement);
 	ControlHandle				GetControl() { return mControl; }
+
+protected:
+	
+	virtual void			GetRectForMacControl(nsRect &outRect);
 
 private:
 
-	void						DrawWidget();
-	static void					ScrollActionProc(ControlHandle, ControlPartCode);
-	void						DoScrollAction(ControlPartCode);
+	void							DrawWidget();
+	static void				ScrollActionProc(ControlHandle, ControlPartCode);
+	void							DoScrollAction(ControlPartCode);
 
 // DATA
 private:
 
-	PRUint32					mMaxRange;
-	PRUint32					mThumbSize;
+	PRUint32					mFullImageSize;
+	PRUint32					mVisibleImageSize;
 	PRUint32 					mLineIncrement;
 	PRBool						mMouseDownInScroll;
 	ControlPartCode				mClickedPartCode;

@@ -33,8 +33,8 @@ nsScrollbar::nsScrollbar(PRBool /*aIsVertical*/)
 	:	nsMacControl()
 	,	nsIScrollbar()
 	,	mLineIncrement(0)
-	,	mMaxRange(0)
-	,	mThumbSize(0)
+	,	mFullImageSize(0)
+	,	mVisibleImageSize(0)
 	,	mMouseDownInScroll(PR_FALSE)
 	,	mClickedPartCode(0)
 {
@@ -126,11 +126,11 @@ void nsScrollbar::DoScrollAction(ControlPartCode part)
 {
 	PRUint32 pos;
 	PRUint32 incr;
-	PRUint32 thumb;
+	PRUint32 visibleImageSize;
 	PRInt32 scrollBarMessage = 0;
 	GetPosition(pos);
 	GetLineIncrement(incr);
-	GetThumbSize(thumb);
+	GetThumbSize(visibleImageSize);
 	switch(part)
 	{
 		case kControlUpButtonPart:
@@ -145,11 +145,11 @@ void nsScrollbar::DoScrollAction(ControlPartCode part)
 			break;
 		case kControlPageUpPart:
 			scrollBarMessage = NS_SCROLLBAR_PAGE_PREV;
-			SetPosition(pos - thumb);
+			SetPosition(pos - visibleImageSize);
 			break;
 		case kControlPageDownPart:
 			scrollBarMessage = NS_SCROLLBAR_PAGE_NEXT;
-			SetPosition(pos + thumb);
+			SetPosition(pos + visibleImageSize);
 			break;
 		case kControlIndicatorPart:
 			scrollBarMessage = NS_SCROLLBAR_POS;
@@ -203,7 +203,7 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 						// which lets you pass the action proc to TrackControl
 						// for the thumb (this was illegal in previous
 						// versions of the defproc).
-					::TrackControl(mControl, thePoint, sControlActionProc);
+						::TrackControl(mControl, thePoint, sControlActionProc);
 						break;
 #if 0
 					case kControlIndicatorPart:
@@ -267,22 +267,21 @@ nsScrollbar::DrawWidget()
 	Invalidate(PR_TRUE);
 }
 
-
 /**-------------------------------------------------------------------------------
  *	set the maximum range of a scroll bar
  *	@update	dc 09/16/98
  *	@param	aMaxRange -- the maximum to set this to
  *	@return -- If a good size was returned
  */
-NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
+NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange) // really means set full image size.
 {
-	mMaxRange = ((int)aEndRange) > 0 ? aEndRange : 10;
+	mFullImageSize = ((int)aEndRange) > 0 ? aEndRange : 10;
 	if (mControl)
 	{
 		StartDraw();
 		::SetControl32BitMaximum(
 			mControl,
-			mMaxRange > mThumbSize ? mMaxRange - mThumbSize : 0);
+			mFullImageSize > mVisibleImageSize ? mFullImageSize - mVisibleImageSize : 0);
 		EndDraw();
 	}
 	return NS_OK;
@@ -294,9 +293,9 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
  *	@param	aMaxRange -- The current maximum this slider can be
  *	@return -- If a good size was returned
  */
-NS_METHOD nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
+NS_METHOD nsScrollbar::GetMaxRange(PRUint32& aMaxRange) // really means get full image size
 {
-	aMaxRange = mMaxRange;
+	aMaxRange = mFullImageSize;
 	return NS_OK;
 }
 
@@ -310,7 +309,8 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
 	if ((PRInt32)aPos < 0)
 		aPos = 0;
-	mValue = ((int)aPos) > mMaxRange ? mMaxRange : ((int)aPos);
+	PRUint32 aMax = mFullImageSize - mVisibleImageSize;
+	mValue = ((PRInt32)aPos) > aMax ? aMax : ((int)aPos);
 	return NS_OK;
 }
 
@@ -335,14 +335,14 @@ NS_METHOD nsScrollbar::GetPosition(PRUint32& aPos)
  */
 NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-	mThumbSize = ((int)aSize) > 0 ? aSize : 1;
+	mVisibleImageSize = ((int)aSize) > 0 ? aSize : 1;
 
-	if (mThumbSize > mMaxRange)
-		mThumbSize = mMaxRange;
+	if (mVisibleImageSize > mFullImageSize)
+		mVisibleImageSize = mFullImageSize;
 	if (mControl)
 	{
 		StartDraw();
-		SetControlViewSize(mControl, mThumbSize);
+		SetControlViewSize(mControl, mVisibleImageSize);
 		EndDraw();
 	}
 	return NS_OK;
@@ -356,7 +356,7 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
  */
 NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
-	aSize = mThumbSize;
+	aSize = mVisibleImageSize;
 	return NS_OK;
 }
 
@@ -394,12 +394,35 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 {
 	SetLineIncrement(aLineIncrement);
 	SetPosition(aPosition);
-	mThumbSize = aThumbSize; // needed by SetMaxRange
+	mVisibleImageSize = aThumbSize; // needed by SetMaxRange
 	SetMaxRange(aMaxRange);
 	SetThumbSize(aThumbSize); // Needs to know the maximum value when calling Mac toolbox.
 
 	return NS_OK;
 }
 
+#pragma mark -
 
+//-------------------------------------------------------------------------
+//
+// Get the rect which the Mac control uses. This may be different for
+// different controls, so this method allows overriding
+//
+//-------------------------------------------------------------------------
+void nsScrollbar::GetRectForMacControl(nsRect &outRect)
+{
+		outRect = mBounds;
+		outRect.x = outRect.y = 0;
+		
+		if (mBounds.height > mBounds.width)
+		{
+			// vertical scroll bar
+			outRect.Inflate(0, 1);
+		}
+		else
+		{
+			// horizontal scroll bar
+			outRect.Inflate(1, 0);
+		}
+}
 
