@@ -74,6 +74,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowCreator.h"
 #include "nsIXPConnect.h"
+#include "nsPIDOMWindow.h"
 
 #ifdef XP_UNIX
 // please see bug 78421 for the eventual "right" fix for this
@@ -652,27 +653,32 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       }
     }
 
-    // Get the calling context off the JS context stack
+    // Set the new window's referrer from the calling context's document:
+
+    // get the calling context off the JS context stack
     nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
 
     JSContext* ccx = nsnull;
 
+    // get its document, if any
     if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
-      nsCOMPtr<nsIScriptGlobalObject> sgo;
 
+      nsCOMPtr<nsIScriptGlobalObject> sgo;
       nsWWJSUtils::nsGetStaticScriptGlobal(ccx, ::JS_GetGlobalObject(ccx),
                                            getter_AddRefs(sgo));
 
-      nsCOMPtr<nsIDOMWindow> w(do_QueryInterface(sgo));
-
+      nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(sgo));
       if (w) {
+        /* use the URL from the *extant* document, if any. The usual accessor
+           GetDocument will synchronously create an about:blank document if
+           it has no better answer, and we only care about a real document.
+           Also using GetDocument to force document creation seems to
+           screw up focus in the hidden window; see bug 36016.
+        */
         nsCOMPtr<nsIDOMDocument> document;
-
-        // Get the document from the window.
-        w->GetDocument(getter_AddRefs(document));
+        w->GetExtantDocument(getter_AddRefs(document));
 
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
-
         if (doc) { 
           nsCOMPtr<nsIURI> uri;
           doc->GetDocumentURL(getter_AddRefs(uri));
