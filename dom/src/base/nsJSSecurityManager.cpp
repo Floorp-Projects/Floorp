@@ -18,6 +18,7 @@
 
 #include "nsJSSecurityManager.h"
 #include "nsCCapsManager.h"
+#include "nsIPrincipalManager.h"
 #include "nsIServiceManager.h"
 #ifdef OJI
 #include "jvmmgr.h"
@@ -32,102 +33,17 @@
 #include "nsIURL.h"
 
 static NS_DEFINE_IID(kIXPCSecurityManagerIID, NS_IXPCSECURITYMANAGER_IID);
-static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
-static NS_DEFINE_IID(kICapsSecurityCallbacksIID, NS_ICAPSSECURITYCALLBACKS_IID);
-static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
-static NS_DEFINE_IID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_IID(kICapsSecurityCallbacksIID, NS_ICAPSSECURITYCALLBACKS_IID);
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-nsJSSecurityManager::nsJSSecurityManager()
-{
-  NS_INIT_REFCNT();
-  mCapsManager = nsnull;
-  mPrefs = nsnull;
- }
-
-nsJSSecurityManager::~nsJSSecurityManager()
-{
-	nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);
-	NS_IF_RELEASE(mCapsManager);
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIScriptSecurityManagerIID)) {
-    *aInstancePtr = (void*)(nsIScriptSecurityManager*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kICapsSecurityCallbacksIID)) {
-    *aInstancePtr = (void*)(nsICapsSecurityCallbacks*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIXPCSecurityManagerIID)) {
-	*aInstancePtr = (void*)(nsIXPCSecurityManager*)this;
-	NS_ADDREF_THIS();
-	return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsJSSecurityManager)
-NS_IMPL_RELEASE(nsJSSecurityManager)
-
-NS_IMETHODIMP
-nsJSSecurityManager::Init() 
-{
-	return nsServiceManager::GetService(kPrefServiceCID, nsIPref::GetIID(), (nsISupports**)&mPrefs);
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::CheckScriptAccess(nsIScriptContext* aContext, void* aObj, const char* aProp, PRBool* aResult)
-{
-#ifdef SECURITY_ENABLED
-  *aResult = PR_FALSE;
-  JSContext* cx = (JSContext*)aContext->GetNativeContext();
-  PRInt32 secLevel = CheckForPrivilege(cx, (char*)aProp, nsnull);
-  switch (secLevel) {
-    case SCRIPT_SECURITY_ALL_ACCESS:
-      *aResult = PR_TRUE;
-      return NS_OK;
-
-    case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS:
-      return CheckPermissions(cx, (JSObject*)aObj, eJSTarget_Max, aResult);
-
-    default:
-      // Default is no access
-      *aResult = PR_FALSE;
-      return NS_OK;
-  }
-#else
-  *aResult = PR_TRUE;
-  return NS_OK;
-#endif
-}
-
-void
-nsJSSecurityManager::InitCaps(void)
-{
-  if (nsnull == mCapsManager) return;
-  nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)& mCapsManager);
-  if ((NS_OK == res) && (nsnull != mCapsManager)) {
-    mCapsManager->InitializeFrameWalker(this);
-  }
-}
-
 static nsString gUnknownOriginStr("[unknown origin]");
-static nsString gFileDoubleSlashUrlPrefix("file://");
 static nsString gFileUrlPrefix("file:");
 
-/* This array must be kept in sync with nsIScriptSecurityManager.idl */
+static nsString gFileDoubleSlashUrlPrefix("file://");
 static char * targetStrings[] = {
   "UniversalBrowserRead",
   "UniversalBrowserWrite",
@@ -141,6 +57,482 @@ static char * targetStrings[] = {
   "AccountSetup",
   /* See Target.java for more targets */
 };
+/*
+extern "C" NS_DOM nsresult 
+NS_NewScriptSecurityManager(nsIScriptSecurityManager ** aInstancePtrResult)
+{
+  nsIScriptSecurityManager* it = new nsJSSecurityManager();
+  if (nsnull == it) return NS_ERROR_OUT_OF_MEMORY;
+  nsresult ret = it->QueryInterface(kIScriptSecurityManagerIID, (void **) aInstancePtrResult);
+  if (NS_FAILED(ret)) return ret;
+  if (NS_FAILED(ret)) NS_RELEASE(*aInstancePtrResult);
+  return ret;
+}
+*/
+nsJSSecurityManager::nsJSSecurityManager()
+{
+  NS_INIT_REFCNT();
+  nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), (nsISupports**)&mPrefs);
+}
+
+nsJSSecurityManager::~nsJSSecurityManager()
+{
+  nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);
+//    NS_IF_RELEASE(mCapsManager);
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) return NS_ERROR_NULL_POINTER;
+  /*
+  if (aIID.Equals(kICapsSecurityCallbacksIID)) {
+      *aInstancePtr = (void*)(nsICapsSecurityCallbacks*)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  */
+  if (aIID.Equals(kIXPCSecurityManagerIID)) {
+      *aInstancePtr = (void*)(nsIXPCSecurityManager*)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(nsJSSecurityManager)
+NS_IMPL_RELEASE(nsJSSecurityManager)
+
+PR_STATIC_CALLBACK(void *)
+GetPrincipalArray(JSContext *aCx, struct JSPrincipals *aPrincipals);
+
+PR_STATIC_CALLBACK(void)
+DestroyJSPrincipals(JSContext *aCx, JSPrincipals *aPrincipals);
+
+PR_STATIC_CALLBACK(PRBool)
+GlobalPrivilegesEnabled(JSContext *aCx, JSPrincipals *aPrincipals);
+
+static nsJSPrincipalsData unknownPrincipals = {
+  {
+    gUnknownOriginStr.ToNewCString(),
+    GetPrincipalArray,
+    GlobalPrivilegesEnabled,
+    0,
+    DestroyJSPrincipals
+  },
+  nsnull
+};
+
+//JSPrincipal callback
+PR_STATIC_CALLBACK(void)
+DestroyJSPrincipals(JSContext *aCx, JSPrincipals *aPrincipals)
+{
+  if (aPrincipals != nsnull && aPrincipals != (JSPrincipals*)&unknownPrincipals) {
+    nsJSPrincipalsData* data = (nsJSPrincipalsData*)aPrincipals;
+    if (aPrincipals->codebase) delete aPrincipals->codebase;
+    if (data->principalsArrayRef != nsnull) {
+      /* XXX: raman: Should we free up the principals that are in that array also? */
+      ((nsIPrincipalArray *)data->principalsArrayRef)->FreePrincipalArray();
+    }
+    //XXX
+    if (data->name) delete data->name;
+    //data->untransformed
+    //data->transformed
+    if (data->codebaseBeforeSettingDomain) delete data->codebaseBeforeSettingDomain;
+    if (data->zip)
+      //ns_zip_close(data->zip);
+    if (data->url) NS_RELEASE(data->url);
+    PR_Free(data);
+  }
+}
+
+//JSPrincipal callback
+PR_STATIC_CALLBACK(void *)
+GetPrincipalArray(JSContext *aCx, struct JSPrincipals *aPrincipals)
+{
+  nsJSPrincipalsData *data = (nsJSPrincipalsData *)aPrincipals;
+/*
+  //Get array of principals 
+	if (data->principalsArrayRef == nsnull) {
+		nsICapsManager * capsMan;
+		nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)& capsMan);
+		if ((NS_OK == res) && (nsnull != capsMan)) {
+			nsIPrincipalManager * prinMan;
+			capsMan->GetPrincipalManager(& prinMan);
+//			prinMan->CreateMixedPrincipalArray(nsnull, nsnull, aPrincipals->codebase, (nsIPrincipalArray * *)&(data->principalsArrayRef));
+			NS_RELEASE(capsMan);
+		}
+	}
+*/
+  return data->principalsArrayRef;
+}
+
+
+//JSPrincipal callback
+PR_STATIC_CALLBACK(PRBool)
+GlobalPrivilegesEnabled(JSContext *aCx, JSPrincipals *aPrincipals)
+{
+  nsJSPrincipalsData *data = (nsJSPrincipalsData *) aPrincipals;
+  return (PRBool)(nsnull != data->principalsArrayRef || gUnknownOriginStr.Equals(aPrincipals->codebase));
+}
+
+
+
+NS_IMETHODIMP
+nsJSSecurityManager::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports * aObj)
+{
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
+{
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanGetService(JSContext * aJSContext, const nsCID & aCID)
+{
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanCallMethod(JSContext * aJSContext, 
+                                   const nsIID & aIID, 
+                                   nsISupports *aObj, 
+                                   nsIInterfaceInfo *aInterfaceInfo, 
+                                   PRUint16 aMethodIndex, 
+                                   const jsid aName)
+{
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanGetProperty(JSContext * aJSContext, 
+                                    const nsIID & aIID, 
+                                    nsISupports *aObj, 
+                                    nsIInterfaceInfo *aInterfaceInfo, 
+                                    PRUint16 aMethodIndex, 
+                                    const jsid aName)
+{
+     return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanSetProperty(JSContext * aJSContext, 
+                                    const nsIID & aIID, 
+                                    nsISupports *aObj, 
+                                    nsIInterfaceInfo *aInterfaceInfo, 
+                                    PRUint16 aMethodIndex, 
+                                    const jsid aName)
+{
+    return NS_OK;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+// Later: used for signed scripts
+
+NS_IMETHODIMP
+nsJSSecurityManager::FreeNSJSJavaFrameWrapper(struct nsFrameWrapper *aWrapper)
+{
+  PR_FREEIF(aWrapper);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::GetStartFrame(struct nsFrameWrapper *aWrapper)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::IsEndOfFrame(struct nsFrameWrapper *aWrapper, PRBool* aReturn)
+{
+  *aReturn = PR_FALSE;
+
+  if ((aWrapper == nsnull) || (aWrapper->iterator == nsnull)) {
+    *aReturn = PR_TRUE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::IsValidFrame(struct nsFrameWrapper *aWrapper, PRBool* aReturn)
+{
+  *aReturn = (aWrapper->iterator != nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::NewNSJSJavaFrameWrapper(void *aContext, struct nsFrameWrapper ** aWrapper)
+{
+  struct nsFrameWrapper *result;
+
+  result = (struct nsFrameWrapper *)PR_MALLOC(sizeof(struct nsFrameWrapper));
+  if (result == nsnull) {
+      return NS_ERROR_FAILURE;
+  }
+
+  result->iterator = (void*)NewJSFrameIterator(aContext);
+  *aWrapper = result;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::GetNextFrame(struct nsFrameWrapper *aWrapper, int *aDepth, void** aReturn)
+{
+  nsJSFrameIterator *iterator;
+  if (aWrapper->iterator == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  iterator = (nsJSFrameIterator*)(aWrapper->iterator);
+
+  if (!NextJSFrame(&iterator)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  (*aDepth)++;
+  *aReturn = aWrapper->iterator;
+  return NS_OK;
+}
+
+PRBool
+nsJSSecurityManager::NextJSFrame(struct nsJSFrameIterator **aIterator)
+{
+  nsJSFrameIterator *iterator = *aIterator;
+  PRBool result = NextJSJavaFrame(iterator);
+	if (!result) {
+		if (iterator->intersect) 
+			((nsIPrincipalArray *)(* aIterator)->intersect)->FreePrincipalArray();
+		PR_Free(iterator);
+		* aIterator = nsnull;
+	}
+	return result;
+}
+
+nsJSFrameIterator *
+nsJSSecurityManager::NewJSFrameIterator(void *aContext)
+{
+    JSContext *aCx = (JSContext *)aContext;
+    nsJSFrameIterator *result;
+    void *array;
+
+    result = (nsJSFrameIterator*)PR_MALLOC(sizeof(nsJSFrameIterator));
+    if (result == nsnull) {
+        return nsnull;
+    }
+
+    if (aCx == nsnull) {
+        return nsnull;
+    }
+
+    result->fp = nsnull;
+    result->cx = aCx;
+    result->fp = JS_FrameIterator(aCx, &result->fp);
+    array = result->fp
+        ? JS_GetFramePrincipalArray(aCx, result->fp)
+        : nsnull;
+    result->intersect = array;
+    result->sawEmptyPrincipals =
+        (result->intersect == nsnull && result->fp &&
+         JS_GetFrameScript(aCx, result->fp))
+        ? PR_TRUE : PR_FALSE;
+
+    return result;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::OJIGetPrincipalArray(struct nsFrameWrapper *aWrapper, void** aReturn)
+{
+  nsJSFrameIterator *iterator;
+  if (aWrapper->iterator == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  iterator = (nsJSFrameIterator*)(aWrapper->iterator);
+  *aReturn = ::JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
+  return NS_OK;
+}
+
+PRBool
+nsJSSecurityManager::NextJSJavaFrame(struct nsJSFrameIterator *aIterator)
+{
+	nsIPrincipalArray * current;
+	nsIPrincipalArray * previous;
+    if (aIterator->fp == 0) return PR_FALSE;
+    current = (nsIPrincipalArray *)JS_GetFramePrincipalArray(aIterator->cx, aIterator->fp);
+    if (current == nsnull) {
+        if (JS_GetFrameScript(aIterator->cx, aIterator->fp))
+            aIterator->sawEmptyPrincipals = PR_TRUE;
+    } else {
+        nsIPrincipalArray * arrayIntersect;
+        if (aIterator->intersect) {
+            previous = (nsIPrincipalArray *)aIterator->intersect;
+            current->IntersectPrincipalArray(previous,& arrayIntersect);
+            /* XXX: raman: should we do a free the previous principal Array */
+            ((nsIPrincipalArray *)aIterator->intersect)->FreePrincipalArray();
+        }
+        aIterator->intersect = current;
+    }
+    aIterator->fp = JS_FrameIterator(aIterator->cx, &aIterator->fp);
+    return aIterator->fp != nsnull;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::OJIGetAnnotation(struct nsFrameWrapper *aWrapper, void** aReturn)
+{
+  nsJSFrameIterator *iterator;
+  void *annotation;
+  void *current;
+
+  if (aWrapper->iterator == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  iterator = (nsJSFrameIterator*)(aWrapper->iterator);
+
+  annotation = JS_GetFrameAnnotation(iterator->cx, iterator->fp);
+  if (annotation == nsnull)
+    return NS_ERROR_FAILURE;
+
+  current = JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
+
+  if (iterator->sawEmptyPrincipals || current == nsnull ||
+      (iterator->intersect /*&&
+      !CanExtendTrust(iterator->cx, current, iterator->intersect)*/))
+    return NS_ERROR_FAILURE;
+
+  *aReturn = annotation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSSecurityManager::OJISetAnnotation(struct nsFrameWrapper *aWrapper, void *aPrivTable,  void** aReturn)
+{
+  if (aWrapper->iterator) {
+    nsJSFrameIterator *iterator = (nsJSFrameIterator*)(aWrapper->iterator);
+    JS_SetFrameAnnotation(iterator->cx, iterator->fp, aPrivTable);
+  }
+  *aReturn = aPrivTable;
+  return NS_OK;
+}
+
+
+/*
+ * If given principals can access the given target, return true. Otherwise
+ * return false.  The script must already have explicitly requested access
+ * to the given target.
+ */
+PRBool
+nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
+{
+  nsPrivilegeTable * annotation;
+  JSStackFrame *fp;
+  void *annotationRef;
+  nsIPrincipalArray * principalArray = nsnull;
+#ifdef OJI
+  JSStackFrame *pFrameToStartLooking = *JVM_GetStartJSFrameFromParallelStack();
+  JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
+  PRBool  bCalledFromJava = (pFrameToEndLooking != nsnull);
+  if (pFrameToStartLooking == nsnull) {
+    pFrameToStartLooking = JS_FrameIterator(aCx, &pFrameToStartLooking);
+    if (pFrameToStartLooking == nsnull) {
+// There are no frames or scripts at this point.
+      pFrameToEndLooking = nsnull;
+    }
+  }
+#else
+    JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
+    JSStackFrame *pFrameToEndLooking   = nsnull;
+#endif
+
+   /* Map eJSTarget to nsTarget */
+  NS_ASSERTION(aTarget >= 0, "No target in PrincipalsCanAccessTarget");
+  //NS_ASSERTION(aTarget < sizeof(targetStrings)/sizeof(targetStrings[0]), "");
+
+  /* Find annotation */
+	annotationRef = nsnull;
+	principalArray = nsnull;
+	fp = pFrameToStartLooking;
+	while ((fp = JS_FrameIterator(aCx, &fp)) != pFrameToEndLooking) {
+		nsIPrincipalArray * current;
+		if (JS_GetFrameScript(aCx, fp) == nsnull) continue;
+		current = (nsIPrincipalArray *)JS_GetFramePrincipalArray(aCx, fp);
+		if (current == nsnull) return PR_FALSE;
+		annotationRef = (void *) JS_GetFrameAnnotation(aCx, fp);
+		if (annotationRef) {
+			if (principalArray != nsnull) {
+				PRBool canExtend;
+        nsresult rv;
+        NS_WITH_SERVICE(nsIPrincipalManager, prinMan,NS_PRINCIPALMANAGER_PROGID,&rv);
+				prinMan->CanExtendTrust(current, principalArray, & canExtend);
+				if (!canExtend) return PR_FALSE;
+				break;
+			}
+		}
+		if (principalArray != nsnull) current->IntersectPrincipalArray(principalArray,& principalArray);
+		else principalArray =  current;
+	}
+	if (annotationRef) annotation = (nsPrivilegeTable *)annotationRef;
+	else {
+#ifdef OJI
+  /*
+   * Call from Java into JS. Just call the Java routine for checking
+   * privileges.
+   */
+  if (nsnull == pFrameToEndLooking) {
+    if (principalArray) {
+      /*
+       * Must check that the principals that signed the Java applet are
+       * a subset of the principals that signed this script.
+       */
+      void *javaPrincipals = JVM_GetJavaPrincipalsFromStackAsNSVector(pFrameToStartLooking);
+
+      //if (!CanExtendTrust(aCx, javaPrincipals, principalArray)) {
+      //  return PR_FALSE;
+      //}
+    }
+    /*
+     * XXX sudu: TODO: Setup the parameters representing a target.
+     */
+    return JVM_NSISecurityContextImplies(pFrameToStartLooking, targetStrings[aTarget], NULL);
+  }
+#endif /* OJI */
+    // No annotation in stack
+    return PR_FALSE;
+  }
+
+  // Now find permission for (annotation, target) pair.
+  PRBool allowed;
+  //mCapsManager->IsAllowed(annotation, targetStrings[aTarget], &allowed);
+
+  return allowed;
+}
+
+
+
+/* This array must be kept in sync with nsIScriptSecurityManager.idl */
+
+
+#if JS_SECURITY_OBJ
+/*
 
 static char access_error_message[] =
     "access disallowed from scripts at %s to documents at another domain";
@@ -148,9 +540,6 @@ static char container_error_message[] =
     "script at '%s' is not signed by sufficient principals to access "
     "signed container";
 
-
-#if JS_SECURITY_OBJ
-/*
 static char enablePrivilegeStr[] =      "enablePrivilege";
 static char isPrivilegeEnabledStr[] =   "isPrivilegeEnabled";
 static char disablePrivilegeStr[] =     "disablePrivilege";
@@ -289,113 +678,8 @@ lm_InitSecurity(MochaDecoder *decoder)
 #endif //JS_SECURITY_OBJ
 
 
-/**
-  * nsIScriptSecurityManager interface
-  */
-
-NS_IMETHODIMP
-nsJSSecurityManager::GetSubjectOriginURL(JSContext *aCx, nsString **aOrigin)
-{
-  /*
-   * Get origin from script of innermost interpreted frame.
-   */
-  JSPrincipals *principals;
-  JSStackFrame *fp;
-  JSScript *script;
-
-#ifdef OJI
-  JSStackFrame *pFrameToStartLooking = *JVM_GetStartJSFrameFromParallelStack();
-  JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
-  if (pFrameToStartLooking == nsnull) {
-    pFrameToStartLooking = JS_FrameIterator(aCx, &pFrameToStartLooking);
-    if (pFrameToStartLooking == nsnull) {
-      /*
-      ** There are no frames or scripts at this point.
-      */
-      pFrameToEndLooking = nsnull;
-    }
-  }
-#else
-  JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
-  JSStackFrame *pFrameToEndLooking   = nsnull;
-#endif
-
-  fp = pFrameToStartLooking;
-  while (fp  != pFrameToEndLooking) {
-    script = JS_GetFrameScript(aCx, fp);
-    if (script) {
-      principals = JS_GetScriptPrincipals(aCx, script);
-      *aOrigin = new nsString(principals ? principals->codebase 
-                                         : JS_GetScriptFilename(aCx, script));
-      return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-    }
-    fp = JS_FrameIterator(aCx, &fp);
-  }
-#ifdef OJI
-  principals = JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
-  if (principals) {
-    *aOrigin = new nsString(principals->codebase);
-    return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-  }
-#endif
-
-  /*
-   * Not called from either JS or Java. We must be called
-   * from the interpreter. Get the origin from the decoder.
-   */
-  return GetObjectOriginURL(aCx, JS_GetGlobalObject(aCx), aOrigin);
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::GetObjectOriginURL(JSContext *aCx, JSObject *aObj, nsString** aOrigin)
-{
-  JSPrincipals *principals;
-  GetContainerPrincipals(aCx, aObj, &principals);
-  *aOrigin = new nsString(principals ? principals->codebase : nsnull);
-  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
 
 //+++
-NS_IMETHODIMP
-nsJSSecurityManager::GetPrincipalsFromStackFrame(JSContext *aCx, JSPrincipals** aPrincipals)
-{
-  /*
-   * Get principals from script of innermost interpreted frame.
-   */
-  JSStackFrame *fp;
-  JSScript *script;
-#ifdef OJI
-  JSStackFrame *pFrameToStartLooking = *JVM_GetStartJSFrameFromParallelStack();
-  JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
-  if (pFrameToStartLooking == nsnull) {
-    pFrameToStartLooking = JS_FrameIterator(aCx, &pFrameToStartLooking);
-    if (pFrameToStartLooking == nsnull) {
-      /*
-      ** There are no frames or scripts at this point.
-      */
-      pFrameToEndLooking = nsnull;
-    }
-  }
-#else
-  JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
-  JSStackFrame *pFrameToEndLooking   = nsnull;
-#endif
-
-  fp = pFrameToStartLooking;
-  while ((fp = JS_FrameIterator(aCx, &fp)) != pFrameToEndLooking) {
-    script = JS_GetFrameScript(aCx, fp);
-    if (script) {
-      *aPrincipals = JS_GetScriptPrincipals(aCx, script);
-      return NS_OK;
-    }
-  }
-#ifdef OJI
-  *aPrincipals = JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
-  return NS_OK;
-#endif
-  *aPrincipals = nsnull;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsJSSecurityManager::GetCompilationPrincipals(nsIScriptContext *aContext, 
@@ -454,202 +738,8 @@ nsJSSecurityManager::GetCompilationPrincipals(nsIScriptContext *aContext,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsJSSecurityManager::CanAccessTarget(JSContext *aCx, PRInt16 aTarget, PRBool* aReturn)
-{
-  JSPrincipals *principals;
-  *aReturn = PR_TRUE;
 
-  GetPrincipalsFromStackFrame(aCx, &principals);
 
-#if 0
-  if ((nsCapsGetRegistrationModeFlag()) && principals && 
-      (NET_URL_Type(principals->codebase) == FILE_TYPE_URL)) {
-		return NS_OK;
-  }
-  else 
-#endif
-  if (principals && !principals->globalPrivilegesEnabled(aCx, principals)) {
-    *aReturn = PR_FALSE;
-  }
-  else if (!PrincipalsCanAccessTarget(aCx, aTarget)) {
-    *aReturn = PR_FALSE;
-  }
-
-  return NS_OK;
-}
-
-/*
- * If given principals can access the given target, return true. Otherwise
- * return false.  The script must already have explicitly requested access
- * to the given target.
- */
-PRBool
-nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
-{
-  nsPrivilegeTable * annotation;
-  JSStackFrame *fp;
-  void *annotationRef;
-  nsIPrincipalArray * principalArray = nsnull;
-#ifdef OJI
-  JSStackFrame *pFrameToStartLooking = *JVM_GetStartJSFrameFromParallelStack();
-  JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
-  PRBool  bCalledFromJava = (pFrameToEndLooking != nsnull);
-  if (pFrameToStartLooking == nsnull) {
-    pFrameToStartLooking = JS_FrameIterator(aCx, &pFrameToStartLooking);
-    if (pFrameToStartLooking == nsnull) {
-      /*
-      ** There are no frames or scripts at this point.
-      */
-      pFrameToEndLooking = nsnull;
-    }
-  }
-#else
-    JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
-    JSStackFrame *pFrameToEndLooking   = nsnull;
-#endif
-
-  InitCaps();
-
-  /* Map eJSTarget to nsTarget */
-  NS_ASSERTION(aTarget >= 0, "No target in PrincipalsCanAccessTarget");
-  //NS_ASSERTION(aTarget < sizeof(targetStrings)/sizeof(targetStrings[0]), "");
-
-  /* Find annotation */
-	annotationRef = nsnull;
-	principalArray = nsnull;
-	fp = pFrameToStartLooking;
-	while ((fp = JS_FrameIterator(aCx, &fp)) != pFrameToEndLooking) {
-		nsIPrincipalArray * current;
-		if (JS_GetFrameScript(aCx, fp) == nsnull) continue;
-		current = (nsIPrincipalArray *)JS_GetFramePrincipalArray(aCx, fp);
-		if (current == nsnull) return PR_FALSE;
-		annotationRef = (void *) JS_GetFrameAnnotation(aCx, fp);
-		if (annotationRef) {
-			if (principalArray != nsnull) {
-				PRBool canExtend;
-				nsIPrincipalManager * prinMan;
-				mCapsManager->GetPrincipalManager(& prinMan);
-				prinMan->CanExtendTrust(current, principalArray, & canExtend);
-				if (!canExtend) return PR_FALSE;
-				break;
-			}
-		}
-		if (principalArray != nsnull) current->IntersectPrincipalArray(principalArray,& principalArray);
-		else principalArray =  current;
-	}
-	if (annotationRef) annotation = (nsPrivilegeTable *)annotationRef;
-	else {
-#ifdef OJI
-  /*
-   * Call from Java into JS. Just call the Java routine for checking
-   * privileges.
-   */
-  if (nsnull == pFrameToEndLooking) {
-    if (principalArray) {
-      /*
-       * Must check that the principals that signed the Java applet are
-       * a subset of the principals that signed this script.
-       */
-      void *javaPrincipals = JVM_GetJavaPrincipalsFromStackAsNSVector(pFrameToStartLooking);
-
-      if (!CanExtendTrust(aCx, javaPrincipals, principalArray)) {
-        return PR_FALSE;
-      }
-    }
-    /*
-     * XXX sudu: TODO: Setup the parameters representing a target.
-     */
-    return JVM_NSISecurityContextImplies(pFrameToStartLooking, targetStrings[aTarget], NULL);
-  }
-#endif /* OJI */
-    // No annotation in stack
-    return PR_FALSE;
-  }
-
-  // Now find permission for (annotation, target) pair.
-  PRBool allowed;
-  mCapsManager->IsAllowed(annotation, targetStrings[aTarget], &allowed);
-
-  return allowed;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, PRInt16 aTarget, PRBool* aReturn)
-{
-  nsString* subjectOrigin = nsnull;
-  nsString* objectOrigin = nsnull;
-  nsISupports* running;
-  nsIScriptGlobalObjectData *globalData;
-  JSPrincipals *principals;
-  nsresult rv=NS_OK;
-  
-  /* May be in a layer loaded from a different origin.*/
-  rv = GetSubjectOriginURL(aCx, &subjectOrigin);
-  if(rv != NS_OK)
-    return rv;
-  
-  /*
-   * Hold onto reference to the running decoder's principals
-   * in case a call to GetObjectOriginURL ends up
-   * dropping a reference due to an origin changing
-   * underneath us.
-   */
-  running = (nsISupports*)JS_GetPrivate(aCx, JS_GetGlobalObject(aCx));
-  if (nsnull != running &&
-      NS_OK == running->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
-    globalData->GetPrincipals((void**)&principals);
-    NS_RELEASE(globalData);
-  }
-
-  if (principals) {
-    JSPRINCIPALS_HOLD(aCx, principals);
-  }
-
-  rv = GetObjectOriginURL(aCx, aObj, &objectOrigin);
-
-  if (rv != NS_OK || !subjectOrigin || !objectOrigin) {
-    *aReturn = PR_FALSE;
-    goto out;
-  }
-
-  /* Now see whether the origin methods and servers match. */
-  if (SameOriginsStr(aCx, subjectOrigin, objectOrigin)) {
-    *aReturn = PR_TRUE;
-    goto out;
-  }
-
-  /*
-   * If we failed the origin tests it still might be the case that we
-   *   are a signed script and have permissions to do this operation.
-   * Check for that here
-   */
-  if (aTarget != eJSTarget_Max) {
-    PRBool canAccess;
-    
-    CanAccessTarget(aCx, aTarget, &canAccess);
-    if (canAccess) {
-      *aReturn = PR_TRUE;
-      goto out;
-    }
-  }
-
-  JS_ReportError(aCx, "Access error message", subjectOrigin->ToNewCString());
-  *aReturn = PR_FALSE;
-
-out:
-  if (subjectOrigin) {
-    delete subjectOrigin;
-  }
-  if (objectOrigin) {
-    delete subjectOrigin;
-  }
-
-  if (principals) {
-    JSPRINCIPALS_DROP(aCx, principals);
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsJSSecurityManager::CheckContainerAccess(JSContext *aCx, JSObject *aObj,
@@ -772,57 +862,6 @@ nsJSSecurityManager::CheckContainerAccess(JSContext *aCx, JSObject *aObj,
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::GetContainerPrincipals(JSContext *aCx, JSObject *container, JSPrincipals** aPrincipals)
-{
-  *aPrincipals = nsnull;
-
-  // Need to check that the origin hasn't changed underneath us
-  char* originUrl = FindOriginURL(aCx, container);
-  if (!originUrl) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsISupports *tmp;
-  nsIScriptGlobalObjectData *globalData;
-
-  tmp = (nsISupports*)JS_GetPrivate(aCx, container);
-  if (nsnull != tmp &&
-      NS_OK == tmp->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
-    globalData->GetPrincipals((void**)aPrincipals);
-  }
-
-  if (nsnull != *aPrincipals) {
-    if (SameOrigins(aCx, originUrl, (*aPrincipals)->codebase)) {
-      delete originUrl;
-      return NS_OK;
-    }
-
-    nsJSPrincipalsData* data;
-    data = (nsJSPrincipalsData*)*aPrincipals;
-    if (data->codebaseBeforeSettingDomain &&
-        SameOrigins(aCx, originUrl, data->codebaseBeforeSettingDomain)) {
-      /* document.domain was set, so principals are okay */
-      delete originUrl;
-      return NS_OK;
-    }
-    /* Principals have changed underneath us. Remove them. */
-    globalData->SetPrincipals(nsnull);
-  }
-  /* Create new principals and return them. */
-  nsAutoString originUrlStr(originUrl);
-
-  if (NS_OK != NewJSPrincipals(nsnull, nsnull, &originUrlStr, aPrincipals)) {
-    delete originUrl;
-    return NS_ERROR_FAILURE;
-  }
-
-  globalData->SetPrincipals((void*)*aPrincipals);
-
-  delete originUrl;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsJSSecurityManager::SetContainerPrincipals(JSContext *aCx, JSObject *aContainer, JSPrincipals *aPrincipals)
 {
   //Start from topmost item.
@@ -833,7 +872,7 @@ nsJSSecurityManager::SetContainerPrincipals(JSContext *aCx, JSObject *aContainer
 
   tmp = (nsISupports*)JS_GetPrivate(aCx, aContainer);
   if (nsnull != tmp &&
-      NS_OK == tmp->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
+      NS_OK == tmp->QueryInterface(NS_GET_IID(nsIScriptGlobalObjectData), (void**)&globalData)) {
     globalData->SetPrincipals((void*)aPrincipals);
   }
 
@@ -870,7 +909,7 @@ nsJSSecurityManager::CanCaptureEvent(JSContext *aCx, JSFunction *aFun, JSObject 
     return NS_OK;
   }
 
-  *aReturn = (PRBool)(SameOrigins(aCx, originChar, principals->codebase) ||
+  *aReturn = (PRBool)(this->SameOrigins(aCx, originChar, principals->codebase) ||
               IsExternalCaptureEnabled(aCx, principals));
 
   delete origin;
@@ -930,7 +969,7 @@ nsJSSecurityManager::CheckSetParentSlot(JSContext *aCx, JSObject *aObj, jsval *a
       delete oldOrigin;
       return NS_ERROR_FAILURE;
     }
-    if (!SameOriginsStr(aCx, oldOrigin, newOrigin)) {
+    if (!this->SameOrigins(aCx, oldOrigin, newOrigin)) {
       delete oldOrigin;
       delete newOrigin;
       return NS_OK;
@@ -1017,293 +1056,9 @@ nsJSSecurityManager::PrintToConsole(const char *data)
   printf("%s", data);
 }
 
-PRBool
-nsJSSecurityManager::SameOrigins(JSContext *aCx, const char* aOrigin1, const char* aOrigin2)
-{
-  if (!aOrigin1 || !aOrigin2) {
-    return PR_FALSE;
-  }
 
-  nsAutoString origin1(aOrigin1);
-  nsAutoString origin2(aOrigin2);
 
-  return SameOriginsStr(aCx, &origin1, &origin2);
-}
 
-PRBool
-nsJSSecurityManager::SameOriginsStr(JSContext *aCx, nsString* aOrigin1, nsString* aOrigin2)
-{
-  if (!aOrigin1 || !aOrigin2) {
-    return PR_FALSE;
-  }
-
-  // Shouldn't return true if both origin1 and origin2 are unknownOriginStr. 
-  if (gUnknownOriginStr.EqualsIgnoreCase(*aOrigin1)) {
-    return PR_FALSE;
-  }
-
-  if (aOrigin1 == aOrigin2) {
-    return PR_TRUE;
-  }
-
-  nsString* cmp1 = GetCanonicalizedOrigin(aCx, aOrigin1);
-  nsString* cmp2 = GetCanonicalizedOrigin(aCx, aOrigin2);
-
-  if (cmp1 && cmp2) {
-    if (cmp1 == cmp2) {
-      delete cmp1;
-      delete cmp2;
-      return PR_TRUE;
-    }
-    if (cmp1->Find(gFileUrlPrefix) == 0 &&
-        cmp2->Find(gFileUrlPrefix) == 0) {
-      delete cmp1;
-      delete cmp2;
-      return PR_TRUE;
-    }
-  }
-  if (cmp1) {
-    delete cmp1;
-  }
-  if (cmp2) {
-    delete cmp2;
-  }
-  return PR_FALSE;
-}
-
-nsString* 
-nsJSSecurityManager::GetCanonicalizedOrigin(JSContext* aCx, nsString* aUrlString)
-{
-  char* origin;
-  char* urlChar = aUrlString->ToNewCString();
-
-  if (!urlChar) {
-    JS_ReportOutOfMemory(aCx);
-    return nsnull;
-  }
-
-  origin = ParseURL(urlChar, GET_PROTOCOL_PART | GET_HOST_PART);
-
-  if (!origin) {
-    delete urlChar;
-    JS_ReportOutOfMemory(aCx);
-    return nsnull;
-  }
-  delete urlChar;
-  return new nsString(origin);
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyJSPrincipals(JSContext *aCx, JSPrincipals *principals);
-
-PR_STATIC_CALLBACK(void *)
-GetPrincipalArray(JSContext *aCx, struct JSPrincipals *principals);
-
-PR_STATIC_CALLBACK(PRBool)
-GlobalPrivilegesEnabled(JSContext *aCx, JSPrincipals *principals);
-
-static nsJSPrincipalsData unknownPrincipals = {
-  {
-    gUnknownOriginStr.ToNewCString(),
-    GetPrincipalArray,
-    GlobalPrivilegesEnabled,
-    0,
-    DestroyJSPrincipals
-  },
-  nsnull
-};
-
-NS_IMETHODIMP
-nsJSSecurityManager::GetOriginFromSourceURL(nsString* aSourceURL, nsString **result)
-{
-  if (aSourceURL->Length() == 0 || aSourceURL->EqualsIgnoreCase(gUnknownOriginStr)) {
-    *result = nsnull;
-    return NS_OK;
-  }
-#if 0 //need to get url type 
-  int urlType;
-
-  urlType = NET_URL_Type(sourceURL);
-  if (urlType == MOCHA_TYPE_URL) {
-    NS_ASSERTION(PR_FALSE, "Invalid URL type");/* this shouldn't occur */
-    *result = nsnull;
-    return NS_OK;
-  }
-#endif
-  nsAutoString sourceURL(*aSourceURL);
-
-  //Stripfiledoubleslash
-  if (!sourceURL.Find(gFileDoubleSlashUrlPrefix)) {
-    sourceURL = sourceURL.Cut(gFileDoubleSlashUrlPrefix.Length(), 2); 
-  }
-
-  char* chS = sourceURL.ToNewCString();
-  if (!chS) {
-    *result = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *result = new nsString(ParseURL(chS, GET_PROTOCOL_PART|GET_HOST_PART|GET_PATH_PART));
-  delete [] chS;
-  return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::NewJSPrincipals(nsIURI *aURL, nsString* aName, nsString* aCodebase, JSPrincipals** aPrincipals)
-{
-  nsJSPrincipalsData *result;
-  PRBool needUnlock = PR_FALSE;
-  void *zip = nsnull; //ns_zip_t
-
-  InitCaps();
-
-#if 0
-  if (aURL) {
-    char *fn = nsnull;
-
-    if (NET_IsLocalFileURL(archive->address)) {
-      char* pathPart = ParseURL(archive->address, GET_PATH_PART);
-      fn = WH_FileName(pathPart, xpURL);
-      PR_Free(pathPart);
-    } 
-    else if (archive->cache_file && NET_ChangeCacheFileLock(archive, TRUE)) {
-      fn = WH_FileName(archive->cache_file, xpCache);
-      needUnlock = PR_TRUE;
-    }
-
-    if (fn) {
-#ifdef XP_MAC
-      /*
-       * Unfortunately, ns_zip_open wants a Unix-style name. Convert
-       * Mac path to a Unix-style path. This code is copied from
-       * appletStubs.c.
-       */
-      OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
-      char *unixPath = nsnull;
-
-      if (ConvertMacPathToUnixPath(fn, &unixPath) == 0) {
-        zip = ns_zip_open(unixPath);
-      }
-      PR_FREEIF(unixPath);
-#else
-      zip = ns_zip_open(fn);
-#endif
-      PR_Free(fn);
-    }
-  }
-#endif 
-
-  //Allocate and fill the nsJSPrincipalsData struct
-  result = PR_NEWZAP(nsJSPrincipalsData);
-  if (result == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  
-  nsString* codebaseStr;
-  nsresult rv;
-  if ((rv = GetOriginFromSourceURL(aCodebase, &codebaseStr)) != NS_OK)
-      return rv;
-  
-  if (!codebaseStr) {
-    PR_Free(result);
-    return NS_ERROR_FAILURE;
-  }
-
-  result->principals.codebase = codebaseStr->ToNewCString();
-  delete codebaseStr;
-  if (result->principals.codebase == nsnull) {
-    PR_Free(result);
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aName) {
-    result->name = aName ? aName->ToNewCString() : nsnull;
-    if (result->name == nsnull) {
-      delete result->principals.codebase;
-      PR_Free(result);
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  result->principals.destroy = DestroyJSPrincipals;
-  result->principals.getPrincipalArray = GetPrincipalArray;
-  result->principals.globalPrivilegesEnabled = GlobalPrivilegesEnabled;
-  result->url = aURL;
-  NS_IF_ADDREF(aURL);
-  result->zip = zip;
-  result->needUnlock = needUnlock;
-
-  *aPrincipals = (JSPrincipals*)result;
-  return NS_OK;
-}
-
-//JSPrincipal callback
-PR_STATIC_CALLBACK(void)
-DestroyJSPrincipals(JSContext *aCx, JSPrincipals *aPrincipals)
-{
-  if (aPrincipals != nsnull &&
-      aPrincipals != (JSPrincipals*)&unknownPrincipals) {
-    nsJSPrincipalsData* data = (nsJSPrincipalsData*)aPrincipals;
-
-    if (aPrincipals->codebase) {
-      delete aPrincipals->codebase;
-    }
-    if (data->principalsArrayRef != nsnull) {
-      /* XXX: raman: Should we free up the principals that are in that array also? */
-      nsICapsManager * capsMan;
-      nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)&capsMan);
-      if ((NS_OK == res) && (nsnull != capsMan)) {
-		((nsIPrincipalArray *)data->principalsArrayRef)->FreePrincipalArray();
-        NS_RELEASE(capsMan);
-      }
-    }
-    //XXX
-    if (data->name) {
-      delete data->name;
-    }
-    //data->untransformed
-    //data->transformed
-    if (data->codebaseBeforeSettingDomain) {
-      delete data->codebaseBeforeSettingDomain;
-    }
-
-    if (data->zip)
-      //ns_zip_close(data->zip);
-    if (data->url) NS_RELEASE(data->url);
-    PR_Free(data);
-  }
-}
-
-//JSPrincipal callback
-PR_STATIC_CALLBACK(void *)
-GetPrincipalArray(JSContext *aCx, struct JSPrincipals *aPrincipals)
-{
-  nsJSPrincipalsData *data = (nsJSPrincipalsData *)aPrincipals;
-
-  //Get array of principals 
-	if (data->principalsArrayRef == nsnull) {
-		nsICapsManager * capsMan;
-		nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)& capsMan);
-		if ((NS_OK == res) && (nsnull != capsMan)) {
-			nsIPrincipalManager * prinMan;
-			capsMan->GetPrincipalManager(& prinMan);
-//			prinMan->CreateMixedPrincipalArray(nsnull, nsnull, aPrincipals->codebase, (nsIPrincipalArray * *)&(data->principalsArrayRef));
-			NS_RELEASE(capsMan);
-		}
-	}
-
-  return data->principalsArrayRef;
-}
-
-//JSPrincipal callback
-PR_STATIC_CALLBACK(PRBool)
-GlobalPrivilegesEnabled(JSContext *aCx, JSPrincipals *aPrincipals)
-{
-  nsJSPrincipalsData *data = (nsJSPrincipalsData *) aPrincipals;
-
-  return (PRBool)(nsnull != data->principalsArrayRef ||
-         gUnknownOriginStr.Equals(aPrincipals->codebase));
-}
 
 void
 nsJSSecurityManager::PrintPrincipalsToConsole(JSContext *aCx, JSPrincipals *aPrincipals)
@@ -1345,32 +1100,6 @@ nsJSSecurityManager::InvalidateCertPrincipals(JSContext *aCx, JSPrincipals *aPri
 		data->principalsArrayRef = nsnull;
 	}
   data->signedness = HAS_UNSIGNED_SCRIPTS;
-}
-
-char*
-nsJSSecurityManager::FindOriginURL(JSContext *aCx, JSObject *aGlobal)
-{
-  nsISupports * tmp1, * tmp2;
-  nsIScriptGlobalObjectData* globalData = nsnull;
-  nsAutoString urlString;
-  tmp1 = (nsISupports *)JS_GetPrivate(aCx, aGlobal);
-  if (nsnull != tmp1 && 
-      NS_OK == tmp1->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
-    globalData->GetOrigin(&urlString);
-  }
-  if (urlString.Length() == 0) {
-    /* Must be a new, empty window?  Use running origin. */
-    tmp2 = (nsISupports*)JS_GetPrivate(aCx, JS_GetGlobalObject(aCx));
-    /* Compare running and current to avoid infinite recursion. */
-    if (tmp1 == tmp2) urlString = gUnknownOriginStr;
-    else if (nsnull != tmp2 && 
-             NS_OK == tmp2->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
-      globalData->GetOrigin(&urlString);
-    }
-  }
-  NS_IF_RELEASE(globalData);
-
-  return urlString.ToNewCString();
 }
 
 PRBool
@@ -1584,54 +1313,48 @@ nsJSSecurityManager::RegisterPrincipals(nsIScriptContext *aContext, nsIScriptGlo
   if (NS_OK == aGlobal->QueryInterface(kIScriptObjectOwnerIID, (void**)&aGlobalObjOwner)) {
     aGlobalObjOwner->GetScriptObject(aContext, (void**)&inner);
   }
-  if (inner == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_OK != GetContainerPrincipals(cx, inner, &containerPrincipals)) {
-    return NS_ERROR_FAILURE;
-  }
-
+  if (inner == nsnull) return NS_ERROR_FAILURE;
+  if (NS_OK != GetContainerPrincipals(cx, inner, &containerPrincipals)) return NS_ERROR_FAILURE;
   containerData = (nsJSPrincipalsData *)containerPrincipals;
   JSObject* container = inner;
-
   if (!aName && aPrincipals != containerPrincipals && aPrincipals) {
-      /*
-       * "name" argument omitted since it was specified when "principals"
-       * was created. Get it from "principals".
-       */
-      aName = new nsString(data->name);
+    // "name" argument omitted since it was specified when "principals"
+    // was created. Get it from "principals".
+    aName = new nsString(data->name);
   }
 #if 0
   implicitName = nsnull;
   if (!aName && data && data->signedness == HAS_SIGNED_SCRIPTS) {
-      /*
-       * Name is unspecified. Use the implicit name formed from the
-       * origin URL and the ordinal within the page. For example, the
-       * third implicit name on http://www.co.com/dir/mypage.html
-       * would be "_mypage2".
-       */
-      char *url;
-      char *path;
-
-      url = FindOriginURL(cx, inner);
-      if (!url) {
-        return nsnull;
-      }
-      path = *url? ParseURL(url, GET_PATH_PART) : nsnull;
-      if (path && *path) {
-          char *s;
-          s = PL_strrchr(path, '.');
-          if (s)
-              *s = '\0';
-          s = PL_strrchr(path, '/');
-          //XXXGlobalApi
-          implicitName = PR_sprintf_append(nsnull, "_%s%d", s ? s+1 : path,
-                                           aGlobal->signature_ordinal++);
-          name = implicitName;
-      }
-      PR_FREEIF(path);
-      delete url;
+    /*
+     * Name is unspecified. Use the implicit name formed from the
+     * origin URL and the ordinal within the page. For example, the
+     * third implicit name on http://www.co.com/dir/mypage.html
+     * would be "_mypage2".
+     */
+    char * urlchars, * path, * tempchars;
+    urlchars = FindOriginURL(cx, inner);
+    if (!urlchars) return nsnull;
+    path = ParseURL(urlchars, GET_PATH_PART)
+    nsIURL * url;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIComponentManager, compMan,kComponentManagerCID,&rv);
+    if (!NS_SUCCEEDED(rv)) return nsnull;
+    rv = compMan->CreateInstance(kURLCID,NULL,nsIURL::GetIID(),(void**)&url);
+    if (!NS_SUCCEEDED(rv)) return nsnull;
+    rv = url->SetSpec(urlchars);
+    if (!NS_SUCCEEDED(rv)) return nsnull;
+    url->GetPath(& path);
+    if (path && *path) {
+        char * s = PL_strrchr(path, '.');
+        if (s) *s = '\0';
+        s = PL_strrchr(path, '/');
+        //XXXGlobalApi
+        implicitName = PR_sprintf_append(nsnull, "_%s%d", s ? s+1 : path,
+                                         aGlobal->signature_ordinal++);
+        name = implicitName;
+    }
+    PR_FREEIF(path);
+    delete url;
   }
 #endif
   untransformed = nsnull;
@@ -1715,7 +1438,7 @@ nsJSSecurityManager::RegisterPrincipals(nsIScriptContext *aContext, nsIScriptGlo
         InvalidateCertPrincipals(cx, containerPrincipals);
 
         /* compare codebase principals */
-        if (!SameOrigins(cx, containerPrincipals->codebase,
+        if (!this->SameOrigins(cx, containerPrincipals->codebase,
                          aPrincipals->codebase)) {
           /* Codebases don't match; evaluate under different
              principals than container */
@@ -1736,7 +1459,7 @@ nsJSSecurityManager::RegisterPrincipals(nsIScriptContext *aContext, nsIScriptGlo
   if (!PrincipalsEqual(cx, aPrincipals, containerPrincipals)) {
     /* We have two unequal sets of principals. */
     if (containerData->signedness == HAS_NO_SCRIPTS &&
-      SameOrigins(cx, aPrincipals->codebase,
+      this->SameOrigins(cx, aPrincipals->codebase,
                   containerPrincipals->codebase)) {
       /*
        * Principals are unequal because we have container principals
@@ -1782,6 +1505,149 @@ nsJSSecurityManager::RegisterPrincipals(nsIScriptContext *aContext, nsIScriptGlo
   *aRetPrincipals = containerPrincipals;
   return NS_OK;
 }
+
+#if 0
+NS_IMETHODIMP
+nsJSSecurityManager::CheckURI(nsString *uri, nsIURI *base, PRBool checkFile, 
+                              PRBool *isOkay)
+{
+    *isOkay = PR_TRUE;
+    return NS_OK;
+
+    // TODO: Perform checks on uri
+    nsresult result;
+    nsIURI *url;
+    char *str;
+
+    if (!NS_SUCCEEDED(result = NS_NewURI(&url, *uri)))
+        return result;
+    if (!NS_SUCCEEDED(result = url->GetProtocol(&str)))
+        return result;  // TODO: what happens if no protocol?
+#endif
+
+#if 0
+    // Old 4.x code
+    const char *
+    lm_CheckURL(JSContext *cx, const char *url_string, JSBool checkFile)
+    {
+        char *protocol, *absolute;
+        JSObject *obj;
+        MochaDecoder *decoder;
+
+        protocol = NET_ParseURL(url_string, GET_PROTOCOL_PART);
+        if (!protocol || *protocol == '\0' || XP_STRCHR(protocol, '?')) {
+            lo_TopState *top_state;
+
+	    obj = JS_GetGlobalObject(cx);
+	    decoder = JS_GetPrivate(cx, obj);
+
+	    LO_LockLayout();
+	    top_state = lo_GetMochaTopState(decoder->window_context);
+            if (top_state && top_state->base_url) {
+	        absolute = NET_MakeAbsoluteURL(top_state->base_url,
+				               (char *)url_string);	/*XXX*/
+                /* 
+	         * Temporarily unlock layout so that we don't hold the lock
+	         * across a call (lm_CheckPermissions) that may result in 
+	         * synchronous event handling.
+	         */
+	        LO_UnlockLayout();
+                if (!lm_CheckPermissions(cx, obj, JSTARGET_UNIVERSAL_BROWSER_READ))
+                {
+                    /* Don't leak information about the url of this page. */
+                    XP_FREEIF(absolute);
+                    return NULL;
+                }
+	        LO_LockLayout();
+	    } else {
+	        absolute = NULL;
+	    }
+	    if (absolute) {
+	        if (protocol) XP_FREE(protocol);
+	        protocol = NET_ParseURL(absolute, GET_PROTOCOL_PART);
+	    }
+	    LO_UnlockLayout();
+        } else {
+	    absolute = JS_strdup(cx, url_string);
+	    if (!absolute) {
+	        XP_FREE(protocol);
+	        return NULL;
+	    }
+	    decoder = NULL;
+        }
+
+        if (absolute) {
+
+	    /* Make sure it's a safe URL type. */
+	    switch (NET_URL_Type(protocol)) {
+	      case FILE_TYPE_URL:
+                if (checkFile) {
+                    const char *subjectOrigin = lm_GetSubjectOriginURL(cx);
+                    if (subjectOrigin == NULL) {
+	                XP_FREE(protocol);
+	                return NULL;
+                    }
+                    if (NET_URL_Type(subjectOrigin) != FILE_TYPE_URL &&
+                        !lm_CanAccessTarget(cx, JSTARGET_UNIVERSAL_FILE_READ)) 
+                    {
+                        XP_FREE(absolute);
+                        absolute = NULL;
+                    }
+                }
+                break;
+	      case FTP_TYPE_URL:
+	      case GOPHER_TYPE_URL:
+	      case HTTP_TYPE_URL:
+	      case MAILTO_TYPE_URL:
+	      case NEWS_TYPE_URL:
+	      case RLOGIN_TYPE_URL:
+	      case TELNET_TYPE_URL:
+	      case TN3270_TYPE_URL:
+	      case WAIS_TYPE_URL:
+	      case SECURE_HTTP_TYPE_URL:
+	      case URN_TYPE_URL:
+	      case NFS_TYPE_URL:
+	      case MOCHA_TYPE_URL:
+	      case VIEW_SOURCE_TYPE_URL:
+	      case NETHELP_TYPE_URL:
+	      case WYSIWYG_TYPE_URL:
+	      case LDAP_TYPE_URL:
+    #ifdef JAVA
+    /* DHIREN */
+	      case MARIMBA_TYPE_URL:
+    /* ~DHIREN */
+    #endif
+	        /* These are "safe". */
+	        break;
+	      case ABOUT_TYPE_URL:
+	        if (XP_STRCASECMP(absolute, "about:blank") == 0)
+		    break;
+	        if (XP_STRNCASECMP(absolute, "about:pics", 10) == 0)
+		    break;
+	        /* these are OK if we are signed */
+	        if (lm_CanAccessTarget(cx, JSTARGET_UNIVERSAL_BROWSER_READ))
+		    break;
+	        /* FALL THROUGH */
+	      default:
+	        /* All others are naughty. */
+	        /* XXX signing - should we allow these for signed scripts? */
+	        XP_FREE(absolute);
+	        absolute = NULL;
+	        break;
+	    }
+        }
+
+        if (!absolute) {
+	    JS_ReportError(cx, "illegal URL method '%s'",
+		           protocol && *protocol ? protocol : url_string);
+        }
+        if (protocol)
+	    XP_FREE(protocol);
+        return absolute;
+    }
+
+}
+#endif
 
 #ifdef EARLY_ACCESS_STUFF
 /*
@@ -1838,7 +1704,7 @@ nsJSSecurityManager::IntersectPrincipals(JSContext *aCx, JSPrincipals *aPrincipa
   NS_ASSERTION(data->signedness != HAS_NO_SCRIPTS, "Signed page with no scripts");
   NS_ASSERTION(newData->signedness != HAS_NO_SCRIPTS, "Signed page with no scripts");
 
-  if (!SameOrigins(aCx, aPrincipals->codebase, aNewPrincipals->codebase)) {
+  if (!this->SameOrigins(aCx, aPrincipals->codebase, aNewPrincipals->codebase)) {
     delete aPrincipals->codebase;
     aPrincipals->codebase = gUnknownOriginStr.ToNewCString();
     if (aPrincipals->codebase == nsnull) {
@@ -1897,214 +1763,15 @@ nsJSSecurityManager::PrincipalsEqual(JSContext *aCx, JSPrincipals *aPrinA, JSPri
  * Glue code for JS stack crawling callbacks
  ******************************************************************************/
 
-nsJSFrameIterator *
-nsJSSecurityManager::NewJSFrameIterator(void *aContext)
-{
-    JSContext *aCx = (JSContext *)aContext;
-    nsJSFrameIterator *result;
-    void *array;
-
-    result = (nsJSFrameIterator*)PR_MALLOC(sizeof(nsJSFrameIterator));
-    if (result == nsnull) {
-        return nsnull;
-    }
-
-    if (aCx == nsnull) {
-        return nsnull;
-    }
-
-    result->fp = nsnull;
-    result->cx = aCx;
-    result->fp = JS_FrameIterator(aCx, &result->fp);
-    array = result->fp
-        ? JS_GetFramePrincipalArray(aCx, result->fp)
-        : nsnull;
-    result->intersect = array;
-    result->sawEmptyPrincipals =
-        (result->intersect == nsnull && result->fp &&
-         JS_GetFrameScript(aCx, result->fp))
-        ? PR_TRUE : PR_FALSE;
-
-    return result;
-}
 
 
-PRBool
-nsJSSecurityManager::NextJSJavaFrame(struct nsJSFrameIterator *aIterator)
-{
-	nsIPrincipalArray * current;
-	nsIPrincipalArray * previous;
-    if (aIterator->fp == 0) return PR_FALSE;
-    current = (nsIPrincipalArray *)JS_GetFramePrincipalArray(aIterator->cx, aIterator->fp);
-    if (current == nsnull) {
-        if (JS_GetFrameScript(aIterator->cx, aIterator->fp))
-            aIterator->sawEmptyPrincipals = PR_TRUE;
-    } else {
-        nsIPrincipalArray * arrayIntersect;
-        if (aIterator->intersect) {
-            previous = (nsIPrincipalArray *)aIterator->intersect;
-            current->IntersectPrincipalArray(previous,& arrayIntersect);
-            /* XXX: raman: should we do a free the previous principal Array */
-            ((nsIPrincipalArray *)aIterator->intersect)->FreePrincipalArray();
-        }
-        aIterator->intersect = current;
-    }
-    aIterator->fp = JS_FrameIterator(aIterator->cx, &aIterator->fp);
-    return aIterator->fp != nsnull;
-}
 
-PRBool
-nsJSSecurityManager::NextJSFrame(struct nsJSFrameIterator **aIterator)
-{
-  nsJSFrameIterator *iterator = *aIterator;
-  PRBool result = NextJSJavaFrame(iterator);
-	if (!result) {
-		if (iterator->intersect) 
-			((nsIPrincipalArray *)(* aIterator)->intersect)->FreePrincipalArray();
-		PR_Free(iterator);
-		* aIterator = nsnull;
-	}
-	return result;
-}
 
 /**
   * nsICapsSecurityCallbacks interface
   */
 
-NS_IMETHODIMP
-nsJSSecurityManager::NewNSJSJavaFrameWrapper(void *aContext, struct nsFrameWrapper ** aWrapper)
-{
-  struct nsFrameWrapper *result;
 
-  result = (struct nsFrameWrapper *)PR_MALLOC(sizeof(struct nsFrameWrapper));
-  if (result == nsnull) {
-      return NS_ERROR_FAILURE;
-  }
-
-  result->iterator = (void*)NewJSFrameIterator(aContext);
-  *aWrapper = result;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::FreeNSJSJavaFrameWrapper(struct nsFrameWrapper *aWrapper)
-{
-  PR_FREEIF(aWrapper);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::GetStartFrame(struct nsFrameWrapper *aWrapper)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::IsEndOfFrame(struct nsFrameWrapper *aWrapper, PRBool* aReturn)
-{
-  *aReturn = PR_FALSE;
-
-  if ((aWrapper == nsnull) || (aWrapper->iterator == nsnull)) {
-    *aReturn = PR_TRUE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::IsValidFrame(struct nsFrameWrapper *aWrapper, PRBool* aReturn)
-{
-  *aReturn = (aWrapper->iterator != nsnull);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::GetNextFrame(struct nsFrameWrapper *aWrapper, int *aDepth, void** aReturn)
-{
-  nsJSFrameIterator *iterator;
-  if (aWrapper->iterator == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  iterator = (nsJSFrameIterator*)(aWrapper->iterator);
-
-  if (!NextJSFrame(&iterator)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  (*aDepth)++;
-  *aReturn = aWrapper->iterator;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::OJIGetPrincipalArray(struct nsFrameWrapper *aWrapper, void** aReturn)
-{
-  nsJSFrameIterator *iterator;
-  if (aWrapper->iterator == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  iterator = (nsJSFrameIterator*)(aWrapper->iterator);
-  *aReturn = JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::OJIGetAnnotation(struct nsFrameWrapper *aWrapper, void** aReturn)
-{
-  nsJSFrameIterator *iterator;
-  void *annotation;
-  void *current;
-
-  if (aWrapper->iterator == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  iterator = (nsJSFrameIterator*)(aWrapper->iterator);
-
-  annotation = JS_GetFrameAnnotation(iterator->cx, iterator->fp);
-  if (annotation == nsnull)
-    return NS_ERROR_FAILURE;
-
-  current = JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
-
-  if (iterator->sawEmptyPrincipals || current == nsnull ||
-      (iterator->intersect &&
-      !CanExtendTrust(iterator->cx, current, iterator->intersect)))
-    return NS_ERROR_FAILURE;
-
-  *aReturn = annotation;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::OJISetAnnotation(struct nsFrameWrapper *aWrapper, void *aPrivTable,  void** aReturn)
-{
-  if (aWrapper->iterator) {
-    nsJSFrameIterator *iterator = (nsJSFrameIterator*)(aWrapper->iterator);
-    JS_SetFrameAnnotation(iterator->cx, iterator->fp, aPrivTable);
-  }
-  *aReturn = aPrivTable;
-  return NS_OK;
-}
-
-char *
-nsJSSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str)
-{
-  const char *subjectOrigin = "";//GetSubjectOriginURL(cx);
-  char *policy_str;
-  char *retval = 0;
-
-  if ((policy_str = GetSitePolicy(subjectOrigin)) == 0) {
-    /* No site-specific policy.  Get global policy name. */
-
-    if (NS_OK != mPrefs->CopyCharPref("javascript.security_policy", &policy_str))
-      policy_str = PL_strdup("default");
-  }
-  if (policy_str) { //why can't this be default? && PL_strcasecmp(policy_str, "default") != 0) {
-    retval = PR_sprintf_append(NULL, "js_security.%s.%s", policy_str, pref_str);
-    PR_Free(policy_str);
-  }
-
-  return retval;
-}
 
 /* Get the site-specific policy associated with object origin org. */
 char *
@@ -2207,31 +1874,6 @@ nsJSSecurityManager::GetSitePolicy(const char *org)
   PR_FREEIF(orghost);
   PR_FREEIF(sitepol);
   return retval;
-}
-
-PRInt32 
-nsJSSecurityManager::CheckForPrivilege(JSContext *cx, char *prop_name, int priv_code)
-{
-  char *tmp_prop_name;
-
-  if(prop_name == NULL) {
-    return SCRIPT_SECURITY_NO_ACCESS;
-  }
-
-  tmp_prop_name = AddSecPolicyPrefix(cx, prop_name);
-  if(tmp_prop_name == NULL) {
-    return SCRIPT_SECURITY_NO_ACCESS;
-  }
-
-  PRInt32 secLevel = SCRIPT_SECURITY_NO_ACCESS;
-
-  if (NS_OK == mPrefs->GetIntPref(tmp_prop_name, &secLevel)) {
-    PR_FREEIF(tmp_prop_name);
-    return secLevel;
-  }
-
-  PR_FREEIF(tmp_prop_name);
-  return SCRIPT_SECURITY_ALL_ACCESS;
 }
 
 static const char* continue_on_violation = "continue_on_access_violation";
@@ -2636,349 +2278,7 @@ lm_CheckPrivateTag(JSContext *cx, JSObject *obj, jsval id)
 */
 #endif //def'ing out ACL code.
 
-#define PMAXHOSTNAMELEN 64
-
-//XXX This is only here until I have a new Netlib equivalent!!!
-char * 
-nsJSSecurityManager::ParseURL (const char *url, int parts_requested)
-{
-	char *rv=0,*colon, *slash, *ques_mark, *hash_mark;
-	char *atSign, *host, *passwordColon, *gtThan;
-
-  if(!url) {
-		return(SACat(rv, ""));
-  }
-	colon = PL_strchr(url, ':'); /* returns a const char */
-
-	/* Get the protocol part, not including anything beyond the colon */
-	if (parts_requested & GET_PROTOCOL_PART) {
-		if(colon) {
-			char val = *(colon+1);
-			*(colon+1) = '\0';
-			rv = SACopy(rv, url);
-			*(colon+1) = val;
-
-			/* If the user wants more url info, tack on extra slashes. */
-			if ((parts_requested & GET_HOST_PART) || 
-          (parts_requested & GET_USERNAME_PART) || 
-          (parts_requested & GET_PASSWORD_PART)) {
-        if( *(colon+1) == '/' && *(colon+2) == '/') {
-          rv = SACat(rv, "//");
-        }
-				/* If there's a third slash consider it file:/// and tack on the last slash. */
-        if ( *(colon+3) == '/' ) {
-					rv = SACat(rv, "/");
-        }
-			}
-		}
-	}
-
-	/* Get the username if one exists */
-	if (parts_requested & GET_USERNAME_PART) {
-		if (colon && 
-        (*(colon+1) == '/') && 
-        (*(colon+2) == '/') && 
-        (*(colon+3) != '\0')) {
-
-      if ( (slash = PL_strchr(colon+3, '/')) != NULL) {
-				*slash = '\0';
-      }
-			if ( (atSign = PL_strchr(colon+3, '@')) != NULL) {
-				*atSign = '\0';
-        if ( (passwordColon = PL_strchr(colon+3, ':')) != NULL) {
-					*passwordColon = '\0';
-        }
-				rv = SACat(rv, colon+3);
-
-				/* Get the password if one exists */
-				if (parts_requested & GET_PASSWORD_PART) {
-					if (passwordColon) {
-						rv = SACat(rv, ":");
-						rv = SACat(rv, passwordColon+1);
-					}
-				}
-        if (parts_requested & GET_HOST_PART) {
-					rv = SACat(rv, "@");
-        }
-        if (passwordColon) {
-					*passwordColon = ':';
-        }
-				*atSign = '@';
-			}
-      if (slash) {
-				*slash = '/';
-      }
-		}
-	}
-
-	/* Get the host part */
-  if (parts_requested & GET_HOST_PART) {
-    if(colon) {
-	    if(*(colon+1) == '/' && *(colon+2) == '/') {
-		    slash = PL_strchr(colon+3, '/');
-
-        if(slash) {
-				  *slash = '\0';
-        }
-
-        if( (atSign = PL_strchr(colon+3, '@')) != NULL) {
-				  host = atSign+1;
-        }
-        else {
-          host = colon+3;
-        }
-			
-			  ques_mark = PL_strchr(host, '?');
-
-        if(ques_mark) {
-				  *ques_mark = '\0';
-        }
-
-			  gtThan = PL_strchr(host, '>');
-
-        if (gtThan) {
-				  *gtThan = '\0';
-        }
-
-        /* limit hostnames to within PMAXHOSTNAMELEN characters to keep
-         * from crashing
-         */
-        if(PL_strlen(host) > PMAXHOSTNAMELEN) {
-          char * cp;
-          char old_char;
-
-          cp = host + PMAXHOSTNAMELEN;
-          old_char = *cp;
-
-          *cp = '\0';
-
-          rv = SACat(rv, host);
-
-          *cp = old_char;
-        }
-			  else {
-				  rv = SACat(rv, host);
-				}
-
-        if(slash) {
-				  *slash = '/';
-        }
-
-        if(ques_mark) {
-				  *ques_mark = '?';
-        }
-
-        if (gtThan) {
-				  *gtThan = '>';
-        }
-			}
-    }
-	}
-	
-	/* Get the path part */
-  if (parts_requested & GET_PATH_PART) {
-    if(colon) {
-      if(*(colon+1) == '/' && *(colon+2) == '/') {
-				/* skip host part */
-        slash = PL_strchr(colon+3, '/');
-			}
-			else {
-				/* path is right after the colon
-				 */
-        slash = colon+1;
-			}
-                
-			if(slash) {
-			  ques_mark = PL_strchr(slash, '?');
-			  hash_mark = PL_strchr(slash, '#');
-
-        if(ques_mark) {
-				  *ques_mark = '\0';
-        }
-
-        if(hash_mark) {
-				  *hash_mark = '\0';
-        }
-
-        rv = SACat(rv, slash);
-
-        if(ques_mark) {
-				  *ques_mark = '?';
-        }
-
-        if(hash_mark) {
-				  *hash_mark = '#';
-        }
-			}
-		}
-  }
-		
-  if(parts_requested & GET_HASH_PART) {
-		hash_mark = PL_strchr(url, '#'); /* returns a const char * */
-
-		if(hash_mark) {
-			ques_mark = PL_strchr(hash_mark, '?');
-
-      if(ques_mark) {
-				*ques_mark = '\0';
-      }
-
-      rv = SACat(rv, hash_mark);
-
-      if(ques_mark) {
-				*ques_mark = '?';
-      }
-	  }
-  }
-
-  if(parts_requested & GET_SEARCH_PART) {
-    ques_mark = PL_strchr(url, '?'); /* returns a const char * */
-
-    if(ques_mark) {
-      hash_mark = PL_strchr(ques_mark, '#');
-
-      if(hash_mark) {
-          *hash_mark = '\0';
-      }
-
-      rv = SACat(rv, ques_mark);
-
-      if(hash_mark) {
-          *hash_mark = '#';
-      }
-    }
-  }
-
-	/* copy in a null string if nothing was copied in
-	 */
-  if(!rv) {
-	  rv = SACopy(rv, "");
-  }
-    
-  return rv;
-}
-
-char * 
-nsJSSecurityManager::SACopy (char *destination, const char *source)
-{
-	if(destination) {
-	  PR_Free(destination);
-		destination = 0;
-	}
-  if (!source)	{
-    destination = NULL;
-	}
-  else {
-    destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-    if (destination == NULL) 
- 	    return(NULL);
-
-    PL_strcpy (destination, source);
-  }
-  return destination;
-}
 
 
-char *
-nsJSSecurityManager::SACat (char *destination, const char *source)
-{
-    if (source && *source)
-      {
-        if (destination)
-          {
-            int length = PL_strlen (destination);
-            destination = (char *) PR_Realloc (destination, length + PL_strlen(source) + 1);
-            if (destination == NULL)
-            return(NULL);
 
-            PL_strcpy (destination + length, source);
-          }
-        else
-          {
-            destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-            if (destination == NULL)
-                return(NULL);
-
-             PL_strcpy (destination, source);
-          }
-      }
-    return destination;
-}
-
-extern "C" NS_DOM nsresult NS_NewScriptSecurityManager(nsIScriptSecurityManager ** aInstancePtrResult)
-{
-  nsIScriptSecurityManager* it = new nsJSSecurityManager();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  nsresult ret = it->QueryInterface(kIScriptSecurityManagerIID, (void **) aInstancePtrResult);
-  
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
-
-  ret = it->Init();
-
-  if (NS_FAILED(ret)) {
-    NS_RELEASE(*aInstancePtrResult);
-  }
-
-  return ret;
-}
-
-NS_IMETHODIMP
-nsJSSecurityManager::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, 
-                                      nsISupports *aObj)
-{
-#if 0
-    nsString* aOrigin=nsnull;
-    nsresult rv=this->GetSubjectOriginURL(aJSContext, &aOrigin);
 #endif
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsJSSecurityManager::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
-{
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsJSSecurityManager::CanGetService(JSContext * aJSContext, const nsCID & aCID)
-{
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsJSSecurityManager::CanCallMethod(JSContext * aJSContext, 
-                                   const nsIID & aIID, 
-                                   nsISupports *aObj, 
-                                   nsIInterfaceInfo *aInterfaceInfo, 
-                                   PRUint16 aMethodIndex, 
-                                   const jsid aName)
-{
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsJSSecurityManager::CanGetProperty(JSContext * aJSContext, 
-                                    const nsIID & aIID, 
-                                    nsISupports *aObj, 
-                                    nsIInterfaceInfo *aInterfaceInfo, 
-                                    PRUint16 aMethodIndex, 
-                                    const jsid aName)
-{
-     return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsJSSecurityManager::CanSetProperty(JSContext * aJSContext, 
-                                    const nsIID & aIID, 
-                                    nsISupports *aObj, 
-                                    nsIInterfaceInfo *aInterfaceInfo, 
-                                    PRUint16 aMethodIndex, 
-                                    const jsid aName)
-{
-    return NS_OK;
-}

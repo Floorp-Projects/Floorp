@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsIFactory.h"
+#include "nsIPrincipal.h"
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
@@ -206,9 +207,9 @@ public:
   virtual void      Finalize(JSContext *aContext);
   
   // nsIScriptGlobalObjectData interface
-  NS_IMETHOD       GetPrincipals(void** aPrincipals);
-  NS_IMETHOD       SetPrincipals(void* aPrincipals);
-  NS_IMETHOD       GetOrigin(nsString* aOrigin);
+  NS_IMETHOD       GetPrincipal(nsIPrincipal * * prin);
+  NS_IMETHOD       SetPrincipal(nsIPrincipal * prin);
+  NS_IMETHOD       GetOrigin(nsIURI** aOrigin);
 
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
@@ -250,7 +251,7 @@ protected:
   HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
-  JSPrincipals *mPrincipals;
+  nsIPrincipal * mPrincipal;
 
   BarPropImpl *mMenubar;
   BarPropImpl *mToolbar;
@@ -288,7 +289,7 @@ struct nsTimeoutImpl {
   PRInt32             interval;       /* Non-zero if repetitive timeout */
   PRInt64             when;           /* nominal time to run this timeout */
   JSVersion           version;        /* Version of JavaScript to execute */
-  JSPrincipals        *principals;    /* principals with which to execute */
+  nsIPrincipal       *principal;    /* principals with which to execute */
   char                *filename;      /* filename of setTimeout call */
   PRUint32            lineno;         /* line number of setTimeout call */
   nsTimeoutImpl       *next;

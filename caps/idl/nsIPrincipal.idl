@@ -17,37 +17,55 @@
  */
 /*defines interfaces for codebase and certificate principals*/
 #include "nsISupports.idl"
+interface nsIURI;
+%{C++
+struct JSPrincipals;
+%}
+
+[ptr] native JSPrincipals(JSPrincipals);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipal : nsISupports {
-	const short PrincipalType_Unknown=0;
-	const short PrincipalType_CodebaseExact=1;
-	const short PrincipalType_CodebaseRegex=2;
-	const short PrincipalType_Certificate=3;
-	const short PrincipalType_CertificateFingerPrint=4;
-	const short PrincipalType_CertificateKey=5;
-	const short PrincipalType_CertificateChain=6;
+  const short PrincipalType_Unknown=0;
+  const short PrincipalType_CodebaseExact=1;
+  const short PrincipalType_CodebaseRegex=2;
+  const short PrincipalType_Certificate=3;
+  const short PrincipalType_CertificateFingerPrint=4;
+  const short PrincipalType_CertificateKey=5;
+  const short PrincipalType_CertificateChain=6;
 
-	void GetType(out short type);
-	void IsSecure(out boolean result);
-	void ToString(out string result);
-	void HashCode(out unsigned long code);
-	void Equals(in nsIPrincipal other, out boolean result);
+  void ToJSPrincipal(out JSPrincipals jsprin);
+  void GetType(out short type);
+  void IsSecure(out boolean result);
+  void ToString(out string result);
+  void HashCode(out unsigned long code);
+  void Equals(in nsIPrincipal other, out boolean result);
 };
 
-[uuid(c29fe440-25e1-11d2-8160-006008119d7a)]
+%{C++
+#define NS_CODEBASEPRINCIPAL_PROGID "component://netscape/codebaseprincipal"
+#define NS_CODEBASEPRINCIPAL_CLASSNAME "codebaseprincipal"
+%}
+
+[uuid(829fe440-25e1-11d2-8160-006008119d7a)]
 interface nsICodebasePrincipal : nsIPrincipal {
-	void GetURL(out string ppCodeBaseURL);
-	void IsCodebaseExact(out boolean result);
-	void IsCodebaseRegex(out boolean result);
+  void GetURLString(out string ppCodeBaseURL);
+  void GetURL(out nsIURI url);
+  void IsCodebaseExact(out boolean result);
+  void IsCodebaseRegex(out boolean result);
 };
+
+%{C++
+#define NS_CERTIFICATEPRINCIPAL_PROGID "component://netscape/codebaseprincipal"
+#define NS_CERTIFICATEPRINCIPAL_CLASSNAME "codebaseprincipal"
+%}
 
 [uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
 interface nsICertificatePrincipal : nsIPrincipal {
-	void GetPublicKey(out string publicKey);
-	void GetCompanyName(out string ppCompanyName);
-	void GetCertificateAuthority(out string ppCertAuthority);
-	void GetSerialNumber(out string ppSerialNumber);
-	void GetExpirationDate(out string ppExpDate);
-	void GetFingerPrint(out string ppFingerPrint);
+  void GetPublicKey(out string publicKey);
+  void GetCompanyName(out string ppCompanyName);
+  void GetCertificateAuthority(out string ppCertAuthority);
+  void GetSerialNumber(out string ppSerialNumber);
+  void GetExpirationDate(out string ppExpDate);
+  void GetFingerPrint(out string ppFingerPrint);
 };

@@ -28,15 +28,18 @@ interface nsIScriptContext;
 
 [uuid(7cb78236-47b0-11d3-ba17-0060b0f199a2)]
 interface nsICapsManager : nsISupports {
-
-	void GetPrincipalManager(out nsIPrincipalManager prinMan);
-
-	void GetPrivilegeManager(out nsIPrivilegeManager privMan);
-
-	void CreateCodebasePrincipal([const] in string codebaseURL, out nsIPrincipal prin);
 %{C++
+/*
+  void GetPrincipalManager(out nsIPrincipalManager prinMan);
+
+  void GetPrivilegeManager(out nsIPrivilegeManager privMan);
+
+  void CreateCodebasePrincipal([const] in string codebaseURL, out nsIPrincipal prin);
+
 	NS_IMETHOD
 	CreateCertificatePrincipal(const unsigned char * * certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts, nsIPrincipal * * prin) = 0;
+*/
+  
 %}
 
 	void GetPermission(in nsIPrincipal prin, in nsITarget target, out short privilegeState);

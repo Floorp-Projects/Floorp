@@ -58,11 +58,13 @@ CPP_OBJS=                                    \
     .\$(OBJDIR)\nsCCapsManager.obj           \
     .\$(OBJDIR)\nsCertificatePrincipal.obj   \
     .\$(OBJDIR)\nsCodebasePrincipal.obj      \
+    .\$(OBJDIR)\nsJSPrincipals.obj           \
     .\$(OBJDIR)\nsPrincipalArray.obj         \
     .\$(OBJDIR)\nsPrincipalManager.obj       \
     .\$(OBJDIR)\nsPrivilege.obj              \
     .\$(OBJDIR)\nsPrivilegeManager.obj       \
     .\$(OBJDIR)\nsPrivilegeTable.obj         \
+    .\$(OBJDIR)\nsScriptSecurityManager.obj  \
     .\$(OBJDIR)\nsSecurityManagerFactory.obj \
     .\$(OBJDIR)\nsSystemPrivilegeTable.obj   \
     .\$(OBJDIR)\nsTarget.obj                 \
@@ -77,7 +79,6 @@ CPP_OBJS=                                    \
 #//
 #//------------------------------------------------------------------------
 
-
 #//------------------------------------------------------------------------
 #//
 #// Define any local options for the make tools 
@@ -86,6 +87,7 @@ CPP_OBJS=                                    \
 #//------------------------------------------------------------------------
 LINCS= $(LINCS) \
 		-I$(PUBLIC)\js \
+		-I$(XPDIST)\public\js \
 		-I$(PUBLIC)\nspr \
 		-I$(PUBLIC)\xpcom \
 		-I$(PUBLIC)\security \
@@ -97,6 +99,7 @@ LINCS= $(LINCS) \
 		-I$(DEPTH)\lib\libstyle \
 		-I$(PUBLIC)\caps \
 		-I$(PUBLIC)\public \
+		-I$(PUBLIC)\xpconnect \
 #		-I$(PUBLIC)\rdf \
 		$(NULL)
 
@@ -104,6 +107,8 @@ LLIBS = \
 	$(LIBNSPR)                    \
 	$(DIST)\lib\xpcom.lib         \
 	$(DIST)\lib\xplib.lib         \
+	$(DIST)\lib\js3250.lib	      \
+	$(DIST)\lib\oji.lib	      \
 	$(DIST)\lib\zlib.lib          \
 	$(NULL)
 

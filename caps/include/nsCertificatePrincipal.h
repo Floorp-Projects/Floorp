@@ -18,11 +18,19 @@
 /*describes principals for use with signed scripts*/
 #ifndef _NS_CERTIFICATE_PRINCIPAL_H_
 #define _NS_CERTIFICATE_PRINCIPAL_H_
+#include "jsapi.h"
 #include "nsVector.h"
 #include "nsIPrincipal.h"
 
+#define NS_CERTIFICATEPRINCIPALMANAGER_CID \
+{ 0x7ee2a4c0, 0x4b91, 0x11d3, \
+{ 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
+
 class nsCertificatePrincipal : public nsICertificatePrincipal {
 public:
+
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPALMANAGER_CID)
+
 	NS_DECL_ISUPPORTS
 
 	NS_IMETHOD
@@ -43,6 +51,9 @@ public:
 	NS_IMETHOD
 	GetFingerPrint(char ** fp);
 
+  NS_IMETHOD
+  ToJSPrincipal(JSPrincipals * * jsprin);
+  
 	NS_IMETHOD
 	GetType(PRInt16 * type);
 

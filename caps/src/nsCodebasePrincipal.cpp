@@ -17,17 +17,42 @@
  */
 /* describes principals by thier orginating uris*/
 #include "nsCodebasePrincipal.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "xp.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
 
 NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
 
 NS_IMETHODIMP
-nsCodebasePrincipal::GetURL(char **cburl)
+nsCodebasePrincipal::ToJSPrincipal(JSPrincipals * * jsprin)
 {
-	* cburl = (char *)itsCodeBaseURL;
-	return NS_OK;
+    if (itsJSPrincipals.refcount == 0) {
+        NS_ADDREF(this);
+    }
+    *jsprin = &itsJSPrincipals;
+    return NS_OK;
+/*
+    char * cb;
+  this->GetURLString(& cb);
+  * jsprin = NS_STATIC_CAST(JSPrincipals *,this);
+  (* jsprin)->codebase = PL_strdup(cb);
+  return NS_OK;
+  */
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::GetURLString(char **cburl)
+{
+  return itsURL->GetSpec(cburl);
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::GetURL(nsIURI * * url) 
+{
+  return itsURL->Clone(url);
 }
 
 NS_IMETHODIMP
@@ -54,11 +79,9 @@ nsCodebasePrincipal::GetType(PRInt16 * type)
 NS_IMETHODIMP 
 nsCodebasePrincipal::IsSecure(PRBool * result)
 { 
-	/*
-	if ((0 == memcmp("https:", itsKey, strlen("https:"))) ||
-      (0 == memcmp("file:", itsKey, strlen("file:"))))
-    return PR_TRUE;
-	*/
+//	if ((0 == memcmp("https:", itsKey, strlen("https:"))) ||
+//      (0 == memcmp("file:", itsKey, strlen("file:"))))
+//    return PR_TRUE;
 	return PR_FALSE;
 }
 
@@ -71,32 +94,48 @@ nsCodebasePrincipal::ToString(char * * result)
 NS_IMETHODIMP
 nsCodebasePrincipal::HashCode(PRUint32 * code)
 {
-	code=0;
+	(* code) = 0;
 	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCodebasePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
-	PRInt16 oType = 0;
-//	char ** oCodeBase;
-	other->GetType(& oType);
-	* result = (itsType == oType) ? PR_TRUE : PR_FALSE;	
-//XXXariel fix this
-//	if (* result) {
-//		nsICodebasePrincipal * cbother = (nsCodebasePrincipal)other;
-//		cbother->GetURL(& oCodeBase);
-//	}
-//	* result = (itsCodebase == oCodeBase) ? PR_TRUE : PR_FALSE;	
-	return NS_OK;
+  PRInt16 oType = 0;
+  other->GetType(& oType);
+  (* result) = (itsType == oType) ? PR_TRUE : PR_FALSE;	
+  if ((* result) != PR_TRUE) return NS_OK;
+  nsICodebasePrincipal * cbother;
+  char * oCodebase = nsnull, * myCodebase = nsnull;
+  other->QueryInterface(NS_GET_IID(nsICodebasePrincipal),(void * *)& cbother);
+  cbother->GetURLString(& oCodebase);
+  this->GetURLString(& myCodebase);
+  (* result) = (PL_strcmp(myCodebase, oCodebase) == 0) ? PR_TRUE : PR_FALSE;	
+  return NS_OK;
 }
 
-nsCodebasePrincipal::nsCodebasePrincipal(PRInt16 type, const char * codeBaseURL)
+nsCodebasePrincipal::nsCodebasePrincipal()
 {
-	this->itsType = type;
-	this->itsCodeBaseURL = codeBaseURL;
+  NS_INIT_ISUPPORTS();
+  itsURL = nsnull;
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::Init(PRInt16 type, nsIURI *uri)
+{
+  nsresult result;
+  NS_ADDREF(this);
+  this->itsType = type;
+  if (!NS_SUCCEEDED(result = uri->Clone(&itsURL))) return result;
+  if (!NS_SUCCEEDED(result = itsJSPrincipals.Init(this))) {
+    NS_RELEASE(itsURL);
+    return result;
+  }
+  return NS_OK;
 }
 
 nsCodebasePrincipal::~nsCodebasePrincipal(void)
 {
+    if (itsURL)
+        NS_RELEASE(itsURL);
 }

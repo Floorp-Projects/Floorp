@@ -46,9 +46,6 @@ interface nsIPrivilegeManager : nsISupports
 
 };
 %{C++
-#define NS_PRIVILEGEMANAGER_CID \
-{ 0x422e8544, 0x4b91, 0x11d3, \
-{ 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 #define NS_PRIVILEGEMANAGER_PROGID "component://netscape/privilegemanager"
 #define NS_PRIVILEGEMANAGER_CLASSNAME "privilegemanager"
 %}

@@ -38,9 +38,7 @@ static PRMonitor * caps_lock = NULL;
  * a void * as argument and it passed that argument as a parameter to the 
  * callback function.
  */
-char * gForever;
-char * gSession;
-char * gDenied;
+char * gForever, * gSession, * gDenied;
 nsPrivilegeTable * gPrivilegeTable;
 
 static PRBool RDF_RemovePrincipalsPrivilege(nsIPrincipal * prin, nsITarget * target);
@@ -302,7 +300,9 @@ nsPrivilegeManager::EnablePrincipalPrivilegeHelper(nsIScriptContext * context, n
 	/* Get the registered target */
 	nsITarget *targ = nsTarget::FindTarget(target);
 	if (targ != target) return PR_FALSE;
-	callerPrinArray = nsPrincipalManager::GetPrincipalManager()->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	callerPrinArray = prinMan->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
 	if (preferredPrin != NULL) {
 		nsIPrincipal * callerPrin;
 		PRUint32 i;
@@ -454,7 +454,9 @@ void
 nsPrivilegeManager::RegisterPrincipalAndSetPrivileges(nsIPrincipal * prin, nsITarget * target, nsIPrivilege * newPrivilege)
 {
 	nsPrivilegeTable *privTable;
-	nsPrincipalManager::GetPrincipalManager()->RegisterPrincipal(prin);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	prinMan->RegisterPrincipal(prin);
 	//Store the list of targets for which the user has given privilege
 	PrincipalKey prinKey(prin);
 	nsCaps_lock();
@@ -520,8 +522,9 @@ nsPrivilegeManager::CheckPrivilegeGranted(nsITarget *target, PRInt32 callerDepth
 NS_IMETHODIMP
 nsPrivilegeManager::CheckPrivilegeGranted(nsIScriptContext * context, nsITarget * target, PRInt32 callerDepth, void * data, PRBool * result)
 {
-	nsIPrincipalArray * callerPrinArray = 
-		nsPrincipalManager::GetPrincipalManager()->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	nsIPrincipalArray * callerPrinArray = prinMan->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
 	PRInt16 privilegeState = this->GetPrincipalPrivilege(target, callerPrinArray, data);
 	* result = (privilegeState == nsIPrivilege::PrivilegeState_Allowed) ? PR_TRUE : PR_FALSE;
 	return NS_OK;
@@ -547,10 +550,10 @@ nsPrivilegeManager::GetTargetsWithPrivileges(char *prinName, char** forever, cha
 {
 	/* Admin UI */
 	nsCaps_lock();
-	*forever = gForever = NULL;
-	*session = gSession = NULL;
-	*denied = gDenied = NULL;
-	nsIPrincipal * prin = nsPrincipalManager::GetPrincipalManager()->GetPrincipalFromString(prinName);
+	* forever = gForever = * session = gSession = * denied = gDenied = NULL;
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	nsIPrincipal * prin = prinMan->GetPrincipalFromString(prinName);
 	if (prin == NULL) {
 		nsCaps_unlock();
 		return;
@@ -575,7 +578,8 @@ nsPrivilegeManager::GetTargetsWithPrivileges(char *prinName, char** forever, cha
 PRBool 
 nsPrivilegeManager::RemovePrincipal(char * prinName)
 {
-	nsPrincipalManager * itsPrincipalManager = nsPrincipalManager::GetPrincipalManager();
+	nsPrincipalManager * itsPrincipalManager;
+  nsPrincipalManager::GetPrincipalManager(& itsPrincipalManager);
 	nsCaps_lock();
 	nsIPrincipal * prin = itsPrincipalManager->GetPrincipalFromString(prinName);
 	if (prin == NULL) {
@@ -591,7 +595,9 @@ NS_IMETHODIMP
 nsPrivilegeManager::RemovePrincipalsPrivilege(const char * prinName, const char * targetDesc, PRBool * result)
 {
 	/* Admin UI */
-	nsIPrincipal * prin = nsPrincipalManager::GetPrincipalManager()->GetPrincipalFromString((char *)prinName);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	nsIPrincipal * prin = prinMan->GetPrincipalFromString((char *)prinName);
 	if (prin == NULL) {
 		* result = PR_FALSE;
 		return NS_OK;
@@ -996,7 +1002,9 @@ void
 nsPrivilegeManager::Save(nsIPrincipal * prin, nsITarget *target, nsIPrivilege *newPrivilege)
 {
 	PRBool eq;
-	prin->Equals(nsPrincipalManager::GetPrincipalManager()->GetSystemPrincipal(),& eq);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	prin->Equals(prinMan->GetSystemPrincipal(),& eq);
 	if (eq) return;
 #ifdef ENABLE_RDF
 	nsCaps_lock();

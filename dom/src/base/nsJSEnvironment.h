@@ -30,7 +30,6 @@ private:
   nsIScriptNameSpaceManager* mNameSpaceManager;
   PRBool mIsInitialized;
   PRUint32 mNumEvaluations;
-  nsIScriptSecurityManager* mSecManager;
 
 public:
   nsJSContext(JSRuntime *aRuntime);

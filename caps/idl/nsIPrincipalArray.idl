@@ -40,3 +40,8 @@ interface nsIPrincipalArray : nsISupports
 
 	void GetPrincipalArraySize(out unsigned long result);
 };
+
+%{C++
+#define NS_PRINCIPALARRAY_PROGID "component://netscape/principalarray"
+#define NS_PRINCIPALARRAY_CLASSNAME "principalarray"
+%}

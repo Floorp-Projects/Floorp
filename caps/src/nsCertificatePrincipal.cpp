@@ -64,6 +64,15 @@ nsCertificatePrincipal::GetFingerPrint(char * * fingerPrint)
 	return (itsFingerPrint == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsCertificatePrincipal::ToJSPrincipal(JSPrincipals * * jsprin)
+{
+//  *jsprin = NS_STATIC_CAST(JSPrincipals *,this);
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsCertificatePrincipal::GetType(PRInt16 * type)
 {

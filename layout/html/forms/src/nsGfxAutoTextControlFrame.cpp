@@ -299,28 +299,29 @@ nsresult nsGfxAutoTextControlFrame::BuildScriptEventHandler(nsIScriptContext* aC
 {
 	nsIScriptGlobalObject *global;
 	nsIScriptGlobalObjectData *globalData;
-	JSPrincipals* principals = nsnull;
+	nsIPrincipal * prin = nsnull;
 	*mScriptObject = nsnull;
-
 	global = aContext->GetGlobalObject();
 	if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)))
 	{
-		if (NS_FAILED(globalData->GetPrincipals((void**)&principals)))
+		if (NS_FAILED(globalData->GetPrincipal(& prin)))
 		{
 			NS_RELEASE(global);
 			NS_RELEASE(globalData);
 			return NS_ERROR_FAILURE;
 		}
+    
 		NS_RELEASE(globalData);
 	}
 	NS_IF_RELEASE(global);
-
+  JSPrincipals * jsprin;
+  prin->ToJSPrincipal(& jsprin);
 	if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)mScriptObject))
 	{
 		JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
 		if (nsnull != aName)
 		{
-			JS_CompileUCFunctionForPrincipals(mJSContext, *mScriptObject, principals, aName,
+			JS_CompileUCFunctionForPrincipals(mJSContext, *mScriptObject, jsprin, aName,
 		           0, nsnull, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
 		           nsnull, 0);
 			return NS_OK;
@@ -333,20 +334,15 @@ nsresult nsGfxAutoTextControlFrame::BuildScriptEventHandler(nsIScriptContext* aC
 nsresult nsGfxAutoTextControlFrame::ExecuteScriptEventHandler(PRInt32 handlerID)
 {
 	jsval funval, result;
-	
 	SetEventHandlers(handlerID);
-
 	if (mEvtHdlrContext[handlerID] && mEvtHdlrScript[handlerID])
 	{
 		JSContext* mJSContext = (JSContext*)mEvtHdlrContext[handlerID]->GetNativeContext();
-
 		if (!JS_LookupProperty(mJSContext, mEvtHdlrScript[handlerID], eventName[handlerID], &funval))
-	    	return NS_ERROR_FAILURE;
-
-	  	if (JS_TypeOfValue(mJSContext, funval) != JSTYPE_FUNCTION)
-			return NS_OK;
-
+      return NS_ERROR_FAILURE;
+    if (JS_TypeOfValue(mJSContext, funval) != JSTYPE_FUNCTION)
+      return NS_OK;
 		JS_CallFunctionValue(mJSContext, mEvtHdlrScript[handlerID], funval, 0, nsnull, &result);
 	}
-    return NS_OK;
+  return NS_OK;
 }
