@@ -11,7 +11,7 @@ print LOGFILE $buffer;
 close LOGFILE;
 
 # Send the response
-print "Content-type: text/xml\n\n";
+print "Content-type: application/xml\n\n";
 print "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/1999/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/1999/XMLSchema\">\n";
 print "<SOAP-ENV:Body>\n";
 print "<m:GetLastTradePriceResponse xmlns:m=\"uri:some-namespace\">\n";

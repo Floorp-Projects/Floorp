@@ -325,7 +325,7 @@ nsHTTPSOAPTransport::SetupRequest(nsISOAPCall* aCall, PRBool async,
   if (AStringIsNull(uri))
     return SOAP_EXCEPTION(NS_ERROR_NOT_INITIALIZED,"SOAP_TRANSPORT_URI", "No transport URI was specified.");
 
-  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+  rv = request->OverrideMimeType(NS_LITERAL_CSTRING("application/xml"));
   if (NS_FAILED(rv))
     return rv;
 
