@@ -1828,7 +1828,7 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
     }
 
     /* Pass the notification out to any observers... */
-    nsAutoString msgStr(aMsg);
+    nsString msgStr(aMsg);
     m_DocLoader->FireOnStatusURLLoad(aURL, msgStr);
 
     /* Pass the notification out to the Observer... */
