@@ -26,10 +26,8 @@
 
 #include <Xfe/XfeTest.h>
 
-#if defined(LINUX) || defined(IRIX)
+#ifdef XFE_USE_NATIVE_XPM
 #include <X11/xpm.h>
-#else
-#include <xpm.h>
 #endif
 
 /*----------------------------------------------------------------------*/
@@ -44,8 +42,10 @@ XfeAllocatePixmapFromFile(char *			filename,
 						  Pixmap *			pixmap,
 						  Pixmap *			mask)
 {
-    XpmAttributes		attrib;
 	Boolean				result = True;
+
+#ifdef XFE_USE_NATIVE_XPM
+    XpmAttributes		attrib;
 	XpmColorSymbol		symbols[1];
 
     assert( dpy != NULL );
@@ -81,7 +81,17 @@ XfeAllocatePixmapFromFile(char *			filename,
 		result = False;
     }
 
-    return result;
+#else
+
+	/* So that loser platforms that dont ship xpm will at least compile */
+	*pixmap = XmUNSPECIFIED_PIXMAP;
+	*mask = XmUNSPECIFIED_PIXMAP;
+
+	result = False;
+
+#endif
+
+	return result;
 }
 /*----------------------------------------------------------------------*/
 Boolean
@@ -95,8 +105,10 @@ XfeAllocatePixmapFromData(char **			data,
 						  Pixmap *			pixmap,
 						  Pixmap *			mask)
 {
-    XpmAttributes		attrib;
 	Boolean				result = True;
+
+#ifdef XFE_USE_NATIVE_XPM
+    XpmAttributes		attrib;
 	XpmColorSymbol		symbols[1];
 
     assert( dpy != NULL );
@@ -130,7 +142,17 @@ XfeAllocatePixmapFromData(char **			data,
 		result = False;
     }
 
-    return result;
+#else
+
+	/* So that loser platforms that dont ship xpm will at least compile */
+	*pixmap = XmUNSPECIFIED_PIXMAP;
+	*mask = XmUNSPECIFIED_PIXMAP;
+
+	result = False;
+
+#endif
+
+	return result;
 }
 /*----------------------------------------------------------------------*/
 Pixmap

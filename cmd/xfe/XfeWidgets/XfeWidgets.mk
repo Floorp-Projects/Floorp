@@ -94,6 +94,8 @@ ifeq ($(OS_ARCH),Linux)
 
   XFE_USE_NATIVE_XPM	= True
 
+  XFE_EXTRA_DEFINES		+= -DXFE_USE_NATIVE_XPM
+
   XFE_OS_LD_FLAGS		=
 
 endif
@@ -150,6 +152,8 @@ ifeq ($(OS_ARCH),IRIX)
   XFE_X_LIBS			= -lXmu -lX11 -lSM -lICE
 
   XFE_USE_NATIVE_XPM	= True
+
+  XFE_EXTRA_DEFINES		+= -DXFE_USE_NATIVE_XPM
 
   XFE_OS_LD_FLAGS		=
 
