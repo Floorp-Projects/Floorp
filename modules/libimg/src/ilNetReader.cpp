@@ -25,7 +25,7 @@ class NetReaderImpl : public ilINetReader {
 public:
 
   NetReaderImpl(il_container *aContainer);
-  ~NetReaderImpl();
+  virtual ~NetReaderImpl();
 
   NS_DECL_ISUPPORTS
 
