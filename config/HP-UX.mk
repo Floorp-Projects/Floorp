@@ -27,16 +27,17 @@ ARCH			:= hpux
 CPU_ARCH		:= hppa
 GFX_ARCH		:= x
 
-OS_INCLUDES		=
+OS_INCLUDES		= -I/usr/include/X11R$(X11_REV) -I/usr/contrib/X11R$(X11_REV)/include -I/usr/include/Motif$(MOTIF_REV)_R$(X11_REV) -I/usr/include/Motif$(MOTIF_REV)
 G++INCLUDES		=
 LOC_LIB_DIR		= /usr/lib/X11
 MOTIF			=
 MOTIFLIB		=
+MOTIF_REV		= 1.2
 OS_LIBS			= -ldld
 
-PLATFORM_FLAGS		= $(DSO_CFLAGS) -DHPUX -Dhpux -D$(CPU_ARCH) $(ADDITIONAL_CFLAGS)
+PLATFORM_FLAGS		= $(DSO_CFLAGS) -DHPUX -Dhpux -DHPUX$(subst .,,$(subst .0,,$(suffix $(OS_RELEASE)))) -DHPUX$(subst .,,$(subst .0,,$(suffix $(OS_RELEASE))))$(subst .,_,$(OS_VERSION)) -D$(CPU_ARCH) $(ADDITIONAL_CFLAGS)
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
-PORT_FLAGS		= -D_HPUX_SOURCE -DSW_THREADS -DNO_SIGNED -DNO_FNDELAY -DHAVE_ODD_SELECT -DNO_CDEFS_H -DNO_LONG_LONG -DNEED_IOCTL_H -DNEED_MATH_H -DUSE_NODL_TABS -DMITSHM -DNEED_SYS_WAIT_H -DHAVE_INT32_T -DNEED_UINT_T -DNEED_H_ERRNO
+PORT_FLAGS		= -D_HPUX_SOURCE -DSW_THREADS -DNO_SIGNED -DNO_FNDELAY -DHAVE_ODD_SELECT -DNO_CDEFS_H -DNEED_IOCTL_H -DNEED_MATH_H -DUSE_NODL_TABS -DMITSHM -DNEED_SYS_WAIT_H -DHAVE_INT32_T -DNEED_UINT_T -DNEED_H_ERRNO
 PDJAVA_FLAGS		=
 
 OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
@@ -62,48 +63,61 @@ PT_LOCALE		= pt
 ######################################################################
 
 ifeq ($(OS_RELEASE),A.09)
-PLATFORM_FLAGS		+= -DHPUX9 -Dhpux9
 OS_LIBS			+= -L/lib/pa1.1 -lm
+ifndef NS_USE_GCC
 NO_INLINE		= +d
+endif
 else
 OS_LIBS			+= -lm
 endif
 
 ifeq ($(OS_RELEASE),B.10)
-PLATFORM_FLAGS		+= -DHPUX10 -Dhpux10
 PORT_FLAGS		+= -DRW_NO_OVERLOAD_SCHAR -DHAVE_MODEL_H
 JAVA_PROG		= $(CONTRIB_BIN)java
-ifeq ($(OS_VERSION),.10)
-PLATFORM_FLAGS		+= -DHPUX10_10
-endif
-ifeq ($(OS_VERSION),.20)
-PLATFORM_FLAGS		+= -DHPUX10_20
-endif
-ifeq ($(OS_VERSION),.30)
-PLATFORM_FLAGS		+= -DHPUX10_30
-endif
 endif
 
 ifeq ($(OS_RELEASE),B.11)
-PLATFORM_FLAGS		+= -DHPUX10 -DHPUX11
+PLATFORM_FLAGS		+= -DHPUX10
+MOTIF_REV		= 2.1
 endif
 
 ######################################################################
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
 
-BSDECHO			= $(DIST)/bin/bsdecho
+ifndef NS_USE_GCC
 CC			= cc -Ae
 CCC			= CC -Aa +a1 $(NO_INLINE)
+endif
+
+BSDECHO			= $(DIST)/bin/bsdecho
 DLL_SUFFIX		= sl
+EMACS			= /bin/true
 PERL			= $(LOCAL_BIN)perl
+
+ifdef BUILD_OPT
+ifdef NS_USE_GCC
+OPTIMIZER		= -O
+else
+OPTIMIZER		= -O +Onolimit
+endif
+endif
 
 ######################################################################
 # Other
 ######################################################################
 
+ifdef MOZ_USE_X11R6
+X11_REV			= 6
+else
+X11_REV			= 5
+endif
+
 ifdef SERVER_BUILD
-PLATFORM_FLAGS		+= +DA1.0 -Wl,-E
+ifndef NS_USE_GCC                                                 
+PLATFORM_FLAGS		+= +DA1.0                           
+endif
+PLATFORM_FLAGS		+= -Wl,-E
 endif
 
 ELIBS_CFLAGS		= -g -DHAVE_STRERROR
@@ -116,4 +130,9 @@ MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
 DSO_LDOPTS		= -b
 DSO_LDFLAGS		=
+
+ifdef NS_USE_GCC
+DSO_CFLAGS		= -fPIC
+else
 DSO_CFLAGS		= +Z
+endif
