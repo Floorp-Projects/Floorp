@@ -128,7 +128,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 			pMsgCompFields->SetSubject("[spam] test", NULL);
 			pMsgCompFields->SetBody("Sample message sent with Mozilla\n\nPlease do not reply, thanks\n\nJean-Francois\n", NULL);
 
-			pMsgSend->SendMessage(pMsgCompFields);
+			pMsgSend->SendMessage(pMsgCompFields, "");
 
 			pMsgCompFields->Release(); 
 		}
