@@ -27,9 +27,129 @@
 
 <overlay id="pipPageInfoOverlayID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://global/content/strres.js" />
+  <script src="chrome://pippki/content/pippki.js" />
   <script language="JavaScript">
   <![CDATA[
-    function securityOnLoad() { }
+    var security = {
+      // Display the server certificate (static)
+      viewCert : function () {
+        var cert = security._cert;
+        if (cert) cert.view();
+      },
+
+      _getSecurityInfo : function() {
+        const nsIX509Cert = Components.interfaces.nsIX509Cert;
+        const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+        const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
+        const nsISSLStatusProvider = Components.interfaces.nsISSLStatusProvider;
+
+        // Get the window for this information
+        var w;
+        if ("arguments" in window && window.arguments.length > 1 && window.arguments[0])
+          w = window.arguments[0];
+        else
+          w = window.opener.frames[0];
+
+        var ui = security._getSecurityUI();
+        var sp = ui.QueryInterface(nsISSLStatusProvider);
+        var status = sp.SSLStatus;
+        if (status) {
+          var cert = status.serverCert;
+          return {
+            hostName : w.location.host,
+            cAName : cert.issuerName,
+            encryptionAlgorithm : status.cipherName,
+            encryptionStrength : status.secretKeyLength,
+            cert : cert,
+          };
+        } else {
+          return {
+            hostName : w.location.host,
+            cAName : "",
+            encryptionAlgorithm : "",
+            encryptionStrength : 0,
+            cert : null
+          };
+        } 
+      },
+
+      // Find the secureBrowserUI object (if present)
+      _getSecurityUI : function() {
+        return window.opener.gBrowser.boxObject.getPropertyAsSupports("secureBrowserUI");
+      },
+
+      _cert : null,
+    };
+
+    function securityOnLoad() {
+      var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+
+      var info = security._getSecurityInfo();
+      var idHdr;
+      var message1;
+      var message2;
+
+      /* Set the identification messages */
+      if (info.cert)
+      {
+        idHdr = bundle.GetStringFromName("pageInfo_WebSiteVerified");
+        document.getElementById("security-identity").setAttribute("value", idHdr);
+
+        message1 = bundle.formatStringFromName("pageInfo_Identity_Verified", 
+                                [ info.hostName, info.cAName ],
+                                2);
+        setText("security-identity-text", message1);
+
+        var viewText = bundle.GetStringFromName("pageInfo_ViewCertificate");
+        setText("security-view-text", viewText);
+        security._cert = info.cert;
+      } else {
+        idHdr = bundle.GetStringFromName("pageInfo_SiteNotVerified");
+        document.getElementById("security-identity").setAttribute("value", idHdr);
+
+        document.getElementById("security-view-cert").setAttribute("disabled", "true");
+        document.getElementById("security-view-cert").setAttribute("hidden", "true");
+      }
+
+      /* Set the encryption messages */
+      if (info.encryptionStrength >= 90) {
+        var hdr = bundle.formatStringFromName("pageInfo_StrongEncryption",
+                             [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
+        document.getElementById("security-privacy").setAttribute("value", hdr);
+
+        var msg1 = bundle.GetStringFromName("pageInfo_Privacy_Strong1");
+        setText("security-privacy-msg1", msg1);
+
+        var msg2 = bundle.GetStringFromName("pageInfo_Privacy_Strong2");
+        setText("security-privacy-msg2", msg2);
+
+        security._cert = info.cert;
+      } else if (info.encryptionStrength > 0) {
+        var hdr = bundle.formatStringFromName("pageInfo_WeakEncryption",
+                             [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
+        document.getElementById("security-privacy").setAttribute("value", hdr);
+
+        var msg1 = bundle.formatStringFromName("pageInfo_Privacy_Weak1",
+                                               [ info.hostName ], 1);
+        setText("security-privacy-msg1", msg1);
+
+        var msg2 = bundle.GetStringFromName("pageInfo_Privacy_Weak2");
+        setText("security-privacy-msg2", msg2);
+      } else {
+        var hdr = bundle.GetStringFromName("pageInfo_NoEncryption");
+        document.getElementById("security-privacy").setAttribute("value", hdr);
+
+        var msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1",
+                                               [ info.hostName ], 1);
+        setText("security-privacy-msg1", msg1);
+
+        var msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
+        setText("security-privacy-msg2", msg2);
+      }
+    }
+
+    /* Register for pageInfo onload calls */
     onLoadRegistry.push(securityOnLoad);
   ]]>
   </script>
@@ -37,8 +157,20 @@
     <tab id="securityTab" label="&pageInfo.securityTab;" />
   </tabs>
   <tabpanels id="tabpanels">
-    <box id="securityPanel" flex="1">
-      <text class="header label" value="&pageInfo.securityHeader;" />
-    </box>
+    <vbox id="securityPanel" flex="1">
+      <text id="security-identity" class="header label" />
+      <html id="security-identity-text" flex="1" />
+      <hbox>
+        <button id="security-view-cert" class="normal" label="&pageInfo.view.label;" 
+          oncommand="security.viewCert();" />
+        <html id="security-view-text" flex="1" />
+      </hbox>
+      <separator class="groove" orient="horizontal" />
+      <text id="security-privacy" class="header label" />
+      <vbox flex="1" >
+        <html id="security-privacy-msg1" />
+        <html id="security-privacy-msg2" />
+      </vbox>
+    </vbox>
   </tabpanels>
 </overlay>
