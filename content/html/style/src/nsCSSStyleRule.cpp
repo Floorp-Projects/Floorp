@@ -2022,6 +2022,28 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         }
       }
 
+      // -moz-outline-radius: length, percent, inherit
+      if (nsnull != ourMargin->mOutlineRadius) {
+        nsStyleCoord  coord;
+        nsStyleCoord  parentCoord;
+        parentSpacing->mOutlineRadius.GetLeft(parentCoord);
+        if (SetCoord(ourMargin->mOutlineRadius->mLeft, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mOutlineRadius.SetLeft(coord);
+        }
+        parentSpacing->mOutlineRadius.GetTop(parentCoord);
+        if (SetCoord(ourMargin->mOutlineRadius->mTop, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mOutlineRadius.SetTop(coord);
+        }
+        parentSpacing->mOutlineRadius.GetRight(parentCoord);
+        if (SetCoord(ourMargin->mOutlineRadius->mRight, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mOutlineRadius.SetRight(coord);
+        }
+        parentSpacing->mOutlineRadius.GetBottom(parentCoord);
+        if (SetCoord(ourMargin->mOutlineRadius->mBottom, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
+          spacing->mOutlineRadius.SetBottom(coord);
+        }
+      }
+
       // outline-width: length, enum, inherit
       if (! SetCoord(ourMargin->mOutlineWidth, spacing->mOutlineWidth, parentSpacing->mOutlineWidth,
                      SETCOORD_LEH, aFont->mFont, aPresContext)) {

@@ -206,6 +206,7 @@ protected:
   PRBool ParseBorderStyle(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderWidth(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+  PRBool ParseOutlineRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseContent(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseCounterData(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
@@ -2677,6 +2678,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseBorderWidth(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty__moz_border_radius:
     return ParseBorderRadius(aErrorCode, aDeclaration, aChangeHint);
+  case eCSSProperty__moz_outline_radius:
+    return ParseOutlineRadius(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_clip:
     return ParseClip(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_content:
@@ -3346,6 +3349,12 @@ static const nsCSSProperty kBorderRadiusIDs[] = {
   eCSSProperty__moz_border_radius_bottomRight,
   eCSSProperty__moz_border_radius_bottomLeft
 };
+static const nsCSSProperty kOutlineRadiusIDs[] = {
+  eCSSProperty__moz_outline_radius_topLeft,
+  eCSSProperty__moz_outline_radius_topRight,
+  eCSSProperty__moz_outline_radius_bottomRight,
+  eCSSProperty__moz_outline_radius_bottomLeft
+};
 
 PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
                                   PRInt32& aChangeHint)
@@ -3466,6 +3475,12 @@ PRBool CSSParserImpl::ParseBorderRadius(PRInt32& aErrorCode, nsICSSDeclaration* 
                                        PRInt32& aChangeHint)
 {
   return ParseBoxProperties(aErrorCode, aDeclaration, kBorderRadiusIDs, aChangeHint);
+}
+
+PRBool CSSParserImpl::ParseOutlineRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
+                                       PRInt32& aChangeHint)
+{
+  return ParseBoxProperties(aErrorCode, aDeclaration, kOutlineRadiusIDs, aChangeHint);
 }
 
 
