@@ -417,6 +417,10 @@ sub MakeResourceAliases()
     my($navigator_locale_chrome_dir) = "$navigator_chrome_dir" . "locale:";
     my($navigator_skin_chrome_dir) = "$navigator_chrome_dir" . "skin:";
 
+    my($necko_chrome_dir) = "$chrome_dir" . "necko:";
+    my($necko_content_chrome_dir) = "$necko_chrome_dir" . "content:";
+    my($necko_locale_chrome_dir) = "$necko_chrome_dir" . "locale:";
+
         my($global_chrome_dir) = "$chrome_dir" . "global:";
         my($global_content_chrome_dir) = "$global_chrome_dir" . "content:";
     my($global_locale_chrome_dir) = "$global_chrome_dir" . "locale:";
@@ -487,6 +491,10 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",                           "$navigator_content_chrome_dir");
         _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                                      "$navigator_skin_chrome_dir");
         _InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",                      "$navigator_locale_chrome_dir", 0);
+
+        #NECKO
+        _InstallResources(":mozilla:netwerk:resources:content:MANIFEST",                           "$necko_content_chrome_dir");
+        _InstallResources(":mozilla:netwerk:resources:locale:en-US:MANIFEST",                      "$necko_locale_chrome_dir", 0);
 
         #SECURITY
         _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",           "$global_content_chrome_dir");
