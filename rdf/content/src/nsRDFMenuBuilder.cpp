@@ -322,7 +322,7 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
     {
         // Finally, mark this as a "container" so that we know to
         // recursively generate kids if they're asked for.
-        if (NS_FAILED(rv = menuItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
+        if (NS_FAILED(rv = menuItem->SetAttribute(kNameSpaceID_None, kLazyContentAtom, "true", PR_FALSE)))
             return rv;
     }
 

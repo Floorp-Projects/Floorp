@@ -295,7 +295,7 @@ private:
     static nsIAtom*             kRefAtom;
     static nsIAtom*             kClassAtom;
     static nsIAtom*             kStyleAtom;
-    static nsIAtom*             kContainerAtom;
+    static nsIAtom*             kLazyContentAtom;
     static nsIAtom*             kTreeAtom;
 
     static nsIAtom*             kPopupAtom;
@@ -327,7 +327,7 @@ nsIAtom*             RDFElementImpl::kIdAtom;
 nsIAtom*             RDFElementImpl::kRefAtom;
 nsIAtom*             RDFElementImpl::kClassAtom;
 nsIAtom*             RDFElementImpl::kStyleAtom;
-nsIAtom*             RDFElementImpl::kContainerAtom;
+nsIAtom*             RDFElementImpl::kLazyContentAtom;
 nsIAtom*             RDFElementImpl::kTreeAtom;
 nsIAtom*             RDFElementImpl::kPopupAtom;
 nsIAtom*             RDFElementImpl::kTooltipAtom;
@@ -408,15 +408,15 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
         NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
 
-        kIdAtom        = NS_NewAtom("id");
-        kRefAtom       = NS_NewAtom("ref");
-        kClassAtom     = NS_NewAtom("class");
-        kStyleAtom     = NS_NewAtom("style");
-        kContainerAtom = NS_NewAtom("container");
-        kTreeAtom      = NS_NewAtom("tree");
-        kPopupAtom     = NS_NewAtom("popup");
-        kTooltipAtom   = NS_NewAtom("tooltip");
-        kContextAtom   = NS_NewAtom("context");
+        kIdAtom          = NS_NewAtom("id");
+        kRefAtom         = NS_NewAtom("ref");
+        kClassAtom       = NS_NewAtom("class");
+        kStyleAtom       = NS_NewAtom("style");
+        kLazyContentAtom = NS_NewAtom("lazycontent");
+        kTreeAtom        = NS_NewAtom("tree");
+        kPopupAtom       = NS_NewAtom("popup");
+        kTooltipAtom     = NS_NewAtom("tooltip");
+        kContextAtom     = NS_NewAtom("context");
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
@@ -498,7 +498,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kClassAtom);
         NS_IF_RELEASE(kStyleAtom);
-        NS_IF_RELEASE(kContainerAtom);
+        NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kContextAtom);
@@ -1994,8 +1994,8 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     // Check to see if this is the RDF:container property; if so, and
     // the value is "true", then remember to generate our kids on
     // demand.
-    if ((aNameSpaceID == kNameSpaceID_RDF) &&
-        (aName == kContainerAtom) &&
+    if ((aNameSpaceID == kNameSpaceID_None) &&
+        (aName == kLazyContentAtom) &&
         (aValue.EqualsIgnoreCase("true"))) {
         mContentsMustBeGenerated = PR_TRUE;
     }

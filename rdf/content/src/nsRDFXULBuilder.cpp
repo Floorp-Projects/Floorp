@@ -194,11 +194,12 @@ private:
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
 
-    static nsIAtom* kContainerAtom;
+    static nsIAtom* kLazyContentAtom;
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kInstanceOfAtom;
-    static nsIAtom* kItemContentsGeneratedAtom;
+    static nsIAtom* kTemplateContentsGeneratedAtom;
+    static nsIAtom* kContainerContentsGeneratedAtom;
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuBarAtom;
     static nsIAtom* kKeysetAtom;
@@ -354,11 +355,12 @@ nsINameSpaceManager* RDFXULBuilderImpl::gNameSpaceManager;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
-nsIAtom*        RDFXULBuilderImpl::kContainerAtom;
+nsIAtom*        RDFXULBuilderImpl::kLazyContentAtom;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kInstanceOfAtom;
-nsIAtom*        RDFXULBuilderImpl::kItemContentsGeneratedAtom;
+nsIAtom*        RDFXULBuilderImpl::kTemplateContentsGeneratedAtom;
+nsIAtom*        RDFXULBuilderImpl::kContainerContentsGeneratedAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuBarAtom;
 nsIAtom*        RDFXULBuilderImpl::kKeysetAtom;
@@ -428,11 +430,12 @@ RDFXULBuilderImpl::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
         if (NS_FAILED(rv)) return rv;
 
-        kContainerAtom            = NS_NewAtom("container");
+        kLazyContentAtom            = NS_NewAtom("lazycontent");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kIdAtom                   = NS_NewAtom("id");
         kInstanceOfAtom           = NS_NewAtom("instanceof");
-        kItemContentsGeneratedAtom = NS_NewAtom("itemcontentsgenerated");
+        kTemplateContentsGeneratedAtom = NS_NewAtom("itemcontentsgenerated");
+        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
         kMenuAtom                 = NS_NewAtom("menu");
         kMenuBarAtom              = NS_NewAtom("menubar");
         kKeysetAtom               = NS_NewAtom("keyset");
@@ -500,10 +503,11 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kXUL_element);
 
-        NS_IF_RELEASE(kContainerAtom);
+        NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kXULContentsGeneratedAtom);
         NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kItemContentsGeneratedAtom);
+        NS_IF_RELEASE(kTemplateContentsGeneratedAtom);
+        NS_IF_RELEASE(kContainerContentsGeneratedAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kMenuAtom);
@@ -1696,7 +1700,12 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         // Clear the contents-generated attribute so that the next time we
         // come back, we'll regenerate the kids we just killed.
         rv = element->UnsetAttribute(kNameSpaceID_None,
-                                     kItemContentsGeneratedAtom,
+                                     kTemplateContentsGeneratedAtom,
+                                     PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = element->UnsetAttribute(kNameSpaceID_None,
+                                     kContainerContentsGeneratedAtom,
                                      PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
@@ -1708,7 +1717,7 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         if (NS_FAILED(rv)) return rv;
 
         rv = element->SetAttribute(kNameSpaceID_RDF,
-                                   kContainerAtom,
+                                   kLazyContentAtom,
                                    "true",
                                    PR_FALSE);
         if (NS_FAILED(rv)) return rv;
@@ -2620,7 +2629,7 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
 
     // Make it a container so that its contents get recursively
     // generated on-demand.
-    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE))) {
+    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kLazyContentAtom, "true", PR_FALSE))) {
         NS_ERROR("unable to make element a container");
         return rv;
     }
