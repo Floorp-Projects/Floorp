@@ -26,7 +26,7 @@ nsWindow::nsWindow() : nsWidget()
   mName = "nsWindow";
   mBackground = NS_RGB(255, 255, 255);
   mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
-  mBackground = NS_RGB(255, 255, 255);
+  mBorderRGB = NS_RGB(255,255,255);
   mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
 }
 
