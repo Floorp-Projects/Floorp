@@ -389,7 +389,7 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
-        rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
     if (NS_FAILED(rv)) return rv;
 
     *aLocalFile = localDir;
