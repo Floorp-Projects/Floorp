@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.2 2000/04/07 10:34:35 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.h,v 1.3 2000/04/07 22:59:18 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -41,11 +41,11 @@
 #else
 #include "CommandLineUtils.h"
 #include "printers.h"
-#include "URIUtils.h"
-#include "XMLParser.h"
 #include "XMLDOMUtils.h"
 #endif
 
+#include "URIUtils.h"
+#include "XMLParser.h"
 #include "dom.h"
 #include "ExprParser.h"
 #include "MITREObject.h"
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/07 10:34:35 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/07 22:59:18 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
@@ -295,7 +295,7 @@ private:
      * their value. If this value is true, the allowOnlyTextNodes flag is ignored.
     **/
     MBool getText
-        (DocumentFragment* dfrag, String& dest, MBool deep, MBool allowOnlyTextNodes);
+        (DocumentFragment* dfrag, DOMString& dest, MBool deep, MBool allowOnlyTextNodes);
 
     /**
      * Notifies all registered ErrorObservers of the given error
