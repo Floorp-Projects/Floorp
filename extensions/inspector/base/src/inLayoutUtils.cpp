@@ -103,7 +103,7 @@ inLayoutUtils::GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell)
   return frame;
 }
 
-nsIRenderingContext*
+already_AddRefed<nsIRenderingContext>
 inLayoutUtils::GetRenderingContextFor(nsIPresShell* aShell)
 {
   nsCOMPtr<nsIViewManager> viewman;
