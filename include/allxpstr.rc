@@ -6522,16 +6522,12 @@ ResDef(XP_EDT_CHARSET_EDIT_CANCEL, (XP_MSG_BASE + 853),
 "\nSelect Cancel to abort editing this page.")
 ResDef(XP_EDT_CHARSET_EDIT_NOREPLACE, (XP_MSG_BASE + 854),
 "\nSelect Cancel to edit the page and keep '%s'.")
-ResDef(XP_EDT_CHARSET_CORRECTED, (XP_MSG_BASE + 855),
-"\nThe suggested character set to use is '%s'.\n")
-ResDef(XP_EDT_CHARSET_EDIT_SUGGESTED, (XP_MSG_BASE + 856),
+ResDef(XP_EDT_CHARSET_EDIT_SUGGESTED, (XP_MSG_BASE + 855),
 "\nThe suggested character set to use is '%s'.")
-
-ResDef(XP_EDT_CHARSET_CONVERT_PAGE, (XP_MSG_BASE + 857),
+ResDef(XP_EDT_CHARSET_CONVERT_PAGE, (XP_MSG_BASE + 856),
 "This may alter some of the characters in your page.\nYou cannot undo this action.")
-
-ResDef(XP_EDT_CHARSET_SET_METATAG, (XP_MSG_BASE + 858),
-"This changes the Content-Type label saved with the page.\nIt will not convert any characters in your page.")
+ResDef(XP_EDT_CHARSET_SET_METATAG, (XP_MSG_BASE + 857),
+"This only changes the Content-Type tag saved with the page.\nIt will not convert any characters in your page.")
 
 
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
