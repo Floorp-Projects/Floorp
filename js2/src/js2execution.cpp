@@ -275,116 +275,144 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
     return result;
 }
 
-// Assumes arguments are on the top of stack.
+// Assumes arguments are on the top of stack. argCount is the number that were pushed by user code
 JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
 {
     JSValue *argBase;
-    uint32 maxExpectedArgCount = target->getRequiredArgumentCount() + target->getOptionalArgumentCount();
+    uint32 maxExpectedParameterCount = target->getRequiredParameterCount() + target->getOptionalParameterCount() + target->getNamedParameterCount();
     if (target->isChecked()) {
-        if (argCount < target->getRequiredArgumentCount())
+        if (argCount < target->getRequiredParameterCount())
             reportError(Exception::referenceError, "Insufficient quantity of arguments");
     
-        if ((argCount > maxExpectedArgCount) && !target->hasRestParameter())
+        if ((argCount > maxExpectedParameterCount) && !target->hasRestParameter())
             reportError(Exception::referenceError, "Oversufficient quantity of arguments");
     }
 
     uint32 i;
-    uint32 argBlockSize = max(argCount, maxExpectedArgCount) + (target->hasRestParameter() ? 1 : 0);
-                                                    // room for all required & optional arguments
+    uint32 argBlockSize = max(argCount, maxExpectedParameterCount) + (target->hasRestParameter() ? 1 : 0);
+                                                    // room for all required,optional & named arguments
                                                     // plus the rest parameter if it exists.
     argBase = new JSValue[argBlockSize];     
 
+/*
+* If the first parameter is required and no positional argument has been supplied for it, then raise an error unless the function 
+*   is unchecked, in which case let undefined be the first parameter’s value.
+*
+* If the first parameter is optional and there is a positional argument remaining, use the value of the positional argument 
+*    and raise an error if there is also a named argument with a matching argument name. If there are no remaining positional 
+*    arguments, then if there is a named argument with a matching argument name, use the value of that named argument. Otherwise, 
+*   evaluate the first parameter’s AssignmentExpression and let it be the first parameter’s value.
+* 
+* Implicitly coerce the argument (or default) value to type t and bind the parameter’s Identifier to the result.
+*/    
+    uint32 inArgIndex = 0;
+    uint32 argStart = stackSize() - argCount;
     bool *argUsed = new bool[argCount];
     for (i = 0; i < argCount; i++)
-        argUsed[i] = false;
-    uint32 argStart = stackSize() - argCount;
-    uint32 argIndex = 0;      // the index into argBase, the resolved outgoing arguments
-    uint32 posArgIndex = 0;   // next positional arg from the incoming set
-    for (i = 0; i < argCount; i++) {    // find the first positional (i.e. non-named arg)
-        JSValue v = getValue(i + argStart);
-        if (!v.isObject() || (v.object->mType != NamedArgument_Type)) {
-            posArgIndex = i;
-            break;
-        }
-    }
-    // for each parameter - see if there's a named arg that matches
-    // otherwise take the next non-named argument. (unless the parameter
-    // is an optional one)
-    while (argIndex < maxExpectedArgCount) {                        
-        bool foundNamedArg = false;
-        // find a matching named argument
-        for (uint32 i = 0; i < argCount; i++) {
-            JSValue v = getValue(i + argStart);
-            if (v.isObject() && (v.object->mType == NamedArgument_Type)) {
-                NamedArgument *arg = static_cast<NamedArgument *>(v.object);
-                if (target->findParameterName(arg->mName) == argIndex) {
-                    // mark this arg has having been used
-                    argUsed[i] = true;
-                    foundNamedArg = true;
-                    argBase[argIndex] = arg->mValue;
-                    break;
-                }
-            }
-        }
-        if (!foundNamedArg) {
-            if (target->argHasInitializer(argIndex)) {
-                argBase[argIndex] = target->runArgInitializer(this, argIndex, mThis, argBase, maxExpectedArgCount);
-            }
-            else {
-                if (posArgIndex < argCount) {
-                    argUsed[posArgIndex] = true; 
-                    argBase[argIndex] = getValue(posArgIndex++ + argStart);
+        argUsed[i] = false;    
+    uint32 restParameterIndex;
+
+    uint32 pCount = maxExpectedParameterCount + (target->hasRestParameter() ? 1 : 0);
+    for (uint32 pIndex = 0; pIndex < pCount; pIndex++) {        
+        bool needDefault = true;
+        if (target->parameterIsRequired(pIndex)) {
+            if (inArgIndex < argCount) {
+                JSValue v = getValue(inArgIndex + argStart);
+                bool isPositionalArg = !(v.isObject() && (v.object->mType == NamedArgument_Type));
+                // if the next argument is named, then we've run out of positional args
+                if (!isPositionalArg) {
+                    if (!target->isChecked())
+                        needDefault = false; // the undefined value is already assigned in the arg block
                 }
                 else {
-                    if (target->isChecked())
-                        reportError(Exception::referenceError, "Missing positional argument");
-                    else
-                        argBase[argIndex] = kUndefinedValue;
+                    argBase[pIndex] = getValue(inArgIndex + argStart);
+                    argUsed[inArgIndex++] = true;
+                    needDefault = false;
                 }
             }
+            if (needDefault)
+                reportError(Exception::referenceError, "missing required argument");
         }
-        argIndex++;
+        else {
+            if (target->parameterIsOptional(pIndex)) {
+                bool tookPositionalArg = false;
+                if (inArgIndex < argCount) {
+                    JSValue v = getValue(inArgIndex + argStart);
+                    if (!(v.isObject() && (v.object->mType == NamedArgument_Type))) {
+                        argBase[pIndex] = v;
+                        argUsed[inArgIndex++] = true;
+                        needDefault = false;
+                    }
+                }
+            }
+            else {
+                if (target->parameterIsNamed(pIndex)) {
+                    const String *parameterName = target->getParameterName(pIndex);
+                    for (uint32 i = inArgIndex; i < argCount; i++) {
+                        if (!argUsed[i]) {
+                            JSValue v = getValue(i + argStart);
+                            if (v.isObject() && (v.object->mType == NamedArgument_Type)) {
+                                NamedArgument *arg = static_cast<NamedArgument *>(v.object);
+                                if (arg->mName == parameterName) {
+                                    argBase[pIndex] = arg->mValue;
+                                    argUsed[i] = true;
+                                    needDefault = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                    restParameterIndex = pIndex;
+            }
+        }
+        if (needDefault)
+            if (target->parameterHasInitializer(pIndex))
+                argBase[pIndex] = target->runParameterInitializer(this, pIndex, mThis, argBase, maxExpectedParameterCount);
     }
 
+    // now find a place for any left-overs:
+/*
+* If there is a RestParameter with a type that does not allow the dynamic addition of named properties and one or more of the
+*    remaining arguments is named, raise an error.
+*
+* If there is a RestParameter with an Identifier, bind that Identifier to an array of the remaining positional and/or named
+*    arguments. The remaining positional arguments are assigned indices starting from 0.
+*
+* If there is no RestParameter and any arguments remain, raise an error unless the function is unchecked.
+*/
+
     JSValue restArgument;
-    if (target->hasRestParameter() && target->getRestParameterName()) {
-        restArgument = target->getRestParameterType()->newInstance(this);
-        argBase[maxExpectedArgCount] = JSValue(restArgument);
+    bool haveRestArg = false;
+    
+    if (target->hasRestParameter() && target->getParameterName(restParameterIndex)) {
+        restArgument = target->getParameterType(restParameterIndex)->newInstance(this);
+        argBase[restParameterIndex] = JSValue(restArgument);
+        haveRestArg = true;
     }
-    posArgIndex = 0;    // re-number the non-named arguments that end up in the rest arg
-    // now find a place for any left-overs
+    inArgIndex = 0;    // re-number the non-named arguments that end up in the rest arg
     for (i = 0; i < argCount; i++) {
         if (!argUsed[i]) {
             JSValue v = getValue(i + argStart);
-            if (v.isObject() && (v.object->mType == NamedArgument_Type)) {
+            bool isNamedArg = v.isObject() && (v.object->mType == NamedArgument_Type);
+            if (isNamedArg) {
                 NamedArgument *arg = static_cast<NamedArgument *>(v.object);
-                // if this argument matches a parameter name, that's bad because
-                // it's a duplicate case
-                if (target->findParameterName(arg->mName) != NotABanana)
-                    reportError(Exception::referenceError, "Duplicate named argument");                                
-                else {
-                    if (target->hasRestParameter()) {
-                        if (!restArgument.isUndefined())
-                            // XXX is it an error to have duplicate named rest properties?
-                            restArgument.object->setProperty(this, *arg->mName, (NamespaceList *)(NULL), arg->mValue);
-                    }
-                    else
-                        reportError(Exception::referenceError, "Unknown named argument, no rest argument");                                
-                }
+                if (haveRestArg)
+                    restArgument.object->setProperty(this, *arg->mName, (NamespaceList *)(NULL), arg->mValue);
+                else
+                    reportError(Exception::referenceError, "Unused named argument, no rest argument");                                
             }
             else {
-                if (target->hasRestParameter()) {
-                    if (!restArgument.isUndefined()) {
-                        const String *id = numberToString(posArgIndex++);
-                        restArgument.object->setProperty(this, *id, (NamespaceList *)(NULL), v);
-                    }
+                if (haveRestArg) {
+                    const String *id = numberToString(inArgIndex++);
+                    restArgument.object->setProperty(this, *id, (NamespaceList *)(NULL), v);
                 }
                 else {
                     if (target->isChecked())
                        reportError(Exception::referenceError, "Extra argument, no rest argument"); 
                     else {
-                        JSValue v = getValue(i + argStart);
-                        if (v.isObject() && (v.object->mType == NamedArgument_Type)) {
+                        if (isNamedArg) {
                             NamedArgument *arg = static_cast<NamedArgument *>(v.object);
                             argBase[i] = arg->mValue;
                         }
@@ -395,6 +423,7 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
             }
         }
     }
+    
     argCount = argBlockSize;
     return argBase;
 }

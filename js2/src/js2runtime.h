@@ -1129,7 +1129,7 @@ XXX ...couldn't get this to work...
             return obj->isNestedFunction();
         }
 
-	bool isPossibleUncheckedFunction(FunctionDefinition *f);
+	bool isPossibleUncheckedFunction(FunctionDefinition &f);
 
         void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type)
         {
@@ -1187,12 +1187,15 @@ XXX ...couldn't get this to work...
         JSFunction() : JSObject(Function_Type), mActivation() { mActivation.mContainer = this; mPrototype = Function_Type->mPrototypeObject; }        // for JSBoundFunction (XXX ask Patrick about this structure)
     public:
 
-        class ArgumentData {
+        typedef enum { Invalid, RequiredParameter, OptionalParameter, RestParameter, NamedParameter } ParameterFlag;
+
+        class ParameterData {
         public:
-            ArgumentData() : mName(NULL), mType(NULL), mInitializer((uint32)(-1)) { }
+            ParameterData() : mName(NULL), mType(NULL), mInitializer((uint32)(-1)), mFlag(Invalid) { }
             const String *mName;
             JSType *mType;
             uint32 mInitializer;
+            ParameterFlag mFlag;
         };
 
 
@@ -1210,18 +1213,22 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("JSFunction", t); STD::free(t); }
 #endif
 
+#ifdef DEBUG
+        uint32 maxParameterIndex()              { return mRequiredParameters + mOptionalParameters + mNamedParameters + ((mHasRestParameter) ? 1 : 0); } 
+#endif
         void setByteCode(ByteCodeModule *b)     { ASSERT(!isNative()); mByteCode = b; }
         void setResultType(JSType *r)           { mResultType = r; }
-        void setArgCounts(Context *cx, uint32 r, uint32 o, uint32 n, bool hasRest, bool restIsNamed);
-        void setArgument(uint32 index, const String *n, JSType *t)
-                                                { ASSERT(mArguments && (index < (mRequiredArgs + mOptionalArgs + ((mHasRestParameter) ? 1 : 0) ))); mArguments[index].mType = t; mArguments[index].mName = n; }
-        void setArgumentInitializer(uint32 index, uint32 offset)
-                                                { ASSERT(mArguments && (index < (mRequiredArgs + mOptionalArgs + ((mHasRestParameter) ? 1 : 0) ))); mArguments[index].mInitializer = offset; }
+        void setParameterCounts(Context *cx, uint32 r, uint32 o, uint32 n, bool hasRest);
+        void setParameter(uint32 index, const String *n, JSType *t, ParameterFlag flag)
+                                                { ASSERT(mParameters && (index < maxParameterIndex())); 
+                                                  mParameters[index].mType = t; mParameters[index].mName = n; mParameters[index].mFlag = flag; }
+        void setParameterInitializer(uint32 index, uint32 offset)
+                                                { ASSERT(mParameters && (index < maxParameterIndex())); mParameters[index].mInitializer = offset; }
 
         void setIsPrototype(bool i)             { mIsPrototype = i; }
         void setIsConstructor(bool i)           { mIsConstructor = i; }
         void setIsUnchecked()                   { mIsChecked = false; }
-        void setFunctionName(FunctionName *n)   { mFunctionName = new FunctionName(); mFunctionName->prefix = n->prefix; mFunctionName->name = n->name; }
+        void setFunctionName(FunctionName &n)   { mFunctionName = new FunctionName(); mFunctionName->prefix = n.prefix; mFunctionName->name = n.name; }
         void setFunctionName(const StringAtom *n)
                                                 { mFunctionName = new FunctionName(); mFunctionName->name = n; }
         void setClass(JSType *c)                { mClass = c; }
@@ -1237,47 +1244,61 @@ XXX ...couldn't get this to work...
                                                 { return mParameterBarrel; }
         virtual Activation *getActivation()     { return &mActivation; }
 
-        virtual JSType *getResultType()         { return mResultType; }
-        virtual JSType *getArgType(uint32 a)    { ASSERT(mArguments && (a < (mRequiredArgs + mOptionalArgs))); return mArguments[a].mType; }
-        virtual bool argHasInitializer(uint32 a){ ASSERT(mArguments && (a < (mRequiredArgs + mOptionalArgs))); return (mArguments[a].mInitializer != (uint32)(-1)); }
-        virtual JSValue runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc);
         virtual ScopeChain *getScopeChain()     { return mScopeChain; }
         virtual JSValue getThisValue()          { return kNullValue; }         
         virtual JSType *getClass()              { return mClass; }
         virtual FunctionName *getFunctionName() { return mFunctionName; }
-        virtual uint32 findParameterName(const String *name);
-        virtual uint32 getRequiredArgumentCount()   
-                                                { return mRequiredArgs; }
-        virtual uint32 getOptionalArgumentCount()   
-                                                { return mOptionalArgs; }
-        virtual bool hasOptionalArguments()     { return (mOptionalArgs > 0); }
+
         virtual bool isChecked()                { return mIsChecked; }
+
+        virtual JSType *getResultType()         { return mResultType; }
+        virtual JSType *getParameterType(uint32 a)    
+                                                { ASSERT(mParameters && (a < maxParameterIndex())); return mParameters[a].mType; }
+        virtual bool parameterHasInitializer(uint32 a)
+                                                { ASSERT(mParameters && (a < maxParameterIndex())); return (mParameters[a].mInitializer != (uint32)(-1)); }
+        virtual JSValue runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc);
+
+        virtual uint32 getRequiredParameterCount()   
+                                                { return mRequiredParameters; }
+        virtual uint32 getOptionalParameterCount()   
+                                                { return mOptionalParameters; }
+        virtual uint32 getNamedParameterCount() { return mNamedParameters; }
+        virtual bool hasOptionalParameters()    { return (mOptionalParameters > 0); }
+        virtual bool parameterIsRequired(uint32 index)  
+                                                { ASSERT(mParameters && (index < maxParameterIndex())); return (mParameters[index].mFlag == RequiredParameter); }
+        virtual bool parameterIsOptional(uint32 index)  
+                                                { ASSERT(mParameters && (index < maxParameterIndex())); return (mParameters[index].mFlag == OptionalParameter); }
+        virtual bool parameterIsNamed(uint32 index)  
+                                                { ASSERT(mParameters && (index < maxParameterIndex())); return (mParameters[index].mFlag == NamedParameter); }
+        virtual uint32 getRestParameterIndex()  { ASSERT(mHasRestParameter); return (mRequiredParameters + mOptionalParameters); }
+        
+        virtual const String *getParameterName(uint32 index)
+                                                { ASSERT(mParameters && (index < maxParameterIndex())); return mParameters[index].mName; }
         virtual bool hasRestParameter()         { return mHasRestParameter; }
-        virtual const String *getRestParameterName()  
-                                                { ASSERT(mHasRestParameter); return mArguments[(mRequiredArgs + mOptionalArgs)].mName; }
-        virtual JSType *getRestParameterType()  { ASSERT(mHasRestParameter); return mArguments[(mRequiredArgs + mOptionalArgs)].mType; }
 
         virtual JSFunction *getFunction()       { return this; }
         bool isEqual(JSFunction *f)             { return (getFunction() == f->getFunction()); }
 
+        void countParameters(Context *cx, FunctionDefinition &f);
+        
+        
         ParameterBarrel *mParameterBarrel;
         Activation mActivation;                 // not used during execution  (XXX so maybe we should handle it differently, hmmm?)
+
 
     private:
         ByteCodeModule *mByteCode;
         NativeCode *mCode;
         JSType *mResultType;
-        uint32 mRequiredArgs;                   // total # parameters
-        uint32 mOptionalArgs;
-        uint32 mNamedArgs;
-        ArgumentData *mArguments;
+        uint32 mRequiredParameters;
+        uint32 mOptionalParameters;
+        uint32 mNamedParameters;
+        ParameterData *mParameters;
         ScopeChain *mScopeChain;
         bool mIsPrototype;                      // set for functions with prototype attribute
         bool mIsConstructor;
         bool mIsChecked;
         bool mHasRestParameter;
-        bool mRestIsNamed;
-        const String *mRestParameterName;
         JSType *mClass;                         // pointer to owning class if this function is a method
         FunctionName *mFunctionName;
     };
@@ -1303,26 +1324,32 @@ XXX ...couldn't get this to work...
                                         { return mFunction->mParameterBarrel; }
         Activation *getActivation()     { return &mFunction->mActivation; }
         JSType *getResultType()         { return mFunction->getResultType(); }
-        JSType *getArgType(uint32 a)    { return mFunction->getArgType(a); }
-        bool argHasInitializer(uint32 a){ return mFunction->argHasInitializer(a); }
-        JSValue runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
-                                        { return mFunction->runArgInitializer(cx, a, thisValue, argv, argc); }
+        JSType *getParameterType(uint32 a)    { return mFunction->getParameterType(a); }
+        bool parameterHasInitializer(uint32 a){ return mFunction->parameterHasInitializer(a); }
+        JSValue runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
+                                        { return mFunction->runParameterInitializer(cx, a, thisValue, argv, argc); }
         ScopeChain *getScopeChain()     { return mFunction->getScopeChain(); }
         JSValue getThisValue()          { return (mThis) ? JSValue(mThis) : kNullValue; }         
         JSType *getClass()              { return mFunction->getClass(); }
         FunctionName *getFunctionName() { return mFunction->getFunctionName(); }
-        uint32 findParameterName(const String *name)
-                                        { return mFunction->findParameterName(name); } 
-        uint32 getRequiredArgumentCount()   
-                                        { return mFunction->getRequiredArgumentCount(); }
-        uint32 getOptionalArgumentCount()   
-                                        { return mFunction->getOptionalArgumentCount(); }
-        bool hasOptionalArguments()     { return mFunction->hasOptionalArguments(); }
+
+        uint32 getRequiredParameterCount()   
+                                        { return mFunction->getRequiredParameterCount(); }
+        uint32 getOptionalParameterCount()   
+                                        { return mFunction->getOptionalParameterCount(); }
+        uint32 getNamedParameterCount()  { return mFunction->getNamedParameterCount(); }
+        virtual bool parameterIsRequired(uint32 index)  
+                                        { return mFunction->parameterIsRequired(index); }
+        virtual bool parameterIsOptional(uint32 index)  
+                                        { return mFunction->parameterIsOptional(index); }
+        virtual bool parameterIsNamed(uint32 index)  
+                                        { return mFunction->parameterIsNamed(index); }
+        virtual uint32 getRestParameterIndex()
+                                        { return mFunction->getRestParameterIndex(); }
+        virtual const String *getParameterName(uint32 index)
+                                        { return mFunction->getParameterName(index); }
         bool isChecked()                { return mFunction->isChecked(); }
         bool hasRestParameter()         { return mFunction->hasRestParameter(); }
-        const String *getRestParameterName()  
-                                        { return mFunction->getRestParameterName(); }
-        JSType *getRestParameterType()  { return mFunction->getRestParameterType(); }
 
         void getProperty(Context *cx, const String &name, NamespaceList *names) 
                                         { mFunction->getProperty(cx, name, names); }

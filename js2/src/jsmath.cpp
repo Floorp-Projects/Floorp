@@ -256,7 +256,7 @@ void initMathObject(Context *cx, JSObject *mathObj)
 
     for (i = 0; i < sizeof(MathObjectFunctions) / sizeof(MathObjectFunctionDef); i++) {
         JSFunction *f = new JSFunction(cx, MathObjectFunctions[i].imp, Number_Type);
-        f->setArgCounts(cx, MathObjectFunctions[i].length, 0, 0, false, false);
+        f->setParameterCounts(cx, MathObjectFunctions[i].length, 0, 0, false);
         mathObj->defineVariable(cx, widenCString(MathObjectFunctions[i].name), 
                                     (NamespaceList *)(NULL), Property::ReadOnly | Property::DontDelete, 
                                     Number_Type, JSValue(f));

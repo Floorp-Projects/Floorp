@@ -602,7 +602,7 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
             // Make sure there's a default constructor with 0 (required) parameters
                     JSFunction *superConstructor = superClass->getDefaultConstructor();
                     if (superConstructor) {
-                        if (superConstructor->getRequiredArgumentCount() > 0)
+                        if (superConstructor->getRequiredParameterCount() > 0)
                             m_cx->reportError(Exception::typeError, "Super class default constructor must be called explicitly - it has required parameters that must be specified", pos);
                         addOp(LoadThisOp);
                         addOp(LoadFunctionOp);
@@ -641,7 +641,7 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
         if (v->initializer) {        
             // this code gets executed if the function is called without
             // an argument for this parameter. 
-            fnc->setArgumentInitializer(index, currentOffset());
+            fnc->setParameterInitializer(index, currentOffset());
             genExpr(v->initializer);
             addOpSetDepth(ReturnOp, 0);
         }
@@ -2269,7 +2269,7 @@ BinaryOpEquals:
             uint32 reqArgCount = 0;
             uint32 optArgCount = 0;
             uint32 namedArgCount = 0;
-
+/*
             VariableBinding *b = f->function.parameters;
             while (b != f->function.optParameters) {
                 reqArgCount++;
@@ -2286,8 +2286,11 @@ BinaryOpEquals:
             }
             fnc->setArgCounts(m_cx, reqArgCount, optArgCount, namedArgCount,
                               f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
+*/
+            fnc->countParameters(m_cx, f->function);
 
-	    if (mScopeChain->isPossibleUncheckedFunction(&f->function))
+
+	    if (mScopeChain->isPossibleUncheckedFunction(f->function))
 		fnc->setIsPrototype(true);
 
             m_cx->buildRuntimeForFunction(f->function, fnc);

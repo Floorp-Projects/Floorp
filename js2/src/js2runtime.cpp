@@ -350,7 +350,7 @@ Reference *JSObject::genReference(bool hasBase, const String& name, NamespaceLis
                 return new GetterFunctionReference(prop->mData.fPair.getterF, prop->mAttributes);
             else {
                 JSFunction *f = prop->mData.fPair.setterF;
-                return new SetterFunctionReference(f, f->getArgType(0), prop->mAttributes);
+                return new SetterFunctionReference(f, f->getParameterType(0), prop->mAttributes);
             }
         default:
             NOT_REACHED("bad storage kind");
@@ -948,15 +948,15 @@ JS2Runtime::ByteCodeModule *Context::genCode(StmtNode *p, const String &/*source
      the function does not have a declared return type; 
      the function is not a getter or setter. 
 */
-bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition *f)
+bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition &f)
 {
     bool result = false;
-    if ((f->resultType == NULL)
-            && (f->optParameters == NULL)
-            && (f->prefix == FunctionName::normal)
+    if ((f.resultType == NULL)
+            && (f.optParameters == NULL)
+            && (f.prefix == FunctionName::normal)
             && (topClass() == NULL)) {
         result = true;
-        VariableBinding *b = f->parameters;
+        VariableBinding *b = f.parameters;
         while (b) {
             if (b->type != NULL) {
                     result = false;
@@ -966,6 +966,29 @@ bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition *f)
         }
     }
     return result;
+}
+
+void JSFunction::countParameters(Context *cx, FunctionDefinition &f)
+{
+    uint32 requiredParameterCount = 0;
+    uint32 optionalParameterCount = 0;
+    uint32 namedParameterCount = 0;
+
+    VariableBinding *b = f.parameters;
+    while (b != f.optParameters) {
+        requiredParameterCount++;
+        b = b->next;
+    }
+    while (b != f.restParameter) {
+        optionalParameterCount++;
+        b = b->next;
+    }
+    b = f.namedParameters;
+    while (b) {
+        namedParameterCount++;
+        b = b->next;
+    }
+    setParameterCounts(cx, requiredParameterCount, optionalParameterCount, namedParameterCount, f.restParameter != f.namedParameters);
 }
 
 //  The first pass over the tree - it just installs the names of each declaration
@@ -1094,36 +1117,17 @@ void ScopeChain::collectNames(StmtNode *p)
             */
             if (!isPrototype
                     && (!isOperator)
-		    && isPossibleUncheckedFunction(&f->function)) {
+		    && isPossibleUncheckedFunction(f->function)) {
                 isPrototype = true;
                 fnc->setIsUnchecked();
             }
 
             fnc->setIsPrototype(isPrototype);
             fnc->setIsConstructor(isConstructor);
-            fnc->setFunctionName(&f->function);
+            fnc->setFunctionName(f->function);
             f->mFunction = fnc;
 
-            uint32 reqArgCount = 0;
-            uint32 optArgCount = 0;
-            uint32 namedArgCount = 0;
-
-            VariableBinding *b = f->function.parameters;
-            while (b != f->function.optParameters) {
-                reqArgCount++;
-                b = b->next;
-            }
-            while (b != f->function.restParameter) {
-                optArgCount++;
-                b = b->next;
-            }
-            b = f->function.namedParameters;
-            while (b) {
-                namedArgCount++;
-                b = b->next;
-            }
-            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, namedArgCount,
-                              f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
+            fnc->countParameters(m_cx, f->function);
 
             if (isOperator) {
                 // no need to do anything yet, all operators are 'pre-declared'
@@ -1203,7 +1207,7 @@ void ScopeChain::collectNames(StmtNode *p)
                                 // make a function into a const declaration, but only if any types
                                 // have been specified - otherwise it's a 1.5 atyle definition and
                                 // duplicates are allowed
-                                if (!isPossibleUncheckedFunction(&f->function))
+                                if (!isPossibleUncheckedFunction(f->function))
                                     f->attributeValue->mTrueFlags |= Property::Const;
                                 if (isStatic)
                                     defineStaticMethod(m_cx, name, f, fnc);
@@ -1400,7 +1404,7 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
                 return new GetterFunctionReference(prop->mData.fPair.getterF, prop->mAttributes);
             else {
                 JSFunction *f = prop->mData.fPair.setterF;
-                return new SetterFunctionReference(f, f->getArgType(0), prop->mAttributes);
+                return new SetterFunctionReference(f, f->getParameterType(0), prop->mAttributes);
             }
         case ValuePointer:
             return new StaticFieldReference(name, acc, this, prop->mType, prop->mAttributes);
@@ -1410,7 +1414,7 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
                 return new GetterMethodReference(prop->mData.iPair.getterI, this, prop->mType, prop->mAttributes);
             else {
                 JSFunction *f = mMethods[prop->mData.iPair.setterI];
-                return new SetterMethodReference(prop->mData.iPair.setterI, this, f->getArgType(0), prop->mAttributes);
+                return new SetterMethodReference(prop->mData.iPair.setterI, this, f->getParameterType(0), prop->mAttributes);
             }
         case Slot:
             return new FieldReference(prop->mData.index, acc, prop->mType, prop->mAttributes);
@@ -1679,9 +1683,18 @@ void Context::buildRuntimeForStmt(StmtNode *p)
             
             VariableBinding *v = f->function.parameters;
             uint32 parameterCount = 0;
+            JSFunction::ParameterFlag flag = JSFunction::RequiredParameter;
             while (v) {
                 // XXX if no type is specified for the rest parameter - is it Array?
-                fnc->setArgument(parameterCount++, v->name, mScopeChain->extractType(v->type));
+                if (v == f->function.optParameters)
+                    flag = JSFunction::OptionalParameter;
+                else
+                    if (v == f->function.restParameter)
+                        flag = JSFunction::RestParameter;
+                    else
+                        if (v == f->function.namedParameters)
+                            flag = JSFunction::NamedParameter;
+                fnc->setParameter(parameterCount++, v->name, mScopeChain->extractType(v->type), flag);
                 v = v->next;
             }
 
@@ -1926,28 +1939,10 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
 
         fnc = new JSFunction(cx, NULL, cx->mScopeChain);
 
-        uint32 reqArgCount = 0;
-        uint32 optArgCount = 0;
-        uint32 namedArgCount = 0;
+        fnc->countParameters(cx, f->function);    
 
-        VariableBinding *b = f->function.parameters;
-        while (b != f->function.optParameters) {
-            reqArgCount++;
-            b = b->next;
-        }
-        while (b != f->function.restParameter) {
-            optArgCount++;
-            b = b->next;
-        }
-        b = f->function.namedParameters;
-        while (b) {
-            namedArgCount++;
-            b = b->next;
-        }
-        fnc->setArgCounts(cx, reqArgCount, optArgCount, namedArgCount,
-                          f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
 
-        if (cx->mScopeChain->isPossibleUncheckedFunction(&f->function)) {
+        if (cx->mScopeChain->isPossibleUncheckedFunction(f->function)) {
 	    fnc->setIsPrototype(true);
             fnc->setIsUnchecked();
         }
@@ -2463,15 +2458,15 @@ JSFunction::JSFunction(Context *, JSType *resultType, ScopeChain *scopeChain)
                 mByteCode(NULL), 
                 mCode(NULL), 
                 mResultType(resultType),
-                mRequiredArgs(0),
-                mOptionalArgs(0),
-                mArguments(NULL),
+                mRequiredParameters(0),
+                mOptionalParameters(0),
+                mNamedParameters(0),
+                mParameters(NULL),
                 mScopeChain(NULL), 
                 mIsPrototype(false),
                 mIsConstructor(false),
                 mIsChecked(true),
                 mHasRestParameter(false),
-                mRestParameterName(NULL),
                 mClass(NULL),
                 mFunctionName(NULL)
 {
@@ -2490,15 +2485,15 @@ JSFunction::JSFunction(Context *, NativeCode *code, JSType *resultType)
                 mByteCode(NULL), 
                 mCode(code), 
                 mResultType(resultType), 
-                mRequiredArgs(0),
-                mOptionalArgs(0),
-                mArguments(NULL),
+                mRequiredParameters(0),
+                mOptionalParameters(0),
+                mNamedParameters(0),
+                mParameters(NULL),
                 mScopeChain(NULL),
                 mIsPrototype(false),
                 mIsConstructor(false),
                 mIsChecked(false),          // native functions aren't checked (?)
                 mHasRestParameter(false),
-                mRestParameterName(NULL),
                 mClass(NULL),
                 mFunctionName(NULL)
 {
@@ -2507,34 +2502,24 @@ JSFunction::JSFunction(Context *, NativeCode *code, JSType *resultType)
     mActivation.mContainer = this;
 }
               
-JSValue JSFunction::runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
+JSValue JSFunction::runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(mArguments && (a < (mRequiredArgs + mOptionalArgs)));
-    return cx->interpret(getByteCode(), (int32)mArguments[a].mInitializer, getScopeChain(), thisValue, argv, argc);
+    ASSERT(mParameters && (a < maxParameterIndex()));
+    return cx->interpret(getByteCode(), (int32)mParameters[a].mInitializer, getScopeChain(), thisValue, argv, argc);
 }
 
-void JSFunction::setArgCounts(Context *cx, uint32 r, uint32 o, uint32 n, bool hasRest, bool restIsNamed)
+void JSFunction::setParameterCounts(Context *cx, uint32 r, uint32 o, uint32 n, bool hasRest)
 {
     mHasRestParameter = hasRest;
-    mRestIsNamed = restIsNamed;
-    mRequiredArgs = r;
-    mOptionalArgs = o;
-    mNamedArgs = n;
-    mArguments = new ArgumentData[mRequiredArgs + mOptionalArgs + ((hasRest) ? 1 : 0)];
-    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue((float64)mRequiredArgs)); 
+    mRequiredParameters = r;
+    mOptionalParameters = o;
+    mNamedParameters = n;
+    mParameters = new ParameterData[mRequiredParameters + mOptionalParameters + + mNamedParameters + ((hasRest) ? 1 : 0)];
+    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue((float64)mRequiredParameters)); 
 }
 
 
-uint32 JSFunction::findParameterName(const String *name)
-{
-    uint32 maxArgs = mRequiredArgs + mOptionalArgs + ((mHasRestParameter) ? 1 : 0);
-    ASSERT(mArguments || (maxArgs == 0));
-    for (uint32 i = 0; i < maxArgs; i++) {
-        if (mArguments[i].mName->compare(*name) == 0)
-            return i;
-    }
-    return NotABanana;
-}
+
 
 void Context::assureStackSpace(uint32 s)
 {
@@ -2568,7 +2553,7 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
 //            fun->setClass(type); don't do this, it makes the function a method
             StringAtom *name = &mWorld.identifiers[widenCString(pdef->mDef[i].name)];
             fun->setFunctionName(name);
-            fun->setArgCounts(this, pdef->mDef[i].length, 0, 0, false, false);
+            fun->setParameterCounts(this, pdef->mDef[i].length, 0, 0, false);
             type->mPrototypeObject->defineVariable(this, *name,
                                                (NamespaceList *)(NULL), 
                                                Property::NoAttribute,
@@ -2978,7 +2963,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     
     for (i = 0; i < (sizeof(globalObjectFunctions) / sizeof(ProtoFunDef)); i++) {
         x = new JSFunction(this, globalObjectFunctions[i].imp, globalObjectFunctions[i].result);
-        x->setArgCounts(this, globalObjectFunctions[i].length, 0, 0, false, false);
+        x->setParameterCounts(this, globalObjectFunctions[i].length, 0, 0, false);
         x->setIsPrototype(true);
         getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), Property::NoAttribute, globalObjectFunctions[i].result, JSValue(x));    
     }
