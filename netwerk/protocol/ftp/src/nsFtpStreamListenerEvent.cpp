@@ -118,8 +118,9 @@ nsFtpOnDataAvailableEvent::~nsFtpOnDataAvailableEvent()
 
 nsresult
 nsFtpOnDataAvailableEvent::Init(nsIInputStream* aIStream, 
-                                PRUint32 aSourceOffset, PRUint32 aLength)
+                                PRUint32 aSourceOffset, PRUint32 aLength, char *aBuffer)
 {
+    mUnderlyingBuffer = aBuffer;
     mLength = aLength;
     mSourceOffset = aSourceOffset;
     mIStream = aIStream;
@@ -130,8 +131,12 @@ nsFtpOnDataAvailableEvent::Init(nsIInputStream* aIStream,
 NS_IMETHODIMP
 nsFtpOnDataAvailableEvent::HandleEvent()
 {
+  nsresult rv;
   nsIStreamListener* receiver = (nsIStreamListener*)mListener;
-  return receiver->OnDataAvailable(mChannel, mContext, mIStream, mSourceOffset, mLength);
+  rv = receiver->OnDataAvailable(mChannel, mContext, mIStream, mSourceOffset, mLength);
+  if (mUnderlyingBuffer)
+      nsAllocator::Free(mUnderlyingBuffer);
+  return rv;
 }
 /*
 NS_IMETHODIMP 

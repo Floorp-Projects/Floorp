@@ -1218,84 +1218,137 @@ nsFtpConnectionThread::S_list() {
     return mCOutStream->Write(buffer, bufLen, &bytes);
 }
 
+// listBuf is free'd by the eventHandler, don't free him.
 FTP_STATE
 nsFtpConnectionThread::R_list() {
     nsresult rv;
-    char listBuf[NS_FTP_BUFFER_READ_SIZE];
-    PRUint32 read;
-
-    // XXX need to loop this read somehow.
-    rv = mDInStream->Read(listBuf, NS_FTP_BUFFER_READ_SIZE, &read);
+    PRBool sentStart = PR_FALSE;
+    PRUint32 dataLeft, bufSize, read;
+    char *listBuf = nsnull; // the buffer receiving the listing
+ 
+    rv = mDInStream->Available(&dataLeft);
     if (NS_FAILED(rv)) return FTP_ERROR;
 
-    // tell the user about the data.
+    bufSize = PR_MIN(dataLeft, NS_FTP_BUFFER_READ_SIZE);
 
-    nsIInputStream *stringStream = nsnull;
-    nsISupports *stringStrmSup = nsnull;
-    rv = NS_NewCharInputStream(&stringStrmSup, listBuf);
-    if (NS_FAILED(rv)) return FTP_ERROR;
+    if (bufSize > 0) {
+        listBuf = (char*)nsAllocator::Alloc(bufSize + 1);    
+        if (!listBuf) return FTP_ERROR;
 
-    rv = stringStrmSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&stringStream);
-    if (NS_FAILED(rv)) return FTP_ERROR;
+        // this is ascii data coming in. terminate this sucker.
+        listBuf[bufSize] = '\0';
 
-    nsFTPContext *dataCtxt = new nsFTPContext();
-    if (!dataCtxt) return FTP_ERROR;
-    dataCtxt->SetContentType("text/ftp-dirListing");
-    nsISupports *ctxtSup = nsnull;
-    rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
-
-    // we're now receiving a dir listing. push it through a converter.
-
-    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-    if (NS_FAILED(rv)) return FTP_ERROR;
-
-
-    nsString fromStr("text/ftp-dir-");
-    SetDirMIMEType(fromStr);
-
-    // all FTP directory listings are converted to http-index
-    nsString toStr("application/http-index-format");
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return FTP_ERROR;
-
-    // setup a listener to push the data into. This listener sits inbetween the
-    // unconverted data of fromType, and the final listener in the chain (in this case
-    // the mListener).
-    nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
-                                             toStr.GetUnicode(),
-                                             mListener, mUrl, &converterListener);
-    if (NS_FAILED(rv)) return FTP_ERROR;
-
-    // tell the user that we've begun the transaction.
-    nsFtpOnStartRequestEvent* startEvent =
-        new nsFtpOnStartRequestEvent(converterListener, mChannel, mContext);
-    if (!startEvent) return FTP_ERROR;
-
-    rv = startEvent->Fire(mEventQueue);
-    if (NS_FAILED(rv)) {
-        delete startEvent;
+        rv = mDInStream->Read(listBuf, bufSize, &read);
+        if (NS_FAILED(rv) || read < 1) {
+            nsAllocator::Free(listBuf);
+            return FTP_ERROR;
+        }
+    } else {
         return FTP_ERROR;
     }
 
-    // send data off
-    nsFtpOnDataAvailableEvent* availEvent =
-        new nsFtpOnDataAvailableEvent(converterListener, mChannel, ctxtSup);
-    if (!availEvent) return FTP_ERROR;
+    do {
+        // tell the user about the data.
 
-    rv = availEvent->Init(stringStream, 0, read);
-    NS_RELEASE(stringStream);
-    if (NS_FAILED(rv)) {
-        delete availEvent;
-        return FTP_ERROR;
-    }
+        nsIInputStream *stringStream = nsnull;
+        nsISupports *stringStrmSup = nsnull;
+        rv = NS_NewCharInputStream(&stringStrmSup, listBuf); // char streams keep ref to buffer
+        if (NS_FAILED(rv)) return FTP_ERROR;
 
-    rv = availEvent->Fire(mEventQueue);
-    if (NS_FAILED(rv)) {
-        delete availEvent;
-        return FTP_ERROR;
-    }
+        rv = stringStrmSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&stringStream);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        nsFTPContext *dataCtxt = new nsFTPContext();
+        if (!dataCtxt) return FTP_ERROR;
+        dataCtxt->SetContentType("text/ftp-dirListing");
+        nsISupports *ctxtSup = nsnull;
+        rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
+
+        // we're receiving a dir listing. push it through a converter.
+        nsIStreamListener *converterListener = nsnull;
+
+        if (!sentStart) {
+            sentStart = PR_TRUE;
+            NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+            if (NS_FAILED(rv)) return FTP_ERROR;
+
+            nsString fromStr("text/ftp-dir-");
+            SetDirMIMEType(fromStr);
+
+            // all FTP directory listings are converted to http-index
+            nsString toStr("application/http-index-format");
+
+            // setup a listener to push the data into. This listener sits inbetween the
+            // unconverted data of fromType, and the final listener in the chain (in this case
+            // the mListener).
+            rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
+                                                     toStr.GetUnicode(),
+                                                     mListener, mUrl, &converterListener);
+            if (NS_FAILED(rv)) {
+                nsAllocator::Free(listBuf);
+                return FTP_ERROR;
+            }
+
+            // tell the user that we've begun the transaction.
+            nsFtpOnStartRequestEvent* startEvent =
+                new nsFtpOnStartRequestEvent(converterListener, mChannel, mContext);
+            if (!startEvent) return FTP_ERROR;
+
+            rv = startEvent->Fire(mEventQueue);
+            if (NS_FAILED(rv)) {
+                delete startEvent;
+                return FTP_ERROR;
+            }
+        } // END sentStart
+
+        // send data off
+        nsFtpOnDataAvailableEvent* availEvent =
+            new nsFtpOnDataAvailableEvent(converterListener, mChannel, ctxtSup);
+        if (!availEvent) return FTP_ERROR;
+
+        PRUint32 streamLen;
+        rv = stringStream->Available(&streamLen);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+        rv = availEvent->Init(stringStream, 0, streamLen, listBuf); // pass the buffer ptr in so it 
+                                                                    // can be deleted later.
+        NS_RELEASE(stringStream);
+        if (NS_FAILED(rv)) {
+            delete availEvent;
+            return FTP_ERROR;
+        }
+
+        rv = availEvent->Fire(mEventQueue);
+        if (NS_FAILED(rv)) {
+            delete availEvent;
+            return FTP_ERROR;
+        }
+
+        rv = mDInStream->Available(&dataLeft);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        bufSize = PR_MIN(dataLeft, NS_FTP_BUFFER_READ_SIZE);
+
+        // don't free the old buf, that'll happen in the availEvent destructor.
+        if (bufSize > 0) {
+            char *listBuf = (char*)nsAllocator::Alloc(bufSize);    
+            if (!listBuf) return FTP_ERROR;
+
+            // this is ascii data coming in. terminate this sucker.
+            listBuf[bufSize] = '\0';
+
+            // get more data
+            rv = mDInStream->Read(listBuf, bufSize, &read);
+            if (NS_FAILED(rv)) {
+                nsAllocator::Free(listBuf);
+                return FTP_ERROR;
+            }
+        } else {
+            // fall out
+            rv = NS_ERROR_FAILURE;
+        }
+
+    } while (NS_SUCCEEDED(rv) && read > 0); // end do: stmt
+
 
     // NOTE: that we're not firing an OnStopRequest() to the converterListener (the
     //  stream converter). It (at least this implementation of it) doesn't care 
@@ -1783,7 +1836,8 @@ nsFtpConnectionThread::SetSystInternals(void) {
         mServerType = FTP_UNIX_TYPE;
         mList = PR_TRUE;
     }
-    else if (mResponseMsg.Find("Windows_NT") > -1) {
+    else if (mResponseMsg.Find("windows", PR_TRUE) > -1) {
+        // treat any server w/ "windows" in it as a dos based NT server.
         mServerType = FTP_NT_TYPE;
         mList = PR_TRUE;
     }
