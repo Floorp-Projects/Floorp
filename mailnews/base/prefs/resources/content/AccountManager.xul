@@ -37,10 +37,10 @@
           <rule>
             <treechildren>
               <treeitem uri="..." open="true"
-                        IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                         PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
-                <treerow >
+                <treerow>
                   <treecell class="treecell-indent"
+                            properties="isDefaultServer-rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                             label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                 </treerow>
               </treeitem>
@@ -50,12 +50,14 @@
       </tree>
       
       <button label="&addAccountButton.label;" oncommand="onAddAccount(event);" id="addAccountButton"
-              prefstring="mail.disable_new_account_addition"/>
+              prefstring="mail.disable_new_account_addition"
+              accesskey="&addAccountButton.accesskey;"/>
       <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
-              prefstring="mail.disable_button.set_default_account"/>
-  
+              prefstring="mail.disable_button.set_default_account"
+              accesskey="&setDefaultButton.accesskey;"/>
       <button disabled="true" label="&removeButton.label;" oncommand="onRemoveAccount(event);" id="removeButton"
-              prefstring="mail.disable_button.delete_account"/>
+              prefstring="mail.disable_button.delete_account"
+              accesskey="&removeButton.accesskey;"/>
     </vbox>
   
     <iframe id="contentFrame" name="contentFrame" flex="1"/>
