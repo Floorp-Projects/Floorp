@@ -440,7 +440,7 @@ NS_IMETHODIMP oeICalEventImpl::SetCategories(const nsACString& aNewVal)
 #ifdef ICAL_DEBUG_ALL
     printf( "SetCategories( %s )\n", PromiseFlatCString( aNewVal ).get() );
 #endif
-    m_category = m_category;
+    m_category = aNewVal;
 
     return NS_OK;
 }
