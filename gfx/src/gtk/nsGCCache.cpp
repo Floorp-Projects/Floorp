@@ -96,12 +96,12 @@ GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMa
         if (gc_cache[i].clipRegion &&
             gdk_region_equal(clipRegion, gc_cache[i].clipRegion)) {
           //          printf("found GC in cache %i\n", ++numCalls);
-          return gc_cache [i].gc;
+          return gdk_gc_ref(gc_cache[i].gc);
         }
       } else {
         if(!gc_cache[i].clipRegion)
           //          printf("found GC in cache (no region) %i\n", ++numCalls);
-          return gc_cache [i].gc;
+          return gdk_gc_ref(gc_cache[i].gc);
       }
   }
   
@@ -139,7 +139,7 @@ GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMa
 
     gc_cache [this_slot].gc = gc;
     
-    return gc;
+    return gdk_gc_ref(gc);
   }
 }
 
