@@ -166,14 +166,25 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // would muck up the XUL display
     // - bbaetz
 
-    // ftp urls don't always end in a /
     PRBool isScheme = PR_FALSE;
     if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
+
+        // ftp urls don't always end in a /
+        // make sure they do
+        // but look out for /%2F as path
+        nsCAutoString path;
+        rv = uri->GetPath(path);
+        if (NS_FAILED(rv)) return rv;
+        if (baseUri.Last() != '/' && !path.EqualsIgnoreCase("/%2F")) {
+            baseUri.Append('/');
+            path.Append('/');
+            uri->SetPath(path);
+        }
+
         // strip out the password here, so it doesn't show in the page title
         // This is done by the 300: line generation in ftp, but we don't use
         // that - see above
         
-        // if there was a password, strip it out
         nsCAutoString pw;
         rv = uri->GetPassword(pw);
         if (NS_FAILED(rv)) return rv;
@@ -185,27 +196,14 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;
-             if (titleUri.Last() != '/')
+             if (titleUri.Last() != '/' && !path.EqualsIgnoreCase("/%2F"))
                  titleUri.Append('/');
         }
 
-        if (baseUri.Last() != '/')
-            baseUri.Append('/');
-
-        nsCString::const_iterator start, finish;
-        baseUri.BeginReading(start);
-        baseUri.EndReading(finish);
-        finish.advance(-2); // don't count the last /
-        
-        // No RFindChar
-        while(finish != start && *finish != '/')
-            --finish;
-
-        if (Distance(start, finish) > (sizeof("ftp://") - 1)) {
-            ++finish; // include the end '/'
-            parentStr = Substring(start, finish);
+        if (!path.Equals("//") && !path.EqualsIgnoreCase("/%2F")) {
+            rv = uri->Resolve(NS_LITERAL_CSTRING(".."),parentStr);
+            if (NS_FAILED(rv)) return rv;
         }
-
     } else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
         nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri);
         nsCOMPtr<nsIFile> file;

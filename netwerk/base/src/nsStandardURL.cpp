@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsStandardURL.h"
-#include "nsURLHelper.h"
 #include "nsDependentSubstring.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -382,9 +381,9 @@ nsStandardURL::EncodeHost(const char *host, nsCString &result)
 }
 
 void
-nsStandardURL::CoalescePath(char *path)
+nsStandardURL::CoalescePath(netCoalesceFlags coalesceFlag, char *path)
 {
-    net_CoalesceDirsAbs(path);
+    net_CoalesceDirs(coalesceFlag, path);
     PRInt32 newLen = strlen(path);
     if (newLen < mPath.mLen) {
         PRInt32 diff = newLen - mPath.mLen;
@@ -575,9 +574,15 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
     buf[i] = '\0';
 
-    if (mDirectory.mLen > 1)
-        CoalescePath(buf + mDirectory.mPos);
-
+    if (mDirectory.mLen > 1) {
+        netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;
+        if (SegmentIs(buf,mScheme,"ftp")) {
+            coalesceFlag = (netCoalesceFlags) (coalesceFlag 
+                                        | NET_COALESCE_ALLOW_RELATIVE_ROOT
+                                        | NET_COALESCE_DOUBLE_SLASH_IS_ROOT);
+        }
+        CoalescePath(coalesceFlag, buf + mDirectory.mPos);
+    }
     mSpec.Adopt(buf);
     return NS_OK;
 }
@@ -608,6 +613,20 @@ nsStandardURL::SegmentIs(const URLSegment &seg, const char *val)
     // if the first |seg.mLen| chars of |val| match, then |val| must
     // also be null terminated at |seg.mLen|.
     return !nsCRT::strncasecmp(mSpec.get() + seg.mPos, val, seg.mLen)
+        && (val[seg.mLen] == '\0');
+}
+
+PRBool
+nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *val)
+{
+    // one or both may be null
+    if (!val || !spec)
+        return (!val && (!spec || seg.mLen < 0));
+    if (seg.mLen < 0)
+        return PR_FALSE;
+    // if the first |seg.mLen| chars of |val| match, then |val| must
+    // also be null terminated at |seg.mLen|.
+    return !nsCRT::strncasecmp(spec + seg.mPos, val, seg.mLen)
         && (val[seg.mLen] == '\0');
 }
 
@@ -1500,6 +1519,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     char *resultPath = nsnull;
     PRBool relative = PR_FALSE;
     PRUint32 offset = 0;
+    netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;
 
     // relative urls should never contain a host, so we always want to use
     // the noauth url parser.
@@ -1515,6 +1535,14 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     if (NS_FAILED(rv)) scheme.Reset(); 
 
     if (scheme.mLen >= 0) {
+        // add some flags to coalesceFlag if it is an ftp-url
+        // need this later on when coalescing the resulting URL
+        if (SegmentIs(relpath, scheme, "ftp")) {
+            coalesceFlag = (netCoalesceFlags) (coalesceFlag 
+                                        | NET_COALESCE_ALLOW_RELATIVE_ROOT
+                                        | NET_COALESCE_DOUBLE_SLASH_IS_ROOT);
+
+        }
         // this URL appears to be absolute
         // but try to find out more
         if (SegmentIs(mScheme,relpath,scheme)) {
@@ -1537,12 +1565,21 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
             // because we have to assume this is absolute 
             *result = nsCRT::strdup(relpath);
         }  
-    } else if (relpath[0] == '/' && relpath[1] == '/') {
-        // this URL //host/path is almost absolute
-        *result = AppendToSubstring(mScheme.mPos, mScheme.mLen + 1, relpath);
     } else {
-        // then it must be relative 
-        relative = PR_TRUE;
+        // add some flags to coalesceFlag if it is an ftp-url
+        // need this later on when coalescing the resulting URL
+        if (SegmentIs(mScheme,"ftp")) {
+            coalesceFlag = (netCoalesceFlags) (coalesceFlag 
+                                        | NET_COALESCE_ALLOW_RELATIVE_ROOT
+                                        | NET_COALESCE_DOUBLE_SLASH_IS_ROOT);
+        }
+        if (relpath[0] == '/' && relpath[1] == '/') {
+            // this URL //host/path is almost absolute
+            *result = AppendToSubstring(mScheme.mPos, mScheme.mLen + 1, relpath);
+        } else {
+            // then it must be relative 
+            relative = PR_TRUE;
+        }
     }
     if (relative) {
         PRUint32 len = 0;
@@ -1570,8 +1607,21 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
                 len = mRef.mPos - 1;
             break;
         default:
-            // overwrite everything after the directory 
-            len = mDirectory.mPos + mDirectory.mLen;
+            if (coalesceFlag & NET_COALESCE_DOUBLE_SLASH_IS_ROOT) {
+                if (Filename().Equals(NS_LITERAL_CSTRING("%2F"),
+                                      nsCaseInsensitiveCStringComparator())) {
+                    // if ftp URL ends with %2F then simply
+                    // append relative part because %2F also
+                    // marks the root directory with ftp-urls
+                    len = mFilepath.mPos + mFilepath.mLen;
+                } else {
+                    // overwrite everything after the directory 
+                    len = mDirectory.mPos + mDirectory.mLen;
+                }
+            } else { 
+                // overwrite everything after the directory 
+                len = mDirectory.mPos + mDirectory.mLen;
+            }
         }
         *result = AppendToSubstring(0, len, realrelpath);
         // locate result path
@@ -1581,14 +1631,14 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (resultPath)
-        net_CoalesceDirsRel(resultPath);
+        net_CoalesceDirs(coalesceFlag, resultPath);
     else {
         // locate result path
         resultPath = PL_strstr(*result, "://");
         if (resultPath) {
             resultPath = PL_strchr(resultPath + 3, '/');
             if (resultPath)
-                net_CoalesceDirsRel(resultPath);
+                net_CoalesceDirs(coalesceFlag,resultPath);
         }
     }
     // XXX avoid extra copy
