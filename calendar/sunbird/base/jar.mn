@@ -1,4 +1,7 @@
 calendar.jar:
+   content/calendar/about-sunbird.png            (content/about-sunbird.png)
+*  content/calendar/aboutDialog.css              (content/aboutDialog.css)
+*  content/calendar/aboutDialog.xul              (content/aboutDialog.xul)
 *  content/calendar/calendar.xul                 (content/calendar.xul)
 *  content/calendar/customizeToolbar.xul         (content/customizeToolbar.xul)
 *  content/calendar/hiddenWindow.xul             (content/hiddenWindow.xul)
