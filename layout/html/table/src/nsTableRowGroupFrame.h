@@ -188,6 +188,8 @@ public:
 
   virtual PRBool ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height) { return PR_TRUE; }
 
+  void GetMaxElementSize(nsSize& aMaxElementSize) const;
+
 protected:
 
   /** implement abstract method on nsHTMLContainerFrame */
@@ -240,10 +242,12 @@ protected:
   nsresult AdjustSiblingsAfterReflow(nsIPresContext&      aPresContext,
                                      RowGroupReflowState& aReflowState,
                                      nsIFrame*            aKidFrame,
+                                     nsSize*              aMaxElementSize,
                                      nscoord              aDeltaY);
   
   nsresult RecoverState(RowGroupReflowState& aReflowState,
-                        nsIFrame*            aKidFrame);
+                        nsIFrame*            aKidFrame,
+                        nsSize*              aMaxElementSize);
 
   /**
    * Reflow the frames we've already created
@@ -302,8 +306,14 @@ public:
 
 private:
   nsIAtom *mType;
+  nsSize   mMaxElementSize;
 
 };
+
+inline void nsTableRowGroupFrame::GetMaxElementSize(nsSize& aMaxElementSize) const
+{
+  aMaxElementSize = mMaxElementSize;
+}
 
 
 #endif

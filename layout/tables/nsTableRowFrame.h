@@ -170,6 +170,8 @@ public:
 
   virtual PRBool Contains(const nsPoint& aPoint);
 
+  void GetMaxElementSize(nsSize& aMaxElementSize) const;
+
   /** used by yje row group frame code */
   void ReflowCellFrame(nsIPresContext&          aPresContext,
                        const nsHTMLReflowState& aReflowState,
@@ -230,7 +232,8 @@ protected:
                           RowReflowState& aState,
                           nsIFrame*       aKidFrame,
                           nscoord&        aMaxCellTopMargin,
-                          nscoord&        aMaxCellBottomMargin);
+                          nscoord&        aMaxCellBottomMargin,
+                          nsSize*         aMaxElementSize);
 
   void PlaceChild(nsIPresContext& aPresContext,
                   RowReflowState& aState,
@@ -284,6 +287,7 @@ private:
   nscoord  mCellMaxTopMargin;
   nscoord  mCellMaxBottomMargin;
   PRInt32  mMinRowSpan;           // the smallest row span among all my child cells
+  nsSize   mMaxElementSize;       // cached max element size
   PRBool   mInitializedChildren;  // PR_TRUE if child cells have been initialized 
                                   // (for now, that means "added to the table", and
                                   // is NOT the same as having nsIFrame::Init() called.)
@@ -303,5 +307,11 @@ inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 
 inline void nsTableRowFrame::ResetInitChildren()
 { mInitializedChildren=PR_FALSE; } 
+
+inline void nsTableRowFrame::GetMaxElementSize(nsSize& aMaxElementSize) const
+{
+  aMaxElementSize.width = mMaxElementSize.width;
+  aMaxElementSize.height = mMaxElementSize.height;
+}
 
 #endif
