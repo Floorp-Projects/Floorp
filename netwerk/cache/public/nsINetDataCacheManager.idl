@@ -48,31 +48,43 @@ interface nsINetDataCacheManager : nsISupports
      * Flag for the GetCachedNetData() method: If set, the memory cache is
      * neither searched nor will any data be stored into it.  This might be
      * appropriate, for example, with images, because they have their own
-     * memory cache for storing *decoded* images.
+     * cache for storing *decoded* images.
      */
     const unsigned long BYPASS_MEMORY_CACHE       = 1 << 0;
 
     /**
-     * Flag for the GetCachedNetData() method: If set, the disk cache is
-     * neither searched nor will any be data stored into it.  No extension
-     * caches be searched either.  This might be used to avoid leaving  
-     * persistent records of secure data.
+     * Flag for the GetCachedNetData() method: If set, the disk cache
+     * is neither searched nor will any be data stored into it.
+     * However, read-only extension caches may be searched.  This
+     * might be used to avoid leaving persistent records of secure
+     * data.
      */
     const unsigned long BYPASS_PERSISTENT_CACHE   = 1 << 1;
+
+    /**
+     * Flag for the GetCachedNetData() method: If set, any stream
+     * content is stored in the cache as a single disk file.  Content
+     * will not be cached in the memory cache nor is it cached in a
+     * flat-file cache database.  This is used to implement the jar
+     * protocol handler and to provide the stream-as-file semantics
+     * required by the classic bowser plugin API.
+     */
+    const unsigned long CACHE_AS_FILE             = 1 << 2;
 
     /**
      * Fetch the cache entry record for the given URI.  If one does not exist,
      * create a new, empty record.  The normal search order for caches is:
      *   + Memory cache
      *   + Disk cache
+     *   + File cache (stream-as-file cache)
      *   + All extension caches
      *
      * When writing, data is typically stored in both the memory cache and the
-     * disk.  Both the search order and this write policy can be modified by
+     * disk cache.  Both the search order and this write policy can be modified by
      * setting one or more of the flag argument bits, as defined above.
      *
-     * The optionally-NULL secondaryKey argument can be used for form
-     * post data in the case of HTTP.
+     * The optionally-NULL secondaryKey argument can be used, e.g. for form
+     * post data or for HTTP headers in the case of HTTP.
      */
     nsICachedNetData getCachedNetData(in nsIURI uri,
                                       [size_is(secondaryKeyLength)] in string secondaryKey,
@@ -106,19 +118,10 @@ interface nsINetDataCacheManager : nsISupports
     /*
      * Enumerate all the loaded nsINetDataCache-implementing cache modules.
      * The first module enumerated will be the memory cache, the second will be
-     * the disk cache, followed by all the extension caches, in search order.
+     * the disk cache, then the file cache, followed by all the extension
+     * caches, in search order. 
      */
     nsISimpleEnumerator newCacheModuleIterator();
-
-    /**
-     * Retrieve an interface pointer to the distinguished memory cache.
-     */
-    readonly attribute nsINetDataCache memoryCache;
-
-    /**
-     * Retrieve an interface pointer to the distinguished disk cache.
-     */
-    readonly attribute nsINetDataDiskCache diskCache;
 
     /**
      * Remove all entries from all writable caches.  This could be used, for
@@ -130,9 +133,20 @@ interface nsINetDataCacheManager : nsISupports
     void RemoveAll();
 
     /**
-     * Return the number of times that GetCachedNetData() located an
-     * existing cache entry divided by the number of times
-     * GetCachedNetData was called.
+     * The disk cache is made up of the file cache (for stream-as-file
+     * requests) and a (possibly independent) persistent cache that handles all
+     * other cache requests.  This attribute sets/gets the combined capacity of
+     * these caches, measured in KBytes.  Setting the capacity lower than the
+     * current amount of space currently in use may cause cache entries to be
+     * evicted from the cache to accomodate the requested capacity.
      */
-    readonly attribute double hitRatio;
+    attribute PRUint32 diskCacheCapacity;
+
+    /**
+     * This attribute sets/gets the capacity of the memory cache, measured in
+     * KBytes.  Setting the capacity lower than the current amount of space
+     * currently in use may cause cache entries to be evicted from the cache to
+     * accomodate the requested capacity.
+     */
+    attribute PRUint32 memCacheCapacity;
 };
