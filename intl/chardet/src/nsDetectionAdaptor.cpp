@@ -21,8 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#define IMPL_NS_IPARSERFILTER
-
 #include "nsString.h"
 #include "plstr.h"
 #include "pratom.h"
@@ -89,49 +87,16 @@ nsDetectionAdaptor::nsDetectionAdaptor( void )
 {
      NS_INIT_REFCNT();
      PR_AtomicIncrement(& g_InstanceCount);
-     mDetector = nsnull;
      mDontFeedToDetector = PR_TRUE;
-     mObserver = nsnull;
 }
 //--------------------------------------------------------------
 nsDetectionAdaptor::~nsDetectionAdaptor()
 {
      PR_AtomicDecrement(& g_InstanceCount);
 }
+
 //--------------------------------------------------------------
-NS_IMPL_ADDREF ( nsDetectionAdaptor );
-NS_IMPL_RELEASE ( nsDetectionAdaptor );
-//----------------------------------------------------------------------
-// here: can't use NS_IMPL_QUERYINTERFACE due to the #ifdef
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsDetectionAdaptor::QueryInterface(REFNSIID aIID, void**aInstancePtr)
-{
-
-  if( NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aInstancePtr = NULL;
-
-  if( aIID.Equals ( NS_GET_IID(nsICharsetDetectionAdaptor) )) {
-    *aInstancePtr = (void*) ((nsICharsetDetectionAdaptor*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#ifdef IMPL_NS_IPARSERFILTER
-  if( aIID.Equals ( kIParserFilterIID)) {
-    *aInstancePtr = (void*) ((nsIParserFilter*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif /* IMPL_NS_IPARSERFILTER */
-
-  if( aIID.Equals ( kISupportsIID )) {
-    *aInstancePtr = (void*) ( this );
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2 (nsDetectionAdaptor, nsIParserFilter, nsICharsetDetectionAdaptor);
 
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::Init(
@@ -139,40 +104,30 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
     nsIDocument* aDocument, nsIParser* aParser, const PRUnichar* aCharset,
     const char* aCommand)
 {
-    if((nsnull != aWebShellSvc) && (nsnull != aDetector) && (nsnull != aCharset))
-    {
-      nsICharsetDetectionObserver* aObserver = nsnull;
-      nsresult rv = NS_OK;
-      mObserver = new nsMyObserver(); // weak ref to it, release by charset detector
-      if(nsnull == mObserver)
-         return NS_ERROR_OUT_OF_MEMORY;
+  if((nsnull != aWebShellSvc) && (nsnull != aDetector) && (nsnull != aCharset))
+  {
+    nsresult rv = NS_OK;
+    mObserver = new nsMyObserver();
+    if(!mObserver)
+       return NS_ERROR_OUT_OF_MEMORY;
 
-      rv = mObserver->QueryInterface(NS_GET_IID(nsICharsetDetectionObserver),
-                               (void**) &aObserver);
-     
+    rv = mObserver->Init(aWebShellSvc, aDocument, aParser, aCharset, aCommand);
+    if(NS_SUCCEEDED(rv)) {
+      rv = aDetector->Init(mObserver.get());
       if(NS_SUCCEEDED(rv)) {
-         rv = mObserver->Init(aWebShellSvc, aDocument, 
-              aParser, aCharset, aCommand);
-         if(NS_SUCCEEDED(rv)) {
-            rv = aDetector->Init(aObserver);
-         }
-
-         if(NS_FAILED(rv))
-              return rv;
-
-         mDetector = aDetector;
-
-         mDontFeedToDetector = PR_FALSE;
-         return NS_OK;
-      } 
+        mDetector = aDetector;
+        mDontFeedToDetector = PR_FALSE;
+        return NS_OK;
+      }
     }
-    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::RawBuffer
     (const char * buffer, PRUint32 * buffer_length) 
 {
-    if((mDontFeedToDetector) || (nsnull == mDetector))
+    if((mDontFeedToDetector) || (!mDetector))
        return NS_OK;
     nsresult rv = NS_OK;
     rv = mDetector->DoIt((const char*)buffer, *buffer_length, &mDontFeedToDetector);
@@ -184,7 +139,7 @@ NS_IMETHODIMP nsDetectionAdaptor::RawBuffer
 //--------------------------------------------------------------
 NS_IMETHODIMP nsDetectionAdaptor::Finish()
 {
-    if((mDontFeedToDetector) || (nsnull == mDetector))
+    if((mDontFeedToDetector) || (!mDetector))
        return NS_OK;
     nsresult rv = NS_OK;
     rv = mDetector->Done();
