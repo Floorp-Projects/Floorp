@@ -433,7 +433,7 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 
-	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* create new lines */);
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* create new lines */);
 
 	m_nextState = SEND_FIRST_NNTP_COMMAND;
 	m_nextStateAfterResponse = NNTP_CONNECT;
@@ -1068,16 +1068,12 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char * line = nsnull;
-	PRInt32 status;
+	PRUint32 status = 0;
 
 	NS_PRECONDITION(nsnull != inputStream, "invalid input stream");
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -1251,18 +1247,14 @@ PRInt32 nsNNTPProtocol::SendListExtensions()
 
 PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	PRInt32 status = 0; 
+	PRUint32 status = 0; 
 
 	if (MK_NNTP_RESPONSE_TYPE(m_responseCode) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
 		char *line = nsnull;
 
 		PRBool pauseForMoreData = PR_FALSE;
-		line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-		if (pauseForMoreData)
-			status = 0; // record error
-		else
-			status = 1;
+		line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 		if(status == 0)
 		{
@@ -1333,16 +1325,12 @@ PRInt32 nsNNTPProtocol::SendListSearches()
 PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line = nsnull;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 
 	NS_PRECONDITION(inputStream, "invalid input stream");
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -1393,14 +1381,10 @@ PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line = nsnull;
-	PRInt32 status = 0; 
+	PRUint32 status = 0; 
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(status == 0)
 	{
@@ -1457,14 +1441,10 @@ PRInt32 nsNNTPProtocol::GetProperties()
 PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line = NULL;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(status == 0)
 	{
@@ -1540,14 +1520,10 @@ PRInt32 nsNNTPProtocol::SendListSubscriptions()
 PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line = NULL;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(status == 0)
 	{
@@ -1990,25 +1966,12 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 	nsresult rv = NS_OK;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
-
-	if(status == 0)
-	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		PR_FREEIF(line);
-		return(MK_NNTP_SERVER_ERROR);
-	}
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(status > 1)
 	{
@@ -2488,14 +2451,11 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line, *s, *s1=NULL, *s2=NULL, *flag=NULL;
-	PRInt32 oldest, youngest, status = 0;
+	PRInt32 oldest, youngest;
+	PRUint32 status = 0;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
     if(status == 0)
     {
@@ -2636,14 +2596,10 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     char * line;
     char * description;
     int i=0;
-	PRInt32 status = 1;
+	PRUint32 status = 1;
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else 
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
     if(status == 0)
     {
@@ -2916,14 +2872,10 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 {
     char *line;
     nsresult rv;
-	PRInt32 status = 1;
+	PRUint32 status = 1;
 
     PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
     if(status == 0)
     {
@@ -3053,14 +3005,10 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 {
   char *line;
   nsresult rv;
-  PRInt32 status = 1;
+  PRUint32 status = 1;
 
   PRBool pauseForMoreData = PR_FALSE;
-  line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-  if (pauseForMoreData)
-	  status = 0; // record error
-  else
-	  status = 1;
+  line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
   if(status == 0)
   {
@@ -3662,7 +3610,7 @@ PRInt32 nsNNTPProtocol::XPATSend()
 PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line;
-	PRInt32 status = 1; 
+	PRUint32 status = 1; 
 
 	if (m_responseCode != MK_NNTP_RESPONSE_XPAT_OK)
 	{
@@ -3675,11 +3623,7 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-	  status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -3750,7 +3694,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 {
 	char *line;
 	char *prettyName;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 
 	if (m_responseCode != MK_NNTP_RESPONSE_LIST_OK)
 	{
@@ -3761,11 +3705,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1; // mscott -- ????
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -3835,7 +3775,7 @@ PRInt32 nsNNTPProtocol::ListXActive()
 PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 
 	PR_ASSERT(m_responseCode == MK_NNTP_RESPONSE_LIST_OK);
 	if (m_responseCode != MK_NNTP_RESPONSE_LIST_OK)
@@ -3847,11 +3787,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1; 
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -3983,7 +3919,7 @@ PRInt32 nsNNTPProtocol::ListGroup()
 PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line;
-	PRInt32 status = 0;
+	PRUint32 status = 0;
 
 	PR_ASSERT(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED);
 	if (m_responseCode != MK_NNTP_RESPONSE_GROUP_SELECTED)
@@ -3994,11 +3930,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -4052,14 +3984,10 @@ PRInt32 nsNNTPProtocol::SearchResponse()
 PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 length)
 {
 	char *line = NULL;
-	PRInt32 status = 1;
+	PRUint32 status = 1;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
-	if (pauseForMoreData)
-		status = 0; // record error
-	else
-		status = 1;
+	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(status == 0)
 	{
