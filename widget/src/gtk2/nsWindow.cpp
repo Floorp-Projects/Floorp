@@ -746,7 +746,12 @@ nsWindow::SetCursor(nsCursor aCursor)
 
         if (nsnull != newCursor) {
             mCursor = aCursor;
+
+            if (!mContainer)
+                return NS_OK;
+
             gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, newCursor);
+
             XFlush(GDK_DISPLAY());
         }
     }
