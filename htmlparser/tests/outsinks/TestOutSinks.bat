@@ -28,12 +28,16 @@ set errmsg=
 set has_err=
 
 echo Testing simple html to html ...
-TestOutput -i text/html -o text\html -f 0 -c OutTestData/simple.html OutTestData/simple.html
+TestOutput -i text/html -o text/html -f 0 -c OutTestData/simple.html OutTestData/simple.html
 if errorlevel 1 echo Simple html to html failed (%errorlevel%). && set has_err=1 && set errmsg=%errmsg% simple.html
 
 echo Testing simple copy case ...
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/simplecopy.out OutTestData/simple.html
 if errorlevel 1 echo Simple copy test failed. && set has_err=1 && set errmsg=%errmsg% simplecopy.out
+
+echo "Testing simple html to plaintext formatting ..."
+TestOutput -i text/html -o text/plain -f 34 -w 70 -c OutTestData/simplefmt.out OutTestData/simple.html
+if errorlevel 1 echo Simple formatting test failed. && set has_err=1 && set errmsg=%errmsg% plainnowrap.out
 
 echo Testing non-wrapped plaintext ...
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/plainnowrap.out OutTestData/plain.html
@@ -58,6 +62,14 @@ if errorlevel 1 echo Xif to HTML conversion test failed. && set has_err=1 && set
 echo Testing HTML Table to Text ...
 TestOutput -i text/html -o text/plain -c OutTestData/htmltable.out OutTestData/htmltable.html
 if errorlevel 1 echo HTML Table to Plain text failed (%errorlevel%). && set has_err=1 && set errmsg=%errmsg% htmltable.out
+
+echo "Testing XIF to plain with doctype (bug 28447) ..."
+TestOutput -i text/xif -o text/plain -f 2 -c OutTestData/xifdtplain.out OutTestData/doctype.xif
+if errorlevel 1 echo XIF to plain with doctype failed (%errorlevel%). && set has_err=1 && set errmsg=%errmsg% xifdtplain.out
+
+REM echo "Testing XIF to html with doctype ..."
+REM TestOutput -i text/xif -o text/html -f 0 -c OutTestData/xifdthtml.out OutTestData/doctype.xif
+REM if errorlevel 1 echo XIF to html with doctype failed (%errorlevel%). && set has_err=1 && set errmsg=%errmsg% xifdthtml.out
 
 if %has_err% == 0 goto success
 echo.

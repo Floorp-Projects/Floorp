@@ -44,7 +44,7 @@ endif
 echo "Testing simple html to plaintext formatting ..."
 TestOutput -i text/html -o text/plain -f 34 -w 70 -c OutTestData/simplefmt.out OutTestData/simple.html
 if ($status != 0) then
-  echo "Simple copy test failed.\n"
+  echo "Simple formatting test failed.\n"
   set errmsg = ($errmsg "simplefmt.out")
 endif
 
@@ -88,6 +88,20 @@ TestOutput -i text/html -o text/plain -f 2 -c OutTestData/htmltable.out OutTestD
 if ($status != 0) then
   echo "HTML Table to Plain text failed."
   set errmsg = ($errmsg "htmltable.out")
+endif
+
+echo "Testing XIF to plain with doctype (bug 28447) ..."
+TestOutput -i text/xif -o text/plain -f 2 -c OutTestData/xifdtplain.out OutTestData/doctype.xif
+if ($status != 0) then
+  echo "XIF to plain with doctype failed."
+  set errmsg = ($errmsg "xifdtplain.out")
+endif
+
+echo "Testing XIF to html with doctype ..."
+TestOutput -i text/xif -o text/html -f 0 -c OutTestData/xifdthtml.out OutTestData/doctype.xif
+if ($status != 0) then
+  echo "XIF to html with doctype failed."
+  set errmsg = ($errmsg "xifdthtml.out")
 endif
 
 if ("$errmsg" != "") then
