@@ -36,14 +36,58 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD ProcessLink(const nsString& aURLSpec);
+    
 };
+
+static nsVoidArray * g_workList;
+static nsVoidArray * g_duplicateList;
+static int g_iProcessed;
+static int g_iMaxProcess = 5000;
+static PRBool g_bHitTop;
 
 NS_IMPL_ISUPPORTS(RobotSinkObserver, kIRobotSinkObserverIID);
 
 NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 {
-  fputs(aURLSpec, stdout);
-  printf("\n");
+  if (!g_bHitTop) {
+     
+     PRInt32 nCount = g_duplicateList->Count();
+     if (nCount > 0)
+     {
+        for (PRInt32 n = 0; n < nCount; n++)
+        {
+           nsString * pstr = (nsString *)g_duplicateList->ElementAt(n);
+           if (pstr->Equals(aURLSpec)) {
+              fputs ("DR: (duplicate found '",stdout);
+              fputs (aURLSpec,stdout);
+              fputs ("')\n",stdout);
+              return NS_OK;
+           }
+        }
+     }
+     g_duplicateList->AppendElement(new nsString(aURLSpec));
+     nsAutoString str;
+     str.Truncate();
+     nsString(aURLSpec).Left(str,5);
+     if (str.Equals("http:")) {
+        char str_num[25];
+        g_iProcessed++;
+        if (g_iProcessed == g_iMaxProcess)
+           g_bHitTop = PR_TRUE;
+        sprintf(str_num, "%d", g_iProcessed);
+        g_workList->AppendElement(new nsString(aURLSpec));
+        fputs("DebugRobot ",stdout);
+        fputs(str_num, stdout);
+        fputs(": ",stdout);
+        fputs(aURLSpec,stdout);
+        fputs("\n", stdout);
+     }
+     else {
+        fputs ("DR: (cannot process URL types '",stdout);
+        fputs (aURLSpec,stdout);
+        fputs ("')\n",stdout);
+     }
+  }
   return NS_OK;
 }
 
@@ -51,16 +95,22 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 
 extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList)
 {
+  if (nsnull==workList)
+     return -1;
+  g_iProcessed = 0;
+  g_bHitTop = PR_FALSE;
+  g_duplicateList = new nsVoidArray();
   RobotSinkObserver* myObserver = new RobotSinkObserver();
   NS_ADDREF(myObserver);
+  g_workList = workList;
 
   for (;;) {
-    PRInt32 n = workList->Count();
+    PRInt32 n = g_workList->Count();
     if (0 == n) {
       break;
     }
-    nsString* urlName = (nsString*) workList->ElementAt(n - 1);
-    workList->RemoveElementAt(n - 1);
+    nsString* urlName = (nsString*) g_workList->ElementAt(n - 1);
+    g_workList->RemoveElementAt(n - 1);
 
     // Create url
     nsIURL* url;
