@@ -21,6 +21,7 @@
 ## Copyright (C) 1998, 2000 Michael J. Fromberger. All Rights Reserved.
 ##
 ## Contributor(s):
+##	Netscape Communications Corporation
 ##
 ## Alternatively, the contents of this file may be used under the
 ## terms of the GNU General Public License Version 2 or later (the
@@ -35,20 +36,21 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.1 2000/07/14 00:44:17 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.2 2000/07/17 22:21:42 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
 ## compiler (gcc) should work, at the very least
 #CC=cc
-CC=gcc
+#CC=gcc
 
 ## 
 ## Define PERL to point to your local Perl interpreter.  It
 ## should be Perl 5.x, although it's conceivable that Perl 4
 ## might work ... I haven't tested it.
 ##
-PERL=/usr/bin/perl
+#PERL=/usr/bin/perl
+PERL=perl
 
 ##
 ## Define CFLAGS to contain any local options your compiler
@@ -57,10 +59,14 @@ PERL=/usr/bin/perl
 ## Conditional compilation options are no longer here; see
 ## the file 'mpi-config.h' instead.
 ##
-#CFLAGS=-ansi -fullwarn -woff 1521 -O3
-#CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1
-CFLAGS=-ansi -pedantic -Wall -O3
-#CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1
+#CFLAGS=-ansi -fullwarn -woff 1521 -O3 -I.
+#CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 -I.
+#CFLAGS=-ansi -pedantic -Wall -O3 -I.
+#CFLAGS=-ansi -n32 -O3 -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC -DUSE_32 -I.
+#CFLAGS=-ansi -n32 -O3 -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC -I.
+#CFLAGS=-ansi -n32 -g -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC -I.
+#CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 -I.
+CFLAGS = -O -I.
 
 ##
 ## Define LIBS to include any libraries you need to link against.
@@ -118,7 +124,7 @@ help:
 	@ echo "The following targets can be built with this Makefile:"
 	@ echo ""
 	@ echo "libmpi       - arithmetic and prime testing library"
-	@ echo "tests        - test drivers (requires MP_IOFUNC)"
+	@ echo "mpi-test     - test driver (requires MP_IOFUNC)"
 	@ echo "tools        - command line tools"
 	@ echo "doc          - manual pages for tools"
 	@ echo "clean        - clean up objects and such"
@@ -126,8 +132,13 @@ help:
 	@ echo "dist         - distribution tarball"
 	@ echo ""
 
-.c.o: $*.h $*.c
-	$(CC) $(CFLAGS) -c $<
+.SUFFIXES: .c .o .i
+
+.c.i:
+	$(CC) $(CFLAGS) -E $< > $@
+
+#.c.o: $*.h $*.c
+#	$(CC) $(CFLAGS) -c $<
 
 mpi.o: mpi-config.h logtab.h mpi.h mpi.c
 	$(CC) $(CFLAGS) -c mpi.c
