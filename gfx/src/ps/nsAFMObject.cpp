@@ -79,7 +79,7 @@ DefFonts gSubstituteFonts[] =
  */
 static struct keyname_st
 {
-  char *name;
+  const char *name;
   AFMKey key;
 } keynames[] =
 {
@@ -494,7 +494,7 @@ PRBool  found = PR_FALSE;
 
   while((upper >=lower) && !found) {
     midpoint = (lower+upper)/2;
-    if(keynames[midpoint].name == NULL){
+    if(keynames[midpoint].name == nsnull) {
       break;
     }
     cmpvalue = strcmp(aKey,keynames[midpoint].name);
@@ -617,7 +617,7 @@ void
 nsAFMObject::ReadCharMetrics (AFMFontInformation *aFontInfo,PRInt32 aNumCharacters)
 {
 PRInt32 i = 0,ivalue,first=1;
-AFMscm  *cm = NULL;
+AFMscm  *cm = nsnull;
 AFMKey  key;
 PRBool  done = PR_FALSE;
 double  notyet;

@@ -106,25 +106,24 @@ PR_END_EXTERN_C
 /** ---------------------------------------------------
  *  Default Constructor
  */
-nsXPrintContext::nsXPrintContext()
+nsXPrintContext::nsXPrintContext() :
+  mXlibRgbHandle(nsnull),
+  mPDisplay(nsnull),
+  mPContext(None),
+  mScreen(nsnull),
+  mVisual(nsnull),
+  mDrawable(None),
+  mGC(nsnull),
+  mDepth(0),
+  mIsGrayscale(PR_FALSE), /* default is color output */
+  mIsAPrinter(PR_TRUE),   /* default destination is printer */
+  mPrintFile(nsnull),
+  mXpuPrintToFileHandle(nsnull),
+  mPrintResolution(0L),
+  mContext(nsnull)
 {
   NS_INIT_REFCNT();
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
-  
-  mXlibRgbHandle = (XlibRgbHandle *)nsnull;
-  mPDisplay    = (Display *)nsnull;
-  mPContext    = (XPContext)None;
-  mScreen      = (Screen *)nsnull;
-  mVisual      = (Visual *)nsnull;
-  mDrawable    = (Drawable)None;
-  mGC          = nsnull;
-  mDepth       = 0;
-  mIsGrayscale = PR_FALSE; /* default is color output */
-  mIsAPrinter  = PR_TRUE;  /* default destination is printer */
-  mPrintFile   = nsnull;
-  mXpuPrintToFileHandle = nsnull;
-  mPrintResolution = 0L;
-  mContext     = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -141,22 +140,16 @@ nsXPrintContext::~nsXPrintContext()
       mGC->Release();
       mGC = nsnull;
     }
-    
-    if (mPContext != None)
-    {
-      XPU_TRACE(XpDestroyContext(mPDisplay, mPContext));
-      mPContext = None;
-    }
-    
+       
     if (mXlibRgbHandle)
     {
       xxlib_rgb_destroy_handle(mXlibRgbHandle);
       mXlibRgbHandle = nsnull;
     }
-        
-    XPU_TRACE(XCloseDisplay(mPDisplay));
     
+    XPU_TRACE(XpuClosePrinterDisplay(mPDisplay, mPContext));           
     mPDisplay = nsnull;
+    mPContext = None;
   }
   
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::~nsXPrintContext() done.\n"));
@@ -366,26 +359,130 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 }
 
 
+nsresult nsXPrintContext::SetPageSize(float page_width_mm, float page_height_mm)
+{
+  nsresult                rv = NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
+  XpuMediumSourceSizeList mlist;
+  int                     mlist_count;
+  int                     i;
+  
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("SetPageSize: Requested page width_mm=%f, page height_mm=%f\n", 
+         (double)page_width_mm, (double)page_height_mm));
+
+  mlist = XpuGetMediumSourceSizeList(mPDisplay, mPContext, &mlist_count);
+  if( !mlist || mlist_count == 0 )
+  {
+    return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
+  }
+
+  XpuMediumSourceSizeRec *match = nsnull;
+
+#ifdef PR_LOGGING 
+  /* Print page sizes for the log... */
+  for( i = 0 ; i < mlist_count ; i++ )
+  {
+    XpuMediumSourceSizeRec *curr = &mlist[i];
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("got '%s'/'%s'\t%d %f %f %f %f\n", 
+           XPU_NULLXSTR(curr->tray_name), curr->medium_name, curr->mbool, 
+           curr->ma1, curr->ma2, curr->ma3, curr->ma4));
+  }
+#endif /* PR_LOGGING */
+
+  /* Tolerate +/- 2mm due conversion/rounding errors and different notations */
+  match = XpuFindMediumSourceSizeBySize(mlist, mlist_count, page_width_mm, page_height_mm, 2.0f);
+ 
+  /* No match ?
+   * The "try again" with a tolerance if +/- 10mm
+   */
+  if (!match)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+           ("No match found in first attempt, trying again with 10mm tolerance...\n"));
+    match = XpuFindMediumSourceSizeBySize(mlist, mlist_count, page_width_mm, page_height_mm, 10.0f); 
+  }    
+  
+  /* Found a match ? */
+  if (match)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+           ("match %s/%s !\n", XPU_NULLXSTR(match->tray_name), match->medium_name));
+    if( XpuSetDocMediumSourceSize(mPDisplay, mPContext, match) == 1 )
+      rv = NS_OK;  
+  }
+  
+  XpuFreeMediumSourceSizeList(mlist);
+  
+  return rv;
+}
+
+nsresult nsXPrintContext::SetOrientation(int landscape)
+{
+  const char         *orientation;
+  XpuOrientationList  list;
+  int                 list_count;
+  XpuOrientationRec  *match;
+
+  /* which orientation ? */
+  switch( landscape )
+  {
+    case 1 /* NS_LANDSCAPE */: orientation = "landscape"; break;
+    case 0 /* NS_PORTRAIT */:  orientation = "portrait";  break;
+    default:  
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+             ("Unsupported orientation %d.\n", landscape));  
+      return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
+  }
+  
+  /* Print the used orientation to the log... */
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("orientation=%s\n", orientation));    
+
+  /* Get list of supported orientations */
+  list = XpuGetOrientationList(mPDisplay, mPContext, &list_count);
+  if( !list || list_count == 0 )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuGetOrientationList() failure.\n"));  
+    return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
+  }
+
+  /* Find requested orientation */
+  match = XpuFindOrientationByName(list, list_count, orientation );
+  if (!match)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuFindOrientationByName() failure.\n"));  
+    return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
+  }
+
+  /* Set orientation */
+  if (XpuSetDocOrientation(mPDisplay, mPContext, match) != 1)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuSetDocOrientation() failure.\n"));  
+    return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
+  }
+
+  return NS_OK;
+}
+
+
 nsresult
 nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::SetupPrintContext()\n"));
   
-  int    printSize;
-  float  top, bottom, left, right;
-  int    landscape;
-  char  *buf;
-  nsresult rv;
+  float        top, bottom, left, right;
+  int          landscape;
+  int          num_copies;
+  const char  *printername;
+  nsresult     rv;
 
   // Get the Attributes
   aSpec->GetToPrinter(mIsAPrinter);
   aSpec->GetGrayscale(mIsGrayscale);
-  aSpec->GetSize(printSize);
   aSpec->GetTopMargin(top);
   aSpec->GetBottomMargin(bottom);
   aSpec->GetLeftMargin(left);
   aSpec->GetRightMargin(right);
   aSpec->GetLandscape(landscape);
+  aSpec->GetCopies(num_copies);
   
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::SetupPrintContext: borders top=%f, bottom=%f, left=%f, right=%f\n", 
@@ -394,7 +491,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   /* get destination printer (we need this when printing to file as
    * the printer DDX in Xprt generates the data...) 
    */
-  aSpec->GetPrinterName(&buf);
+  aSpec->GetPrinterName(&printername);
   
   /* Are we "printing" to a file instead to the print queue ? */
   if (!mIsAPrinter) 
@@ -421,12 +518,12 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   /* get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5)
    * ToDo: report error to user (dialog)
    */
-  if( XpuGetPrinter(buf, &mPDisplay, &mPContext) != 1 )
+  if( XpuGetPrinter(printername, &mPDisplay, &mPContext) != 1 )
     return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::SetupPrintContext: name='%s', display='%s', vendor='%s', release=%ld\n",
-          buf,
+          printername,
           XDisplayString(mPDisplay), 
           XServerVendor(mPDisplay),
           (long)XVendorRelease(mPDisplay)));
@@ -434,32 +531,31 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   if (NS_FAILED(rv = AlertBrokenXprt(mPDisplay)))
     return rv;
     
+  if( XpQueryExtension(mPDisplay, &mXpEventBase, &mXpErrorBase) == False )
+    return NS_ERROR_UNEXPECTED;
+    
 #ifdef XPRINT_DEBUG_SOMETIMES_USEFULL
   dumpXpAttributes(mPDisplay, mPContext);
-#endif /* DEBUG */
+#endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
+  
+  PRInt32 page_width_in_twips,
+          page_height_in_twips;
+  float   page_width_mm,
+          page_height_mm;
 
-  /* which orientation ? */
-  switch (landscape)
-  {
-    case 1 /* NS_LANDSCAPE */:
-      if (XpuSetContentOrientation(mPDisplay,mPContext, XPDocAttr, "landscape") != 1)
-      {
-        NS_WARNING("orientation 'landscape' not supported on this printer");
-        return NS_ERROR_FAILURE;
-      }
-      break;
-    case 0 /* NS_PORTRAIT */:
-      if (XpuSetContentOrientation(mPDisplay,mPContext, XPDocAttr, "portrait") != 1)
-      {
-        NS_WARNING("orientation 'portrait' not supported on this printer");
-        return NS_ERROR_FAILURE;
-      }
-      break;
-    default:  
-      NS_WARNING("unsupported orientation");
-      return NS_ERROR_FAILURE;
-  }    
+  aSpec->GetPageSizeInTwips(&page_width_in_twips, &page_height_in_twips);
+  page_width_mm  = NS_TWIPS_TO_MILLIMETERS(page_width_in_twips);
+  page_height_mm = NS_TWIPS_TO_MILLIMETERS(page_height_in_twips);
+  
+  if (NS_FAILED(XPU_TRACE(rv = SetPageSize(page_width_mm, page_height_mm))))
+    return rv;
+  
+  if (NS_FAILED(XPU_TRACE(rv = SetOrientation(landscape))))
+    return rv;
     
+  if (XPU_TRACE(XpuSetDocumentCopies(mPDisplay, mPContext, num_copies)) != 1)
+    return NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES;
+        
   /* set printer context
    * WARNING: after this point it is no longer allows to change job attributes
    * only after the XpSetContext() call the alllication is allowed to make 
@@ -467,6 +563,10 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * ones !!
    */
   XPU_TRACE(XpSetContext(mPDisplay, mPContext));
+
+#ifdef XPRINT_DEBUG_SOMETIMES_USEFULL
+  dumpXpAttributes(mPDisplay, mPContext);
+#endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
 
   /* get default printer resolution. May fail if Xprt is misconfigured.
    * ToDo: Report error to user (dialog)
@@ -524,24 +624,22 @@ nsXPrintContext::BeginDocument( PRUnichar *aTitle )
   // Check the output type
   if(mIsAPrinter) 
   {
-    XPU_TRACE(XpStartJob(mPDisplay, XPSpool));
-    XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPStartJobNotify));
+    XPU_TRACE(XpuStartJobToSpooler(mPDisplay));
   } 
   else 
   {   
-    XPU_TRACE(XpStartJob(mPDisplay, XPGetData));
-    
-    if( XPU_TRACE(mXpuPrintToFileHandle = XpuPrintToFile(mPDisplay, mPContext, mPrintFile)) == nsnull )
+    if( XPU_TRACE(mXpuPrintToFileHandle = XpuStartJobToFile(mPDisplay, mPContext, mPrintFile)) == nsnull )
     {
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
              ("nsXPrintContext::BeginDocument(): XpuPrintToFile failure %s/(%d)\n", 
              strerror(errno), errno));
 
       return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
-    }
-    
-    XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPStartJobNotify));
+    }    
   } 
+
+  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPStartJobNotify));
+
   
   return NS_OK;
 }  
@@ -553,7 +651,7 @@ nsXPrintContext::BeginPage()
   // XMoveWindow(mPDisplay, mDrawable, 100, 100);
   
   XPU_TRACE(XpStartPage(mPDisplay, mDrawable));
-  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPStartPageNotify));
+  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPStartPageNotify));
 
   return NS_OK;
 }
@@ -562,7 +660,7 @@ NS_IMETHODIMP
 nsXPrintContext::EndPage()
 {
   XPU_TRACE(XpEndPage(mPDisplay));
-  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPEndPageNotify));
+  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPEndPageNotify));
   
   return NS_OK;
 }
@@ -571,7 +669,7 @@ NS_IMETHODIMP
 nsXPrintContext::EndDocument()
 {
   XPU_TRACE(XpEndJob(mPDisplay));
-  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPEndJobNotify));
+  XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPEndJobNotify));
 
   /* Are we printing to a file ? */
   if( !mIsAPrinter )
@@ -696,8 +794,8 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
   int      prev_res = 0,
            dummy;
   long     imageResolution;
-  PRInt32  aDWidth_scaled;
-  PRInt32  aDHeight_scaled;
+  PRInt32  aDWidth_scaled,
+           aDHeight_scaled;
   nsresult rv = NS_OK;
   
   PRInt32 aSrcWidth  = aImage->GetWidth();
@@ -731,17 +829,20 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
   scalingFactor *= (scale_x < scale_y)?(scale_x):(scale_y);
   
   /* Adjust destination size to the match the scaling factor */
-  imageResolution = double(mPrintResolution) * scalingFactor;
-  aDWidth_scaled  = double(aDWidth)          * scalingFactor;
-  aDHeight_scaled = double(aDHeight)         * scalingFactor;
-
-  NS_ASSERTION(!((aDWidth_scaled <= 0) || (aDHeight_scaled <= 0)),
-               "Image scaled to zero width/height");
-  NS_ASSERTION(!(imageResolution <= 0),
-               "Image resolution must not be 0");
+  imageResolution = long(   double(mPrintResolution) * scalingFactor);
+  aDWidth_scaled  = PRInt32(double(aDWidth)          * scalingFactor);
+  aDHeight_scaled = PRInt32(double(aDHeight)         * scalingFactor);
 
   /* Image scaled to 0 width/height ? */
-  if( (aDWidth_scaled <= 0) || (aDHeight_scaled <= 0) || (imageResolution <= 0))
+  NS_ASSERTION(!((aDWidth_scaled <= 0) || (aDHeight_scaled <= 0)),
+               "Image scaled to zero width/height");
+  if( (aDWidth_scaled <= 0) || (aDHeight_scaled <= 0) )
+    return NS_OK;
+
+  /* Image scaled to zero-width/height ? */
+  NS_ASSERTION(imageResolution != 0, "Image resolution must not be 0");
+  NS_ASSERTION(imageResolution >= 0, "Image resolution must not be negative");
+  if( imageResolution <= 0 )
     return NS_OK;
 
   /* Set image resolution */

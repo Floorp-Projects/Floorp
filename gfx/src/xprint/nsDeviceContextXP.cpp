@@ -72,7 +72,7 @@ nsDeviceContextXp :: ~nsDeviceContextXp()
 
 
 NS_IMETHODIMP
-nsDeviceContextXp :: SetSpec(nsIDeviceContextSpec* aSpec)
+nsDeviceContextXp::SetSpec(nsIDeviceContextSpec* aSpec)
 {
   nsresult  rv = NS_ERROR_FAILURE;
 
@@ -82,11 +82,15 @@ nsDeviceContextXp :: SetSpec(nsIDeviceContextSpec* aSpec)
 
   mSpec = aSpec;
 
-  if(mPrintContext) DestroyXPContext(); // we cannot reuse that...
+  if (mPrintContext)
+    DestroyXPContext(); // we cannot reuse that...
     
   mPrintContext = new nsXPrintContext();
-  xpSpec = do_QueryInterface(mSpec);
-  if(xpSpec) {
+  if (!mPrintContext)
+    return  NS_ERROR_OUT_OF_MEMORY;
+    
+  xpSpec = do_QueryInterface(mSpec, &rv);
+  if (NS_SUCCEEDED(rv)) {
     rv = mPrintContext->Init(this, xpSpec);
   }
  
@@ -140,20 +144,22 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
  */
 NS_IMETHODIMP nsDeviceContextXp :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-   nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+   
+  aContext = nsnull;
 
-   nsCOMPtr<nsRenderingContextXp> xpContext;
+  nsCOMPtr<nsRenderingContextXp> renderingContext = new nsRenderingContextXp();
+  if (!renderingContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+     
+  rv = renderingContext->Init(this);
 
-   xpContext = new nsRenderingContextXp();
-   if (xpContext) {
-     rv = xpContext->Init(this);
-   }
+  if (NS_SUCCEEDED(rv)) {
+    aContext = renderingContext;
+    NS_ADDREF(aContext);
+  }
 
-   if (NS_SUCCEEDED(rv)) {
-     aContext = xpContext;
-     NS_ADDREF(aContext);
-   }
-   return rv;
+  return rv;
 }
 
 /** ---------------------------------------------------

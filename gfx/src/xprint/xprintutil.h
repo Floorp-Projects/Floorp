@@ -44,6 +44,7 @@
 
 /* I don't know how to make this "better" yet... ;-( */
 #ifdef USE_MOZILLA_TYPES
+#include <prtypes.h>
 #include <prmem.h>
 #include <prthread.h>
 #define XPU_USE_NSPR 1
@@ -63,45 +64,128 @@
 #define XPU_DEBUG_ONLY(EX)
 #endif /* DEBUG */
 
-/* debug: replace NULLptrs with "<NULL>" string */
+/* debug/logging: replace NULLptrs with "<NULL>" string */
 #define XPU_NULLXSTR(s) (((s)!=NULL)?(s):("<NULL>"))
+
+/*
+ * Struct for XpuGetMediumSourceSizeList(), XpuFreeMediumSourceSizeList(),
+ * XpuSetDocMediumSourceSize(), XpuSetPageMediumSourceSize(),
+ * XpuFindMediumSourceSizeBy*()
+ */
+typedef struct {
+  const char *tray_name;
+  const char *medium_name;
+  int         mbool;
+  float       ma1; 
+  float       ma2; 
+  float       ma3; 
+  float       ma4;
+} XpuMediumSourceSizeRec, *XpuMediumSourceSizeList;
+
+/*
+ * Struct for XpuGetResolutionList(), XpuFreeResolutionList(),
+ * XpuGetResolution(), XpuSetPageResolution(), XpuSetDocResolution()
+ */
+typedef struct {
+  long dpi;
+  /* ToDo: Support for Xdpi != Ydpi */
+} XpuResolutionRec, *XpuResolutionList;
+
+/*
+ * Struct for XpuGetOrientationList(), XpuFreeOrientationList(),
+ * XpuFindOrientationBy*(), XpuSetPageResolution(), 
+ * XpuSetDocOrientation()
+ */
+typedef struct {
+  const char *orientation;
+} XpuOrientationRec, *XpuOrientationList;
+
+/*
+ * Struct for XpuGetPlexList(), XpuFreePlexList(), XpuFindPlexBy*(),
+ * XpuSetDocPlex(), XpuSetPagePlex()
+ */
+typedef struct {
+  const char *plex;
+} XpuPlexRec, *XpuPlexList;
 
 /* prototypes */
 _XFUNCPROTOBEGIN
 
 int XpuCheckExtension( Display *pdpy );
-const char *XpuGetXpServerList( void );
+
+/* Create/destroy connection to printer */
 int XpuGetPrinter( const char *printername, Display **pdpyptr, XPContext *pcontextptr );
+void XpuClosePrinterDisplay(Display *pdpy, XPContext pcontext);
+
+/* Misc. functions */
 void XpuSetOneAttribute( Display *pdpy, XPContext pcontext, 
                          XPAttributes type, const char *attribute_name, const char *value, XPAttrReplacement replacement_rule );
+void XpuSetOneLongAttribute( Display *pdpy, XPContext pcontext, 
+                         XPAttributes type, const char *attribute_name, long value, XPAttrReplacement replacement_rule );
 int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, const char *query );
 int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title );
-int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, const char *orientation );
 int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, long *result );
+#ifdef DEBUG
 void dumpXpAttributes( Display *pdpy, XPContext pcontext );
-void XpuSetContext( Display *pdpy, XPContext pcontext );
-void XpuWaitForPrintNotify( Display *pdpy, int detail );
-Bool XpuSetResolution( Display *pdpy, XPContext pcontext, long dpi );
-Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi );
-const char *XpuEmumerateXpAttributeValue( const char *value, void **vcptr );
-void XpuDisposeEmumerateXpAttributeValue( void **vc );
-Bool XpuParseMediumSourceSize( const char *value, 
-                               const char **media_name, Bool *mbool, 
-                               float *ma1, float *ma2, float *ma3, float *ma4 );
+#endif /* DEBUG */
+void XpuWaitForPrintNotify( Display *pdpy, int xp_event_base, int detail );
+
+/* Get list of printers */
 XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count );
 void XpuFreePrinterList( XPPrinterList list );
 
+/* Set number of document copies */
+int XpuSetDocumentCopies( Display *pdpy, XPContext pcontext, long num_copies );
+
+/* Get/Set/Query supported mediums (paper sizes) */
+XpuMediumSourceSizeList XpuGetMediumSourceSizeList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
+void XpuFreeMediumSourceSizeList( XpuMediumSourceSizeList list );
+int XpuSetDocMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourceSizeRec *medium_spec );
+int XpuSetPageMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourceSizeRec *medium_spec );
+XpuMediumSourceSizeRec *
+XpuFindMediumSourceSizeBySize( XpuMediumSourceSizeList mlist, int mlist_count,
+                               float page_width_mm, float page_height_mm, float tolerance );
+XpuMediumSourceSizeRec *
+XpuFindMediumSourceSizeByBounds( XpuMediumSourceSizeList mlist, int mlist_count, 
+                                 float m1, float m2, float m3, float m4, float tolerance );
+XpuMediumSourceSizeRec *
+XpuFindMediumSourceSizeByName( XpuMediumSourceSizeList mlist, int mlist_count, 
+                               const char *tray_name, const char *medium_name );
+
+/* Get/Set resolution */
+XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
+void XpuFreeResolutionList( XpuResolutionList list );
+Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi );
+Bool XpuSetPageResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec * );
+Bool XpuSetDocResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec * );
+
+/* Get/Set orientation */
+XpuOrientationList XpuGetOrientationList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
+void XpuFreeOrientationList( XpuOrientationList list );
+XpuOrientationRec *
+XpuFindOrientationByName( XpuOrientationList list, int list_count, const char *orientation );
+int XpuSetDocOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *rec );
+int XpuSetPageOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *rec );
+
+/* Get/set plex modes */
+XpuPlexList XpuGetPlexList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
+void XpuFreePlexList( XpuPlexList list );
+XpuPlexRec *XpuFindPlexByName( XpuPlexList list, int list_count, const char *plex );
+int XpuSetDocPlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec );
+int XpuSetPagePlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec );
+
+/* Start job to printer (spooler) or file */
+void XpuStartJobToSpooler(Display *pdpy);
+void *XpuStartJobToFile( Display *pdpy, XPContext pcontext, const char *filename );
+XPGetDocStatus XpuWaitForPrintFileChild( void *handle );
+
+_XFUNCPROTOEND
 
 #define XpuGetJobAttributes( pdpy, pcontext )     XpGetAttributes( (pdpy), (pcontext), XPJobAttr )
 #define XpuGetDocAttributes( pdpy, pcontext )     XpGetAttributes( (pdpy), (pcontext), XPDocAttr )
 #define XpuGetPageAttributes( pdpy, pcontext )    XpGetAttributes( (pdpy), (pcontext), XPPageAttr )
 #define XpuGetPrinterAttributes( pdpy, pcontext ) XpGetAttributes( (pdpy), (pcontext), XPPrinterAttr )
 #define XpuGetServerAttributes( pdpy, pcontext )  XpGetAttributes( (pdpy), (pcontext), XPServerAttr )
-
-void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename );
-XPGetDocStatus XpuWaitForPrintFileChild( void *handle );
-
-_XFUNCPROTOEND
 
 #endif /* !XPRINTUTIL_H */
 /* EOF. */

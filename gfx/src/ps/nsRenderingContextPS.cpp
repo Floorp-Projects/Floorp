@@ -38,13 +38,12 @@
 
 #include "nsRenderingContextPS.h"
 #include "nsFontMetricsPS.h"
-#include <math.h>
 #include "nsDeviceContextPS.h"
 #include "nsPostScriptObj.h"  
 #include "nsIRegion.h"      
 #include "nsIImage.h"      
 
-static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+#include <math.h>
 
 // Macro to convert from TWIPS (1440 per inch) to POINTS (72 per inch)
 #define NS_PIXELS_TO_POINTS(x) (x * 10)
@@ -83,13 +82,13 @@ public:
  */
 PS_State :: PS_State()
 {
-  mNext = nsnull;
+  mNext         = nsnull;
   mMatrix.SetToIdentity();  
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
-  mFontMetrics = nsnull;
+  mFontMetrics  = nsnull;
   mCurrentColor = NS_RGB(0, 0, 0);
-  mTextColor = NS_RGB(0, 0, 0);
-  mLineStyle = nsLineStyle_kSolid;
+  mTextColor    = NS_RGB(0, 0, 0);
+  mLineStyle    = nsLineStyle_kSolid;
 }
 
 /** ---------------------------------------------------
@@ -97,13 +96,15 @@ PS_State :: PS_State()
  *  Default Constructor for the state
  *	@update 12/21/98 dwc
  */
-PS_State :: PS_State(PS_State &aState):mMatrix(&aState.mMatrix),mLocalClip(aState.mLocalClip)
+PS_State :: PS_State(PS_State &aState) : 
+  mMatrix(&aState.mMatrix),
+  mLocalClip(aState.mLocalClip)
 {
   mNext = &aState;
-  //mClipRegion = NULL;
+  //mClipRegion = nsnull;
   mCurrentColor = aState.mCurrentColor;
   mFontMetrics = nsnull;
-  //mFont = NULL;
+  //mFont = nsnull;
   mFlags = ~FLAGS_ALL;
   mTextColor = aState.mTextColor;
   mLineStyle = aState.mLineStyle;
@@ -115,18 +116,17 @@ PS_State :: PS_State(PS_State &aState):mMatrix(&aState.mMatrix),mLocalClip(aStat
  */
 PS_State :: ~PS_State()
 {
-  //if (NULL != mClipRegion){
+  //if (nsnull != mClipRegion){
     //VERIFY(::DeleteObject(mClipRegion));
-    //mClipRegion = NULL;
+    //mClipRegion = nsnull;
   //}
 
   //don't delete this because it lives in the font metrics
-  //mFont = NULL;
+  //mFont = nsnull;
 }
 
 
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextPS, nsIRenderingContext)
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -170,40 +170,6 @@ nsRenderingContextPS :: ~nsRenderingContextPS()
 
   mTranMatrix = nsnull;
 }
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 12/21/98 dwc
- */
-nsresult
-nsRenderingContextPS :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIRenderingContextIID)){
-    nsIRenderingContext* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID)){
-    nsIRenderingContext* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsRenderingContextPS)
-NS_IMPL_RELEASE(nsRenderingContextPS)
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -1112,7 +1078,7 @@ PRInt32       y = aY;
   }
 
 	mTranMatrix->TransformCoord(&x, &y);
-  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), PR_FALSE);
+  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : nsnull), PR_FALSE);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;

@@ -49,6 +49,10 @@
 #include "nsIPersistentProperties2.h"
 #include "nsCRT.h"
 
+#ifndef NS_BUILD_ID
+#include "nsBuildID.h"
+#endif /* !NS_BUILD_ID */
+
 #include "prenv.h"
 
 #ifdef VMS
@@ -73,11 +77,6 @@ extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
-
-/* 
- * Paper Names 
- */
-const char*const paper_string[]={ "Letter", "Legal", "Executive", "A4", "A3" };
 
 /* 
  * global
@@ -122,7 +121,7 @@ FreeLangGroups(nsHashKey * aKey, void *aData, void *aClosure)
 }
 
 static void
-PrintAsDSCTextline(FILE *f, char *text, int maxlen)
+PrintAsDSCTextline(FILE *f, const char *text, int maxlen)
 {
   NS_ASSERTION(maxlen > 1, "bad max length");
 
@@ -188,7 +187,7 @@ nsPostScriptObj::~nsPostScriptObj()
     // end the document
     end_document();
     finalize_translation();
-    if ( mPrintSetup->filename != (char *) NULL )
+    if ( mPrintSetup->filename != nsnull )
       fclose( mPrintSetup->out );
     else {
 #if defined(XP_OS2_VACPP) || defined(XP_PC)
@@ -198,7 +197,7 @@ nsPostScriptObj::~nsPostScriptObj()
 #endif
     }
 #ifdef VMS
-    if ( mPrintSetup->print_cmd != (char *) NULL ) {
+    if ( mPrintSetup->print_cmd != nsnull ) {
       char VMSPrintCommand[1024];
       PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s /delete %s.",
         mPrintSetup->print_cmd, mPrintSetup->filename);
@@ -241,18 +240,52 @@ nsPostScriptObj::~nsPostScriptObj()
 #endif /* DEBUG */  
 }
 
+void 
+nsPostScriptObj::settitle(PRUnichar * aTitle)
+{
+  if (aTitle) {
+    mTitle = ToNewCString(nsDependentString(aTitle));
+  }
+}
+
+static
+const char *paper_size_to_paper_name(float width_in_inch, float height_in_inch)
+{
+#define MORE_OR_LESS_EQUAL(a, b, tolerance) (PR_ABS((a) - (b)) <= (tolerance))
+#define MATCH_PAGE(width, height, paper_width, paper_height) \
+          (MORE_OR_LESS_EQUAL((width),  (paper_width),  0.4f) && \
+           MORE_OR_LESS_EQUAL((height), (paper_height), 0.4f))
+
+  // 210mm X 297mm == 8.27in X 11.69in  
+  if (MATCH_PAGE(width_in_inch, height_in_inch, 8.27f, 11.69f))
+    return "A4";
+  // 297mm X 420mm == 11.69in X 16.53in  
+  if (MATCH_PAGE(width_in_inch, height_in_inch, 11.69f, 16.53f))
+    return "A3";  
+  if (MATCH_PAGE(width_in_inch, height_in_inch, 8.5f, 11.0f))
+    return "Letter";
+  if (MATCH_PAGE(width_in_inch, height_in_inch, 8.5f, 14.0f))
+    return "Legal"; 
+  if (MATCH_PAGE(width_in_inch, height_in_inch, 7.5f, 10.0f))
+    return "Executive";
+#undef MATCH_PAGE
+#undef MORE_OR_LESS_EQUAL
+
+  return nsnull;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 nsresult 
-nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
+nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 {
-  PRBool  isGray, isAPrinter, isFirstPageFirst;
-  int     printSize;
-  int     landscape;
-  float   fwidth, fheight;
-  char    *buf;
+  PRBool      isGray, isAPrinter, isFirstPageFirst;
+  int         printSize;
+  int         landscape;
+  float       fwidth, fheight;
+  const char *printername;
 
   PrintInfo* pi = new PrintInfo(); 
   mPrintSetup = new PrintSetup();
@@ -262,7 +295,6 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 
     mPrintSetup->color = PR_TRUE;              // Image output 
     mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
-    mPrintSetup->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4,a3)
     mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
     if ( aSpec != nsnull ) {
       aSpec->GetGrayscale( isGray );
@@ -271,12 +303,19 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
         mPrintSetup->deep_color = PR_FALSE; 
       }
 
-
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
-      aSpec->GetSize( printSize );
-      mPrintSetup->paper_size = printSize;
+      PRInt32 paper_width_in_twips,
+              paper_height_in_twips;
+      aSpec->GetPageSizeInTwips(&paper_width_in_twips, &paper_height_in_twips);
+      mPrintSetup->paper_width_in_inch  = NS_TWIPS_TO_INCHES(paper_width_in_twips);
+      mPrintSetup->paper_height_in_inch = NS_TWIPS_TO_INCHES(paper_height_in_twips);
+
+      /* Chceck if we have a name for this paper size... */
+      if (!paper_size_to_paper_name(mPrintSetup->paper_width_in_inch, mPrintSetup->paper_height_in_inch))
+        return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
+
       aSpec->GetToPrinter( isAPrinter );
       if (isAPrinter) {
         /* Define the destination printer (queue). 
@@ -287,39 +326,41 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
          */
         char *envvar;
         /* get printer name */
-        aSpec->GetPrinterName(&buf);
+        aSpec->GetPrinterName(&printername);
         
         /* do not set the ${MOZ_PRINTER_NAME} env var if we want the default 
          * printer */
-        if (buf)
+        if (printername)
         {
           /* strip the leading NS_POSTSCRIPT_DRIVER_NAME string */
-          buf = buf + NS_POSTSCRIPT_DRIVER_NAME_LEN;
+          printername = printername + NS_POSTSCRIPT_DRIVER_NAME_LEN;
           
-          if (!strcmp(buf, "default"))
-            buf = "";
+          if (!strcmp(printername, "default"))
+            printername = "";
         }
         else 
-          buf = "";
+          printername = "";
 
-        envvar = (char *)malloc(strlen(buf) + /*strlen("MOZ_PRINTER_NAME=")+1*/18);
+        envvar = (char *)malloc(strlen(printername) + /*strlen("MOZ_PRINTER_NAME=")+1*/18);
         if (!envvar)
           return NS_ERROR_OUT_OF_MEMORY;
-        sprintf(envvar, "MOZ_PRINTER_NAME=%s", buf);
+        sprintf(envvar, "MOZ_PRINTER_NAME=%s", printername);
 #ifdef DEBUG
         printf("setting printer name via '%s'\n", envvar);
 #endif /* DEBUG */
         PR_SetEnv(envvar);
         free(envvar);
+        
+        const char *command;
 #ifndef VMS
-        aSpec->GetCommand( &buf );
+        aSpec->GetCommand( &command );
 #if defined(XP_OS2_VACPP) || defined(XP_PC)
-	mPrintSetup->out = NULL;
+	mPrintSetup->out = nsnull;
         // popen not defined OS2TODO
 #else
-        mPrintSetup->out = popen( buf, "w" );
+        mPrintSetup->out = popen(command, "w");
 #endif
-        mPrintSetup->filename = (char *) NULL;  
+        mPrintSetup->filename = nsnull;  
 #else
         // We can not open a pipe and print the contents of it. Instead
         // we have to print to a file and then print that.
@@ -328,8 +369,9 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
         mPrintSetup->out = fopen(mPrintSetup->filename, "w");
 #endif
       } else {
-        aSpec->GetPath( &buf );
-        mPrintSetup->filename = buf;          
+        const char *path;
+        aSpec->GetPath(&path);
+        mPrintSetup->filename = path;          
         mPrintSetup->out = fopen(mPrintSetup->filename, "w"); 
         if (!mPrintSetup->out)
           return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
@@ -347,7 +389,17 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
     memset(pi, 0, sizeof(struct PrintInfo_));
 
     mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
-    aSpec->GetPageDimensions( fwidth, fheight );
+    aSpec->GetLandscape( landscape );
+    fwidth  = mPrintSetup->paper_width_in_inch;
+    fheight = mPrintSetup->paper_height_in_inch;
+
+    if (landscape) {
+      float temp;
+      temp   = fwidth;
+      fwidth = fheight;
+      fheight = temp;
+    }
+
     mPrintSetup->width = (int)(fwidth * mPrintSetup->dpi);
     mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
 #ifdef DEBUG
@@ -356,9 +408,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 #endif
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
-    mPrintSetup->sizes = NULL;
+    mPrintSetup->sizes = nsnull;
 
-    aSpec->GetLandscape( landscape );
     mPrintSetup->landscape = (landscape) ? PR_TRUE : PR_FALSE; // Rotated output 
     //mPrintSetup->landscape = PR_FALSE;
 
@@ -388,16 +439,16 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 #else
     mPrintSetup->url = nsnull;
 #endif
-    mPrintSetup->completion = NULL;            // Called when translation finished 
-    mPrintSetup->carg = NULL;                  // Data saved for completion routine 
+    mPrintSetup->completion = nsnull;          // Called when translation finished 
+    mPrintSetup->carg = nsnull;                // Data saved for completion routine 
     mPrintSetup->status = 0;                   // Status of URL on completion 
 	                                    // "other" font is for encodings other than iso-8859-1 
-    mPrintSetup->otherFontName[0] = NULL;		   
+    mPrintSetup->otherFontName[0] = nsnull;		   
   				                            // name of "other" PostScript font 
-    mPrintSetup->otherFontInfo[0] = NULL;	   
+    mPrintSetup->otherFontInfo[0] = nsnull;	   
     // font info parsed from "other" afm file 
     mPrintSetup->otherFontCharSetID = 0;	      // charset ID of "other" font 
-    //mPrintSetup->cx = NULL;                  // original context, if available 
+    //mPrintSetup->cx = nsnull;                 // original context, if available 
     pi->page_height = mPrintSetup->height * 10;	// Size of printable area on page 
     pi->page_width = mPrintSetup->width * 10;	// Size of printable area on page 
     pi->page_break = 0;	              // Current page bottom 
@@ -405,15 +456,12 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
     pi->phase = 0;
 
  
-    pi->pages=NULL;		                // Contains extents of each page 
+    pi->pages = nsnull;		                // Contains extents of each page 
 
     pi->pt_size = 0;		              // Size of above table 
     pi->n_pages = 0;	        	      // # of valid entries in above table 
 
     mTitle = nsnull;
-    if(nsnull != aTitle){
-      mTitle = ToNewCString(nsDependentString(aTitle));
-    }
 
     pi->doc_title = mTitle;
     pi->doc_width = 0;	              // Total document width 
@@ -440,7 +488,7 @@ void
 nsPostScriptObj::finalize_translation()
 {
   XP_DELETE(mPrintContext->prSetup);
-  mPrintContext->prSetup = NULL;
+  mPrintContext->prSetup = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -487,10 +535,14 @@ FILE *f;
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->top),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
-  fprintf(f, "%%%%Creator: Mozilla (NetScape) HTML->PS\n");
+
+  nsXPIDLCString useragent;
+  useragent.Assign("unknown"); /* Fallback */
+  gPrefs->CopyCharPref("general.useragent.misc", getter_Copies(useragent));
+  fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n", useragent.get(), (unsigned long)NS_BUILD_ID);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
   fprintf(f, "%%%%DocumentPaperSizes: %s\n",
-	            paper_string[mPrintContext->prSetup->paper_size]);
+          paper_size_to_paper_name(mPrintSetup->paper_width_in_inch, mPrintSetup->paper_height_in_inch));
   fprintf(f, "%%%%Orientation: %s\n",
               (mPrintContext->prSetup->width < mPrintContext->prSetup->height) ? "Portrait" : "Landscape");
 

@@ -58,6 +58,7 @@
 static void PrintXPGetDocStatus( XPGetDocStatus status );
 #endif
 static Bool  XNextEventTimeout( Display *display, XEvent *event_return, struct timeval *timeout );
+static void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename );
 static void  MyPrintToFileProc( Display *pdpy, XPContext pcontext, unsigned char *data, unsigned int data_len, XPointer client_data );
 static void  MyFinishProc( Display *pdpy, XPContext pcontext, XPGetDocStatus  status, XPointer client_data );
 #ifdef XPU_USE_NSPR
@@ -65,6 +66,21 @@ static void PrintToFile_Consumer( void *handle );
 #else
 static void *PrintToFile_Consumer( void *handle );
 #endif
+
+void XpuStartJobToSpooler(Display *pdpy)
+{
+  XpStartJob(pdpy, XPSpool);
+}
+
+void *XpuStartJobToFile( Display *pdpy, XPContext pcontext, const char *filename )
+{
+  void *handle;
+
+  XpStartJob(pdpy, XPGetData);
+  handle = XpuPrintToFile(pdpy, pcontext, filename);
+    
+  return(handle);
+}
 
 #ifdef DEBUG
 /* DEBUG: Print XPGetDocStatus */
@@ -167,6 +183,7 @@ typedef struct
 } MyPrintFileData;
 
 
+static
 void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
 {
   MyPrintFileData *mpfd; /* warning: shared between threads !! */
@@ -174,7 +191,7 @@ void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
   if( (mpfd = malloc(sizeof(MyPrintFileData))) == NULL )
     return(NULL);
   
-  mpfd->displayname = DisplayString(pdpy);
+  mpfd->displayname = XDisplayString(pdpy);
   mpfd->pdpy        = NULL;
   mpfd->pcontext    = pcontext;
   mpfd->file_name   = filename;
@@ -256,21 +273,22 @@ typedef struct
 {
   pid_t           pid;
   int             pipe[2];  /* child-->parent communication pipe */
-  char           *displayname;
+  const char     *displayname;
   Display        *pdpy;
   XPContext       pcontext;
-  char           *file_name;
+  const char     *file_name;
   FILE           *file;
   XPGetDocStatus  status;
   Bool            done;
 } MyPrintFileData;
 
 
+static
 void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
 {
   MyPrintFileData *mpfd;
 
-  if( (mpfd = malloc(sizeof(MyPrintFileData))) == NULL )
+  if( (mpfd = (MyPrintFileData *)malloc(sizeof(MyPrintFileData))) == NULL )
     return(NULL);
 
   /* create pipe */
@@ -282,7 +300,7 @@ void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
     return(NULL);
   }
         
-  mpfd->displayname = DisplayString(pdpy);
+  mpfd->displayname = XDisplayString(pdpy);
   mpfd->pcontext    = pcontext;
   mpfd->file_name   = filename;
   mpfd->file        = NULL;

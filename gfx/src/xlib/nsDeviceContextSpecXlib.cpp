@@ -106,7 +106,7 @@ NS_IMPL_ISUPPORTS3(nsDeviceContextSpecXlib,
 NS_IMPL_ISUPPORTS2(nsDeviceContextSpecXlib,
                    nsIDeviceContextSpec,
                    nsIDeviceContextSpecPS)
-#endif
+#endif /* USE_XPRINT */
 
 /** -------------------------------------------------------
  */
@@ -190,12 +190,12 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings* aPS, PRBool aQuiet
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  NS_ASSERTION(nsnull != aPS, "No print settings.");
-  
+  mPrintSettings = aPS;
+
   // if there is a current selection then enable the "Selection" radio button
-  if (aPS != nsnull) {
+  if (mPrintSettings) {
     PRBool isOn;
-    aPS->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
+    mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
     nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
@@ -208,7 +208,6 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings* aPS, PRBool aQuiet
   PRBool     color          = PR_FALSE;
   PRBool     tofile         = PR_FALSE;
   PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
-  PRInt32    paper_size     = NS_LETTER_SIZE;
   PRInt32    orientation    = NS_PORTRAIT;
   PRInt32    fromPage       = 1;
   PRInt32    toPage         = 1;
@@ -227,8 +226,8 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings* aPS, PRBool aQuiet
   }
 
   if (!aQuiet ) {
-    rv = DisplayXPDialog(aPS, 
-                         "chrome://global/content/printdialog.xul", canPrint);    
+    rv = DisplayXPDialog(mPrintSettings, 
+                         "chrome://global/content/printdialog.xul", canPrint);
   }
   else {
     canPrint = PR_TRUE;
@@ -241,7 +240,6 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings* aPS, PRBool aQuiet
       aPS->GetPrinterName(&printer);
       aPS->GetPrintReversed(&reversed);
       aPS->GetPrintInColor(&color);
-      aPS->GetPaperSize(&paper_size);
       aPS->GetOrientation(&orientation);
       aPS->GetPrintCommand(&command);
       aPS->GetPrintRange(&printRange);
@@ -257,67 +255,64 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings* aPS, PRBool aQuiet
 
       if (command != nsnull && printfile != nsnull) {
         // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-        strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
-        strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
+        strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());  
+        strcpy(mPath,    NS_ConvertUCS2toUTF8(printfile).get());
       }
       if (printer != nsnull) 
-        strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());        
+        strcpy(mPrinter, NS_ConvertUCS2toUTF8(printer).get());        
 #ifdef DEBUG_rods
-      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", 
+             dtop, dleft, dbottom, dright);
       printf("printRange     %d\n", printRange);
       printf("fromPage       %d\n", fromPage);
       printf("toPage         %d\n", toPage);
+      printf("tofile         %d\n", tofile);
+      printf("printfile      %s\n", 
+             printfile? NS_ConvertUCS2toUTF8(printfile).get():"NULL");
+      printf("command        %s\n", 
+              command? NS_ConvertUCS2toUTF8(command).get():"NULL");
+      printf("printer        %s\n", 
+              printer? NS_ConvertUCS2toUTF8(printer).get():"NULL");
 #endif /* DEBUG_rods */
     } else {
 #ifdef VMS
       // Note to whoever puts the "lpr" into the prefs file. Please contact me
       // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-      strcpy(mPrData.command, "print");
+      strcpy(mCommand, "print");
 #else
-      strcpy(mPrData.command, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+      strcpy(mCommand, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
 #endif /* VMS */
     }
 
-    mPrData.top       = dtop;
-    mPrData.bottom    = dbottom;
-    mPrData.left      = dleft;
-    mPrData.right     = dright;
-    mPrData.fpf       = !reversed;
-    mPrData.grayscale = !color;
-    mPrData.size      = paper_size;
-    mPrData.orientation = orientation;
-    mPrData.toPrinter = !tofile;
-    mPrData.copies = copies;
+    mTop         = dtop;
+    mBottom      = dbottom;
+    mLeft        = dleft;
+    mRight       = dright;
+    mFpf         = !reversed;
+    mGrayscale   = !color;
+    mOrientation = orientation;
+    mToPrinter   = !tofile;
+    mCopies      = copies;
 
     // PWD, HOME, or fail 
     
     if (!printfile) {
       if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
         if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
-          strcpy(mPrData.path, "mozilla.ps");
+          strcpy(mPath, "mozilla.ps");
           
       if ( path != (char *) nsnull )
-        sprintf(mPrData.path, "%s/mozilla.ps", path);
+        sprintf(mPath, "%s/mozilla.ps", path);
       else
         return NS_ERROR_FAILURE;
     }
-    
-#ifdef NOT_IMPLEMENTED_YET
-    if (globalNumPrinters) {
-       for(int i = 0; (i < globalNumPrinters) && !mQueue; i++) {
-          if (!(mGlobalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
-             mQueue = PrnDlg.SetPrinterQueue(i);
-       }
-    }
-#endif /* NOT_IMPLEMENTED_YET */
-    
+       
     if (command != nsnull) {
       nsMemory::Free(command);
     }
     if (printfile != nsnull) {
       nsMemory::Free(printfile);
     }
-
     return NS_OK;
   }
 
@@ -326,124 +321,92 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(nsIPrintSettings* aPS, PRBool aQuiet
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetToPrinter(PRBool &aToPrinter)
 {
-  aToPrinter = mPrData.toPrinter;
+  aToPrinter = mToPrinter;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrinterName ( char **aPrinter )
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrinterName ( const char **aPrinter )
 {
-   *aPrinter = &mPrData.printer[0];
+   *aPrinter = mPrinter;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetCopies ( int &aCopies )
 {
-   aCopies = mPrData.copies;
+   aCopies = mCopies;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetFirstPageFirst(PRBool &aFpf)      
 {
-  aFpf = mPrData.fpf;
+  aFpf = mFpf;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetGrayscale(PRBool &aGrayscale)      
 {
-  aGrayscale = mPrData.grayscale;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetSize(int &aSize)      
-{
-  aSize = mPrData.size;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetPageDimensions(float &aWidth, float &aHeight)
-{
-    if (mPrData.size == NS_LETTER_SIZE) {
-        aWidth = 8.5;
-        aHeight = 11.0;
-    } else if (mPrData.size == NS_LEGAL_SIZE) {
-        aWidth = 8.5;
-        aHeight = 14.0;
-    } else if (mPrData.size == NS_EXECUTIVE_SIZE) {
-        aWidth = 7.5;
-        aHeight = 10.0;
-    } else if (mPrData.size == NS_A4_SIZE) {
-        // 210mm X 297mm == 8.27in X 11.69in
-        aWidth = 8.27;
-        aHeight = 11.69;
-    } else if (mPrData.size == NS_A3_SIZE) {
-        // 297mm X 420mm == 11.69in X 16.53in
-        aWidth = 11.69;
-        aHeight = 16.53;
-    }
-    
-    if (mPrData.orientation == NS_LANDSCAPE) {
-      float temp;
-      temp = aWidth;
-      aWidth = aHeight;
-      aHeight = temp;
-    }
-
+  aGrayscale = mGrayscale;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetLandscape(PRBool &landscape)
 {
-  landscape = (mPrData.orientation == NS_LANDSCAPE);
+  landscape = (mOrientation == NS_LANDSCAPE);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetTopMargin(float &value)      
 {
-  value = mPrData.top;
+  value = mTop;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetBottomMargin(float &value)      
 {
-  value = mPrData.bottom;
+  value = mBottom;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetRightMargin(float &value)      
 {
-  value = mPrData.right;
+  value = mRight;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetLeftMargin(float &value)      
 {
-  value = mPrData.left;
+  value = mLeft;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetCommand(char **aCommand)      
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetCommand(const char **aCommand)      
 {
-  *aCommand = &mPrData.command[0];
+  *aCommand = mCommand;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecXlib::GetPath(char **aPath)      
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetPath(const char **aPath)      
 {
-  *aPath = &mPrData.path[0];
+  *aPath = mPath;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetUserCancelled(PRBool &aCancel)     
 {
-  aCancel = mPrData.cancel;
+  aCancel = mCancel;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecXlib::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(PrintMethod &aMethod)
 {
   /* printer names for the PostScript module alwas start with 
    * the NS_POSTSCRIPT_DRIVER_NAME string */
-  if (strncmp(mPrData.printer, NS_POSTSCRIPT_DRIVER_NAME, 
+  if (strncmp(mPrinter, NS_POSTSCRIPT_DRIVER_NAME, 
               NS_POSTSCRIPT_DRIVER_NAME_LEN) != 0)
     aMethod = pmXprint;
   else

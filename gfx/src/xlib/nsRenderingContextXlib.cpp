@@ -105,7 +105,6 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mFontMetrics      = nsnull;
   mTranMatrix       = nsnull;
   mP2T              = 1.0f;
-  mStateCache       = new nsVoidArray();
   mCurrentFont      = nsnull;
   mCurrentLineStyle = nsLineStyle_kSolid;
   mCurrentColor     = NS_RGB(0, 0, 0); /* X11 intial bg color is always _black_...
@@ -127,15 +126,11 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::~nsRenderingContextXlib()\n"));
   NS_IF_RELEASE(mFontMetrics);
-  if (mStateCache) {
-    PRInt32 cnt = mStateCache->Count();
+  PRInt32 cnt = mStateCache.Count();
 
-    while (--cnt >= 0) {
-      PRBool clipstate;
-      PopState(clipstate);
-    }
-    delete mStateCache;
-    mStateCache = nsnull;
+  while (--cnt >= 0) {
+    PRBool clipstate;
+    PopState(clipstate);
   }
 
   if (mTranMatrix)
@@ -161,8 +156,9 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Init(DeviceContext, Widget)\n"));
   nsDrawingSurfaceXlibImpl *surf; // saves some cast stunts
 
-  mContext = do_QueryInterface(aContext);
-  NS_ASSERTION(nsnull != mContext, "Device context is null.");
+  NS_ENSURE_TRUE(aContext != nsnull, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aWindow  != nsnull, NS_ERROR_NULL_POINTER);
+  mContext = aContext;
   
   nsIDeviceContext *dc = mContext;     
   NS_STATIC_CAST(nsDeviceContextX *, dc)->GetXlibRgbHandle(mXlibRgbHandle);
@@ -175,7 +171,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 
   if (surf) {
     Drawable  win = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
-    xGC      *gc  = (xGC*)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+    xGC      *gc  = (xGC *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
     surf->Init(mXlibRgbHandle, 
                win, 
@@ -194,8 +190,8 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContxtXlib::Init(DeviceContext, DrawingSurface)\n"));
 
-  mContext = do_QueryInterface(aContext);
-  NS_ASSERTION(nsnull != mContext, "Device context is null.");
+  NS_ENSURE_TRUE(nsnull != aContext, NS_ERROR_NULL_POINTER);
+  mContext = aContext;
   
   nsIDeviceContext *dc = mContext;     
   NS_STATIC_CAST(nsDeviceContextX *, dc)->GetXlibRgbHandle(mXlibRgbHandle);
@@ -235,8 +231,9 @@ nsresult nsRenderingContextXlib::CommonInit(void)
          (long)mDisplay, (long)drawable,
          (long)root_win, (int)x, (int)y, (int)width, (int)height, (int)border, (int)depth));
 
-  mClipRegion = do_QueryInterface(new nsRegionXlib());
-  if (!mClipRegion) return NS_ERROR_OUT_OF_MEMORY;
+  mClipRegion = new nsRegionXlib();
+  if (!mClipRegion)
+    return NS_ERROR_OUT_OF_MEMORY;
   mClipRegion->Init();
   mClipRegion->SetTo(0, 0, width, height);
 
@@ -332,7 +329,7 @@ nsRenderingContextXlib::PushState(void)
 
   state->mMatrix = mTranMatrix;
   
-  mStateCache->AppendElement(state);
+  mStateCache.AppendElement(state);
   
   if (nsnull == mTranMatrix)
     mTranMatrix = new nsTransform2D();
@@ -341,8 +338,9 @@ nsRenderingContextXlib::PushState(void)
   
   if (mClipRegion) {
     state->mClipRegion = mClipRegion;
-    mClipRegion = do_QueryInterface(new nsRegionXlib());
-    if (!mClipRegion) return NS_ERROR_OUT_OF_MEMORY;
+    mClipRegion = new nsRegionXlib();
+    if (!mClipRegion)
+      return NS_ERROR_OUT_OF_MEMORY;
     mClipRegion->Init();
     mClipRegion->SetTo(*state->mClipRegion);
   }
@@ -360,12 +358,12 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::PopState()\n"));
 
-  PRUint32 cnt = mStateCache->Count();
+  PRUint32 cnt = mStateCache.Count();
   GraphicsState *state;
   
   if (cnt > 0) {
-    state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
-    mStateCache->RemoveElementAt(cnt - 1);
+    state = (GraphicsState *)mStateCache.ElementAt(cnt - 1);
+    mStateCache.RemoveElementAt(cnt - 1);
     
     if (mTranMatrix)
       delete mTranMatrix;

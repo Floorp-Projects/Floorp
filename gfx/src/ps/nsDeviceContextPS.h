@@ -102,8 +102,8 @@ protected:
   
   nsDrawingSurface       mSurface;
   PRUint32               mDepth;
-  nsIDeviceContextSpec  *mSpec;
-  nsIDeviceContext      *mParentDeviceContext;
+  nsCOMPtr<nsIDeviceContextSpec>  mSpec;
+  nsCOMPtr<nsIDeviceContext>      mParentDeviceContext;
   nsPostScriptObj       *mPSObj;
 
 public:

@@ -76,8 +76,8 @@ protected:
 public:
   // nsIRenderingContext
   NS_IMETHOD Init(nsIDeviceContext* aContext);
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget){return NS_OK;}
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface){return NS_OK;}
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget) {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface) {return NS_ERROR_NOT_IMPLEMENTED;}
 
   NS_IMETHOD Reset(void);
 
