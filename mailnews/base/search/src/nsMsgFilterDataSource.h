@@ -25,17 +25,42 @@
 #define __nsMsgFilterDataSource_h
 
 #include "nsIRDFDataSource.h"
+#include "nsMsgRDFDataSource.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
 
-class nsMsgFilterDataSource : public nsIRDFDataSource
+
+class nsMsgFilterDataSource : public nsMsgRDFDataSource
 {
  public:
   nsMsgFilterDataSource();
   virtual ~nsMsgFilterDataSource();
   
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIRDFDATASOURCE
-    
+  NS_IMETHOD GetTargets(nsIRDFResource *source,
+                        nsIRDFResource *property,
+                        PRBool aTruthValue,
+                        nsISimpleEnumerator **_retval);
+  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source,
+                             nsISimpleEnumerator **_retval);
+
+  
  private:
+
+  static nsrefcnt mGlobalRefCount;
+  
+  static nsresult initGlobalObjects(nsIRDFService* rdf);
+  static nsresult cleanupGlobalObjects();
+  static nsresult getServerArcsOut();
+  static nsresult getFilterArcsOut();
+
+  // arcs out
+  static nsCOMPtr<nsISupportsArray> mFolderArcsOut;
+  static nsCOMPtr<nsISupportsArray> mFilterArcsOut;
+
+  // resources used
+  static nsCOMPtr<nsIRDFResource> kNC_Child;
+  static nsCOMPtr<nsIRDFResource> kNC_Name;
 
 };
 
