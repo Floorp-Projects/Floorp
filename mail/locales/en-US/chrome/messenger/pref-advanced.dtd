@@ -2,13 +2,13 @@
 
 <!-- Privacy Settings -->
 <!ENTITY privacyTitle.label            "Privacy">
-<!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages.">
+<!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages">
 <!ENTITY disableImageInMailNews.accesskey "B">
 <!ENTITY allowRemoteImagesForFriends.label  "Allow remote images if the sender is in my:">
 <!ENTITY allowRemoteImagesForFriends.accesskey "A">
+<!ENTITY enbJsCheckMailNews.label      "Enable JavaScript in mail messages">
 <!ENTITY enablePhishingDetector.label      "Check mail messages for email scams">
 <!ENTITY enablePhishingDetector.accesskey  "l">
-<!ENTITY enbJsCheckMailNews.label      "Enable JavaScript in mail messages.">
 <!ENTITY enbJsCheckMailNews.accesskey  "J">
 
 <!-- Password Manager -->
@@ -22,10 +22,13 @@
 
 <!-- General -->
 <!ENTITY generalSettings.label         "General Settings">
-<!ENTITY showCondensedAddresses.label  "Show only display name for people in my address book.">
-<!ENTITY markAsRead.label              "Mark message read after displaying for">
-<!ENTITY markAsReadEnd.label           "second(s).">
-<!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane.">
+<!ENTITY showCondensedAddresses.label  "Show only display name for people in my address book">
+<!-- LOCALIZATION NOTE (markAsRead.label): This will concatenate with
+     "xxx seconds before marking a message as read", using a number and
+     (markAsReadEnd.label). -->
+<!ENTITY markAsRead.label              "Wait">
+<!ENTITY markAsReadEnd.label           "seconds before marking a message as read">
+<!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane">
 <!ENTITY emailCollectionPicker.label   "Automatically add outgoing e-mail addresses to my:">
 
 

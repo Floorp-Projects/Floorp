@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Sean Su <ssu@netscape.com>
 #   Scott MacGregor <scott@scott-macgregor.org>
+#   Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,6 +73,21 @@
                                               
                        // smart update
                        "enableSmartUpdate", "enableExtensionUpdate"];
+
+    var gMarkAsReadDelay;
+
+    function Startup() {
+      gMarkAsReadDelay = document.getElementById("markAsReadDelay");
+      enableTextbox(document.getElementById("markAsRead"), gMarkAsReadDelay, true);
+    }
+
+    function enableTextbox(checkbox, textbox, startingUp) {
+      textbox.disabled = (!checkbox.checked ||
+                          parent.hPrefWindow.getPrefIsLocked(textbox.getAttribute("prefstring")));
+
+      if (!textbox.disabled && !startingUp)
+        textbox.focus();
+    }
   ]]>
   </script>
 
@@ -128,7 +144,9 @@
         <checkbox id="showCondensedAddresses" label="&showCondensedAddresses.label;" prefstring="mail.showCondensedAddresses"/>
       </hbox> 
       <hbox align="center" pack="start">
-        <checkbox id="markAsRead" label="&markAsRead.label;" prefstring="mailnews.mark_message_read.delay"/>
+        <checkbox id="markAsRead" label="&markAsRead.label;"
+                  prefstring="mailnews.mark_message_read.delay"
+                  oncommand="enableTextbox(this, gMarkAsReadDelay, false);"/>
         <textbox  id="markAsReadDelay" size="2" preftype="int" prefstring="mailnews.mark_message_read.delay.interval"/>
         <label value="&markAsReadEnd.label;"/>
       </hbox>
