@@ -36,6 +36,7 @@ class nsITreeDataModel : public nsIDataModel
 public:
 	// Column APIs
 	NS_IMETHOD GetVisibleColumnCount(PRUint32& count) const = 0;
+	NS_IMETHOD GetColumnCount(PRUint32& count) const = 0;
 	NS_IMETHOD GetNthColumn(nsITreeColumn*& pColumn, PRUint32 n) const = 0;
 	
 	// TreeItem APIs
