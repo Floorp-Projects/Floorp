@@ -84,6 +84,8 @@ public:
                         PRInt32 aStatus);
 
 
+  NS_IMETHOD ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult);
+
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);

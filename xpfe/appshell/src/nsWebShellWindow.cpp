@@ -767,6 +767,11 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
 } // nsWebShellWindow::LoadMenus
 
+NS_IMETHODIMP
+nsWebShellWindow::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
@@ -819,7 +824,7 @@ nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anUR
   *aNewWebShellResult = mWebShell;
 
   // Cache our webshell info.
-  nsWebShellInfo* webShellInfo = new nsWebShellInfo("contentframe", 
+  nsWebShellInfo* webShellInfo = new nsWebShellInfo("content_frame", 
                                                     aName, anURL, aOpenerShell);
 
   if (mContentShells == nsnull)
