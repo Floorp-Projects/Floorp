@@ -416,8 +416,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_MOVE:
+    // on the Mac, GenerateDragGesture() may not return until the drag has completed
+    // and so |aTargetFrame| may have been deleted (moving a bookmark, for example).
+    // If this is the case, however, we know that ClearFrameRefs() has been called
+    // and it cleared out |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
+    // into UpdateCursor().
     GenerateDragGesture(aPresContext, aEvent);
-    UpdateCursor(aPresContext, aEvent, aTargetFrame, aStatus);
+    UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
     GenerateMouseEnterExit(aPresContext, aEvent);
     break;
   case NS_MOUSE_EXIT:
@@ -1186,7 +1191,8 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
   }
   //If not disabled, check for the right cursor.
   else {
-    aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor);
+    if ( aTargetFrame )
+      aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor);
   }
 
   switch (cursor) {
@@ -1234,9 +1240,11 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
     *aStatus = nsEventStatus_eConsumeDoDefault;
   }
 
-  nsCOMPtr<nsIWidget> window;
-  aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));
-  window->SetCursor(c);
+  if ( aTargetFrame ) {
+    nsCOMPtr<nsIWidget> window;
+    aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));
+    window->SetCursor(c);
+  }
 }
 
 void
