@@ -29,8 +29,20 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 
+B_NAME = mozilla-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)-$(MOZILLA_VERSION)
+STUB_NAME = $(B_NAME)-installer
+SEA_NAME  = $(B_NAME)-full-installer
+
+ifndef INSTALLER_URL
+INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/mozilla/nightly/latest-trunk/linux-xpi"
+endif
+
 installer:
-	$(PERL) $(srcdir)/deliver.pl -o $(DEPTH) -s $(topsrcdir)
+	$(PERL) $(srcdir)/deliver.pl $(MOZILLA_VERSION) \
+                                     $(INSTALLER_URL)   \
+                                     $(STUB_NAME)       \
+                                     $(SEA_NAME)        \
+                                     -o $(DEPTH) -s $(topsrcdir)
 
 include $(topsrcdir)/config/rules.mk
 
