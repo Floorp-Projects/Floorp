@@ -159,8 +159,6 @@
 
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-       onkeyup="if (event.keyCode == 8)	return doDelete(false); if( event.keyCode == 13 ) OpenURL(event, event.target.parentNode.parentNode, this);"
-       onclick="OpenURL(event, event.target.parentNode.parentNode, this);"
        multiple="true"
        onselect="bookmarkSelect();"
        ondragover="return DragOverTree(event);"
