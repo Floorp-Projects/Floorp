@@ -29,8 +29,8 @@ CPPSRCS = 	x86ExceptionHandler.cpp					\
 		x86SysCallsRuntime.cpp					\
 		$(NULL)
 
-LOCAL_MD_EXPORTS_x86 =  x86SysCallsRuntime.h			\
-			x86Win32ExceptionHandler.h		\
+LOCAL_MD_EXPORTS_x86 =  x86SysCallsRuntime.h		\
+			x86ExceptionHandler.h		\
 			$(NULL)
 
 MODULE_NAME = EF

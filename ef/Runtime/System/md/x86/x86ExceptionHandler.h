@@ -19,12 +19,12 @@
  *
  * Contributor(s): 
  */
-// x86Win32_Exception.cpp
+// x86ExceptionHandler.h
 //
 // simon
 
-#ifndef _X86WIN32_EXCEPTION_H_
-#define _X86WIN32_EXCEPTION_H_
+#ifndef _X86EXCEPTIONHANDLER_H_
+#define _X86EXCEPTIONHANDLER_H_
 
 #if defined(_WIN32)
 #include <excpt.h>
@@ -80,4 +80,4 @@ void printContext(LogModuleObject &f, Context* context);
 
 //--------------------------------------------------------------------------------
 
-#endif // _X86WIN32_EXCEPTION_H_
+#endif // _X86EXCEPTIONHANDLER_H_

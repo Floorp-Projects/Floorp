@@ -37,7 +37,7 @@
 #include "NativeCodeCache.h"
 #include "LogModule.h"
 
-#include "x86Win32ExceptionHandler.h"
+#include "x86ExceptionHandler.h"
 
 // declarations
 extern "C" SYSCALL_FUNC(void) x86SoftwareExceptionHandler(Uint32 EBP, Uint32 EDI, Uint32 ESI, Uint32 EBX, const JavaObject& inObject);

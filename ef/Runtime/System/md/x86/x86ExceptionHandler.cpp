@@ -26,12 +26,12 @@
 
 #include "SysCalls.h"
 #include "prprf.h"
-#include "x86Win32ExceptionHandler.h"
+#include "x86ExceptionHandler.h"
 #include "ExceptionTable.h"
 #include "NativeCodeCache.h"
 #include "LogModule.h"
 
-UT_DEFINE_LOG_MODULE(Win32ExceptionHandler);
+UT_DEFINE_LOG_MODULE(x86ExceptionHandler);
 UT_DEFINE_LOG_MODULE(ExceptionRegs);
 
 extern "C" SYSCALL_FUNC(void) x86JumpToHandler(const JavaObject* inObject, Uint8* handler, Uint32 EBX, Uint32 ESI, Uint32 EDI, Uint32* EBP, Uint32* ESP);
@@ -139,7 +139,7 @@ extern "C" SYSCALL_FUNC(void) x86SoftwareExceptionHandler(Uint32 inEBP, Uint32 i
 	context.restoreESP = (Uint32*) ((Uint8*)context.sucessorEBP + 12);
 
 	// now that the context struct is filled we can print debugging information
-	DEBUG_LOG_ONLY(printExceptionBegin(UT_LOG_MODULE(Win32ExceptionHandler), &context));	
+	DEBUG_LOG_ONLY(printExceptionBegin(UT_LOG_MODULE(x86ExceptionHandler), &context));	
 
 	// find the exception handler
 	Uint8* handler = findExceptionHandler(&context);
@@ -147,7 +147,7 @@ extern "C" SYSCALL_FUNC(void) x86SoftwareExceptionHandler(Uint32 inEBP, Uint32 i
 	// jump to it
 	UT_LOG(ExceptionRegs, PR_LOG_DEBUG, ("Exit:  "));
 	DEBUG_LOG_ONLY(printRegs(UT_LOG_MODULE(ExceptionRegs), &context));
-	UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("\n===============================\n\n"));
+	UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("\n===============================\n\n"));
 	assert(handler);
 	x86JumpToHandler(context.object, handler, context.EBX, context.ESI, context.EDI, context.sourceEBP, context.restoreESP);	
 }
@@ -230,7 +230,7 @@ bool x86PopStackFrame(Context* context)
 		context->restoreESP = NULL;
 	}
 
-	DEBUG_LOG_ONLY(printContext(UT_LOG_MODULE(Win32ExceptionHandler), context));
+	DEBUG_LOG_ONLY(printContext(UT_LOG_MODULE(x86ExceptionHandler), context));
 	DEBUG_ONLY(checkForNativeStub(context));
 	return true;
 }
@@ -253,7 +253,7 @@ bool isGuardFrame(Context* context, bool printIdentifier = false)
 		if( ((Uint32)(sysInvokeNativeStubs[i]) + 9 + 5 * i) == retAddress)
 		{
 			if(printIdentifier)
-				UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("Guard Frame (made by sysInvokeNative%d())\n", i));
+				UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("Guard Frame (made by sysInvokeNative%d())\n", i));
 			return true;
 		}
 	// check other stubs
@@ -261,7 +261,7 @@ bool isGuardFrame(Context* context, bool printIdentifier = false)
 		if( ((Uint32)(sysInvokeNativeStubs[i]) + 23) == retAddress)
 		{
 			if(printIdentifier)
-				UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("Guard Frame (made by sysInvokeNative(%d))\n", i));
+				UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("Guard Frame (made by sysInvokeNative(%d))\n", i));
 			return true;
 		}
 
@@ -269,7 +269,7 @@ bool isGuardFrame(Context* context, bool printIdentifier = false)
 	if((Uint32)compileStubReEntryPoint == retAddress)
 	{
 		if(printIdentifier)
-			UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("Guard Frame (staticCompileStub)\n"));
+			UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("Guard Frame (staticCompileStub)\n"));
 		DEBUG_LOG_ONLY(PR_fprintf(PR_STDOUT,"WARNING: exception unwinding past a static compile stub\n"));
 		return true;
 	}
@@ -426,16 +426,16 @@ Uint8* findExceptionHandler(Context* context)
 		if (!x86PopStackFrame(context)) // when popStack() fails, we are faced with an uncaught exception
 		{
 			Uint8* uncaughtHandler = uncaughtExceptionExit(context);
-			UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("\n-------------------------------\n"));
-			UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("Uncaught Exception -- jumping to handler at 0x%p\n", uncaughtHandler));
+			UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("\n-------------------------------\n"));
+			UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("Uncaught Exception -- jumping to handler at 0x%p\n", uncaughtHandler));
 			return uncaughtHandler;
 		}
 	}
 
 	Uint8* pHandler = context->sourceCE->eTable->getStart()+ete->pHandler;
 	assert(pHandler);
-	UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("\n-------------------------------\n"));
-	UT_LOG(Win32ExceptionHandler, PR_LOG_DEBUG, ("Matched to catch handler at %p\n\n", pHandler));
+	UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("\n-------------------------------\n"));
+	UT_LOG(x86ExceptionHandler, PR_LOG_DEBUG, ("Matched to catch handler at %p\n\n", pHandler));
 	assert(context->restoreESP != NULL);	// restore ESP must not be null, could mean that we are trying to return to a native method, NYI
 	return pHandler;
 }
