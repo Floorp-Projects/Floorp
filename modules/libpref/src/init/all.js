@@ -379,6 +379,7 @@ pref("mime.table.allow_edit", true);
 pref("mime.table.allow_remove", true);
 
 pref("signed.applets.codebase_principal_support", false);
+pref("security.xpconnect.plugin.unrestricted", true);
 
 pref("security.policy.default.barprop.visible.write", "UniversalBrowserWrite");
 
