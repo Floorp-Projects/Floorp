@@ -829,19 +829,19 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
       memset(mTypes,0,mLength);//initialize to 0
       while (details)
       {
-        if (!(details->mType & SELECTION_TYPES_WE_CARE_ABOUT))
-          continue;
-        if (details->mStart == details->mEnd)
-          continue;//collapsed selections need not apply
-        mInit = PR_TRUE;//WE FOUND SOMETHING WE CARE ABOUT
-        for (int i = details->mStart; i < details->mEnd; i++)
+        if ((details->mType & SELECTION_TYPES_WE_CARE_ABOUT ) && 
+          (details->mStart != details->mEnd))
         {
-            if ((PRUint32)i>=mLength)
-            {
-              NS_ASSERTION(0,"Selection Details out of range?");
-              return;//eh
-            }
-            mTypes[i]|=details->mType;//add this bit
+          mInit = PR_TRUE;//WE FOUND SOMETHING WE CARE ABOUT
+          for (int i = details->mStart; i < details->mEnd; i++)
+          {
+              if ((PRUint32)i>=mLength)
+              {
+                NS_ASSERTION(0,"Selection Details out of range?");
+                return;//eh
+              }
+              mTypes[i]|=details->mType;//add this bit
+          }
         }
         details= details->mNext;
       }
