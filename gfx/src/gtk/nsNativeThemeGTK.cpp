@@ -269,16 +269,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
       checkBoxState.selected = CheckBooleanAttr(aFrame, atom);
       
-#ifdef DEBUG_NATIVE_THEME
-      printf("paint checkbox: aRect=(%d,%d,%d,%d), aClipRect=(%d,%d,%d,%d)\n",
-             aRect.x, aRect.y, aRect.width, aRect.height, aClipRect.x,
-             aClipRect.y, aClipRect.width, aClipRect.height);
-
-      printf("          gdk_rect=(%d,%d,%d,%d), gdk_clip=(%d,%d,%d,%d)\n",
-             gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
-             gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
-#endif
-
       moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect,
                              &gdk_clip, &checkBoxState,
                              (aWidgetType==NS_THEME_RADIO) ? "radiobutton" : "checkbutton");
@@ -294,14 +284,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
       GtkWidgetState buttonState;
       GetGtkWidgetState(aFrame, &buttonState);
-      
       GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
       
-#ifdef DEBUG_NATIVE_THEME
-      printf("paint scrollbar button, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
-             gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
-             gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
-#endif
       moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style, &gdk_rect, &gdk_clip,
                                      &buttonState, arrowType);
     }
@@ -328,11 +312,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       GtkWidgetState thumbState;
       GetGtkWidgetState(aFrame, &thumbState);
 
-#ifdef DEBUG_NATIVE_THEME
-      printf("paint thumb, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
-             gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
-             gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
-#endif
       moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style,
                                     &gdk_rect, &gdk_clip, &thumbState);
     }
@@ -374,6 +353,19 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
     break;
 
+  case NS_THEME_CHECKBOX_CONTAINER:
+  case NS_THEME_RADIO_CONTAINER:
+    {
+      EnsureCheckBoxWidget();
+
+      GtkWidgetState state;
+      GetGtkWidgetState(aFrame, &state);
+
+      moz_gtk_container_paint(window, gCheckboxWidget->style, &gdk_rect,
+                              &gdk_clip, &state,
+                              (aWidgetType == NS_THEME_RADIO_CONTAINER) ? "radiobutton" : "checkbutton");
+    }
+    break;
   }
 
   return NS_OK;
@@ -501,6 +493,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       aResult->width += child_requisition.width;
       aResult->height += child_requisition.height;
     }
+    break;
   }
 
   return NS_OK;
@@ -557,6 +550,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
   case NS_THEME_CHECKBOX:
+  case NS_THEME_CHECKBOX_CONTAINER:
+  case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
