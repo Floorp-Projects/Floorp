@@ -1253,6 +1253,12 @@ nsPasswordManager::Load(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPasswordManager::BeforeUnload(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
 /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::RemoveForDOMDocumentEnumerator(nsISupports* aKey,
                                                   PRInt32& aEntry,
