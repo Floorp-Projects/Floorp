@@ -22,6 +22,8 @@
  */
 #include "prlog.h"
 
+#include <stdlib.h>
+
 /* Leave a bit of room for any malloc header bytes... */
 #define MAX_SEGMENT_SIZE    (65536L - 4096L)
 
