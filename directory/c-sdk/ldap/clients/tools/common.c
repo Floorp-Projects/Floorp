@@ -1502,7 +1502,8 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 		LDAP_X_CONTROL_PWPOLICY_RESPONSE )) {
 		unsigned long tag1=0, tag2=0, tag3=0;
 		long warnvalue=0;
-		int grclogins=-1, secsleft=-1, errvalue=-1;
+		int grclogins=-1, secsleft=-1;
+		long errvalue=-1;
 		static int err2str_size = sizeof(pwpolicy_err2str)/sizeof(pwpolicy_err2str[0]);
 
 		if ( ( ber = ber_init(&(ctrls[i]->ldctl_value)) ) == NULL ) {
