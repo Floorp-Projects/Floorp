@@ -551,6 +551,7 @@ function Shutdown()
   observerService.removeObserver(gDownloadObserver, "dl-failed");  
   observerService.removeObserver(gDownloadObserver, "dl-start");  
   observerService.removeObserver(gDownloadObserver, "xpinstall-download-started");  
+  observerService.removeObserver(gDownloadObserver, "xpinstall-dialog-close");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
