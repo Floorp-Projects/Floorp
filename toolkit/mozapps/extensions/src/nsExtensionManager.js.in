@@ -75,6 +75,7 @@ const FILE_CHROME_MANIFEST            = "contents.rdf";
 const FILE_WASINSAFEMODE              = "Safe Mode";
 const FILE_INSTALLED_EXTENSIONS       = "installed-extensions.txt"
 const FILE_INSTALLED_EXTENSIONS_PROCESSED = "installed-extensions-processed.txt"
+#expand const TARGET_OS                                 = "__OSARCH__";
 
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
@@ -3112,6 +3113,7 @@ nsRDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
     dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);
+    dsURI = dsURI.replace(/%APP_OS%/g, TARGET_OS);
     
     // escape() does not properly encode + symbols in any embedded FVF strings.
     dsURI = dsURI.replace(/\+/g, "%2B");
