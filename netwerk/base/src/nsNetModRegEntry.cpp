@@ -114,12 +114,16 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
     if (NS_FAILED(rv)) 
         return rv;
     
-    if (topic && PL_strcmp(topic, mTopic)) 
+    if (topic && !PL_strcmp(topic, mTopic)) 
     {
         nsCOMPtr<nsINetNotify> aSyncProxy;
-        rv = aEntry->GetSyncProxy(getter_AddRefs(aSyncProxy));
+        aEntry->GetSyncProxy(getter_AddRefs(aSyncProxy));
+
+        // mSyncProxy may not be initialized yet.
+        nsCOMPtr<nsINetNotify> mySyncProxy;
+        GetSyncProxy(getter_AddRefs(mySyncProxy));
         
-        if(aSyncProxy == mSyncProxy)
+        if(aSyncProxy == mySyncProxy)
         {
             *_retVal = PR_TRUE;
         }
