@@ -1271,7 +1271,8 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
           if(!(theParentContains && theChildAgrees)) {
             if (!CanPropagate(theParentTag,aChildTag,theParentContains)) { 
               if(theChildIsContainer || (!theParentContains)){ 
-                if(!theChildAgrees && !gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag)) {
+                if(!theChildAgrees && 
+                   !gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,theIndex,aChildTag)) {
                   // Closing the tags above might cause non-compatible results.
                   // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
                   // In the example above <TBODY> is badly misplaced, but 

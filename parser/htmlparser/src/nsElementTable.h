@@ -214,7 +214,7 @@ struct nsHTMLElement {
   PRBool          CanOmitStartTag(eHTMLTags aChild) const;
   PRBool          CanOmitEndTag(void) const;
   PRBool          CanContainSelf(void) const;
-  PRBool          CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aTag) const;
+  PRBool          CanAutoCloseTag(nsDTDContext& aContext,PRInt32 aIndex,eHTMLTags aTag) const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
   PRBool          IsSpecialParent(eHTMLTags aTag) const;
   PRBool          IsExcludableParent(eHTMLTags aParent) const;
