@@ -473,6 +473,34 @@ struct PK11SSLMACInfoStr {
 	(element)->next = NULL; \
 	(element)->prev = NULL; \
 
+#define pk11queue_init_element(element) \
+    (element)->prev = NULL;
+
+#define pk11queue_add2(element, id, index, head) \
+    {                                            \
+	(element)->next = (head)[index];         \
+	if ((head)[index])                       \
+	    (head)[index]->prev = (element);     \
+	(head)[index] = (element);               \
+    }
+
+#define pk11queue_find2(element, id, index, head) \
+    for ( (element) = (head)[index];              \
+          (element) != NULL;                      \
+          (element) = (element)->next) {          \
+	if ((element)->handle == (id)) { break; } \
+    }
+
+#define pk11queue_delete2(element, id, index, head) \
+	if ((element)->next) (element)->next->prev = (element)->prev; \
+	if ((element)->prev) (element)->prev->next = (element)->next; \
+	   else (head)[index] = ((element)->next);
+
+#define pk11queue_clear_deleted_element(element) \
+	(element)->next = NULL; \
+	(element)->prev = NULL; \
+
+
 /* sessionID (handle) is used to determine session lock bucket */
 #ifdef NOSPREAD
 /* NOSPREAD:	(ID>>L2LPB) & (perbucket-1) */
