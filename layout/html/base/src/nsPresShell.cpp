@@ -272,6 +272,8 @@ public:
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const;
+  NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
+                                nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
@@ -1703,6 +1705,15 @@ PresShell::GetPrimaryFrameFor(nsIContent* aContent,
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+PresShell::GetStyleContextFor(nsIFrame*         aFrame,
+                              nsIStyleContext** aStyleContext) const
+{
+  if (!aFrame || !aStyleContext) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  return (aFrame->GetStyleContext(aStyleContext));
+}
 
 NS_IMETHODIMP
 PresShell::GetLayoutObjectFor(nsIContent*   aContent,
