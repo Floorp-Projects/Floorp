@@ -23,6 +23,7 @@
 // Local Includes
 #include "nsWebBrowser.h"
 #include "nsWebBrowserPersist.h"
+#include "nsWebBrowserFind.h"
 
 // Helper Classes
 #include "nsGfxCIID.h"
@@ -55,7 +56,7 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
    mContentListener(nsnull), mInitInfo(nsnull), mContentType(typeContentWrapper),
    mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
-   mProgressListener(nsnull), mListenerArray(nsnull)
+   mProgressListener(nsnull), mListenerArray(nsnull), mFindImpl(nsnull)
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();
@@ -101,6 +102,10 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       delete mListenerArray;
       mListenerArray = nsnull;
    }
+   if (mFindImpl) {
+      delete mFindImpl;
+      mFindImpl = nsnull;
+   }
 
    return NS_OK;
 }
@@ -125,6 +130,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFind)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -680,6 +686,125 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, const char *
     persist->Release();
     return rv;
 }
+
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserFind
+//*****************************************************************************
+
+/* boolean findNext (); */
+NS_IMETHODIMP nsWebBrowser::FindNext(PRBool *didFind)
+{
+    NS_ENSURE_ARG_POINTER(didFind);
+    *didFind = PR_FALSE;
+
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+        
+    NS_ENSURE_TRUE(mFindImpl->CanFindNext(), NS_ERROR_NOT_INITIALIZED);
+    
+    nsCOMPtr<nsIDOMWindow> windowToSearch;
+    rv = GetFocusedWindow(getter_AddRefs(windowToSearch));
+    if (!windowToSearch) {
+        nsCOMPtr<nsIDOMWindowInternal> contentDomWindow;
+        rv = GetPrimaryContentWindow(getter_AddRefs(contentDomWindow));
+        windowToSearch = contentDomWindow;
+    }
+    
+    NS_ENSURE_TRUE(windowToSearch, NS_ERROR_FAILURE);
+    rv = mFindImpl->DoFind(windowToSearch, didFind);
+    
+    return rv;
+}
+
+/* attribute wstring searchString; */
+NS_IMETHODIMP nsWebBrowser::GetSearchString(PRUnichar * *aSearchString)
+{
+    NS_ENSURE_ARG_POINTER(aSearchString);
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    return mFindImpl->GetSearchString(aSearchString);
+}
+
+NS_IMETHODIMP nsWebBrowser::SetSearchString(const PRUnichar * aSearchString)
+{
+    NS_ENSURE_ARG(aSearchString);
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    return mFindImpl->SetSearchString(aSearchString);
+}
+
+/* attribute boolean findBackwards; */
+NS_IMETHODIMP nsWebBrowser::GetFindBackwards(PRBool *aFindBackwards)
+{
+    NS_ENSURE_ARG_POINTER(aFindBackwards);
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    *aFindBackwards = mFindImpl->GetFindBackwards();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetFindBackwards(PRBool aFindBackwards)
+{
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    mFindImpl->SetFindBackwards(aFindBackwards);
+    return NS_OK;
+}
+
+/* attribute boolean wrapFind; */
+NS_IMETHODIMP nsWebBrowser::GetWrapFind(PRBool *aWrapFind)
+{
+    NS_ENSURE_ARG_POINTER(aWrapFind);
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    *aWrapFind = mFindImpl->GetWrapFind();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetWrapFind(PRBool aWrapFind)
+{
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    mFindImpl->SetWrapFind(aWrapFind);
+    return NS_OK;
+}
+
+/* attribute boolean entireWord; */
+NS_IMETHODIMP nsWebBrowser::GetEntireWord(PRBool *aEntireWord)
+{
+    NS_ENSURE_ARG_POINTER(aEntireWord);
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    *aEntireWord = mFindImpl->GetEntireWord();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetEntireWord(PRBool aEntireWord)
+{
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    mFindImpl->SetEntireWord(aEntireWord);
+    return NS_OK;
+}
+
+/* attribute boolean matchCase; */
+NS_IMETHODIMP nsWebBrowser::GetMatchCase(PRBool *aMatchCase)
+{
+    NS_ENSURE_ARG_POINTER(aMatchCase);
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    *aMatchCase = mFindImpl->GetMatchCase();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetMatchCase(PRBool aMatchCase)
+{
+    nsresult rv = EnsureFindImpl();
+    if (NS_FAILED(rv)) return rv;
+    mFindImpl->SetMatchCase(aMatchCase);
+    return NS_OK;
+}
+
 
 //*****************************************************************************
 // nsWebBrowser::nsIBaseWindow
@@ -1268,6 +1393,16 @@ NS_IMETHODIMP nsWebBrowser::EnsureContentListener()
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::EnsureFindImpl()
+{
+   if (mFindImpl)
+      return NS_OK;
+
+   mFindImpl = new nsWebBrowserFindImpl;
+   NS_ENSURE_TRUE(mFindImpl, NS_ERROR_OUT_OF_MEMORY);
+   return mFindImpl->Init();
+}
+
 /* static */
 nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
 {
@@ -1402,8 +1537,27 @@ NS_IMETHODIMP nsWebBrowser::SetFocusAtLastElement(void)
 /* attribute nsIDOMWindow focusedWindow; */
 NS_IMETHODIMP nsWebBrowser::GetFocusedWindow(nsIDOMWindow * *aFocusedWindow)
 {
-  *aFocusedWindow = nsnull;
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aFocusedWindow);
+    *aFocusedWindow = nsnull;
+
+    nsresult rv;
+    nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+
+    nsCOMPtr<nsIDOMWindow> domWindowExternal;
+    rv = GetContentDOMWindow(getter_AddRefs(domWindowExternal));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindowExternal /*domWindow*/, &rv));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIFocusController> focusController;
+    piWin->GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController)
+      rv = focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+    
+    *aFocusedWindow = focusedWindow;
+    NS_IF_ADDREF(*aFocusedWindow);
+    
+    return *aFocusedWindow ? NS_OK : NS_ERROR_FAILURE;
 }
 NS_IMETHODIMP nsWebBrowser::SetFocusedWindow(nsIDOMWindow * aFocusedWindow)
 {
