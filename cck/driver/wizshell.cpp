@@ -13,9 +13,9 @@ void CreateRshell (void)
 {
 		CWnd Mywnd;
 
-		Mywnd.MessageBox(CString(iniFilePath),iniFilePath,MB_OK);
+//		Mywnd.MessageBox(CString(iniFilePath),iniFilePath,MB_OK);
 
-		Mywnd.MessageBox(CString(customizationPath),customizationPath,MB_OK);
+//		Mywnd.MessageBox(CString(customizationPath),customizationPath,MB_OK);
 
 	ifstream part1("part1.ini");
 	ifstream part2("part2.ini");

@@ -79,7 +79,7 @@ BOOL CSumDlg::OnInitDialog()
 //			str2 += "\r\n";
 
 //			CWnd Mywnd;
-//			Mywnd.MessageBox(Valuebox,"hello",MB_OK);
+//			Mywnd.MessageBox("hi","hello",MB_OK);
 
 		}
 	}
