@@ -202,12 +202,12 @@ stub_op_dcl(TreeState *state)
                 IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
     }
     fputs("))\n"
-          "    return JS_FALSE;\n"
-          "  ",
+          "    return JS_FALSE;\n",
           state->file);
 
     if (op->op_type_spec) {
         state->tree = op->op_type_spec;
+        fputs("  ", state->file);
         xpcom_type(state);
         fputs(" retval;\n", state->file);
 
@@ -246,21 +246,15 @@ stub_op_dcl(TreeState *state)
             fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
             break;
           case IDLN_IDENT:
-            fputs("  *rval = JSVAL_NULL;\n", state->file);
             if (IDL_NODE_UP(state->tree) &&
                 IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
                 /* XXXbe issue warning, method should have been noscript? */
+                fputs("  *rval = JSVAL_NULL;\n", state->file);
                 break;
             }
-            fputs("  nsIXPConnectWrappedNative *xwn = 0;\n"
-                  "  if (NS_SUCCEEDED(retval->QueryInterface(nsIXPConnectWrappedNative::IID(),\n"
-                  "                   (void**) &xwn))) {\n"
-                  "    JSObject *xjo = 0;\n"
-                  "    if (NS_SUCCEEDED(xwn->GetJSObject(&xjo)))\n"
-                  "      *rval = OBJECT_TO_JSVAL(xjo);\n"
-                  "    NS_RELEASE(xwn);\n"
-                  "  }\n",
-                  state->file);
+            fprintf(state->file,
+                    "  *rval = OBJECT_TO_JSVAL(%s_GetJSObject(cx, retval));\n",
+                    IDL_IDENT(state->tree).str);
             break;
           default:
             assert(0); /* XXXbe */
@@ -270,6 +264,15 @@ stub_op_dcl(TreeState *state)
     fputs("  return JS_TRUE;\n"
           "}\n",
           state->file);
+    return TRUE;
+}
+
+static gboolean
+stub_forward_dcl(TreeState *state)
+{
+    fprintf(state->file,
+            "\n#include \"%s.h\"\n",
+            IDL_IDENT(IDL_FORWARD_DCL(state->tree).ident).str);
     return TRUE;
 }
 
@@ -423,13 +426,15 @@ stub_interface(TreeState *state)
                 "\nstatic void\n"
                 "%s_Finalize(JSContext *cx, JSObject *obj)\n"
                 "{\n"
-                "  nsISupports *priv = (nsISupports *)JS_GetPrivate(cx, obj);\n"
+                "  %s *priv = (%s *)JS_GetPrivate(cx, obj);\n"
                 "  if (!priv)\n"
                 "    return;\n"
-                "  // XXXbe QI nsIXPConnectWrappedNative and SetJSObject(0)\n"
+                "  JSObject *proto = JS_GetPrototype(cx, obj);\n"
+                "  if (proto)\n"
+                "    (void) JS_DeleteElement(cx, proto, (jsint)priv >> 1);\n"
                 "  NS_RELEASE(priv);\n"
                 "}\n",
-                className);
+                className, className, className);
 
         /* Emit a constructor. */
         fprintf(state->file,
@@ -462,7 +467,7 @@ stub_interface(TreeState *state)
               state->file);
         fprintf(state->file, "%s_Finalize\n};\n", className);
 
-        /* Emit a JSClass initialization function. */
+        /* Emit a InitJSClass function. */
         fprintf(state->file,
                 "\nextern JSObject *\n"
                 "%s_InitJSClass(JSContext *cx, JSObject *obj, JSObject *parent_proto)\n"
@@ -481,7 +486,7 @@ stub_interface(TreeState *state)
             fprintf(state->file, "%s_funcs", className);
         else
             fputc('0', state->file);
-        fputs(", 0, 0);\n", state->file);
+        fputs(  ", 0, 0);\n", state->file);
         if (priv->const_dbls) {
             fprintf(state->file,
                     "  if (!proto)\n"
@@ -494,6 +499,29 @@ stub_interface(TreeState *state)
         fputs(  "  return proto;\n"
                 "}\n",
                 state->file);
+
+        /* Emit a GetJSObject function. */
+        fprintf(state->file,
+                "\nextern JSObject *\n"
+                "%s_GetJSObject(JSContext *cx, %s *priv)\n"
+                "{\n"
+                "  jsval v;\n"
+                "  if (!JS_LookupElement(cx, proto, (jsint)priv >> 1, &v))\n"
+                "    return 0;\n"
+                "  if (JSVAL_IS_VOID(v)) {\n"
+                "    JSObject *obj = JS_NewObject(cx, &foo_class, 0, 0);\n"
+                "    if (!obj || !JS_SetPrivate(cx, obj, priv))\n"
+                "      return 0;\n"
+                "    NS_ADDREF(priv);\n"
+                "    v = PRIVATE_TO_JSVAL(obj);\n"
+                "    if (!JS_DefineElement(cx, proto, (jsint)priv >> 1, v, 0, 0,\n"
+                "                          JSPROP_READONLY | JSPROP_PERMANENT)) {\n"
+                "      return 0;\n"
+                "    }\n"
+                "  }\n"
+                "  return (JSObject *)JSVAL_TO_PRIVATE(v);\n"
+                "}\n",
+                className, className);
     }
 
     /* Clean up whether or not there were errors. */
@@ -512,6 +540,7 @@ xpidl_stub_dispatch(void)
         table[IDLN_LIST] = stub_list;
         table[IDLN_ATTR_DCL] = stub_attr_dcl;
         table[IDLN_OP_DCL] = stub_op_dcl;
+        table[IDLN_FORWARD_DCL] = stub_forward_dcl;
         table[IDLN_TYPE_ENUM] = stub_type_enum;
         table[IDLN_INTERFACE] = stub_interface;
     }
