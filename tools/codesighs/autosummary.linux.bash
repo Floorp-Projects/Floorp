@@ -130,7 +130,7 @@ grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFI
 #   nm --format=bsd --size-sort --print-file-name
 #
 NMRESULTS="$TMPDIR/nm.txt"
-xargs -n 1 nm --format=bsd --size-sort --print-file-name < $THEFILES > $NMRESULTS 2> /dev/null
+xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $THEFILES > $NMRESULTS 2> /dev/null
 
 
 #
