@@ -35,7 +35,7 @@ REQUIRES	= xpcom \
       gfx \
       layout \
       layout_xul \
-      content_xul \
+      xultmpl \
       widget \
       view \
       caps \
