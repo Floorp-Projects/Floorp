@@ -28,7 +28,7 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\cck\InitDist.win>
 
 export::
-	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\Shell
-	$(MAKE_INSTALL) *.inf $(CCKDIST)\CCKTool\Shell
-	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\Shell
-	$(MAKE_INSTALL) *.txt $(CCKDIST)\CCKTool\Shell
+	$(MAKE_INSTALL) *.exe $(CCKDIST)
+	$(MAKE_INSTALL) *.inf $(CCKDIST)
+	$(MAKE_INSTALL) *.ini $(CCKDIST)
+	$(MAKE_INSTALL) *.txt $(CCKDIST)

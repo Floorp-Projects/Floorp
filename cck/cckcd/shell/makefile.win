@@ -27,5 +27,5 @@ include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\cck\InitDist.win>
 
-export::
-	$(MAKE_INSTALL) * $(CCKDIST)\CCKTool\Shell
+#export::
+	#$(MAKE_INSTALL) * $(CCKDIST)\CCKTool\Shell
