@@ -49,6 +49,8 @@ public:
   NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
                     const nsString &aLabel, 
                     PRUint32        aCommand) ;
+  NS_IMETHOD Create(nsIMenu * aParent);
+  NS_IMETHOD Create(nsIPopUpMenu * aParent);
 
   // nsIMenuBar Methods
   NS_IMETHOD GetLabel(nsString &aText);
@@ -58,6 +60,7 @@ public:
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
@@ -77,6 +80,7 @@ protected:
   nsIWidget    * mTarget;
 
   nsIMenuListener * mXULCommandListener;
+  PRBool      mIsSeparator;
 
 };
 

@@ -33,6 +33,7 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 #include "nsMenuItem.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
@@ -75,7 +76,6 @@ NS_IMPL_RELEASE(nsMenu)
 nsMenu::nsMenu() : nsIMenu()
 {
   NS_INIT_REFCNT();
-  mNumMenuItems  = 0;
   mMenu          = nsnull;
   mMenuBarParent = nsnull;
   mMenuParent    = nsnull;
@@ -105,7 +105,6 @@ NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
 
   mLabel = aLabel;
   mMenu = CreateMenu();
-  aParent->AddMenu(this);
     
   return NS_OK;
 }
@@ -118,7 +117,6 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
   mLabel = aLabel;
 
   mMenu = CreateMenu();
-  aParent->AddMenu(this);
     
   return NS_OK;
 }
@@ -194,7 +192,7 @@ nsIWidget *  nsMenu::GetParentWidget()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
-  PRUint32 command;
+  /*PRUint32 command;
   nsString name;
 
   aMenuItem->GetCommand(command);
@@ -214,38 +212,19 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   menuInfo.wID        = (DWORD)id;
   menuInfo.cch        = strlen(nameStr);
 
-  BOOL status = ::InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = ::InsertMenuItem(mMenu, mItems.Count(), TRUE, &menuInfo);
 
   delete[] nameStr;
-
+*/
+  InsertItemAt(mItems.Count(), (nsISupports *)aMenuItem);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
-  nsString name;
-  aMenu->GetLabel(name);
-  mItems.AppendElement((nsISupports *)aMenu);
-  char * nameStr = name.ToNewCString();
 
-  HMENU nativeMenuHandle;
-  void * voidData;
-  aMenu->GetNativeData(voidData);
-  nativeMenuHandle = (HMENU)voidData;
-
-  MENUITEMINFO menuInfo;
-
-  menuInfo.cbSize     = sizeof(menuInfo);
-  menuInfo.fMask      = MIIM_SUBMENU | MIIM_TYPE;
-  menuInfo.hSubMenu   = nativeMenuHandle;
-  menuInfo.fType      = MFT_STRING;
-  menuInfo.dwTypeData = nameStr;
-
-  BOOL status = ::InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
-
-  delete[] nameStr;
-
+  InsertItemAt(mItems.Count(), (nsISupports *)aMenu);
   return NS_OK;
 
 }
@@ -253,13 +232,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  MENUITEMINFO menuInfo;
-
-  menuInfo.cbSize = sizeof(menuInfo);
-  menuInfo.fMask  = MIIM_TYPE;
-  menuInfo.fType  = MFT_SEPARATOR;
-
-  BOOL status = ::InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
+  InsertSeparator(mItems.Count());
 
   return NS_OK;
 }
@@ -280,32 +253,107 @@ NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem)
+NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
 {
-  return NS_OK;
+  nsString name;
+  BOOL status = FALSE;
+
+  NS_ADDREF(aMenuItem);
+
+  mItems.InsertElementAt(aMenuItem, (PRInt32)aCount);
+
+  nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aMenuItem));
+  if (menuItem) {
+    menuItem->GetLabel(name);
+    nsIWidget * win = GetParentWidget();
+    PRInt32 id = ((nsWindow *)win)->GetNewCmdMenuId();
+    ((nsMenuItem *)((nsIMenuItem *)menuItem))->SetCmdId(id);
+
+    char * nameStr = name.ToNewCString();
+
+    MENUITEMINFO menuInfo;
+    menuInfo.cbSize     = sizeof(menuInfo);
+    menuInfo.fMask      = MIIM_TYPE | MIIM_ID;
+    menuInfo.fType      = MFT_STRING;
+    menuInfo.dwTypeData = nameStr;
+    menuInfo.wID        = (DWORD)id;
+    menuInfo.cch        = strlen(nameStr);
+
+    status = ::InsertMenuItem(mMenu, aCount, TRUE, &menuInfo);
+
+    delete[] nameStr;
+  } else {
+    nsCOMPtr<nsIMenu> menu(do_QueryInterface(aMenuItem));
+    if (menu) {
+      nsString name;
+      menu->GetLabel(name);
+      mItems.AppendElement((nsISupports *)(nsIMenu *)menu);
+
+      char * nameStr = name.ToNewCString();
+
+      HMENU nativeMenuHandle;
+      void * voidData;
+      menu->GetNativeData(voidData);
+      nativeMenuHandle = (HMENU)voidData;
+
+      MENUITEMINFO menuInfo;
+
+      menuInfo.cbSize     = sizeof(menuInfo);
+      menuInfo.fMask      = MIIM_SUBMENU | MIIM_TYPE;
+      menuInfo.hSubMenu   = nativeMenuHandle;
+      menuInfo.fType      = MFT_STRING;
+      menuInfo.dwTypeData = nameStr;
+
+      BOOL status = ::InsertMenuItem(mMenu, aCount, TRUE, &menuInfo);
+
+      delete[] nameStr;
+    }
+  }
+
+  return (status ? NS_OK : NS_ERROR_FAILURE);
 }
 
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, const nsString & aMenuItemName)
-{
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
 {
-  return NS_OK;
+  nsMenuItem * item = new nsMenuItem();
+  item->Create(this);
+  mItems.InsertElementAt((nsISupports *)(nsIMenuItem *)item, (PRInt32)aCount);
+  NS_ADDREF((nsIMenuItem *)item);
+
+  MENUITEMINFO menuInfo;
+
+  menuInfo.cbSize = sizeof(menuInfo);
+  menuInfo.fMask  = MIIM_TYPE;
+  menuInfo.fType  = MFT_SEPARATOR;
+
+  BOOL status = ::InsertMenuItem(mMenu, aCount, TRUE, &menuInfo);
+ 
+  return (status ? NS_OK : NS_ERROR_FAILURE);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
 {
-  return NS_OK;
+
+  nsISupports * supports = (nsISupports *)mItems.ElementAt(aCount);
+  NS_RELEASE(supports);
+  mItems.RemoveElementAt(aCount);
+
+  return (::RemoveMenu(mMenu, aCount, MF_BYPOSITION) ? NS_OK:NS_ERROR_FAILURE);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
+  while (mItems.Count()) {
+    nsISupports * supports = (nsISupports *)mItems.ElementAt(0);
+    NS_RELEASE(supports);
+    mItems.RemoveElementAt(0);
+
+    ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
+  }
   return NS_OK;
 }
 

@@ -75,6 +75,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mPopUpParent = nsnull;
   mTarget      = nsnull;
   mXULCommandListener = nsnull;
+  mIsSeparator = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -235,6 +236,20 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
+{
+  mIsSeparator = PR_TRUE;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent)
+{
+  mIsSeparator = PR_TRUE;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 {
   aText = mLabel;
@@ -281,6 +296,13 @@ NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
+{
+  aIsSep = mIsSeparator;
   return NS_OK;
 }
 

@@ -103,31 +103,25 @@ class nsIMenu : public nsISupports {
     * Returns a Menu or Menu Item at a specified Index
     *
     */
-    NS_IMETHOD GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem) = 0;
+    NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem) = 0;
 
    /**
     * Inserts a Menu Item at a specified Index
     *
     */
-    NS_IMETHOD InsertItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem) = 0;
-
-   /**
-    * Creates and inserts a Menu Item at a specified Index
-    *
-    */
-    NS_IMETHOD InsertItemAt(const PRUint32 aCount, const nsString & aMenuItemName) = 0;
+    NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem) = 0;
 
    /**
     * Creates and inserts a Separator at a specified Index
     *
     */
-    NS_IMETHOD InsertSeparator(const PRUint32 aCount) = 0;
+    NS_IMETHOD InsertSeparator(const PRUint32 aPos) = 0;
 
    /**
     * Removes an Menu Item from a specified Index
     *
     */
-    NS_IMETHOD RemoveItem(const PRUint32 aCount) = 0;
+    NS_IMETHOD RemoveItem(const PRUint32 aPos) = 0;
 
    /**
     * Removes all the Menu Items

@@ -77,6 +77,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
+  mIsSeparator = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -115,6 +116,21 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 		      this);
   delete[] nameStr;
 }
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::Create(nsIMenu * aParent)
+{
+  mIsSeparator = PR_TRUE;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent)
+{
+  mIsSeparator = PR_TRUE;
+  return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 GtkWidget *nsMenuItem::GetNativeParent()
@@ -264,6 +280,13 @@ NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
 {
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
+{
+  aIsSep = mIsSeparator;
   return NS_OK;
 }
 

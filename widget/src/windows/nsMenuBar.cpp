@@ -82,7 +82,6 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   NS_INIT_REFCNT();
-  mNumMenus = 0;
   mMenu     = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
@@ -122,12 +121,33 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
+  InsertMenuAt(mItems.Count(), aMenu);
+  return NS_OK;
+}
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
+{
+  aCount = mItems.Count();
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
+{
+  aMenu = (nsIMenu *)mItems[aPos];
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
+{
   nsString name;
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
 
-  mItems.AppendElement(aMenu);
+  mItems.InsertElementAt(aMenu, (PRInt32)aPos);
+  NS_ADDREF(aMenu);
 
   HMENU nativeMenuHandle;
   void * voidData;
@@ -142,7 +162,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem(mMenu, mNumMenus++, TRUE, &menuInfo);
+  BOOL status = ::InsertMenuItem(mMenu, aPos, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -157,34 +177,24 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuBar::GetMenuCount(PRUint32 &aCount)
+NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aPos)
 {
-  aCount = mItems.Count();
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuBar::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
-{
-  aMenu = (nsIMenu *)mItems[aCount];
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aCount)
-{
-  return NS_OK;
+  nsIMenu * menu = (nsIMenu *)mItems.ElementAt(aPos);
+  NS_RELEASE(menu);
+  mItems.RemoveElementAt(aPos);
+  return (::RemoveMenu(mMenu, aPos, MF_BYPOSITION) ? NS_OK:NS_ERROR_FAILURE);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveAll()
 {
+  while (mItems.Count()) {
+    nsISupports * supports = (nsISupports *)mItems.ElementAt(0);
+    NS_RELEASE(supports);
+    mItems.RemoveElementAt(0);
+
+    ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
+  }
   return NS_OK;
 }
 
@@ -198,5 +208,6 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Paint()
 {
+  mParent->Invalidate(PR_TRUE);
   return NS_OK;
 }
