@@ -1805,13 +1805,11 @@ js_Interpret(JSContext *cx, jsval *result)
                        : JSVAL_VOID;                                          \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
                 ok = SPROP_GET(cx, sprop, obj, obj, &rval);                   \
-                if (ok) {                                                     \
-                    JS_LOCK_SCOPE(cx, scope_);                                \
-                    sprop = js_DropScopeProperty(cx, scope_, sprop);          \
-                    if (sprop && SPROP_HAS_VALID_SLOT(sprop))                 \
-                        LOCKED_OBJ_SET_SLOT(obj, slot, rval);                 \
-                    JS_UNLOCK_SCOPE(cx, scope_);                              \
-                }                                                             \
+                JS_LOCK_SCOPE(cx, scope_);                                    \
+                sprop = js_DropScopeProperty(cx, scope_, sprop);              \
+                if (ok && sprop && SPROP_HAS_VALID_SLOT(sprop))               \
+                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);                     \
+                JS_UNLOCK_SCOPE(cx, scope_);                                  \
             } else {                                                          \
                 JS_UNLOCK_OBJ(cx, obj);                                       \
                 ok = call;                                                    \
@@ -1839,16 +1837,14 @@ js_Interpret(JSContext *cx, jsval *result)
                 sprop->nrefs++;                                               \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
                 ok = SPROP_SET(cx, sprop, obj, obj, &rval);                   \
-                if (ok) {                                                     \
-                    JS_LOCK_SCOPE(cx, scope_);                                \
-                    sprop = js_DropScopeProperty(cx, scope_, sprop);          \
-                    if (sprop && SPROP_HAS_VALID_SLOT(sprop)) {               \
-                        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);          \
-                        SET_ENUMERATE_ATTR(sprop);                            \
-                        GC_POKE(cx, JSVAL_NULL);  /* XXX second arg ignored */\
-                    }                                                         \
-                    JS_UNLOCK_SCOPE(cx, scope_);                              \
+                JS_LOCK_SCOPE(cx, scope_);                                    \
+                sprop = js_DropScopeProperty(cx, scope_, sprop);              \
+                if (ok && sprop && SPROP_HAS_VALID_SLOT(sprop)) {             \
+                    LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);              \
+                    SET_ENUMERATE_ATTR(sprop);                                \
+                    GC_POKE(cx, JSVAL_NULL);  /* XXX second arg ignored */    \
                 }                                                             \
+                JS_UNLOCK_SCOPE(cx, scope_);                                  \
             } else {                                                          \
                 JS_UNLOCK_OBJ(cx, obj);                                       \
                 ok = call;                                                    \
