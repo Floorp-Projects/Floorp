@@ -85,8 +85,10 @@ public:
   NS_IMETHOD GetDocURI(nsCString& aResult) = 0;
   NS_IMETHOD GetID(nsCString& aResult) = 0;
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult) = 0;
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints) = 0;
+  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult)=0;
+
+  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex) = 0;
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints) = 0;
 
   NS_IMETHOD IsStyleBinding(PRBool* aResult) = 0;
   NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) = 0;
@@ -102,8 +104,7 @@ public:
 
   NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult)=0;
 
-  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult, 
-                               nsIContent** aParent, PRBool* aMultipleInsertionPoints)=0;
+  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult)=0;
 
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult)=0;
 };

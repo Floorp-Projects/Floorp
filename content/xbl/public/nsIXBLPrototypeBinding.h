@@ -32,6 +32,7 @@ class nsIDocument;
 class nsIDOMEventReceiver;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
+class nsIXBLBinding;
 
 // {34D700F5-C1A2-4408-A0B1-DD8F891DD1FE}
 #define NS_IXBLPROTOTYPEBINDING_IID \
@@ -76,11 +77,13 @@ public:
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult)=0;
 
+  NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding)=0;
+
   NS_IMETHOD GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                               nsIContent* aChild, nsIContent** aResult)=0;
+                               nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)=0;
 
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                                     nsIContent** aResult, PRBool* aMultipleInsertionPoints)=0;
+                                     nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints)=0;
 
   NS_IMETHOD GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag)=0;
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag)=0;

@@ -65,11 +65,6 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushStyleBindings(nsIContent* aContent);
 
-  // For a given element, returns a flat list of all the anonymous children that need
-  // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsIDOMNodeList** aResult, nsIContent** aChildElement,
-                            PRBool* aMultipleInsertionPoints);
-
   // Gets the object's base class type.
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 

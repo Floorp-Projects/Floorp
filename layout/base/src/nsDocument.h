@@ -115,19 +115,6 @@ protected:
   nsIDocument* mDocument;
 };
 
-class nsAnonymousContentList : public nsGenericDOMNodeList 
-{
-public:
-  nsAnonymousContentList(nsISupportsArray* aElements);
-  virtual ~nsAnonymousContentList();
-
-  // nsIDOMNodeList interface
-  NS_DECL_IDOMNODELIST
-  
-private:
-  nsISupportsArray* mElements;
-};
-
 // Base class for our document implementations
 class nsDocument : public nsIDocument, 
                    public nsIDOMDocument, 

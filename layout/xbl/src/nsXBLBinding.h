@@ -79,8 +79,10 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetDocURI(nsCString& aResult);
   NS_IMETHOD GetID(nsCString& aResult);
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints);
+  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult);
+
+  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints);
 
   NS_IMETHOD IsStyleBinding(PRBool* aResult) { *aResult = mIsStyleBinding; return NS_OK; };
   NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; return NS_OK; };
@@ -96,7 +98,7 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD ImplementsInterface(REFNSIID aIID, PRBool* aResult);
 
-  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult, nsIContent** aParent, PRBool* aMultipleInsertionPoints);
+  NS_IMETHOD GetAnonymousNodes(nsIDOMNodeList** aResult);
 
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult);
 
@@ -172,6 +174,8 @@ protected:
 
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
+  nsSupportsHashtable* mInsertionPointTable;    // A hash from nsIContent* -> (a sorted array of nsIXBLInsertionPoint*)
+
   PRPackedBool mIsStyleBinding;
   PRPackedBool mMarkedForDeath;
 };

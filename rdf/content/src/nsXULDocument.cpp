@@ -2899,17 +2899,12 @@ NS_IMETHODIMP
 nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
                                  nsIDOMNodeList** aResult)
 {
-  nsresult rv;
-  
-  // Use the XBL service to get the anonymous node list.
-  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-  if (!xblService)
-    return rv;
-
-  PRBool dummy;
-  nsCOMPtr<nsIContent> dummyElt;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  return xblService->GetContentList(content, aResult, getter_AddRefs(dummyElt), &dummy);
+  *aResult = nsnull;
+  if (mBindingManager) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+    return mBindingManager->GetAnonymousNodesFor(content, aResult);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    

@@ -55,6 +55,9 @@ public:
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) = 0;
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;
 
+  NS_IMETHOD GetInsertionParent(nsIContent* aContent, nsIContent** aResult)=0;
+  NS_IMETHOD SetInsertionParent(nsIContent* aContent, nsIContent* aResult)=0;
+
   NS_IMETHOD GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult) = 0;
   NS_IMETHOD SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult) = 0;
 
@@ -79,8 +82,15 @@ public:
 
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult) = 0;
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
+  // For a given element with an insertion point child, returns a flat list of all the real children.
+  NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
+  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsISupportsArray* aList)=0;
+
+  NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult) = 0;
+  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList) = 0;
+
+  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex) = 0;
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints) = 0;
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL) = 0;

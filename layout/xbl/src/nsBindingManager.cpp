@@ -51,6 +51,7 @@
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIXBLBindingAttachedHandler.h"
+#include "nsIXBLInsertionPoint.h"
 
 #include "nsIStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
@@ -191,6 +192,89 @@ nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aRes
   return NS_OK;
 }
 
+// ==================================================================
+// = nsAnonymousContentList 
+// ==================================================================
+
+class nsAnonymousContentList : public nsGenericDOMNodeList 
+{
+public:
+  nsAnonymousContentList(nsISupportsArray* aElements);
+  virtual ~nsAnonymousContentList();
+
+  // nsIDOMNodeList interface
+  NS_DECL_IDOMNODELIST
+  
+private:
+  nsISupportsArray* mElements;
+};
+
+MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList);
+
+nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
+{
+  MOZ_COUNT_CTOR(nsAnonymousContentList);
+
+  // We don't reference count our Anonymous reference (to avoid circular
+  // references). We'll be told when the Anonymous goes away.
+  mElements = aElements;
+  NS_IF_ADDREF(mElements);
+}
+ 
+nsAnonymousContentList::~nsAnonymousContentList()
+{
+  MOZ_COUNT_DTOR(nsAnonymousContentList);
+  NS_IF_RELEASE(mElements);
+}
+
+NS_IMETHODIMP
+nsAnonymousContentList::GetLength(PRUint32* aLength)
+{
+  NS_ASSERTION(aLength != nsnull, "null ptr");
+  if (! aLength)
+      return NS_ERROR_NULL_POINTER;
+
+  PRUint32 cnt;
+  mElements->Count(&cnt);
+
+  *aLength = 0;
+  nsCOMPtr<nsIXBLInsertionPoint> point;
+  PRUint32 l;
+  for (PRUint32 i = 0; i < cnt; i++) {
+    point = getter_AddRefs((nsIXBLInsertionPoint*)(mElements->ElementAt(i)));
+    point->ChildCount(&l);
+    *aLength += l;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  PRUint32 cnt;
+  nsresult rv = mElements->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+
+  PRUint32 pointCount = 0;
+  nsCOMPtr<nsIXBLInsertionPoint> point;
+  for (PRUint32 i = 0; i < cnt; i++) {
+    aIndex -= pointCount;
+    
+    point = getter_AddRefs((nsIXBLInsertionPoint*)(mElements->ElementAt(i)));
+    point->ChildCount(&pointCount);
+
+    if (aIndex < pointCount) {
+      nsCOMPtr<nsIContent> result;
+      rv = point->ChildAt(aIndex, getter_AddRefs(result));
+      if (result && NS_SUCCEEDED(rv))
+        return result->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
+      else return rv;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -205,6 +289,9 @@ public:
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult);
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding);
 
+  NS_IMETHOD GetInsertionParent(nsIContent* aContent, nsIContent** aResult);
+  NS_IMETHOD SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
+
   NS_IMETHOD GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult);
   NS_IMETHOD SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
 
@@ -213,8 +300,14 @@ public:
 
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
+  NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
+  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsISupportsArray* aList);
+
+  NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
+  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList);
+
+  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints);
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
@@ -258,11 +351,43 @@ protected:
 
 // MEMBER VARIABLES
 protected: 
+  // A mapping from nsIContent* to the nsIXBLBinding* that is installed on that element.
   nsSupportsHashtable* mBindingTable;
+
+  // A mapping from nsIContent* to an nsIDOMNodeList* (nsAnonymousContentList*).  
+  // This list contains an accurate reflection of our *explicit* children (once intermingled with
+  // insertion points) in the altered DOM.
+  nsSupportsHashtable* mContentListTable;
+
+  // A mapping from nsIContent* to an nsIDOMNodeList* (nsAnonymousContentList*).  
+  // This list contains an accurate reflection of our *anonymous* children (if and only if they are
+  // intermingled with insertion points) in the altered DOM.  This table is not used
+  // if no insertion points were defined directly underneath a <content> tag in a
+  // binding.  The NodeList from the <content> is used instead as a performance
+  // optimization.
+  nsSupportsHashtable* mAnonymousNodesTable;
+
+  // A mapping from nsIContent* to nsIContent*.  The insertion parent is our one true
+  // parent in the transformed DOM.  This gives us a more-or-less O(1) way of obtaining
+  // our transformed parent.
+  nsSupportsHashtable* mInsertionParentTable;
+
+  // A mapping from nsIContent* to nsIXPWrappedJS* (an XPConnect wrapper for JS objects).
+  // For XBL bindings that implement XPIDL interfaces, and that get referred to from C++,
+  // this table caches the XPConnect wrapper for the binding.  By caching it, I control
+  // its lifetime, and I prevent a re-wrap of the same script object (in the case where
+  // multiple bindings in an XBL inheritance chain both implement an XPIDL interface).
   nsSupportsHashtable* mWrapperTable;
+
+  // A mapping from nsIDocument* to nsIXBLDocumentInfo*.  This table is the cache of
+  // all binding documents that have been loaded by a given bound document.
   nsSupportsHashtable* mDocumentTable;
+
+  // The currently loading binding docs.  If they're in this table, they have not yet
+  // finished loading.
   nsSupportsHashtable* mLoadingDocTable;
 
+  // A queue of binding attached event handlers that are awaiting execution.
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
 
@@ -279,6 +404,9 @@ nsBindingManager::nsBindingManager(void)
   NS_INIT_REFCNT();
 
   mBindingTable = nsnull;
+  mContentListTable = nsnull;
+  mAnonymousNodesTable = nsnull;
+  mInsertionParentTable = nsnull;
   mWrapperTable = nsnull;
   mDocumentTable = nsnull;
   mLoadingDocTable = nsnull;
@@ -289,6 +417,9 @@ nsBindingManager::nsBindingManager(void)
 nsBindingManager::~nsBindingManager(void)
 {
   delete mBindingTable;
+  delete mContentListTable;
+  delete mAnonymousNodesTable;
+  delete mInsertionParentTable;
   delete mWrapperTable;
   delete mDocumentTable;
   delete mLoadingDocTable;
@@ -329,6 +460,36 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
     // The death of the bindings means the death of the JS wrapper.
     SetWrappedJS(aContent, nsnull);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetInsertionParent(nsIContent* aContent, nsIContent** aResult) 
+{ 
+  if (mInsertionParentTable) {
+    nsISupportsKey key(aContent);
+    *aResult = NS_STATIC_CAST(nsIContent*, mInsertionParentTable->Get(&key));
+  }
+  else {
+    *aResult = nsnull;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::SetInsertionParent(nsIContent* aContent, nsIContent* aParent)
+{
+  if (!mInsertionParentTable)
+    mInsertionParentTable = new nsSupportsHashtable;
+
+  nsISupportsKey key(aContent);
+  if (aParent) {
+    mInsertionParentTable->Put(&key, aParent);
+  }
+  else
+    mInsertionParentTable->Remove(&key);
 
   return NS_OK;
 }
@@ -383,6 +544,11 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
     }
   }
 
+  // Clear out insertion parents and content lists.
+  SetInsertionParent(aContent, nsnull);
+  SetContentListFor(aContent, nsnull);
+  SetAnonymousNodesFor(aContent, nsnull);
+
   for (PRInt32 i = aOldDocument->GetNumberOfShells() - 1; i >= 0; --i) {
     nsCOMPtr<nsIPresShell> shell = dont_AddRef( aOldDocument->GetShellAt(i) );
     NS_ASSERTION(shell != nsnull, "Zoiks! nsIPresShell::ShellAt() broke");
@@ -434,26 +600,105 @@ nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAto
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult)
+nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+{ 
+  // Locate the primary binding and get its node list of anonymous children.
+  *aResult = nsnull;
+  
+  if (mContentListTable) {
+    nsISupportsKey key(aContent);
+    *aResult = NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key));
+  }
+  
+  if (!*aResult) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+    return node->GetChildNodes(aResult);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::SetContentListFor(nsIContent* aContent, nsISupportsArray* aList)
+{ 
+  if (!mContentListTable) {
+    if (!aList) 
+      return NS_OK;
+    mContentListTable = new nsSupportsHashtable;
+  }
+
+  nsISupportsKey key(aContent);
+  if (aList) {
+    nsAnonymousContentList* contentList = new nsAnonymousContentList(aList);
+    mContentListTable->Put(&key, (nsIDOMNodeList*)contentList);
+  }
+  else
+    mContentListTable->Remove(&key);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+{ 
+  // Locate the primary binding and get its node list of anonymous children.
+  *aResult = nsnull;
+  if (mAnonymousNodesTable) {
+    nsISupportsKey key(aContent);
+    *aResult = NS_STATIC_CAST(nsIDOMNodeList*, mAnonymousNodesTable->Get(&key));
+  }
+
+  if (!*aResult) {
+    nsCOMPtr<nsIXBLBinding> binding;
+    GetBinding(aContent, getter_AddRefs(binding));
+    if (binding)
+      return binding->GetAnonymousNodes(aResult);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList)
+{ 
+  if (!mAnonymousNodesTable) {
+    if (!aList) 
+      return NS_OK;
+    mAnonymousNodesTable = new nsSupportsHashtable;
+  }
+
+  nsISupportsKey key(aContent);
+  if (aList) {
+    nsAnonymousContentList* contentList = new nsAnonymousContentList(aList);
+    mAnonymousNodesTable->Put(&key, (nsIDOMNodeList*)contentList);
+  }
+  else
+    mAnonymousNodesTable->Remove(&key);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aParent, getter_AddRefs(binding));
   
   if (binding)
-    return binding->GetInsertionPoint(aChild, aResult);
+    return binding->GetInsertionPoint(aChild, aResult, aIndex);
   
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult,
+nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,
                                           PRBool* aMultipleInsertionPoints)
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aParent, getter_AddRefs(binding));
   
   if (binding)
-    return binding->GetSingleInsertionPoint( aResult, aMultipleInsertionPoints);
+    return binding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints);
   
   return NS_OK;
 }

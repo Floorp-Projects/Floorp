@@ -48,6 +48,7 @@
 #include "nsINameSpace.h"
 #include "nsXBLService.h"
 #include "nsXBLBinding.h"
+#include "nsIXBLInsertionPoint.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsFixedSizeAllocator.h"
 #include "xptinfo.h"
@@ -108,6 +109,59 @@ public:
 
 NS_IMPL_ISUPPORTS1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
 
+// nsIXBLInsertionPointEntry and helpers.  This class stores all the necessary
+// info to figure out the position of an insertion point.
+
+// {76F238AE-5ACB-49e6-B2DE-FD1940637753}
+#define NS_IXBLINS_IID \
+{ 0x76f238ae, 0x5acb, 0x49e6, { 0xb2, 0xde, 0xfd, 0x19, 0x40, 0x63, 0x77, 0x53 } }
+
+class nsIXBLInsertionPointEntry : public nsISupports {
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IXBLINS_IID; return iid; }
+
+  NS_IMETHOD GetInsertionParent(nsIContent** aResult)=0;
+
+  NS_IMETHOD GetInsertionIndex(PRUint32* aResult)=0;
+  NS_IMETHOD SetInsertionIndex(PRUint32 aIndex)=0;
+};
+  
+class nsXBLInsertionPointEntry : public nsIXBLInsertionPointEntry {
+public:
+  NS_IMETHOD GetInsertionParent(nsIContent** aResult)
+  {
+    *aResult = mInsertionParent;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+  };
+    
+  NS_IMETHOD GetInsertionIndex(PRUint32* aResult) { *aResult = mInsertionIndex; return NS_OK; };
+  NS_IMETHOD SetInsertionIndex(PRUint32 aIndex) { mInsertionIndex = aIndex;  return NS_OK; };
+
+  nsCOMPtr<nsIContent> mInsertionParent;
+  PRUint32 mInsertionIndex;
+  
+  static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+    return aAllocator.Alloc(aSize);
+  }
+
+  static void operator delete(void* aPtr, size_t aSize) {
+    nsFixedSizeAllocator::Free(aPtr, aSize);
+  }
+
+  nsXBLInsertionPointEntry(nsIContent* aParent) {
+    NS_INIT_REFCNT();
+    mInsertionIndex = 0;
+    mInsertionParent = aParent;
+  };
+
+  virtual ~nsXBLInsertionPointEntry() {};
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS1(nsXBLInsertionPointEntry, nsIXBLInsertionPointEntry)
+
 // =============================================================================
 
 // Static initialization
@@ -123,15 +177,24 @@ nsIAtom* nsXBLPrototypeBinding::kValueAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kXBLTextAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kImplementationAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kImplementsAtom = nsnull;
-nsFixedSizeAllocator nsXBLPrototypeBinding::kPool;
+nsFixedSizeAllocator nsXBLPrototypeBinding::kAttrPool;
+nsFixedSizeAllocator nsXBLPrototypeBinding::kInsPool;
 
-static const size_t kBucketSizes[] = {
+static const PRInt32 kNumElements = 128;
+
+static const size_t kAttrBucketSizes[] = {
   sizeof(nsXBLAttributeEntry)
 };
 
-static const PRInt32 kNumBuckets = sizeof(kBucketSizes)/sizeof(size_t);
-static const PRInt32 kNumElements = 128;
-static const PRInt32 kInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLAttributeEntry))) * kNumElements;
+static const PRInt32 kAttrNumBuckets = sizeof(kAttrBucketSizes)/sizeof(size_t);
+static const PRInt32 kAttrInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLAttributeEntry))) * kNumElements;
+
+static const size_t kInsBucketSizes[] = {
+  sizeof(nsXBLInsertionPointEntry)
+};
+
+static const PRInt32 kInsNumBuckets = sizeof(kInsBucketSizes)/sizeof(size_t);
+static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPointEntry))) * kNumElements;
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -156,7 +219,8 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
   //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
-    kPool.Init("XBL Attribute Entries", kBucketSizes, kNumBuckets, kInitialSize);
+    kAttrPool.Init("XBL Attribute Entries", kAttrBucketSizes, kAttrNumBuckets, kAttrInitialSize);
+    kInsPool.Init("XBL Insertion Point Entries", kInsBucketSizes, kInsNumBuckets, kInsInitialSize);
 
     kInheritStyleAtom = NS_NewAtom("inheritstyle");
     kHandlersAtom = NS_NewAtom("handlers");
@@ -466,31 +530,107 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
   return NS_OK;
 }
 
+struct InsertionData {
+  nsIXBLBinding* mBinding;
+  nsXBLPrototypeBinding* mPrototype;
+
+  InsertionData(nsIXBLBinding* aBinding,
+                nsXBLPrototypeBinding* aPrototype) 
+    :mBinding(aBinding), mPrototype(aPrototype) {};
+};
+
+PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsIXBLInsertionPointEntry* entry = (nsIXBLInsertionPointEntry*)aData;
+  InsertionData* data = (InsertionData*)aClosure;
+  nsIXBLBinding* binding = data->mBinding;
+  nsXBLPrototypeBinding* proto = data->mPrototype;
+
+  // Get the insertion parent.
+  nsCOMPtr<nsIContent> content;
+  entry->GetInsertionParent(getter_AddRefs(content));
+  PRUint32 index;
+  entry->GetInsertionIndex(&index);
+
+  // Locate the real content.
+  nsCOMPtr<nsIContent> realContent;
+  nsCOMPtr<nsIContent> instanceRoot;
+  binding->GetAnonymousContent(getter_AddRefs(instanceRoot));
+  nsCOMPtr<nsIContent> templRoot;
+  proto->GetImmediateChild(nsXBLPrototypeBinding::kContentAtom, getter_AddRefs(templRoot));
+  proto->LocateInstance(templRoot, instanceRoot, content, getter_AddRefs(realContent));
+  if (!realContent)
+    binding->GetBoundElement(getter_AddRefs(realContent));
+
+  // Now that we have the real content, look it up in our table.
+  nsCOMPtr<nsISupportsArray> points;
+  binding->GetInsertionPointsFor(realContent, getter_AddRefs(points));
+  nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
+  PRUint32 count;
+  points->Count(&count);
+  PRUint32 i = 0, currIndex = 0;  
+  for ( ; i < count; i++) {
+    nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)points->ElementAt(i));
+    currPoint->GetInsertionIndex(&currIndex);
+    if (currIndex == index) {
+      // This is a match. Break out of the loop and set our variable.
+      insertionPoint = currPoint;
+      break;
+    }
+    
+    if (currIndex > index)
+      // There was no match. Break.
+      break;
+  }
+
+  if (!insertionPoint) {
+    // We need to make a new insertion point.
+    NS_NewXBLInsertionPoint(realContent, index, getter_AddRefs(insertionPoint));
+    points->InsertElementAt(insertionPoint, i);
+  }
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::InstantiateInsertionPoints(nsIXBLBinding* aBinding)
+{
+  InsertionData data(aBinding, this);
+  if (mInsertionPointTable)
+    mInsertionPointTable->Enumerate(InstantiateInsertionPoint, &data);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                                         nsIContent* aChild, nsIContent** aResult)
+                                         nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)
 {
   if (mInsertionPointTable) {
     nsCOMPtr<nsIAtom> tag;
     aChild->GetTag(*getter_AddRefs(tag));
     nsISupportsKey key(tag);
-    nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, 
-                                                                 mInsertionPointTable->Get(&key)));
-    if (!content) {
+    nsCOMPtr<nsIXBLInsertionPointEntry> entry = getter_AddRefs(NS_STATIC_CAST(nsIXBLInsertionPointEntry*, 
+                                                               mInsertionPointTable->Get(&key)));
+    if (!entry) {
       nsISupportsKey key2(kChildrenAtom);
-      content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, mInsertionPointTable->Get(&key2)));
+      entry = getter_AddRefs(NS_STATIC_CAST(nsIXBLInsertionPointEntry*, mInsertionPointTable->Get(&key2)));
     }
 
     nsCOMPtr<nsIContent> realContent;
-    if (content) {
+    if (entry) {
+      nsCOMPtr<nsIContent> content;
+      entry->GetInsertionParent(getter_AddRefs(content));
+      entry->GetInsertionIndex(aIndex);
       nsCOMPtr<nsIContent> templContent;
       GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
       LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
     }
+    
     if (realContent)
       *aResult = realContent;
     else
       *aResult = aBoundElement;
+
     NS_IF_ADDREF(*aResult);
   }
   return NS_OK;  
@@ -499,15 +639,19 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* 
 NS_IMETHODIMP
 nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
                                                nsIContent* aCopyRoot,
-                                               nsIContent** aResult, PRBool* aMultipleInsertionPoints)
+                                               nsIContent** aResult, PRUint32* aIndex,
+                                               PRBool* aMultipleInsertionPoints)
 { 
   if (mInsertionPointTable) {
     if(mInsertionPointTable->Count() == 1) {
       nsISupportsKey key(kChildrenAtom);
-      nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, 
-                                                                   mInsertionPointTable->Get(&key)));
+      nsCOMPtr<nsIXBLInsertionPointEntry> entry = getter_AddRefs(NS_STATIC_CAST(nsIXBLInsertionPointEntry*, 
+                                                                 mInsertionPointTable->Get(&key)));
       nsCOMPtr<nsIContent> realContent;
-      if (content) {
+      if (entry) {
+        nsCOMPtr<nsIContent> content;
+        entry->GetInsertionParent(getter_AddRefs(content));
+        entry->GetInsertionIndex(aIndex);
         nsCOMPtr<nsIContent> templContent;
         GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
         LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
@@ -519,6 +663,7 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
         // match the filter will just go right underneath the bound element).
         *aMultipleInsertionPoints = PR_TRUE;
         *aResult = nsnull;
+        *aIndex = 0;
         return NS_OK;
       }
 
@@ -527,6 +672,7 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
         *aResult = realContent;
       else
         *aResult = aBoundElement;
+
       NS_IF_ADDREF(*aResult);
     }
     else 
@@ -774,7 +920,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
       }
       
       // Create an XBL attribute entry.
-      nsXBLAttributeEntry* xblAttr = new (kPool) nsXBLAttributeEntry(atom, attribute, aElement);
+      nsXBLAttributeEntry* xblAttr = new (kAttrPool) nsXBLAttributeEntry(atom, attribute, aElement);
 
       // Now we should see if some element within our anonymous
       // content is already observing this attribute.
@@ -826,7 +972,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   if (!childrenElements)
     return;
 
-  mInsertionPointTable = new nsSupportsHashtable;
+  mInsertionPointTable = new nsSupportsHashtable(4);
 
   PRUint32 count;
   childrenElements->Count(&count);
@@ -838,11 +984,15 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
     if (child) {
       nsCOMPtr<nsIContent> parent; 
       child->GetParent(*getter_AddRefs(parent));
+
+      // Create an XBL insertion point entry.
+      nsXBLInsertionPointEntry* xblIns = new (kInsPool) nsXBLInsertionPointEntry(parent);
+
       nsAutoString includes;
       child->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
       if (includes.IsEmpty()) {
         nsISupportsKey key(kChildrenAtom);
-        mInsertionPointTable->Put(&key, parent);
+        mInsertionPointTable->Put(&key, xblIns);
       }
       else {
         // The user specified at least one attribute.
@@ -860,26 +1010,28 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
           atom = getter_AddRefs(NS_NewAtom(tok.GetUnicode()));
            
           nsISupportsKey key(atom);
-          mInsertionPointTable->Put(&key, parent);
+          mInsertionPointTable->Put(&key, xblIns);
           
           token = nsCRT::strtok( newStr, ", ", &newStr );
         }
 
         nsMemory::Free(str);
       }
-    }
-  }
 
-  // Now remove the <children> elements.
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> supp;
-    childrenElements->GetElementAt(i, getter_AddRefs(supp));
-    nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
-    if (child) {
-      nsCOMPtr<nsIContent> parent; 
-      child->GetParent(*getter_AddRefs(parent));
+      // Compute the index of the <children> element.  This index is
+      // equal to the index of the <children> in the template minus the #
+      // of previous insertion point siblings removed.  Because our childrenElements
+      // array was built in a DFS that went from left-to-right through siblings,
+      // if we dynamically obtain our index each time, then the removals of previous
+      // siblings will cause the index to adjust (and we won't have to take that into
+      // account explicitly).
       PRInt32 index;
       parent->IndexOf(child, index);
+      xblIns->SetInsertionIndex((PRUint32)index);
+
+      // Now remove the <children> element from the template.  This ensures that the
+      // binding instantiation will not contain a clone of the <children> element when
+      // it clones the binding template.
       parent->RemoveChildAt(index, PR_FALSE);
     }
   }

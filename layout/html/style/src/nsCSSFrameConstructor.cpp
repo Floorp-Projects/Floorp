@@ -786,6 +786,56 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 }
 #endif // MOZ_MATHML
 
+// Helper class for iterating children during frame construction.
+// This class should always be used in lieu of the straight content
+// node APIs, since it handles XBL-generated anonymous content as well.
+struct ChildIterator
+{
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIBindingManager> mBindingManager;
+  PRUint32 mIndex;
+  PRUint32 mLength;
+  nsCOMPtr<nsIDOMNodeList> mNodes;
+
+  ChildIterator(nsIContent* aContent)
+    :mContent(aContent), mIndex(0), mLength(0), mNodes(nsnull)
+  {
+    nsCOMPtr<nsIDocument> doc;
+    aContent->GetDocument(*getter_AddRefs(doc));
+    doc->GetBindingManager(getter_AddRefs(mBindingManager));
+
+    // Retrieve the anonymous content that we should build.
+    mBindingManager->GetAnonymousNodesFor(mContent, getter_AddRefs(mNodes));
+    if (mNodes) {
+      mNodes->GetLength(&mLength);
+      if (mLength == 0)
+        mNodes = nsnull;
+    }
+    
+    // We may have an altered list of children from XBL insertion points.
+    // If we don't have any anonymous kids, we next check to see if we have 
+    // insertion points.
+    if (!mNodes) {
+      mBindingManager->GetContentListFor(mContent, getter_AddRefs(mNodes));
+      if (mNodes)
+        mNodes->GetLength(&mLength);
+    }
+  }
+
+  PRBool HasMoreChildren() {
+    return mIndex < mLength;
+  }
+
+  void NextChild(nsIContent** aChild) {
+    if (mNodes) {
+      nsCOMPtr<nsIDOMNode> node;
+      mNodes->Item(mIndex, getter_AddRefs(node));
+      node->QueryInterface(NS_GET_IID(nsIContent), (void**)aChild);
+    }
+    mIndex++;
+  }
+};
+
 // -----------------------------------------------------------
 
 // return the child list that aFrame belongs on. does not ADDREF
@@ -818,6 +868,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mGfxScrollFrame(nsnull)
 {
   NS_INIT_REFCNT();
+  
 #ifdef NS_DEBUG
   mVerifyFastFindFrame = PR_FALSE;
   // Get the pref for verifying the new fast find frame with hint code.
@@ -2864,12 +2915,6 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
                          PR_TRUE, childItems, PR_TRUE, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    // if there are any tree anonymous children create frames for them
-    nsCOMPtr<nsIAtom> tagName;
-    aContent->GetTag(*getter_AddRefs(tagName));
-    CreateAnonymousTableCellFrames(aPresShell, aPresContext, tagName, aState, aContent, 
-                                  aNewCellInnerFrame, aNewCellOuterFrame, childItems);
-
     aNewCellInnerFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aState.mFloatedItems.childList) {
       aNewCellInnerFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::floaterList,
@@ -3019,13 +3064,11 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresShell*            aPresShell,
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
 
-  PRInt32 count;
-  aContent->ChildCount(count);
-
-  for (PRInt32 childX = 0; childX < count; childX++) { // iterate the child content
+  ChildIterator iterator(aContent);
+  while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
-    rv = aContent->ChildAt(childX, *getter_AddRefs(childContent));
-    if (childContent.get() && NS_SUCCEEDED(rv)) {
+    iterator.NextChild(getter_AddRefs(childContent));
+    if (childContent.get()) {
       rv = TableProcessChild(aPresShell, aPresContext, aState, *childContent.get(), aParentFrame,
                              parentFrameType.get(), parentStyleContext.get(),
                              aTableCreator, aChildItems, aCaption);
@@ -4126,7 +4169,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
         InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
                              listStyle, PR_FALSE, PR_FALSE, PR_TRUE);
-
         newFrame = listFrame;
         // XXX Temporary for Bug 19416
         {
@@ -5041,160 +5083,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
-
-  const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
-      styleContext->GetStyleData(eStyleStruct_UserInterface);
-
-  if (!ui->mBehavior.IsEmpty()) {
-    // Get the XBL loader.
-    nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-    if (!xblService)
-      return rv;
-
-     // Retrieve the anonymous content that we should build.
-    nsCOMPtr<nsIDOMNodeList> anonymousItems;
-    nsCOMPtr<nsIContent> childElement;
-    PRBool multiple;
-    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement), &multiple);
-    
-    if (anonymousItems)
-    {
-      // See if we have to move our explicit content.
-      nsFrameItems explicitItems;
-      if (childElement || multiple) {
-        // First, remove all of the kids from the frame list and put them
-        // in a new frame list.
-        explicitItems.childList = aChildItems.childList;
-        explicitItems.lastChild = aChildItems.lastChild;
-        aChildItems.childList = aChildItems.lastChild = nsnull;
-      }
-
-      // Build the frames for the anonymous content.
-      PRUint32 count = 0;
-      anonymousItems->GetLength(&count);
-
-      for (PRUint32 i=0; i < count; i++)
-      {
-        // get our child's content and set its parent to our content
-        nsCOMPtr<nsIDOMNode> elt;
-        if (NS_FAILED(anonymousItems->Item(i, getter_AddRefs(elt))))
-            continue;
-
-        // create the frame and attach it to our frame
-        nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
-        ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
-      }
-
-      if (childElement) {
-        // Now append the explicit frames 
-        // All our explicit content that we built must be reparented.
-        nsIFrame* frame = nsnull;
-        nsIFrame* currFrame = aChildItems.childList;
-        while (currFrame) {
-          LocateAnonymousFrame(aPresContext,
-                               currFrame,
-                               childElement,
-                               &frame);
-          if (frame)
-            break;
-          currFrame->GetNextSibling(&currFrame);
-        }
-
-        nsCOMPtr<nsIFrameManager> frameManager;
-        aPresShell->GetFrameManager(getter_AddRefs(frameManager));
-      
-        if (frameManager && frame && explicitItems.childList) {
-          frameManager->AppendFrames(aPresContext, *aPresShell, frame,
-                                     nsnull, explicitItems.childList);
-
-          nsIFrame* insertionPoint = nsnull;
-          frameManager->GetInsertionPoint(aPresShell, frame, explicitItems.childList, &insertionPoint);
-          if (!insertionPoint) {
-            nsCOMPtr<nsIStyleContext> styleContextForFrame;
-            frame->GetStyleContext(getter_AddRefs(styleContextForFrame));
-            nsIFrame* walkit = explicitItems.childList;
-            while (walkit) {
-              nsIFrame* realFrame = GetRealFrame(walkit);
-              realFrame->SetParent(frame);
-              aPresContext->ReParentStyleContext(realFrame, styleContextForFrame);
-              walkit->GetNextSibling(&walkit);
-            }
-          }
-        }
-      }
-      else if (multiple) {
-        nsCOMPtr<nsIDocument> document;
-        nsCOMPtr<nsIBindingManager> bindingManager;
-        aParent->GetDocument(*getter_AddRefs(document));
-        document->GetBindingManager(getter_AddRefs(bindingManager));
-        nsCOMPtr<nsIContent> currContent;
-        nsCOMPtr<nsIContent> insertionElement;
-        nsIFrame* currFrame = explicitItems.childList;
-        explicitItems.childList = explicitItems.lastChild = nsnull;
-        nsCOMPtr<nsIFrameManager> frameManager;
-        aPresShell->GetFrameManager(getter_AddRefs(frameManager));
-          
-        while (currFrame) {
-          nsIFrame* nextFrame;
-          currFrame->GetNextSibling(&nextFrame);
-          currFrame->SetNextSibling(nsnull);
-          
-          currFrame->GetContent(getter_AddRefs(currContent));
-          bindingManager->GetInsertionPoint(aParent, currContent, getter_AddRefs(insertionElement));
-          
-          nsIFrame* frame = nsnull;
-          if (insertionElement) {
-            nsIFrame* childFrame = aChildItems.childList;
-            while (childFrame) {
-              LocateAnonymousFrame(aPresContext,
-                                   childFrame,
-                                   insertionElement,
-                                   &frame);
-              if (frame)
-                break;
-              childFrame->GetNextSibling(&childFrame);
-            }
-          }
-
-          if (!frame) {
-            if (!explicitItems.childList)
-              explicitItems.childList = explicitItems.lastChild = currFrame;
-            else {
-              explicitItems.lastChild->SetNextSibling(currFrame);
-              explicitItems.lastChild = currFrame;
-            }
-          }
-
-          if (frameManager && frame) {
-            frameManager->AppendFrames(aPresContext, *aPresShell, frame,
-                                       nsnull, currFrame);
-
-            nsIFrame* insertionPoint = nsnull;
-            frameManager->GetInsertionPoint(aPresShell, frame, explicitItems.childList, &insertionPoint);
-            if (!insertionPoint) {
-              frame->GetStyleContext(getter_AddRefs(styleContext));
-              nsIFrame* realFrame = GetRealFrame(currFrame);
-              realFrame->SetParent(frame);
-              aPresContext->ReParentStyleContext(realFrame, styleContext);
-            }
-          }
-       
-          currFrame = nextFrame;
-        }
-        if (explicitItems.lastChild) {
-          explicitItems.lastChild->SetNextSibling(aChildItems.childList);
-          aChildItems.childList = explicitItems.childList;
-        }
-      }
-
-      return NS_OK;
-    }
-  }
-  // If we have no anonymous content from XBL see if we might have
-  // some by looking at the tag rather than doing a QueryInterface on
+  // See if we might have anonymous content
+  // by looking at the tag rather than doing a QueryInterface on
   // the frame.  Only these tags' frames can have anonymous content
   // through nsIAnonymousContentCreator.  We do this check for
   // performance reasons. If we did a QueryInterface on every tag it
@@ -5275,61 +5165,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
     }
   }
 
-  return NS_OK;
-}
-
-// after the node has been constructed and initialized create any
-// anonymous content a node needs.
-nsresult
-nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPresShell, 
-                                             nsIPresContext*  aPresContext,
-                                             nsIAtom*                 aTag,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aParent,
-                                             nsIFrame*                aNewFrame,
-                                             nsIFrame*                aNewCellFrame,
-                                             nsFrameItems&            aChildItems)
-{
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aNewCellFrame->GetStyleContext(getter_AddRefs(styleContext));
-
-  const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
-      styleContext->GetStyleData(eStyleStruct_UserInterface);
-
-  if (!ui->mBehavior.IsEmpty()) {
-    // Get the XBL loader.
-    nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-    if (!xblService)
-      return rv;
-
-    // Retrieve the anonymous content that we should build.
-    nsCOMPtr<nsIContent> childElement;
-    nsCOMPtr<nsIDOMNodeList> anonymousItems;
-    PRBool multiple;
-    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement), &multiple);
-    
-    if (!anonymousItems)
-      return NS_OK;
-
-    // Build the frames for the anonymous content.
-    PRUint32 count = 0;
-    anonymousItems->GetLength(&count);
-
-    for (PRUint32 i=0; i < count; i++)
-    {
-      // get our child's content and set its parent to our content
-      nsCOMPtr<nsIDOMNode> elt;
-      if (NS_FAILED(anonymousItems->Item(i, getter_AddRefs(elt))))
-          continue;
-
-      // create the frame and attach it to our frame
-      nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
-      ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
-    }
-
-    return NS_OK;
-  }
   return NS_OK;
 }
 
@@ -7175,29 +7010,19 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
   rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, tag, getter_AddRefs(styleContext));
 
   if (NS_SUCCEEDED(rv)) {
-    // Pre-check for display "none" - if we find that, don't create
-    // any frame at all
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      styleContext->GetStyleData(eStyleStruct_Display);
-
-    if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-      aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
-    }
-    else
-    {
-      PRInt32 nameSpaceID;
-      aContent->GetNameSpaceID(nameSpaceID);
-      rv = ConstructFrameInternal(aPresShell,
-                                    aPresContext,
-                                    aState,
-                                    aContent,
-                                    aParentFrame,
-                                    tag,
-                                    nameSpaceID,
-                                    styleContext,
-                                    aFrameItems,
-                                    PR_FALSE);
-    }
+    
+    PRInt32 nameSpaceID;
+    aContent->GetNameSpaceID(nameSpaceID);
+    rv = ConstructFrameInternal(aPresShell,
+                                  aPresContext,
+                                  aState,
+                                  aContent,
+                                  aParentFrame,
+                                  tag,
+                                  nameSpaceID,
+                                  styleContext,
+                                  aFrameItems,
+                                  PR_FALSE);
   }
   
   return rv;
@@ -7216,13 +7041,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                                nsFrameItems&            aFrameItems,
                                                PRBool                   aXBLBaseTag)
 {
-#ifdef DEBUG_hyatt
-	if (aTag == nsXULAtoms::menulist) {
-		printf("moo!");
-	}
-#endif /* DEBUG_hyatt */
   // The following code allows the user to specify the base tag
-  // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
+  // of an element using XBL.  XUL and HTML objects (like boxes, menus, etc.)
   // can then be extended arbitrarily.
   nsCOMPtr<nsIStyleContext> styleContext(do_QueryInterface(aStyleContext));
   nsCOMPtr<nsIXBLBinding> binding;
@@ -7278,6 +7098,15 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     }
   }
 
+  // Pre-check for display "none" - if we find that, don't create
+  // any frame at all
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    styleContext->GetStyleData(eStyleStruct_Display);
+
+  if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+    aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+    return NS_OK;
+  }
 
   nsIFrame* lastChild = aFrameItems.lastChild;
 
@@ -11286,11 +11115,11 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIStyleContext> styleContext;
-
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+    
   if (aCanHaveGeneratedContent) {
     // Probe for generated content before
     nsIFrame* generatedFrame;
-    aFrame->GetStyleContext(getter_AddRefs(styleContext));
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::beforePseudo,
                                     aParentIsBlock, &generatedFrame)) {
@@ -11310,19 +11139,15 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     nsPseudoFrames priorPseudoFrames; 
     aState.mPseudoFrames.Reset(&priorPseudoFrames);
 
-    // Iterate the child content objects and construct frames
-    PRInt32   count;
-    aContent->ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
+    ChildIterator iterator(aContent);
+    while (iterator.HasMoreChildren()) {
       nsCOMPtr<nsIContent> childContent;
-      if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
-        // Construct a child frame
-        rv = ConstructFrame(aPresShell, aPresContext, aState, childContent, aFrame, aFrameItems);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-      }
+      iterator.NextChild(getter_AddRefs(childContent));
+      rv = ConstructFrame(aPresShell, aPresContext, aState, childContent, aFrame, aFrameItems);
+      if (NS_FAILED(rv))
+        return rv;
     }
+
     // process the current pseudo frame state
     if (!aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
@@ -12471,17 +12296,14 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
   }
 
   // Iterate the child content objects and construct frames
-  PRInt32   count;
-  aContent->ChildCount(count);
-  for (PRInt32 i = 0; i < count; i++) {
+  ChildIterator iterator(aContent);
+  while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
-    if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
-      // Construct a child frame
-      rv = ConstructFrame(aPresShell, aPresContext, aState, childContent, aFrame, aFrameItems);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
+    iterator.NextChild(getter_AddRefs(childContent));
+    // Construct a child frame
+    rv = ConstructFrame(aPresShell, aPresContext, aState, childContent, aFrame, aFrameItems);
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   // process pseudo frames if necessary
@@ -12763,36 +12585,34 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
 
   // Iterate the child content objects and construct frames
   PRBool allKidsInline = PR_TRUE;
-  PRInt32 count;
-  aContent->ChildCount(count);
-  for (PRInt32 i = 0; i < count; i++) {
+  ChildIterator iterator(aContent);
+  while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
-    if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
-      // Construct a child frame
-      nsIFrame* oldLastChild = aFrameItems.lastChild;
-      rv = ConstructFrame(aPresShell, aPresContext, aState, childContent, aFrame, aFrameItems);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+    iterator.NextChild(getter_AddRefs(childContent));
+    // Construct a child frame
+    nsIFrame* oldLastChild = aFrameItems.lastChild;
+    rv = ConstructFrame(aPresShell, aPresContext, aState, childContent, aFrame, aFrameItems);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-      // Examine newly added children (we may have added more than one
-      // child if the child was another inline frame that ends up
-      // being carved in 3 pieces) to maintain the allKidsInline flag.
-      if (allKidsInline) {
-        nsIFrame* kid;
-        if (oldLastChild) {
-          oldLastChild->GetNextSibling(&kid);
+    // Examine newly added children (we may have added more than one
+    // child if the child was another inline frame that ends up
+    // being carved in 3 pieces) to maintain the allKidsInline flag.
+    if (allKidsInline) {
+      nsIFrame* kid;
+      if (oldLastChild) {
+        oldLastChild->GetNextSibling(&kid);
+      }
+      else {
+        kid = aFrameItems.childList;
+      }
+      while (kid) {
+        if (!IsInlineFrame(kid)) {
+          allKidsInline = PR_FALSE;
+          break;
         }
-        else {
-          kid = aFrameItems.childList;
-        }
-        while (kid) {
-          if (!IsInlineFrame(kid)) {
-            allKidsInline = PR_FALSE;
-            break;
-          }
-          kid->GetNextSibling(&kid);
-        }
+        kid->GetNextSibling(&kid);
       }
     }
   }
