@@ -428,7 +428,7 @@ function onPanelLoaded(pageId) {
     // the account data, and then restore theh page
     if (pageId == currentPageId) {
       clearAccountData(currentServerId, currentPageId);
-      restorePage(currentServerId, currentPageId);
+      restorePage(currentPageId, currentServerId);
     }
   } else {
 
@@ -734,7 +734,7 @@ function getValueArrayFor(serverId) {
 
 function clearAccountData(serverId, pageId)
 {
-  getValueArrayFor(serverId)[pageId] = null;
+  accountArray[serverId] = null;
 }
 
 function getServerIdAndPageIdFromTree(tree)
