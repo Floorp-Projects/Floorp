@@ -247,6 +247,11 @@
 { 0x4e03b3a6, 0x624a, 0x11d3, \
   { 0x8a, 0xd4, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
 
-
+//
+// nsIMsgProtocolInfo
+//
+// there is no base class.
+#define NS_MSGPROTOCOLINFO_PROGID_PREFIX \
+  "component://netscape/messenger/protocol/info;type="
 
 #endif // nsMessageBaseCID_h__
