@@ -647,7 +647,7 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
   nsresult rv = NS_OK;
   if (editor)
   {
-      nsAutoString tString
+      nsAutoString tString;
 
       if (aParams) {
         nsXPIDLCString s;
