@@ -76,4 +76,4 @@ var value = re.exec(string_to_match);
 var expect =  string_to_match;
 var actual = value ? value[0] : value;
 
-reportCompare(expect, actual, status);
+reportCompare(expect, actual, summary);
