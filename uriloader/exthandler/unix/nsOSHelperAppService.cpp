@@ -417,17 +417,16 @@ GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
         }
 #endif
         if (NS_SUCCEEDED(rv)) { // entry parses
-          nsAString::const_iterator match_start, match_end, end_iter;
+          nsAString::const_iterator start, end;
+          extensions.BeginReading(start);
+          extensions.EndReading(end);
+          nsAString::const_iterator iter(start);
 
-          extensions.BeginReading(match_start);
-          extensions.EndReading(end_iter);
-          match_end = end_iter;
-          
-          while (CaseInsensitiveFindInReadable(aFileExtension,
-                                               match_start,
-                                               match_end)) {
-            if (match_end == end_iter ||
-                *match_end == ',') {
+          while (start != end) {
+            FindCharInReadable(',', iter, end);
+            if (Compare(Substring(start, iter),
+                        aFileExtension,
+                        nsCaseInsensitiveStringComparator()) == 0) {
               // it's a match.  Assign the type and description and run
               aMajorType.Assign(Substring(majorTypeStart, majorTypeEnd));
               aMinorType.Assign(Substring(minorTypeStart, minorTypeEnd));
@@ -435,15 +434,10 @@ GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
               mimeFile->Close();
               return NS_OK;
             }
-            // go past what remains of the non-matching extension
-            while (match_start != end_iter &&
-                   *match_start != ',') {
-              ++match_start;
+            if (iter != end) {
+              ++iter;
             }
-            if (match_start != end_iter) {
-              ++match_start;  // go past the comma
-            }
-            match_end = end_iter;
+            start = iter;
           }
         }
         // truncate the entry for the next iteration
