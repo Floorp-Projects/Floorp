@@ -665,10 +665,10 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
     unsigned int requiredFlags;
     PRArenaPool *arena = NULL;
     CERTGeneralName *namesList = NULL;
-    CERTGeneralName *subjectNameList = NULL;
     CERTCertificate **certsList      = NULL;
     int certsListLen = 16;
     int namesCount = 0;
+    PRBool subjectCertIsSelfIssued;
 
     cbd_FortezzaType last_type = cbd_None;
 
@@ -743,32 +743,42 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
     if (certsList == NULL)
 	goto loser;
 
+    /* RFC 3280 says that the name constraints will apply to the names
+    ** in the leaf (EE) cert, whether it is self issued or not, so
+    ** we pretend that it is not.
+    */
+    subjectCertIsSelfIssued = PR_FALSE;
     for ( count = 0; count < CERT_MAX_CERT_CHAIN; count++ ) {
-	int subjectNameListLen;
-	int i;
 	PRBool validCAOverride = PR_FALSE;
 
 	/* Construct a list of names for the current and all previous 
-	 * certifcates to be verified against the name constraints extension 
-	 * of the issuer certificate. 
+	 * certifcates (except leaf (EE) certs, root CAs, and self-issued
+	 * intermediate CAs) to be verified against the name constraints 
+	 * extension of the issuer certificate. 
 	 */
-	subjectNameList    = CERT_GetCertificateNames(subjectCert, arena);
-	subjectNameListLen = CERT_GetNamesLength(subjectNameList);
-	if (certsListLen <= namesCount + subjectNameListLen) {
-	    certsListLen = (namesCount + subjectNameListLen) * 2;
-	    certsList = 
-	        (CERTCertificate **)PORT_Realloc(certsList, 
-		                     certsListLen * sizeof(CERTCertificate *));
-	    if (certsList == NULL) {
-		goto loser;
+	if (subjectCertIsSelfIssued == PR_FALSE) {
+	    CERTGeneralName *subjectNameList;
+	    int subjectNameListLen;
+	    int i;
+	    subjectNameList    = CERT_GetCertificateNames(subjectCert, arena);
+	    subjectNameListLen = CERT_GetNamesLength(subjectNameList);
+	    if (certsListLen <= namesCount + subjectNameListLen) {
+		CERTCertificate **tmpCertsList;
+		certsListLen = (namesCount + subjectNameListLen) * 2;
+		tmpCertsList = 
+		    (CERTCertificate **)PORT_Realloc(certsList, 
+	                            certsListLen * sizeof(CERTCertificate *));
+		if (tmpCertsList == NULL) {
+		    goto loser;
+		}
+		certsList = tmpCertsList;
 	    }
+	    for (i = 0; i < subjectNameListLen; i++) {
+		certsList[namesCount + i] = subjectCert;
+	    }
+	    namesCount += subjectNameListLen;
+	    namesList = cert_CombineNamesLists(namesList, subjectNameList);
 	}
-	for (i = 0; i < subjectNameListLen; i++) {
-	    certsList[namesCount + i] = subjectCert;
-	}
-	namesCount += subjectNameListLen;
-	namesList = cert_CombineNamesLists(namesList, subjectNameList);
-
 	/* find the certificate of the issuer */
 	issuerCert = CERT_FindCertIssuer(subjectCert, t, certUsage);
 	if ( ! issuerCert ) {
@@ -951,9 +961,15 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    LOG_ERROR(log, issuerCert, count+1, 0);
 	    goto loser;
 	} 
-	if (issuerCert->derIssuer.len == 0 ||
-	    !SECITEM_ItemsAreEqual(&issuerCert->derIssuer, 
-	                           &issuerCert->derSubject)) {
+	/* The issuer cert will be the subject cert in the next loop.
+	 * A cert is self-issued if its subject and issuer are equal and
+	 * both are of non-zero length. 
+	 */
+	subjectCertIsSelfIssued = (PRBool)
+	    SECITEM_ItemsAreEqual(&issuerCert->derIssuer, 
+				  &issuerCert->derSubject) &&
+	    issuerCert->derSubject.len > 0;
+	if (subjectCertIsSelfIssued == PR_FALSE) {
 	    /* RFC 3280 says only non-self-issued intermediate CA certs 
 	     * count in path length.
 	     */
