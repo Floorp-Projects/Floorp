@@ -72,7 +72,8 @@ public:
 
   // Table menu & submenus
   static MenuSpec table_menu_spec[];
-  static MenuSpec table_insert_delete_submenu_spec[];
+  static MenuSpec table_select_submenu_spec[];
+  static MenuSpec insert_table_menu_spec[];
 
   static MenuSpec tools_menu_spec[];
 

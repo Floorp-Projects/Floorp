@@ -1439,7 +1439,15 @@ fe_EditorIndent(MWContext* context, Boolean is_indent)
 void
 fe_EditorAlignSet(MWContext* pMWContext, ED_Alignment align)
 {
-    ED_ElementType type = EDT_GetCurrentElementType(pMWContext);
+    ED_ElementType type;
+
+    if (EDT_IsInsertPointInTable(pMWContext))
+    {
+        EDT_SetTableAlign(pMWContext, align);
+        return;
+    }
+
+    type = EDT_GetCurrentElementType(pMWContext);
 
     switch ( type ){
         case ED_ELEMENT_HRULE:

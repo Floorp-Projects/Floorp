@@ -36,6 +36,8 @@
 #include "pk11func.h"
 #endif
 
+extern "C" int XFE_EDITOR_NEWTABLE_COLS;
+
 #define FE_SYNTAX_ERROR() doSyntaxErrorAlert(view, info)
 
 //
@@ -615,6 +617,131 @@ public:
 	};
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorTableCellInsert(view->getContext(), NULL);
+	}; 
+};
+
+class SelectTableCommand : public XFE_EditorViewCommand
+{
+public:
+	SelectTableCommand() : XFE_EditorViewCommand(xfeCmdSelectTable) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_ChangeTableSelection(view->getContext(), ED_HIT_SEL_TABLE,
+                                 ED_MOVE_NONE,
+                                 EDT_GetTableCellData(view->getContext()));
+	}; 
+};
+
+class SelectTableCellCommand : public XFE_EditorViewCommand
+{
+public:
+	SelectTableCellCommand() : XFE_EditorViewCommand(xfeCmdSelectTableCell) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_ChangeTableSelection(view->getContext(), ED_HIT_SEL_CELL,
+                                 ED_MOVE_NONE,
+                                 EDT_GetTableCellData(view->getContext()));
+	}; 
+};
+
+class SelectTableRowCommand : public XFE_EditorViewCommand
+{
+public:
+	SelectTableRowCommand() : XFE_EditorViewCommand(xfeCmdSelectTableRow) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_ChangeTableSelection(view->getContext(), ED_HIT_SEL_ROW,
+                                 ED_MOVE_NONE,
+                                 EDT_GetTableCellData(view->getContext()));
+	}; 
+};
+
+class SelectTableColumnCommand : public XFE_EditorViewCommand
+{
+public:
+	SelectTableColumnCommand()
+      : XFE_EditorViewCommand(xfeCmdSelectTableColumn) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_ChangeTableSelection(view->getContext(), ED_HIT_SEL_COL,
+                                 ED_MOVE_NONE,
+                                 EDT_GetTableCellData(view->getContext()));
+	}; 
+};
+
+class SelectTableAllCellsCommand : public XFE_EditorViewCommand
+{
+public:
+	SelectTableAllCellsCommand()
+      : XFE_EditorViewCommand(xfeCmdSelectTableAllCells) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_ChangeTableSelection(view->getContext(), ED_HIT_SEL_ALL_CELLS,
+                                 ED_MOVE_NONE,
+                                 EDT_GetTableCellData(view->getContext()));
+	}; 
+};
+
+class TableJoinCommand : public XFE_EditorViewCommand
+{
+public:
+	TableJoinCommand()
+      : XFE_EditorViewCommand(xfeCmdTableJoin) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+        return (EDT_GetMergeTableCellsType(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_MergeTableCells(view->getContext());
+	}; 
+};
+
+class ConvertTextToTableCommand : public XFE_EditorViewCommand
+{
+public:
+	ConvertTextToTableCommand()
+      : XFE_EditorViewCommand(xfeCmdConvertTextToTable) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return EDT_CanConvertTextToTable(view->getContext());
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        char* cols_str = XFE_Prompt(view->getContext(),
+                                    XP_GetString(XFE_EDITOR_NEWTABLE_COLS),
+                                    "1");
+        int cols = atoi(cols_str);
+        if (cols <= 0)
+          return;
+        EDT_ConvertTextToTable(view->getContext(), cols);
+	}; 
+};
+
+class ConvertTableToTextCommand : public XFE_EditorViewCommand
+{
+public:
+	ConvertTableToTextCommand()
+      : XFE_EditorViewCommand(xfeCmdConvertTableToText) {};
+
+	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
+		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
+	};
+	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
+        EDT_ConvertTableToText(view->getContext());
 	}; 
 };
 
@@ -2768,6 +2895,13 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	registerCommand(my_commands, new DeleteTableCellCommand);
 	registerCommand(my_commands, new DeleteTableRowCommand);
 	registerCommand(my_commands, new DeleteTableColumnCommand);
+	registerCommand(my_commands, new SelectTableCommand);
+	registerCommand(my_commands, new SelectTableCellCommand);
+	registerCommand(my_commands, new SelectTableRowCommand);
+	registerCommand(my_commands, new SelectTableColumnCommand);
+	registerCommand(my_commands, new TableJoinCommand);
+	registerCommand(my_commands, new ConvertTextToTableCommand);
+	registerCommand(my_commands, new ConvertTableToTextCommand);
 	registerCommand(my_commands, new RemoveLinkCommand);
 	registerCommand(my_commands, new SelectAllCommand);
 	registerCommand(my_commands, new FindCommand);

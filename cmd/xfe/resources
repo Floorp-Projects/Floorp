@@ -1948,6 +1948,18 @@ Remove the link corresponding to the selected text
 *selectTable.mnemonic:                          l
 *selectTable.documentationString:	\
 Select the table at the current cursor location
+*selectRow.labelString:                       Row
+*selectRow.documentationString:	\
+Select the table row at the current cursor location
+*selectColumn.labelString:                       Column
+*selectColumn.documentationString:	\
+Select the table Column at the current cursor location
+*selectCell.labelString:                       Cell
+*selectCell.documentationString:	\
+Select the table cell at the current cursor location
+*selectAllCells.labelString:                       All Cells
+*selectAllCells.documentationString:	\
+Select all cells in the table at the current cursor location
 
 *menuBar*editPageSource.labelString:        HTML Source
 *editPageSource.documentationString:	\
@@ -2918,7 +2930,7 @@ Set the style to Blink
 *menuBar*clearAllStyles.mnemonic:           r
 *clearAllStyles.documentationString: Remove all character styles
 
-*menuBar*setTableProperties.labelString:    Table Properties
+*menuBar*setTableProperties.labelString:    Table Properties...
 *menuBar*setTableProperties.mnemonic:       T
 *setTableProperties.documentationString: Change table properties
 
@@ -3023,9 +3035,18 @@ Right-justify the current paragraph
 !=============================
 
 *menuBar*tableMenu.labelString:		Table
+!*menuBar*tableMenu*align.labelString:	Align Table
 *tableInsertMenu.labelString:		Insert
 *tableDeleteMenu.labelString:		Delete
 *tableSelectMenu.labelString:		Select
+*tableSelectMenu*selectTable.labelString:		Table
+*tableSelectMenu*selectTableRow.labelString:		Row
+*tableSelectMenu*selectTableColumn.labelString:		Column
+*tableSelectMenu*selectTableCell.labelString:		Cell
+*tableSelectMenu*selectTableAllCells.labelString:	All Cells
+*tableJoin.labelString:					Join
+*convertTextToTable.labelString:			Convert Text to Table
+*convertTableToText.labelString:			Convert Table to Text
 
 !============================
   Tools Menu - Page Composer
@@ -4028,10 +4049,10 @@ File/New Document/From Template.
 ! Cell tab in table dialog
 *changeSelection.labelString:			Selection
 *previous.labelString:				Previous
-*tableCreateDialog_popup*next.labelString:			Next
-*selectCell.labelString:			Cell
-*selectRow.labelString:				Row
-*selectColumn.labelString:			Column
+*cellTab*next.labelString:			Next
+*cellSelect.labelString:			Cell
+*rowSelect.labelString:				Row
+*columnSelect.labelString:			Column
 *cellRowsLabel.labelString:			Cell spans
 *cellColumnsLabel.labelString:			row(s), and 
 *cellColumnsUnits.labelString:			column(s)

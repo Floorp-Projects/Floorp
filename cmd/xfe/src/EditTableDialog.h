@@ -33,6 +33,10 @@
 class XFE_Frame;
 class EDT_AllTableData;
 
+//
+// I don't think we really need to save all these variables.
+// 2DO: clean out the ones we don't need to save.
+//
 typedef struct fe_EditorTablesTableStruct
 {
 	Widget number_rows_text;
@@ -52,9 +56,6 @@ typedef struct fe_EditorTablesTableStruct
 	LO_Color color_value;
 	Widget caption_toggle;
 	Widget caption_type;
-#ifdef EQUAL_COLUMN_TOGGLE
-	Widget equal_column_toggle;
-#endif /* EQUAL_COLUMN_TOGGLE */
 	Widget alignBox;
     Boolean inserting;
 } fe_EditorTablesTableStruct; 
@@ -84,6 +85,7 @@ typedef struct fe_EditorTablesCellStruct
 	Widget height_units;
 	Widget bg_group;
 	LO_Color color_value;
+    Widget option_menu;
 } fe_EditorTablesCellStruct;
 
 class XFE_EditTableDialog: public XFE_Dialog
@@ -102,10 +104,11 @@ private:
     XP_Bool m_doneWithLoop;
 
     fe_EditorTablesTableStruct* m_table;
-    fe_EditorTablesCellStruct* m_cell;
+    fe_EditorTablesCellStruct m_cell;
 
     void ok();
     void cancel();
+    void changeSelection(Boolean);
 
     Widget tablePropertiesCreate(Widget parent);
     void tablePropertiesInit();
@@ -113,7 +116,6 @@ private:
     void cellPropertiesInit();
     void cellPropertiesSet();
     Boolean cellPropertiesValidate();
-
     void tablePropertiesCommonSet(EDT_AllTableData* table_data);
     Boolean tablePropertiesValidate();
     void tablePropertiesSet();
@@ -124,6 +126,7 @@ private:
     static void cancel_cb(Widget, XtPointer, XtPointer);
     static void table_toggle_cb(Widget, XtPointer, XtPointer);
     static void cell_toggle_cb(Widget, XtPointer, XtPointer);
+    static void cell_selection_cb(Widget, XtPointer, XtPointer);
 };
 
 #endif /* _xfe_EditTableDialog_h */

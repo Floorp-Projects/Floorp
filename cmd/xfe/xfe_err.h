@@ -1568,6 +1568,9 @@ ResDef(XFE_SUBUPGRADE_AUTOSUBSCRIBE, XFE_ERR_OFFSET+635, "Automatically subscrib
 
 ResDef(XFE_MOVEMAIL_TAB, XFE_ERR_OFFSET + 636, "MoveMail")
 
+ResDef(XFE_EDITOR_NEWTABLE_COLS, XFE_ERR_OFFSET + 637,
+       "Number of columns in new table?")
+
 END_STR(mcom_cmd_xfe_xfe_err_h_strings)
 
 #endif /* __XFE_XFE_ERR_H_ */

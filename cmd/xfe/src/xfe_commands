@@ -431,6 +431,13 @@ xfeCmdSetDefaultColor                                              setDefaultCol
 xfeCmdSetTableProperties                                           setTableProperties
 xfeCmdIndent                                                       indent
 xfeCmdOutdent                                                      outdent
+xfeCmdSelectTableRow                                               selectRow
+xfeCmdSelectTableColumn                                            selectColumn
+xfeCmdSelectTableCell                                              selectCell
+xfeCmdSelectTableAllCells                                          selectAllCells
+xfeCmdTableJoin                                                    tableJoin
+xfeCmdConvertTextToTable                                           convertTextToTable
+xfeCmdConvertTableToText                                           convertTableToText
 xfeCmdSetTextProperties                                            setTextProperties
 xfeCmdSetPageTitle                                                 setPageTitle
 xfeCmdSetDefaultTextProperties                                     setDefaultTextProperties

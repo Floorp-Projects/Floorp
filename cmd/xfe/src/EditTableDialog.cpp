@@ -118,6 +118,7 @@ static Widget fe_create_background_group(Widget parent, char* name,
 /* A routine that comes from Mail/News SearchRuleView.cpp, of all places: */
 extern Widget fe_make_option_menu(Widget toplevel, Widget parent,
                                   char* widgetName, Widget *popup);
+Widget fe_get_current_attribute_option(Widget parent);
 
 /* Some defs of stuff in editordialogs.c */
 extern char* fe_SimpleTableAlignment[];
@@ -175,7 +176,6 @@ XFE_EditTableDialog::XFE_EditTableDialog(Widget parent, char *name,
 
     m_context = context;
     m_table = table;
-    m_cell = new fe_EditorTablesCellStruct;     // XXX need to get real cell
 
 	n = 0;
 	folder = fe_CreateFolder(m_chrome, "folder", args, n);
@@ -202,7 +202,7 @@ XFE_EditTableDialog::XFE_EditTableDialog(Widget parent, char *name,
 
 XFE_EditTableDialog::~XFE_EditTableDialog()
 {
-    delete m_cell;
+    delete m_table;
 }
 
 void
@@ -275,10 +275,10 @@ XFE_EditTableDialog::table_toggle_cb(Widget widget,
 
 void
 XFE_EditTableDialog::cell_toggle_cb(Widget widget,
-                                    XtPointer , XtPointer closure)
+                                    XtPointer clientData, XtPointer)
 {
-#if 1
-	fe_EditorTablesCellStruct* w_data = (fe_EditorTablesCellStruct*)closure;
+    XFE_EditTableDialog* edt = (XFE_EditTableDialog*)clientData;
+	fe_EditorTablesCellStruct* w_data = &(edt->m_cell);
 	Boolean enabled = XmToggleButtonGetState(widget);
 	MWContext* context = fe_WidgetToMWContext(widget);
 	Widget  text = NULL;
@@ -296,41 +296,41 @@ XFE_EditTableDialog::cell_toggle_cb(Widget widget,
 		fe_TextFieldSetEditable(context, text, enabled);
 	if (radio != NULL)
 		fe_SimpleRadioGroupSetSensitive(radio, enabled);
-#else
-    Widget  first = (Widget)closure;
-	Boolean enabled = XmToggleButtonGetState(widget);
-	MWContext* context = fe_WidgetToMWContext(widget);
-	Widget*  children;
-	Cardinal num_children;
-	Cardinal i;
-	Widget*  group = NULL;
+}
 
-	XtVaGetValues(XtParent(widget),
-				  XmNchildren, &children,
-				  XmNnumChildren, &num_children, 0);
+void
+XFE_EditTableDialog::changeSelection(Boolean nextP)
+{
+    ED_MoveSelType moveType;
+    if (nextP)
+        moveType = ED_MOVE_NEXT;
+    else
+        moveType = ED_MOVE_PREV;
+    EDT_TableCellData* cellData = EDT_GetTableCellData(m_context);
+    Widget which = fe_get_current_attribute_option(m_cell.option_menu);
+    if (!strncmp(XtName(which), "cell", 4))
+    {
+        EDT_ChangeTableSelection(m_context, ED_HIT_SEL_CELL,
+                                 moveType, cellData);
+    }
+    else if (!strncmp(XtName(which), "row", 3))
+    {
+        EDT_ChangeTableSelection(m_context, ED_HIT_SEL_ROW,
+                                 moveType, cellData);
+    }
+    else if (!strncmp(XtName(which), "col", 3))
+    {
+        EDT_ChangeTableSelection(m_context, ED_HIT_SEL_COL,
+                                 moveType, cellData);
+    }
+}
 
-	for (i = 0; i < num_children; i++) {
-	    if (children[i] == first) {
-		    group = &children[i];
-			break;
-		}
-	}
-
-	if (!group)
-  	    return;
-
-	for (i = 0; i < 3; i++) {
-	    if (group[i] == widget)
-		    break;
-	}
-
-	if (i == 0 || i == 1) { /* width & height */
-	    fe_TextFieldSetEditable(context, group[i+3], enabled);
-		fe_SimpleRadioGroupSetSensitive(group[i+6], enabled);
-	} else if (i == 2) { /* color */
-	    XtVaSetValues(group[i+3], XmNsensitive, enabled, 0);
-	}
-#endif
+void
+XFE_EditTableDialog::cell_selection_cb(Widget w, XtPointer clientData,
+                                       XtPointer)
+{
+    XFE_EditTableDialog* edt = (XFE_EditTableDialog*)clientData;
+    edt->changeSelection(strncmp(XtName(w), "next", 4) == 0);
 }
 
 void 
@@ -528,63 +528,59 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 	other_frame = XmCreateFrame(form, "_frame", args, n);
 	XtManageChild(other_frame);
 
-#ifdef DEBUG_akkana
     n = 0;
 	XtSetArg(args[n], XmNchildType, XmFRAME_TITLE_CHILD); n++;
     w = XmCreateLabelGadget(other_frame, "changeSelection", args, n);
     XtManageChild(w);
 
 	n = 0;
-	XtSetArg(args[n], XmNfractionBase, 3); n++;
+	XtSetArg(args[n], XmNfractionBase, 4); n++;
 	prevnext_form = XmCreateForm(other_frame, "_form", args, n);
 	XtManageChild(prevnext_form);
 
-    n = 0;
-	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
-    w = XmCreatePushButtonGadget(prevnext_form, "previous", args, n);
+    Widget pulldownParent, option_menu;
+    option_menu = fe_make_option_menu(FE_GetToplevelWidget(),
+                                      prevnext_form, "searchTypeOpt",
+                                      &pulldownParent);
+    XtVaSetValues(option_menu,
+                  XmNtopAttachment, XmATTACH_FORM,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNbottomAttachment, XmATTACH_FORM,
+                  0);
+    w = XmCreatePushButtonGadget(pulldownParent, "cellSelect", NULL, 0);
     XtManageChild(w);
+    w = XmCreatePushButtonGadget(pulldownParent, "rowSelect", NULL, 0);
+    XtManageChild(w);
+    w = XmCreatePushButtonGadget(pulldownParent, "columnSelect", NULL, 0);
+    XtManageChild(w);
+    XtManageChild(option_menu);
+
+    // Set the menu appropriately:
+    //XtVaSetValues(m_opt_valueField, XmNsubMenuId, popup, 0);
 
     n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
 	XtSetArg(args[n], XmNleftPosition, 1); n++;
 	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    w = XmCreatePushButtonGadget(prevnext_form, "previous", args, n);
+    XtManageChild(w);
+	XtAddCallback(w, XmNactivateCallback, 
+				  cell_selection_cb, (XtPointer)this);
+
+    n = 0;
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
+	XtSetArg(args[n], XmNleftWidget, w); n++;
+	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
     w = XmCreatePushButtonGadget(prevnext_form, "next", args, n);
     XtManageChild(w);
-
-    Widget pulldownParent, optionMenu;
-    optionMenu = fe_make_option_menu(FE_GetToplevelWidget(),
-                                     prevnext_form, "searchTypeOpt",
-                                     &pulldownParent);
-    XtVaSetValues(optionMenu,
-                  XmNtopAttachment, XmATTACH_FORM,
-                  XmNleftAttachment, XmATTACH_POSITION,
-                  XmNleftPosition, 2,
-                  XmNrightAttachment, XmATTACH_FORM,
-                  XmNbottomAttachment, XmATTACH_FORM,
-                  0);
-    w = XmCreatePushButtonGadget(pulldownParent, "selectCell", NULL, 0);
-    XtManageChild(w);
-    w = XmCreatePushButtonGadget(pulldownParent, "selectRow", NULL, 0);
-    XtManageChild(w);
-    w = XmCreatePushButtonGadget(pulldownParent, "selectColumn", NULL, 0);
-    XtManageChild(w);
-    //XtAddCallback(w, XmNactivateCallback, selectOptionCB, this);
-    XtManageChild(optionMenu);
-
-    // Set the menu appropriately:
-    //XtVaSetValues(m_opt_valueField, XmNsubMenuId, popup, 0);
-#endif /* DEBUG_akkana */
+	XtAddCallback(w, XmNactivateCallback, 
+				  cell_selection_cb, (XtPointer)this);
 
 	n = 0;
-#ifdef DEBUG_akkana
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNtopWidget, other_frame); n++;
-#else /* DEBUG_akkana */
-	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
-#endif /* DEBUG_akkana */
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
 	rows_label = XmCreateLabelGadget(form, "cellRowsLabel", args, n);
     XtManageChild(rows_label);
@@ -720,9 +716,9 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 	XtManageChild(height_toggle);
 
 	XtAddCallback(width_toggle, XmNvalueChangedCallback, 
-				  cell_toggle_cb, (XtPointer)m_cell);
+				  cell_toggle_cb, (XtPointer)this);
 	XtAddCallback(height_toggle, XmNvalueChangedCallback, 
-				  cell_toggle_cb, (XtPointer)m_cell);
+				  cell_toggle_cb, (XtPointer)this);
 
 	/*
 	 *    Background..
@@ -735,19 +731,20 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 	bg_group = fe_create_background_group(form, "background", args, n);
 	XtManageChild(bg_group);
 
-	m_cell->number_rows_text = rows_text;
-	m_cell->number_columns_text = columns_text;
-	m_cell->horizontal_alignment = horizontal_alignment;
-	m_cell->vertical_alignment = vertical_alignment;
-	m_cell->header_style = header_style;
-	m_cell->wrap_text = wrap_text;
-	m_cell->width_toggle = width_toggle;
-	m_cell->width_text = width_text;
-	m_cell->width_units = width_units;
-	m_cell->height_toggle = height_toggle;
-	m_cell->height_text = height_text;
-	m_cell->height_units = height_units;
-	m_cell->bg_group = bg_group;
+	m_cell.number_rows_text = rows_text;
+	m_cell.number_columns_text = columns_text;
+	m_cell.horizontal_alignment = horizontal_alignment;
+	m_cell.vertical_alignment = vertical_alignment;
+	m_cell.header_style = header_style;
+	m_cell.wrap_text = wrap_text;
+	m_cell.width_toggle = width_toggle;
+	m_cell.width_text = width_text;
+	m_cell.width_units = width_units;
+	m_cell.height_toggle = height_toggle;
+	m_cell.height_text = height_text;
+	m_cell.height_units = height_units;
+	m_cell.bg_group = bg_group;
+    m_cell.option_menu = option_menu;
 
 	return form;
 }
@@ -755,73 +752,6 @@ XFE_EditTableDialog::cellPropertiesCreate(Widget parent)
 void
 XFE_EditTableDialog::cellPropertiesInit()
 {
-#if 0
-	Boolean is_nested = EDT_IsInsertPointInNestedTable(context);
-    EDT_TableCellData cell_data;
-	Boolean enabled = TRUE;
-	Widget  widget;
-
-	memset(&cell_data, 0, sizeof(EDT_TableCellData));
-
-	if (!fe_EditorTableCellGetData(context, &cell_data)) {
-	    memset(&cell_data, 0, sizeof(EDT_TableCellData));
-		cell_data.iColSpan = 1;
-		cell_data.iRowSpan = 1;
-	    cell_data.align = ED_ALIGN_DEFAULT;
-	    cell_data.valign = ED_ALIGN_DEFAULT;
-	    cell_data.pColorBackground = NULL;
-		enabled = FALSE;
-	}
-
-	fe_set_numeric_text_field(m_cell->number_rows_text,
-							  cell_data.iRowSpan);
-	fe_TextFieldSetEditable(context, m_cell->number_rows_text, enabled);
-	fe_set_numeric_text_field(m_cell->number_columns_text,
-							  cell_data.iColSpan);
-	fe_TextFieldSetEditable(context, m_cell->number_columns_text, enabled);
-
-	fe_SimpleRadioGroupSetWhich(m_cell->horizontal_alignment,
-								fe_ED_Alignment_to_index(cell_data.align));
-	fe_SimpleRadioGroupSetSensitive(m_cell->horizontal_alignment, enabled);
-
-	fe_SimpleRadioGroupSetWhich(m_cell->vertical_alignment,
-								fe_ED_Alignment_to_index(cell_data.valign));
-	fe_SimpleRadioGroupSetSensitive(m_cell->vertical_alignment, enabled);
-
-	XmToggleButtonGadgetSetState(m_cell->header_style, cell_data.bHeader,
-								 FALSE);
-	XtVaSetValues(m_cell->header_style, XmNsensitive, enabled, 0);
-	XmToggleButtonGadgetSetState(m_cell->wrap_text, cell_data.bNoWrap, FALSE);
-	XtVaSetValues(m_cell->wrap_text, XmNsensitive, enabled, 0);
-
-	fe_table_tbr_set(context, m_cell->width_toggle,
-					 m_cell->width_text, m_cell->width_units,
-					 cell_data.bWidthDefined,
-					 cell_data.iWidth,
-					 (cell_data.bWidthPercent));
-	XtVaSetValues(m_cell->width_toggle, XmNsensitive, enabled, 0);
-
-	widget = fe_SimpleRadioGroupGetChild(m_cell->width_units, 1);
-	fe_table_percent_label_set(widget, is_nested);
-
-	fe_table_tbr_set(context, m_cell->height_toggle,
-					 m_cell->height_text, m_cell->height_units,
-					 cell_data.bHeightDefined,
-					 cell_data.iHeight,
-					 (cell_data.bHeightPercent));
-	XtVaSetValues(m_cell->height_toggle, XmNsensitive, enabled, 0);
-
-	widget = fe_SimpleRadioGroupGetChild(m_cell->height_units, 1);
-	fe_table_percent_label_set(widget, is_nested);
-	
-	/*
-	 *    Background stuff
-	 */
-	fe_bg_group_set(m_cell->bg_group,
-					cell_data.pColorBackground,
-					cell_data.pBackgroundImage,
-					cell_data.bBackgroundNoSave);
-#else
 	Boolean is_nested = EDT_IsInsertPointInNestedTable(m_context);
     EDT_TableCellData* cell_data = EDT_GetTableCellData(m_context);
 	Boolean enabled = TRUE;
@@ -832,57 +762,56 @@ XFE_EditTableDialog::cellPropertiesInit()
 		enabled = FALSE;
 	}
 
-	fe_set_numeric_text_field(m_cell->number_rows_text,
+	fe_set_numeric_text_field(m_cell.number_rows_text,
 							  cell_data->iRowSpan);
-	fe_TextFieldSetEditable(m_context, m_cell->number_rows_text, enabled);
-	fe_set_numeric_text_field(m_cell->number_columns_text,
+	fe_TextFieldSetEditable(m_context, m_cell.number_rows_text, enabled);
+	fe_set_numeric_text_field(m_cell.number_columns_text,
 							  cell_data->iColSpan);
-	fe_TextFieldSetEditable(m_context, m_cell->number_columns_text, enabled);
+	fe_TextFieldSetEditable(m_context, m_cell.number_columns_text, enabled);
 
-	fe_SimpleRadioGroupSetWhich(m_cell->horizontal_alignment,
+	fe_SimpleRadioGroupSetWhich(m_cell.horizontal_alignment,
 								fe_ED_Alignment_to_index(cell_data->align));
-	fe_SimpleRadioGroupSetSensitive(m_cell->horizontal_alignment, enabled);
+	fe_SimpleRadioGroupSetSensitive(m_cell.horizontal_alignment, enabled);
 
-	fe_SimpleRadioGroupSetWhich(m_cell->vertical_alignment,
+	fe_SimpleRadioGroupSetWhich(m_cell.vertical_alignment,
 								fe_ED_Alignment_to_index(cell_data->valign));
-	fe_SimpleRadioGroupSetSensitive(m_cell->vertical_alignment, enabled);
+	fe_SimpleRadioGroupSetSensitive(m_cell.vertical_alignment, enabled);
 
-	XmToggleButtonGadgetSetState(m_cell->header_style, cell_data->bHeader,
+	XmToggleButtonGadgetSetState(m_cell.header_style, cell_data->bHeader,
 								 FALSE);
-	XtVaSetValues(m_cell->header_style, XmNsensitive, enabled, 0);
-	XmToggleButtonGadgetSetState(m_cell->wrap_text, cell_data->bNoWrap, FALSE);
-	XtVaSetValues(m_cell->wrap_text, XmNsensitive, enabled, 0);
+	XtVaSetValues(m_cell.header_style, XmNsensitive, enabled, 0);
+	XmToggleButtonGadgetSetState(m_cell.wrap_text, cell_data->bNoWrap, FALSE);
+	XtVaSetValues(m_cell.wrap_text, XmNsensitive, enabled, 0);
 
-	fe_table_tbr_set(m_context, m_cell->width_toggle,
-					 m_cell->width_text, m_cell->width_units,
+	fe_table_tbr_set(m_context, m_cell.width_toggle,
+					 m_cell.width_text, m_cell.width_units,
 					 cell_data->bWidthDefined,
 					 cell_data->iWidth,
 					 (cell_data->bWidthPercent));
-	XtVaSetValues(m_cell->width_toggle, XmNsensitive, enabled, 0);
+	XtVaSetValues(m_cell.width_toggle, XmNsensitive, enabled, 0);
 
-	widget = fe_SimpleRadioGroupGetChild(m_cell->width_units, 1);
+	widget = fe_SimpleRadioGroupGetChild(m_cell.width_units, 1);
 	fe_table_percent_label_set(widget, is_nested);
 
-	fe_table_tbr_set(m_context, m_cell->height_toggle,
-					 m_cell->height_text, m_cell->height_units,
+	fe_table_tbr_set(m_context, m_cell.height_toggle,
+					 m_cell.height_text, m_cell.height_units,
 					 cell_data->bHeightDefined,
 					 cell_data->iHeight,
 					 (cell_data->bHeightPercent));
-	XtVaSetValues(m_cell->height_toggle, XmNsensitive, enabled, 0);
+	XtVaSetValues(m_cell.height_toggle, XmNsensitive, enabled, 0);
 
-	widget = fe_SimpleRadioGroupGetChild(m_cell->height_units, 1);
+	widget = fe_SimpleRadioGroupGetChild(m_cell.height_units, 1);
 	fe_table_percent_label_set(widget, is_nested);
 	
 	/*
 	 *    Background stuff
 	 */
-	fe_bg_group_set(m_cell->bg_group,
+	fe_bg_group_set(m_cell.bg_group,
 					cell_data->pColorBackground,
 					cell_data->pBackgroundImage,
 					cell_data->bBackgroundNoSave);
 
 	EDT_FreeTableCellData(cell_data);
-#endif
 }
 
 void
@@ -891,30 +820,30 @@ XFE_EditTableDialog::cellPropertiesSetValidateCommon(EDT_TableCellData* cell_dat
 	unsigned index;
 
 	cell_data->iRowSpan = 
-		fe_get_numeric_text_field(m_cell->number_rows_text);
+		fe_get_numeric_text_field(m_cell.number_rows_text);
 	cell_data->iColSpan = 
-		fe_get_numeric_text_field(m_cell->number_columns_text);
+		fe_get_numeric_text_field(m_cell.number_columns_text);
 	 
-	index = fe_SimpleRadioGroupGetWhich(m_cell->horizontal_alignment);
+	index = fe_SimpleRadioGroupGetWhich(m_cell.horizontal_alignment);
 	cell_data->align = fe_index_to_ED_Alignment(index, TRUE);
 
-	index = fe_SimpleRadioGroupGetWhich(m_cell->vertical_alignment);
+	index = fe_SimpleRadioGroupGetWhich(m_cell.vertical_alignment);
 	cell_data->valign = fe_index_to_ED_Alignment(index, FALSE);
 
-	cell_data->bHeader = XmToggleButtonGadgetGetState(m_cell->header_style);
-	cell_data->bNoWrap = XmToggleButtonGadgetGetState(m_cell->wrap_text);
+	cell_data->bHeader = XmToggleButtonGadgetGetState(m_cell.header_style);
+	cell_data->bNoWrap = XmToggleButtonGadgetGetState(m_cell.wrap_text);
 
-	cell_data->bWidthDefined = XmToggleButtonGetState(m_cell->width_toggle);
-	cell_data->iWidth = fe_get_numeric_text_field(m_cell->width_text);
+	cell_data->bWidthDefined = XmToggleButtonGetState(m_cell.width_toggle);
+	cell_data->iWidth = fe_get_numeric_text_field(m_cell.width_text);
 	cell_data->bWidthPercent =
-	  (fe_SimpleRadioGroupGetWhich(m_cell->width_units) == 1);
+	  (fe_SimpleRadioGroupGetWhich(m_cell.width_units) == 1);
 
 	cell_data->bHeightDefined =
-		XmToggleButtonGetState(m_cell->height_toggle);
+		XmToggleButtonGetState(m_cell.height_toggle);
 	cell_data->iHeight =
-		fe_get_numeric_text_field(m_cell->height_text);
+		fe_get_numeric_text_field(m_cell.height_text);
 	cell_data->bHeightPercent =
-		(fe_SimpleRadioGroupGetWhich(m_cell->height_units) == 1);
+		(fe_SimpleRadioGroupGetWhich(m_cell.height_units) == 1);
 
 }
 
@@ -960,7 +889,7 @@ XFE_EditTableDialog::cellPropertiesValidate()
 	}
 
 	if (nerrors > 0) {
-		fe_editor_range_error_dialog(m_context, m_cell->number_rows_text,
+		fe_editor_range_error_dialog(m_context, m_cell.number_rows_text,
 									 errors, nerrors);
 		return FALSE;
 	}
@@ -980,7 +909,7 @@ XFE_EditTableDialog::cellPropertiesSet()
 	/*
 	 *    Background stuff
 	 */
-	fe_bg_group_get(m_cell->bg_group,
+	fe_bg_group_get(m_cell.bg_group,
 					&cell_data.pColorBackground,
 					&cell_data.pBackgroundImage,
 					&cell_data.bBackgroundNoSave);
@@ -1019,9 +948,6 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
 	Widget caption_type;
 	Widget alignframe;
 	Widget alignBox;
-#ifdef EQUAL_COLUMN_TOGGLE
-	Widget equal_column_toggle;
-#endif /* EQUAL_COLUMN_TOGGLE */
 	Widget bg_group;
     Widget w;
 	Arg args[16];
@@ -1308,9 +1234,6 @@ XFE_EditTableDialog::tablePropertiesCreate(Widget parent)
         m_table->caption_toggle = caption_toggle;
         m_table->caption_type = caption_type;
         m_table->alignBox = alignBox;
-#ifdef EQUAL_COLUMN_TOGGLE
-        m_table->equal_column_toggle = equal_column_toggle;
-#endif /* EQUAL_COLUMN_TOGGLE */
         m_table->bg_group = bg_group;
     }
 
@@ -1385,12 +1308,6 @@ XFE_EditTableDialog::tablePropertiesInit()
 					 0,
 					 (table_data.cd.align != ED_ALIGN_ABSTOP));
 
-#ifdef EQUAL_COLUMN_TOGGLE
-	XmToggleButtonGadgetSetState(m_table->equal_column_toggle,
-								 table_data.td.bUseCols,
-								 FALSE);
-#endif /* EQUAL_COLUMN_TOGGLE */
-
 	/* we don't have default for alignment yet, so we need to subtract one
 	 * from index 
   	 */
@@ -1461,10 +1378,6 @@ XFE_EditTableDialog::tablePropertiesCommonSet(EDT_AllTableData* table_data)
 	 */
 
 	table_data->has_caption = XmToggleButtonGetState(m_table->caption_toggle);
-#ifdef EQUAL_COLUMN_TOGGLE
-	table_data->td.bUseCols =
-		XmToggleButtonGetState(m_table->equal_column_toggle);
-#endif /* EQUAL_COLUMN_TOGGLE */
 
 	if (fe_SimpleRadioGroupGetWhich(m_table->caption_type) == 1)
 		table_data->cd.align = ED_ALIGN_ABSBOTTOM;
