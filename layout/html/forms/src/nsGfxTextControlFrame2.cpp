@@ -2238,10 +2238,11 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::Paint(nsIPresContext* aPresContext,
+nsGfxTextControlFrame2::Paint(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
-                              const nsRect& aDirtyRect,
-                              nsFramePaintLayer aWhichLayer)
+                              const nsRect&        aDirtyRect,
+                              nsFramePaintLayer    aWhichLayer,
+                              PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {

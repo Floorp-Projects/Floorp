@@ -45,10 +45,11 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD Paint(nsIPresContext* aCX,
+  NS_IMETHOD Paint(nsIPresContext*      aCX,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;

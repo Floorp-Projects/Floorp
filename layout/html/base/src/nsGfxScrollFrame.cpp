@@ -558,10 +558,11 @@ nsGfxScrollFrame::GetPadding(nsMargin& aMargin)
 }
 
 NS_IMETHODIMP
-nsGfxScrollFrame::Paint(nsIPresContext*      aPresContext,
+nsGfxScrollFrame::Paint(nsIPresContext*   aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer)
+                     nsFramePaintLayer    aWhichLayer,
+                     PRUint32             aFlags)
 {
   // Paint our children
   return nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,

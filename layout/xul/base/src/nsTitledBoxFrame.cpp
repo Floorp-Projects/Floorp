@@ -34,10 +34,11 @@ public:
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 
                                
-  NS_METHOD Paint(nsIPresContext* aPresContext,
+  NS_METHOD Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect,
-                  nsFramePaintLayer aWhichLayer);
+                  const nsRect&        aDirtyRect,
+                  nsFramePaintLayer    aWhichLayer,
+                  PRUint32             aFlags);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -98,10 +99,11 @@ nsTitledBoxFrame::nsTitledBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
 NS_IMETHODIMP
-nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect& aDirtyRect,
-                       nsFramePaintLayer aWhichLayer)
+nsTitledBoxFrame::Paint(nsIPresContext*      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
+                        const nsRect&        aDirtyRect,
+                        nsFramePaintLayer    aWhichLayer,
+                        PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Paint our background and border

@@ -1514,10 +1514,11 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Paint(nsIPresContext* aPresContext,
+nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect,
-                     nsFramePaintLayer aWhichLayer)
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer,
+                     PRUint32             aFlags)
 {
   const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
   if ((vis != nsnull) && !vis->IsVisibleOrCollapsed()) {

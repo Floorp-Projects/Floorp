@@ -331,10 +331,11 @@ NS_METHOD nsPolygonFrame::RenderPoints(nsIRenderingContext& aRenderingContext,
 //
 //
 NS_METHOD 
-nsPolygonFrame::Paint(nsIPresContext* aPresContext,
+nsPolygonFrame::Paint(nsIPresContext*          aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nsFramePaintLayer aWhichLayer)
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
 
   // if we aren't visible then we are done.

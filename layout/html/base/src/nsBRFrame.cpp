@@ -41,10 +41,11 @@ class BRFrame : public nsFrame {
 public:
   // nsIFrame
 #ifdef NS_DEBUG
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 #endif
   NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                          const nsPoint& aPoint,
@@ -86,10 +87,11 @@ BRFrame::~BRFrame()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-BRFrame::Paint(nsIPresContext* aPresContext,
+BRFrame::Paint(nsIPresContext*      aPresContext,
                nsIRenderingContext& aRenderingContext,
-               const nsRect& aDirtyRect,
-               nsFramePaintLayer aWhichLayer)
+               const nsRect&        aDirtyRect,
+               nsFramePaintLayer    aWhichLayer,
+               PRUint32             aFlags)
 {
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;

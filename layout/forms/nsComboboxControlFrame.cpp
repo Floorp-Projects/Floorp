@@ -2585,10 +2585,11 @@ nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState*
 }
 
 NS_METHOD 
-nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
+nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer)
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {

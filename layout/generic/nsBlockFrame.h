@@ -95,7 +95,8 @@ public:
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 #ifdef DEBUG
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
@@ -386,10 +387,11 @@ protected:
 
   //----------------------------------------
   //XXX
-  virtual void PaintChildren(nsIPresContext* aPresContext,
+  virtual void PaintChildren(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer);
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags = 0);
 
   void PaintFloaters(nsIPresContext* aPresContext,
                      nsIRenderingContext& aRenderingContext,

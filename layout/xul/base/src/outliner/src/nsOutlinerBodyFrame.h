@@ -235,7 +235,8 @@ public:
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags = 0);
 
   // This method paints a specific column background of the outliner.
   NS_IMETHOD PaintColumn(nsOutlinerColumn*    aColumn,

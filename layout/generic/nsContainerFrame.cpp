@@ -150,9 +150,10 @@ NS_IMETHODIMP
 nsContainerFrame::Paint(nsIPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
-                        nsFramePaintLayer    aWhichLayer)
+                        nsFramePaintLayer    aWhichLayer,
+                        PRUint32             aFlags)
 {
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
   return NS_OK;
 }
 
@@ -166,11 +167,12 @@ void
 nsContainerFrame::PaintChildren(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer)
+                                nsFramePaintLayer    aWhichLayer,
+                                PRUint32             aFlags)
 {
   nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer, aFlags);
     kid->GetNextSibling(&kid);
   }
 }
@@ -181,7 +183,8 @@ nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer)
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags)
 {
   nsIView *pView;
   aFrame->GetView(aPresContext, &pView);
@@ -225,7 +228,7 @@ nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
       aRenderingContext.Translate(kidRect.x, kidRect.y);
 
       // Paint the kid
-      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
+      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer, aFlags);
       // don't use PushState and PopState, because they're slow
       aRenderingContext.Translate(-kidRect.x, -kidRect.y);
 

@@ -111,7 +111,8 @@ NS_IMETHODIMP
 nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer)
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
   nsresult rv = NS_OK;
 

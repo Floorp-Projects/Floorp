@@ -400,10 +400,11 @@ nsFormControlFrame::SetClickPoint(nscoord aX, nscoord aY)
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
 NS_METHOD
-nsFormControlFrame::Paint(nsIPresContext* aPresContext,
+nsFormControlFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nsFramePaintLayer aWhichLayer)
+                          const nsRect&        aDirtyRect,
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {

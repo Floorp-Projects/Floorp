@@ -452,16 +452,18 @@ PRBool IsFirstRow(nsIPresContext*  aPresContext,
 }
 #endif
 
-NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
+NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
-                                 const nsRect& aDirtyRect,
-                                 nsFramePaintLayer aWhichLayer)
+                                 const nsRect&        aDirtyRect,
+                                 nsFramePaintLayer    aWhichLayer,
+                                 PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
+      !(aFlags && (NS_ROW_FRAME_PAINT_SKIP_ROW == aFlags))) {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
     if (eCompatibility_Standard == mode) {
@@ -487,7 +489,9 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
   }
 #endif
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (!(aFlags && (NS_ROW_FRAME_PAINT_SKIP_CELLS == aFlags))) {
+    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  }
   return NS_OK;
 
 }
@@ -511,7 +515,8 @@ nsTableRowFrame::GetSkipSides() const
 void nsTableRowFrame::PaintChildren(nsIPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect,
-                                    nsFramePaintLayer aWhichLayer)
+                                    nsFramePaintLayer    aWhichLayer,
+                                    PRUint32             aFlags)
 {
   nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {

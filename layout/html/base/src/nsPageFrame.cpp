@@ -358,7 +358,8 @@ NS_IMETHODIMP
 nsPageFrame::Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer)
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags)
 {
   aRenderingContext.PushState();
   PRBool clipEmpty;

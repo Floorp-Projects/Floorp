@@ -608,7 +608,8 @@ public:
   NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer) = 0;
+                    nsFramePaintLayer    aWhichLayer,
+                    PRUint32             aFlags = 0) = 0;
 
   /**
    * Event handling of GUI events.

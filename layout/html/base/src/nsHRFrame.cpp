@@ -50,10 +50,11 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
@@ -89,7 +90,8 @@ NS_METHOD
 HRuleFrame::Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
-                  nsFramePaintLayer    aWhichLayer)
+                  nsFramePaintLayer    aWhichLayer,
+                  PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;

@@ -305,10 +305,11 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
 }
 
 NS_IMETHODIMP
-nsImageBoxFrame::Paint(nsIPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect,
-                                nsFramePaintLayer aWhichLayer)
+nsImageBoxFrame::Paint(nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer,
+                       PRUint32             aFlags)
 {	
 	const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);

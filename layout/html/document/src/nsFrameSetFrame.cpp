@@ -122,10 +122,11 @@ public:
                              nsPoint&        aPoint,
                              PRInt32&        aCursor);
   
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -166,7 +167,8 @@ public:
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -648,7 +650,8 @@ NS_IMETHODIMP
 nsHTMLFramesetFrame::Paint(nsIPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
-                           nsFramePaintLayer    aWhichLayer)
+                           nsFramePaintLayer    aWhichLayer,
+                           PRUint32             aFlags)
 {
   //printf("frameset paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
@@ -1671,7 +1674,8 @@ NS_METHOD
 nsHTMLFramesetBorderFrame::Paint(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect,
-                                 nsFramePaintLayer    aWhichLayer)
+                                 nsFramePaintLayer    aWhichLayer,
+                                 PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
@@ -1855,7 +1859,8 @@ NS_METHOD
 nsHTMLFramesetBlankFrame::Paint(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer)
+                                nsFramePaintLayer    aWhichLayer,
+                                PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;

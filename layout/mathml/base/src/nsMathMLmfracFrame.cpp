@@ -157,7 +157,8 @@ NS_IMETHODIMP
 nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer)
+                          nsFramePaintLayer    aWhichLayer,
+                          PRUint32             aFlags)
 {
   ////////////
   // paint the fraction line

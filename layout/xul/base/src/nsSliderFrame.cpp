@@ -275,10 +275,11 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Paint(nsIPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect,
-                                nsFramePaintLayer aWhichLayer)
+nsSliderFrame::Paint(nsIPresContext*      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer,
+                     PRUint32             aFlags)
 {
   // if we are too small to have a thumb don't paint it.
   nsIBox* thumb;

@@ -105,10 +105,11 @@ nsLegendFrame::Reflow(nsIPresContext*          aPresContext,
 
 
 NS_IMETHODIMP
-nsLegendFrame::Paint(nsIPresContext* aPresContext,
+nsLegendFrame::Paint(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect,
-                     nsFramePaintLayer aWhichLayer)
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer,
+                     PRUint32             aFlags)
 {
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {

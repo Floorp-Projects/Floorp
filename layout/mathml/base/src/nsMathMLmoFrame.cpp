@@ -116,7 +116,8 @@ NS_IMETHODIMP
 nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer)
+                       nsFramePaintLayer    aWhichLayer,
+                       PRUint32             aFlags)
 {
   nsresult rv = NS_OK;
   if (NS_MATHML_OPERATOR_GET_FORM(mFlags) ||

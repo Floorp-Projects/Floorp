@@ -114,10 +114,11 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
 
   // nsIScrollPositionListener
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -386,10 +387,11 @@ CanvasFrame::DrawDottedRect(nsIRenderingContext& aRenderingContext, nsRect& aRec
  
 
 NS_IMETHODIMP
-CanvasFrame::Paint(nsIPresContext* aPresContext,
+CanvasFrame::Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer)
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     SetDefaultBackgroundColor(aPresContext);

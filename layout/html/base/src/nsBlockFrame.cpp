@@ -4969,7 +4969,8 @@ NS_IMETHODIMP
 nsBlockFrame::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer)
+                    nsFramePaintLayer    aWhichLayer,
+                    PRUint32             aFlags)
 {
   if (NS_FRAME_IS_UNFLOWABLE & mState) {
     return NS_OK;
@@ -5119,10 +5120,11 @@ nsBlockFrame::PaintFloaters(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
+nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer)
+                            const nsRect&        aDirtyRect,
+                            nsFramePaintLayer    aWhichLayer,
+                            PRUint32             aFlags)
 {
 #ifdef DEBUG
   PRInt32 depth = 0;

@@ -286,7 +286,8 @@ NS_IMETHODIMP
 nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer)
+                            nsFramePaintLayer    aWhichLayer,
+                            PRUint32             aFlags)
 {
   const nsStyleVisibility* visib = NS_STATIC_CAST(const nsStyleVisibility*,
     mStyleContext->GetStyleData(eStyleStruct_Visibility));

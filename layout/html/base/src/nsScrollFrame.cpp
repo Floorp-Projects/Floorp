@@ -973,7 +973,8 @@ NS_IMETHODIMP
 nsScrollFrame::Paint(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer)
+                     nsFramePaintLayer    aWhichLayer,
+                     PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Only paint the border and background if we're visible
