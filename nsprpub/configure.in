@@ -266,6 +266,10 @@ if test -z "$CC"; then
         CC=cc
     ;;
 
+    *-openvms*)
+        CC=cc
+    ;;
+
     *-osf*)
         CC=cc
     ;;
@@ -309,6 +313,10 @@ if test -z "$CXX"; then
 
     *-irix*)
         CXX=CC
+    ;;
+
+    *-openvms*)
+        CXX=cxx
     ;;
 
     *-osf*)
@@ -541,8 +549,8 @@ if test "$OS_ARCH" = "Linux"; then
     OS_RELEASE=`echo $OS_RELEASE | awk -F\. '{ print $1 "." $2 }'`
 fi
 
-if test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
-    OS_ARCH=OpenVMS
+if test "$OS_ARCH" = "OpenVMS"; then
+    OS_RELEASE=`uname -v`
 fi
 
 #######################################################################
@@ -1475,23 +1483,16 @@ mips-sony-newsos*)
 *-openvms*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(VMS)
-    AC_DEFINE(VMS_AS_IS)
-    AC_DEFINE(_SOCKADDR_LEN)
-    AC_DEFINE(GENERIC_PTHREAD_REDEFINES)
     RESOLVE_LINK_SYMBOLS=1
-    CROSS_COMPILE=1
-    _HAVE_PTHREADS=1
-    HOST_CC=c89
-    HOST_CXX=cxx
-    HOST_CFLAGS=-O
-    HOST_CXXFLAGS=-O
-    CC=ccc
-    CXX=ccc
-    CFLAGS="$CFLAGS -Wc,names=\(short,as\)"
-    CXXFLAGS="$CXXFLAGS -Wc,names=\(short,as\)"
+    AR_FLAGS='c $@'
     MDCPUCFG_H=_openvms.cfg
     PR_MD_CSRCS=openvms.c
-    MKSHLIB='vmsld $(OPTIMIZER)'
+    DSO_LDOPTS='-shared -auto_symvec $(LDFLAGS)'
+    if test -n "$MOZ_DEBUG"; then
+      DSO_LDOPTS="$DSO_LDOPTS $_DEBUG_FLAGS"
+    else
+      DSO_LDOPTS="$DSO_LDOPTS $_OPTIMIZE_FLAGS"
+    fi
     ;;
 
 *-osf*)

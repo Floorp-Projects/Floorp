@@ -160,6 +160,15 @@ ALL_TRASH		= $(TARGETS) $(OBJS) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAG
 			  $(NOSUCHFILE) \
 			  so_locations
 
+ifeq ($(OS_ARCH),OpenVMS)
+ALL_TRASH		+= $(wildcard *.c*_defines)
+ifdef SHARED_LIBRARY
+VMS_SYMVEC_FILE		= $(SHARED_LIBRARY:.$(DLL_SUFFIX)=_symvec.opt)
+VMS_SYMVEC_FILE_MODULE	= $(srcdir)/$(LIBRARY_NAME)_symvec.opt
+ALL_TRASH		+= $(VMS_SYMVEC_FILE)
+endif
+endif
+
 ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
@@ -328,14 +337,14 @@ ifeq ($(OS_ARCH),OS2)
 	$(LINK_DLL) $(DLLBASE) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $@.def
 else	# OS2
 ifeq ($(OS_TARGET), OpenVMS)
-	@if test ! -f $(OBJDIR)/VMSuni.opt; then \
-	    echo "Creating universal symbol option file $(OBJDIR)/VMSuni.opt";\
-	    create_opt_uni $(OBJS); \
+	@if test ! -f $(VMS_SYMVEC_FILE); then \
+	  if test -f $(VMS_SYMVEC_FILE_MODULE); then \
+	    echo Creating component options file $(VMS_SYMVEC_FILE); \
+	    cp $(VMS_SYMVEC_FILE_MODULE) $(VMS_SYMVEC_FILE); \
+	  fi; \
 	fi
-	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OBJDIR)/VMSuni.opt
-else	# OpenVMS
-	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS)
 endif	# OpenVMS
+	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS)
 endif   # OS2
 endif	# WINNT
 endif	# AIX 4.1

@@ -1,0 +1,4 @@
+! Fixed section of symbol vector for LIBPLC4
+!
+GSMATCH=LEQUAL,2,1
+case_sensitive=YES

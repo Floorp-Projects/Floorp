@@ -204,4 +204,22 @@ int thread_resume(PRThread *thr_id) {
     return 0;
 }
 
+/*
+** Stubs for nspr_symvec.opt
+**
+** PR_ResumeSet, PR_ResumeTest, and PR_SuspendAllSuspended
+** (defined in ptthread.c) used to be exported by mistake
+** (because they look like public functions).  They have been
+** converted into static functions.
+**
+** There is an existing third-party binary that uses NSPR: the
+** Java plugin for Mozilla.  Because it is part of the Java
+** SDK, we have no control over its releases.  So we need these
+** stub functions to occupy the slots that used to be occupied
+** by PR_ResumeSet, PR_ResumeTest, and PR_SuspendAllSuspended
+** in the symbol vector so that LIBNSPR4 is backward compatible.
+*/
 
+void PR_VMS_Stub1(void) { }
+void PR_VMS_Stub2(void) { }
+void PR_VMS_Stub3(void) { }
