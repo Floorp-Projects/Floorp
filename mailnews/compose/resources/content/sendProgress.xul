@@ -81,14 +81,12 @@ Contributor(s):
       </rows>
     </grid>
     
-    <separator/>
-      <checkbox id="keepProgressDialogUp" label="&keepProgressDialogUpMsg.label;"/>
-    <separator/>
-    
+    <!-- remove the cancel button until we finish the backend code
     <box id="CancelButton">
       <spring flex="1"/>
       <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
       <spring flex="1"/>
     </box>
+    -->
 
 </window>

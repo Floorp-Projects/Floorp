@@ -25,7 +25,6 @@
  */
 
 var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
-var prefContractID = "@mozilla.org/preferences;1";
 
 // dialog is just an array we'll use to store various properties from the dialog document...
 var dialog;
@@ -34,7 +33,6 @@ var dialog;
 var msgProgress = null; 
 
 // random global variables...
-var keepProgressWindowUpBox;
 var targetFile;
 var itsASaveOperation = false;
 
@@ -66,10 +64,7 @@ var progressListener = {
         var percentMsg = getString( "percentMsg" );
         percentMsg = replaceInsert( percentMsg, 1, 100 );
         dialog.progressText.setAttribute("value", percentMsg);
-        if (aStatus == 0)
-          processEndOfDownload(false);
-        else
-          processEndOfDownload(true);
+        window.close();
       }
     },
     
@@ -155,17 +150,6 @@ function getString( stringId ) {
 
 function loadDialog() 
 {
-  if (itsASaveOperation)
-  {
-    keepProgressWindowUpBox.checked = false;
-    keepProgressWindowUpBox.setAttribute("hidden", true);
-  }
-  else
-  {
-    var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
-    if (prefs)
-      keepProgressWindowUpBox.checked = prefs.GetBoolPref("mailnews.send.progressDnldDialog.keepAlive");
-  }
 }
 
 function replaceInsert( text, index, value ) {
@@ -201,7 +185,6 @@ function onLoad() {
     dialog.progress    = document.getElementById("dialog.progress");
     dialog.progressText = document.getElementById("dialog.progressText");
     dialog.cancel      = document.getElementById("cancel");
-    keepProgressWindowUpBox = document.getElementById('keepProgressDialogUp');
 
     // Set up dialog button callbacks.
     var object = this;
@@ -220,14 +203,6 @@ function onLoad() {
 
 function onUnload() 
 {
-  if (!itsASaveOperation)
-  {
-    // remember the user's decision for the checkbox.
-    var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
-    if (prefs)
-      prefs.SetBoolPref("mailnews.send.progressDnldDialog.keepAlive", keepProgressWindowUpBox.checked);
-  }
-
   if (msgProgress)
   {
    try 
@@ -262,40 +237,4 @@ function onCancel ()
     
   // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
   return false;
-}
-
-// closeWindow should only be called from processEndOfDownload
-function closeWindow(forceClose)
-{
-  // while the time out was fired the user may have checked the
-  // keep this dialog open box...so we should abort and not actually
-  // close the window.
-  if (forceClose || itsASaveOperation || !keepProgressWindowUpBox.checked)
-    window.close();
-  else
-    setupPostProgressUI();
-}
-
-function setupPostProgressUI()
-{
-  //dialog.cancel.childNodes[0].nodeValue = "Close";
-  // turn the cancel button into a close button
-  var cancelButton = document.getElementById('cancel');
-  if (cancelButton)
-  {
-    cancelButton.setAttribute("label", getString("dialogCloseLabel"));
-    cancelButton.setAttribute("onclick", "window.close()");
-  }
-}
-
-// when we receive a stop notification we are done reporting progress on the send/save
-// now we have to decide if the window is supposed to go away or if we are supposed to remain open
-function processEndOfDownload(forceClose)
-{
-  if (forceClose || itsASaveOperation || !keepProgressWindowUpBox.checked)
-//    return window.setTimeout( "closeWindow();", 2000 ); // shut down, we are all done.
-    return closeWindow(forceClose); // shut down, we are all done.
-  
-  // o.t the user has asked the window to stay open so leave it open and enable the open and open new folder buttons
-  setupPostProgressUI();
 }

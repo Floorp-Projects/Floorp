@@ -126,9 +126,13 @@ var progressListener = {
 
     onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
     {
-      statusText = document.getElementById("statusText");
-      if (statusText)
-        statusText.setAttribute("label", aMessage);
+      // Looks like it's possible that we get call while the document has been already delete!
+      // therefore we need to protect ourself by using try/catch
+      try {
+        statusText = document.getElementById("statusText");
+        if (statusText)
+          statusText.setAttribute("label", aMessage);
+      } catch (ex) {};
     },
 
     onSecurityChange: function(aWebProgress, aRequest, state)
