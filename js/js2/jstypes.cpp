@@ -33,6 +33,7 @@
 
 #include "jstypes.h"
 #include "numerics.h"
+#include "icodegenerator.h"
 
 namespace JavaScript {
 namespace JSTypes {
@@ -134,6 +135,11 @@ JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not 
         break;
     }
     return kUndefinedValue;
+}
+
+JSFunction::~JSFunction()
+{
+    delete mICode;
 }
 
 JSString::JSString(const String& str)
