@@ -56,11 +56,11 @@ nsDownloadProgressListener.prototype = {
     set document(newval) {
       return this.doc = newval;
     },
-    onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownloadItem)
+    onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload)
     {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
-        var aDownloadID = aDownloadItem.target.persistentDescriptor;
+        var aDownloadID = aDownload.target.persistentDescriptor;
         var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
 
         var progressCol = elt.nextSibling.firstChild;
@@ -75,10 +75,10 @@ nsDownloadProgressListener.prototype = {
     },
 
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                               aCurTotalProgress, aMaxTotalProgress, aDownloadItem)
+                               aCurTotalProgress, aMaxTotalProgress, aDownload)
     {
       if (!this.startTime)
-        this.startTime = aDownloadItem.startTime / 1000;
+        this.startTime = aDownload.startTime / 1000;
 
       var overallProgress = aCurTotalProgress;
       // Get current time.
@@ -98,7 +98,7 @@ nsDownloadProgressListener.prototype = {
       else
         rate = 0;
 
-      var aDownloadID = aDownloadItem.target.persistentDescriptor;
+      var aDownloadID = aDownload.target.persistentDescriptor;
       var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
       if (this.doc.getElementById("TimeElapsed").getAttribute("hidden") != "true") {
         elapsedCol = elt.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling;
@@ -200,14 +200,14 @@ nsDownloadProgressListener.prototype = {
       else
         timeRemainingCol.setAttribute("label", getString( "unknownTime", this.doc ));
     },
-    onLocationChange: function(aWebProgress, aRequest, aLocation, aDownloadItem)
+    onLocationChange: function(aWebProgress, aRequest, aLocation, aDownload)
     {
     },
-    onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage, aDownloadItem)
+    onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage, aDownload)
     {
       // XXX error handling
     },
-    onSecurityChange: function(aWebProgress, aRequest, state, aDownloadItem)
+    onSecurityChange: function(aWebProgress, aRequest, state, aDownload)
     {
     },
     QueryInterface : function(iid)

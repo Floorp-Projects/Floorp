@@ -42,7 +42,7 @@
 
 #include "nsIDownloadManager.h"
 #include "nsIDownloadProgressListener.h"
-#include "nsIDownloadItem.h"
+#include "nsIDownload.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
@@ -80,6 +80,7 @@ protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
+  nsresult GetDataSource(nsIRDFDataSource** aDataSource);
   nsresult AssertProgressInfo();
   nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
   nsresult DownloadStarted(const char* aPersistentDescriptor);
@@ -92,20 +93,20 @@ private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsHashtable* mCurrDownloadItems;
+  nsHashtable* mCurrDownloads;
 
-  friend class DownloadItem;
+  friend class nsDownload;
 };
 
-class DownloadItem : public nsIDownloadItem
+class nsDownload : public nsIDownload
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_NSIDOWNLOADITEM
+  NS_DECL_NSIDOWNLOAD
   NS_DECL_ISUPPORTS
 
-  DownloadItem();
-  virtual ~DownloadItem();
+  nsDownload();
+  virtual ~nsDownload();
 
 protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
@@ -116,14 +117,13 @@ protected:
   nsresult SetPersist(nsIWebBrowserPersist* aPersist);
   nsresult SetTarget(nsILocalFile* aTarget);
   nsresult SetSource(nsIURI* aSource);
-  nsresult SetPrettyName(const PRUnichar* aPrettyName);
   nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
   nsresult GetDownloadState(DownloadState* aState);
   nsresult SetDownloadState(DownloadState aState);
 private:
   nsDownloadManager* mDownloadManager;
 
-  nsString mPrettyName;
+  nsString mDisplayName;
   nsCOMPtr<nsILocalFile> mTarget;
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mListener;
