@@ -1725,7 +1725,7 @@ nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
   nsresult result;
   nsCOMPtr<nsISupports> isupports = do_QueryInterface(inNewListener , &result);
   if (NS_SUCCEEDED(result))
-    result = mSelectionListeners->AppendElement(isupports);		// addrefs
+    result = mSelectionListeners->AppendElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// addrefs
   return result;
 }
 
@@ -1739,7 +1739,7 @@ nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove
   if (!inListenerToRemove )
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsISupports> isupports = do_QueryInterface(inListenerToRemove);
-  return mSelectionListeners->RemoveElement(isupports);		// releases
+  return mSelectionListeners->RemoveElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// releases
 }
 
 
@@ -1784,9 +1784,8 @@ nsRangeList::NotifySelectionListeners()
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt;i++)
   {
-    nsCOMPtr<nsIDOMSelectionListener> thisListener;
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
-    thisListener = do_QueryInterface(isupports);
+    nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
     if (thisListener)
     	thisListener->NotifySelectionChanged();
   }
