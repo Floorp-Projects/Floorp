@@ -371,14 +371,13 @@ protected:
                                        PRBool aValue,
                                        PRBool aClearAll);
   PRBool   ToggleOptionSelectedFromFrame(PRInt32 aIndex);
-  PRBool   SingleSelection(PRInt32 aSelectedIndex, PRBool aDoToggle);
-  PRBool   ExtendedSelection(PRInt32 aStartIndex,
-                             PRInt32 aEndIndex,
+  PRBool   SingleSelection(PRInt32 aClickedIndex, PRBool aDoToggle);
+  PRBool   ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex,
                              PRBool aClearAll);
-  PRBool   PerformSelection(PRInt32 aSelectedIndex,
-                            PRBool aIsShift,
+  PRBool   PerformSelection(PRInt32 aClickedIndex, PRBool aIsShift,
                             PRBool aIsControl);
   PRBool   HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
+  void     InitSelectionRange(PRInt32 aClickedIndex);
 
   // Timer Methods
   nsresult StartUpdateTimer(nsIPresContext * aPresContext);
