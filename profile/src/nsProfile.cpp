@@ -143,7 +143,6 @@ const char* kMigrationBundleURL = "chrome://communicator/locale/profile/migratio
 // we want everyone to have the debugging info to the console for now
 // to help track down profile manager problems
 // when we ship, we'll turn this off
-#define DEBUG_profile 1
 #undef DEBUG_profile_verbose
 #ifdef DEBUG_seth
 #define DEBUG_profile_verbose 1
