@@ -306,10 +306,7 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     nsStringKey key(aFilename);
     nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
     if (!manItem)
-    {
-      ReportError(aFilename, nsIZipReader::NOT_SIGNED);
       return NS_OK;
-    }
     if (!manItem->step2Complete)
     {
       NS_ASSERTION(manItem->step2Complete, 
