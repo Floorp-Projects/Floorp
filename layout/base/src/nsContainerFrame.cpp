@@ -400,14 +400,6 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
   if (parent->mFirstChild == nextInFlow) {
     nextInFlow->GetNextSibling(parent->mFirstChild);
 
-    // When a parent loses it's last child and that last child is a
-    // pseudo-frame then the parent's content offsets are now wrong.
-    // However, we know that the parent will eventually be reflowed
-    // in one of two ways: it will either get a chance to pullup
-    // children or it will be deleted because it's prev-in-flow
-    // (e.g. this) is complete. In either case, the content offsets
-    // will be repaired.
-
   } else {
     nsIFrame* nextSibling;
 
@@ -764,25 +756,6 @@ PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
 
   aChild->GetGeometricParent(parent);
   if (parent != (nsIFrame*)this) {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
-PRBool nsContainerFrame::IsLastChild(const nsIFrame* aChild) const
-{
-  // Check the geometric parent
-  nsIFrame* parent;
-
-  aChild->GetGeometricParent(parent);
-  if (parent != (nsIFrame*)this) {
-    return PR_FALSE;
-  }
-
-  // Check that aChild is in our sibling list
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-  if (lastChild != aChild) {
     return PR_FALSE;
   }
 
