@@ -1348,35 +1348,47 @@ static PRStatus pt_Connect(
     return PR_SUCCESS;
 }  /* pt_Connect */
 
-PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
+static PRStatus pt_ConnectContinue(
+    PRFileDesc *fd, PRInt16 out_flags)
 {
     int err;
     PRInt32 osfd;
-    PRFileDesc *bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
 
-    if (NULL == bottom) {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return PR_FAILURE;
-    }
-    if (pd->out_flags & PR_POLL_NVAL) {
+    if (out_flags & PR_POLL_NVAL)
+    {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
     }
-    if ((pd->out_flags & (PR_POLL_WRITE | PR_POLL_EXCEPT | PR_POLL_ERR)) == 0) {
-        PR_ASSERT(pd->out_flags == 0);
+    if ((out_flags & (PR_POLL_WRITE | PR_POLL_EXCEPT | PR_POLL_ERR)) == 0)
+    {
+        PR_ASSERT(out_flags == 0);
         PR_SetError(PR_IN_PROGRESS_ERROR, 0);
         return PR_FAILURE;
     }
 
-    osfd = bottom->secret->md.osfd;
+    osfd = fd->secret->md.osfd;
 
     err = _MD_unix_get_nonblocking_connect_error(osfd);
-    if (err != 0) {
+    if (err != 0)
+    {
         _PR_MD_MAP_CONNECT_ERROR(err);
         return PR_FAILURE;
     }
     return PR_SUCCESS;
-}
+}  /* pt_ConnectContinue */
+
+PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
+{
+    /* Find the NSPR layer and invoke its connectcontinue method */
+    PRFileDesc *bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+
+    if (NULL == bottom)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+    return bottom->methods->connectcontinue(pd->fd, pd->out_flags);
+}  /* PR_GetConnectStatus */
 
 static PRFileDesc* pt_Accept(
     PRFileDesc *fd, PRNetAddr *addr, PRIntervalTime timeout)
@@ -2455,7 +2467,7 @@ static PRIOMethods _pr_file_methods = {
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRConnectcontinueFN)_PR_InvalidStatus, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
@@ -2494,7 +2506,7 @@ static PRIOMethods _pr_pipe_methods = {
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRConnectcontinueFN)_PR_InvalidStatus, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
@@ -2533,7 +2545,7 @@ static PRIOMethods _pr_tcp_methods = {
     pt_GetSocketOption,
     pt_SetSocketOption,
     pt_SendFile, 
-    (PRReservedFN)_PR_InvalidInt, 
+    pt_ConnectContinue,
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
@@ -2572,7 +2584,7 @@ static PRIOMethods _pr_udp_methods = {
     pt_GetSocketOption,
     pt_SetSocketOption,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRConnectcontinueFN)_PR_InvalidStatus, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
@@ -2611,7 +2623,7 @@ static PRIOMethods _pr_socketpollfd_methods = {
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRConnectcontinueFN)_PR_InvalidStatus, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 

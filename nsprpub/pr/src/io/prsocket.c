@@ -253,26 +253,23 @@ static PRStatus PR_CALLBACK SocketConnect(
 		return PR_FAILURE;
 }
 
-PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
+static PRStatus PR_CALLBACK SocketConnectContinue(
+    PRFileDesc *fd, PRInt16 out_flags)
 {
     PRInt32 osfd;
-    PRFileDesc *bottom = pd->fd;
     int err;
 
-    if (pd->out_flags & PR_POLL_NVAL) {
+    if (out_flags & PR_POLL_NVAL) {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
     }
-    if ((pd->out_flags & (PR_POLL_WRITE | PR_POLL_EXCEPT | PR_POLL_ERR)) == 0) {
-        PR_ASSERT(pd->out_flags == 0);
+    if ((out_flags & (PR_POLL_WRITE | PR_POLL_EXCEPT | PR_POLL_ERR)) == 0) {
+        PR_ASSERT(out_flags == 0);
         PR_SetError(PR_IN_PROGRESS_ERROR, 0);
         return PR_FAILURE;
     }
 
-    while (bottom->lower != NULL) {
-        bottom = bottom->lower;
-    }
-    osfd = bottom->secret->md.osfd;
+    osfd = fd->secret->md.osfd;
 
 #if defined(XP_UNIX)
 
@@ -293,7 +290,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
     Sleep(0);
 #endif /* WIN32 */
 
-    if (pd->out_flags & PR_POLL_EXCEPT) {
+    if (out_flags & PR_POLL_EXCEPT) {
         int len = sizeof(err);
         if (getsockopt(osfd, (int)SOL_SOCKET, SO_ERROR, (char *) &err, &len)
                 == SOCKET_ERROR) {
@@ -308,12 +305,12 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
         return PR_FAILURE;
     }
 
-    PR_ASSERT(pd->out_flags & PR_POLL_WRITE);
+    PR_ASSERT(out_flags & PR_POLL_WRITE);
     return PR_SUCCESS;
 
 #elif defined(XP_OS2)
 
-    if (pd->out_flags & PR_POLL_EXCEPT) {
+    if (out_flags & PR_POLL_EXCEPT) {
         int len = sizeof(err);
         if (getsockopt(osfd, SOL_SOCKET, SO_ERROR, (char *) &err, &len)
                 < 0) {
@@ -328,7 +325,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
         return PR_FAILURE;
     }
 
-    PR_ASSERT(pd->out_flags & PR_POLL_WRITE);
+    PR_ASSERT(out_flags & PR_POLL_WRITE);
     return PR_SUCCESS;
 
 #elif defined(XP_MAC)
@@ -341,7 +338,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 
 #elif defined(XP_BEOS)
 
-    err = _MD_beos_get_nonblocking_connect_error(bottom);
+    err = _MD_beos_get_nonblocking_connect_error(fd);
     if( err != 0 ) {
 	_PR_MD_MAP_CONNECT_ERROR(err);
 	return PR_FAILURE;
@@ -353,6 +350,18 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return PR_FAILURE;
 #endif
+}
+
+PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
+{
+    /* Find the NSPR layer and invoke its connectcontinue method */
+    PRFileDesc *bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+
+    if (NULL == bottom) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+    return bottom->methods->connectcontinue(pd->fd, pd->out_flags);
 }
 
 static PRFileDesc* PR_CALLBACK SocketAccept(PRFileDesc *fd, PRNetAddr *addr,
@@ -1105,7 +1114,7 @@ static PRIOMethods tcpMethods = {
 	_PR_SocketGetSocketOption,
 	_PR_SocketSetSocketOption,
     SocketSendFile, 
-    (PRReservedFN)_PR_InvalidInt, 
+    SocketConnectContinue;
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
@@ -1144,7 +1153,7 @@ static PRIOMethods udpMethods = {
 	_PR_SocketGetSocketOption,
 	_PR_SocketSetSocketOption,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRConnectcontinueFN)_PR_InvalidStatus, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
@@ -1184,7 +1193,7 @@ static PRIOMethods socketpollfdMethods = {
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRConnectcontinueFN)_PR_InvalidStatus, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 
     (PRReservedFN)_PR_InvalidInt, 

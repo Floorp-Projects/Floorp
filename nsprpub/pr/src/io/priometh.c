@@ -53,7 +53,7 @@ PRIOMethods _pr_faulty_methods = {
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt,
+    (PRConnectcontinueFN)_PR_InvalidStatus,
     (PRReservedFN)_PR_InvalidInt,
     (PRReservedFN)_PR_InvalidInt,
     (PRReservedFN)_PR_InvalidInt,
@@ -164,6 +164,12 @@ PR_IMPLEMENT(PRStatus) PR_Connect(
     PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
 {
 	return((fd->methods->connect)(fd,addr,timeout));
+}
+
+PR_IMPLEMENT(PRStatus) PR_ConnectContinue(
+    PRFileDesc *fd, PRInt16 out_flags)
+{
+	return((fd->methods->connectcontinue)(fd,out_flags));
 }
 
 PR_IMPLEMENT(PRFileDesc*) PR_Accept(PRFileDesc *fd, PRNetAddr *addr,
