@@ -420,7 +420,8 @@ nsWindow::Destroy(void)
         gtk_widget_destroy(GTK_WIDGET(mContainer));
         mContainer = nsnull;
     }
-    else if (mDrawingarea) {
+    
+    if (mDrawingarea) {
         g_object_unref(mDrawingarea);
         mDrawingarea = nsnull;
     }
