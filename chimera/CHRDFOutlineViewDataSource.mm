@@ -117,7 +117,6 @@
 
 - (BOOL) outlineView: (NSOutlineView*) aOutlineView isItemExpandable: (id) aItem
 {
-    NSLog(@"outlineView:%@isItemExpandable:%@", aOutlineView, aItem);
     if (!mDataSource)
         return NO;
     
@@ -143,7 +142,6 @@
 - (id) outlineView: (NSOutlineView*) aOutlineView child: (int) aIndex
                                                   ofItem: (id) aItem
 {
-    NSLog(@"outlineView:%@child:%dofItem:%@", aOutlineView, aIndex, aItem);
     if (!mDataSource)
         return nil;
     
@@ -165,7 +163,6 @@
     
 - (int) outlineView: (NSOutlineView*) aOutlineView numberOfChildrenOfItem: (id) aItem;
 {
-    NSLog(@"outlineView:%@numberOfChildrenOfItem:%@", aOutlineView, aItem);
     if (!mDataSource)
         return nil;
     
@@ -206,25 +203,40 @@
 - (id) outlineView: (NSOutlineView*) aOutlineView objectValueForTableColumn: (NSTableColumn*) aTableColumn
                                                   byItem: (id) aItem
 {
-    NSLog(@"outlineView:%@objectValueForTableColumn:%@byItem:%@", aOutlineView, aTableColumn, aItem);
+    NSLog(@"*** aItem = %@", aItem);
     if (!mDataSource || !aItem)
         return nil;
+    
+    NSLog(@"1");
         
     // The table column's identifier is the RDF Resource URI of the property being displayed in
     // that column, e.g. "http://home.netscape.com/NC-rdf#Name"
     NSString* columnPropertyURI = [aTableColumn identifier];
     
+    NSLog(@"2");
+        
     nsCOMPtr<nsIRDFResource> propertyResource;
     mRDFService->GetResource([columnPropertyURI cString], getter_AddRefs(propertyResource));
     
+    NSLog(@"3");
+        
     nsCOMPtr<nsIRDFResource> resource = [aItem resource];
     
+    NSLog(@"4");
+        
     nsCOMPtr<nsIRDFNode> valueNode;
     mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
-    if (!valueNode)
+    if (!valueNode) {
+        NSLog(@"ValueNode is null!");
         return nil;
+    }
     
     nsCOMPtr<nsIRDFLiteral> valueLiteral(do_QueryInterface(valueNode));
+    nsXPIDLString str3;
+    valueLiteral->GetValue(getter_Copies(str3));
+    nsCAutoString str2; str2.AssignWithConversion(str3);
+    NSLog(@"Value = %@", [NSString stringWithCString: str2.get()]);
+    
     if (!valueLiteral)
         return nil;
     
