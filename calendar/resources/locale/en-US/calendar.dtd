@@ -442,3 +442,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+
