@@ -130,3 +130,25 @@ NS_NewMessengerBootstrap(nsIAppShellService **msgboot,
 
 }
 
+// nsMessenger implementation
+
+class nsMessenger : public nsIMessenger {
+
+public:
+    NS_DECL_ISUPPORTS;
+};
+
+NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::IID())
+
+
+nsresult
+NS_NewMessenger(nsIMessenger **msg)
+{
+  if (!msg) return NS_ERROR_NULL_POINTER;
+  nsMessenger *messenger = 
+    new nsMessenger();
+  if (!messenger) return NS_ERROR_OUT_OF_MEMORY;
+  return messenger->QueryInterface(nsIMessenger::IID(),
+			           (void**)&msg);
+}
+
