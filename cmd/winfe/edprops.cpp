@@ -4276,8 +4276,8 @@ void CDocMetaPage::OnVarDelete()
         }
     }
     if ( nSel != -1 && GetNameAndValue(csSelString, csName, csValue ) ) {
-        // This will delete entry in EDT data with selected Name
-        SetMetaData(bEquiv, CHAR_STR(csName), NULL);
+        // TRUE = delete entry in EDT data with selected Name-Value pair
+        SetMetaData(bEquiv, CHAR_STR(csName), CHAR_STR(csValue), TRUE);
         // Rebuild the list
         GetMetaData();
         SetModified(TRUE);
@@ -4384,7 +4384,7 @@ void CDocMetaPage::GetMetaData()
 // Create a MetaData structure and save it 
 // This commits change - NO BUFFERING
 // Be sure to strip off spaces and quotes before calling this
-void CDocMetaPage::SetMetaData(BOOL bHttpEquiv, char * pName, char * pValue)
+void CDocMetaPage::SetMetaData(BOOL bHttpEquiv, char * pName, char * pValue, BOOL bDelete)
 {
     CListBox *pMetaList = (CListBox*)GetDlgItem(IDC_META_LIST);
     CListBox *pEquivList = (CListBox*)GetDlgItem(IDC_EQUIV_LIST);
@@ -4420,6 +4420,9 @@ void CDocMetaPage::SetMetaData(BOOL bHttpEquiv, char * pName, char * pValue)
                     // The NAME in edit box is same as in the selected item,
                     // copy the Content value so we replace specifically that item
                     pData->pPrevContent = XP_STRDUP(CHAR_STR(csValue));
+                    // We want to delete this entry
+                    if( bDelete)
+                        XP_FREEIF(pData->pContent);
                 }
                 else
                 {

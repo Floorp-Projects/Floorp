@@ -852,7 +852,7 @@ protected:
     void EnableButtons(BOOL bEnable);
     void GetMetaData();
     void ClearNameAndValue();
-    void SetMetaData(BOOL bHttpEquiv, char * pName, char * pValue);
+    void SetMetaData(BOOL bHttpEquiv, char * pName, char * pValue, BOOL bDelete = FALSE);
 
 private:
     // This is used to change resource hInstance back to EXE
