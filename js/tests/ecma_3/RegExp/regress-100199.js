@@ -70,28 +70,88 @@ pattern = /[]/;
   expectedmatch = null;
   addThis();
 
-
-pattern = /a[]/;
-  string = 'abc';
+  string = '[';
   status = inSection(5);
   actualmatch = string.match(pattern);
   expectedmatch = null;
   addThis();
 
-  string = '';
+  string = ']';
   status = inSection(6);
   actualmatch = string.match(pattern);
   expectedmatch = null;
   addThis();
 
-  string = 'a[';
+  string = '[]';
   status = inSection(7);
   actualmatch = string.match(pattern);
   expectedmatch = null;
   addThis();
 
-  string = 'a[]';
+  string = '[ ]';
   status = inSection(8);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = '][';
+  status = inSection(9);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+
+pattern = /a[]/;
+  string = 'abc';
+  status = inSection(10);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = '';
+  status = inSection(11);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = 'a[';
+  status = inSection(12);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = 'a[]';
+  status = inSection(13);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = '[';
+  status = inSection(14);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = ']';
+  status = inSection(15);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = '[]';
+  status = inSection(16);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = '[ ]';
+  status = inSection(17);
+  actualmatch = string.match(pattern);
+  expectedmatch = null;
+  addThis();
+
+  string = '][';
+  status = inSection(18);
   actualmatch = string.match(pattern);
   expectedmatch = null;
   addThis();
@@ -99,54 +159,103 @@ pattern = /a[]/;
 
 pattern = /[^]/;
   string = 'abc';
-  status = inSection(9);
+  status = inSection(19);
   actualmatch = string.match(pattern);
   expectedmatch = Array('a');
   addThis();
 
   string = '';
-  status = inSection(10);
+  status = inSection(20);
   actualmatch = string.match(pattern);
   expectedmatch = null; //there are no characters to test against the condition
   addThis();
 
+  string = '\/';
+  status = inSection(21);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('/');
+  addThis();
+
   string = '\[';
-  status = inSection(11);
+  status = inSection(22);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('[');
+  addThis();
+  
+  string = '[';
+  status = inSection(23);
   actualmatch = string.match(pattern);
   expectedmatch = Array('[');
   addThis();
 
-  string = '\/';
-  status = inSection(12);
+  string = ']';
+  status = inSection(24);
   actualmatch = string.match(pattern);
-  expectedmatch = Array('/');
+  expectedmatch = Array(']');
+  addThis();
+
+  string = '[]';
+  status = inSection(25);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('[');
+  addThis();
+
+  string = '[ ]';
+  status = inSection(26);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('[');
+  addThis();
+
+  string = '][';
+  status = inSection(27);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array(']');
   addThis();
 
 
 pattern = /a[^]/;
   string = 'abc';
-  status = inSection(13);
+  status = inSection(28);
   actualmatch = string.match(pattern);
   expectedmatch = Array('ab');
   addThis();
 
   string = '';
-  status = inSection(14);
+  status = inSection(29);
   actualmatch = string.match(pattern);
   expectedmatch = null; //there are no characters to test against the condition
   addThis();
 
   string = 'a[';
-  status = inSection(15);
+  status = inSection(30);
   actualmatch = string.match(pattern);
   expectedmatch = Array('a[');
   addThis();
 
+  string = 'a]';
+  status = inSection(31);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('a]');
+  addThis();
+
   string = 'a[]';
-  status = inSection(16);
+  status = inSection(32);
   actualmatch = string.match(pattern);
   expectedmatch = Array('a[');
   addThis();
+
+  string = 'a[ ]';
+  status = inSection(33);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('a[');
+  addThis();
+
+  string = 'a][';
+  status = inSection(34);
+  actualmatch = string.match(pattern);
+  expectedmatch = Array('a]');
+  addThis();
+
 
 
 
