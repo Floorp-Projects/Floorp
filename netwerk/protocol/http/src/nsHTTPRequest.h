@@ -21,13 +21,12 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsIHTTPCommonHeaders.h"
-#include "nsIHTTPRequest.h"
 #include "nsIStreamObserver.h"
 #include "nsIURL.h"
+#include "nsHTTPHeaderArray.h"
+#include "nsHTTPEnums.h"
 
 class nsIInputStream;
-class nsVoidArray;
 class nsIBufferInputStream;
 class nsIInputStream;
 class nsIChannel;
@@ -54,7 +53,7 @@ class nsHTTPChannel;
 
     -Gagan Saksena 03/29/99
 */
-class nsHTTPRequest : public nsIHTTPRequest , public nsIStreamObserver
+class nsHTTPRequest : public nsIStreamObserver
 {
 
 public:
@@ -66,7 +65,13 @@ public:
     // Methods from nsISupports
     NS_DECL_ISUPPORTS
 
-    // Methods from nsIHeader
+    // nsIStreamObserver functions
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+                             nsresult aStatus,
+                             const PRUnichar* aMsg);
+
+    // Finally our own methods...
     /*
         Set or Get a header on the request. Note that for the first iteration
         of this design, a set call will not replace an existing singleton
@@ -78,186 +83,26 @@ public:
         Similarly getting will for now only get the first occurence. 
         TODO change to get the list.
     */
-    NS_IMETHOD          SetHeader(const char* i_Header, const char* i_Value);
-    NS_IMETHOD          GetHeader(const char* i_Header, char* *o_Value);
-    //This will be a no-op initially
-    NS_IMETHOD          GetHeaderMultiple(const char* i_Header, 
-                                          char** *o_ValueArray,
-                                          int *o_Count);
+    NS_IMETHOD          SetHeader(nsIAtom* i_Header, const char* i_Value);
+    NS_IMETHOD          GetHeader(nsIAtom* i_Header, char* *o_Value);
 
-    // Methods from nsIHTTPCommonHeaders
-    NS_IMETHOD          SetAllow(const char* i_Value);
-    NS_IMETHOD          GetAllow(char* *o_Value);
-
-    NS_IMETHOD          SetContentBase(const char* i_Value);
-    NS_IMETHOD          GetContentBase(char* *o_Value);
-
-    NS_IMETHOD          SetContentEncoding(const char* i_Value);
-    NS_IMETHOD          GetContentEncoding(char* *o_Value);
-
-    NS_IMETHOD          SetContentLanguage(const char* i_Value);
-    NS_IMETHOD          GetContentLanguage(char* *o_Value);
-
-    NS_IMETHOD          SetContentLength(const char* i_Value);
-    NS_IMETHOD          GetContentLength(char* *o_Value);
-
-    NS_IMETHOD          SetContentLocation(const char* i_Value);
-    NS_IMETHOD          GetContentLocation(char* *o_Value);
-
-    NS_IMETHOD          SetContentMD5(const char* i_Value);
-    NS_IMETHOD          GetContentMD5(char* *o_Value);
-
-    NS_IMETHOD          SetContentRange(const char* i_Value);
-    NS_IMETHOD          GetContentRange(char* *o_Value);
-
-    NS_IMETHOD          SetContentTransferEncoding(const char* i_Value);
-    NS_IMETHOD          GetContentTransferEncoding(char* *o_Value);
-
-    NS_IMETHOD          SetContentType(const char* i_Value);
-    NS_IMETHOD          GetContentType(char* *o_Value);
-
-    NS_IMETHOD          SetDerivedFrom(const char* i_Value);
-    NS_IMETHOD          GetDerivedFrom(char* *o_Value);
-
-    NS_IMETHOD          SetETag(const char* i_Value);
-    NS_IMETHOD          GetETag(char* *o_Value);
-
-    NS_IMETHOD          SetExpires(const char* i_Value);
-    NS_IMETHOD          GetExpires(char* *o_Value);
-
-    NS_IMETHOD          SetLastModified(const char* i_Value);
-    NS_IMETHOD          GetLastModified(char* *o_Value);
-
-    /*
-        To set multiple link headers, call set link again.
-    */
-    NS_IMETHOD          SetLink(const char* i_Value);
-    NS_IMETHOD          GetLink(char* *o_Value);
-    NS_IMETHOD          GetLinkMultiple(
-                            const char** *o_ValueArray, 
-                            int count) const;
-
-    NS_IMETHOD          SetTitle(const char* i_Value);
-    NS_IMETHOD          GetTitle(char* *o_Value);
-
-    NS_IMETHOD          SetURI(const char* i_Value);
-    NS_IMETHOD          GetURI(char* *o_Value);
-
-    NS_IMETHOD          SetVersion(const char* i_Value);
-    NS_IMETHOD          GetVersion(char* *o_Value);
-
-    // Common Transaction headers
-    NS_IMETHOD          SetConnection(const char* i_Value);
-    NS_IMETHOD          GetConnection(char* *o_Value);
-
-    NS_IMETHOD          SetDate(const char* i_Value);
-    NS_IMETHOD          GetDate(char* *o_Value);
-
-    NS_IMETHOD          SetPragma(const char* i_Value);
-    NS_IMETHOD          GetPragma(char* *o_Value);
-
-    NS_IMETHOD          SetForwarded(const char* i_Value);
-    NS_IMETHOD          GetForwarded(char* *o_Value);
-
-    NS_IMETHOD          SetMessageID(const char* i_Value);
-    NS_IMETHOD          GetMessageID(char* *o_Value);
-
-    NS_IMETHOD          SetMIME(const char* i_Value);
-    NS_IMETHOD          GetMIME(char* *o_Value);
-
-    NS_IMETHOD          SetTrailer(const char* i_Value);
-    NS_IMETHOD          GetTrailer(char* *o_Value);
-
-    NS_IMETHOD          SetTransfer(const char* i_Value);
-    NS_IMETHOD          GetTransfer(char* *o_Value);
-
-    // Methods from nsIHTTPRequest
-    NS_IMETHOD          SetAccept(const char* i_Types);
-    NS_IMETHOD          GetAccept(char* *o_Types);
-                    
-    NS_IMETHOD          SetAcceptChar(const char* i_Chartype);
-    NS_IMETHOD          GetAcceptChar(char* *o_Chartype);
-                    
-    NS_IMETHOD          SetAcceptEncoding(const char* i_Encoding);
-    NS_IMETHOD          GetAcceptEncoding(char* *o_Encoding);
-                    
-    NS_IMETHOD          SetAcceptLanguage(const char* i_Lang);
-    NS_IMETHOD          GetAcceptLanguage(char* *o_Lang);
-                    
-    NS_IMETHOD          SetAuthentication(const char* i_Foo);
-    NS_IMETHOD          GetAuthentication(char* *o_Foo);
-                    
-    NS_IMETHOD          SetExpect(const char* i_Expect);
-    NS_IMETHOD          GetExpect(char** o_Expect);
-                    
-    NS_IMETHOD          SetFrom(const char* i_From);
-    NS_IMETHOD          GetFrom(char** o_From);
-
-    /*
-        This is the actual Host for connection. Not necessarily the
-        host in the url (as in the cases of proxy connection)
-    */
-    NS_IMETHOD          SetHost(const char* i_Host);
-    NS_IMETHOD          GetHost(char** o_Host);
-
-    NS_IMETHOD          SetHTTPVersion(HTTPVersion i_Version);
-    NS_IMETHOD          GetHTTPVersion(HTTPVersion *o_Version);
-
-    NS_IMETHOD          SetIfModifiedSince(const char* i_Value);
-    NS_IMETHOD          GetIfModifiedSince(char* *o_Value);
-
-    NS_IMETHOD          SetIfMatch(const char* i_Value);
-    NS_IMETHOD          GetIfMatch(char* *o_Value);
-
-    NS_IMETHOD          SetIfMatchAny(const char* i_Value);
-    NS_IMETHOD          GetIfMatchAny(char* *o_Value);
-                        
-    NS_IMETHOD          SetIfNoneMatch(const char* i_Value);
-    NS_IMETHOD          GetIfNoneMatch(char* *o_Value);
-                        
-    NS_IMETHOD          SetIfNoneMatchAny(const char* i_Value);
-    NS_IMETHOD          GetIfNoneMatchAny(char* *o_Value);
-                        
-    NS_IMETHOD          SetIfRange(const char* i_Value);
-    NS_IMETHOD          GetIfRange(char* *o_Value);
-                        
-    NS_IMETHOD          SetIfUnmodifiedSince(const char* i_Value);
-    NS_IMETHOD          GetIfUnmodifiedSince(char* *o_Value);
-                        
-    NS_IMETHOD          SetMaxForwards(const char* i_Value);
-    NS_IMETHOD          GetMaxForwards(char* *o_Value);
-
-    /* 
-        Range information for byte-range requests 
-    */
-    NS_IMETHOD          SetRange(const char* i_Value);
-    NS_IMETHOD          GetRange(char* *o_Value);
-                        
-    NS_IMETHOD          SetReferer(const char* i_Value);
-    NS_IMETHOD          GetReferer(char* *o_Value);
-                        
-    NS_IMETHOD          SetUserAgent(const char* i_Value);
-    NS_IMETHOD          GetUserAgent(char* *o_Value);
-
-    // nsIStreamObserver functions
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg);
-
-    // Finally our own methods...
     /*
         Clone the current request for later use. Release it
         after you are done.
     */
     NS_IMETHOD          Clone(const nsHTTPRequest* *o_Copy) const;
                         
+    NS_IMETHOD          SetHTTPVersion(HTTPVersion i_Version);
+    NS_IMETHOD          GetHTTPVersion(HTTPVersion* o_Version);
+
     NS_IMETHOD          SetMethod(HTTPMethod i_Method);
     HTTPMethod          GetMethod(void) const;
                         
     NS_IMETHOD          SetPriority(); // TODO 
     NS_IMETHOD          GetPriority(); //TODO
-    
+
+    nsresult            GetHeaderEnumerator(nsISimpleEnumerator** aResult);
+        
     /* 
         Returns the stream set up to hold the request data
         Calls build if not already built.
@@ -297,11 +142,12 @@ protected:
     HTTPMethod                  m_Method;
     nsCOMPtr<nsIURL>            m_pURI;
     HTTPVersion                 m_Version;
-    nsVoidArray*                m_pArray;
     // The actual request stream! 
     nsIBufferInputStream*       m_Request; 
     nsIChannel*                 m_pTransport;
     nsHTTPChannel*              m_pConnection;
+
+    nsHTTPHeaderArray           mHeaders;
 };
 
 #define NS_HTTP_REQUEST_SEGMENT_SIZE     (4*1024)

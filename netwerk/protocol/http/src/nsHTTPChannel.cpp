@@ -28,6 +28,7 @@
 #include "nsIStreamListener.h"
 #include "nsIIOService.h"
 #include "nsXPIDLString.h"
+#include "nsHTTPAtoms.h"
 
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
@@ -36,7 +37,7 @@
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
 #include "nsIMIMEService.h"
-
+#include "nsIEnumerator.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -235,29 +236,44 @@ nsHTTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 NS_IMETHODIMP
 nsHTTPChannel::GetContentType(char * *aContentType)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_OK;
 
-    if (m_pResponse) {
-        rv = m_pResponse->GetContentType(aContentType);
+    // Parameter validation...
+    if (!aContentType) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aContentType = nsnull;
+
+    //
+    // If the content type has been returned by the server then retern that...
+    //
+    if (mContentType.Length()) {
+        *aContentType = mContentType.ToNewCString();
+        if (!*aContentType) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        return rv;
     }
 
-    if (NS_FAILED(rv)) {
-        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-
-            rv = MIMEService->GetTypeFromURI(m_URI, aContentType);
-            if (NS_SUCCEEDED(rv)) return rv;
-            // XXX we should probably set the content-type for this http response at this stage too.
-        }
-	}
+    //
+    // No response yet...  Try to determine the content-type based
+    // on the file extension of the URI...
+    //
+    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = MIMEService->GetTypeFromURI(m_URI, aContentType);
+        if (NS_SUCCEEDED(rv)) return rv;
+        // XXX we should probably set the content-type for this http response at this stage too.
+    }
 
     // if all else fails treat it as text/html?
 	if (!*aContentType) 
 		*aContentType = nsCRT::strdup(DUMMY_TYPE);
-    if (!*aContentType)
-        return NS_ERROR_OUT_OF_MEMORY;
-    else
+    if (!*aContentType) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
         rv = NS_OK;
+    }
 
     return rv;
 }
@@ -283,21 +299,35 @@ nsHTTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 // nsIHTTPChannel methods:
 
 NS_IMETHODIMP
-nsHTTPChannel::GetRequestHeader(const char* i_Header, char* *o_Value)
+nsHTTPChannel::GetRequestHeader(nsIAtom* i_Header, char* *o_Value)
 {
     NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
     return m_pRequest->GetHeader(i_Header, o_Value);
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetRequestHeader(const char* i_Header, const char* i_Value)
+nsHTTPChannel::SetRequestHeader(nsIAtom* i_Header, const char* i_Value)
 {
     NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
     return m_pRequest->SetHeader(i_Header, i_Value);
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetResponseHeader(const char* i_Header, char* *o_Value)
+nsHTTPChannel::GetRequestHeaderEnumerator(nsISimpleEnumerator** aResult)
+{
+    nsresult rv;
+
+    if (m_pRequest) {
+        rv = m_pRequest->GetHeaderEnumerator(aResult);
+    } else {
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsHTTPChannel::GetResponseHeader(nsIAtom* i_Header, char* *o_Value)
 {
     if (!m_bConnected)
         Open();
@@ -305,6 +335,25 @@ nsHTTPChannel::GetResponseHeader(const char* i_Header, char* *o_Value)
         return m_pResponse->GetHeader(i_Header, o_Value);
     else
         return NS_ERROR_FAILURE ; // NS_ERROR_NO_RESPONSE_YET ? 
+}
+
+
+NS_IMETHODIMP
+nsHTTPChannel::GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult)
+{
+    nsresult rv;
+
+    if (!m_bConnected) {
+        Open();
+    }
+
+    if (m_pResponse) {
+        rv = m_pResponse->GetHeaderEnumerator(aResult);
+    } else {
+        *aResult = nsnull;
+        rv = NS_ERROR_FAILURE ; // NS_ERROR_NO_RESPONSE_YET ? 
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -386,6 +435,7 @@ nsHTTPChannel::Init()
         request from the handler
     */
     nsresult rv;
+
     m_pRequest = new nsHTTPRequest(m_URI);
     if (m_pRequest == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -400,7 +450,7 @@ nsHTTPChannel::Init()
     nsCRT::free(ua);
     char * uaCString = uaString.ToNewCString();
     if (!uaCString) return NS_ERROR_OUT_OF_MEMORY;
-    m_pRequest->SetUserAgent(uaCString);
+    m_pRequest->SetHeader(nsHTTPAtoms::User_Agent, uaCString);
     nsCRT::free(uaCString);
     return NS_OK;
 }
@@ -535,8 +585,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport)
     return m_pHandler->ReleaseTransport(aTransport);
 }
 
-nsresult
-nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
+nsresult nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
 { 
   NS_IF_RELEASE(m_pResponse);
   m_pResponse = i_pResp;
@@ -545,8 +594,7 @@ nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
   return NS_OK;
 }
 
-nsresult
-nsHTTPChannel::GetResponseContext(nsISupports** aContext)
+nsresult nsHTTPChannel::GetResponseContext(nsISupports** aContext)
 {
   if (aContext) {
     *aContext = mResponseContext;
@@ -556,6 +604,13 @@ nsHTTPChannel::GetResponseContext(nsISupports** aContext)
 
   return NS_ERROR_NULL_POINTER;
 }
+
+nsresult nsHTTPChannel::SetContentType(const char* aContentType)
+{
+    mContentType = aContentType;
+    return NS_OK;
+}
+
 
 nsresult
 nsHTTPChannel::SetPostDataStream(nsIInputStream* postDataStream)

@@ -19,7 +19,7 @@
 #include "nspr.h"
 #include "nsHTTPHandler.h"
 #include "nsHTTPChannel.h"
-//#include "nsITimer.h" 
+
 #include "nsIProxy.h"
 #include "plstr.h" // For PL_strcasecmp maybe DEBUG only... TODO check
 #include "nsXPIDLString.h"
@@ -32,6 +32,7 @@
 #include "nsIFileStream.h" 
 #include "nsIStringStream.h" 
 #include "nsHTTPEncodeStream.h" 
+#include "nsHTTPAtoms.h"
 
 #if defined(PR_LOGGING)
 //
@@ -83,6 +84,9 @@ nsHTTPHandler::nsHTTPHandler()
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPHandler [this=%x].\n", this));
 
+    // Initialize the Atoms used by the HTTP protocol...
+    nsHTTPAtoms::AddRefAtoms();
+
     rv = NS_NewISupportsArray(getter_AddRefs(m_pConnections));
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to create new ISupportsArray");
@@ -106,6 +110,10 @@ nsHTTPHandler::~nsHTTPHandler()
 
     mPendingChannelList->Clear();
     mTransportList->Clear();
+
+    // Release the Atoms used by the HTTP protocol...
+    nsHTTPAtoms::ReleaseAtoms();
+
 }
 
 NS_IMPL_ADDREF(nsHTTPHandler);

@@ -26,7 +26,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsCRT.h"
 
-#include "kHTTPHeaders.h"
+#include "nsHTTPAtoms.h"
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
 #include "nsProxyObjectManager.h"
@@ -575,21 +575,37 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
     return NS_OK;
   }
 
-  nsAutoString headerKey(eOneByte);
-  PRInt32 colonOffset;
-
+  //
   // Extract the key field - everything up to the ':'
   // The header name is case-insensitive...
+  //
+  PRInt32 colonOffset;
+  nsAutoString headerKey(eOneByte);
+  nsCOMPtr<nsIAtom> headerAtom;
+
   colonOffset = m_HeaderBuffer.Find(':');
+  if (-1 == colonOffset) {
+    //
+    // The header is malformed... Just clear it.
+    //
+    m_HeaderBuffer.Truncate();
+    return NS_ERROR_FAILURE;
+  }
   (void) m_HeaderBuffer.Left(headerKey, colonOffset);
   headerKey.ToLowerCase();
-
+  //
   // Extract the value field - everything past the ':'
   // Trim any leading or trailing whitespace...
+  //
   m_HeaderBuffer.Cut(0, colonOffset+1);
   m_HeaderBuffer.Trim(" ");
 
-  rv = m_pResponse->SetHeaderInternal(headerKey.GetBuffer(), m_HeaderBuffer.GetBuffer());
+  headerAtom = NS_NewAtom(headerKey.GetBuffer());
+  if (headerAtom) {
+    rv = ProcessHeader(headerAtom, m_HeaderBuffer);
+  } else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
 
   m_HeaderBuffer.Truncate();
 
@@ -622,6 +638,36 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
     // Notify the consumer that headers are available...
     FireOnHeadersAvailable();
   } 
+
+  return rv;
+}
+
+
+nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader, 
+                                               nsString& aValue)
+{
+  nsresult rv;
+
+  if (nsHTTPAtoms::Content_Type == aHeader) {
+    nsAutoString buffer(eOneByte);
+    PRInt32 semicolon;
+
+    //
+    // Set the content-type in the HTTPChannel...
+    //
+    semicolon = aValue.Find(';');
+    if (-1 != semicolon) {
+      aValue.Left(buffer, semicolon);
+      m_pConnection->SetContentType(buffer.GetBuffer());
+    } else {
+      m_pConnection->SetContentType(aValue.GetBuffer());
+    }
+  }
+
+  //
+  // Set the response header...
+  //
+  rv = m_pResponse->SetHeader(aHeader, aValue.GetBuffer());
 
   return rv;
 }
@@ -705,7 +751,7 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
   char *location;
 
   location = nsnull;
-  m_pResponse->GetHeader(kHH_LOCATION, &location);
+  m_pResponse->GetHeader(nsHTTPAtoms::Location, &location);
 
   if ((301 == aStatusCode) || (302 == aStatusCode)) {
     if (location) {
@@ -746,7 +792,7 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsILoadGroup> group;
             rv = m_pConnection->GetLoadGroup(getter_AddRefs(group));
-            if (NS_SUCCEEDED(rv)) {
+            if (group) {
                 // Add the new channel first. That way we don't run the risk
                 // of emptying the group and firing off the OnEndDocumentLoad
                 // notification.
