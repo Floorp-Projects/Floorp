@@ -691,9 +691,11 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
     if (view) {
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
-      viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-      nsRect r(0, 0, 0, 0);
-      viewManager->ResizeView(view, r);
+      if (viewManager) { // the view manager can be null during widget teardown
+        viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+        nsRect r(0, 0, 0, 0);
+        viewManager->ResizeView(view, r);
+      }
     }
     // set here so hide chain can close the menu as well.
     mMenuOpen = PR_FALSE;
