@@ -987,17 +987,23 @@ nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
   nsGenericHTMLContainerElement::GetInlineStyleRules(aRules);
 
   // The BodyFixupRule only applies when we have HTML as the parent of the BODY
+  // and we are in an HTML doc (as opposed to an XML doc)
   // - check if this is the case, and set the flag to use the rule only if 
   //   the HTML is the parent of the BODY
-  nsCOMPtr<nsIContent> parentElement;
-  GetParent(*getter_AddRefs(parentElement));
-  if (parentElement) {
-    nsCOMPtr<nsIAtom> tag;
-    parentElement->GetTag(*getter_AddRefs(tag));
-
-    if (tag.get() == nsHTMLAtoms::html) {
-      // create the fixup rule
-      useBodyFixupRule = PR_TRUE;
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
+  if (htmlDoc) {
+    // not XML, so we might need to back propagate the background...
+    nsCOMPtr<nsIContent> parentElement;
+    GetParent(*getter_AddRefs(parentElement));
+    if (parentElement) {
+      nsCOMPtr<nsIAtom> tag;
+      parentElement->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsHTMLAtoms::html) {
+        // create the fixup rule
+        useBodyFixupRule = PR_TRUE;
+      }
     }
   }
 
