@@ -28,6 +28,7 @@ LIBRARY_NAME = rdf
 
 CPPSRCS =				\
         nsBookmarkDataSource.cpp	\
+	nsContainerCursor.cpp		\
         nsEmptyCursor.cpp               \
         nsMemoryDataSource.cpp          \
         nsRDFContentSink.cpp            \
@@ -41,6 +42,7 @@ CPPSRCS =				\
 	nsRDFSimpleContentSink.cpp	\
 	nsRDFTreeDocument.cpp		\
         nsSimpleDataBase.cpp            \
+	nsStreamDataSource.cpp		\
 	rdfutil.cpp			\
 	$(NULL)
 
