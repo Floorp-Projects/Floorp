@@ -755,16 +755,13 @@ nsScriptSecurityManager::ReportErrorToConsole(nsIURI* aTarget)
       console->LogStringMessage(messageUni);
       nsMemory::Free(messageUni);
     }
-#ifndef DEBUG
-    else // If JS console reporting failed, print to stderr.
+#ifdef DEBUG
+    char* messageCstr = msg.ToNewCString();
+    if (!messageCstr)
+        return NS_ERROR_FAILURE;
+    fprintf(stderr, "%s\n", messageCstr);
+    PR_Free(messageCstr);
 #endif
-    {
-      char* messageCstr = msg.ToNewCString();
-      if (!messageCstr)
-          return NS_ERROR_FAILURE;
-      fprintf(stderr, "%s\n", messageCstr);
-      PR_Free(messageCstr);
-    }
     //-- Always returns an error
     return NS_ERROR_DOM_BAD_URI;
 }
