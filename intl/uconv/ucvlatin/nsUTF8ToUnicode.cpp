@@ -55,7 +55,6 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
                                             PRInt32 aSrcLength, 
                                             PRInt32 * aDestLength)
 {
-  // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
+  return NS_OK;
 }
