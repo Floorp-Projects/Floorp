@@ -4017,7 +4017,7 @@ cat > conftest.$ac_ext <<EOF
 
 int main() {
 
-#if defined(__DECCXX) && (__DECCXX_VER<60290024)
+#if defined(__DECCXX) && (__DECCXX_VER<60190029)
 #error "Compiler is too old."
 #endif 
 ; return 0; }
