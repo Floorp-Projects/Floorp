@@ -628,11 +628,11 @@ AC_CHECK_LIB(w, iswupper)
 AC_CHECK_LIB(l, yywrap,,
     AC_CHECK_LIB(fl, yywrap))
 AM_PATH_LIBIDL($LIBIDL_VERSION,BUILD_XPIDL=1,
-  [echo libIDL will be required starting the week of 12-APR-1999.]
+  [echo libIDL $LIBIDL_VERSION or higher is required.]
   [echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/]
   [echo before your tree is HOSED.]
   [echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.]
-  [sleep 3])
+  [AC_MSG_ERROR(libIDL not installed.)])
 
 dnl Replace `main' with a function in -lC_r:
 dnl AC_CHECK_LIB(C_r, main)
