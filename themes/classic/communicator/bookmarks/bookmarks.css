@@ -84,12 +84,12 @@
  
   .treeitem-bookmark[container="true"][open="true"][loading="true"]
     {
-      list-style-image    : url("resource:/res/rdf/loading.gif") ! important ;
+      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
     }
 
   .treeitem-bookmark[status="new"]
     {
-      list-style-image    : url("resource:/res/rdf/loading.gif") ! important ;
+      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
     }
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"],
@@ -133,19 +133,22 @@
       list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
     }
 
+/**
+ * XXX - need to create some different icons for file system objects
+ **/    
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"]
     {
-      list-style-image    : url("resource:/res/rdf/folder-open.gif");
+      list-style-image    : url("chrome://communicator/skin/directory/file-folder-open.gif");
     }
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"]
     {
-      list-style-image    : url("resource:/res/rdf/folder-closed.gif");
+      list-style-image    : url("chrome://communicator/skin/directory/file-folder-closed.gif");
     }
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"]
     {
-      list-style-image    : url("resource:/res/rdf/article.gif");
+      list-style-image    : url("chrome://communicator/skin/directory/file-icon.gif");
     }
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"],
