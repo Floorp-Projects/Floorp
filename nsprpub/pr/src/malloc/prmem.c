@@ -97,11 +97,12 @@ _PR_DestroyZones(void)
             while (mz->head) {
                 MemBlockHdr *hdr = mz->head;
                 mz->head = hdr->s.next;  /* unlink it */
-                pr_ZoneFree(hdr);
+                free(hdr);
                 mz->elements--;
             }
         }
     } 
+    use_zone_allocator = PR_FALSE;
 } 
 
 void
@@ -110,7 +111,7 @@ _PR_InitZones(void)
     int i, j;
     char *envp;
 
-    if (envp = getenv("NSPR_USE_ZONE_ALLOCATOR")) {
+    if ((envp = getenv("NSPR_USE_ZONE_ALLOCATOR")) != NULL) {
         use_zone_allocator = (atoi(envp) == 1);
     }
 
@@ -275,6 +276,9 @@ pr_ZoneRealloc(void *oldptr, PRUint32 bytes)
     PR_ASSERT(mb->s.magic == ZONE_MAGIC);
     if (mb->s.magic != ZONE_MAGIC) {
         /* Maybe this just came from ordinary malloc */
+        fprintf(stderr,
+            "Warning: reallocing memory block %p from ordinary malloc\n",
+            oldptr);
         /* We don't know how big it is.  But we can fix that. */
         oldptr = realloc(oldptr, bytes);
         if (!oldptr) {
@@ -329,6 +333,8 @@ pr_ZoneFree(void *ptr)
 
     if (mb->s.magic != ZONE_MAGIC) {
         /* maybe this came from ordinary malloc */
+        fprintf(stderr,
+            "Warning: freeing memory block %p from ordinary malloc\n", ptr);
         free(ptr);
         return;
     }
@@ -342,7 +348,7 @@ pr_ZoneFree(void *ptr)
     if (!mz) {
         PR_ASSERT(blockSize > 65536);
         /* This block was not in any zone.  Just free it. */
-        free(ptr);
+        free(mb);
         return;
     }
     PR_ASSERT(mz->blockSize == blockSize);
