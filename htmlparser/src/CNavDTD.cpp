@@ -42,7 +42,7 @@
 #include "nsViewSourceHTML.h"
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
-// #include "nsLinebreakConverter.h"
+#include "nsLinebreakConverter.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -1961,7 +1961,7 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     // now replace remaining CRs with LFs
     aNode.mSkippedContent.ReplaceChar("\r", kNewLine);
     */
-#if 0
+#if 1
     nsLinebreakConverter::ConvertStringLineBreaks(aNode.mSkippedContent,
          nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
 #endif
