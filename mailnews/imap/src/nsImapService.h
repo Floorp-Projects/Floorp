@@ -30,6 +30,7 @@ class nsIImapHostSessionList;
 class nsString2;
 class nsIImapUrl;
 class nsIMsgFolder;
+class nsIMsgStatusFeedback;
 
 class nsImapService : public nsIImapService, public nsIMsgMessageService, public nsIProtocolHandler
 {
@@ -47,6 +48,7 @@ public:
 	NS_IMETHOD SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder *aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
+							nsIMsgStatusFeedback *aMsgStatusFeedback,
                             nsIURI ** aURL);	
 	NS_IMETHOD LiteSelectFolder(nsIEventQueue * aClientEventQueue, 
                                 nsIMsgFolder * aImapMailFolder, 

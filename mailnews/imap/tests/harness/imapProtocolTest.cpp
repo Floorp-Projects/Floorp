@@ -454,7 +454,7 @@ nsresult nsIMAP4TestDriver::OnSelectFolder()
 	{
 		SetupInbox();
         if (NS_SUCCEEDED(rv) && m_inbox)
-            rv = imapService->SelectFolder(m_eventQueue, m_inbox /* imap folder sink */, this /* url listener */, nsnull);
+            rv = imapService->SelectFolder(m_eventQueue, m_inbox /* imap folder sink */, this /* url listener */, nsnull, nsnull);
 		m_runningURL = PR_TRUE; // we are now running a url...
 	}
 

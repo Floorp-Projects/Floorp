@@ -1020,6 +1020,18 @@ nsImapProtocol::GetRunningUrl(nsIURI **result)
         return NS_ERROR_NULL_POINTER;
 }
 
+
+NS_IMETHODIMP nsImapProtocol::GetRunningImapURL(nsIImapUrl **aImapUrl)
+{
+    if (aImapUrl && m_runningUrl)
+	{
+        return m_runningUrl->QueryInterface(nsIImapUrl::GetIID(), (void**) aImapUrl);
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+
+}
+
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs
  * the transport layer that this data is now available for transmission.

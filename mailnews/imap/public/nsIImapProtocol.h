@@ -87,6 +87,8 @@ public:
 	NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags) = 0;
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags) = 0;
 
+	NS_IMETHOD GetRunningImapURL(nsIImapUrl **aImapUrl) = 0;
+
 	// this is for the temp message display hack
     // ** jt - let's try it a litter more generic way
 	NS_IMETHOD GetStreamConsumer (nsISupports **aSupport) = 0;

@@ -45,14 +45,12 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsImapStringBundle.h"
 
+#include "nsIMsgStatusFeedback.h"
 
-
-#ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
 #include "nsIMsgFilterService.h"
 #include "nsImapMoveCoalescer.h"
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
-#endif
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -441,7 +439,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 	// don't run select if we're already running a url/select...
 	if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
 	{
-		rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+		rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull, nsnull);
 		m_urlRunning = PR_TRUE;
 	}
 
@@ -1041,7 +1039,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
 		PRUint32 numFolders;
 		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
 	}
-    rv = imapService->SelectFolder(m_eventQueue, inbox, this, nsnull);
+    rv = imapService->SelectFolder(m_eventQueue, inbox, this, nsnull, nsnull);
     return rv;
 }
 
@@ -1812,7 +1810,7 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
                                                   PR_TRUE);
             }
             // force to update the thread pane view
-            rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+            rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull, nsnull);
         }
 	}
 	else
@@ -2720,14 +2718,12 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
 	if (mDatabase)
 		mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
-#ifdef DOING_FILTERS
 	if (m_moveCoalescer)
 	{
 		m_moveCoalescer->PlaybackMoves (m_eventQueue);
 		delete m_moveCoalescer;
 		m_moveCoalescer = nsnull;
 	}
-#endif
     return NS_OK;
 }
 
@@ -2815,6 +2811,23 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
 	nsCString message(aInfo->message);
 	printf("progress: %d %s\n", aInfo->percent, message.GetBuffer());
 #endif
+	if (aProtocol)
+	{
+		nsCOMPtr <nsIImapUrl> imapUrl;
+		aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
+		if (imapUrl)
+		{
+			nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
+			if (mailnewsUrl)
+			{
+				nsCOMPtr <nsIMsgStatusFeedback> feedback;
+				mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+				if (feedback && aInfo->message)
+					feedback->ShowStatusString(aInfo->message);
+			}
+		}
+	}
+
     return NS_OK;
 }
 
@@ -3136,7 +3149,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             urlListener, nsnull,
                                             copySupport);
     if (NS_SUCCEEDED(rv))
-        imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+        imapService->SelectFolder(m_eventQueue, this, this, nsnull, nsnull);
 
     return rv;
 }

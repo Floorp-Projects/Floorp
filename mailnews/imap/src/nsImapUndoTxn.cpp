@@ -165,7 +165,7 @@ nsImapMoveCopyMsgTxn::Undo(void)
                 m_idsAreUids);
             if (NS_SUCCEEDED(rv))
                 rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
-                                               srcListener, nsnull);
+                                               srcListener, nsnull, nsnull);
         }
     }
     if (m_dstKeyArray.GetSize() > 0)
@@ -180,7 +180,7 @@ nsImapMoveCopyMsgTxn::Undo(void)
                                           m_idsAreUids);
         if (NS_SUCCEEDED(rv))
             rv = imapService->SelectFolder(m_eventQueue, m_dstFolder,
-                                           dstListener, nsnull);
+                                           dstListener, nsnull, nsnull);
     }
 	return rv;
 }
@@ -208,7 +208,7 @@ nsImapMoveCopyMsgTxn::Redo(void)
                                               m_idsAreUids);
             if (NS_SUCCEEDED(rv))
                 rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
-                                               srcListener, nsnull);
+                                               srcListener, nsnull, nsnull);
         }
     }
     if (m_dstKeyArray.GetSize() > 0)
@@ -224,7 +224,7 @@ nsImapMoveCopyMsgTxn::Redo(void)
                                                m_idsAreUids);
         if(NS_SUCCEEDED(rv))
             rv = imapService->SelectFolder(m_eventQueue, m_dstFolder,
-                                           dstListener, nsnull);
+                                           dstListener, nsnull, nsnull);
     }
 	return rv;
 }

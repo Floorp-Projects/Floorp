@@ -370,11 +370,9 @@ protected:
     PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;
 	nsCOMPtr<nsIMsgParseMailMsgState> m_msgParser;
-#ifdef DOING_FILTERS
 	nsCOMPtr<nsIMsgFilterList> m_filterList;
 	PRBool				m_msgMovedByFilter;
 	nsImapMoveCoalescer *m_moveCoalescer;
-#endif
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
     nsCOMPtr<nsIEventQueue> m_eventQueue;

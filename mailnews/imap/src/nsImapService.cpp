@@ -35,6 +35,8 @@
 #include "nsIEventQueueService.h"
 #include "nsRDFCID.h"
 
+#include "nsIMsgStatusFeedback.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -122,6 +124,7 @@ NS_IMETHODIMP
 nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
+							nsIMsgStatusFeedback *aStatusFeedback,
                             nsIURI ** aURL)
 {
 
@@ -142,6 +145,11 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
+
+		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+		if (mailNewsUrl)
+			mailNewsUrl->SetStatusFeedback(aStatusFeedback);
+
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
 		if (NS_SUCCEEDED(rv))
@@ -326,7 +334,7 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
                                          PR_TRUE);
                     // ** jt -- force to update the folder
                     if (NS_SUCCEEDED(rv))
-                        rv = SelectFolder(queue, folder, aUrlListener, nsnull);
+                        rv = SelectFolder(queue, folder, aUrlListener, nsnull, nsnull);
                 }
 			}
 		}
