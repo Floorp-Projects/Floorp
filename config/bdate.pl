@@ -16,7 +16,6 @@
 #
 
 # XP way of doing the build date.
-# 9823309 = 1998, julian day 233 (Fri, Aug 21), 9am PST
+# 98091509 = 1998, September, 15th, 9am local time zone
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
-printf("%02d%03d%02d\n", $year, 1+$yday, $hour);
-
+printf("%02d%02d%02d%02d\n", $year, 1+$mon, $mday, $hour);
