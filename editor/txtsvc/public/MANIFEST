@@ -1,0 +1,7 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:editor directory
+#
+
+nsITextService.h
+nsITextServicesDocument.h
+nsTextServicesCID.h
