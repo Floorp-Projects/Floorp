@@ -54,6 +54,13 @@
 
 #include "nsAutoLock.h"
 
+// _mbsstr isn't declared in w32api headers but it's there in the libs
+#ifdef __MINGW32__
+extern "C" {
+unsigned char *_mbsstr( const unsigned char *str,
+                        const unsigned char *substr );
+};
+#endif
 
 //----------------------------------------------------------------------------
 // short cut resolver

@@ -113,12 +113,17 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
  * XPCOM_DLL              - name of the loadable xpcom library on disk. 
  * XPCOM_SEARCH_KEY       - name of the environment variable that can be 
  *                          modified to include additional search paths.   
- * GRE_CONF_NAME          - Name of the GRE Configuration file                    
+ * GRE_CONF_NAME          - Name of the GRE Configuration file
  */
 
 #if defined(XP_WIN32) || defined(XP_OS2)
 
+#if defined(XP_WIN32) && defined(__GNUC__)
+#define XPCOM_DLL         "libxpcom" MOZ_DLL_SUFFIX
+#else
 #define XPCOM_DLL         "xpcom.dll"
+#endif
+
 #define XPCOM_SEARCH_KEY  "PATH"
 #define GRE_CONF_NAME     "gre.config"
 #define GRE_WIN_REG_LOC   "Software\\mozilla.org\\GRE\\"
