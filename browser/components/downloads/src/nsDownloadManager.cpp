@@ -70,7 +70,7 @@ static PRBool gQuitting = PR_FALSE;
 #define DOWNLOAD_MANAGER_FE_URL "chrome://browser/content/downloadmanager/downloadmanager.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://browser/locale/downloadmanager/downloadmanager.properties"
 #define INTERVAL 500
-#define DOWNLOAD_ENDED_TIMEOUT 5000
+#define DOWNLOAD_ENDED_TIMEOUT 10000
 
 nsIRDFResource* gNC_DownloadsRoot;
 nsIRDFResource* gNC_File;
