@@ -101,7 +101,7 @@ use constant contenttypes =>
    "rdf" => "application/xml" , 
    "xml" => "text/xml" , 
    "js" => "application/x-javascript" , 
-   "csv" => "text/plain" ,
+   "csv" => "text/csv" ,
    "png" => "image/png" ,
   };
 
