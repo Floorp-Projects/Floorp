@@ -57,7 +57,13 @@ public:
   // in the space manager which means that some floaters may be hidden
   // by the translation and therefore won't be in the count.
   PRInt32 GetFloaterCount() const {
-    return mFloaters;
+    return mLeftFloaters + mRightFloaters;
+  }
+  PRInt32 GetLeftFloaterCount() const {
+    return mLeftFloaters;
+  }
+  PRInt32 GetRightFloaterCount() const {
+    return mRightFloaters;
   }
 
   // Return the impact on the max-element-size for this band by
@@ -79,10 +85,11 @@ protected:
   // Bounding rect of available space between any left and right floaters
   nsRect mAvailSpace;
 
-  // Number of floaters in the current band. Note that this number may
-  // be less than the total number of floaters present in the band, if
-  // our translation in the space manager "hides" some floaters.
-  PRInt32 mFloaters;
+  // Number of left/right floaters in the current band. Note that this
+  // number may be less than the total number of floaters present in
+  // the band, if our translation in the space manager "hides" some
+  // floaters.
+  PRInt32 mLeftFloaters, mRightFloaters;
 
   void ComputeAvailSpaceRect();
   PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
