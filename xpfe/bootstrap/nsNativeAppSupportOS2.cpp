@@ -221,27 +221,28 @@ struct Mutex {
     Mutex( const char *name )
         : mName( name ),
           mHandle( 0 ),
-          mState( -1 ) {
+          mState( 0xFFFF ) {
         /* OS/2 named semaphores must begin with "\\SEM32\\" to be valid */
         mName.Insert("\\SEM32\\", 0);
-        APIRET rc = DosCreateMutexSem( mName.get(), &mHandle, 0, FALSE );
+        APIRET rc = DosCreateMutexSem(mName.get(), &mHandle, 0, FALSE);
+        if (rc != NO_ERROR) {
 #if MOZ_DEBUG_DDE
-        if ( rc != NO_ERROR ) {
-            printf( "CreateMutex error = 0x%08X\n", rc );
-        }
+            printf( "CreateMutex error = 0x%08X\n", (int)rc );
 #endif
+        }
     }
     ~Mutex() {
         if ( mHandle ) {
             // Make sure we release it if we own it.
             Unlock();
 
-            APIRET rc = DosCloseMutexSem( mHandle );
+
+            APIRET rc = DosCloseMutexSem(mHandle);
+            if (rc != NO_ERROR) {
 #if MOZ_DEBUG_DDE
-            if ( rc != NO_ERROR ) {
-                printf( "CloseHandle error = 0x%08X\n", rc );
-            }
+                printf( "CloseHandle error = 0x%08X\n", (int)rc );
 #endif
+            }
         }
     }
     BOOL Lock( DWORD timeout ) {
@@ -253,7 +254,7 @@ struct Mutex {
 #if MOZ_DEBUG_DDE
             printf( "...wait complete, result = 0x%08X\n", (int)mState );
 #endif
-            return mState == NO_ERROR;
+            return (mState == NO_ERROR);
         } else {
             return FALSE;
         }
@@ -264,7 +265,7 @@ struct Mutex {
             printf( "Releasing DDE mutex\n" );
 #endif
             DosReleaseMutexSem( mHandle );
-            mState = -1;
+            mState = 0xFFFF;
         }
     }
 private:
@@ -439,7 +440,7 @@ nsSplashScreenOS2::~nsSplashScreenOS2() {
 NS_IMETHODIMP
 nsSplashScreenOS2::Show() {
     //Spawn new thread to display real splash screen.
-    int handle = _beginthread( ThreadProc, NULL, 16384, (void *)this );
+    _beginthread( ThreadProc, NULL, 16384, (void *)this );
     return NS_OK;
 }
 
@@ -610,10 +611,10 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
         nsPaletteOS2::SelectGlobalPalette(hps, dlg);
 #endif
         GpiErase (hps);
-        POINTL aptl[8] = {0, 0, splashScreen->mBitmapCX, splashScreen->mBitmapCY,
-                          0, 0, 0, 0,
-                          0, 0, 0, 0,
-                          0, 0, 0, 0};
+        POINTL aptl[8] = {{0, 0}, {splashScreen->mBitmapCX, splashScreen->mBitmapCY},
+                          {0, 0}, {0, 0},
+                          {0, 0}, {0, 0},
+                          {0, 0}, {0, 0}};
 
         GpiBitBlt( hps, splashScreen->hpsMemory, 3L, aptl, ROP_SRCCOPY, 0L );
         WinEndPaint( hps );
@@ -938,15 +939,14 @@ BOOL SetupOS2ddeml()
     BOOL bRC = FALSE;
     HMODULE hmodDDEML = NULLHANDLE;
     APIRET rc = NO_ERROR;
-    ULONG ulVersion = 0;
 
     rc = DosLoadModule( NULL, 0, "PMDDEML", &hmodDDEML );
     if( rc == NO_ERROR )
     {
-       int i=0;
+       int i;
        /* all of this had better work.  Get ready to be a success! */
        bRC = TRUE;
-       for( i; ddemlfnTable[i].ord != 0; i++ )
+       for( i=0; ddemlfnTable[i].ord != 0; i++ )
        {
           rc = DosQueryProcAddr( hmodDDEML, ddemlfnTable[i].ord, NULL,
                                  ddemlfnTable[i].fn );
@@ -1436,15 +1436,6 @@ static nsCString hszValue( DWORD instance, HSZ hsz ) {
     }
     result += "]";
     return result;
-}
-#else
-// These are purely a safety measure to avoid the infamous "won't
-// build non-debug" type Tinderbox flames.
-static nsCString uTypeDesc( UINT ) {
-    return nsCString( "?" );
-}
-static nsCString hszValue( DWORD, HSZ ) {
-    return nsCString( "?" );
 }
 #endif
 
@@ -2113,7 +2104,7 @@ nsNativeAppSupportOS2::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
 #if MOZ_DEBUG_DDE
-        printf( "Error creating command line service = 0x%08X (argc=%d, argv=0x%08X)\n", (int)rv, (int)argc, (void*)argv );
+        printf( "Error creating command line service = 0x%08X (argc=%d, argv=0x%08X)\n", (int)rv, (int)argc, (int)argv );
 #endif
     }
 
