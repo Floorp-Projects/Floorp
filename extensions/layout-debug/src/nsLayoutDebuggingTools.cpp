@@ -401,8 +401,7 @@ DumpContentRecur(nsIDocShell* aDocShell, FILE* out)
         fprintf(out, "docshell=%p \n", NS_STATIC_CAST(void*, aDocShell));
         nsCOMPtr<nsIDocument> doc(document(aDocShell));
         if (doc) {
-            nsCOMPtr<nsIContent> root;
-            doc->GetRootContent(getter_AddRefs(root));
+            nsIContent *root = doc->GetRootContent();
             if (root) {
                 root->List(out);
             }
