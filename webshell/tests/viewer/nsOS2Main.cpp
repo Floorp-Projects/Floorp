@@ -47,6 +47,16 @@ nsresult nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
    return NS_OK; 
 }
 
+nsresult
+nsNativeBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
+{
+  NS_ASSERTION(nsnull != aHeightOut,"null out param.");
+
+  *aHeightOut = 0;
+
+  return NS_OK;
+}
+
 nsEventStatus nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
    return nsBrowserWindow::DispatchMenuItem(aID);

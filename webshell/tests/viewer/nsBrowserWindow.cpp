@@ -1381,6 +1381,19 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   return NS_OK;
 }
 
+// Overload this method in your nsNativeBrowserWindow if you need to 
+// have the logic in nsBrowserWindow::Layout() offset the menu within
+// the parent window.
+nsresult
+nsBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
+{
+  NS_ASSERTION(nsnull != aHeightOut,"null out param.");
+
+  *aHeightOut = 0;
+
+  return NS_OK;
+}
+
 nsresult
 nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
 {
@@ -1427,6 +1440,7 @@ void
 nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
   nscoord txtHeight;
+  nscoord menuBarHeight;
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
@@ -1434,6 +1448,9 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   } else {
     txtHeight = 24;
   }
+
+  // Find out the menubar height
+  GetMenuBarHeight(&menuBarHeight);
 
   nsRect rr(0, 0, aWidth, aHeight);
 
@@ -1446,15 +1463,15 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
       if (mThrobber) {
 	      PRInt32 width = PR_MAX(aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH), 0);
       
-	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
+	      locationWidget->Resize(2*BUTTON_WIDTH, menuBarHeight,
                                width,
                                BUTTON_HEIGHT,
                                PR_TRUE);
-	      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
+	      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, menuBarHeight);
       }
       else {
 	      PRInt32 width = PR_MAX(aWidth - 2*BUTTON_WIDTH, 0);
-	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
+	      locationWidget->Resize(2*BUTTON_WIDTH, menuBarHeight,
                                width,
                                BUTTON_HEIGHT,
                                PR_TRUE);
@@ -1462,6 +1479,20 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 
       locationWidget->Show(PR_TRUE);
       NS_RELEASE(locationWidget);
+
+      nsIWidget* w = nsnull;
+      if (mBack &&
+          NS_SUCCEEDED(mBack->QueryInterface(kIWidgetIID, (void**)&w))) {
+        w->Move(0, menuBarHeight);
+        w->Show(PR_TRUE);
+        NS_RELEASE(w);
+      }
+      if (mForward &&
+          NS_SUCCEEDED(mForward->QueryInterface(kIWidgetIID, (void**)&w))) {
+        w->Move(BUTTON_WIDTH, menuBarHeight);
+        w->Show(PR_TRUE);
+        NS_RELEASE(w);
+      }
     }
   }
   else {
@@ -1473,11 +1504,13 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     }
     if (mBack &&
         NS_SUCCEEDED(mBack->QueryInterface(kIWidgetIID, (void**)&w))) {
+      w->Move(0, menuBarHeight);
       w->Show(PR_FALSE);
       NS_RELEASE(w);
     }
     if (mForward &&
         NS_SUCCEEDED(mForward->QueryInterface(kIWidgetIID, (void**)&w))) {
+        w->Move(BUTTON_WIDTH, menuBarHeight);
       w->Show(PR_FALSE);
       NS_RELEASE(w);
     }
@@ -1512,9 +1545,9 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   }
 
   rr.x += WEBSHELL_LEFT_INSET;
-  rr.y += WEBSHELL_TOP_INSET;
+  rr.y += WEBSHELL_TOP_INSET + menuBarHeight;
   rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
-  rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
+  rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET + menuBarHeight;
 
   //Since allowing a negative height is a bad idea, let's condition this...
   if(rr.height<0)
