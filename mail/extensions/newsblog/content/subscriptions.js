@@ -36,15 +36,21 @@
 
 var gRSSServer = null;
 
-function doLoad() {
-    // extract the server argument
-    if (window.arguments[0].server)
-        gRSSServer = window.arguments[0].server;
+function doLoad() 
+{
+  // extract the server argument
+  if (window.arguments[0].server)
+    gRSSServer = window.arguments[0].server;
     
-    var ds = getSubscriptionsDS(gRSSServer);
-    var tree = document.getElementById('subscriptions');
-    tree.database.AddDataSource(ds);
-    tree.builder.rebuild();
+  var ds = getSubscriptionsDS(gRSSServer);
+  var tree = document.getElementById('subscriptions');
+  tree.database.AddDataSource(ds);
+  tree.builder.rebuild();
+    
+  var docshell = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIWebNavigation)
+                .QueryInterface(Components.interfaces.nsIDocShell);        
+  docshell.allowAuth = true;
 }
 
 function onAccept()

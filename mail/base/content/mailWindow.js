@@ -199,6 +199,7 @@ function InitMsgWindow()
   msgWindow.SetDOMWindow(window);
   mailSession.AddMsgWindow(msgWindow);
   document.getElementById("messagepane").docShell.allowAuth = false;
+  msgWindow.rootDocShell.allowAuth = true; 
 }
 
 function AddDataSources()

@@ -222,6 +222,7 @@ function InitMsgWindow()
 
   var messagepane = document.getElementById("messagepane");
   messagepane.docShell.allowAuth = false;
+  msgWindow.rootDocShell.allowAuth = true; 
 }
 
 function messagePaneOnClick(event)
