@@ -2421,7 +2421,6 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
-#include "nsISizeOfHandler.h"
 #include "nsIStyleSet.h"
 
 
@@ -2526,8 +2525,7 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
       nsIFrame* root;
       shell->GetRootFrame(root);
       if (nsnull != root) {
-        nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
-        root->List(out, 0, filter);
+        root->List(out, 0);
       }
       NS_RELEASE(shell);
     }
@@ -2657,62 +2655,11 @@ nsBrowserWindow::ToggleFrameBorders()
 void
 nsBrowserWindow::ShowContentSize()
 {
-  nsISizeOfHandler* szh;
-  if (NS_OK != NS_NewSizeOfHandler(&szh)) {
-    return;
-  }
-
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
-    if (nsnull != doc) {
-      nsIContent* content = doc->GetRootContent();
-      if (nsnull != content) {
-	content->SizeOf(szh);
-	PRUint32 totalSize;
-	szh->GetSize(totalSize);
-	printf("Content model size is approximately %d bytes\n", totalSize);
-	NS_RELEASE(content);
-      }
-      NS_RELEASE(doc);
-    }
-    NS_RELEASE(shell);
-  }
-  NS_RELEASE(szh);
 }
 
 void
 nsBrowserWindow::ShowFrameSize()
 {
-  nsIPresShell* shell0 = GetPresShell();
-  if (nsnull != shell0) {
-    nsIDocument* doc = shell0->GetDocument();
-    if (nsnull != doc) {
-      PRInt32 i, shells = doc->GetNumberOfShells();
-      for (i = 0; i < shells; i++) {
-	nsIPresShell* shell = doc->GetShellAt(i);
-	if (nsnull != shell) {
-	  nsISizeOfHandler* szh;
-	  if (NS_OK != NS_NewSizeOfHandler(&szh)) {
-	    return;
-	  }
-	  nsIFrame* root;
-	  shell->GetRootFrame(root);
-	  if (nsnull != root) {
-	    root->SizeOf(szh);
-	    PRUint32 totalSize;
-	    szh->GetSize(totalSize);
-	    printf("Frame model for shell=%p size is approximately %d bytes\n",
-		   shell, totalSize);
-	  }
-	  NS_RELEASE(szh);
-	  NS_RELEASE(shell);
-	}
-      }
-      NS_RELEASE(doc);
-    }
-    NS_RELEASE(shell0);
-  }
 }
 
 void
