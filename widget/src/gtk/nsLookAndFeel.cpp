@@ -117,6 +117,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             gtk_widget_unref(text);
         }
         break;
+    case eMetric_TextFieldBorder:
+        aMetric = 2;
+        break;
     case eMetric_TextVerticalInsidePadding:
         aMetric = 0;
         break;
