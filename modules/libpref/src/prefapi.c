@@ -2460,7 +2460,7 @@ void pref_Alert(char* msg)
 #if 0
 	FE_Alert(NULL, msg);
 #else
-    fputs(stderr, msg);
+    fputs(msg, stderr);
 #endif
 #endif
 #if defined (XP_PC)
