@@ -233,12 +233,6 @@ public:
   static PRBool TableCaptionAlignParamToString(const nsHTMLValue& aValue,
                                                nsString& aResult);
 
-protected:
-  nsHTMLTagContent();
-  nsHTMLTagContent(nsIAtom* aTag);
-  virtual ~nsHTMLTagContent();
-  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
-
   /**
    * Helper method used by GetAttribute to map an attribute
    * to a string value.
@@ -246,6 +240,20 @@ protected:
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;
+
+  /**
+   * Helper method used by SetAttribute to map a string to an
+   * attribute value.
+   */
+  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,
+                                          const nsString& aValue,
+                                          nsHTMLValue& aResult);
+
+protected:
+  nsHTMLTagContent();
+  nsHTMLTagContent(nsIAtom* aTag);
+  virtual ~nsHTMLTagContent();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   
   virtual nsresult AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValue, REFNSIID aIID);
