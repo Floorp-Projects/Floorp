@@ -2,6 +2,8 @@
 #
 # Run all our tests
 #
+ALL_SH_BASEPATH=$PATH	#to avoid that PATH is being appended every time 
+export ALL_SH_BASEPATH	#init is sourced
 CURDIR=`pwd`
 TESTS="sdr ssl cipher smime"
 cd common
