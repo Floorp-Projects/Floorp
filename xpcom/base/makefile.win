@@ -33,7 +33,6 @@ EXPORTS =                  \
         nsAgg.h            \
         nsIAllocator.h     \
         nsMemory.h         \
-        nsCOMPtr.h         \
         nsCom.h            \
 	nsComObsolete.h  \
         nsCWeakReference.h \
@@ -107,7 +106,6 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
         .\$(OBJDIR)\nsMemoryImpl.obj   \
-        .\$(OBJDIR)\nsCOMPtr.obj      \
         .\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsIInterfaceRequestor.obj \

@@ -24,6 +24,7 @@ DEPTH=..
 
 
 DIRS=   typelib        \
+	glue           \
         base           \
         ds             \
         io             \

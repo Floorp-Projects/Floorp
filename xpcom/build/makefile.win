@@ -78,6 +78,7 @@ SUB_LIBRARIES =                           \
         $(DIST)\lib\string_s.lib          \
         $(DIST)\lib\string_obsolete_s.lib \
         $(DIST)\lib\mozreg.lib            \
+	$(DIST)\lib\xpcomglue.lib         \
         $(NULL)
 
 LLIBS = $(SUB_LIBRARIES)               \
