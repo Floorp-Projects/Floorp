@@ -113,9 +113,9 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
         "finalize", "()V", (void*)&Java_netscape_javascript_JSObject_finalize,
     };
     
-    JNIEnv* env = NULL;
-    nsrefcnt count = jvmPlugin->GetJNIEnv(&env);
-    if (count > 0 && env != NULL) {
+    MRJSession* session = jvmPlugin->getSession();
+    JNIEnv* env = session->getCurrentEnv();
+    if (env != NULL) {
         jclass classJSObject = env->FindClass("netscape/javascript/JSObject");
         if (classJSObject != NULL) {
             // register LiveConnect native methods.
@@ -142,8 +142,6 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
             netscape_oji_JNIUtils_GetCurrentClassLoader = env->GetStaticMethodID(netscape_oji_JNIUtils, "GetCurrentClassLoader", "()Ljava/lang/Object;");
             netscape_oji_JNIUtils_GetObjectClassLoader = env->GetStaticMethodID(netscape_oji_JNIUtils, "GetObjectClassLoader", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
-        
-        jvmPlugin->ReleaseJNIEnv(env);
     }
     
     return result;
