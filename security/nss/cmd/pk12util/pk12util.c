@@ -142,9 +142,6 @@ p12u_InitContext(PRBool fileImport, char *filename)
 SECItem *
 P12U_NicknameCollisionCallback(SECItem *old_nick, PRBool *cancel, void *wincx)
 {
-    char *nick = NULL;
-    SECItem *ret_nick = NULL;
-
     if(cancel == NULL) {
       pk12uErrno = PK12UERR_USER_CANCELLED;
       return NULL;
@@ -158,6 +155,9 @@ P12U_NicknameCollisionCallback(SECItem *old_nick, PRBool *cancel, void *wincx)
     return NULL;
 
 #if 0
+    char *nick = NULL;
+    SECItem *ret_nick = NULL;
+
     nick = strdup( DEFAULT_CERT_NICKNAME );
 
     if(old_nick && !PORT_Strcmp((char *)old_nick->data, nick)) {
@@ -896,7 +896,6 @@ static secuCommandFlag pk12util_options[] =
 int
 main(int argc, char **argv)
 {
-    PRIntn ret = 0;
     secuPWData slotPw = { PW_NONE, NULL };
     secuPWData p12FilePw = { PW_NONE, NULL };
     PK11SlotInfo *slot;
