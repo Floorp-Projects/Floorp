@@ -1196,9 +1196,6 @@ nsHTMLEditor::DeleteColumn(nsIDOMElement *aTable, PRInt32 aColIndex)
 
     if (cell)
     {
-      // This must always be >= 1
-      NS_ASSERTION((actualRowSpan > 0),"Actual ROWSPAN = 0 in DeleteTableColumn");
-
       // Find cells that don't start in column we are deleting
       if (startColIndex < aColIndex || colSpan > 1 || colSpan == 0)
       {
@@ -1406,8 +1403,6 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
     // Compensate for cells that don't start or extend below the row we are deleting
     if (cell)
     {
-      // Real colspan must always be >= 1
-      NS_ASSERTION((actualColSpan > 0),"Effective COLSPAN = 0 in DeleteTableRow");
       if (startRowIndex < aRowIndex)
       {
         // Cell starts in row above us
@@ -1590,7 +1585,7 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
   PRBool  isSelected;
   for (PRInt32 row = minRow; row <= maxRow; row++)
   {
-    for(PRInt32 col = minColumn; col <= maxColumn; col += actualColSpan)
+    for(PRInt32 col = minColumn; col <= maxColumn; col += PR_MAX(actualColSpan, 1))
     {
       res = GetCellDataAt(table, row, col, getter_AddRefs(cell),
                           currentRowIndex, currentColIndex, rowSpan, colSpan, 
@@ -1651,7 +1646,7 @@ nsHTMLEditor::SelectAllTableCells()
   PRBool  isSelected;
   for(PRInt32 row = 0; row < rowCount; row++)
   {
-    for(PRInt32 col = 0; col < colCount; col += actualColSpan)
+    for(PRInt32 col = 0; col < colCount; col += PR_MAX(actualColSpan, 1))
     {
       res = GetCellDataAt(table, row, col, getter_AddRefs(cell),
                           currentRowIndex, currentColIndex, rowSpan, colSpan, 
@@ -1723,7 +1718,7 @@ nsHTMLEditor::SelectTableRow()
   PRBool cellSelected = PR_FALSE;
   PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan, currentRowIndex, currentColIndex;
   PRBool  isSelected;
-  for(PRInt32 col = 0; col < colCount; col += actualColSpan)
+  for(PRInt32 col = 0; col < colCount; col += PR_MAX(actualColSpan, 1))
   {
     res = GetCellDataAt(table, startRowIndex, col, getter_AddRefs(cell),
                         currentRowIndex, currentColIndex, rowSpan, colSpan, 
@@ -1790,7 +1785,7 @@ nsHTMLEditor::SelectTableColumn()
   PRBool cellSelected = PR_FALSE;
   PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan, currentRowIndex, currentColIndex;
   PRBool  isSelected;
-  for(PRInt32 row = 0; row < rowCount; row += actualRowSpan)
+  for(PRInt32 row = 0; row < rowCount; row += PR_MAX(actualRowSpan, 1))
   {
     res = GetCellDataAt(table, row, startColIndex, getter_AddRefs(cell),
                         currentRowIndex, currentColIndex, rowSpan, colSpan, 
@@ -1976,9 +1971,6 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     //   such as all cells having rowspan > 1 (Call FixRowSpan first!)
     if (NS_FAILED(res) || !cell) return NS_ERROR_FAILURE;
 
-    // 0 value results in infinite loop!
-    NS_ASSERTION(actualColSpan2 > 0, "ColSpan=0 in SplitCellIntoRows");
-
     // Skip over cells spanned from above (like the one we are splitting!)
     if (startRowIndex2 == rowBelowIndex)
     {
@@ -2163,15 +2155,13 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
       PRBool lastRowIsSet = PR_FALSE;
       PRInt32 lastColInRow = 0;
       PRInt32 firstColInRow = firstColIndex;
-      for (colIndex = firstColIndex; colIndex < colCount; colIndex += actualColSpan2)
+      for (colIndex = firstColIndex; colIndex < colCount; colIndex += PR_MAX(actualColSpan2, 1))
       {
         res = GetCellDataAt(table, rowIndex, colIndex, getter_AddRefs(cell2),
                             startRowIndex2, startColIndex2, rowSpan2, colSpan2, 
                             actualRowSpan2, actualColSpan2, isSelected2);
         if (NS_FAILED(res)) return res;
 
-        // We must have colspan >=1 if we have a cell
-        NS_ASSERTION(!cell2 || (actualColSpan2 > 0), "JoinTableCells: ColSpan=0");
         if (isSelected2)
         {
           if (!cellFoundInRow)
@@ -2207,10 +2197,6 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
           // We're done with this row
           break;
         }
-        // Be sure we have >= 1 to increment loop else we're infinite!
-        // (actualColSpan2 = 0 when end of row is reached)
-        actualColSpan2 = PR_MAX(1, actualColSpan2);
-
       } // End of column loop
 
       // Done with this row 
@@ -2255,7 +2241,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
     // 2nd pass: Do the joining and merging
     for (rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
-      for (colIndex = 0; colIndex < colCount; colIndex+=actualColSpan2)
+      for (colIndex = 0; colIndex < colCount; colIndex += PR_MAX(actualColSpan2, 1))
       {
         res = GetCellDataAt(table, rowIndex, colIndex, getter_AddRefs(cell2),
                             startRowIndex2, startColIndex2, rowSpan2, colSpan2, 
@@ -2487,7 +2473,7 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
   PRInt32 minRowSpan = -1;
   PRInt32 colIndex;
   
-  for( colIndex = 0; colIndex < colCount; colIndex += actualColSpan)
+  for( colIndex = 0; colIndex < colCount; colIndex += PR_MAX(actualColSpan, 1))
   {
     res = GetCellDataAt(aTable, aRowIndex, colIndex, getter_AddRefs(cell),
                         startRowIndex, startColIndex, rowSpan, colSpan, 
@@ -2502,16 +2488,14 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
     {
       minRowSpan = rowSpan;
     }
-    // Find cases that would yield infinite loop
     NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in FixBadRowSpan");
-    actualColSpan = PR_MAX(actualColSpan, 1);
   }
   if(minRowSpan > 1)
   {
     // The amount to reduce everyone's rowspan
     // so at least one cell has rowspan = 1
     PRInt32 rowsReduced = minRowSpan - 1;
-    for(colIndex = 0; colIndex < colCount; colIndex += actualColSpan)
+    for(colIndex = 0; colIndex < colCount; colIndex += PR_MAX(actualColSpan, 1))
     {
       res = GetCellDataAt(aTable, aRowIndex, colIndex, getter_AddRefs(cell),
                           startRowIndex, startColIndex, rowSpan, colSpan, 
@@ -2526,7 +2510,6 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
         if(NS_FAILED(res)) return res;
       }
       NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in FixBadRowSpan");
-      actualColSpan = PR_MAX(actualColSpan, 1);
     }
   }
   return GetTableSize(aTable, aNewRowCount, colCount);
@@ -2548,7 +2531,7 @@ nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& a
   PRInt32 minColSpan = -1;
   PRInt32 rowIndex;
   
-  for( rowIndex = 0; rowIndex < rowCount; rowIndex += actualRowSpan)
+  for( rowIndex = 0; rowIndex < rowCount; rowIndex += PR_MAX(actualRowSpan, 1))
   {
     res = GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
                         startRowIndex, startColIndex, rowSpan, colSpan, 
@@ -2563,16 +2546,14 @@ nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& a
     {
       minColSpan = colSpan;
     }
-    // Find cases that would yield infinite loop
     NS_ASSERTION((actualRowSpan > 0),"ActualRowSpan = 0 in FixBadColSpan");
-    actualRowSpan = PR_MAX(actualRowSpan, 1);
   }
   if(minColSpan > 1)
   {
     // The amount to reduce everyone's colspan
     // so at least one cell has colspan = 1
     PRInt32 colsReduced = minColSpan - 1;
-    for(rowIndex = 0; rowIndex < rowCount; rowIndex += actualRowSpan)
+    for(rowIndex = 0; rowIndex < rowCount; rowIndex += PR_MAX(actualRowSpan, 1))
     {
       res = GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
                           startRowIndex, startColIndex, rowSpan, colSpan, 
@@ -2587,7 +2568,6 @@ nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& a
         if(NS_FAILED(res)) return res;
       }
       NS_ASSERTION((actualRowSpan > 0),"ActualRowSpan = 0 in FixBadColSpan");
-      actualRowSpan = PR_MAX(actualRowSpan, 1);
     }
   }
   return GetTableSize(aTable, rowCount, aNewColCount);
@@ -3466,7 +3446,7 @@ nsHTMLEditor::AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PR
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  for( PRInt32 col = 0; col < aNumberOfColumns; col += actualColSpan)
+  for( PRInt32 col = 0; col < aNumberOfColumns; col += PR_MAX(actualColSpan, 1))
   {
     nsCOMPtr<nsIDOMElement> cell;    
     nsresult res = GetCellDataAt(aTable, aRowIndex, col, getter_AddRefs(cell),
@@ -3482,7 +3462,6 @@ nsHTMLEditor::AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PR
     if (!isSelected)
       return PR_FALSE;
 
-    // Find cases that would yield infinite loop
     NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in AllCellsInRowSelected");
   }
   return PR_TRUE;
@@ -3496,7 +3475,7 @@ nsHTMLEditor::AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex,
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  for( PRInt32 row = 0; row < aNumberOfRows; row += actualRowSpan)
+  for( PRInt32 row = 0; row < aNumberOfRows; row += PR_MAX(actualRowSpan, 1))
   {
     nsCOMPtr<nsIDOMElement> cell;    
     nsresult res = GetCellDataAt(aTable, row, aColIndex, getter_AddRefs(cell),
@@ -3511,9 +3490,6 @@ nsHTMLEditor::AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex,
     // Return as soon as a non-selected cell is found
     if (!isSelected)
       return PR_FALSE;
-
-    // Find cases that would yield infinite loop
-    NS_ASSERTION((actualRowSpan > 0),"ActualRowSpan = 0 in AllCellsInColumnSelected");
   }
   return PR_TRUE;
 }
