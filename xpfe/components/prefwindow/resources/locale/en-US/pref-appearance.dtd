@@ -27,6 +27,8 @@
 <!ENTITY showHideTooltips.accesskey "t">
 <!ENTITY useSiteIcons.label "Show Web Site Icons">
 <!ENTITY useSiteIcons.accesskey "i">
+<!ENTITY enableAutomaticImageResizing.label "Enable automatic image resizing">
+<!ENTITY enableAutomaticImageResizing.accesskey "r">
 
 <!--LOCALIZATION NOTE (languageList.txt.label): Don't translate "&brandShortName;".
     Place &brandShortName; in the phrase where the name of the application should appear
