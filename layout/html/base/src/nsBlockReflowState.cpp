@@ -1111,7 +1111,8 @@ nsBlockFrame::InitializeState(nsIPresContext*      aPresContext,
       // Get and apply the stylistic size. Note: do not limit the
       // height until we are done reflowing.
       PRIntn ss = aState.mStyleSizeFlags =
-        nsCSSLayout::GetStyleSize(aPresContext, this, aState.mStyleSize);
+        nsCSSLayout::GetStyleSize(aPresContext, aReflowState,
+                                  aState.mStyleSize);
       if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
         aState.mAvailSize.width = aState.mStyleSize.width + lr;
       }
