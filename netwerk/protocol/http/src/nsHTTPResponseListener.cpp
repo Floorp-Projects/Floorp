@@ -39,6 +39,8 @@
 #include "nsIPipe.h"
 #endif
 
+#include "nsXPIDLString.h" 
+
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -54,14 +56,13 @@ static const int kMAX_HEADER_SIZE = 60000;
 
 
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection): 
-    mFirstLineParsed(PR_FALSE),
-    mResponse(nsnull),
     mConsumer(nsnull),
-    mReadLength(0),
-    mHeadersDone(PR_FALSE),
+    mFirstLineParsed(PR_FALSE),
     mHeaderBuffer(eOneByte),
-    mResponseContext(nsnull),
-    mChannel(nsnull)
+    mHeadersDone(PR_FALSE),
+    mReadLength(0),
+    mResponse(nsnull),
+    mResponseContext(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -69,14 +70,14 @@ nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
     mConnection = aConnection;
     NS_IF_ADDREF(mConnection);
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPResponseListener [this=%x].\n", this));
 
 }
 
 nsHTTPResponseListener::~nsHTTPResponseListener()
 {
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPResponseListener [this=%x].\n", this));
 
     NS_IF_RELEASE(mConnection);
@@ -102,7 +103,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
     nsCOMPtr<nsIBufferInputStream> bufferInStream = do_QueryInterface(i_pStream);
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPResponseListener::OnDataAvailable [this=%x].\n"
             "\tstream=%x. \toffset=%d. \tlength=%d.\n",
             this, i_pStream, i_SourceOffset, i_Length));
@@ -141,7 +142,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
             i_Length -= actualBytesRead;
         }
 
-        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this));
         //
         // Parse the response headers as long as there is more data and
@@ -178,7 +179,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 
     if (NS_SUCCEEDED(rv)) {
         if (i_Length) {
-            PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+            PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                    ("\tOnDataAvailable [this=%x]. Calling consumer "
                     "OnDataAvailable.\tlength:%d\n", this, i_Length));
 
@@ -201,7 +202,7 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
 {
     nsresult rv;
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPResponseListener::OnStartRequest [this=%x].\n", this));
 
     // Initialize header varaibles...  
@@ -225,7 +226,7 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
 {
     nsresult rv = NS_OK;
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPResponseListener::OnStopRequest [this=%x]."
             "\tStatus = %x\n", this, i_Status));
 
@@ -356,7 +357,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   PRBool bFoundString = PR_FALSE;
   PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPResponseListener::ParseStatusLine [this=%x].\taLength=%d\n", 
           this, aLength));
 
@@ -404,7 +405,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   // Wait for more data to arrive before processing the header...
   if (!bFoundString) return NS_OK;
 
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
          , this, mHeaderBuffer.GetBuffer()));
 
@@ -437,7 +438,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   token = str.GetBuffer();
   mResponse->SetServerVersion(token);
 
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseStatusLine [this=%x].\tHTTP-Version: %s\n",
           this, token));
 
@@ -460,7 +461,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
 
   mResponse->SetStatus(statusCode);
   
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseStatusLine [this=%x].\tStatus-Code: %d\n",
           this, statusCode));
 
@@ -472,7 +473,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   token = mHeaderBuffer.GetBuffer();
   mResponse->SetStatusString(token);
 
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseStatusLine [this=%x].\tReason-Phrase: %s\n",
           this, token));
 
@@ -600,7 +601,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
 
   } while (PR_TRUE);
 
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
           this, mHeaderBuffer.GetBuffer()));
 
@@ -658,7 +659,7 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
 {
   nsresult rv = NS_OK;
 
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPResponseListener::FinishedResponseHeaders [this=%x].\n",
           this));
 
@@ -751,7 +752,7 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Informational: 1xx
     //
     case 1:
-      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("ProcessStatusCode [this=%x].\tStatus - Informational: %d.\n",
               this, statusCode));
       break;
@@ -760,7 +761,7 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Successful: 2xx
     //
     case 2:
-      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
               this, statusCode));
       break;
@@ -769,7 +770,7 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Redirection: 3xx
     //
     case 3:
-      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("ProcessStatusCode [this=%x].\tStatus - Redirection: %d.\n",
               this, statusCode));
       rv = ProcessRedirection(statusCode);
@@ -779,16 +780,19 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Client Error: 4xx
     //
     case 4:
-      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-             ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
-              this, statusCode));
-      break;
-
+		PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+			("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
+			this, statusCode));
+		if (statusCode == 401)
+		{
+			rv = ProcessAuthentication(statusCode);
+		}
+		break;
     //
     // Server Error: 5xx
     //
     case 5:
-      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("ProcessStatusCode [this=%x].\tStatus - Server Error: %d.\n",
               this, statusCode));
       break;
@@ -797,7 +801,7 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
     // Unknown Status Code catagory...
     //
     default:
-      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
              ("ProcessStatusCode [this=%x].\tStatus - Unknown Status Code catagory: %d.\n",
               this, statusCode));
       break;
@@ -808,30 +812,59 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
 
 
 
-nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
+nsresult
+nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 {
   nsresult rv = NS_OK;
-  char *location;
+  nsXPIDLCString location;
 
-  location = nsnull;
-  mResponse->GetHeader(nsHTTPAtoms::Location, &location);
+  mResponse->GetHeader(nsHTTPAtoms::Location, getter_Copies(location));
 
-  if ((301 == aStatusCode) || (302 == aStatusCode)) {
-    if (location) {
+  if ((301 == aStatusCode) || (302 == aStatusCode) && (location))
+  {
       nsCOMPtr<nsIChannel> channel;
 
       rv = mConnection->Redirect(location, getter_AddRefs(channel));
       if (NS_SUCCEEDED(rv)) {
-        //
-        // Disconnect the consumer from this response listener...  This allows
-        // the entity that follows to be discarded without notifying the 
-        // consumer...
-        //
-        NS_RELEASE(mConsumer);
-        mResponseContext = nsnull;
+		//
+		// Disconnect the consumer from this response listener...  This allows
+		// the entity that follows to be discarded without notifying the 
+		// consumer...
+		//
+		NS_RELEASE(mConsumer);
+		mResponseContext = nsnull;
       }
-      nsCRT::free(location);
-    }
   }
   return rv;
+}
+
+nsresult
+nsHTTPResponseListener::ProcessAuthentication(PRInt32 aStatusCode)
+{
+	NS_ASSERTION(aStatusCode == 401, "We don't handle other types of errors!"); // thats all we handle for now... 
+	if (aStatusCode != 401)
+		return NS_OK; // Let life go on...
+
+	nsresult rv = NS_OK;
+	nsXPIDLCString challenge; // identifies the auth type and realm.
+
+	if (NS_FAILED(rv = mResponse->GetHeader(
+                nsHTTPAtoms::WWW_Authenticate, 
+                getter_Copies(challenge))))
+		return rv; // We can't send user-password without this challenge.
+
+	if (!challenge || !*challenge) // can we do * on an XPIDLCString? check... todo
+		return rv;
+
+	nsCOMPtr<nsIChannel> channel;
+	if (NS_FAILED(rv = mConnection->Authenticate(challenge, getter_AddRefs(channel))))
+		return rv;
+	//
+	// Disconnect the consumer from this response listener...  This allows
+	// the entity that follows to be discarded without notifying the 
+	// consumer...
+	//
+	NS_RELEASE(mConsumer);
+	mResponseContext = nsnull;
+	return rv;
 }

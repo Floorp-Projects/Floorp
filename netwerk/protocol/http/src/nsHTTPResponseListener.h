@@ -97,19 +97,19 @@ protected:
     nsresult ProcessHeader(nsIAtom* aHeader, nsString& aValue);
     nsresult ProcessStatusCode();
     nsresult ProcessRedirection(PRInt32 aStatusCode);
+	nsresult ProcessAuthentication(PRInt32 aStatusCode);
 
 protected:
-    PRBool              mHeadersDone;
-    PRBool              mFirstLineParsed;
-    nsHTTPResponse*     mResponse;
-    nsHTTPChannel*      mConnection;
-    nsIStreamListener*  mConsumer;
-    PRUint32            mReadLength; // Already read
 
-    nsString            mHeaderBuffer;
+    nsHTTPChannel*      	mConnection;
+    nsIStreamListener*  	mConsumer;
+    PRBool              	mFirstLineParsed;
+    nsString            	mHeaderBuffer;
+    PRBool              	mHeadersDone;
+    PRUint32            	mReadLength; // Already read
+    nsHTTPResponse*     	mResponse;
 
-    nsCOMPtr<nsISupports> mResponseContext;
-    nsCOMPtr<nsIChannel>  mChannel;
+    nsCOMPtr<nsISupports> 	mResponseContext;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

@@ -25,16 +25,18 @@ IS_COMPONENT = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =			   \
-        nsHTTPHandler.cpp	   \
-        nsHTTPHandlerFactory.cpp   \
-        nsHTTPChannel.cpp	   \
-        nsHTTPRequest.cpp	   \
-        nsHTTPResponseListener.cpp \
-        nsHTTPResponse.cpp	   \
-        nsHTTPEncodeStream.cpp	   \
-        nsHTTPHeaderArray.cpp	   \
-        nsHTTPAtoms.cpp	           \
+CPPSRCS =			   				\
+        nsHTTPHandler.cpp	   		\
+        nsHTTPHandlerFactory.cpp    \
+        nsHTTPChannel.cpp	   		\
+        nsHTTPRequest.cpp	   		\
+        nsHTTPResponseListener.cpp  \
+        nsHTTPResponse.cpp	   		\
+        nsHTTPEncodeStream.cpp	    \
+        nsHTTPHeaderArray.cpp	    \
+        nsHTTPAtoms.cpp	            \
+		nsBasicAuth.cpp				\
+		nsAuth.cpp					\
         $(NULL)
 
 EXPORTS=			\

@@ -18,8 +18,6 @@
 #------------------------------------------------------------------------
 #
 # Makefile to build the pluggable HTTP 
-# This depends on the pluggable architecture apis exposed
-# by NuNet. 
 #
 # -Gagan Saksena 03/25/99
 #
@@ -52,8 +50,10 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsHTTPResponseListener.obj \
 	.\$(OBJDIR)\nsHTTPResponse.obj         \
 	.\$(OBJDIR)\nsHTTPHeaderArray.obj      \
-  .\$(OBJDIR)\nsHTTPAtoms.obj            \
+    .\$(OBJDIR)\nsHTTPAtoms.obj            \
 	.\$(OBJDIR)\nsHTTPEncodeStream.obj     \
+	.\$(OBJDIR)\nsBasicAuth.obj     	   \
+	.\$(OBJDIR)\nsAuth.obj          	   \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
