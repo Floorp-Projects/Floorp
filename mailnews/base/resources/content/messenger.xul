@@ -329,7 +329,7 @@ Rights Reserved.
           
 		<splitter id="sidebar-splitter"/>
 
-		<box align="vertical" flex="1">
+		<box orient="vertical" flex="1">
      
 			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
