@@ -50,7 +50,6 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
-#include "nsITimer.h"
 
 #include "nsExternalHelperAppService.h"
 

@@ -45,13 +45,6 @@
 #import "BrowserWrapper.h"
 #import "BrowserWindowController.h"
 
-#include "nsCOMPtr.h"
-#include "nsIDOMElement.h"
-#include "nsIContent.h"
-#include "nsIAtom.h"
-#include "nsString.h"
-#include "nsCRT.h"
-
 //////////////////////////
 //     NEEDS IMPLEMENTED : Implement drag tracking for moving tabs around.
 //  Implementation hints : Track drags ;)

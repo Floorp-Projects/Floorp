@@ -27,7 +27,6 @@
 #import "BookmarksButton.h"
 
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
 #include "nsString.h"
 #include "nsCRT.h"
 

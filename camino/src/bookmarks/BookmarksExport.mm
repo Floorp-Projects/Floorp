@@ -43,10 +43,8 @@
 #import "BookmarksService.h"
 
 #include "nsCOMPtr.h"
-#include "nsIFileStreams.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
-#include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 
 #include "nsIDOMElement.h"

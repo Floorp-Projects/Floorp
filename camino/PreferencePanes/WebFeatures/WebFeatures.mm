@@ -4,7 +4,6 @@
 #include "nsIServiceManagerUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIPermission.h"
-#include "nsIPref.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsIURI.h"

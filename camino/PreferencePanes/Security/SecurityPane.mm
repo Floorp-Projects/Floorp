@@ -1,6 +1,5 @@
 #import "SecurityPane.h"
 
-#include "nsCOMPtr.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIPref.h"
 

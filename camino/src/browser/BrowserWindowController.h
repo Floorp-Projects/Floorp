@@ -40,8 +40,6 @@
 #import "Find.h"
 #import "BookmarksToolbar.h"
 
-#include "nsIBrowserHistory.h"
-
 class nsIURIFixup;
 class nsIBrowserHistory;
 class nsIDOMEvent;

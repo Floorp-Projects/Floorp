@@ -71,7 +71,6 @@
 #include "nsNetUtil.h"
 
 #include "nsIClipboardCommands.h"
-#include "nsICommandManager.h"
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefBranch.h"

@@ -28,13 +28,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIPrefBranch.h"
-#include "nsIPref.h"
 #include "nsIBrowserHistory.h"
 #include "nsICacheService.h"
 #include "nsILocalFileMac.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsString.h"
 
 const int kDefaultExpireDays = 9;
 

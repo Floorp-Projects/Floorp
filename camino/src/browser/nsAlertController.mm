@@ -38,8 +38,6 @@
 #import "nsAlertController.h"
 #import "CHBrowserService.h"
 
-#include "nsIBadCertListener.h"
-
 enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
 
 const int kMinDialogWidth = 500;

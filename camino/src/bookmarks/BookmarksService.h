@@ -37,17 +37,12 @@
 
 #include <Appkit/Appkit.h>
 #include <Carbon/Carbon.h>
-
-#include "nsCOMPtr.h"
-#include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
-#include "nsVoidArray.h"
-
+#include "nsString.h"
 
 class nsIAtom;
 class nsIContent;
+class nsIDOMDocument;
 class nsIDOMElement;
-class nsIDOMHTMLDocument;
 
 @class BookmarksDataSource;
 @class BookmarksToolbar;

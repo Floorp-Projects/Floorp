@@ -9,9 +9,7 @@
 #import "PreferencePaneBase.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPrefBranch.h"
 #include "nsIPref.h"
-#include "nsIMemory.h"
 
 @implementation PreferencePaneBase
 

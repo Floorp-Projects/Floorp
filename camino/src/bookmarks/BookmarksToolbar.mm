@@ -31,7 +31,6 @@
 #import "BookmarksDataSource.h"
 
 #include "nsIContent.h"
-#include "nsIAtom.h"
 
 @interface BookmarksToolbar(Private)
 

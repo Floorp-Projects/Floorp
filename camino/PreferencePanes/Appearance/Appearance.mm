@@ -39,12 +39,6 @@
  
 #import "Appearance.h"
 
-#include "nsIServiceManager.h"
-#include "nsIPrefBranch.h"
-#include "nsIPref.h"
-#include "nsIMemory.h"
-
-
 @interface OrgMozillaChimeraPreferenceAppearance(Private)
 
 - (void)setupFontRegionPopup;
