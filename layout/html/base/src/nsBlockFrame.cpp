@@ -1948,12 +1948,14 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       //
       // For inline lines with no-wrap, the only way things
       // could change is if there is a percentage-sized child.
+      // However, right floaters within such lines might need to be
+      // repositioned, so we check for floaters as well.
       if (line->IsBlock() ||
           line->HasPercentageChild() || 
+          line->HasFloaters() ||
           (wrapping &&
            ((line != mLines.back() && !line->HasBreak()) ||
            line->ResizeReflowOptimizationDisabled() ||
-           line->HasFloaters() ||
            line->IsImpactedByFloater() ||
            (line->mBounds.XMost() > newAvailWidth)))) {
         line->MarkDirty();
