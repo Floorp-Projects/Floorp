@@ -99,11 +99,6 @@ private:
   friend class nsDownload;
 };
 
-struct DownloadClosure {
-  nsDownloadManager* DownloadManager;
-  nsCString path;
-};
-
 class nsDownload : public nsIDownload,
                    public nsIWebProgressListener
 {
@@ -129,12 +124,12 @@ protected:
   nsresult SetDownloadState(DownloadState aState);
   nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);
   nsresult SetStartTime(PRInt64 aStartTime);
-private:
   nsDownloadManager* mDownloadManager;
+  nsCOMPtr<nsILocalFile> mTarget;
 
+private:
   nsString mDisplayName;
 
-  nsCOMPtr<nsILocalFile> mTarget;
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mListener;
   nsCOMPtr<nsIWebProgressListener> mDialogListener;

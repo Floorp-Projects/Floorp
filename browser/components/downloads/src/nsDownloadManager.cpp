@@ -116,9 +116,14 @@ nsDownloadManager::~nsDownloadManager()
 
 void PR_CALLBACK nsDownloadManager::DownloadCallback(nsITimer *aTimer, void *aClosure)
 {
-  DownloadClosure* closure = (DownloadClosure*)aClosure;
-  closure->DownloadManager->DownloadEnded(closure->path.get(), nsnull);
-  delete aClosure;
+  nsDownload* download = NS_STATIC_CAST(nsDownload*, aClosure);
+
+  nsCAutoString path;
+  nsresult rv = download->mTarget->GetNativePath(path);
+  if (NS_FAILED(rv)) return;
+
+  download->mDownloadManager->DownloadEnded(path.get(), nsnull);
+  delete aClosure;  
 }
 
 PRInt32 PR_CALLBACK nsDownloadManager::CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure)
@@ -196,6 +201,9 @@ nsDownloadManager::DownloadEnded(const char* aPath, const PRUnichar* aMessage)
   if (mCurrDownloads.Exists(&key)) {
     AssertProgressInfoFor(aPath);
     
+    nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
+    NS_RELEASE(download);
+
     if (!gQuitting)
       mCurrDownloads.Remove(&key);
   }
@@ -543,7 +551,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   }
 
   mCurrDownloads.Put(&key, *aDownload);
-
+  NS_ADDREF(*aDownload);
   return rv;
 }
 
@@ -1007,10 +1015,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
         mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
       if (NS_FAILED(rv)) return rv;
       
-      DownloadClosure* closure = new DownloadClosure();
-      closure->DownloadManager = mDownloadManager;
-      closure->path = path;
-      mTimer->InitWithFuncCallback(nsDownloadManager::DownloadCallback, (void*)closure, DOWNLOAD_ENDED_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
+      mTimer->InitWithFuncCallback(nsDownloadManager::DownloadCallback, this, DOWNLOAD_ENDED_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
     }
   }
 
@@ -1077,14 +1082,14 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       nsresult rv = mTarget->GetNativePath(path);
       if (NS_FAILED(rv)) return rv;
 
+      if (mTimer)
+        mTimer->Cancel();
+
       if (!mTimer)
         mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
       if (NS_FAILED(rv)) return rv;
     
-      DownloadClosure* closure = new DownloadClosure();
-      closure->DownloadManager = mDownloadManager;
-      closure->path = path;
-      mTimer->InitWithFuncCallback(nsDownloadManager::DownloadCallback, (void*)closure, DOWNLOAD_ENDED_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
+      mTimer->InitWithFuncCallback(nsDownloadManager::DownloadCallback, this, DOWNLOAD_ENDED_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
     }
 
     // break the cycle we created in AddDownload
