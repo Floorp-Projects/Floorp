@@ -256,8 +256,6 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
     return NS_OK;
   }
 
-  nsresult rv = NS_ERROR_NO_INTERFACE;
-
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
   mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
