@@ -17,6 +17,7 @@ classic.jar:
 +   skin/classic/global/tree/twisty-clsd.gif        (skin/icons/twisty-clsd.gif)
 +   skin/classic/global/toolbar.css                 (skin/toolbar.css)
 +   skin/classic/global/tree.css                    (skin/tree.css)
++   skin/classic/communicator/communicator.css      (skin/communicator.css)
 +   skin/classic/messenger/primaryToolbar.css       (skin/primaryToolbar.css)
 +   skin/classic/messenger/accountCentral.css       (skin/accountCentral.css)
 +   skin/classic/messenger/threadPane.css           (skin/threadPane.css)
