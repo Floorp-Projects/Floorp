@@ -201,7 +201,7 @@ Show Dialog=TRUE
 Title=Software License Agreement
 ;*** LOCALIZE ME BABY ***
 Sub Title=Terms and conditions for using this software.
-License File=license.txt
+License File=license
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement. Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
