@@ -332,6 +332,11 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 	return m_baseURL->GetFileName(aFileName);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const char * aFileName)
 {
 	return m_baseURL->SetFileName(aFileName);

@@ -52,6 +52,12 @@ interface nsIURL : nsIURI
      */
     attribute string FileName;
 
+    /**
+     * Returns the file extension portion of a filename in a url.
+     * If a file extension does not exist, the empty string is returned.
+     */
+    readonly attribute string FileExtension;
+
 	/**
 	 * Returns the parameters specified after the ; in the URL. 
 	 *

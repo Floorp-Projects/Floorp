@@ -130,6 +130,26 @@ nsStdURL::GetFileName(char* *o_FileName)
 }
 
 inline NS_METHOD
+nsStdURL::GetFileExtension(char* *o_FileExtension)
+{
+    if (!o_FileExtension)
+        return NS_ERROR_NULL_POINTER;
+
+    char *dot = mFileName;
+    if (dot) {
+        while (*dot && (*dot != '.')) dot++; // goto the dot.
+        if (*dot) {
+            nsCAutoString ext(dot+1);
+            *o_FileExtension = ext.ToNewCString();
+            if (!*o_FileExtension) return NS_ERROR_OUT_OF_MEMORY;
+        } else {
+            *o_FileExtension = nsnull;
+        }
+    }
+    return NS_OK;
+}
+
+inline NS_METHOD
 nsStdURL::GetRef(char* *o_Ref)
 {
     return DupString(o_Ref, mRef);
