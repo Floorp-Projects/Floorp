@@ -456,7 +456,7 @@ $fields =~ s/[&?]cmdtype=[^&]*//g;
 
 my $oldorder;
 
-if (defined $::FORM{'order'}) {
+if (defined $::FORM{'order'} && trim($::FORM{'order'}) ne "") {
     $oldorder = url_quote(", $::FORM{'order'}");
 } else {
     $oldorder = "";
