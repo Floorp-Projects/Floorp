@@ -137,7 +137,7 @@
     <menuitem id="context-sendpage"
               label="&contextSendPage.label;"
               accesskey="&contextSendPage.accesskey;"
-              oncommand="sendPage(gContextMenu.target.ownerDocument);"
+              oncommand="sendPage();"
               insertafter="context-savepage"/>
     <menuitem id="context-sendimage"
               label="&contextSendImage.label;"
