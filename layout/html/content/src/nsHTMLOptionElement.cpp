@@ -31,6 +31,9 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMText.h"
+#include "nsIDOMNode.h"
+#include "nsGenericElement.h"
+#include "nsIDOMHTMLCollection.h"
 
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
@@ -102,8 +105,11 @@ protected:
   nsGenericHTMLContainerElement mInner;
   nsIForm* mForm;
 
-  // Return the primary frame associated with this content
+  // Get the primary frame associated with this content
   nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);
+
+  // Get the select content element that contains this option
+  nsresult GetSelect(nsIDOMHTMLSelectElement *&aSelectElement);
 };
 
 nsresult
@@ -216,7 +222,7 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
 }
 
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
-NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
+//NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
@@ -240,6 +246,54 @@ nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
     mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
     return NS_OK;
   }
+}
+
+NS_IMETHODIMP 
+nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
+{
+  nsresult res = NS_ERROR_FAILURE;
+  *aIndex = -1; // -1 indicates the index was not found
+
+  // Get our nsIDOMNode interface to compare apples to apples.
+  nsIDOMNode* thisNode = nsnull;
+  if (NS_OK == this->QueryInterface(kIDOMNodeIID, (void**)&thisNode)) {
+
+    // Get our containing select content object.
+    nsIDOMHTMLSelectElement* selectElement = nsnull;
+    if (NS_OK == GetSelect(selectElement)) {
+
+      // Get the options from the select object.
+      nsIDOMHTMLCollection* options = nsnull;
+      if (NS_OK == selectElement->GetOptions(&options)) {
+
+        // Walk the options to find out where we are in the list (ick, O(n))
+        PRUint32 length = 0;
+        options->GetLength(&length);
+        nsIDOMNode* thisOption = nsnull;
+        for (PRUint32 i = 0; i < length; i++) {
+          options->Item(i, &thisOption);
+          if (thisNode == thisOption) {
+            res = NS_OK;
+            *aIndex = i;
+            break;
+          }
+          NS_IF_RELEASE(thisOption);
+        }
+        NS_RELEASE(options);
+      }
+      NS_RELEASE(selectElement);
+    }
+    NS_RELEASE(thisNode);
+  }
+  return res;
+}
+
+// This method does nothing for now as Index is supposed to be a read-only property
+// (See the DOM Errata)
+NS_IMETHODIMP
+nsHTMLOptionElement::SetIndex(PRInt32 aIndex)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -334,24 +388,39 @@ nsHTMLOptionElement::GetStyleHintForAttributeChange(
 // then call nsGenericHTMLElement::GetPrimaryFrame()
 nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame)
 {
+  nsIDOMHTMLSelectElement* selectElement = nsnull;
+  nsresult res = GetSelect(selectElement);
+  if (NS_OK == res) {
+    nsIHTMLContent* selectContent = nsnull;
+    nsresult gotContent = selectElement->QueryInterface(kIContentIID, (void**)&selectContent);
+    NS_RELEASE(selectElement);
+
+    if (NS_OK == gotContent) {
+      res = nsGenericHTMLElement::GetPrimaryFrame(selectContent, aIFormControlFrame);
+      NS_RELEASE(selectContent);
+    }
+  }
+  return res;
+}
+
+// Get the select content element that contains this option
+nsresult nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement)
+{
   // Get the containing element (Either a select or an optGroup)
-  nsresult res = NS_NOINTERFACE;
   nsIDOMNode* parentNode = nsnull;
-  nsresult gotParent = this->GetParentNode(&parentNode);
-  if (NS_OK == gotParent) {
-    nsIDOMHTMLSelectElement* selectElement = nsnull;
-    nsresult isSelect = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+  nsresult res = NS_ERROR_FAILURE;
+  if (NS_OK == this->GetParentNode(&parentNode)) {
+    aSelectElement = nsnull;
+    res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
 
     // If we are in an OptGroup we need to GetParentNode again (at least once)
-    if (NS_OK != isSelect) {
+    if (NS_OK != res) {
       nsIDOMHTMLOptGroupElement* optgroupElement = nsnull;
       while (1) { // Be ready for nested OptGroups
-        nsresult isOptGroup = parentNode->QueryInterface(kIDOMHTMLOptGroupElementIID, (void**)&optgroupElement);
-        if (NS_OK == isOptGroup) {     // We don't really need the optgroup,
-          NS_RELEASE(optgroupElement); // just seeing if it IS one.
+        if (NS_OK == parentNode->QueryInterface(kIDOMHTMLOptGroupElementIID, (void**)&optgroupElement)) {
+          NS_RELEASE(optgroupElement); // Don't need the optgroup, just seeing if it IS one.
           nsIDOMNode* grandParentNode = nsnull;
-          gotParent = parentNode->GetParentNode(&grandParentNode);
-          if (NS_OK == gotParent) {
+          if (NS_OK == parentNode->GetParentNode(&grandParentNode)) {
             NS_RELEASE(parentNode);
             parentNode = grandParentNode;
           } else {
@@ -361,22 +430,11 @@ nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormContro
           break; // Break out if not a OptGroup (hopefully we have a select)
         }
       }
-      isSelect = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+      res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
     }
 
     // We have a select if we're gonna get one, so let go of the generic node
     NS_RELEASE(parentNode);
-
-    if (NS_OK == isSelect) {
-      nsIHTMLContent* selectContent = nsnull;
-      nsresult gotContent = selectElement->QueryInterface(kIContentIID, (void**)&selectContent);
-      NS_RELEASE(selectElement);
-
-      if (NS_OK == gotContent) {
-        res = nsGenericHTMLElement::GetPrimaryFrame(selectContent, aIFormControlFrame);
-        NS_RELEASE(selectContent);
-      }
-    }
   }
   return res;
 }
