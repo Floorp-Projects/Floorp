@@ -85,8 +85,8 @@
     test();
 
 function getTestCases( ) {
-
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
+    // all the "ResultArrays" below are hard-coded to Pacific Standard Time values -
+    var TZ_ADJUST =  TZ_PST * msPerHour;
 
     // Dates around 1970
 
@@ -129,7 +129,7 @@ function getTestCases( ) {
     addNewTestCase( new Date(1969,11,31,23,59,59,1000),
                     "new Date(1969,11,31,23,59,59,1000)",
                     [TIME_1970-TZ_ADJUST,1970,0,1,4,8,0,0,0,1970,0,1,4,0,0,0,0] );
-/*
+
     // Dates around 2000
 
     addNewTestCase( new Date( 1999,11,31,15,59,59,999),
@@ -202,7 +202,7 @@ function getTestCases( ) {
     addNewTestCase( new Date(2004,11,31,16,0,0,0),
                     "new Date(2004,11,31,16,0,0,0)",
                     [UTC_YEAR_2005,2005,0,1,6,0,0,0,0,2004,11,31,5,16,0,0,0] );
-*/
+
 /*
    This test case is incorrect.  Need to fix the DaylightSavings functions in
    shell.js for this to work properly.
@@ -232,7 +232,8 @@ function getTestCases( ) {
 }
 
 function addNewTestCase( DateCase, DateString, ResultArray ) {
-    DateCase = DateCase;
+    //adjust hard-coded ResultArray for tester's timezone instead of PST
+    adjustResultArray(ResultArray); 
 
     var item = testcases.length;
 
@@ -257,6 +258,7 @@ function addNewTestCase( DateCase, DateString, ResultArray ) {
     testcases[item++] = new TestCase( SECTION, DateString+".getSeconds()",          ResultArray[SECONDS],    DateCase.getSeconds() );
     testcases[item++] = new TestCase( SECTION, DateString+".getMilliseconds()",     ResultArray[MS],         DateCase.getMilliseconds() );
 }
+
 
 function test() {
     for( tc = 0; tc < testcases.length; tc++ ) {
