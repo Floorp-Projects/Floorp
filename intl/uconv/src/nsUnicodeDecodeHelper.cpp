@@ -168,25 +168,34 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
       if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) break;
 
     if (i == aTableCount) {
-      src++;
-      res = NS_ERROR_UDEC_ILLEGALINPUT;
-      break;
+      if (*src == (PRUint8)0xa0)
+        *dest = 0x00a0;
+      else
+        *dest = 0xfffd; 
+      bcr = 1;
     }
-
-    if (!uScan(aShiftTable[i], NULL, src, NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
-    (PRUint32 *)&bcr)) {
-      res = NS_OK_UDEC_MOREINPUT;
-      break;
-    }
-
-    if (!uMapCode((uTable*) aMappingTable[i], NS_STATIC_CAST(PRUint16, med), NS_REINTERPRET_CAST(PRUint16*, dest))) {
-      if (med < 0x20) {
-        // somehow some table miss the 0x00 - 0x20 part
-        *dest = med;
-      } else {
-        // Unicode replacement value for unmappable chars
-        *dest = 0xfffd;
-      }
+    else
+    {
+        if (!uScan(aShiftTable[i], NULL, src, NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
+        (PRUint32 *)&bcr)) {
+          res = NS_OK_UDEC_MOREINPUT;
+          break;
+        }
+        if (!uMapCode((uTable*) aMappingTable[i], NS_STATIC_CAST(PRUint16, med), NS_REINTERPRET_CAST(PRUint16*, dest))) {
+          if (med < 0x20) {
+            // somehow some table miss the 0x00 - 0x20 part
+            *dest = med;
+          } else {
+						// 2 for EUC-KR code set 1 and  EUC-JP codeset 1 and 2
+						// 3 for EUC-JP codeset 3, 4 for EUC-TW code set 3(CNS 11643 Plane 2 - 7)
+            if (bcr >= 2 && !(*(src+1) & 0x80) ) {
+                bcr-= (bcr-1);
+            }
+						// If stand-alone 0xa0 gets this far (BIG5), leave it alone.
+            // Otherwise, use Unicode replacement value for unmappable chars
+            *dest = (*src == (PRUint8)0xa0 ) ? 0x00a0 : 0xfffd;
+          }
+       }
     }
 
     src += bcr;
