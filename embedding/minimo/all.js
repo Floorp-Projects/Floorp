@@ -2,7 +2,6 @@ user_pref("general.useragent.override", "Mozilla/5.0 (Linux; U; Familiar 0.72; e
 
 pref("keyword.enabled", false);
 
-pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.memory.enable",         true);
 pref("browser.cache.memory.capacity",       256);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
@@ -192,7 +191,6 @@ pref("network.http.proxy.pipelining", false);
 // Max number of requests in the pipeline
 pref("network.http.pipelining.maxrequests" , 4);
 
-pref("network.http.proxy.ssl.connect",true);
 // </http>
 
 // This preference controls whether or not internationalized domain names (IDN)
@@ -206,9 +204,6 @@ pref("network.standard-url.escape-utf8", true);
 // enables the prefetch service (i.e., prefetching of <link rel="next"> URLs).
 pref("network.prefetch-next", true);
 
-pref("network.hosts.socks_server",          "");
-pref("network.hosts.socks_serverport",      1080);
-pref("network.hosts.socks_conf",            "");
 pref("network.image.imageBehavior",         0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.image.warnAboutImages",       false);
 pref("network.proxy.autoconfig_url",        "");
@@ -217,12 +212,8 @@ pref("network.proxy.ftp",                   "");
 pref("network.proxy.ftp_port",              0);
 pref("network.proxy.gopher",                "");
 pref("network.proxy.gopher_port",           0);
-pref("network.proxy.news",                  "");
-pref("network.proxy.news_port",             0);
 pref("network.proxy.http",                  "");
 pref("network.proxy.http_port",             0);
-pref("network.proxy.wais",                  "");
-pref("network.proxy.wais_port",             0);
 pref("network.proxy.ssl",                   "");
 pref("network.proxy.ssl_port",              0);
 pref("network.proxy.socks",                 "");
