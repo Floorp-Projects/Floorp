@@ -29,6 +29,7 @@ class nsIStyleContext;
 struct nsTableList;
 struct nsStyleDisplay;
 class nsIPresShell;
+class nsVoidArray;
 
 class nsCSSFrameConstructor : public nsIStyleFrameConstruction {
 public:
@@ -93,7 +94,10 @@ public:
   NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
-  
+
+  NS_IMETHOD ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
+                                   nsIPresContext* aPresContext);
+
   // Notification that we were unable to render a replaced element.
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
@@ -381,6 +385,11 @@ protected:
 
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
                                     nsIContent* aContent);
+
+  PRInt32 FindRestyledFramesBelow(nsIFrame* aFrame, 
+                                  nsIPresContext* aPresContext,
+                                  PRInt32 aParentHint,
+                                  nsStyleChangeList& aResults);
 
   nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
