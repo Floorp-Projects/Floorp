@@ -1,0 +1,43 @@
+<!ENTITY lHeader                        "Cookies">
+
+<!-- cookies -->
+
+<!ENTITY cookiePolicy.label             "Cookie Acceptance Policy">
+
+<!ENTITY accAllCookiesRadio.label       "Allow all cookies">
+<!ENTITY accAllCookiesRadio.accesskey   "c">
+
+<!ENTITY accOrgCookiesRadio.label       "Allow cookies for the originating website only">
+<!ENTITY accOrgCookiesRadio.accesskey   "o">
+
+<!ENTITY accP3PCookiesRadio.label       "Allow cookies based on privacy settings">
+<!ENTITY accP3PCookiesRadio.accesskey   "p">
+
+<!ENTITY disableCookies.label           "Block cookies">
+<!ENTITY disableCookies.accesskey       "B">
+
+<!ENTITY cookieRetentionPolicy.label    "Cookie Retention Policy">
+
+<!ENTITY acceptNormally.label           "Accept cookies normally">
+<!ENTITY acceptNormally.accesskey       "n">
+
+<!ENTITY acceptForSession.label         "Accept for current session only">
+<!ENTITY acceptForSession.accesskey     "s">
+
+<!ENTITY acceptforNDays.label           "Accept cookies for">
+<!ENTITY acceptforNDays.accesskey       "f">
+<!ENTITY days.label                     "days">
+
+<!ENTITY warnAboutCookies.label         "Ask for each cookie">
+<!ENTITY warnAboutCookies.accesskey     "A">
+<!ENTITY forCurrentSession.label        "except for session cookies">
+<!ENTITY forCurrentSession.accesskey    "e">
+
+<!ENTITY manageCookies.label            "Manage Cookies and Sites">
+<!ENTITY manageCookiesDescription.label "Allows you to view and manage stored cookies and per-site settings for accepting and rejecting cookies. Per-site settings will override the settings above.">
+
+<!ENTITY viewCookies.label              "Cookie Manager">
+<!ENTITY viewCookies.accesskey          "M">
+<!ENTITY viewP3P.label                  "View Privacy Settings">
+<!ENTITY viewP3P.accesskey              "V">
+

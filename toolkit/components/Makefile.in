@@ -51,6 +51,7 @@ else
 DIRS = 		\
 	autocomplete \
 	console \
+	cookie \
 	filepicker \
 	help \
 	history \

@@ -39,13 +39,13 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE page [
-<!ENTITY % prefPopupsDTD SYSTEM "chrome://cookie/locale/pref-popups.dtd" >
+<!ENTITY % prefPopupsDTD SYSTEM "chrome://communicator/locale/pref/pref-popups.dtd" >
 %prefPopupsDTD;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="popupsPanel"
-      onload="parent.initPanel('chrome://cookie/content/pref-popups.xul');"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-popups.xul');"
       headertitle="&title;">
           
   <script type="application/x-javascript">
@@ -92,7 +92,7 @@
           document.getElementById("prefillWhitelist").setAttribute("value", false);
         }
 
-        if (parent.queuedTag == "chrome://cookie/content/pref-popups.xul") {
+        if (parent.queuedTag == "chrome://communicator/content/pref/pref-popups.xul") {
           // opened from About Popups menuitem
           gPolicyCheckbox.checked = true;
           parent.queuedTag = null;

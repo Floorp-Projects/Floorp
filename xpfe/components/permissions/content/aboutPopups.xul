@@ -40,7 +40,7 @@
 <!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
-  <!ENTITY % aboutPopupsDTD SYSTEM "chrome://communicator/locale/aboutPopups.dtd" >
+  <!ENTITY % aboutPopupsDTD SYSTEM "chrome://communicator/locale/permissions/aboutPopups.dtd" >
   %aboutPopupsDTD;
 ]>
 
@@ -80,7 +80,7 @@
         }
         catch(ex) { }
         
-        goPreferences("securityItem", "chrome://cookie/content/pref-popups.xul", "popupspref");
+        goPreferences("securityItem", "chrome://communicator/content/pref/pref-popups.xul", "popupspref");
       }
 
       function doHelpButton() {

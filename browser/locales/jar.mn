@@ -51,9 +51,6 @@
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 *   locale/browser-region/contents.rdf             (generic/chrome/browser-region/contents.rdf)
-*   locale/@AB_CD@/cookie/contents.rdf                     (generic/chrome/cookie/contents.rdf)
-    locale/@AB_CD@/cookie/cookieAcceptDialog.dtd           (%chrome/cookie/cookieAcceptDialog.dtd)
-    locale/@AB_CD@/cookie/cookieAcceptDialog.properties    (%chrome/cookie/cookieAcceptDialog.properties)
 #ifndef MOZ_USE_OFFICIAL_BRANDING
 *   locale/branding/contents.rdf      (generic/chrome/branding/contents.rdf)
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)

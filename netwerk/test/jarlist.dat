@@ -142,12 +142,12 @@ jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/viewZoomOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/tasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/messenger/mailTasksOverlay.dtd
 jar:resource:///chrome/venkman.jar!/locale/en-US/venkman/venkman-overlay.dtd
-jar:resource:///chrome/en-US.jar!/locale/en-US/cookie/cookieTasksOverlay.dtd
+jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/permissions/cookieTasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/wallet/walletTasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/global/charsetOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/navigator/linkToolbar.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/sidebar/sidebarOverlay.dtd
-jar:resource:///chrome/en-US.jar!/locale/en-US/cookie/cookieContextOverlay.dtd
+jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/permissions/imageContextOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/wallet/walletContextOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/securityOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/bookmarks/bookmarksOverlay.dtd
@@ -167,7 +167,7 @@ jar:resource:///chrome/comm.jar!/content/communicator/viewZoomOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/tasksOverlay.xul
 jar:resource:///chrome/messenger.jar!/content/messenger/mailTasksOverlay.xul
 jar:resource:///chrome/venkman.jar!/content/venkman/venkman-overlay.xul
-jar:resource:///chrome/comm.jar!/content/cookie/cookieTasksOverlay.xul
+jar:resource:///chrome/comm.jar!/content/communicator/permissions/cookieTasksOverlay.xul
 jar:resource:///chrome/comm.jar!/content/wallet/walletTasksOverlay.xul
 jar:resource:///chrome/toolkit.jar!/content/global/charsetOverlay.xul
 jar:resource:///chrome/comm.jar!/content/navigator/platformNavigationBindings.xul
@@ -175,7 +175,7 @@ jar:resource:///chrome/comm.jar!/content/navigator/navExtraOverlay.xul
 jar:resource:///chrome/comm.jar!/content/navigator/linkToolbarOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/sidebar/sidebarOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/contentAreaContextOverlay.xul
-jar:resource:///chrome/comm.jar!/content/cookie/cookieContextOverlay.xul
+jar:resource:///chrome/comm.jar!/content/communicator/permissions/imageContextOverlay.xul
 jar:resource:///chrome/comm.jar!/content/wallet/walletContextOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/securityOverlay.xul
 jar:resource:///chrome/comm.jar!/content/communicator/communicatorOverlay.xul

@@ -41,7 +41,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/permissions/cookieViewer.dtd" >
 
 <dialog id="cookieviewer"
         buttons="accept,help"
@@ -54,14 +54,14 @@
         ondialoghelp="doHelpButton();"
         persist="screenX screenY width height">
 
-  <script src="chrome://communicator/content/wallet/CookieViewer.js"/>
+  <script src="chrome://communicator/content/permissions/cookieViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
+  <script src="chrome://communicator/content/permissions/treeUtils.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
   <keyset id="dialogKeys"/>
   <stringbundle id="cookieBundle"
-                src="chrome://communicator/locale/wallet/CookieViewer.properties"/>
+                src="chrome://communicator/locale/permissions/cookieViewer.properties"/>
            
   <tabbox id="tabbox" flex="1">
     <tabs>

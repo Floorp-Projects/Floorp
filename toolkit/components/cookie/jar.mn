@@ -1,0 +1,3 @@
+comm.jar:
+  content/cookie/cookieAcceptDialog.xul          (content/cookieAcceptDialog.xul)
+  content/cookie/cookieAcceptDialog.js           (content/cookieAcceptDialog.js)
