@@ -150,6 +150,12 @@ struct nsHTMLGenericContent {
 
   void ListAttributes(FILE* out) const;
 
+  void TriggerLink(nsIPresContext& aPresContext,
+                   const nsString& aBase,
+                   const nsString& aURLSpec,
+                   const nsString& aTargetSpec,
+                   PRBool aClick);
+
   //----------------------------------------
 
   // Attribute parsing utilities
@@ -285,7 +291,7 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
   ~nsHTMLGenericContainerContent();
 
   nsresult CopyInnerTo(nsIHTMLContent* aSrcContent,
-                       nsHTMLGenericLeafContent* aDest);
+                       nsHTMLGenericContainerContent* aDest);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
@@ -566,10 +572,7 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
                             nsEvent* aEvent,                                 \
                             nsIDOMEvent** aDOMEvent,                         \
                             PRUint32 aFlags,                                 \
-                            nsEventStatus& aEventStatus) {                   \
-    return _g.HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,        \
-                             aEventStatus);                                  \
-  }
+                            nsEventStatus& aEventStatus);
 
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC(_g)                             \
   virtual void Compact() {                                                 \
@@ -645,49 +648,49 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
     nsIHTMLContent* tmp = _this;                                \
     nsISupports* tmp2 = tmp;                                    \
     *_iptr = (void*) tmp2;                                      \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIDOMNodeIID)) {                               \
     nsIDOMNode* tmp = _this;                                    \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIDOMElementIID)) {                            \
     nsIDOMElement* tmp = _this;                                 \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIDOMHTMLElementIID)) {                        \
     nsIDOMHTMLElement* tmp = _this;                             \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIDOMEventReceiverIID)) {                      \
     nsIDOMEventReceiver* tmp = _this;                           \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIScriptObjectOwnerIID)) {                     \
     nsIScriptObjectOwner* tmp = _this;                          \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIContentIID)) {                               \
     nsIContent* tmp = _this;                                    \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIHTMLContentIID)) {                           \
     nsIHTMLContent* tmp = _this;                                \
     *_iptr = (void*) tmp;                                       \
-    mRefCnt++;                                                  \
+    AddRef();                                                   \
     return NS_OK;                                               \
   }
 
