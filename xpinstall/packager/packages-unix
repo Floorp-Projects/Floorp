@@ -53,6 +53,9 @@ bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
 bin/splash.xpm
+; this is used by gtk embedding clients
+bin/libgtkembedmoz.so
+
 
 bin/components/libappcomps.so
 bin/components/bookmarks.xpt
