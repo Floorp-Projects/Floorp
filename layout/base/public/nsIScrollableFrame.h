@@ -105,6 +105,15 @@ public:
 
   NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)=0;
 
+
+  /**
+   * Set information about whether the vertical and horizontal scrollbars
+   * are currently visible
+   */
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible) = 0;
+
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) = 0;
 
   NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,

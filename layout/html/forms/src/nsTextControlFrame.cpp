@@ -2996,6 +2996,16 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
   // than descending from the root frame of the frame hierarchy.
   first->AddStateBits(NS_FRAME_REFLOW_ROOT);
 
+//we must turn off scrollbars for singleline text controls
+  if (IsSingleLineTextControl()) 
+  {
+    nsIScrollableFrame *scrollableFrame = nsnull;
+    if (first)
+      first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
+    if (scrollableFrame)
+      scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
+  }
+
   //register keylistener
   nsCOMPtr<nsIDOMEventReceiver> erP;
   if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)

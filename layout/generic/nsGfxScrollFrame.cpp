@@ -64,6 +64,7 @@
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITextControlFrame.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIURI.h"
 #include "nsGUIEvent.h"
@@ -1136,6 +1137,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsBoxFrame* aOuter)
     mOuter(aOuter),
     mMaxElementWidth(0),
     mLastDir(-1),
+    mNeverHasVerticalScrollbar(PR_FALSE),
+    mNeverHasHorizontalScrollbar(PR_FALSE),
     mHasVerticalScrollbar(PR_FALSE), 
     mHasHorizontalScrollbar(PR_FALSE),
     mFirstPass(PR_FALSE),
@@ -1262,9 +1265,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
     if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
-      // If we just return early here, we'll never create content or
-      // frames an |mHScrollbarBox| and |mVScrollbarBox| will always be
-      // null.
+      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
       return;
     }
   }
@@ -1278,6 +1279,17 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   if (!canHaveHorizontal && !canHaveVertical)
     // Nothing to do.
     return;
+
+  // The anonymous <div> used by <inputs> never gets scrollbars.
+  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));
+  if (textFrame) {
+    // Make sure we are not a text area.
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
+    if (!textAreaElement) {
+      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
+      return;
+    }
+  }
 
   nsNodeInfoManager *nodeInfoManager =
     presContext->GetDocument()->NodeInfoManager();
@@ -1549,7 +1561,7 @@ PRBool
 nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop, PRBool aHorizontal, PRBool aAdd)
 {
   if (aHorizontal) {
-     if (!mHScrollbarBox)
+     if (mNeverHasHorizontalScrollbar || !mHScrollbarBox)
        return PR_FALSE;
 
      nsSize hSize;
@@ -1566,7 +1578,7 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScr
 
      return fit;
   } else {
-     if (!mVScrollbarBox)
+     if (mNeverHasVerticalScrollbar || !mVScrollbarBox)
        return PR_FALSE;
 
      nsSize vSize;
