@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsrootidl.idl"
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
 #include "nsIFileSpec.idl"
@@ -64,8 +65,10 @@ interface nsIMsgCopyService : nsISupports {
      * aSupport -- the originator of CopyMessages or CopyFileMessage; it can
      *             be either a nsIMsgFolder or a nsIFileSpec
      * dstFolder -- the destination folder which performs the copy operation
+     * result -- the result of the copy operation
      */
 	void NotifyCompletion(in nsISupports aSupport,
-						  in nsIMsgFolder dstFolder);
+						  in nsIMsgFolder dstFolder,
+                          in nsresult result);
 
 };
