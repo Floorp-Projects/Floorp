@@ -462,13 +462,20 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     
     char * contentType;
     rv = mimeService->GetTypeFromURI(uri, &contentType);
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+      if (contentType)
+        nsMemory::Free(contentType);
+      return;
+    }
 
     nsXPIDLCString value;
     rv = catman->GetCategoryEntry("Gecko-Content-Viewers",contentType, getter_Copies(value));
 
     if (NS_SUCCEEDED(rv) && value && *value && (value.Length() > 0))
       *aDoc = PR_TRUE;
+
+    if (contentType)
+      nsMemory::Free(contentType);
   }
 }
 
