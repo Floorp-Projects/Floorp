@@ -100,9 +100,7 @@
     <command id="toggleSidebar"/>
   </commandset>
 
-  <!-- Use this when we abandon the default startup page -->
-  <!-- broadcaster id="args" value="about:blank"/ -->
-  <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
+  <broadcaster id="args" value="about:blank"/>
   <broadcaster id="canPrint"/>
   
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs
