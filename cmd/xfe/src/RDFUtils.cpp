@@ -45,6 +45,9 @@
 
 #include <Xfe/Button.h>		// For XmBUTTON_ defines
 
+#include <Xfe/BmButton.h>	// For XfeIsBmButton()
+#include <Xfe/BmCascade.h>	// For XfeIsBmCascade()
+
 //////////////////////////////////////////////////////////////////////////
 //
 // XFE Command utilities
@@ -655,5 +658,104 @@ XFE_RDFUtils::getButtonLayoutForEntry(HT_Resource entry,int32 style)
     }
 
 	return layout;
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Menu items
+//
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_RDFUtils::configureMenuPushButton(Widget item,HT_Resource entry)
+{
+	XP_ASSERT( XfeIsAlive(item) );
+	XP_ASSERT( entry != NULL );
+
+	// Pixmaps can only be set for XfeBmButton widgets
+	if (XfeIsBmButton(item))
+	{
+		int32 style;
+		PREF_GetIntPref("browser.chrome.style", &style);
+		
+		if (style == BROWSER_TOOLBAR_TEXT_ONLY)
+		{
+			XtVaSetValues(item,
+						  XmNlabelPixmap,        XmUNSPECIFIED_PIXMAP,
+						  XmNlabelPixmapMask,    XmUNSPECIFIED_PIXMAP,
+						  NULL);
+			
+		}
+		else
+		{
+			Pixmap pixmap;
+			Pixmap mask;
+			
+			XFE_RDFUtils::getPixmapsForEntry(item,
+											 entry,
+											 &pixmap,
+											 &mask,
+											 NULL,
+											 NULL);
+			
+			XtVaSetValues(item,
+						  XmNlabelPixmap,        pixmap,
+						  XmNlabelPixmapMask,    mask,
+						  NULL);
+		}
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_RDFUtils::configureMenuCascadeButton(Widget item,HT_Resource entry)
+{
+	XP_ASSERT( XfeIsAlive(item) );
+	XP_ASSERT( entry != NULL );
+
+	// Pixmaps can only be set for XfeBmCascade widgets
+	if (XfeIsBmCascade(item))
+	{
+		int32 style;
+		PREF_GetIntPref("browser.chrome.style", &style);
+		
+		if (style == BROWSER_TOOLBAR_TEXT_ONLY)
+		{
+			XtVaSetValues(item,
+						  XmNlabelPixmap,        XmUNSPECIFIED_PIXMAP,
+						  XmNlabelPixmapMask,    XmUNSPECIFIED_PIXMAP,
+						  XmNarmPixmap,          XmUNSPECIFIED_PIXMAP,
+						  XmNarmPixmapMask,      XmUNSPECIFIED_PIXMAP,
+						  NULL);
+		}
+		else
+		{        
+			Pixmap pixmap;
+			Pixmap mask;
+			Pixmap armedPixmap;
+			Pixmap armedMask;
+			
+			XFE_RDFUtils::getPixmapsForEntry(item,
+											 entry,
+											 &pixmap,
+											 &mask,
+											 &armedPixmap,
+											 &armedMask);
+			
+			Arg         av[4];
+			Cardinal    ac = 0;
+        
+			XtSetArg(av[ac],XmNlabelPixmap,        pixmap); ac++;
+			XtSetArg(av[ac],XmNlabelPixmapMask,    mask);   ac++;
+			
+			// Only show the armed pixmap/mask if this entry has children
+			if (XfeIsAlive(XfeCascadeGetSubMenu(item)))
+			{
+				XtSetArg(av[ac],XmNarmPixmap,        armedPixmap); ac++;
+				XtSetArg(av[ac],XmNarmPixmapMask,    armedMask);   ac++;
+			}
+        
+			XtSetValues(item,av,ac);
+		}
+	}
 }
 //////////////////////////////////////////////////////////////////////////

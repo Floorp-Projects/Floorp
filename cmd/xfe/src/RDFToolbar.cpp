@@ -376,50 +376,6 @@ XFE_RDFToolbar::updateRoot()
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
-{
-    int32			style = XFE_RDFUtils::getStyleForEntry(entry);
-	unsigned char	layout = XFE_RDFUtils::getButtonLayoutForEntry(entry,
-																   style);
-
-    if (style == BROWSER_TOOLBAR_TEXT_ONLY)
-	{
-		XtVaSetValues(item,
-					  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
-					  XmNpixmapMask,		XmUNSPECIFIED_PIXMAP,
-					  NULL);
-
-		XtVaSetValues(item, XmNbuttonLayout, layout, NULL);
-	}
-	else
-	{
-		Pixmap pixmap;
-		Pixmap pixmapMask;
-
-		XFE_RDFUtils::getPixmapsForEntry(item,
-										 entry,
-										 &pixmap,
-										 &pixmapMask,
-										 NULL,
-										 NULL);
-
-        XtVaSetValues(item,
-                      XmNpixmap,		pixmap,
-                      XmNpixmapMask,	pixmapMask,
-                      XmNbuttonLayout,	layout,
-                      NULL);
-	}
-
-#ifdef NOT_YET
-	// Add popup callback to item
-	XtAddCallback(item,
-				  XmNbutton3DownCallback,
-				  &XFE_RDFToolbar::popupCB,
-				  (XtPointer) this);
-#endif
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
 XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 {
     int32			style = XFE_RDFUtils::getStyleForEntry(entry);
@@ -468,14 +424,6 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 
 		XtVaSetValues(item,XmNbuttonLayout,layout,NULL);
 	}
-
-#ifdef NOT_YET
-	// Add popup callback to item
-	XtAddCallback(item,
-				  XmNbutton3DownCallback,
-				  &XFE_RDFToolbar::popupCB,
-				  (XtPointer) this);
-#endif
 }
 //////////////////////////////////////////////////////////////////////////
 void

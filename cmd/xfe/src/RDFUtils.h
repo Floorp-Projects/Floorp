@@ -130,6 +130,18 @@ public:
 
 	static unsigned char	getButtonLayoutForEntry	(HT_Resource	entry,
 													 int32			style);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Menu items                                                       //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static void		configureMenuPushButton			(Widget			item,
+													 HT_Resource	entry);
+
+	static void		configureMenuCascadeButton		(Widget			item,
+													 HT_Resource	entry);
+
 };
 
 #endif // _xfe_rdf_utils_h_

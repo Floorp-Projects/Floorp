@@ -120,13 +120,6 @@ protected:
     // Gets called when the personal toolbar folder's name changes
     virtual void    updateToolbarFolderName   ();
 
-    // Configure the items
-    virtual void    configureXfeBmButton      (Widget, HT_Resource);
-    virtual void    configureXfeBmCascade     (Widget, HT_Resource);
-    virtual void    configureButton           (Widget, HT_Resource);
-    virtual void    configureCascade          (Widget, HT_Resource);
-    virtual void    configureSeparator        (Widget, HT_Resource);
-
     // Menu component creation methods
     Widget    createCascadeButton     (Widget menu, HT_Resource entry, 
                                        XP_Bool ignore_children);

@@ -589,14 +589,7 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
     XFE_RDFUtils::setItemLabelString(_frame->getContext(),cascade,entry);
     
     // Configure the new cascade button
-    if (_fancyItems)
-    {
-        configureXfeBmCascade(cascade,entry);
-    }
-    else
-    {
-        configureCascade(cascade,entry);
-    }
+	XFE_RDFUtils::configureMenuCascadeButton(cascade,entry);
 
     // Create a new bookmark data structure for the callbacks
     data = XP_NEW_ZAP(ItemCallbackStruct);
@@ -640,14 +633,12 @@ XFE_RDFMenuToolbarBase::createMoreButton(Widget menu)
                               &cascade,
                               &pulldown);
 
-    if (_fancyItems)
-    {
-        configureXfeBmCascade(cascade,NULL);
-    }
-    else
-    {
-        configureCascade(cascade,NULL);
-    }
+#if 0
+	// Cant use a NULL entry...hmmm...
+
+    // Configure the more button
+	XFE_RDFUtils::configureMenuCascadeButton(cascade,NULL);
+#endif
 
     return cascade;
 }
@@ -672,15 +663,14 @@ XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
     if (_fancyItems)
     {
         button = XfeCreateBmButton(non_full_menu,xfeCmdOpenTargetUrl,NULL,0);
-
-        configureXfeBmButton(button,entry);
     }
     else
     {
         button = XmCreatePushButton(non_full_menu,xfeCmdOpenTargetUrl,NULL,0);
-
-        configureButton(button,entry);
     }
+
+    // Configure the new push button
+	XFE_RDFUtils::configureMenuPushButton(button,entry);
 
     // Set the item's label
     XFE_RDFUtils::setItemLabelString(_frame->getContext(),button,entry);
@@ -774,108 +764,11 @@ XFE_RDFMenuToolbarBase::createSeparator(Widget menu)
 
     separator = XmCreateSeparator(parent,name,NULL,0);
 
-    configureSeparator(separator,NULL);
+//    configureSeparator(separator,NULL);
 
     XtManageChild(separator);
     
     return separator;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureXfeBmButton(Widget item,HT_Resource entry)
-{
-    int32 toolbar_style;
-    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
-
-    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
-    {
-        XtVaSetValues(item,
-                      XmNlabelPixmap,        XmUNSPECIFIED_PIXMAP,
-                      XmNlabelPixmapMask,    XmUNSPECIFIED_PIXMAP,
-                      NULL);
-
-    }
-    else
-    {
-        Pixmap pixmap;
-        Pixmap mask;
-
-		XFE_RDFUtils::getPixmapsForEntry(item,
-										 entry,
-										 &pixmap,
-										 &mask,
-										 NULL,
-										 NULL);
-
-        XtVaSetValues(item,
-                      XmNlabelPixmap,        pixmap,
-                      XmNlabelPixmapMask,    mask,
-                      NULL);
-    }
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureXfeBmCascade(Widget item,HT_Resource entry)
-{
-    int32 toolbar_style;
-    PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
-
-    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
-    {
-        XtVaSetValues(item,
-                      XmNlabelPixmap,        XmUNSPECIFIED_PIXMAP,
-                      XmNlabelPixmapMask,    XmUNSPECIFIED_PIXMAP,
-                      XmNarmPixmap,          XmUNSPECIFIED_PIXMAP,
-                      XmNarmPixmapMask,      XmUNSPECIFIED_PIXMAP,
-                      NULL);
-    }
-    else
-    {        
-        Pixmap pixmap;
-        Pixmap mask;
-        Pixmap armedPixmap;
-        Pixmap armedMask;
-        
-		XFE_RDFUtils::getPixmapsForEntry(item,
-										 entry,
-										 &pixmap,
-										 &mask,
-										 &armedPixmap,
-										 &armedMask);
-        
-        Arg         av[4];
-        Cardinal    ac = 0;
-        
-        XtSetArg(av[ac],XmNlabelPixmap,        pixmap); ac++;
-        XtSetArg(av[ac],XmNlabelPixmapMask,    mask);   ac++;
-        
-        // Only show the aremd pixmap/mask if this entry has children
-        if (XfeIsAlive(XfeCascadeGetSubMenu(item)))
-        {
-            XtSetArg(av[ac],XmNarmPixmap,        armedPixmap); ac++;
-            XtSetArg(av[ac],XmNarmPixmapMask,    armedMask);   ac++;
-        }
-        
-        XtSetValues(item,av,ac);
-    }
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureButton(Widget      /*item*/,
-                                        HT_Resource /*entry*/)
-{
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureCascade(Widget      /*item*/,
-                                         HT_Resource /*entry*/)
-{
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::configureSeparator(Widget      /*item*/,
-                                           HT_Resource /*entry*/)
-{
 }
 //////////////////////////////////////////////////////////////////////////
 HT_Resource

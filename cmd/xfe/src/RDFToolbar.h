@@ -78,7 +78,6 @@ protected:
     void       addItem                  (HT_Resource);
 
     // Override RDFMenuToolbarBase methods
-	virtual void	configureXfeButton		(Widget, HT_Resource);
 	virtual void	configureXfeCascade		(Widget, HT_Resource);
 
     // Toolbar component creation methods
