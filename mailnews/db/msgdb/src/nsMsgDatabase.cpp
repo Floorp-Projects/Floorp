@@ -332,7 +332,7 @@ nsMsgDatabase::~nsMsgDatabase()
 
 NS_IMPL_ADDREF(nsMsgDatabase)
 
-NS_IMETHODIMP nsMsgDatabase::Release(void)                    
+NS_IMETHODIMP_(nsrefcnt) nsMsgDatabase::Release(void)                    
 {                                                      
 	NS_PRECONDITION(0 != mRefCnt, "dup release");     
 	if (--mRefCnt == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
