@@ -62,6 +62,7 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsPresContext.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
@@ -232,8 +233,9 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
             return NS_OK;
           }
 
-          if (!nsContentUtils::GetBoolPref("browser.block.target_new_window")) {
-            // not blocking new windows
+          if (nsContentUtils::GetIntPref("browser.link.open_newwindow",
+                                     nsIBrowserDOMWindow::OPEN_NEWWINDOW) ==
+              nsIBrowserDOMWindow::OPEN_NEWWINDOW) {
             verb = eLinkVerb_New;
           }
         } else if (value.EqualsLiteral("replace")) {
@@ -325,7 +327,9 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
 
           // XXX Should probably do this using atoms 
           if (show.EqualsLiteral("new")) {
-            if (!nsContentUtils::GetBoolPref("browser.block.target_new_window")) {
+            if (nsContentUtils::GetIntPref("browser.link.open_newwindow",
+                                      nsIBrowserDOMWindow::OPEN_NEWWINDOW) ==
+                nsIBrowserDOMWindow::OPEN_NEWWINDOW) {
               verb = eLinkVerb_New;
             }
           } else if (show.EqualsLiteral("replace")) {

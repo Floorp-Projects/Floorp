@@ -355,9 +355,6 @@ protected:
 
     PRPackedBool               mIsBeingDestroyed;
 
-    // Disallow popping up new windows with target=
-    PRPackedBool               mDisallowPopupWindows;
-
     // Validate window targets to prevent frameset spoofing
     PRPackedBool               mValidateOrigin;
 
