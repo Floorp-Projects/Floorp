@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.10 2000/09/11 04:17:02 wtc%netscape.com Exp $
+ * $Id: rsa.c,v 1.11 2000/09/12 20:32:43 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -292,7 +292,7 @@ RSA_PublicKeyOp(RSAPublicKey  *key,
     CHECK_MPI_OK( mp_exptmod(&m, &e, &n, &c) );
 #endif
     /* 4.  result c is ciphertext */
-    err = mp_to_unsigned_octets(&c, output, modLen);
+    err = mp_to_fixlen_octets(&c, output, modLen);
     if (err >= 0) err = MP_OKAY;
 cleanup:
     mp_clear(&n);
@@ -319,8 +319,8 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     mp_int m, m1, m2, b2, h, c;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    unsigned int modLen;
     unsigned int offset;
+    unsigned int modLen;
     modLen = rsa_modulusLen(&key->modulus);
     if (!key || !output || !input) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -374,8 +374,8 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     /* 4.  m = m2 + h * q */
     CHECK_MPI_OK( mp_mul(&h, &q, &m) );
     CHECK_MPI_OK( mp_add(&m, &m2, &m) );
-    /* m is the output (plus a possible leading 0)*/
-    err = mp_to_unsigned_octets(&m, output + offset, modLen);
+    /* m is the output */
+    err = mp_to_fixlen_octets(&m, output, modLen);
     if (err >= 0) err = MP_OKAY;
 cleanup:
     mp_clear(&p);
