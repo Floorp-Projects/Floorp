@@ -1059,11 +1059,7 @@ NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue
     PRInt32 index = aValue.ToInteger(&error, 10); // Get index from aValue
     if (error == 0)
       GetOptionSelected(index, &selected);
-    if (selected) {
-      aValue = "1";
-    } else {
-      aValue = "0";
-    }
+    nsFormControlHelper::GetBoolString(selected, aValue);
     
   // For selectedIndex, get the value from the widget
   } else if (nsHTMLAtoms::selectedindex == aName) {

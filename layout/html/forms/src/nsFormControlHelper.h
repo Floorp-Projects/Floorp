@@ -37,6 +37,9 @@ class nsFormFrame;
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
 
+#define NS_STRING_TRUE   "1"
+#define NS_STRING_FALSE  "0"
+
 /**
   * Enumeration of possible mouse states used to detect mouse clicks
   */
@@ -105,6 +108,25 @@ public:
                       nsFont&                aFont);
 
   static void ForceDrawFrame(nsIFrame * aFrame);
+
+ 
+ /** 
+  * Utility to convert a string to a PRBool
+  * @param aValue string to convert to a PRBool
+  * @returns PR_TRUE if aValue = "1", PR_FALSE otherwise
+  */
+
+  static PRBool GetBool(const nsString& aValue);
+
+ /** 
+  * Utility to convert a PRBool to a string
+  * @param aValue Boolean value to convert to string.
+  * @param aResult string to hold the boolean value. It is set to "1" 
+  *        if aValue equals PR_TRUE, "0" if aValue equals PR_FALSE.
+
+  */
+
+  static void  GetBoolString(const PRBool aValue, nsString& aResult);
 
   // XXX similar functionality needs to be added to widget library and these
   //     need to change to use it.

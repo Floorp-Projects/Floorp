@@ -102,9 +102,9 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
   nsresult result = GetDefaultCheckState(&checked);
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     if (PR_TRUE == checked)
-      SetProperty(nsHTMLAtoms::checked, "1");
+      SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
     else
-      SetProperty(nsHTMLAtoms::checked, "0");
+      SetProperty(nsHTMLAtoms::checked, NS_STRING_FALSE);
   }
 
   if (mWidget != nsnull) {
@@ -157,7 +157,7 @@ nsRadioControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 void 
 nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  SetProperty(nsHTMLAtoms::checked, "1");
+  SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
   
   if (mFormFrame) {
      // The form frame will determine which radio button needs
@@ -192,9 +192,9 @@ nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
   }
 
  if (PR_TRUE == aValue)
-    SetProperty(nsHTMLAtoms::checked, "1");
+    SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
   else
-    SetProperty(nsHTMLAtoms::checked, "0");  
+    SetProperty(nsHTMLAtoms::checked, NS_STRING_FALSE);  
   
 }
 
@@ -364,19 +364,13 @@ void nsRadioControlFrame::GetRadioControlFrameState(nsString& aValue)
     if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
       PRBool state = PR_FALSE;
       radio->GetState(state);
-      if (PR_TRUE == state)
-        aValue = "1";
-      else
-        aValue = "0";
+      nsFormControlHelper::GetBoolString(state, aValue);
       NS_RELEASE(radio);
     }
   }
   else {   
       // Get the state for GFX-rendered widgets
-    if (PR_TRUE == mChecked)
-      aValue = "1";
-    else
-      aValue = "0";
+    nsFormControlHelper::GetBoolString(mChecked, aValue);
   }
 }         
 
@@ -385,7 +379,7 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
   if (nsnull != mWidget) {
     nsIRadioButton* radio = nsnull;
     if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
-      if (aValue == "1")
+      if (aValue == NS_STRING_TRUE)
         radio->SetState(PR_TRUE);
       else
         radio->SetState(PR_FALSE);
@@ -395,11 +389,7 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
   }
   else {    
        // Set the state for GFX-rendered widgets
-    if (aValue == "1")
-      mChecked = PR_TRUE;
-    else
-      mChecked = PR_FALSE;
-
+    mChecked = nsFormControlHelper::GetBool(aValue);
     nsFormControlHelper::ForceDrawFrame(this);
   }
 }         
