@@ -2729,7 +2729,7 @@ typedef enum INTL_DateFormatSelector {
 	INTL_DateFormatNone,
 	INTL_DateFormatLong,
 	INTL_DateFormatShort,
-	INTL_DateFormatYearMonth,
+	INTL_DateFormatYearMonth
 } INTL_DateFormatSelector;
 
 typedef enum INTL_TimeFormatSelector {
