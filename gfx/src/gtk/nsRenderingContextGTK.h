@@ -173,6 +173,9 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
+  NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint);
+  NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect);
+
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
@@ -188,6 +191,7 @@ public:
                                 PRUint32           aLength,
                                 nsBoundingMetrics& aBoundingMetrics,
                                 PRInt32*           aFontID = nsnull);
+
 #endif /* MOZ_MATHML */
 
   //locals
