@@ -114,7 +114,7 @@ interface calIOperationListener : nsISupports
   void onOperationComplete(in nsresult aStatus,
 			   in string aId,
 			   in unsigned long aOperation,
-			   in nsISupports aDetail);
+			   in nsIVariant aDetail);
   /**
    * for getItem and getItems
    */
