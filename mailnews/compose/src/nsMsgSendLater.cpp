@@ -429,7 +429,7 @@ nsMsgSendLater::CompleteMailFileSend()
 {
 nsresult                    rv;
 nsString                    recips;
-nsString                    ccList;
+nsXPIDLCString                    ccList;
 PRBool                      created;
 nsCOMPtr<nsIMsgCompFields>  compFields = nsnull;
 nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
@@ -443,7 +443,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (NS_FAILED(mMessage->GetRecipients(&recips)))
     return NS_ERROR_UNEXPECTED;
   else
-  	mMessage->GetCCList(&ccList);
+  	mMessage->GetCcList(getter_Copies(ccList));
 
   // Get the composition fields interface
   nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 

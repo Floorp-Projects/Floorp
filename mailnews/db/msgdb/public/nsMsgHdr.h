@@ -48,7 +48,7 @@ public:
     NS_IMETHOD SetDate(PRTime date);
     NS_IMETHOD SetMessageId(const char *messageId);
     NS_IMETHOD SetReferences(const char *references);
-    NS_IMETHOD SetCCList(const char *ccList);
+    NS_IMETHOD SetCcList(const char *ccList);
     NS_IMETHOD SetRecipients(const char *recipients, PRBool recipientsIsNewsgroup);
 	NS_IMETHOD SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses);
     NS_IMETHOD SetCCListArray(const char *names, const char *addresses, PRUint32 numAddresses);
@@ -59,7 +59,7 @@ public:
 	NS_IMETHOD GetAuthor(nsString *resultAuthor);
 	NS_IMETHOD GetSubject(nsString *resultSubject);
 	NS_IMETHOD GetRecipients(nsString *resultRecipients);
-	NS_IMETHOD GetMessageId(nsCString *resultMessageId);
+	NS_IMETHOD GetMessageId(char **resultMessageId);
 
 	NS_IMETHOD GetMime2DecodedAuthor(nsString *resultAuthor);
 	NS_IMETHOD GetMime2DecodedSubject(nsString *resultSubject);
@@ -69,7 +69,7 @@ public:
 	NS_IMETHOD GetSubjectCollationKey(nsString *resultSubject);
 	NS_IMETHOD GetRecipientsCollationKey(nsString *resultRecipients);
 
-	NS_IMETHOD GetCCList(nsString *ccList);
+	NS_IMETHOD GetCcList(char **ccList);
     // flag handling routines
     NS_IMETHOD GetFlags(PRUint32 *result);
     NS_IMETHOD SetFlags(PRUint32 flags);

@@ -634,7 +634,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
     const char contentType[] = "text/plain";
 		nsAutoString msgBody;
 		PRUnichar *bodyText = NULL;
-    nsString format(contentType);
+    nsAutoString format(contentType);
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
 
     nsresult rv2;
@@ -692,8 +692,8 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 
 	if (m_compFields && identity) 
 	{ 
-		nsString aString;
-		nsString aCharset(msgCompHeaderInternalCharset());
+		nsAutoString aString;
+		nsAutoString aCharset(msgCompHeaderInternalCharset());
 		char *outCString;
 
 		// Convert fields to UTF-8
@@ -812,7 +812,7 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
 
   // Now, lets init the editor here!
   // Just get a blank editor started...
-  m_editor->LoadUrl(nsString("about:blank").GetUnicode());
+  m_editor->LoadUrl(nsAutoString("about:blank").GetUnicode());
 
   return NS_OK;
 } 
@@ -864,7 +864,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
     /* we need to extract only the first URI*/
-    nsString  firstURI(originalMsgURI);
+    nsAutoString  firstURI(originalMsgURI);
     PRInt32 offset = firstURI.FindChar(',');
     if (offset >= 0)
     	firstURI.Truncate(offset);
@@ -872,11 +872,11 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
     nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(firstURI.GetUnicode()));
     if ((NS_SUCCEEDED(rv)) && message)
     {
-      nsString aString = "";
-      nsString bString = "";
-      nsString aCharset = "";
-      nsString decodedString;
-      nsString encodedCharset;  // we don't use this
+      nsAutoString aString("");
+      nsAutoString bString("");
+      nsAutoString aCharset("");
+      nsAutoString decodedString;
+      nsAutoString encodedCharset;  // we don't use this
       char *aCString = nsnull;
     
       rv = message->GetCharSet(&aCharset);
@@ -915,12 +915,14 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           
             if (type == nsIMsgCompType::ReplyAll)
             {
-              nsString cString, dString;
+              nsAutoString cString;
               rv = message->GetRecipients(&cString);
 	      if (NS_FAILED(rv)) return rv; 
               CleanUpRecipients(cString);
-              rv = message->GetCCList(&dString);
+              nsXPIDLCString ccList;
+              rv = message->GetCcList(getter_Copies(ccList));
 	      if (NS_FAILED(rv)) return rv; 
+              nsAutoString dString(ccList);
               CleanUpRecipients(dString);
               if (cString.Length() > 0 && dString.Length() > 0)
                 cString = cString + ", ";
@@ -1022,7 +1024,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   if (originalMsg && !quoteHeaders)
   {
     nsresult rv;
-    nsString author;
+    nsAutoString author;
     rv = originalMsg->GetMime2DecodedAuthor(&author);
     if (NS_SUCCEEDED(rv))
     {
@@ -1034,7 +1036,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         getter_AddRefs(parser));
       if (parser)
       {
-        nsString aCharset(msgCompHeaderInternalCharset());
+        nsAutoString aCharset(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
         rv = ConvertFromUnicode(aCharset, author, &utf8Author);
         if (NS_SUCCEEDED(rv) && utf8Author)
@@ -1101,10 +1103,10 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
       if (compFields)
       {
-        nsString aCharset(msgCompHeaderInternalCharset());
-	      	nsString replyTo;
-          nsString newgroups;
-          nsString followUpTo;
+        nsAutoString aCharset(msgCompHeaderInternalCharset());
+	      	nsAutoString replyTo;
+          nsAutoString newgroups;
+          nsAutoString followUpTo;
           char *outCString = nsnull;
           PRUnichar emptyUnichar = 0;
           PRBool toChanged = PR_FALSE;
@@ -1273,7 +1275,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
   mQuotingToFollow = PR_FALSE;
 
-  nsString    tmpURI(originalMsgURI);
+  nsAutoString    tmpURI(originalMsgURI);
   
   // Create a mime parser (nsIStreamConverter)!
   rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
@@ -1613,7 +1615,7 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
   else
   {
     nsresult    rv;
-    nsString    tSignature = "";
+    nsAutoString    tSignature = "";
 
     rv = mComposeObj->ProcessSignature(identity, &tSignature);
     if ((NS_SUCCEEDED(rv)) && editor)
@@ -1644,7 +1646,7 @@ nsresult
 nsMsgCompose::ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData)
 {
   nsresult    rv;
-  nsString    origBuf;
+  nsAutoString    origBuf;
 
   rv = LoadDataFromFile(aSigFile, origBuf);
   if (NS_FAILED(rv))
@@ -1659,7 +1661,7 @@ nsresult
 nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
 {
   nsresult    rv;
-  nsString    origBuf;
+  nsAutoString    origBuf;
 
   rv = LoadDataFromFile(aSigFile, origBuf);
   if (NS_FAILED(rv))
@@ -1729,11 +1731,11 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // look at the signature file first...if the extension is .htm or 
   // .html, we assume its HTML, otherwise, we assume it is plain text
   //
-  nsString      urlStr;
+  nsAutoString      urlStr;
   nsCOMPtr<nsIFileSpec> sigFileSpec;
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
-  nsString      sigData = "";
+  nsAutoString      sigData = "";
 
   if (identity)
   {
@@ -1761,7 +1763,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // type for the editor.
   //
   nsFileURL sigFilePath(testSpec);
-  char    *fileExt = nsMsgGetExtensionFromFileURL(nsString(sigFilePath));
+  char    *fileExt = nsMsgGetExtensionFromFileURL(nsAutoString(sigFilePath));
   
   if ( (fileExt) && (*fileExt) )
   {

@@ -30,6 +30,7 @@
 #include "nsFileStream.h"
 #include "nsMsgLocalSearch.h"
 #include "nsMsgSearchTerm.h"
+#include "nsXPIDLString.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -253,12 +254,12 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 //		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
 		if (actionType == nsMsgFilterAction::MoveToFolder)
 		{
-			nsCString msgId;
-			msgHdr->GetMessageId(&msgId);
+			nsXPIDLCString msgId;
+			msgHdr->GetMessageId(getter_Copies(msgId));
 			*stream << "mailbox:";
 			*stream << (char *) value;
 			*stream << "id = ";
-			*stream << nsAutoCString(msgId);
+			*stream << (const char*)msgId;
 			*stream << "\n";
 
 //			XP_FilePrintf(m_logFile, "mailbox:%s?id=%s\n", value, (const char *) msgId);

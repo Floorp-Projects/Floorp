@@ -1204,7 +1204,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 					PR_FREEIF(names);
 				}
 				else	// hmm, should we just use the original string?
-					m_newMsgHdr->SetCCList(ccList->value);
+					m_newMsgHdr->SetCcList(ccList->value);
 			}
 			status = InternSubject (subject);
 			if (status >= 0)

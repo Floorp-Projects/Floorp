@@ -144,10 +144,10 @@ NS_IMETHODIMP nsMessage::SetReferences(const char *references)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::SetCCList(const char *ccList)
+NS_IMETHODIMP nsMessage::SetCcList(const char *ccList)
 {
 	if(mMsgHdr)
-		return mMsgHdr->SetCCList(ccList);
+		return mMsgHdr->SetCcList(ccList);
 	else
 		return NS_ERROR_FAILURE;
 }
@@ -225,15 +225,15 @@ NS_IMETHODIMP nsMessage::GetRecipients(nsString *resultRecipients)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetCCList(nsString *ccList)
+NS_IMETHODIMP nsMessage::GetCcList(char **ccList)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetCCList(ccList);
+		return mMsgHdr->GetCcList(ccList);
 	else
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMessageId(nsCString *resultMessageId)
+NS_IMETHODIMP nsMessage::GetMessageId(char **resultMessageId)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMessageId(resultMessageId);

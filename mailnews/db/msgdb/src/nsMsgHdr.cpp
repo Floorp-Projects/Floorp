@@ -27,6 +27,7 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgMimeCID.h"
 #include "nsIMimeConverter.h"
+#include "nsXPIDLString.h"
 
 NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
 
@@ -397,7 +398,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 	return ret;
 }
 
-NS_IMETHODIMP nsMsgHdr::SetCCList(const char *ccList)
+NS_IMETHODIMP nsMsgHdr::SetCcList(const char *ccList)
 {
 	return SetStringColumn(ccList, m_mdb->m_ccListColumnToken);
 }
@@ -433,7 +434,7 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	ret = SetCCList(allRecipients);
+	ret = SetCcList(allRecipients);
 	return ret;
 }
 
@@ -540,14 +541,14 @@ NS_IMETHODIMP nsMsgHdr::GetRecipients(nsString *resultRecipients)
 	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_recipientsColumnToken, *resultRecipients);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetCCList(nsString *resultCCList)
+NS_IMETHODIMP nsMsgHdr::GetCcList(char * *resultCCList)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, *resultCCList);
+	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_ccListColumnToken, resultCCList);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetMessageId(nsCString *resultMessageId)
+NS_IMETHODIMP nsMsgHdr::GetMessageId(char * *resultMessageId)
 {
-	return m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_messageIdColumnToken, *resultMessageId);
+	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_messageIdColumnToken, resultMessageId);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetMime2DecodedAuthor(nsString *resultAuthor)
@@ -714,11 +715,11 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
 	PRUint16 numReferences = 0;
 	possibleChild->GetNumReferences(&numReferences);
 	nsCAutoString reference;
-	nsCAutoString messageId;
+	nsXPIDLCString messageId;
 
-	GetMessageId(&messageId);
+	GetMessageId(getter_Copies(messageId));
 	possibleChild->GetStringReference(numReferences - 1, reference);
 
-	return (messageId.Equals(reference));
+	return (reference.Equals(messageId));
 }
 

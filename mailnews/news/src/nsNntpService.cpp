@@ -278,8 +278,8 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
     return rv;
   }
 
-  nsCString messageId;
-  rv = msgHdr->GetMessageId(&messageId);
+  nsXPIDLCString messageId;
+  rv = msgHdr->GetMessageId(getter_Copies(messageId));
 
 #ifdef DEBUG_NEWS
   PRUint32 bytes;
@@ -299,7 +299,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   newsURI += "/";
   newsURI += hostname;
   newsURI += "/";
-  newsURI += messageId;
+  newsURI += (const char*)messageId;
 
 #ifdef DEBUG_NEWS
   printf("newsURI = %s\n", (const char *)nsAutoCString(newsURI));
@@ -929,14 +929,14 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   }
   
   nsMsgKey key;
-  nsCString messageId;
+  nsXPIDLCString messageId;
   
   nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(0));
   nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
   if (message) {
     rv = message->GetMessageKey(&key);
     if (NS_FAILED(rv)) return rv;
-    rv = message->GetMessageId(&messageId);
+    rv = message->GetMessageId(getter_Copies(messageId));
     if (NS_FAILED(rv)) return rv;
   }
   else {
@@ -948,7 +948,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   urlStr += "/";
   urlStr += hostname;
   urlStr += "/";
-  urlStr += messageId;
+  urlStr += (const char*)messageId;
   urlStr += "?cancel";
 
 #ifdef DEBUG_NEWS

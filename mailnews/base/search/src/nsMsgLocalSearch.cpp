@@ -483,7 +483,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 {
     nsresult err = NS_OK;
     nsString  recipients;
-    nsString  ccList;
+    nsXPIDLCString  ccList;
     nsString  matchString;
 	PRUint32 msgFlags;
 
@@ -532,7 +532,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             err = pTerm->MatchRfc822String (nsCAutoString(recipients), charset, &result);
             if (boolKeepGoing == result)
             {
-                msgToMatch->GetCCList(&ccList);
+                msgToMatch->GetCcList(getter_Copies(ccList));
                 err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, &result);
             }
         }
@@ -575,7 +575,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, &result);
             break;
         case nsMsgSearchAttrib::CC:
-            msgToMatch->GetCCList(&ccList);
+            msgToMatch->GetCcList(getter_Copies(ccList));
             err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, &result);
             break;
         case nsMsgSearchAttrib::AgeInDays:

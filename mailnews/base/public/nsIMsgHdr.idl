@@ -38,72 +38,70 @@ native nsMsgPriority(nsMsgPriority);
 [scriptable, uuid(4e994f60-c317-11d2-8cc9-0060b0fc14a3)]
 interface nsIMsgHdr : nsISupports
 {
-    [noscript] void GetProperty(in string propertyName, in nsStringRef propertyValue);
-    [noscript] void SetProperty(in string propertyName, in nsStringRef propertyStr);
+    [noscript] void getProperty(in string propertyName, in nsStringRef propertyValue);
+    [noscript] void setProperty(in string propertyName, in nsStringRef propertyStr);
 
-    unsigned long GetUint32Property(in string propertyName);
-    void SetUint32Property(in string propertyName,
+    unsigned long getUint32Property(in string propertyName);
+    void setUint32Property(in string propertyName,
                            in unsigned long propertyVal);
 
     readonly attribute unsigned short numReferences;
-    [noscript] void GetStringReference(in long refNum, in nsCStringRef ref);
+    [noscript] void getStringReference(in long refNum, in nsCStringRef ref);
 
     attribute PRTime date;
     
-    /* XXX make this an attribute */
-    void SetMessageId(in string messageId);
-	[noscript] void GetMessageId(in nsCString messageId);
-
-    /* XXX make this an attribute */
-    void SetReferences(in string references);
-    void SetCCList(in string ccList);
-    void SetRecipients(in string recipients, in boolean recipientsIsNewsgroup);
-	void SetRecipientsArray(in string names, in string addresses, in unsigned long numAddresses);
-    void SetCCListArray(in string names, in string addresses, in unsigned long numAddresses);
-    void SetAuthor(in string author);
-    void SetSubject(in string subject);
-    void SetStatusOffset(in unsigned long statusOffset);
-
-	[noscript] void GetAuthor(in nsString resultAuthor);
-	[noscript] void GetSubject(in nsString resultSubject);
-	[noscript] void GetRecipients(in nsString resultRecipients);
-	[noscript] void GetCCList(in nsString ccList);
-
-	[noscript] void GetMime2DecodedAuthor(in nsString resultAuthor);
-	[noscript] void GetMime2DecodedSubject(in nsString resultSubject);
-	[noscript] void GetMime2DecodedRecipients(in nsString resultRecipients);
-
-	[noscript] void GetAuthorCollationKey(in nsString resultAuthor);
-	[noscript] void GetSubjectCollationKey(in nsString resultSubject);
-	[noscript] void GetRecipientsCollationKey(in nsString resultRecipients);
-
-    // flag handling routines
-    void GetFlags(out unsigned long result);
-    void SetFlags(in unsigned long flags);
-    void OrFlags(in unsigned long flags, out unsigned long result);
-    void AndFlags(in unsigned long flags, out unsigned long result);
-
-	// Mark message routines
-	void MarkRead(in boolean bRead);
-	void MarkFlagged(in boolean bFlagged);
-
-    void GetMessageKey(out nsMsgKey result);
-    void GetThreadId(out nsMsgKey result);
-    void SetThreadId(in nsMsgKey inKey);
-    void SetMessageKey(in nsMsgKey inKey);
-    void GetMessageSize(out unsigned long result);
-    void SetMessageSize(in unsigned long messageSize);
-    void GetLineCount(out unsigned long result);
-    void SetLineCount(in unsigned long lineCount);
-    [noscript] void SetPriority(in nsMsgPriority priority);
-    void SetPriorityString(in string priority);
-    void GetMessageOffset(out unsigned long result);
-    void GetStatusOffset(out unsigned long result); 
-	[noscript] void GetCharSet(in nsString result);
-	[noscript] void GetPriority(out nsMsgPriority msgPriority);
-    void GetThreadParent(out nsMsgKey result);
-    void SetThreadParent(in nsMsgKey inKey);
+    attribute string messageId;
+    attribute string ccList;
+    attribute unsigned long statusOffset;
+    readonly attribute unsigned long messageOffset;
     
+	// Mark message routines
+    // attribute boolean read;
+	//attribute boolean flagged;
+    void markRead(in boolean read);
+    void markFlagged(in boolean flagged);
+    
+    [noscript] attribute nsMsgPriority priority;
+    void setPriorityString(in string priority);
+    
+    /* flag handling routines */
+    attribute unsigned long flags;
+    unsigned long OrFlags(in unsigned long flags);
+    unsigned long AndFlags(in unsigned long flags);
+
+    attribute nsMsgKey threadId;
+    attribute nsMsgKey messageKey;
+    attribute nsMsgKey threadParent;
+
+    attribute unsigned long messageSize;
+    attribute unsigned long lineCount;
+    
+    /* anything below here still has to be fixed */
+    void setReferences(in string references);
+
+	void setRecipientsArray(in string names, in string addresses,
+                            in unsigned long numAddresses);
+    void setCCListArray(in string names, in string addresses,
+                        in unsigned long numAddresses);
+
+    
+    void setAuthor(in string author);
+    void setSubject(in string subject);
+    void setRecipients(in string recipients, in boolean recipientsIsNewsgroup);
+
+	[noscript] void getAuthor(in nsString resultAuthor);
+	[noscript] void getSubject(in nsString resultSubject);
+	[noscript] void getRecipients(in nsString resultRecipients);
+
+	[noscript] void getMime2DecodedAuthor(in nsString resultAuthor);
+	[noscript] void getMime2DecodedSubject(in nsString resultSubject);
+	[noscript] void getMime2DecodedRecipients(in nsString resultRecipients);
+
+	[noscript] void getAuthorCollationKey(in nsString resultAuthor);
+	[noscript] void getSubjectCollationKey(in nsString resultSubject);
+	[noscript] void getRecipientsCollationKey(in nsString resultRecipients);
+
+	[noscript] void getCharSet(in nsString result);
 };
 
 [scriptable, uuid(B5212A60-F93F-11d2-951C-006097222B83)]
