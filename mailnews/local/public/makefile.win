@@ -21,13 +21,16 @@ MODULE=msglocal
 ################################################################################
 ## exports
 
+XPIDLSRCS = \
+			.\nsIPop3IncomingServer.idl	\
+			.\nsIPop3Service.idl		\
+			.\nsIMailboxService.idl		\
+			.\nsIPop3Sink.idl			\
+			$(NULL)
+
 EXPORTS =								\
-			nsIPop3Sink.h				\
 			nsIPop3URL.h				\
 			nsIMailboxUrl.h				\
-			nsIMailboxService.h			\
-			nsIPop3Service.h			\
-			nsIPop3IncomingServer.h		\
 			nsIMsgParseMailMsgState.h	\
 			$(NULL)
 
