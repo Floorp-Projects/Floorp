@@ -108,10 +108,10 @@ esac
 nt_warning
 case $1 in 
     -all)
-        for w in tommy y2sun2 kentuckyderby galileo shame axilla columbus \
+        for w in tommy booboo kentuckyderby galileo shame axilla columbus \
                  smarch charm hp64 biggayal orville kwyjibo hbombaix raven \
                  jordan hornet phaedrus louie box dbldog huey washer dryer \
-                 shabadoo trex bummer compaqtor
+                 shabadoo trex bummer compaqtor jellyfish sjsu
         do
                 echo $w
                 ping $w && rsh $w '/u/sonmi/bin/qaclean'
