@@ -618,11 +618,15 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        saveURL( this.linkURL(), this.linkText(), null, true );
+        saveURL( this.linkURL(), this.linkText(), null, true, null,
+                 getReferrer(document) );
     },
     // Save URL of clicked-on image.
     saveImage : function () {
-        saveURL( this.imageURL, null, "SaveImageTitle", false );
+        // Note: getReferrer wants our chrome document, not the actual
+        // target document; it handles getting that itself.
+        saveImageURL( this.imageURL, null, "SaveImageTitle", false, null,
+                      getReferrer(document) );
     },
     // Generate email address and put it on clipboard.
     copyEmail : function () {
