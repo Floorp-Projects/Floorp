@@ -30,7 +30,7 @@ function hostnameIsIllegal(hostname)
   // this only checks for illegal characters in the hostname
   // but hostnames like "...." and "_" and ".111" will get by
   // my test.  
-  var validChars = hostname.match(/[A-Za-z0-9._]/g);
+  var validChars = hostname.match(/[A-Za-z0-9.-]/g);
   if (!validChars || (validChars.length != hostname.length)) {
     return true;
   }
