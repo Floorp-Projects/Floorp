@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.155 $ ';
+$::UtilsVersion = '$Revision: 1.156 $ ';
 
 package TinderUtils;
 
@@ -724,9 +724,9 @@ sub BuildIt {
                 # build processes also need to do this.
                 if (-e $dist_dir) {
                     print_log "Deleting $dist_dir\n";
-                    $status = run_shell_command "\\rm -rf $dist_dir";
-                    if ($status != 0) {
-                        print_log "Error: \\rm -rf $dist_dir failed.\n";
+                    File::Path::rmtree($dist_dir, 0, 0);
+                    if (-e "$dist_dir") {
+                        print_log "Error: rmtree('$dist_dir', 0, 0) failed.\n";
                     }
                 }
             }
@@ -862,7 +862,10 @@ sub run_all_tests {
             # Recreate profile if we have $Settings::CleanProfile set.
             if ($Settings::CleanProfile) {
                 print_log "Creating clean profile ...\n";
-                system("\\rm -rf $build_dir/.mozilla");
+                File::Path::rmtree("$build_dir/.mozilla", 0, 0);
+                if (-e "$build_dir/.mozilla") {
+                    print_log "Error: rmtree('$build_dir/.mozilla', 0, 0) failed.\n";
+                }
                 $cp_result = create_profile($build_dir, $binary_dir, $binary);
             }
         }
@@ -1306,10 +1309,12 @@ sub DeleteBinary {
 
 sub DeleteBinaryDir {
     my ($binarydir) = @_;
-
-    if ( -e "$binarydir") {
-        File::Path::rmtree([$binarydir], 0, 0);
-        print_log "Binarydir $binarydir removed.\n";
+    if (-e $binarydir) {
+        print_log "Deleting $binarydir\n";
+        my $count = File::Path::rmtree($binarydir, 0, 0);
+        if (-e "$binarydir") {
+            print_log "Error: rmtree('$binarydir', 0, 0) failed.\n";
+        }
     } else {
         print_log "No binarydir detected; none deleted.\n";
     }
