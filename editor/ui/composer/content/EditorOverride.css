@@ -27,24 +27,24 @@
  *  and Named Anchors, should be placed in EditorContent.css instead of here.
 */
 
-/* Override the browser's pointer cursor over links */
-a:link, a:visited, a:active {
+/* Primary cursor is text I-beam */
+
+* {
   cursor: text;
 }
 
-/* We want the default arrow when hover over the 
-   various objects, such as the image that 
-   represents the named anchor
+
+/* Use default arrow over objects with size that 
+   are selected when clicked on.
+   Override the browser's pointer cursor over links
 */
+
+img, img[usemap], area,
+object, object[usemap], 
+applet, hr, button, input, select,
 a:link img, a:visited img, a:active img,
-img[usemap], 
-object[usemap], 
 a[name] {
   cursor: default;
-}
-
-a[name], a:link img, a:visited img {
-  -moz-user-input: none;
 }
 
 a:visited, a:active {
@@ -52,8 +52,13 @@ a:visited, a:active {
   color : inherit;
 }
 
+/* Prevent clicking on links from going to link */
+a[name], a:link img, a:visited img {
+  -moz-user-input: none;
+}
+
 /* We suppress user/author's prefs for link underline, 
-   so we must set explicitly
+   so we must set explicitly. This isn't good!
 */
 a:link {
   text-decoration: underline;
