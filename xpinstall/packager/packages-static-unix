@@ -23,6 +23,7 @@ bin/chrome/en-win.jar
 bin/chrome/US.jar
 bin/defaults/profile/US/*
 bin/defaults/messenger/US/*
+bin/defaults/isp/US/movemail.rdf
 bin/searchplugins/*
 
 [deflenus]
@@ -34,6 +35,7 @@ bin/defaults/profile/localstore.rdf
 bin/defaults/profile/search.rdf
 bin/defaults/profile/mimeTypes.rdf
 bin/defaults/messenger/mailViews.dat
+bin/defaults/isp/movemail.rdf
 
 [xpcom]
 bin/libmozjs.so
