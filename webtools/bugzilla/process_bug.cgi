@@ -834,7 +834,10 @@ if ($::FORM{'keywords'}) {
 
 my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
 
-if ($::comma eq "" && 0 == @keywordlist && $keywordaction ne "makeexact") {
+if ($::comma eq ""
+    && 0 == @keywordlist && $keywordaction ne "makeexact"
+    && defined $::FORM{'masscc'} && ! $::FORM{'masscc'}
+    ) {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
         PuntTryAgain("Um, you apparently did not change anything on the " .
                      "selected bugs.");
