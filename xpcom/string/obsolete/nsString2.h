@@ -20,17 +20,18 @@
 /***********************************************************************
   MODULE NOTES:
 
-  This class provides a 1-byte ASCII string implementation that shares
-  a common API with all other strImpl derivatives. 
+  This version of the nsString class offers many improvements over the
+  original version:
+    1. Wide and narrow chars
+    2. Allocators
+    3. Much smarter autostrings
+    4. Subsumable strings
+    5. Memory pools and recycling
  ***********************************************************************/
 
 
 #ifndef _nsString2
 #define _nsString2
-
-//#define nsString2     nsString
-//#define nsAutoString2 nsAutoString
-
 
 #include "prtypes.h"
 #include "nscore.h"
@@ -45,6 +46,13 @@
 
 class nsISizeOfHandler;
 
+
+#ifdef  USE_STRING2
+#define nsString2     nsString
+#define nsAutoString2 nsAutoString
+#endif
+
+class NS_BASE nsSubsumeStr;
 
 class NS_BASE nsString2 : public nsStr {
 
@@ -82,6 +90,12 @@ nsString2(const nsStr&,eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgent* anAg
  * @param   reference to another nsString2
  */
 nsString2(const nsString2& aString);   
+
+/**
+ * This constructor takes a subsumestr
+ * @param   reference to subsumestr
+ */
+nsString2(nsSubsumeStr& aSubsumeStr);   
 
 /**
  * Destructor
@@ -139,16 +153,15 @@ PRBool IsOrdered(void) const;
   Accessor methods...
  *********************************************************************/
 
-char* GetBuffer(void) const;
-PRUnichar* GetUnicode(void) const;
-operator PRUnichar*() const {return GetUnicode();}
+const char* GetBuffer(void) const;
+const PRUnichar* GetUnicode(void) const;
 
 
  /**
    * Get nth character.
    */
-PRUnichar operator[](int anIndex) const;
-PRUnichar CharAt(int anIndex) const;
+PRUnichar operator[](PRUint32 anIndex) const;
+PRUnichar CharAt(PRUint32 anIndex) const;
 PRUnichar First(void) const;
 PRUnichar Last(void) const;
 
@@ -164,42 +177,42 @@ PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsString2 operator+(const nsStr& aString);
+nsSubsumeStr operator+(const nsStr& aString);
 
 /**
  * Create a new string by appending given string to this
  * @param   aString -- 2nd string to be appended
  * @return  new string
  */
-nsString2 operator+(const nsString2& aString);
+nsSubsumeStr operator+(const nsString2& aString);
 
 /**
  * create a new string by adding this to the given buffer.
  * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created string
  */
-nsString2 operator+(const char* aCString);
+nsSubsumeStr operator+(const char* aCString);
 
 /**
  * create a new string by adding this to the given wide buffer.
  * @param   aString is a ptr to UC-string to be added to this
  * @return  newly created string
  */
-nsString2 operator+(const PRUnichar* aString);
+nsSubsumeStr operator+(const PRUnichar* aString);
 
 /**
  * create a new string by adding this to the given char.
  * @param   aChar is a char to be added to this
  * @return  newly created string
  */
-nsString2 operator+(char aChar);
+nsSubsumeStr operator+(char aChar);
 
 /**
  * create a new string by adding this to the given char.
  * @param   aChar is a unichar to be added to this
  * @return  newly created string
  */
-nsString2 operator+(PRUnichar aChar);
+nsSubsumeStr operator+(PRUnichar aChar);
 
 /**********************************************************************
   Lexomorphic transforms...
@@ -353,7 +366,6 @@ PRInt32 ToInteger(PRInt32* aErrorCode,PRUint32 aRadix=10) const;
 nsString2& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
 nsString2& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
 nsString2& SetString(const nsString2& aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-void Copy(nsString2& aString) const;
 
 /**
  * assign given string to this string
@@ -380,6 +392,7 @@ nsString2& operator=(char aChar) {return Assign(aChar);}
 nsString2& operator=(PRUnichar aChar) {return Assign(aChar);}
 nsString2& operator=(const char* aCString) {return Assign(aCString);}
 nsString2& operator=(const PRUnichar* aString) {return Assign(aString);}
+nsString2& operator=(nsSubsumeStr& aSubsumeString);
 
 /**
  * Here's a bunch of append mehtods for varying types...
@@ -402,8 +415,7 @@ nsString2& operator+=(PRUnichar aChar){return Append(aChar);}
  */
 nsString2& Append(const nsStr& aString) {return Append(aString,aString.mLength);}
 nsString2& Append(const nsString2& aString) {return Append(aString,aString.mLength);}
-nsString2& Append(const char* aString) {if(aString) {Append(aString,nsCRT::strlen(aString));} return *this;}
-nsString2& Append(const PRUnichar* aString) {if(aString) {Append(aString,nsCRT::strlen(aString));} return *this;}
+ 
 
 /*
  *  Appends n characters from given string to this,
@@ -414,13 +426,13 @@ nsString2& Append(const PRUnichar* aString) {if(aString) {Append(aString,nsCRT::
  */
 nsString2& Append(const nsStr& aString,PRInt32 aCount);
 nsString2& Append(const nsString2& aString,PRInt32 aCount);
-nsString2& Append(const char* aString,PRInt32 aCount);
-nsString2& Append(const PRUnichar* aString,PRInt32 aCount);
+nsString2& Append(const char* aString,PRInt32 aCount=-1);
+nsString2& Append(const PRUnichar* aString,PRInt32 aCount=-1);
 nsString2& Append(char aChar);
 nsString2& Append(PRUnichar aChar);
 nsString2& Append(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
 nsString2& Append(float aFloat);
-              
+             
 /*
  *  Copies n characters from this string to given string,
  *  starting at the leftmost offset.
@@ -464,7 +476,7 @@ PRUint32 Right(nsString2& aCopy,PRInt32 aCount) const;
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-nsString2& Insert(nsString2& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
+nsString2& Insert(const nsString2& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
 
 /**
  * Insert a given string into this string at
@@ -519,6 +531,7 @@ PRInt32 BinarySearch(PRUnichar aChar) const;
  *  @param   aString is substring to be sought in this
  *  @return  offset in string, or -1 (kNotFound)
  */
+PRInt32 Find(const nsString2& aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 Find(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE) const;
@@ -554,6 +567,7 @@ PRInt32 RFindCharInSet(const nsString2& aString,PRUint32 anOffset=0) const;
  * @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE) const;
+PRInt32 RFind(const nsString2& aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFind(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFind(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRUint32 offset=0) const;
@@ -675,10 +689,8 @@ static  PRBool IsAlpha(PRUnichar ch);
  */
 static  PRBool IsDigit(PRUnichar ch);
 
-#if 0
 static  void        Recycle(nsString2* aString);
 static  nsString2*  NewString(eCharSize aCharSize=eTwoByte);
-#endif
 
 static void   SelfTest();
 virtual void  DebugDump(ostream& aStream) const;
@@ -701,12 +713,11 @@ ostream& operator<<(ostream& os,nsString2& aString);
   If the buffer needs to grow, it gets reallocated on the heap.
  **************************************************************/
 
-
 class NS_BASE nsAutoString2 : public nsString2 {
 public: 
 
     nsAutoString2(eCharSize aCharSize=kDefaultCharSize);
-    nsAutoString2(nsBufDescriptor& anExtBuffer,const char* aCString);
+    nsAutoString2(nsStr& anExtBuffer,const char* aCString);
 
 
     nsAutoString2(const char* aCString,eCharSize aCharSize=kDefaultCharSize);
@@ -717,6 +728,7 @@ public:
     nsAutoString2(const nsStr& aString,eCharSize aCharSize=kDefaultCharSize);
     nsAutoString2(const nsString2& aString,eCharSize aCharSize=kDefaultCharSize);
     nsAutoString2(const nsAutoString2& aString,eCharSize aCharSize=kDefaultCharSize);
+    nsAutoString2(nsSubsumeStr& aSubsumeStr);
     nsAutoString2(PRUnichar aChar,eCharSize aCharSize=kDefaultCharSize);
     virtual ~nsAutoString2();
 
@@ -738,5 +750,28 @@ public:
 };
 
 
+/***************************************************************
+  The subsumestr class is very unusual. 
+  It differs from a normal string in that it doesn't use normal
+  copy semantics when another string is assign to this. 
+  Instead, it "steals" the contents of the source string.
+
+  This is very handy for returning nsString classes as part of
+  an operator+(...) for example, in that it cuts down the number
+  of copy operations that must occur. 
+
+  You should probably not use this class unless you really know
+  what you're doing.
+ ***************************************************************/
+class NS_BASE nsSubsumeStr : public nsString2 {
+public:
+  nsSubsumeStr(nsString2& aString);
+  nsSubsumeStr(nsStr& aString);
+  nsSubsumeStr(const PRUnichar* aString);
+  nsSubsumeStr(const char* aString);
+};
+
+
 #endif
+
 

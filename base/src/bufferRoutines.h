@@ -31,7 +31,12 @@
 
 #include "nsCRT.h"
 
-static const PRInt32 kNotFound=-1;
+#ifndef RICKG_TESTBED
+#include "nsUnicharUtilCIID.h"
+#include "nsIServiceManager.h"
+#include "nsICaseConversion.h"
+#endif
+
 
 inline PRUnichar GetUnicharAt(const char* aString,PRUint32 anIndex) {
   return ((PRUnichar*)aString)[anIndex];
@@ -57,7 +62,7 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  */
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUint32 theMax=aLength-anOffset;
-//  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   char* first= aDest+anOffset+aCount;
   char* last = aDest+aLength;
@@ -102,7 +107,7 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  */
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUint32 theMax=aLength-anOffset;
-//  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   PRUnichar* theBuf=(PRUnichar*)aDest;
   PRUnichar* first= theBuf+anOffset+aCount;
@@ -279,7 +284,7 @@ CopyChars gCopyChars[2][2]={
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32  theIndex=0;
   for(theIndex=0;theIndex<aLength;theIndex++){
@@ -303,7 +308,7 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PR
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32  theIndex=0;
   for(theIndex=0;theIndex<aLength;theIndex++){
@@ -329,7 +334,7 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PR
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32 theIndex=0;
   for(theIndex=aLength-1;theIndex>=0;theIndex--){
@@ -355,7 +360,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,P
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRUint32 theIndex=0;
   for(theIndex=aLength-1;theIndex>=0;theIndex--){
@@ -368,7 +373,7 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,P
   return kNotFound;
 }
 
-typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUnichar aChar,PRBool aIgnoreCase);
+typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase);
 FindChars gFindChars[]={&FindChar1,&FindChar2};
 FindChars gRFindChars[]={&RFindChar1,&RFindChar2};
 
@@ -496,6 +501,53 @@ PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){
   return result;
 }
 
+//----------------------------------------------------------------------------------------
+
+#ifndef RICKG_TESTBED
+class HandleCaseConversionShutdown3 : public nsIShutdownListener {
+public :
+   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
+   HandleCaseConversionShutdown3(void) { NS_INIT_REFCNT(); }
+   virtual ~HandleCaseConversionShutdown3(void) {}
+   NS_DECL_ISUPPORTS
+};
+
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
+static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
+static nsICaseConversion * gCaseConv = 0; 
+
+NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, kIShutdownListenerIID);
+
+nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
+    if (cid.Equals(kUnicharUtilCID)) {
+        NS_ASSERTION(service == gCaseConv, "wrong service!");
+        if(gCaseConv){
+          gCaseConv->Release();
+          gCaseConv = 0;
+        }
+    }
+    return NS_OK;
+}
+
+
+class CCaseConversionServiceInitializer {
+public:
+  CCaseConversionServiceInitializer(){
+    mListener = new HandleCaseConversionShutdown3();
+    if(mListener){
+      mListener->AddRef();
+      nsresult result=nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,(nsISupports**) &gCaseConv, mListener);
+    }
+  }
+protected:
+  HandleCaseConversionShutdown3* mListener;
+};
+
+#endif
+
+//----------------------------------------------------------------------------------------
+
 /**
  * This method performs a case conversion the data in the given buffer 
  *
@@ -506,14 +558,25 @@ PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){
  * @return  0
  */
 PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){ 
+  PRUnichar* cp = (PRUnichar*)aString;
+  PRUnichar* end = cp + aCount-1;
   PRInt32 result=0;
 
-  typedef PRUnichar chartype;
-  chartype* cp = (chartype*)aString;
-  chartype* end = cp + aCount-1;
+#ifndef RICKG_TESTBED
+  static CCaseConversionServiceInitializer  gCaseConversionServiceInitializer;
+
+  // I18N code begin
+  if(gCaseConv) {
+    nsresult err=(aToUpper) ? gCaseConv->ToUpper(cp, cp, aCount) : gCaseConv->ToLower(cp, cp, aCount);
+    if(NS_SUCCEEDED(err))
+      return 0;
+  }
+  // I18N code end
+#endif
+
 
   while (cp <= end) {
-    chartype ch = *cp;
+    PRUnichar ch = *cp;
     if(aToUpper) {
       if ((ch >= 'a') && (ch <= 'z')) {
         *cp = 'A' + (ch - 'a');
@@ -549,7 +612,7 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
  * @return  the new length of the given buffer
  */
 PRInt32 StripChars1(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* aSet){ 
-//  PRInt32 result=0;
+  PRInt32 result=0;
 
   typedef char  chartype;
   chartype*  from = (chartype*)&aString[anOffset];
@@ -581,7 +644,7 @@ PRInt32 StripChars1(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* 
  * @return  the new length of the given buffer
  */
 PRInt32 StripChars2(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* aSet){ 
-//  PRInt32 result=0;
+  PRInt32 result=0;
 
   typedef PRUnichar  chartype;
   chartype*  from = (chartype*)&aString[anOffset];
@@ -622,7 +685,7 @@ StripChars gStripChars[]={&StripChars1,&StripChars2};
  * @return  the new length of the given buffer
  */
 PRInt32 TrimChars1(char* aString,PRUint32 aLength,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-//  PRInt32 result=0;
+  PRInt32 result=0;
 
   typedef char  chartype;
   chartype*  from = (chartype*)aString;
@@ -745,7 +808,7 @@ TrimChars gTrimChars[]={&TrimChars1,&TrimChars2};
  * @return  the new length of the given buffer
  */
 PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-//  PRInt32 result=0;
+  PRInt32 result=0;
 
   TrimChars1(aString,aLength,aSet,aEliminateLeading,aEliminateTrailing);
 
@@ -791,7 +854,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
  * @return  the new length of the given buffer
  */
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-//  PRInt32 result=0;
+  PRInt32 result=0;
 
   TrimChars2(aString,aLength,aSet,aEliminateLeading,aEliminateTrailing);
 
