@@ -44,5 +44,9 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH), Linux)
+DEFINES += -D_BSD_SOURCE
+endif
+
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
