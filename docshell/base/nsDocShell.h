@@ -55,6 +55,7 @@
 
 // Interfaces Needed
 #include "nsIDocumentCharsetInfo.h"
+#include "nsIDocCharset.h"
 #include "nsIGlobalHistory.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
@@ -151,6 +152,7 @@ class nsDocShell : public nsIDocShell,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
                    public nsITextScroll, 
+                   public nsIDocCharset, 
                    public nsIContentViewerContainer,
                    public nsIInterfaceRequestor,
                    public nsIScriptGlobalObjectOwner,
@@ -174,6 +176,7 @@ public:
     NS_DECL_NSIBASEWINDOW
     NS_DECL_NSISCROLLABLE
     NS_DECL_NSITEXTSCROLL
+    NS_DECL_NSIDOCCHARSET
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
     NS_DECL_NSIWEBPROGRESSLISTENER

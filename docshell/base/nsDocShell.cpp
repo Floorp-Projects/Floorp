@@ -216,6 +216,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
     NS_INTERFACE_MAP_ENTRY(nsITextScroll)
+    NS_INTERFACE_MAP_ENTRY(nsIDocCharset)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
     NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
@@ -1014,6 +1015,51 @@ nsDocShell::SetParentURIContentListener(nsIURIContentListener * aParent)
 
     return mContentListener->SetParentContentListener(aParent);
 }
+
+NS_IMETHODIMP
+nsDocShell::GetCharset(PRUnichar** aCharset)
+{
+    NS_ENSURE_ARG_POINTER(aCharset);
+    *aCharset = nsnull; 
+
+    nsCOMPtr<nsIPresShell> presShell;
+    nsCOMPtr<nsIDocument> doc;
+    GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    presShell->GetDocument(getter_AddRefs(doc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    nsAutoString charset;
+    NS_ENSURE_SUCCESS(doc->GetDocumentCharacterSet(charset), NS_ERROR_FAILURE);
+    *aCharset = charset.ToNewUnicode();
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetCharset(const PRUnichar* aCharset)
+{
+    // set the default charset
+    nsCOMPtr<nsIContentViewer> viewer;
+    GetContentViewer(getter_AddRefs(viewer));
+    if (viewer) {
+      nsCOMPtr<nsIMarkupDocumentViewer> muDV(do_QueryInterface(viewer));
+      if (muDV) {
+        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(aCharset),
+                                                       NS_ERROR_FAILURE);
+      }
+    }
+
+    // set the charset override
+    nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
+    GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
+    if (dcInfo) {
+      nsCOMPtr<nsIAtom> csAtom;
+      csAtom = dont_AddRef(NS_NewAtom(aCharset));
+      dcInfo->SetForcedCharset(csAtom);
+    }
+
+    return NS_OK;
+} 
 
 NS_IMETHODIMP
 nsDocShell::GetDocumentCharsetInfo(nsIDocumentCharsetInfo **
