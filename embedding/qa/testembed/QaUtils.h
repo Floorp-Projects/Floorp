@@ -64,6 +64,7 @@ extern void FormatAndPrintOutput(const char *, double, int);
 extern void FormatAndPrintOutput(const char *, PRUint32, int);
 extern void RequestName(nsIRequest *, nsCString &, int displayMethod=1);
 extern void WebProgDOMWindowTest(nsIWebProgress *, const char *,int displayMethod=1);
+extern void WebProgIsDocLoadingTest(nsIWebProgress *, const char *, int displayMethod=1);
 extern nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *);
 extern nsCAutoString GetTheUri(nsIURI *theUri, int displayMethod=1);
 extern void onStateChangeString(char *, char *, nsCString, PRUint32, int displayMethod=1);

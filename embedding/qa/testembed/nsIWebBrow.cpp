@@ -111,6 +111,10 @@ void CNsIWebBrowser::WBSetContainerWindow(PRInt16 displayMode)
 	// SetContainerWindow
 
 	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
+	if (!qaWebBrowserChrome) {
+		QAOutput("Didn't get web browser chrome object.", displayMode);
+		return;
+	}
 	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetContainerWindow() test");
 }
