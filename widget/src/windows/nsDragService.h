@@ -54,6 +54,10 @@ public:
   NS_IMETHOD StartInvokingDragSession(IDataObject * aDataObj, PRUint32 aActionType);
 
 protected:
+
+    // determine if we have a single data object or one of our private collections
+  PRBool IsCollectionObject ( IDataObject* inDataObj ) ;
+
   IDropSource        * mNativeDragSrc;
   nsNativeDragTarget * mNativeDragTarget;
   IDataObject *        mDataObject;
