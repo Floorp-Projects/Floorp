@@ -80,6 +80,7 @@ protected:
 
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
+    nsBlockFrame::SetFlags(aFlags);
   }
 
   nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
