@@ -317,6 +317,21 @@ titledbutton.button32[disabled="true"]:active {
 	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
 }
 
+/* non-iconic toolbar button (e.g. search) */
+titledbutton.toolbar-non-iconic { 
+  background-color: #99CCCC;
+  padding: 2px;
+  margin: 0px 2px 0px 2px;
+  border: 1px outset #99CCCC;
+  -moz-border-radius: 4px;
+  font-weight: bold;
+} 
+
+titledbutton.toolbar-non-iconic:active {
+  padding: 3px 1px 1px 3px;
+  border: 1px inset #CCFFFF;
+}
+
 /**
  * Throbber
  */

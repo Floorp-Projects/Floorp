@@ -131,13 +131,6 @@ function SearchPanelStartup()
   	 //set to default value 'the web'
 	 //hack: hardcoded postion in here replace with a function that finds the entry 'the web'
 	 
-    // set the category name on the advanced panel
-    var categoryText = categoryList.options[ categoryList.selectedIndex ].text;
-    var textElement = document.getElementById( "categoryNameText" );
-    textElement.setAttribute( "value", categoryText );
-    //set the category name on the settings button
-    settingsButton.value = settingsButtonText + categoryText;
-    
     for( var i = 0; i < categoryList.options.length; i++ )
     {
       if( ( lastCategoryName == "" && categoryList.options[i].value == "NC:SearchEngineRoot" ) ||
@@ -145,6 +138,14 @@ function SearchPanelStartup()
         categoryList.selectedIndex = i;
       }
     }
+             
+    // set the category name on the advanced panel
+    var categoryText = categoryList.options[ categoryList.selectedIndex ].text;
+    var textElement = document.getElementById( "categoryNameText" );
+    textElement.setAttribute( "value", categoryText );
+    //set the category name on the settings button
+    settingsButton.value = settingsButtonText + categoryText + "...";
+
     if( lastCategoryName == "" )
       lastCategoryName = "NC:SearchEngineRoot";
     else
@@ -467,14 +468,14 @@ function doSearch()
       engineURIs[engineURIs.length] = treeItem.getAttribute( "id" );
     }
     else {
-      dump("*** multiple search engines present, selecting the netscape search engine\n");
+      dump("*** multiple engines present, none selected, selecting the netscape search engine\n");
       for( var i = 0; i < treeChildrenNode.childNodes.length; i++ )
       {
         var currItem = treeChildrenNode.childNodes[i];
           dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
-        if( currItem.getAttribute("id").indexOf("Open_Directory") != -1 ) {
+        if( currItem.getAttribute("id").indexOf("NetscapeSearchMain") != -1 ) {
           
-          engineURIs[engineURIs.length] = treeItem.getAttribute("id");
+          engineURIs[engineURIs.length] = currItem.getAttribute("id");
           break;
         }
       }

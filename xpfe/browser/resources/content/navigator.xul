@@ -374,7 +374,7 @@ Contributor(s): ______________________________________. -->
          <box align="vertical" flex="1%">
            <spring style="height: 4px;"/>
 			<box id="searchbutton" align="horizontal" style="width: 100%;"> 
-			<titledbutton id="search-button" value="&searchButton.label;"
+			<titledbutton id="search-button" class="toolbar-non-iconic" value="&searchButton.label;"
                   onclick="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 /> 
             </box>
