@@ -157,9 +157,9 @@ GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE) $(SDK)
 
 OSPACKAGE	= unix
 ifdef USE_SHORT_LIBNAME
-MOZILLA_BIN	= $(DIST)/bin/mozilla$(BIN_SUFFIX)
+MOZILLA_BIN	= $(DIST)/bin/$(MOZ_PKG_APPNAME)$(BIN_SUFFIX)
 else
-MOZILLA_BIN	= $(DIST)/bin/mozilla-bin
+MOZILLA_BIN	= $(DIST)/bin/$(MOZ_PKG_APPNAME)-bin
 endif
 
 ifeq ($(OS_ARCH),IRIX)
@@ -167,7 +167,7 @@ STRIP_FLAGS	= -f
 endif
 ifeq ($(OS_ARCH),BeOS)
 STRIP_FLAGS	= -g
-PLATFORM_EXCLUDE_LIST = ! -name "*.stub" ! -name "mozilla-bin"
+PLATFORM_EXCLUDE_LIST = ! -name "*.stub" ! -name "$(MOZ_PKG_APPNAME)-bin"
 endif
 ifeq ($(OS_ARCH),OS2)
 STRIP		= $(srcdir)/os2/strip.cmd
