@@ -45,7 +45,6 @@ EXPORTS = nsIStreamListener.h           \
           nsIRelatedLinks.h             \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
-          nsINetContainerApplication.h  \
           nsIRefreshUrl.h               \
 	      nsIConnectionInfo.h		\
           nsILoadAttribs.h          \

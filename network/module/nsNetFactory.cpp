@@ -125,7 +125,7 @@ nsresult nsNetFactory::CreateInstance(nsISupports *aOuter,
   if (mClassID.Equals(kNetServiceCID)) {
     // No need create a new one if we've already got one.
     if (!gNetlibService) {
-        res = NS_InitINetService(nsnull);
+        res = NS_InitINetService();
         if (res != NS_OK)
             return NS_ERROR_FAILURE;
     }

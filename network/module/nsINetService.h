@@ -40,8 +40,6 @@
   {0x9e, 0x7e, 0x00, 0x60, 0x08, 0xbf, 0x09, 0x2e} }
 
 
-class nsINetContainerApplication;
-
 /**
  * The nsINetService interface provides an API to the networking service.
  * This is a preliminary interface which <B>will</B> change over time!
@@ -75,15 +73,6 @@ struct nsINetService : public nsISupports
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream) = 0;
 
-    /**
-     * Get the container application for the net service.
-     *
-     * @param aContainer An output parameter to receive the container
-     *                   application.
-     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
-     */
-    NS_IMETHOD GetContainerApplication(nsINetContainerApplication **aContainer)=0;
-  
     /**
      * Get the complete cookie string associated with the URL
      *
@@ -137,6 +126,60 @@ struct nsINetService : public nsISupports
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
     NS_IMETHOD SetHTTPOneOne(PRBool aSendOneOne)=0;
+
+    /**
+     * Get the application name string that will be used as part
+     * of a HTTP request.
+     *
+     * @param aAppCodeName   The application name string.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetAppCodeName(nsString& aAppCodeName)=0;
+  
+    /**
+     * Get the application version string that will be used as part
+     * of a HTTP request.
+     *
+     * @param aAppVersion   The application version string.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetAppVersion(nsString& aAppVersion)=0;
+
+    /**
+     * Get the application name.
+     *
+     * @param aAppName   The application name.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetAppName(nsString& aAppName)=0;
+
+    /**
+     * Get the translation of the application. The value for language
+     * is usually a 2-letter code such as "en" and occasionally a 
+     * five-character code to indicate a language subtype, such as "zh_CN". 
+     *
+     * @param aLanguage  The application language.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetLanguage(nsString& aLanguage)=0;
+
+    /**
+     * Get the current platform (machine type).
+     *
+     * @param aPlatform   The current platform.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetPlatform(nsString& aPlatform)=0;
+
+    /**
+     * Add a string to the user agent AppVersion.
+     *
+     * @param aCustom   The string to be inserted into the AppVersion portion
+     *  of the user agent string. A user-agent of the form:
+     *      Mozilla/x.x [en] (OS; I) becomes Mozilla/x.x [en]C-aCustom (OS; I)
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD SetCustomUserAgent(nsString aCustom)=0;
 };
 
 
@@ -147,7 +190,7 @@ struct nsINetService : public nsISupports
 extern "C" NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
                                              nsISupports* aOuter);
 
-extern "C" NS_NET nsresult NS_InitINetService(nsINetContainerApplication *aContainer);
+extern "C" NS_NET nsresult NS_InitINetService();
 
 extern "C" NS_NET nsresult NS_ShutdownINetService();
 
