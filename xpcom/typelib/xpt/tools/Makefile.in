@@ -29,7 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 INTERNAL_TOOLS	= 1
 
-SIMPLE_PROGRAMS	= xpt_dump$(BIN_SUFFIX) xpt_lin$(BIN_SUFFIX)k
+SIMPLE_PROGRAMS	= xpt_dump$(BIN_SUFFIX) xpt_link$(BIN_SUFFIX)
+
 CSRCS		= xpt_dump.c xpt_link.c
 
 ifdef CROSS_COMPILE
@@ -49,7 +50,7 @@ EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
 
 
 ifdef CROSS_COMPILE
-HOST_LIBS		= $(DIST)/host/lib/libhostxpt.a
+HOST_LIBS		= $(DIST)/host/lib/libhostxpt.$(LIB_SUFFIX)
 HOST_EXTRA_DEPS		= $(wildcard $(DIST)/host/lib/libhostxpt.*)
 
 ifdef HOST_NSPR_MDCPUCFG
