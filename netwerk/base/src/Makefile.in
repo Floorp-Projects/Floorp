@@ -53,7 +53,6 @@ CPPSRCS		= \
 		nsNetModRegEntry.cpp \
 		nsNetModuleMgr.cpp \
 		nsProtocolProxyService.cpp \
-		nsProxyAutoConfigUtils.cpp \
 		nsRequestObserverProxy.cpp \
 		nsResumableEntityID.cpp \
 		nsSimpleStreamListener.cpp \
