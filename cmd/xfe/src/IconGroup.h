@@ -58,10 +58,10 @@ typedef struct IconGroup
 					 pixmap_mo, pixmap_md, \
 					 { 0 }, { 0 }, { 0 }, { 0 } };
 #define ICONGROUP(name) struct IconGroup name##_group = \
-{ "####", &name, &name##_i, &name##_mo, &name##_md, \
+{ "####", &name, 0, &name##_mo, 0, \
   { 0 }, { 0 }, { 0 }, { 0 } };
 #define ICONGROUP_NOMO(name) struct IconGroup name##_group = \
-{ "####", &name, &name##_i, 0, 0, { 0 }, { 0 }, { 0 }, { 0 } };
+{ "####", &name, 0, 0, 0, { 0 }, { 0 }, { 0 }, { 0 } };
 #else
 #ifdef WANT_EXTERNS
 #define ICONGROUP(name) extern struct IconGroup name##_group;

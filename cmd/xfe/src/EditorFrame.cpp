@@ -388,7 +388,7 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 	{ 
 		xfeCmdNewBlank,
 		CASCADEBUTTON,
-		&ed_new_group, NULL, NULL, NULL,					// Icons
+		&ed_new_group,										// Icons
 		(MenuSpec*) &XFE_EditorFrame::new_submenu_spec,		// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -396,7 +396,7 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 	{ 
 		xfeCmdOpenPage,
 		DYNA_CASCADEBUTTON,
-		&ed_open_group, NULL, NULL, NULL,					// Icons
+		&ed_open_group,										// Icons
 		NULL,												// Submenu spec
 		XFE_EditRecentMenu::generate, (void *) True,		// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -404,7 +404,7 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 	{ 
 		xfeCmdSave,
 		CASCADEBUTTON,
-		&ed_save_group, NULL, NULL, NULL,					// Icons
+		&ed_save_group,										// Icons
 		(MenuSpec*) &XFE_EditorFrame::save_submenu_spec,	// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -414,14 +414,14 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 #ifdef MOZ_MAIL_NEWS
 		"publishMenu",
 		CASCADEBUTTON,
-		&ed_publish_group, NULL, NULL, NULL,				// Icons
+		&ed_publish_group,									// Icons
 		(MenuSpec*) &XFE_EditorFrame::publish_submenu_spec,	// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
 #else /* MOZ_MAIL_NEWS */
 		xfeCmdPublish,
 		PUSHBUTTON,
-		&ed_publish_group, NULL, NULL, NULL,				// Icons
+		&ed_publish_group,									// Icons
 		NULL,												// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -466,7 +466,7 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 
 	{ xfeCmdOutdent,	PUSHBUTTON, &ed_outdent_group },
 	{ xfeCmdIndent,	PUSHBUTTON, &ed_indent_group },
-	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group, 0, 0, 0,
+	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group,
 	  (MenuSpec*)&XFE_EditorFrame::alignment_menu_spec },
 	{ NULL }
 };

@@ -601,10 +601,7 @@ XFE_Toolbar::createPush(ToolbarSpec * spec)
 	XFE_Button * button = new XFE_Button(m_parentFrame,
 										 m_toolBar,
 										 spec->toolbarButtonName, 
-										 spec->iconGroup,
-										 spec->iconGroup2,
-										 spec->iconGroup3,
-										 spec->iconGroup4);
+										 spec->iconGroup);
 	// 
 	button->setToplevel(m_parentFrame);
 
@@ -1109,9 +1106,6 @@ XFE_Toolbar::user_addItem(String				widgetName,
 	spec->toolbarButtonName = (char *) XtNewString(widgetName);
 	spec->tag				= tag;
 	spec->iconGroup			= ig;
-	spec->iconGroup2		= NULL;
-	spec->iconGroup3		= NULL;
-	spec->iconGroup4		= NULL;
 	spec->submenu			= subMenuSpec;
 	spec->generateProc		= generateProc;
 	spec->generateArg		= generateArg;

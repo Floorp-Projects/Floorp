@@ -127,7 +127,7 @@ ToolbarSpec XFE_FolderFrame::toolbar_spec[] = {
   {  // XX mail only
     xfeCmdComposeMessage,
     CASCADEBUTTON,
-    &MNTB_Compose_group, NULL, NULL, NULL, 	// Icons
+    &MNTB_Compose_group, 	// Icons
     compose_message_submenu_spec,   		// Submenu spec
     NULL, NULL,  				// Generate proc/arg
     XFE_TOOLBAR_DELAY_LONG     			// Popup delay

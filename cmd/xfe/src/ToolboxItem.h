@@ -50,9 +50,6 @@ typedef struct ToolbarSpec
 	EChromeTag tag;
 	
 	IconGroup *iconGroup;
-	IconGroup *iconGroup2;
-	IconGroup *iconGroup3;
-	IconGroup *iconGroup4;
 
 	struct MenuSpec *submenu;
 

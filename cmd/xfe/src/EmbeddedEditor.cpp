@@ -96,9 +96,9 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 
 	{ xfeCmdOutdent,	PUSHBUTTON, &ed_outdent_group },
 	{ xfeCmdIndent,	PUSHBUTTON, &ed_indent_group },
-	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group, 0, 0, 0,
+	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group,
 	  (MenuSpec*)&alignment_menu_spec },
-	{ "editorGoodiesMenu", CASCADEBUTTON, &ed_insert_group, 0, 0, 0,
+	{ "editorGoodiesMenu", CASCADEBUTTON, &ed_insert_group,
 	  (MenuSpec*)&goodies_menu_spec },
 	{ NULL }
 };

@@ -205,7 +205,7 @@ ToolbarSpec XFE_ComposeFrame::toolbar_spec[] = {
   {
 	  xfeCmdAttach,
 	  CASCADEBUTTON, 
-	  &MNTB_Next_group, NULL, NULL, NULL,					// Icons
+	  &MNTB_Next_group,                 					// Icons
 	  message_attach_menu_spec,								// Submenu spec
 	  NULL, NULL,											// Generate proc/arg
 	  XFE_TOOLBAR_DELAY_SHORT								// Popup delay
