@@ -85,14 +85,14 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	*result = nsnull;
 	if (m_bCacheHeaders && m_cachedHeaders)
 	{
-#ifdef USE_JSD_HASHTABLE
-    JSDHashEntryHdr *entry;
-    entry = JS_DHashTableOperate(m_cachedHeaders, (const void *) key, JS_DHASH_LOOKUP);
-    if (JS_DHASH_ENTRY_IS_BUSY(entry))
+#ifdef USE_PLD_HASHTABLE
+    PLDHashEntryHdr *entry;
+    entry = PL_DHashTableOperate(m_cachedHeaders, (const void *) key, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
     {
       MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
       *result = element->mHdr;
-      // need to do our own add ref because the JS_DHashTable doesn't addref.
+      // need to do our own add ref because the PL_DHashTable doesn't addref.
 		  if (*result)
 		  {
 			  NS_ADDREF(*result);
@@ -119,17 +119,17 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 	if (m_bCacheHeaders)
 	{
 		if (!m_cachedHeaders)
-#ifdef USE_JSD_HASHTABLE
-    m_cachedHeaders = JS_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
+#ifdef USE_PLD_HASHTABLE
+    m_cachedHeaders = PR_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
 #else
 			m_cachedHeaders = new nsSupportsHashtable;
 #endif
     if (m_cachedHeaders)
     {
-#ifdef USE_JSD_HASHTABLE
+#ifdef USE_PLD_HASHTABLE
 		  if (key == nsMsgKey_None)
 			  hdr->GetMessageKey(&key);
-      JSDHashEntryHdr *entry = JS_DHashTableOperate(m_cachedHeaders, (void *) key, JS_DHASH_ADD);
+      PLDHashEntryHdr *entry = PL_DHashTableOperate(m_cachedHeaders, (void *) key, PL_DHASH_ADD);
       if (!entry)
         return NS_ERROR_OUT_OF_MEMORY; // XXX out of memory
 
@@ -158,9 +158,9 @@ nsresult nsMsgDatabase::ClearHdrCache()
 {
 	if (m_cachedHeaders)
 	{
-#ifdef USE_JSD_HASHTABLE
-  JS_DHashTableFinish(m_cachedHeaders);
-  JS_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+#ifdef USE_PLD_HASHTABLE
+  PL_DHashTableFinish(m_cachedHeaders);
+  PL_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
 #else
 		m_cachedHeaders->Reset();
 #endif
@@ -175,8 +175,8 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
 
-#ifdef USE_JSD_HASHTABLE
-   JS_DHashTableOperate(m_cachedHeaders, (void *) key, JS_DHASH_REMOVE);
+#ifdef USE_PLD_HASHTABLE
+   PL_DHashTableOperate(m_cachedHeaders, (void *) key, PL_DHASH_REMOVE);
    NS_RELEASE(hdr); // get rid of extra ref the cache was holding.
 
 #else
@@ -207,10 +207,10 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 
 	if (m_headersInUse)
 	{
-#ifdef USE_JSD_HASHTABLE
-    JSDHashEntryHdr *entry;
-    entry = JS_DHashTableOperate(m_headersInUse, (const void *) key, JS_DHASH_LOOKUP);
-    if (JS_DHASH_ENTRY_IS_BUSY(entry))
+#ifdef USE_PLD_HASHTABLE
+    PLDHashEntryHdr *entry;
+    entry = PL_DHashTableOperate(m_headersInUse, (const void *) key, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
     {
       MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
       *result = element->mHdr;
@@ -222,7 +222,7 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 		nsCStringKey hashKey(strKey.GetBuffer());
 		// nsHashtable doesn't do an addref
 		*result = (nsIMsgDBHdr *) m_headersInUse->Get(&hashKey);
-#endif // USE_JSD_HASHTABLE
+#endif // USE_PLD_HASHTABLE
 		if (*result)
 		{
 			NS_ADDREF(*result);
@@ -232,21 +232,21 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	return rv;
 }
 
-#ifdef USE_JSD_HASHTABLE
-JSDHashTableOps nsMsgDatabase::gMsgDBHashTableOps =
+#ifdef USE_PLD_HASHTABLE
+PLDHashTableOps nsMsgDatabase::gMsgDBHashTableOps =
 {
-  JS_DHashAllocTable,
-  JS_DHashFreeTable,
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   GetKey,
   HashKey,
   MatchEntry,
   MoveEntry,
   ClearEntry,
-  JS_DHashFinalizeStub
+  PL_DHashFinalizeStub
 };
 
 const void* CRT_CALL
-nsMsgDatabase::GetKey(JSDHashTable* aTable, JSDHashEntryHdr* aEntry)
+nsMsgDatabase::GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   MsgHdrHashElement* hdr = NS_REINTERPRET_CAST(MsgHdrHashElement*, aEntry);
 //  nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, hdr->mHdr);  // closed system, so this is ok
@@ -257,21 +257,21 @@ nsMsgDatabase::GetKey(JSDHashTable* aTable, JSDHashEntryHdr* aEntry)
 
 // HashKey is supposed to maximize entropy in the low order bits, and the key
 // as is, should do that.
-JSDHashNumber CRT_CALL
-nsMsgDatabase::HashKey(JSDHashTable* aTable, const void* aKey)
+PLDHashNumber CRT_CALL
+nsMsgDatabase::HashKey(PLDHashTable* aTable, const void* aKey)
 {
-  return JSDHashNumber(aKey);
+  return PLDHashNumber(aKey);
 }
 
-JSBool CRT_CALL
-nsMsgDatabase::MatchEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aEntry, const void* aKey)
+PRBool CRT_CALL
+nsMsgDatabase::MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const MsgHdrHashElement* hdr = NS_REINTERPRET_CAST(const MsgHdrHashElement*, aEntry);
   return aKey == (const void *) hdr->mKey; // ### or get the key from the hdr...
 }
 
 void CRT_CALL
-nsMsgDatabase::MoveEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aFrom, JSDHashEntryHdr* aTo)
+nsMsgDatabase::MoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo)
 {
   const MsgHdrHashElement* from = NS_REINTERPRET_CAST(const MsgHdrHashElement*, aFrom);
   MsgHdrHashElement* to = NS_REINTERPRET_CAST(MsgHdrHashElement*, aTo);
@@ -280,31 +280,36 @@ nsMsgDatabase::MoveEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aFrom, JSD
 }
 
 void CRT_CALL
-nsMsgDatabase::ClearEntry(JSDHashTable* aTable, JSDHashEntryHdr* aEntry)
+nsMsgDatabase::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, aEntry);
   element->mHdr = nsnull; // eh? Need to release this or not?
   element->mKey = nsMsgKey_None; // eh?
 }
 
-extern JS_PUBLIC_API(JSDHashNumber)
-JS_DHashStringKey(JSDHashTable *table, const void *key);
+extern CRT_CALL PLDHashNumber
+PL_DHashStringKey(PLDHashTable *table, const void *key);
 
-extern JS_PUBLIC_API(void)
-JS_DHashFinalizeStub(JSDHashTable *table);
+extern CRT_CALL void
+PL_DHashFinalizeStub(PLDHashTable *table);
 
-#endif // USE_JSD_HASHTABLE
+#endif // USE_PLD_HASHTABLE
 
 nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key) 
 {
-#ifdef USE_JSD_HASHTABLE
+#ifdef USE_PLD_HASHTABLE
   if (!m_headersInUse)
-    m_headersInUse = JS_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE );
+  {
+    mdb_count numHdrs = MSG_HASH_SIZE;
+    if (m_mdbAllMsgHeadersTable)
+      m_mdbAllMsgHeadersTable->GetCount(GetEnv(), &numHdrs);
+    m_headersInUse = PR_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), PR_MAX(MSG_HASH_SIZE, numHdrs));
+  }
   if (m_headersInUse)
   {
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
-        JSDHashEntryHdr *entry = JS_DHashTableOperate(m_headersInUse, (void *) key, JS_DHASH_ADD);
+        PLDHashEntryHdr *entry = PL_DHashTableOperate(m_headersInUse, (void *) key, PL_DHASH_ADD);
     if (!entry)
       return NS_ERROR_OUT_OF_MEMORY; // XXX out of memory
 
@@ -334,7 +339,7 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 
 		return NS_OK;
 	}
-#endif // USE_JSD_HASHTABLE
+#endif // USE_PLD_HASHTABLE
 	return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -342,12 +347,12 @@ nsresult nsMsgDatabase::ClearUseHdrCache()
 {
 	if (m_headersInUse)
 	{
-#ifdef USE_JSD_HASHTABLE
-  JS_DHashTableFinish(m_headersInUse);
-  JS_DHashTableInit(m_headersInUse, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE);
+#ifdef USE_PLD_HASHTABLE
+  PL_DHashTableFinish(m_headersInUse);
+  PL_DHashTableInit(m_headersInUse, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE);
 #else
 		m_headersInUse->Reset();
-#endif // USE_JSD_HASHTABLE
+#endif // USE_PLD_HASHTABLE
 	}
 	return NS_OK;
 }
@@ -359,8 +364,8 @@ nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
 
-#ifdef USE_JSD_HASHTABLE
-   JS_DHashTableOperate(m_headersInUse, (void *) key, JS_DHASH_REMOVE);
+#ifdef USE_PLD_HASHTABLE
+   PL_DHashTableOperate(m_headersInUse, (void *) key, PL_DHASH_REMOVE);
 #else
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
@@ -677,7 +682,7 @@ nsMsgDatabase::~nsMsgDatabase()
 	MOZ_COUNT_DTOR(nsMsgDatabase);
 //	Close(FALSE);	// better have already been closed.
 	ClearHdrCache();
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
   NS_ASSERTION(!m_headersInUse || m_headersInUse->Count() == 0, "leaking headers");
 #endif
 	ClearUseHdrCache();
@@ -996,10 +1001,18 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
 	ClearHdrCache();
 #ifdef DEBUG_bienvenu
+#ifdef USE_PLD_HASHTABLE
+  if (m_headersInUse && m_headersInUse->entryCount > 0)
+#else
   if (m_headersInUse && m_headersInUse->Count() > 0)
+#endif
   {
-    NS_ASSERTION(PR_FALSE, "leaking headers");
+//    NS_ASSERTION(PR_FALSE, "leaking headers");
+#ifdef USE_PLD_HASHTABLE
+    printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
+#else
     printf("leaking %d headers in %s\n", m_headersInUse->Count(), (const char *) m_dbName);
+#endif
   }
 #endif
 	ClearUseHdrCache();

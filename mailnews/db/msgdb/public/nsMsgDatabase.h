@@ -23,7 +23,7 @@
 #ifndef _nsMsgDatabase_H_
 #define _nsMsgDatabase_H_
 
-// #define USE_JSD_HASHTABLE
+#define USE_PLD_HASHTABLE
 
 #include "nsIMsgDatabase.h"
 #include "nsMsgHdr.h"
@@ -39,8 +39,8 @@
 #include "nsIMimeConverter.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
-#ifdef USE_JSD_HASHTABLE
-#include "jsdhash.h"
+#ifdef USE_PLD_HASHTABLE
+#include "pldhash.h"
 #endif
 class ListContext;
 class nsMsgKeyArray;
@@ -361,25 +361,25 @@ protected:
 	nsresult			RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
 	// all instantiated headers, but doesn't hold refs. 
-#ifdef USE_JSD_HASHTABLE
-  JSDHashTable  *m_headersInUse;
-  static const void* CRT_CALL GetKey(JSDHashTable* aTable, JSDHashEntryHdr* aEntry);
-  static JSDHashNumber CRT_CALL HashKey(JSDHashTable* aTable, const void* aKey);
-  static JSBool CRT_CALL MatchEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aEntry, const void* aKey);
-  static void CRT_CALL MoveEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aFrom, JSDHashEntryHdr* aTo);
-  static void CRT_CALL ClearEntry(JSDHashTable* aTable, JSDHashEntryHdr* aEntry);
+#ifdef USE_PLD_HASHTABLE
+  PLDHashTable  *m_headersInUse;
+  static const void* CRT_CALL GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+  static PLDHashNumber CRT_CALL HashKey(PLDHashTable* aTable, const void* aKey);
+  static PRBool CRT_CALL MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey);
+  static void CRT_CALL MoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo);
+  static void CRT_CALL ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-  static JSDHashTableOps gMsgDBHashTableOps;
+  static PLDHashTableOps gMsgDBHashTableOps;
   struct MsgHdrHashElement {
-    JSDHashEntryHdr mHeader;
+    PLDHashEntryHdr mHeader;
     nsMsgKey       mKey;
     nsIMsgDBHdr     *mHdr;
   };
-  JSDHashTable  *m_cachedHeaders;
+  PLDHashTable  *m_cachedHeaders;
 #else
 	nsSupportsHashtable	*m_cachedHeaders; // keeps MRU headers around
 	nsHashtable			*m_headersInUse;  
-#endif // USE_JSD_HASHTABLE
+#endif // USE_PLD_HASHTABLE
 	PRBool				m_bCacheHeaders;
 
 };
