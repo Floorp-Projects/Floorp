@@ -23,5 +23,5 @@
 [uuid(dcfbb49c-1dd1-11b2-9f39-935aef484817)]
 interface nsIJSRuntimeService : nsISupports
 {
-    attribute JSRuntime        runtime;
+    readonly attribute JSRuntime        runtime;
 };

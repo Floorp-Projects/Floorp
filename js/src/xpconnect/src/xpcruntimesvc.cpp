@@ -33,7 +33,13 @@ nsJSRuntimeServiceImpl::nsJSRuntimeServiceImpl() :
     NS_ADDREF_THIS();
 }
 
-nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() { }
+nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
+    if (mRuntime)
+        JS_DestroyRuntime(mRuntime);
+#ifdef DEBUG_shaver
+    fprintf(stderr, "nJRSI: destroyed runtime %p\n", mRuntime);
+#endif
+}
 
 NS_IMPL_ISUPPORTS1(nsJSRuntimeServiceImpl, nsIJSRuntimeService);
 
@@ -49,6 +55,8 @@ nsJSRuntimeServiceImpl::GetSingleton()
     return singleton;
 }
 
+const uint32 gGCSize = 4L * 1024L * 1024L; /* pref? */
+
 /* attribute JSRuntime runtime; */
 NS_IMETHODIMP
 nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
@@ -56,22 +64,14 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
     if (!runtime)
 	return NS_ERROR_NULL_POINTER;
 
+    if (!mRuntime) {
+        mRuntime = JS_NewRuntime(gGCSize);
+        if (!mRuntime)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
     *runtime = mRuntime;
 #ifdef DEBUG_shaver
     fprintf(stderr, "nJRSI: returning %p\n", mRuntime);
 #endif
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSRuntimeServiceImpl::SetRuntime(JSRuntime *runtime)
-{
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nJRSI: setting %p over %p\n", runtime, mRuntime);
-#endif
-    NS_ASSERTION(!mRuntime || !runtime, "can\'t switch runtimes");
-    if (mRuntime && runtime)
-        return NS_ERROR_INVALID_ARG;
-    mRuntime = runtime;
     return NS_OK;
 }
