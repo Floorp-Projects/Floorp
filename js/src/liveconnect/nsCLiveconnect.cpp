@@ -81,46 +81,6 @@ PR_END_EXTERN_C
 #include "nsISecurityContext.h"
 #include "prmem.h"
 
-static nsresult
-CreatePrincipal(nsISupports* aSecuritySupports,
-                nsIScriptSecurityManager* aSecMan,
-                nsIPrincipal ** aOutPrincipal)
-{
-    nsresult rv;
-    nsCOMPtr<nsISecurityContext> securityContext(
-        do_QueryInterface(aSecuritySupports, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    char originBuf1[512];
-    char* origin = originBuf1;
-    size_t originSize = sizeof(originBuf1);
-    rv = securityContext->GetOrigin(origin, originSize);
-    while (NS_FAILED(rv) && originSize < 65536U)
-    {  // Try allocating a larger buffer on the heap
-        if (origin != originBuf1)
-        PR_Free(origin);
-        originSize *= 2;
-        origin = (char*)PR_Malloc(originSize);
-        if (!origin)
-            return NS_ERROR_OUT_OF_MEMORY;
-        rv = securityContext->GetOrigin(origin, originSize);
-    }
-    if (NS_FAILED(rv))
-    {
-        if (origin != originBuf1)
-            PR_Free(origin);
-        return rv;
-    }
-
-    nsCOMPtr<nsIURI> originURI;
-    rv = NS_NewURI(getter_AddRefs(originURI), origin);
-    if (origin != originBuf1)
-        PR_Free(origin);
-    if (NS_FAILED(rv)) return rv;
-
-    return aSecMan->GetCodebasePrincipal(originURI, aOutPrincipal);
-}
-
 /***************************************************************************/
 // A class to put on the stack to manage JS contexts when we are entering JS.
 // This pushes and pops the given context
@@ -176,10 +136,7 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
         return;
 
     nsCOMPtr<nsIPrincipal> principal;
-    if (aSecuritySupports)
-        mPushResult = CreatePrincipal(aSecuritySupports, secMan, getter_AddRefs(principal));
-    else
-        mPushResult = secMan->GetPrincipalFromContext(cx, getter_AddRefs(principal));
+    mPushResult = secMan->GetPrincipalFromContext(cx, getter_AddRefs(principal));
 
     if (NS_FAILED(mPushResult))
     {
@@ -187,7 +144,7 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
         return;
     }
 
-    // See if Javascript is enabled for the current window
+    // See if JavaScript is enabled for the current window
     PRBool jsEnabled = PR_FALSE;
     mPushResult = secMan->CanExecuteScripts(cx, principal, &jsEnabled);
     if (!jsEnabled)

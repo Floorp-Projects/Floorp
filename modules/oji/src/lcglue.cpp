@@ -249,37 +249,21 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 JS_STATIC_DLL_CALLBACK(JSPrincipals*)
 get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
 {
-    nsISupports* credentials = NS_REINTERPRET_CAST(nsISupports*, pNSISecurityContext);
-    nsCOMPtr<nsISecurityContext> securityContext = do_QueryInterface(credentials);
-    if (securityContext) {
-        nsresult rv;
-        nsCOMPtr<nsIScriptSecurityManager> ssm = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            char codebase[512];
-            rv = securityContext->GetOrigin(codebase, sizeof(codebase) - 1);
-            if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIURI> codebaseURI;
-                rv = NS_NewURI(getter_AddRefs(codebaseURI), nsDependentCString(codebase));
-                if (NS_SUCCEEDED(rv)) {
-                    nsCOMPtr<nsIPrincipal> principal;
-                    rv = ssm->GetCodebasePrincipal(codebaseURI, getter_AddRefs(principal));
-                    if (NS_SUCCEEDED(rv)) {
-                        JSPrincipals* jsprincipals;
-                        principal->GetJSPrincipals(pJSContext, &jsprincipals);
-                        return jsprincipals;
-                    }
-                }
-            }
-        }
-    } else {
-        nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(credentials);
-        if (principal) {
-            JSPrincipals* jsprincipals;
-            principal->GetJSPrincipals(pJSContext, &jsprincipals);
-            return jsprincipals;
-        }
-    }
-    return NULL;
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return NULL;
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = secMan->GetPrincipalFromContext(pJSContext,
+                                         getter_AddRefs(principal));
+    if (NS_FAILED(rv))
+        return NULL;
+
+    JSPrincipals* jsprincipals = NULL;
+    principal->GetJSPrincipals(pJSContext, &jsprincipals);
+    return jsprincipals;
 }
 
 JS_STATIC_DLL_CALLBACK(jobject)
@@ -330,72 +314,6 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
                         void *pNSISecurityContext,
                         void *java_applet_obj)
 {
-    JSContext *pJSCX    = map_jsj_thread_to_js_context_impl(nsnull,java_applet_obj,jEnv,errp);
-    nsCOMPtr<nsIPrincipal> principal;
-
-    nsISupports* credentials = NS_REINTERPRET_CAST(nsISupports*, pNSISecurityContext);
-    nsCOMPtr<nsISecurityContext> javaSecurityContext = do_QueryInterface(credentials);
-    if (javaSecurityContext) {
-        if (pJSCX) {
-            nsIScriptContext *scriptContext =
-                GetScriptContextFromJSContext(pJSCX);
-
-            if (scriptContext) {
-                nsIScriptGlobalObject *global =
-                    scriptContext->GetGlobalObject();
-                NS_ASSERTION(global, "script context has no global object");
-
-                nsCOMPtr<nsIScriptObjectPrincipal> globalData =
-                    do_QueryInterface(global);
-                if (globalData) {
-                    if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal))))
-                        return NS_ERROR_FAILURE;
-                }
-            }
-        }
-
-        // What if !pJSCX? 
-
-        nsCOMPtr<nsISecurityContext> jsSecurityContext = new nsCSecurityContext(principal);
-        if (!jsSecurityContext)
-            return PR_FALSE;
-
-        // Check that the origin + certificate are the same.
-        // If not, then return false.
-
-        const int buflen = 512;
-        char jsorigin[buflen];
-        char jvorigin[buflen];
-        *jsorigin = nsnull;
-        *jvorigin = nsnull;
-        
-        jsSecurityContext->GetOrigin(jsorigin,buflen);
-        javaSecurityContext->GetOrigin(jvorigin,buflen);
-
-        if (nsCRT::strcasecmp(jsorigin,jvorigin)) {
-            return PR_FALSE;
-        }
-
-#if 0
-      // ISSUE: Needs security review. We don't compare certificates. 
-      // because currently there is no basis for making a postive comparison.
-      // If one or the other context is signed, the comparison will fail.
-
-        char jscertid[buflen];
-        char jvcertid[buflen];
-        *jscertid = nsnull;
-        *jvcertid = nsnull;
-
-        jsSecurityContext->GetCertificateID(jscertid,buflen);
-        javaSecurityContext->GetCertificateID(jvcertid,buflen);
-
-        if (nsCRT::strcasecmp(jscertid,jvcertid)) {
-            return PR_FALSE;
-        }
-#endif
-
-    }
-
 	return PR_TRUE;
 }
 

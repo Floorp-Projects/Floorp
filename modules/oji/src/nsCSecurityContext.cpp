@@ -54,9 +54,7 @@
 // For GetOrigin()
 
 #include "nsIScriptSecurityManager.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsCRT.h"
 
 #include "nsTraceRefcnt.h"
@@ -66,31 +64,12 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
 ////////////////////////////////////////////////////////////////////////////
-// from nsISupports 
+// nsISupports 
 
-// Thes macro expands to the aggregated query interface scheme.
-
-NS_IMPL_ADDREF(nsCSecurityContext)
-NS_IMPL_RELEASE(nsCSecurityContext)
-
-NS_METHOD
-nsCSecurityContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {                                            
-        return NS_ERROR_NULL_POINTER;                                        
-    }   
-    *aInstancePtr = NULL;
-    if (aIID.Equals(kISecurityContextIID) ||
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (nsISecurityContext*) this;
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS1(nsCSecurityContext, nsISecurityContext)
 
 ////////////////////////////////////////////////////////////////////////////
-// from nsISecurityContext:
+// nsISecurityContext
 
 NS_METHOD 
 nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAllowedAccess)
@@ -100,14 +79,21 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
     }
   
     if(!nsCRT::strcmp(target,"UniversalBrowserRead")) {
-        *bAllowedAccess = m_HasUniversalBrowserReadCapability;
-        return NS_OK;
+        // XXX we lie to the applet and say we have UniversalBrowserRead
+        // even if we don't so that we can bypass the Java plugin's broken
+        // origin checks.  Note that this only affects the plugin's perception
+        // of our script's capabilities, and has no bearing on the script's
+        // real capabilities. This code should be changed to assign
+        // |m_HasUniversalBrowserReadCapability| into the out parameter
+        // once Java's origin checking code is fixed.
+        // See bug 146458 for details.
+        *bAllowedAccess = PR_TRUE;
     } else if(!nsCRT::strcmp(target,"UniversalJavaPermission")) {
         *bAllowedAccess = m_HasUniversalJavaCapability;
-        return NS_OK;
     } else {
         *bAllowedAccess = PR_FALSE;
     }
+
     return NS_OK;
 }
 
