@@ -603,66 +603,6 @@ toolbar titledbutton[disabled="true"]:active {
 	padding: 2px;
 }
 
-xpmenubar > xpmenu {
-  border: 1px solid transparent;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  padding-left: 3px;
-  padding-right: 3px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
-
-xpmenuchildren > xpmenu {
-  border: 1px solid transparent;
-  padding: 2px;
-}
-
-xpmenuchildren > xpmenuitem {
-  border: 1px solid transparent;
-  padding: 2px;
-}
-
-xpmenubar > xpmenu[menuactive="true"] {
-  border: 1px outset white;
-  color:#333366;
-}
-
-xpmenubar > xpmenu[menuactive="true"][open="true"] {
-  border: 1px inset;
-}
-
-xpmenuchildren > xpmenu[menuactive="true"] {
-  background-color: #666699;
-  color: white;
-}
-
-xpmenuchildren > xpmenuitem[menuactive="true"] {
-  background-color: #666699;
-  color: white;
-}
-
-.menu-right {
-  padding: 0px;
-  border: 0px;
-  width: 6px;
-  margin-left: 8px;
-}
-
-xpmenuitem > .menu-right {
-  list-style-image: none;
-}
-
-xpmenu > .menu-right {
-  list-style-image: url(chrome://global/skin/menuArrow.gif);
-}
-
-xpmenu[menuactive="true"] > .menu-right {
-  list-style-image: url(chrome://global/skin/menuArrow_mo.gif);
-}
-
-
-
 /* tree related stuff */
 
 tree {
@@ -1157,3 +1097,72 @@ treeitem [open="true"]> treerow > treecell > titledbutton.twisty {
 }
 
 
+xpmenubar > xpmenu {
+  border: 1px solid transparent;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+xpmenuchildren > xpmenu {
+  border: 1px solid transparent;
+  padding: 2px;
+}
+
+xpmenuchildren > xpmenuitem {
+  border: 1px solid transparent;
+  padding: 2px;
+}
+
+xpmenubar > xpmenu[menuactive="true"] {
+  border: 1px outset white;
+  color:#333366;
+}
+
+xpmenubar > xpmenu[menuactive="true"][open="true"] {
+  border: 1px inset;
+}
+
+xpmenuchildren > xpmenu[menuactive="true"] {
+  background-color: #666699;
+  color: white;
+}
+
+xpmenuchildren > xpmenuitem[menuactive="true"] {
+  background-color: #666699;
+  color: white;
+}
+
+.menu-right {
+  padding: 0px;
+  border: 0px;
+  width: 10px;
+  margin-left: 6px;
+  margin-right: 0px;
+}
+
+.menu-left {
+  padding: 0px;
+  border: 0px;
+  width: 13px;
+  margin-right: 2px;
+}
+
+xpmenuitem > .menu-right {
+  list-style-image: none;
+}
+
+xpmenuitem > .menu-left {
+  list-style-image: none;
+}
+
+xpmenu > .menu-right {
+  list-style-image: url(chrome://global/skin/menuArrow.gif);
+}
+
+xpmenu[menuactive="true"] > .menu-right {
+  list-style-image: url(chrome://global/skin/menuArrow_mo.gif);
+}
