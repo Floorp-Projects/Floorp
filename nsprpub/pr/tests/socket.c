@@ -283,7 +283,7 @@ PRInt32 native_thread = 0;
 	if (native_thread) {
 #if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 		pthread_t tid;
-		if (!pthread_create(&tid, NULL, start, arg))
+		if (!pthread_create(&tid, NULL, (void * (*)(void *)) start, arg))
 			return((PRThread *) tid);
 		else
 			return (NULL);

@@ -90,6 +90,14 @@ make no representations about the suitability of this software for any
 purpose.  It is provided "as is" without express or implied warranty.
 */
 
+
+/*
+ * NOTE:
+ *		The interfaces for error-code-translation described in the rest of
+ *		this file are preliminary in the 3.1 release of nspr and are subject 
+ *		to change in future releases.
+ */
+
 /*
 ** Description:	Localizable error code to string function.
 **

@@ -47,7 +47,7 @@ export OPTIMIZER
 OS_LIBS			= -lm
 else	# 4.1.3_U1
 ifdef USE_PTHREADS
-OS_LIBS			= -lpthread -lposix4 -lsocket -lnsl -ldl
+OS_LIBS			= -lpthread -lthread -lposix4 -lsocket -lnsl -ldl
 else
 ifdef LOCAL_THREADS_ONLY
 OS_LIBS			= -lsocket -lnsl -ldl

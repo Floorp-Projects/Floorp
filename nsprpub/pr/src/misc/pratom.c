@@ -102,10 +102,7 @@ PRIntn lock_count;
 			num_atomic_locks = MAX_ATOMIC_LOCKS;
 		else {
 			num_atomic_locks = PR_FloorLog2(num_atomic_locks);
-			if (num_atomic_locks == 0)
-				num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
-			else	
-				num_atomic_locks = 1L << num_atomic_locks;
+			num_atomic_locks = 1L << num_atomic_locks;
 		}
 		atomic_locks = (pthread_mutex_t *) PR_Malloc(sizeof(pthread_mutex_t) *
 						num_atomic_locks);
