@@ -1811,8 +1811,9 @@ mime_decompose_file_close_fn ( void *stream_closure )
     MimeDecoderDestroy(mdd->decoder_data, PR_FALSE);
     mdd->decoder_data = 0;
   }
-  
-  mdd->tmpFileStream->close();
+
+  if (mdd->tmpFileStream->GetIStream())
+    mdd->tmpFileStream->close();
   delete mdd->tmpFileStream;
   delete mdd->tmpFileSpec;
   mdd->tmpFileSpec = nsnull;
