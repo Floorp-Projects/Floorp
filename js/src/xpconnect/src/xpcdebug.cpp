@@ -411,9 +411,10 @@ static void PrintObjectBasics(JSObject* obj)
 {
     if(OBJ_IS_NATIVE(obj))
         printf("%#x 'native' <%s>", 
-               obj, ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);        
+               (unsigned int) obj, 
+               ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);        
     else
-        printf("%#x 'host'", obj);
+        printf("%#x 'host'", (unsigned int) obj);
 
 }
 
