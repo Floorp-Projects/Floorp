@@ -245,9 +245,6 @@ NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
 
 	if(nsnull != mWindowPtr)
 	{
-		if (mControl)
-			::DisposeControl(mControl);
-
 #ifdef DEBUG
 		// we should have a root control at this point. If not, something's wrong.
 		// it's made in nsMacWindow
@@ -255,8 +252,11 @@ NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
 		OSErr		err = ::GetRootControl(mWindowPtr, &rootControl);
 		NS_ASSERTION((err == noErr && rootControl != nil), "No root control exists for the window");
 #endif
-			
-		mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, inControlType, nil);
+
+		if (mControl)
+			::DisposeControl(mControl);
+
+		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, 0, 0, 1, inControlType, nil);
 		
 		// need to reset the font now
 		// XXX to do: transfer the text in the old control over too
