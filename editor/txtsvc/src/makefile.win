@@ -44,6 +44,7 @@ CPP_OBJS =					\
 
 
 LLIBS=					\
+ $(LIBNSPR)				\
  $(DIST)\lib\unicharutil_s.lib		\
  $(DIST)\lib\xpcom.lib			\
  $(NULL)
