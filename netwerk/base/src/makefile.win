@@ -31,7 +31,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
 LIBRARY_NAME=neckobase_s
 

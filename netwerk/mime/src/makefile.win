@@ -34,7 +34,7 @@ LLIBS= $(LLIBS) \
         $(LIBNSPR) \
         $(NULL)
 
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                  \
         .\$(OBJDIR)\nsMIMEInfoImpl.obj      \

@@ -98,21 +98,6 @@
 #define NS_ERROR_REDIRECT_LOOP \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 31)
 
-#undef NS_NET
-#ifdef _IMPL_NS_NET
-#if defined(XP_PC) && !defined(XP_OS2)
-#define NS_NET _declspec(dllexport)
-#else  /* !XP_PC */
-#define NS_NET
-#endif /* !XP_PC */
-#else  /* !_IMPL_NS_NET */
-#if defined(XP_PC) && !defined(XP_OS2)
-#define NS_NET _declspec(dllimport)
-#else  /* !XP_PC */
-#define NS_NET
-#endif /* !XP_PC */
-#endif /* !_IMPL_NS_NET */
-
 // Where most necko status messages come from:
 #define NECKO_MSGS_URL  "chrome://necko/locale/necko.properties"
 

@@ -25,7 +25,7 @@ REQUIRES	= xpcom \
 		  string \
 		  pref \
 		  $(NULL)
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
 LIBRARY_NAME=neckodns_s
 

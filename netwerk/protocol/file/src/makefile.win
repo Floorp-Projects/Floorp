@@ -31,7 +31,7 @@ include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=nkfile_s
 
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsFileChannel.obj          \
