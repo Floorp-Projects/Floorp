@@ -115,8 +115,6 @@ class nsWidget : public nsBaseWidget
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
   // are we a "top level" widget?
     PRBool     mIsToplevel;
-    nsRect     mRequestedSize;
-    nsRect     mOldSize;
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();

@@ -358,69 +358,44 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
   nsWindow *widget = (nsWindow *)p;
   EventInfo *eventinfo = NULL;
-  PRBool is_window = PR_FALSE;
-#if 0
-  g_print("size_allocate: %s (%p), {x=%i, y=%i, w=%i, h=%i}\n",
-          gtk_widget_get_name(w),
-          p,
-          alloc->x,
-          alloc->y,
-          alloc->width,
-          alloc->height);
-  g_print("size_allocate: old size: {x=%i, y=%i, w=%i, h=%i}\n",
-          widget->mOldSize.x,
-          widget->mOldSize.y,
-          widget->mOldSize.width,
-          widget->mOldSize.height);
-  g_print("size_allocate: requested size: {x=%i, y=%i, w=%i, h=%i}\n",
-          widget->mRequestedSize.x,
-          widget->mRequestedSize.y,
-          widget->mRequestedSize.width,
-          widget->mRequestedSize.height);
-#endif
-  // only send the event if someone requested this...
-  if (widget->mRequestedSize.x != 0 &&
-      widget->mRequestedSize.y != 0 &&
-      widget->mRequestedSize.width != 0 &&
-      widget->mRequestedSize.height != 0 ) {
-    //    g_print("size_allocate: sending event because it was requested....\n");
-    eventinfo = (EventInfo *)g_malloc(sizeof(struct EventInfo));
-    eventinfo->rect = new nsRect();
-    eventinfo->rect->x = 0;
-    eventinfo->rect->y = 0;
-    // lying!
-    eventinfo->rect->width = widget->mRequestedSize.width;
-    eventinfo->rect->height = widget->mRequestedSize.height;
-    eventinfo->widget = widget;
-    // don't go destroying my widget until I'm done with it, dammit.
-    NS_ADDREF(widget);
-    gtk_idle_add(idle_resize_cb, eventinfo);
-    widget->mOldSize.x = alloc->x;
-    widget->mOldSize.y = alloc->y;
-    widget->mOldSize.width = alloc->width;
-    widget->mOldSize.height = alloc->height;
+  GtkAllocation *old_size = NULL;
+  PRBool send_event = PR_FALSE;
+
+  old_size = gtk_object_get_data(GTK_OBJECT(w), "mozilla.old_size");
+  // see if we need to allocate this - this may be the first time
+  // the size allocation has happened.
+  if (!old_size) { 
+    old_size = g_malloc(sizeof(GtkAllocation));
+    old_size->x = alloc->x;
+    old_size->y = alloc->y;
+    old_size->width = alloc->width;
+    old_size->height = alloc->height;
+    gtk_object_set_data(GTK_OBJECT(w), "mozilla.old_size", old_size);
+    send_event = PR_TRUE;
   }
-  else if (widget->mIsToplevel &&
-           (widget->mOldSize.width != alloc->width ||
-            widget->mOldSize.height != alloc->height)) {
-    //g_print("size_allocate: sending event for toplevel....\n");
+  // only send an event if we've actually changed sizes.
+  else if ((old_size->x != alloc->x) ||
+           (old_size->y != alloc->y) ||
+           (old_size->width != alloc->width) ||
+           (old_size->height != alloc->height)) {
+    old_size->x = alloc->x;
+    old_size->y = alloc->y;
+    old_size->width = alloc->width;
+    old_size->height = alloc->height;
+    send_event = PR_TRUE;
+  }
+  // send it out.
+  if (send_event == PR_TRUE) {
     eventinfo = (EventInfo *)g_malloc(sizeof(struct EventInfo));
     eventinfo->rect = new nsRect();
-    eventinfo->rect->x = 0;
-    eventinfo->rect->y = 0;
-    // lying!
+    eventinfo->rect->x = alloc->x;
+    eventinfo->rect->y = alloc->y;
     eventinfo->rect->width = alloc->width;
     eventinfo->rect->height = alloc->height;
     eventinfo->widget = widget;
-    // don't go destroying my widget until I'm done with it, dammit.
     NS_ADDREF(widget);
     gtk_idle_add(idle_resize_cb, eventinfo);
-    widget->mOldSize.x = alloc->x;
-    widget->mOldSize.y = alloc->y;
-    widget->mOldSize.width = alloc->width;
-    widget->mOldSize.height = alloc->height;
   }
-  memset(&widget->mRequestedSize, 0, sizeof(nsRect));
 }
 
 #if 0
