@@ -74,13 +74,19 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 }
 
 extern "C" __declspec(dllexport)
-void NewConfig(CString configname, WIDGET* curWidget)
+BOOL NewConfig(CString configname, WIDGET* curWidget)
 {
-	Config(configname,"",curWidget);
+	if (!Config(configname,"",curWidget))
+		return FALSE;
+	else
+		return TRUE;
 }
 			
 extern "C" __declspec(dllexport)
-void CopyConfig(CString configname, WIDGET* curWidget)
+BOOL CopyConfig(CString configname, WIDGET* curWidget)
 {
-	Config(configname,"Create a Copy",curWidget);
+	if(!Config(configname,"Create a Copy",curWidget))
+		return FALSE;
+	else
+		return TRUE;
 }
