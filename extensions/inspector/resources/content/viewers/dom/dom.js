@@ -332,8 +332,8 @@ DOMViewer.prototype =
       // html iframe or frame
       this.subject = node.contentDocument;
     } else if (n == "editor") {
-      // editor shell
-      this.subject = node.editorShell.editorDocument;
+      // editor
+      this.subject = node.contentDocument;
     }
   },
  
@@ -758,10 +758,7 @@ DOMViewer.prototype =
   {
     for (var i = 0; i < aKids.length; ++i) {
       try {
-        if (aKids[i].localName == "editor")
-          aArray.push(aKids[i].editorShell.editorDocument);
-        else
-          aArray.push(aKids[i].contentDocument);
+        aArray.push(aKids[i].contentDocument);
       } catch (ex) {
         // if we can't access the content document, skip it
       }
