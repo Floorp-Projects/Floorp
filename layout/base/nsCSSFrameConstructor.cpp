@@ -816,10 +816,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
   return PR_FALSE;
 }
 
-#ifdef DEBUG_kipp
-static int skippedTextFrames;
-#endif
-
 static PRBool
 IsEmptyTextContent(nsIContent* aContent)
 {
@@ -5216,11 +5212,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       nsCOMPtr<nsIContent> childContent;
       aContainer->ChildAt(i, *getter_AddRefs(childContent));
       if (okToSkip && IsEmptyTextContent(childContent)) {
-#ifdef DEBUG_kipp
-        skippedTextFrames++;
-        printf("[ContentAppended] skippedTextFrames = %d\n",
-               skippedTextFrames);
-#endif
         continue;
       }
 #if 0
@@ -5403,36 +5394,38 @@ nsCSSFrameConstructor::MakeFirstLetterFrame(nsIPresContext* aPresContext,
                                             nsIFrame* aParentFrame,
                                             nsFrameItems& aFrameItems)
 {
-  // We have two cases where we need to make sure that a
-  // :first-letter frame is created.
-  nsCOMPtr<nsIStyleContext> parentFrameSC;
-  aParentFrame->GetStyleContext(getter_AddRefs(parentFrameSC));
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    parentFrameSC->GetStyleData(eStyleStruct_Display);
-  PRBool isBlock =
-    (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) ||
-    (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM);
+  if (aFrameItems.lastChild) {
+    // We have two cases where we need to make sure that a
+    // :first-letter frame is created.
+    nsCOMPtr<nsIStyleContext> parentFrameSC;
+    aParentFrame->GetStyleContext(getter_AddRefs(parentFrameSC));
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      parentFrameSC->GetStyleData(eStyleStruct_Display);
+    PRBool isBlock =
+      (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) ||
+      (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM);
 
-  // First case: a direct child of a block frame that is its
-  // first child.
-  if (isBlock &&
-      ShouldCreateFirstLetterFrame(aPresContext, aChild,
-                                   aFrameItems.lastChild)) {
-    WrapTextFrame(aPresContext, aState, aFrameItems.childList,
-                  aContainer, aChild, aParentFrame, aFrameItems,
-                  aState.mFloatedItems, isBlock);
-  }
-  // Second case: a direct child of an inline frame, where the
-  // inline frame is the first child of the block (or its parent
-  // inline frame is the first child of the block, recursively
-  // true upward).
-  else if ((display->mDisplay == NS_STYLE_DISPLAY_INLINE) &&
-           ContentIsLogicalFirstChild(aChild, aContainingBlock) &&
-           ShouldCreateFirstLetterFrame(aPresContext, aChild,
-                                        aFrameItems.lastChild)) {
-    WrapTextFrame(aPresContext, aState, aFrameItems.childList,
-                  aContainer, aChild, aParentFrame, aFrameItems,
-                  aState.mFloatedItems, isBlock);
+    // First case: a direct child of a block frame that is its
+    // first child.
+    if (isBlock &&
+        ShouldCreateFirstLetterFrame(aPresContext, aChild,
+                                     aFrameItems.lastChild)) {
+      WrapTextFrame(aPresContext, aState, aFrameItems.childList,
+                    aContainer, aChild, aParentFrame, aFrameItems,
+                    aState.mFloatedItems, isBlock);
+    }
+    // Second case: a direct child of an inline frame, where the
+    // inline frame is the first child of the block (or its parent
+    // inline frame is the first child of the block, recursively
+    // true upward).
+    else if ((display->mDisplay == NS_STYLE_DISPLAY_INLINE) &&
+             ContentIsLogicalFirstChild(aChild, aContainingBlock) &&
+             ShouldCreateFirstLetterFrame(aPresContext, aChild,
+                                          aFrameItems.lastChild)) {
+      WrapTextFrame(aPresContext, aState, aFrameItems.childList,
+                    aContainer, aChild, aParentFrame, aFrameItems,
+                    aState.mFloatedItems, isBlock);
+    }
   }
 
   return NS_OK;
@@ -7676,10 +7669,6 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
     nsCOMPtr<nsIContent> childContent;
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
       if (okToSkip && IsEmptyTextContent(childContent)) {
-#ifdef DEBUG_kipp
-        skippedTextFrames++;
-        printf("skippedTextFrames = %d\n", skippedTextFrames);
-#endif
         continue;
       }
 #if 0
