@@ -946,7 +946,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
     aDropDownBtn->SetRect(buttonRect);
     SetChildFrameSize(aDropDownBtn, aBtnWidth, aDesiredSize.height);
     aDesiredSize.width = 0;
-    aDesiredSize.height = dispHeight;
+    aDesiredSize.height = dispHeight + aBorderPadding.top + aBorderPadding.bottom;;
     // XXX What about ascent and descent?
     return;
   }
