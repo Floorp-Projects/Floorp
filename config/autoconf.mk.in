@@ -65,10 +65,6 @@ OS_INCLUDES	= $(NSPR_CFLAGS) $(JPEG_CFLAGS) $(PNG_CFLAGS) $(ZLIB_CFLAGS)
 OS_LIBS		= @LDFLAGS@ @LIBS@
 AC_DEFINES	= @DEFS@
 
-ifdef MOZ_DEBUG
-OS_CFLAGS := $(filter-out -O%, $(OS_CFLAGS))
-endif
-
 USE_CPP_INCLUDE_FLAG = @USE_CPP_INCLUDE_FLAG@
 ifdef USE_CPP_INCLUDE_FLAG
   AC_INCLUDE_OR_DEFINES := -include @CONFIG_DEFS_H@
@@ -159,6 +155,10 @@ MOZ_NATIVE_MAKEDEPEND	= @SYSTEM_MAKEDEPEND@
 LIBS_PATH       = @LIBS_PATH@
 
 COMPILER_DEPEND = @COMPILER_DEPEND@
+
+ifdef MOZ_DEBUG
+OS_CFLAGS := $(filter-out -O%, $(OS_CFLAGS))
+endif
 
 # Pulled these out of configure.in,
 # so undefine them now instead of subst
