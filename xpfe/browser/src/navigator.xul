@@ -662,7 +662,7 @@
 	         <menuitem name="Japanese (EUC-JP)" onclick="BrowserSetDefaultCharacterSet('EUC-JP');"/>
                  <separator />
 	         <menuitem name="Traditional Chinese (Big5)" onclick="BrowserSetDefaultCharacterSet('Big5');"/>
-	         <menuitem name="Traditional Chinese (EUC-TW)" onclick="BrowserSetDefaultCharacterSet('EUC-TW');"/>
+	         <menuitem name="Traditional Chinese (EUC-TW)" onclick="BrowserSetDefaultCharacterSet('x-euc-tw');"/>
 	         <menuitem name="Simplified Chinese (GB2312)" onclick="BrowserSetDefaultCharacterSet('GB2312');"/>
                  <separator />
  	         <menuitem name="Korean (EUC-KR)" onclick="BrowserSetDefaultCharacterSet('EUC-KR');"/>
