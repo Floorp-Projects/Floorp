@@ -580,7 +580,7 @@ NS_METHOD nsDOMEvent::GetText(nsString& aText)
     aText = *mText;
     return NS_OK;
   }
-  aText.Assign(NS_LITERAL_STRING(""));
+  aText.Truncate();
   return NS_ERROR_FAILURE;
 }
 

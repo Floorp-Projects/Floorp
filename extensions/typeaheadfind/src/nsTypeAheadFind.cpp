@@ -2516,7 +2516,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     if (lastShell != presShell) {
       mFocusedWeakShell = do_GetWeakReference(presShell);
       CancelFind();
-      DisplayStatus(PR_FALSE, nsnull, PR_TRUE, NS_LITERAL_STRING("").get());  // Clear status
+      DisplayStatus(PR_FALSE, nsnull, PR_TRUE, EmptyString().get());  // Clear status
     }
     return NS_OK;
   }

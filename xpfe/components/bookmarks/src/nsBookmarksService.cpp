@@ -307,7 +307,7 @@ bm_AddRefGlobals()
 
         gRDF->GetLiteral(NS_LITERAL_STRING("true").get(), &kTrueLiteral);
 
-        gRDF->GetLiteral(NS_LITERAL_STRING("").get(), &kEmptyLiteral);
+        gRDF->GetLiteral(EmptyString().get(), &kEmptyLiteral);
 
         gRDF->GetDateLiteral(0, &kEmptyDate);
 

@@ -48,6 +48,7 @@
 #include "nsString.h"
 #include "nsEditorUtils.h"
 #include "TypeInState.h"
+#include "nsReadableUtils.h"
 
 class nsVoidArray;
 class nsIDOMElement;
@@ -58,7 +59,7 @@ struct StyleCache : public PropItem
 {
   PRBool mPresent;
   
-  StyleCache() : PropItem(nsnull, nsString(), nsString()), mPresent(PR_FALSE){};
+  StyleCache() : PropItem(nsnull, EmptyString(), EmptyString()), mPresent(PR_FALSE){};
   StyleCache(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue) : 
              PropItem(aTag, aAttr, aValue), mPresent(PR_FALSE) {};
   ~StyleCache() {};

@@ -239,8 +239,8 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
         rv = mURI->GetPath(userHost);
 
         nsAutoString title;
-        title = NS_LITERAL_STRING("Finger information for ")
-              + NS_ConvertUTF8toUCS2(userHost);
+        title = NS_LITERAL_STRING("Finger information for ");
+        AppendUTF8toUTF16(userHost, title);
 
         conv->SetTitle(title.get());
         conv->PreFormatHTML(PR_TRUE);
@@ -425,8 +425,8 @@ nsFingerChannel::OnTransportStatus(nsITransport *trans, nsresult status,
 {
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
-        NS_ConvertUTF8toUCS2 host(mHost);
-        mProgressSink->OnStatus(this, nsnull, status, host.get());
+        mProgressSink->OnStatus(this, nsnull, status,
+                                NS_ConvertUTF8toUCS2(mHost).get());
 
         if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
             status == nsISocketTransport::STATUS_SENDING_TO) {

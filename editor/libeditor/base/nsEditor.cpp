@@ -1117,7 +1117,7 @@ nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
   //  mark the node dirty.
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(aNode));
   if (element)
-    element->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), NS_LITERAL_STRING(""));
+    element->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString());
   return NS_OK;
 }
 
@@ -2333,7 +2333,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
     if (!nodeAsText)
     {
       // create a text node
-      res = aDoc->CreateTextNode(nsAutoString(), getter_AddRefs(nodeAsText));
+      res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
       if (NS_FAILED(res)) return res;
       if (!nodeAsText) return NS_ERROR_NULL_POINTER;
       nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(nodeAsText);

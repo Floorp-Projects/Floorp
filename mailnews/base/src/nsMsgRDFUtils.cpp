@@ -39,6 +39,7 @@
 #include "prprf.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
+#include "nsReadableUtils.h"
 
 nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfService)
 {
@@ -52,7 +53,7 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfS
     rv = rdfService->GetLiteral(str, getter_AddRefs(value));
   } 
   else {
-    rv = rdfService->GetLiteral(NS_LITERAL_STRING("").get(), getter_AddRefs(value));
+    rv = rdfService->GetLiteral(EmptyString().get(), getter_AddRefs(value));
   }
 
   if (NS_SUCCEEDED(rv)) {

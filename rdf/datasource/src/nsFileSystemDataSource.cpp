@@ -1676,7 +1676,7 @@ FileSystemDataSource::GetExtension(nsIRDFResource *source, nsIRDFLiteral **aResu
     PRInt32 lastDot = filename.RFindChar('.');
     if (lastDot == -1)
     {
-        gRDFService->GetLiteral(NS_LITERAL_STRING("").get(), aResult);
+        gRDFService->GetLiteral(EmptyString().get(), aResult);
     }
     else
     {

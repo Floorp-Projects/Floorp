@@ -182,7 +182,7 @@ main(int argc, char* argv[])
 	
         // QI and set the upload stream
         nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
-        uploadChannel->SetUploadStream(uploadStream, NS_LITERAL_CSTRING(""), -1);
+        uploadChannel->SetUploadStream(uploadStream, EmptyCString(), -1);
 
         // create a dummy listener
         InputTestConsumer* listener;

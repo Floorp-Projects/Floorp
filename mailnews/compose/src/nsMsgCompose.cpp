@@ -143,7 +143,7 @@ static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type,
 
     rv = prefs->CopyUnicharPref("mailnews.reply_header_locale", reply_header_locale);
     if (NS_FAILED(rv) || !*reply_header_locale)
-      *reply_header_locale = nsCRT::strdup(NS_LITERAL_STRING("").get());
+      *reply_header_locale = nsCRT::strdup(EmptyString().get());
 
     rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_authorwrote", reply_header_authorwrote);
     if (NS_FAILED(rv) || !*reply_header_authorwrote)
@@ -2383,9 +2383,7 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
         docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
       
       if (aHTMLEditor)
-        mailEditor->InsertAsCitedQuotation(mMsgBody,
-                                           NS_LITERAL_STRING(""),
-                                           PR_TRUE,
+        mailEditor->InsertAsCitedQuotation(mMsgBody, EmptyString(), PR_TRUE,
                                            getter_AddRefs(nodeInserted));
       else
         mailEditor->InsertAsQuotation(mMsgBody, getter_AddRefs(nodeInserted));

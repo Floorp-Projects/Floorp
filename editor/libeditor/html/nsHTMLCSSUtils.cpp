@@ -76,11 +76,7 @@ void ProcessDefaultValue(const nsAString * aInputString, nsAString & aOutputStri
                          const char * aDefaultValueString,
                          const char * aPrependString, const char* aAppendString)
 {
-  if (aDefaultValueString) {
-    aOutputString.Assign(NS_ConvertASCIItoUCS2(aDefaultValueString));
-  }
-  else
-    aOutputString.Truncate();
+  CopyASCIItoUTF16(aDefaultValueString, aOutputString);
 }
 
 static
@@ -718,7 +714,7 @@ nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
     }
   }
   if (returnColor) {
-    aColor.Assign(NS_ConvertASCIItoUCS2(returnColor));
+    CopyASCIItoUTF16(returnColor, aColor);
   }
   return NS_OK;
 }
@@ -738,7 +734,7 @@ nsHTMLCSSUtils::GetDefaultLengthUnit(nsAString & aLengthUnit)
                                      getter_Copies(returnLengthUnit));
     if (NS_FAILED(result)) return result;
     if (returnLengthUnit) {
-      aLengthUnit.Assign(NS_ConvertASCIItoUCS2(returnLengthUnit));
+      CopyASCIItoUTF16(returnLengthUnit, aLengthUnit);
     }
   }
   return NS_OK;
@@ -1448,7 +1444,7 @@ nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement * aElement,
 
   return cssDecl->SetProperty(aProperty,
                               aValue,
-                              nsString());
+                              EmptyString());
 }
 
 nsresult

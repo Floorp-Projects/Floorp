@@ -192,7 +192,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
              nsCOMPtr<nsIURI> newUri;
              rv = uri->Clone(getter_AddRefs(newUri));
              if (NS_FAILED(rv)) return rv;
-             rv = newUri->SetPassword(NS_LITERAL_CSTRING(""));
+             rv = newUri->SetPassword(EmptyCString());
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;

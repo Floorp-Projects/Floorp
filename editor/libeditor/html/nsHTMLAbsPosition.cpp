@@ -694,7 +694,7 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
       res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(viewCSS));
       if (NS_FAILED(res)) return res;
       nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-      res = viewCSS->GetComputedStyle(aElement, nsString(), getter_AddRefs(cssDecl));
+      res = viewCSS->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
       if (NS_FAILED(res)) return res;
       // from these declarations, get the one we want and that one only
       nsCOMPtr<nsIDOMCSSValue> colorCssValue;

@@ -155,7 +155,7 @@ nsResProtocolHandler::Init()
     //
     // make resource:/// point to the application directory
     //
-    rv = AddSpecialDir(NS_OS_CURRENT_PROCESS_DIR, NS_LITERAL_CSTRING(""));
+    rv = AddSpecialDir(NS_OS_CURRENT_PROCESS_DIR, EmptyCString());
     NS_ENSURE_SUCCESS(rv, rv);
 
     //

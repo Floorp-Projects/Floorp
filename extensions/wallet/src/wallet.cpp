@@ -3869,7 +3869,7 @@ public:
 #ifdef AutoCapture
 PRIVATE PRBool
 wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
-  if (valueOnForm.Equals(NS_LITERAL_STRING(""))) {
+  if (valueOnForm.Equals(EmptyString())) {
     return PR_FALSE;
   }
   nsIDOMHTMLInputElement* inputElement;

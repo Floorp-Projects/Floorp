@@ -1031,8 +1031,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   
   nsCOMPtr<nsIURL> documentURI(do_QueryInterface(uriClone, &rv));
   NS_ENSURE_TRUE(documentURI, rv);
-  
-  documentURI->SetRef(NS_LITERAL_CSTRING(""));
+
+  documentURI->SetRef(EmptyCString());
 
 #ifdef MOZ_XUL
   // We've got a file.  Check our XBL document cache.

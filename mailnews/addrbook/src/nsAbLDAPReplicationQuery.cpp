@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * 	Dan Mosedale <dmose@netscape.com>
+ *   Dan Mosedale <dmose@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -165,8 +166,8 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
 
     // initialize the LDAP connection
     return mConnection->Init(host.get(), port, 
-			     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE,
-			     aAuthDN, listener, nsnull);
+                             (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE,
+                             aAuthDN, listener, nsnull);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener)
@@ -192,7 +193,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWe
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::DoReplicationQuery()
 {
-    return ConnectToLDAPServer(mURL, NS_LITERAL_CSTRING(""));
+    return ConnectToLDAPServer(mURL, EmptyCString());
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()

@@ -101,7 +101,7 @@ NS_IMETHODIMP nsMsgProcessReport::Reset()
 {
   mProceeded = PR_FALSE;
   mError = NS_OK;
-  mMessage.Assign(NS_LITERAL_STRING(""));
+  mMessage.Truncate();
 
   return NS_OK;
 }

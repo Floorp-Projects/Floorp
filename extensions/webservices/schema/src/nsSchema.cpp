@@ -22,6 +22,7 @@
  */
 
 #include "nsSchemaPrivate.h"
+#include "nsReadableUtils.h"
 
 ////////////////////////////////////////////////////////////
 //
@@ -34,14 +35,16 @@ nsSchema::nsSchema(nsISchemaCollection* aCollection,
   mCollection = aCollection;  // Weak reference
   
   if (aSchemaElement) {
-    aSchemaElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+    const nsAFlatString& empty = EmptyString();
+
+    aSchemaElement->GetAttributeNS(empty, 
                                    NS_LITERAL_STRING("targetNamespace"), 
                                    mTargetNamespace);
     mTargetNamespace.Trim(" \r\n\t");
     aSchemaElement->GetNamespaceURI(mSchemaNamespace);
 
     nsAutoString elementFormDefault;
-    aSchemaElement->GetAttributeNS(NS_LITERAL_STRING(""), 
+    aSchemaElement->GetAttributeNS(empty, 
                                    NS_LITERAL_STRING("elementFormDefault"), 
                                    elementFormDefault);
     elementFormDefault.Trim(" \r\n\t");

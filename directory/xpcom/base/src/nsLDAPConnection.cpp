@@ -330,7 +330,7 @@ nsLDAPConnection::GetErrorString(PRUnichar **_retval)
 
     // make a copy using the XPCOM shared allocator
     //
-    *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(rv));
+    *_retval = UTF8ToNewUnicode(nsDependentCString(rv));
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

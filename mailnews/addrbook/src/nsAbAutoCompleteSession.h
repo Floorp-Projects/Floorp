@@ -40,6 +40,7 @@
 
 #include "msgCore.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIAbDirectory.h"
 #include "nsIAbAutoCompleteSession.h"
@@ -156,13 +157,15 @@ public:
                           PRBool isMailList, 
                           nsAbAutoCompleteSession::MatchType type)
   {
-    mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-    mDisplayName = nsCRT::strdup(displayName ? displayName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-    mFirstName = nsCRT::strdup(firstName ? firstName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-    mLastName = nsCRT::strdup(lastName ? lastName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-    mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-    mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-    mDirName = nsCRT::strdup(dirName ? dirName : NS_STATIC_CAST(const PRUnichar *, NS_LITERAL_STRING("").get()));
+    const PRUnichar *empty = EmptyString().get();
+
+    mNickName = nsCRT::strdup(nickName ? nickName : empty);
+    mDisplayName = nsCRT::strdup(displayName ? displayName : empty);
+    mFirstName = nsCRT::strdup(firstName ? firstName : empty);
+    mLastName = nsCRT::strdup(lastName ? lastName : empty);
+    mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : empty);
+    mNotes = nsCRT::strdup(notes ? notes : empty);
+    mDirName = nsCRT::strdup(dirName ? dirName : empty);
     mIsMailList = isMailList;
     mType = type;
   }

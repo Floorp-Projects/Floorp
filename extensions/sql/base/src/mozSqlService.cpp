@@ -340,9 +340,8 @@ mozSqlService::GetNewConnection(nsIRDFResource* aAlias, mozISqlConnection **_ret
   if (NS_FAILED(rv))
     return rv;
 
-  nsCAutoString contractID(
-    NS_LITERAL_CSTRING("@mozilla.org/sql/connection;1?type=") +
-    NS_ConvertUCS2toUTF8(type));
+  nsCAutoString contractID("@mozilla.org/sql/connection;1?type=");
+  AppendUTF16toUTF8(type, contractID);
 
   nsCOMPtr<mozISqlConnection> conn = do_CreateInstance(contractID.get());
   if (! conn)

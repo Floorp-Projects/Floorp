@@ -251,7 +251,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetColumnIndex(const PRUnichar *aColID, PRInt32 *
 
 NS_IMETHODIMP nsTreeBoxObject::GetColumnID(PRInt32 colIndex, nsAString & _retval)
 {
-  _retval = NS_LITERAL_STRING("");
+  _retval.Truncate();
   nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetColumnID(colIndex, _retval);

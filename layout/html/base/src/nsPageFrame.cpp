@@ -358,7 +358,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
     if (mPD->mDateTimeStr != nsnull) {
       aNewStr.ReplaceSubstring(kDate.get(), mPD->mDateTimeStr);
     } else {
-      aNewStr.ReplaceSubstring(kDate.get(), NS_LITERAL_STRING("").get());
+      aNewStr.ReplaceSubstring(kDate.get(), EmptyString().get());
     }
     return;
   }

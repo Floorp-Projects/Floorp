@@ -1123,12 +1123,14 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
       if (NS_FAILED(rv)) 
         goto done;
       
+      const nsAFlatCString& empty = EmptyCString();
+
       saveListener->m_channel = nsnull;
       rv = NS_NewInputStreamChannel(getter_AddRefs(saveListener->m_channel),
         url, 
         nsnull,                 // inputStream
-        NS_LITERAL_CSTRING(""), // contentType
-        NS_LITERAL_CSTRING("")); // contentCharset
+        empty,                  // contentType
+        empty);                 // contentCharset
       NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewInputStreamChannel failed");
       if (NS_FAILED(rv)) 
         goto done;

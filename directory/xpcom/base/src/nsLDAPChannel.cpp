@@ -640,7 +640,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     //
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
-                           : PR_FALSE, NS_LITERAL_CSTRING(""), this, nsnull);
+                           : PR_FALSE, EmptyCString(), this, nsnull);
     switch (rv) {
     case NS_OK:
         break;
@@ -672,7 +672,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // kick off a bind operation 
     // 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("initiating SimpleBind\n"));
-    rv = mCurrentOperation->SimpleBind(NS_LITERAL_CSTRING(""));
+    rv = mCurrentOperation->SimpleBind(EmptyCString());
     if (NS_FAILED(rv)) {
 
         // XXXdmose better error handling / passthrough; deal with password

@@ -274,7 +274,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
   
   rv = errorObject->Init(errorText.get(),
                          NS_ConvertUTF8toUCS2(documentURI).get(),
-                         NS_LITERAL_STRING("").get(), /* source line */
+                         EmptyString().get(), /* source line */
                          aLineNumber,
                          0,  /* column number */
                          nsIScriptError::errorFlag,

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -263,14 +264,15 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
         nsAutoString passwordFound;
 
         // Get password entry corresponding to the server URI we are passing in.
-        rv = passwordMgrInt->FindPasswordEntry(serverUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
-                                               hostFound, userNameFound, passwordFound);
+        rv = passwordMgrInt->FindPasswordEntry(serverUri, EmptyString(),
+                                               EmptyString(), hostFound,
+                                               userNameFound, passwordFound);
         if (NS_FAILED(rv))
             return rv;
 
         if (!passwordFound.IsEmpty())
             // XXX This needs CopyUCS2toUTF8
-            mAuthPswd.Assign(NS_ConvertUCS2toUTF8(passwordFound));
+            CopyUTF16toUTF8(passwordFound, mAuthPswd);
     }
 
     return rv;

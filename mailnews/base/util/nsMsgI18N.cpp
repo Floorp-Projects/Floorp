@@ -111,7 +111,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsAFlatCString& aCharset,
         char localbuf[512];
         PRInt32 consumedLen = 0;
 
-        outString.Assign("");
+        outString.Truncate();
 
         // convert
         while (consumedLen < originalUnicharLength) {
@@ -172,7 +172,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsAFlatCString& aCharset,
       PRUnichar localbuf[512];
       PRInt32 consumedLen = 0;
 
-      outString.Assign(NS_LITERAL_STRING(""));
+      outString.Truncate();
 
       // convert
       while (consumedLen < originalLength) {

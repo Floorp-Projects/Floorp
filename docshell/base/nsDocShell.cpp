@@ -992,7 +992,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
     else if (name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
     {
         mustMakeNewWindow = PR_TRUE;
-        name.Assign(NS_LITERAL_STRING(""));
+        name.Truncate();
     }
     else if(name.EqualsIgnoreCase("_parent"))
     {
@@ -1065,7 +1065,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
 
                         // Neither is from the origin domain, send load to a new window (_blank)
                         mustMakeNewWindow = PR_TRUE;
-                        name.Assign(NS_LITERAL_STRING(""));
+                        name.Truncate();
                     } // else (target's parent from origin domain) allow this load
                 } // else (no parent) allow this load since shell is a toplevel window
             } // else (target from origin domain) allow this load
@@ -1084,9 +1084,9 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
             return NS_ERROR_FAILURE;
         }
 
-        rv = parentWindow->Open(NS_LITERAL_STRING(""),    // URL to load
+        rv = parentWindow->Open(EmptyString(),            // URL to load
                                 name,                     // Window name
-                                NS_LITERAL_STRING(""),    // Window features
+                                EmptyString(),            // Window features
                                 getter_AddRefs(newWindow));
         if (NS_FAILED(rv)) return rv;
 
@@ -5385,7 +5385,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
             // we really need to have a content type associated with this stream!!
-            uploadChannel->SetUploadStream(aPostData, NS_LITERAL_CSTRING(""), -1);
+            uploadChannel->SetUploadStream(aPostData, EmptyCString(), -1);
             /* If there is a valid postdata *and* it is a History Load,
              * set up the cache key on the channel, to retrieve the
              * data *only* from the cache. If it is a normal reload, the 
@@ -5857,7 +5857,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     else {
 
         // Tell the shell it's at an anchor, without scrolling.
-        shell->GoToAnchor(NS_LITERAL_STRING(""), PR_FALSE);
+        shell->GoToAnchor(EmptyString(), PR_FALSE);
         
         // An empty anchor was found, but if it's a load from history,
         // we don't have to jump to the top of the page. Scrollbar 

@@ -1669,7 +1669,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
           if (length != writeCount)
             return NS_ERROR_FAILURE;
           
-          valueCStr = "";   
+          valueCStr.Truncate();
 
           for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
             if (EXPORT_ATTRIBUTES_TABLE[i].ldapPropertyName) {
@@ -1682,7 +1682,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
                 else if (value.Equals(NS_LITERAL_STRING("plaintext").get()))
                   value = NS_LITERAL_STRING("false");
                 else
-                  value = NS_LITERAL_STRING(""); // unknown.
+                  value.Truncate(); // unknown.
               }
 
               if (!value.IsEmpty()) {
@@ -1692,7 +1692,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
                 valueCStr += LDIF_LINEBREAK;
               }
               else
-                valueCStr = "";
+                valueCStr.Truncate();
               
               length = valueCStr.Length();
               if (length) {
@@ -1701,7 +1701,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
                 if (length != writeCount)
                   return NS_ERROR_FAILURE;
               }
-              valueCStr = "";
+              valueCStr.Truncate();
             }
             else {
               // something we don't support yet
@@ -2038,7 +2038,7 @@ NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType, const char
 
             rv = parentWindow->OpenDialog(
                 NS_LITERAL_STRING("chrome://messenger/content/addressbook/abNewCardDialog.xul"),
-                NS_LITERAL_STRING(""),
+                EmptyString(),
                 NS_LITERAL_STRING("chrome,resizable=no,titlebar,modal,centerscreen"),
                 ifptr, getter_AddRefs(dialogWindow));
             NS_ENSURE_SUCCESS(rv, rv);

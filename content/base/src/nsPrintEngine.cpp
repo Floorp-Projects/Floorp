@@ -2152,7 +2152,7 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*      aPO,
       *aTitle = nsCRT::strdup(aPO->mDocTitle);
     } else {
       switch (aDefType) {
-        case eDocTitleDefBlank: *aTitle = ToNewUnicode(NS_LITERAL_STRING(""));
+        case eDocTitleDefBlank: *aTitle = ToNewUnicode(EmptyString());
           break;
 
         case eDocTitleDefURLDoc:

@@ -91,7 +91,7 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::DoReplicationQuery()
         return NS_ERROR_NOT_INITIALIZED;
 
 #ifdef USE_AUTHDLG
-    return ConnectToLDAPServer(mURL, NS_LITERAL_CSTRING(""));
+    return ConnectToLDAPServer(mURL, EmptyCString());
 #else
     mDataProcessor->PopulateAuthData();
     return ConnectToLDAPServer(mURL, mAuthDN);
@@ -130,11 +130,12 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryRootDSE()
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    return mOperation->SearchExt(NS_LITERAL_CSTRING(""), nsILDAPURL::SCOPE_BASE, 
-                               NS_LITERAL_CSTRING("objectclass=*"), 
-                               MozillaLdapPropertyRelator::rootDSEAttribCount, 
-                               MozillaLdapPropertyRelator::changeLogRootDSEAttribs,
-                               0, 0);
+    return
+      mOperation->SearchExt(EmptyCString(), nsILDAPURL::SCOPE_BASE, 
+			    NS_LITERAL_CSTRING("objectclass=*"), 
+			    MozillaLdapPropertyRelator::rootDSEAttribCount, 
+			    MozillaLdapPropertyRelator::changeLogRootDSEAttribs,
+			    0, 0);
 }
 
 NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsACString & aChangeLogDN, PRInt32 aLastChangeNo)

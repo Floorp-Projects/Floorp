@@ -96,7 +96,7 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
-    mBuffer.Assign(NS_LITERAL_STRING(""));
+    mBuffer.Truncate();
     return rv;
 }
 

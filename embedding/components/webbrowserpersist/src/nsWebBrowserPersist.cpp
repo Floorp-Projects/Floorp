@@ -1193,7 +1193,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
                 nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
                 NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
                 // Attach the postdata to the http channel
-                uploadChannel->SetUploadStream(aPostData, NS_LITERAL_CSTRING(""), -1);
+                uploadChannel->SetUploadStream(aPostData, EmptyCString(), -1);
             }
         }
 
@@ -3128,7 +3128,7 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
     nsAutoString newValue;
 
     // remove username/password if present
-    fileAsURI->SetUserPass(NS_LITERAL_CSTRING(""));
+    fileAsURI->SetUserPass(EmptyCString());
 
     // reset node attribute 
     // Use relative or absolute links
@@ -3241,7 +3241,7 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
                        mCurrentCharset.get(), relativeURI);
         if (NS_SUCCEEDED(rv) && newURI)
         {
-            newURI->SetUserPass(NS_LITERAL_CSTRING(""));
+            newURI->SetUserPass(EmptyCString());
             nsCAutoString uriSpec;
             newURI->GetSpec(uriSpec);
             attrNode->SetNodeValue(NS_ConvertUTF8toUCS2(uriSpec));

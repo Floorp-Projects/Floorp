@@ -229,7 +229,9 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAString & aInString)
 {
-  return InsertHTMLWithContext(aInString, nsString(), nsString(), nsString(),
+  const nsAFlatString& empty = EmptyString();
+
+  return InsertHTMLWithContext(aInString, empty, empty, empty,
                                nsnull,  nsnull, 0, PR_TRUE);
 }
 
@@ -1106,8 +1108,10 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
               stuffToPaste.Append(NS_LITERAL_STRING("</A>"));
             }
             nsAutoEditBatch beginBatching(this);
+
+            const nsAFlatString& empty = EmptyString();
             rv = InsertHTMLWithContext(stuffToPaste,
-                                       nsString(), nsString(), flavor, 
+                                       empty, empty, flavor, 
                                        aSourceDoc,
                                        aDestinationNode, aDestOffset,
                                        aDoDeleteSelection);
@@ -1609,8 +1613,9 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
     // Get the Data from the clipboard  
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
-      rv = InsertFromTransferable(trans, nsnull, nsString(), nsString(),
-                                  nsnull, 0, PR_TRUE);
+      const nsAFlatString& empty = EmptyString();
+      rv = InsertFromTransferable(trans, nsnull, empty, empty, nsnull, 0,
+                                  PR_TRUE);
     }
   }
 

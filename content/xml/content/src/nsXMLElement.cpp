@@ -312,7 +312,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
             rv = DocShellToPresContext(aShell, getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
               rv = TriggerLink(pc, verb, base, uri,
-                               NS_LITERAL_STRING(""), PR_TRUE);
+                               EmptyString(), PR_TRUE);
 
               return SpecialAutoLoadReturn(rv,verb);
             }

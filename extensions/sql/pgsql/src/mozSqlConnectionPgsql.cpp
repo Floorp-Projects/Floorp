@@ -81,7 +81,7 @@ nsresult
 mozSqlConnectionPgsql::Setup()
 {
   if (PQstatus(mConnection) == CONNECTION_BAD) {
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQerrorMessage(mConnection)));
+    CopyUTF8toUTF16(PQerrorMessage(mConnection), mErrorMessage);
     mConnection = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -93,6 +93,7 @@ mozSqlConnectionPgsql::Setup()
   PRInt32 stat = PQresultStatus(result);
   if (stat != PGRES_COMMAND_OK) {
     mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQresultErrorMessage(result)));
+    CopyUTF8toUTF16(PQresultErrorMessage(result), mErrorMessage);
     PQfinish(mConnection);
     mConnection = nsnull;
     return NS_ERROR_FAILURE;
@@ -102,7 +103,7 @@ mozSqlConnectionPgsql::Setup()
   PGresult* result = PQexec(mConnection, "select version()");
   PRInt32 stat = PQresultStatus(result);
   if (stat != PGRES_TUPLES_OK) {
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQresultErrorMessage(result)));
+    CopyUTF8toUTF16(PQresultErrorMessage(result), mErrorMessage);
     return NS_ERROR_FAILURE;
   }
   char* version = PQgetvalue(result, 0, 0);
@@ -185,7 +186,7 @@ mozSqlConnectionPgsql::RealExec(const nsAString& aQuery,
     free(query);
     stat = PQresultStatus(types);
     if (stat != PGRES_TUPLES_OK) {
-      mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQresultErrorMessage(types)));
+      CopyUTF8toUTF16(PQresultErrorMessage(types), mErrorMessage);
       return NS_ERROR_FAILURE;
     }
 
@@ -214,7 +215,7 @@ mozSqlConnectionPgsql::RealExec(const nsAString& aQuery,
     mLastID = PQoidValue(r);
   }
   else {
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQresultErrorMessage(r)));
+    CopyUTF8toUTF16(PQresultErrorMessage(r), mErrorMessage);
     return NS_ERROR_FAILURE;
   }
 
@@ -225,7 +226,7 @@ nsresult
 mozSqlConnectionPgsql::CancelExec()
 {
   if (!PQrequestCancel(mConnection)) {
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQerrorMessage(mConnection)));
+    CopyUTF8toUTF16(PQerrorMessage(mConnection), mErrorMessage);
     return NS_ERROR_FAILURE;
   }
 

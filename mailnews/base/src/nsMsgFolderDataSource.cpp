@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgCopyService.h"
@@ -1599,7 +1600,7 @@ nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **targ
   if (NS_SUCCEEDED(rv))
     createNode(NS_ConvertASCIItoUCS2(charset).get(), target, getRDFService());
   else
-    createNode(NS_LITERAL_STRING("").get(), target, getRDFService());
+    createNode(EmptyString().get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -1913,7 +1914,7 @@ nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 aNumMessages, nsIRDFNode **nod
   if(numMessages == kDisplayQuestionCount)
     createNode(NS_LITERAL_STRING("???").get(), node, getRDFService());
   else if (numMessages == kDisplayBlankCount || numMessages == 0)
-    createNode(NS_LITERAL_STRING("").get(), node, getRDFService());
+    createNode(EmptyString().get(), node, getRDFService());
   else
     createIntNode(numMessages, node, getRDFService());
   return NS_OK;
@@ -1924,7 +1925,7 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
 {
   PRUint32 folderSize = aFolderSize;
   if (folderSize == kDisplayBlankCount || folderSize == 0)
-    createNode(NS_LITERAL_STRING("").get(), aNode, getRDFService());
+    createNode(EmptyString().get(), aNode, getRDFService());
   else if(folderSize == kDisplayQuestionCount)
     createNode(NS_LITERAL_STRING("???").get(), aNode, getRDFService());
   else

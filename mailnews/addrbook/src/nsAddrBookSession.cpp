@@ -182,7 +182,7 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
   NS_ENSURE_ARG_POINTER(userDir);
   *userDir = nsnull;
 
-  nsresult rv;		
+  nsresult rv;
   nsCOMPtr<nsIFile> profileDir;
   nsCAutoString pathBuf;
 
@@ -250,10 +250,10 @@ NS_IMETHODIMP nsAddrBookSession::GenerateNameFromCard(nsIAbCard *card, PRInt32 g
     else {
       if (lastName.Length())
         *aName = ToNewUnicode(lastName);
-      else if (firstName.Length())
+      else {
+        // aName may be empty here, but that's ok.
         *aName = ToNewUnicode(firstName);
-      else
-        *aName = ToNewUnicode(NS_LITERAL_STRING(""));
+      }
     }
   }
   

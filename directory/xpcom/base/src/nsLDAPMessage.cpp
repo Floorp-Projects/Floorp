@@ -513,7 +513,7 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     //
     PRUint32 i;
     for ( i = 0 ; i < numVals ; i++ ) {
-        (*aValues)[i] = ToNewUnicode(NS_ConvertUTF8toUCS2(values[i]));
+        (*aValues)[i] = UTF8ToNewUnicode(nsDependentCString(values[i]));
         if ( ! (*aValues)[i] ) {
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
             ldap_value_free(values);

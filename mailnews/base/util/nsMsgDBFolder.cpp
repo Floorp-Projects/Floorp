@@ -534,7 +534,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
         PRBool defaultUsed;
         folderInfo->GetCharacterSet(&mCharset, &defaultUsed);
         if (defaultUsed)
-          mCharset.Assign(NS_LITERAL_STRING(""));
+          mCharset.Truncate();
         folderInfo->GetCharacterSetOverride(&mCharsetOverride);
         
         if (db) {
@@ -1989,9 +1989,12 @@ nsresult nsMsgDBFolder::PromptForCachePassword(nsIMsgIncomingServer *server, nsI
         nsAutoString userNameFound;
         nsAutoString passwordFound;
 
+        const nsAFlatString& empty = EmptyString();
+
         // Get password entry corresponding to the host URI we are passing in.
-        rv = passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
-                                               hostFound, userNameFound, passwordFound);
+        rv = passwordMgrInt->FindPasswordEntry(currServerUri, empty, empty,
+                                               hostFound, userNameFound,
+                                               passwordFound);
         if (NS_FAILED(rv)) 
           break;
         // compare the user-entered password with the saved password with

@@ -210,7 +210,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
                                     uri,
                                     inputStream,
                                     nsDependentCString(contentType),
-                                    NS_LITERAL_CSTRING(""));
+                                    EmptyCString());
   if (NS_FAILED(result))
     return result;
 

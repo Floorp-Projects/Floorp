@@ -3976,7 +3976,7 @@ PRInt32 nsNNTPProtocol::GetNextGroupNeedingCounts( nsISupports** pNextGroup, PRI
     
     if (m_newsRCListCount) {
       // clear the status text.
-      rv = SetProgressStatus(NS_LITERAL_STRING("").get());
+      rv = SetProgressStatus(EmptyString().get());
       NS_ENSURE_SUCCESS(rv, rv);
       
       SetProgressBarPercent(0, -1);

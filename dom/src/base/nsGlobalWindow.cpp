@@ -2284,7 +2284,7 @@ GlobalWindowImpl::Alert(const nsAString& aString)
   const PRUnichar *title = nsnull;
   nsresult rv = CheckSecurityIsChromeCaller(&isChrome);
   if (NS_FAILED(rv) || !isChrome) {
-      MakeScriptDialogTitle(NS_LITERAL_STRING(""), newTitle);
+      MakeScriptDialogTitle(EmptyString(), newTitle);
       title = newTitle.get();
   }
   NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling alert(), use the prompt service");
@@ -2315,7 +2315,7 @@ GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
   const PRUnichar *title = nsnull;
   nsresult rv = CheckSecurityIsChromeCaller(&isChrome);
   if (NS_FAILED(rv) || !isChrome) {
-      MakeScriptDialogTitle(NS_LITERAL_STRING(""), newTitle);
+      MakeScriptDialogTitle(EmptyString(), newTitle);
       title = newTitle.get();
   }
   NS_WARN_IF_FALSE(!isChrome,
