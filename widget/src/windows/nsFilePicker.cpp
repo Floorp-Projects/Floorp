@@ -49,7 +49,6 @@ nsFilePicker::nsFilePicker()
 {
   NS_INIT_REFCNT();
   mWnd = NULL;
-  mNumberOfFilters = 0;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
   mDisplayDirectory = do_CreateInstance("component://mozilla/file/local");
@@ -91,9 +90,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   ofn.lStructSize = sizeof(ofn);
 
-  nsString filterList;
-  GetFilterListArray(filterList);
-  char *filterBuffer = filterList.ToNewCString();
+  char *filterBuffer = mFilterList.ToNewCString();
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
   if (nsnull == title)
     title = mTitle.ToNewCString();
@@ -161,15 +158,21 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
                                           const PRUnichar **aTitles,
                                           const PRUnichar **aFilters)
 {
-  mNumberOfFilters  = aNumberOfFilters;
-  mTitles           = aTitles;
-  mFilters          = aFilters;
+  mFilterList.SetLength(0);
+  for (PRUint32 i = 0; i < aNumberOfFilters; i++) {
+    mFilterList.Append(aTitles[i]);
+    mFilterList.Append('\0');
+    mFilterList.Append(aFilters[i]);
+    mFilterList.Append('\0');
+  }
+  mFilterList.Append('\0'); 
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
-  NS_ENSURE_ARG_POINTER(*aFile);
+  /*NS_ENSURE_ARG_POINTER(*aFile); */
 
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
     
@@ -249,32 +252,6 @@ NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
   mMode = aMode;
   return NS_OK;
 }
-
-
-
-//-------------------------------------------------------------------------
-//
-// Convert filter titles + filters into a Windows filter string
-//
-//-------------------------------------------------------------------------
-
-void nsFilePicker::GetFilterListArray(nsString& aFilterList)
-{
-  aFilterList.SetLength(0);
-  for (PRUint32 i = 0; i < mNumberOfFilters; i++) {
-    const nsString& title = mTitles[i];
-    const nsString& filter = nsAutoString(mFilters[i]);
-    
-    aFilterList.Append(title);
-    aFilterList.Append('\0');
-    aFilterList.Append(filter);
-    aFilterList.Append('\0');
-  }
-  aFilterList.Append('\0'); 
-}
-
-
-
 
 
 //-------------------------------------------------------------------------

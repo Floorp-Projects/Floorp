@@ -60,9 +60,7 @@ protected:
   nsString               mTitle;
   PRInt16                mMode;
   nsString               mFile;
-  PRUint32               mNumberOfFilters;  
-  const PRUnichar**      mTitles;
-  const PRUnichar**      mFilters;
+  nsString               mFilterList;
   nsString               mDefault;
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;
