@@ -59,6 +59,7 @@
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
 
+#include "nsICommandManager.h"
 
 class nsBaseContentList;
 class nsContentList;
@@ -303,6 +304,16 @@ protected:
   PLDHashTable mIdAndNameHashTable;
 
   nsCOMPtr<nsIWyciwygChannel> mWyciwygChannel;
+
+  /* Midas implementation */
+  nsresult   GetMidasCommandManager(nsICommandManager** aCommandManager);
+  PRBool     ConvertToMidasInternalCommand(const nsAString & inCommandID,
+                                           const nsAString & inParam,
+                                           nsACString& outCommandID,
+                                           nsACString& outParam);
+  nsCOMPtr<nsICommandManager> mMidasCommandManager;
+  PRBool                      mEditingIsOn;
+
 };
 
 #endif /* nsHTMLDocument_h___ */
