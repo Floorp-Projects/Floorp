@@ -2770,6 +2770,24 @@ nsListControlFrame::IsTargetOptionDisabled(PRBool &aIsDisabled)
 }
 
 //----------------------------------------------------------------------
+NS_IMETHODIMP 
+nsListControlFrame::IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled)
+{
+  PRBool isOptDisabled = PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement;
+  if (options) {
+    optionElement = getter_AddRefs(GetOption(*options, anIndex));
+    nsCOMPtr<nsIContent> content = do_QueryInterface(optionElement);
+    if (content) {
+      aIsDisabled = nsFormFrame::GetDisabled(nsnull, content);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
 // This is used to reset the the list and it's selection because the 
 // selection was cancelled and the list rolled up.
 void nsListControlFrame::ResetSelectedItem()
@@ -2820,10 +2838,16 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         aMouseEvent->PreventCapture();
         aMouseEvent->PreventBubble();
       } else {
+        mButtonDown = PR_FALSE;
+        CaptureMouseEvents(mPresContext, PR_FALSE);
         return NS_OK;
       }
+      mButtonDown = PR_FALSE;
+      CaptureMouseEvents(mPresContext, PR_FALSE);
       return NS_ERROR_FAILURE; // means consume event
     } else {
+      mButtonDown = PR_FALSE;
+      CaptureMouseEvents(mPresContext, PR_FALSE);
       return NS_OK;
     }
   }
@@ -2838,6 +2862,10 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
       } 
       REFLOW_DEBUG_MSG(">>>>>> Option is disabled");
+      mButtonDown = PR_FALSE;
+      CaptureMouseEvents(mPresContext, PR_FALSE);
+      SetContentSelected(mSelectedIndex, PR_FALSE);
+      mSelectedIndex = kNothingSelected;
       return NS_OK;
     }
   }
@@ -3300,6 +3328,92 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
   return NS_OK;
 }
 
+//---------------------------------------------------------------------
+// Ok, the entire idea of this routine is to move to the next item that 
+// is suppose to be selected. If the item is disabled then we search in 
+// the same direction looking for the next item to select. If we run off 
+// the end of the list then we start at the end of the list and search 
+// backwards until we get back to the original item or an enabled option
+// 
+// anNewIndex - will get set to the new index if it finds one
+// anOldIndex - gets sets to the old index if a new index is found
+// aDoSetNewIndex - indicates that a new item was found and it can be selected
+// aWasDisabled - means it found a new item but it was disabled
+// aNumOptions - the total number of options in the list
+// aDoAdjustInc - the initial increment 1-n
+// aDoAdjustIncNext - the increment used to search for the next enabled option
+void
+nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOldIndex, 
+                                              PRBool &aDoSetNewIndex, PRBool &aWasDisabled,
+                                              PRInt32 aNumOptions, PRInt32 aDoAdjustInc, 
+                                              PRInt32 aDoAdjustIncNext)
+{
+  // the aDoAdjustInc could be a "1" for a single item or 
+  // any number greater representing a page of items
+  //
+  PRInt32 newIndex    = anNewIndex + aDoAdjustInc;
+  PRBool doingReverse = PR_FALSE;   // means we reached the end of the list and now we are searching backwards
+  PRInt32 bottom      = 0;          // lowest index in the search range
+  PRInt32 top         = aNumOptions;// highest index in the search range
+
+  // make sure we start off in the range
+  if (newIndex < bottom) {
+    newIndex = 0;
+  } else if (newIndex >= top) {
+    newIndex = aNumOptions;
+  }
+
+
+  aWasDisabled = PR_FALSE;
+  while (1) {
+    // Special Debug Code
+    //printf("T:%d  B:%d  I:%d  R:%d  IM:%d  I:%d\n", top, bottom, newIndex, aDoAdjustInc, aDoAdjustIncNext, doingReverse);
+    //if (newIndex < -30 || newIndex > 30) {
+    //  printf("********************************* Stopped!\n");
+    //  return;
+    //}
+    // if the newIndex isn't disabled, we are golden, bail out
+    if (NS_OK == IsOptionDisabled(newIndex, aWasDisabled) && !aWasDisabled) {
+      break;
+    }
+
+    // it WAS disabled, so sart looking ahead for the next enabled option
+    newIndex += aDoAdjustIncNext;
+
+    // well, if we reach end reverse the search
+    if (newIndex < bottom) {
+      if (doingReverse) {
+        return; // if we are in reverse mode and reach the end bail out
+      } else {
+        // reset the newIndex to the end of the list we hit
+        // reverse the incrementer
+        // set the other end of the list to our original starting index
+        newIndex         = bottom;
+        aDoAdjustIncNext = -aDoAdjustIncNext;
+        doingReverse     = PR_TRUE;
+        top              = anNewIndex;
+      }
+    } else  if (newIndex >= top) {
+      if (doingReverse) {
+        return;        // if we are in reverse mode and reach the end bail out
+      } else {
+        // reset the newIndex to the end of the list we hit
+        // reverse the incrementer
+        // set the other end of the list to our original starting index
+        newIndex = top - 1;
+        aDoAdjustIncNext = -aDoAdjustIncNext;
+        doingReverse     = PR_TRUE;
+        bottom           = anNewIndex;
+      }
+    }
+  }
+
+  // Looks like we found one
+  anOldIndex     = anNewIndex;
+  anNewIndex     = newIndex;
+  aDoSetNewIndex = PR_TRUE;
+}
+
 nsresult
 nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
@@ -3366,9 +3480,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     case nsIDOMKeyEvent::DOM_VK_LEFT: {
       REFLOW_DEBUG_MSG2("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
       if (mSelectedIndex > 0) {
-        mOldSelectedIndex = mSelectedIndex;
-        mSelectedIndex--;
-        doSetNewIndex = PR_TRUE;
+        PRBool wasDisabled;
+        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
+                                  doSetNewIndex, wasDisabled, 
+                                  (PRInt32)numOptions, -1, -1);
       }
       REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
       } break;
@@ -3376,22 +3491,26 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     case nsIDOMKeyEvent::DOM_VK_DOWN:
     case nsIDOMKeyEvent::DOM_VK_RIGHT: {
       REFLOW_DEBUG_MSG2("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
-      if ((mSelectedIndex+1) < (PRInt32)numOptions) {
-        mOldSelectedIndex = mSelectedIndex;
-        mSelectedIndex++;
-        doSetNewIndex = PR_TRUE;
+
+      if (mSelectedIndex < (PRInt32)numOptions) {
+        PRBool wasDisabled;
+        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
+                                  doSetNewIndex, wasDisabled, 
+                                  (PRInt32)numOptions, 1, 1);
       }
       REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_RETURN: {
-      PRBool isDroppedDown;
-      mComboboxFrame->IsDroppedDown(&isDroppedDown);
-      if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
-        mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown);
-      } else {
-	      UpdateSelection(PR_TRUE, PR_FALSE, mContent);
-	    }
+      if (mComboboxFrame != nsnull) {
+        PRBool isDroppedDown;
+        mComboboxFrame->IsDroppedDown(&isDroppedDown);
+        if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+          mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown);
+        } else {
+	        UpdateSelection(PR_TRUE, PR_FALSE, mContent);
+	      }
+      }
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_ESCAPE: {
@@ -3403,23 +3522,19 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_UP: {
       if (mSelectedIndex > 0) {
-        mOldSelectedIndex = mSelectedIndex;
-        mSelectedIndex    -= (mNumDisplayRows-1);
-        if (mSelectedIndex < 0) {
-          mSelectedIndex = 0;
-        }
-        doSetNewIndex = PR_TRUE;
+        PRBool wasDisabled;
+        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
+                                  doSetNewIndex, wasDisabled, 
+                                  (PRInt32)numOptions, -(mNumDisplayRows-1), -1);
       }
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
       if (mSelectedIndex < (PRInt32)numOptions) {
-        mOldSelectedIndex = mSelectedIndex;
-        mSelectedIndex    += (mNumDisplayRows-1);
-        if (mSelectedIndex > (PRInt32)numOptions-1) {
-          mSelectedIndex = (PRInt32)numOptions-1;
-        }
-        doSetNewIndex = PR_TRUE;
+        PRBool wasDisabled;
+        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
+                                  doSetNewIndex, wasDisabled, 
+                                  (PRInt32)numOptions, (mNumDisplayRows-1), 1);
       }
       } break;
 
