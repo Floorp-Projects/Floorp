@@ -44,18 +44,27 @@ public:
 
   //nsIDrawingSurfacePh interface
 
-  NS_IMETHOD Init(PhGC_t &aGC);
-  NS_IMETHOD Init(PhGC_t &aGC, PRUint32 aWidth, PRUint32 aHeight,
+  NS_IMETHOD Init(PhGC_t * &aGC);
+  NS_IMETHOD Init(PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight,
                   PRUint32 aFlags);
   NS_IMETHOD GetGC(PhGC_t** aGC);
   NS_IMETHOD ReleaseGC(void);
+  NS_IMETHOD Select(void);
+  void Stop(void);
 
   // locals
+  PhGC_t *GetGC(void);
+  PhImage_t     *mPixmap;
 
 private:
   ~nsDrawingSurfacePh();
 
-  PhGC_t        mGC;
+  PhGC_t        *mGC;
+  PhGC_t        *mholdGC;
+  PRUint32	mWidth;
+  PRUint32	mHeight;
+  PRUint32	mFlags;
+  PRBool	mIsOffscreen;
 };
 
 #endif

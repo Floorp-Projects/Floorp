@@ -37,7 +37,7 @@
 #include "nsIDOMRenderingContext.h"
 #include "nsIRenderingContextPh.h"
 
-//#include "nsDrawingSurfacePh.h"
+#include "nsDrawingSurfacePh.h"
 //#include "nsRegionPh.h"
 
 class GraphicsState;
@@ -171,6 +171,7 @@ private:
   void PushClipState(void);
   void holdSetGC();
   void SetGC();
+  NS_IMETHOD CommonInit();
   void RestoreGC();
   void ApplyClipping( PRBool = PR_FALSE );
 
@@ -181,7 +182,8 @@ protected:
   nscolor            mCurrentColor;
   nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics     *mFontMetrics;
-  nsDrawingSurface   mSurface;
+  nsDrawingSurfacePh *mOffscreenSurface;
+  nsDrawingSurfacePh *mSurface;
   nsDrawingSurface   mMainSurface;
   nsIWidget          *mDCOwner;
   nsIDeviceContext   *mContext;

@@ -38,7 +38,7 @@ public:
    * @param  aDC HDC to initialize drawing surface with
    * @return error status
    **/
-  NS_IMETHOD Init( PhGC_t &aGC ) = 0;
+  NS_IMETHOD Init( PhGC_t * &aGC ) = 0;
 
   /**
    * Initialize an offscreen drawing surface using a
@@ -53,7 +53,7 @@ public:
    *         surface created
    * @return error status
    **/
-  NS_IMETHOD Init( PhGC_t &aGC, PRUint32 aWidth, PRUint32 aHeight,
+  NS_IMETHOD Init( PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight,
                   PRUint32 aFlags) = 0;
 
   /**
