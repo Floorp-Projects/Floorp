@@ -10,7 +10,6 @@ calendar.jar:
     content/calendar/attachFile.js (content/attachFile.js)
     content/calendar/calendar.js (content/calendar.js)
     content/calendar/calendar.xul (content/calendar.xul)
-    content/calendar/calElements.xul (content/calElements.xul)
     content/calendar/calendarEvent.js (content/calendarEvent.js)
     content/calendar/calExtOverlay.js (content/calExtOverlay.js)
     content/calendar/calExtOverlay.xul (content/calExtOverlay.xul)

@@ -213,6 +213,9 @@
 
 <!--<script type="application/x-javascript" src="chrome://calendar/content/email.js"/>-->
 
+<!-- NEEDED ALARMS ERIC -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarOverlay.js"/>
+
 <!-- GENERAL CONTEXT MENU -->
 <popup id="context-menu"
        onpopuphidden="gNewDateVariable = null;"

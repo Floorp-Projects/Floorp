@@ -91,10 +91,10 @@
 
   <!-- Thunderbird or Mozilla Mail 1.5 or later -->
   <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
-    <RDF:li>chrome://calendar/content/calendarExtensionOverlay.xul</RDF:li>
+    <RDF:li>chrome://calendar/content/calExtOverlay.xul</RDF:li>
   </RDF:Seq>
 
    <RDF:Seq about="chrome://messenger/content/messengercompose/messengercompose.xul">
-    <RDF:li>chrome://calendar/content/calendarExtensionOverlay.xul</RDF:li>
+    <RDF:li>chrome://calendar/content/calExtOverlay.xul</RDF:li>
   </RDF:Seq>
 </RDF:RDF>
