@@ -223,21 +223,17 @@ ifeq ($(OS_ARCH),OSF1)
 LDFLAGS		+= -lc_r
 endif
 ifeq ($(OS_ARCH),SunOS)
-ifeq ($(CPU_ARCH),sparc)
+ifeq ($(TARGET_CPU),sparc)
 
-ifndef JS_NO_ULTRA
-ULTRA_OPTIONS	:= -xarch=v8plus,-DULTRA_SPARC
-ULTRA_OPTIONSCC	:= -DULTRA_SPARC
+ifdef JS_ULTRASPARC_OPTS
+DEFINES += -DULTRA_SPARC
+ifdef GNU_CC
+CFLAGS   += -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0
+CXXFLAGS += -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0,-K,PIC
 else
-ULTRA_OPTIONS	:= -xarch=v8
-ULTRA_OPTIONSCC	:=
-endif
-
-ifeq ($(shell uname -m),sun4u)
-ASFLAGS		+= -Wa,$(ULTRA_OPTIONS),-P,-L,-D_ASM,-D__STDC__=0 $(ULTRA_OPTIONSCC)
-else
-ASFLAGS		+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
-endif
+ASFLAGS  += -xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC
+endif # GNU_CC
+endif # JS_ULTRASPARC_OPTS
 
 endif
 ifeq ($(OS_RELEASE),4.1)
