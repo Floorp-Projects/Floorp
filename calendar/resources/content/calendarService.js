@@ -137,8 +137,8 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
 
         var args = new Object ();
         args.url = channel.URI.spec;
-
-        w.open("chrome://calendar/content/calendar.xul", "calendar", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+        dump( "\n\nURL IS "+args.url );
+        w.openDialog("chrome://calendar/content/calendar.xul", "calendar", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", args);
     }
     
 }
