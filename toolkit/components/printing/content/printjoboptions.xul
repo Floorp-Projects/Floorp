@@ -40,7 +40,7 @@
 # the terms of any one of the NPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-#
+
 #ifdef XP_UNIX
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
@@ -55,7 +55,6 @@
 
   <script type="application/x-javascript" src="chrome://global/content/printjoboptions.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-
   <grid>
     <columns>
       <column/>
@@ -63,6 +62,13 @@
     </columns>
 
     <rows>
+      <row id="jobTitleGroup">
+        <hbox align="center" pack="end">
+          <label id="jobTitleLabel" value="&jobTitleInput.label;"/>
+        </hbox>
+        <textbox id="jobTitleInput" flex="1"/>
+      </row>
+
       <row id="paperGroup">
         <hbox align="center" pack="end">
           <label id="paperLabel" value="&paperInput.label;"/>
@@ -80,22 +86,46 @@
           <menupopup/>
         </menulist>
       </row>
-      
+
+      <row id="resolutionGroup">
+        <hbox align="center" pack="end">
+          <label id="resolutionLabel" value="&resolutionInput.label;"/>
+        </hbox>
+        <menulist id="resolutionList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+      <row id="colorspaceGroup">
+        <hbox align="center" pack="end">
+          <label id="colorspaceLabel" value="&colorspaceInput.label;"/>
+        </hbox>
+        <menulist id="colorspaceList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
       <row id="cmdGroup">
         <label id="cmdLabel" value="&cmdInput.label;"/>
         <textbox id="cmdInput" flex="1"/>
       </row>
 
-      <row>
+      <row id="colorGroup">
         <hbox align="center" pack="end">
           <label value="&colorGroup.label;"/>
         </hbox>
-        <radiogroup id="colorGroup" orient="horizontal">
+        <radiogroup id="colorRadioGroup" orient="horizontal">
           <radio id="grayRadio" label="&grayRadio.label;"/>
           <radio id="colorRadio" label="&colorRadio.label;"/>
         </radiogroup>
       </row>
 
+      <row id="fontsGroup">
+        <hbox align="center" pack="end">
+          <label value="&fontsGroup.label;"/>
+        </hbox>
+        <checkbox id="downloadFonts" label="&downloadFonts.label;" />
+      </row>
     </rows>
   </grid>
 
