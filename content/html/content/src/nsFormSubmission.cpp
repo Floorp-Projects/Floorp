@@ -258,8 +258,9 @@ protected:
    *
    * @param aStr the string to encode
    * @param aEncoded the encoded string [OUT]
+   * @throws NS_ERROR_OUT_OF_MEMORY if we run out of memory
    */
-  void URLEncode(const nsAString& aStr, nsCString& aEncoded);
+  nsresult URLEncode(const nsAString& aStr, nsCString& aEncoded);
 
 private:
   /**
@@ -290,17 +291,19 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   // Encode name
   //
   nsCString convName;
-  URLEncode(aName, convName);
+  nsresult rv = URLEncode(aName, convName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //
   // Encode value
   //
   nsCString convValue;
   if (processedValue) {
-    URLEncode(*processedValue, convValue);
+    rv = URLEncode(*processedValue, convValue);
   } else {
-    URLEncode(aValue, convValue);
+    rv = URLEncode(aValue, convValue);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //
   // Append data to string
@@ -414,13 +417,15 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 }
 
 // i18n helper routines
-void
+nsresult
 nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
 {
   char* inBuf = EncodeVal(aStr);
 
   if (!inBuf)
     inBuf = ToNewCString(aStr);
+
+  NS_ENSURE_TRUE(inBuf, NS_ERROR_OUT_OF_MEMORY);
 
   // convert to CRLF breaks
   char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
@@ -432,6 +437,8 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
   nsMemory::Free(convertedBuf);
 
   aEncoded.Adopt(escapedBuf);
+
+  return NS_OK;
 }
 
 
@@ -479,7 +486,25 @@ protected:
                                   nsIInputStream** aPostDataStream);
 
   // Helpers
+  /**
+   * Roll up the data we have so far and add it to the multiplexed data stream.
+   */
   nsresult AddPostDataStream();
+  /**
+   * Call ProcessValue() and EncodeVal() on name and value.
+   *
+   * @param aSource the source of the name/value pair
+   * @param aName the name to be sent
+   * @param aValue the value to be sent
+   * @param aProcessedName the name, after being encoded [OUT]
+   * @param aProcessedValue the value, after being processed / encoded [OUT]
+   * @throws NS_ERROR_OUT_OF_MEMORY if out of memory
+   */
+  nsresult ProcessAndEncode(nsIDOMHTMLElement* aSource,
+                            const nsAString& aName,
+                            const nsAString& aValue,
+                            nsCString& aProcessedName,
+                            nsCString& aProcessedValue);
 
 private:
   /**
@@ -538,13 +563,12 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsAString& aCharset,
                              &mBackwardsCompatibleSubmit);
 }
 
-//
-// nsIFormSubmission
-//
-NS_IMETHODIMP
-nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
+nsresult
+nsFSMultipartFormData::ProcessAndEncode(nsIDOMHTMLElement* aSource,
                                         const nsAString& aName,
-                                        const nsAString& aValue)
+                                        const nsAString& aValue,
+                                        nsCString& aProcessedName,
+                                        nsCString& aProcessedValue)
 {
   //
   // Let external code process (and possibly change) value
@@ -554,25 +578,48 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
   //
   // Get name
   //
-  nsCString nameStr;
-  nameStr.Adopt(EncodeVal(aName));
+  char * encodedVal = EncodeVal(aName);
+  if (!encodedVal) {
+    delete processedValue;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aProcessedName.Adopt(encodedVal);
 
   //
   // Get value
   //
-  nsCString valueStr;
   if (processedValue) {
-    valueStr.Adopt(EncodeVal(*processedValue));
+    encodedVal = EncodeVal(*processedValue);
+    delete processedValue;
   } else {
-    valueStr.Adopt(EncodeVal(aValue));
+    encodedVal = EncodeVal(aValue);
   }
+  if (!encodedVal) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aProcessedValue.Adopt(encodedVal);
 
   //
   // Convert linebreaks in value
   //
-  valueStr.Adopt(nsLinebreakConverter::ConvertLineBreaks(valueStr.get(),
-                 nsLinebreakConverter::eLinebreakAny,
-                 nsLinebreakConverter::eLinebreakNet));
+  aProcessedValue.Adopt(nsLinebreakConverter::ConvertLineBreaks(aProcessedValue.get(),
+                        nsLinebreakConverter::eLinebreakAny,
+                        nsLinebreakConverter::eLinebreakNet));
+  return NS_OK;
+}
+
+//
+// nsIFormSubmission
+//
+NS_IMETHODIMP
+nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
+                                        const nsAString& aName,
+                                        const nsAString& aValue)
+{
+  nsCString nameStr;
+  nsCString valueStr;
+  nsresult rv = ProcessAndEncode(aSource, aName, aValue, nameStr, valueStr);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //
   // Make MIME block for name/value pair
@@ -582,8 +629,6 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
                  + NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
                  + nameStr + NS_LITERAL_CSTRING("\"" CRLF CRLF)
                  + valueStr + NS_LITERAL_CSTRING(CRLF);
-
-  delete processedValue;
 
   return NS_OK;
 }
@@ -596,33 +641,10 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                        const nsACString& aContentType,
                                        PRBool aMoreFilesToCome)
 {
-  //
-  // Let external code process (and possibly change) value
-  //
-  nsString* processedValue = ProcessValue(aSource, aName, aFilename);
-
-  //
-  // Get name
-  //
   nsCString nameStr;
-  nameStr.Adopt(EncodeVal(aName));
-
-  //
-  // Get filename
-  //
   nsCString filenameStr;
-  if (processedValue) {
-    filenameStr.Adopt(EncodeVal(*processedValue));
-  } else {
-    filenameStr.Adopt(EncodeVal(aFilename));
-  }
-
-  //
-  // Convert linebreaks in filename
-  //
-  filenameStr.Adopt(nsLinebreakConverter::ConvertLineBreaks(filenameStr.get(),
-                    nsLinebreakConverter::eLinebreakAny,
-                    nsLinebreakConverter::eLinebreakNet));
+  nsresult rv = ProcessAndEncode(aSource, aName, aFilename, nameStr, filenameStr);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //
   // Make MIME block for name/value pair
@@ -657,8 +679,6 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
   // CRLF after file
   //
   mPostDataChunk += NS_LITERAL_CSTRING(CRLF);
-
-  delete processedValue;
 
   return NS_OK;
 }
