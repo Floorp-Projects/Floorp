@@ -1310,7 +1310,7 @@ $table{bugs_activity} =
 $table{attachments} =
    'attach_id mediumint not null auto_increment primary key,
     bug_id mediumint not null,
-    creation_ts timestamp,
+    creation_ts datetime not null,
     description mediumtext not null,
     mimetype mediumtext not null,
     ispatch tinyint,
@@ -3159,7 +3159,50 @@ if (GetFieldDef("products", "product")) {
     $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
     $dbh->do("ALTER TABLE components ADD INDEX (name)");
 }
-        
+
+# 2002-08-XX - bbaetz@student.usyd.edu.au - bug 153578
+# attachments creation time needs to be a datetime, not a timestamp
+my $fielddef;
+if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    print "Fixing creation time on attachments...\n";
+
+    my $sth = $dbh->prepare("SELECT COUNT(attach_id) FROM attachments");
+    $sth->execute();
+    my ($attach_count) = $sth->fetchrow_array();
+
+    if ($attach_count > 1000) {
+        print "This may take a while...\n";
+    }
+    my $i = 0;
+
+    # This isn't just as simple as changing the field type, because
+    # the creation_ts was previously updated when an attachment was made
+    # obsolete from the attachment creation screen. So we have to go
+    # and recreate these times from the comments..
+    $sth = $dbh->prepare("SELECT bug_id, attach_id, submitter_id " .
+                         "FROM attachments");
+    $sth->execute();
+
+    # Restrict this as much as possible in order to avoid false positives, and
+    # keep the db search time down
+    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs WHERE bug_id=? AND who=? AND thetext LIKE ? ORDER BY bug_when LIMIT 1");
+    while (my ($bug_id, $attach_id, $submitter_id) = $sth->fetchrow_array()) {
+        $sth2->execute($bug_id, $submitter_id, "Created an attachment (id=$attach_id)%");
+        my ($when) = $sth2->fetchrow_array();
+        if ($when) {
+            $dbh->do("UPDATE attachments SET creation_ts='$when' WHERE attach_id=$attach_id");
+        } else {
+            print "Warning - could not determine correct creation time for attachment $attach_id on bug $bug_id\n";
+        }
+        ++$i;
+        print "Converted $i of $attach_count attachments\n" if !($i % 1000);
+    }
+    print "Done - converted $i attachments\n";
+
+    ChangeFieldType("attachments", "creation_ts", "datetime NOT NULL");
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

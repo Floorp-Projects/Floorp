@@ -382,11 +382,6 @@ sub viewall
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, 
      $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = FetchSQLData();
 
-    # Format the attachment's creation/modification date into something readable.
-    if ($a{'date'} =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $a{'date'} = "$3/$4/$2&nbsp;$5:$6";
-    }
-
     # Flag attachments as to whether or not they can be viewed (as opposed to
     # being downloaded).  Currently I decide they are viewable if their MIME type 
     # is either text/*, image/*, or application/vnd.mozilla.*.
@@ -480,8 +475,8 @@ sub insert
   my $thedata = SqlQuote($::FORM{'data'});
 
   # Insert the attachment into the database.
-  SendSQL("INSERT INTO attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) 
-           VALUES ($::FORM{'bugid'}, $filename, $description, $contenttype, $::FORM{'ispatch'}, $::userid, $thedata)");
+  SendSQL("INSERT INTO attachments (bug_id, creation_ts, filename, description, mimetype, ispatch, submitter_id, thedata) 
+           VALUES ($::FORM{'bugid'}, now(), $filename, $description, $contenttype, $::FORM{'ispatch'}, $::userid, $thedata)");
 
   # Retrieve the ID of the newly created attachment record.
   SendSQL("SELECT LAST_INSERT_ID()");
@@ -676,8 +671,7 @@ sub update
            SET     description = $quoteddescription , 
                    mimetype = $quotedcontenttype , 
                    ispatch = $::FORM{'ispatch'} , 
-                   isobsolete = $::FORM{'isobsolete'} , 
-                   creation_ts = creation_ts
+                   isobsolete = $::FORM{'isobsolete'}
            WHERE   attach_id = $::FORM{'id'}
          ");
 
