@@ -52,6 +52,7 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMWindow.idl			\
 	nsIDOMWindow2.idl			\
 	nsIDOMWindowCollection.idl		\
+	nsIDOMWindowUtils.idl			\
 	$(NULL)
 
 XPIDLSRCS =					\
