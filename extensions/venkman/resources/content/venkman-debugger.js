@@ -100,9 +100,11 @@ function initDebugger()
     console.jsds.on();
     console.jsds.breakpointHook = console._executionHook;
     console.jsds.debuggerHook = console._executionHook;
-    //console.jsds.errorHook = console._errorHook;
+    console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
-    //dbg.interruptHook = interruptHooker;
+
+    setThrowMode(TMODE_IGNORE);
+
     var enumer = new Object();
     enumer.enumerateScript = function (script)
     {
@@ -115,19 +117,14 @@ function initDebugger()
 
 function detachDebugger()
 {
-    var count = console._stopLevel;
-    var i;
-
-    for (i = 0; i < count; ++i)
-        console.jsds.exitNestedEventLoop();
-
-    ASSERT (console._stopLevel == 0,
-            "console.stopLevel != 0 after detachDebugger");
-
-    console.jsds.clearAllBreakpoints();
-    console.jsds.scriptHook = null;
-    console.jsds.debuggerHook = null;
     console.jsds.off();
+
+    if (console._stopLevel > 0)
+    {
+        --console._stopLevel;
+        console.jsds.exitNestedEventLoop();
+    }
+
 }
 
 function insertScriptEntry (script, scriptList)
@@ -221,11 +218,66 @@ function addScript(script)
         insertScriptEntry (script, scriptList);
 }
 
+const TMODE_IGNORE = 0;
+const TMODE_TRACE = 1;
+const TMODE_BREAK = 2;
+
+function getThrowMode (tmode)
+{
+    return console._throwMode;
+}
+
+function cycleThrowMode ()
+{
+    switch (console._throwMode)
+    {
+        case TMODE_IGNORE:
+            setThrowMode(TMODE_TRACE);
+            break;            
+
+        case TMODE_TRACE:
+            setThrowMode(TMODE_BREAK);
+            break;
+
+        case TMODE_BREAK:
+            setThrowMode(TMODE_IGNORE);
+            break;
+    }
+}
+
+function setThrowMode (tmode)
+{    
+    switch (tmode) {
+        case TMODE_IGNORE:
+            console.jsds.throwHook = null;
+            display (MSG_TMODE_IGNORE);
+            break;            
+
+        case TMODE_TRACE:
+            console.jsds.throwHook = console._executionHook;
+            display (MSG_TMODE_TRACE);
+            break;
+
+        case TMODE_BREAK:
+            console.jsds.throwHook = console._executionHook;
+            display (MSG_TMODE_BREAK);
+            break;
+            
+        default:
+            throw new BadMojo (ERR_INVALID_PARAM, "tmode");
+    }
+    
+    console._throwMode = tmode;
+}
+
 function debugTrap (frame, type, rv)
 {
     var tn = "";
     var showFrame = true;
     var sourceContext = 2;
+    var retcode = jsdIExecutionHook.RETURN_CONTINUE;
+    
+    $ = new Array();
     
     switch (type)
     {
@@ -239,6 +291,16 @@ function debugTrap (frame, type, rv)
             tn = MSG_WORD_DEBUGGER;
             break;
         case jsdIExecutionHook.TYPE_THROW:
+            display (getMsg(MSN_EXCP_TRACE, [formatValue(rv.value),
+                                             formatFrame(frame)]), MT_ETRACE);
+            if (rv.value.jsClassName == "Error")
+                display (formatProperty(rv.value.getProperty("message")));
+
+            if (console._throwMode != TMODE_BREAK)
+                return jsdIExecutionHook.RETURN_CONTINUE_THROW;
+
+            $[0] = rv.value;
+            retcode = jsdIExecutionHook.RETURN_CONTINUE_THROW;
             tn = MSG_WORD_THROW;
             break;
         case jsdIExecutionHook.TYPE_INTERRUPTED:
@@ -253,15 +315,16 @@ function debugTrap (frame, type, rv)
             /* don't print stop/cont messages for other types */
     }
 
-    if (tn)
-        display (getMsg(MSN_STOP, tn), MT_STOP);
-
     ++console._stopLevel;
 
     /* set our default return value */
-    console._continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
+    console._continueCodeStack.push (retcode);
 
-    $ = new Array();
+    if (tn)
+        display (getMsg(MSN_STOP, tn), MT_STOP);
+    if ($[0])
+        display (getMsg(MSN_FMT_TMP_ASSIGN, [0, formatValue ($[0])]),
+                 MT_FEVAL_OUT);
     
     /* build an array of frames */
     console.frames = new Array(frame);
@@ -285,12 +348,22 @@ function debugTrap (frame, type, rv)
      * console.dbg.exitNestedEventLoop() 
      */
 
+    if (console._stopLevel > 0)
+    {
+        --console._stopLevel;
+        console.jsds.exitNestedEventLoop();
+    }
+
     if (tn)
         display (getMsg(MSN_CONT, tn), MT_CONT);
+
+    rv.value = $[0];
 
     $ = new Array();
     clearCurrentFrame();
     delete console.frames;
+
+    console.onDebugContinue();
     
     return console._continueCodeStack.pop();
 }
@@ -435,7 +508,13 @@ function formatValue (v, summary)
             }
             else
             {
-                type = (v.jsClassName) ? v.jsClassName : MSG_TYPE_OBJECT;
+                if (v.jsClassName)
+                    if (v.jsClassName == "XPCWrappedNative_NoHelper")
+                        type = MSG_CLASS_XPCOBJ;
+                    else
+                        type = v.jsClassName;
+                else
+                    type = MSG_TYPE_OBJECT;
                 value = "{" + String(v.propertyCount) + "}";
             }
             break;
@@ -457,17 +536,59 @@ function formatValue (v, summary)
         return getMsg (MSN_FMT_VALUE_SHORT, [type, value]);
 
     if (v.jsClassName)
-        return getMsg (MSN_FMT_VALUE_LONG, [type, v.jsClassName, value]);
+        if (v.jsClassName == "XPCWrappedNative_NoHelper")
+            /* translate this long, unintuitive, and common class name into
+             * something more palatable. */
+            return getMsg (MSN_FMT_VALUE_LONG, [type, MSG_CLASS_XPCOBJ, value]);
+        else
+            return getMsg (MSN_FMT_VALUE_LONG, [type, v.jsClassName, value]);
 
     return getMsg (MSN_FMT_VALUE_MED, [type, value]);
 
+}
+
+function setSourceFunctionMarks (url)
+{
+    source = console._sources[url];
+    scriptArray = console._scripts[url];
+    
+    if (!source || !scriptArray)
+    {
+        dd ("Can't set function marks for " + url);
+        return false;
+    }
+    
+    for (var i = 0; i < scriptArray.length; ++i)
+    {
+        if (i > 0 || scriptArray[i].baseLineNumber > 1)
+        {
+            var j = scriptArray[i].baseLineNumber - 1;
+            var stop = j + scriptArray[i].lineExtent;
+            if (!source[j] || !source[stop])
+            {
+                dd ("Script " + scriptArray[i].functionName + "(" +
+                    scriptArray[i].baseLineNumber + ", " + 
+                    scriptArray[i].lineExtent + ") does not actually exist in " +
+                    url + " (" + source.length + " lines.)");
+            }
+            else
+            {
+                source[j].functionStart = true;
+                source[stop].functionEnd = true;
+                for (; j <= stop ; ++j)
+                    source[j].functionLine = true;
+            }
+        }
+        
+    }
 }
 
 function loadSource (url, cb)
 {
     var observer = {
         onComplete: function oncomplete (data, url, status) {
-            var ary = data.split(/$/m);
+            var ary = data.replace(/\t/g, console.prefs["sourcetext.tab.string"])
+                .split(/$/m);
             for (var i = 0; i < ary.length; ++i)
             {
                 /* We use "new String" here so we can decorate the source line
@@ -479,14 +600,23 @@ function loadSource (url, cb)
                 ary[i] = new String(ary[i].replace(/[\0-\31]/g, ""));
             }
             console._sources[url] = ary;
+            setSourceFunctionMarks(url);
             cb(data, url, status);
         }
     };
 
-    if (url.search (/^(chrome:|file:)/) != -1)
-        observer.onComplete (loadURLNow(url), url, Components.results.NS_OK);
-    else
+    var ex;
+    
+    try
+    {
+        var src = loadURLNow(url);
+        observer.onComplete (src, url, Components.results.NS_OK);
+    }
+    catch (ex)
+    {
+        /* if we can't load it now, try to load it later */
         loadURLAsync (url, observer);
+    }
 }
         
 function displayCallStack ()
@@ -635,15 +765,16 @@ function setBreakpoint (fileName, line)
         }
     }
 
+    if (!bpList.length)
+    {
+        display (getMsg(MSN_ERR_BP_NOLINE, [fileName, line]), MT_ERROR);
+        return false;
+    }
+    
     bpList.fileName = fileName;
     bpList.line = line;
 
-    if (bpList.length)
-        display (getMsg(MSN_BP_CREATED,
-                        [fileName, line, bpList.length]));
-    else
-        display (getMsg(MSN_ERR_BP_NOLINE, [fileName, line]),
-                 MT_ERROR);
+    display (getMsg(MSN_BP_CREATED, [fileName, line, bpList.length]));
     
     if (bpList.length > 0)
     {
