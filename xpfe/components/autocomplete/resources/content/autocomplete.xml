@@ -507,7 +507,12 @@
 
           // tell each session to start searching...
           for (var name in this.mSessions)
-            this.mSessions[name].onStartLookup(str, this.mLastResults[name], this.mListeners[name]);
+            try {
+              this.mSessions[name].onStartLookup(str, this.mLastResults[name], this.mListeners[name]);
+            } catch (e) {
+              --this.mSessionReturns;
+              this.searchFailed();
+            }
         ]]></body>
       </method>
 
