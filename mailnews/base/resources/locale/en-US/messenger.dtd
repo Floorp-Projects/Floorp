@@ -93,7 +93,7 @@ Rights Reserved.
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
 <!ENTITY showLocationToolbarCmd.label		".Show Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey	"l">
-<!ENTITY showMessageCmd.label				".Message">  
+<!ENTITY showMessageCmd.label				"Message">  
 <!ENTITY sortMenu.label "Sort"> 
 <!ENTITY sortByDateCmd.label "by Date">  
 <!ENTITY sortByFlagCmd.label ".by Flag">  
@@ -235,7 +235,7 @@ Rights Reserved.
 <!ENTITY markMenu.label "Mark">  
 <!ENTITY markAsReadCmd.label "As Read">  
 <!ENTITY markAsUnreadCmd.label "As Unread">  
-<!ENTITY markThreadAsReadCmd.label ".Thread As Read">  
+<!ENTITY markThreadAsReadCmd.label "Thread As Read">  
 <!ENTITY markByDateCmd.label ".by Date...">  
 <!ENTITY markAllReadCmd.label "All Read">  
 <!ENTITY markFlaggedCmd.label "Flag">  
@@ -252,6 +252,7 @@ Rights Reserved.
 <!ENTITY replyButton.label "Reply">  
 <!ENTITY replyAllButton.label "Reply All">  
 <!ENTITY forwardButton.label "Forward">  
+<!ENTITY fileButton.label "File">  
 <!ENTITY nextButton.label "Next">  
 <!ENTITY deleteButton.label "Delete">  
 <!ENTITY printButton.label "Print">  

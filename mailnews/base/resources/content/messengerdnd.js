@@ -252,7 +252,10 @@ function DropOnFolderTree(event)
 			//temperary for single mail window, not working when supporting multiple mail windows
 			messageTree = GetThreadTree();
 			var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
-			gNextMessageAfterDelete = nextMessage.getAttribute('id');
+			if(nextMessage)
+				gNextMessageAfterDelete = nextMessage.getAttribute('id');
+			else
+				gNextMessageAfterDelete = null;
 
             messenger.CopyMessages(treeDatabase,
                                    sourceRescource,

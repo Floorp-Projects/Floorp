@@ -47,6 +47,7 @@ install::
 	$(MAKE_INSTALL) readcol.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) readmail.gif		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) unreadmail.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) file.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) next.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) threadcol.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) unthreadcol.gif			$(DIST)\bin\chrome\messenger\skin\default
@@ -117,6 +118,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\readcol.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\readmail.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\unreadmail.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\file.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\next.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\threadcol.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\unthreadcol.gif

@@ -233,9 +233,14 @@ function ChangeFolderByDOMNode(folderNode)
   dump(uri + "\n");
   
   var isThreaded = folderNode.getAttribute('threaded');
+  var sortResource = folderNode.getAttribute('sortResource');
+  if(!sortResource)
+	sortResource = "";
+
+  var sortDirection = folderNode.getAttribute('sortDirection');
 
   if (uri)
-	  ChangeFolderByURI(uri, isThreaded == "true", "");
+	  ChangeFolderByURI(uri, isThreaded == "true", sortResource, sortDirection);
 }
 
 function setTitleFromFolder(msgfolder, subject)
@@ -284,7 +289,7 @@ function setTitleFromFolder(msgfolder, subject)
     window.title = title;
 }
 
-function ChangeFolderByURI(uri, isThreaded, sortID)
+function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
 {
   dump('In ChangeFolderByURI\n');
   var resource = RDF.GetResource(uri);
@@ -307,6 +312,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
 		gCurrentFolderToReroot = uri;
 		gCurrentLoadingFolderIsThreaded = isThreaded;
 		gCurrentLoadingFolderSortID = sortID;
+		gCurrentLoadingFolderSortDirection = sortDirection;
 		msgfolder.startFolderLoading();
 		msgfolder.updateFolder(msgWindow);
 	}
@@ -320,14 +326,15 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
 	gCurrentFolderToReroot = "";
 	gCurrentLoadingFolderIsThreaded = false;
 	gCurrentLoadingFolderSortID = "";
-	RerootFolder(uri, msgfolder, isThreaded, sortID);
+	RerootFolder(uri, msgfolder, isThreaded, sortID, sortDirection);
+
 	//Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
 	//notification before folder has actually changed.
 	msgfolder.updateFolder(msgWindow);
   }
 }
 
-function RerootFolder(uri, newFolder, isThreaded, sortID)
+function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 {
   dump('In reroot folder\n');
   var folder = GetThreadTreeFolder();
@@ -338,9 +345,20 @@ function RerootFolder(uri, newFolder, isThreaded, sortID)
 
   //Set threaded state
   ShowThreads(isThreaded);
+  
+  //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
+  folder.setAttribute('ref', "");
+
+  var column = FindThreadPaneColumnBySortResource(sortID);
+
+  if(column)
+	SortThreadPane(column, sortID, "http://home.netscape.com/NC-rdf#Date", false, sortDirection);
+  else
+	SortThreadPane("DateColumn", "http://home.netscape.com/NC-rdf#Date", "", false, null);
 
   folder.setAttribute('ref', uri);
-  
+    msgNavigationService.EnsureDocumentIsLoaded(document);
+
   UpdateStatusMessageCounts(newFolder);
 }
 
@@ -418,16 +436,70 @@ function RestoreThreadPaneSelection(selectionArray)
 
 }
 
-function SortThreadPane(column, sortKey, secondarySortKey)
+function FindThreadPaneColumnBySortResource(sortID)
+{
+
+	if(sortID == "http://home.netscape.com/NC-rdf#Date")
+		return "DateColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Sender")
+		return "AuthorColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Status")
+		return "StatusColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Subject")
+		return "SubjectColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Flagged")
+		return "FlaggedButtonColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Priority")
+		return "PriorityColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#Size")
+		return "SizeColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#HasUnreadMessages")
+		return "UnreadButtonColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#TotalUnreadMessages")
+		return "UnreadColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#TotalMessages")
+		return "TotalColumn";
+
+	return null;
+
+
+}
+
+//If toggleCurrentDirection is true, then get current direction and flip to opposite.
+//If it's not true then use the direction passed in.
+function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirection, direction)
 {
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
 
+	if(!direction)
+	{
+		direction = "ascending";
+		//If we just clicked on the same column, then change the direction
+		if(toggleCurrentDirection)
+		{
+			var currentDirection = node.getAttribute('sortDirection');
+			if (currentDirection == "ascending")
+					direction = "descending";
+			else if (currentDirection == "descending")
+					direction = "ascending";
+		}
+	}
+
+   var folder = GetSelectedFolder();
+	if(folder)
+	{
+		folder.setAttribute("sortResource", sortKey);
+		folder.setAttribute("sortDirection", direction);
+	}
+
+	SetActiveThreadPaneSortColumn(column);
+
 	var selection = SaveThreadPaneSelection();
 	var beforeSortTime = new Date();
 
-	var result = SortColumn(node, sortKey, secondarySortKey);
+	var result = SortColumn(node, sortKey, secondarySortKey, direction);
 	var afterSortTime = new Date();
 	var timeToSort = (afterSortTime.getTime() - beforeSortTime.getTime())/1000;
 
@@ -445,10 +517,10 @@ function SortFolderPane(column, sortKey)
 		dump('Couldnt find sort column\n');
 		return false;
 	}
-	return SortColumn(node, sortKey, null);
+	return SortColumn(node, sortKey, null, null);
 }
 
-function SortColumn(node, sortKey, secondarySortKey)
+function SortColumn(node, sortKey, secondarySortKey, direction)
 {
 	dump('In sortColumn\n');
 	var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
@@ -459,13 +531,18 @@ function SortColumn(node, sortKey, secondarySortKey)
 		if (xulSortService)
 		{
 			// sort!!!
-			sortDirection = "ascending";
-			var currentDirection = node.getAttribute('sortDirection');
-			if (currentDirection == "ascending")
-					sortDirection = "descending";
-			else if (currentDirection == "descending")
-					sortDirection = "ascending";
-			else    sortDirection = "ascending";
+			var sortDirection;
+			if(direction)
+				sortDirection = direction;
+			else
+			{
+				var currentDirection = node.getAttribute('sortDirection');
+				if (currentDirection == "ascending")
+						sortDirection = "descending";
+				else if (currentDirection == "descending")
+						sortDirection = "ascending";
+				else    sortDirection = "ascending";
+			}
 
 			try
 			{

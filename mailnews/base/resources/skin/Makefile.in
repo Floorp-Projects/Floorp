@@ -52,6 +52,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		readmail.gif \
 		unreadmail.gif \
 		replyall.gif \
+		file.gif \
 		next.gif \
 		threadcol.gif \
 		unthreadcol.gif \

@@ -406,7 +406,10 @@ function MsgDeleteMessage(fromToolbar)
 	//get the current folder
 
 	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList);
-	gNextMessageAfterDelete = nextMessage.getAttribute('id');
+	if(nextMessage)
+		gNextMessageAfterDelete = nextMessage.getAttribute('id');
+	else
+		gNextMessageAfterDelete = null;
   }
 }
 
@@ -553,7 +556,11 @@ function MsgMoveMessage(destFolder)
         }
         else
         {
-			gNextMessageAfterDelete = nextMessage.getAttribute('id');
+			if(nextMessage)
+				gNextMessageAfterDelete = nextMessage.getAttribute('id');
+			else
+				gNextMessageAfterDelete = null;
+
             messenger.CopyMessages(tree.database,
                                    srcFolder.resource,
                                    destFolder.resource, messageList, true);
@@ -600,35 +607,35 @@ function MsgViewAllThreadMsgs()
 
 function MsgSortByDate()
 {
-	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null);
+	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null, true, null);
 }
 
 function MsgSortBySender()
 {
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
 function MsgSortByStatus()
 {
-	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
 function MsgSortBySubject()
 {
-	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
 function MsgSortByFlagged() 
 {
-	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 function MsgSortByPriority()
 {
-	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date',true, null);
 }
 function MsgSortBySize() 
 {
-	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 function MsgSortByThread()
 {
@@ -636,7 +643,7 @@ function MsgSortByThread()
 }
 function MsgSortByUnread()
 {
-	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null);
 }
 function MsgSortByOrderReceived()
 {
@@ -652,12 +659,12 @@ function MsgSortDescending()
 }
 function MsgSortByRead()
 {
-	dump("not implemented yet.\n");
+	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#HasUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
 function MsgSortByTotal()
 {
-	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date', true, null);
 }
 
 function MsgNewFolder()
@@ -918,7 +925,9 @@ function MsgFilters() {
 
 function MsgToggleMessagePane()
 {
-    MsgToggleSplitter("messagePaneSplitter");
+	//OnClickThreadAndMessagePaneSplitter is based on the value before the splitter is toggled.
+	OnClickThreadAndMessagePaneSplitter();
+    MsgToggleSplitter("gray_horizontal_splitter");
 }
 
 function MsgToggleFolderPane()
@@ -1054,7 +1063,33 @@ function MsgMarkMsgAsRead(markRead)
   messenger.MarkMessagesRead(tree.database, messageList, markRead);
 }
 
-function MsgMarkThreadAsRead() {}
+function MsgMarkThreadAsRead()
+{
+	var tree = GetThreadTree();
+	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
+	if(messageList.Count() == 1)
+	{
+		var messageSupports = messageList.GetElementAt(0);
+		if(messageSupports)
+		{
+			var message = messageSupports.QueryInterface(Components.interfaces.nsIMessage);
+			if(message)
+			{
+				var folder = message.GetMsgFolder();
+				if(folder)
+				{
+					var thread = folder.getThreadForMessage(message);
+					if(thread)
+					{
+						messenger.markThreadRead(tree.database, folder, thread);
+					}
+				}
+			}
+		}
+	}
+
+}
+
 function MsgMarkByDate() {}
 function MsgMarkAllRead()
 {

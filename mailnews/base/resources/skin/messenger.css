@@ -228,6 +228,10 @@ iframe {
 	list-style-image:url("chrome://messenger/skin/forward.gif");
 }
 
+#button_file {
+	list-style-image:url("chrome://messenger/skin/file.gif");
+}
+
 #button_next {
 	list-style-image:url("chrome://messenger/skin/next.gif");
 }

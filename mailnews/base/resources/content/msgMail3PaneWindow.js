@@ -66,9 +66,12 @@ var gCurrentLoadingFolderURI;
 var gCurrentFolderToReroot;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
+var gCurrentLoadingFolderSortDirection = null;
 
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
+
+var gActiveThreadPaneSortColumn = "";
 
 // the folderListener object
 var folderListener = {
@@ -80,28 +83,33 @@ var folderListener = {
 
 	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
 	{
-		if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages")
+		var currentLoadedFolder = GetThreadTreeFolder();
+		var currentURI = currentLoadedFolder.getAttribute('ref');
+
+		//if we don't have a folder loaded, don't bother.
+		if(currentURI)
 		{
-			folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
-			if(folder)
+			if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages")
 			{
-				var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-				if(folderResource)
+				folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
+				if(folder)
 				{
-					var folderURI = folderResource.Value;
-					var currentLoadedFolder = GetThreadTreeFolder();
-					var currentURI = currentLoadedFolder.getAttribute('ref');
-					if(currentURI == folderURI)
+					var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+					if(folderResource)
 					{
-						UpdateStatusMessageCounts(folder);
+						var folderURI = folderResource.Value;
+						if(currentURI == folderURI)
+						{
+							UpdateStatusMessageCounts(folder);
+						}
 					}
+
+
 				}
 
 
+
 			}
-
-
-
 		}
 	},
 
@@ -128,9 +136,10 @@ var folderListener = {
 					{
 						msgFolder.endFolderLoading();
 						dump("before reroot in OnFolderLoaded\n");
-						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID);
+						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID, gCurrentLoadingFolderSortDirection);
 						gCurrentLoadingFolderIsThreaded = false;
 						gCurrentLoadingFolderSortID = "";
+						gCurrentLoadingFolderSortDirection = null;
 					}
 				}
 				if(uri == gCurrentLoadingFolderURI)
@@ -165,16 +174,19 @@ var folderListener = {
 			msgNavigationService.EnsureDocumentIsLoaded(document);
 
 			dump("next message uri is " + gNextMessageAfterDelete + "\n");
-			var nextMessage = document.getElementById(gNextMessageAfterDelete);
-			if(!nextMessage)
-				dump("No next message after delete\n");
-			SelectNextMessage(nextMessage);
-			var threadTree = GetThreadTree();
-			if(threadTree)
-				threadTree.ensureElementIsVisible(nextMessage);
-			else
-				dump("No thread tree\n");
-			gNextMessageAfterDelete = null;
+			if(gNextMessageAfterDelete)
+			{
+				var nextMessage = document.getElementById(gNextMessageAfterDelete);
+				if(!nextMessage)
+					dump("No next message after delete\n");
+				SelectNextMessage(nextMessage);
+				var threadTree = GetThreadTree();
+				if(threadTree)
+					threadTree.ensureElementIsVisible(nextMessage);
+				else
+					dump("No thread tree\n");
+				gNextMessageAfterDelete = null;
+			}
 		}
 	}
 }
@@ -286,8 +298,18 @@ function OnUnloadMessenger()
 			messenger.SetWindow(null, null);
 		}
 	}
+	
+	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = null;
 
-  msgWindow.closeWindow();
+	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = null;
+
+	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = null;
+
+
+  	msgWindow.closeWindow();
 }
 
 
@@ -477,6 +499,8 @@ function AddDataSources()
 	//To threadpane copy content menu
 	SetupMoveCopyMenus('threadPaneContext-copyMenu', accountManagerDataSource, folderDataSource);
 
+	//To FileButton menu
+	SetupMoveCopyMenus('FileButtonMenu', accountManagerDataSource, folderDataSource);
 	//Add statusFeedback
 
 	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
@@ -492,6 +516,7 @@ function AddDataSources()
 
 function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
 {
+	dump("SetupMoveCopyMenus for " + menuid + "\n");
 	var menu = document.getElementById(menuid);
 	if(menu)
 	{
@@ -534,7 +559,6 @@ function OnLoadThreadPane(threadTree)
 {
     gThreadTree = threadTree;
 	//Sort by date by default
-	MsgSortByDate();
 	// add folderSource to thread pane
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	threadTree.database.AddDataSource(folderDataSource);
@@ -723,3 +747,23 @@ function ChangeSelection(tree, newSelection)
 	}
 }
 
+function SetActiveThreadPaneSortColumn(column)
+{
+	gActiveThreadPaneSortColumn = column;
+}
+
+function GetActiveThreadPaneSortColumn()
+{
+	return gActiveThreadPaneSortColumn;
+}
+
+function ClearActiveThreadPaneSortColumn()
+{
+	var activeColumn = document.getElementById(gActiveThreadPaneSortColumn);
+	if(activeColumn)
+	{
+		activeColumn.removeAttribute("sortActive");
+		activeColumn = "";
+	}
+
+}

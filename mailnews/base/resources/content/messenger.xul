@@ -116,7 +116,7 @@ Rights Reserved.
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
   
-	<!--key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" observes="cmd_NextUnreadMsg"/-->
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" observes="cmd_NextUnreadMsg"/>
 </keyset>
 
 <popupset>
@@ -433,7 +433,7 @@ Rights Reserved.
             <menuitem id="menu_showTaskbar"/>
           </menupopup>
         </menu>
-        <menuitem value="&showMessageCmd.label;" disabled="true" oncommand="MsgToggleMessagePane();"/>
+        <menuitem value="&showMessageCmd.label;" oncommand="MsgToggleMessagePane();"/>
         <menuseparator/>
         <menu value="&sortMenu.label;">
           <menupopup>
@@ -627,7 +627,8 @@ Rights Reserved.
       </menu>
       <menuitem value="&editMsgAsNewCmd.label;" disabled="true" oncommand="MsgEditMessageAsNew();"/>
       <menuseparator/>
-      <menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null"
+		    rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template> 
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -675,7 +676,8 @@ Rights Reserved.
           </rule>
         </template>
       </menu>
-      <menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null"  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menu value="&copyMsgMenu.label;" id="copyMenu" datasources="rdf:null"
+	    rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
 		<template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -732,7 +734,7 @@ Rights Reserved.
 	    <menupopup>
         <menuitem value="&markAsReadCmd.label;" oncommand="MsgMarkMsgAsRead(true);"/>
         <menuitem value="&markAsUnreadCmd.label;" oncommand="MsgMarkMsgAsRead(false);"/>
-        <menuitem value="&markThreadAsReadCmd.label;" disabled="true" oncommand="MsgMarkThreadAsRead();"/>
+        <menuitem value="&markThreadAsReadCmd.label;" oncommand="MsgMarkThreadAsRead();"/>
         <menuitem value="&markByDateCmd.label;" disabled="true" oncommand="MsgMarkByDate();"/>
         <menuitem value="&markAllReadCmd.label;" oncommand="MsgMarkAllRead();"/>
         <menuseparator/>
@@ -761,6 +763,59 @@ Rights Reserved.
             <titledbutton id="button_replyall" class="button28" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
             <titledbutton id="button_forward" class="button28" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
             <toolbarseparator/>
+			<menu id="FileButtonMenu" datasources="rdf:null" 
+					    rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
+				>
+				<titledbutton id="button_file" class="other28" align="top" value="&fileButton.label;"/>
+ 				<template> 
+				  <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+					<menupopup>
+					  <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+						SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+						<menupopup>
+						  <menuitem uri="..." value="&fileHereMenu.label;" 
+						oncommand="MsgMoveMessage(event.target)"
+						SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+						  <menuseparator/>
+						</menupopup>
+					  </menu>
+					</menupopup>
+				  </rule>
+			  <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+						<!-- don't show nntp servers in the file and copies menus -->
+				  </rule>
+			  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+					<!-- note, there is no "file here" -->
+					<menupopup>
+					  <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+										SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+										BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+										IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+										ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+					<menupopup/>
+					  </menu>
+					</menupopup>
+			  </rule>
+				  <rule nc:CanFileMessages="true">
+					<menupopup>
+					<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+						SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+					</menupopup>
+				  </rule>
+				</template>
+		        <menupopup/>
+
+			  </menu>
+
             <titledbutton id="button_next" class="other28" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
 			<titledbutton id="button_delete" class="other28" disabled="true" align="top" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
             <titledbutton id="button_print" class="other28" align="top" value="&printButton.label;" onclick="Print()"/>
@@ -797,7 +852,7 @@ Rights Reserved.
 
 		<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
-		<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() -->
+		<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePnae() -->
 	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"
 							 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
