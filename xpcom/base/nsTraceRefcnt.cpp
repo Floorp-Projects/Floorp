@@ -283,10 +283,12 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   }
   return entry;
 }
+#endif /* NS_BUILD_REFCNT_LOGGING */
  
 void
 nsTraceRefcnt::DumpStatistics()
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
   if (!gTrackBloat) {
     return;
   }
@@ -304,11 +306,13 @@ nsTraceRefcnt::DumpStatistics()
   PL_HashTableDump(gBloatView, BloatEntry::DumpEntry, stdout);
 
   UNLOCK_TRACELOG();
+#endif
 }
 
 void
 nsTraceRefcnt::ResetStatistics()
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
   LOCK_TRACELOG();
   if (gBloatView) {
     PL_HashTableEnumerateEntries(gBloatView, BloatEntry::DestroyEntry, 0);
@@ -316,12 +320,14 @@ nsTraceRefcnt::ResetStatistics()
     gBloatView = nsnull;
   }
   UNLOCK_TRACELOG();
+#endif
 }
 
 void
 nsTraceRefcnt::GatherStatistics(nsTraceRefcntStatFunc aFunc,
                                 void* aClosure)
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
   LOCK_TRACELOG();
 
   if (gBloatView) {
@@ -333,11 +339,13 @@ nsTraceRefcnt::GatherStatistics(nsTraceRefcntStatFunc aFunc,
   }
 
   UNLOCK_TRACELOG();
+#endif
 }
 
 void
 nsTraceRefcnt::SnapshotStatistics()
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
   LOCK_TRACELOG();
 
   if (gBloatView) {
@@ -345,8 +353,10 @@ nsTraceRefcnt::SnapshotStatistics()
   }
 
   UNLOCK_TRACELOG();
+#endif
 }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
 static PRBool LogThisType(const char* aTypeName)
 {
   void* he = PL_HashTableLookup(gTypesToLog, aTypeName);
@@ -457,6 +467,7 @@ static void InitTraceLog(void)
 
   }
 }
+#endif
 
 
 static int nsIToA16(PRUint32 aNumber, char* aBuffer)
@@ -793,8 +804,6 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
   aBuffer[0] = '\0';
 }
 #endif // __linux__
-
-#endif /* NS_BUILD_REFCNT_LOGGING */
 
 //----------------------------------------------------------------------
 
