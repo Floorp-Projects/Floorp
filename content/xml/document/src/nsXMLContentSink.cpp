@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsReadableUtils.h"
 #include "nsXMLContentSink.h"
 #include "nsIElementFactory.h"
 #include "nsIParser.h"
@@ -104,7 +103,6 @@
 #include "nsHTMLTokens.h"
 
 static char kNameSpaceSeparator = ':';
-static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "xml-stylesheet";
 static char kXSLType[] = "text/xsl";
 
@@ -505,15 +503,16 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                 PRBool aIsHTML)
 {
   // Add tag attributes to the content attributes
-  nsAutoString name;
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
   PRInt32 ac = aNode.GetAttributeCount();
+
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsAReadableString& key = aNode.GetKeyAt(i);
-    name.Assign(key);
 
-    nsCOMPtr<nsIAtom> nameSpacePrefix(dont_AddRef(CutNameSpacePrefix(name)));
-    nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(name)));
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
     PRInt32 nameSpaceID;
 
     if (nameSpacePrefix) {
@@ -530,6 +529,9 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
       nameAtom = dont_AddRef(NS_NewAtom(key));
       nameSpacePrefix = nsnull;
     } else if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
+      // Ooh, what a nice little hack we have here :-)
+      nsAutoString name;
+      nameAtom->ToString(name);
       name.InsertWithConversion("xmlns:", 0);
       nameAtom = dont_AddRef(NS_NewAtom(name));
       nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
@@ -561,89 +563,121 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
   return NS_OK;
 }
 
-void
+nsresult
 nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
-  nsAutoString k, prefix;
   PRInt32 ac = aNode.GetAttributeCount();
-  PRInt32 offset;
-  nsINameSpace* nameSpace = nsnull;
+  nsCOMPtr<nsINameSpace> nameSpace;
+  nsresult rv = NS_OK;
 
-  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
-    nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
-    NS_ADDREF(nameSpace);
-  }
-  else {
-    nsINameSpaceManager* manager = nsnull;
-    mDocument->GetNameSpaceManager(manager);
-    NS_ASSERTION(nsnull != manager, "no name space manager in document");
-    if (nsnull != manager) {
-      manager->CreateRootNameSpace(nameSpace);
-      NS_RELEASE(manager);
+  if (mNameSpaceStack && (0 < mNameSpaceStack->Count())) {
+    nameSpace =
+      (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
+  } else {
+    nsCOMPtr<nsINameSpaceManager> manager;
+    mDocument->GetNameSpaceManager(*getter_AddRefs(manager));
+
+    NS_ASSERTION(manager, "no name space manager in document");
+
+    if (manager) {
+      rv = manager->CreateRootNameSpace(*getter_AddRefs(nameSpace));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  if (nsnull != nameSpace) {
-    for (PRInt32 i = 0; i < ac; i++) {
-      const nsAReadableString& key = aNode.GetKeyAt(i);
-      k.Assign(key);
-      // Look for "xmlns" at the start of the attribute name
-      offset = k.Find(kNameSpaceDef);
-      if (0 == offset) {
-        if (k.Length() == (sizeof(kNameSpaceDef)-1)) {
-          // If there's nothing left, this is a default namespace
-          prefix.Truncate();
-        }
-        else {
-          PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
-          // If the next character is a :, there is a namespace prefix
-          if (':' == next) {
-            prefix.Truncate();
-            k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
-          }
-          else {
-            continue;
-          }
-        }
+  NS_ENSURE_TRUE(nameSpace, NS_ERROR_UNEXPECTED);
 
-        // Open a local namespace
-        nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
-        nsINameSpace* child = nsnull;
-        nameSpace->CreateChildNameSpace(prefixAtom, aNode.GetValueAt(i), child);
-        if (nsnull != child) {
-          NS_RELEASE(nameSpace);
-          nameSpace = child;
+  static const NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
+  static const PRUint32 xmlns_len = kNameSpaceDef.Length();
+
+  for (PRInt32 i = 0; i < ac; i++) {
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+    // Look for "xmlns" at the start of the attribute name
+
+    PRUint32 key_len = key.Length();
+
+    if (key_len >= xmlns_len &&
+        nsDependentSubstring(key, 0, xmlns_len).Equals(kNameSpaceDef)) {
+      nsCOMPtr<nsIAtom> prefixAtom;
+
+      // If key_len > xmlns_len we have a xmlns:foo type attribute,
+      // extract the prefix. If not, we have a xmlns attribute in
+      // which case there is no prefix.
+
+      if (key_len > xmlns_len) {
+        nsReadingIterator<PRUnichar> start, end;
+
+        key.BeginReading(start);
+        key.EndReading(end);
+
+        start.advance(xmlns_len);
+
+        if (*start == ':') {
+          ++start;
+
+          prefixAtom =
+            dont_AddRef(NS_NewAtom(nsDependentSubstring(start, end)));
         }
-        NS_IF_RELEASE(prefixAtom);
       }
+
+      nsCOMPtr<nsINameSpace> child;
+      rv = nameSpace->CreateChildNameSpace(prefixAtom, aNode.GetValueAt(i),
+                                           *getter_AddRefs(child));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nameSpace = child;
     }
-    if (nsnull == mNameSpaceStack) {
-      mNameSpaceStack = new nsAutoVoidArray();
-    }
-    mNameSpaceStack->AppendElement(nameSpace);
   }
+
+  if (!mNameSpaceStack) {
+    mNameSpaceStack = new nsAutoVoidArray();
+
+    if (!mNameSpaceStack) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  nsINameSpace *tmp = nameSpace;
+  mNameSpaceStack->AppendElement(tmp);
+  NS_ADDREF(tmp);
+
+  return NS_OK;
 }
 
-nsIAtom*  nsXMLContentSink::CutNameSpacePrefix(nsString& aString)
+// static
+void
+nsXMLContentSink::SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
+                               nsIAtom **aLocalName)
 {
-  nsAutoString  prefix;
-  PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
-  if (-1 != nsoffset) {
-    aString.Left(prefix, nsoffset);
-    aString.Cut(0, nsoffset+1);
+  nsReadingIterator<PRUnichar> iter, end;
+
+  aString.BeginReading(iter);
+  aString.EndReading(end);
+
+  FindCharInReadable(kNameSpaceSeparator, iter, end);
+
+  if (iter != end) {
+    nsReadingIterator<PRUnichar> start;
+
+    aString.BeginReading(start);
+
+    *aPrefix = NS_NewAtom(nsDependentSubstring(start, iter));
+
+    ++iter;
+
+    *aLocalName = NS_NewAtom(nsDependentSubstring(iter, end));
+
+    return;
   }
-  if (0 < prefix.Length()) {
-    return NS_NewAtom(prefix);
-  }
-  return nsnull;
+
+  *aPrefix = nsnull;
+  *aLocalName = NS_NewAtom(aString);
 }
 
 NS_IMETHODIMP
 nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsAutoString tag;
-  nsCOMPtr<nsIAtom> nameSpacePrefix;
   PRBool isHTML = PR_FALSE;
   PRBool appendContent = PR_TRUE;
   nsCOMPtr<nsIContent> content;
@@ -657,9 +691,10 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   mState = eXMLContentSinkState_InDocumentElement;
 
-  tag.Assign(aNode.GetText());
-  nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
-  nsCOMPtr<nsIAtom> tagAtom(dont_AddRef(NS_NewAtom(tag)));
+  nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
+
+  SplitXMLName(aNode.GetText(), getter_AddRefs(nameSpacePrefix),
+               getter_AddRefs(tagAtom));
 
   // We must register namespace declarations found in the attribute list
   // of an element before creating the element. This is because the
@@ -789,9 +824,6 @@ NS_IMETHODIMP
 nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsAutoString tag;
-  nsCOMPtr<nsIAtom> nameSpacePrefix;
-  PRBool isHTML = PR_FALSE;
   PRBool popContent = PR_TRUE;
   PRBool appendContent = PR_FALSE;
 
@@ -800,16 +832,14 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   // no close tags for elements.
   PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
 
-  tag.Assign(aNode.GetText());
-
-  nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
-  PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-  isHTML = IsHTMLNameSpace(nameSpaceID);
-
   FlushText();
 
-  if (isHTML) {
-    nsCOMPtr<nsIAtom> tagAtom(dont_AddRef(NS_NewAtom(tag)));
+  nsCOMPtr<nsIContent> currentContent(dont_AddRef(GetCurrentContent()));
+
+  if (currentContent && currentContent->IsContentOfType(nsIContent::eHTML)) {
+    nsCOMPtr<nsIAtom> tagAtom;
+
+    currentContent->GetTag(*getter_AddRefs(tagAtom));
 
     if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessEndSCRIPTTag(aNode);
@@ -1561,7 +1591,7 @@ nsXMLContentSink::AddEntityReference(const nsIParserNode& aNode)
 PRInt32
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
-  PRInt32 id = (nsnull == aPrefix) ? kNameSpaceID_None : kNameSpaceID_Unknown;
+  PRInt32 id = aPrefix ? kNameSpaceID_Unknown : kNameSpaceID_None;
 
   if (mNameSpaceStack && mNameSpaceStack->Count() > 0) {
     PRInt32 index = mNameSpaceStack->Count() - 1;
