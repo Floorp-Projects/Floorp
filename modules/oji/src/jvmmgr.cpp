@@ -857,12 +857,12 @@ nsJVMMgr::MaybeStartupLiveConnect()
         return PR_TRUE;
 
 	do {
-		static XP_Bool registeredLiveConnectFactory = false;
+		static PRBool registeredLiveConnectFactory = PR_FALSE;
 		if (!registeredLiveConnectFactory) {
             NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
 			registeredLiveConnectFactory = 
-	            nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
-	                                        PR_FALSE, PR_FALSE);
+	            (nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
+	                                        PR_FALSE, PR_FALSE) == NS_OK);
 		}
 	    if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
 	        JSJ_Init(&jsj_callbacks);
