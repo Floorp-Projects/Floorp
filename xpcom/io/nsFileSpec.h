@@ -282,10 +282,11 @@ class NS_BASE nsFileSpec
 {
     public:
                                 nsFileSpec();
-
+                                
+                                // These two meathods take *native* file paths.
         NS_EXPLICIT             nsFileSpec(const char* inString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFileSpec(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
-                                // These above two meathods take *native* file paths.
+                                
         
         NS_EXPLICIT             nsFileSpec(const nsFilePath& inPath);
         NS_EXPLICIT             nsFileSpec(const nsFileURL& inURL);
@@ -293,12 +294,14 @@ class NS_BASE nsFileSpec
                                 nsFileSpec(const nsFileSpec& inPath);
         virtual                 ~nsFileSpec();
 
+                                // These two operands take *native* file paths.
         void                    operator = (const char* inPath);
         void                    operator = (const nsString& inPath)
                                 {
                                     const nsAutoCString path(inPath);
                                     *this = path;
                                 }
+
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);

@@ -1159,7 +1159,7 @@ nsprPath::operator const char*()
 	if (modifiedNSPRPath != nsnull)
 		delete [] modifiedNSPRPath;
 	
-	modifiedNSPRPath = strdup( mFilePath );
+	modifiedNSPRPath = PL_strdup( mFilePath );
 	char* resultPath = modifiedNSPRPath;
 	
 	/* strip the leading seperator */
@@ -1171,8 +1171,8 @@ nsprPath::operator const char*()
 		 resultPath[1] = ':';
 	
 	/* Remove the ending seperator */
-    if(resultPath[strlen(resultPath) - 1 ] == '/')
-		 resultPath[strlen(resultPath) - 1 ] = '\0';	 
+    if(resultPath[PL_strlen(resultPath) - 1 ] == '/')
+		 resultPath[PL_strlen(resultPath) - 1 ] = '\0';	 
 		
     return resultPath;
 	
@@ -1185,6 +1185,8 @@ nsprPath::operator const char*()
 nsprPath::~nsprPath()
 //----------------------------------------------------------------------------------------
 {
+#ifdef XP_PC
 	if (modifiedNSPRPath != nsnull)
 			delete [] modifiedNSPRPath;
+#endif
 }
