@@ -247,10 +247,10 @@
                                     
                             <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
                                 <menupopup>
-                                    <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   value="days" />
-                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"   selected="true" value="weeks" />
-                                    <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;"   value="months"  />
-                                    <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"   value="years" />
+                                    <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   id="repeat-length-days"   value="days" />
+                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"  id="repeat-length-weeks"  value="weeks" selected="true" />
+                                    <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;" id="repeat-length-months" value="months"  />
+                                    <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"  id="repeat-length-years"  value="years" />
                                 </menupopup>
                             </menulist>
                           </hbox>
@@ -272,8 +272,8 @@
                               <spacer class="repeat-left-spacer" />
                               <vbox>
                                  <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true" />
-                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month" selected="false" />
+                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true"/>
+                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month"/>
                                  </radiogroup>
                               </vbox>
                           </hbox>

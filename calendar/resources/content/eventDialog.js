@@ -209,7 +209,7 @@ function loadCalendarEventDialog()
    
    setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
-   setFieldValue( "repeat-length-units", gEvent.recurUnits, "value" );  
+   setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
    setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
@@ -233,7 +233,6 @@ function loadCalendarEventDialog()
    // set up OK, Cancel
    
    doSetOKCancel( onOKCommand, 0 );
-   
    // start focus on title
    
    var firstFocus = document.getElementById( "title-field" );
@@ -796,34 +795,31 @@ function updateRepeatUnitExtensions( )
    if( repeatMenu.selectedItem )
    {
       switch( repeatMenu.selectedItem.value )
-       {
+      {
            case "days":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.setAttribute( "collapsed", "true" );
-               sizeToContent();  
            break;
            
            case "weeks":
                weekExtensions.setAttribute( "collapsed", "false" );
                monthExtensions.setAttribute( "collapsed", "true" );
                updateAdvancedWeekRepeat();
-               sizeToContent();  
            break;
            
            case "months":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.setAttribute( "collapsed", "false" );
                updateAdvancedRepeatDayOfMonth();
-               sizeToContent();  
            break;
            
            case "years":
                weekExtensions.setAttribute( "collapsed", "true" );
                monthExtensions.setAttribute( "collapsed", "true" );
-               sizeToContent();  
            break;
        
-       }
+      }
+      sizeToContent();  
    }
    
 }
