@@ -3226,7 +3226,10 @@ NS_IMETHODIMP GlobalWindowImpl::Activate()
 
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  if (!presShell) {
+    NS_WARNING( "no preshell for window" );
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIViewManager> vm;
   presShell->GetViewManager(getter_AddRefs(vm));
