@@ -2660,15 +2660,31 @@ JS_PUBLIC_API(JSBool)
 JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
                      JSExecPart part, jsval *rval)
 {
-    JSScript tmp = *script;
-
+    JSScript tmp;
+    JSRuntime *rt;
+    JSBool ok;
+    
+    /* Make a temporary copy of the JSScript structure and farble it a bit. */
+    tmp = *script;
     if (part == JSEXEC_PROLOG) {
         tmp.length = PTRDIFF(tmp.main, tmp.code, jsbytecode);
     } else {
         tmp.length -= PTRDIFF(tmp.main, tmp.code, jsbytecode);
         tmp.code = tmp.main;
     }
-    return JS_ExecuteScript(cx, obj, &tmp, rval);
+
+    /* Tell the debugger about our temporary copy of the script structure. */
+    rt = cx->runtime;
+    if (rt->newScriptHook) {
+        rt->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
+                          rt->newScriptHookData);
+    }
+
+    /* Execute the farbled struct and tell the debugger to forget about it. */
+    ok = JS_ExecuteScript(cx, obj, &tmp, rval);
+    if (rt->destroyScriptHook)
+        rt->destroyScriptHook(cx, &tmp, rt->destroyScriptHookData);
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
