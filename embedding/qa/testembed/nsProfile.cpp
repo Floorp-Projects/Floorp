@@ -144,20 +144,20 @@ void CProfile::RunAllTests()
 
 	USES_CONVERSION ;
 
-	NS_NAMED_LITERAL_STRING(newProfileName, "New Test");
+	NS_NAMED_LITERAL_STRING(newProfileName, "nsIProfileTest");
 
     rv = oNsProfile->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_TRUE);
     RvTestResultDlg(rv, "oNsProfile->CreateNewProfile");
 
-    rv = oNsProfile->RenameProfile(currProfileName, T2W("New default"));
-    RvTestResultDlg(rv, "oNsProfile->RenameProfile");
-
-    rv = oNsProfile->DeleteProfile(currProfileName, PR_TRUE);
-    RvTestResultDlg(rv, "oNsProfile->DeleteProfile");
-
     rv = oNsProfile->CloneProfile(currProfileName);
     RvTestResultDlg(rv, "oNsProfile->CloneProfile");
 
+    rv = oNsProfile->RenameProfile(currProfileName, T2W("nsIProfileTestNew"));
+    RvTestResultDlg(rv, "oNsProfile->RenameProfile");
+
+    rv = oNsProfile->DeleteProfile(T2W("nsIProfileTestNew"), PR_TRUE);
+    RvTestResultDlg(rv, "oNsProfile->DeleteProfile");
+ 
 }
 
 void CProfile::GetProfileCount()
