@@ -160,9 +160,24 @@ NS_IMETHODIMP NS_NewCharsetConverterManager(nsISupports* aOuter,
   return res;
 }
 
-NS_IMETHODIMP NS_RegisterConverterManagerData()
+NS_IMETHODIMP
+NS_RegisterConverterManagerData(nsIComponentManager* aCompMgr,
+                                nsIFile* aPath,
+                                const char *aLocation,
+                                const char *aType,
+                                const nsModuleComponentInfo* aInfo)
 {
   return nsCharsetConverterManager::RegisterConverterManagerData();
+}
+
+NS_IMETHODIMP
+NS_UnregisterConverterManagerData(nsIComponentManager* aCompMgr,
+                                  nsIFile* aPath,
+                                  const char* aRegistryLocation,
+                                  const nsModuleComponentInfo* aInfo)
+{
+  // XXX TODO remove converter manager cruft
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------------

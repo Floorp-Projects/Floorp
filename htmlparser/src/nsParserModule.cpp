@@ -151,18 +151,6 @@ nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
 //----------------------------------------------------------------------
 
 #if !defined(MOZ_DISABLE_DTD_DEBUG)
-static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
-#endif
-
-static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
-static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
-static NS_DEFINE_CID(kCTransitionalDTDCID, NS_CTRANSITIONAL_DTD_CID);
-static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
-
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 #endif
 
@@ -191,177 +179,33 @@ static nsModuleComponentInfo gComponents[] = {
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
-//----------------------------------------------------------------------
+static PRBool gInitialized = PR_FALSE;
 
-class nsParserModule : public nsIModule {
-public:
-  nsParserModule();
-  virtual ~nsParserModule();
-
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIMODULE
-
-  nsresult Initialize();
-
-protected:
-  void Shutdown();
-
-  PRBool mInitialized;
-};
-
-nsParserModule::nsParserModule()
-  : mInitialized(PR_FALSE)
+static nsresult
+Initialize(nsIModule* aSelf)
 {
-  NS_INIT_ISUPPORTS();
-}
-
-nsParserModule::~nsParserModule()
-{
-  Shutdown();
-}
-
-NS_IMPL_ISUPPORTS1(nsParserModule, nsIModule)
-
-nsresult
-nsParserModule::Initialize()
-{
-  if (!mInitialized) {
+  if (!gInitialized) {
     nsHTMLTags::AddRefTable();
     nsHTMLEntities::AddRefTable();
-    mInitialized = PR_TRUE;
     InitializeElementTable();
     CNewlineToken::AllocNewline();
+    gInitialized = PR_TRUE;
   }
   return NS_OK;
 }
 
-void
-nsParserModule::Shutdown()
+static void
+Shutdown(nsIModule* aSelf)
 {
-  if (mInitialized) {
+  if (gInitialized) {
     nsHTMLTags::ReleaseTable();
     nsHTMLEntities::ReleaseTable();
     nsDTDContext::ReleaseGlobalObjects();
     nsParser::FreeSharedObjects();
-    mInitialized = PR_FALSE;
     DeleteElementTable();
     CNewlineToken::FreeNewline();
+    gInitialized = PR_FALSE;
   }
 }
 
-NS_IMETHODIMP
-nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-  nsresult rv=NS_OK;
-
-  if (!mInitialized) {
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    mInitialized = PR_TRUE;
-  }
-
-  nsCOMPtr<nsIGenericFactory> fact;
-
-  for (unsigned int i = 0; i < NUM_COMPONENTS; i++) {
-    if (aClass.Equals(gComponents[i].mCID)) {
-      rv = NS_NewGenericFactory(getter_AddRefs(fact), &gComponents[i]);
-      break;
-    }
-  }
-
-  if (fact) {
-    rv = fact->QueryInterface(aIID, r_classObj);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsParserModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFile* aPath,
-                             const char* registryLocation,
-                             const char* componentType)
-{
-  nsresult rv = NS_OK;
-  nsModuleComponentInfo* cp = gComponents, *end = cp + NUM_COMPONENTS;
-  while (cp < end) {
-    rv = aCompMgr->RegisterComponentWithType(cp->mCID, cp->mDescription,
-                                             nsnull, aPath, registryLocation,
-                                             PR_TRUE, PR_TRUE, componentType);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsParserModule: unable to register %s component => %x\n",
-             cp->mDescription, rv);
-#endif
-      break;
-    }
-    cp++;
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsParserModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                               nsIFile* aPath,
-                               const char* registryLocation)
-{
-  nsModuleComponentInfo* cp = gComponents, *end = cp + NUM_COMPONENTS;
-  while (cp < end) {
-    nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsParserModule: unable to unregister %s component => %x\n",
-             cp->mDescription, rv);
-#endif
-    }
-    cp++;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsParserModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-  if (!okToUnload) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *okToUnload = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsParserModule *gModule = NULL;
-
-extern "C" NS_EXPORT 
-nsresult NSGETMODULE_ENTRY_POINT(nsParserModule) (nsIComponentManager *servMgr,
-                                          nsIFile* location,
-                                          nsIModule** return_cobj)
-{
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(return_cobj, "Null argument");
-  NS_ASSERTION(gModule == NULL, "nsParserModule: Module already created.");
-
-  // Create an initialize the layout module instance
-  nsParserModule *m = new nsParserModule();
-  if (!m) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-  if (NS_FAILED(rv)) {
-    delete m;
-    m = nsnull;
-  }
-  gModule = m;                  // WARNING: Weak Reference
-  return rv;
-}
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsParserModule, gComponents, Initialize, Shutdown)

@@ -32,8 +32,6 @@ CPPSRCS=dlldeps.cpp nsLayoutDLF.cpp nsLayoutFactory.cpp
 
 CPP_OBJS=				\
 	.\$(OBJDIR)\dlldeps.obj		\
-	.\$(OBJDIR)\nsLayoutDLF.obj	\
-	.\$(OBJDIR)\nsLayoutFactory.obj	\
 	.\$(OBJDIR)\nsLayoutModule.obj	\
 	$(NULL)
 

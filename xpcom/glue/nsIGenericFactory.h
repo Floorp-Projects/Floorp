@@ -69,14 +69,14 @@ typedef NS_CALLBACK(NSConstructorProcPtr)(nsISupports *aOuter, REFNSIID aIID,
 
 typedef NS_CALLBACK(NSRegisterSelfProcPtr)(nsIComponentManager *aCompMgr,
                                            nsIFile *aPath,
-                                           const char *registryLocation,
-                                           const char *componentType,
-                                           const nsModuleComponentInfo *info);
+                                           const char *aRegistryLocation,
+                                           const char *aComponentType,
+                                           const nsModuleComponentInfo *aInfo);
 
 typedef NS_CALLBACK(NSUnregisterSelfProcPtr)(nsIComponentManager *aCompMgr,
                                              nsIFile *aPath,
-                                             const char *registryLocation,
-                                             const nsModuleComponentInfo *info);
+                                             const char *aRegistryLocation,
+                                             const nsModuleComponentInfo *aInfo);
 
 typedef NS_CALLBACK(NSFactoryDestructorProcPtr)(void);
 
@@ -107,11 +107,13 @@ struct nsModuleComponentInfo {
 };
 
 typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
+typedef nsresult (PR_CALLBACK *nsModuleConstructorProc) (nsIModule *self);
 
 extern NS_COM nsresult
 NS_NewGenericModule(const char* moduleName,
                     PRUint32 componentCount,
                     nsModuleComponentInfo* components,
+                    nsModuleConstructorProc ctor,
                     nsModuleDestructorProc dtor,
                     nsIModule* *result);
 
@@ -126,9 +128,15 @@ NS_NewGenericModule(const char* moduleName,
 #endif
 
 #define NS_IMPL_NSGETMODULE(_name, _components)                               \
-    NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, nsnull)
+    NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, nsnull)
+
+#define NS_IMPL_NSGETMODULE_WITH_CTOR(_name, _components, _ctor)              \
+    NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, nsnull)
 
 #define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)              \
+    NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, _dtor)
+
+#define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
                                                                               \
 PRUint32                                                                      \
    NSGETMODULE_COMPONENTS_COUNT(_name) =                                      \
@@ -145,7 +153,7 @@ NSGETMODULE_ENTRY_POINT(_name) (nsIComponentManager *servMgr,                 \
     return NS_NewGenericModule((#_name),                                      \
                                NSGETMODULE_COMPONENTS_COUNT(_name),           \
                                NSGETMODULE_COMPONENTS(_name),                 \
-                               _dtor, result);                                \
+                               _ctor, _dtor, result);                         \
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,10 +167,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     _InstanceClass * inst;                                                    \
                                                                               \
-    if (NULL == aResult) {                                                    \
-        rv = NS_ERROR_NULL_POINTER;                                           \
-        return rv;                                                            \
-    }                                                                         \
     *aResult = NULL;                                                          \
     if (NULL != aOuter) {                                                     \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
@@ -191,10 +195,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     _InstanceClass * inst;                                                    \
                                                                               \
-    if (NULL == aResult) {                                                    \
-        rv = NS_ERROR_NULL_POINTER;                                           \
-        return rv;                                                            \
-    }                                                                         \
     *aResult = NULL;                                                          \
     if (NULL != aOuter) {                                                     \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
@@ -227,10 +227,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     _InstanceClass * inst;                                                    \
                                                                               \
-    if (NULL == aResult) {                                                    \
-        rv = NS_ERROR_NULL_POINTER;                                           \
-        return rv;                                                            \
-    }                                                                         \
     *aResult = NULL;                                                          \
     if (NULL != aOuter) {                                                     \
         rv = NS_ERROR_NO_AGGREGATION;                                         \

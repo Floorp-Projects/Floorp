@@ -36,8 +36,6 @@ EXTRA_DSO_LIBS	= gkgfx
 REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale timer xuldoc
 
 CPPSRCS		= \
-		nsLayoutDLF.cpp \
-		nsLayoutFactory.cpp \
 		nsLayoutModule.cpp \
 		$(NULL)
 
