@@ -49,6 +49,7 @@ struct StyleFontImpl : public nsStyleFont {
 
   void ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext);
   PRInt32 CalcDifference(const StyleFontImpl& aOther) const;
+  static PRInt32 CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
 private:  // These are not allowed
   StyleFontImpl(const StyleFontImpl& aOther);
@@ -71,9 +72,27 @@ void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresC
 
 PRInt32 StyleFontImpl::CalcDifference(const StyleFontImpl& aOther) const
 {
-  if (mFont.Equals(aOther.mFont) && mFixedFont.Equals(aOther.mFixedFont) &&
-      (mFlags == aOther.mFlags)) {
-    return NS_STYLE_HINT_NONE;
+  if (mFlags == aOther.mFlags) {
+    PRInt32 impact = CalcFontDifference(mFont, aOther.mFont);
+    if (impact < NS_STYLE_HINT_REFLOW) {
+      impact = CalcFontDifference(mFixedFont, aOther.mFixedFont);
+    }
+    return impact;
+  }
+  return NS_STYLE_HINT_REFLOW;
+}
+
+PRInt32 StyleFontImpl::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
+{
+  if ((aFont1.size == aFont2.size) && 
+      (aFont1.style == aFont2.style) &&
+      (aFont1.variant == aFont2.variant) &&
+      (aFont1.weight == aFont2.weight) &&
+      (aFont1.name == aFont2.name)) {
+    if ((aFont1.decorations == aFont2.decorations)) {
+      return NS_STYLE_HINT_NONE;
+    }
+    return NS_STYLE_HINT_VISUAL;
   }
   return NS_STYLE_HINT_REFLOW;
 }
@@ -1246,18 +1265,16 @@ void StyleUserInterfaceImpl::ResetFrom(const nsStyleUserInterface* aParent, nsIP
 {
   if (aParent) {
     mUserInput = aParent->mUserInput;
-    mModifyContent = aParent->mModifyContent;
-    mAutoSelect = aParent->mAutoSelect;
-    mAutoTab = aParent->mAutoTab;
+    mUserModify = aParent->mUserModify;
+    mUserFocus = aParent->mUserFocus;
   }
   else {
     mUserInput = NS_STYLE_USER_INPUT_AUTO;
-    mModifyContent = NS_STYLE_MODIFY_CONTENT_READ_ONLY;
-    mAutoSelect = NS_STYLE_AUTO_SELECT_NONE;
-    mAutoTab = NS_STYLE_AUTO_TAB_AUTO;
+    mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
+    mUserFocus = NS_STYLE_USER_FOCUS_NONE;
   }
 
-  mSelectionStyle = NS_STYLE_SELECTION_STYLE_ANY;
+  mUserSelect = NS_STYLE_USER_SELECT_TEXT;
   mKeyEquivalent = PRUnichar(0); // XXX what type should this be?
   mResizer = NS_STYLE_RESIZER_AUTO;
 }
@@ -1266,11 +1283,10 @@ PRInt32 StyleUserInterfaceImpl::CalcDifference(const StyleUserInterfaceImpl& aOt
 {
   if ((mUserInput == aOther.mUserInput) && 
       (mResizer == aOther.mResizer)) {
-    if ((mModifyContent == aOther.mModifyContent) && 
-        (mSelectionStyle == aOther.mSelectionStyle)) {
-      if ((mAutoSelect == aOther.mAutoSelect) &&
-          (mKeyEquivalent == aOther.mKeyEquivalent) &&
-          (mAutoTab == aOther.mAutoTab) &&
+    if ((mUserModify == aOther.mUserModify) && 
+        (mUserSelect == aOther.mUserSelect)) {
+      if ((mKeyEquivalent == aOther.mKeyEquivalent) &&
+          (mUserFocus == aOther.mUserFocus) &&
           (mResizer == aOther.mResizer)) {
         return NS_STYLE_HINT_NONE;
       }
