@@ -247,19 +247,43 @@
       return bestState;
     }
 
+    var bestState;
+
+    function stateFoundInFormsArray(formsArray, captureOrPrefill, threshhold) {
+      state =
+        getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
+      if (state == enable) {
+        if (elementCount > threshhold) {
+          bestState = enable;
+          return true;
+        }
+        bestState = enable;
+      } else if (state == disable && bestState == hide) {
+        bestState = disable;
+        return false;
+      }
+    }
+
     // Walk through the DOM to determine how capture or prefill item is to appear.
     //   arguments:
     //      captureOrPrefill = capture, prefill
     //   returned value:
     //      hide, disable, enable
+
     function getState(captureOrPrefill, threshhold) {
-      if (!window._content || !window._content.document) {
-        return hide;
+      stateFound(window.content, captureOrPrefill, threshhold);
+      return bestState;
+    }
+
+    function stateFound(content, captureOrPrefill, threshhold) {
+      bestState = hide;
+      if (!content || !content.document) {
+        return false;
       }
-      var document = window._content.document;
+      var document = content.document;
       if (!("forms" in document)) {
         // this will occur if document is xul document instead of html document for example
-        return hide;
+        return false;
       }
 
       // test for wallet service being available
@@ -267,57 +291,50 @@
         gWalletService = Components.classes["@mozilla.org/wallet/wallet-service;1"]
                                    .getService(Components.interfaces.nsIWalletService);
       if (!gWalletService) {
-        return hide;
+        return true;
       }
 
-      var bestState = hide;
       var state;
       elementCount = 0;
 
       // process frames if any
       var formsArray;
-      var framesArray = window._content.frames;
+      var framesArray = content.frames;
       if (framesArray.length != 0) {
         var frame;
         for (frame=0; frame<framesArray.length; ++frame) {
+
+          // recursively process each frame for additional documents
+          if (stateFound(framesArray[frame], captureOrPrefill, threshhold)) {
+            return true;
+          }
+
+          // process the document of this frame
           var frameDocument = framesArray[frame].document;
           if (frameDocument) {
-            formsArray = frameDocument.forms;
-            state =
-              getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
-            if (state == enable) {
-              if (elementCount > threshhold) {
-                gIsEncrypted = -1;
-                return enable;
-              }
-              bestState = enable;
-            } else if (state == disable && bestState == hide) {
-              bestState = disable;
+
+            if (stateFoundInFormsArray(frameDocument.forms, captureOrPrefill, threshhold)) {
+              gIsEncrypted = -1;
+              return true;
             }
           }
         }
       }
+
       // process top-level document
-      formsArray = document.forms;
-      state =
-        getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
       gIsEncrypted = -1;
-      if (state == enable) {
-        if (elementCount > threshhold) {
-          return enable;
-        }
-        bestState = enable;
-      } else if (state == disable && bestState == hide) {
-        bestState = disable;
+      if (stateFoundInFormsArray(document.forms, captureOrPrefill, threshhold)) {
+        return true;
       }
 
       // if we got here, then there was no text (or select) element with a value
       // or there were too few text (or select) elements
       if (elementCount > threshhold) {
         // no text (or select) element with a value
-        return bestState;
+        return false;
       }
 
       // too few text (or select) elements
-      return hide;
+      bestState = hide;
+      return false;
     }
