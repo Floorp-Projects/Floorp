@@ -319,6 +319,8 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
   tag.ToLowerCase();
   if (tag == "normal" || tag == "p") {
     res = RemoveParagraphStyle();
+  } else if (tag == "li") {
+    res = InsertList("ul");
   } else {
     res = ReplaceBlockParent(tag);
   }
