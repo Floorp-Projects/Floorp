@@ -155,6 +155,10 @@ static int quiet_fgets (char *buf, int length, FILE *input)
   /* fflush (input); */
   memset (buf, 0, length);
 
+  if (input != stdin) {
+     return fgets(buf,length,input);
+  }
+
   while (1)
     {
     c = getch();

@@ -255,6 +255,8 @@ SECU_FilePasswd(PK11SlotInfo *slot, PRBool retry, void *arg)
     nb = PR_Read(fd, phrase, sizeof(phrase));
   
     PR_Close(fd);
+    /* handle the Windows EOL case */
+    if ((nb > 2) && (phrase[nb-2] == '\r') ) nb--;
     if (phrase[nb-1] == '\n') {
 	phrase[nb-1] = '\0';
 	if (nb == 0) {
@@ -309,11 +311,15 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 
     if (pwdata->source == PW_NONE) {
 	/* open terminal */
+#ifdef _WINDOWS
+	input = stdin;
+#else
 	input = fopen(consoleName, "r");
 	if (input == NULL) {
 	    PR_fprintf(PR_STDERR, "Error opening input terminal for read\n");
 	    return NULL;
 	}
+#endif
 
 	/* we have no password, so initialize database with one */
 	PR_fprintf(PR_STDERR, 
@@ -393,9 +399,16 @@ SECU_ChangePW(PK11SlotInfo *slot, char *passwd, char *pwFile)
     for (;;) {
 	oldpw = SECU_GetModulePassword(slot, PR_FALSE, &pwdata);
 
-	if (PK11_CheckUserPassword(slot, oldpw) != SECSuccess)
-	    PR_fprintf(PR_STDERR, "Invalid password.  Try again.\n");
-	else
+	if (PK11_CheckUserPassword(slot, oldpw) != SECSuccess) {
+	    if (pwdata.source == PW_NONE) {
+		PR_fprintf(PR_STDERR, "Invalid password.  Try again.\n");
+	    } else {
+		PR_fprintf(PR_STDERR, "Invalid password.\n");
+		PORT_Memset(oldpw, 0, PL_strlen(oldpw));
+		PORT_Free(oldpw);
+		return SECFailure;
+	    }
+	} else
 	    break;
 
 	PORT_Free(oldpw);
@@ -578,11 +591,15 @@ SECU_ChangeKeyDBPassword(SECKEYKeyDBHandle *handle)
     oldpwitem = secu_GetZeroLengthPassword(handle);
 
     /* open terminal */
+#ifdef _WINDOWS
+    input = stdin;
+#else
     input = fopen(consoleName, "r");
     if (input == NULL) {
 	fprintf(stderr, "Error opening input terminal\n");
 	return SECFailure;
     }
+#endif
 
     output = fopen(consoleName, "w");
     if (output == NULL) {
@@ -667,7 +684,7 @@ SECU_ChangeKeyDBPassword(SECKEYKeyDBHandle *handle)
     SECITEM_ZfreeItem(newpwitem, PR_TRUE);
     SECITEM_ZfreeItem(oldpwitem, PR_TRUE);
 
-    fclose(input);
+    if (input != stdin) fclose(input);
     fclose(output);
 
     if (failed) {

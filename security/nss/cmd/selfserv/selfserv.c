@@ -894,7 +894,7 @@ send_answer:
 		break;
 	    }
 	} else {
-	    fwrite(buf, 1, i, stdout);	/* display it */
+	    /* fwrite(buf, 1, i, stdout);	/* display it */
 	    rv = PR_Write(ssl_sock, buf, i);
 	    if (rv < 0) {
 		errWarn("PR_Write");
