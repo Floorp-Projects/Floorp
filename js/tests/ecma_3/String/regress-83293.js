@@ -20,69 +20,26 @@
 * Date: 30 May 2001
 *
 * SUMMARY:  Regression test for bug 83293
-* str.replace(strA, strB) == str.replace(new RegExp(strA),strB)
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=83293
+*
+* str.replace(strA, strB) == str.replace(new RegExp(strA),strB)
+* See ECMA-262 Section 15.5.4.11 String.prototype.replace
 */
 //-------------------------------------------------------------------------------------------------
-var UBound = 0;
 var bug = 83293;
 var summary = 'Testing str.replace(strA, strB) == str.replace(new RegExp(strA),strB)' ;
 var status = '';
-var statusitems = [ ];
 var actual = '';
-var actualvalues = [ ];
 var expect= '';
-var expectedvalues = [ ];
 var cnEmptyString = '';
 var str = 'abc';
 var strA = '';
 var strB = 'Z';
 
 
-status = 'Section A of test';
-strA = 'a';
-actual = str.replace(strA, strB);
-expect = str.replace(new RegExp(strA), strB);
-addThis();
-
-status = 'Section B of test';
-strA = 'x';
-actual = str.replace(strA, strB);
-expect = str.replace(new RegExp(strA), strB);
-addThis();
-
-status = 'Section C of test';
-strA = undefined;
-actual = str.replace(strA, strB);
-expect = str.replace(new RegExp(strA), strB);
-addThis();
-
-status = 'Section D of test';
-strA = null;
-actual = str.replace(strA, strB);
-expect = str.replace(new RegExp(strA), strB);
-addThis();
-
-status = 'Section E of test';
-strA = cnEmptyString;
-actual = str.replace(strA, strB);
-expect = str.replace(new RegExp(strA), strB);
-addThis();
-
-
-
 //-------------------------------------------------------------------------------------------------
 test();
 //-------------------------------------------------------------------------------------------------
-
-
-function addThis()
-{
-  statusitems[UBound] = status;
-  actualvalues[UBound] = actual;
-  expectedvalues[UBound] = expect;
-  UBound++;
-}
 
 
 function test()
@@ -91,10 +48,35 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
  
-  for (var i = 0; i < UBound; i++)
-  {
-    reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
-  }
+  status = 'Section A of test';
+  strA = 'a';
+  actual = str.replace(strA, strB);
+  expect = str.replace(new RegExp(strA), strB);
+  reportCompare(expect, actual, status);
 
-  exitFunc ('test');
+  status = 'Section B of test';
+  strA = 'x';
+  actual = str.replace(strA, strB);
+  expect = str.replace(new RegExp(strA), strB);
+  reportCompare(expect, actual, status);
+
+  status = 'Section C of test';
+  strA = undefined;
+  actual = str.replace(strA, strB);
+  expect = str.replace(new RegExp(strA), strB);
+  reportCompare(expect, actual, status);
+
+  status = 'Section D of test';
+  strA = null;
+  actual = str.replace(strA, strB);
+  expect = str.replace(new RegExp(strA), strB);
+  reportCompare(expect, actual, status);
+
+  status = 'Section E of test';
+  strA = cnEmptyString;
+  actual = str.replace(strA, strB);
+  expect = str.replace(new RegExp(strA), strB);
+  reportCompare(expect, actual, status);
+
+exitFunc ('test');
 }
