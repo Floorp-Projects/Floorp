@@ -29,7 +29,6 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
-#include "nsIPref.h"
 #include "nsIChannel.h"
 
 class nsMimeXmlEmitter : public nsMimeBaseEmitter {

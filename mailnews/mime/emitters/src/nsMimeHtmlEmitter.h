@@ -30,7 +30,6 @@
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"
-#include "nsIPref.h"
 #include "nsIChannel.h"
 #include "nsIMimeMiscStatus.h"
 #include "nsIMimeConverter.h"
