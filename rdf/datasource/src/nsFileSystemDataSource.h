@@ -84,12 +84,9 @@ private:
 	static nsIRDFResource		*kNC_Child;
 	static nsIRDFResource		*kNC_Name;
 	static nsIRDFResource		*kNC_URL;
-	static nsIRDFResource		*kNC_Columns;
-	static nsIRDFResource		*kNC_Folder;
-
+	static nsIRDFResource		*kNC_FileSystemObject;
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
-	static nsIRDFResource		*kRDF_Seq;
 
 public:
 
@@ -158,9 +155,10 @@ private:
 	nsIRDFNode	*mTarget;
 	int		mCount;
 	nsVoidArray	*mArray;
+	PRBool		mArcsOut;
 
 public:
-			FileSystemCursor(nsIRDFResource *source, nsIRDFResource *property, nsVoidArray *array);
+			FileSystemCursor(nsIRDFResource *source, nsIRDFResource *property, PRBool isArcsOut, nsVoidArray *array);
 	virtual		~FileSystemCursor(void);
 
 	NS_DECL_ISUPPORTS
