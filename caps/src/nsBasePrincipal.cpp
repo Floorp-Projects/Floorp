@@ -61,7 +61,7 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
         return NS_OK;
     }
     nsStringKey key(capability);
-    *result = (PRInt16) mCapabilities->Get(&key);
+    *result = (PRInt16)(PRInt32)mCapabilities->Get(&key);
     if (!*result)
         *result = nsIPrincipal::ENABLE_UNKNOWN;
     return NS_OK;
