@@ -71,7 +71,9 @@ require Exporter;
 
 # constants for stringifying exceptions
 sub seMaxLength() { 80 }
+sub seMaxSubLength() { 20 }
 sub seMaxArguments() { 10 }
+sub seMaxDepth() { 2 }
 sub seEllipsis() { '...' }
 
 sub syntaxError($;$) {
@@ -275,7 +277,7 @@ sub stringify {
                 $stacktrace .= "  eval {...} in $frame->{'filename'} line $frame->{'line'}\n";
             }
         } elsif ($frame->{'hasargs'}) {
-            my @arguments = arguments(@{$frame->{'arguments'}});
+            my @arguments = arguments(0, @{$frame->{'arguments'}});
             local $" = ', ';
             $stacktrace .= "  $frame->{'subroutine'}(@arguments) called from $frame->{'filename'} line $frame->{'line'}\n";
         } else {
@@ -289,8 +291,9 @@ sub stringify {
     }
 }
 
-sub arguments(@) {
-    my(@values) = @_;
+sub arguments($@) {
+    my($depth, @values) = @_;
+    ++$depth;
     my @arguments;
     foreach my $value (@values) {
         my $argument;
@@ -311,11 +314,11 @@ sub arguments(@) {
                     if ($ref ne 'HASH') {
                         $argument .= " ($ref)";
                     }
-                } elsif (ref($value) eq 'ARRAY') {
-                    my @items = arguments(@$value);
+                } elsif (ref($value) eq 'ARRAY' and $depth < seMaxDepth) {
+                    my @items = arguments($depth, @$value);
                     local $" = ', ';
                     $argument = "[@items] at $address";
-                } elsif (ref($value) eq 'HASH') {
+                } elsif (ref($value) eq 'HASH' and $depth < seMaxDepth) {
                     my @items;
                     my $count = 0;
                     foreach my $key (sort keys %$value) {
@@ -323,13 +326,14 @@ sub arguments(@) {
                             push(@items, seEllipsis);
                             last;
                         }
-                        my($keyName, $valueName) = arguments($key, $value->{$key});
+                        my($keyName, $valueName) = arguments($depth, $key, $value->{$key});
                         push(@items, "$keyName => $valueName");
                     }
                     local $" = ', ';
-                    $argument = "{@items} at $address";
+                    $argument = "@items";
+                    $argument = "{$argument} at $address";
                 } elsif (ref($value) eq 'SCALAR') {
-                    my @items = arguments($$value);
+                    my @items = arguments($depth, $$value);
                     $argument = "\\@items";
                 } elsif (ref($value) eq 'CODE') {
                     $argument = "sub { ... } at $address";
@@ -338,6 +342,7 @@ sub arguments(@) {
                         # !!!
                         $argument = "$ref at $address blessed as $class but not a class (!)";
                     } else {
+                        # deeply nested HASH or ARRAY, probably
                         $argument = "$ref at $address";
                     }
                 }
@@ -348,11 +353,14 @@ sub arguments(@) {
             # scalar
             if (not defined($value)) {
                 $argument = 'undef';
-            } elsif ($value =~ m/^-?[0-9]+(?:\.[0-9]+)$/os) {
+            } elsif ($value =~ m/^-?[0-9]+(?:\.[0-9]+)?$/os) {
                 $argument = $value;
             } else {
                 $argument = $value;
                 $argument =~ s/([\\\'])/\\$1/gos;
+                if (length($argument) > seMaxLength) {
+                    substr($argument, seMaxLength) = seEllipsis;
+                }
                 $argument = "'$argument'";
             }
         }
