@@ -16,7 +16,7 @@ sub Help {
         'ops' => 'Lists the autoop list for a channel. Syntax: \'ops in <channel>\'',
         'opme' => 'Checks the autoop list, and ops the speaker if they are on the autoop list. Must be used in a channel. Syntax: \'op me\' or \'opme\'',
         'mask' => 'Add or remove a regexp mask from a channel\'s autoop list. Only bot and channel admins can do this. USE OF THIS FEATURE IS HIGHLY DISCOURAGED AS IT IS VERY INSECURE!!! Syntax: \'add mask <user@host> in <channel>\' to add and \'remove mask <user@host> in <channel>\' to remove. The special word \'everywhere\' can be used instead of a channel name to add a mask that works in all channels.',
-        'autoop' => 'Add someone to the autoop list for a channel. Only bot and channel admins can do this. Syntax: \'op <user> in <channel>\'',
+        'autoop' => 'Add someone to the autoop list for a channel. Only bot and channel admins can do this. Syntax: \'autoop <user> in <channel>\'',
         'deautoop' => 'Remove someone from the autoop list for a channel. Only bot and channel admins can do this. Syntax: \'deautoop <user> in <channel>\'',
         'enable' => 'Enable a module in a channel. Only bot and channel admins can do this. Syntax: \'enable <module> in <channel>\'',
         'disable' => 'Disable a module in a channel. Only bot and channel admins can do this. Syntax: \'disable <module> in <channel>\'',
