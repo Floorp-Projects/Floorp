@@ -132,7 +132,7 @@ ULONG _pr_PostEventMsgId;
 #else
 UINT _pr_PostEventMsgId;
 #endif /* OS2 */
-static char *_pr_eventWindowClass = "NSPR:EventWindow";
+static char *_pr_eventWindowClass = "XPCOM:EventWindow";
 #endif /* Win32, Win16, OS2 */
 
 /*******************************************************************************
@@ -1025,7 +1025,7 @@ int CALLBACK LibMain( HINSTANCE hInst, WORD wDataSeg,
 #if defined(_WIN32)
 
 /*
-** Initialization routine for the NSPR DLL...
+** Initialization routine for the DLL...
 */
 
 BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
@@ -1119,8 +1119,8 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     */
 
 
-    /* Register the windows message for NSPR Event notification */
-    _pr_PostEventMsgId = RegisterWindowMessage("NSPR_PostEvent");
+    /* Register the windows message for XPCOM Event notification */
+    _pr_PostEventMsgId = RegisterWindowMessage("XPCOM_PostEvent");
 
     /* Register the class for the event receiver window */
     if (!GetClassInfo(_pr_hInstance, _pr_eventWindowClass, &wc)) {
@@ -1139,7 +1139,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
         
     /* Create the event receiver window */
     eventQueue->eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
-                                        "NSPR:EventReceiver",
+                                        "XPCOM:EventReceiver",
                                             0, 0, 0, 10, 10,
                                             NULL, NULL, _pr_hInstance,
                                             NULL);
@@ -1170,7 +1170,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
                          0, 0);
 
        _pr_PostEventMsgId = WinAddAtom( WinQuerySystemAtomTable(),
-                                        "NSPR_PostEvent");
+                                        "XPCOM_PostEvent");
     }
 
     eventQueue->eventReceiverWindow = WinCreateWindow( HWND_DESKTOP,
