@@ -61,9 +61,7 @@ nsMsgRDFDataSource::Init()
 
 void nsMsgRDFDataSource::Close()
 {
-	mStatusFeedback = null_nsCOMPtr();
-	mTransactionManager = null_nsCOMPtr();
-	mMessageView = null_nsCOMPtr();
+	mWindow = null_nsCOMPtr();
 	kEmptyArray = null_nsCOMPtr();
 }
 
@@ -84,8 +82,8 @@ nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
       res = NS_STATIC_CAST(nsIRDFDataSource*, this);
   else if(iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
       res = NS_STATIC_CAST(nsIShutdownListener*, this);
-  else if(iid.Equals(nsCOMTypeInfo<nsIMsgWindowData>::GetIID()))
-	  res = NS_STATIC_CAST(nsIMsgWindowData*, this);
+  else if(iid.Equals(nsCOMTypeInfo<nsIMsgRDFDataSource>::GetIID()))
+	  res = NS_STATIC_CAST(nsIMsgRDFDataSource*, this);
 
   if (res) {
       NS_ADDREF(this);
@@ -295,56 +293,21 @@ nsMsgRDFDataSource::OnShutdown(const nsCID& aClass, nsISupports* service)
 }
 
 
-NS_IMETHODIMP nsMsgRDFDataSource::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)
+NS_IMETHODIMP nsMsgRDFDataSource::GetWindow(nsIMsgWindow * *aWindow)
 {
-	if(!aStatusFeedback)
+	if(!aWindow)
 		return NS_ERROR_NULL_POINTER;
 
-	*aStatusFeedback = mStatusFeedback;
-	NS_IF_ADDREF(*aStatusFeedback);
+	*aWindow = mWindow;
+	NS_IF_ADDREF(*aWindow);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgRDFDataSource::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
+NS_IMETHODIMP nsMsgRDFDataSource::SetWindow(nsIMsgWindow * aWindow)
 {
-	mStatusFeedback = aStatusFeedback;
+	mWindow = aWindow;
 	return NS_OK;
 }
-
-
-NS_IMETHODIMP nsMsgRDFDataSource::GetTransactionManager(nsITransactionManager * *aTransactionManager)
-{
-	if(!aTransactionManager)
-		return NS_ERROR_NULL_POINTER;
-
-	*aTransactionManager = mTransactionManager;
-	NS_IF_ADDREF(*aTransactionManager);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgRDFDataSource::SetTransactionManager(nsITransactionManager * aTransactionManager)
-{
-	mTransactionManager = aTransactionManager;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgRDFDataSource::GetMessageView(nsIMessageView * *aMessageView)
-{
-	if(!aMessageView)
-		return NS_ERROR_NULL_POINTER;
-
-	*aMessageView = mMessageView;
-	NS_IF_ADDREF(*aMessageView);
-	return NS_OK;
-
-}
-
-NS_IMETHODIMP nsMsgRDFDataSource::SetMessageView(nsIMessageView * aMessageView)
-{
-	mMessageView = aMessageView;
-	return NS_OK;
-}
-
 
 nsIRDFService *
 nsMsgRDFDataSource::getRDFService()

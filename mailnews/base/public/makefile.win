@@ -47,8 +47,9 @@ XPIDLSRCS =								\
 		.\nsIUrlListenerManager.idl		\
 		.\nsIMsgStatusFeedback.idl		\
 		.\nsIMsgMailNewsUrl.idl			\
-		.\nsIMsgWindowData.idl			\
+		.\nsIMsgWindow.idl			\
 		.\nsIMsgProtocolInfo.idl		\
+		.\nsIMsgRDFDataSource.idl		\
 		$(NULL)
 
 ################################################################################

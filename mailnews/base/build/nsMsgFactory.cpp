@@ -64,6 +64,7 @@
 
 #include "nsMsgFilterService.h"
 #include "nsMessageView.h"
+#include "nsMsgWindow.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -112,6 +113,8 @@ static NS_DEFINE_CID(kMsgStatusFeedbackCID, NS_MSGSTATUSFEEDBACK_CID);
 //MessageView
 static NS_DEFINE_CID(kMessageViewCID, NS_MESSAGEVIEW_CID);
 
+//MsgWindow
+static NS_DEFINE_CID(kMsgWindowCID, NS_MSGWINDOW_CID);
 
 // private factory declarations for each component we know how to produce
 
@@ -133,6 +136,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCopyService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFolderCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgStatusFeedback)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessageView,Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
 
 // Module implementation for the sample library
 class nsMsgBaseModule : public nsIModule
@@ -170,6 +174,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mMsgFolderCacheFactory;
     nsCOMPtr<nsIGenericFactory> mMsgStatusFeedbackFactory;
     nsCOMPtr<nsIGenericFactory> mMessageViewFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgWindowFactory;
 };
 
 nsMsgBaseModule::nsMsgBaseModule()
@@ -217,6 +222,7 @@ void nsMsgBaseModule::Shutdown()
     mMsgFolderCacheFactory = null_nsCOMPtr();
     mMsgStatusFeedbackFactory = null_nsCOMPtr();
     mMessageViewFactory = null_nsCOMPtr();
+    mMsgWindowFactory = null_nsCOMPtr();
 }
 
 // Create a factory object for creating instances of aClass.
@@ -353,6 +359,12 @@ NS_IMETHODIMP nsMsgBaseModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mMessageViewFactory), &nsMessageViewConstructor);
         fact = mMessageViewFactory;
     }
+    else if (aClass.Equals(kMsgWindowCID)) 
+    {
+        if (!mMsgWindowFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgWindowFactory), &nsMsgWindowConstructor);
+        fact = mMsgWindowFactory;
+    }
     
     
     if (fact)
@@ -404,7 +416,9 @@ static Components gComponents[] = {
     { "Mail/News Status Feedback", &kMsgStatusFeedbackCID,
       NS_MSGSTATUSFEEDBACK_PROGID},
     { "Mail/News MessageView", &kMessageViewCID,
-      NS_MESSAGEVIEW_PROGID}
+      NS_MESSAGEVIEW_PROGID},
+    { "Mail/News MsgWindow", &kMsgWindowCID,
+      NS_MSGWINDOW_PROGID}
 
 };
 

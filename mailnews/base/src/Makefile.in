@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsMsgFolderCacheElement.cpp \
 		nsMsgStatusFeedback.cpp \
 		nsMessageView.cpp \
+		nsMsgWindow.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -70,6 +71,7 @@ EXPORTS		= \
 		nsMsgCopyService.h \
 		nsMsgStatusFeedback.h \
 		nsMessageView.h \
+		nsMsgWindow.h \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

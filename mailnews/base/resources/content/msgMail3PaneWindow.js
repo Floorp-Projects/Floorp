@@ -26,6 +26,7 @@ var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
 var messageViewProgID      = "component://netscape/messenger/messageview";
 var mailSessionProgID      = "component://netscape/messenger/services/session";
 var prefProgID             = "component://netscape/preferences";
+var msgWindowProgID		   = "component://netscape/messenger/msgwindow";
 
 var datasourceProgIDPrefix = "component://netscape/rdf/datasource?name=";
 var accountManagerDSProgID = datasourceProgIDPrefix + "msgaccountmanager";
@@ -52,6 +53,10 @@ statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatu
 //Create message view object
 var messageView = Components.classes[messageViewProgID].createInstance();
 messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
+
+//Create message window object
+var msgWindow = Components.classes[msgWindowProgID].createInstance();
+msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
 // the folderListener object
 var folderListener = {
@@ -91,6 +96,8 @@ function OnLoadMessenger()
     
     loadStartPage();
 	messenger.SetWindow(window, statusFeedback);
+
+	InitMsgWindow();
 
 	AddDataSources();
 	InitPanes();
@@ -212,6 +219,11 @@ function getFolderListener()
     }
 }
 
+function InitMsgWindow()
+{
+	msgWindow.statusFeedback = statusFeedback;
+	msgWindow.messageView = messageView;
+}
 
 function AddDataSources()
 {
@@ -236,17 +248,15 @@ function AddDataSources()
 		copyMenu.setAttribute('ref', 'msgaccounts:/');
 	}
 	//Add statusFeedback
-	var windowData = folderDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-	windowData.messageView = messageView;
 
-	windowData = messageDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-	windowData.messageView = messageView;
+	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = msgWindow;
 
-	windowData = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-	windowData.messageView = messageView;
+	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = msgWindow;
+
+	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+	msgDS.window = msgWindow;
 
 }	
 
@@ -273,8 +283,10 @@ function OnLoadFolderPane(folderTree)
 	//Add folderDataSource and accountManagerDataSource to folderPane
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderTree.database.AddDataSource(accountManagerDataSource);
-    folderTree.database.AddDataSource(folderDataSource);
+	var database = folderTree.database;
+
+	database.AddDataSource(accountManagerDataSource);
+    database.AddDataSource(folderDataSource);
 	folderTree.setAttribute('ref', 'msgaccounts:/');
 }
 
@@ -341,6 +353,10 @@ function RefreshThreadTreeView()
 {
 	var currentFolder = GetThreadTreeFolder();  
 	var currentFolderID = currentFolder.getAttribute('ref');
+	//This will make us lose selection when this happens.
+	//need to figure out if we have to save off selection or if
+	//tree widget is responsible for this.
+	ClearThreadTreeSelection();
 	currentFolder.setAttribute('ref', currentFolderID);
 }
 

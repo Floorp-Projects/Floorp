@@ -316,7 +316,11 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
 		PRBool showThreads;
-		rv = mMessageView->GetShowThreads(&showThreads);
+		nsCOMPtr<nsIMessageView> messageView;
+		rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+		if(NS_FAILED(rv)) return rv;
+
+		rv = messageView->GetShowThreads(&showThreads);
 		if(NS_FAILED(rv)) return rv;
 
 		if(showThreads && property == kNC_MessageChild)
@@ -336,7 +340,11 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 					nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
 					NS_NewMessageFromMsgHdrEnumerator(messages, msgfolder, getter_AddRefs(converter));
 					PRUint32 viewType;
-					rv = mMessageView->GetViewType(&viewType);
+					nsCOMPtr<nsIMessageView> messageView;
+					rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+					if(NS_FAILED(rv)) return rv;
+
+					rv = messageView->GetViewType(&viewType);
 					if(NS_FAILED(rv)) return rv;
 
 					nsMessageViewMessageEnumerator * messageEnumerator = 
@@ -430,7 +438,11 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 	{
 
 		PRBool showThreads;
-		rv = mMessageView->GetShowThreads(&showThreads);
+		nsCOMPtr<nsIMessageView> messageView;
+		rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+		if(NS_FAILED(rv)) return rv;
+
+		rv = messageView->GetShowThreads(&showThreads);
 		if(NS_FAILED(rv)) return rv;
 
 		if(showThreads)
@@ -895,7 +907,11 @@ nsresult nsMsgMessageDataSource::createMessageTotalNode(nsIMessage *message, nsI
 	nsString emptyString("");
 
 	PRBool showThreads;
-	rv = mMessageView->GetShowThreads(&showThreads);
+	nsCOMPtr<nsIMessageView> messageView;
+	rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+	if(NS_FAILED(rv)) return rv;
+
+	rv = messageView->GetShowThreads(&showThreads);
 	if(NS_FAILED(rv)) return rv;
 
 	if(!showThreads)
@@ -939,7 +955,11 @@ nsresult nsMsgMessageDataSource::createMessageUnreadNode(nsIMessage *message, ns
 	nsString emptyString("");
 
 	PRBool showThreads;
-	rv = mMessageView->GetShowThreads(&showThreads);
+	nsCOMPtr<nsIMessageView> messageView;
+	rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+	if(NS_FAILED(rv)) return rv;
+
+	rv = messageView->GetShowThreads(&showThreads);
 	if(NS_FAILED(rv)) return rv;
 
 	if(!showThreads)

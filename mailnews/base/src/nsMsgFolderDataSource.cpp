@@ -312,7 +312,11 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
     else if ((kNC_MessageChild == property))
     {
 		PRBool showThreads;
-		rv = mMessageView->GetShowThreads(&showThreads);
+		nsCOMPtr<nsIMessageView> messageView;
+		rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+		if(NS_FAILED(rv)) return rv;
+
+		rv = messageView->GetShowThreads(&showThreads);
 		if(NS_FAILED(rv)) return rv;
 
 		if(showThreads)
@@ -335,7 +339,11 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 			if (NS_SUCCEEDED(rv))
 			{
 				PRUint32 viewType;
-				rv = mMessageView->GetViewType(&viewType);
+				nsCOMPtr<nsIMessageView> messageView;
+				rv = mWindow->GetMessageView(getter_AddRefs(messageView));
+				if(NS_FAILED(rv)) return rv;
+
+				rv = messageView->GetViewType(&viewType);
 				if(NS_FAILED(rv)) return rv;
 				nsMessageViewMessageEnumerator * messageEnumerator = 
 					new nsMessageViewMessageEnumerator(messages, viewType);

@@ -26,10 +26,12 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsITransactionManager.h"
-#include "nsIMsgWindowData.h"
+#include "nsIMsgWindow.h"
+#include "nsIMsgRDFDataSource.h"
+
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIShutdownListener,
-  						   public nsIMsgWindowData
+  						   public nsIMsgRDFDataSource
 {
  public:
   nsMsgRDFDataSource();
@@ -37,7 +39,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   virtual nsresult Init();
   
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIMSGWINDOWDATA
+  NS_DECL_NSIMSGRDFDATASOURCE
   NS_DECL_NSIRDFDATASOURCE
   NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
 
@@ -51,9 +53,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 								nsIRDFNode *object, PRBool assert);
 	nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);
 
-	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
-	nsCOMPtr<nsITransactionManager> mTransactionManager;
-	nsCOMPtr<nsIMessageView> mMessageView;
+	nsCOMPtr<nsIMsgWindow> mWindow;
 
 	nsCOMPtr<nsISupportsArray> kEmptyArray;
 	PRBool m_shuttingDown;
