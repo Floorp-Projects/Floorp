@@ -1,0 +1,288 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Scott Furman">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (WinNT; I) [Netscape]">
+   <TITLE>README for LiveConnect</TITLE>
+</HEAD>
+<BODY>
+
+<CENTER>
+<H2>
+<FONT COLOR="#CC0000"><FONT SIZE=+3>WARNING:</FONT></FONT></H2></CENTER>
+
+<CENTER>
+<H2>
+<FONT COLOR="#CC0000">This document is a skeleton, still&nbsp;<BR>
+very much under construction.</FONT></H2></CENTER>
+
+<H2>
+Introduction</H2>
+This is the README file for the JavaScript LiveConnect implementation.&nbsp;
+It consists of build conventions and instructions, source code conventions,
+a design walk-through, and a brief file-by-file description of the source.
+
+<P>This document assumes basic familiarity with JSRef, the reference implementation
+of JavaScript, and with the LiveConnect technology&nbsp; (LiveConnect allows
+JavaScript and Java virtual machines to be connected.&nbsp; It enables
+JavaScript to access Java fields, invoke Java methods and makes it possible
+for Java to access JavaScript object properties and evaluate JavaScript.&nbsp;
+More information on LiveConnect can be found by searching the index on
+Netscape's <A HREF="http://developer.netscape.com">DevEdge site</A>.)
+
+<P>JSRef builds a library or DLL containing the JavaScript runtime (compiler,
+interpreter, decompiler, garbage collector, atom manager, standard classes).&nbsp;
+The LiveConnect project/makefiles build a library that links both with
+JSRef and with a Java Virtual Machine (JVM) that implements the Java Native
+Interface (JNI), as specified by JavaSoft.&nbsp; It then compiles a small
+"shell" program and links that with the library to make an interpreter
+that can be used interactively and with test scripts.
+
+<P><I>Scott Furman, 4/8/98</I>
+<H2>
+Build conventions</H2>
+To enable multi-threaded execution, define the <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>
+cpp macro and flesh out the stubs and required headers in jslock.c/.h.&nbsp;
+See the JS API docs for more.&nbsp; JSRef must also be built with <TT><FONT SIZE=+1>JS_THREADSAFE</FONT></TT>.
+
+<P>Update your JVM's <TT><FONT SIZE=+1>CLASSPATH</FONT></TT> to point to
+the <TT><FONT SIZE=+1>liveconnect/classes</FONT></TT> subdirectory.&nbsp;
+If you do not, LiveConnect will still operate but with the limitation that
+JS objects may not be passed as arguments of Java methods and it will not
+be possible to call from Java into JavaScript, i.e. the <I>netscape.javascript.JSObject</I>
+class will be inaccessible.
+<UL><B>Windows</B>
+<UL>
+<LI>
+Use MSDEV5.0 (LiveConnectShell.dsw).</LI>
+
+<LI>
+You must first build the JS runtime, js32.dll, by using the normal JSRef
+build procedure.</LI>
+
+<LI>
+Identify the JVM that you are linking against by setting the <TT><FONT SIZE=+1>JDK</FONT></TT>
+environment variable to point to the top-level JDK directory, e.g. <TT><FONT SIZE=+1>D:\jdk1.1.5</FONT></TT>.&nbsp;
+This is used to establish paths for header file inclusion, linking and
+execution.&nbsp; If you are not using Sun's JVM, the project files may
+require manual tweaking to set these paths correctly.</LI>
+
+<LI>
+The output files (DLLs and executables) are placed in the <TT><FONT SIZE=+1>js/ref/liveconnect/Debug</FONT></TT>
+or <TT><FONT SIZE=+1>js/ref/liveconnect/Release</FONT></TT> directories.</LI>
+
+<LI>
+The LiveConnect-enabled shell is named <TT><FONT SIZE=+1>lcshell.exe</FONT></TT>
+and appears in the output directory.</LI>
+
+<LI>
+You must have the JVM DLL in your <TT><FONT SIZE=+1>PATH</FONT></TT> environment
+variable in order to run.&nbsp; If you are using the Sun JDK, the DLL appears
+in the JDK's bin directory.</LI>
+</UL>
+<B>Mac</B>
+<UL>
+<LI>
+<FONT COLOR="#FF0000">LiveConnect is known to build on the Mac, but no
+project files created yet</FONT></LI>
+
+<LI>
+Use CodeWarrior 1.x (???.prj.hqx) or 2 (???.prj2.hqx).</LI>
+</UL>
+<B>Unix</B>
+<UL>
+<LI>
+<FONT COLOR="#FF0000">No Makefiles created yet</FONT></LI>
+
+<LI>
+Use vendor cc or gcc (ftp://prep.ai.mit.edu/pub/gnu) for compiling,&nbsp;
+and use gmake for building.</LI>
+
+<LI>
+To compile optimized code, set BUILD_OPT=1 on the nmake/gmake command line
+or preset it in the environment or makefile.&nbsp; The C preprocessor macro
+DEBUG&nbsp; will be undefined, and NDEBUG (archaic Unix-ism for "No Debugging")
+will be defined.&nbsp; Without BUILD_OPT, DEBUG is predefined and NDEBUG
+is undefined.</LI>
+
+<LI>
+Your own debug flag, DEBUG_$USER, will be defined or undefined as BUILD_OPT
+is unset or set.</LI>
+
+<LI>
+To add C compiler options from the make command line, set XCFLAGS=-Dfoo.</LI>
+
+<LI>
+To predefine -D or -U options in the makefile, set DEFINES.</LI>
+
+<LI>
+To predefine -I options in the makefile, set INCLUDES.</LI>
+</UL>
+</UL>
+
+<H2>
+Naming and coding conventions:</H2>
+
+<UL>
+<LI>
+Public function names begin with JSJ_ followed by capitalized "intercaps",&nbsp;
+e.g. JSJ_ConnectToJavaVM.</LI>
+
+<LI>
+Extern but library-private function names use a jsj_ prefix and mixed case,
+e.g. jsj_LookupSymbol.</LI>
+
+<LI>
+Most static function names have unprefixed, underscore-separated names:
+get_char.</LI>
+
+<LI>
+But static native methods of JS objects have intercaps names, e.g., JavaObject_getProperty().</LI>
+
+<LI>
+And library-private and static data use underscores, not intercaps (but
+library-private data do use a js_ prefix).</LI>
+
+<LI>
+Scalar type names are lowercase and js-prefixed: jsdouble.</LI>
+
+<LI>
+Aggregate type names are JS-prefixed and mixed-case: JSObject.</LI>
+
+<LI>
+Macros are generally ALL_CAPS and underscored, to call out potential side
+effects, multiple uses of a formal argument, etc.</LI>
+
+<LI>
+Four spaces of indentation per statement nesting level.&nbsp; The files
+are space-filled, so adjusting of your tab setting should be unnecessary.</LI>
+
+<LI>
+DLL entry points have their return type expanded within a PR_PUBLIC_API()&nbsp;
+macro call, to get the right Windows secret type qualifiers in the right
+places for both 16- and 32-bit builds.</LI>
+
+<LI>
+Callback functions that might be called from a DLL are similarly macroized
+with PR_STATIC_CALLBACK (if the function otherwise would be static to hide
+its name) or PR_CALLBACK (this macro takes no type argument; it should
+be used after the return type and before the function name).</LI>
+</UL>
+
+<H2>
+The LiveConnect API</H2>
+All public LiveConnect entry points and callbacks are documented in jsjava.h,
+the header file that exports those functions.
+<H2>
+Design walk-through</H2>
+&nbsp;
+<BR>&nbsp;
+<H2>
+File walk-through</H2>
+&nbsp;
+<TABLE BORDER=3 CELLSPACING=0 CELLPADDING=4 >
+<TR>
+<TD>jsjava.h</TD>
+
+<TD>LiveConnect's only public header file.&nbsp; Defines all public API
+entry points, callbacks and types.&nbsp;</TD>
+</TR>
+
+<TR>
+<TD>jsj_private.h</TD>
+
+<TD>LiveConnect internal header file for intra-module sharing of functions
+and types</TD>
+</TR>
+
+<TR>
+<TD>jsj.c</TD>
+
+<TD>Public API entry points and initialization code</TD>
+</TR>
+
+<TR>
+<TD>jsj_array.c</TD>
+
+<TD>Read and write elements of a Java array using the JNI.</TD>
+</TR>
+
+<TR>
+<TD>jsj_class.c</TD>
+
+<TD>Construct and manipulate JavaClassDescriptor structs, which are the
+native wrappers for Java classes.&nbsp; JavaClassDescriptors are used to
+describe the signatures of methods and fields.&nbsp; There is a JavaClassDescriptor
+associated with the reflection of each Java Object.</TD>
+</TR>
+
+<TR>
+<TD>jsj_convert.c</TD>
+
+<TD>Convert between Java and JavaScript values of all types, including
+the wrapping of JS objects as Java objects and vice-versa.</TD>
+</TR>
+
+<TR>
+<TD>jsj_field.c</TD>
+
+<TD>Reflect Java fields as properties of JavaObject objects and implement
+getter/setter access to those fields.</TD>
+</TR>
+
+<TR>
+<TD>jsj_JavaArray.c</TD>
+
+<TD>Implementation of the JavaScript JavaArray class.&nbsp; Instances of
+JavaArray are used to reflect Java arrays.</TD>
+</TR>
+
+<TR>
+<TD>jsj_JavaClass.c</TD>
+
+<TD>Implementation of the JavaScript JavaClass class.&nbsp;&nbsp; Instances
+of JavaClass are used to reflect Java classes.</TD>
+</TR>
+
+<TR>
+<TD>jsj_JavaObject.c</TD>
+
+<TD>Implementation of the JavaScript JavaObject class.&nbsp;&nbsp; Instances
+of JavaObject are used to reflect Java objects, except for Java arrays,
+although some of the code in this file is used by the JavaArray code.</TD>
+</TR>
+
+<TR>
+<TD>jsj_JavaPackage.c</TD>
+
+<TD>Implementation of the JavaScript JavaPackage class.&nbsp;&nbsp; Instances
+of JavaPackage are used to reflect Java packages.</TD>
+</TR>
+
+<TR>
+<TD>jsj_JSObject.c</TD>
+
+<TD>Implementation of the native methods for the&nbsp; <I>netscape.javascript.JSObject</I>
+Java class, which are used for calling into JavaScript from Java.&nbsp;
+It also contains the code that handles propagation of exceptions both into
+and out of Java.</TD>
+</TR>
+
+<TR>
+<TD>jsj_method.c</TD>
+
+<TD>Reflect Java methods as properties of JavaObject objects and make it
+possible to invoke those methods.&nbsp; Includes overloaded method resolution
+and argument/return-value conversion code.</TD>
+</TR>
+
+<TR>
+<TD>jsj_utils.c</TD>
+
+<TD>Low-level utility code fo reporting errors, etc.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<BR>&nbsp;
+</BODY>
+</HTML>
