@@ -538,6 +538,7 @@ input[type=radio] {
 
 input[type=radio][disabled] {
   border: 1px solid;
+  padding: 1px;
 }
 
 input[type=radio]:focus {
@@ -772,6 +773,8 @@ input[type="button"][disabled], input[type="button"][disabled]:active {
 
 /* HTML 4 Button */
 button { 
+  font-family: sans-serif;
+  font-size: small;
   user-select: none !important;
   display: inline;
   vertical-align: bottom;
@@ -865,36 +868,14 @@ label {
   cursor: default !important;
   user-select: none !important;
   overflow:hidden !important;
-	white-space:nowrap !important;
-	background-color: inherit !important;
-	color: inherit !important;
-	text-align: inherit !important;
+  white-space:nowrap !important;
+  background-color: inherit !important;
+  color: inherit !important;
+  text-align: inherit !important;
   padding-left:   4px !important;
-  padding-right:  5px !important;
+  padding-right:  0px !important;
   padding-bottom: 1px !important;
   padding-top:    1px !important;
-}
-
-select:-moz-display-comboboxcontrol-frame {
-  cursor: default;
-  user-select: none;
-  overflow:hidden;
-	white-space:nowrap;
-	background-color: inherit;
-	color: inherit;
-	text-align: inherit;
-  padding-left:   4px;
-  padding-right:  5px;
-  padding-bottom: 1px;
-  padding-top:    1px;
-}
-
-select:focus *:-moz-display-comboboxcontrol-frame {
-  border: 1px dotted black;
-  padding-left:   3px;
-  padding-right:  4px;
-  padding-bottom: 0px;
-  padding-top:    0px;
 }
 
 select:-moz-dummy-option { 
@@ -903,6 +884,7 @@ select:-moz-dummy-option {
 }
 
 select[size] {
+  user-select: none !important;
   box-sizing: border-box;
   font-family: sans-serif;
   font-size: small;
@@ -916,16 +898,14 @@ select[size] {
 }
 
 select, select[size="1"] {
+  user-select: none !important;
   box-sizing: border-box;
   font-family: sans-serif;
   font-size: small;
   background-color: white;
   border: inset 2px rgb(192, 192, 192);
-  padding-left:   0px;
-  padding-top:    0px;
-  padding-right:  0px;
-  padding-bottom: 0px;
-  margin: 0px 0px 0px 0px;
+  padding: 0px;
+  margin:  0px;
   vertical-align: bottom;
   color:black;
   white-space:nowrap;
@@ -944,6 +924,7 @@ select[disabled] {
 /* combobox button */
 select > input[type="button"] {
   user-focus: none;
+  user-select: none !important;
   position: static !important;
   white-space:nowrap;
   border: outset 2px rgb(204, 204, 204);
@@ -985,9 +966,9 @@ option {
 
 /* we need to address the part where there is a label */
 /* and content. The CSS3 content property would be handy for this */
-option[label]:before { 
+/*option[label]:before { 
   content:attr(label);
-}
+}*/
 
 select[size] option {
   padding-left:   3px;
@@ -999,7 +980,7 @@ select[size] option {
 select option, select[size="1"] option {
   padding-left:   3px;
   padding-top:    0px;
-  padding-right:  0px;
+  padding-right:  5px;
   padding-bottom: 0px;
 }
 
