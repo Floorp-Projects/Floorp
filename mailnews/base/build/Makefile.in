@@ -31,7 +31,6 @@ EXPORTS		= nsMsgBaseCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libmsgbase_s.a \
-		$(DIST)/lib/librdfutil_s.a \
 		$(DIST)/lib/libmsgsearch_s.a \
 		$(NULL)
 
@@ -40,6 +39,7 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/lib	\
+		$(DIST)/lib/librdfutil_s.a \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		-lxpcom \

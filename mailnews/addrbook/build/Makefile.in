@@ -31,13 +31,13 @@ EXPORTS		= nsAbBaseCID.h
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libaddrbook_s.a \
-	$(DIST)/lib/librdfutil_s.a \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 	$(MKSHLIB_FORCE_ALL) \
 	$(SHARED_LIBRARY_LIBS) \
 	$(MKSHLIB_UNFORCE_ALL) \
+	$(DIST)/lib/librdfutil_s.a \
 	-L$(DIST)/bin \
 	$(NSPR_LIBS) \
 	-lxpcom \
