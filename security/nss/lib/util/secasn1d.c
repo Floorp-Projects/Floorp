@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.11 2001/11/21 18:00:28 relyea%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.12 2001/11/29 18:46:17 jpierre%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -2308,7 +2308,7 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
     sec_asn1d_state *state = NULL;
     unsigned long consumed;
     SEC_ASN1EncodingPart what;
-
+    sec_asn1d_state *stateEnd = cx->current;
 
     if (cx->status == needBytes)
 	cx->status = keepGoing;
@@ -2481,7 +2481,7 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
     }
 
     if (cx->status == decodeError) {
-	while (state != NULL) {
+	while (state != NULL && stateEnd->parent!=state) {
 	    sec_asn1d_free_child (state, PR_TRUE);
 	    state = state->parent;
 	}
