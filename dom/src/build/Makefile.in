@@ -29,7 +29,7 @@ LIBRARY_NAME = jsdom
 
 MODULE=dom
 
-REQUIRES=xpcom raptor caps oji
+REQUIRES=xpcom raptor caps ojiimpl
 
 CPPSRCS=nsDOMFactory.cpp \
 	nsHTMLTagsEnums.cpp \
