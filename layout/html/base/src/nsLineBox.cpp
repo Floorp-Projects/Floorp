@@ -63,9 +63,10 @@ ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
 char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
-  PR_snprintf(aBuf, aBufSize, "%s,%s",
+  PR_snprintf(aBuf, aBufSize, "%s,%s[0x%x]",
               (mState & LINE_IS_DIRTY) ? "dirty" : "clean",
-              (mState & LINE_IS_BLOCK) ? "block" : "inline");
+              (mState & LINE_IS_BLOCK) ? "block" : "inline",
+              mState);
   return aBuf;
 }
 
