@@ -1072,7 +1072,6 @@ SearchDataSource::GetSearchEngineList()
 #ifdef	XP_MAC
 	// on Mac, use system's search files
 	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
-	nsFileSpec 			nativeDir(searchSitesDir);
 #else
 	// on other platforms, use our search files
 	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
@@ -1080,8 +1079,9 @@ SearchDataSource::GetSearchEngineList()
 	searchSitesDir += "res";
 	searchSitesDir += "rdf";
 	searchSitesDir += "datasets";
-	nsFileSpec 			nativeDir(searchSitesDir);
 #endif
+
+	nsFileSpec 			nativeDir(searchSitesDir);
 	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
 	{
 		const nsFileSpec	fileSpec = (const nsFileSpec &)i;
@@ -1103,15 +1103,20 @@ SearchDataSource::GetSearchEngineList()
 				if ((!err) && (cInfo.hFileInfo.ioFlFndrInfo.fdType == 'issp') &&
 					(cInfo.hFileInfo.ioFlFndrInfo.fdCreator == 'fndf'))
 #else
+				// else just check the extension
 				nsAutoString	extension;
 				if ((uri.Right(extension, 4) == 4) && (extension.EqualsIgnoreCase(".src")))
 #endif
 				{
-#ifdef	XP_MAC
-					PRInt32	separatorOffset = uri.RFindChar(PRUnichar(':'));
+					char	c;
+#ifdef	XP_WIN
+					c = '\\';
+#elif	XP_MAC
+					c = ':';
 #else
-					PRInt32	separatorOffset = uri.RFindChar(PRUnichar('/'));
+					c = '/';
 #endif
+					PRInt32	separatorOffset = uri.RFindChar(PRUnichar(c));
 					if (separatorOffset > 0)
 					{
 						uri.Cut(0, separatorOffset+1);
@@ -1210,7 +1215,7 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 	// XXX we should get this from prefs.
 	searchEngine += "res";
 	searchEngine += "rdf";
-	searchEngine += "search";
+	searchEngine += "datasets";
 #endif
 	searchEngine += baseFilename;
 
