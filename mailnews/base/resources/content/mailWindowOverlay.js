@@ -1105,7 +1105,7 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
     var msgHdr = null;
     var windowID = GetWindowByWindowType("mail:messageWindow");
 
-    if(!windowID)
+    if (!windowID)
       return false;
 
     if (!aMessageUri) {
@@ -1124,29 +1124,34 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
         if (!msgHdr)
             return false;
 
-        if (msgHdr.folder.URI != windowID.gCurrentFolderUri) {
-            if ("CreateView" in windowID) {
-                // Reset the window's message uri and folder uri vars, and
-                // update the command handlers to what's going to be used.
-                // This has to be done before the call to CreateView().
-                windowID.gCurrentMessageUri = messageUri;
-                windowID.gCurrentFolderUri = msgHdr.folder.URI;
-                windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
-                windowID.CreateView(gDBView);
-            }
-            else
-                return false;
+        // even if the folder uri's match, we can't use the existing view
+        // (msgHdr.folder.URI == windowID.gCurrentFolderUri)
+        // the reason is quick search and mail views.
+        // see bug #187673
+        //
+        // for the sake of simplicity,
+        // let's always call CreateView(gDBView)
+        // which will clone gDBView
+        if ("CreateView" in windowID) {
+          // Reset the window's message uri and folder uri vars, and
+          // update the command handlers to what's going to be used.
+          // This has to be done before the call to CreateView().
+          windowID.gCurrentMessageUri = messageUri;
+          windowID.gCurrentFolderUri = msgHdr.folder.URI;
+          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
+          windowID.CreateView(gDBView);
+          windowID.gDBView.loadMessageByMsgKey(msgHdr.messageKey);
         }
-
-        windowID.gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+        else
+          return false;
     }
     catch (ex) {
         dump("reusing existing standalone message window failed: " + ex + "\n");
         return false;
     }
+
     // bring existing window to front
     windowID.focus();
-
     return true;
 }
 
