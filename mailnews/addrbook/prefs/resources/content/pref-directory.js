@@ -53,6 +53,9 @@ function enableAutocomplete()
     editButton.setAttribute("disabled", true);
 //    autocompleteSkipDirectory.setAttribute("disabled", true);
   }
+  // if we do not have any directories disable the dropdown list box
+  if (gAvailDirectories.length < 1)
+    directoriesList.setAttribute("disabled", true);
   gFromGlobalPref = true;
   LoadDirectories(directoriesListPopup);
 }
@@ -61,8 +64,14 @@ function setupDirectoriesList()
 {
   var override = document.getElementById("identity.overrideGlobalPref").getAttribute("value");
   var autocomplete = document.getElementById("ldapAutocomplete");
+  // useGlobalFlag is set when user changes the selectedItem on the radio button and switches
+  // to a different pane and switches back in Mail/news AccountSettings
+  var useGlobalFlag = document.getElementById("overrideGlobalPref").getAttribute("value");
+  // directoryServerFlag is set when user changes the server to None and switches
+  // to a different pane and switches back in Mail/news AccountSettings
+  var directoryServerFlag = document.getElementById("directoryServer").getAttribute("value");
 
-  if(override == "true")
+  if(override == "true" && !useGlobalFlag)
     autocomplete.selectedItem = document.getElementById("directories");
   else
     autocomplete.selectedItem = document.getElementById("useGlobalPref");
@@ -73,7 +82,10 @@ function setupDirectoriesList()
   try {
     var directoryServerString = gPrefInt.CopyUnicharPref(directoryServer + ".description");
   }
-  catch(ex) {
+  catch(ex) {}
+  if (directoryServerFlag || !directoryServerString) {
+    document.getElementById("identity.directoryServer").setAttribute("value", "");
+    directoryServer = "";
     var addressBookBundle = document.getElementById("bundle_addressBook");
     directoryServerString = addressBookBundle.getString("directoriesListItemNone");
   }
@@ -156,16 +168,74 @@ function LoadDirectories(popup)
     }
     if (popup && !gFromGlobalPref) 
     {
+      // we are in mail/news Account settings
       item=document.createElement("menuitem");
       var addressBookBundle = document.getElementById("bundle_addressBook");
       var directoryName = addressBookBundle.getString("directoriesListItemNone");
       item.setAttribute("label", directoryName);
       item.setAttribute("value", "");
       popup.appendChild(item);
-      if (gRefresh)
-        setupDirectoriesList();
+      if (gRefresh) {  
+      // gRefresh is true if user edits, removes or adds a directory.
+        var directoriesList =  document.getElementById("directoriesList");
+        var directoryDescription = null;
+        if(directoriesList.value != "") {
+          // make sure the selected directory still exists
+          try {
+            directoryDescription = gPrefInt.
+                     CopyUnicharPref(directoriesList.value + ".description"); 
+          }
+          catch (ex) {}
+        }
+        if(!directoryDescription) {
+          // if selected directory doesn't exist, set it to none
+          directoriesList.value = "";
+          var addressBookBundle = document.getElementById("bundle_addressBook");
+          directoriesList.label = addressBookBundle.
+                          getString("directoriesListItemNone");
+        }
+        else {
+          directoriesList.label = directoryDescription;
+          directoriesList.value = directoriesList.value;
+        }
+      }
     }
     if (popup && gFromGlobalPref) {
+    // we are in global preferences-> Addressing pane.
+      var directoriesList =  document.getElementById("directoriesList");
+      if (gRefresh) {
+        // gRefresh is true if user edits, removes or adds a directory.
+        var directoryDescription = null;
+        if(directoriesList.label != "") {
+          // make sure the selected directory still exists
+          try {
+            directoryDescription = gPrefInt.
+                     CopyUnicharPref(directoriesList.value + ".description"); 
+          }
+          catch (ex) {}
+        }
+        if(!directoryDescription) {
+          // if selected directory doesn't exist, 
+          // set it the first one in the list of directories 
+          // if we have  atleast one directory.
+          // or else set it to ""
+          if (gAvailDirectories.length >= 1) {
+            directoriesList.label = gAvailDirectories[0][1];
+            directoriesList.value = gAvailDirectories[0][0];
+            directoriesList.removeAttribute("disabled");
+          }
+          else {
+            directoriesList.label = "";
+            directoriesList.value = null;
+            directoriesList.setAttribute("disabled", true);
+          }
+        }
+        else {
+          directoriesList.label = directoryDescription;
+          directoriesList.value = directoriesList.value;
+        }
+        return;
+      }
       var pref_string_title = "ldap_2.autoComplete.directoryServer";
       try {
         var directoryServer = gPrefInt.CopyCharPref(pref_string_title);
@@ -184,7 +254,6 @@ function LoadDirectories(popup)
           description = "";
         } 
 	  }
-	  var directoriesList =  document.getElementById("directoriesList");
       if ((directoryServer != "") && (description != ""))
       {
         directoriesList.label = description;
@@ -193,10 +262,13 @@ function LoadDirectories(popup)
       else if(gAvailDirectories.length >= 1) {
          directoriesList.label = gAvailDirectories[0][1];
          directoriesList.value = gAvailDirectories[0][0];
+         gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", 
+                              gAvailDirectories[0][0]);
       }
       else {
         directoriesList.label = "";
         directoriesList.value = null;
+        gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", "");
       }
 	}
   }
@@ -334,23 +406,6 @@ function removeDirectory()
   var cell =  row.firstChild;
 
   if(gCurrentDirectoryServer && gCurrentDirectoryServerId) {
-    if(!gPrefInt) { 
-      try {
-        gPrefInt = Components.classes["@mozilla.org/preferences;1"];
-        gPrefInt = gPrefInt.getService(Components.interfaces.nsIPref);
-      }
-      catch (ex) {
-        gPrefInt = null;
-      }
-    }
-    try {
-      var directoryServer = gPrefInt.CopyCharPref("ldap_2.autoComplete.directoryServer");
-    }
-    catch(ex)  {
-      directoryServer = "";
-    }
-    if (gCurrentDirectoryServerId == directoryServer)
-      gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", "");
     var len= gDeletedDirectories.length;
     gDeletedDirectories[len] = gCurrentDirectoryServerId;
   }
@@ -360,15 +415,51 @@ function removeDirectory()
   if (nextNode) {
     directoriesTree.selectItem(nextNode)
   } 
-  window.opener.gRefresh = true;
 }
 
+//  remove all the directories that are selected for deletion from preferences
+//  check if the deleted directory is selected for autocompletion in global
+//  or identity prefs. If so change the pref to ""
 function onOK()
 {
   var len = gDeletedDirectories.length;
-  for (var i=0; i< len; i++){
-    gPrefInt.DeleteBranch(gDeletedDirectories[i]);
+  if (len) {
+    try {
+      var directoryServer = gPrefInt.CopyCharPref("ldap_2.autoComplete.directoryServer");
+    }
+    catch(ex)  {
+      directoryServer = null;
+    }
+    var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
+                 .getService(Components.interfaces.nsIMsgAccountManager);
+    if (am) { 
+      var allIdentities = am.allIdentities;
+      var identitiesCount = allIdentities.Count();
+      var identityServer = new Array();
+      var currentIdenity = null;
+      var j=0;
+      for (j=0; j< identitiesCount; j++) {
+        currentIdentity = allIdentities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
+        identityServer[j] = {server:currentIdentity.directoryServer, deleted:false};
+      }
+      var deletedGlobal = false;
+      for (var i=0; i< len; i++){
+        if (!deletedGlobal && directoryServer && (gDeletedDirectories[i] == directoryServer)) {
+          gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", "");
+          deletedGlobal = true;
+        }
+        for (j=0; j<identitiesCount; j++){
+          if (identityServer[j].server && !identityServer[j].deleted && (gDeletedDirectories[i] == identityServer[j].server)) {
+            identityServer[j].server = "";
+            identityServer[j].deleted = true;
+          }
+        }
+        gPrefInt.DeleteBranch(gDeletedDirectories[i]);
+      }
+      gPrefInt.savePrefFile(null);
+    }
   }
+  window.opener.gRefresh = true;
   window.close();
 }
 

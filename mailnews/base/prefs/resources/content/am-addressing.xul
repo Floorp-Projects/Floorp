@@ -44,6 +44,8 @@ Contributors:
   <text hidden="true" wsm_persist="true" id="identity.overrideGlobalPref"
         pref="true" preftype="bool" prefattribute="value"
         prefstring="mail.identity.%identitykey%.overrideGlobal_Pref"/>
+  <text hidden="true" wsm_persist="true" id="overrideGlobalPref" value=""/>
+  <text hidden="true" wsm_persist="true" id="directoryServer" value=""/>
   <hbox class="box-smallheader" title="&addressing.label;"/>
   
   <separator class="thin"/>
