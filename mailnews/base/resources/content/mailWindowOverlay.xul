@@ -940,7 +940,7 @@ Rights Reserved.
       <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
                   crop="right" observes="cmd_print" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
-    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print" default="true"/>
+    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
         </menupopup>
   	  </menubutton>
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" onclick="MsgStop();"/>
