@@ -98,34 +98,6 @@ interface nsIEditorShell : nsISupports
    *   because it's gone by the time destructor is called
   */
   void Shutdown();
-  
-  /** Access for the common alert dialog 
-    *
-    * title   Title (caption) of the dialog
-    * msg     Message in the dialog
-    *
-    * Dialog contains an "Ok" button. No return value
-    */
-  void AlertWithTitle(in wstring title, in wstring msg);
-  
-  /** Access for the common alert dialog 
-    *
-    * title           Title (caption) of the dialog
-    * question        Question asked of the user 
-    * yesButtonText   Text for the "Yes" button
-    *                 If empty, "Yes" will be used
-    * noButtonText    Text for the "No" button.
-    *                 If empty, the button will not be displayed
-    *
-    * Dialog always has a "Cancel" button
-    * Button order follows platform-specific rules
-    *
-    * Returns:  0   Yes button pressed
-    *           1   Cancel button pressed
-    *           2   No button pressed
-    */
-  PRInt32 ConfirmWithTitle(in wstring title, in wstring question,
-                           in wstring yesButtonText, in wstring noButtonText);
                         
   /* check a particular window's URL to see if it matches the given URL */
   boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindowInternal inCheckWindow); 
