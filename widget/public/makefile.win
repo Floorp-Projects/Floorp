@@ -62,8 +62,7 @@ EXPORTS=nsui.h \
   nsIPopUpMenu.h \
   nsIMenuButton.h \
   nsIImageButtonListener.h \
-  nsIContentConnector.h \
-  nsISelectionMgr.h
+  nsIContentConnector.h 
 
 
 include <$(DEPTH)\config\rules.mak>
