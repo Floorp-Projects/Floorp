@@ -78,7 +78,6 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
-#include "nsIFile.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -1394,7 +1393,7 @@ NS_IMETHODIMP nsPlaintextEditor::Cut()
 
   PRBool isCollapsed;
   if (NS_SUCCEEDED(selection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_OK;  // just return ok so no JS error is thrown
 
   res = Copy();
   if (NS_SUCCEEDED(res))
