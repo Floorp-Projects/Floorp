@@ -137,7 +137,7 @@ nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyle
   nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
   
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext); 
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -251,15 +251,10 @@ nsToolboxFrame :: GetSkipSides() const
 // This doesn't have to explicitly worry about toolbars that grow because of
 // too much content because Gecko handles all that for us (grin).
 //
-// If a toolbar (child) is not visible, we need to leave extra space at the bottom of
+// If any toolbar is collapsed, we need to leave extra space at the bottom of
 // the toolbox for a "expando area" in which the grippies that represent the 
 // collapsed toolbars reside.
-//
-// *** IMPORTANT IMPORTANT IMPORTANT ***
-// We need a way to distinguish in the dom between a toolbar being hidden and a toolbar
-// being collapsed. Right now I'm using "visible" as "collapsed" since there is no
-// way to hide a toolbar from menus, etc.
-//
+// 
 NS_IMETHODIMP 
 nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
@@ -268,8 +263,26 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 {
   //*** This temporary and used to initialize the psuedo-styles we use. But where else
   //*** should it go?
-  ReResolveStyleContext(&aPresContext, mStyleContext);
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:
+      ReResolveStyleContext(&aPresContext, mStyleContext);
+  }
 
+  // Until I can handle incremental reflow correctly (or at all), I need to at
+  // least make sure that I don't be a bad citizen. This will certainly betray my 
+  // complete lack of understanding of the reflow code, but I think I need to
+  // make sure that I advance to the next reflow command to make everything down 
+  // the line matches up.
+  if ( aReflowState.reason == eReflowReason_Incremental ) {
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    if (this != target) {
+      // ignore the next reflow command and proceed as normal...
+      nsIFrame* ignore;
+      aReflowState.reflowCommand->GetNext(ignore);
+    }
+  }
+  
   // start with a reasonable desired size (in twips), which will be changed to 
   // the size of our children plus some other stuff below.
   mSumOfToolbarHeights = 0;
