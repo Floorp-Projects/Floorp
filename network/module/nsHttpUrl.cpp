@@ -667,19 +667,20 @@ nsHttpUrlImpl::ReconstructSpec(void)
 
 PRBool nsHttpUrlImpl::Equals(const nsIURL* aURL) const 
 {
-    PRBool bIsEqual;
-    NS_LOCK_INSTANCE();
-    nsIHttpURL* otherURL;
-    if (NS_SUCCEEDED(((nsIURL*)aURL)->QueryInterface(kIHttpURLIID, (void**)&otherURL))) {
-        nsHttpUrlImpl* other = (nsHttpUrlImpl*)otherURL;
-        bIsEqual = PRBool((0 == PL_strcmp(mProtocol, other->mProtocol)) && 
-                          (0 == PL_strcasecmp(mHost, other->mHost)) &&
-                          (0 == PL_strcmp(mFile, other->mFile)));
-        NS_RELEASE(otherURL);
+    PRBool bIsEqual(PR_FALSE);
+    if (aURL)
+    {
+        NS_LOCK_INSTANCE();
+        nsIHttpURL* otherURL;
+        if (NS_SUCCEEDED(((nsIURL*)aURL)->QueryInterface(kIHttpURLIID, (void**)&otherURL))) {
+            nsHttpUrlImpl* other = (nsHttpUrlImpl*)otherURL;
+            bIsEqual = PRBool((0 == PL_strcmp(mProtocol, other->mProtocol)) && 
+                              (0 == PL_strcasecmp(mHost, other->mHost)) &&
+                              (0 == PL_strcmp(mFile, other->mFile)));
+            NS_RELEASE(otherURL);
+        }
+        NS_UNLOCK_INSTANCE();
     }
-    else
-        bIsEqual = PR_FALSE;
-    NS_UNLOCK_INSTANCE();
     return bIsEqual;
 }
 
