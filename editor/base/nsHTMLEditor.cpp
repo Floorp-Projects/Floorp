@@ -970,6 +970,44 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
   return result;
 }
 
+
+NS_IMETHODIMP nsHTMLEditor::GetTypingState(nsIAtom *aProperty, PRBool &aSet)
+{
+  if (!aProperty)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (!mTypeInState)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  PRUint32  styleEnum;
+  mTypeInState->GetEnumForName(aProperty, styleEnum);
+  if (styleEnum == NS_TYPEINSTATE_UNKNOWN)
+    return NS_ERROR_UNEXPECTED;
+  
+  mTypeInState->GetProp(styleEnum, aSet);
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsHTMLEditor::GetTypingStateValue(nsIAtom *aProperty, nsString &aValue)
+{
+  if (!aProperty)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (!mTypeInState)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  PRUint32  styleEnum;
+  mTypeInState->GetEnumForName(aProperty, styleEnum);
+  if (styleEnum == NS_TYPEINSTATE_UNKNOWN)
+    return NS_ERROR_UNEXPECTED;
+  
+  mTypeInState->GetPropValue(styleEnum, aValue);
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -5077,7 +5115,8 @@ NS_IMETHODIMP nsHTMLEditor::MoveContentOfNodeIntoNewParent(nsIDOMNode  *aNode,
                     {
                       result = nsEditor::InsertNode(newChildNode, aNewParentNode, 0);
                       if (NS_SUCCEEDED(result)) 
-                      { // set the selection
+                      {
+                        // set the selection
                         nsCOMPtr<nsIDOMSelection>selection;
                         result = GetSelection(getter_AddRefs(selection));
 												if (NS_FAILED(result)) return result;
