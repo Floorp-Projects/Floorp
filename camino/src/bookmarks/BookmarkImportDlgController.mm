@@ -41,6 +41,13 @@
 #import "BookmarkManager.h"
 #import "BookmarkFolder.h"
 
+@interface BookmarkImportDlgController (Private)
+
+-(void) tryAddImportFromBrowser: (NSString *) aBrowserName withBookmarkPath: (NSString *) aPath;
+-(NSString *) getSaltedBookmarkPathForProfile: (NSString *) aPath;
+
+@end
+
 @implementation BookmarkImportDlgController
 
 -(void) windowDidLoad
@@ -48,95 +55,67 @@
   [self buildAvailableFileList];
 }
 
+// Check for common webbrower bookmark files and, if they exist, add import buttons.
 -(void) buildAvailableFileList
 {
-  // check for common webbrower bookmark files and, if they exist, add to button.
-  NSFileManager *fm = [NSFileManager defaultManager];
-  NSMenuItem *browserItem;
-  NSEnumerator *enumerator;
-  id aTempItem;
-  // iCab
-  NSString *pathString = [[NSString stringWithString:@"~/Library/Preferences/iCab Preferences/Hotlist.html"] stringByExpandingTildeInPath];
-  if ([fm fileExistsAtPath:pathString]) {
-    [mBrowserListButton insertItemWithTitle:@"iCab" atIndex:0];
-    browserItem = [mBrowserListButton itemAtIndex:0];
-    [browserItem setTarget:self];
-    [browserItem setAction:@selector(nullAction:)];
-    [browserItem setRepresentedObject:pathString];
-  }
-  // Firebird
-  pathString = [[NSString stringWithString:@"~/Library/Phoenix/Profiles/default/"] stringByExpandingTildeInPath];
-  if ([fm fileExistsAtPath:pathString]) {
-    NSArray *saltArray = [fm directoryContentsAtPath:pathString];
-    enumerator = [saltArray objectEnumerator];
-    while ((aTempItem = [enumerator nextObject])) {
-      if (![aTempItem hasPrefix:@"."])
-        break;
-    }
-    if (aTempItem) {
-      pathString = [pathString stringByAppendingFormat:@"/%@/bookmarks.html",aTempItem];
-      if ([fm fileExistsAtPath:pathString]) {
-        [mBrowserListButton insertItemWithTitle:@"Mozilla Firebird" atIndex:0];
-        browserItem = [mBrowserListButton itemAtIndex:0];
-        [browserItem setTarget:self];
-        [browserItem setAction:@selector(nullAction:)];
-        [browserItem setRepresentedObject:pathString];
-      }
-    }
-  }
-
-  // Netscape/Mozilla
-  pathString = [[NSString stringWithString:@"~/Library/Mozilla/Profiles/default/"] stringByExpandingTildeInPath];
-  if ([fm fileExistsAtPath:pathString]) {
-    NSArray *saltArray = [fm directoryContentsAtPath:pathString];
-    enumerator = [saltArray objectEnumerator];
-    while ((aTempItem = [enumerator nextObject])) {
-      if (![aTempItem hasPrefix:@"."])
-        break;
-    }
-    if (aTempItem) {
-      pathString = [pathString stringByAppendingFormat:@"/%@/bookmarks.html",aTempItem];
-      if ([fm fileExistsAtPath:pathString]) {
-        [mBrowserListButton insertItemWithTitle:@"Netscape/Mozilla" atIndex:0];
-        browserItem = [mBrowserListButton itemAtIndex:0];
-        [browserItem setTarget:self];
-        [browserItem setAction:@selector(nullAction:)];
-        [browserItem setRepresentedObject:pathString];
-      }
-    }
-  }
-
-  // Omniweb
-  pathString = [[NSString stringWithString:@"~/Library/Application Support/Omniweb/Bookmarks.html"] stringByStandardizingPath];
-  if ([fm fileExistsAtPath:pathString]) {
-    [mBrowserListButton insertItemWithTitle:@"Omniweb" atIndex:0];
-    browserItem = [mBrowserListButton itemAtIndex:0];
-    [browserItem setTarget:self];
-    [browserItem setAction:@selector(nullAction:)];
-    [browserItem setRepresentedObject:pathString];
-  }
-
-  // IE
-  pathString = [[NSString stringWithString:@"~/Library/Preferences/Explorer/Favorites.html"] stringByStandardizingPath];
-  if ([fm fileExistsAtPath:pathString]) {
-    [mBrowserListButton insertItemWithTitle:@"Internet Explorer" atIndex:0];
-    browserItem = [mBrowserListButton itemAtIndex:0];
-    [browserItem setTarget:self];
-    [browserItem setAction:@selector(nullAction:)];
-    [browserItem setRepresentedObject:pathString];
-  }
-
-  // Safari
- pathString = [[NSString stringWithString:@"~/Library/Safari/Bookmarks.plist"] stringByStandardizingPath];
-  if ([fm fileExistsAtPath:pathString]) {
-    [mBrowserListButton insertItemWithTitle:@"Safari" atIndex:0];
-    browserItem = [mBrowserListButton itemAtIndex:0];
-    [browserItem setTarget:self];
-    [browserItem setAction:@selector(nullAction:)];
-    [browserItem setRepresentedObject:pathString];
-  }
+  NSString *mozPath;
+  
+  // Remove everything but the "Select a File..." option, on the off-chance that someone brings
+  // up the import dialog, throws away a profile, then brings up the import dialog again
+  while ([mBrowserListButton numberOfItems] > 1)
+    [mBrowserListButton removeItemAtIndex:0];
+  
+  [self tryAddImportFromBrowser:@"iCab" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist.html"];
+  [self tryAddImportFromBrowser:@"Omniweb" withBookmarkPath:@"~/Library/Application Support/Omniweb/Bookmarks.html"];
+  [self tryAddImportFromBrowser:@"Internet Explorer" withBookmarkPath:@"~/Library/Preferences/Explorer/Favorites.html"];
+  [self tryAddImportFromBrowser:@"Safari" withBookmarkPath:@"~/Library/Safari/Bookmarks.plist"];
+  
+  mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Mozilla/Profiles/default/"];
+  if (mozPath)
+    [self tryAddImportFromBrowser:@"Netscape/Mozilla" withBookmarkPath:mozPath];
+  
+  // Try Firefox from the new ~/Library/Firefox location, then ~/Library/Phoenix if that fails
+  mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Firefox/Profiles/default/"];
+  if (!mozPath)
+    mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Phoenix/Profiles/default/"];
+  if (mozPath)
+    [self tryAddImportFromBrowser:@"Mozilla Firefox" withBookmarkPath:mozPath];
+  
   [mBrowserListButton selectItemAtIndex:0];
   [mBrowserListButton synchronizeTitleAndSelectedItem];
+}
+
+// Checks for the existence of the specified bookmarks file, and adds an import option for
+// the given browser if the file is found.
+-(void) tryAddImportFromBrowser: (NSString *) aBrowserName withBookmarkPath: (NSString *) aPath
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSString *fullPathString = [aPath stringByStandardizingPath];
+  if ([fm fileExistsAtPath:fullPathString]) {
+    [mBrowserListButton insertItemWithTitle:aBrowserName atIndex:0];
+    NSMenuItem *browserItem = [mBrowserListButton itemAtIndex:0];
+    [browserItem setTarget:self];
+    [browserItem setAction:@selector(nullAction:)];
+    [browserItem setRepresentedObject:fullPathString];
+  }
+}
+
+// Given a Mozilla-like profile, returns the bookmarss.html file in the salt directory,
+// or nil if no salt directory is found
+-(NSString *) getSaltedBookmarkPathForProfile: (NSString *) aPath
+{
+  NSFileManager *fm = [NSFileManager defaultManager];
+  id aTempItem;
+  NSString *fullPathString = [aPath stringByStandardizingPath];
+  if ([fm fileExistsAtPath:fullPathString]) {
+    NSArray *saltArray = [fm directoryContentsAtPath:fullPathString];
+    NSEnumerator *enumerator = [saltArray objectEnumerator];
+    while ((aTempItem = [enumerator nextObject])) {
+      if (![aTempItem hasPrefix:@"."])
+        return [fullPathString stringByAppendingFormat:@"/%@/bookmarks.html",aTempItem];
+    }
+  }
+  return nil;
 }
 
 // keeps browsers turned on
