@@ -438,8 +438,9 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 				PRUint32	flags = m_flags[threadIndex];
 				// if we have a collapsed thread which just got a new
 				// top of thread, change the keys array.
-        char level = 0; // ### TODO
-				if ((flags & MSG_FLAG_ELIDED) && level == 0 
+                nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
+                PRInt32 level = FindLevelInThread(msgHdr, insertIndex);
+				if ((flags & MSG_FLAG_ELIDED) && (level == 0)
 					&& (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) || !(msgFlags & MSG_FLAG_READ)))
 				{
           nsMsgKey msgKey;
@@ -457,12 +458,8 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 				}
 				if (! (flags & MSG_FLAG_ELIDED))	// thread is expanded
 				{								// insert child into thread
-					PRUint8 level = 0;					// levels of other hdrs may have changed!
+					                            // levels of other hdrs may have changed!
 					PRUint32	newFlags = msgFlags;
-          nsMsgViewIndex insertIndex = 0;
-#if 0
-					insertIndex = GetInsertInfoForNewHdr(newKey, threadIndex, &level);
-#endif
 					// this header is the new king! try collapsing the existing thread,
 					// removing it, installing this header as king, and expanding it.
 					if (level == 0)	

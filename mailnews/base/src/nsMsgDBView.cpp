@@ -58,6 +58,7 @@ nsIAtom * nsMsgDBView::kFlaggedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kImapDeletedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kAttachMsgAtom = nsnull;
+nsIAtom * nsMsgDBView::kHasUnreadAtom = nsnull;
 
 PRUnichar * nsMsgDBView::kHighestPriorityString = nsnull;
 PRUnichar * nsMsgDBView::kHighPriorityString = nsnull;
@@ -110,6 +111,7 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kNewsMsgAtom = NS_NewAtom("news");
   kImapDeletedMsgAtom = NS_NewAtom("imapdeleted");
   kAttachMsgAtom = NS_NewAtom("attach");
+  kHasUnreadAtom = NS_NewAtom("hasUnread");
 
   kHighestPriorityAtom = NS_NewAtom("priority-highest");
   kHighPriorityAtom = NS_NewAtom("priority-high");
@@ -143,6 +145,7 @@ nsMsgDBView::~nsMsgDBView()
     NS_IF_RELEASE(kNewsMsgAtom);
     NS_IF_RELEASE(kImapDeletedMsgAtom);
     NS_IF_RELEASE(kAttachMsgAtom);
+    NS_IF_RELEASE(kHasUnreadAtom);
 
     NS_IF_RELEASE(kHighestPriorityAtom);
     NS_IF_RELEASE(kHighPriorityAtom);
@@ -746,7 +749,25 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
       properties->AppendElement(kFlaggedMsgAtom); 
     }
   }
-      
+
+  if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+  {
+    if (m_flags[aRow] & MSG_VIEW_FLAG_ISTHREAD)
+    {
+      nsCOMPtr <nsIMsgThread> thread;
+      rv = GetThreadContainingIndex(aRow, getter_AddRefs(thread));
+      if (NS_SUCCEEDED(rv) && thread)
+      {
+        PRUint32 numUnreadChildren;
+        thread->GetNumUnreadChildren(&numUnreadChildren);
+        if (numUnreadChildren > 0)
+        {
+            properties->AppendElement(kHasUnreadAtom);
+        }   
+      }
+    }
+  }     
+
   return NS_OK;
 }
 
@@ -3100,30 +3121,6 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
   OnHeaderAddedOrDeleted();
   return NS_OK;
 }
-
-nsresult nsMsgDBView::InsertHdrAt(nsIMsgDBHdr *msgHdr, nsMsgViewIndex insertIndex)
-{
-	PRUint32	flags = 0;
-  nsMsgKey msgKey;
-	msgHdr->GetFlags(&flags);
-  msgHdr->GetMessageKey(&msgKey);
-
-	NoteStartChange(insertIndex, 1, nsMsgViewNotificationCode::changed);
-	m_keys.SetAt(insertIndex, msgKey);
-	m_flags.SetAt(insertIndex, flags);
-    PRInt32 level = 0;
-#if 0
-    if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
-    {
-      level = FindLevelInThread(msgHdr, insertIndex);
-    }
-#endif
-	m_levels.SetAt(insertIndex, level);
-	NoteEndChange(insertIndex, 1, nsMsgViewNotificationCode::changed);
-	OnHeaderAddedOrDeleted();
-	return NS_OK;
-}
-
 
 PRBool nsMsgDBView::WantsThisThread(nsIMsgThread * /*threadHdr*/)
 {

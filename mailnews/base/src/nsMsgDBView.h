@@ -81,6 +81,7 @@ protected:
   static nsIAtom* kNewsMsgAtom;
   static nsIAtom* kImapDeletedMsgAtom;
   static nsIAtom* kAttachMsgAtom;
+  static nsIAtom* kHasUnreadAtom;
 
   static nsIAtom* kHighestPriorityAtom;
   static nsIAtom* kHighPriorityAtom;
@@ -144,8 +145,6 @@ protected:
   nsMsgViewIndex GetIndexForThread(nsIMsgDBHdr *hdr);
   virtual nsresult GetThreadContainingIndex(nsMsgViewIndex index, nsIMsgThread **thread);
   virtual nsresult GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr);
-
-  virtual nsresult InsertHdrAt(nsIMsgDBHdr *msgHdr, nsMsgViewIndex insertIndex);
 
   nsresult ToggleExpansion(nsMsgViewIndex index, PRUint32 *numChanged);
   nsresult ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded);

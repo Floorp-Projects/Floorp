@@ -99,11 +99,11 @@ outlinerbody:-moz-outliner-image(threadCol, container, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
 }
 
-outlinerbody:-moz-outliner-image(threadCol, container, unread) {
+outlinerbody:-moz-outliner-image(threadCol, container, hasUnread) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
 }
 
-outlinerbody:-moz-outliner-image(threadCol, container, unread, open) {
+outlinerbody:-moz-outliner-image(threadCol, container, hasUnread, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
 }
 
