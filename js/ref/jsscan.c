@@ -201,9 +201,8 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
     ts->userbuf.base = (jschar *)base;
     ts->userbuf.limit = (jschar *)base + length;
     ts->userbuf.ptr = (jschar *)base;
-#ifdef JSD_LOWLEVEL_SOURCE
-    ts->jsdc = JSD_JSDContextForJSContext(cx);
-#endif
+    ts->listener = cx->runtime->sourceHandler;
+    ts->listenerData = cx->runtime->sourceHandlerData;
     return ts;
 }
 
@@ -249,48 +248,6 @@ js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
     return JS_TRUE;
 #endif
 }
-
-#ifdef JSD_LOWLEVEL_SOURCE
-static void
-SendSourceToJSDebugger(JSTokenStream *ts, jschar *str, size_t length)
-{
-    if (!ts->jsdsrc) {
-	const char* filename = ts->filename ? ts->filename : "typein";
-
-	if (1 == ts->lineno) {
-	    ts->jsdsrc = JSD_NewSourceText(ts->jsdc, filename);
-	} else {
-	    ts->jsdsrc = JSD_FindSourceForURL(ts->jsdc, filename);
-	    if (ts->jsdsrc && JSD_SOURCE_PARTIAL !=
-		JSD_GetSourceStatus(ts->jsdc, ts->jsdsrc)) {
-		ts->jsdsrc = NULL;
-	    }
-	}
-    }
-    if (ts->jsdsrc) {
-	/* here we convert our Unicode into a C string to pass to JSD */
-#define JSD_BUF_SIZE 1024
-	static char* buf = NULL;
-	int remaining = length;
-
-	if (!buf)
-	    buf = malloc(JSD_BUF_SIZE);
-	if (buf)
-	{
-	    while (remaining && ts->jsdsrc) {
-		int bytes = PR_MIN(remaining, JSD_BUF_SIZE);
-		int i;
-		for (i = 0; i < bytes; i++)
-		    buf[i] = (const char) *(str++);
-		ts->jsdsrc = JSD_AppendSourceText(ts->jsdc,ts->jsdsrc,
-						  buf, bytes,
-						  JSD_SOURCE_PARTIAL);
-		remaining -= bytes;
-	    }
-	}
-    }
-}
-#endif
 
 static int32
 GetChar(JSTokenStream *ts)
@@ -341,12 +298,9 @@ GetChar(JSTokenStream *ts)
 		    return EOF;
 		}
 	    }
-
-#ifdef JSD_LOWLEVEL_SOURCE
-	    if (ts->jsdc)
-		SendSourceToJSDebugger(ts, ts->userbuf.ptr, len);
-#endif
-
+            if (ts->listener)
+                (*ts->listener)(ts->filename, ts->lineno, ts->userbuf.ptr, len,
+                                &ts->listenerTSData, ts->listenerData);
 	    /*
 	     * Any one of \n, \r, or \r\n ends a line (longest match wins).
 	     */

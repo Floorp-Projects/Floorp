@@ -1082,6 +1082,63 @@ static JSPropertySpec its_props[] = {
     {0}
 };
 
+#ifdef JSD_LOWLEVEL_SOURCE
+/* 
+ * This facilitates sending source to JSD (the debugger system) in the shell 
+ * where the source is loaded using the JSFILE hack in jsscan. The function 
+ * below is used as a callback for the jsdbgapi JS_SetSourceHandler hook. 
+ * A more normal embedding (e.g. mozilla) loads source itself and can send 
+ * source directly to JSD without using this hook scheme.
+ *
+ * XXX At some future point JSD will understand Unicode source and the
+ * *very* ugly conversion below will be unnecessary.
+ */
+static void
+SendSourceToJSDebugger(const char *filename, uintN lineno,
+                       jschar *str, size_t length, 
+                       void **listenerTSData, JSDContext* jsdc)
+{
+    JSDSourceText *jsdsrc = (JSDSourceText *) *listenerTSData;
+
+    if (!jsdsrc) {
+        if (!filename)
+            filename = "typein";
+	if (1 == lineno) {
+	    jsdsrc = JSD_NewSourceText(jsdc, filename);
+	} else {
+	    jsdsrc = JSD_FindSourceForURL(jsdc, filename);
+	    if (jsdsrc && JSD_SOURCE_PARTIAL !=
+		JSD_GetSourceStatus(jsdc, jsdsrc)) {
+		jsdsrc = NULL;
+	    }
+	}
+    }
+    if (jsdsrc) {
+	/* here we convert our Unicode into a C string to pass to JSD */
+#define JSD_BUF_SIZE 1024
+	static char* buf = NULL;
+	int remaining = length;
+
+	if (!buf)
+	    buf = malloc(JSD_BUF_SIZE);
+	if (buf)
+	{
+	    while (remaining && jsdsrc) {
+		int bytes = PR_MIN(remaining, JSD_BUF_SIZE);
+		int i;
+		for (i = 0; i < bytes; i++)
+		    buf[i] = (const char) *(str++);
+		jsdsrc = JSD_AppendSourceText(jsdc,jsdsrc,
+					      buf, bytes,
+					      JSD_SOURCE_PARTIAL);
+		remaining -= bytes;
+	    }
+	}
+    }
+    *listenerTSData = jsdsrc;
+}
+#endif /* JSD_LOWLEVEL_SOURCE */
+
 static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 
 static JSBool
@@ -1438,7 +1495,9 @@ main(int argc, char **argv)
     if (!_jsdc)
 	return 1;
     JSD_JSContextInUse(_jsdc, cx);
-
+#ifdef JSD_LOWLEVEL_SOURCE
+    JS_SetSourceHandler(rt, SendSourceToJSDebugger, _jsdc);
+#endif /* JSD_LOWLEVEL_SOURCE */
 #ifdef JSDEBUGGER_JAVA_UI
     _jsdjc = JSDJ_CreateContext();
     if (! _jsdjc)

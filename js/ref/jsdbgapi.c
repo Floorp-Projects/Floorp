@@ -806,3 +806,11 @@ JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
     rt->debuggerHandlerData = closure;
     return JS_TRUE;
 }
+
+JS_PUBLIC_API(JSBool)
+JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
+{
+    rt->sourceHandler = handler;
+    rt->sourceHandlerData = closure;
+    return JS_TRUE;
+}        

@@ -223,6 +223,9 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
 extern JS_PUBLIC_API(JSBool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure);
 
+extern JS_PUBLIC_API(JSBool)
+JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure);
+
 PR_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

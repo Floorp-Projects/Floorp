@@ -96,4 +96,9 @@ typedef void
 			JSScript    *script,
 			void        *callerdata );
 
+typedef void
+(*JSSourceHandler)(const char *filename, uintN lineno, 
+                   jschar *str, size_t length, 
+                   void **listenerTSData, void *closure);
+
 #endif /* jsprvtd_h___ */

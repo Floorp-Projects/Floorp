@@ -29,10 +29,6 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
-#ifdef JSD_LOWLEVEL_SOURCE
-#include "jsdebug.h"
-#endif
-
 PR_BEGIN_EXTERN_C
 
 typedef enum JSTokenType {
@@ -152,10 +148,9 @@ struct JSTokenStream {
     FILE                *file;          /* stdio stream if reading from file */
 #endif
     JSPrincipals        *principals;    /* principals associated with given input */
-#ifdef JSD_LOWLEVEL_SOURCE
-    JSDContext          *jsdc;          /* used to cram source into debugger */
-    JSDSourceText       *jsdsrc;        /* used to cram source into debugger */
-#endif
+    JSSourceHandler     listener;       /* callback for source; eg debugger */
+    void                *listenerData;  /* listener 'this' data */
+    void                *listenerTSData;/* listener data for this TokenStream */
 };
 
 /* JSTokenStream flags */
