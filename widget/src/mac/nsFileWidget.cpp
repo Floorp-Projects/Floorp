@@ -265,9 +265,14 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 		} // if user clicked OK	
 	} // if can get dialog options
 	
-	if ( eventProc )
+	if ( eventProc ) {
+#if TARGET_CARBON
+		::DisposeNavEventUPP(eventProc);
+#else
 		::DisposeRoutineDescriptor(eventProc);
-		
+#endif
+	}
+	
 	return retVal;
 	
 } // PutFile
@@ -332,8 +337,13 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 		} // if user clicked OK	
 	} // if can get dialog options
 	
-	if ( eventProc )
+	if ( eventProc ) {
+#if TARGET_CARBON
+		::DisposeNavEventUPP(eventProc);
+#else
 		::DisposeRoutineDescriptor(eventProc);
+#endif
+	}
 		
 	return retVal;
 
@@ -396,8 +406,13 @@ nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 		} // if user clicked OK	
 	} // if can get dialog options
 	
-	if ( eventProc )
+	if ( eventProc ) {
+#if TARGET_CARBON
+		::DisposeNavEventUPP(eventProc);
+#else
 		::DisposeRoutineDescriptor(eventProc);
+#endif
+	}
 		
 	return retVal;
 
