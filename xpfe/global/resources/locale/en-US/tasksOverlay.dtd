@@ -17,14 +17,22 @@
 
 <!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
 <!ENTITY walletMenu.label "Personal Managers">
-<!ENTITY autoFill.label "AutoFill">
+<!ENTITY walletFormManager.label "Form Manager">
 <!ENTITY walletPasswordManager.label "Password Manager">
-<!ENTITY walletSafeFillCmd.label "Safe Form Fill">
-<!ENTITY walletQuickFillCmd.label "Quick Form Fill">
-<!ENTITY walletRequestToCaptureCmd.label "Capture Form">
+<!ENTITY walletSafeFillCmd.label "Prefill Form Safely">
+<!ENTITY walletQuickFillCmd.label "Prefill Form Quickly">
+<!ENTITY walletRequestToCaptureCmd.label "Capture Data from Form">
 <!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
-<!ENTITY walletContentsCmd.label "Wallet Contents...">
+<!ENTITY walletContentsCmd.label "View Stored Form Data">
 <!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
-<!ENTITY walletDisplayCookiesCmd.label "Cookie Manager">
-<!ENTITY walletSamplesCmd.label "About My Wallet...">
+<!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
+<!ENTITY walletAllowCookiesCmd.label "Allow Site to Set Cookies">
+<!ENTITY walletBlockCookiesCmd.label "Block Site from Setting Cookies">
+<!ENTITY walletDisplayImagesCmd.label "View Sites that can/cannot Display Images">
+<!ENTITY walletAllowImagesCmd.label "Allow Site to Display Images">
+<!ENTITY walletBlockImagesCmd.label "Block Site from Displaying Images">
+<!ENTITY walletInterviewCmd.label "Interview">
+<!ENTITY walletSamplesCmd.label "Demonstration">
 <!ENTITY walletChangePasswordCmd.label "Change Master Password...">
+<!ENTITY walletCookieManager.label "Cookie Manager">
+<!ENTITY walletImageManager.label "Image Manager">
