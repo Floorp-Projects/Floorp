@@ -1,0 +1,55 @@
+Black Connect
+================================
+
+This directory contains the Black Connect
+
+The sources is divided into three directories
+
+   connect
+      public headers. 
+      ORB implementation.
+      
+   xpcom
+      XPCOM stubs and proxy implementation
+      
+   java
+      JAVA stubs and proxy implementation
+      Java component loader
+
+===============================================
+Solaris directions  
+===============================================
+
+Requirements:
+
+* current mozilla built tree
+
+* JDK1.3 
+
+* Perl 5 perl.exe must be in your path
+
+How To Build:
+
+*  make sure the environment var JDKHOME is set to your jdk installation
+   directory, ie export  JDKHOME=/usr/local/jdk1.3
+   
+* Add following directories to to your LD_LIBRARY_PATH:
+   
+
+$MOZILLA_FIVE_HOME:$JDKHOME/jre/lib/$HOSTTYPE/native_threads:$JDKHOME/jre/lib/$HOSTTYPE/classic:
+$JDKHOME/jre/lib/$HOSTTYPE/:
+
+* Set CONNECT_SRC environment variable to connect directoty, 
+  ie  /ws/mozilla/mozilla/java/xpcom/connect 
+
+* type "gmake"
+
+===============================================
+How to run test java component
+===============================================
+* cd java/test
+* gmake
+
+Test component would be placed in dist/bin/componets and loaded on mozilla
+sturtup
+

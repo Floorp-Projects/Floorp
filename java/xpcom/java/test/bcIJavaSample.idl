@@ -1,0 +1,9 @@
+#include "nsISupports.idl"
+
+[scriptable, uuid(ca1e2656-1dd1-11b2-9c4e-f49ea557abde)]
+interface bcIJavaSample : nsISupports
+{
+    void test0();
+    void test1(in long l);
+    void test2(in bcIJavaSample o);
+};
