@@ -297,7 +297,7 @@ mozilla.1: mozilla.man.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 GARBAGE += mozilla.1
 endif
 
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
 libs:: $(srcdir)/mozilla
 	$(INSTALL) $< $(DIST)/bin
 endif
