@@ -1,15 +1,10 @@
-; Base Embedding Package File for linux
-;
-;
+; Minimo Embedding Package File for linux
+;   Do NOT touch unless you talk to dougt@meer.net
 ;
 
 [Embed]
 
-; 
-; Sample App + launch script
-; 
 TestGtkEmbed
-run-mozilla.sh
 
 ; 
 ; NSPR:
@@ -33,9 +28,6 @@ components/xpcom_ds.xpt
 components/xpcom_io.xpt
 components/xpcom_threads.xpt
 components/xpcom_xpti.xpt
-libxpcom_compat.so
-components/libxpcom_compat_c.so
-components/xpcom_obsolete.xpt
 
 ; xpconnect
 components/libxpconnect.so
@@ -68,20 +60,15 @@ components/layout_xul.xpt
 components/layout_xul_tree.xpt               
 components/content_base.xpt
 
-; Imaging:
+; Imaging:  
 libmozz.so
 components/libimglib2.so
 components/imglib2.xpt
-
-; 
-; Components: (need to trim fat)
-; 
 
 ; appshell 
 
 components/libnsappshell.so
 components/appshell.xpt 
-
 
 ; caps
 components/libcaps.so
@@ -96,8 +83,6 @@ components/libcookie.so
 components/libdocshell.so                 
 components/docshell.xpt
 components/uriloader.xpt
-components/libchrome.so                   
-components/chrome.xpt                   
 components/libwebbrwsr.so
 components/webBrowser_core.xpt
 components/libembedcomponents.so
@@ -111,21 +96,8 @@ components/jar.xpt
 components/pref.xpt                     
 components/libpref.so
 
-; profile
-components/libprofile.so                  
-components/profile.xpt
-
 ; session history
 components/shistory.xpt
-
-; optional typeaheadfind 
-; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
-;components/libtypeaheadfind.so
-;components/typeaheadfind.xpt
-
-; rdf
-components/librdf.so
-components/rdf.xpt
 
 ; required l10n libraries
 
@@ -160,10 +132,6 @@ components/jsurl.xpt
 components/libeditor.so                   
 components/editor.xpt
 
-; find functionality
-; Optional - only if your code uses nsIWebBrowserFind
-components/txtsvc.xpt
-
 ; netwerk
 components/libnecko.so                    
 components/necko.xpt                    
@@ -178,26 +146,10 @@ components/necko_strconv.xpt
 ; cache
 components/necko_cache.xpt
 
-; optional for FTP support
-components/libnecko2.so                   
-components/necko_ftp.xpt                
-
 ; plugins
 ; Optional - only if you need plugin support
 components/libgkplugin.so
 components/plugin.xpt
-
-; wallet
-; Optional - only if you need password persistence
-components/libwallet.so
-components/wallet.xpt                  
-
-; download progress
-; Optional - you can implement your own download progress dialog
-;   then this is no longer required
-;components/nsProgressDialog.js
-;components/nsHelperAppDlg.js
-;components/nsDownloadProgressListener.js
 
 ; psm2
 ; Optional - only if you need HTTPS support
@@ -214,10 +166,6 @@ libsoftokn3.so
 libssl3.so
 libnssckbi.so
 
-; xmlextras, optional for XMLHttpRequest support
-components/libxmlextras.so
-components/xmlextras.xpt
-
 res/language.properties
 res/langGroups.properties
 res/charsetData.properties
@@ -228,9 +176,6 @@ res/unixcharset.properties
 ; required prefs files
 greprefs/*
 
-;
-; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
-; 
 chrome/embed.jar
 
 ; 
@@ -253,24 +198,5 @@ res/entityTables/html40Latin1.properties
 res/entityTables/html40Symbols.properties
 res/entityTables/transliterate.properties
 
-;
-; Optional for MathML
-;
-;res/mathml.css
-;res/dtd/mathml.dtd
-;res/entityTables/mathml20.properties
-;res/fonts/mathfont.properties
-;res/fonts/mathfontCMEX10.properties
-;res/fonts/mathfontCMSY10.properties
-;res/fonts/mathfontMath1.properties
-;res/fonts/mathfontMath2.properties
-;res/fonts/mathfontMath4.properties
-;res/fonts/mathfontMTExtra.properties
-;res/fonts/mathfontPUA.properties
-;res/fonts/mathfontSymbol.properties
-;components/libucvmath.so
-
-; p3p
-components/libp3p.so
-components/p3p.xpt
-
+; minimo stuff
+components/libchrmlite.so 
