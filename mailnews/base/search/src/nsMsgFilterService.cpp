@@ -299,7 +299,7 @@ nsMsgFilterService::ThrowAlertMsg(const char*aMsgName, nsIMsgWindow *aMsgWindow)
 
 
 // this class holds the list of filters and folders, and applies them in turn, first iterating
-// over all the filters on one folder, and then advancing to the next folder and repeating. \
+// over all the filters on one folder, and then advancing to the next folder and repeating. 
 // For each filter,we take the filter criteria and create a search term list. Then, we execute the search.
 // We are a search listener so that we can build up the list of search hits. 
 // Then, when the search is done, we will apply the filter action(s) en-masse, so, for example, if the action is a move, 

@@ -263,16 +263,29 @@ function viewLog()
 function runSelectedFilters()
 {
   var folderURI = runFiltersFolderPicker.getAttribute("uri");
+  var resource = rdf.GetResource(folderURI);
+  var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
+  var filterList = filterService.getTempFilterList(msgFolder);
+  var folders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  folders.AppendElement(msgFolder);
 
+  // make sure the tmp filter list uses the real filter list log stream
+  filterList.logStream = currentFilterList().logStream;
+  filterList.loggingEnabled = currentFilterList().loggingEnabled;
   var sel = gFilterTree.view.selection;
   for (var i = 0; i < sel.getRangeCount(); i++) {
     var start = {}, end = {};
     sel.getRangeAt(i, start, end);
     for (var j = start.value; j <= end.value; j++) {
-      var filter = getFilter(j);
-      alert("run filter " + filter.filterName + " on " + folderURI);
+      var curFilter = getFilter(j);
+      if (curFilter)
+      {
+        filterList.insertFilterAt(start.value - j, curFilter);
+      }
     }
   }
+  filterService.applyFiltersToFolders(filterList, folders, gFilterListMsgWindow);
 }
 
 function moveCurrentFilter(motion)
