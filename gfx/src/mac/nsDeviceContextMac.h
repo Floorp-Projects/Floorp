@@ -81,8 +81,10 @@ public:
 
 private:
 	static PRUint32		mPixelsPerInch;
+	static PRBool			mDisplayVerySmallFonts;
 public:
 	static PRUint32		GetScreenResolution();
+	static PRBool			DisplayVerySmallFonts();
 };
 
 #endif /* nsDeviceContextMac_h___ */

@@ -32,7 +32,8 @@
 #include "nsIServiceManager.h"
 
 
-PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
+PRUint32 nsDeviceContextMac::mPixelsPerInch = 72;
+PRBool nsDeviceContextMac::mDisplayVerySmallFonts = false;
 
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -589,7 +590,25 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
+	return mPixelsPerInch;
+}
+
+PRBool nsDeviceContextMac::DisplayVerySmallFonts()
+{
+	static PRBool initialized = PR_FALSE;
+	if (initialized)
+		return mDisplayVerySmallFonts;
+	initialized = PR_TRUE;
+
+  nsIPref* prefs;
+  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+  if (NS_SUCCEEDED(rv) && prefs) {
+		PRBool boolVal;
+		if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display_very_small_fonts", &boolVal))) {
+			mDisplayVerySmallFonts = boolVal;
+		}
+		nsServiceManager::ReleaseService(kPrefCID, prefs);
+	}
 
 	return mPixelsPerInch;
-	
 }
