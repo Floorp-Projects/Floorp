@@ -1239,7 +1239,6 @@ alpha*-*-osf*)
 
 dnl the qsort routine under solaris is faulty
 *-solaris*) 
-    AC_DEFINE(BROKEN_QSORT)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
     SYSTEM_MAKEDEPEND=
