@@ -63,7 +63,8 @@
 	
     <!-- View Menu -->
 	<key id="key_reload"  key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel"/>
-	<key id="key_viewsource"    key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
+	<key id="key_viewSource" key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
+	<key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   observes="View:PageInfo"   modifiers="accel"/>
 
 	<key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   observes="cmd_viewTextZoomReduce"  modifiers="accel"/>
 	<key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  observes="cmd_viewTextZoomEnlarge" modifiers="accel"/>
@@ -123,7 +124,8 @@
 	<broadcaster id="cmd_viewpersonaltoolbar" value="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" value="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
-	<broadcaster id="View:PageSource"  value="&pageSourceCmd.label;" oncommand="BrowserViewSource();"/>
+	<broadcaster id="View:PageSource" oncommand="BrowserViewSource();"/>
+	<broadcaster id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
 
 	<!-- Search Menu -->
 	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
@@ -223,8 +225,8 @@
       <menuitem value="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
       <menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();"/>
       <menuseparator />
-      <menuitem accesskey="&pageSourceCmd.accesskey;" key="key_viewsource" observes="View:PageSource"/>
-      <menuitem accesskey="&pageInfoCmd.accesskey;" value="&pageInfoCmd.label;" oncommand="BrowserPageInfo();"/>
+      <menuitem accesskey="&pageSourceCmd.accesskey;" value="&pageSourceCmd.label;" key="key_viewSource" observes="View:PageSource"/>
+      <menuitem accesskey="&pageInfoCmd.accesskey;"   value="&pageInfoCmd.label;"   key="key_viewInfo"   observes="View:PageInfo"/>
       <menuseparator />
       <menuitem accesskey="&translateMenu.accesskey;" value="&translateMenu.label;" oncommand="Translate();"/>
       <menu value="&webContentMenu.label;" 
