@@ -184,6 +184,9 @@ public:
   NS_IMETHOD Cancel(nsresult status);  // handle stop button
   NS_IMETHOD GetContentType(nsACString &aContentType);
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt);
+  NS_IMETHOD GetOriginalURI(nsIURI* *aURI);
+  NS_IMETHOD SetOriginalURI(nsIURI* aURI);
+
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:
