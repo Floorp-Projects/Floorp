@@ -192,7 +192,6 @@
 #endif
 
 
-
 #ifdef NO_EXPLICIT
 	#define explicit
 #endif
@@ -206,9 +205,9 @@
 #endif
 
 #ifndef NO_BOOL
-	typedef bool BOOL;
+	typedef bool CAP_BOOL;
 #else
-	typedef PRBool BOOL;
+	typedef PRBool CAP_BOOL;
 #endif
 
 
@@ -402,7 +401,7 @@ class COM_auto_ptr
 //			template <class T> friend class nsFuncDoesntAddRef;
 
 			T**
-			StartAssignment( BOOL awaiting_AddRef )
+			StartAssignment( CAP_BOOL awaiting_AddRef )
 				{
 					if ( mRawPtr && !mIsAwaitingAddRef )
 						NS_RELEASE(mRawPtr);
@@ -423,14 +422,14 @@ class COM_auto_ptr
 
 		private:
 			T* mRawPtr;
-			BOOL mIsAwaitingAddRef;
+			CAP_BOOL mIsAwaitingAddRef;
 	};
 
 
 
 template <class T>
 inline
-BOOL
+CAP_BOOL
 operator==( const COM_auto_ptr<T>& aLeft, const T*const aRight )
 	{
 		return aLeft.get() == aRight;
@@ -438,7 +437,7 @@ operator==( const COM_auto_ptr<T>& aLeft, const T*const aRight )
 
 template <class T>
 inline
-BOOL
+CAP_BOOL
 operator!=( const COM_auto_ptr<T>& aLeft, const T*const aRight )
 	{
 		return aLeft.get() != aRight;
@@ -446,7 +445,7 @@ operator!=( const COM_auto_ptr<T>& aLeft, const T*const aRight )
 
 template <class T>
 inline
-BOOL
+CAP_BOOL
 operator==( const T*const aLeft, const COM_auto_ptr<T>& aRight )
 	{
 		return aLeft == aRight.get();
@@ -454,7 +453,7 @@ operator==( const T*const aLeft, const COM_auto_ptr<T>& aRight )
 
 template <class T>
 inline
-BOOL
+CAP_BOOL
 operator!=( const T*const aLeft, const COM_auto_ptr<T>& aRight )
 	{
 		return aLeft != aRight.get();
