@@ -127,14 +127,8 @@ use Mails; # internal
 $|++;
 
 # internal 'constants'
-my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.8 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
-
-# adjust the version constant
-$VERSION =~ /([0-9.]+)/;
-$VERSION = $1;
 
 # variables that should only be changed if you know what you are doing
 my $LOGGING = 1; # set to '0' to disable logging
@@ -158,7 +152,7 @@ if ($LOGGING) {
 
 # begin session log...
 &debug('-'x80);
-&debug("$NAME $VERSION starting up");
+&debug('mozbot starting up');
 &debug('compilation took '.&days($^T).'.'); 
 if ($CHROOT) {
     &debug('mozbot chroot()ed successfully');
@@ -194,6 +188,7 @@ my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
+my $modulenames = ('General');
 
 # - which variables can be saved.
 &registerConfigVariables(
@@ -292,7 +287,7 @@ sub connect {
              Server => $server,
              Port => $port,
              Nick => $nicks[$nick],
-             Ircname => "$NAME $VERSION; $helpline",
+             Ircname => "mozbot; $helpline",
              Username => $USERNAME,
              LocalAddr => $localAddr,
            )) {
@@ -302,7 +297,7 @@ sub connect {
         } else {
             &debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
         }
-        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "$NAME $VERSION; $helpline", $nicks[0]) unless $mailed;
+        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "mozbot; $helpline", $nicks[0]) unless $mailed;
         sleep($sleepdelay);
         &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \@nicks, \$nick, \$owner, \$sleepdelay));
         &debug("connecting to $server:$port...");
@@ -507,7 +502,6 @@ sub on_connect {
     # now load all modules
     @modules = ( # the 'internal' modules
         BotModules::Admin->create('Admin', ''), # admin commands
-        BotModules::General->create('General', ''), # help-related commands
     );
     foreach (@modulenames) {
         my $result = LoadModule($_); 
@@ -2164,32 +2158,74 @@ sub InChannel {
 sub Help {
     my $self = shift;
     my ($event) = @_;
+    my $result = {
+        'auth' => 'Authenticate yourself: auth <username> <password>',
+        'password' => 'Change your password: password <oldpassword> <newpassword> <newpassword>',
+        'newuser' => 'Registers a new username and password (with no privileges). Syntax: newuser <username> <newpassword> <newpassword>',
+    };
     if ($self->isAdmin($event)) {
-        return {
-            '' => 'The administration module is used to perform tasks that fundamentally affect the bot.',
-            'shutdown' => 'Shuts the bot down completely.',
-            'shutup' => 'Clears the output queue (you actually have to say \'shutup please\' or nothing will happen).',
-            'restart' => 'Shuts the bot down completely then restarts it, so that any source changes take effect.',
-            'cycle' => 'Makes the bot disconnect from the server then try to reconnect.',
-            'vars' => 'Manage variables: vars [<module> [<variable> [\'<value>\']]], say \'vars\' for more details.',
-            'join' => 'Makes the bot attempt to join a channel. The same effect can be achieved using /invite. Syntax: join <channel>',
-            'part' => 'Makes the bot leave a channel. The same effect can be achieved using /kick. Syntax: part <channel>',
-            'load' => 'Loads a module from disk, if it is not already loaded: load <module>',
-            'unload' => 'Unloads a module from memory: load <module>',
-            'reload' => 'Unloads and then loads a module: reload <module>',
-            'bless' => 'Sets the \'admin\' flag on a registered user. Syntax: bless <user>',
-            'unbless' => 'Resets the \'admin\' flag on a registered user. Syntax: unbless <user>',
-        };
-    } else {
-        return {};
+        $result->{''} = 'The administration module is used to perform tasks that fundamentally affect the bot.';
+        $result->{'shutdown'} = 'Shuts the bot down completely.';
+        $result->{'shutup'} = 'Clears the output queue (you actually have to say \'shutup please\' or nothing will happen).';
+        $result->{'restart'} = 'Shuts the bot down completely then restarts it, so that any source changes take effect.';
+        $result->{'cycle'} = 'Makes the bot disconnect from the server then try to reconnect.';
+        $result->{'vars'} = 'Manage variables: vars [<module> [<variable> [\'<value>\']]], say \'vars\' for more details.';
+        $result->{'join'} = 'Makes the bot attempt to join a channel. The same effect can be achieved using /invite. Syntax: join <channel>';
+        $result->{'part'} = 'Makes the bot leave a channel. The same effect can be achieved using /kick. Syntax: part <channel>';
+        $result->{'load'} = 'Loads a module from disk, if it is not already loaded: load <module>';
+        $result->{'unload'} = 'Unloads a module from memory: load <module>';
+        $result->{'reload'} = 'Unloads and then loads a module: reload <module>';
+        $result->{'bless'} = 'Sets the \'admin\' flag on a registered user. Syntax: bless <user>';
+        $result->{'unbless'} = 'Resets the \'admin\' flag on a registered user. Syntax: unbless <user>';
     }
+    return $result;
 }
 
 # Told - Called for messages prefixed by the bot's nick
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($self->isAdmin($event)) {
+    if ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
+        if (not $event->{'channel'}) {
+            if (defined($users{$1})) {
+                if (&::checkPassword($2, $users{$1})) {
+                    $authenticatedUsers{$event->{'user'}} = $1;
+                    $self->directSay($event, "Hi $1!");
+                    &::do($event->{'bot'}, $event->{'_event'}, 'Authed'); # hack hack hack
+                } else {
+                    $self->directSay($event, "No...");
+                }
+            } else {
+                $self->directSay($event, "You have not been added as a user yet. Try the \'newuser\' command (see \'help newuser\' for details).");
+            }
+        }
+    } elsif ($message =~ /^\s*password\s+($variablepattern)\s+($variablepattern)\s+\2\s*$/osi) {
+        if (not $event->{'channel'}) {
+            if ($authenticatedUsers{$event->{'user'}}) { 
+                if (&::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
+                    $users{$authenticatedUsers{$event->{'user'}}} = &::newPassword($2);
+                    $self->say($event, 'Password changed. Please reauthenticate.');
+                    $self->saveConfig();
+                } else {
+                    $self->say($event, 'That is not your current password. Please reauthenticate.');
+                }
+                delete($authenticatedUsers{$event->{'user'}});
+            }
+        }
+    } elsif ($message =~ /^\s*new\s*user\s+($variablepattern)\s+($variablepattern)\s+\2\s*$/osi) {
+        if (not $event->{'channel'}) {
+            if (defined($users{$1})) {
+                $self->say($event, 'That user already exists in my list, you can\'t add them again!');
+            } elsif ($1) {
+                $users{$1} = &::newPassword($2);
+                $userFlags{$1} = 0;
+                $self->directSay($event, "New user '$1' added with password '$2' and no rights.");
+                $self->saveConfig();
+            } else {
+                $self->say($event, 'That is not a valid user name.');
+            }
+        }
+    } elsif ($self->isAdmin($event)) {
         if ($message =~ /^\s*(?:shutdown,?\s+please)\s*[?!.]*\s*$/osi) {
             $self->say($event, 'But of course. Have a nice day!');
             $event->{'bot'}->quit('I was told to shutdown by '.$event->{'from'}.'. :-(');
@@ -2260,6 +2296,38 @@ sub Scheduled {
     } else {
         $self->directSay($event, $type);
     }
+}
+
+# remove any (other) temporary administrators when an admin authenticates
+sub Authed {
+    my $self = shift;
+    my ($event, $who) = @_;
+    if ($self->isAdmin($event)) {
+        foreach (keys %userFlags) {
+            if ((($userFlags{$_} & 2) == 2) and ($authenticatedUsers{$event->{'user'}} ne $_)) {
+                delete($userFlags{$_});
+                delete($users{$_});
+                # if they authenticated, remove the entry to prevent dangling links
+                foreach my $user (keys %authenticatedUsers) {
+                    if ($authenticatedUsers{$user} eq $_) {
+                        delete($authenticatedUsers{$user});
+                    }
+                }
+                $self->directSay($event, "Temporary administrator '$_' removed from user list.");
+                $self->saveConfig();
+            }
+        }
+    }
+    return $self->SUPER::Authed(@_); # this should not stop anything else happening
+}
+
+# SpottedQuit - Called when someone leaves a server
+sub SpottedQuit {
+    my $self = shift;
+    my ($event, $who, $why) = @_;
+    delete($authenticatedUsers{$event->{'user'}});
+    # XXX this doesn't deal with a user who has authenticated twice.
+    return $self->SUPER::SpottedQuit(@_);
 }
 
 sub CheckSource {
@@ -2551,192 +2619,6 @@ sub ReloadModule {
     # then it is also a good time to remove this comment... ;-)
     $self->UnloadModule(@_);
     $self->LoadModule(@_);
-}
-
-
-################################
-# General Module               #
-################################
-
-package BotModules::General;
-use vars qw(@ISA);
-@ISA = qw(BotModules);
-1;
-
-# Initialise - Called when the module is loaded
-sub Initialise {
-    my $self = shift;
-    $self->{'_static'} = 1;
-} 
-
-# RegisterConfig - Called when initialised, should call registerVariables
-sub RegisterConfig {
-    my $self = shift;
-    $self->SUPER::RegisterConfig(@_);
-    $self->registerVariables( 
-      # [ name, save?, settable?, value ]
-        ['channels', 0, 0, undef], # remove the 'channels' internal variable...
-        ['autojoin', 0, 0, 0], # remove the 'autojoin' internal variable...
-        ['preferredHelpLineLength', 1, 1, 70], 
-    );
-}
-
-sub InChannel {
-    # my $self = shift;
-    # my ($event) = @_;
-    return 1; # always
-}
-
-# saveConfig - make sure we also save the main config variables...
-sub saveConfig {
-    my $self = shift;
-    $self->SUPER::saveConfig(@_);
-    &Configuration::Save($cfgfile, &::configStructure(\%users, \%userFlags));
-}
-
-sub Help {
-    my $self = shift;
-    my ($event) = @_;
-    return {
-        '' => 'The module that provides the bot-wide services.', 
-        'help' => 'Gives information about modules and commands. Syntax: help [<topic>]',
-        'auth' => 'Authenticate yourself: auth <username> <password>',
-        'password' => 'Change your password: password <oldpassword> <newpassword> <newpassword>',
-        'newuser' => 'Registers a new username and password (with no privileges). Syntax: newuser <username> <newpassword> <newpassword>',
-    };
-}
-
-# Told - Called for messages prefixed by the bot's nick
-sub Told {
-    my $self = shift;
-    my ($event, $message) = @_;
-    if ($message =~ /^\s*help(?:\s+($variablepattern))?[ ?!.]*\s*$/osi) {
-        if ($1) {
-            # display help for that command
-            # first, build the help file...
-            my %topicList;
-            foreach my $module (@modules) {
-                my $commands = $module->Help($event);
-                if ($commands->{''}) {
-                    $topicList{lc($module->{'_name'})} = [] unless defined($topicList{lc($module->{'_name'})});
-                    push(@{$topicList{lc($module->{'_name'})}}, $commands->{''});
-                }
-                foreach (keys %$commands) {
-                    $topicList{lc($_)} = [] unless defined($topicList{lc($_)});
-                    push(@{$topicList{lc($_)}}, $commands->{lc($_)});
-                }
-            }        
-            if (defined($topicList{lc($1)})) {
-                foreach (@{$topicList{lc($1)}}) {
-                    $self->say($event, "$1: $_");
-                }
-            } else {
-                $self->say($event, "No help for topic '$1'.");
-            }
-        } else {
-            $self->directSay($event, "Help topics for $NAME $VERSION ($helpline):");
-            $self->say($event, "$event->{'from'}: help info /msg'ed") if ($event->{'channel'});
-            local @" = ', '; # to reset font-lock: " 
-            my @helplist;
-            foreach my $module (@modules) {
-                my %commands = %{$module->Help($event)};
-                my $moduleHelp = delete($commands{''});
-                my @commands = sort keys %commands;
-                if (@commands) {
-                    push(@helplist, "$module->{'_name'}: @commands");
-                } elsif ($moduleHelp) {
-                    push(@helplist, "$module->{'_name'}");
-                }
-            }
-            foreach ($self->prettyPrint($self->{'preferredHelpLineLength'}, undef, '  ', ';  ', @helplist)) {
-                $self->directSay($event, $_);
-            }
-            $self->directSay($event, 'For help on a particular topic, type \'help <topic>\'. Note that some commands may be disabled in certain channels.');
-        }
-    } elsif ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
-        if (not $event->{'channel'}) {
-            if (defined($users{$1})) {
-                if (&::checkPassword($2, $users{$1})) {
-                    $authenticatedUsers{$event->{'user'}} = $1;
-                    $self->directSay($event, "Hi $1!");
-                    &::do($event->{'bot'}, $event->{'_event'}, 'Authed'); # hack hack hack
-                } else {
-                    $self->directSay($event, "No...");
-                }
-            } else {
-                $self->directSay($event, "You have not been added as a user yet. Try the \'newuser\' command (see \'help newuser\' for details).");
-            }
-        }
-    } elsif ($message =~ /^\s*password\s+($variablepattern)\s+($variablepattern)\s+\2\s*$/osi) {
-        if (not $event->{'channel'}) {
-            if ($authenticatedUsers{$event->{'user'}}) { 
-                if (&::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
-                    $users{$authenticatedUsers{$event->{'user'}}} = &::newPassword($2);
-                    $self->say($event, 'Password changed. Please reauthenticate.');
-                    $self->saveConfig();
-                } else {
-                    $self->say($event, 'That is not your current password. Please reauthenticate.');
-                }
-                delete($authenticatedUsers{$event->{'user'}});
-            }
-        }
-    } elsif ($message =~ /^\s*new\s*user\s+($variablepattern)\s+($variablepattern)\s+\2\s*$/osi) {
-        if (not $event->{'channel'}) {
-            if (defined($users{$1})) {
-                $self->say($event, 'That user already exists in my list, you can\'t add them again!');
-            } elsif ($1) {
-                $users{$1} = &::newPassword($2);
-                $userFlags{$1} = 0;
-                $self->directSay($event, "New user '$1' added with password '$2' and no rights.");
-                $self->saveConfig();
-            } else {
-                $self->say($event, 'That is not a valid user name.');
-            }
-        }
-    } else {
-        return $self->SUPER::Told(@_);
-    }
-    return 0; # dealt with it, do nothing else
-}
-
-
-# remove any (other) temporary administrators when an admin authenticates
-sub Authed {
-    my $self = shift;
-    my ($event, $who) = @_;
-    if ($self->isAdmin($event)) {
-        foreach (keys %userFlags) {
-            if ((($userFlags{$_} & 2) == 2) and ($authenticatedUsers{$event->{'user'}} ne $_)) {
-                delete($userFlags{$_});
-                delete($users{$_});
-                # if they authenticated, remove the entry to prevent dangling links
-                foreach my $user (keys %authenticatedUsers) {
-                    if ($authenticatedUsers{$user} eq $_) {
-                        delete($authenticatedUsers{$user});
-                    }
-                }
-                $self->directSay($event, "Temporary administrator '$_' removed from user list.");
-                $self->saveConfig();
-            }
-        }
-    }
-    return $self->SUPER::Authed(@_); # this should not stop anything else happening
-}
-
-# SpottedQuit - Called when someone leaves a server
-sub SpottedQuit {
-    my $self = shift;
-    my ($event, $who, $why) = @_;
-    delete($authenticatedUsers{$event->{'user'}});
-    # XXX this doesn't deal with a user who has authenticated twice.
-    return $self->SUPER::SpottedQuit(@_);
-}
-
-sub CTCPVersion {
-    my $self = shift;
-    my ($event, $who, $what) = @_;
-    local $" = ', ';
-    $self->ctcpReply($event, 'VERSION', "$NAME $VERSION (@modulenames)");
 }
 
 
