@@ -53,7 +53,7 @@
 class nsNativeAppSupportBase : public nsINativeAppSupport {
 public:
     nsNativeAppSupportBase();
-    ~nsNativeAppSupportBase();
+    virtual ~nsNativeAppSupportBase();
 
     // nsINativeAppSupport methods.
     NS_DECL_NSINATIVEAPPSUPPORT
