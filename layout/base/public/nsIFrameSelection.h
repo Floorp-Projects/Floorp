@@ -180,10 +180,10 @@ public:
    *  @param aContentOffset is the offset of the table or cell
    *  @param aTarget indicates what to select:
    *    TABLESELECTION_CELL      We should select a cell (content points to the cell)
-   *    TABLESELECTION_ROW       We should select a row (content points to first cell in row)
-   *    TABLESELECTION_COLUMN    We should select a row (content points to first cell in column)
+   *    TABLESELECTION_ROW       We should select a row (content points to any cell in row)
+   *    TABLESELECTION_COLUMN    We should select a row (content points to any cell in column)
    *    TABLESELECTION_TABLE     We should select a table (content points to the table)
-   *    TABLESELECTION_ALLCELLS  We should select all cells (content points to first cell in table)
+   *    TABLESELECTION_ALLCELLS  We should select all cells (content points to any cell in table)
    *  @param aMouseEvent         passed in so we we can get where event occured and what keys are pressed
    */
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent) = 0;
