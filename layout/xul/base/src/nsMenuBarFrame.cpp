@@ -56,3 +56,16 @@ nsMenuBarFrame::nsMenuBarFrame()
 
 } // cntr
 
+NS_IMETHODIMP
+nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
+                     nsIContent*      aContent,
+                     nsIFrame*        aParent,
+                     nsIStyleContext* aContext,
+                     nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // Create the menu bar listener.
+  mMenuBarListener = new nsMenuBarListener(this);
+  return rv;
+}

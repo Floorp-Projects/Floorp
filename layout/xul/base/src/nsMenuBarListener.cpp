@@ -49,9 +49,10 @@ NS_IMPL_RELEASE(nsMenuBarListener)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsMenuBarListener::nsMenuBarListener() 
+nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
 {
   NS_INIT_REFCNT();
+  mMenuBarFrame = aMenuBar;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -134,6 +135,12 @@ nsMenuBarListener::MouseMove(nsIDOMEvent* aMouseEvent)
   return NS_OK; // means I am NOT consuming event
 }
 
+////////////////////////////////////////////////////////////////////////
+nsresult
+nsMenuBarListener::DragMove(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
@@ -193,7 +200,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aMouseEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyPressed(nsIDOMEvent* aMouseEvent)
+nsMenuBarListener::KeyPress(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK; // means I am NOT consuming event
 }
