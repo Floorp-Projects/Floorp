@@ -74,10 +74,11 @@ static void DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow, nsCOMPtr<nsIWebSh
 //----------------------------------------------------------------------------------------
 nsPrefWindow::nsPrefWindow()
 //----------------------------------------------------------------------------------------
-:    mTreeWindow(nsnull)
-,    mPanelWindow(nsnull)
+:    mTreeFrame(nsnull)
+,    mPanelFrame(nsnull)
 ,    mPrefs(nsnull)
 ,    mSubStrings(nsnull)
+,    mWindow(nsnull)
 {
 	NS_INIT_REFCNT();
     
@@ -97,8 +98,8 @@ nsPrefWindow::nsPrefWindow()
 nsPrefWindow::~nsPrefWindow()
 //----------------------------------------------------------------------------------------
 {
-    NS_IF_RELEASE(mTreeWindow);
-    NS_IF_RELEASE(mPanelWindow);
+    NS_IF_RELEASE(mTreeFrame);
+    NS_IF_RELEASE(mPanelFrame);
     nsServiceManager::ReleaseService(kPrefCID, mPrefs);
     if (mSubStrings)
     {
@@ -114,9 +115,12 @@ NS_IMPL_ISUPPORTS( nsPrefWindow, nsIPrefWindow::GetIID())
 
 //----------------------------------------------------------------------------------------
 /* static */ nsPrefWindow* nsPrefWindow::Get()
+// Called by the factory.
 //----------------------------------------------------------------------------------------
 {
-	if (!sPrefWindow)
+	if (sPrefWindow)
+		NS_ADDREF(sPrefWindow);
+	else
 	{
 		nsPrefWindow* prefWindow = new nsPrefWindow();
 		nsresult rv;
@@ -398,13 +402,13 @@ nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
 nsresult nsPrefWindow::InitializePrefWidgets()
 //----------------------------------------------------------------------------------------
 {
-    NS_ASSERTION(mPanelWindow, "panel window is null");
+    NS_ASSERTION(mPanelFrame, "panel window is null");
     NS_ASSERTION(mPrefs, "prefs pointer is null");
-    if (!mPanelWindow || !mPrefs)
+    if (!mPanelFrame || !mPrefs)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMDocument> aDOMDoc;
-    mPanelWindow->GetDocument(getter_AddRefs(aDOMDoc));
+    mPanelFrame->GetDocument(getter_AddRefs(aDOMDoc));
     return InitializeWidgetsRecursive(aDOMDoc);
     
 } // nsPrefWindow::InitializePrefWidgets
@@ -550,13 +554,13 @@ nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
 nsresult nsPrefWindow::FinalizePrefWidgets()
 //----------------------------------------------------------------------------------------
 {
-    NS_ASSERTION(mPanelWindow, "panel window is null");
+    NS_ASSERTION(mPanelFrame, "panel window is null");
     NS_ASSERTION(mPrefs, "prefs pointer is null");
-    if (!mPanelWindow || !mPrefs)
+    if (!mPanelFrame || !mPrefs)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMDocument> aDOMDoc;
-    mPanelWindow->GetDocument(getter_AddRefs(aDOMDoc));
+    mPanelFrame->GetDocument(getter_AddRefs(aDOMDoc));
     return FinalizeWidgetsRecursive(aDOMDoc);
     
 } // nsPrefWindow::FinalizePrefWidgets
@@ -566,6 +570,8 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
 //----------------------------------------------------------------------------------------
 {
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
+    if (mWindow)
+    	return NS_OK;
     nsIWebShellWindow* window = nsnull;
     nsCOMPtr<nsIURL> urlObj;
     nsresult rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://pref/content/");
@@ -583,6 +589,7 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
                                  nsnull, cb, 504, 436);
     if (window)
     {
+        mWindow = window;
         nsCOMPtr<nsIWidget> parentWindowWidgetThing;
         nsresult gotParent
         	= parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
@@ -603,15 +610,15 @@ NS_IMETHODIMP nsPrefWindow::ChangePanel(const PRUnichar* aURL)
 // Start loading of a new prefs panel.
 //----------------------------------------------------------------------------------------
 {
-    NS_ASSERTION(mPanelWindow, "panel window is null");
-    if (!mPanelWindow)
+    NS_ASSERTION(mPanelFrame, "panel window is null");
+    if (!mPanelFrame)
         return NS_OK;
 
     nsresult rv = FinalizePrefWidgets();
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(mPanelWindow));
+    nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(mPanelFrame));
     if (!globalScript)
         return NS_ERROR_FAILURE;
     nsCOMPtr<nsIWebShell> webshell;
@@ -629,15 +636,15 @@ NS_IMETHODIMP nsPrefWindow::PanelLoaded(nsIDOMWindow* aWin)
 {
     // Out with the old!
     
-    if (mPanelWindow != aWin)
+    if (mPanelFrame != aWin)
     {
-        NS_IF_RELEASE(mPanelWindow);
-        mPanelWindow = aWin;
-        NS_IF_ADDREF(mPanelWindow);
+        NS_IF_RELEASE(mPanelFrame);
+        mPanelFrame = aWin;
+        NS_IF_ADDREF(mPanelFrame);
     }
     
     // In with the new!
-    if (mPanelWindow)
+    if (mPanelFrame)
     {
         nsresult rv = InitializePrefWidgets();
         if (NS_FAILED(rv))
@@ -702,8 +709,22 @@ NS_IMETHODIMP nsPrefWindow::SavePrefs()
         mPrefs->SavePrefFile();
     }
     // Then close    
-    return Close(mPanelWindow);
+    mWindow = nsnull;
+    return Close(mPanelFrame);
 } // nsPrefWindow::SavePrefs
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsPrefWindow::CancelPrefs()
+//----------------------------------------------------------------------------------------
+{
+    // Do the prefs stuff...
+    if (mPrefs)
+        mPrefs->DeleteBranch("temp_tree");
+    
+    // Then close    
+    mWindow = nsnull;
+    return Close(mPanelFrame);
+}
 
 //----------------------------------------------------------------------------------------
 char* nsPrefWindow::GetSubstitution(nsString& formatstr)
@@ -729,18 +750,6 @@ char* nsPrefWindow::GetSubstitution(nsString& formatstr)
 } // nsPrefWindow::GetSubstitution
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::CancelPrefs()
-//----------------------------------------------------------------------------------------
-{
-    // Do the prefs stuff...
-    if (mPrefs)
-        mPrefs->DeleteBranch("temp_tree");
-    
-    // Then close    
-    return Close(mPanelWindow);
-}
-
-//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPrefWindow::SetSubstitutionVar(
 	PRUint32 aStringnum,
     const char* aVal)
@@ -758,3 +767,4 @@ NS_IMETHODIMP nsPrefWindow::SetSubstitutionVar(
 	mSubStrings[aStringnum] = s.ToNewCString();
 	return NS_OK;
 } // nsPrefWindow::SetSubstitutionVar
+
