@@ -99,6 +99,14 @@ public:
 
   NS_IMETHOD    Close()=0;
 
+  NS_IMETHOD    Back()=0;
+
+  NS_IMETHOD    Forward()=0;
+
+  NS_IMETHOD    Home()=0;
+
+  NS_IMETHOD    Stop()=0;
+
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos)=0;
 
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif)=0;
@@ -161,6 +169,10 @@ public:
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Blur();  \
   NS_IMETHOD    Close();  \
+  NS_IMETHOD    Back();  \
+  NS_IMETHOD    Forward();  \
+  NS_IMETHOD    Home();  \
+  NS_IMETHOD    Stop();  \
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos);  \
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif);  \
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight);  \
@@ -213,6 +225,10 @@ public:
   NS_IMETHOD    Focus() { return _to##Focus(); }  \
   NS_IMETHOD    Blur() { return _to##Blur(); }  \
   NS_IMETHOD    Close() { return _to##Close(); }  \
+  NS_IMETHOD    Back() { return _to##Back(); }  \
+  NS_IMETHOD    Forward() { return _to##Forward(); }  \
+  NS_IMETHOD    Home() { return _to##Home(); }  \
+  NS_IMETHOD    Stop() { return _to##Stop(); }  \
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos) { return _to##MoveTo(aXPos, aYPos); }  \
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif) { return _to##MoveBy(aXDif, aYDif); }  \
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight) { return _to##ResizeTo(aWidth, aHeight); }  \
