@@ -19,6 +19,7 @@
 #include "nsRepository.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
@@ -163,13 +164,15 @@ GtkMozillaContainer::LoadURL(const gchar *url)
 void
 GtkMozillaContainer::Stop()
 {
-  mWebShell->Stop();
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+   webNav->Stop();
 }
 
 void
 GtkMozillaContainer::Reload(GtkMozillaReloadType type)
 {
- mWebShell->Reload((nsLoadFlags)type);
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+   webNav->Reload(nsIWebNavigation::loadNormal);
 }
 
 gint
