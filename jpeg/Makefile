@@ -40,7 +40,6 @@ CSRCS		= jdapimin.c \
 		  jidctfst.c \
 		  jidctflt.c \
 		  jidctint.c \
-		  jidctred.c \
 		  jdsample.c \
 		  jdcolor.c \
 		  jquant1.c \
