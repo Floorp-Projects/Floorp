@@ -117,6 +117,7 @@ nsProgressDialog.prototype = {
     set displayName(newval) { return this.mDisplayName = newval; },
     get paused()            { return this.mPaused; },
     get request()           { return this.mRequest; },
+    set request(newval)     { return this.mRequest = newval; },
     get completed()         { return this.mCompleted; },
     get mode()              { return this.mMode; },
     get percent()           { return this.mPercent; },
@@ -127,7 +128,6 @@ nsProgressDialog.prototype = {
 
     // These setters use functions that update the dialog.
     set paused(newval)      { return this.setPaused(newval); },
-    set request(newval)     { return this.setRequest(newval); },
     set completed(newval)   { return this.setCompleted(newval); },
     set mode(newval)        { return this.setMode(newval); },
     set percent(newval)     { return this.setPercent(newval); },
@@ -697,32 +697,6 @@ nsProgressDialog.prototype = {
             }
         }
         return this.mPaused = pausing;
-    },
-
-    // Set the saved nsIRequest.  The first time, we test it for
-    // ftp and initialize the pause/resume stuff.
-    // XXX This is broken, I think, because if we're doing something
-    //     like saving a web-page-complete that has multiple images
-    //     accessed via ftp: urls, then it seems like the pause/resume
-    //     button should come and go, depending on what's being downloaded
-    //     at a given point in time.  The old dialog didn't handle that case
-    //     either, though, so I'm not sweating it for now.
-    setRequest: function( aRequest ) {
-        if ( this.request == null && this.loaded && aRequest ) {
-            // Right now, all that supports restarting downloads is ftp (rfc959).
-            try {
-                ftpChannel = aRequest.QueryInterface( Components.interfaces.nsIFTPChannel );
-                if ( ftpChannel ) {
-                    this.dialogElement("pauseResume").label = this.getString("pause");
-                    this.paused = false;
-                }
-            } catch ( e ) {
-            }
-            // This *must* come after the "this.paused = false" above, so that we
-            // don't suspend or resume the first time we call that function!
-            this.mRequest = aRequest;
-        }
-        return this.mRequest;
     },
 
     // Convert raw rate (bytes/sec) to Kbytes/sec (to nearest tenth).
