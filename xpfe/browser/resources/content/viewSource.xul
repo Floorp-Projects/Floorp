@@ -8,7 +8,8 @@
         onload="onLoadViewSource()"
         onunload="Shutdown()"
         title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
-        titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:viewsource"
+        titlepreface="&mainWindow.preface;"
+        titlemenuseparator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:viewsource"
 		align="vertical" width="640" height="480"> 
   
   <html:script src="chrome://navigator/content/navigator.js"></html:script>
