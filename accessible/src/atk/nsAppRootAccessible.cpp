@@ -44,6 +44,7 @@
 #include "nsAppRootAccessible.h"
 #include "prlink.h"
 
+#include <gtk/gtk.h>
 #include <atk/atk.h>
 
 /* maiutil */
@@ -51,6 +52,9 @@
 static guint mai_util_add_global_event_listener(GSignalEmissionHook listener,
                                                 const gchar *event_type);
 static void mai_util_remove_global_event_listener(guint remove_listener);
+static guint mai_util_add_key_event_listener(AtkKeySnoopFunc listener,
+                                             gpointer data);
+static void mai_util_remove_key_event_listener(guint remove_listener);
 static AtkObject *mai_util_get_root(void);
 static G_CONST_RETURN gchar *mai_util_get_toolkit_name(void);
 static G_CONST_RETURN gchar *mai_util_get_toolkit_version(void);
@@ -63,6 +67,13 @@ static guint add_listener (GSignalEmissionHook listener,
                            const gchar *object_type,
                            const gchar *signal,
                            const gchar *hook_data);
+static AtkKeyEventStruct *atk_key_event_from_gdk_event_key(GdkEventKey *key);
+static gboolean notify_hf(gpointer key, gpointer value, gpointer data);
+static void insert_hf(gpointer key, gpointer value, gpointer data);
+static gboolean remove_hf(gpointer key, gpointer value, gpointer data);
+static gint mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event,
+                            gpointer func_data);
+static void value_destroy_func(gpointer data);
 
 static GHashTable *listener_list = NULL;
 static gint listener_idx = 1;
@@ -85,6 +96,9 @@ typedef struct _MaiUtilListenerInfo MaiUtilListenerInfo;
 typedef struct _MaiUtil                  MaiUtil;
 typedef struct _MaiUtilClass             MaiUtilClass;
 
+static GHashTable *key_listener_list = NULL;
+static guint key_snooper_id = 0;
+
 G_BEGIN_DECLS
 typedef void (*GnomeAccessibilityInit) (void);
 typedef void (*GnomeAccessibilityShutdown) (void);
@@ -94,6 +108,12 @@ struct _MaiUtil
 {
     AtkUtil parent;
     GList *listener_list;
+};
+
+struct MaiKeyListenerInfo
+{
+    AtkKeySnoopFunc listener;
+    gpointer data;
 };
 
 struct GnomeAccessibilityModule
@@ -174,12 +194,8 @@ mai_util_class_init(MaiUtilClass *klass)
         mai_util_add_global_event_listener;
     atk_class->remove_global_event_listener =
         mai_util_remove_global_event_listener;
-    /*
-      atk_class->add_key_event_listener =
-      mai_util_add_key_event_listener;
-      atk_class->remove_key_event_listener =
-      mai_util_remove_key_event_listener;
-    */
+    atk_class->add_key_event_listener = mai_util_add_key_event_listener;
+    atk_class->remove_key_event_listener = mai_util_remove_key_event_listener;
     atk_class->get_root = mai_util_get_root;
     atk_class->get_toolkit_name = mai_util_get_toolkit_name;
     atk_class->get_toolkit_version = mai_util_get_toolkit_version;
@@ -257,6 +273,126 @@ mai_util_remove_global_event_listener(guint remove_listener)
     }
     else {
         g_warning("Invalid listener_id %d", remove_listener);
+    }
+}
+
+static AtkKeyEventStruct *
+atk_key_event_from_gdk_event_key (GdkEventKey *key)
+{
+    AtkKeyEventStruct *event = g_new0(AtkKeyEventStruct, 1);
+    switch (key->type) {
+    case GDK_KEY_PRESS:
+        event->type = ATK_KEY_EVENT_PRESS;
+        break;
+    case GDK_KEY_RELEASE:
+        event->type = ATK_KEY_EVENT_RELEASE;
+        break;
+    default:
+        g_assert_not_reached ();
+        return NULL;
+    }
+    event->state = key->state;
+    event->keyval = key->keyval;
+    event->length = key->length;
+    if (key->string && key->string [0] && 
+        (key->state & GDK_CONTROL_MASK ||
+         g_unichar_isgraph (g_utf8_get_char (key->string)))) {
+        event->string = key->string;
+    }
+    else if (key->type == GDK_KEY_PRESS ||
+             key->type == GDK_KEY_RELEASE) {
+        event->string = gdk_keyval_name (key->keyval);	    
+    }
+    event->keycode = key->hardware_keycode;
+    event->timestamp = key->time;
+
+    MAI_LOG_DEBUG(("MaiKey:\tsym %u\n\tmods %x\n\tcode %u\n\ttime %lx\n",
+                   (unsigned int) event->keyval,
+                   (unsigned int) event->state,
+                   (unsigned int) event->keycode,
+                   (unsigned long int) event->timestamp));
+    return event;
+}
+
+static gboolean
+notify_hf(gpointer key, gpointer value, gpointer data)
+{
+    AtkKeyEventStruct *event = (AtkKeyEventStruct *) data;
+    MaiKeyListenerInfo *info = (MaiKeyListenerInfo *)value;
+
+    return (*(info->listener))(event, info->data) ? TRUE : FALSE;
+}
+
+static void
+value_destroy_func(gpointer data)
+{
+    g_free(data);
+}
+
+static void
+insert_hf(gpointer key, gpointer value, gpointer data)
+{
+    GHashTable *new_table = (GHashTable *) data;
+    g_hash_table_insert (new_table, key, value);
+}
+
+static gboolean
+remove_hf(gpointer key, gpointer value, gpointer data)
+{
+    AtkKeySnoopFunc listener = (AtkKeySnoopFunc)data;
+    MaiKeyListenerInfo *info = (MaiKeyListenerInfo *)value;
+    if (info->listener == listener)
+        return TRUE;
+    return FALSE;
+}
+
+static gint
+mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
+{
+    /* notify each AtkKeySnoopFunc in turn... */
+
+    gint consumed = 0;
+    if (key_listener_list) {
+        AtkKeyEventStruct *keyEvent = atk_key_event_from_gdk_event_key(event);
+        GHashTable *new_hash = g_hash_table_new(NULL, NULL);
+        g_hash_table_foreach (key_listener_list, insert_hf, new_hash);
+        consumed = g_hash_table_foreach_steal (new_hash, notify_hf, keyEvent);
+        g_hash_table_destroy (new_hash);
+        g_free (keyEvent);
+    }
+    return (consumed ? 1 : 0);
+}
+
+static guint
+mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
+                                 gpointer data)
+{
+    NS_ENSURE_TRUE(listener, 0);
+
+    static guint key=0;
+    MaiKeyListenerInfo *info = g_new0(MaiKeyListenerInfo, 1);
+    NS_ENSURE_TRUE(info, 0);
+
+    info->listener = listener;
+    info->data = data;
+
+    if (!key_listener_list) {
+        key_listener_list = g_hash_table_new_full(NULL, NULL, NULL,
+                                                  value_destroy_func);
+        key_snooper_id = gtk_key_snooper_install(mai_key_snooper, NULL);
+    }
+    g_hash_table_insert(key_listener_list, GUINT_TO_POINTER (key++),
+                        (gpointer)info);
+    return key;
+}
+
+static void
+mai_util_remove_key_event_listener (guint remove_listener)
+{
+    g_hash_table_foreach_remove(key_listener_list, remove_hf,
+                                (gpointer)remove_listener);
+    if (g_hash_table_size(key_listener_list) == 0) {
+        gtk_key_snooper_remove(key_snooper_id);
     }
 }
 
@@ -352,7 +488,7 @@ nsAppRootAccessible::~nsAppRootAccessible()
 
 /* virtual functions */
 
-/*
+#if 0
 #ifdef MAI_LOGGING
 void
 nsAppRootAccessible::DumpMaiObjectInfo(int aDepth)
@@ -381,7 +517,7 @@ nsAppRootAccessible::DumpMaiObjectInfo(int aDepth)
             (unsigned int)this, "nsAppRootAccessible");
 }
 #endif
-*/
+#endif
 
 NS_IMETHODIMP nsAppRootAccessible::Init()
 {
