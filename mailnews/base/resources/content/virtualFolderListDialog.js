@@ -191,7 +191,7 @@ function selectFolderTreeOnClick(event)
   }
   else if (event.detail == 1)
   {
-    if (obj.value != "twisty" && col.value == "selectedColumn")
+    if (obj.value != "twisty" && col.value.id == "selectedColumn")
       ReverseStateFromNode(row.value)
   }
 }
