@@ -677,27 +677,24 @@ eParseMode DetermineParseMode(nsParser& aParser) {
  * @param 
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
+nsresult nsParser::WillBuildModel(nsString& aFilename){
 
   nsresult result=NS_OK;
 
   if(mParserContext){
-    if(eOnStart==mParserContext->mStreamListenerState) {  
+    if(eUnknownDetect==mParserContext->mAutoDetectStatus) {  
       mMajorIteration=-1; 
       mMinorIteration=-1; 
-      if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
-        mParserContext->mDTD=aDefaultDTD;
-        if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand,mParserContext->mScanner->GetBuffer())) {
-          mParserContext->mParseMode=DetermineParseMode(*this);  
-          mParserContext->mStreamListenerState=eOnDataAvail;
-          mParserContext->mDTD->WillBuildModel( aFilename,
-                                                PRBool(0==mParserContext->mPrevContext),
-                                                mParserContext->mSourceType,
-                                                mParserContext->mParseMode,
-                                                mCommand,
-                                                mSink);
-        }//if        
-      }//if
+      if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand,mParserContext->mScanner->GetBuffer())) {
+        mParserContext->mParseMode=DetermineParseMode(*this);  
+       // mParserContext->mStreamListenerState=eOnDataAvail;
+        mParserContext->mDTD->WillBuildModel( aFilename,
+                                              PRBool(0==mParserContext->mPrevContext),
+                                              mParserContext->mSourceType,
+                                              mParserContext->mParseMode,
+                                              mCommand,
+                                              mSink);
+      }//if        
     }//if
   } 
   else result=kInvalidParserContext;    
@@ -716,7 +713,7 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   //One last thing...close any open containers.
   nsresult result=anErrorCode;
 
-  if(mParserContext->mParserEnabled) {
+  if((mParserContext) && mParserContext->mParserEnabled) {
     if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
       result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
     }
@@ -800,29 +797,28 @@ nsresult nsParser::Terminate(void){
  *  @return  current state
  */
 nsresult nsParser::EnableParser(PRBool aState){
-  nsIParser* me = nsnull;
 
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
   // the reenabling process, hold a reference to ourselves.
-  if (eOnStop == mParserContext->mStreamListenerState) {
-    me = this;
-    NS_ADDREF(me);
-  }    
+  nsresult result=NS_OK;
+  nsIParser* me = this;
+  NS_ADDREF(me);
 
   // If we're reenabling the parser
-  mParserContext->mParserEnabled=aState;
-  nsresult result=NS_OK;
-  if(aState) {
-    result=ResumeParse();
-    if(result!=NS_OK) 
-      result=mInternalState;
+  if(mParserContext) {
+    mParserContext->mParserEnabled=aState;
+    if(aState) {
+      result=ResumeParse();
+      if(result!=NS_OK) 
+        result=mInternalState;
+    }
+    else {
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::EnableParser(), this=%p\n", this));
+      MOZ_TIMER_STOP(mParseTime);
+    }  
   }
-  else {
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::EnableParser(), this=%p\n", this));
-    MOZ_TIMER_STOP(mParseTime);
-  }  
 
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
@@ -953,10 +949,16 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
       //only make a new context if we dont have one, OR if we do, but has a different context key...
     
       nsScanner* theScanner=new nsScanner(mUnusedInput,mCharset,mCharsetSource);
-      pc=new CParserContext(theScanner,aKey, 0);
+      pc=new CParserContext(theScanner,aKey, 0, aLastCall);
       if(pc && theScanner) {
         PushContext(*pc);
-        pc->mStreamListenerState=eOnStart;  
+
+        pc->mMultipart=!aLastCall; //by default
+        if (pc->mPrevContext) {
+          pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available
+        }
+
+        pc->mStreamListenerState = (pc->mMultipart) ? eOnDataAvail : eOnStop;  
         pc->mContextType=CParserContext::eCTString;
         pc->mSourceType=aContentType; 
         mUnusedInput.Truncate(0);
@@ -973,22 +975,13 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
 
     pc->mScanner->Append(aSourceBuffer);
 
-    if (nsnull != pc->mPrevContext) {
-      pc->mMultipart = (pc->mPrevContext->mMultipart || !aLastCall);
-    }
-    else {
-      pc->mMultipart=!aLastCall;
-    }
-    result=ResumeParse();
-    if(aLastCall) {
-      pc->mScanner->CopyUnusedData(mUnusedInput);
-      pc=PopContext(); 
-      delete pc;
-    }//if
+    result=ResumeParse(PR_FALSE);
+
   }//if
   NS_RELEASE(me);  
   return result;
-}
+} 
+
 
 /**
  *  Call this method to test whether a given fragment is valid within a given context-stack.
@@ -1106,88 +1099,127 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
 
  
 /**
- *  This routine is called to cause the parser to continue
- *  parsing it's underlying stream. This call allows the
- *  parse process to happen in chunks, such as when the
- *  content is push based, and we need to parse in pieces.
+ *  This routine is called to cause the parser to continue parsing it's underlying stream. 
+ *  This call allows the parse process to happen in chunks, such as when the content is push 
+ *  based, and we need to parse in pieces.
  *  
- *  @update  gess 01/04/99 
- *  @param   
+ *  An interesting change in how the parser gets used has led us to add extra processing to this method. 
+ *  The case occurs when the parser is blocked in one context, and gets a parse(string) call in another context.
+ *  In this case, the parserContexts are linked. No problem.
+ *
+ *  The problem is that Parse(string) assumes that it can proceed unabated, but if the parser is already
+ *  blocked that assumption is false. So we needed to add a mechanism here to allow the parser to continue
+ *  to process (the pop and free) contexts until 1) it get's blocked again; 2) it runs out of contexts.
+ *
+ *
+ *  @update  rickg 03.10.2000 
+ *  @param   allowItertion : set to true if non-script resumption is requested
+ *  @param   aIsFinalChunk : tells us when the last chunk of data is provided.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
+nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
+  
   nsresult result=NS_OK;
+
   if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
     MOZ_TIMER_START(mParseTime);
 
-    result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
+    result=WillBuildModel(mParserContext->mScanner->GetFilename());
     if(mParserContext->mDTD) {
+
       mParserContext->mDTD->WillResumeParse();
-      if(NS_OK==result) {     
-        nsresult   theTokenizerResult=NS_OK;
-       
-        while(result==NS_OK) {
+      PRBool theIterationIsOk=(allowIteration||(!mParserContext->mPrevContext));
+      
+      while((result==NS_OK) && (theIterationIsOk)) {
 
-          if(mUnusedInput.Length()>0) {
-            if(mParserContext->mScanner) {
-              // -- Ref: Bug# 22485 --
-              // Insert the unused input into the source buffer 
-              // as if it was read from the input stream. 
-              // Adding Insert() per vidur!!
-              mParserContext->mScanner->Insert(mUnusedInput);
-              mUnusedInput.Truncate(0);
-            }
+        if(mUnusedInput.Length()>0) {
+          if(mParserContext->mScanner) {
+            // -- Ref: Bug# 22485 --
+            // Insert the unused input into the source buffer 
+            // as if it was read from the input stream. 
+            // Adding Insert() per vidur!!
+            mParserContext->mScanner->Insert(mUnusedInput);
+            mUnusedInput.Truncate(0);
           }
+        }
 
-          result=Tokenize(aIsFinalChunk);
+        nsresult theTokenizerResult=Tokenize(aIsFinalChunk);   // kEOF==2152596456
+        result=BuildModel(); 
 
-          if(result!=NS_OK) theTokenizerResult=result; 
+        theIterationIsOk=PRBool(kEOF!=theTokenizerResult);
+      
+       // Make sure not to stop parsing too early. Therefore, before shutting down the 
+        // parser, it's important to check whether the input buffer has been scanned to 
+        // completion ( theTokenizerResult should be kEOF ). kEOF -> End of buffer.
 
-          result=BuildModel();
+        // If we're told to block the parser, we disable all further parsing 
+        // (and cache any data coming in) until the parser is re-enabled.
+
+        if(NS_ERROR_HTMLPARSER_BLOCK==result) {
+              //BLOCK == 2152596464
+           mParserContext->mDTD->WillInterruptParse();
+           result=EnableParser(PR_FALSE);
+           return result;
+        }
         
-          if(result==NS_ERROR_HTMLPARSER_STOPPARSING) mInternalState=result;
+        else if (NS_ERROR_HTMLPARSER_STOPPARSING==result) {
+          mInternalState=result;
+          DidBuildModel(mStreamStatus);
+          return mInternalState;
+        }
+                  
+        else if((NS_OK==result) && (theTokenizerResult==kEOF)){
 
-          // Make sure not to stop parsing too early. Therefore, before shutting down the 
-          // parser, it's important to check whether the input buffer has been scanned to 
-          // completion ( theTokenizerResult should be kEOF ). kEOF -> End of buffer.
-          if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
-            ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result) && (theTokenizerResult==kEOF))){
+          PRBool theContextIsStringBased=PRBool(CParserContext::eCTString==mParserContext->mContextType);
+          if( (eOnStop==mParserContext->mStreamListenerState) || 
+              (!mParserContext->mMultipart) ||
+              (theContextIsStringBased)) {
 
-            DidBuildModel(mStreamStatus);          
+            if(!mParserContext->mPrevContext) {
 
-            MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
-            MOZ_TIMER_STOP(mParseTime);
+              DidBuildModel(mStreamStatus);          
 
-            MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
-            MOZ_TIMER_PRINT(mParseTime);
+              MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
+              MOZ_TIMER_STOP(mParseTime);
 
-            MOZ_TIMER_LOG(("DTD Time: "));
-            MOZ_TIMER_PRINT(mDTDTime);
+              MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
+              MOZ_TIMER_PRINT(mParseTime);
 
-            MOZ_TIMER_LOG(("Tokenize Time: "));
-            MOZ_TIMER_PRINT(mTokenizeTime);
-              
-            return mInternalState;
-          }
-          // If we're told to block the parser, we disable
-          // all further parsing (and cache any data coming
-          // in) until the parser is enabled.
-          //PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
-          else if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-             mParserContext->mDTD->WillInterruptParse();
-             result=EnableParser(PR_FALSE);
-             break;
-          }
-          // If we're at the end of the current scanner buffer,
-          // we interrupt parsing and wait for the next one
-          else if (theTokenizerResult==kEOF) { 
-            mParserContext->mDTD->WillInterruptParse();
-            break;
-          }
-        }//while
-      }//if
+              MOZ_TIMER_LOG(("DTD Time: "));
+              MOZ_TIMER_PRINT(mDTDTime);
+
+              MOZ_TIMER_LOG(("Tokenize Time: "));
+              MOZ_TIMER_PRINT(mTokenizeTime);
+
+              return result;
+
+            }
+            else {
+
+              CParserContext* theContext=PopContext();
+              if(theContext) {
+                theIterationIsOk=PRBool(allowIteration && theContextIsStringBased);
+                if(theContext->mCopyUnused) {
+                  theContext->mScanner->CopyUnusedData(mUnusedInput);
+                }
+                delete theContext;
+              }
+              result = mInternalState;  
+                //...then intentionally fall through to WillInterruptParse()...
+            }
+
+          }             
+
+        }
+
+        if(kEOF==theTokenizerResult) {
+          mParserContext->mDTD->WillInterruptParse();
+        }
+
+      }//while
     }//if
     else {
       mInternalState=result=NS_ERROR_HTMLPARSER_UNRESOLVEDDTD;
@@ -1450,6 +1482,8 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
 
   NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
 
+  mParserContext->mStreamListenerState=eOnDataAvail;
+
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
     if(mParserContext->mScanner) {
       mParserContext->mScanner->GetBuffer().Truncate();
@@ -1549,7 +1583,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
     //What we'll do (for now at least) is construct a blank HTML document.
     nsAutoString  temp("<html><body></body></html>");
     mParserContext->mScanner->Append(temp);
-    result=ResumeParse(nsnull, PR_TRUE);    
+    result=ResumeParse(PR_TRUE,PR_TRUE);    
   }
 
   mParserContext->mStreamListenerState=eOnStop;
@@ -1559,7 +1593,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
      mParserFilter->Finish();
 
   mParserContext->mScanner->SetIncremental(PR_FALSE);
-  result=ResumeParse(nsnull, PR_TRUE);
+  result=ResumeParse(PR_TRUE,PR_TRUE);
   
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
@@ -1575,6 +1609,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
   if(gOutFile){
     gOutFile->close();
     delete gOutFile;
+    gOutFile=0;
   }
 #endif
 

@@ -33,7 +33,7 @@ MOZ_DECL_CTOR_COUNTER(CParserContext);
  * @param   aKey
  * @param   aListener
  */
-CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver* aListener) :
+CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver* aListener,PRBool aCopyUnused) :
   mSourceType()
   //,mTokenDeque(gTokenDeallocator)
 {
@@ -53,6 +53,7 @@ CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver*
   mStreamListenerState=eNone;
   mMultipart=PR_TRUE;
   mContextType=eCTNone;
+  mCopyUnused=aCopyUnused;
 }
 
 
