@@ -116,7 +116,7 @@ js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
 /*
  * Class for for/in loop property iterator objects.
  */
-#define JSSLOT_ITER_STATE   (JSSLOT_START)
+#define JSSLOT_ITER_STATE   JSSLOT_PRIVATE
 
 static void
 prop_iterator_finalize(JSContext *cx, JSObject *obj)

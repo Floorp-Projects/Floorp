@@ -158,7 +158,8 @@ extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
 extern void js_InitContextForLocking(JSContext *);
 extern void js_TransferScopeLock(JSContext *, JSScope *, JSScope *);
-extern jsval js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
+extern JS_FRIEND_API(jsval)
+js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
 extern void js_SetSlotThreadSafe(JSContext *, JSObject *, uint32, jsval);
 extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);

@@ -82,7 +82,7 @@ struct JSObjectMap {
 #define OBJ_CHECK_ACCESS(cx,obj,id,mode,vp,attrsp)                            \
     (obj)->map->ops->checkAccess(cx,obj,id,mode,vp,attrsp)
 
-/* These two are time-optimized to avoid stub calls. */
+/* These four are time-optimized to avoid stub calls. */
 #define OBJ_THIS_OBJECT(cx,obj)                                               \
     ((obj)->map->ops->thisObject                                              \
      ? (obj)->map->ops->thisObject(cx,obj)                                    \
@@ -91,7 +91,31 @@ struct JSObjectMap {
     ((obj)->map->ops->dropProperty                                            \
      ? (obj)->map->ops->dropProperty(cx,obj,prop)                             \
      : (void)0)
+#define OBJ_GET_REQUIRED_SLOT(cx,obj,slot)                                    \
+    ((obj)->map->ops->getRequiredSlot                                         \
+     ? (obj)->map->ops->getRequiredSlot(cx, obj, slot)                        \
+     : JSVAL_VOID)
+#define OBJ_SET_REQUIRED_SLOT(cx,obj,slot,v)                                  \
+    ((obj)->map->ops->setRequiredSlot                                         \
+     ? (obj)->map->ops->setRequiredSlot(cx, obj, slot, v)                     \
+     : (void)0)
 
+/*
+ * In the original JS engine design, obj->slots pointed to a vector of length
+ * JS_INITIAL_NSLOTS words if obj->map was shared with a prototype object,
+ * else of length obj->map->nslots.  With the advent of JS_GetReservedSlot,
+ * JS_SetReservedSlot, and JSCLASS_HAS_RESERVED_SLOTS (see jsapi.h), the size
+ * of the minimum length slots vector in the case where map is shared cannot
+ * be constant.  This length starts at JS_INITIAL_NSLOTS, but may advance to
+ * include all the reserved slots.
+ *
+ * Therefore slots must be self-describing.  Rather than tag its low order bit
+ * (a bit is all we need) to distinguish initial length from reserved length,
+ * we do "the BSTR thing": over-allocate slots by one jsval, and store the
+ * *net* length (counting usable slots, which have non-negative obj->slots[]
+ * indices) in obj->slots[-1].  All code that sets obj->slots must be aware of
+ * this hack -- you have been warned, and jsobj.c has been updated!
+ */
 struct JSObject {
     JSObjectMap *map;
     jsval       *slots;
@@ -101,11 +125,12 @@ struct JSObject {
 #define JSSLOT_PARENT       1
 #define JSSLOT_CLASS        2
 #define JSSLOT_PRIVATE      3
-#define JSSLOT_START        3
+#define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
+                             ? JSSLOT_PRIVATE + 1                             \
+                             : JSSLOT_CLASS + 1)
 
-#define JSSLOT_FREE(clasp)  (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
-			     ? JSSLOT_PRIVATE + 1                             \
-			     : JSSLOT_START)
+#define JSSLOT_FREE(clasp)  (JSSLOT_START(clasp)                              \
+                             + JSCLASS_RESERVED_SLOTS(clasp))
 
 #define JS_INITIAL_NSLOTS   5
 
@@ -133,13 +158,13 @@ struct JSObject {
 /* Thread-safe functions and wrapper macros for accessing obj->slots. */
 #define OBJ_GET_SLOT(cx,obj,slot)                                             \
     (OBJ_CHECK_SLOT(obj, slot),                                               \
-     (!OBJ_IS_NATIVE(obj) || OBJ_SCOPE(obj)->ownercx == cx)                   \
+     (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->ownercx == cx)                    \
      ? LOCKED_OBJ_GET_SLOT(obj, slot)                                         \
      : js_GetSlotThreadSafe(cx, obj, slot))
 
 #define OBJ_SET_SLOT(cx,obj,slot,value)                                       \
     (OBJ_CHECK_SLOT(obj, slot),                                               \
-     (!OBJ_IS_NATIVE(obj) || OBJ_SCOPE(obj)->ownercx == cx)                   \
+     (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->ownercx == cx)                    \
      ? (void) LOCKED_OBJ_SET_SLOT(obj, slot, value)                           \
      : js_SetSlotThreadSafe(cx, obj, slot, value))
 
@@ -367,6 +392,12 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg);
 
 extern void
 js_Clear(JSContext *cx, JSObject *obj);
+
+extern jsval
+js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
+
+extern void
+js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 JS_END_EXTERN_C
 

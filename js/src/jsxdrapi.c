@@ -77,14 +77,14 @@ typedef struct JSXDRMemState {
 #define MEM_NEED(xdr, bytes)                                                  \
     JS_BEGIN_MACRO                                                            \
         if ((xdr)->mode == JSXDR_ENCODE) {                                    \
-            uint32 new_limit_ = JS_ROUNDUP(MEM_COUNT(xdr) + bytes, MEM_BLOCK);\
             if (MEM_LIMIT(xdr) &&                                             \
                 MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                    \
-                void *data_ = JS_realloc((xdr)->cx, (xdr)->data, new_limit_); \
+                uint32 limit_ = JS_ROUNDUP(MEM_COUNT(xdr) + bytes, MEM_BLOCK);\
+                void *data_ = JS_realloc((xdr)->cx, (xdr)->data, limit_);     \
                 if (!data_)                                                   \
                     return 0;                                                 \
                 (xdr)->data = data_;                                          \
-                MEM_LIMIT(xdr) = new_limit_;                                  \
+                MEM_LIMIT(xdr) = limit_;                                      \
             }                                                                 \
         } else {                                                              \
             MEM_LEFT(xdr, bytes);                                             \
@@ -275,6 +275,8 @@ JS_XDRDestroy(JSXDRState *xdr)
         if (xdr->reghash)
             JS_DHashTableDestroy(xdr->reghash);
     }
+    if (xdr->data)
+        JS_free(cx, xdr->data);
     JS_free(cx, xdr);
 }
 
@@ -470,7 +472,7 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble **dp)
     return JS_TRUE;
 }
 
-/* These are magic: see jsapi.h, near the top, for the real jsval tags. */
+/* These are magic pseudo-tags: see jsapi.h, near the top, for real tags. */
 #define JSVAL_XDRNULL   0x8
 #define JSVAL_XDRVOID   0xA
 
@@ -498,7 +500,9 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
         *vp = JSVAL_VOID;
         break;
       case JSVAL_STRING: {
-        JSString *str = JSVAL_TO_STRING(*vp);
+        JSString *str;
+        if (xdr->mode == JSXDR_ENCODE)
+            str = JSVAL_TO_STRING(*vp);
         if (!JS_XDRString(xdr, &str))
             return JS_FALSE;
         if (xdr->mode == JSXDR_DECODE)
@@ -528,29 +532,24 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
       case JSVAL_BOOLEAN: {
         uint32 b;
         if (xdr->mode == JSXDR_ENCODE)
-            b = (uint32)JSVAL_TO_BOOLEAN(*vp);
+            b = (uint32) JSVAL_TO_BOOLEAN(*vp);
         if (!JS_XDRUint32(xdr, &b))
             return JS_FALSE;
         if (xdr->mode == JSXDR_DECODE)
-            *vp = BOOLEAN_TO_JSVAL((JSBool)b);
+            *vp = BOOLEAN_TO_JSVAL((JSBool) b);
         break;
       }
       default: {
-        char numBuf[12];
-        if (type & JSVAL_INT) {
-            uint32 i;
-            if (xdr->mode == JSXDR_ENCODE)
-                i = (uint32) JSVAL_TO_INT(*vp);
-            if (!JS_XDRUint32(xdr, &i))
-                return JS_FALSE;
-            if (xdr->mode == JSXDR_DECODE)
-                *vp = INT_TO_JSVAL((int32) i);
-            break;
-        }
-        JS_snprintf(numBuf, sizeof numBuf, "%#lx", type);
-        JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_JVAL_TYPE, type);
-        return JS_FALSE;
+        uint32 i;
+
+        JS_ASSERT(type & JSVAL_INT);
+        if (xdr->mode == JSXDR_ENCODE)
+            i = (uint32) JSVAL_TO_INT(*vp);
+        if (!JS_XDRUint32(xdr, &i))
+            return JS_FALSE;
+        if (xdr->mode == JSXDR_DECODE)
+            *vp = INT_TO_JSVAL((int32) i);
+        break;
       }
     }
     return JS_TRUE;
@@ -561,7 +560,14 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
     JSBool hasMagic;
 
-    return js_XDRScript(xdr, scriptp, &hasMagic);
+    if (!js_XDRScript(xdr, scriptp, &hasMagic))
+        return JS_FALSE;
+    if (!hasMagic) {
+        JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_SCRIPT_MAGIC);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 #define CLASS_REGISTRY_MIN      8

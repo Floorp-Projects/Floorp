@@ -449,7 +449,8 @@ ClaimScope(JSScope *scope, JSContext *cx)
     return JS_FALSE;
 }
 
-jsval
+/* Exported to js.c, which calls it via OBJ_GET_* and JSVAL_IS_* macros. */
+JS_FRIEND_API(jsval)
 js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
 {
     jsval v;
@@ -459,7 +460,23 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     jsword me;
 #endif
 
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    /*
+     * We handle non-native objects via JSObjectOps.getRequiredSlot, treating
+     * all slots starting from 0 as required slots.  A property definition or
+     * some prior arrangement must have allocated slot.
+     *
+     * Note once again (see jspubtd.h, before JSGetRequiredSlotOp's typedef)
+     * the crucial distinction between a |required slot number| that's passed
+     * to the get/setRequiredSlot JSObjectOps, and a |reserved slot index|
+     * passed to the JS_Get/SetReservedSlot APIs.
+     */
+    if (!OBJ_IS_NATIVE(obj))
+        return OBJ_GET_REQUIRED_SLOT(cx, obj, slot);
+
+    /*
+     * Native object locking is inlined here to optimize the single-threaded
+     * and contention-free multi-threaded cases.
+     */
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
@@ -523,7 +540,19 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     jsword me;
 #endif
 
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    /*
+     * We handle non-native objects via JSObjectOps.setRequiredSlot, as above
+     * for the Get case.
+     */
+    if (!OBJ_IS_NATIVE(obj)) {
+        OBJ_SET_REQUIRED_SLOT(cx, obj, slot, v);
+        return;
+    }
+
+    /*
+     * Native object locking is inlined here to optimize the single-threaded
+     * and contention-free multi-threaded cases.
+     */
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
