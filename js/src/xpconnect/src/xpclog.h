@@ -67,6 +67,7 @@
 #define XPC_LOG_INDENT()        XPC_Log_Indent()
 #define XPC_LOG_OUTDENT()       XPC_Log_Outdent()
 #define XPC_LOG_CLEAR_INDENT()  XPC_Log_Clear_Indent()
+#define XPC_LOG_FINISH()        XPC_Log_Finish()
 
 JS_BEGIN_EXTERN_C
 
@@ -75,6 +76,7 @@ PRBool XPC_Log_Check(int i);
 void   XPC_Log_Indent();
 void   XPC_Log_Outdent();
 void   XPC_Log_Clear_Indent();
+void   XPC_Log_Finish();
 
 JS_END_EXTERN_C
 
@@ -88,6 +90,7 @@ JS_END_EXTERN_C
 #define XPC_LOG_INDENT()       ((void)0)
 #define XPC_LOG_OUTDENT()      ((void)0)
 #define XPC_LOG_CLEAR_INDENT() ((void)0)
+#define XPC_LOG_FINISH()       ((void)0)
 #endif
 
 #endif /* xpclog_h___ */

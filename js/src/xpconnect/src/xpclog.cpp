@@ -61,11 +61,24 @@ static PRBool Init()
     g_Spaces[SPACE_COUNT] = 0;
     if(!g_LogMod || !g_Spaces || !PR_LOG_TEST(g_LogMod,1))
     {
-        g_InitState = -1;
+        g_InitState = 1;
+        XPC_Log_Finish();
         return PR_FALSE;
     }
     g_InitState = 1;
     return PR_TRUE;
+}
+
+void   
+XPC_Log_Finish()
+{
+    if(g_InitState == 1) 
+    {
+        delete g_Spaces;
+        // we'd like to properly cleanup the LogModule, but nspr owns that
+        g_LogMod = nsnull;
+    }
+    g_InitState = -1;
 }
 
 void

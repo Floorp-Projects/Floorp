@@ -417,5 +417,7 @@ xpcPerThreadData::CleanupAllThreads()
         for(xpcPerThreadData* cur = gThreads; cur; cur = cur->mNextThread)
             cur->Cleanup();
     }
+    if(gTLSIndex != BAD_TLS_INDEX)
+        PR_SetThreadPrivate(gTLSIndex, nsnull);
 }
 

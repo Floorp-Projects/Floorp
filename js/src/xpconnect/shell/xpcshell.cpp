@@ -475,8 +475,10 @@ Process(JSContext *cx, JSObject *obj, char *filename)
         }
         ungetc(ch, fh);
         script = JS_CompileFileHandle(cx, obj, filename, fh);
-        if (script)
+        if (script) {
             (void)JS_ExecuteScript(cx, obj, script, &result);
+            JS_DestroyScript(cx, script);
+        }
         return;
     }
 
@@ -830,6 +832,8 @@ main(int argc, char **argv)
     xpc->SyncJSContexts();
     xpc->DebugDump(4);
     xpc = nsnull;   // force nsCOMPtr to Release the service
+    secman = nsnull;
+    rtsvc = nsnull;
 
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");

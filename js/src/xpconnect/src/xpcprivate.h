@@ -72,6 +72,7 @@
 #include "xpcjsid.h"
 #include "prlong.h"
 #include "prmem.h"
+#include "prenv.h"
 
 #include "nsIJSContextStack.h"
 #include "prthread.h"
@@ -93,7 +94,6 @@
 
 #ifdef XPC_TOOLS_SUPPORT
 #include "nsIXPCToolsProfiler.h"
-#include "nsIPref.h"
 #endif
 
 #ifdef DEBUG
@@ -981,7 +981,7 @@ private:
                                  const nsXPTMethodInfo* method,
                                  const XPCNativeMemberDescriptor* desc,
                                  const nsXPTParamInfo& param,
-                                 uint8 vtblIndex,
+                                 uint16 vtblIndex,
                                  uint8 paramIndex,
                                  SizeMode mode,
                                  nsXPTCVariant* dispatchParams,
@@ -991,7 +991,7 @@ private:
                                      const nsXPTMethodInfo* method,
                                      const XPCNativeMemberDescriptor* desc,
                                      const nsXPTParamInfo& param,
-                                     uint8 vtblIndex,
+                                     uint16 vtblIndex,
                                      uint8 paramIndex,
                                      const nsXPTType& datum_type,
                                      nsXPTCVariant* dispatchParams,
