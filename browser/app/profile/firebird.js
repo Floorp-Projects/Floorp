@@ -302,6 +302,7 @@ pref("javascript.options.showInConsole",    false);
 // popups.policy 1=allow,2=reject
 pref("privacy.popups.policy",               1);
 pref("privacy.popups.usecustom",            true);
+pref("privacy.popups.firstTime",            true);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);
