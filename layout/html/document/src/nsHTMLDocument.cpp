@@ -52,9 +52,12 @@
 
 
 // Find/Serach Includes
+#if XP_NEW_SELECTION
+#else
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
 #include "nsSelectionPoint.h"
+#endif
 const PRInt32 kForward  = 0;
 const PRInt32 kBackward = 1;
 
