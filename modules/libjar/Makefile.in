@@ -26,6 +26,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/objs.mk
 
 # Linux and Solaris installer needs standalone libjar
 ifneq (,$(filter Linux SunOS5,$(OS_ARCH)))
@@ -36,31 +37,18 @@ MODULE		= jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
 IS_COMPONENT	= 1
 
-CPPSRCS		= \
-		nsJARInputStream.cpp \
-		nsZipArchive.cpp \
-		nsJAR.cpp \
-		nsJARFactory.cpp \
-		nsWildCard.cpp \
-		$(NULL)
+CPPSRCS		= $(MODULES_LIBJAR_LCPPSRCS)
 
-EXPORTS		= zipfile.h \
-		zipstub.h \
-		$(NULL)
+XPIDLSRCS	= $(MODULES_LIBJAR_LXPIDLSRCS)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		= $(MODULES_LIBJAR_LEXPORTS)
 
-XPIDLSRCS	= \
-		nsIZipReader.idl \
-		$(NULL)
+include $(topsrcdir)/config/rules.mk
 
-
-EXTRA_DSO_LDOPTS = \
+EXTRA_DSO_LDOPTS += \
 		-L$(DIST)/bin \
 		$(ZLIB_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
 

@@ -23,29 +23,18 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		= @srcdir@:@srcdir@/../src/
 
 include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/../src/objs.mk
 
 MODULE		= zlib
 LIBRARY_NAME	= z_s
 
+CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
+EXPORTS		= $(MODULES_ZLIB_SRC_LEXPORTS)
 
-CSRCS		= \
-		adler32.c \
-		crc32.c \
-		compress.c \
-		uncompr.c \
-		deflate.c \
-		trees.c \
-		zutil.c \
-		inflate.c \
-		infblock.c \
-		inftrees.c \
-		infcodes.c \
-		infutil.c \
-		inffast.c \
-		$(NULL)
+OBJS		= $(addprefix S_,$(CSRCS:.c=.$(OBJ_SUFFIX)))
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 override NO_SHARED_LIB=1
@@ -56,15 +45,12 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-export::	copysrcs
+# Make sure that these custom rules stay in sync with rules.mk
+S_%.$(OBJ_SUFFIX): $(srcdir)/../src/%.c
+	$(REPORT_BUILD)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(ELOG) $(CC) -Fo$@ -c $(COMPILE_CFLAGS) $<
+else
+	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
+endif
 
-copysrcs::
-	cp $(srcdir)/../src/*.c .
-	cp $(srcdir)/../src/*.h .
-
-clean::
-	$(RM) *.h *.c *.o *.a
-
-clobber::	clean
-
-clobber_all::	clean

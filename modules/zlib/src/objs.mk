@@ -13,33 +13,29 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+MODULES_ZLIB_SRC_LCSRCS = \
+		adler32.c \
+		crc32.c \
+		compress.c \
+		uncompr.c \
+		deflate.c \
+		trees.c \
+		zutil.c \
+		inflate.c \
+		infblock.c \
+		inftrees.c \
+		infcodes.c \
+		infutil.c \
+		inffast.c \
+		$(NULL)
 
-include $(DEPTH)/config/autoconf.mk
-include $(srcdir)/objs.mk
+MODULES_ZLIB_SRC_LEXPORTS = zlib.h zconf.h
 
-MODULE		= zlib
-LIBRARY_NAME	= z
-
-CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
-
-EXPORTS		= $(MODULES_ZLIB_SRC_LEXPORTS)
-
-# need a static lib for some components (pngcom, say)
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
-override NO_STATIC_LIB=
-endif
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
-
-include $(topsrcdir)/config/rules.mk
+MODULES_ZLIB_SRC_CSRCS := $(addprefix $(topsrcdir)/modules/zlib/src/, $(MODULES_ZLIB_SRC_LCSRCS))
 
