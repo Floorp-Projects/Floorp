@@ -380,8 +380,7 @@ MailDataSource::AddObserver(nsIRDFObserver* n)
         if ((mObservers = new nsVoidArray()) == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    mObservers->AppendElement(n);
-    return NS_OK;
+    return mObservers->AppendElement(n) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -389,8 +388,7 @@ MailDataSource::RemoveObserver(nsIRDFObserver* n)
 {
     if (! mObservers)
         return NS_OK;
-    mObservers->RemoveElement(n);
-    return NS_OK;
+    return mObservers->RemoveElement(n) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
