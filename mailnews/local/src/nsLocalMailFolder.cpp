@@ -2331,7 +2331,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
                        "Fatal ... bad message format\n");
         }
         
-        mCopyState->m_fileStream->write(start, end-start+linebreak_len); 
+        mCopyState->m_fileStream->write(start, end-start);
+        mCopyState->m_fileStream->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);   
         if (mCopyState->m_parseMsgState)
             mCopyState->m_parseMsgState->ParseAFolderLine(start,
                                                   end-start+linebreak_len);
