@@ -16,6 +16,7 @@
  * Reserved.
  */
 
-/* Debug specific defines for the JavaRuntime */
+/* Non debug specific defines for NSStdLib */
 
+#include "MacPrefix.h"
 #include "NSStdLibConfig.h"
