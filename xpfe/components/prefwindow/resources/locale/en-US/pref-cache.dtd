@@ -6,7 +6,7 @@
 <!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. (Clicking Reload always shows you the latest version of a page.)">
 <!ENTITY  diskCache.label               "Cache:">
 <!ENTITY  diskCache.accesskey           "C">
-<!ENTITY  kbytes                        "KB">
+<!ENTITY  mbytes                        "MB">
 <!ENTITY  diskCacheFolder.label         "Cache Folder:">
 <!ENTITY  clearDiskCache.label          "Clear Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">

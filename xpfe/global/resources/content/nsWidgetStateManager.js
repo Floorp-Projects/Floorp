@@ -110,13 +110,6 @@ nsWidgetStateManager.prototype =
           if (!(aPageTag in this.dataManager.pageData))
             return;
 
-          if( 'GetFields' in this.contentArea)
-            {
-              // save page data based on user supplied function in content area
-              var dataObject = this.contentArea.GetFields();
-              if (dataObject)
-                this.dataManager.setPageData( aPageTag, dataObject );
-            }
 
             // Automatic element retrieval. This is done in two ways.
             // 1) if an element id array is present in the document, this is
@@ -157,6 +150,14 @@ nsWidgetStateManager.prototype =
                                 this.handlers.default_handler.get;
                 this.dataManager.setItemData( aPageTag, elementID, get_Func( elementID ) );
               }
+           if( 'GetFields' in this.contentArea)
+             {
+               // save page data based on user supplied function in content area
+               var dataObject = this.dataManager.getPageData( aPageTag );
+               dataObject = this.contentArea.GetFields( dataObject );
+               if (dataObject)
+                 this.dataManager.setPageData( aPageTag, dataObject );
+             }
         },
 
     setPageData:

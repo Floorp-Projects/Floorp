@@ -38,6 +38,15 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["browserCacheDiskCache", "browserCacheCheckDocFrequency", "enablePrefetch"];
+    function GetFields(pageData) {
+      // because the cache is in kilobytes, and the UI is in megabytes.
+      pageData.browserCacheDiskCache.value <<= 10;
+      return null;
+    }
+    function SetFields(pageData) {
+      pageData.browserCacheDiskCache.value >>= 10;
+      return true;
+    }
   ]]>
   </script>
   
@@ -52,9 +61,9 @@
 
     <hbox align="center">
       <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
-      <textbox id="browserCacheDiskCache" size="8" preftype="int"
+      <textbox id="browserCacheDiskCache" size="5" preftype="int"
                   prefstring="browser.cache.disk.capacity" prefattribute="value"/>
-      <label value="&kbytes;"/>
+      <label value="&mbytes;"/>
       <button label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
               oncommand="prefClearDiskAndMemCache();"
               id="clearDiskCache"
