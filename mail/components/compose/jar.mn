@@ -3,6 +3,8 @@ messenger.jar:
 *+  content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
 +   content/editor/images/tag-anchor.gif                           (content/icons/tag-anchor.gif)
 
+comm.jar:
++   content/editor/EdSpellCheck.js                                 (content/EdSpellCheck.js) 
 
 en-US.jar:
 +   locale/en-US/messenger/messengercompose/messengercompose.dtd   (locale/messengercompose.dtd)
