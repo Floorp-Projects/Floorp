@@ -51,6 +51,7 @@ XPIDL_MODULE = xpcom_base
 
 XPIDLSRCS =               \
         .\nsrootidl.idl   \
+        .\nsIErrorService.idl \
         .\nsIMemory.idl \
         .\nsILeakDetector.idl \
         .\nsIInterfaceRequestor.idl \
@@ -84,6 +85,7 @@ LCFLAGS = $(LCFLAGS) -DGC_LEAK_DETECTOR
 
 
 CPP_OBJS =                            \
+        .\$(OBJDIR)\nsErrorService.obj       \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
         .\$(OBJDIR)\nsMemoryImpl.obj   \

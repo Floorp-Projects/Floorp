@@ -34,6 +34,7 @@ LIBRARY_NAME	= xpcombase_s
 CPPSRCS		= \
 		nsAllocator.cpp \
 		nsMemoryImpl.cpp \
+		nsErrorService.cpp \
 		nsDebug.cpp \
 		nsIInterfaceRequestor.cpp \
 		nsTraceRefcnt.cpp \
@@ -83,6 +84,7 @@ XPIDLSRCS	= \
 		nsrootidl.idl \
 		nsISupports.idl \
 		nsIMemory.idl \
+		nsIErrorService.idl \
 		nsIInterfaceRequestor.idl \
 		nsIWeakReference.idl \
 		nsIConsoleService.idl \
