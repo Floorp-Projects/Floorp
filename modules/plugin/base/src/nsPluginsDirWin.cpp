@@ -93,32 +93,41 @@ static PRUint32 CalculateVariantCount(char* mimeTypes)
 
 static char** MakeStringArray(PRUint32 variants, char* data)
 {
-	char** buffer = NULL;
-	char* index = data;
-	PRUint32 count = 0;
-	
-  if((variants == 0) || (data == NULL))
+  if((variants <= 0) || (data == NULL))
     return NULL;
 
-	buffer = (char **)PR_Calloc(variants, sizeof(char *));
-	if(!buffer)
-	    return NULL;
-	buffer[count] = index;
-	++count;
+  char ** array = (char **)PR_Calloc(variants, sizeof(char *));
+  if(array == NULL)
+    return NULL;
 
-	while (*index && count<variants)
-	{
-		if (*index == '|')
-		{
-		  buffer[count] = index + 1;
-		  ++count;
-		  *index = 0;
-		}
-		++index;
-	}
-	return buffer;
+  char * start = data;
+  for(PRUint32 i = 0; i < variants; i++)
+  {
+    char * p = PL_strchr(start, '|');
+    if(p != NULL)
+      *p = 0;
+
+    array[i] = PL_strdup(start);
+    start = ++p;
+  }
+  return array;
 }
 
+static void FreeStringArray(PRUint32 variants, char ** array)
+{
+  if((variants == 0) || (array == NULL))
+    return;
+
+  for(PRUint32 i = 0; i < variants; i++)
+  {
+    if(array[i] != NULL)
+    {
+      PL_strfree(array[i]);
+      array[i] = NULL;
+    }
+  }
+  PR_Free(array);
+}
 ///////////////////////////////////////////////////////////////////////////
 
 /* nsPluginsDir implementation */
@@ -294,15 +303,19 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 		info.fName = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\ProductName");
 		info.fDescription = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileDescription");
 
-		info.fMimeType = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\MIMEType");
-		info.fMimeDescription = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileOpenName");
-		info.fExtensions = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileExtents");
+		char *mimeType = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\MIMEType");
+		char *mimeDescription = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileOpenName");
+		char *extensions = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileExtents");
 
-		info.fVariantCount = CalculateVariantCount(info.fMimeType);
-		info.fMimeTypeArray = MakeStringArray(info.fVariantCount, info.fMimeType);
-		info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, info.fMimeDescription);
-		info.fExtensionArray = MakeStringArray(info.fVariantCount, info.fExtensions);
+		info.fVariantCount = CalculateVariantCount(mimeType);
+		info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
+		info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
+		info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
     info.fFileName = PL_strdup(path);
+
+    PL_strfree(mimeType);
+    PL_strfree(mimeDescription);
+    PL_strfree(extensions);
 	}
 	else
 		res = NS_ERROR_FAILURE;
@@ -315,29 +328,23 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
-  if(info.fName != nsnull)
+  if(info.fName != NULL)
     PL_strfree(info.fName);
 
-  if(info.fDescription != nsnull)
+  if(info.fDescription != NULL)
     PL_strfree(info.fDescription);
 
-  if(info.fMimeType != nsnull)
-    PL_strfree(info.fMimeType);
+  if(info.fMimeTypeArray != NULL)
+    FreeStringArray(info.fVariantCount, info.fMimeTypeArray);
 
-  if(info.fMimeDescription != nsnull)
-    PL_strfree(info.fMimeDescription);
+  if(info.fMimeDescriptionArray != NULL)
+    FreeStringArray(info.fVariantCount, info.fMimeDescriptionArray);
 
-  if(info.fExtensions != nsnull)
-    PL_strfree(info.fExtensions);
+  if(info.fExtensionArray != NULL)
+    FreeStringArray(info.fVariantCount, info.fExtensionArray);
 
-  if(info.fMimeTypeArray != nsnull)
-    PR_Free(info.fMimeTypeArray);
-
-  if(info.fMimeDescriptionArray != nsnull)
-    PR_Free(info.fMimeDescriptionArray);
-
-  if(info.fExtensionArray != nsnull)
-    PR_Free(info.fExtensionArray);
+  if(info.fFileName != NULL)
+    PL_strfree(info.fFileName);
 
   ZeroMemory((void *)&info, sizeof(info));
 

@@ -58,9 +58,6 @@ struct nsPluginInfo {
 	PRUint32 fPluginInfoSize;	// indicates how large the structure is currently.
 	char* fName;				// name of the plugin
 	char* fDescription;			// etc.
-	char* fMimeType;
-	char* fMimeDescription;
-	char* fExtensions;
 	PRUint32 fVariantCount;
 	char** fMimeTypeArray;
 	char** fMimeDescriptionArray;

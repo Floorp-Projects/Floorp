@@ -158,7 +158,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
     nsresult rv;
-    const char* mimedescr;
+    const char* mimedescr, *name, *description;
     char *mdesc,*start,*nexttoc,*mtype,*exten,*descr;
     int i,num;
 
@@ -192,14 +192,18 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     }
 
     if (plugin) {
-        plugin->GetValue(nsPluginVariable_NameString, &info.fName);
-        plugin->GetValue(nsPluginVariable_DescriptionString, &info.fDescription);
+        plugin->GetValue(nsPluginVariable_NameString, &name);
+        info.fName = PL_strdup(name);
+
+        plugin->GetValue(nsPluginVariable_DescriptionString, &description);
+        info.fDescription = PL_strdup(description);
+
         plugin->GetMIMEDescription(&mimedescr);
     }
     else {
-        info.fName = PL_strdup(this->GetCString()); // XXXwaterson LEAK
-        info.fDescription = "";
-        info.fMimeDescription = "";
+        info.fName = PL_strdup(this->GetCString());
+        info.fDescription = PL_strdup("");
+        info.fMimeDescription = PL_strdup("");
     }
 
 #ifdef NS_DEBUG
@@ -246,22 +250,18 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         printf("Registering plugin for: \"%s\",\"%s\",\"%s\"\n", mtype,descr ? descr : "null",exten ? exten : "null");
 #endif
 
-        if(i==0) {
-            info.fMimeType = mtype ? mtype : (char *)"";
-            info.fMimeDescription = descr ? descr : (char *)"";
-            info.fExtensions = exten ? exten : (char *)"";
-        }
-
         if(!*mtype && !descr && !exten) {
             i--;
             info.fVariantCount--;
         } else {
-            info.fMimeTypeArray[i] = mtype ? mtype : (char *)"";
-            info.fMimeDescriptionArray[i] = descr ? descr : (char *)"";
-            info.fExtensionArray[i] = exten ? exten : (char *)"";
+            info.fMimeTypeArray[i] = mtype ? PL_strdup(mtype) : PL_strdup("");
+            info.fMimeDescriptionArray[i] = descr ? PL_strdup(descr) : PL_strdup("");
+            info.fExtensionArray[i] = exten ? PL_strdup(exten) : PL_strdup("");
         }
         start=nexttoc;
     }
+
+    PR_Free(mdesc);
 
 	return NS_OK;
 }
@@ -269,6 +269,22 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
+  if(info.fName != nsnull)
+    PL_strfree(info.fName);
+
+  if(info.fDescription != nsnull)
+    PL_strfree(info.fDescription);
+
+  for(PRUint32 i = 0; i < info.fVariantCount; i++)
+  {
+    if(info.fMimeTypeArray[i] != nsnull)
+      PL_strfree(info.fMimeTypeArray[i]);
+
+    if(info.fMimeDescriptionArray[i] != nsnull)
+      PL_strfree(info.fMimeDescriptionArray[i]);
+
+    if(info.fExtensionArray[i] != nsnull)
+      PL_strfree(info.fExtensionArray[i]);
+  }
   return NS_OK;
 }
-

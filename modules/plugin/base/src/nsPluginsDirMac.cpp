@@ -128,7 +128,9 @@ static char* GetPluginString(short id, short index)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-	// need to open the plugin's resource file and read some resources.
+  nsCRT::memset(&info, 0, sizeof(info));
+
+  // need to open the plugin's resource file and read some resources.
 	FSSpec spec = *this;
 	Boolean targetIsFolder, wasAliased;
 	OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
@@ -141,15 +143,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 			// 'STR#', 126, 1 => plugin description.
 			info.fDescription = GetPluginString(126, 1);
 			
-			// 'STR#', 128, 1 => MIME type.
-			info.fMimeType = GetPluginString(128, 1);
-
-			// 'STR#', 127, 1 => MIME description.
-			info.fMimeDescription = GetPluginString(127, 1);
-			
-			// 'STR#', 128, 2 => extensions.
-			info.fExtensions = GetPluginString(128, 2);
-
 			// Determine how many  'STR#' resource for all MIME types/extensions.
 			Handle typeList = ::Get1Resource('STR#', 128);
 			if (typeList != NULL) {
@@ -179,5 +172,21 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
+  if (info.fPluginInfoSize <= sizeof(nsPluginInfo)) 
+  {
+    delete[] info.fName;
+    delete[] info.fDescription;
+    int variantCount = info.fVariantCount;
+    for (int i = 0; i < variantCount; i++) 
+    {
+      delete[] info.fMimeTypeArray[i];
+      delete[] info.fExtensionArray[i];
+      delete[] info.fMimeDescriptionArray[i];
+    }
+    delete[] info.fMimeTypeArray;
+    delete[] info.fMimeDescriptionArray;
+    delete[] info.fExtensionArray;
+    delete[] info.fFileName;
+  }
   return NS_OK;
 }

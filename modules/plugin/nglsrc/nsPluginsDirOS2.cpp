@@ -65,44 +65,60 @@ static char *LoadRCDATAString( HMODULE hMod, ULONG resid)
    return string;
 }
 
-/* Take a string of the form "foo|bar|baz" and return an  */
-/* array of pointers *into that string* to foo, bar, baz. */
-/* There may be embedded nulls after | characters, thanks */
-/* to the way the resource compiler works.  Technically   */
-/* the flat string ought to end with a double null, but   */
-/* I'm not checking here.                                 */
-/* The 'flat' string is altered, ['\0'/'|']               */
-/* The array returned needs to be PR_Free'd.              */
-/* Also return the size of the array!                     */
-static char **BuildStringArray( char *aFlat, PRUint32 &aSize)
+static PRUint32 CalculateVariantCount(char* mimeTypes)
 {
-   char **array = 0;
+	PRUint32 variants = 1;
 
-   aSize = 1;
-   /* make two passes through the string 'cos I'm lazy */
-   char *c = aFlat;
-   while( 0 != (c = PL_strchr( c, '|')))
-   {
-      /* skip past <= 1 null char */
-      c++; if( !*c) c++;
-      aSize++;
-   }
+  if(mimeTypes == nsnull)
+    return 0;
 
-   PRInt32 index = 0;
+	char* index = mimeTypes;
+	while (*index)
+	{
+		if (*index == '|')
+			variants++;
 
-   array = (char**) PR_Malloc( aSize * sizeof( char *));
+		++index;
+	}
+	return variants;
+}
 
-   c = aFlat;
+static char** MakeStringArray(PRUint32 variants, char* data)
+{
+  if((variants <= 0) || (data == nsnull))
+    return nsnull;
 
-   for(;;) // do-while-do
-   {
-      array[ index++] = c;
-      c = PL_strchr( c, '|');
-      if( !c) break;
-      *c++ = '\0';
-   }
+  char ** array = (char **)PR_Calloc(variants, sizeof(char *));
+  if(array == nsnull)
+    return nsnull;
 
-   return array;
+  char * start = data;
+  for(PRUint32 i = 0; i < variants; i++)
+  {
+    char * p = PL_strchr(start, '|');
+    if(p != nsnull)
+      *p = 0;
+
+    array[i] = PL_strdup(start);
+    start = ++p;
+  }
+  return array;
+}
+
+static void FreeStringArray(PRUint32 variants, char ** array)
+{
+  if((variants == 0) || (array == nsnull))
+    return;
+
+  for(PRUint32 i = 0; i < variants; i++)
+  {
+    if(array[i] != nsnull)
+    {
+      PL_strfree(array[i]);
+      array[i] = nsnull;
+    }
+  }
+  PR_Free(array);
 }
 
 // nsPluginsDir class
@@ -188,29 +204,25 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
 
       PRUint32 variants = 0;
 
-      // ...mime types...
-      info.fMimeType = LoadRCDATAString( hPlug, NS_INFO_MIMEType);
-      if( nsnull == info.fMimeType) break;
-      info.fMimeTypeArray = BuildStringArray( info.fMimeType, variants);
+      char * mimeType = LoadRCDATAString( hPlug, NS_INFO_MIMEType);
+      if( nsnull == mimeType) break;
+
+      char * mimeDescription = LoadRCDATAString( hPlug, NS_INFO_FileOpenName);
+      if( nsnull == mimeDescription) break;
+
+      char * extensions = LoadRCDATAString( hPlug, NS_INFO_FileExtents);
+      if( nsnull == extensions) break;
+
+      info.fVariantCount = CalculateVariantCount(mimeType);
+
+      info.fMimeTypeArray = MakeStringArray(variants, mimeType);
       if( info.fMimeTypeArray == nsnull) break;
 
-      // (other lists must be same length as this one)
-      info.fVariantCount = variants;
-
-      // ...bizarre `description' thingy...
-      info.fMimeDescription = LoadRCDATAString( hPlug, NS_INFO_FileOpenName);
-      if( nsnull == info.fMimeDescription) break;
-      info.fMimeDescriptionArray =
-                          BuildStringArray( info.fMimeDescription, variants);
+      info.fMimeDescriptionArray = MakeStringArray(variants, mimeDescription);
       if( nsnull == info.fMimeDescriptionArray) break;
-      if( variants != info.fVariantCount) break;
 
-      // ...file extensions...
-      info.fExtensions = LoadRCDATAString( hPlug, NS_INFO_FileExtents);
-      if( nsnull == info.fExtensions) break;
-      info.fExtensionArray = BuildStringArray( info.fExtensions, variants);
-      if( nsnull == info.fExtensionArray) break;
-      if( variants != info.fVariantCount) break;
+      info.fExtensionArray = MakeStringArray(variants, extensions);
+      if( nsnull == extensionArray) break;
 
       rc = NS_OK;
       break;
@@ -230,23 +242,14 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
    if(info.fDescription != nsnull)
      PL_strfree(info.fDescription);
  
-   if(info.fMimeType != nsnull)
-     PL_strfree(info.fMimeType);
- 
-   if(info.fMimeDescription != nsnull)
-     PL_strfree(info.fMimeDescription);
- 
-   if(info.fExtensions != nsnull)
-     PL_strfree(info.fExtensions);
- 
    if(info.fMimeTypeArray != nsnull)
-     PR_Free(info.fMimeTypeArray);
+     FreeStringArray(info.fVariantCount, info.fMimeTypeArray);
  
    if(info.fMimeDescriptionArray != nsnull)
-     PR_Free(info.fMimeDescriptionArray);
+     FreeStringArray(info.fVariantCount, info.fMimeDescriptionArray);
  
    if(info.fExtensionArray != nsnull)
-     PR_Free(info.fExtensionArray);
+     FreeStringArray(info.fVariantCount, info.fExtensionArray);
  
    memset((void *)&info, 0, sizeof(info));
  
