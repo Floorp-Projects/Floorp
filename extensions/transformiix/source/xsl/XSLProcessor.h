@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLProcessor.h,v 1.2 1999/11/15 07:13:08 nisheeth%netscape.com Exp $
+ * $Id: XSLProcessor.h,v 1.3 1999/11/15 07:48:36 nisheeth%netscape.com Exp $
  */
 
 
@@ -29,36 +29,76 @@
 #define MITREXSL_XSLPROCESSOR_H
 
 #ifndef __BORLANDC__
+#ifndef MOZILLA
 #include <iostream.h>
 #include <fstream.h>
 #endif
+#endif
+
+#ifdef MOZILLA
+#include "nsIDocumentTransformer.h"
+#else
 #include "CommandLineUtils.h"
+#include "printers.h"
+#include "URIUtils.h"
+#include "XMLParser.h"
+#include "XMLDOMUtils.h"
+#endif
+
 #include "dom.h"
 #include "ExprParser.h"
 #include "MITREObject.h"
 #include "NamedMap.h"
 #include "Names.h"
 #include "NodeSet.h"
-#include "printers.h"
 #include "ProcessorState.h"
 #include "String.h"
 #include "Tokenizer.h"
-#include "URIUtils.h"
-#include "XMLDOMUtils.h"
-#include "XMLParser.h"
 #include "ErrorObserver.h"
 #include "List.h"
 #include "VariableBinding.h"
 #include "Numbering.h"
 
+#ifdef MOZILLA
+/* bacd8ad0-552f-11d3-a9f7-000064657374 */
+#define MITRE_XSL_PROCESSOR_CID   \
+{ 0xbacd8ad0, 0x552f, 0x11d3, {0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
+
+#endif
+
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:08 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/15 07:48:36 $
 **/
-class XSLProcessor {
+class XSLProcessor 
+#ifdef MOZILLA
+: nsIDocumentTransformer 
+#endif
+{
 
 public:
+#ifdef MOZILLA
+    // Define a Create method to be used with a factory:
+    static NS_METHOD
+    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+
+    /**
+     * This macro expands into a declaration of the nsISupports interface.
+     * Every XPCOM component needs to implement nsISupports, as it acts
+     * as the gateway to other interfaces this component implements.  You
+     * could manually declare QueryInterface, AddRef, and Release instead
+     * of using this macro, but why?
+     */
+    // nsISupports interface    
+    NS_DECL_ISUPPORTS
+
+    // nsIDocumentTransformer methods
+    NS_IMETHOD TransformDocument(nsIDOMElement* aSourceDOM, 
+                               nsIDOMElement* aStyleDOM,
+                               nsIDOMDocument* aOutputDoc,
+                               nsIObserver* aObserver);
+#endif
 
     /**
      * A warning message used by all templates that do not allow non character
@@ -74,7 +114,11 @@ public:
     /**
      * Default destructor for XSLProcessor
     **/
+#ifdef MOZILLA
+    virtual ~XSLProcessor();
+#else
     ~XSLProcessor();
+#endif
 
     /**
      * Registers the given ErrorObserver with this XSLProcessor
@@ -94,7 +138,7 @@ public:
       //--------------------------------------------/
      //-- Methods that return the Result Document -/
     //--------------------------------------------/
-
+#ifndef MOZILLA
     /**
      * Parses all XML Stylesheet PIs associated with the
      * given XML document. If any stylesheet PIs are found with
@@ -114,6 +158,7 @@ public:
      * @return the result tree.
     **/
     Document* process(Document& xmlDocument, String& documentBase);
+#endif
 
     /**
      * Processes the given XML Document using the given XSL document
@@ -133,6 +178,7 @@ public:
     Document* process(istream& xmlInput, istream& xslInput, 
            String& documentBase);
 
+#ifndef MOZILLA
     /**
      * Reads an XML document from the given XML input stream. The
      * XML document is processed using the associated XSL document
@@ -180,6 +226,7 @@ public:
     void process(istream& xmlInput, istream& xslInput, 
            ostream& out, String& documentBase);
 
+#endif
 
 private:
 
@@ -223,8 +270,9 @@ private:
                       MBool allowShadowing,
                       ProcessorState* ps);
 
+#ifndef MOZILLA
     XMLPrinter* createPrinter(Document& xslDocument, ostream& out);
-
+#endif
 
     /**
      * Processes the xsl:with-param elements of the given xsl action
@@ -266,10 +314,12 @@ private:
     **/
     void notifyError(String& errorMessage, ErrorObserver::ErrorLevel level);
 
+#ifndef MOZILLA
     /**
      * Parses the contents of data, and returns the type and href psuedo attributes
     **/
     void parseStylesheetPI(String& data, String& type, String& href);
+#endif
 
     void process(Node* node, Node* context, ProcessorState* ps);
     void process(Node* node, Node* context, String* mode, ProcessorState* ps);
