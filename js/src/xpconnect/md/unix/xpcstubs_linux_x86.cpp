@@ -156,50 +156,106 @@ nsresult nsXPCWrappedJS::Stub##n() \
 
 #endif
 
+/*
 static nsresult
 PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex, uint32* args)
 {
     printf("PrepareAndDispatch called with methodIndex = %d\n", (int)methodIndex);
     return NS_ERROR_FAILURE;
 }        
+*/
 
-static nsresult SharedStub(void)
+static nsresult
+PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex, uint32* args)
 {
-  void* method = PrepareAndDispatch;
-  nsresult result;
-  __asm__ __volatile__(
-    "leal   0x14(%%ebp), %%edx\n\t"    /* args */
-    "pushl  %%edx\n\t"
-    "movl   0x08(%%ebp), %%ecx\n\t"    /* vtbl index */
-    "pushl  %%ecx\n\t"
-    "movl   0x10(%%ebp), %%edx\n\t"    /* this */
-    "pushl  %%edx\n\t"
-    "movl   %1, %%eax\n\t"             /* PrepareAndDispatch */
-    "call   *%%eax\n\t"
-    "addl   $0x0c, %%esp\n\t"
-    "movl   %%eax, %0"
-    : "=g" (result)     /* %0 */
-    : "g" (method)      /* %1 */
-    : "ax", "dx", "cx", "memory" );
-    return result;
-}   
+#define PARAM_BUFFER_COUNT     32
 
-// these macros get expanded (many times) in the file #included below
+    nsXPCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
+    nsXPCMiniVariant* dispatchParams = NULL;
+    nsXPCWrappedJSClass* clazz;
+    nsIInterfaceInfo* iface_info;
+    const nsXPTMethodInfo* info;
+    uint8 paramCount;
+    uint8 i;
+    nsresult result = NS_ERROR_FAILURE;
+
+    NS_ASSERTION(self,"no self");
+
+    clazz = self->GetClass();
+    NS_ASSERTION(clazz,"no class");
+
+    iface_info = clazz->GetInterfaceInfo();
+    NS_ASSERTION(iface_info,"no interface info");
+
+    iface_info->GetMethodInfo(uint16(methodIndex), &info);
+    NS_ASSERTION(info,"no interface info");
+
+    paramCount = info->GetParamCount();
+
+    // setup variant array pointer
+    if(paramCount > PARAM_BUFFER_COUNT)
+        dispatchParams = new nsXPCMiniVariant[paramCount];
+    else
+        dispatchParams = paramBuffer;
+    NS_ASSERTION(dispatchParams,"no place for params");
+
+    uint32* ap = args;
+    for(i = 0; i < paramCount; i++, ap++)
+    {
+        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTType& type = param.GetType();
+        nsXPCMiniVariant* dp = &dispatchParams[i];
+
+        if(param.IsOut() || !type.IsArithmetic())
+        {
+            dp->val.p = (void*) *ap;
+            continue;
+        }
+        // else
+        switch(type)
+        {
+        case nsXPTType::T_I8     : dp->val.i8  = *((int8*)   ap);       break;
+        case nsXPTType::T_I16    : dp->val.i16 = *((int16*)  ap);       break;
+        case nsXPTType::T_I32    : dp->val.i32 = *((int32*)  ap);       break;
+        case nsXPTType::T_I64    : dp->val.i64 = *((int64*)  ap); ap++; break;
+        case nsXPTType::T_U8     : dp->val.u8  = *((uint8*)  ap);       break;
+        case nsXPTType::T_U16    : dp->val.u16 = *((uint16*) ap);       break;
+        case nsXPTType::T_U32    : dp->val.u32 = *((uint32*) ap);       break;
+        case nsXPTType::T_U64    : dp->val.u64 = *((uint64*) ap); ap++; break;
+        case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)  ap);       break;
+        case nsXPTType::T_DOUBLE : dp->val.d   = *((double*) ap); ap++; break;
+        case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*) ap);       break;
+        case nsXPTType::T_CHAR   : dp->val.c   = *((char*)   ap);       break;
+        case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*)ap);       break;
+        default:
+            NS_ASSERTION(0, "bad type");
+            break;
+        }
+    }
+    result = clazz->CallMethod(self, (uint16)methodIndex, info, dispatchParams);
+
+    if(dispatchParams != paramBuffer)
+        delete [] dispatchParams;
+
+    return result;
+}
+
 #define STUB_ENTRY(n) \
 nsresult nsXPCWrappedJS::Stub##n() \
 { \
-  void* stub = SharedStub; \
+  register void* method = PrepareAndDispatch; \
+  register nsresult result; \
   __asm__ __volatile__( \
-    "popl  %%ebp\n\t" \
-    "pushl $"#n"\n\t" \
-    "call  *%%edx\n\t" \
-    "addl  $8, %%esp\n\t" \
-    "leave\n\t" \
-    "ret\n\t" \
-    : \
-    : "d" (stub) \
-    : "ax", "memory" ); \
-  return 0; /* just to avoid warning */ \
+    "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
+    "pushl  %%ecx\n\t" \
+    "pushl  $"#n"\n\t"                 /* method index */ \
+    "movl   0x08(%%ebp), %%ecx\n\t"    /* this */ \
+    "pushl  %%ecx\n\t" \
+    "call   *%%edx"                    /* PrepareAndDispatch */ \
+    : "=a" (result)     /* %0 */ \
+    : "d" (method)      /* %1 */ \
+    : "ax", "dx", "cx", "memory" ); \
+    return result; \
 }
 
 #define SENTINEL_ENTRY(n) \
