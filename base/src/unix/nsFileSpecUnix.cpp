@@ -94,7 +94,7 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
             strcat(buffer, ++lastSeparator);
         }
     }
-    if (!canonicalPath && *ioPath != '/' && !inMakeDirs)
+    if (!canonicalPath && ioPath[0] != '/' && !inMakeDirs)
     {
         // Well, if it's a relative path, hack it ourselves.
         canonicalPath = realpath(".", buffer);
