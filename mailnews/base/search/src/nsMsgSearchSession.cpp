@@ -46,6 +46,9 @@
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgSearchNotify.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgFolderFlags.h"
 
 NS_IMPL_ISUPPORTS4(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIFolderListener, nsISupportsWeakReference)
 
@@ -272,6 +275,7 @@ NS_IMETHODIMP nsMsgSearchSession::InterruptSearch()
 {
   if (m_window)
   {
+    ReleaseFolderDBRef();
     m_idxRunningScope = m_scopeList.Count(); // this'll make us not run another url
     m_window->StopUrls();
   }
@@ -360,7 +364,10 @@ NS_IMETHODIMP nsMsgSearchSession::OnStopRunningUrl(nsIURI *url, nsresult aExitCo
   nsresult rv = GetRunningAdapter (getter_AddRefs(runningAdapter));
   // tell the current adapter that the current url has run.
   if (NS_SUCCEEDED(rv) && runningAdapter)
+  {
     runningAdapter->CurrentUrlDone(aExitCode);
+    ReleaseFolderDBRef();
+  }
   m_idxRunningScope++;
   if (m_idxRunningScope < m_scopeList.Count())
     GetNextUrl();
@@ -639,6 +646,28 @@ nsresult nsMsgSearchSession::TimeSlice (PRBool *aDone)
   return TimeSliceSerial(aDone);
 }
 
+void nsMsgSearchSession::ReleaseFolderDBRef()  
+{
+  nsMsgSearchScopeTerm *scope = GetRunningScope();
+  if (scope)
+  {
+    PRBool isOpen =PR_FALSE;
+    PRUint32 flags;
+    nsCOMPtr <nsIMsgFolder> folder;
+    scope->GetFolder(getter_AddRefs(folder));
+    nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);
+    if (mailSession && folder)
+    {
+      mailSession->IsFolderOpenInWindow(folder, &isOpen);
+      folder->GetFlags(&flags);
+
+      /*we don't null out the db reference for inbox because inbox is like the "main" folder
+       and performance outweighs footprint */
+      if (!isOpen && !(MSG_FOLDER_FLAG_INBOX & flags)) 
+        folder->SetMsgDatabase(nsnull);
+    }
+  }
+}
 nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
 {
 	// This version of TimeSlice runs each scope term one at a time, and waits until one
@@ -648,23 +677,24 @@ nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
   NS_ENSURE_ARG(aDone);
 
 	nsMsgSearchScopeTerm *scope = GetRunningScope();
-	if (scope)
-	{
-		scope->TimeSlice (aDone);
-		if (*aDone)
-		{
-			m_idxRunningScope++;
-//			if (m_idxRunningScope < m_scopeList.Count())
-//  			UpdateStatusBar (MK_MSG_SEARCH_STATUS);
+  if (scope)
+  {
+    scope->TimeSlice (aDone);
+    if (*aDone)
+    {
+      ReleaseFolderDBRef();
+      m_idxRunningScope++;
+      //			if (m_idxRunningScope < m_scopeList.Count())
+      //  			UpdateStatusBar (MK_MSG_SEARCH_STATUS);
 		}
     *aDone = PR_FALSE;
-		return NS_OK;
-	}
-	else
+    return NS_OK;
+  }
+  else
 	{
     *aDone = PR_TRUE;
-		return NS_OK;
-	}
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP
