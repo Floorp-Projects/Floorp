@@ -104,6 +104,7 @@ public:
 	// aNumBytesInLine -- The number of bytes in the line returned
 	// aPauseForMoreData -- There is not enough data in the stream to make a line at this time...
 	char * ReadNextLine(nsIInputStream * aInputStream, PRUint32 &anumBytesInLine, PRBool &aPauseForMoreData);
+  nsresult GrowBuffer(PRInt32 desiredSize);
 protected:
 	PRBool m_eatCRLFs;
 	PRBool m_allocateNewLines;

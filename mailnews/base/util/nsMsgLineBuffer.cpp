@@ -297,12 +297,19 @@ nsMsgLineStreamBuffer::~nsMsgLineStreamBuffer()
 	PR_FREEIF(m_dataBuffer); // release our buffer...
 }
 
-// the design for this method has an inherit bug: if the length of the line is greater than the size of m_dataBufferSize, 
-// then we'll never find the next line because we can't hold the whole line in memory. 
+
+nsresult nsMsgLineStreamBuffer::GrowBuffer(PRInt32 desiredSize)
+{
+  m_dataBuffer = (char *) PR_REALLOC(m_dataBuffer, desiredSize);
+  if (!m_dataBuffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+  m_dataBufferSize = desiredSize;
+  return NS_OK;
+}
+
 // aInputStream - the input stream we want to read a line from
 // aPauseForMoreData is returned as PR_TRUE if the stream does not yet contain a line and we must wait for more
 // data to come into the stream.
-
 // Note to people wishing to modify this function: Be *VERY CAREFUL* this is a critical function used by all of
 // our mail protocols including imap, nntp, and pop. If you screw it up, you could break a lot of stuff.....
 
@@ -336,18 +343,29 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 		PRUint32 numFreeBytesInBuffer = m_dataBufferSize - m_startPos - m_numBytesInBuffer;
 		if (numBytesInStream >= numFreeBytesInBuffer)
 		{
-            if (m_numBytesInBuffer && m_startPos)
-            {
-                nsCRT::memmove(m_dataBuffer, startOfLine, m_numBytesInBuffer);
-                m_dataBuffer[m_numBytesInBuffer] = '\0'; // make sure the end
-                                                         // of the buffer is
-                                                         // terminated
-                m_startPos = 0;
-                startOfLine = m_dataBuffer;
-                numFreeBytesInBuffer = m_dataBufferSize - m_numBytesInBuffer;
+      if (m_numBytesInBuffer && m_startPos)
+      {
+          nsCRT::memmove(m_dataBuffer, startOfLine, m_numBytesInBuffer);
+          m_dataBuffer[m_numBytesInBuffer] = '\0'; // make sure the end
+                                                   // of the buffer is
+                                                   // terminated
+          m_startPos = 0;
+          startOfLine = m_dataBuffer;
+          numFreeBytesInBuffer = m_dataBufferSize - m_numBytesInBuffer;
 //				printf("moving data in read line around because buffer filling up\n");
-            }
-            NS_ASSERTION(m_startPos == 0, "m_startPos should be 0 .....\n");
+      }
+      else if (!m_startPos)
+      {
+        PRInt32 growBy = (numBytesInStream - numFreeBytesInBuffer) * 2;
+        // try growing buffer by twice as much as we need.
+        nsresult rv = GrowBuffer(m_dataBufferSize + growBy);
+        // if we can't grow the buffer, we have to bail.
+        if (!NS_SUCCEEDED(rv))
+          return nsnull;
+        startOfLine = m_dataBuffer;
+        numFreeBytesInBuffer += growBy;
+      }
+      NS_ASSERTION(m_startPos == 0, "m_startPos should be 0 .....\n");
 		}
 
 		PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer - 1 /* leave one for a null terminator */, numBytesInStream);
