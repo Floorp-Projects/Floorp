@@ -388,7 +388,7 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
         return PR_TRUE;
 
     /* check modification date */
-    int32 regTime;
+    PRInt32 regTime;
     if (NS_FAILED(mRegistry->GetInt(key, lastModValueName, &regTime)))
         return PR_TRUE;
     PRBool changed;
@@ -396,7 +396,7 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
         return PR_TRUE;
 
     /* check file size */
-    int32 regSize;
+    PRInt32 regSize;
     if (NS_FAILED(mRegistry->GetInt(key, fileSizeValueName, &regSize)))
         return PR_TRUE;
     PRUint32 size = 0;
