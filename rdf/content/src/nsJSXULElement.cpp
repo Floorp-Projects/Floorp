@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIController.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMXULElement.h"
 #include "nsIRDFResource.h"
 #include "nsIDOMNodeList.h"
@@ -39,12 +40,14 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIControllerIID, NS_ICONTROLLER_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIController);
 NS_DEF_PTR(nsIDOMElement);
+NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
 NS_DEF_PTR(nsIDOMXULElement);
 NS_DEF_PTR(nsIRDFResource);
 NS_DEF_PTR(nsIDOMNodeList);
@@ -54,7 +57,10 @@ NS_DEF_PTR(nsIDOMNodeList);
 //
 enum XULElement_slots {
   XULELEMENT_RESOURCE = -1,
-  XULELEMENT_CONTROLLER = -2
+  XULELEMENT_CONTROLLER = -2,
+  XULELEMENT_ID = -3,
+  XULELEMENT_CLASSNAME = -4,
+  XULELEMENT_STYLE = -5
 };
 
 /***********************************************************************/
@@ -113,6 +119,55 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case XULELEMENT_ID:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsAutoString prop;
+        if (NS_OK == a->GetId(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case XULELEMENT_CLASSNAME:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsAutoString prop;
+        if (NS_OK == a->GetClassName(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case XULELEMENT_STYLE:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.style", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMCSSStyleDeclaration* prop;
+        if (NS_OK == a->GetStyle(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -162,6 +217,34 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       
         a->SetController(prop);
         NS_IF_RELEASE(prop);
+        break;
+      }
+      case XULELEMENT_ID:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsAutoString prop;
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+        a->SetId(prop);
+        
+        break;
+      }
+      case XULELEMENT_CLASSNAME:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsAutoString prop;
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+        a->SetClassName(prop);
+        
         break;
       }
       default:
@@ -455,6 +538,9 @@ static JSPropertySpec XULElementProperties[] =
 {
   {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"controller",    XULELEMENT_CONTROLLER,    JSPROP_ENUMERATE},
+  {"id",    XULELEMENT_ID,    JSPROP_ENUMERATE},
+  {"className",    XULELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
+  {"style",    XULELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

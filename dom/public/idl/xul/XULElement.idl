@@ -5,6 +5,10 @@ interface XULElement : Element {
     readonly attribute xpidl nsIRDFResource resource;
 	attribute xpidl nsIController controller;
 
+	attribute  DOMString            id;
+    attribute  DOMString            className;
+	readonly attribute CSSStyleDeclaration style;
+
     void addBroadcastListener(in DOMString attr, in Element element);
     void removeBroadcastListener(in DOMString attr, in Element element);
 	void doCommand();
