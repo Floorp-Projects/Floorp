@@ -135,15 +135,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
 
 	if( mLocked ) return NS_ERROR_FAILURE;
 
-	mLocked = PR_TRUE;
-
-	mLockX = aX;
-	mLockY = aY;
-	mLockWidth = aWidth;
-	mLockHeight = aHeight;
-	mLockFlags = aFlags;
-
-	// create a offscreen context to save the locked rectangle into
+	// create an offscreen context to save the locked rectangle into
 	PdOffscreenContext_t *odc = (PdOffscreenContext_t *) mDrawContext;
 	format = odc->format;
 	mLockDrawContext = ( PhDrawContext_t * )PdCreateOffscreenContext( format, aWidth, aHeight, Pg_OSC_MEM_PAGE_ALIGN );
@@ -159,6 +151,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
 	PgContextBlitArea( (PdOffscreenContext_t *)mDrawContext, &src_area, (PdOffscreenContext_t *) mLockDrawContext, &dst_area );
 
 	*aBits = PdGetOffscreenContextPtr( (PdOffscreenContext_t *) mLockDrawContext );
+	if( *aBits == nsnull ) return NS_ERROR_FAILURE; /* on certain hardware this may fail */
+
 	switch( format ) {
 		case Pg_IMAGE_PALETTE_BYTE:
 			bpl = 1;
@@ -176,7 +170,15 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
 		default:
 		    return NS_ERROR_FAILURE;
 		}
+
 	*aStride = *aWidthBytes = bpl * dst_area.size.w;
+
+	mLocked = PR_TRUE;
+	mLockX = aX;
+	mLockY = aY;
+	mLockWidth = aWidth;
+	mLockHeight = aHeight;
+	mLockFlags = aFlags;
 
 	return NS_OK;
 	}
@@ -196,11 +198,11 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock( void ) {
 		src_area.size.w = mLockWidth;
 		src_area.size.h = mLockHeight;
 		PgContextBlitArea( (PdOffscreenContext_t *) mLockDrawContext, &src_area, (PdOffscreenContext_t *) mDrawContext, &dst_area );
-
-		// release the mLockDrawContext somehow !!
-		PhDCRelease( (PdDirectContext_t *) mLockDrawContext );
-		mLockDrawContext = nsnull;
 		}
+
+	// release the mLockDrawContext somehow !!
+	PhDCRelease( (PdDirectContext_t *) mLockDrawContext );
+	mLockDrawContext = nsnull;
 
 	mLocked = PR_FALSE;
 	return NS_OK;
