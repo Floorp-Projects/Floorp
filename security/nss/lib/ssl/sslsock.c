@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.33 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslsock.c,v 1.34 2004/05/11 03:48:25 jpierre%netscape.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -459,13 +459,17 @@ SECStatus
 ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled)
 {
     PRFileDesc *       osfd = ss->fd->lower;
-    int 	       rv;
+    SECStatus         rv = SECFailure;
     PRSocketOptionData opt;
 
     opt.option         = PR_SockOpt_NoDelay;
     opt.value.no_delay = (PRBool)!enabled;
 
-    rv = osfd->methods->setsocketoption(osfd, &opt);
+    if (osfd->methods->setsocketoption) {
+        rv = (SECStatus) osfd->methods->setsocketoption(osfd, &opt);
+    } else {
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    }
 
     return rv;
 }
