@@ -24,6 +24,8 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS =			\
 	nsIFormManager.h	\
+	nsIListControlFrame.h	\
+	nsIComboboxControlFrame.h	\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
