@@ -53,4 +53,11 @@
     <NC:content>http://home.netscape.com/bookmark/6_0/ssearch.html</NC:content>
   </RDF:Description>
 
+  <!-- Composer -->
+
+  <RDF:Description about='urn:clienturl:composer:spellcheckers'>
+    <NC:title>Spellcheckers</NC:title>
+    <NC:content>about:blank</NC:content>
+  </RDF:Description>
+
 </RDF:RDF>
