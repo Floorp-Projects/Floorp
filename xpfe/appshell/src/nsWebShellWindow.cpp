@@ -1155,30 +1155,9 @@ nsWebShellWindow::ShowModal()
 // the two someday.
 NS_IMETHODIMP
 nsWebShellWindow::ShowModally(PRBool aPrepare)
-{
-  nsresult            rv;
-  nsIEventQueue       *eventQ;
-  nsCOMPtr<nsIWidget> parentWidget;
-
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  eventQ = NULL;
-  if (aPrepare)
-    eventQService->PushThreadEventQueue(&eventQ);
-
-  parentWidget = do_QueryReferent(mParentWindow);
-  if (parentWidget)
-    parentWidget->Enable(PR_FALSE);
-  rv = ShowModal();
-  if (parentWidget)
-    parentWidget->Enable(PR_TRUE);
-
-  if (eventQ)
-    eventQService->PopThreadEventQueue(eventQ);
-
-  return rv;
+{ 
+   NS_ERROR("Can't use this anymore");
+   return NS_ERROR_FAILURE;
 }
 
 
@@ -1452,36 +1431,6 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 
   return domDoc;
 } // nsWebShellWindow::GetNamedDOMDoc
-
-//----------------------------------------
-PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
-{
-  nsIPresShell * presShell = aDoc->GetShellAt(0);
-  if (!presShell)
-    return 0;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (presContext) {
-    nsRect rect;
-    presContext->GetVisibleArea(rect);
-    nsIFrame * rootFrame;
-    nsSize size;
-    presShell->GetRootFrame(&rootFrame);
-    if (rootFrame) {
-      rootFrame->GetSize(size);
-      float t2p;
-      presContext->GetTwipsToPixels(&t2p);
-      printf("Doc size %d,%d\n", PRInt32((float)size.width*t2p), 
-                                 PRInt32((float)size.height*t2p));
-      //return rect.height;
-      return PRInt32((float)rect.height*t2p);
-      //return PRInt32((float)size.height*presContext->GetTwipsToPixels());
-    }
-  }
-  NS_RELEASE(presShell);
-  return 0;
-}
 
 //----------------------------------------
 
