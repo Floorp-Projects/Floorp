@@ -951,10 +951,12 @@ function OpenSearch(tabName, searchStr)
   function BrowserViewSource()
   {
 	dump("BrowserViewSource(); \n ");
-   //  window.openDialog( "chrome://navigator/content/viewSource.xul", "_blank", "chrome,all,dialog=no", window.content.location );
-     // Use a browser window to view source
-    window.openDialog( "chrome://navigator/content/", "_blank", "chrome,menubar,status,dialog=no", window.content.location,"view-source" );
-
+    // Use a browser window to view source
+    window.openDialog( "chrome://navigator/content/",
+                       "_blank",
+                       "chrome,menubar,status,dialog=no,resizable",
+                       window.content.location,
+                       "view-source" );
   }
 
 
