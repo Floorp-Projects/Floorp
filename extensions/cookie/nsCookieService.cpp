@@ -280,28 +280,20 @@ nsCookieService *nsCookieService::gCookieService = nsnull;
 nsCookieService*
 nsCookieService::GetSingleton()
 {
-  if (!gCookieService) {
-    // create a new singleton nsCookieService
-    gCookieService = new nsCookieService();
-    if (gCookieService) {
-      NS_ADDREF(gCookieService);
-      // init it
-      nsresult rv = gCookieService->Init();
-      // if Init() failed, release & return
-      if (NS_FAILED(rv)) {
-        NS_RELEASE(gCookieService);
-        gCookieService = nsnull;
-      }
-    }
+  if (gCookieService) {
+    NS_ADDREF(gCookieService);
+    return gCookieService;
   }
-  NS_IF_ADDREF(gCookieService);
-  return gCookieService;
-}
 
-void
-nsCookieService::FreeSingleton()
-{
-  NS_IF_RELEASE(gCookieService);
+  // Create a new singleton nsCookieService (note: the ctor AddRefs for us).
+  // We AddRef only once since XPCOM has rules about the ordering of module
+  // teardowns - by the time our module destructor is called, it's too late to
+  // Release our members (e.g. nsIObserverService and nsIPrefBranch), since GC
+  // cycles have already been completed and would result in serious leaks.
+  // See bug 209571.
+  gCookieService = new nsCookieService();
+
+  return gCookieService;
 }
 
 /******************************************************************************
@@ -323,33 +315,21 @@ nsCookieService::nsCookieService()
  , mCookieChanged(PR_FALSE)
  , mCookieIconVisible(PR_FALSE)
 {
-}
-
-nsCookieService::~nsCookieService()
-{
-  if (mWriteTimer)
-    mWriteTimer->Cancel();
-
-  // clean up memory
-  RemoveAllFromMemory();
-}
-
-nsresult nsCookieService::Init()
-{
-  nsresult rv;
+  // AddRef now, so we don't cross XPCOM boundaries with a zero refcount
+  NS_ADDREF_THIS();
 
   // cache and init the preferences observer
   InitPrefObservers();
 
   // cache mCookieFile
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
-  if (NS_SUCCEEDED(rv)) {
-    rv = mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
+  if (mCookieFile) {
+    mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
   }
 
   Read();
 
-  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
   if (mObserverService) {
     mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
     mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);
@@ -360,18 +340,26 @@ nsresult nsCookieService::Init()
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
 
   // Register as an observer for the document loader  
-  nsCOMPtr<nsIDocumentLoader> docLoaderService = do_GetService(kDocLoaderServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService));
-    if (progress)
-      progress->AddProgressListener((nsIWebProgressListener*)this,
-                                    nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                                    nsIWebProgress::NOTIFY_STATE_NETWORK);
+  nsCOMPtr<nsIDocumentLoader> docLoaderService = do_GetService(kDocLoaderServiceCID);
+  nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(docLoaderService);
+  if (progress) {
+    progress->AddProgressListener(this,
+                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                  nsIWebProgress::NOTIFY_STATE_NETWORK);
   } else {
     NS_ERROR("Couldn't get nsIDocumentLoader");
   }
+}
 
-  return NS_OK;
+nsCookieService::~nsCookieService()
+{
+  gCookieService = nsnull;
+
+  if (mWriteTimer)
+    mWriteTimer->Cancel();
+
+  // clean up memory
+  RemoveAllFromMemory();
 }
 
 NS_IMETHODIMP

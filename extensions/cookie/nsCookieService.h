@@ -85,9 +85,7 @@ class nsCookieService : public nsICookieService
 
     nsCookieService();
     virtual ~nsCookieService();
-    nsresult Init();
     static nsCookieService*       GetSingleton();
-    static void                   FreeSingleton();
 
   protected:
     void                          InitPrefObservers();
