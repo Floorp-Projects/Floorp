@@ -338,14 +338,28 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
                                   nsGenericHTMLElement* aDst,
                                   PRBool aDeep)
 {
-  nsresult result = NS_OK;
+  nsresult rv = NS_OK;
 
-  if (nsnull != mAttributes) {
-    result = mAttributes->Clone(&(aDst->mAttributes));
+  if (mAttributes) {
+    PRInt32 index, count;
+    GetAttrCount(count);
+    nsCOMPtr<nsIAtom> name, prefix;
+    PRInt32 namespace_id;
+    nsAutoString value;
 
-    if (NS_SUCCEEDED(result)) {
+    for (index = 0; index < count; index++) {
+      rv = GetAttrNameAt(index, namespace_id, *getter_AddRefs(name),
+                         *getter_AddRefs(prefix));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = GetAttr(namespace_id, name, value);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aDst->SetAttr(namespace_id, name, value, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (NS_SUCCEEDED(rv)) {
       nsHTMLValue val;
-      nsresult rv = aDst->GetHTMLAttribute(nsHTMLAtoms::style, val);
+      rv = aDst->GetHTMLAttribute(nsHTMLAtoms::style, val);
 
       if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
           val.GetUnit() == eHTMLUnit_ISupports) {
@@ -355,7 +369,7 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
         if (rule) {
           nsCOMPtr<nsICSSRule> ruleClone;
 
-          result = rule->Clone(*getter_AddRefs(ruleClone));
+          rv = rule->Clone(*getter_AddRefs(ruleClone));
 
           val.SetISupportsValue(ruleClone);
           aDst->SetHTMLAttribute(nsHTMLAtoms::style, val, PR_FALSE);
@@ -371,7 +385,7 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 
   aDst->SetContentID(id);
 
-  return result;
+  return rv;
 }
 
 nsresult
