@@ -2392,11 +2392,12 @@ ParserWriteFunc(nsIInputStream* in,
       // Only continue if it's a recognized charset and not
       // one of a designated set that we ignore.
       if (NS_SUCCEEDED(result) &&
-          !preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
-          !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
-          !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
-          !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
-          !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))) {
+          ((kCharsetFromByteOrderMark == guessSource) ||
+           (!preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
+            !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
+            !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
+            !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
+            !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))))) {
         guess.Assign(preferred);
         pws->mParser->SetDocumentCharset(guess, guessSource); 
         pws->mParser->SetSinkCharset(guess);
