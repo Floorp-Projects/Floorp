@@ -35,7 +35,7 @@ sub Help {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ /^\s*help(?:\s+($variablepattern))?[ ?!.]*\s*$/osi) {
+    if ($message =~ /^\s*(?:help|commands?)(?:\s+($variablepattern))?[ ?!.]*\s*$/osi) {
         if ($1) {
             # display help for that command
             # first, build the help file...
