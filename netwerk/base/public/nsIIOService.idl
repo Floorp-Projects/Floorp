@@ -30,6 +30,7 @@ interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsIEventQueue;
 interface nsIBufferInputStream;
+interface nsIBufferOutputStream;
 
 [scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
 interface nsIIOService : nsISupports
@@ -124,7 +125,8 @@ interface nsIIOService : nsISupports
      * A synchronous stream listener pushes data through a pipe that ends up
      * in an input stream to be read by another thread.
      */
-    nsIStreamListener NewSyncStreamListener(out nsIBufferInputStream inStream);
+    nsIStreamListener NewSyncStreamListener(out nsIBufferInputStream inStream,
+                                            out nsIBufferOutputStream outStream);
 
 };
 

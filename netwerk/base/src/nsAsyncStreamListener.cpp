@@ -40,18 +40,18 @@ public:
 
     // nsAsyncStreamObserver methods:
     nsAsyncStreamObserver(nsIEventQueue* aEventQ) 
-      : mReceiver(nsnull), mStatus(NS_OK) 
+        : mReceiver(nsnull), mStatus(NS_OK) 
     { 
-      NS_INIT_REFCNT();
-      mEventQueue = aEventQ;
-      NS_IF_ADDREF(mEventQueue);
+        NS_INIT_REFCNT();
+        mEventQueue = aEventQ;
+        NS_IF_ADDREF(mEventQueue);
     }
     
     virtual ~nsAsyncStreamObserver();
 
     void Init(nsIStreamObserver* aListener) {
-      mReceiver = aListener;
-      NS_ADDREF(mReceiver);
+        mReceiver = aListener;
+        NS_ADDREF(mReceiver);
     }
 
     nsISupports* GetReceiver()      { return mReceiver; }
@@ -74,26 +74,26 @@ public:
     // nsIStreamListener methods:
     NS_IMETHOD OnStartBinding(nsISupports* context) 
     { 
-      return nsAsyncStreamObserver::OnStartBinding(context); 
+        return nsAsyncStreamObserver::OnStartBinding(context); 
     }
 
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg) 
     { 
-      return nsAsyncStreamObserver::OnStopBinding(context, aStatus, aMsg); 
+        return nsAsyncStreamObserver::OnStopBinding(context, aStatus, aMsg); 
     }
 
     NS_IMETHOD OnStartRequest(nsISupports* context) 
     { 
-      return nsAsyncStreamObserver::OnStartRequest(context); 
+        return nsAsyncStreamObserver::OnStartRequest(context); 
     }
 
     NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg) 
     { 
-      return nsAsyncStreamObserver::OnStopRequest(context, aStatus, aMsg); 
+        return nsAsyncStreamObserver::OnStopRequest(context, aStatus, aMsg); 
     }
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
@@ -103,11 +103,11 @@ public:
 
     // nsAsyncStreamListener methods:
     nsAsyncStreamListener(nsIEventQueue* aEventQ) 
-      : nsAsyncStreamObserver(aEventQ) {}
+        : nsAsyncStreamObserver(aEventQ) {}
 
     void Init(nsIStreamListener* aListener) {
-      mReceiver = aListener;
-      NS_ADDREF(mReceiver);
+        mReceiver = aListener;
+        NS_ADDREF(mReceiver);
     }
 };
 
@@ -128,8 +128,8 @@ protected:
     static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
-    nsAsyncStreamObserver* mListener;
-    nsISupports*                mContext;
+    nsAsyncStreamObserver*      mListener;
+    nsISupports*                 mContext;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -80,7 +80,8 @@ nsHTTPRequest::Build()
         NS_ERROR("Request already built!");
 
     nsIBuffer* buf;
-    rv = NS_NewBuffer(&buf, 4 * 1024, 16 * 1024);
+    rv = NS_NewBuffer(&buf, NS_HTTP_REQUEST_SEGMENT_SIZE,
+                      NS_HTTP_REQUEST_BUFFER_SIZE, nsnull);
     if (NS_FAILED(rv)) return rv;
     rv = NS_NewBufferInputStream(&m_Request, buf);
     if (NS_SUCCEEDED(rv))

@@ -216,7 +216,8 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     if (NS_FAILED(rv)) goto done;
 
     nsIBuffer* buf;
-    rv = NS_NewBuffer(&buf, NS_FILE_TRANSPORT_BUFFER_SIZE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+    rv = NS_NewBuffer(&buf, NS_FILE_TRANSPORT_BUFFER_SIZE,
+                      NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
     rv = NS_NewBufferInputStream(&bufStr, buf);
     if (NS_FAILED(rv)) goto done;
 

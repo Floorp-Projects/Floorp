@@ -30,6 +30,7 @@ class nsFileProtocolHandler;
 class nsIBaseStream;
 class nsIBuffer;
 class nsIBufferInputStream;
+class nsIBufferOutputStream;
 
 class nsFileChannel : public nsIFileChannel, public nsIRunnable {
 public:
@@ -139,18 +140,19 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
+    nsresult Init(nsFileProtocolHandler* handler,
+                  const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
                   nsIEventQueue* queue);
 
     void Process(void);
 
     enum State {
+        QUIESCENT,
         START_READ,
         READING,
         START_WRITE,
         WRITING,
-        ENDING,
-        ENDED
+        ENDING
     };
 
 protected:
@@ -167,9 +169,9 @@ protected:
     PRBool                      mSuspended;
 
     // state variables:
-    nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/writing
-    nsIBuffer*                  mBuffer;
-    nsIBufferInputStream*       mBufferStream;
+    nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/Writing
+    nsIBufferInputStream*       mBufferInputStream;
+    nsIBufferOutputStream*      mBufferOutputStream;
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
     PRInt32                     mAmount;
@@ -178,6 +180,7 @@ private:
     PRLock*                     mLock;
 };
 
-#define NS_FILE_TRANSPORT_BUFFER_SIZE   (4*1024)
+#define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)
+#define NS_FILE_TRANSPORT_BUFFER_SIZE    (32*1024)
 
 #endif // nsFileChannel_h__
