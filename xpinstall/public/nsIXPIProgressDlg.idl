@@ -24,11 +24,12 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIDialogParamBlock.idl"
 
 [scriptable, uuid(597140A0-1C1D-11d3-8E10-914233F46847)]
 interface nsIXPIProgressDlg : nsISupports
 {
-    void Open();
+    void Open(in nsIDialogParamBlock ioParamBlock);
     void Close();
 
     void SetTitle( in wstring aTitle );

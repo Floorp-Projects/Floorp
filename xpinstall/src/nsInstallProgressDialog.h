@@ -34,19 +34,19 @@
 
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsIXULWindowCallbacks.h"    
+#include "nsPIXPIManagerCallbacks.h"    
 
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 
 
 class nsInstallProgressDialog : public nsIXPINotifier,
-                                public nsIXULWindowCallbacks, 
                                 public nsIXPIProgressDlg
 {
     public: 
 
-        nsInstallProgressDialog(nsIXULWindowCallbacks* aManager);
+        nsInstallProgressDialog(nsPIXPIManagerCallbacks *aManager);
         virtual ~nsInstallProgressDialog();
         
         NS_DECL_ISUPPORTS
@@ -57,17 +57,15 @@ class nsInstallProgressDialog : public nsIXPINotifier,
         // implement nsIXPIProgressDlg
         NS_DECL_NSIXPIPROGRESSDLG
 
-        // Declare implementations of nsIXULWindowCallbacks interface functions.
-        NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
-        NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell);
+//        void SetWindow(nsISupports* aWindow);
 
     protected:
         nsresult setDlgAttribute(const char *id, const char *name, const nsString &value);
         nsresult getDlgAttribute(const char *id, const char *name, nsString &value);
 
     private:
-        nsIXULWindowCallbacks*       mManager;
-        nsCOMPtr<nsIDOMXULDocument>  mDocument;		// why is this owned?
-        nsCOMPtr<nsIWebShellWindow>  mWindow;			// why is this owned?
+        nsPIXPIManagerCallbacks*       mManager;
+        nsCOMPtr<nsIDOMXULDocument>    mDocument;   // Should this be a weak reference?
+        nsCOMPtr<nsIDOMWindow>         mWindow;     // Should this be a weak reference?
 };
 #endif

@@ -27,8 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE_XPINSTALL = \
-		$(srcdir)/progress.xul \
-		$(srcdir)/progress.html \
 		$(srcdir)/xpistatus.xul \
 		$(srcdir)/xpistatus.js \
 		$(srcdir)/institems.xul \

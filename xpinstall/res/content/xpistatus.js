@@ -23,58 +23,59 @@
 
 var browser;
 var dialog;
+var param;
+var manager;
 
-function onLoad() {
-	dialog = new Object;
-  //dialog.title     = document.getElementByID( "xpi.process" );
-  //dialog.current   = document.getElementByID( "xpi.currentlyprocessing");
-	dialog.newWindow   = document.getElementById( "dialog.newWindow" );
+function onLoad() 
+{
+    var i = 0;
+	var row = 0;
+	var moduleName;
+	var URL;
 
-	browser = XPAppCoresManager.Find( window.arguments[0] );
-	if ( !browser ) {
-		dump( "unable to get browser app core\n" );
-        window.close();
+	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
+	if ( !param )
+    {
+	    dump (" error getting param block interface \n");
 	}
-
+	manager = window.arguments[1];
+	
+	while (moduleName != "")
+	{
+		moduleName = param.GetString(i++);
+		URL = param.GetString(i++);
+        addTreeItem(row++, moduleName, URL);
+	}
+	manager.DialogOpened(window);
 }
 
-function onTyping( key ) {
-   // Look for enter key...
-   if ( key == 13 ) {
-      // If ok button not disabled, go for it.
-      if ( !dialog.ok.disabled ) {
-         open();
-      }
-   } else {
-      // Check for valid input.
-      if ( dialog.input.value == "" ) {
-         // No input, disable ok button if enabled.
-         if ( !dialog.ok.disabled ) {
-            dialog.ok.setAttribute( "disabled", "" );
-         }
-      } else {
-         // Input, enable ok button if disabled.
-         if ( dialog.ok.disabled ) {
-            dialog.ok.removeAttribute( "disabled" );
-         }
-      }
-   }
+function addTreeItem(num, modName, url)
+{
+  dump("Adding element " + num + " : " + name + "\n");
+  var body = document.getElementById("theTreeBody");
+
+  var newitem = document.createElement('treeitem');
+  var newrow = document.createElement('treerow');
+  
+  newrow.setAttribute("rowNum", num);
+  newrow.setAttribute("rowName", modName);
+
+  var elem = document.createElement('treecell');
+  elem.setAttribute("value", modName);
+  newrow.appendChild(elem);
+
+  var elem = document.createElement('treecell');
+  elem.setAttribute("value", url);
+  newrow.appendChild(elem);
+
+  newitem.appendChild(newrow);
+  body.appendChild(newitem);
 }
 
-function open() {
-   if ( dialog.ok.disabled ) {
-      return;
-   }
 
-	var url = dialog.input.value;
 
-	browser.loadUrl( url );
-
-	/* Close dialog. */
-    window.close();
-}
-
-function cancel() {
+function cancel() 
+{
     window.close();
 }
 

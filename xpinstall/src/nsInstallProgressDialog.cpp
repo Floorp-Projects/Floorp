@@ -28,7 +28,9 @@
 
 #include "nsIAppShellComponentImpl.h"
 
+
 #include "nsIBrowserWindow.h"
+#include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
@@ -39,12 +41,17 @@
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
+#include "nsICommonDialogs.h"
+#include "nsPIXPIManagerCallbacks.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 
-nsInstallProgressDialog::nsInstallProgressDialog(nsIXULWindowCallbacks* aManager)
-    : mManager(aManager)
+static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+
+nsInstallProgressDialog::nsInstallProgressDialog(nsPIXPIManagerCallbacks *aManager)
+  : mManager(aManager)
 {
     NS_INIT_REFCNT();
 }
@@ -74,11 +81,6 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   }
   if (aIID.Equals(nsIXPIProgressDlg::GetIID())) {
     *aInstancePtr = (void*) ((nsIXPIProgressDlg*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIXULWindowCallbacks::GetIID())) {
-    *aInstancePtr = (void*) ((nsIXULWindowCallbacks*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -141,125 +143,55 @@ nsInstallProgressDialog::LogComment(const PRUnichar* comment)
 }
 
 
-// Do startup stuff from C++ side.
+
 NS_IMETHODIMP
-nsInstallProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) 
+nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
 {
     nsresult rv = NS_OK;
-
-    // Get content viewer from the web shell.
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    rv = aWebShell ? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
-                   : NS_ERROR_NULL_POINTER;
-
-    if ( contentViewer ) {
-        // Up-cast to a document viewer.
-        nsCOMPtr<nsIDocumentViewer> docViewer( do_QueryInterface( contentViewer, &rv ) );
-        if ( docViewer ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> document;
-            rv = docViewer->GetDocument(*getter_AddRefs(document));
-            if ( document ) {
-                // Upcast to XUL document.
-                mDocument = do_QueryInterface( document, &rv );
-                if ( ! mDocument ) 
-                {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: Upcast to nsIDOMXULDocument failed, rv=0x%X\n",
-                                  __FILE__, (int)__LINE__, (int)rv );
-                }
-            } 
-            else 
-            {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetDocument failed, rv=0x%X\n",
-                              __FILE__, (int)__LINE__, (int)rv );
-            }
-        } 
-        else 
-        {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Upcast to nsIDocumentViewer failed, rv=0x%X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
-        }
-    } 
-    else 
-    {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContentViewer failed, rv=0x%X\n",
-                      __FILE__, (int)__LINE__, (int)rv );
-    }
-
-    if (mManager)
-        mManager->ConstructBeforeJavaScript(aWebShell);
-
-    return rv;
-}
-
-
-NS_IMETHODIMP
-nsInstallProgressDialog::ConstructAfterJavaScript(nsIWebShell *aWebShell) 
-{
-    if (mManager)
-        return mManager->ConstructAfterJavaScript(aWebShell);
-    else
-        return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsInstallProgressDialog::Open()
-{
-    nsresult rv = NS_OK;
-
-    // Get app shell service.
+    
+    // Now do the stuff to create a window and pass the JS args to it.
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
-
     if ( NS_SUCCEEDED( rv ) ) 
     {
-        // Open "progress" dialog.
-        nsIURI *url;
-        char * urlStr = "chrome://xpinstall/content/progress.xul";
-        rv = NS_NewURI( &url, urlStr );
-        
-        if ( NS_SUCCEEDED(rv) ) 
+        nsCOMPtr<nsIDOMWindow> hiddenWindow;
+        JSContext* jsContext;
+        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
+        if (NS_SUCCEEDED(rv))
         {
-            rv = appShell->CreateTopLevelWindow( nsnull,
-                                                 url,
-                                                 PR_TRUE,
-                                                 PR_TRUE,
-                                                 NS_CHROME_ALL_CHROME,
-                                                 this,  // callbacks??
-                                                 0,
-                                                 0,
-                                                 getter_AddRefs(mWindow));
+            nsCOMPtr<nsPIXPIManagerCallbacks> mgr = do_QueryInterface(mManager);
 
-            if ( NS_SUCCEEDED( rv ) ) 
+            void* stackPtr;
+            jsval *argv = JS_PushArguments( jsContext,
+                                            &stackPtr,
+                                            "sss%ip%ip",
+                                            "chrome://xpinstall/content/xpistatus.xul",
+                                            "_blank",
+                                            "chrome",
+                                            (const nsIID*)&nsIDialogParamBlock::GetIID(),
+                                            (nsISupports*)ioParamBlock,
+                                            (const nsIID*)&nsPIXPIManagerCallbacks::GetIID(),
+                                            (nsISupports*)mgr
+                                            );
+            if (argv)
             {
-                if ( mWindow )
-                    mWindow->Show(PR_TRUE);
-                else
-                    rv = NS_ERROR_NULL_POINTER;
+                rv = hiddenWindow->OpenDialog( jsContext,
+                                               argv,
+                                               5,
+                                               getter_AddRefs( mWindow ));
             }
-            else 
-            {
-                DEBUG_PRINTF( PR_STDOUT, "Error creating progress dialog, rv=0x%X\n", (int)rv );
-            }
-            NS_RELEASE( url );
+
+            JS_PopArguments( jsContext, stackPtr);  
         }
-    } 
-    else 
-    {
-        DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
+        
     }
-
     return rv;
 }
+
 
 NS_IMETHODIMP
 nsInstallProgressDialog::Close()
 {
-    if (mWindow)
-    {
-        mWindow->Close();
-    }
+    mWindow->Close();
     return NS_OK;
 }
 
@@ -327,6 +259,17 @@ nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
 {
     nsresult rv = NS_OK;
 
+    if (!mDocument)
+    {
+        nsCOMPtr<nsIDOMDocument> doc;
+        rv = mWindow->GetDocument( getter_AddRefs(doc) );
+        if (NS_SUCCEEDED(rv))
+        {
+            mDocument = do_QueryInterface(doc,&rv);
+        }
+        NS_WARN_IF_FALSE(rv == NS_OK,"couldn't get nsIDOMXULDocument from nsXPIProgressDlg");
+    }
+
     if ( mDocument ) {
         // Find specified element.
         nsCOMPtr<nsIDOMElement> elem;
@@ -355,6 +298,17 @@ nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,
                                                     nsString &value ) 
 {
     nsresult rv = NS_OK;
+
+    if (!mDocument)
+    {
+        nsCOMPtr<nsIDOMDocument> doc;
+        rv = mWindow->GetDocument( getter_AddRefs(doc) );
+        if (NS_SUCCEEDED(rv))
+        {
+            mDocument = do_QueryInterface(doc,&rv);
+        }
+        NS_WARN_IF_FALSE(rv == NS_OK,"couldn't get nsIDOMXULDocument from nsXPIProgressDlg");
+    }
 
     if ( mDocument ) {
         // Find specified element.

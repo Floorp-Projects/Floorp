@@ -31,10 +31,11 @@ EXPORTS=    nsIDOMInstallTriggerGlobal.h \
             nsISoftwareUpdate.h          \
             $(NULL)
 
-XPIDLSRCS =                              \
-            .\nsIXPINotifier.idl         \
-            .\nsIXPIProgressDlg.idl      \
-            .\nsPIXPIStubHook.idl      \
+XPIDLSRCS =                               \
+            .\nsIXPINotifier.idl          \
+            .\nsIXPIProgressDlg.idl       \
+            .\nsPIXPIStubHook.idl         \
+            .\nsPIXPIManagerCallbacks.idl \
             $(NULL) 
 
 include <$(DEPTH)\config\rules.mak>
