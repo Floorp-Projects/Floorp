@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Paul Ashford <arougthopher@lizardland.net>
- *
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,9 +92,9 @@ public:
  
   static nsresult FamilyExists(const nsString& aFontName); 
   inline PRBool   GetEmulateBold() { return mEmulateBold; }
- 
+  static int FontMatchesGenericType(font_family family, uint32 flags, const char* aGeneric,  const char* aLangGroup);
   nsCOMPtr<nsIAtom>   mLangGroup; 
- 
+  static int MatchesLangGroup(font_family family,  const char* aLangGroup);
 protected:
   void RealizeFont(nsIDeviceContext* aContext);
 
