@@ -22,7 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+PROGRAM = widget
+
+# Hardcoding dlopen()'s?  This needs to get fixed.
+#
+TOOLKIT_CFLAGS := \
+	-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	-DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	$(TK_CFLAGS)
 
 CPPSRCS = \
 	main.cpp	 \
@@ -30,26 +37,7 @@ CPPSRCS = \
 	../../../webshell/tests/viewer/nsStubs.cpp \
 	$(NULL)
 
-INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/shell
-
-DIRS	=
-
-OBJS	= $(CPPSRCS:.cpp=.o)
-
-ifneq (,$(filter gtk,$(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = $(TK_GTK_CFLAGS)
-TOOLKIT_LIBS   = $(TK_GTK_LIBS)
-else
-ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = $(TK_MOTIF_CFLAGS)
-TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
-endif
-endif
-
-CFLAGS += -DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).so\" \
-	  -DGFX_DLL=\"libgfx$(MOZ_TOOLKIT).so\"
-
-EX_LIBS = \
+LIBS := \
 	-L$(DIST)/bin	\
 	-lraptorbase	\
 	-lpng \
@@ -105,28 +93,10 @@ EX_LIBS = \
 	-lmozdbm \
 	$(NULL)
 
-PROGS   = widget
 
-TARGETS = $(PROGS)
+include $(topsrcdir)/config/config.mk
+
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
-
-$(PROGS): $(OBJS) #$(EX_LIBS)
-	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIB) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-endif
-endif
-
-install:: $(TARGETS)
-	$(INSTALL) $(OBJDIR)/$(PROGS) $(DIST)/bin
-
-clobber::
-	rm -f $(DIST)/bin/$(PROGS)
-
 
