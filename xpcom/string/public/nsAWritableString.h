@@ -17,14 +17,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Scott Collins <scc@mozilla.org>
+ *
  * Contributor(s):
- *   Scott Collins <scc@netscape.com>
  */
 
 #ifndef _nsAWritableString_h__
 #define _nsAWritableString_h__
-
-  // WORK IN PROGRESS
 
   // See also...
 #include "nsAReadableString.h"
