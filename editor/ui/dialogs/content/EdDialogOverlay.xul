@@ -45,6 +45,7 @@
 <button
   id        = "AdvancedEditButton"
   class     = "dialog"
+  oncommand = "onAdvancedEdit();"
   label     = "&AdvancedEditButton.label;"
   tooltip   = "aTooltip" 
   tooltiptext="&AdvancedEditButton.tooltip;"/>
