@@ -295,7 +295,7 @@ titledbutton.button32 {
 	color: #CCFFFF;
 	min-width: 36px;
 	min-height: 36px;
-        border: 1px solid transparent;
+	border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -306,7 +306,7 @@ titledbutton.button32 {
 }
 
 titledbutton.button32:hover {
-        border: 1px solid transparent;
+	border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -316,7 +316,7 @@ titledbutton.button32:hover {
 }
 
 titledbutton.button32:active {
-        border: 1px solid transparent;
+	border: 1px solid transparent;
 	padding: 0px;
 	margin-top: 7px;
 	margin-left: 2px;
@@ -326,7 +326,7 @@ titledbutton.button32:active {
 }
 
 titledbutton.button32[disabled="true"] {
-        border: 1px solid transparent;
+	border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -336,7 +336,7 @@ titledbutton.button32[disabled="true"] {
 }
 
 titledbutton.button32[disabled="true"]:hover {
-        border: 1px solid transparent;
+	border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -346,7 +346,7 @@ titledbutton.button32[disabled="true"]:hover {
 }
 
 titledbutton.button32[disabled="true"]:active {
-        border: 1px solid transparent;
+	border: 1px solid transparent;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
@@ -1066,13 +1066,13 @@ titledbutton.toolbar-flat {
 }
 
 titledbutton.toolbar-flat:hover {
-	text-decoration: none;
-	background-color: #336699;
+  text-decoration: none;
+  background-color: #336699;
   color: #CCFFFF;
 }
 
 titledbutton.toolbar-flat:active {
-	text-decoration: none;
+  text-decoration: none;
   color: #CCFFFF;
   padding: 2px 0px 0px 2px;
 }
@@ -1084,7 +1084,7 @@ titledbutton.push {
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
   border-right: 1px solid #666666;
-  -moz-border-radius: 3px 3px 2px 2px;
+  -moz-border-radius: 3px;
   padding: 2px;
   margin: 2px;
   text-align: center;
@@ -1100,6 +1100,7 @@ titledbutton.push:hover {
   color: #003366;
   padding: 2px;
   text-decoration: underline;
+  margin: 2px;
 }
  
 /*titledbutton.push:hover:-moz-outline {
@@ -1113,6 +1114,7 @@ titledbutton.push:active {
   border-right: 1px solid white;
   padding: 3px 1px 1px 3px;
   text-decoration: none;
+  margin: 2px;
 }
 
 /*titledbutton.push:active:-moz-outline {
@@ -1125,11 +1127,13 @@ titledbutton.push[toggled="1"] {
   border-left: 1px solid #666666;
   border-right: 1px solid white;
   padding: 3px 1px 1px 3px;
+  margin: 2px;
 }
 
 titledbutton.push[toggled="2"] {
    background-color: lightgray;
-   border: 1px solid gray;
+   border: 1px solid #999999;
+	margin: 2px;
 }
 
 titledbutton.push[disabled="true"] {
@@ -1137,6 +1141,7 @@ titledbutton.push[disabled="true"] {
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
+	margin: 2px;
 }
 
 titledbutton.push[disabled="true"]:hover {
@@ -1144,6 +1149,7 @@ titledbutton.push[disabled="true"]:hover {
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
+	margin: 2px;
 }
 
 titledbutton.push[disabled="true"]:active {
@@ -1152,6 +1158,7 @@ titledbutton.push[disabled="true"]:active {
 	border : 1px solid #999999;
 	color: #999999;
 	padding: 2px;
+	margin: 2px;
 }
 
 titledbutton.dialog {
@@ -1164,7 +1171,12 @@ titledbutton.dialog[default] {
 	list-style-image: url("chrome://global/skin/return.gif");
 	
 	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
-	padding-right: 2em;
+	padding-right: 12px;
+}
+
+titledbutton.dialog[default]:active {
+	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
+	padding-right: 11px;
 }
 
 titledbutton.popup {
@@ -1300,21 +1312,18 @@ tree.inset > treehead > treerow > treecell.sortable:active {
 }
 
 treecell.image > titledbutton {
-  border: 1px solid transparent;
   text-decoration: none;
   margin: 0px;
   padding: 0px;
 }
 
 treecell.image > titledbutton:hover {
-  border: 1px solid transparent;
   text-decoration: none;
   margin: 0px;
   padding: 0px;
 }
  
 treecell.image > titledbutton:active {
-  border: 1px solid transparent;
   text-decoration: none;
   margin: 0px;
   padding: 0px;
@@ -1406,7 +1415,7 @@ tab:active {
     /* top tabs */
 tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
   border-bottom: none;
-  -moz-border-radius: 8px 9px 0px 0px;
+  -moz-border-radius: 8px 8px 0px 0px;
   padding-bottom: 1px;
   margin: 1px 2px 1px 2px;
 }
@@ -1436,7 +1445,7 @@ tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab {
   border-bottom: 1px solid #666666;
   border-left: none;
   border-right: 1px solid #666666;
-  -moz-border-radius: 0px 9px 8px 0px;
+  -moz-border-radius: 0px 8px 8px 0px;
   padding: 3px 5px 1px 5px;
   margin: 2px 1px 2px 1px;
 }
@@ -1656,7 +1665,7 @@ html|input[type=checkbox] {
   color: black;
   /* FIX ME - we really want the same size radius on each corner,
     but rounding bug seems to cause the corners to be calculated in a different way */
-  -moz-border-radius: 3px 3px 2px 2px;
+  -moz-border-radius: 3px;
 }
 
 html|input[type=checkbox]:focus {
@@ -1769,7 +1778,7 @@ html|select > html|input[type="button"] {
   background-position: center;
   width: 12px;
   height: 12px;
-  -moz-border-radius: 0px 3px 2px 0px;
+  -moz-border-radius: 0px 3px 3px 0px;
 }
 
 /* combobox button depressed */
@@ -1780,13 +1789,13 @@ html|select > html|input[type="button"]:active {
   border-bottom: 1px solid white;
   border-left: 1px solid #666666;
   border-right: 1px solid white;
-  -moz-border-radius: 0px 3px 2px 0px;
+  -moz-border-radius: 0px 3px 3px 0px;
 }
 
 html|select[disabled] > html|input[type="button"] {
   background-color: #CCCCCC;
   border: solid 1px #999999;
-  -moz-border-radius: 0px 3px 2px 0px;
+  -moz-border-radius: 0px 3px 3px 0px;
 }
 
 
