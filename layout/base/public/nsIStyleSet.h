@@ -23,7 +23,6 @@
 #include "nslayout.h"
 
 class nsIAtom;
-class nsIStyleMolecule;
 class nsIStyleRule;
 class nsIStyleSheet;
 class nsIStyleContext;
@@ -50,11 +49,8 @@ public:
   virtual PRInt32 GetNumberOfOverrideStyleSheets() = 0;
   virtual nsIStyleSheet* GetOverrideStyleSheetAt(PRInt32 aIndex) = 0;
 
-  virtual void AppendDocStyleSheet(nsIStyleSheet* aSheet) = 0;
-  virtual void InsertDocStyleSheetAfter(nsIStyleSheet* aSheet,
-                                        nsIStyleSheet* aAfterSheet) = 0;
-  virtual void InsertDocStyleSheetBefore(nsIStyleSheet* aSheet,
-                                         nsIStyleSheet* aBeforeSheet) = 0;
+  // the ordering of document style sheets is given by the document
+  virtual void AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument) = 0;
   virtual void RemoveDocStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual PRInt32 GetNumberOfDocStyleSheets() = 0;
   virtual nsIStyleSheet* GetDocStyleSheetAt(PRInt32 aIndex) = 0;
