@@ -187,9 +187,6 @@ function Startup()
     if (GetCellData(curRowIndex, curColIndex))
       curColSpan = cellData.colSpan;
 
-    // Set appropriate icons in the Previous/Next buttons
-    SetSelectionButtons();
-
     // Starting TabPanel name is passed in
     if (window.arguments[1] == "CellPanel")
     {
@@ -228,13 +225,13 @@ function Startup()
   colCount = editorShell.GetTableColumnCount(TableElement);
   lastColIndex = colCount-1;
 
+
+  // Set appropriate icons and enable state for the Previous/Next buttons
+  SetSelectionButtons();
+
   // If only one cell in table, disable change-selection widgets
   if (rowCount == 1 && colCount == 1)
-  {
     dialog.SelectionList.setAttribute("disabled", "true");
-    dialog.PreviousButton.setAttribute("disabled", "true");
-    dialog.NextButton.setAttribute("disabled", "true");
-  }
 
   // User can change these via textboxes
   newRowCount = rowCount;
@@ -457,7 +454,6 @@ function GetColorAndUpdate(ColorWellID)
     case "cellBackgroundCW":
       colorObj.Type = "Cell";
       colorObj.CellColor = CellColor;
-      SetCheckbox('CellColorCheckbox');
       break;
   }
   // Avoid the JS warning
@@ -477,6 +473,7 @@ function GetColorAndUpdate(ColorWellID)
     case "cellBackgroundCW":
       CellColor = colorObj.BackgroundColor;
       SetColor(ColorWellID, CellColor);
+      SetCheckbox('CellColorCheckbox');
       break;
   }
 }
@@ -750,6 +747,15 @@ function SetSelectionButtons()
     dialog.PreviousButton.setAttribute("type","col");
     dialog.NextButton.setAttribute("type","col");
   }
+  DisableSelectionButtons((SelectedCellsType == SELECT_ROW && rowCount == 1) ||
+                          (SelectedCellsType == SELECT_COLUMN && colCount == 1) ||
+                          (rowCount == 1 && colCount == 1));
+}
+
+function DisableSelectionButtons( disable )
+{
+  dialog.PreviousButton.setAttribute("disabled", disable ? "true" : "false");
+  dialog.NextButton.setAttribute("disabled", disable ? "true" : "false");
 }
 
 function SetSpanEnable()
