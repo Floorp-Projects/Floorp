@@ -637,10 +637,10 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
-    //
+    // Need to deal with VERSION2 pref - don't know how to get it from here.
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
-                           : PR_FALSE, EmptyCString(), this, nsnull);
+                           : PR_FALSE, EmptyCString(), this, nsnull, nsILDAPConnection::VERSION3);
     switch (rv) {
     case NS_OK:
         break;
