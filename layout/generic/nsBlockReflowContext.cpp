@@ -343,7 +343,9 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   PRBool fits = PR_TRUE;
   nscoord x = mX;
   nscoord y = mY;
-  if (0 == mMetrics.height) {
+  // When deciding whether it's an empty paragraph we also need to take into
+  // account the combined area
+  if ((0 == mMetrics.height) && (0 == mMetrics.mCombinedArea.height)) {
     if (IsHTMLParagraph(mFrame)) {
       // Special "feature" for HTML compatability - empty paragraphs
       // collapse into nothingness, including their margins.
