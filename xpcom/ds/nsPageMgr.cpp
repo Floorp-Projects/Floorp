@@ -400,10 +400,10 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
     nsPageCount size = maxPages;
     mZero_fd = NULL;
 
+#ifdef HAVE_DEV_ZERO
     mZero_fd = open("/dev/zero", O_RDWR);
-
     while (addr == NULL) {
-        /* let the system place the heap */
+    /* let the system place the heap */
         addr = (nsPage*)mmap(0, size << NS_PAGEMGR_PAGE_BITS,
                              PROT_READ | PROT_WRITE,
                              MAP_PRIVATE,
@@ -416,6 +416,21 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
             }
         }
     }
+#else
+#ifdef HAVE_VALLOC 
+    while (addr == NULL) {
+        addr = (nsPage*)valloc(size << NS_PAGEMGR_PAGE_BITS);
+        if (NULL == addr) {
+            size--;
+            if (size < minPages) {
+                return PR_FAILURE;
+            }
+        }
+    }
+    memset(addr, '\0', size << NS_PAGEMGR_PAGE_BITS);
+#endif /* HAVE_VALLOC */
+#endif /* HAVE_DEV_ZERO */
+
     PR_ASSERT(NS_PAGEMGR_IS_ALIGNED(addr, NS_PAGEMGR_PAGE_BITS));
     mMemoryBase = addr;
     mPageCount = size;
@@ -464,8 +479,14 @@ nsPageMgr::FinalizePages()
     sys$deltva(&retadr,&retadr2,0);
 
 #else
+#ifdef HAVE_DEV_ZERO
     munmap((caddr_t)mMemoryBase, mPageCount << NS_PAGEMGR_PAGE_BITS);
     close(mZero_fd);
+#else /* HAVE_DEV_ZERO */
+#ifdef HAVE_VALLOC
+    free(mMemoryBase);
+#endif /* HAVE_VALLOC */
+#endif /* HAVE_DEV_ZERO */
 #endif
 }
 
