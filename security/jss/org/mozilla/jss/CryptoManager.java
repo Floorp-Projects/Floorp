@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.17 $ $Date: 2003/04/28 21:27:57 $
+ * @version $Revision: 1.18 $ $Date: 2003/05/09 18:57:15 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -861,10 +861,13 @@ public final class CryptoManager implements TokenSupplier
 
             int position = java.security.Security.insertProviderAt(
                             new JSSProvider(), 1);
-            if(position==-1) {
-                Debug.trace(Debug.ERROR,
-                    "Unable to install default provider");
-            }
+            // This returns -1 if the provider was already installed, in which
+            // case it is not installed again.  Is this
+            // an error? I don't think so, although it might be confusing
+            // if the provider is not in the position they expected.
+            // However, this will only happen if they are installing the
+            // provider themselves, so presumably they know what they're
+            // doing.
         }
         if( values.removeSunProvider ) {
             java.security.Security.removeProvider("SUN");
