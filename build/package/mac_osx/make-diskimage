@@ -68,8 +68,8 @@ IMAGE_DEV=`hdid -nomount rw.$DISKIMAGE | grep "^/dev/disk.s2" | sed -e "s?^/dev/
 hdiutil eject $IMAGE_DEV
 
 # Mount it, copy the folder, then unmount it
-hdid rw.$DISKIMAGE
-ditto -rsrcFork $FOLDER /Volumes/$VOLUME_NAME
+MOUNT_DIR=`hdid rw.$DISKIMAGE | grep "^/dev/disk.s2" | sed -e "s?^/dev/[^/]*??"`
+ditto -rsrcFork $FOLDER $MOUNT_DIR
 hdiutil eject $IMAGE_DEV
 
 # Convert to a read-only image
