@@ -1909,7 +1909,7 @@ void CStandardFlexTable::InsideDropArea(DragReference inDragRef)
 			// the user's holding the mouse down on this row, & we just noticed
 			STableCell cell(mDropRow, GetHiliteColumn());
 			Boolean expanded;
-			if (CellHasDropFlag(cell, expanded) && !expanded)
+			if (RowIsContainer(mDropRow, &expanded) && !expanded)
 			{
 				SetCellExpansion(cell, true);
 				// The revealed rows should be there now, just draw them.
@@ -2621,6 +2621,21 @@ void CStandardFlexTable::ClickCountToOpen ( Uint16 inNewCount )
 	mClickCountToOpen = inNewCount;
 
 } // CStandardFlexTable::TableSupportsNaturalOrderSort
+
+
+//----------------------------------------------------------------------------------------
+Boolean
+CStandardFlexTable :: RowIsContainer( const TableIndexT & inRow, Boolean* outIsExpanded ) const
+// Default implementation, just returns false.
+//----------------------------------------------------------------------------------------
+{
+	Assert_(outIsExpanded != NULL);
+	if ( outIsExpanded )
+		*outIsExpanded = false;
+		
+	return false;
+
+} // RowIsContainer
 
 
 #pragma mark -

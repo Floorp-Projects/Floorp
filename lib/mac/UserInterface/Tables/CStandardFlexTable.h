@@ -369,6 +369,8 @@ protected:
 							TableIndexT		inDropRow);
 	virtual Boolean		RowIsContainer(
 							const TableIndexT & /* inRow */ ) const { return false; }
+	virtual Boolean		RowIsContainer(
+							const TableIndexT & /* inRow */, Boolean* /*outIsExpanded*/ ) const ;
 	void				ComputeItemDropAreas(
 							const Rect& inLocalCellRect,
 							Rect& outTop,
