@@ -95,8 +95,6 @@ NS_IMETHODIMP nsMsgQuoteListener::GetMsgQuote(nsIMsgQuote ** aMsgQuote)
 
 nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 {
-
-	printf("RECEIVE CALLBACK: OnHeadersReady\n");
 	nsCOMPtr<nsIStreamListener> aStreamListener;
   nsCOMPtr<nsIMsgQuote> msgQuote = do_QueryReferent(mMsgQuote);
 
