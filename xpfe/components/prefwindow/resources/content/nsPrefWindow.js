@@ -47,6 +47,8 @@ function nsPrefWindow( frame_id )
   this.wsm            = new nsWidgetStateManager( frame_id );
   this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled"];
   this.pref           = null;
+  this.chromeRegistry = null;
+  this.observerService= null;
   
   this.cancelHandlers = [];
   this.okHandlers     = [];  
@@ -63,6 +65,8 @@ nsPrefWindow.prototype =
           try 
             {
               this.pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+              this.chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
+              this.observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
             }
           catch(e) 
             {
