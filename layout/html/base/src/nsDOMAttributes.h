@@ -32,16 +32,16 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult            GetScriptObject(JSContext *aContext, void** aScriptObject);
-  virtual nsresult            ResetScriptObject();
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
 
   // nsIDOMAttribute interface
-  virtual nsresult            GetName(nsString &aName);
-  virtual nsresult            GetValue(nsString &aValue);
-  virtual nsresult            SetValue(nsString &aValue);
-  virtual nsresult            GetSpecified();
-  virtual nsresult            SetSpecified(PRBool specified);
-  virtual nsresult            ToString(nsString &aString);
+  NS_IMETHOD GetName(nsString &aName);
+  NS_IMETHOD GetValue(nsString &aValue);
+  NS_IMETHOD SetValue(nsString &aValue);
+  NS_IMETHOD GetSpecified();
+  NS_IMETHOD SetSpecified(PRBool specified);
+  NS_IMETHOD ToString(nsString &aString);
 
 private:
   nsString *mName;
@@ -57,15 +57,15 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult            GetScriptObject(JSContext *aContext, void** aScriptObject);
-  virtual nsresult            ResetScriptObject();
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
 
   // nsIDOMAttributeList interface
-  virtual nsresult            GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute);
-  virtual nsresult            SetAttribute(nsIDOMAttribute *aAttribute);
-  virtual nsresult            Remove(nsString &attrName, nsIDOMAttribute** aAttribute);
-  virtual nsresult            Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute);
-  virtual nsresult            GetLength(PRUint32 *aLength);
+  NS_IMETHOD GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute);
+  NS_IMETHOD SetAttribute(nsIDOMAttribute *aAttribute);
+  NS_IMETHOD Remove(nsString &attrName, nsIDOMAttribute** aAttribute);
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute);
+  NS_IMETHOD GetLength(PRUint32 *aLength);
 
 private:
   nsIHTMLContent &mContent;

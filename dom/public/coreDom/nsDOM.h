@@ -44,7 +44,7 @@ public:
    *                        DocumentFragments, etc.) can only exist within the context of a Document
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            CreateDocument(nsString &type, nsIDOMDocument** aDocument) = 0;
+  NS_IMETHOD CreateDocument(nsString &type, nsIDOMDocument** aDocument) = 0;
 
   /**
    * Returns TRUE if the current DOM implements a given feature, FALSE otherwise 
@@ -52,7 +52,7 @@ public:
    * @param aFeature [in]   The package name of the feature to test
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            HasFeature(nsString &aFeature) = 0;
+  NS_IMETHOD HasFeature(nsString &aFeature) = 0;
 };
 
 

@@ -46,7 +46,7 @@ public:
    *                        to be filtered, otherwise, it will not be
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            SetFilter(PRInt32 aFilter, PRBool aFilterOn) = 0;
+  NS_IMETHOD SetFilter(PRInt32 aFilter, PRBool aFilterOn) = 0;
 
   /**
    * This method returns the number of items that will be iterated over if the 
@@ -58,7 +58,7 @@ public:
    *                        results in multithreaded, multiuser situations.
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetLength(PRUint32 *aLength) = 0;
+  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /**
    * This method returns the Node over which the iterator currentl rests. 
@@ -66,7 +66,7 @@ public:
    * @param aNode [out]   This method will return the Node at the current position in the interation.
    * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetCurrentNode(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD GetCurrentNode(nsIDOMNode **aNode) = 0;
 
   /**
    * This method alters the internal state of the iterator such that the node it 
@@ -77,7 +77,7 @@ public:
    *                      or null when it is not possible to iterate any further.
    * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetNextNode(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD GetNextNode(nsIDOMNode **aNode) = 0;
 
   /**
    * This method alters the internal state of the iterator such that the node it 
@@ -88,7 +88,7 @@ public:
    *                      null when it is not possible to iterate any further.
    * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetPreviousNode(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD GetPreviousNode(nsIDOMNode **aNode) = 0;
 
   /**
    * This method alters the internal state of the iterator such that the node it 
@@ -98,7 +98,7 @@ public:
    * @param aNode [out]    This method will only return null when there are no items to iterate over.
    * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            ToFirst(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToFirst(nsIDOMNode **aNode) = 0;
 
   /**
    * This method alters the internal state of the iterator such that the node it 
@@ -108,7 +108,7 @@ public:
    * @param aNode [out]    This method will only return null when there are no items to iterate over.
    * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            ToLast(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToLast(nsIDOMNode **aNode) = 0;
 
   /**
    * This method alters the internal state of the iterator such that the node it 
@@ -120,7 +120,7 @@ public:
    *                      of the range of legal values.
    * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            MoveTo(int aNth, nsIDOMNode **aNode) = 0;
+  NS_IMETHOD MoveTo(int aNth, nsIDOMNode **aNode) = 0;
 };
 
 #define NS_IDOMTREEITERATOR_IID \
@@ -130,15 +130,15 @@ public:
 
 class nsIDOMTreeIterator : public nsIDOMNodeIterator {
 public:
-  virtual nsresult            NumChildren(PRUint32 *aLength) = 0;
-  virtual nsresult            NumPreviousSiblings(PRUint32 *aLength) = 0;
-  virtual nsresult            NumNextSiblings(PRUint32 *aLength) = 0;
-  virtual nsresult            ToParent(nsIDOMNode **aNode) = 0;
-  virtual nsresult            ToPreviousSibling(nsIDOMNode **aNode) = 0;
-  virtual nsresult            ToNextSibling(nsIDOMNode **aNode) = 0;
-  virtual nsresult            ToFirstChild(nsIDOMNode **aNode) = 0;
-  virtual nsresult            ToLastChild(nsIDOMNode **aNode) = 0;
-  virtual nsresult            ToNthChild(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD NumChildren(PRUint32 *aLength) = 0;
+  NS_IMETHOD NumPreviousSiblings(PRUint32 *aLength) = 0;
+  NS_IMETHOD NumNextSiblings(PRUint32 *aLength) = 0;
+  NS_IMETHOD ToParent(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToPreviousSibling(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToNextSibling(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToFirstChild(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToLastChild(nsIDOMNode **aNode) = 0;
+  NS_IMETHOD ToNthChild(nsIDOMNode **aNode) = 0;
 };
 
 #endif // nsIDOMIterators_h__

@@ -45,7 +45,7 @@ public:
    * @param newChild [out]  The tag name
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              GetTagName(nsString &aName) = 0;
+  NS_IMETHOD GetTagName(nsString &aName) = 0;
 
   /**
    * The attributes for this element. 
@@ -53,7 +53,7 @@ public:
    * @param aAttributeList [out]  The AttributeList
    * @return <b>NS_OK</b>         iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              GetAttributes(nsIDOMAttributeList **aAttributeList) = 0;
+  NS_IMETHOD GetAttributes(nsIDOMAttributeList **aAttributeList) = 0;
 
   /**
    * Retrieves an attribute value by name from an Element object. 
@@ -64,7 +64,7 @@ public:
    * @param aValue [out]    The attribute value as a string
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              GetDOMAttribute(nsString &aName, nsString &aValue) = 0;
+  NS_IMETHOD GetDOMAttribute(nsString &aName, nsString &aValue) = 0;
 
   /**
    * Set an attribute value from an Element object. 
@@ -75,7 +75,7 @@ public:
    * @param aValue [in]     The attribute value as a string
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              SetDOMAttribute(nsString &aName, nsString &aValue) = 0;
+  NS_IMETHOD SetDOMAttribute(nsString &aName, nsString &aValue) = 0;
 
   /**
    * Remove the specified attribute 
@@ -83,7 +83,7 @@ public:
    * @param aName [in]      The attribute name
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              RemoveAttribute(nsString &aName) = 0;
+  NS_IMETHOD RemoveAttribute(nsString &aName) = 0;
 
   /**
    * Retrieves an Attribute node by name from an Element object.  
@@ -92,7 +92,7 @@ public:
    * @param aAttribute [out]  The attribute with the given name
    * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              GetAttributeNode(nsString &aName, nsIDOMAttribute **aAttribute) = 0;
+  NS_IMETHOD GetAttributeNode(nsString &aName, nsIDOMAttribute **aAttribute) = 0;
 
   /**
    * Set an Attribute node by name from an Element object.  
@@ -100,7 +100,7 @@ public:
    * @param aAttribute [in] The attribute to set
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              SetAttributeNode(nsIDOMAttribute *aAttribute) = 0;
+  NS_IMETHOD SetAttributeNode(nsIDOMAttribute *aAttribute) = 0;
 
   /**
    * Removes the specified attribute/value pair from an Element node object. 
@@ -108,7 +108,7 @@ public:
    * @param aAttribute [in] The attribute to remove
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              RemoveAttributeNode(nsIDOMAttribute *aAttribute) = 0;
+  NS_IMETHOD RemoveAttributeNode(nsIDOMAttribute *aAttribute) = 0;
 
   /**
    * Returns an iterator through all subordinate elements with a given tag name.
@@ -117,7 +117,7 @@ public:
    * @param aIterator [out] The iterator
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator) = 0;
+  NS_IMETHOD GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator) = 0;
 
   /**
    * Puts all Tet nodes in the sub-tree underneath this Element into a "normal" 
@@ -126,7 +126,7 @@ public:
    *
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult              Normalize() = 0;
+  NS_IMETHOD Normalize() = 0;
 };
 
 #endif // nsIDOMElement_h__

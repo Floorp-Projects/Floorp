@@ -30,18 +30,18 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult            GetScriptObject(JSContext *aContext, void** aScriptObject);
-  virtual nsresult            ResetScriptObject();
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
 
   // nsIDOMIterator interface
-  virtual nsresult            SetFilter(PRInt32 aFilter, PRBool aFilterOn);
-  virtual nsresult            GetLength(PRUint32 *aLength);
-  virtual nsresult            GetCurrentNode(nsIDOMNode **aNode);
-  virtual nsresult            GetNextNode(nsIDOMNode **aNode);
-  virtual nsresult            GetPreviousNode(nsIDOMNode **aNode);
-  virtual nsresult            ToFirst(nsIDOMNode **aNode);
-  virtual nsresult            ToLast(nsIDOMNode **aNode);
-  virtual nsresult            MoveTo(int aNth, nsIDOMNode **aNode);
+  NS_IMETHOD SetFilter(PRInt32 aFilter, PRBool aFilterOn);
+  NS_IMETHOD GetLength(PRUint32 *aLength);
+  NS_IMETHOD GetCurrentNode(nsIDOMNode **aNode);
+  NS_IMETHOD GetNextNode(nsIDOMNode **aNode);
+  NS_IMETHOD GetPreviousNode(nsIDOMNode **aNode);
+  NS_IMETHOD ToFirst(nsIDOMNode **aNode);
+  NS_IMETHOD ToLast(nsIDOMNode **aNode);
+  NS_IMETHOD MoveTo(int aNth, nsIDOMNode **aNode);
 
 private:
   nsIContent &mContent;

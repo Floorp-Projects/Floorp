@@ -54,14 +54,14 @@ public:
    * @return nsresult NS_OK if the script object is successfully returned
    *
    **/
-  virtual nsresult  GetScriptObject(JSContext *aContext, void** aScriptObject) = 0;
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject) = 0;
 
   /**
    * Nuke the current script object.
    * Next call to GetScriptObject creates a new script object.
    *
    **/
-  virtual nsresult  ResetScriptObject() = 0;
+  NS_IMETHOD ResetScriptObject() = 0;
 };
 
 class nsIDOMDocument;
