@@ -25,7 +25,10 @@ use Socket;
 require 'tbglobals.pl';
 require 'imagelog.pl';
 
-# Port an old-style imagelog thing to a newstyle one
+# Set up an alarm handler for URLs that take too long.
+$SIG{ALRM} = sub { die "timeout" };
+
+# Move an old imagelog to a new one
 
 open( IMAGELOG, "<$data_dir/imagelog.txt" ) || die "can't open file";
 open (OUT, ">$data_dir/newimagelog.txt") || die "can't open output file";
@@ -35,7 +38,27 @@ while( <IMAGELOG> ){
     chop;
     ($url,$quote)  = split(/\`/);
     print "$url\n";
-    $size = &URLsize($url);
+
+    eval {
+      # Only wait 8 seconds for images to load.
+      alarm(8);
+      $size = &URLsize($url);
+      alarm(0);
+    };
+    # Check if the eval block died.
+    if ($@) {
+      if ($@ =~ /timeout/) {
+        # URL took to long skip it.
+        warn "URL took too long. Skip it.\n";
+        next;
+      } else {
+        # Some other error (e.g. no host)
+        warn "$@\n";
+        alarm(0);
+        next;
+      }
+    }
+
     $width = "";
     $height = "";
     if ($size =~ /WIDTH=([0-9]*)/) {
@@ -50,9 +73,6 @@ while( <IMAGELOG> ){
         print OUT "$url`$width`$height`$quote\n";
     }
 }
-
-
-
 
 
 
@@ -213,8 +233,4 @@ sub URLsize {
         $size="";
     }
     return $size;
-}
-
-sub dokill {
-    kill 9,$child if $child;
 }
