@@ -432,6 +432,12 @@ depend::
 
 #//------------------------------------------------------------------------
 #// DEPEND
+#//
+#//   If you ever need to change the set of includes (e.g., you go whack
+#//   the build rules over in obj.inc), make sure to update the input
+#//   to $(MAKEDEP). It only looks through the directories that you tell
+#//   it to.
+#//
 #//------------------------------------------------------------------------
 
 MAKEDEP=$(MOZ_SRC)\mozilla\config\makedep.exe
@@ -447,6 +453,8 @@ depend:: $(OBJDIR)
     @echo Analyzing dependencies...
     $(MAKEDEP) -s -o $(MAKEDEPFILE) @<<
 $(LINCS)
+$(LINCS_1)
+$(INCS)
 $(OBJS)
 <<
 
