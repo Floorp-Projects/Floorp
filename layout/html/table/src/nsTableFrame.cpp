@@ -1246,8 +1246,12 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
         
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *spacing, 0, 0);
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      if (eCompatibility_NavQuirks != mode) {
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+      }
       // paint the column groups and columns
       nsIFrame* colGroupFrame = mColGroups.FirstChild();
       while (nsnull != colGroupFrame) {
