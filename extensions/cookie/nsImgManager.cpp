@@ -96,6 +96,13 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
                     if (NS_FAILED(rv) || !httpType) return rv;                    
                 }
 
+                rv = aContentLoc->SchemeIs("http", &httpType);
+                if (NS_FAILED(rv) || !httpType) {
+                    // check HTTPS as well
+                    rv = aContentLoc->SchemeIs("https", &httpType);
+                    if (NS_FAILED(rv) || !httpType) return rv;                    
+                }
+
                 nsXPIDLCString baseHost;
                 rv = baseURI->GetHost(getter_Copies(baseHost));
                 if (NS_FAILED(rv) || !baseHost) return rv;
