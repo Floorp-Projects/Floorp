@@ -32,6 +32,7 @@
 #define NS_STYLE_HINT_VISUAL      3   // change was visual only (ie: COLOR=)
 #define NS_STYLE_HINT_REFLOW      4   // change requires reflow (ie: WIDTH=)
 #define NS_STYLE_HINT_FRAMECHANGE 5   // change requires frame change (ie: DISPLAY=)
+#define NS_STYLE_HINT_MAX         NS_STYLE_HINT_FRAMECHANGE
 
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0
