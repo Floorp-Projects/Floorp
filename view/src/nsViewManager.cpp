@@ -2879,8 +2879,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   // code still does the right thing. Yay for the display list based
   // approach!)
 
-  nsRegion region(r);
-  OptimizeDisplayList(&displayList, region, finalTransparentRect, opaqueRegion, PR_TRUE);
+  OptimizeDisplayList(&displayList, nsRegion(r), finalTransparentRect, opaqueRegion, PR_TRUE);
 
   PRBool anyUnscrolledViews = PR_FALSE;
   PRBool anyUnblittableViews = PR_FALSE;
@@ -3286,8 +3285,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
 
   // Paint the view. The clipping rect was set above set don't clip again.
   //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
-  nsRegion region(trect);
-  RenderViews(view, *localcx, region, PR_FALSE);
+  RenderViews(view, *localcx, nsRegion(trect), PR_FALSE);
 
   NS_RELEASE(localcx);
 
