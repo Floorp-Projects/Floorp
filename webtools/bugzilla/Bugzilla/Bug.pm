@@ -491,12 +491,12 @@ sub EmitDependList {
   return @list;
 }
 
-sub ValidateTime{
+sub ValidateTime {
   my ($time, $field) = @_;
     if ($time > 99999.99 || $time < 0 || !($time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/)){
       ThrowUserError("need_positive_number", {field => "$field"}, "abort");
     }
- }
+}
 
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);
