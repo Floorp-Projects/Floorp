@@ -1169,6 +1169,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   nsresult rv = NS_OK;
+  PRBool isStyleChange = PR_FALSE;
   nsIFrame* target;
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
@@ -1193,6 +1194,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
       switch (type) {
       case nsIReflowCommand::StyleChanged:
         rv = PrepareStyleChangedReflow(state);
+        isStyleChange = PR_TRUE;
         break;
       case nsIReflowCommand::ReflowDirty:
         break;
@@ -1254,53 +1256,60 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
   if (eReflowReason_Incremental == aReflowState.reason) {
-    nsMargin  border = aReflowState.mComputedBorderPadding -
-                       aReflowState.mComputedPadding;
+    if (isStyleChange) {
+      // Lots of things could have changed so damage our entire
+      // bounds
+      Invalidate(nsRect(0, 0, mRect.width, mRect.height));
 
-    // See if our width changed
-    if ((aMetrics.width != mRect.width) && (border.right > 0)) {
-      nsRect  damageRect;
-
-      if (aMetrics.width < mRect.width) {
-        // Our new width is smaller, so we need to make sure that
-        // we paint our border in its new position
-        damageRect.x = aMetrics.width - border.right;
-        damageRect.width = border.right;
-        damageRect.y = 0;
-        damageRect.height = aMetrics.height;
-
-      } else {
-        // Our new width is larger, so we need to erase our border in its
-        // old position
-        damageRect.x = mRect.width - border.right;
-        damageRect.width = border.right;
-        damageRect.y = 0;
-        damageRect.height = mRect.height;
+    } else {
+      nsMargin  border = aReflowState.mComputedBorderPadding -
+                         aReflowState.mComputedPadding;
+  
+      // See if our width changed
+      if ((aMetrics.width != mRect.width) && (border.right > 0)) {
+        nsRect  damageRect;
+  
+        if (aMetrics.width < mRect.width) {
+          // Our new width is smaller, so we need to make sure that
+          // we paint our border in its new position
+          damageRect.x = aMetrics.width - border.right;
+          damageRect.width = border.right;
+          damageRect.y = 0;
+          damageRect.height = aMetrics.height;
+  
+        } else {
+          // Our new width is larger, so we need to erase our border in its
+          // old position
+          damageRect.x = mRect.width - border.right;
+          damageRect.width = border.right;
+          damageRect.y = 0;
+          damageRect.height = mRect.height;
+        }
+        Invalidate(damageRect);
       }
-      Invalidate(damageRect);
-    }
-
-    // See if our height changed
-    if ((aMetrics.height != mRect.height) && (border.bottom > 0)) {
-      nsRect  damageRect;
-      
-      if (aMetrics.height < mRect.height) {
-        // Our new height is smaller, so we need to make sure that
-        // we paint our border in its new position
-        damageRect.x = 0;
-        damageRect.width = aMetrics.width;
-        damageRect.y = aMetrics.height - border.bottom;
-        damageRect.height = border.bottom;
-
-      } else {
-        // Our new height is larger, so we need to erase our border in its
-        // old position
-        damageRect.x = 0;
-        damageRect.width = mRect.width;
-        damageRect.y = mRect.height - border.bottom;
-        damageRect.height = border.bottom;
+  
+      // See if our height changed
+      if ((aMetrics.height != mRect.height) && (border.bottom > 0)) {
+        nsRect  damageRect;
+        
+        if (aMetrics.height < mRect.height) {
+          // Our new height is smaller, so we need to make sure that
+          // we paint our border in its new position
+          damageRect.x = 0;
+          damageRect.width = aMetrics.width;
+          damageRect.y = aMetrics.height - border.bottom;
+          damageRect.height = border.bottom;
+  
+        } else {
+          // Our new height is larger, so we need to erase our border in its
+          // old position
+          damageRect.x = 0;
+          damageRect.width = mRect.width;
+          damageRect.y = mRect.height - border.bottom;
+          damageRect.height = border.bottom;
+        }
+        Invalidate(damageRect);
       }
-      Invalidate(damageRect);
     }
   }
 
