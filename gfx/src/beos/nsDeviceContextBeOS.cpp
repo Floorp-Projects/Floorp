@@ -474,7 +474,9 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
        // no style 
     
        // no decoration 
-           
+
+    aFont->systemFont = PR_TRUE;
+
     status = NS_OK; 
   } 
   return (status); 

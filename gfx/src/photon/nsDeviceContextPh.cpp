@@ -420,6 +420,8 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aF
 			break;
   	}
 
+  aFont->systemFont = PR_TRUE;
+
   return NS_OK;
 }
 
