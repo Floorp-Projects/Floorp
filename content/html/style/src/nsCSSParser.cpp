@@ -591,18 +591,21 @@ void CSSParserImpl::ProcessImport(const nsString& aURLSpec)
         // Create a new parse to parse the import. 
 
         if (NS_OK == rv) {
-          CSSParserImpl *parser = new CSSParserImpl();
-          nsIStyleSheet* childSheet;
-          rv = parser->Parse(uin, url, childSheet);
-          NS_RELEASE(parser);
-          if ((NS_OK == rv) && (nsnull != childSheet)) {
-            nsICSSStyleSheet* cssChild = nsnull;
-            if (NS_OK == childSheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssChild)) {
-              mSheet->AppendStyleSheet(cssChild);
-              NS_RELEASE(cssChild);
+          nsICSSParser* parser;
+          rv = NS_NewCSSParser(&parser);
+          if (NS_OK == rv) {
+            nsIStyleSheet* childSheet = nsnull;
+            rv = parser->Parse(uin, url, childSheet);
+            NS_RELEASE(parser);
+            if ((NS_OK == rv) && (nsnull != childSheet)) {
+              nsICSSStyleSheet* cssChild = nsnull;
+              if (NS_OK == childSheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssChild)) {
+                mSheet->AppendStyleSheet(cssChild);
+                NS_RELEASE(cssChild);
+              }
             }
+            NS_IF_RELEASE(childSheet);
           }
-          NS_RELEASE(childSheet);
         }
         NS_RELEASE(uin);
       }
@@ -870,11 +873,16 @@ PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
   }
   if (eCSSToken_ID == tk->mType) {
     // #id
-    mask |= SELECTOR_ID;
-    aSelectorResult->mID.Append(tk->mIdent);
-    if (!GetToken(aErrorCode, PR_FALSE)) {
-      // premature eof is ok (here!)
-      return PR_TRUE;
+    if ((1 < tk->mIdent.Length()) && (nsString::IsAlpha(tk->mIdent.CharAt(1)))) { // verify is legal ID
+      mask |= SELECTOR_ID;
+      aSelectorResult->mID.Append(tk->mIdent);
+      if (!GetToken(aErrorCode, PR_FALSE)) {
+        // premature eof is ok (here!)
+        return PR_TRUE;
+      }
+    }
+    else {
+      return PR_FALSE;
     }
   }
   if ((eCSSToken_Symbol == tk->mType) && ('.' == tk->mSymbol)) {
@@ -1447,7 +1455,7 @@ PRBool CSSParserImpl::ParseEnum(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
   if (id >= 0) {
     PRInt32 ix = SearchKeywordTable(id, aTable);
     if (ix >= 0) {
-      aDeclaration->AddValue(aName, nsCSSValue(aTable[ix+1], eCSSUnit_Enumerated));
+      aDeclaration->AppendValue(aName, nsCSSValue(aTable[ix+1], eCSSUnit_Enumerated));
       return PR_TRUE;
     }
   }
@@ -1484,7 +1492,7 @@ PRBool CSSParserImpl::TranslateLength(nsICSSDeclaration* aDeclaration,
     // Must be a zero number...
     units = eCSSUnit_Point;
   }
-  aDeclaration->AddValue(aName, nsCSSValue(aNumber, units));
+  aDeclaration->AppendValue(aName, nsCSSValue(aNumber, units));
   return PR_TRUE;
 }
 
@@ -1506,32 +1514,32 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
     if (sid >= 0) { // known keyword
       if ((aVariants & VARIANT_AUTO) != 0) {
         if (sid == KEYWORD_AUTO) {
-          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_Auto));
+          aDeclaration->AppendValue(aName, nsCSSValue(eCSSUnit_Auto));
           return PR_TRUE;
         }
       }
       if ((aVariants & VARIANT_INHERIT) != 0) {
         if (sid == KEYWORD_INHERIT) {
-          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_Inherit));
+          aDeclaration->AppendValue(aName, nsCSSValue(eCSSUnit_Inherit));
           return PR_TRUE;
         }
       }
       if ((aVariants & VARIANT_NONE) != 0) {
         if (sid == KEYWORD_NONE) {
-          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_None));
+          aDeclaration->AppendValue(aName, nsCSSValue(eCSSUnit_None));
           return PR_TRUE;
         }
       }
       if ((aVariants & VARIANT_NORMAL) != 0) {
         if (sid == KEYWORD_NORMAL) {
-          aDeclaration->AddValue(aName, nsCSSValue(eCSSUnit_Normal));
+          aDeclaration->AppendValue(aName, nsCSSValue(eCSSUnit_Normal));
           return PR_TRUE;
         }
       }
       if ((aVariants & VARIANT_KEYWORD) != 0) {
         PRInt32 ix = SearchKeywordTable(sid, aTable);
         if (ix >= 0) {
-          aDeclaration->AddValue(aName, nsCSSValue(aTable[ix+1], eCSSUnit_Enumerated));
+          aDeclaration->AppendValue(aName, nsCSSValue(aTable[ix+1], eCSSUnit_Enumerated));
           return PR_TRUE;
         }
       }
@@ -1542,17 +1550,17 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
   }
   if (((aVariants & VARIANT_PERCENT) != 0) &&
       (eCSSToken_Percentage == tk->mType)) {
-    aDeclaration->AddValue(aName, nsCSSValue(tk->mNumber, eCSSUnit_Percent));
+    aDeclaration->AppendValue(aName, nsCSSValue(tk->mNumber, eCSSUnit_Percent));
     return PR_TRUE;
   }
   if (((aVariants & VARIANT_NUMBER) != 0) &&
       (eCSSToken_Number == tk->mType)) {
-    aDeclaration->AddValue(aName, nsCSSValue(tk->mNumber, eCSSUnit_Number));
+    aDeclaration->AppendValue(aName, nsCSSValue(tk->mNumber, eCSSUnit_Number));
     return PR_TRUE;
   }
   if (((aVariants & VARIANT_INTEGER) != 0) &&
       (eCSSToken_Number == tk->mType) && tk->mIntegerValid) {
-    aDeclaration->AddValue(aName, nsCSSValue(tk->mInteger, eCSSUnit_Integer));
+    aDeclaration->AppendValue(aName, nsCSSValue(tk->mInteger, eCSSUnit_Integer));
     return PR_TRUE;
   }
   if (((aVariants & VARIANT_URL) != 0) &&
@@ -1564,10 +1572,10 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
     nsString baseURL;
     nsresult rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
     if (NS_OK == rv) {
-      aDeclaration->AddValue(aName, nsCSSValue(absURL));
+      aDeclaration->AppendValue(aName, nsCSSValue(absURL));
     }
     else {
-      aDeclaration->AddValue(aName, nsCSSValue(tk->mIdent));
+      aDeclaration->AppendValue(aName, nsCSSValue(tk->mIdent));
     }
     return PR_TRUE;
   }
@@ -1579,7 +1587,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
       // XXX This loses the original input format (e.g. a name which
       // should be preserved when editing)
       if (ParseColor(aErrorCode, &rgba)) {
-        aDeclaration->AddValue(aName, nsCSSValue(rgba));
+        aDeclaration->AppendValue(aName, nsCSSValue(rgba));
         return PR_TRUE;
       }
       return PR_FALSE;
@@ -1636,13 +1644,13 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32* aErrorCode,
   switch (count) {
     case 1: // Make right == top
       aDeclaration->GetValue(aNames[0], value);
-      aDeclaration->AddValue(aNames[1], value);
+      aDeclaration->AppendValue(aNames[1], value);
     case 2: // Make bottom == top
       aDeclaration->GetValue(aNames[0], value);
-      aDeclaration->AddValue(aNames[2], value);
+      aDeclaration->AppendValue(aNames[2], value);
     case 3: // Make left == right
       aDeclaration->GetValue(aNames[1], value);
-      aDeclaration->AddValue(aNames[3], value);
+      aDeclaration->AppendValue(aNames[3], value);
   }
 
   return PR_TRUE;
@@ -1847,28 +1855,28 @@ PRBool CSSParserImpl::ParseBackground(PRInt32* aErrorCode, nsICSSDeclaration* aD
 
   // Provide missing values
   if ((found & 1) == 0) {
-    aDeclaration->AddValue(kBackgroundNames[0], 
-                           nsCSSValue(NS_STYLE_BG_COLOR_TRANSPARENT,
-                                      eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(kBackgroundNames[0], 
+                              nsCSSValue(NS_STYLE_BG_COLOR_TRANSPARENT,
+                                         eCSSUnit_Enumerated));
   }
   if ((found & 2) == 0) {
-    aDeclaration->AddValue(kBackgroundNames[1], 
-                           nsCSSValue(NS_STYLE_BG_IMAGE_NONE,
-                                      eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(kBackgroundNames[1], 
+                              nsCSSValue(NS_STYLE_BG_IMAGE_NONE,
+                                         eCSSUnit_Enumerated));
   }
   if ((found & 4) == 0) {
-    aDeclaration->AddValue(kBackgroundNames[2], 
-                           nsCSSValue(NS_STYLE_BG_REPEAT_XY,
-                                      eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(kBackgroundNames[2], 
+                              nsCSSValue(NS_STYLE_BG_REPEAT_XY,
+                                         eCSSUnit_Enumerated));
   }
   if ((found & 8) == 0) {
-    aDeclaration->AddValue(kBackgroundNames[3], 
-                           nsCSSValue(NS_STYLE_BG_ATTACHMENT_SCROLL,
-                                      eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(kBackgroundNames[3], 
+                              nsCSSValue(NS_STYLE_BG_ATTACHMENT_SCROLL,
+                                         eCSSUnit_Enumerated));
   }
   if ((found & 16) == 0) {
-    aDeclaration->AddValue("background-x-position", nsCSSValue(0.0f, eCSSUnit_Percent));
-    aDeclaration->AddValue("background-y-position", nsCSSValue(0.0f, eCSSUnit_Percent));
+    aDeclaration->AppendValue("background-x-position", nsCSSValue(0.0f, eCSSUnit_Percent));
+    aDeclaration->AppendValue("background-y-position", nsCSSValue(0.0f, eCSSUnit_Percent));
   }
 
   // XXX Note: no default for filter (yet)
@@ -1918,7 +1926,7 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32* aErrorCode,
 
     // We have one number which is the x position. Create an value for
     // the vertical position which is of value 50%
-    aDeclaration->AddValue(byp, nsCSSValue(0.5f, eCSSUnit_Percent));
+    aDeclaration->AppendValue(byp, nsCSSValue(0.5f, eCSSUnit_Percent));
     // XXX shouldn't this be CENTER enum instead?
     return PR_TRUE;
   }
@@ -1978,8 +1986,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32* aErrorCode,
   }
 
   // Create style values
-  aDeclaration->AddValue(bxp, nsCSSValue(xValue, eCSSUnit_Enumerated));
-  aDeclaration->AddValue(byp, nsCSSValue(yValue, eCSSUnit_Enumerated));
+  aDeclaration->AppendValue(bxp, nsCSSValue(xValue, eCSSUnit_Enumerated));
+  aDeclaration->AppendValue(byp, nsCSSValue(yValue, eCSSUnit_Enumerated));
   return PR_TRUE;
 }
 
@@ -2028,17 +2036,17 @@ PRBool CSSParserImpl::ParseBorder(PRInt32* aErrorCode, nsICSSDeclaration* aDecla
   if (0 == (found & 1)) {
     // provide missing border width's
     for (int i = 0; i < 4; i++) {
-      aDeclaration->AddValue(kBorderWidthNames[i], 
-                             nsCSSValue(NS_STYLE_BORDER_WIDTH_MEDIUM,
-                                        eCSSUnit_Enumerated));
+      aDeclaration->AppendValue(kBorderWidthNames[i], 
+                                nsCSSValue(NS_STYLE_BORDER_WIDTH_MEDIUM,
+                                           eCSSUnit_Enumerated));
     }
   }
   if (0 == (found & 2)) {
     // provide missing border style's
     for (int i = 0; i < 4; i++) {
-      aDeclaration->AddValue(kBorderStyleNames[i], 
-                             nsCSSValue(NS_STYLE_BORDER_STYLE_NONE,
-                                        eCSSUnit_Enumerated));
+      aDeclaration->AppendValue(kBorderStyleNames[i], 
+                                nsCSSValue(NS_STYLE_BORDER_STYLE_NONE,
+                                           eCSSUnit_Enumerated));
     }
   }
 
@@ -2065,13 +2073,13 @@ PRBool CSSParserImpl::ParseBorderSide(PRInt32* aErrorCode, nsICSSDeclaration* aD
   if (found == 0) return PR_FALSE;
   if ((found & 1) == 0) {
     // Provide default border-width
-    aDeclaration->AddValue(kBorderWidthNames[aWhich],
-                           nsCSSValue(NS_STYLE_BORDER_WIDTH_MEDIUM, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(kBorderWidthNames[aWhich],
+                              nsCSSValue(NS_STYLE_BORDER_WIDTH_MEDIUM, eCSSUnit_Enumerated));
   }
   if ((found & 2) == 0) {
     // Provide default border-style
-    aDeclaration->AddValue(kBorderStyleNames[aWhich],
-                           nsCSSValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(kBorderStyleNames[aWhich],
+                              nsCSSValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated));
   }
 
   // Do NOT provide a missing color value as the default is to be
@@ -2116,12 +2124,12 @@ PRBool CSSParserImpl::ParseClip(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
   }
   if (ident->EqualsIgnoreCase("auto")) {
     for (int i = 0; i < 4; i++) {
-      aDeclaration->AddValue(kClipNames[i], nsCSSValue(eCSSUnit_Auto));
+      aDeclaration->AppendValue(kClipNames[i], nsCSSValue(eCSSUnit_Auto));
     }
     return PR_TRUE;
   } else if (ident->EqualsIgnoreCase("inherit")) {
     for (int i = 0; i < 4; i++) {
-      aDeclaration->AddValue(kClipNames[i], nsCSSValue(eCSSUnit_Inherit));
+      aDeclaration->AppendValue(kClipNames[i], nsCSSValue(eCSSUnit_Inherit));
     }
     return PR_TRUE;
   } else if (ident->EqualsIgnoreCase("rect")) {
@@ -2160,18 +2168,18 @@ PRBool CSSParserImpl::ParseFont(PRInt32* aErrorCode, nsICSSDeclaration* aDeclara
   PRInt32 found = ParseChoice(aErrorCode, aDeclaration, fontNames, 3);
   if ((found & 1) == 0) {
     // Provide default font-style
-    aDeclaration->AddValue(fontNames[0],
-                           nsCSSValue(NS_STYLE_FONT_STYLE_NORMAL, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(fontNames[0],
+                              nsCSSValue(NS_STYLE_FONT_STYLE_NORMAL, eCSSUnit_Enumerated));
   }
   if ((found & 2) == 0) {
     // Provide default font-variant
-    aDeclaration->AddValue(fontNames[1],
-                           nsCSSValue(NS_STYLE_FONT_VARIANT_NORMAL, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(fontNames[1],
+                              nsCSSValue(NS_STYLE_FONT_VARIANT_NORMAL, eCSSUnit_Enumerated));
   }
   if ((found & 4) == 0) {
     // Provide default font-weight
-    aDeclaration->AddValue(fontNames[2],
-                           nsCSSValue(NS_STYLE_FONT_WEIGHT_NORMAL, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(fontNames[2],
+                              nsCSSValue(NS_STYLE_FONT_WEIGHT_NORMAL, eCSSUnit_Enumerated));
   }
 
   // Get mandatory font-size
@@ -2254,7 +2262,7 @@ PRBool CSSParserImpl::ParseFontFamily(PRInt32* aErrorCode, nsICSSDeclaration* aD
   if (family.Length() == 0) {
     return PR_FALSE;
   }
-  aDeclaration->AddValue(aName, nsCSSValue(family));
+  aDeclaration->AppendValue(aName, nsCSSValue(family));
   return PR_TRUE;
 }
 
@@ -2281,13 +2289,13 @@ PRBool CSSParserImpl::ParseFontWeight(PRInt32* aErrorCode, nsICSSDeclaration* aD
       UngetToken();
       return PR_FALSE;
     }
-    aDeclaration->AddValue(aName, nsCSSValue(kFontWeightKTable[ix+1], eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(aName, nsCSSValue(kFontWeightKTable[ix+1], eCSSUnit_Enumerated));
   } else if (eCSSToken_Number == tk->mType) {
     PRInt32 v = (PRInt32) tk->mNumber;
     if (v < 100) v = 100;
     else if (v > 900) v = 900;
     v = v - (v % 100);
-    aDeclaration->AddValue(aName, nsCSSValue(v, eCSSUnit_Integer));
+    aDeclaration->AppendValue(aName, nsCSSValue(v, eCSSUnit_Integer));
   } else {
     UngetToken();
     return PR_FALSE;
@@ -2317,7 +2325,7 @@ PRBool CSSParserImpl::ParseListStyle(PRInt32* aErrorCode, nsICSSDeclaration* aDe
         break;
       }
       if (eCSSToken_URL == mToken.mType) {
-        aDeclaration->AddValue(lsi, nsCSSValue(mToken.mIdent));
+        aDeclaration->AppendValue(lsi, nsCSSValue(mToken.mIdent));
         found |= 4;
         continue;
       } else {
@@ -2341,13 +2349,13 @@ PRBool CSSParserImpl::ParseListStyle(PRInt32* aErrorCode, nsICSSDeclaration* aDe
 
   // Provide default values
   if ((found & 1) == 0) {
-    aDeclaration->AddValue(lst, nsCSSValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(lst, nsCSSValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated));
   }
   if ((found & 2) == 0) {
-    aDeclaration->AddValue(lsp, nsCSSValue(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(lsp, nsCSSValue(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE, eCSSUnit_Enumerated));
   }
   if ((found & 4) == 0) {
-    aDeclaration->AddValue(lsi, nsCSSValue(NS_STYLE_LIST_STYLE_IMAGE_NONE, eCSSUnit_Enumerated));
+    aDeclaration->AppendValue(lsi, nsCSSValue(NS_STYLE_LIST_STYLE_IMAGE_NONE, eCSSUnit_Enumerated));
   }
   return PR_TRUE;
 }
@@ -2413,6 +2421,6 @@ PRBool CSSParserImpl::ParseTextDecoration(PRInt32* aErrorCode,
   if (0 == decoration) {
     return PR_FALSE;
   }
-  aDeclaration->AddValue(aName, nsCSSValue(decoration, eCSSUnit_Integer));
+  aDeclaration->AppendValue(aName, nsCSSValue(decoration, eCSSUnit_Integer));
   return PR_TRUE;
 }
