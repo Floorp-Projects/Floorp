@@ -222,7 +222,7 @@ RDF_ReleaseDataSource(RDF rdf, RDFT dataSource)
   dataSource->rdf = deleteFromRDFList(dataSource->rdf, rdf);
   if ((dataSource->rdf == NULL) && (dataSource->destroy != NULL)) {
       PL_HashTableRemove(dataSourceHash,  dataSource->url); 
-      (*dataSource->destroy)(dataSource);     (*dataSource->destroy)(dataSource);
+      (*dataSource->destroy)(dataSource);
   }
   return 0;
 }
