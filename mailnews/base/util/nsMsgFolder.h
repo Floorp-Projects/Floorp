@@ -242,13 +242,8 @@ public:
 	NS_IMETHOD TestSemaphore (nsISupports *semHolder, PRBool *isSemaphoreHolder);
 	NS_IMETHOD IsLocked(PRBool *isLocked);
 
-#ifdef HAVE_PANE
-  MWContext *GetFolderPaneContext();
-#endif
+	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message) = 0;
 
-#ifdef HAVE_MASTER
-  MSG_Master *GetMaster() {return m_master;}
-#endif
 
 #ifdef HAVE_CACHE
 	virtual nsresult WriteToCache(XP_File);
