@@ -112,12 +112,16 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHitSubMenus        = new nsVoidArray();
     mVScrollbar         = nsnull;
 
-    mIMEProperty        = 0;
-    mIMEIsComposing     = PR_FALSE;
-    mIMECompositionString = NULL;
-    mIMECompositionStringSize = 0;
-    mIMECompositionStringSize = 0;
-    mIMECompositionUniString = NULL;
+	mIMEProperty		= 0;
+	mIMEIsComposing		= PR_FALSE;
+	mIMECompositionString = NULL;
+	mIMECompositionStringSize = 0;
+	mIMECompositionStringSize = 0;
+	mIMECompositionUniString = NULL;
+#ifdef DEBUG_TAGUE
+	mHaveDBCSLeadByte = false;
+	mDBCSLeadByte = '\0';
+#endif
 
 #ifdef NEW_DRAG_AND_DROP
     mNativeDragTarget = nsnull;
@@ -1918,18 +1922,18 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
     case VK_F9:    
     case VK_F10:   
     case VK_F11:   
-    case VK_F12:  
-      *aAsciiKey = aVirtualKeyCode;
+    case VK_F12: 
+#ifdef DEBUG_TAGUE
+	case VK_RETURN:
+	case VK_BACK:
+#endif
+		*aAsciiKey = aVirtualKeyCode;
       break;
 
     case VK_DELETE:
       *aAsciiKey = '\177'; 
       keyType = SPECIAL_KEY;   
       break;
-
-    //case VK_RETURN:*aAsciiKey = '\n';   
-      //keyType = SPECIAL_KEY;   
-      //break;
 
     case VK_MENU:
       keyType = DONT_PROCESS_KEY;
@@ -2084,6 +2088,36 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 //
 //
 //-------------------------------------------------------------------------
+#ifdef DEBUG_TAGUE
+BOOL nsWindow::OnChar( UINT aVirtualKeyCode, bool isMultiByte )
+{
+  wchar_t	uniChar;
+  char		charToConvert[2];
+  size_t	length;
+
+  if (isMultiByte) {
+	  charToConvert[0]=HIBYTE(aVirtualKeyCode);
+	  charToConvert[1] = LOBYTE(aVirtualKeyCode);
+	  length=2;
+  } else {
+	  charToConvert[0] = LOBYTE(aVirtualKeyCode);
+	  length=1;
+  }
+  // if we get a '\n', ignore it because we already processed it in OnKeyDown.
+  // This is the safest assumption since not always pressing enter produce a WM_CHAR
+  //if (IsDBCSLeadByte(aVirtualKeyCode) || aVirtualKeyCode == 0xD /*'\n'*/ ) {
+	//	return FALSE;
+	//}
+  //printf("OnChar (KeyDown) %d\n", aVirtualKeyCode);
+  ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,charToConvert,length,
+	  &uniChar,sizeof(uniChar));
+
+  DispatchKeyEvent(NS_KEY_PRESS, uniChar, uniChar);
+
+  return FALSE;
+}
+
+#else
 BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
 {
 
@@ -2098,6 +2132,7 @@ BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
 
   return FALSE;
 }
+#endif
 
 
 
@@ -2211,7 +2246,50 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_PAINT:
             result = OnPaint();
             break;
+#ifdef DEBUG_TAGUE
+		case WM_SYSCHAR:
+		case WM_CHAR: 
+			{
+				unsigned char	ch = (unsigned char)wParam;
+				UINT			char_result;
 
+				//
+				// check first for backspace or return, these are currently being handled on
+				// the WM_KEYDOWN
+				//
+				if (ch==0x0d || ch==0x08) {
+					result = PR_TRUE;
+					break;
+				}
+
+				//
+				// check first to see if we have the first byte of a two-byte DBCS sequence
+				//  if so, store it away and do nothing until we get the second sequence
+				//
+				if (IsDBCSLeadByte(ch) && !mHaveDBCSLeadByte) {
+					mHaveDBCSLeadByte = TRUE;
+					mDBCSLeadByte = ch;
+					result = PR_TRUE;
+					break;
+				}
+
+				//
+				// at this point, we may have the second byte of a DBCS sequence or a single byte
+				// character, depending on the previous message.  Check and handle accordingly
+				//
+				if (mHaveDBCSLeadByte) {
+					char_result = (mDBCSLeadByte << 8) | ch;
+					mHaveDBCSLeadByte = FALSE;
+					mDBCSLeadByte = 0;
+					result = OnChar(char_result,true);
+				} else {
+					char_result = ch;
+					result = OnChar(char_result,false);
+				}
+
+				break;
+			}
+#else
         case WM_SYSCHAR:
         case WM_CHAR:
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -2234,7 +2312,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				      result = PR_FALSE;
              
           break;
-
+#endif
         // Let ths fall through if it isn't a key pad
         case WM_SYSKEYUP:
             // if it's a keypad key don't process a WM_CHAR will come or...oh well...
