@@ -63,6 +63,10 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
+nsIFrame * gCurrentlyFocusedTargetFrame = 0; 
+nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
+nsIPresContext * gCurrentlyFocusedPresContext = 0; // Strong
+
 nsIContent * gLastFocusedContent = 0;
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 
@@ -123,6 +127,8 @@ nsEventStateManager::~nsEventStateManager()
   if(mInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
+
+	NS_IF_RELEASE(gCurrentlyFocusedPresContext);
   }
 }
 
@@ -1718,6 +1724,26 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   return NS_OK;
 }
 
+// This API crosses ESM instances to give the currently focused frame, no matter what ESM instace
+// you call it from.
+NS_IMETHODIMP
+nsEventStateManager::GetFocusedEventTarget(nsIFrame **aFrame)
+{
+  if (!gCurrentlyFocusedTargetFrame && gCurrentlyFocusedContent && gCurrentlyFocusedPresContext) {
+	nsCOMPtr<nsIPresShell> shell;
+    if (gCurrentlyFocusedPresContext) {
+      nsresult rv = gCurrentlyFocusedPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv) && shell){
+        shell->GetPrimaryFrameFor(gCurrentlyFocusedContent, &gCurrentlyFocusedTargetFrame);
+      }
+    }
+  }
+
+  *aFrame = gCurrentlyFocusedTargetFrame;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsEventStateManager::GetEventTargetContent(nsIContent** aContent)
 {
@@ -1803,6 +1829,12 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     notifyContent[3] = mCurrentFocus;
     mCurrentFocus = aContent;
     NS_IF_ADDREF(mCurrentFocus);
+
+	gCurrentlyFocusedContent = mCurrentFocus;
+
+	NS_IF_RELEASE(gCurrentlyFocusedPresContext);
+	gCurrentlyFocusedPresContext = mPresContext;
+	NS_IF_ADDREF(gCurrentlyFocusedPresContext);
   }
 
   if (aContent) { // notify about new content too
