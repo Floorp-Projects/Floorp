@@ -189,6 +189,14 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 NS_IMETHODIMP
 nsMsgSearchDBView::OnSearchDone(nsresult status)
 {
+  //we want to set imap delete model once the search is over because setting next
+  //message after deletion will happen before deleting the message and search scope
+  //can change with every search.
+  mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;  //set to default in case it is non-imap folder
+  nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(0));
+  nsCOMPtr <nsIMsgFolder> curFolder = do_QueryInterface(curSupports);
+  if (curFolder)   
+    GetImapDeleteModel(curFolder);
   return NS_OK;
 }
 
@@ -252,18 +260,12 @@ nsresult nsMsgSearchDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex 
 {
     nsresult rv;
     InitializeGlobalsForDeleteAndFile(indices, numIndices);
-    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[0]));
-    nsCOMPtr <nsIMsgFolder> curFolder = do_QueryInterface(curSupports, &rv);
-    if (NS_SUCCEEDED(rv) && curFolder)
-    {   
-        rv = GetImapDeleteModel(curFolder);
-        if (NS_SUCCEEDED(rv) && mDeleteModel != nsMsgImapDeleteModels::MoveToTrash)
-              deleteStorage = PR_TRUE;
-    }
+    if (mDeleteModel != nsMsgImapDeleteModels::MoveToTrash)
+      deleteStorage = PR_TRUE;
     if (!deleteStorage)
-        rv = ProcessRequestsInOneFolder(window);
+      rv = ProcessRequestsInOneFolder(window);
     else
-        rv = ProcessRequestsInAllFolders(window);
+      rv = ProcessRequestsInAllFolders(window);
     return rv;
 }
 

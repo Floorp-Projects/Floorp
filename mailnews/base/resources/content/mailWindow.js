@@ -428,6 +428,10 @@ nsMessagePaneController.prototype =
   },
   clearMsgPane: function()
   {
+    if (gDBView)
+      setTitleFromFolder(gDBView.msgFolder,null);
+    else
+      setTitleFromFolder(null,null);
     ClearMessagePane();
   }
 }

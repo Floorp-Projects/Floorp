@@ -259,7 +259,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     {
       var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
       var outlinerSelection = outlinerView.selection;
-      if (gNextMessageViewIndexAfterDelete != -1) 
+      if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
       {
         viewSize = outlinerView.rowCount;
         if (gNextMessageViewIndexAfterDelete >= viewSize) 
@@ -267,7 +267,15 @@ function HandleDeleteOrMoveMsgCompleted(folder)
           if (viewSize > 0)
             gNextMessageViewIndexAfterDelete = viewSize - 1;
           else
-            gNextMessageViewIndexAfterDelete = -1;
+          {           
+            gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
+
+            //there is nothing to select viewSize is 0
+
+            outlinerSelection.clearSelection();
+            setTitleFromFolder(folder,null);
+            ClearMessagePane();
+          }
         }
       }
 
@@ -275,7 +283,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
       // the selection then add the next message to select. This just generates
       // an extra round of command updating notifications that we are trying to
       // optimize away.
-      if (gNextMessageViewIndexAfterDelete != -1) 
+      if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
       {
         // when deleting a message we don't update the commands when the selection goes to 0
         // (we have a hack in nsMsgDBView which prevents that update) so there is no need to
@@ -294,12 +302,6 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 
         EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
         gDBView.suppressCommandUpdating = false;
-      }
-      else 
-      {
-        outlinerSelection.clearSelection(); /* clear selection in either case  */
-        setTitleFromFolder(folder,null);
-        ClearMessagePane();
       }
     }
       gNextMessageViewIndexAfterDelete = -2;  

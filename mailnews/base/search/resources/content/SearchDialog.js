@@ -41,7 +41,7 @@ var gStatusFeedback = new nsMsgStatusFeedback;
 var gNumOfSearchHits = 0;
 var RDF;
 var gSearchBundle;
-var gNextMessageViewIndexAfterDelete = -1;
+var gNextMessageViewIndexAfterDelete = -2;
 
 // Datasource search listener -- made global as it has to be registered
 // and unregistered in different functions.
@@ -51,6 +51,8 @@ var gViewSearchListener;
 var gSearchStopButton;
 var gSearchSessionFolderListener;
 var gMailSession;
+
+const nsMsgViewIndex_None = 0xFFFFFFFF;
 
 // Controller object for search results thread pane
 var nsSearchResultsController =
@@ -549,13 +551,12 @@ function MsgDeleteSelectedMessages()
 
 function SetNextMessageAfterDelete()
 {
-    dump("setting next msg view index after delete to " + gSearchView.msgToSelectAfterDelete + "\n");
     gNextMessageViewIndexAfterDelete = gSearchView.msgToSelectAfterDelete;
 }
 
 function HandleDeleteOrMoveMessageFailed(folder)
 {
-    gNextMessageViewIndexAfterDelete = -1;
+    gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
 }
 
 
@@ -565,19 +566,23 @@ function HandleDeleteOrMoveMessageCompleted(folder)
         var outlinerSelection = outlinerView.selection;
         viewSize = outlinerView.rowCount;
 
-        if (gNextMessageViewIndexAfterDelete >= viewSize)
+        if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None && gNextMessageViewIndexAfterDelete >= viewSize)
         {
             if (viewSize > 0)
                 gNextMessageViewIndexAfterDelete = viewSize - 1;
             else
-                gNextMessageViewIndexAfterDelete = -1;
+            {
+                gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
+                //clear the selection
+                outlinerSelection.clearSelection();
+            }
         }
 
         // if we are about to set the selection with a new element then DON'T clear
         // the selection then add the next message to select. This just generates
         // an extra round of command updating notifications that we are trying to
         // optimize away.
-        if (gNextMessageViewIndexAfterDelete != -1) {
+        if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) {
             outlinerSelection.select(gNextMessageViewIndexAfterDelete);
             // since gNextMessageViewIndexAfterDelete probably has the same value
             // as the last index we had selected, the outliner isn't generating a new
@@ -588,8 +593,6 @@ function HandleDeleteOrMoveMessageCompleted(folder)
 
             EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
         }
-        else
-            outlinerSelection.clearSelection(); /* clear selection in either case  */
 
 }
 
