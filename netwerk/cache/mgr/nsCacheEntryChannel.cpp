@@ -36,8 +36,7 @@ nsCacheEntryChannel::nsCacheEntryChannel(
         nsILoadGroup* aLoadGroup):
     nsChannelProxy(aChannel), 
     mCacheEntry(aCacheEntry), 
-    mLoadGroup(aLoadGroup), 
-    mLoadAttributes(0)
+    mLoadGroup(aLoadGroup)
 {
     NS_ASSERTION(aCacheEntry->mChannelCount < 0xFF, "Overflowed channel counter");
     mCacheEntry->mChannelCount++;
@@ -197,10 +196,6 @@ nsCacheEntryChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aConte
 
     mCacheEntry->NoteAccess();
 
-    if (mLoadGroup) {
-        mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-    }
-
     rv = mChannel->AsyncRead(aListener, aContext);
 
     return rv;
@@ -226,15 +221,13 @@ nsCacheEntryChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsCacheEntryChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    *aLoadAttributes = mLoadAttributes;
-    return NS_OK;
+    return mChannel->GetLoadAttributes(aLoadAttributes);
 }
 
 NS_IMETHODIMP
 nsCacheEntryChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    mLoadAttributes = aLoadAttributes;
-    return NS_OK;
+    return mChannel->SetLoadAttributes(aLoadAttributes);
 }
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
