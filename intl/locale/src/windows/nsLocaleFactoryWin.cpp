@@ -29,6 +29,7 @@
 #include "nsDateTimeFormatWin.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsLocalefactoryWin.h"
+#include "nsLanguageAtomService.h"
 
 
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -37,6 +38,7 @@ NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
+NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
 
 
 nsLocaleWinFactory::nsLocaleWinFactory(const nsCID &aClass)   
@@ -77,6 +79,9 @@ nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kScriptableDateFormatCID)) {
      inst = NEW_SCRIPTABLE_DATEFORMAT();
+  }
+  else if (mClassID.Equals(kLanguageAtomServiceCID)) {
+     NS_NEWXPCOM(inst, nsLanguageAtomService);
   }
   else 
   {

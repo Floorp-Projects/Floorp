@@ -38,6 +38,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
+#include "nsILanguageAtomService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -49,6 +50,11 @@ NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+
+//
+// for language atoms
+//
+NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -213,6 +219,16 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register ScriptableDateFormat failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
+  //
+  // register the scriptable date time formatter
+  //
+  rv = compMgr->RegisterComponent(kLanguageAtomServiceCID,
+    "Language Atom Service", NS_LANGUAGEATOMSERVICE_PROGID, path, PR_TRUE,
+    PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+    "nsLocaleTest: Register LanguageAtomService failed.");
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -251,6 +267,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kScriptableDateFormatCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kLanguageAtomServiceCID, path);
 	if (NS_FAILED(rv)) goto done;
 
   done:
