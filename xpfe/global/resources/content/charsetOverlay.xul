@@ -14,7 +14,7 @@
 <html:script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
 	<!-- Charset Menu -->
-	<menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BSCharsetMenuRoot">
+	<menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot">
         <template>
             <rule>
 	            <menupopup>
@@ -24,7 +24,7 @@
         </template>
 
         <menupopup>
-  	    <menu value="More"  datasources="rdf:charset-menu" ref="NC:BMCharsetMenuRoot">
+  	    <menu value="More"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
 		            <menupopup>
