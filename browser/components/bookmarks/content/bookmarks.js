@@ -1091,17 +1091,6 @@ var BookmarksUtils = {
     }    
   },
 
-  getResource: function (aName)
-  {
-    if (aName == "LastModifiedDate" ||
-        aName == "LastVisitDate") {
-      return RDF.GetResource(WEB_NS + aName);
-    }
-    else {
-      return RDF.GetResource(NC_NS + aName);
-    }
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // Determine the rdf:type property for the given resource.
   resolveType: function (aResource)
@@ -1281,19 +1270,6 @@ var BookmarksUtils = {
       return false;
 
     return true;
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns true is aItem is a child of aContainer
-  isChildOfContainer: function (aItem, aContainer)
-  {
-    RDFC.Init(BMDS, aContainer);
-    var rChildren = RDFC.GetElements();
-    while (rChildren.hasMoreElements()) {
-      if (aItem == rChildren.getNext())
-        return true;
-    }
-    return false;
   },
 
   /////////////////////////////////////////////////////////////////////////////
