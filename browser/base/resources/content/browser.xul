@@ -18,23 +18,32 @@ Communications Corporation. Portions created by Netscape are
 Copyright (C) 1998-2000 Netscape Communications Corporation. All
 Rights Reserved.
 
-Contributor(s): ______________________________________. -->
+Contributor(s):
+  Dean Tessman <dean_tessman@hotmail.com>
+-->
 
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/securityOverlay.css" type="text/css"?> 
 
+<?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/viewZoomOverlay.xul"?>
+<?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
-%navigatorDTD;
-<!ENTITY % contextMenuDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
-%contextMenuDTD;
+<!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
+%buildDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
+<!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+%contentAreaCommandsDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
+<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
+%charsetDTD;
 ]>
 
 <window id="main-window"
@@ -56,129 +65,134 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/fullScreen.js"/>
-  
-  <script type="application/x-javascript" src="chrome://browser/content/nsBrowserStatusHandler.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/nsBrowserContentListener.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsBrowserStatusHandler.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsBrowserContentListener.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/findUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/personalToolbar.js"/>
-  
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js" />
+
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript">
-    // Global variable that holds the nsContextMenu instance.
-    var gContextMenu = null;
-    
-    // Global variable that caches the default search engine info
-    var gDefaultEngine = null;
-    
-    var gBookmarkPopup = null;
-
-  </script>
-  <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
 
-  <stringbundle id="bundle_navigator" src="chrome://browser/locale/navigator.properties"/>
+  <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
+  <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  <stringbundle id="bookmarksbundle"/>
+  <stringbundle id="bundle_viewZoom"/>
 
-  <commands id="bookmarksItems">    
-    <commandset commandupdater="true"
-                events="focus"
-                oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-    <commandset commandupdater="true"
-                events="select"
-                oncommandupdate="goUpdateSelectEditMenuItems()"/>
-    <commandset commandupdater="true"
-                events="undo"
-                oncommandupdate="goUpdateUndoEditMenuItems()"/>
-    <commandset commandupdater="true"
-                events="clipboard"
-                oncommandupdate="goUpdatePasteMenuItems()"/>
-    <command id="cmd_newNavigator"
-             oncommand="OpenBrowserWindow()"/>
-    <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
+  <commandset id="globalEditMenuItems"
+              commandupdater="true"
+              events="focus"
+              oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+  <commandset id="selectEditMenuItems"
+              commandupdater="true"
+              events="select"
+              oncommandupdate="goUpdateSelectEditMenuItems()"/>
+  <commandset id="undoEditMenuItems"
+              commandupdater="true"
+              events="undo"
+              oncommandupdate="goUpdateUndoEditMenuItems()"/>
+  <commandset id="clipboardEditMenuItems"
+              commandupdater="true"
+              events="clipboard"
+              oncommandupdate="goUpdatePasteMenuItems()"/>
+  <command id="cmd_newNavigator"
+           oncommand="OpenBrowserWindow()"/>
+  <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
 
-    <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
-    <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
-    <command id="Browser:Open" oncommand="ShowAndSelectContentsOfURLBar();"/>
-    <command id="Browser:Print" oncommand="BrowserPrint();"/>
-    <command id="cmd_quit"/>
-    <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
-    <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
+  <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
+  <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
+  <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
+  <command id="Browser:PrintSetup" oncommand="BrowserPrintSetup();"/>
+  <command id="Browser:Print" oncommand="BrowserPrint();"/>
+  <command id="Browser:PrintPreview" oncommand="BrowserPrintPreview();"/>
+  <command id="cmd_quit"/>
+  <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
+  <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
 
-    <command id="cmd_undo" 
-             oncommand="goDoCommand('cmd_undo')"
-             disabled="true"/>
-    <command id="cmd_redo" 
-             oncommand="goDoCommand('cmd_redo')"
-             disabled="true"/>
-    <command id="cmd_cut" 
-             oncommand="goDoCommand('cmd_cut')"
-             disabled="true"/>
-    <command id="cmd_copy" 
-             oncommand="goDoCommand('cmd_copy')"
-             disabled="true"/>
-    <command id="cmd_paste" 
-             oncommand="goDoCommand('cmd_paste')"
-             disabled="true"/>
-    <command id="cmd_delete"
-             oncommand="goDoCommand('cmd_delete')"
-             valueDefault="&deleteCmd.label;"
-             disabled="true"/>
-    <command id="cmd_selectAll"
-             oncommand="goDoCommand('cmd_selectAll')"
-             disabled="true"
-             observes="isImage"/>
+  <command id="cmd_copyLink"
+           oncommand="goDoCommand('cmd_copyLink')"
+           disabled="false"/>
+  <command id="cmd_copyImageLocation"
+           oncommand="goDoCommand('cmd_copyImageLocation')"
+           disabled="false"/>
+  <command id="cmd_copyImageContents"
+           oncommand="goDoCommand('cmd_copyImageContents')"
+           disabled="false"/>
+  <command id="cmd_undo" 
+           oncommand="goDoCommand('cmd_undo')"
+           disabled="true"/>
+  <command id="cmd_redo" 
+           oncommand="goDoCommand('cmd_redo')"
+           disabled="true"/>
+  <command id="cmd_cut" 
+           oncommand="goDoCommand('cmd_cut')"
+           disabled="true"/>
+  <command id="cmd_copy" 
+           oncommand="goDoCommand('cmd_copy')"
+           disabled="true"/>
+  <command id="cmd_paste" 
+           oncommand="goDoCommand('cmd_paste')"
+           disabled="true"/>
+  <command id="cmd_delete"
+           oncommand="goDoCommand('cmd_delete')"
+           valueDefault="&deleteCmd.label;"
+           disabled="true"/>
+  <command id="cmd_selectAll" observes="isImage"
+           oncommand="goDoCommand('cmd_selectAll')"
+           disabled="true"/>
 
-    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
-    <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
-    <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-    <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
-    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
-    <command id="Browser:AddBookmark" oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
-    <command id="Browser:AddBookmarkAs" oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, true);"/>
-    <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();" />
-    <command id="Browser:Home"    oncommand="BrowserHome();"/>
-    <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
-    <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
-    <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-    <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-    <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
-    <command id="cmd_history" oncommand="toHistory();"/>
-    <command id="cmd_stop" oncommand="BrowserStop();" disabled="true"/>
-    <command id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
-    <command id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-    <command id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
-    <command id="cmd_viewlocationbar" oncommand="goToggleToolbar('LocationToolbar','cmd_viewlocationbar');" checked="true"/>
-  </commands>
-
+  <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+  <command id="View:PageInfo"   />
+  <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
+  
+  <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
+  <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
+  
+  <command id="Browser:AddBookmark" label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" 
+           oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
+  <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;"
+           accesskey="&addCurPageAsCmd.accesskey;"
+           oncommand="addBookmarkAs();"/>
+  <command id="Browser:AddGroupmarkAs" label="&addCurTabsAsCmd.label;"
+           accesskey="&addCurTabsAsCmd.accesskey;"
+           oncommand="addGroupmarkAs(); event.preventBubble();"/>
+  <command id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" 
+           oncommand="BrowserEditBookmarks();" />
+  
+  <command id="Browser:Home"    oncommand="BrowserHome();"/>
+  <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
+  <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
+  <commandset id="viewZoomCommands"/>
+    
   <broadcaster id="canGoBack"    disabled="true"/>
   <broadcaster id="canGoForward" disabled="true"/>
   <broadcaster id="Communicator:WorkMode"
                label="&offlineGoOfflineCmd.label;"
                oncommand="toggleOfflineStatus();"/>
+  <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
+  <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+  <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
   <broadcaster id="isImage"/>
-   
+
   <keyset>
     <key id="key_newNavigator"
-         key="&browserCmd.commandkey;"
+         key="&newNavigatorCmd.key;"
          command="cmd_newNavigator"
          modifiers="accel"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
-    <key key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel"/>
-    <key key="&openCmd2.commandkey;" command="Browser:Open" modifiers="alt"/>
+    <key id="focusURLBar"      key="&openCmd.commandkey;" oncommand="ShowAndSelectContentsOfURLBar();"
+         modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
+    <key id="key_editPage"       key="&editPageCmd.commandkey;" command="Browser:EditPage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
     <key id="key_close"/>
     <key id="key_closeWindow"/>
@@ -199,26 +213,24 @@ Contributor(s): ______________________________________. -->
     <key id="key_paste"
          key="&pasteCmd.key;"
          modifiers="accel"/>
-    <key id="key_selectAll"
-         key="&selectAllCmd.key;"
-         modifiers="accel"/>
+    <key id="key_delete"/>
+    <key id="key_selectAll"/>
   
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
+
     <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
+
     <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel"/>
     <key id="addBookmarkAsKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel,shift"/>
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
-    <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
-    <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
-    <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key                          key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel,shift"/>
-    <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key                          key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
-    <key id="key_history" key="&historyCmd.commandkey;" modifiers="accel" command="cmd_history"/>    
+
+    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+    <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
+    <keyset id="viewZoomKeys"/>
     <keyset id="navigationKeys"/>  
   </keyset>
   
@@ -226,171 +238,192 @@ Contributor(s): ______________________________________. -->
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-  <popup id="contentAreaContextMenu"
-         onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-         onpopuphiding="gContextMenu = null;">
-    <menuitem id="context-openlinkintab"
-              label="&openLinkCmdInTab.label;"
-              accesskey="&openLinkCmdInTab.accesskey;"
-              oncommand="gContextMenu.openLinkInTab();"/>
-    <menuitem id="context-openlink"
-              label="&openLinkCmd.label;"
-              accesskey="&openLinkCmd.accesskey;"
-              oncommand="gContextMenu.openLink();"/>
-    <menuseparator id="context-sep-open"/>
-    <menuitem id="context-bookmarklink"
-              label="&bookmarkLinkCmd.label;"
-              accesskey="&bookmarkLinkCmd.accesskey;"
-              oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
-                                                    gContextMenu.linkText(), 
-                                                    undefined, false);"/>
-    <menuitem id="context-savelink"
-              label="&saveLinkCmd.label;"
-              accesskey="&saveLinkCmd.accesskey;"
-              oncommand="gContextMenu.saveLink();"/>
-    <menuitem id="context-copyemail"
-              label="&copyEmailCmd.label;"
-              accesskey="&copyEmailCmd.accesskey;"
-              oncommand="gContextMenu.copyEmail();"/>
-    <menuitem id="context-copylink"
-              label="&copyLinkCmd.label;"
-              accesskey="&copyLinkCmd.accesskey;"
-              oncommand="goDoCommand('cmd_copyLink');"/>
-    <menuseparator id="context-sep-copylink"/>
-    <menuitem id="context-viewimage"
-              label="&viewImageCmd.label;"
-              accesskey="&viewImageCmd.accesskey;"
-              oncommand="gContextMenu.viewImage();"/>
-    <menuitem id="context-copyimage"
-              label="&copyImageCmd.label;"
-              accesskey="&copyImageCmd.accesskey;"
-              oncommand="goDoCommand('cmd_copyImageLocation');"/>
-    <menuseparator id="context-sep-copyimage"/>
-    <menuitem id="context-saveimage"
-              label="&saveImageCmd.label;"
-              accesskey="&saveImageCmd.accesskey;"
-              oncommand="gContextMenu.saveImage();"/>
-    <menuitem id="context-setWallpaper"
-              label="&setWallpaperCmd.label;"
-              accesskey="&setWallpaperCmd.accesskey;"
-              oncommand="gContextMenu.setWallpaper();"/>
-    <menuseparator id="context-sep-setWallpaper"/>
-    <menuitem id="context-back"
-              label="&goBackCmd.label;"
-              accesskey="&goBackCmd.accesskey;"
-              oncommand="BrowserBack()"/>
-    <menuitem id="context-forward"
-              label="&goForwardCmd.label;"
-              accesskey="&goForwardCmd.accesskey;"
-              oncommand="BrowserForward()"/>
-    <menuitem id="context-reload"
-              label="&reloadCmd.label;"
-              accesskey="&reloadCmd.accesskey;"
-              oncommand="BrowserReload();"/>
-    <menuitem id="context-stop"
-              label="&stopCmd.label;"
-              accesskey="&stopCmd.accesskey;"
-              command="cmd_stop"/>
-    <menuseparator id="context-sep-stop"/>
-    <menuitem id="context-bookmarkpage"
-              label="&bookmarkPageCmd.label;"
-              accesskey="&bookmarkPageCmd.accesskey;"
-              oncommand="gContextMenu.addBookmark();"/>
-    <menuitem id="context-savepage"
-              label="&savePageCmd.label;"
-              accesskey="&savePageCmd.accesskey;"
-              oncommand="saveDocument(window._content.document);"/>
-    <menuseparator id="context-sep-viewbgimage"/>
-    <menuitem id="context-viewbgimage"
-              label="&viewBGImageCmd.label;"
-              accesskey="&viewBGImageCmd.accesskey;"
-              oncommand="gContextMenu.viewBGImage();"/>
-    <menuitem id="context-undo"
-              label="&undoCmd.label;"
-              accesskey="&undoCmd.accesskey;"
-              command="cmd_undo"/>
-    <menuseparator id="context-sep-undo"/>
-    <menuitem id="context-cut"
-              label="&cutCmd.label;"
-              accesskey="&cutCmd.accesskey;"
-              command="cmd_cut"/>
-    <menuitem id="context-copy"
-              label="&copyCmd.label;"
-              accesskey="&copyCmd.accesskey;"
-              command="cmd_copy"/>
-    <menuitem id="context-paste"
-              label="&pasteCmd.label;"
-              accesskey="&pasteCmd.accesskey;"
-              command="cmd_paste"/>
-    <menuitem id="context-delete"
-              label="&deleteCmd.label;"
-              accesskey="&deleteCmd.accesskey;"
-              command="cmd_delete"/>
-    <menuseparator id="context-sep-paste"/>
-    <menuitem id="context-selectall"
-              label="&selectAllCmd.label;"
-              accesskey="&selectAllCmd.accesskey;"
-              command="cmd_selectAll"/>      
-    <menuseparator id="context-sep-selectall"/>
-    <menuitem id="context-searchselect"
-              accesskey="&search.accesskey;"
-              oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
-    <menuseparator id="frame-sep"/>
-    <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
-      <menupopup id="frame_popup">
-        <menuitem label="&showOnlyThisFrameCmd.label;"
-                  accesskey="&showOnlyThisFrameCmd.accesskey;"
-                  oncommand="gContextMenu.showOnlyThisFrame();"/>
-        <menuitem label="&openFrameCmdInTab.label;"
-                  accesskey="&openFrameCmdInTab.accesskey;"
-                  oncommand="gContextMenu.openFrameInTab();"/>
-        <menuitem label="&openFrameCmd.label;"
-                  accesskey="&openFrameCmd.accesskey;"
-                  oncommand="gContextMenu.openFrame();"/>
-        <menuseparator/>
-        <menuitem id="context-reload-frame"
-                  label="&reloadFrameCmd.label;"
-                  accesskey="&reloadFrameCmd.accesskey;"
-                  oncommand="gContextMenu.reloadFrame();"/>
-        <menuseparator/>
-        <menuitem label="&bookmarkFrameCmd.label;"
-                  accesskey="&bookmarkFrameCmd.accesskey;"
-                  oncommand="gContextMenu.addBookmarkForFrame();"/>
-        <menuitem id="saveframeas"
-                  label="&saveFrameCmd.label;"
-                  accesskey="&saveFrameCmd.accesskey;"
-                  oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
-        <menuseparator/>
-        <menuitem label="&viewFrameSourceCmd.label;"
-                  accesskey="&viewFrameSourceCmd.accesskey;"
-                  oncommand="gContextMenu.viewFrameSource();"/>
-        <menuitem label="&viewFrameInfoCmd.label;"
-                  accesskey="&viewFrameInfoCmd.accesskey;"
-                  oncommand="gContextMenu.viewFrameInfo();"/>        
-      </menupopup>
-    </menu>
-    <menuseparator id="context-sep-properties"/>
-    <menuitem id="context-viewsource"
-              label="&viewPageSourceCmd.label;"
-              accesskey="&viewPageSourceCmd.accesskey;"
-              oncommand="BrowserViewSourceOfDocument(_content.document);"/>
-    <menuitem id="context-viewinfo"
-              label="&viewPageInfoCmd.label;"
-              accesskey="&viewPageInfoCmd.accesskey;"
-              oncommand="gContextMenu.viewInfo();"/>
-    <menuitem id="context-metadata"
-              label="&metadataCmd.label;"
-              accesskey="&metadataCmd.accesskey;"
-              oncommand="gContextMenu.showMetadata();"/>
-  </popup>
-  <popup id="bmContext"/>
+  <popupset id="bookmarksPopupset"/>
+ 
+    <!-- This is a generic context menu for a content area. It contains 
+         each and every possible menu choice.  The appropriate items are
+         hidden/shown upon display, based on what the user has clicked-on.
+     -->
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
+           onpopuphiding="gContextMenu = null;">
+      <menuitem id="context-openlink"
+                label="&openLinkCmd.label;"
+                accesskey="&openLinkCmd.accesskey;"
+                oncommand="gContextMenu.openLink();"/>
+      <menuitem id="context-openlinkintab"
+                label="&openLinkCmdInTab.label;"
+                accesskey="&openLinkCmdInTab.accesskey;"
+                oncommand="gContextMenu.openLinkInTab();"/>
+      <menuseparator id="context-sep-open"/>
+      <menuitem id="context-bookmarklink"
+                label="&bookmarkLinkCmd.label;"
+                accesskey="&bookmarkLinkCmd.accesskey;"
+                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                                                      gContextMenu.linkText(), 
+                                                      undefined, false);"/>
+      <menuitem id="context-savelink"
+                label="&saveLinkCmd.label;"
+                accesskey="&saveLinkCmd.accesskey;"
+                oncommand="gContextMenu.saveLink();"/>
+      <menuitem id="context-copyemail"
+                label="&copyEmailCmd.label;"
+                accesskey="&copyEmailCmd.accesskey;"
+                oncommand="gContextMenu.copyEmail();"/>
+      <menuitem id="context-copylink"
+                label="&copyLinkCmd.label;"
+                accesskey="&copyLinkCmd.accesskey;"
+                command="cmd_copyLink"/>
+      <menuseparator id="context-sep-copylink"/>
+      <menuitem id="context-viewimage"
+                label="&viewImageCmd.label;"
+                accesskey="&viewImageCmd.accesskey;"
+                oncommand="gContextMenu.viewImage();"/>
+      <menuitem id="context-copyimage"
+                label="&copyImageCmd.label;"
+                accesskey="&copyImageCmd.accesskey;"
+                command="cmd_copyImageLocation"/>
+      <menuseparator id="context-sep-copyimage"/>
+      <menuitem id="context-saveimage"
+                label="&saveImageCmd.label;"
+                accesskey="&saveImageCmd.accesskey;"
+                oncommand="gContextMenu.saveImage();"/>
+      <menuitem id="context-setWallpaper"
+                label="&setWallpaperCmd.label;"
+                accesskey="&setWallpaperCmd.accesskey;"
+                oncommand="gContextMenu.setWallpaper();"/>
+      <menuseparator id="context-sep-image"/>
+      <menuitem id="context-back"
+                label="&goBackCmd.label;"
+                accesskey="&goBackCmd.accesskey;"
+                oncommand="BrowserBack()"/>
+      <menuitem id="context-forward"
+                label="&goForwardCmd.label;"
+                accesskey="&goForwardCmd.accesskey;"
+                oncommand="BrowserForward()"/>
+      <menuitem id="context-reload"
+                label="&reloadCmd.label;"
+                accesskey="&reloadCmd.accesskey;"
+                oncommand="BrowserReload();"/>
+      <menuitem id="context-stop"
+                label="&stopCmd.label;"
+                accesskey="&stopCmd.accesskey;"
+                disabled="true"
+                oncommand="BrowserStop();"/>
+      <menuseparator id="context-sep-stop"/>
+      <menuitem id="context-bookmarkpage"
+                label="&bookmarkPageCmd.label;"
+                accesskey="&bookmarkPageCmd.accesskey;"
+                oncommand="gContextMenu.addBookmark();"/>
+      <menuitem id="context-savepage"
+                label="&savePageCmd.label;"
+                accesskey="&savePageCmd.accesskey;"
+                oncommand="saveDocument(window._content.document);"/>
+      <menuseparator id="context-sep-viewbgimage"/>
+      <menuitem id="context-viewbgimage"
+                label="&viewBGImageCmd.label;"
+                accesskey="&viewBGImageCmd.accesskey;"
+                oncommand="gContextMenu.viewBGImage();"/>
+      <menuitem id="context-undo"
+                label="&undoCmd.label;"
+                accesskey="&undoCmd.accesskey;"
+                command="cmd_undo"/>
+      <menuseparator id="context-sep-undo"/>
+      <menuitem id="context-cut"
+                label="&cutCmd.label;"
+                accesskey="&cutCmd.accesskey;"
+                command="cmd_cut"/>
+      <menuitem id="context-copy"
+                label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"/>
+      <menuitem id="context-paste"
+                label="&pasteCmd.label;"
+                accesskey="&pasteCmd.accesskey;"
+                command="cmd_paste"/>
+      <menuitem id="context-delete"
+                label="&deleteCmd.label;"
+                accesskey="&deleteCmd.accesskey;"
+                command="cmd_delete"/>
+      <menuseparator id="context-sep-paste"/>
+      <menuitem id="context-selectall"
+                label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>      
+      <menuseparator id="context-sep-selectall"/>
+      <menuitem id="context-searchselect"
+                accesskey="&search.accesskey;"
+                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
+      <menuseparator id="frame-sep"/>
+      <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
+        <menupopup id="frame_popup">
+          <menuitem label="&showOnlyThisFrameCmd.label;"
+                    accesskey="&showOnlyThisFrameCmd.accesskey;"
+                    oncommand="gContextMenu.showOnlyThisFrame();"/>
+          <menuitem label="&openFrameCmd.label;"
+                    accesskey="&openFrameCmd.accesskey;"
+                    oncommand="gContextMenu.openFrame();"/>
+          <menuitem label="&openFrameCmdInTab.label;"
+                    accesskey="&openFrameCmdInTab.accesskey;"
+                    oncommand="gContextMenu.openFrameInTab();"/>
+          <menuseparator/>
+          <menuitem id="context-reload-frame"
+                    label="&reloadFrameCmd.label;"
+                    accesskey="&reloadFrameCmd.accesskey;"
+                    oncommand="gContextMenu.reloadFrame();"/>
+          <menuseparator/>
+          <menuitem label="&bookmarkFrameCmd.label;"
+                    accesskey="&bookmarkFrameCmd.accesskey;"
+                    oncommand="gContextMenu.addBookmarkForFrame();"/>
+          <menuitem id="saveframeas"
+                    label="&saveFrameCmd.label;"
+                    accesskey="&saveFrameCmd.accesskey;"
+                    oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
+          <menuseparator/>
+          <menuitem label="&viewFrameSourceCmd.label;"
+                    accesskey="&viewFrameSourceCmd.accesskey;"
+                    oncommand="gContextMenu.viewFrameSource();"/>
+          <menuitem label="&viewFrameInfoCmd.label;"
+                    accesskey="&viewFrameInfoCmd.accesskey;"
+                    oncommand="gContextMenu.viewFrameInfo();"/>        
+        </menupopup>
+      </menu>
+      <menuseparator id="context-sep-properties"/>
+      <menuitem id="context-viewpartialsource-selection"
+                label="&viewPartialSourceForSelectionCmd.label;"
+                accesskey="&viewPartialSourceCmd.accesskey;"
+                oncommand="gContextMenu.viewPartialSource('selection');"/>
+      <menuitem id="context-viewpartialsource-mathml"
+                label="&viewPartialSourceForMathMLCmd.label;"
+                accesskey="&viewPartialSourceCmd.accesskey;"
+                oncommand="gContextMenu.viewPartialSource('mathml');"/>
+      <menuitem id="context-viewsource"
+                label="&viewPageSourceCmd.label;"
+                accesskey="&viewPageSourceCmd.accesskey;"
+                oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+      <menuitem id="context-viewinfo"
+                label="&viewPageInfoCmd.label;"
+                accesskey="&viewPageInfoCmd.accesskey;"
+                oncommand="gContextMenu.viewInfo();"/>
+      <menuitem id="context-metadata"
+                label="&metadataCmd.label;"
+                accesskey="&metadataCmd.accesskey;"
+                oncommand="gContextMenu.showMetadata();"/>
+    </popup>
 
-  <toolbox class="toolbox-top" deferattached="true">
-      <menubar id="main-menubar" class="chromeclass-menubar" grippytooltiptext="&menuBar.tooltip;">
-      <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
-        <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
-            <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
-            <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
+  <toolbox id="navigator-toolbox" class="toolbox-top">
+    <!-- Menu -->
+      <menubar id="main-menubar" class="chromeclass-menubar">
+        <menu id="menu_File"
+              label="&fileMenu.label;"
+              accesskey="&fileMenu.accesskey;">
+          <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
+            <menuitem id="menu_newNavigator"
+                      label="&newNavigatorCmd.label;"
+                      accesskey="&newNavigatorCmd.accesskey;"
+                      key="key_newNavigator"
+                      command="cmd_newNavigator"/>
+            <menuitem id="menu_newNavigatorTab" command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                       label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
             <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
             <menuitem id="menu_close"/>
@@ -399,9 +432,9 @@ Contributor(s): ______________________________________. -->
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
             <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
             <menuseparator/>
-            <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
-            <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
-            <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
+            <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
+            <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
+            <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
             <menuseparator/>
             <menuitem id="offlineGoOfflineCmd"
                       label="&offlineGoOfflineCmd.label;"
@@ -410,78 +443,84 @@ Contributor(s): ______________________________________. -->
           </menupopup>
         </menu>
     
-        <menu label="&editMenu.label;"
+        <menu id="menu_Edit"
+              label="&editMenu.label;"
               accesskey="&editMenu.accesskey;">
-          <menupopup>
-            <menuitem label="&undoCmd.label;"
+          <menupopup id="menu_Edit_Popup">
+            <menuitem id="menu_undo"
+                      label="&undoCmd.label;"
                       key="key_undo"
                       accesskey="&undoCmd.accesskey;"
                       command="cmd_undo"/>
-            <menuitem label="&redoCmd.label;"
+            <menuitem id="menu_redo"
+                      label="&redoCmd.label;"
                       key="key_redo"
                       accesskey="&redoCmd.accesskey;"
                       command="cmd_redo"/>
             <menuseparator/>
-            <menuitem label="&cutCmd.label;"
+            <menuitem id="menu_cut"
+                      label="&cutCmd.label;"
                       key="key_cut"
                       accesskey="&cutCmd.accesskey;"
                       command="cmd_cut"/>
-            <menuitem label="&copyCmd.label;"
+            <menuitem id="menu_copy"
+                      label="&copyCmd.label;"
                       key="key_copy"
                       accesskey="&copyCmd.accesskey;"
                       command="cmd_copy"/>
-            <menuitem label="&pasteCmd.label;"
+            <menuitem id="menu_paste"
+                      label="&pasteCmd.label;"
                       key="key_paste"
                       accesskey="&pasteCmd.accesskey;"
                       command="cmd_paste"/>
-            <menuitem label="&deleteCmd.label;"
+            <menuitem id="menu_delete"
+                      label="&deleteCmd.label;"
                       key="key_delete"
                       accesskey="&deleteCmd.accesskey;"
                       command="cmd_delete"/>
             <menuseparator/>
-            <menuitem label="&selectAllCmd.label;"
+            <menuitem id="menu_selectAll"
+                      label="&selectAllCmd.label;"
                       key="key_selectAll"
                       accesskey="&selectAllCmd.accesskey;"
                       command="cmd_selectAll"/>
             <menuseparator/>
-            <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-            <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
-            <menuseparator/> 
-            <menuitem label="&preferencesCmd.label;"
-                      key="key_preferences"
+            <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
+            <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+            <menuseparator id="menu_PrefsSeparator"/> 
+            <menuitem id="menu_preferences"
+                      label="&preferencesCmd.label;"
                       accesskey="&preferencesCmd.accesskey;"
-                      oncommand="goPreferences('navigator.xul',
-                                               'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
+                      oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
           </menupopup>
         </menu>
     
-        <menu accesskey="&viewMenu.accesskey;" label="&viewMenu.label;">
-          <menupopup>
-            <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;">
-              <menupopup onpopupshowing="updateToolbarStates(this);"> 
-                <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewnavbar"  />
-                <menuitem label="&locationbarCmd.label;" accesskey="&locationbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewlocationbar"/>
-                <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewpersonaltoolbar" />
-                <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewtaskbar" />
+        <menu id="menu_View" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+          <menupopup id="menu_View_Popup">
+            <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
+              <menupopup id="view_toolbars_popup" onpopupshowing="updateToolbarStates(this);"> 
+                <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
+                <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
+                <menuitem id="menuitem_showhide_tabbar" label="&tabbarCmd.label;" accesskey="&tabbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="showHideTabbar();" checked="true"/>
+                <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
+                <menuitem label="&componentbarCmd.label;" accesskey="&componentbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewcomponentbar"/>
               </menupopup>
             </menu>   
             <menuitem id="menuitem_fullScreen" accesskey="&fullScreenCmd.accesskey;"
                       label="&fullScreenCmd.label;" key="key_fullScreen"
                       command="View:FullScreen" hidden="true"/>
-            <menuseparator/>
+            <menuseparator />
+            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="cmd_stop" key="key_stop"/>
-            <menuseparator/>
-            <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;" observes="isImage">
-              <menupopup id="menu_textZoomPopup" onpopupshowing="updateTextZoomMenu();">
-                <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" command="cmd_textZoomReduce"/>
-                <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;" command="cmd_textZoomEnlarge"/>
-                <menuseparator/>
-              </menupopup>
-            </menu>
-            <menu label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)"
-                  onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');"
-                  observes="isImage">
+            <menuseparator />
+      
+            <!-- overlayed from viewZoomOverlay.xul -->
+            <menu id="menu_textZoom" observes="isImage"/>
+    
+            <menu id="charsetMenu" observes="isImage"
+                  label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
+                  datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
+                  oncommand="MultiplexHandler(event)" onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');">
                 <template>
                     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                         <menupopup>
@@ -496,7 +535,7 @@ Contributor(s): ______________________________________. -->
                 </template>
         
                 <menupopup>
-                  <menu label="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+                <menu label="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
                     <template>
                         <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                             <menupopup>
@@ -506,8 +545,8 @@ Contributor(s): ______________________________________. -->
                     </template>
                     <menupopup>
                     </menupopup>
-                  </menu>
-                  <menu label="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+                </menu>
+                <menu label="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -577,17 +616,45 @@ Contributor(s): ______________________________________. -->
                 <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
                 </menupopup>
             </menu>
-            <menuseparator/>
+            <menuseparator />
             <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
+            <menuseparator />
+            <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
+              <menupopup id="theme" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)" onpopupshowing="checkTheme()">
+                <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
+                          oncommand="goPreferences('appearance','chrome://communicator/content/pref/pref-themes.xul', 'themes-panel')"/>
+                <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
+                <menuseparator/>
+                <template>
+                <menuitem uri="..."
+                          label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                          accesskey="rdf:http://www.mozilla.org/rdf/chrome#accessKey"
+                          id="rdf:http://www.mozilla.org/rdf/chrome#name"
+                          type="radio"
+                          name="themeGroup"/>
+                </template>
+              </menupopup>
+            </menu>
           </menupopup>
         </menu>
     
+        <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
+          <menupopup onpopupshowing="updateGoMenu(event);">
+            <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
+            <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
+            <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
+            <menuseparator/>
+            <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
+            <menuseparator hidden="true"/>
+          </menupopup>
+        </menu>
+        
         <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-              ref="NC:BookmarksRoot" flags="dont-test-empty"
-              oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)">
-          <template xmlns:nc="http://home.netscape.com/NC-rdf#">
+              ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
+              oncommand="OpenBookmarkURL(event.target, this.database)">
+          <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
             <rule nc:FolderGroup="true" iscontainer="true">
               <menupopup>
                 <menuitem class="menuitem-iconic bookmark-group" 
@@ -631,46 +698,56 @@ Contributor(s): ______________________________________. -->
               </menupopup>
             </rule>
           </template>
-          <menupopup>
-            <menuitem label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;"
-                      key="addBookmarkKb"   command="Browser:AddBookmark"/>
-            <menuitem label="&addCurPageAsCmd.label;" accesskey="&addCurPageAsCmd.accesskey;"
-                      key="addBookmarkAsKb" command="Browser:AddBookmarkAs"/>
-            <menuitem label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;"
-                      key="manBookmarkKb"   command="Browser:ManageBookmark"/>
+          <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
+            <!-- for some reason these don't work as command="" -->
+            <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
+            <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
+            <menuitem id="bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
+            <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
             <menuseparator/>
           </menupopup>
         </menu>
           
-       <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
-        <menupopup onpopupshowing="javaItemEnabling();">
-          <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" key="key_history" command="cmd_history"/>
-          <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
-          <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
-          <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+      <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+        <menupopup id="taskPopup">
+          <menuitem id="downloadmgr" label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
+          <menuseparator/>
+          <menu label="&webDevelopment.label;" accesskey="&webDevelopment.accesskey;">
+            <menupopup id="toolsPopup" onpopupshowing="javaItemEnabling();">
+              <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
+              <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+            </menupopup>
+          </menu>
+          <menuseparator id="navBeginGlobalItems"/>
         </menupopup>
       </menu>
-      <menu label="&helpMenu.label;"
+      
+      <menu id="menu_Help"
+            label="&helpMenu.label;"
             accesskey="&helpMenu.accesskey;">
-        <menupopup>
+        <menupopup id="helpPopup">
           <menuitem accesskey="&releaseCmd.accesskey;"
                     label="&releaseCmd.label;"
+                    id="releaseUrl"
                     oncommand="openTopWin('&releaseURL;');"/>
-          <menuseparator/>
+
+          <menuseparator id="menu_HelpAboutSeparator"/>
+    
           <menuitem class="about"
                     accesskey="&aboutCommPluginsCmd.accesskey;"
                     label="&aboutCommPluginsCmd.label;"
+                    id="pluginInfo"
                     oncommand="openTopWin('about:plugins')"/>
           <menuitem accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
+                    id="aboutName"
                     oncommand="goAboutDialog();"/>
         </menupopup>
       </menu>
     </menubar>
-
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             grippytooltiptext="&navbarCmd.label;"
-             tbalign="stretch" fullscreentoolbar="true">
+  
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
+             fullscreentoolbar="true">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                        label="&backButton.label;"
@@ -695,35 +772,59 @@ Contributor(s): ______________________________________. -->
                        
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
                        label="&stopButton.label;"
-                       command="cmd_stop"
+                       oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
-        <toolbarbutton id="home-button" class="toolbarbutton-1"
-                       label="&homeButton.label;" persist="hidden"
-                       ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                       ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                       ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                       oncommand="BrowserHome();"/>
       </hbox>
-      <toolbarseparator/>
-      <toolbarbutton id="search-button" class="toolbarbutton-1"
-                     label="&searchButton.label;" persist="hidden"
-                     oncommand="openPanel('chrome://browser/content/search/search-panel.xul',
-                                          this.getAttribute('label'));"/>
-      <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
-                     label="&bookmarksButton.label;" persist="hidden"
-                     oncommand="openPanel('chrome://browser/content/bookmarks/bm-panel.xul',
-                                          this.getAttribute('label'));"/>
-      <toolbarbutton id="history-button" class="toolbarbutton-1"
-                     label="&historyButton.label;" persist="hidden"
-                     oncommand="openPanel('chrome://communicator/content/history/history-panel.xul',
-                                          this.getAttribute('label'));"/>
-      <toolbarseparator/>
+ 
+      <hbox id="nav-bar-inner" flex="1">
+        <textbox id="urlbar" class="chromeclass-location" flex="1"
+                 type="autocomplete" searchSessions="history" 
+                 timeout="50" maxrows="6" alwaysopenpopup="true"
+                 disablehistory="false"
+                 defaultSearchEngine="true" tabScrolling="true"
+                 showCommentColumn="true"
+                 inputtooltiptext="&locationBar.tooltip;"
+                 oninput="window.XULBrowserWindow.userTyped.value=true;"
+                 ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
+                 ontextrevert="return handleURLBarRevert();"
+                 onfocus="URLBarFocusHandler(event);"
+                 onmousedown="URLBarMouseDownHandler(event);"
+                 onclick="URLBarClickHandler(event);">
+          <deck id="page-proxy-deck">
+            <image id="page-proxy-button"
+                   ondraggesture="PageProxyDragGesture(event);"
+                   tooltiptext="&proxyIcon.tooltip;"/>
+            <image id="page-proxy-favicon" validate="never"
+                   ondraggesture="PageProxyDragGesture(event);"
+                   onload="this.parentNode.selectedIndex = 1;
+                           event.stopPropagation();
+                           event.preventBubble();
+                           HandleBookmarkIcon(this.src, true);"
+                   onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
+                   tooltiptext="&proxyIcon.tooltip;"/>
+          </deck>
+
+          <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+                     popupalign="topleft" popupanchor="bottomleft"
+                     onpopupshowing="createUBHistoryMenu(event.target);" 
+                     oncommand="executeUrlBarHistoryCommand(event.target);"/>
+        </textbox>
+
+        <button id="go-button" class="button-toolbar chromeclass-location"
+                label="&goButton.label;" persist="hidden"
+                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
+                ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                tooltiptext="&goButton.tooltip;"/> 
+      </hbox>
+
       <toolbarbutton id="print-button" class="toolbarbutton-1"
                      label="&printButton.label;" persist="hidden"
                      oncommand="BrowserPrint();"
                      tooltiptext="&printButton.tooltip;"/>
-      <spacer flex="1"/>
-      <hbox align="center">
+
+      <hbox id="throbber-box" align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
       </hbox>
@@ -740,67 +841,31 @@ Contributor(s): ______________________________________. -->
       </hbox>
     </toolbar>
   
-    <toolbar id="LocationToolbar" class="chromeclass-toolbar" persist="collapsed"
-             tbalign="stretch" fullscreentoolbar="true" grippytooltiptext="&locationbarCmd.label;">
-      <hbox id="nav-bar-inner" flex="1">
-        <label value="&location.label;" accesskey="&location.accesskey;" control="urlbar"/>
-        <textbox id="urlbar" class="chromeclass-location" flex="1"
-                 type="autocomplete" searchSessions="history" 
-                 timeout="50" maxrows="6" alwaysopenpopup="true"
-                 disablehistory="false"
-                 defaultSearchEngine="true" tabScrolling="true"
-                 showCommentColumn="true"
-                 oninput="window.XULBrowserWindow.userTyped.value=true;"
-                 ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
-                 ontextrevert="return handleURLBarRevert();"
-                 onfocus="URLBarFocusHandler(event);"
-                 onblur="URLBarBlurHandler(event);">
-          <deck id="page-proxy-deck">
-            <image id="page-proxy-button"
-                   ondraggesture="PageProxyDragGesture(event);"
-                   tooltiptext="&proxyIcon.tooltip;"/>
-            <image id="page-proxy-favicon" validate="never"
-                   ondraggesture="PageProxyDragGesture(event);"
-                   onload="this.parentNode.selectedIndex = 1;
-                           event.stopPropagation();
-                           event.preventBubble();
-                           HandleBookmarkIcon(this.src, true);"
-                   onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
-                   tooltiptext="&proxyIcon.tooltip;"/>
-          </deck>
+    <toolbar id="PersonalToolbar" class="chromeclass-directories"
+             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
+             ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
+             ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
+             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
+             ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
 
-          <menupopup class="autocomplete-history-popup"
-                     popupalign="topleft" popupanchor="bottomleft"
-                     onpopupshowing="createUBHistoryMenu(event.target);" 
-                     oncommand="executeUrlBarHistoryCommand(event.target);"/>
-        </textbox>
-
-        <button id="go-button" class="button-toolbar chromeclass-location"
-                label="&goButton.label;" persist="hidden"
-                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
-                ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
-                ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
-                tooltiptext="&goButton.tooltip;"/> 
-      </hbox>
-    </toolbar>
-
-    <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
-             ondragover="nsDragAndDrop.dragOver(event, personalToolbarObserver);"
-             ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
-             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
-             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
-             grippytooltiptext="&personalbarCmd.label;"
-             tbalign="stretch">
-
+      <toolbarbutton id="home-button" class="bookmark-item"
+                     label="&homeButton.label;" persist="hidden"
+                     oncommand="BrowserHome(); event.preventBubble()"
+                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.preventBubble()"
+                     ondragenter="event.preventBubble()"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver); event.preventBubble()"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver); event.preventBubble()"/>
+  
+      <toolbarseparator id="home-bm-separator" persist="hidden"/>
       <!-- Personal toolbar items -->
-      <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
+      <hbox id="NC:PersonalToolbarFolder" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-           oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
+           oncommand="OpenBookmarkURL(event.target, this.database)"
+           rdf:type="http://home.netscape.com/NC-rdf#Folder">
         <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
-          <vbox flex="1">  
+          <vbox id="ptTooltipTextBox" flex="1">  
             <label id="ptTitleText" />
             <label id="ptUrlText" />
           </vbox>
@@ -821,18 +886,13 @@ Contributor(s): ______________________________________. -->
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </rule>
+
           <rule parent="hbox" iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <toolbarbutton type="menu" editable="true" class="bookmark-item"
-                           validate="never"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
-                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
-                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
-              <menupopup
-                         ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
                 <menuitem label="&emptyItem.label;" disabled="true"/>
               </menupopup>
             </toolbarbutton>
@@ -841,20 +901,13 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox" iscontainer="true">
             <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name"
-                           image="rdf:http://home.netscape.com/NC-rdf#Icon"
-                           validate="never"
-                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
-                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
-              <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();"/>
+                           label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup/>
             </toolbarbutton>
           </rule>
 
           <rule parent="hbox">
             <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
-                           validate="never"
                            status="rdf:http://home.netscape.com/WEB-rdf#status"
                            rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
                            statustext="rdf:http://home.netscape.com/NC-rdf#URL"
@@ -862,33 +915,32 @@ Contributor(s): ______________________________________. -->
                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </rule>
 
-          <rule iscontainer="true" isempty="true"
-                rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <menupopup
-                       ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+          <rule nc:FolderGroup="true" iscontainer="true">
+            <menupopup>
+              <menuitem class="menuitem-iconic bookmark-group" 
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"
+                        group="true"
+                        uri="rdf:*"
+                        xulcontentsgenerated="true"/>
+            </menupopup>
+          </rule>
+
+          <rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                  validate="never"
                   label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
-                  <menuitem label="&emptyItem.label;" disabled="true"
-                      src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                      validate="never"
-                      ondraggesture="event.preventBubble(); return false;"/>
+                  <menuitem label="&emptyItem.label;" disabled="true"/>
                 </menupopup>
               </menu>
             </menupopup>
           </rule>
 
           <rule iscontainer="true">
-            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+            <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*"
                     type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    validate="never"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
@@ -902,13 +954,8 @@ Contributor(s): ______________________________________. -->
             </menupopup>
           </rule>
           <rule>
-            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
-                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
-                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+            <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                        validate="never"
-                        status="rdf:http://home.netscape.com/WEB-rdf#status"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
           </rule>
@@ -917,26 +964,22 @@ Contributor(s): ______________________________________. -->
     </toolbar>
 
   </toolbox>
-     
+    
   <hbox flex="1">
-    <vbox id="boxSidebar" hidden="true" flex="1" persist="hidden width">
-       <sidebarheader id="sidebarhdrSidebar" class="sidebarheader-main"
-                      type="box" persist="label"
-                      collapse="after">
-         <toolbarbutton id="btnSidebarClose" oncommand="SidebarHide();"
-                        tooltiptext="&closeButton.label;"/>
-       </sidebarheader>
-       <browser id="browserSidebar" flex="1" persist="src"/>
-    </vbox>
-    <splitter id="splitterSidebar" collapse="before" persist="state hidden"
-                                   class="chromeclass-extrachrome sidebar-splitter"
-                                   align="center" onmouseup="SidebarFinishClick();"/>
-    <tabbrowser id="content"
-                flex="1" contenttooltip="aHTMLTooltip"
-                contentcontextmenu="contentAreaContextMenu"
-                onclick="return contentAreaClick(event);"
-                ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"/>
-  </hbox>  
+    <!-- we only need to handle |ondragdrop| because everything else is
+          taken care of by the builtin behavior inside the tabbrowser -->
+    <vbox id="appcontent" flex="1"
+         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+
+      <hbox id="browser" flex="1">
+        <tabbrowser id="content"
+                    flex="1" contenttooltip="aHTMLTooltip"
+                    contentcontextmenu="contentAreaContextMenu"
+                    onnewtab="BrowserOpenTab();"
+                    onclick="return contentAreaClick(event);"/>
+      </hbox>
+    </vbox>  
+  </hbox>
 
   <statusbar id="status-bar" class="chromeclass-status"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
@@ -944,8 +987,10 @@ Contributor(s): ______________________________________. -->
     <statusbarpanel class="statusbarpanel-progress">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
-    <statusbarpanel class="statusbarpanel-iconic" id="offline-status" observes="Communicator:WorkMode"/>
-    <statusbarpanel class="statusbarpanel-iconic" id="security-button" onclick="displayPageInfo()"/>
+    <statusbarpanel id="offline-status" class="statusbarpanel-iconic"
+                    observes="Communicator:WorkMode"/>
+  <statusbarpanel id="security-button" class="statusbarpanel-iconic"
+                  onclick="displayPageInfo()"/>    
   </statusbar> 
 
 </window>
