@@ -23,6 +23,8 @@
 #include "nsIRobotSink.h"
 #include "nsIRobotSinkObserver.h"
 #include "nsIParser.h"
+#include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
@@ -204,7 +206,7 @@ extern "C" NS_EXPORT void DumpVectorRecord(void);
 //----------------------------------------------------------------------
 extern "C" NS_EXPORT int DebugRobot(
    nsVoidArray * workList, 
-   nsIWebShell * ww, 
+   nsIDocShell * docShell, 
    int iMaxLoads, 
    char * verify_dir,
    void (*yieldProc )(const char *)
@@ -315,10 +317,11 @@ extern "C" NS_EXPORT int DebugRobot(
       }
     }
     g_bReadyForNextUrl = PR_FALSE;
-    if (ww) {
+    if (docShell) {
       nsIDocumentLoader *docLoader;
 
-      ww->GetDocumentLoader(docLoader);
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+      webShell->GetDocumentLoader(docLoader);
       if (docLoader) {
         docLoader->AddObserver(pl);
         NS_RELEASE(docLoader);
@@ -327,7 +330,8 @@ extern "C" NS_EXPORT int DebugRobot(
       (void)url->GetSpec(&spec);
       nsAutoString theSpec(spec);
       nsCRT::free(spec);
-      ww->LoadURL(theSpec.GetUnicode());/* XXX hook up stream listener here! */
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+      webNav->LoadURI(theSpec.GetUnicode());/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
         if (yieldProc != NULL) {
           (void)url->GetSpec(&spec);
