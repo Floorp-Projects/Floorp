@@ -523,7 +523,6 @@ LocalVar('platforms', '
 
 
 
-
 LocalVar('contenttypes', '
 #
 # The types of content that template files can generate, indexed by file extension.
@@ -536,6 +535,16 @@ $contenttypes = {
 };
 ');
 
+
+
+LocalVar('pages', '
+#
+# A mapping from tags to template names for the general page display system,
+# page.cgi.
+#
+%pages = (
+);
+');
 
 
 
