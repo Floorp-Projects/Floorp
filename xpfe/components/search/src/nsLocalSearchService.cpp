@@ -504,7 +504,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
   dsName.AssignWithConversion(tokens[0].value);
 
   nsCOMPtr<nsIRDFDataSource> datasource;
-  rv = gRDFService->GetDataSource(dsName, getter_AddRefs(datasource));
+  rv = gRDFService->GetDataSource(dsName.get(), getter_AddRefs(datasource));
   if (NS_FAILED(rv)) 
     return rv;
 

@@ -629,7 +629,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
   // try to fixup the argument passed in
 
   nsString url;
-  url.AssignWithConversion(aArgument);
+  url.AssignWithConversion(aArgument.get());
 
   nsresult rv = NS_OK;
 

@@ -511,13 +511,13 @@ BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource,
     for (field = gBookmarkFieldTable; field->mName; ++field)
     {
         str = field->mPropertyName;
-        rv = gRDF->GetResource(str, &field->mProperty);
+        rv = gRDF->GetResource(str.get(), &field->mProperty);
         if (NS_FAILED(rv))  return(rv);
     }
     for (field = gBookmarkHeaderFieldTable; field->mName; ++field)
     {
         str = field->mPropertyName;
-        rv = gRDF->GetResource(str, &field->mProperty);
+        rv = gRDF->GetResource(str.get(), &field->mProperty);
         if (NS_FAILED(rv))  return(rv);
     }
 
@@ -1129,7 +1129,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
         PRBool		isIEFavoriteRoot = PR_FALSE;
         if (!mIEFavoritesRoot.IsEmpty())
         {
-            if (!nsCRT::strcmp(mIEFavoritesRoot, bookmarkURI))
+            if (!nsCRT::strcmp(mIEFavoritesRoot.get(), bookmarkURI))
             {
             	mFoundIEFavoritesRoot = PR_TRUE;
             	isIEFavoriteRoot = PR_TRUE;
@@ -1404,7 +1404,7 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	nsCOMPtr<nsIRDFResource> bookmark;
 	nsCAutoString fullurlC;
 	fullurlC.AssignWithConversion(fullURL);
-	if (NS_FAILED(rv = gRDF->GetResource(fullurlC, getter_AddRefs(bookmark) )))
+	if (NS_FAILED(rv = gRDF->GetResource(fullurlC.get(), getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return(rv);
@@ -2129,7 +2129,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 							{
 								changedFlag = PR_TRUE;
 							}
-							eTagStr.AssignWithConversion(eTagValue);
+							eTagStr.AssignWithConversion(eTagValue.get());
 							nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
 							if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagStr.get(),
 								getter_AddRefs(newETagLiteral))))
@@ -2141,7 +2141,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					}
 					else
 					{
-						eTagStr.AssignWithConversion(eTagValue);
+						eTagStr.AssignWithConversion(eTagValue.get());
 						nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
 						if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagStr.get(),
 							getter_AddRefs(newETagLiteral))))
@@ -2173,7 +2173,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					{
 						changedFlag = PR_TRUE;
 					}
-					lastModStr.AssignWithConversion(lastModValue);
+					lastModStr.AssignWithConversion(lastModValue.get());
 					nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
 					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModStr.get(),
 						getter_AddRefs(newLastModLiteral))))
@@ -2185,7 +2185,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 			else
 			{
-				lastModStr.AssignWithConversion(lastModValue);
+				lastModStr.AssignWithConversion(lastModValue.get());
 				nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModStr.get(),
 					getter_AddRefs(newLastModLiteral))))
@@ -2215,7 +2215,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					{
 						changedFlag = PR_TRUE;
 					}
-					contentLenStr.AssignWithConversion(contentLengthValue);
+					contentLenStr.AssignWithConversion(contentLengthValue.get());
 					nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
 					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.get(),
 						getter_AddRefs(newContentLengthLiteral))))
@@ -2227,7 +2227,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 			else
 			{
-				contentLenStr.AssignWithConversion(contentLengthValue);
+				contentLenStr.AssignWithConversion(contentLengthValue.get());
 				nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.get(),
 					getter_AddRefs(newContentLengthLiteral))))
