@@ -3696,13 +3696,17 @@ nsWebShell::CancelRefreshURLTimers(void)
 nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 {
 
-  const PRUnichar * url=nsnull;
+  const PRUnichar * url=nsnull, * title=nsnull;
   PRInt32     curIndex=0;
+  nsresult rv;
+  nsString * historyURL=nsnull, * newURL=nsnull;
 
   /* Get current history index and url for it */
-  mSHist->getCurrentIndex(curIndex);
-  mSHist->GetURLForIndex(curIndex, &url);
-  nsString * historyURL = (nsString *)  new nsString(url);
+  rv = mSHist->getCurrentIndex(curIndex);
+  if (NS_SUCCEEDED(rv) && curIndex >= 0) {
+    mSHist->GetURLForIndex(curIndex, &url);
+    historyURL = (nsString *)  new nsString(url);
+  }
 
   /* Get the url that netlib passed us */
 #ifdef NECKO
@@ -3711,14 +3715,20 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   const char* spec;
 #endif
   aURL->GetSpec(&spec);
-  nsString* newURL = (nsString*) new nsString(spec);
+  newURL = (nsString*) new nsString(spec);
 #ifdef NECKO
   nsCRT::free(spec);
 #endif
 
-  if (newURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
-    // Replace the top most history entry with the new url
-    printf("Changing  URL from %s to %s for history entry %d\n", historyURL->ToNewCString(), newURL->ToNewCString(), curIndex);
+  if (newURL && historyURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
+  }
+
+  rv = GetTitle(&title);
+ 
+  if (NS_SUCCEEDED(rv) && title) {
+	   nsString titleStr(title);
+     mSHist->SetTitleForIndex(curIndex, title);	  
+    // Replace the top most history entry with the new url    
     mSHist->SetURLForIndex(curIndex, newURL->GetUnicode());
   }
   else {
