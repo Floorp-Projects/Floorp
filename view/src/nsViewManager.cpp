@@ -432,8 +432,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
     localcx = CreateRenderingContext(*aView);
 
     //couldn't get rendering context. this is ok at init time atleast
-    if (nsnull == localcx)
+    if (nsnull == localcx) {
+      mPainting = PR_FALSE;
       return;
+    }
   }
   else
     localcx = aContext;
@@ -549,8 +551,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     localcx = CreateRenderingContext(*aView);
 
     //couldn't get rendering context. this is ok if at startup
-    if (nsnull == localcx)
+    if (nsnull == localcx) {
+      mPainting = PR_FALSE;
       return;
+    }
   }
   else
     localcx = aContext;
@@ -2439,6 +2443,7 @@ NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
   //couldn't get rendering context. this is ok if at startup
   if (nsnull == localcx)
   {
+    mPainting = PR_FALSE;
     return NS_ERROR_FAILURE;
   }
 
