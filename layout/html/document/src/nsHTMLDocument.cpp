@@ -358,9 +358,9 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
         //the caller total control over process, and decoupling
         //parser from any given grammar.
 
-        nsIDTD* theDTD=0;
-        NS_NewNavHTMLDTD(&theDTD);
-        mParser->RegisterDTD(theDTD);
+//        nsIDTD* theDTD=0;
+//        NS_NewNavHTMLDTD(&theDTD);
+//        mParser->RegisterDTD(theDTD);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink); 
         mParser->Parse(aURL);
@@ -1268,7 +1268,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
       str.Append('\n');
     }
 
-    result = mParser->Parse(str, PR_TRUE);
+    result = mParser->Parse(str, PR_TRUE,PR_FALSE,PR_FALSE);
     if (NS_OK != result) {
       return result;
     }
