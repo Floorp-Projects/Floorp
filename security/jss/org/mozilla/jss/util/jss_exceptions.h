@@ -80,6 +80,8 @@ PR_BEGIN_EXTERN_C
 
 #define NICKNAME_CONFLICT_EXCEPTION "org/mozilla/jss/CryptoManager$NicknameConflictException"
 
+#define NO_SUCH_ALG_EXCEPTION "java/security/NoSuchAlgorithmException"
+
 #define NO_SUCH_ITEM_ON_TOKEN_EXCEPTION "org/mozilla/jss/crypto/NoSuchItemOnTokenException"
 
 #define NO_SUCH_TOKEN_EXCEPTION "org/mozilla/jss/NoSuchTokenException"

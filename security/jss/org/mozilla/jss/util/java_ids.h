@@ -74,6 +74,18 @@ PR_BEGIN_EXTERN_C
 #define DEBUG_TRACE_SIG "(ILjava/lang/String;)V"
 
 /*
+ * InetAddress
+ */
+#define GET_ADDR_NAME "getAddress"
+#define GET_ADDR_SIG "()[B"
+
+/*
+ * InputStream
+ */
+#define ISTREAM_READ_NAME "read"
+#define ISTREAM_READ_SIG "([B)I"
+
+/*
  * KeyPair
  */
 #define KEY_PAIR_CLASS_NAME "java/security/KeyPair"
@@ -116,6 +128,12 @@ PR_BEGIN_EXTERN_C
 #define NSSINIT_CLASS_NAME "org/mozilla/jss/NSSInit"
 #define NSSINIT_ISINITIALIZED_NAME "isInitialized"
 #define NSSINIT_ISINITIALIZED_SIG "()Z"
+
+/*
+ * OutputStream
+ */
+#define OSTREAM_WRITE_NAME "write"
+#define OSTREAM_WRITE_SIG "([BII)V"
 
 /*
  * Password
@@ -247,6 +265,21 @@ PR_BEGIN_EXTERN_C
 #define SIG_CONTEXT_PROXY_CONSTRUCTOR_SIG "([B)V"
 
 /*
+ * Socket
+ */
+#define SOCKET_GET_OUTPUT_STREAM_NAME "getOutputStream"
+#define SOCKET_GET_OUTPUT_STREAM_SIG "()Ljava/io/OutputStream;"
+
+#define SOCKET_GET_INPUT_STREAM_NAME "getInputStream"
+#define SOCKET_GET_INPUT_STREAM_SIG "()Ljava/io/InputStream;"
+
+#define GET_INET_ADDR_NAME "getInetAddress"
+#define GET_INET_ADDR_SIG "()Ljava/net/InetAddress;"
+
+#define GET_PORT_NAME "getPort"
+#define GET_PORT_SIG "()I"
+
+/*
  * SSLCertificateApprovalCallback
  */
 #define SSLCERT_APP_CB_APPROVE_NAME "approve"
@@ -268,6 +301,13 @@ PR_BEGIN_EXTERN_C
 #define SSLSOCKET_PROXY_SIG "Lorg/mozilla/jss/ssl/SocketProxy;"
 
 /*
+ * StringBuffer
+ */
+#define STRING_BUFFER_NAME "java/lang/StringBuffer"
+#define STRING_BUFFER_APPEND_NAME "append"
+#define STRING_BUFFER_APPEND_SIG "(Ljava/lang/String;)Ljava/lang/StringBuffer;"
+
+/*
  * ValidityStatus
  */
 #define SSLCERT_APP_CB_VALIDITY_STATUS_CLASS \
@@ -282,6 +322,13 @@ PR_BEGIN_EXTERN_C
  */
 #define SYM_KEY_PROXY_FIELD "keyProxy"
 #define SYM_KEY_PROXY_SIG "Lorg/mozilla/jss/pkcs11/SymKeyProxy;"
+
+/*
+ * Throwable
+ */
+#define THROWABLE_NAME "java/lang/Throwable"
+#define THROWABLE_TO_STRING_NAME "toString"
+#define THROWABLE_TO_STRING_SIG "()Ljava/lang/String;"
 
 /*
  * TokenCallbackInfo
