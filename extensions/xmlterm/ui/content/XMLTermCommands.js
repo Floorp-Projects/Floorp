@@ -1,60 +1,85 @@
 // XMLTerm Page Commands
 
-// CONVENTION: All pre-defined XMLTerm Javascript functions
-//             begin with an upper letter. This allows
-//             an easy distinction with user defined functions,
-//             which should begin with a lower case letter.
+// CONVENTION: All pre-defined XMLTerm Javascript functions and global
+//             variables should begin with an upper-case letter.
+//             This would allow them to be easily distinguished from
+//             user defined functions, which should begin with a lower case
+//             letter.
 
 // Global variables
-var altwin;                   // Alternate (browser) window
+var AltWin;                   // Alternate (browser) window
 
-var tips = new Array();       // Usage tip strings
-var tipnames = new Array();   // Usage tip names
-var tipCount = 0;             // No. of tips
-var selectedTip = 0;          // Selected random tip
+var Tips = new Array();       // Usage tip strings
+var TipNames = new Array();   // Usage tip names
+var TipCount = 0;             // No. of tips
+var SelectedTip = 0;          // Selected random tip
 
 // Set prompt using form entry
 function DefineTip(tip, name) {
-  tips[tipCount] = tip;
-  tipnames[tipCount] = name;
-  tipCount++;
+  Tips[TipCount] = tip;
+  TipNames[TipCount] = name;
+  TipCount++;
   return;
 }
 
 DefineTip('Click the new tip link to the left to get a new tip!',
-          'new-tip');
+          'tips');
 
 DefineTip('User level setting (at the top) controls amount of help information',
-         'level-setting');
+         'level');
 
-DefineTip('Mode setting controls if double clicking a directory/executable opens a new window',
-         'mode-setting');
+DefineTip('Beginner level setting displays keyboard shortcuts at the top of the page',
+         'level');
 
 DefineTip('Icons setting controls whether directory listings use icons',
-          'icons-setting');
+          'icons');
 
 DefineTip('Single click an explicit (underlined) hyperlink; double click implicit (usually blue) hyperlinks',
-         'double-click');
+         'clicking');
 
-DefineTip('Click the SetPrompt button to use a cool Mozilla prompt from dmoz.org!',
-         'set-prompt-moz');
+DefineTip('Clicking on command prompt expands/collapses command output display.',
+          'prompt');
 
-DefineTip('"js:SetPrompt(HTMLstring);" sets prompt to HTML string.',
-          'set-prompt');
+DefineTip('Press F1 (or control-Home) key to collapse output of all commands.',
+          'prompt');
+
+DefineTip('"js:SetPrompt(HTMLstring);" sets prompt to any HTML string.',
+          'prompt');
+
+DefineTip('Beginners may click the SetPrompt button for a cool Mozilla prompt from dmoz.org!',
+         'prompt');
+
+DefineTip('Double-clicking on a previous command line re-executes the command.',
+          'command');
 
 DefineTip('Type "js:func(arg);" to execute inline Javascript function func.',
-          'inline-js');
+          'js');
 
 DefineTip('Inline Javascript ("js:...") can be used to produce HTML output.',
-          'js-html');
+          'js');
 
-DefineTip('XMLterm supports full screen commands like "vi", "emacs -nw", and "less".',
+DefineTip('XMLterm supports full screen commands like "less", "vi", and "emacs -nw"".',
          'full-screen');
 
-DefineTip('Use "xls -i" for iconic display of directory contents.',
-          'xls-i');
+DefineTip('"xls" produces a clickable listing of directory contents.',
+          'xls');
 
-DefineTip('Use "xcat file" to display file.',
+DefineTip('"xls -t" prevents display of icons even if Icons setting is "on".',
+          'xls');
+
+DefineTip('"xcat text-file" displays a text file with clickable URLs.',
+          'xcat');
+
+DefineTip('"xcat image.gif" displays an image file inline!',
+          'xcat');
+
+DefineTip('"xcat http://mozilla.org" displays a web page inline using IFRAMEs.',
+          'xcat');
+
+DefineTip('"xcat -h 1000 http://mozilla.org" displays using an IFRAME 1000 pixels high.',
+          'xcat');
+
+DefineTip('"xcat doc.html" display an HTML document inline using IFRAMEs.',
           'xcat');
 
 // Display random usage tip
@@ -62,13 +87,13 @@ DefineTip('Use "xcat file" to display file.',
 // need to use Prefs to keep track of that)
 function NewTip() {
   var ranval = Math.random();
-  selectedTip = Math.floor(ranval * tipCount);
-  if (selectedTip >= tipCount) selectedTip = 0;
+  SelectedTip = Math.floor(ranval * TipCount);
+  if (SelectedTip >= TipCount) SelectedTip = 0;
 
-  dump("xmlterm: NewTip "+selectedTip+","+ranval+"\n");
+  dump("xmlterm: NewTip "+SelectedTip+","+ranval+"\n");
 
   var tipdata = document.getElementById('tipdata');
-  tipdata.firstChild.data = tips[selectedTip];
+  tipdata.firstChild.data = Tips[SelectedTip];
 
   ShowHelp("",0);
 
@@ -83,7 +108,7 @@ function ExplainTip(tipName) {
     var tipdata = document.getElementById('tipdata');
     tipdata.firstChild.data = "";
   } else {
-    tipName = tipnames[selectedTip];
+    tipName = TipNames[SelectedTip];
   }
 
   ShowHelp('xmltermTips.html#'+tipName,0,120);
@@ -119,22 +144,16 @@ function F9Key(isShift, isControl) {
 // Scroll Home key
 function ScrollHomeKey(isShift, isControl) {
   dump("ScrollHomeKey("+isShift+","+isControl+")\n");
-  if (isShift && window.xmltbrowser) {
-     window.xmltbrowser.scroll(0,0);
-  } else {
-     window.scroll(0,0);
-  }
+
+  ScrollWin(isShift,isControl).scroll(0,0);
   return false;
 }
 
 // Scroll End key
 function ScrollEndKey(isShift, isControl) {
   dump("ScrollEndKey("+isShift+","+isControl+")\n");
-  if (isShift && window.xmltbrowser) {
-     window.xmltbrowser.scroll(0,9999);
-  } else {
-     window.scroll(0,9999);
-  }
+
+  ScrollWin(isShift,isControl).scroll(0,99999);
   return false;
 }
 
@@ -142,23 +161,25 @@ function ScrollEndKey(isShift, isControl) {
 function ScrollPageUpKey(isShift, isControl) {
   dump("ScrollPageUpKey("+isShift+","+isControl+")\n");
 
-  if (isShift && window.xmltbrowser) {
-     window.xmltbrowser.scrollBy(0,-300);
-  } else {
-     window.scrollBy(0,-300);
-  }
+  ScrollWin(isShift,isControl).scrollBy(0,-120);
   return false;
 }
 
 // Scroll PageDown key
 function ScrollPageDownKey(isShift, isControl) {
   dump("ScrollPageDownKey("+isShift+","+isControl+")\n");
-  if (isShift && window.xmltbrowser) {
-    window.xmltbrowser.scrollBy(0,300);
-  } else {
-    window.scrollBy(0,300);
-  }
+
+  ScrollWin(isShift,isControl).scrollBy(0,120);
   return false;
+}
+
+// Scroll Window
+function ScrollWin(isShift, isControl) {
+  if (isShift && (window.frames.length > 0)) {
+    return window.frames[window.frames.length-1];
+  } else {
+    return window;
+  }
 }
 
 // Set history buffer size
@@ -215,10 +236,10 @@ function UpdateSettings() {
   var oldShowIcons = window.showIcons;
   window.showIcons = document.xmltform1.icons.options[document.xmltform1.icons.selectedIndex].value;
 
-  window.commandMode = document.xmltform1.mode.options[document.xmltform1.mode.selectedIndex].value;
+  //window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
 
   dump("UpdateSettings: userLevel="+window.userLevel+"\n");
-  dump("UpdateSettings: commandMode="+window.commandMode+"\n");
+  dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
   dump("UpdateSettings: showIcons="+window.showIcons+"\n");
 
   if (window.userLevel != oldUserLevel) {
@@ -240,14 +261,18 @@ function UpdateSettings() {
 
   if (window.showIcons != oldShowIcons) {
     // Change icon display style in the style sheet
+
     if (window.showIcons == "on") {
       AlterStyle("SPAN.noicons", "display", "none");
-      AlterStyle("TR.icons",     "display", "table-row");
+      AlterStyle("SPAN.icons",   "display", "inline");
       AlterStyle("IMG.icons",    "display", "inline");
+      AlterStyle("TR.icons",     "display", "table-row");
+
     } else {
       AlterStyle("SPAN.noicons", "display", "inline");
-      AlterStyle("TR.icons",     "display", "none");
+      AlterStyle("SPAN.icons",   "display", "none");
       AlterStyle("IMG.icons",    "display", "none");
+      AlterStyle("TR.icons",     "display", "none");
     }
   }
 
@@ -297,7 +322,7 @@ function Load(url) {
   }
 
   // Save browser window object in global variable
-  altwin = window.xmltbrowser;
+  AltWin = window.xmltbrowser;
 
   return (false);
 }
@@ -317,8 +342,10 @@ function DisplayAllOutput(flag) {
                                      (flag) ? "none" : "underline", "")
   }
 
-  if (!flag)
+  if (!flag) {
     ScrollHomeKey(0,0);
+    ScrollEndKey(0,0);
+  }
 
   return (false);
 }
@@ -331,8 +358,9 @@ function DisplayAllOutput(flag) {
 //   textlink  - hyperlink
 //   prompt    - command prompt
 //   command   - command line
-//   exec      - execute command with sendln/createln
-//               (depending upon window.commandMode)
+//   execwin   - execute command with sendln/createln (doubleclick)
+//               (depending upon window.windowsMode)
+//   exec      - execute command with sendln only     (doubleclick)
 //   send      - transmit arg to LineTerm
 //   sendln    - transmit arg+newline to LineTerm
 //   createln  - transmit arg+newline as first command to new XMLTerm
@@ -379,15 +407,15 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
      dump("clickCount="+eventObj.clickCount+"\n");
 
-     var dblClick = (eventObj.clickCount > 1);
+     var dblClick = (eventObj.clickCount == 2);
 
      // Execute shell commands only on double-click for safety
      // Use single click for "selection" and prompt expansion only
      // Windows-style
-     if (!dblClick)
-        return false;
 
      if (targetType === "command") {
+       if (!dblClick)
+         return false;
        var commandElement = document.getElementById(targetType+entryNumber);
        var command = commandElement.firstChild.data;
        window.xmlterm.SendText("\025"+command+"\n", document.cookie);
@@ -401,16 +429,32 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
          return (false);
        }
 
-       var action = targetType;
+       var action;
 
-       if (action === "exec") {
-          if (window.commandMode === "window") {
-             action = "createln";
-          } else {
-             action = "sendln";
+       if (targetType === "execwin") {
+         // Execute command; inline or in a new window
+         if (!dblClick)
+           return false;
+
+         if (window.windowsMode === "on") {
+            action = "createln";
+         } else {
+            action = "sendln";
          }
+
+       } else if (targetType === "exec") {
+         // Execute command inline
+         if (!dblClick)
+           return false;
+
+         action = "sendln";
+
+       } else {
+         // Primitive action
+         action = targetType;
        }
 
+       // Primitive actions
        if (action === "send") {
          dump("send = "+arg1+"\n");
          window.xmlterm.SendText(arg1, document.cookie);

@@ -1,42 +1,44 @@
 #!/usr/bin/perl
 # xcat: an XMLterm wrapper for the UNIX "cat" command
-# Usage: xcat  [-h|help]
+# Usage: xcat  [-h|--height]
 
 use Cwd;
 use Getopt::Long;
 
 Getopt::Long::config('bundling');
 
-$options = "@ARGV";
-
-&GetOptions("help|h!");
-
-if ($opt_help) {
-    print STDERR "Usage: xcat <URL1> <URL2> ...\n";
+if (!@ARGV) {
+    print STDERR "Usage: xcat [--height <pixels>] <file1> <URL2> ...\n";
     exit;
 }
+
+&GetOptions("height|h=i");
+
+my $height = 240;
+$height = $opt_height if $opt_height;
 
 my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
 
 my $dir = cwd();
 
 foreach my $url (@ARGV) {                 # for each argument
-    my ($protocol, $slashpair, $username, $host, $port, $pathname);
+    my ($scheme, $username, $host, $port, $pathname);
 
     # Check if argument is a valid URL
     if ( $url =~ m%\b                             # initiator
-                 ([a-zA-Z]\w*)?:                  # protocol
-                 (//)?                            # slashpair
-                 (?:([\w.]+)@)?                   # username
-                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
-                 (?::(\d+))?                      # port
-                 (/\S*?)                          # pathname
+                 ([a-zA-Z]\w*)?:                  # scheme
+                 (?=/)                            # lookahead
+                 (?://                            # slashpair
+                   (?:([\w.]+)@)?                 # username
+                   ([\w\-]+(?:\.[\w\-]+)*)?       # host
+                   (?::(\d+))?                    # port
+                 )?
+                 (/|/[^/\s]\S*?)?                 # pathname
                  (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
-                 %x ) {
+               %x ) {
+        ($scheme, $username, $host, $port, $pathname) = ($1, $2, $3, $4, $5);
 
-        ($protocol, $slashpair, $username, $host, $port, $pathname) =
-          ($1, $2, $3, $4, $5, $6);
-##        print STDERR "URL: protocol=$protocol, slashpair=$slashpair, username=$username, host=$host, port=$port, pathname=$pathname\n";
+##        print STDERR "URL: scheme=$scheme, username=$username, host=$host, port=$port, pathname=$pathname\n";
 
     } else {
         # Not an URL; assume it is a local file
@@ -47,17 +49,16 @@ foreach my $url (@ARGV) {                 # for each argument
 ##        print STDERR "Not an URL; assume local file $url\n";
 
         # Create a file URL
-        ($protocol, $slashpair, $username, $host, $port, $pathname) =
-          ("file", "//", "", "", "", $url);
-
+        ($scheme, $username, $host, $port, $pathname) =
+          ("file", "", "", "", $url);
     }
 
-    if (($protocol ne "http") && ($protocol ne "file")) {
-        print STDERR "xcat: Cannot handle URI protocol $protocol:\n";
+    if (($scheme ne "http") && ($scheme ne "file")) {
+        print STDERR "xcat: Cannot handle URI scheme $scheme:\n";
         next;
     }
 
-    if ($protocol eq "file") {    # Local filename
+    if ($scheme eq "file") {    # Local filename
 
         if (!(-e $pathname)) {
             print STDERR "xcat: File $pathname not found\n";
@@ -82,18 +83,16 @@ foreach my $url (@ARGV) {                 # for each argument
 
 ##    print STDERR "Filename=$filename, extension=$extension\n";
 
-    if (($extension eq ".gif") || ($extension eq ".png")) {
+    if (($extension eq ".gif") ||
+        ($extension eq ".png") ||
+        ($extension eq ".jpg")) {
 ##        print STDERR "Image file\n";
             
         print "\e{S$cookie\a";             # HTML stream escape sequence
-        print "<IMG SRC='$protocol://${host}$pathname'>";
+        print "<IMG SRC='$scheme://${host}$pathname'>";
         print "\000";                      # Terminate HTML stream
 
-    } elsif (($protocol eq "http") || ($extension eq ".htm")
-                                   || ($extension eq ".html")) {
-        print STDERR "Web/HTML file (unable to display due to IFRAME bug)\n";
-
-    } elsif (($protocol eq "file") && ($extension eq ".url")) {
+    } elsif (($scheme eq "file") && ($extension eq ".url")) {
         # URL
         open INFILE, $pathname or next;
         $_ = <INFILE>;
@@ -102,13 +101,15 @@ foreach my $url (@ARGV) {                 # for each argument
         my @urlvals;
         my $nurl = 0;
         while ( m%\b                              # initiator
-                 (http|file|mailto):              # protocol
-                 (//)?                            # slashpair
-                 (?:([\w.]+)@)?                   # username
-                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
-                 (?::(\d+))?                      # port
-                 (/\S*?)                          # pathname
-                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
+                 (http|file|mailto):              # scheme
+                 (?=/)                            # lookahead
+                 (?://                            # slashpair
+                   (?:([\w.]+)@)?                 # username
+                   ([\w\-]+(?:\.[\w\-]+)*)?       # host
+                   (?::(\d+))?                    # port
+                 )?
+                 (/|/[^/\s]\S*?)?                 # pathname
+                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
                  %x ) {
             $urlvals[$nurl] = $&;
             s%$&%%;
@@ -132,6 +133,17 @@ foreach my $url (@ARGV) {                 # for each argument
             print "\000";                      # Terminate HTML stream
         }
 
+    } elsif ( ($scheme eq "http") ||
+              (($scheme eq "file") && (($extension eq ".htm") ||
+                                       ($extension eq ".html")) ) ) {
+##        print STDERR "IFRAME\n";
+        print "\e{S$cookie\a";             # HTML stream escape sequence
+        print "<iframe frameborder=0 width='100%' height='$height' src='$scheme://${host}$pathname'></iframe>";
+        print "<div class='beginner'>";
+        print "Use shift-key + Home/End/PageUp/PageDown to scroll nested IFrame.";
+        print "</div>";
+        print "\000";                      # Terminate HTML stream
+
     } elsif ((-T $pathname) || ($extension eq "txt")) {  # plain text file
 ##        print STDERR "Text file\n";
 
@@ -146,12 +158,14 @@ foreach my $url (@ARGV) {                 # for each argument
                                # to allow termination of <http://xyz.com> etc.
 
             s%\b                              # URL word boundary
-             ([a-zA-Z]\w*)?:                  # protocol
-             (//)?                            # slashpair
-             (?:([\w.]+)@)?                   # username
-             ([\w\-]+(?:\.[\w\-]+)*)?         # host
-             (?::(\d+))?                      # port
-             (/\S*?)                          # pathname
+             ([a-zA-Z]\w*)?:                  # scheme
+             (?=/)                            # lookahead
+             (?://                            # slashpair
+               (?:([\w.]+)@)?                 # username
+               ([\w\-]+(?:\.[\w\-]+)*)?       # host
+               (?::(\d+))?                    # port
+             )?
+             (/|/[^/\s]\S*?)?                 # pathname
              (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
              %<span class="textlink" onClick="return HandleEvent(event,'click','textlink',-\#,'$&')">$&</span>%xg;
 

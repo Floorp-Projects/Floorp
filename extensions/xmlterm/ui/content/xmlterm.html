@@ -18,7 +18,6 @@
     <input type="button" value="New XMLTerm"
            onClick="return NewXMLTerm('');">
 
-    &nbsp;
     <span class="helplink" onclick="return ExplainTip('level-setting');">
      Level:</span>
     <select name="level" size=1 onchange="return UpdateSettings();">
@@ -31,24 +30,25 @@
     <span class="helplink" onclick="return ExplainTip('icons-setting');">
     Icons:</span>
     <select name="icons" size=1 onchange="return UpdateSettings();">
-      <option value="on">on</option>
       <option value="off" selected>off</option>
+      <option value="on">on</option>
     </select>
 
+<!--
     &nbsp;
-    <span class="helplink" onclick="return ExplainTip('mode-setting');">
-    Mode:</span>
-    <select name="mode" size=1 onchange="return UpdateSettings();">
-      <option value="inline" selected>inline</option>
-      <option value="window">window</option>
+    <span class="helplink" onclick="return ExplainTip('windows-setting');">
+    Windows:</span>
+    <select name="windows" size=1 onchange="return UpdateSettings();">
+      <option value="off" selected>off</option>
+      <option value="on">on</option>
     </select>
+ -->
 
 <!--
     <input type="button" value="Save Settings"
            onClick="return SaveSettings();">
  -->
 
-    &nbsp;
     <span class="helplink" id="aboutxmlterm" onclick="return AboutXMLTerm();">
       About XMLTerm
     </span>
@@ -67,6 +67,9 @@
             <td align=center> <span class="formhead">F7</span>
             <td align=center> <span class="formhead">F8</span>
             <td align=center> <span class="formhead">F9</span>
+          <tr>
+            <td align=center> <span class="formhead">ctl-Home</span>
+            <td align=center> <span class="formhead">ctl-End</span>
           <tr>
             <td><input type="button" value="Hide all output"
                        onClick="return F1Key();">
