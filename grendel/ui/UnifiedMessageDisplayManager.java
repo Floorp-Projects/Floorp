@@ -218,6 +218,10 @@ class UnifiedMessageFrame extends GeneralFrame {
   public void dispose() {
     saveBounds();
 
+    if (fLayout == null) {
+      fLayout = UnifiedMessageDisplayManager.SPLIT_TOP;
+    }
+
     Preferences prefs = PreferencesFactory.Get();
 
     prefs.putString("mail.multi_pane.folder_x",
@@ -228,6 +232,8 @@ class UnifiedMessageFrame extends GeneralFrame {
 		    Integer.toString(fThreads.getSize().width));
     prefs.putString("mail.multi_pane.thread_y",
 		    Integer.toString(fThreads.getSize().height));
+    prefs.putString("mail.multi_pane.layout",
+                    fLayout);
 
     fFolders.dispose();
     fThreads.dispose();
@@ -250,6 +256,8 @@ class UnifiedMessageFrame extends GeneralFrame {
       if (fLayout.equals(layout)) {
         return; // nothing to do
       }
+      
+      fLayout = layout;
       if (fLayout.equals(UnifiedMessageDisplayManager.STACKED)) {
 	remove(splitter1);
       } else {
