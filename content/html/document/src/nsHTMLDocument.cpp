@@ -1578,7 +1578,7 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
-  nsAutoString tmp(aTagName);
+  NS_ConvertUTF16toUTF8 tmp(aTagName);
 
   if (!IsXHTML()) {
     ToLowerCase(tmp);

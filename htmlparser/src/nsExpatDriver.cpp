@@ -1196,4 +1196,10 @@ nsExpatDriver::IntTagToStringTag(PRInt32 aIntTag) const
   return 0;
 }
 
+NS_IMETHODIMP_(nsIAtom *)
+nsExpatDriver::IntTagToAtom(PRInt32 aIntTag) const
+{
+  return 0;
+}
+
 /******************************************************************************/

@@ -889,8 +889,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
   if (aNodeType == eHTMLTag_userdefined) {
-    nsAutoString tmp;
-    tmp.Append(aNode.GetText());
+    NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
     ToLowerCase(tmp);
 
     rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
@@ -899,9 +898,8 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     nsCOMPtr<nsIDTD> dtd;
     rv = mParser->GetDTD(getter_AddRefs(dtd));
     if (NS_SUCCEEDED(rv)) {
-      nsDependentString tag(dtd->IntTagToStringTag(aNodeType));
-
-      rv = mNodeInfoManager->GetNodeInfo(tag, nsnull, kNameSpaceID_None,
+      rv = mNodeInfoManager->GetNodeInfo(dtd->IntTagToAtom(aNodeType), nsnull,
+                                         kNameSpaceID_None,
                                          getter_AddRefs(nodeInfo));
     }
   }
@@ -2259,7 +2257,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
 
   // Make head part
-  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("head"),
+  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("head"),
                                      nsnull, kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4021,7 +4019,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("base"), nsnull,
+    mNodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("base"), nsnull,
                                   kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
 
@@ -4173,7 +4171,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   // Create content object
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("meta"), nsnull,
+  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("meta"), nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);

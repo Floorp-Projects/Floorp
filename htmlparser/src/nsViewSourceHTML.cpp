@@ -903,6 +903,17 @@ CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag) const
   return str_ptr;
 }
 
+NS_IMETHODIMP_(nsIAtom *)
+CViewSourceHTML::IntTagToAtom(PRInt32 aIntTag) const
+{
+  nsIAtom *atom = nsHTMLTags::GetAtom((nsHTMLTag)aIntTag);
+
+  NS_ASSERTION(atom, "Bad tag enum passed to COtherDTD::IntTagToAtom()"
+               "!!");
+
+  return atom;
+}
+
 PRBool CViewSourceHTML::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
   PRBool result=PR_FALSE;
   return result;

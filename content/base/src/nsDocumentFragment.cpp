@@ -189,7 +189,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = nimgr->GetNodeInfo(NS_LITERAL_STRING("#document-fragment"),
+  rv = nimgr->GetNodeInfo(NS_LITERAL_CSTRING("#document-fragment"),
                           nsnull, kNameSpaceID_None,
                           getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);

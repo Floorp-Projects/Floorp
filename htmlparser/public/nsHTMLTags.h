@@ -41,6 +41,8 @@
 
 #include "nsAString.h"
 
+class nsIAtom;
+
 /*
    Declare the enum list using the magic of preprocessing
    enum values are "eHTMLTag_foo" (where foo is the tag)
@@ -73,6 +75,7 @@ public:
   static nsHTMLTag LookupTag(const nsAString& aTagName);
   static nsHTMLTag CaseSensitiveLookupTag(const PRUnichar* aTagName);
   static const PRUnichar *GetStringValue(nsHTMLTag aEnum);
+  static nsIAtom *GetAtom(nsHTMLTag aEnum);
 };
 
 #define eHTMLTags nsHTMLTag

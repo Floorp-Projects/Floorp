@@ -347,14 +347,12 @@ public:
                          PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
   NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
-                         const nsAString& aNamespaceURI,
-                         nsINodeInfo** aNodeInfo) = 0;
   NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
                          const nsAString& aNamespaceURI,
                          nsINodeInfo** aNodeInfo) = 0;
+
+  NS_IMETHOD GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
+                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
 
   /*
    * Retrieve a pointer to the document that owns this node info
