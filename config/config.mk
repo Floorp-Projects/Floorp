@@ -54,7 +54,7 @@ GRE_DIST	= $(DIST)/gre
 VERSION_NUMBER		= 50
 
 BUILD_TOOLS	= $(topsrcdir)/build/unix
-CONFIG_TOOLS	= $(DEPTH)/config
+CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
 #
