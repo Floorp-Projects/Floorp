@@ -16,6 +16,7 @@
             ACTIONS = {
                 checkboxClicked = id; 
                 checkboxStartPageClicked = id; 
+                checkboxUseSystemHomePageClicked = id; 
                 clearGlobalHistory = id; 
                 historyDaysModified = id; 
                 openSystemInternetPanel = id; 
@@ -23,12 +24,13 @@
             CLASS = OrgMozillaChimeraPreferenceNavigation; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                buttonSystemPreferences = NSButton; 
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
                 checkboxOpenTabs = NSButton; 
+                checkboxUseSystemHomePage = NSButton; 
                 sliderHistoryDays = NSSlider; 
                 textFieldHistoryDays = NSTextField; 
+                textFieldHomePage = NSTextField; 
             }; 
             SUPERCLASS = NSPreferencePane; 
         }

@@ -17,6 +17,8 @@
 
 #import "CHExtendedTabView.h"
 #import "BookmarksService.h"
+#import "BookmarksDataSource.h"
+
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIContent.h"

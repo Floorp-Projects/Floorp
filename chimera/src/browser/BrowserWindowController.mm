@@ -584,6 +584,9 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [newView setIsBookmarksImport: YES];
   [[[self window] contentView] addSubview: newView];
   [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
+
+  // XXX force reload
+  //[mSidebarBookmarksDataSource reloadDataForItem: nil reloadChildren: YES];
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender

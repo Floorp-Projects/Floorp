@@ -37,87 +37,21 @@
 
 #include <Appkit/Appkit.h>
 #include <Carbon/Carbon.h>
+
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
+
 #import "MainController.h"
 #import "CHBookmarksToolbar.h"
 #import "CHExtendedOutlineView.h"
 
-@class BookmarkItem;
-class BookmarksService;
 class nsIAtom;
-
-@class BookmarkInfoController;
-
-@interface BookmarksDataSource : NSObject
-{
-  BookmarksService* mBookmarks;
-
-  IBOutlet id mOutlineView;	
-  IBOutlet id mBrowserWindowController;
-  
-  NSString* mCachedHref;
-  
-  BookmarkInfoController* mBookmarkInfoController;
-}
-
--(id) init;
--(void) dealloc;
--(void) windowClosing;
-
--(void) ensureBookmarks;
-
--(IBAction)addBookmark:(id)aSender;
--(void)endAddBookmark: (int)aCode;
-
--(IBAction)deleteBookmarks: (id)aSender;
--(void)deleteBookmark: (id)aItem;
-
--(IBAction)addFolder:(id)aSender;
-
--(void)addBookmark:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder;
-
--(NSString*)resolveKeyword:(NSString*)aKeyword;
-
--(IBAction)openBookmarkInNewTab:(id)aSender;
--(IBAction)openBookmarkInNewWindow:(id)aSender;
-
--(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder;
--(IBAction)showBookmarkInfo:(id)aSender;
-
-// Datasource methods.
-- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;
-- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item;
-- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
-- (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
-
-- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard;
-- (NSDragOperation)outlineView:(NSOutlineView*)ov validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index;
-- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index;
-
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
-
-// Delegate methods
-- (void)outlineViewItemWillExpand:(NSNotification *)notification;
-- (void)outlineViewItemWillCollapse:(NSNotification *)notification;
-
-@end
-
-@interface BookmarkItem : NSObject
-{
-  nsIContent* mContentNode;
-}
-
-- (nsIContent*)contentNode;
-- (void)setContentNode: (nsIContent*)aContentNode;
-- (NSNumber*)contentID;
-- (id)copyWithZone:(NSZone *)aZone;
-@end
-
 class nsIDOMHTMLDocument;
+
+@class BookmarksDataSource;
+@class BookmarkItem;
 
 class BookmarksService
 {
@@ -142,6 +76,8 @@ public:
   static BookmarkItem* GetRootItem();
   static BookmarkItem* GetWrapperFor(nsIContent* aItem);
   static BookmarkItem* GetWrapperFor(PRUint32 contentID);
+  
+  static void ReadBookmarks();
   static void FlushBookmarks();
 
   static void ConstructBookmarksMenu(NSMenu* aMenu, nsIContent* aContent);
@@ -189,6 +125,7 @@ public:
   static nsIAtom* gOpenAtom;
   static nsIAtom* gGroupAtom;
   static nsIDocument* gBookmarks;
+  static BOOL     gBookmarksFileReadOK;
   static nsVoidArray* gInstances;
   static int CHInsertNone;
   static int CHInsertInto;

@@ -7,6 +7,9 @@
 	objects = {
 		080E96DDFE201D6D7F000001 = {
 			children = (
+				F5A3669402CCFAF601DC3354,
+				F5A3669602CCFAF601DC3354,
+				F5A3669702CCFAF601DC3354,
 				F5DE10E90209DC0601A967DF,
 				F517395B020CE3740189DA0C,
 				F528E21A020FD9620168DE43,
@@ -18,18 +21,10 @@
 				F52D5CD8027D3D5001A80166,
 				F6BA6D4E01B2F8A601A962F7,
 				F56769FB0208F74A010001CA,
-				F507BA4C0213AFF701D93544,
-				F57074B6026BA85F01A80166,
-				F57074BA026BFD0101A80166,
 				F57074BE026D80DF01A80166,
 				2E2939FF027F33604B000102,
 				F59E9F3F0237E43401A967DF,
-				F52D5CD0027A887001A80166,
-				F52D5CD4027A88C601A80166,
-				F52F87CD027D75C301A80165,
-				F52F87CE027D75C301A80165,
 				2E748B73029A448D4B000102,
-				F53E012C02AEE93601A967F3,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -452,6 +447,7 @@
 				F53E013302AEEA2901A967F3,
 				F632AF8502B9AEBB01000103,
 				F59236C202C89ACA0100012B,
+				F5A3669802CCFAF601DC3354,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -538,6 +534,7 @@
 				F517395D020CE3750189DA0C,
 				F528E21B020FD9620168DE43,
 				F507BA4D0213AFF701D93544,
+				F5A3669902CCFAF601DC3354,
 				F53F220E022B7C78010001CA,
 				F53F220F022B7C78010001CA,
 				F53F2210022B7C78010001CA,
@@ -645,13 +642,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		2EEC3E6002810B184B000102 = {
-			indentWidth = 2;
-			isa = PBXFileReference;
-			path = CHExtendedTabView.m;
-			refType = 4;
-			usesTabs = 0;
 		};
 		2EEC3E61028138714B000102 = {
 			isa = PBXFileReference;
@@ -948,6 +938,8 @@
 		};
 		F50E1BC90207F99201F281DF = {
 			children = (
+				F5C321D402CBD01C014E7D56,
+				F5C321D002CBCEF7014E7D56,
 				F50E1BCA0207F99201F281DF,
 				F51D9B0A020940C101A80166,
 			);
@@ -1216,6 +1208,7 @@
 				2E748B72029A448D4B000102,
 				F53E012902AEE91C01A967F3,
 				F53E013202AEEA2801A967F3,
+				F5A3669302CCFAF601DC3354,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -1287,6 +1280,7 @@
 			children = (
 				F51D9B0B020940C101A80166,
 				F51D9B0D0209421401A80166,
+				F5C321D702CBD0CE014E7D56,
 			);
 			isa = PBXGroup;
 			name = xul;
@@ -2681,14 +2675,11 @@
 		F5571935022B401B010001CA = {
 			children = (
 				F5BF71450231B8BC010001CA,
-				2EEC3E6002810B184B000102,
 				F5BF71460231B8BC010001CA,
 				F5648739023C3857010001CA,
 				F564873A023C3857010001CA,
 				F5C3AB810270072A01A80166,
 				F5C3AB820270072A01A80166,
-				2EEC3E61028138714B000102,
-				2EEC3E62028138714B000102,
 				F541495A02711A8301A80166,
 				F541495B02711A8301A80166,
 				F541495E02711B0001A80166,
@@ -4183,6 +4174,79 @@
 			settings = {
 			};
 		};
+		F5A3669302CCFAF601DC3354 = {
+			isa = PBXFileReference;
+			path = BookmarksDataSource.h;
+			refType = 4;
+		};
+		F5A3669402CCFAF601DC3354 = {
+			children = (
+				F507BA4C0213AFF701D93544,
+				F5A3669502CCFAF601DC3354,
+				F57074B6026BA85F01A80166,
+				F57074BA026BFD0101A80166,
+				F53E012C02AEE93601A967F3,
+				2EEC3E61028138714B000102,
+				2EEC3E62028138714B000102,
+			);
+			isa = PBXGroup;
+			name = Bookmarks;
+			refType = 4;
+		};
+		F5A3669502CCFAF601DC3354 = {
+			isa = PBXFileReference;
+			path = BookmarksDataSource.mm;
+			refType = 4;
+		};
+		F5A3669602CCFAF601DC3354 = {
+			children = (
+				F52F87CD027D75C301A80165,
+				F52F87CE027D75C301A80165,
+			);
+			isa = PBXGroup;
+			name = History;
+			path = "";
+			refType = 4;
+		};
+		F5A3669702CCFAF601DC3354 = {
+			children = (
+				F52D5CD0027A887001A80166,
+				F52D5CD4027A88C601A80166,
+			);
+			isa = PBXGroup;
+			name = Autocomplete;
+			refType = 4;
+		};
+		F5A3669802CCFAF601DC3354 = {
+			fileRef = F5A3669302CCFAF601DC3354;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A3669902CCFAF601DC3354 = {
+			fileRef = F5A3669502CCFAF601DC3354;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A3669A02CCFB7A01DC3354 = {
+			fileRef = F5A3669302CCFAF601DC3354;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A3669B02CCFB7A01DC3354 = {
+			fileRef = F632AF8402B9AEBB01000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A3669C02CCFB7A01DC3354 = {
+			fileRef = F5A3669502CCFAF601DC3354;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5AC38BA02AD8E7B01A967F3 = {
 			fileRef = F5C2CDA702383CE601A967DF;
 			isa = PBXBuildFile;
@@ -4426,6 +4490,7 @@
 				F53E012B02AEE91D01A967F3,
 				F53E013402AEEA2901A967F3,
 				F59236C402C89ACA0100012B,
+				F5A3669A02CCFB7A01DC3354,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -4538,6 +4603,8 @@
 				F56F242102AC6D0401A967F3,
 				F53E012E02AEE93701A967F3,
 				F59236C502C89ACA0100012B,
+				F5A3669B02CCFB7A01DC3354,
+				F5A3669C02CCFB7A01DC3354,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -6258,6 +6325,24 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5C321D002CBCEF7014E7D56 = {
+			isa = PBXFileReference;
+			name = nsXBLService.cpp;
+			path = /Volumes/Development/Projects/Mozilla/Chimera/mozilla/content/xbl/src/nsXBLService.cpp;
+			refType = 0;
+		};
+		F5C321D402CBD01C014E7D56 = {
+			isa = PBXFileReference;
+			name = xmlparse.c;
+			path = /Volumes/Development/Projects/Mozilla/Chimera/mozilla/expat/xmlparse/xmlparse.c;
+			refType = 0;
+		};
+		F5C321D702CBD0CE014E7D56 = {
+			isa = PBXFileReference;
+			name = nsXMLContentSink.cpp;
+			path = /Volumes/Development/Projects/Mozilla/Chimera/mozilla/content/xml/document/src/nsXMLContentSink.cpp;
+			refType = 0;
 		};
 		F5C3AB810270072A01A80166 = {
 			isa = PBXFileReference;

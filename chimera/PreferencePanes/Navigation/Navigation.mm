@@ -74,6 +74,15 @@ const int kDefaultExpireDays = 9;
   rv = mPrefService->GetBoolPref("browser.tabs.opentabfor.middleclick", &boolPref);
   if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
     [checkboxOpenTabs setState:YES];
+
+	char *buf = nsnull;
+	rv = mPrefService->GetCharPref("browser.startup.homepage", &buf);
+	if (NS_SUCCEEDED(rv) && buf)
+	{
+		[textFieldHomePage setStringValue:[NSString stringWithCString:buf]];
+		free(buf);
+	}
+
 }
 
 - (IBAction)openSystemInternetPanel:(id)sender
@@ -90,6 +99,11 @@ const int kDefaultExpireDays = 9;
     return;
 
   mPrefService->SetBoolPref("browser.tabs.opentabfor.middleclick", [sender state] ? PR_TRUE : PR_FALSE);
+}
+
+- (IBAction)checkboxUseSystemHomePageClicked:(id)sender
+{
+	NSLog(@"Homepage clicked");
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender

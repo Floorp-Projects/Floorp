@@ -37,8 +37,13 @@
 
 #import "CHBrowserView.h"
 #import "BookmarksService.h"
+#import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
+
 #import "StringUtils.h"
+
+#include "nsCRT.h"
+#include "nsString.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -47,725 +52,19 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMParser.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIPrefBranch.h"
-#include "nsString.h"
-#include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsIDOMSerializer.h"
+#include "nsIDocumentEncoder.h"
 #include "nsNetUtil.h"
 #include "nsINamespaceManager.h"
 #include "nsIXBLService.h"
 #include "nsIWebBrowser.h"
 
-@implementation BookmarksDataSource
-
--(id) init
-{
-    if ( (self = [super init]) ) {
-        mBookmarks = nsnull;
-        mCachedHref = nil;
-    }
-    return self;
-}
-
--(void) dealloc
-{
-  [mBookmarkInfoController release];
-  [super dealloc];
-}
-
--(void) windowClosing
-{
-  if (mBookmarks) {
-    mBookmarks->RemoveObserver();
-    delete mBookmarks;
-  }
-}
-
--(void) ensureBookmarks
-{
-    if (mBookmarks)
-        return;
-    
-    mBookmarks = new BookmarksService(self);
-    mBookmarks->AddObserver();
-    
-    [mOutlineView setTarget: self];
-    [mOutlineView setDoubleAction: @selector(openBookmark:)];
-    [mOutlineView setDeleteAction: @selector(deleteBookmarks:)];
-    [mOutlineView reloadData];
-}
-
--(IBAction)addBookmark:(id)aSender
-{
-  [self addBookmark: aSender useSelection: YES isFolder: NO];
-}
-
--(IBAction)addFolder:(id)aSender
-{
-  [self addBookmark: aSender useSelection: YES isFolder: YES];
-}
-
--(void)addBookmark:(id)aSender useSelection:(BOOL)aUseSel isFolder:(BOOL)aIsFolder
-{
-  if (!mBookmarks)
-    return;
-
-  // We use the selected item to determine the parent only if aUseSel is YES.
-  BookmarkItem* item = nil;
-  if (aUseSel && ([mOutlineView numberOfSelectedRows] == 1)) {
-    // There is only one selected row.  If it is a folder, use it as our parent.
-    // Otherwise, use our parent,
-    int index = [mOutlineView selectedRow];
-    item = [mOutlineView itemAtRow: index];
-    if (![mOutlineView isExpandable: item]) {
-      // We can't be used as the parent.  Try our parent.
-      nsIContent* content = [item contentNode];
-      if (!content)
-        return;
-
-      nsCOMPtr<nsIContent> parentContent;
-      content->GetParent(*getter_AddRefs(parentContent));
-      nsCOMPtr<nsIContent> root;
-      mBookmarks->GetRootContent(getter_AddRefs(root));
-      
-      // The root has no item, so we don't need to do a lookup unless we
-      // aren't the root.
-      if (parentContent != root) {
-        PRUint32 contentID;
-        parentContent->GetContentID(&contentID);
-        item = [(BookmarksService::gDictionary) objectForKey: [NSNumber numberWithInt: contentID]];
-      }
-    }
-  }
-
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mBookmarks->gBookmarks));
-  
-  // Fetch the title of the current page and the URL.
-  nsAutoString title, href;
-  if (!aIsFolder) {
-    BookmarksService::GetTitleAndHrefForBrowserView([[mBrowserWindowController getBrowserWrapper] getBrowserView],
-                                                    title, href);
-
-    mCachedHref = [NSString stringWithCharacters: href.get() length: href.Length()];
-    [mCachedHref retain];
-  }
-  else {
-    mCachedHref = nil;
-    title = NS_LITERAL_STRING("New Folder");
-  }
-  
-  NSTextField* textField = [mBrowserWindowController getAddBookmarkTitle];
-  [textField setStringValue: [NSString stringWithCharacters: title.get() length: title.Length()]];
-
-  [mBrowserWindowController cacheBookmarkDS: self];
-
-  // Show/hide the bookmark all tabs checkbox as appropriate.
-  NSTabView* tabView = [mBrowserWindowController getTabBrowser];
-  id checkbox = [mBrowserWindowController getAddBookmarkCheckbox];
-  BOOL hasSuperview = [checkbox superview] != nil;
-  if (aIsFolder && hasSuperview) {
-    // Just don't show it at all.
-    [checkbox removeFromSuperview];
-    [checkbox retain];
-  }
-  else if (!aIsFolder && !hasSuperview) {
-    // Put it back in.
-    [[[mBrowserWindowController getAddBookmarkSheetWindow] contentView] addSubview: checkbox];
-    [checkbox autorelease];
-  }
-
-  // Enable the bookmark all tabs checkbox if appropriate.
-  if (!aIsFolder)
-    [[mBrowserWindowController getAddBookmarkCheckbox] setEnabled: ([tabView numberOfTabViewItems] > 1)];
-  
-  // Build up the folder list.
-  NSPopUpButton* popup = [mBrowserWindowController getAddBookmarkFolder];
-  BookmarksService::ConstructAddBookmarkFolderList(popup, item);
-  
-  [NSApp beginSheet: [mBrowserWindowController getAddBookmarkSheetWindow]
-     modalForWindow: [mBrowserWindowController window]
-      modalDelegate: nil //self
-     didEndSelector: nil //@selector(sheetDidEnd:)
-        contextInfo: nil];
-}
-
--(void)endAddBookmark: (int)aCode
-{
-  if (aCode == 0)
-    return;
-
-  BOOL isGroup = NO;
-  id checkbox = [mBrowserWindowController getAddBookmarkCheckbox];
-  if (([checkbox superview] != nil) && [checkbox isEnabled] && ([checkbox state] == NSOnState)) {
-    mCachedHref = nil;
-    isGroup = YES;
-  }
-  
-  const char* titleC = [[[mBrowserWindowController getAddBookmarkTitle] stringValue] cString];
-  nsAutoString title; title.AssignWithConversion(titleC);
-
-  nsAutoString tagName;
-  if (mCachedHref)
-    tagName = NS_LITERAL_STRING("bookmark");
-  else
-    tagName = NS_LITERAL_STRING("folder");
-  
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mBookmarks->gBookmarks));
-  nsCOMPtr<nsIDOMElement> elt;
-  domDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
-                          tagName,
-                          getter_AddRefs(elt));
-
-  elt->SetAttribute(NS_LITERAL_STRING("name"), title);
-
-  if (mCachedHref) {
-    nsAutoString href; href.AssignWithConversion([mCachedHref cString]);
-    [mCachedHref release];
-    elt->SetAttribute(NS_LITERAL_STRING("href"), href);
-  }
-
-  if (isGroup) {
-    // We have to iterate over each tab and create content nodes using the
-    // title/href of all the pages.  They are inserted underneath the parent.
-    elt->SetAttribute(NS_LITERAL_STRING("group"), NS_LITERAL_STRING("true"));
-    id tabBrowser = [mBrowserWindowController getTabBrowser];
-    int count = [tabBrowser numberOfTabViewItems];
-    for (int i = 0; i < count; i++) {
-      id browserView = [[[tabBrowser tabViewItemAtIndex: i] view] getBrowserView];
-      nsAutoString title, href;
-      BookmarksService::GetTitleAndHrefForBrowserView(browserView, title, href);
-      nsCOMPtr<nsIDOMElement> childElt;
-      domDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
-                              NS_LITERAL_STRING("bookmark"),
-                              getter_AddRefs(childElt));
-      childElt->SetAttribute(NS_LITERAL_STRING("name"), title);
-      childElt->SetAttribute(NS_LITERAL_STRING("href"), href);
-      nsCOMPtr<nsIDOMNode> dummy;
-      elt->AppendChild(childElt, getter_AddRefs(dummy));
-    }
-  }
-  
-  // Figure out the parent element.
-  nsCOMPtr<nsIDOMElement> parentElt;
-  nsCOMPtr<nsIContent> parentContent;
-  NSPopUpButton* popup = [mBrowserWindowController getAddBookmarkFolder];
-  NSMenuItem* selectedItem = [popup selectedItem];
-  int tag = [selectedItem tag];
-  if (tag == -1) {
-    mBookmarks->GetRootContent(getter_AddRefs(parentContent));
-    parentElt = do_QueryInterface(parentContent);
-  }
-  else {
-    BookmarkItem* item = [(BookmarksService::gDictionary) objectForKey: [NSNumber numberWithInt: tag]];
-    // Get the content node.
-    parentContent = [item contentNode];
-    parentElt = do_QueryInterface(parentContent);
-  }
-  
-  nsCOMPtr<nsIDOMNode> dummy;
-  parentElt->AppendChild(elt, getter_AddRefs(dummy));
-
-  nsCOMPtr<nsIContent> childContent(do_QueryInterface(elt));
-  mBookmarks->BookmarkAdded(parentContent, childContent);
-}
-
--(IBAction)deleteBookmarks: (id)aSender
-{
-  if (!mBookmarks)
-    return;
-
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return;
-
-  // we'll run into problems if a parent item and one if its children are both selected.
-  // A cheap way of having to avoid scanning the list to remove children is to have the
-  // outliner collapse all items that are being deleted. This will cull the selection
-  // for us and eliminate any children that happened to be selected.
-  NSEnumerator* selRows = [mOutlineView selectedRowEnumerator];
-  for (NSNumber* currIndex = [selRows nextObject];
-      currIndex != nil;
-      currIndex = [selRows nextObject]) {
-    index = [currIndex intValue];
-    BookmarkItem* item = [mOutlineView itemAtRow: index];
-    [mOutlineView collapseItem: item];
-  }
-
-  // create array of items we need to delete. Deleting items out of of the
-  // selection array is problematic for some reason.
-  NSMutableArray* itemsToDelete = [[[NSMutableArray alloc] init] autorelease];
-  selRows = [mOutlineView selectedRowEnumerator];
-  for (NSNumber* currIndex = [selRows nextObject];
-      currIndex != nil;
-      currIndex = [selRows nextObject]) {
-    index = [currIndex intValue];
-    BookmarkItem* item = [mOutlineView itemAtRow: index];
-    [itemsToDelete addObject: item];
-  }
-
-  // delete all bookmarks that are in our array
-  int count = [itemsToDelete count];
-  for (int i = 0; i < count; i++) {
-    BookmarkItem* item = [itemsToDelete objectAtIndex: i];
-    [self deleteBookmark: item];
-  }
-
-  // restore selection to location near last item deleted
-  int total = [mOutlineView numberOfRows];
-  if (index == total)
-    index--;
-  [mOutlineView selectRow: index byExtendingSelection: NO];
-}
-
--(void)deleteBookmark:(id)aItem
-{
-  nsCOMPtr<nsIContent> content = [aItem contentNode];
-  nsCOMPtr<nsIDOMElement> child(do_QueryInterface(content));
-  if (!child)
-    return;
-  if (child == BookmarksService::gToolbarRoot)
-    return; // Don't allow the personal toolbar to be deleted.
-  
-  nsCOMPtr<nsIDOMNode> parent;
-  child->GetParentNode(getter_AddRefs(parent));
-  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parent));
-  nsCOMPtr<nsIDOMNode> dummy;
-  if (parent)
-    parent->RemoveChild(child, getter_AddRefs(dummy));
-  mBookmarks->BookmarkRemoved(parentContent, content);
-}
-
--(IBAction)openBookmark: (id)aSender
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return;
-
-  id item = [mOutlineView itemAtRow: index];
-  if (!item)
-    return;
-
-  nsIContent* content = [item contentNode];
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
-  nsAutoString group;
-  content->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-  if (!group.IsEmpty())
-    mBookmarks->OpenBookmarkGroup([mBrowserWindowController getTabBrowser], elt);
-  else if ([mOutlineView isExpandable: item]) {
-    if ([mOutlineView isItemExpanded: item])
-      [mOutlineView collapseItem: item];
-    else
-      [mOutlineView expandItem: item];
-  }
-  else {
-    nsAutoString href;
-    content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
-    if (!href.IsEmpty()) {
-      NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
-      // Focus and activate our content area.
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
-    }
-  }
-}
-
--(NSString*) resolveKeyword: (NSString*) aKeyword
-{
-  return BookmarksService::ResolveKeyword(aKeyword);
-}
-
-//
-// outlineView:shouldEditTableColumn:item: (delegate method)
-//
-// Called by the outliner to determine whether or not we should allow the 
-// user to edit this item. For now, Cocoa doesn't correctly handle editing
-// of attributed strings with icons, so we can't turn this on. :(
-//
-- (BOOL)outlineView:(NSOutlineView *)outlineView shouldEditTableColumn:(NSTableColumn *)tableColumn item:(id)item
-{
-  return NO;
-}
-
-- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item
-{
-    if (!mBookmarks)
-        return nil;
-       
-    nsCOMPtr<nsIContent> content;
-    if (!item)
-        mBookmarks->GetRootContent(getter_AddRefs(content));
-    else
-        content = [item contentNode];
-    
-    nsCOMPtr<nsIContent> child;
-    content->ChildAt(index, *getter_AddRefs(child));
-    if ( child )
-      return mBookmarks->GetWrapperFor(child);
-    
-    return nil;
-}
-
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item
-{
-    if (!mBookmarks)
-        return NO;
-    
-    if (!item)
-        return YES; // The root node is always open.
-    
-    nsCOMPtr<nsIAtom> tagName;
-    nsIContent* content = [item contentNode];
-    content->GetTag(*getter_AddRefs(tagName));
-
-    BOOL isExpandable = (tagName == BookmarksService::gFolderAtom);
-
-// XXXben - persistence of folder open state
-// I'm adding this code, turned off, until I can figure out how to refresh the NSOutlineView's
-// row count. Currently the items are expanded, but the outline view continues to believe it had
-// the number of rows it had before the item was opened visible, until the view is resized. 
-#if 0
-    if (isExpandable) {
-      PRBool isOpen = content->HasAttr(kNameSpaceID_None, BookmarksService::gOpenAtom);
-      if (isOpen)
-        [mOutlineView expandItem: item];
-      else
-        [mOutlineView collapseItem: item];
-    }
-#endif
-    
-    return isExpandable;
-}
-
-- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item
-{
-    if (!mBookmarks)
-        return 0;
-  
-    nsCOMPtr<nsIContent> content;
-    if (!item)
-        mBookmarks->GetRootContent(getter_AddRefs(content));
-    else 
-        content = [item contentNode];
-    
-    PRInt32 childCount;
-    content->ChildCount(childCount);
-    
-    return childCount;
-}
-
-- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
-{
-    NSString *columnName = [tableColumn identifier];
-    NSMutableAttributedString *cellValue = [[NSMutableAttributedString alloc] init];
-    NSFileWrapper *fileWrapper = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
-    NSTextAttachment *textAttachment = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
-    NSMutableAttributedString *attachmentAttrString = nil;
-    NSCell *attachmentAttrStringCell;
-
-    if ([columnName isEqualToString: @"name"]) {
-        nsIContent* content = [item contentNode];
-        nsAutoString nameAttr;
-        content->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr);
-        
-        //Set cell's textual contents
-        [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWithCharacters: nameAttr.get() length: nameAttr.Length()]];
-        
-        //Create an attributed string to hold the empty attachment, then release the components.
-        attachmentAttrString = [[NSMutableAttributedString attributedStringWithAttachment:textAttachment] retain];
-        [textAttachment release];
-        [fileWrapper release];
-
-        //Get the cell of the text attachment.
-        attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
-        //Figure out which image to add, and set the cell's image.
-        // Use the bookmark groups image for groups.
-        if ([self outlineView:outlineView isItemExpandable:item]) {
-          nsIContent* content = [item contentNode];
-          nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
-          nsAutoString group;
-          content->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-          if (!group.IsEmpty())
-            [attachmentAttrStringCell setImage:[NSImage imageNamed:@"groupbookmark"]];
-          else
-            [attachmentAttrStringCell setImage:[NSImage imageNamed:@"folder"]];
-        }
-        else
-          [attachmentAttrStringCell setImage:[NSImage imageNamed:@"smallbookmark"]];
-        
-        //Insert the image
-        [cellValue replaceCharactersInRange:NSMakeRange(0, 0) withAttributedString:attachmentAttrString];
-        
-        //Tweak the baseline to vertically center the text.
-        [cellValue addAttribute:NSBaselineOffsetAttributeName
-                          value:[NSNumber numberWithFloat:-3.0]
-                          range:NSMakeRange(0, 1)];
-    }
-    return cellValue;
-}
-
-- (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
-{
-#if NOT_USED
-  // ignore all this. It doesn't work, but i'm leaving it here just in case we ever try to turn 
-  // this code back on. We have to remove the attributes from the string in order to correctly
-  // set it in the DOM.
-  
-  NSString *columnName = [tableColumn identifier];
-  if ( [columnName isEqualTo:@"name"] ) {
-    // remove the attributes
-    int strLen = [object length];
-    NSMutableAttributedString *cellValue = [[NSMutableAttributedString alloc] initWithAttributedString:object];
-    [cellValue removeAttribute:NSBaselineOffsetAttributeName range:NSMakeRange(0,1)];
-    [cellValue removeAttribute:NSAttachmentAttributeName range:NSMakeRange(0,strLen)];
-
-    // extract the unicode
-    strLen = [cellValue length];
-    PRUnichar* buffer = new PRUnichar[strLen + 1];
-    buffer[strLen] = '\0';
-    if ( !buffer )
-      return;
-    [cellValue getCharacters: buffer];
-    nsAutoString nameAttr;
-    nameAttr.Adopt(buffer);
-    
-    // stash it into the dom.
-    nsIContent* content = [item contentNode];
-    content->SetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr, PR_TRUE);
-    
-    [cellValue release];
-  }
-#endif
-}
-
-
-- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard 
-{
-  if (!mBookmarks || [mOutlineView selectedRow] == -1) {
-    return NO;
-  }
- 
-#ifdef FILTER_DESCENDANT_ON_DRAG
-  NSArray *toDrag = BookmarksService::FilterOutDescendantsForDrag(items);
-#else
-  NSArray *toDrag = items;
-#endif
-  int count = [toDrag count];
-  if (count > 0) {
-    // Create Pasteboard Data
-    NSMutableArray *draggedID = [NSMutableArray arrayWithCapacity: count];
-    for (int i = 0; i < count; i++)
-      [draggedID addObject: [[toDrag objectAtIndex: i] contentID]];
-    [pboard declareTypes: [NSArray arrayWithObject: @"MozBookmarkType"] owner: self];
-    [pboard setPropertyList: draggedID forType: @"MozBookmarkType"];
-    return YES;
-  }
-
-  return NO;
-}
-
-
-- (NSDragOperation)outlineView:(NSOutlineView*)ov validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index 
-{
-  NSArray* types = [[info draggingPasteboard] types];
-
-  //  if the index is -1, deny the drop
-  if (index == NSOutlineViewDropOnItemIndex)
-    return NSDragOperationNone;
-
-  if ([types containsObject: @"MozBookmarkType"]) {
-    NSArray *draggedIDs = [[info draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-    BookmarkItem* parent;
-    parent = (item) ? item : BookmarksService::GetRootItem();
-    return (BookmarksService::IsBookmarkDropValid(parent, index, draggedIDs)) ? NSDragOperationGeneric : NSDragOperationNone;
-  } else if ([types containsObject: @"MozURLType"]) {
-    return NSDragOperationGeneric;
-  }
-
-  return NSDragOperationNone;
-}
-
-- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index {
-  NSArray *types = [[info draggingPasteboard] types];
-  BookmarkItem* parent = (item) ? item : BookmarksService::GetRootItem();
-
-  if ([types containsObject: @"MozBookmarkType"]) {
-    NSArray *draggedItems = [[info draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-    BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
-    return YES;
-  }
-  else if ([types containsObject: @"MozURLType"]) {
-    NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];    
-    BookmarkItem* beforeItem = [self outlineView:ov child:index ofItem:item];
-    return BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
-  }
-
-  return NO;
-}
-
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
-{
-  if (!item)
-    [mOutlineView reloadData];
-  else if ([mOutlineView isItemExpanded: item])
-    [mOutlineView reloadItem: item reloadChildren: aReloadChildren];
-}
-
--(IBAction)openBookmarkInNewTab:(id)aSender
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return;
-  if ([mOutlineView numberOfSelectedRows] == 1) {
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-    if (!pref)
-        return; // Something bad happened if we can't get prefs.
-
-    BookmarkItem* item = [mOutlineView itemAtRow: index];
-    nsAutoString hrefAttr;
-    [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
-  
-    // stuff it into the string
-    NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
-
-    PRBool loadInBackground;
-    pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
-
-    [mBrowserWindowController openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
-  }
-}
-
--(IBAction)openBookmarkInNewWindow:(id)aSender
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return;
-  if ([mOutlineView numberOfSelectedRows] == 1) {
-    BookmarkItem* item = [mOutlineView itemAtRow: index];
-    nsAutoString hrefAttr;
-    [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, hrefAttr);
-  
-    // stuff it into the string
-    NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
-
-    nsAutoString group;
-    [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-    if (group.IsEmpty()) 
-      [mBrowserWindowController openNewWindowWithURL: hrefStr loadInBackground: NO];
-    else {
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
-      [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: NO];
-    }
-  }
-}
-
--(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder
-{
-  mBookmarks->OpenBookmarkGroup(aTabView, aFolder);
-}
-
--(IBAction)showBookmarkInfo:(id)aSender
-{
-  if (!mBookmarkInfoController) 
-    mBookmarkInfoController = [[BookmarkInfoController alloc] initWithOutlineView: mOutlineView]; 
-
-  [mBookmarkInfoController showWindow:mBookmarkInfoController];
-
-  int index = [mOutlineView selectedRow];
-  BookmarkItem* item = [mOutlineView itemAtRow: index];
-  [mBookmarkInfoController setBookmark:item];
-}
-
--(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1) {
-    if (mBookmarkInfoController)
-      [mBookmarkInfoController setBookmark:NULL];
-  }
-  else {  
-    BookmarkItem* item = [mOutlineView itemAtRow:index];
-    if (mBookmarkInfoController)
-      [mBookmarkInfoController setBookmark:item];
-  }
-}
-
--(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return NO;
-
-  BookmarkItem* item = [mOutlineView itemAtRow: index];
-  BOOL isBookmark = [mOutlineView isExpandable:item] == NO;
-  
-  nsAutoString group;
-  [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-  BOOL isGroup = !group.IsEmpty();
-
-  if (([aMenuItem action] == @selector(openBookmarkInNewWindow:))) {
-    // Bookmarks and Bookmark Groups can be opened in a new window
-    return (isBookmark || isGroup);
-  }
-  else if (([aMenuItem action] == @selector(openBookmarkInNewTab:))) {
-    // Only Bookmarks can be opened in new tabs
-    return isBookmark;
-  }
-  return YES;
-}
-
-- (void)outlineViewItemWillExpand:(NSNotification *)notification
-{
-  BookmarkItem* item = [[notification userInfo] objectForKey:[[[notification userInfo] allKeys] objectAtIndex: 0]];
-  [item contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, NS_LITERAL_STRING("true"), PR_FALSE);
-}
-
-- (void)outlineViewItemWillCollapse:(NSNotification *)notification
-{
-  BookmarkItem* item = [[notification userInfo] objectForKey:[[[notification userInfo] allKeys] objectAtIndex: 0]];
-  [item contentNode]->UnsetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, PR_FALSE);
-}
-
-@end
-
-@implementation BookmarkItem
--(nsIContent*)contentNode
-{
-  return mContentNode;
-}
-
-- (NSNumber*)contentID
-{
-  PRUint32 contentID = 0;
-  mContentNode->GetContentID(&contentID);
-  return [NSNumber numberWithInt: contentID];
-}
-
-- (NSString *)description
-{
-  nsCOMPtr<nsIContent> item = [self contentNode];
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
-  nsAutoString href;
-  element->GetAttribute(NS_LITERAL_STRING("name"), href);
-  NSString* info = [NSString stringWithCharacters: href.get() length: href.Length()];
-  return [NSString stringWithFormat:@"<BookmarkItem, name = \"%@\">", info];
-}
-
--(void)setContentNode: (nsIContent*)aContentNode
-{
-  mContentNode = aContentNode;
-}
-
-- (id)copyWithZone:(NSZone *)aZone
-{
-  BookmarkItem* copy = [[[self class] allocWithZone: aZone] init];
-  [copy setContentNode: mContentNode];
-  return copy;
-}
-
-@end
 
 // Helper for stripping whitespace
 static void
@@ -793,6 +92,12 @@ StripWhitespaceNodes(nsIContent* aElement)
   }
 }
 
+// the tag of the separator after which to insert bookmarks menu items
+// this tag must not conflict with content IDs (which are all >=0)
+// and match the tab in the .nib
+static const int kBookmarksDividerTag = -1;
+
+
 PRUint32 BookmarksService::gRefCnt = 0;
 nsIDocument* BookmarksService::gBookmarks = nsnull;
 NSMutableDictionary* BookmarksService::gDictionary = nil;
@@ -808,6 +113,7 @@ nsIAtom* BookmarksService::gKeywordAtom = nsnull;
 nsIAtom* BookmarksService::gNameAtom = nsnull;
 nsIAtom* BookmarksService::gOpenAtom = nsnull;
 nsVoidArray* BookmarksService::gInstances = nsnull;
+BOOL BookmarksService::gBookmarksFileReadOK = NO;
 int BookmarksService::CHInsertNone = 0;
 int BookmarksService::CHInsertInto = 1;
 int BookmarksService::CHInsertBefore = 2;
@@ -845,7 +151,8 @@ BookmarksService::GetRootContent(nsIContent** aResult)
 }
 
 BookmarkItem*
-BookmarksService::GetRootItem() {
+BookmarksService::GetRootItem()
+{
   nsCOMPtr<nsIContent> rootContent;
   BookmarksService::GetRootContent(getter_AddRefs(rootContent));
   BookmarkItem* rootItem = BookmarksService::GetWrapperFor(rootContent);
@@ -876,7 +183,8 @@ BookmarksService::GetWrapperFor(nsIContent* aContent)
 }
 
 BookmarkItem*
-BookmarksService::GetWrapperFor(PRUint32 contentID) {
+BookmarksService::GetWrapperFor(PRUint32 contentID)
+{
   BookmarkItem* item = [gDictionary objectForKey: [NSNumber numberWithUnsignedInt: contentID]];
   return item;
 }
@@ -1026,51 +334,9 @@ BookmarksService::AddObserver()
         gDescriptionAtom = NS_NewAtom("description");
         gGroupAtom = NS_NewAtom("group");
         gInstances = new nsVoidArray();
-                
-        nsCOMPtr<nsIFile> profileDir;
-        NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-        profileDir->Append(NS_LITERAL_STRING("bookmarks.xml"));
     
-        PRBool fileExists = PR_FALSE;
-        profileDir->Exists(&fileExists);
-
-        // If the bookmarks file does not exist, copy from the defaults so we don't
-        // crash or anything dumb like that. 
-        if (!fileExists) {
-            nsCOMPtr<nsIFile> defaultBookmarksFile;
-            NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(defaultBookmarksFile));
-            defaultBookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
-          
-            // XXX for some reason unknown to me, leaving this code in causes the program to crash
-            //     with 'cannot dereference null COMPtr.'
-#if I_WANT_TO_CRASH
-            PRBool defaultFileExists;
-            defaultBookmarksFile->Exists(&defaultFileExists);
-            if (defaultFileExists)
-                return;
-#endif
-
-            nsCOMPtr<nsIFile> profileDirectory;
-            NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDirectory));
-
-            defaultBookmarksFile->CopyToNative(profileDirectory, NS_LITERAL_CSTRING("bookmarks.xml"));
-        }
-        
-        nsCAutoString bookmarksFileURL;
-        NS_GetURLSpecFromFile(profileDir, bookmarksFileURL);
-        
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), bookmarksFileURL.get());
-    
-        // XXX this is somewhat lame. we have no way of knowing whether or not the parse succeeded
-        //     or failed. sigh. 
-        nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));    
-        xblService->FetchSyncXMLDocument(uri, &gBookmarks); // The addref is here.
-        
-        nsCOMPtr<nsIContent> rootNode;
-        GetRootContent(getter_AddRefs(rootNode));
-        StripWhitespaceNodes(rootNode);
-    }
+    ReadBookmarks();
+     }
     
     gInstances->AppendElement(this);
 }
@@ -1168,18 +434,141 @@ BookmarksService::DeleteBookmark(nsIDOMElement* aBookmark)
   }
 }
 
+static PRBool
+CheckXMLDocumentParseSuccessful(nsIDOMDocument* inDOMDoc)
+{
+  nsCOMPtr<nsIDOMElement> docElement;
+  inDOMDoc->GetDocumentElement(getter_AddRefs(docElement));
+  if (!docElement)
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIAtom> tagName;
+  nsCOMPtr<nsIContent>   docContent = do_QueryInterface(docElement);
+  docContent->GetTag(*getter_AddRefs(tagName));
+
+  nsCOMPtr<nsIAtom>	parserErrorAtom = do_GetAtom("parsererror");
+  if (parserErrorAtom != tagName)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+static PRBool
+ValidateXMLDocument(nsIDOMDocument* inDOMDoc)
+{
+  if (!inDOMDoc)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMElement> elt;
+  inDOMDoc->GetDocumentElement(getter_AddRefs(elt));
+  if (!elt)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMSerializer> domSerializer = do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID);
+  if (!domSerializer)
+    return PR_FALSE;
+  
+  nsXPIDLString encodedDocStr;
+  nsresult rv = domSerializer->SerializeToString(inDOMDoc, getter_Copies(encodedDocStr));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+  
+  nsCOMPtr<nsIDOMParser> domParser = do_CreateInstance(NS_DOMPARSER_CONTRACTID);
+  if (!domParser)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMDocument> newDomDoc;
+  domParser->ParseFromString(encodedDocStr.get(), "text/xml", getter_AddRefs(newDomDoc));
+  if (newDomDoc)
+   	return CheckXMLDocumentParseSuccessful(newDomDoc);
+  
+  return PR_FALSE;
+}
+
+void
+BookmarksService::ReadBookmarks()
+{
+  nsCOMPtr<nsIFile> profileDirBookmarks;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDirBookmarks));
+  profileDirBookmarks->Append(NS_LITERAL_STRING("bookmarks.xml"));
+  
+  PRBool fileExists = PR_FALSE;
+  profileDirBookmarks->Exists(&fileExists);
+  
+  // If the bookmarks file does not exist, copy from the defaults so we don't
+  // crash or anything dumb like that. 
+  if (!fileExists) {
+    nsCOMPtr<nsIFile> defaultBookmarksFile;
+    NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(defaultBookmarksFile));
+    defaultBookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
+    
+    // XXX for some reason unknown to me, leaving this code in causes the program to crash
+    //     with 'cannot dereference null COMPtr.'
+#if I_WANT_TO_CRASH
+    PRBool defaultFileExists;
+    defaultBookmarksFile->Exists(&defaultFileExists);
+    if (defaultFileExists)
+      return;
+#endif
+  
+    nsCOMPtr<nsIFile> profileDirectory;
+    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDirectory));
+  
+    defaultBookmarksFile->CopyToNative(profileDirectory, NS_LITERAL_CSTRING("bookmarks.xml"));
+  }
+  
+  nsCAutoString bookmarksFileURL;
+  NS_GetURLSpecFromFile(profileDirBookmarks, bookmarksFileURL);
+  
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), bookmarksFileURL.get());
+  
+  // XXX this is somewhat lame. we have no way of knowing whether or not the parse succeeded
+  //     or failed. sigh.
+  // Actually, we do. We check for a root <parsererror> node. This relies on the XMLContentSink
+  // behaviour.
+  nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));    
+  xblService->FetchSyncXMLDocument(uri, &gBookmarks);   // addref here
+    
+  // test for a parser error. The XML parser replaces the document with one
+  // that has a <parsererror> node as the root.
+  nsCOMPtr<nsIDOMDocument> bookmarksDOMDoc = do_QueryInterface(gBookmarks);
+  BOOL validPrefsFile = CheckXMLDocumentParseSuccessful(bookmarksDOMDoc);
+  
+  if (!validPrefsFile) {
+    // uh oh, parser error. Throw some UI
+    NSString *alert = NSLocalizedString(@"CorruptedBookmarksAlert",@"");
+    NSString *message = NSLocalizedString(@"CorruptedBookmarksMsg",@"");
+    NSRunAlertPanel(alert, message, @"OK", nil, nil);
+
+    // maybe we should read the default bookmarks here?
+    gBookmarksFileReadOK = PR_FALSE;
+    return;
+  }
+  
+  gBookmarksFileReadOK = PR_TRUE;
+  
+  nsCOMPtr<nsIContent> rootNode;
+  GetRootContent(getter_AddRefs(rootNode));
+  StripWhitespaceNodes(rootNode);
+}
+
 void
 BookmarksService::FlushBookmarks()
 {
     // XXX we need to insert a mechanism here to ensure that we don't write corrupt
     //     bookmarks files (e.g. full disk, program crash, whatever), because our
-    //     error handling in the parse stage is NON-EXISTENT. 
-    nsCOMPtr<nsIFile> bookmarksFile;
-    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(bookmarksFile));
-    bookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
-    
-    nsCOMPtr<nsIOutputStream> outputStream;
-    NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), bookmarksFile);
+    //     error handling in the parse stage is NON-EXISTENT.
+  //  This is now partially handled by looking for a <parsererror> node at read time.
+  if (!gBookmarksFileReadOK)
+    return;
+  
+  nsCOMPtr<nsIFile> bookmarksFile;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(bookmarksFile));
+  bookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
+  
+  nsCOMPtr<nsIOutputStream> outputStream;
+  NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), bookmarksFile);
 
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
 
@@ -1214,7 +603,7 @@ void BookmarksService::EnsureToolbarRoot()
   }
 
   if (!gToolbarRoot) {
-    printf("Repairing personal toolbar.\n");
+    NSLog(@"Repairing personal toolbar");
     nsCOMPtr<nsIDOMElement> elt;
     domDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
                             NS_LITERAL_STRING("folder"),
@@ -1248,7 +637,7 @@ void RecursiveAddBookmarkConstruct(NSPopUpButton* aPopup, NSMenu* aMenu, int aTa
       NSMutableString *title = [NSMutableString stringWithString:[menuItem title]];
       for (int j = 0; j <= depth; ++j) 
         [title insertString:@"    " atIndex: 0];
-	  
+    
       [aPopup addItemWithTitle: title];
       NSMenuItem* lastItem = [aPopup lastItem];
       if ([menuItem tag] == aTagToMatch)
@@ -1336,8 +725,13 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
 
   if (aIndex == -1)
     [aMenu addItem: menuItem];
-  else
-    [aMenu insertItem: menuItem atIndex: aIndex];
+  else {
+    PRInt32 insertIndex = aIndex;
+    if (aMenu == gBookmarksMenu)	// take static menu items into account
+      insertIndex += [aMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+    
+    [aMenu insertItem: menuItem atIndex: insertIndex];
+  }
   
   nsCOMPtr<nsIAtom> tagName;
   aChild->GetTag(*getter_AddRefs(tagName));
@@ -1531,44 +925,65 @@ static void AddImportedBookmarks(nsIDOMElement* aSrc, nsIDOMElement* aDst, nsIDO
   }
 }
 
+
+#define SAFE_BOOKMARKS_IMPORT
+//static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
+
 void
 BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
 {
-  nsCOMPtr<nsIDOMElement> domElement;
-  aHTMLDoc->GetDocumentElement(getter_AddRefs(domElement));
+  nsCOMPtr<nsIDOMElement> htmlDocRoot;
+  aHTMLDoc->GetDocumentElement(getter_AddRefs(htmlDocRoot));
 
-  nsCOMPtr<nsIDOMElement> elt;
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
-  domDoc->GetDocumentElement(getter_AddRefs(elt));
+  nsCOMPtr<nsIDOMElement>  bookmarksRoot;
+  nsCOMPtr<nsIDOMDocument> bookmarksDOMDoc(do_QueryInterface(gBookmarks));
+  bookmarksDOMDoc->GetDocumentElement(getter_AddRefs(bookmarksRoot));
 
-  // Create the root by hand.
-  nsCOMPtr<nsIDOMElement> childElt;
-  domDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
-                          NS_LITERAL_STRING("folder"),
-                          getter_AddRefs(childElt));
   nsCOMPtr<nsIDOMNode> dummy;
-  elt->AppendChild(childElt, getter_AddRefs(dummy));
+  
+  // Create the root of the new bookmarks by hand.
+  nsCOMPtr<nsIDOMElement> importedRootElement;
+  bookmarksDOMDoc->CreateElementNS(	NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
+                                      NS_LITERAL_STRING("folder"),
+                                      getter_AddRefs(importedRootElement));
   
   // Now crawl through the file and look for <DT> elements.  They signify folders
   // or leaves.
   PRInt32 bookmarksType = 0; // Assume IE.
-  AddImportedBookmarks(domElement, childElt, domDoc, bookmarksType);
+  AddImportedBookmarks(htmlDocRoot, importedRootElement, bookmarksDOMDoc, bookmarksType);
 
   if (bookmarksType == 0)
-    childElt->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Internet Explorer Favorites"));
+    importedRootElement->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Internet Explorer Favorites"));
   else if (bookmarksType == 1)
-    childElt->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Omniweb Favorites"));
+    importedRootElement->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Omniweb Favorites"));
   else if (bookmarksType == 2)
-    childElt->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Mozilla/Netscape Favorites"));
+    importedRootElement->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Mozilla/Netscape Favorites"));
 
-  // Save out the file.
-  FlushBookmarks();
-  
+  // now put the new child into the doc, and validate it
+  bookmarksRoot->AppendChild(importedRootElement, getter_AddRefs(dummy));
+
+  PRBool bookmarksGood = ValidateXMLDocument(bookmarksDOMDoc);
+  if (!bookmarksGood) {
+    // uh oh, parser error. Remove the new node, and then throw some UI
+    bookmarksRoot->RemoveChild(importedRootElement, getter_AddRefs(dummy));
+        
+    NSString *alert = NSLocalizedString(@"ErrorImportingBookmarksAlert",@"");
+    NSString *message = NSLocalizedString(@"ErrorImportingBookmarksMsg",@"");
+    NSRunAlertPanel(alert, message, @"OK", nil, nil);
+    return;
+  }
+
   // Now do a notification that the root Favorites folder got added.  This
   // will update all our views.
-  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(elt));
-  nsCOMPtr<nsIContent> childContent(do_QueryInterface(childElt));
-  BookmarkAdded(parentContent, childContent);
+  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(bookmarksRoot));
+  nsCOMPtr<nsIContent> childContent(do_QueryInterface(importedRootElement));
+  
+  // XXX testing
+  if (gDictionary)
+    [gDictionary removeAllObjects];
+  
+  // this will save the file
+  BookmarkAdded(parentContent, childContent, true /* flush */);
 }
 
 void
