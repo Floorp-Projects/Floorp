@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.6 $ $Date: 2002/02/04 21:57:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.7 $ $Date: 2002/03/04 22:39:25 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -151,7 +151,17 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     rvToken->slot = nssSlot_CreateFromPK11SlotInfo(td, nss3slot);
     rvToken->slot->token = rvToken;
     rvToken->defaultSession->slot = rvToken->slot;
+    rvToken->arena = td->arena;
     return rvToken;
+}
+
+NSS_IMPLEMENT void
+nssToken_UpdateName(NSSToken *token)
+{
+    if (!token) {
+	return;
+    }
+    token->name = nssUTF8_Duplicate(token->pk11slot->token_name,token->arena);
 }
 
 NSS_IMPLEMENT PRBool

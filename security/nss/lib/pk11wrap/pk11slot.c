@@ -447,6 +447,7 @@ PK11_NewSlotInfo(void)
     slot->minPassword = 0;
     slot->maxPassword = 0;
     slot->hasRootCerts = PR_FALSE;
+    slot->nssToken = NULL;
     return slot;
 }
     
@@ -1720,6 +1721,8 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     slot->minPassword = tokenInfo.ulMinPinLen;
     slot->maxPassword = tokenInfo.ulMaxPinLen;
     PORT_Memcpy(slot->serial,tokenInfo.serialNumber,sizeof(slot->serial));
+
+    nssToken_UpdateName(slot->nssToken);
 
     slot->defRWSession = (PRBool)((!slot->readOnly) && 
 					(tokenInfo.ulMaxSessionCount == 1));
