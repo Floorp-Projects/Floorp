@@ -104,6 +104,8 @@ protected:
     nsCOMPtr<nsICacheEntryDescriptor>   mCacheEntry;
     nsCOMPtr<nsIOutputStream>           mCacheOutputStream;
     nsCOMPtr<nsIInputStream>            mCacheInputStream;
+
+    nsCOMPtr<nsISupports>               mSecurityInfo;
 };
 
 #endif /* nsWyciwygChannel_h___ */

@@ -538,22 +538,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         // If a document loading gets triggered, we will see more events.
         return NS_OK;
       }
-
-      if (NS_SUCCEEDED(uri->SchemeIs("wyciwyg", &vs)) && vs)
-      {
-        // We ignore everything caused by wycywig == document.write/writeln
-        // and assume the same security status
-        // Unfortunately, this results in different lock icon states
-        // when using "back".
-        // 1) goto secure page => secure lock icon
-        // 2) trigger document.writeln() => still secure lock icon
-        //    (because we not change lock icon)
-        // 3) go to a different insecure page => insecure lock icon
-        // 4) press "back" button => still insecure lock icon
-        // To fix this, we could try to remember the security state in the 
-        // wyciwyg channel object.
-        return NS_OK;
-      }
     }
   }
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,13 +48,18 @@
 [scriptable, uuid (c36730c0-a3b9-4732-9973-c5e7dbe0dabe)]
 interface nsIWyciwygChannel : nsIChannel
 {
-    /**
-     * Append data to the cache entry; opens the cache entry if necessary.
-     */
-    void writeToCacheEntry(in AString aData);
+  /**
+   * Append data to the cache entry; opens the cache entry if necessary.
+   */
+  void writeToCacheEntry(in AString aData);
 
-    /**
-     * Close the cache entry; subsequent writes have undefined behavior.
-     */
-    void closeCacheEntry(in nsresult reason);
+  /**
+   * Close the cache entry; subsequent writes have undefined behavior.
+   */
+  void closeCacheEntry(in nsresult reason);
+
+  /**
+   * Set the wyciwyg channels security info
+   */
+  void setSecurityInfo(in nsISupports aSecurityInfo);
 };
