@@ -830,9 +830,8 @@ XFE_CALLBACK_DEFN(XFE_RDFToolbar,urlBarTextActivatedNotice)
 		// Because im a lazy bastard, ill do this later and for 
 		// now ill do the following.
 		//
-		// Have a nive day -re
-		// 
-//		urlbar->setTextStringFromURL(url);
+
+		urlbar->setTextStringFromURL(url);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
