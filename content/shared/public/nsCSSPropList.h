@@ -362,7 +362,7 @@ CSS_PROP_POSITION(max-height, max_height, MaxHeight, Position, mMaxHeight, eCSST
 CSS_PROP_POSITION(max-width, max_width, MaxWidth, Position, mMaxWidth, eCSSType_Value, PR_TRUE)
 CSS_PROP_POSITION(min-height, min_height, MinHeight, Position, mMinHeight, eCSSType_Value, PR_TRUE)
 CSS_PROP_POSITION(min-width, min_width, MinWidth, Position, mMinWidth, eCSSType_Value, PR_TRUE)
-CSS_PROP_VISIBILITY(-moz-opacity, opacity, MozOpacity, Display, mOpacity, eCSSType_Value, PR_FALSE) // XXX bug 3935
+CSS_PROP_DISPLAY(-moz-opacity, opacity, MozOpacity, Display, mOpacity, eCSSType_Value, PR_FALSE) // XXX bug 3935
 CSS_PROP_BACKENDONLY(orphans, orphans, Orphans, Breaks, mOrphans, eCSSType_Value, PR_FALSE)
 CSS_PROP_NOTIMPLEMENTED(outline, outline, Outline)
 CSS_PROP_NOTIMPLEMENTED(outline-color, outline_color, OutlineColor)

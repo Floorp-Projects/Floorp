@@ -798,13 +798,15 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
     aStyleContext = aFrame->GetStyleContext();
   }
     
-  const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
+  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
 
   // Set the view's opacity
-  vm->SetViewOpacity(aView, vis->mOpacity);
+  vm->SetViewOpacity(aView, display->mOpacity);
 
   // Make sure visibility is correct
   if (0 == (aFlags & NS_FRAME_NO_VISIBILITY)) {
+    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
+
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
 
@@ -834,7 +836,6 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
                           nsViewVisibility_kHide);
   }
 
-  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   // See if the frame is being relatively positioned or absolutely
   // positioned
   PRBool isTopMostView = display->IsPositioned();
@@ -860,9 +861,8 @@ PRBool
 nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
 {
   nsStyleContext* sc = aFrame->GetStyleContext();
-  const nsStyleVisibility* vis = sc->GetStyleVisibility();
-    
-  if (vis->mOpacity != 1.0f) {
+  const nsStyleDisplay* display = sc->GetStyleDisplay();
+  if (display->mOpacity != 1.0f) {
     return PR_TRUE;
   }
 
@@ -877,8 +877,6 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
     return PR_TRUE;
   }
     
-  const nsStyleDisplay* display = sc->GetStyleDisplay();
-
   if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
     return PR_TRUE;
   } else if (display->IsAbsolutelyPositioned()) {

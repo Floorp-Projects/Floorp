@@ -2451,12 +2451,12 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
     PRBool isCanvas;
     PRBool hasBG =
         nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
-    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
+    const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
 
-    if (vis->mOpacity != 1.0f) {
+    if (disp->mOpacity != 1.0f) {
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsBoxFrame::CreateViewForFrame: frame=%p opacity=%g",
-         aFrame, vis->mOpacity));
+         aFrame, disp->mOpacity));
       aForce = PR_TRUE;
     }
 
@@ -2517,6 +2517,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
             (!hasBG ||
              (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
 
+        const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
         if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
           viewIsVisible = PR_FALSE;
         }
@@ -2556,7 +2557,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
           viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
         }
 
-        viewManager->SetViewOpacity(view, vis->mOpacity);
+        viewManager->SetViewOpacity(view, disp->mOpacity);
       }
 
       // Remember our view

@@ -162,7 +162,6 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     nsCSSValue inherit(eCSSUnit_Inherit);
     aData->mDisplayData->mVisibility = inherit;
     aData->mDisplayData->mDirection = inherit;
-    aData->mDisplayData->mOpacity = inherit;
   }
 
   if (aData->mSID == eStyleStruct_Display) {
@@ -174,6 +173,9 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     aData->mDisplayData->mClip.mRight = autovalue;
     aData->mDisplayData->mClip.mBottom = autovalue;
     aData->mDisplayData->mClip.mLeft = autovalue;
+
+    nsCSSValue one(1.0f, eCSSUnit_Number);
+    aData->mDisplayData->mOpacity = one;
 
     nsCSSValue inlinevalue(NS_STYLE_DISPLAY_INLINE, eCSSUnit_Enumerated);
     aData->mDisplayData->mDisplay = inlinevalue;

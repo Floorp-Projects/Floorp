@@ -2509,6 +2509,15 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     parentDisplay = parentContext->GetStyleDisplay();
   PRBool inherited = aInherited;
 
+  // opacity: factor, inherit
+  if (eCSSUnit_Number == displayData.mOpacity.GetUnit()) {
+    display->mOpacity = displayData.mOpacity.GetFloatValue();
+  }
+  else if (eCSSUnit_Inherit == displayData.mOpacity.GetUnit()) {
+    inherited = PR_TRUE;
+    display->mOpacity = parentDisplay->mOpacity;
+  }
+
   // display: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mDisplay.GetUnit()) {
     display->mDisplay = displayData.mDisplay.GetIntValue();
@@ -2768,15 +2777,6 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct,
     visibility = new (mPresContext) nsStyleVisibility(mPresContext);
   if (!parentVisibility)
     parentVisibility = visibility;
-
-  // opacity: factor, inherit
-  if (eCSSUnit_Number == displayData.mOpacity.GetUnit()) {
-    visibility->mOpacity = displayData.mOpacity.GetFloatValue();
-  }
-  else if (eCSSUnit_Inherit == displayData.mOpacity.GetUnit()) {
-    inherited = PR_TRUE;
-    visibility->mOpacity = parentVisibility->mOpacity;
-  }
 
   // direction: enum, inherit
   if (eCSSUnit_Enumerated == displayData.mDirection.GetUnit()) {

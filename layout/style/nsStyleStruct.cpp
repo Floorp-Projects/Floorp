@@ -1068,6 +1068,7 @@ nsStyleDisplay::nsStyleDisplay()
   mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SetRect(0,0,0,0);
+  mOpacity = 1.0f;
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
@@ -1084,6 +1085,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mOverflow = aSource.mOverflow;
   mClipFlags = aSource.mClipFlags;
   mClip = aSource.mClip;
+  mOpacity = aSource.mOpacity;
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
@@ -1094,7 +1096,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || mFloats != aOther.mFloats
-      || mOverflow != aOther.mOverflow)
+      || mOverflow != aOther.mOverflow
+      // might need to create a view to handle change from 1.0 to partial opacity
+      || (mOpacity != aOther.mOpacity
+          && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0))))
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
 
   // XXX the following is conservative, for now: changing float breaking shouldn't
@@ -1106,7 +1111,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame));
 
   if (mClipFlags != aOther.mClipFlags
-      || mClip != aOther.mClip)
+      || mClip != aOther.mClip
+      || mOpacity != aOther.mOpacity)
     NS_UpdateHint(hint, nsChangeHint_SyncFrameView);
 
   return hint;
@@ -1127,7 +1133,6 @@ nsStyleVisibility::nsStyleVisibility(nsIPresContext* aPresContext)
 
   aPresContext->GetLanguage(getter_AddRefs(mLanguage));
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
-  mOpacity = 1.0f;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
@@ -1135,23 +1140,14 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
   mLanguage = aSource.mLanguage;
-  mOpacity = aSource.mOpacity;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
-  if (mOpacity != aOther.mOpacity
-      && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0)))
-     // might need to create a view to handle change from 1.0 to partial opacity
-     return NS_STYLE_HINT_FRAMECHANGE;
-
   if ((mDirection == aOther.mDirection) &&
       (mLanguage == aOther.mLanguage)) {
     if ((mVisible == aOther.mVisible)) {
-      if (mOpacity == aOther.mOpacity)
-        return NS_STYLE_HINT_NONE;
-      else
-        return NS_STYLE_HINT_VISUAL;
+      return NS_STYLE_HINT_NONE;
     }
     if ((mVisible != aOther.mVisible) && 
         ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) || 
