@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:cookie"
         chrome:displayName="Cookie Manager"
         chrome:author="mozilla.org"
-        chrome:name="cookie">
+        chrome:name="cookie"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 
   <!-- overlay information -->

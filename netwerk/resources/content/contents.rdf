@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:necko"
         chrome:displayName="Necko"
         chrome:author="mozilla.org"
-        chrome:name="necko">
+        chrome:name="necko"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 
 </RDF:RDF>

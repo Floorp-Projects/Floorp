@@ -19,6 +19,10 @@
     </chrome:packages>
   </RDF:Description>
 
+  <!-- Version Information.  State that we work only with major version of this
+       package. -->
+  <RDF:Description about="urn:mozilla:locale:en-US:content-packs"
+	chrome:localeVersion="0.9.3"/>
 </RDF:RDF>
 
 

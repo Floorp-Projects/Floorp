@@ -11,6 +11,7 @@
   <RDF:Description about="urn:mozilla:package:navigator-platform"
         chrome:displayName="UNIX Bindings"
         chrome:author="mozilla.org"
-        chrome:name="navigator-platform">
+        chrome:name="navigator-platform"
+	chrome:localeVersion="0.9.3"/>
   </RDF:Description>
 </RDF:RDF>
