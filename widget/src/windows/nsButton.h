@@ -25,6 +25,10 @@
 
 #include "nsIButton.h"
 
+/**
+ * Native Win32 button wrapper
+ */
+
 class nsButton :  public nsWindow,
                   public nsIButton
 {

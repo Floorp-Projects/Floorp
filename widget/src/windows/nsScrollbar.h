@@ -25,6 +25,10 @@
 
 #include "nsIScrollbar.h"
 
+/**
+ * Native WIN32 scrollbar wrapper. 
+ */
+
 class nsScrollbar : public nsWindow,
                     public nsIScrollbar
 {

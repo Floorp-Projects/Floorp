@@ -1615,7 +1615,7 @@ nsWindow::Enumerator::~Enumerator()
 }
 
 //
-// The evil triad
+// nsISupports implementation macro
 //
 NS_IMPL_ISUPPORTS(nsWindow::Enumerator, NS_IENUMERATOR_IID);
 

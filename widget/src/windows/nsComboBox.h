@@ -24,6 +24,10 @@
 #include "nsSwitchToUIThread.h"
 #include "nsIComboBox.h"
 
+/**
+ * Native Win32 Combobox wrapper
+ */
+
 class nsComboBox : public nsWindow,
                    public nsIComboBox
 {

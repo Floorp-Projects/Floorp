@@ -24,6 +24,10 @@
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 
+/**
+ * Native Win32 FileSelector wrapper
+ */
+
 class nsFileWidget : public nsIFileWidget, public nsObject
 {
   public:

@@ -23,6 +23,10 @@
 // foreward declaration
 struct MethodInfo;
 
+/**
+ * Switch thread to match the thread the widget was created in so messages will be dispatched.
+ */
+
 class nsSwitchToUIThread {
 
 public:

@@ -27,6 +27,10 @@
 #include "nsRadioButton.h"
 #include "nsHashtable.h"
 
+/**
+ * Native radio button manager
+ */
+
 class nsRadioGroup : public nsObject,
                      public nsIRadioGroup
 {

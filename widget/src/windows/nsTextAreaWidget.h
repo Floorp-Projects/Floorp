@@ -26,6 +26,10 @@
 
 #include "nsITextAreaWidget.h"
 
+/**
+ * Native WIN32 multi-line edit control wrapper. 
+ */
+
 class nsTextAreaWidget :  public nsTextHelper,
                           public nsITextAreaWidget
 {

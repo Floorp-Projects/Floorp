@@ -27,6 +27,11 @@
 #include "nsIRadioButton.h"
 #include "nsIRadioGroup.h"
 
+
+/**
+ * Native Win32 Radio button wrapper
+ */
+
 class nsRadioButton : public nsWindow,
                       public nsIRadioButton
 {
