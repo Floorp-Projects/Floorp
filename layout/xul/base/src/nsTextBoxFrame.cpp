@@ -692,7 +692,11 @@ nsTextBoxFrame::UpdateAccessTitle()
             if (( !FindInReadable(mAccessKey, mTitle, nsCaseInsensitiveStringComparator()))
                 || AlwaysAppendAccessKey()) 
             {
-                nsAutoString tmpstring(NS_LITERAL_STRING("("));
+                nsAutoString tmpstring;
+                if (!mTitle.IsEmpty() && !isspace(mTitle.Last())) {
+                  tmpstring += ' ';
+                }
+                tmpstring += '(';
                 tmpstring += mAccessKey;
                 ToUpperCase(tmpstring);
                 tmpstring.Append(NS_LITERAL_STRING(")"));
