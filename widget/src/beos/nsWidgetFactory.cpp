@@ -50,7 +50,7 @@
 #include "nsXIFFormatConverter.h"
 #include "nsDragService.h"
 
-#include "nsISound.h"
+#include "nsSound.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
