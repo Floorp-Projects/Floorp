@@ -63,7 +63,7 @@ public:
     }
     // dtor decrements it.
     ~nsInstanceCounter() {
-        PR_AtomicIncrement( &mInstanceCount );
+        PR_AtomicDecrement( &mInstanceCount );
     }
     // Tests whether shared library can be unloaded.
     static PRBool CanUnload() {
@@ -83,7 +83,12 @@ private:
 
 #define NS_DEFINE_MODULE_INSTANCE_COUNTER() \
 PRInt32 nsInstanceCounter::mInstanceCount = 0; \
-PRInt32 nsInstanceCounter::mLockCount = 0;
+PRInt32 nsInstanceCounter::mLockCount = 0; \
+/* NSCanUnload implementation */\
+extern "C" NS_EXPORT PRBool \
+NSCanUnload( nsISupports* ) { \
+      return nsInstanceCounter::CanUnload(); \
+} \
 
 // Declare component-global class.
 class nsAppShellComponentImpl {
@@ -401,11 +406,6 @@ NSGetFactory( nsISupports *aServiceMgr, \
         } \
     } \
     return rv; \
-} \
-/* NSCanUnload implementation */\
-extern "C" NS_EXPORT PRBool \
-NSCanUnload( nsISupports* ) { \
-      return nsInstanceCounter::CanUnload(); \
 } \
 NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR( className ) \
 
