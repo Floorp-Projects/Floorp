@@ -38,7 +38,7 @@ dnl AC_CHECK_LIB(ical, main)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(time.h sys/types.h assert.h)
+AC_CHECK_HEADERS(time.h sys/types.h assert.h wctype.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

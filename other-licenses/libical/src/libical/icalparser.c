@@ -3,7 +3,7 @@
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.5 2002/08/28 20:56:45 mostafah%oeone.com Exp $
+  $Id: icalparser.c,v 1.6 2002/09/06 18:34:32 mostafah%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -51,10 +51,11 @@
 #include <string.h> /* For strncpy & size_t */
 #include <stdio.h> /* For FILE and fgets and sprintf */
 #include <stdlib.h> /* for free */
-#ifdef XP_MAC
-#include <ctype.h>
-#else
+#ifdef HAVE_WCTYPE_H
 #include <wctype.h>
+#else
+#include <ctype.h>
+#define iswspace isspace
 #endif
 #ifdef WIN32
 #define snprintf      _snprintf
@@ -189,19 +190,11 @@ char* make_segment(char* start, char* end)
     *(buf+size) = 0;
 
 	tmp = (buf+size);
-#ifdef XP_MAC
-	while ( *tmp == '\0' || isspace(*tmp) )
-	{
-		*tmp = 0;
-		tmp--;
-	}
-#else
 	while ( *tmp == '\0' || iswspace(*tmp) )
 	{
 		*tmp = 0;
 		tmp--;
 	}
-#endif
     
     return buf;
     
@@ -551,11 +544,7 @@ char* icalparser_get_line(icalparser *parser,
     } else {
 	*(line_p) = '\0';
     }
-#ifdef XP_MAC
-	while ( (*line_p == '\0' || isspace(*line_p)) && line_p > line )
-#else
     while ( (*line_p == '\0' || iswspace(*line_p)) && line_p > line )
-#endif
 	{
 		*line_p = '\0';
 		line_p--;

@@ -2,7 +2,7 @@
 #  FILE: Makefile.am
 #  CREATOR: eric 
 #  
-#  $Id: Makefile.am,v 1.3 2002/03/14 15:17:50 mikep%oeone.com Exp $
+#  $Id: Makefile.am,v 1.4 2002/09/06 18:34:31 mostafah%oeone.com Exp $
 #
 #
 # (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -43,6 +43,7 @@ CPPFLAGS = -DPACKAGE_DATA_DIR=\""$(datadir)/$(PACKAGE)"\"
 all: ical.h
 
 INCLUDES =			\
+	-I/usr/include/objc	\
 	-I$(top_builddir)	\
 	-I$(top_srcdir)/src	\
 	-I$(top_builddir)/src	\
