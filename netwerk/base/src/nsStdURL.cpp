@@ -628,12 +628,8 @@ nsStdURL::GetSpec(char **o_Spec)
         rv = AppendString(finalSpec,mHost,HOSTESCAPED,esc_Host);
         if (-1 != mPort && mPort != mDefaultPort)
         {
-            char* portBuffer = PR_smprintf(":%d", mPort);
-            if (!portBuffer)
-                return NS_ERROR_OUT_OF_MEMORY;
-            finalSpec += portBuffer;
-            PR_smprintf_free(portBuffer);
-            portBuffer = 0;
+            finalSpec += ':';
+            finalSpec.AppendInt(mPort);
         }
     }
     char* ePath = nsnull;
@@ -675,12 +671,8 @@ nsStdURL::GetPrePath(char **o_Spec)
         rv = AppendString(finalSpec,mHost,HOSTESCAPED,esc_Host);
         if (-1 != mPort && mDefaultPort != mPort)
         {
-            char* portBuffer = PR_smprintf(":%d", mPort);
-            if (!portBuffer)
-                return NS_ERROR_OUT_OF_MEMORY;
-            finalSpec += portBuffer;
-            PR_smprintf_free(portBuffer);
-            portBuffer = 0;
+            finalSpec += ':';
+            finalSpec.AppendInt(mPort);
         }
     }
     *o_Spec = ToNewCString(finalSpec);
@@ -834,7 +826,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         rv = DupString(result, relativePath);
         char* path = PL_strstr(*result,"://");
         if (path) {
-            path = PL_strstr((char*)(path+3),"/");
+            path = PL_strchr((char*)(path+3),'/');
             if (path) 
                 CoaleseDirs(path);
         }
@@ -859,7 +851,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         if (*result) {
             char* path = PL_strstr(*result,"://");
             if (path) {
-                path = PL_strstr((char*)(path+3),"/");
+                path = PL_strchr((char*)(path+3),'/');
                 if (path)
                     CoaleseDirs(path);
             }
@@ -946,7 +938,7 @@ nsStdURL::Resolve(const char *relativePath, char **result)
     if (*result) {
         char* path = PL_strstr(*result,"://");
         if (path) {
-            path = PL_strstr((char*)(path+3),"/");
+            path = PL_strchr((char*)(path+3),'/');
             if (path)
                 CoaleseDirs(path);
         }
