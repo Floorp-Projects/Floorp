@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mike Calmus
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2937,7 +2938,8 @@ SINGSIGN_ReencryptAll()
                               user->signonData_list.ElementAt(k));
         nsAutoString userName;
         if (NS_FAILED(si_Decrypt(data->value, userName))) {
-          return PR_FALSE;
+          //Don't try to re-encrypt. Just go to the next one.
+          continue;
         }
         if (NS_FAILED(si_Encrypt(userName, data->value))) {
           return PR_FALSE;

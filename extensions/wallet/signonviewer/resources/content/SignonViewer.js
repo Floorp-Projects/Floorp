@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *   Ben "Count XULula" Goodger
+ *   Mike Calmus
  */
 
 /*** =================== INITIALISATION CODE =================== ***/
@@ -236,39 +237,38 @@ function LoadSignons() {
     var nextPassword;
     try {
       nextPassword = enumerator.getNext();
+
+      nextPassword = nextPassword.QueryInterface(Components.interfaces.nsIPassword);
+      var host = nextPassword.host;
+      var user = nextPassword.user;
+      var rawuser = user;
+
+      // if no username supplied, try to parse it out of the url
+      if (user == "") {
+        var unused = { };
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+        var username;
+        try {
+          username = ioService.newURI(host, null, null).username;
+        } catch(e) {
+          username = "";
+        }
+        if (username != "") {
+          user = username;
+        } else {
+          user = "<>";
+        }
+      }
+
+      if (encrypted) {
+        user = kSignonBundle.getFormattedString("encrypted", [user], 1);
+      }
+
+      signons[count] = new Signon(count++, host, user, rawuser);
     } catch(e) {
-      /* user supplied invalid database key */
-      window.close();
-      return false;
+      /* An entry is corrupt. Go to next element. */
     }
-    nextPassword = nextPassword.QueryInterface(Components.interfaces.nsIPassword);
-    var host = nextPassword.host;
-    var user = nextPassword.user;
-    var rawuser = user;
-
-    // if no username supplied, try to parse it out of the url
-    if (user == "") {
-      var unused = { };
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-      var username;
-      try {
-        username = ioService.newURI(host, null, null).username;
-      } catch(e) {
-        username = "";
-      }
-      if (username != "") {
-        user = username;
-      } else {
-        user = "<>";
-      }
-    }
-
-    if (encrypted) {
-      user = kSignonBundle.getFormattedString("encrypted", [user], 1);
-    }
-
-    signons[count] = new Signon(count++, host, user, rawuser);
   }
   signonsTreeView.rowCount = signons.length;
 
