@@ -361,7 +361,8 @@ int initCategories(STGlobals* g)
         /* if we are in a rule acculumate */
         if (inrule)
         {
-            rule.pats[rule.npats++] = strdup(in);
+            rule.pats[rule.npats] = strdup(in);
+            rule.patlen[rule.npats++] = strlen(in);
         }
         else if (*in == '<')
         {
@@ -405,6 +406,7 @@ int initCategories(STGlobals* g)
     memset(&rule, 0, sizeof(rule));
     rule.categoryName = strdup("uncategorized");
     rule.pats[0] = strdup("");
+    rule.patlen[0] = 0;
     rule.npats = 1;
     ProcessCategoryLeafRule(&rule, &g->mCategoryRoot, g);
 
@@ -427,7 +429,7 @@ int callsiteMatchesRule(tmcallsite* aCallsite, STCategoryRule* aRule)
         methodName = tmmethodnode_name(aCallsite->method);
         if (!methodName)
             return 0;
-        if (!*aRule->pats[patnum] || strstr(methodName, aRule->pats[patnum]))
+        if (!*aRule->pats[patnum] || !strncmp(methodName, aRule->pats[patnum], aRule->patlen[patnum]))
         {
             /* We have matched so far. Proceed up the stack and to the next pattern */
             patnum++;
@@ -460,6 +462,12 @@ int callsiteMatchesRule(tmcallsite* aCallsite, STCategoryRule* aRule)
     return 0;
 }
 
+#ifdef DEBUG_dp
+PRIntervalTime _gMatchTime = 0;
+PRUint32 _gMatchCount = 0;
+PRUint32 _gMatchRules = 0;
+#endif
+
 /*
 ** matchAllocation
 **
@@ -468,19 +476,30 @@ int callsiteMatchesRule(tmcallsite* aCallsite, STCategoryRule* aRule)
 */
 STCategoryNode* matchAllocation(STGlobals* g, STAllocation* aAllocation)
 {
+#ifdef DEBUG_dp
+    PRIntervalTime start = PR_IntervalNow();
+#endif
     PRUint32 rulenum;
-    int patnum;
-    int pos, firstpos;
-    STCategoryNode* node;
+    STCategoryNode* node = NULL;
     STCategoryRule* rule;
 
     for (rulenum = 0; rulenum < g->mNRules; rulenum++)
     {
+#ifdef DEBUG_dp
+        _gMatchRules++;
+#endif
         rule = g->mCategoryRules[rulenum];
         if (callsiteMatchesRule(aAllocation->mEvents[0].mCallsite, rule))
-            return rule->node;
+        {
+            node = rule->node;
+            break;
+        }
     }
-    return NULL;
+#ifdef DEBUG_dp
+    _gMatchCount++;
+    _gMatchTime += PR_IntervalNow() - start;
+#endif
+    return node;
 }
 
 /*
@@ -569,10 +588,15 @@ PRBool freeNodeRunProcessor(void* clientData, STCategoryNode* node)
 #if defined(DEBUG_dp)
 PRBool printNodeProcessor(void* clientData, STCategoryNode* node)
 {
+    STCategoryNode* root = (STCategoryNode*) clientData;
     if (node->nchildren)
-        fprintf(stderr, "%s [%d children]\n", node->categoryName, node->nchildren);
+        fprintf(stderr, "%-20s [%d children]\n", node->categoryName, node->nchildren);
     else
-        fprintf(stderr, "%s [%d allocations]\n", node->categoryName, node->run ? node->run->mAllocationCount:0);
+        fprintf(stderr, "%-20s [ %7d allocations, %7d size, %4.1f%% ]\n", node->categoryName,
+                node->run ? node->run->mStats.mCompositeCount:0,
+                node->run ? node->run->mStats.mSize:0,
+                node->run ? ((double)node->run->mStats.mSize / root->run->mStats.mSize * 100):0
+                );
     return PR_TRUE;
 }
 
@@ -724,9 +748,12 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     g->mCategoryRoot.categoryName = ST_ROOT_CATEGORY_NAME;
 
 #if defined(DEBUG_dp)
-    walkTree(&g->mCategoryRoot, printNodeProcessor, NULL, 0);
+    walkTree(&g->mCategoryRoot, printNodeProcessor, &g->mCategoryRoot, 0);
     fprintf(stderr, "DEBUG: categorizing ends: %dms [%d rules, %d allocations]\n",
             PR_IntervalToMilliseconds(PR_IntervalNow() - start), g->mNRules, aRun->mAllocationCount);
+    fprintf(stderr, "DEBUG: match : %dms [%d calls, %d rule-compares]\n",
+            PR_IntervalToMilliseconds(_gMatchTime),
+            _gMatchCount, _gMatchRules);
 #endif
 
     return 0;
