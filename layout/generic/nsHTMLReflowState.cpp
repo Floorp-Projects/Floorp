@@ -574,6 +574,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // calculating the computed width and height. For all elements other
     // than absolutely positioned elements, the containing block is formed
     // by the content edge
+    // XXX Correctly handle absolutely positioned elements...
     nscoord containingBlockWidth = cbrs->computedWidth;
     nscoord containingBlockHeight = cbrs->computedHeight;
     //NS_ASSERTION(0 != containingBlockWidth, "containing block width of 0");
