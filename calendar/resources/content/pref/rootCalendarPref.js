@@ -37,18 +37,6 @@ calendarPrefObserver.prototype =
   }
 }
 
-function removePrefObserver( e ){ // this one is called on window destruction (by unload listener from mozgestOverlay.xul)
-  
-   dump( "\n"+e.target.localName );
-   if (e.target.localName == null){ // test if the window is really closing
-      dump( "\nremove CALENDAR prefs Observer" );
-      var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-      pbi.removeObserver(window.calendarPrefObserver.domain, window.calendarPrefObserver.calendarPrefObserver);
-   }
-}
-
-window.addEventListener("unload", removePrefObserver, true); 
-
 function calendarPreferences( CalendarWindow )
 {
    window.calendarPrefObserver = new calendarPrefObserver( this );
