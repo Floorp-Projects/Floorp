@@ -633,6 +633,7 @@ nsLocalFile::InitWithPath(const char *filePath)
          ( (filePath[0] == '\\') && (filePath[1] == '\\') ) )  // netwerk path
     {
         // This is a native path
+        if (nativeFilePath) nsCRT::free(nativeFilePath);
         nativeFilePath = (char*) nsMemory::Clone( filePath, strlen(filePath)+1 );
     }
     
