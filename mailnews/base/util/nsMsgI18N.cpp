@@ -114,7 +114,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
           srcLength = originalUnicharLength - consumedLen;  
           dstLength = 512;
           res = encoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
-          if (NS_FAILED(res))
+          if (NS_FAILED(res) || dstLength == 0)
             break;
           outString.Append(localbuf, dstLength);
 
@@ -178,7 +178,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
         srcLength = originalLength - consumedLen;  
         dstLength = 512;
         res = decoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
-        if (NS_FAILED(res))
+        if (NS_FAILED(res) || dstLength == 0)
           break;
         outString.Append(localbuf, dstLength);
 
