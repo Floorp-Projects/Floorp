@@ -9,7 +9,7 @@
     <content excludes="observes,template">
       	<xul:box inherits="orient" autostretch="never" flex="1">
           <xul:box orient="vertical"  autostretch="never" flex="1">
-            <xul:text class="emailDisplayButton" context="emailAddressPopup" inherits="value,accesskey,crop"/>
+            <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,accesskey,crop"/>
           </xul:box>
           <xul:image class="emailDisplayImage" inherits="src"/>
         </xul:box>
