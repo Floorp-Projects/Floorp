@@ -49,16 +49,16 @@ inline void nsCollationUnix::DoSetLocale()
   char *locale = setlocale(LC_COLLATE, NULL);
   mSavedLocale.AssignWithConversion(locale ? locale : "");
   if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
-    char newLocale[128];
-    (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, 128));
+    char newLocale[MAX_LOCALE_LEN+1];
+    (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, sizeof(newLocale)));
   }
 }
 
 inline void nsCollationUnix::DoRestoreLocale()
 {
   if (!mSavedLocale.EqualsIgnoreCase(mLocale)) { 
-    char oldLocale[128];
-    (void) setlocale(LC_COLLATE, mSavedLocale.ToCString(oldLocale, 128));
+    char oldLocale[MAX_LOCALE_LEN+1];
+    (void) setlocale(LC_COLLATE, mSavedLocale.ToCString(oldLocale, sizeof(oldLocale)));
   }
 }
 
@@ -106,7 +106,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
   PRUnichar *aLocaleUnichar = NULL;
   nsString aCategory;
-  aCategory.AssignWithConversion("NSILOCALE_COLLATE");
+  aCategory.Assign(NS_LITERAL_STRING("NSILOCALE_COLLATE##PLATFORM"));
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
@@ -116,12 +116,14 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        NS_ASSERTION(NS_SUCCEEDED(res), "failed to get app locale info");
         appLocale->Release();
       }
     }
   }
   else {
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    NS_ASSERTION(NS_SUCCEEDED(res), "failed to get locale info");
   }
 
   // Get platform locale and charset name from locale, if available
@@ -133,7 +135,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     }
 
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
-    if (aLocale.EqualsIgnoreCase("en-US")) {
+    if (aLocale.EqualsIgnoreCase("en_US")) { // note: locale is in platform format
       aLocale.AssignWithConversion("C");
     }
 
