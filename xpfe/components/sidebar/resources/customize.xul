@@ -150,11 +150,11 @@
     <!-- The 'reorder' buttons -->
     <vbox id="reorder">
       <spacer flex="1"/>
-      <button oncommand="MoveUp();" id="up" disabled="true"
-              label="&sidebar.customize.up.label;"
+      <button oncommand="MoveUp();" id="up" class="up"
+              disabled="true" label="&sidebar.customize.up.label;"
               accesskey="&sidebar.customize.up.accesskey;"/>
-      <button oncommand="MoveDown();" id="down" disabled="true"
-              label="&sidebar.customize.down.label;"
+      <button oncommand="MoveDown();" id="down" class="down"
+              disabled="true" label="&sidebar.customize.down.label;"
               accesskey="&sidebar.customize.down.accesskey;"/>
       <spacer flex="1"/>
     </vbox> 
