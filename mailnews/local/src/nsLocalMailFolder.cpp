@@ -50,7 +50,6 @@
 #include "nsRDFCID.h"
 #include "nsFileStream.h"
 #include "nsMsgDBCID.h"
-#include "nsLocalMessage.h"
 #include "nsMsgUtils.h"
 #include "nsLocalUtils.h"
 #include "nsIPop3IncomingServer.h"

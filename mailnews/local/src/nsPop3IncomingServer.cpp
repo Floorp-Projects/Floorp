@@ -28,6 +28,7 @@
 #include "nsIPref.h"
 
 #include "nsXPIDLString.h"
+#include "nsIStringBundle.h"
 
 #include "nsIPop3IncomingServer.h"
 #include "nsPop3IncomingServer.h"
@@ -41,7 +42,18 @@
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
+#define INBOX_NAME "Inbox"
+
+nsrefcnt nsPop3IncomingServer::gInstanceCount	= 0;
+
+PRUnichar *nsPop3IncomingServer::kInboxName = 0;
+PRUnichar *nsPop3IncomingServer::kTrashName = 0;
+PRUnichar *nsPop3IncomingServer::kSentName = 0;
+PRUnichar *nsPop3IncomingServer::kDraftsName = 0;
+PRUnichar *nsPop3IncomingServer::kTemplatesName = 0;
+PRUnichar *nsPop3IncomingServer::kUnsentName = 0;
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
 				nsMsgIncomingServer,
@@ -58,13 +70,53 @@ nsPop3IncomingServer::nsPop3IncomingServer()
         POP3_UIDL_UNDEFINED |
         POP3_TOP_UNDEFINED |
         POP3_XTND_XLST_UNDEFINED;
+
+    if (gInstanceCount++ == 0) {
+        initializeStrings();
+
+    }
 }
 
 nsPop3IncomingServer::~nsPop3IncomingServer()
 {
+    if (--gInstanceCount == 0) {
+        CRTFREEIF(kInboxName);
+        CRTFREEIF(kTrashName);
+        CRTFREEIF(kSentName);
+        CRTFREEIF(kDraftsName);
+        CRTFREEIF(kTemplatesName);
+        CRTFREEIF(kUnsentName);
+    }
 }
 
-
+nsresult
+nsPop3IncomingServer::initializeStrings()
+{
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(kStringBundleServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                     nsnull,
+                                     getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("inboxFolderName").GetUnicode(),
+                              &kInboxName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("trashFolderName").GetUnicode(),
+                              &kTrashName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("sentFolderName").GetUnicode(),
+                              &kSentName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("draftsFolderName").GetUnicode(),
+                              &kDraftsName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").GetUnicode(),
+                              &kTemplatesName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("unsentFolderName").GetUnicode(),
+                              &kUnsentName);
+    return NS_OK;
+}
 
 
 NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
@@ -170,7 +222,7 @@ NS_IMETHODIMP nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 	nsCOMPtr <nsIFolder> folder;
 	nsCOMPtr<nsIMsgFolder> msgFolder;
 
-	rv = rootFolder->FindSubFolder("Inbox", getter_AddRefs(folder));
+	rv = rootFolder->FindSubFolder(INBOX_NAME, getter_AddRefs(folder));
 	if (NS_FAILED(rv)) return rv;
 	if (!folder) return NS_ERROR_FAILURE;
  	msgFolder = do_QueryInterface(folder);
@@ -178,37 +230,10 @@ NS_IMETHODIMP nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_INBOX);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = rootFolder->FindSubFolder("Sent", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->FindSubFolder("Drafts", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-	if (NS_FAILED(rv)) return rv;
-	
-	rv = rootFolder->FindSubFolder("Templates", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->FindSubFolder("Trash", getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
- 	msgFolder = do_QueryInterface(folder);
-	if (!msgFolder) return NS_ERROR_FAILURE;
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-	if (NS_FAILED(rv)) return rv;
+    setSubFolderFlag(rootFolder, kSentName, MSG_FOLDER_FLAG_SENTMAIL);
+    setSubFolderFlag(rootFolder, kDraftsName, MSG_FOLDER_FLAG_DRAFTS);
+    setSubFolderFlag(rootFolder, kTemplatesName, MSG_FOLDER_FLAG_TEMPLATES);
+    setSubFolderFlag(rootFolder, kTrashName, MSG_FOLDER_FLAG_TRASH);
 
 	rv = rootFolder->FindSubFolder("Unsent Messages", getter_AddRefs(folder));
 	if (NS_FAILED(rv)) return rv;
@@ -221,6 +246,30 @@ NS_IMETHODIMP nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
 	return NS_OK;
 }
 
+nsresult
+nsPop3IncomingServer::setSubFolderFlag(nsIFolder *aRootFolder,
+                                       PRUnichar *aFolderName,
+                                       PRUint32 flags)
+{
+    nsresult rv;
+
+    // no-copy conversion to utf8 string
+    nsSubsumeCStr utf8Name(nsSubsumeStr(aFolderName, PR_FALSE).ToNewUTF8String(), PR_TRUE);
+
+    nsCOMPtr<nsIFolder> folder;
+	rv = aRootFolder->FindSubFolder(utf8Name, getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+    
+ 	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+    
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+	if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
 	nsresult rv;
@@ -228,7 +277,7 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 	if (!path) return NS_ERROR_NULL_POINTER;
 
 	// todo, use a string bundle for this
-        rv =path->AppendRelativeUnixPath("Inbox");
+        rv =path->AppendRelativeUnixPath(INBOX_NAME);
 	if (NS_FAILED(rv)) return rv;
 	rv = path->Exists(&exists);
 	if (!exists) {

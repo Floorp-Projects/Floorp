@@ -46,6 +46,23 @@ public:
     NS_IMETHOD PerformBiff();
     
 private:
+
+    static nsresult setSubFolderFlag(nsIFolder *aRootFolder,
+                                     PRUnichar *folderName,
+                                     PRUint32 flag);
+    
+    // copied from nsMsgFolder because flag setting is done in the
+    // server, not the folder :(
+    static nsrefcnt gInstanceCount;
+    static nsresult initializeStrings();
+    
+    static PRUnichar *kInboxName;
+    static PRUnichar *kTrashName;
+    static PRUnichar *kSentName;
+    static PRUnichar *kDraftsName;
+    static PRUnichar *kTemplatesName;
+    static PRUnichar *kUnsentName;
+    
     PRUint32 m_capabilityFlags;
 };
 
