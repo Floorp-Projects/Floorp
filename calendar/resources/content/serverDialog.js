@@ -163,7 +163,7 @@ function launchFilePicker()
 
    // caller can force disable of sand box, even if ON globally
 
-   fp.init(window, "Open", nsIFilePicker.modeOpen);
+   fp.init(window, "Save", nsIFilePicker.modeSave);
 
    var ServerName = document.getElementById( "server-name-textbox" ).value;
 
@@ -185,5 +185,17 @@ function launchFilePicker()
       document.getElementById( "server-path-textbox" ).value = fp.file.path;
 
       gCalendarObject.path = fp.file.path;
+
+      if( document.getElementById( "server-name-textbox" ).value == "" )
+      {
+         var fullPathRegex = new RegExp(".*[/\\\\:]([^/\\\\:]+)[\.]ics$");
+            
+         var filename;
+          
+         if (fullPathRegex.test(fp.file.path))
+            filename = fp.file.path.replace(fullPathRegex, "$1");
+            
+         document.getElementById( "server-name-textbox" ).value = filename;
+      }
    }
 }
