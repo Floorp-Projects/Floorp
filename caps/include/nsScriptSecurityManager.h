@@ -62,11 +62,11 @@ private:
     CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability, 
                      PRBool* result);
     PRInt32 
-    GetSecurityLevel(JSContext *cx, nsDOMProp domProp, PRBool isWrite, 
-                     char **capability);
+    GetSecurityLevel(nsIPrincipal *principal, nsDOMProp domProp, 
+                     PRBool isWrite, char **capability);
 
     NS_IMETHOD
-    GetPrefName(JSContext *cx, nsDOMProp domProp, char **result);
+    GetPrefName(nsIPrincipal *principal, nsDOMProp domProp, char **result);
 
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx);
@@ -83,6 +83,7 @@ private:
     nsIPrincipal *mSystemPrincipal;
     nsSupportsHashtable *mPrincipals;
     PRBool mIsJavaScriptEnabled;
+    PRBool mIsMailJavaScriptEnabled;
     unsigned char hasPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };

@@ -59,6 +59,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsDOMError.h"
+#include "nsScriptSecurityManager.h"
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -1295,7 +1296,18 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
 
     // Now pass on absolute url to the click handler
     if (aClick) {
-      handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+      // Check that this page is allowed to load this URI.
+      nsresult rv;
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+      nsIURI *absURI = nsnull;
+      if (NS_SUCCEEDED(rv)) 
+        rv = NS_NewURI(&absURI, absURLSpec, aBaseURL);
+      if (NS_SUCCEEDED(rv)) 
+        rv = securityManager->CheckLoadURI(aBaseURL, absURI);
+      if (NS_SUCCEEDED(rv)) 
+        handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+      NS_IF_RELEASE(absURI);
     }
     else {
       handler->OnOverLink(mContent, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
