@@ -111,6 +111,14 @@ void nsClipboard::Init() {
 // selectionrequest
 nsEventStatus PR_CALLBACK nsClipboard::Callback(nsGUIEvent *event) {
   XEvent *ev = (XEvent *)event->nativeMsg;
+  
+  /* gisburn: quick hack fix for bug 68472 to avoid crash on shutdown
+   * I simply assume that this only happens at shutdown...
+   * FIXME: We should fix&kill the real cause of this problem...
+   */
+  NS_ASSERTION(ev != nsnull, "nsGUIEvent with event->nativeMsg==nsnull"); 
+  if(ev == nsnull)
+    return nsEventStatus_eIgnore;
 
   // Check the event type
   if (ev->type == SelectionRequest) {
