@@ -115,7 +115,7 @@ sub run_shell_command {
   close CMD or $status = 1;
 
   if($status) {
-    exit 1;  # bail.
+    print "Warning, cmd exited with status $status.\n";
   }
 
   return $output;
