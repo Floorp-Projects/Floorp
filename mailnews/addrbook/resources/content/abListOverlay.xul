@@ -87,15 +87,6 @@ Rights Reserved.
 				</treechildren>
 			</tree>
 		</box>
-		<spring style="width:1em"/>
-		<box orient="vertical" flex="20%">
-			<spring style="height:30px"/>
-			<button id="button_remove" disabled="true" value="&RemoveButton.label;" />	
-			<spring style="height:40px"/>
-			<button id="button_up"  disabled="true" value="&UpButton.label;" />	
-			<spring style="height:10px"/>
-			<button id="button_down"  disabled="true" value="&DownButton.label;"/>	
-		</box>
 	</box>
 </box>
 
