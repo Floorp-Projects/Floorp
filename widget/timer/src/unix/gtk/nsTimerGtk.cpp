@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *  Stuart Parmenter <pavlov@netscape.com>
  *  Alexander Larsson (alla@lysator.liu.se)
  */
 
@@ -27,15 +28,135 @@
 #include "nsTimerGtk.h"
 #include "nsCOMPtr.h"
 
-#include <time.h>
-
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
 extern "C" gboolean nsTimerExpired(gpointer aCallData);
 
+
+
+TimeVal::TimeVal()
+{
+  mSeconds = 0;
+  mUSeconds = 0; 
+}
+
+TimeVal::~TimeVal()
+{
+
+}
+
+void TimeVal::Set(PRUint32 sec, PRUint32 usec)
+{
+  mSeconds = sec;
+  mUSeconds = usec;
+}
+
+TimeVal& TimeVal::operator=(const struct timeval &tv)
+{
+  mSeconds = tv.tv_sec;
+  mUSeconds = tv.tv_usec;
+  return *this;
+}
+
+TimeVal TimeVal::operator+(PRUint32 msec) const
+{
+  TimeVal *t = new TimeVal(*this);
+
+  t->mSeconds += (PRUint32)(msec / 1000);
+  t->mUSeconds += (msec % 1000) * 1000;
+ 
+  return *t;
+}
+
+PRBool TimeVal::operator==(const TimeVal &tv) const
+{
+  return ((this->mSeconds == tv.mSeconds) && (this->mUSeconds == tv.mUSeconds));
+}
+
+PRBool TimeVal::operator==(const struct timeval &tv) const
+{
+  return ((this->mSeconds == (PRUint32)tv.tv_sec) && (this->mUSeconds == (PRUint32)tv.tv_usec));
+}
+
+PRBool TimeVal::operator<(const TimeVal &tv) const
+{
+  if (this->mSeconds == tv.mSeconds)
+    return (this->mUSeconds < tv.mUSeconds);
+
+  return (this->mSeconds < tv.mSeconds);
+}
+
+PRBool TimeVal::operator>(const TimeVal &tv) const
+{
+  if (this->mSeconds == tv.mSeconds)
+    return (this->mUSeconds > tv.mUSeconds);
+
+  return (this->mSeconds > tv.mSeconds);
+}
+
+PRBool TimeVal::operator<(const struct timeval &tv) const
+{
+  if (this->mSeconds == (PRUint32)tv.tv_sec)
+    return (this->mUSeconds < (PRUint32)tv.tv_usec);
+
+  return (this->mSeconds < (PRUint32)tv.tv_sec);
+}
+
+PRBool TimeVal::operator>(const struct timeval &tv) const
+{
+  if (this->mSeconds == (PRUint32)tv.tv_sec)
+    return (this->mUSeconds > (PRUint32)tv.tv_usec);
+
+  return (this->mSeconds > (PRUint32)tv.tv_sec);
+}
+
+
+PRBool TimeVal::operator>=(const TimeVal &tv) const
+{
+  if (this->operator>(tv) == PR_TRUE)
+    return PR_TRUE;
+  else if (this->operator==(tv) == PR_TRUE)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+PRBool TimeVal::operator<=(const TimeVal &tv) const
+{
+  if (this->operator<(tv) == PR_TRUE)
+    return PR_TRUE;
+  else if (this->operator==(tv) == PR_TRUE)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+
+PRBool TimeVal::operator>=(const struct timeval &tv) const
+{
+  if (this->operator<(tv) == PR_TRUE)
+    return PR_TRUE;
+  else if (this->operator==(tv) == PR_TRUE)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+PRBool TimeVal::operator<=(const struct timeval &tv) const
+{
+  if (this->operator<(tv) == PR_TRUE)
+    return PR_TRUE;
+  else if (this->operator==(tv) == PR_TRUE)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+
+
 PRBool nsTimerGtk::FireTimeout()
 {
-  //printf("%p FireTimeout() priority = %i\n", this, mPriority);
+  //  printf("%p FireTimeout() priority = %i\n", this, mPriority);
   // because Notify can cause 'this' to get destroyed, we need to hold a ref
   nsCOMPtr<nsITimer> kungFuDeathGrip = this;
   
@@ -51,7 +172,7 @@ PRBool nsTimerGtk::FireTimeout()
 
 void nsTimerGtk::SetDelay(PRUint32 aDelay)
 {
-  mDelay=aDelay;
+  mDelay = aDelay;
 }
 
 void nsTimerGtk::SetPriority(PRUint32 aPriority)
@@ -81,7 +202,6 @@ nsTimerGtk::nsTimerGtk()
   mDelay = 0;
   mClosure = NULL;
   mPriority = 0;
-  mSchedTime = 0;
   mType = NS_TYPE_ONE_SHOT;
 }
 
@@ -96,22 +216,31 @@ nsTimerGtk::~nsTimerGtk()
 void process_timers(nsVoidArray *array)
 {
   int ret;
-  PRUint32 now = (PRUint32) time((time_t *) NULL) * 1000;
+
   PRInt32 count = array->Count();
   
   if (count == 0)
     return;
-  //  printf("count == %i\n", count);
   
   nsTimerGtk *timer;
   int i;
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
   
   for( i = count; i >= 0; i--) {
     timer = (nsTimerGtk*)array->ElementAt(i);
-    if( timer && now >= timer->mSchedTime + timer->mDelay ) {
-      ret = timer->FireTimeout();
-      if( ret == 0 ) {
-        array->RemoveElement(timer);
+
+    if (timer) {
+      if (((timer->mSchedTime + timer->mDelay) <= tv)) {
+        ret = timer->FireTimeout();
+        if( ret == 0 ) {
+          array->RemoveElement(timer);
+        } else {
+          struct timeval ntv;
+          gettimeofday(&ntv, NULL);
+          timer->mSchedTime = ntv;
+        }
       }
     }
   }
@@ -150,7 +279,10 @@ nsresult nsTimerGtk::Init(nsTimerCallbackFunc aFunc,
   mPriority = aPriority;
   mType = aType;
   mDelay = aDelay;
-  mSchedTime = (PRUint32) time((time_t *) NULL) * 1000;
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  mSchedTime = tv;
 
   if (!gTimeoutAdded) {
     nsTimerGtk::gHighestList = new nsVoidArray;
@@ -195,7 +327,10 @@ nsresult nsTimerGtk::Init(nsITimerCallback *aCallback,
   mPriority = aPriority;
   mType = aType;
   mDelay = aDelay;
-  mSchedTime = (PRUint32) time((time_t *) NULL) * 1000;
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  mSchedTime = tv;
   
   if (!gTimeoutAdded) {
     nsTimerGtk::gHighestList = new nsVoidArray;

@@ -28,11 +28,46 @@
 
 #include <gtk/gtk.h>
 
+#include <time.h>
+#include <sys/time.h>
+#include <unistd.h>
+
 /*
  * Implementation of timers using Gtk timer facility 
  */
 
 class nsVoidArray;
+
+class TimeVal {
+public:
+  TimeVal();
+  virtual ~TimeVal();
+
+  void Set(PRUint32 sec, PRUint32 usec);
+
+  TimeVal& operator=(const struct timeval &);
+
+  TimeVal operator+(PRUint32 msec) const; // this is a special class.  only add milli secs to it.
+  PRBool operator==(const TimeVal &) const;
+  PRBool operator==(const struct timeval &) const;
+
+  PRBool operator<(const TimeVal &) const;
+  PRBool operator>(const TimeVal &) const;
+
+  PRBool operator<(const struct timeval &) const;
+  PRBool operator>(const struct timeval &) const;
+
+  PRBool operator<=(const TimeVal &) const;
+  PRBool operator>=(const TimeVal &) const;
+
+  PRBool operator<=(const struct timeval &) const;
+  PRBool operator>=(const struct timeval &) const;
+
+private:
+  PRUint32 mSeconds;
+  PRUint32 mUSeconds;
+};
+
 
 class nsTimerGtk : public nsITimer 
 {
@@ -79,7 +114,7 @@ public:
   static PRBool        gTimeoutAdded;
   static PRBool        gProcessingTimer;
 
-  PRUint32             mSchedTime;
+  TimeVal              mSchedTime;
   PRUint32             mDelay;
 private:
   PRUint32             mPriority;
