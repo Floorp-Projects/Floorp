@@ -73,8 +73,9 @@ package TinderDB::VC_Bonsai;
 # where state is either 'Open' or 'Closed' or some other user defined string.
 #
 # Cell colors are controled by the functions:
-#	TreeData::get_all_tree_states()
+#	TreeData::get_all_sorted_tree_states()
 #	TreeData::TreeState2color($state)
+#	TreeData::TreeState2char($state)
 
 
 # Load standard perl libraries
@@ -93,7 +94,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.10 $ )[1];
+$VERSION = ( qw $Revision: 1.11 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -135,7 +136,7 @@ sub find_last_data {
   # sort numerically descending
   my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
-  my ($last_tree_data, $second2last_tree_data, $last_cvs_data);
+  my ($last_tree_data, $second2last_tree_data, $last_vc_data);
 
   foreach $time (@times) {
 
@@ -151,23 +152,23 @@ sub find_last_data {
       (defined($DATABASE{$tree}{$time}{'treestate'})) &&
 	($last_tree_data = $time);
     
-    (!defined($last_cvs_data)) &&
+    (!defined($last_vc_data)) &&
       (defined($DATABASE{$tree}{$time}{'author'})) &&
-	($last_cvs_data = $time);
+	($last_vc_data = $time);
     
     
     # do not iterate through the whole histroy.  Stop after we have
     # the data we need.
     
-    (defined($last_cvs_data)) &&
-      (defined($second2last_cvs_data)) &&
+    (defined($last_vc_data)) &&
+      (defined($second2last_vc_data)) &&
 	(defined($last_tree_data)) &&
 	  last;
 
   } # foreach $time (@times) 
 
 
-  return ($last_tree_data, $second2last_tree_data, $last_cvs_data);
+  return ($last_tree_data, $second2last_tree_data, $last_vc_data);
 }
 
 
