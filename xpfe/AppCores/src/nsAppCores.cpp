@@ -20,7 +20,6 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
 #include "nsDOMPropsCoreFactory.h"
-#include "nsPrefsCoreFactory.h"
 #include "nsSignonCoreFactory.h"
 #include "nsCookieCoreFactory.h"
 #include "nsWalletCoreFactory.h"
