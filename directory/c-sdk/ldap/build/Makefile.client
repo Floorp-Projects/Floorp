@@ -1,0 +1,23 @@
+NS_DEPTH	= ../../..
+
+CSRCS	= dirver.c
+
+include $(NS_DEPTH)/config/rules.mk
+
+TARGETS	= $(OBJDIR)/dirver$(BIN_SUFFIX)
+
+GARBAGE	+= $(TARGETS)
+
+ifeq ($(OS_ARCH), OS2)
+$(OBJS) = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.o))
+
+$(TARGETS): $(OBJS) 
+	@$(MAKE_OBJDIR)                                                           
+	$(LINK_EXE) -OUT:$@ $(OBJS) 
+endif
+
+export:: $(TARGETS)
+	$(INSTALL) -m 555 $(TARGETS) $(DIST)/bin
+
+install:: export
+
