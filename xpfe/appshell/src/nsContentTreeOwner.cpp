@@ -132,23 +132,21 @@ NS_IMETHODIMP nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** a
    return mXULWindow->GetPrimaryContentShell(aShell);
 }
 
+NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
+   PRInt32 aCX, PRInt32 aCY)
+{
+   return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
+}
+
+NS_IMETHODIMP nsContentTreeOwner::ShowModal()
+{
+   return mXULWindow->ShowModal();   
+}
+
 NS_IMETHODIMP nsContentTreeOwner::GetNewBrowserChrome(PRInt32 aChromeFlags,
    nsIWebBrowserChrome** aWebBrowserChrome)
 {
-	/*
-		Tells the implementer of this interface to create a new webBrowserChrome
-		object for it.  Typically this means the implemetor will create a new 
-		top level window that is represented by nsIWebBrowserChrome.  This
-		most often will be called when for instance there is a need for a new
-		JS window, etc.  Soon after this new object is returned, the webBrowser
-		attribute will checked, if one does not exist, one will be created and
-		setWebBrowser will be called with the new widget to instantiate in this 
-		new window.	
-	*/
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mXULWindow->GetNewBrowserChrome(aChromeFlags, aWebBrowserChrome);
 }
 
 //*****************************************************************************
@@ -281,24 +279,21 @@ NS_IMETHODIMP nsContentTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   *aMainWidget = mXULWindow->mWindow;
+   NS_IF_ADDREF(*aMainWidget);
+
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetFocus()
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mXULWindow->SetFocus();
 }
 
 NS_IMETHODIMP nsContentTreeOwner::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mXULWindow->FocusAvailable(aCurrentFocus, aTookFocus);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetTitle(PRUnichar** aTitle)
