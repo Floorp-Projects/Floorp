@@ -221,6 +221,7 @@ extern struct PRLock *_pr_schedLock;
 
 #define THREAD_KEY_T thread_key_t
 
+extern struct PRThread *_pr_attached_thread_tls();
 extern struct PRThread *_pr_current_thread_tls();
 extern struct _PRCPU *_pr_current_cpu_tls();
 extern struct PRThread *_pr_last_thread_tls();
@@ -229,6 +230,7 @@ extern THREAD_KEY_T threadid_key;
 extern THREAD_KEY_T cpuid_key;
 extern THREAD_KEY_T last_thread_key;
 
+#define _MD_GET_ATTACHED_THREAD() _pr_attached_thread_tls()
 #define _MD_CURRENT_THREAD() _pr_current_thread_tls()
 #define _MD_CURRENT_CPU() _pr_current_cpu_tls()
 #define _MD_LAST_THREAD() _pr_last_thread_tls()

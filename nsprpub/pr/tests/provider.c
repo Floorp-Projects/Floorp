@@ -127,7 +127,7 @@ typedef enum Verbosity
 } Verbosity;
 
 static enum {
-    thread_nspr, thread_pthread, thread_sproc, thread_win32
+    thread_nspr, thread_pthread, thread_uithread, thread_sproc, thread_win32
 } thread_provider;
 
 static PRInt32 domain = AF_INET;
@@ -658,6 +658,20 @@ static void *pthread_start(void *arg)
 }  /* pthread_start */
 #endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
 
+#if defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY)
+#include <thread.h>
+
+static void *uithread_start(void *arg)
+{
+    StartObject *so = (StartObject*)arg;
+    StartFn start = so->start;
+    void *data = so->arg;
+    PR_Free(so);
+    start(data);
+    return NULL;
+}  /* uithread_start */
+#endif /* defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY) */
+
 #if defined(IRIX) && !defined(_PR_PTHREADS)
 #include <sys/types.h>
 #include <sys/prctl.h>
@@ -698,6 +712,11 @@ static PRStatus JoinThread(PRThread *thread)
         rv = PR_SUCCESS;
         break;
 #endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+    case thread_uithread:
+#if defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY)
+        rv = PR_SUCCESS;
+        break;
+#endif /* defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY) */
     case thread_win32:
 #if defined(WIN32)
         rv = PR_SUCCESS;
@@ -757,6 +776,29 @@ static PRStatus NewThread(
         PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
         rv = PR_FAILURE;
 #endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+        break;
+
+    case thread_uithread:
+#if defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY)
+        {
+            int rv;
+            thread_t id;
+            long flags;
+            StartObject *start_object;
+            start_object = PR_NEW(StartObject);
+            PR_ASSERT(NULL != start_object);
+            start_object->start = start;
+            start_object->arg = arg;
+
+            flags = THR_DETACHED;
+
+            rv = thr_create(NULL, NULL, uithread_start, start_object, flags, &id);
+            return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
+        }
+#else
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        rv = PR_FAILURE;
+#endif /* defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY) */
         break;
 
     case thread_sproc:
@@ -947,8 +989,14 @@ static void PR_CALLBACK Server(void *arg)
     PRNetAddr serverAddress;
     CSServer_t *server = (CSServer_t*)arg;
     PRThread *me = server->thread = PR_CurrentThread();
+    PRSocketOptionData sockOpt;
 
     server->listener = PR_Socket(domain, SOCK_STREAM, protocol);
+
+    sockOpt.option = PR_SockOpt_Reuseaddr;
+    sockOpt.value.reuse_addr = PR_TRUE;
+    rv = PR_SetSocketOption(server->listener, &sockOpt);
+    TEST_ASSERT(PR_SUCCESS == rv);
 
     memset(&serverAddress, 0, sizeof(serverAddress));
     rv = PR_InitializeNetAddr(PR_IpAddrAny, DEFAULT_PORT, &serverAddress);
@@ -1063,7 +1111,7 @@ static void Help(void)
     PR_fprintf(debug_out, "\t-e <seconds> duration of the test in seconds  (10)\n");
     PR_fprintf(debug_out, "\t-s <string>  dsn name of server               (localhost)\n");
     PR_fprintf(debug_out, "\t-G           use GLOBAL threads               (LOCAL)\n");
-    PR_fprintf(debug_out, "\t-T <string>  thread provider ('n' | 'p' | 'w')(n)\n");
+    PR_fprintf(debug_out, "\t-T <string>  thread provider ('n' | 'p' | 'u' | 'w')(n)\n");
     PR_fprintf(debug_out, "\t-X           use XTP as transport             (TCP)\n");
     PR_fprintf(debug_out, "\t-6           Use IPv6                         (IPv4)\n");
     PR_fprintf(debug_out, "\t-v           verbosity (accumulative)         (0)\n");
@@ -1115,6 +1163,8 @@ PRIntn main(PRIntn argc, char** argv)
 	thread_provider = thread_win32;
 #elif defined(_PR_PTHREADS)
 	thread_provider = thread_pthread;
+#elif defined(SOLARIS) && defined(_PR_GLOBAL_THREADS_ONLY)
+	thread_provider = thread_uithread;
 #elif defined(IRIX)
 	thread_provider = thread_sproc;
 #else
@@ -1146,6 +1196,7 @@ PRIntn main(PRIntn argc, char** argv)
         case 'T':  /* the thread provider */
             if ('n' == *opt->value) thread_provider = thread_nspr;
             else if ('p' == *opt->value) thread_provider = thread_pthread;
+            else if ('u' == *opt->value) thread_provider = thread_uithread;
             else if ('w' == *opt->value) thread_provider = thread_win32;
             else {Help(); return 2; }
             break;
@@ -1374,6 +1425,8 @@ PRIntn main(PRIntn argc, char** argv)
 		thread_type = "\nWin32 Thread Statistics\n";
 	else if (thread_provider == thread_pthread)
 		thread_type = "\npthread Statistics\n";
+	else if (thread_provider == thread_uithread)
+		thread_type = "\nUnix International (UI) Thread Statistics\n";
 	else if (thread_provider == thread_sproc)
 		thread_type = "\nsproc Statistics\n";
     else {
