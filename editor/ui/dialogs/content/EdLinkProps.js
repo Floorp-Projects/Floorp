@@ -178,8 +178,8 @@ function Startup()
     } else {
       dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
       if (selectedText.length > 0) {
-        // Use just the first 50 characters and add "..."
-        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(selectedText, 50, true));
+        // Use just the first 40 characters and add "..."
+        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(selectedText, 40, true));
       } else {
         dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
       }
