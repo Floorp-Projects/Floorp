@@ -41,6 +41,7 @@
 #include "nsIBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollable.h"
+#include "nsBoxLayoutState.h"
 
 #undef NOISY_SECOND_REFLOW
 
@@ -143,8 +144,32 @@ nsScrollFrame::GetClipSize(   nsIPresContext* aPresContext,
  * @return current scrollbar selection
  */
 NS_IMETHODIMP
-nsScrollFrame::GetScrollPreference(nsScrollPref* aScrollPreference) const
+nsScrollFrame::GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const
 {
+  nsIScrollableView* scrollingView;
+  nsIView*           view;
+  GetView(aPresContext, &view);
+  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+     nsScrollPreference pref;
+     scrollingView->GetScrollPreference(pref);
+     switch(pref) 
+     {
+       case nsScrollPreference_kAuto:
+         *aScrollPreference = Auto;
+         break;
+       case nsScrollPreference_kNeverScroll:
+         *aScrollPreference = NeverScroll;
+         break;
+       case nsScrollPreference_kAlwaysScroll:
+         *aScrollPreference = AlwaysScroll;
+         break;
+     }
+
+     return NS_OK;
+  }
+
+  NS_ERROR("No scrollview!!!");
+  *aScrollPreference = NeverScroll;
   return NS_OK;
 }
 
@@ -156,6 +181,13 @@ nsScrollFrame::GetScrollbarSizes(nsIPresContext* aPresContext,
                              nscoord *aVbarWidth, 
                              nscoord *aHbarHeight) const
 {
+  float             sbWidth, sbHeight;
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+
+  dc->GetScrollBarDimensions(sbWidth, sbHeight);
+  *aVbarWidth = NSToCoordRound(sbWidth);
+  *aHbarHeight = NSToCoordRound(sbHeight);
   return NS_OK;
 }
 
@@ -180,7 +212,6 @@ nsScrollFrame::ScrollTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PR
     return scrollingView->ScrollTo(aX, aY, aFlags); 
 
 }
-
 
 
 /**
@@ -458,22 +489,6 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
   return rv;
 }
 
-// Returns the width of the vertical scrollbar and the height of
-// the horizontal scrollbar in twips
-static inline void
-GetScrollbarDimensions(nsIPresContext* aPresContext,
-                       nscoord&        aWidth,
-                       nscoord&        aHeight)
-{
-  float             sbWidth, sbHeight;
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-
-  dc->GetScrollBarDimensions(sbWidth, sbHeight);
-  aWidth = NSToCoordRound(sbWidth);
-  aHeight = NSToCoordRound(sbHeight);
-}
-
 // Calculates the size of the scroll area. This is the area inside of the
 // border edge and inside of any vertical and horizontal scrollbar
 // Also returns whether space was reserved for the vertical scrollbar.
@@ -693,7 +708,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   // XXX: End Temporary Hack.
 
   if (getScrollBarDimensions) {
-    GetScrollbarDimensions(aPresContext, sbWidth, sbHeight);
+    GetScrollbarSizes(aPresContext, &sbWidth, &sbHeight);
   }
 
   // Compute the scroll area size (area inside of the border edge and inside
@@ -711,9 +726,15 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord theHeight;
   nsIBox* box;
   nsresult result = kidFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
-  if (NS_SUCCEEDED(result))
-     theHeight = scrollAreaSize.height;
-  else 
+  if (NS_SUCCEEDED(result)) {
+     nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
+     nsSize min;
+     box->GetMinSize(state, min);
+     if (min.height > scrollAreaSize.height) 
+        theHeight = min.height;
+     else
+        theHeight = scrollAreaSize.height;
+  } else 
      theHeight = NS_INTRINSICSIZE;
 
   nsSize              kidReflowSize(scrollAreaSize.width, theHeight);
@@ -734,6 +755,11 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
               border.left, border.top, NS_FRAME_NO_MOVE_VIEW, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   CalculateChildTotalSize(kidFrame, kidDesiredSize);
+  if (NS_UNCONSTRAINEDSIZE == scrollAreaSize.width) 
+    scrollAreaSize.width = kidDesiredSize.width;
+
+  if (NS_UNCONSTRAINEDSIZE == scrollAreaSize.height) 
+    scrollAreaSize.height = kidDesiredSize.height;
 
   // If we're 'auto' scrolling and not shrink-wrapping our height, then see
   // whether we correctly predicted whether a vertical scrollbar is needed
@@ -830,9 +856,11 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Compute our desired size
   aDesiredSize.width = scrollAreaSize.width;
-  if (NS_UNCONSTRAINEDSIZE != aDesiredSize.width) {
-    aDesiredSize.width += border.left + border.right;
-  }
+
+  NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aDesiredSize.width, "Bad desired size!!!");
+
+  aDesiredSize.width += border.left + border.right;
+
   if ((kidDesiredSize.height > scrollAreaSize.height) ||
       (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL)) {
     aDesiredSize.width += sbWidth;

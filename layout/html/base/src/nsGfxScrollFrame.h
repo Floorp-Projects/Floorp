@@ -141,7 +141,7 @@ public:
                          nscoord *aWidth, 
                          nscoord *aHeight) const;
 
-  NS_IMETHOD  GetScrollPreference(nsScrollPref* aScrollPreference) const;
+  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
   NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
                                nscoord *aVbarWidth, 

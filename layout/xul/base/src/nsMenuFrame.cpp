@@ -775,7 +775,7 @@ nsMenuFrame::Layout(nsBoxLayoutState& aState)
     nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
     if (scrollframe) {
       nsIScrollableFrame::nsScrollPref pref;
-      scrollframe->GetScrollPreference(&pref);
+      scrollframe->GetScrollPreference(aState.GetPresContext(), &pref);
 
       if (pref == nsIScrollableFrame::Auto)  
       {

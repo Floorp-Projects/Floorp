@@ -351,20 +351,43 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
     aView->GetParent(parentView);
     aKidFrame->GetOffsetFromView(aPresContext, origin, &containingView);
     aView->GetViewManager(vm);
-    
-    if (containingView == parentView) {
-      vm->MoveViewTo(aView, origin.x, origin.y);
 
-    } else {
-      // Huh, the view's parent view isn't the same as the containing view.
-      // This happens for combo box drop-down frames.
-      //
-      // We have the origin in the coordinate space of the containing view,
-      // but we need it in the coordinate space of the parent view so do a
-      // view translation
-      NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
-      vm->MoveViewTo(aView, origin.x, origin.y);
+    if (containingView != parentView) 
+    {
+      // it is possible for parent view not to have a frame attached to it
+      // kind of an anonymous view. This happens with native scrollbars and
+      // the clip view. To fix this we need to go up and parentView chain
+      // until we find a view with client data. This is total HACK to fix
+      // the HACK below. COMBO box code should NOT be in the container code!!!
+      // And the case it looks from does not just happen for combo boxes. Native
+      // scrollframes get in this situation too!! 
+      while(parentView) {
+        void *data = 0;
+        parentView->GetClientData(data);
+        if (data)
+          break;
+      
+        nsRect bounds;
+        parentView->GetBounds(bounds);
+        origin.x += bounds.x;
+        origin.y += bounds.y;
+        parentView->GetParent(parentView);
+      }
+     
+      if (containingView != parentView) 
+      {
+        // Huh, the view's parent view isn't the same as the containing view.
+        // This happens for combo box drop-down frames.
+        //
+        // We have the origin in the coordinate space of the containing view,
+        // but we need it in the coordinate space of the parent view so do a
+        // view translation
+        NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
+        vm->MoveViewTo(aView, origin.x, origin.y);
+      }
     }
+
+    vm->MoveViewTo(aView, origin.x, origin.y);
 
     NS_RELEASE(vm);
   }
@@ -395,19 +418,44 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       aView->GetParent(parentView);
       aFrame->GetOffsetFromView(aPresContext, origin, &containingView);
       
-      if (containingView == parentView) {
-        vm->MoveViewTo(aView, origin.x, origin.y);
+
+      if (containingView != parentView) 
+      {
+        // it is possible for parent view not to have a frame attached to it
+        // kind of an anonymous view. This happens with native scrollbars and
+        // the clip view. To fix this we need to go up and parentView chain
+        // until we find a view with client data. This is total HACK to fix
+        // the HACK below. COMBO box code should NOT be in the container code!!!
+        // And the case it looks from does not just happen for combo boxes. Native
+        // scrollframes get in this situation too!! 
+        while(parentView) {
+          void *data = 0;
+          parentView->GetClientData(data);
+          if (data)
+            break;
       
-      } else {
-        // Huh, the view's parent view isn't the same as the containing view.
-        // This happens for combo box drop-down frames.
-        //
-        // We have the origin in the coordinate space of the containing view,
-        // but we need it in the coordinate space of the parent view so do a
-        // view translation
-        NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
-        vm->MoveViewTo(aView, origin.x, origin.y);
+          nsRect bounds;
+          parentView->GetBounds(bounds);
+          origin.x += bounds.x;
+          origin.y += bounds.y;
+          parentView->GetParent(parentView);
+        }
+     
+        if (containingView != parentView) 
+        {
+          // Huh, the view's parent view isn't the same as the containing view.
+          // This happens for combo box drop-down frames.
+          //
+          // We have the origin in the coordinate space of the containing view,
+          // but we need it in the coordinate space of the parent view so do a
+          // view translation
+          NS_VERIFY(TranslatePointTo(origin, containingView, parentView), "translation failed");
+          vm->MoveViewTo(aView, origin.x, origin.y);
+        }
       }
+
+      vm->MoveViewTo(aView, origin.x, origin.y);
+
     }
 
     if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
