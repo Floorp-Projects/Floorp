@@ -213,7 +213,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
         mParser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink);
-        mParser->Parse(aUrl);
+        mParser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
       }
       NS_RELEASE(sink); 
     }
