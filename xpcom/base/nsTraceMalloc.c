@@ -996,7 +996,7 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
     /*
      * Look for the --trace-malloc <logfile> option early, to avoid missing
      * early mallocs (we miss static constructors whose output overflows the
-     * log file's static 16K output buffer; see xpcom/base/nsTraceMalloc.c).
+     * log file's static 16K output buffer).
      */
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
@@ -1057,6 +1057,7 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 
               case '-':
                 /* Don't log from startup, but do prepare to log later. */
+                /* XXX traditional meaning of '-' as option argument is "stdin" or "stdout" */
                 if (logfilename[1] == '\0')
                     break;
                 /* FALL THROUGH */
