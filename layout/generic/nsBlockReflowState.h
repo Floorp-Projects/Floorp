@@ -553,7 +553,33 @@ nsBaseIBFrame::List(FILE* out, PRInt32 aIndent) const
     }
   }
 
-  // Output the text-runs
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  for (;;) {
+    nsIFrame* kid;
+    GetAdditionalChildListName(listIndex++, listName);
+    if (nsnull == listName) {
+      break;
+    }
+    FirstChild(listName, kid);
+    if (nsnull != kid) {
+      IndentBy(out, aIndent);
+      nsAutoString tmp;
+      if (nsnull != listName) {
+        listName->ToString(tmp);
+        fputs(tmp, out);
+      }
+      fputs("<\n", out);
+      while (nsnull != kid) {
+        kid->List(out, aIndent + 1);
+        kid->GetNextSibling(kid);
+      }
+      IndentBy(out, aIndent);
+      fputs(">\n", out);
+    }
+    NS_IF_RELEASE(listName);
+  }
+
   aIndent--;
   IndentBy(stdout, aIndent);
   fputs(">\n", out);
@@ -4339,15 +4365,6 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   fputs("<\n", out);
   aIndent++;
 
-  // Output bullet first
-  if (nsnull != mBullet) {
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fprintf(out, "bullet <\n");
-    mBullet->List(out, aIndent+1);
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">\n", out);
-  }
-
   // Output the lines
   if (nsnull != mLines) {
     nsLineBox* line = mLines;
@@ -4357,17 +4374,31 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
     }
   }
 
-  // Output floaters next
-  if (mFloaters.NotEmpty()) {
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fprintf(out, "all-floaters <\n");
-    nsIFrame* floater = mFloaters.FirstChild();
-    while (nsnull != floater) {
-      floater->List(out, aIndent+1);
-      floater->GetNextSibling(floater);
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  for (;;) {
+    nsIFrame* kid;
+    GetAdditionalChildListName(listIndex++, listName);
+    if (nsnull == listName) {
+      break;
     }
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">\n", out);
+    FirstChild(listName, kid);
+    if (nsnull != kid) {
+      IndentBy(out, aIndent);
+      nsAutoString tmp;
+      if (nsnull != listName) {
+        listName->ToString(tmp);
+        fputs(tmp, out);
+      }
+      fputs("<\n", out);
+      while (nsnull != kid) {
+        kid->List(out, aIndent + 1);
+        kid->GetNextSibling(kid);
+      }
+      IndentBy(out, aIndent);
+      fputs(">\n", out);
+    }
+    NS_IF_RELEASE(listName);
   }
 
   // Output the text-runs
