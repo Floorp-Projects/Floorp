@@ -178,6 +178,9 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
          ("[this=%p] nsJPEGDecoder::Close\n", this));
 
+  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER)
+    NS_WARNING("Never finished decoding the JPEG.");
+
   /* Step 8: Release JPEG decompression object */
 
   /* This is an important step since it will release a good deal of memory. */
