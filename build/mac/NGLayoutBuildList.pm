@@ -589,6 +589,9 @@ sub BuildClientDist()
    # find
    _InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
+   # search
+   _InstallFromManifest(":mozilla:xpfe:components:search:public:MANIFEST_IDL",			"$distdirectory:idl:");
+
    # bookmarks
    _InstallFromManifest(":mozilla:xpfe:components:bookmarks:public:MANIFEST_IDL",	"$distdirectory:idl:");
 
@@ -846,6 +849,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",			"directory");
 	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
+	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
 	BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 
@@ -1297,7 +1301,12 @@ sub MakeResourceAliases()
 	  _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",			"$related_dir:skin:default");
 	  _InstallResources(":mozilla:xpfe:components:related:resources:locale:MANIFEST",			"$related_dir:locale");
         }
-	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
+        {
+          _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
+
+          my($searchdatasets_dir) = "$resource_dir" . "rdf:datasets:";
+          _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",			"$searchdatasets_dir");
+        }
         {
           my($sidebar_chrome_dir) = "$chrome_dir" . "Sidebar";
           _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",		"$sidebar_chrome_dir:content:default");
@@ -1480,6 +1489,7 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",	"ucth$D.shlb", "ucth.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",	"xfer$D.shlb", "xfer.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", "BookmarksComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:search:macbuild:Search.mcp", "Search$D.shlb", "SearchComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:directory:Directory.mcp", "Directory$D.shlb", "DirectoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindow.mcp", "prefwindow$D.shlb", "prefwindowComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
