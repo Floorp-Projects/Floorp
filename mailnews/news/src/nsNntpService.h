@@ -22,6 +22,7 @@
 #include "nsINntpService.h"
 #include "nsIMsgMessageService.h"
 #include "nsINntpIncomingServer.h"
+#include "nsIFileSpec.h"
 
 class nsIURL;
 class nsIUrlListener;
@@ -43,7 +44,10 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsIMsgMessageService Interface 
   ////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, 
+
+  NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL);
+
+  NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, 
 						   PRBool moveMessage,nsIUrlListener * aUrlListener, nsIURL **aURL);
   
   NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 

@@ -106,6 +106,15 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
 ////////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+{
+	// unimplemented for news right now....if we feel it would be useful to 
+	// be able to spool a news article to disk then this is the method we need to implement.
+	nsresult rv = NS_OK;
+	return rv;
+}
+
 nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
   nsresult rv = NS_OK;
@@ -140,8 +149,8 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
 
 nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, nsString &newsURI)
 {
-  nsString hostname;
-  nsString folder;
+  nsAutoString hostname (eOneByte);
+  nsAutoString folder (eOneByte);
   nsresult rv = NS_OK;
   PRUint32 key;
 
@@ -161,12 +170,12 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   }
 
 #ifdef DEBUG_NEWS
-  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, (const char *)nsAutoCString(folder), key);
+  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, folder.GetBuffer(), key);
 #endif
 
   nsNativeFileSpec pathResult;
 
-  rv = nsNewsURI2Path(kNewsMessageRootURI, nsAutoCString(folder), pathResult);
+  rv = nsNewsURI2Path(kNewsMessageRootURI, folder.GetBuffer(), pathResult);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -192,7 +201,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
     return rv;
   }
 
-  nsString messageId;
+  nsAutoString messageId;
   rv = msgHdr->GetMessageId(messageId);
 
 #ifdef DEBUG_NEWS
