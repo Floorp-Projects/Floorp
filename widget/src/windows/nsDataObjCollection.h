@@ -27,6 +27,8 @@
 class CEnumFormatEtc;
 class nsITransferable;
 
+#define MULTI_MIME "Mozilla/IDataObjectCollectionFormat"
+
 /*
  * This ole registered class is used to facilitate drag-drop of objects which
  * can be adapted by an object derived from CfDragDrop. The CfDragDrop is
