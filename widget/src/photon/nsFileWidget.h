@@ -28,6 +28,8 @@
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 
+class nsIToolkit;
+
 /**
  * Native Photon FileSelector wrapper
  */
@@ -40,7 +42,7 @@ class nsFileWidget : public nsIFileWidget
 
     NS_DECL_ISUPPORTS
 
-    PRBool		OnPaint();
+    //PRBool		OnPaint();
 
     // nsIWidget interface
   
@@ -54,7 +56,7 @@ class nsFileWidget : public nsIFileWidget
 
     // nsIFileWidget part
     virtual PRBool	Show();
-//    NS_IMETHOD		GetFile(nsString& aFile);
+    virtual PRBool	AskReplace();
     NS_IMETHOD      GetFile(nsFileSpec& aFile);
     NS_IMETHOD		SetDefaultString(const nsString& aFile);
     NS_IMETHOD		SetFilterList(PRUint32 aNumberOfFilters,
