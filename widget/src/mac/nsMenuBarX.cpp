@@ -382,7 +382,6 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
   MenuRef menuRef = nsnull;
   aMenu->GetNativeData((void**)&menuRef);
 
-  mNumMenus++;
   PRBool helpMenu;
   aMenu->IsHelpMenu(&helpMenu);
   if(!helpMenu) {
@@ -391,6 +390,10 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
     nsAutoString menuHidden;
     menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
     if( menuHidden != NS_LITERAL_STRING("true")) {
+    	// make sure we only increment |mNumMenus| if the menu is visible, since
+    	// we use it as an index of where to insert the next menu.
+      mNumMenus++;
+      
       Str255 title;
       ::InsertMenuItem(mRootMenu, ::GetMenuTitle(menuRef, title), mNumMenus);
       OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, mNumMenus, menuRef);
