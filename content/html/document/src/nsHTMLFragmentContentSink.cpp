@@ -864,7 +864,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     return NS_OK;
   }
 
-  nsAutoString k;
+  nsCAutoString k;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   // The attributes are on the parser node in the order they came in in the
@@ -879,7 +879,9 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
   for (PRInt32 i = ac - 1; i >= 0; i--) {
     // Get lower-cased key
     const nsAString& key = aNode.GetKeyAt(i);
-    k.Assign(key);
+    // Copy up-front to avoid shared-buffer overhead (and convert to UTF-8
+    // at the same time since that's what the atom table uses).
+    CopyUTF16toUTF8(key, k);
     ToLowerCase(k);
 
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
