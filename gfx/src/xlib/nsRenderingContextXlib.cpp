@@ -319,7 +319,7 @@ nsRenderingContextXlib::PushState(void)
   GraphicsState *state = new GraphicsState();
 
   if (state == 0) {
-    return NS_MEMORY_ALLOCATION_ERROR;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   state->mMatrix = mTMatrix;
