@@ -370,7 +370,7 @@ public:
    *
    * @see #IsSplittable()
    */
-  enum SplittableType {frNotSplittable = 0, frSplittable = 1, frSplittableNonRectangular = 3};
+  enum SplittableType {NotSplittable = 0, Splittable = 1, SplittableNonRectangular = 3};
 
   /**
    * Return how your frame can be split.

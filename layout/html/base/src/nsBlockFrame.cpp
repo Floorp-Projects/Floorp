@@ -246,7 +246,7 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD
 nsBlockFrame::IsSplittable(SplittableType& aIsSplittable) const
 {
-  aIsSplittable = frSplittableNonRectangular;
+  aIsSplittable = SplittableNonRectangular;
   return NS_OK;
 }
 

@@ -36,7 +36,7 @@ nsSplittableFrame::~nsSplittableFrame()
 
 NS_METHOD nsSplittableFrame::IsSplittable(SplittableType& aIsSplittable) const
 {
-  aIsSplittable = frSplittable;
+  aIsSplittable = Splittable;
   return NS_OK;
 }
 

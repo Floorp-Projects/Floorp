@@ -702,7 +702,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
     kidFrame->IsSplittable(kidIsSplittable);
 
     if ((kidFrameSize.width  > aState.availSize.height) &&
-        (kidIsSplittable == frNotSplittable)) {
+        (kidIsSplittable == NotSplittable)) {
       result = PR_FALSE;
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
