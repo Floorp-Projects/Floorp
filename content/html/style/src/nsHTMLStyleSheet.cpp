@@ -1509,21 +1509,11 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 {
   // See if we're paginated
   if (aPresContext->IsPaginated()) {
-    nsIFrame* scrollFrame;
     nsIFrame* pageSequenceFrame;
 
-    // Create a page sequence frame and wrap it in a scroll frame. Let the
-    // scroll frame and page sequence frame share the same style context as
-    // the root frame.
-    // XXX We only need the scroll frame if it's print preview...
-    NS_NewScrollFrame(scrollFrame);
-    scrollFrame->Init(*aPresContext, nsnull, aRootFrame, aRootStyleContext);
-
-    // The page sequence frame needs a view, because it's a scrolled frame
+    // Create a page sequence frame
     NS_NewSimplePageSequenceFrame(pageSequenceFrame);
-    pageSequenceFrame->Init(*aPresContext, nsnull, scrollFrame, aRootStyleContext);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
-                                             aRootStyleContext, PR_TRUE);
+    pageSequenceFrame->Init(*aPresContext, nsnull, aRootFrame, aRootStyleContext);
 
     // Create the first page
     nsIFrame* pageFrame;
@@ -1564,10 +1554,9 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     }
     pageFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
     pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
-    scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
 
-    // Return the scroll frame as the frame sub-tree
-    aNewFrame = scrollFrame;
+    // Return the page sequence frame as the frame sub-tree
+    aNewFrame = pageSequenceFrame;
   
   } else {
     // Resolve the style context for the document element
