@@ -249,15 +249,11 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
 
     while (! proxyInfo->GetCompleted())
     {
-        //rv = eventQ->WaitForEvent();
-        //if (NS_FAILED(rv)) break;
-        
-        rv = eventQ->GetEvent(&event);
+        PLEvent *nextEvent;
+        rv = eventQ->WaitForEvent(&nextEvent);
         if (NS_FAILED(rv)) break;
-        
-        eventQ->HandleEvent(event);
-        
-        PR_Sleep(PR_MillisecondsToInterval(100));
+                
+        eventQ->HandleEvent(nextEvent);
     }  
 
     if (eventLoopCreated)
