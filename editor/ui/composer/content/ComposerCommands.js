@@ -483,6 +483,77 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
   return confirmed;
 }
 
+// returns output flags based on mimetype, wrapCol and prefs
+function GetOutputFlags(aMimeType, aWrapColumn)
+{
+  var outputFlags = 256;  // nsIDocumentEncoder.OutputEncodeEntities
+  if (aMimeType == "text/plain")
+  {
+    // When saving in "text/plain" format, always do formatting
+    outputFlags |= 2;  // nsIDocumentEncoder.OutputFormatted
+  }
+  else
+  {
+    // Should we prettyprint? Check the pref
+    try {
+      var prefService = GetPrefsService();
+      if (prefService.getBoolPref("editor.prettyprint"))
+        outputFlags |= 2;  // nsIDocumentEncoder.OutputFormatted
+    }
+    catch (e) {}
+  }
+
+  if (aWrapColumn > 0)
+    outputFlags |= 32;  // nsIDocumentEncoder.OutputWrap;
+
+  return outputFlags;
+}
+
+// returns number of column where to wrap
+function GetWrapColumn()
+{
+  var wrapCol = 72;
+  try {
+    wrapCol = window.editorshell.editor.GetWrapWidth();
+  }
+  catch (e) {}
+
+  return wrapCol;
+}
+
+var gEditorOutputProgressListener =
+{
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {
+  },
+
+  onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
+                              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+  {
+  },
+
+  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  {
+  },
+
+  onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+  {
+  },
+
+  onSecurityChange : function(aWebProgress, aRequest, state)
+  {
+  },
+
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIWebProgressListener)
+    || aIID.equals(Components.interfaces.nsISupports)
+    || aIID.equals(Components.interfaces.nsISupportsWeakReference))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  }
+}
+
 // throws an error or returns true if user attempted save; false if user canceled save
 function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 {
@@ -542,23 +613,46 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
    } catch (e) {  return false; }
   } // mustShowFileDialog
 
+  try {
+    var imeEditor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
+    if (imeEditor)
+      imeEditor.ForceCompositionEnd();
+    } catch (e) {}
+
   var success = true;
   try {
     var docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
     docURI.spec = urlstring;
 
       window.editorShell.editor.SaveFile(docURI, replacing, aSaveCopy, aMimeType);
-    // drat! save flag doesn't get flipped and we can't save text files; comment this out for now
-//    var persistAPI = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
-//    persistAPI.progressListener = window.editorShell; // nsIWebProgressListener
-//    if (!tempLocalFile)
-//    {
-//      tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-//      tempLocalFile.URL = urlstring;
-//    }
+// remove the "if" and curly braces and the above line to get the nsWebBrowserPersist saving!
+if (!success)
+{
+    if (!tempLocalFile)
+    {
+      tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+      tempLocalFile.URL = urlstring;
+    }
 
-      // we should supply a parent directory if/when we turn on functionality to save related documents
-//    persistAPI.saveDocument(editorDoc, tempLocalFile, null);
+    var parentDir;
+    try {
+      var lastSlash = urlstring.lastIndexOf("\/");
+      if (lastSlash != -1)
+      {
+        var parentDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
+        parentDir = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+        parentDir.spec = parentDirString;
+      }
+    } catch(e) { parentDir = null; }
+
+    var wrapColumn = GetWrapColumn();
+    var outputFlags = GetOutputFlags(aMimeType, wrapColumn);
+
+    // we should supply a parent directory if/when we turn on functionality to save related documents
+    var persistAPI = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
+    persistAPI.progressListener = gEditorOutputProgressListener;
+    persistAPI.saveDocument(editorDoc, tempLocalFile, parentDir, aMimeType, outputFlags, wrapColumn);
+}
   }
   catch (e)
   {
@@ -568,7 +662,12 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     success = false;
   }
 
-  window.editorShell.doAfterSave(doUpdateURL, urlstring);
+  try {
+    window.editorShell.doAfterSave(doUpdateURL, urlstring);  // we need to update the url before notifying listeners
+    if (!aSaveCopy && success)
+      window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+  } catch (e) {}
+
   return success;
 }
 
