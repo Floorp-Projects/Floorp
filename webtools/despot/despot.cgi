@@ -28,8 +28,8 @@ use diagnostics;
 
 # a few configurables
 #
-my $despotOwnerMailTo = "mailto:endico\@mozilla.org";
-my $despotOwner = "endico";
+my $despotOwnerMailTo = "mailto:sysadmins\@mozilla.org";
+my $despotOwner = "sysadmins";
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -68,10 +68,19 @@ if (!defined $::despot) {
 # (f.e. AddUser) result in PrintHeader() getting called twice.
 $::header_done = 0;
 
+$::disabled = "";
+#$::disabled = "Despot is temporarily disabled.  Please try again later.";
+if ($::disabled) {
+    PrintHeader();
+    print h1("Despot -- access control for mozilla.org.");
+    print p($::disabled);
+    exit;
+}
+
 if (!param()) {
     PrintHeader();
     print h1("Despot -- access control for mozilla.org.");
-    if (!exists $ENV{"HTTPS"} || $ENV{"HTTPS"} ne "ON") {
+    if (!exists $ENV{"HTTPS"} || lc($ENV{"HTTPS"}) ne "on") {
         my $fixedurl = "https://$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}";
         print b("<font color=red>If possible, please use the " .
                 a({href=>$fixedurl}, "secure version of this form") .
@@ -91,7 +100,7 @@ import_names("F");              # Makes all form values available as F::.
 
 use Mysql;
 
-$::db = Mysql->Connect("localhost", "mozusers", $F::loginname, "")
+$::db = Mysql->Connect(undef, "mozusers", "root", "")
     || die "Can't connect to database server";
 
 
@@ -205,7 +214,9 @@ sub PrintHeader {
 
 
 sub PrintLoginForm {
-    print start_form(-method=>$::POSTTYPE);
+    # CGI seems to be misbehaving; creating the form tag manually as a workaround.
+    print qq|<form method="$::POSTTYPE" enctype="application/x-www-form-urlencoded">\n|;
+#    print start_form(-method=>$::POSTTYPE);
     print table(Tr(th({-align=>"right"}, "Email address:"),
                    td(textfield(-name=>"loginname",
                                 -size=>20))),
@@ -719,11 +730,20 @@ sub ViewAccount {
 sub FindPartition {
     my $repid = $F::repid;
     my $file = $F::file;
-    my $query = Query("select files.pattern,partitions.name,partitions.id from files,partitions where partitions.id=files.partitionid and partitions.repositoryid=$repid");
+    # Excludes the mozilla-toplevel module which would otherwise always match.
+    my $query = Query("select files.pattern,partitions.name,partitions.id from files,partitions where partitions.id=files.partitionid and partitions.repositoryid=$repid and files.pattern != 'mozilla/%'");
     my @matches = ();
     while (@row = $query->fetchrow()) {
         my ($pattern,$name,$id) = (@row);
         if (FileMatches($file, $pattern) || FileMatches($pattern, $file)) {
+            push(@matches, { 'name' => $name, 'id' => $id, 'pattern' => $pattern });
+        }
+        elsif ($file !~ /^mozilla(-org)?\//
+               && (FileMatches("mozilla/$file", $pattern)
+                   || FileMatches($pattern, "mozilla/$file")
+                   || FileMatches("mozilla-org/$file", $pattern)
+                   || FileMatches($pattern, "mozilla-org/$file")))
+        {
             push(@matches, { 'name' => $name, 'id' => $id, 'pattern' => $pattern });
         }
     }
@@ -731,28 +751,40 @@ sub FindPartition {
     if (scalar(@matches) > 0) {
         # The "view" parameter means the request came from the "look up owners of file"
         # form on the owners page, so we should redirect the user to the anchor on that
-        # page for the first matching module.
-        if (param("view")) {
+        # page for a single match.
+        if (scalar(@matches) == 1 && param("view")) {
             print "Location: http://www.mozilla.org/owners.html#$matches[0]->{name}\n\n";
             exit;
         }
         PrintHeader();
         print h1("Searching for partitions matching $file ...");
         foreach my $match (@matches) {
-            print MyForm("EditPartition") . 
-                  hidden("partitionid", $match->{id}) . 
-                  submit($match->{name}) . 
-                  "(matches pattern $match->{pattern})" .
-                  end_form();
+            if (param("view")) {
+                # This should display modules just as they are displayed
+                # on owners.html, but that code is embedded into syncit.pl.
+                print qq|Module: <a href="http://www.mozilla.org/owners.html#$match->{name}">$match->{name}</a>
+                                 (matches pattern $match->{pattern})<br>\n|;
+            }
+            else {
+                print MyForm("EditPartition") . 
+                      hidden("partitionid", $match->{id}) . 
+                      submit($match->{name}) . 
+                      "(matches pattern $match->{pattern})" .
+                      end_form();
+            }
         }
     }
     else {
         PrintHeader();
         print h1("Searching for partitions matching $file ...");
         print "No partitions found.";
-        if ($file !~ /^mozilla/) {
-            print p("Generally, your filename should start with mozilla/ or mozilla-org/.");
-        }
+    }
+
+    if (param("view")) {
+        # No need for the footer with the "Main Menu" button
+        # for "look up owners of file" users.
+        print "</body></html>\n";
+        exit;
     }
 }
                     
@@ -1034,7 +1066,9 @@ sub ChangePassword {
     PrintHeader();
     print h1("Change your mozilla.org password.");
     $F::loginpassword = "";
-    print start_form($::POSTTYPE);
+    # CGI seems to be misbehaving; creating the form tag manually as a workaround.
+    print qq|<form method="$::POSTTYPE" enctype="application/x-www-form-urlencoded">\n|;
+#    print start_form(-method=>$::POSTTYPE);
     print hidden("loginname", $F::loginname);
     print hidden(-name=>"command",
                  -default=>"SetNewPassword",
@@ -1080,7 +1114,9 @@ sub SetNewPassword {
 
 sub MyForm {
     my ($command) = @_;
-    my $result = start_form($::POSTTYPE) . hidden("loginname", $F::loginname) .
+    # CGI seems to be misbehaving; creating the form tag manually as a workaround.
+    my $result = qq|<form method="$::POSTTYPE" enctype="application/x-www-form-urlencoded">| . 
+        hidden("loginname", $F::loginname) .
         hidden("_despot") .
         hidden("loginpassword", $F::loginpassword) .
             hidden(-name=>"command", -value=>$command, -override=>1);

@@ -22,18 +22,18 @@
 
 # $F::debug = 1;
 
-$cvs = "/opt/cvs-tools/bin/cvs";
-$whoami = "/usr/ucb/whoami";
+#$cvs = "/opt/cvs-tools/bin/cvs";
+#$whoami = "/usr/ucb/whoami";
 #$perlbin = "/tools/ns/bin/perl5.004";
 
-#$cvs = "/usr/bin/cvs";
-#$whoami = "/usr/bin/whoami";
+$cvs = "/usr/bin/cvs";
+$whoami = "/usr/bin/whoami";
 $perlbin = "/usr/bin/perl";
 
 #$curdir = `pwd`;
 #chop($curdir);
 #$ENV{"CVS_PASSFILE"} = "$curdir/.cvspass";
-    
+$ENV{"CVS_RSH"} = "ssh";    
 $ENV{"CVS_PASSFILE"} = "/usr/local/etc/despot-cvspass";
 
 $dontcommit = 0;
@@ -58,7 +58,7 @@ chdir $srcdir || die "Couldn't chdir to $srcdir";
 use Mysql;
 require 'utils.pl';
 
-$db = Mysql->Connect("localhost", "mozusers")
+$db = Mysql->Connect("localhost", "mozusers", "root")
     || die "Can't connect to database server";
 
 $db = $db;                      # Make -w shut up.
