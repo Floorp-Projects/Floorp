@@ -41,6 +41,40 @@
 #endif
 
 
+class NS_COM nsStringComparator
+  {
+    public:
+      typedef PRUnichar char_type;
+
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
+      virtual int operator()( char_type, char_type ) const = 0;
+  };
+
+class NS_COM nsDefaultStringComparator
+    : public nsStringComparator
+  {
+    public:
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
+      virtual int operator() ( char_type, char_type ) const;
+  };
+
+class NS_COM nsCStringComparator
+  {
+    public:
+      typedef char char_type;
+
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
+      virtual int operator() ( char_type, char_type ) const = 0;
+  };
+
+class NS_COM nsDefaultCStringComparator
+    : public nsCStringComparator
+  {
+    public:
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
+      virtual int operator()( char_type, char_type ) const;
+  };
+
   /**
    * |nsAC?String| is the most abstract class in the string hierarchy.
    * Strings implementing |nsAC?String| may be stored in multiple
@@ -105,8 +139,8 @@ class NS_COM nsAString
       virtual size_type Length() const = 0;
       PRBool IsEmpty() const { return Length() == 0; }
 
-      inline PRBool Equals( const self_type& ) const;
-      PRBool Equals( const char_type* ) const;
+      inline PRBool Equals( const abstract_string_type&, const nsStringComparator& = nsDefaultStringComparator() ) const;
+      PRBool Equals( const char_type*, const nsStringComparator& = nsDefaultStringComparator() ) const;
 
       virtual PRBool IsVoid() const;
       virtual void SetIsVoid( PRBool );
@@ -380,8 +414,8 @@ class NS_COM nsACString
       virtual size_type Length() const = 0;
       PRBool IsEmpty() const { return Length() == 0; }
 
-      inline PRBool Equals( const self_type& ) const;
-      PRBool Equals( const char_type* ) const;
+      inline PRBool Equals( const abstract_string_type&, const nsCStringComparator& = nsDefaultCStringComparator() ) const;
+      PRBool Equals( const char_type*, const nsCStringComparator& = nsDefaultCStringComparator() ) const;
 
       virtual PRBool IsVoid() const;
       virtual void SetIsVoid( PRBool );
@@ -694,30 +728,13 @@ nsAString::EndWriting( iterator& aResult )
     return aResult;
   }
 
-class NS_COM nsStringComparator
-  {
-    public:
-      typedef nsAString::char_type char_type;
-
-      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
-      virtual int operator()( char_type, char_type ) const = 0;
-  };
-
-class NS_COM nsDefaultStringComparator
-    : public nsStringComparator
-  {
-    public:
-      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
-      virtual int operator() ( char_type, char_type ) const;
-  };
-
 NS_COM int Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& = nsDefaultStringComparator() );
 
 inline
 PRBool
-nsAString::Equals( const self_type& rhs ) const
+nsAString::Equals( const abstract_string_type& rhs, const nsStringComparator& aComparator ) const
   {
-    return Length()==rhs.Length() && Compare(*this, rhs)==0;
+    return Length()==rhs.Length() && Compare(*this, rhs, aComparator)==0;
   }
 
 inline
@@ -820,23 +837,6 @@ nsACString::EndWriting( iterator& aResult )
   }
 
 
-class NS_COM nsCStringComparator
-  {
-    public:
-      typedef nsACString::char_type char_type;
-
-      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
-      virtual int operator() ( char_type, char_type ) const = 0;
-  };
-
-class NS_COM nsDefaultCStringComparator
-    : public nsCStringComparator
-  {
-    public:
-      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
-      virtual int operator()( char_type, char_type ) const;
-  };
-
 class NS_COM nsCaseInsensitiveCStringComparator
     : public nsCStringComparator
   {
@@ -849,9 +849,9 @@ NS_COM int Compare( const nsACString& lhs, const nsACString& rhs, const nsCStrin
 
 inline
 PRBool
-nsACString::Equals( const self_type& rhs ) const
+nsACString::Equals( const abstract_string_type& rhs, const nsCStringComparator& aComparator ) const
   {
-    return Length()==rhs.Length() && Compare(*this, rhs)==0;
+    return Length()==rhs.Length() && Compare(*this, rhs, aComparator)==0;
   }
 
 inline
