@@ -178,7 +178,7 @@ PRUint32 nsCalMultiDayViewCanvas :: GetNumberViewableDays()
   return (mNumberViewableDays);
 }
 
-nsresult nsCalMultiDayViewCanvas :: AddDayViewCanvas()
+nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
 {
   static NS_DEFINE_IID(kCCalDayViewCID,   NS_CAL_DAYVIEWCANVAS_CID);
   static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
@@ -200,7 +200,7 @@ nsresult nsCalMultiDayViewCanvas :: AddDayViewCanvas()
                                      (void **)&canvas);
 
   if (NS_OK != res)
-    return res ;
+    return nsnull ;
 
   canvas->Init();      
 
@@ -225,7 +225,7 @@ nsresult nsCalMultiDayViewCanvas :: AddDayViewCanvas()
                                        (void **)&canvas);
 
     if (NS_OK != res)
-      return res ;
+      return nsnull ;
 
     canvas->Init();      
 
@@ -248,7 +248,7 @@ nsresult nsCalMultiDayViewCanvas :: AddDayViewCanvas()
                                      (void **)&canvas);
 
   if (NS_OK != res)
-    return res ;
+    return nsnull ;
 
   canvas->Init();      
 
@@ -270,7 +270,7 @@ nsresult nsCalMultiDayViewCanvas :: AddDayViewCanvas()
                                        (void **)&canvas);
 
     if (NS_OK != res)
-      return res ;
+      return nsnull ;
 
     canvas->Init();      
 
@@ -283,7 +283,7 @@ nsresult nsCalMultiDayViewCanvas :: AddDayViewCanvas()
 
   }
 
-  return (NS_OK);
+  return (parent);
 }
 
 nsresult nsCalMultiDayViewCanvas :: ChangeChildDateTime(PRUint32 aIndex, nsDateTime * aDateTime)

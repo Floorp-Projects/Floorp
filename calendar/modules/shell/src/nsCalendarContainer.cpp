@@ -35,6 +35,12 @@
 #include "nsICalendarUser.h"
 #include "nsICalendarModel.h"
 #include "nsCoreCIID.h"
+#include "nsIUser.h"
+#include "nsCurlParser.h"
+#include "nsX400Parser.h"
+#include "nscal.h"
+#include "nsCalMultiDayViewCanvas.h"
+#include "nsLayer.h"
 
 // XXX: This code should use XML for defining the Root UI. We need to
 //      implement the stream manager first to do this, then lots of
@@ -462,7 +468,234 @@ nsresult nsCalendarContainer::GetApplicationShell(nsIApplicationShell*& aResult)
 
 nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec, nsIStreamObserver* aListener, nsIPostData * aPostData)
 {
-  return(mCalendarWidget->LoadURL(aURLSpec, aListener, aPostData));
+  /*
+   * this is temp hack code til get capi url's in the stream manager....sorry!
+   */
+
+  if (aURLSpec.Find(".ics") == -1)  
+  {
+  
+    /*
+     * This is a normal url, go thru the stream manager
+     */
+
+    return(mCalendarWidget->LoadURL(aURLSpec, aListener, aPostData));
+  }
+
+  /*
+   * This is a capi url.  Today, we assume that this is an additional
+   * item for a group agenda
+   */
+
+  nsCalendarShell * shell = (nsCalendarShell *) mCalendarShell;
+
+  /*
+   * Create a New User
+   */
+
+  static NS_DEFINE_IID(kICalendarUserIID,     NS_ICALENDAR_USER_IID); 
+  static NS_DEFINE_IID(kCCalendarUserCID,     NS_CALENDAR_USER_CID);
+  static NS_DEFINE_IID(kIUserIID,             NS_IUSER_IID);
+
+  nsresult res;
+  CAPIStatus s;
+
+  nsICalendarUser * caluser ;
+  nsIUser* pUser;
+
+  res = nsRepository::CreateInstance(kCCalendarUserCID,
+                                     nsnull,           
+                                     kICalendarUserIID,
+                                     (void**)&caluser);
+
+  if (NS_OK != res) 
+    return res;
+
+  caluser->Init();
+
+  if (NS_OK != (res = caluser->QueryInterface(kIUserIID,(void**)&pUser)))
+    return res ;
+  
+
+  nsCurlParser theURL;
+
+  char * cstring = aURLSpec.ToNewCString();
+
+  theURL.SetCurl(cstring);
+
+  delete cstring;
+
+  JulianString sUserName(256);
+  nsString     nsUserName;
+
+  sUserName = theURL.GetUser();
+
+  cstring = sUserName.GetBuffer();
+  nsUserName = cstring;
+
+  pUser->SetUserName(nsUserName);
+
+  sUserName.DoneWithBuffer();
+
+  pUser->GetUserName(nsUserName);
+  JulianString sHandle(256);
+  nsUserName.ToCString(sHandle.GetBuffer(),256);
+  sHandle.DoneWithBuffer();
+
+  /*
+   *  Ask the session manager for a session...
+   */
+  res = shell->mSessionMgr.GetSession(theURL.GetCurl().GetBuffer(), 
+                                      0L, 
+                                      shell->GetCAPIPassword(), 
+                                      shell->mCAPISession);
+  
+  if (nsCurlParser::eCAPI == theURL.GetProtocol())
+  {
+    nsX400Parser x(theURL.GetExtra());
+    x.Delete("ND");
+    x.GetValue(sHandle);
+    sHandle.Prepend(":");
+  }
+
+#if 0
+  s = shell->mSessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(shell->mCAPISession,
+                              sHandle.GetBuffer(),
+                              0,
+                              &(shell->mCAPIHandle));
+#endif
+  nsCalSession* pCalSession;
+  /*
+   * Get the session from the session manager...
+   */
+  s = shell->mSessionMgr.GetSession(theURL.GetCurl(),0,"",pCalSession);
+  if (CAPI_ERR_OK != s)
+    return NS_OK;
+  /*
+   * Get a handle to the specific calendar store from the session
+   */
+
+
+  JulianString jfile = theURL.GetCSID();
+
+  s = pCalSession->mCapi->CAPI_GetHandle(shell->mCAPISession,
+                              jfile.GetBuffer(),//sHandle.GetBuffer(),
+                              0,
+                              &(shell->mCAPIHandle));
+
+
+  /*
+   * Whatever ....
+   */
+
+  nsILayer* pLayer;
+
+  static NS_DEFINE_IID(kILayerIID,            NS_ILAYER_IID);
+  static NS_DEFINE_IID(kCLayerCID,            NS_LAYER_CID);
+
+  if (NS_OK != (res = nsRepository::CreateInstance(
+          kCLayerCID,         // class id that we want to create
+          nsnull,             // not aggregating anything  (this is the aggregatable interface)
+          kILayerIID,         // interface id of the object we want to get back
+          (void**)&pLayer)))
+    return 1;  // XXX fix this
+  pLayer->Init();
+  pLayer->SetCurl(theURL.GetCurl());
+  caluser->SetLayer(pLayer);
+
+
+  /*
+   * Begin a calendar for the logged in user...
+   */
+
+  NSCalendar * pCalendar = new NSCalendar(0);
+  
+
+  switch(theURL.GetProtocol())
+  {
+    case nsCurlParser::eFILE:
+    case nsCurlParser::eCAPI:
+    {
+      DateTime d;
+      DateTime d1;
+      JulianPtrArray EventList;
+      nsILayer *pLayer;
+      d.prevDay(14);
+      d1.nextDay(14);      
+      caluser->GetLayer(pLayer);
+      NS_ASSERTION(0 != pLayer,"null pLayer");
+      pLayer->SetShell(shell);
+      pLayer->FetchEventsByRange(&d,&d1,&EventList);
+      pLayer->SetCal(pCalendar);
+      pCalendar->addEventList(&EventList);
+    }
+    break;
+
+    default:
+    {
+      /* need to report that this is an unhandled curl type */
+    }
+    break;
+  }
+
+  nsICalendarModel * calmodel = nsnull;
+  nsIModel * model = nsnull;
+
+  res = nsRepository::CreateInstance(kCCalendarModelCID, 
+                                     nsnull, 
+                                     kICalendarModelIID, 
+                                     (void **)&calmodel);
+
+  if (NS_OK != res)
+      return res;
+
+  calmodel->Init();
+
+  calmodel->SetCalendarUser(caluser);
+
+  calmodel->QueryInterface(kIModelIID, (void**)&model);
+
+  if (NS_OK != res)
+    return res;
+
+  //mRootCanvas->SetModel(model);
+  /*
+   * find a multi canvas and add one here and then set it's model ... yeehaaa
+   */
+
+  nsString mcstring("MultiCalendarEventWeekView");
+
+  nsCalMultiDayViewCanvas * mc = (nsCalMultiDayViewCanvas *) mRootCanvas->CanvasFromName(mcstring);
+
+  if (nsnull != mc)
+  {
+    nsIXPFCCanvas * canvas = mc->AddDayViewCanvas();
+
+    /*
+     * Get the last sibling and set it's model....
+     */
+
+    if (canvas != nsnull)
+    {
+      mc->SetTimeContext(mc->GetTimeContext());
+
+      canvas->SetModel(model);
+
+      mc->Layout();
+
+      nsRect bounds;
+      mc->GetView()->GetBounds(bounds);
+      gXPFCToolkit->GetViewManager()->UpdateView(mc->GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+
+    }
+
+  }
+
+  NS_RELEASE(model);
+
+
+  return NS_OK;
+  
 }
 
 nsICalendarWidget * nsCalendarContainer::GetDocumentWidget()
