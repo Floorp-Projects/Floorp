@@ -125,7 +125,7 @@ if (exists $::FORM{'bug_status'}) {
     # or NEW, depending on votestoconfirm if either the given state was
     # unconfirmed (so that a user can't override the below check), or if
     # the user doesn't have permission to change the default status anyway
-    if ($::FORM{'bug_status'} == $::unconfirmedstate
+    if ($::FORM{'bug_status'} eq $::unconfirmedstate
         || (!UserInGroup("canedit") && !UserInGroup("canconfirm"))) {
         delete $::FORM{'bug_status'};
     }
