@@ -4,6 +4,10 @@ function upgradeCleanup()
   // need to be cleaned up.
   deleteThisFile("Program",    "psm.exe");
   deleteThisFile("Components", "psmglue.dll");
+
+  deleteThisFile("Components", "pipboot.xpt");
+  deleteThisFile("Components", "pipnss.xpt");
+  deleteThisFile("Components", "pippki.xpt");
 }
 
 // main
