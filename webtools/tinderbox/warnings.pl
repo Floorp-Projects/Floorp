@@ -139,7 +139,7 @@ print STDERR "done.\n";
 # Find the build we want and generate warnings for it
 #
 for $br (last_successful_builds($tree)) {
-  next unless $br->{buildname} =~ /shrike.*\b(Clobber|Clbr)\b/;
+  next unless $br->{buildname} =~ /^$warning_buildnames_pat$/;
 
   my $log_file = "$br->{logfile}";
 
@@ -183,28 +183,15 @@ for $br (last_successful_builds($tree)) {
   next unless $total_unignored_warnings > 0;
 
   # Make the new warnings live.
-  use File::Copy 'move';
-  move($warn_file, "$tree/warnings.html");
+  unlink("$tree/warnings.html");
+  symlink($warn_file, "$tree/warnings.html");
 
-  # Print a summary for the main tinderbox page.
+  # Add an entry to the warning log
   #
-  my $warn_summary = "$tree/warn$log_file";
-  $warn_summary =~ s/.gz$/.pl/;
-
-  $fh->open(">$warn_summary") or die "Unable to open $warn_summary: $!\n";
-  $total_unignored_warnings = commify($total_unignored_warnings);
-  print $fh '$warning_summary=\'<p>Check out the '
-      ."<a href=\"http://tinderbox.mozilla.org/$tree/warnings.html\">"
-      ."$total_unignored_warnings Build Warnings</a> (updated $time_str). "
-      .'-<a href="mailto:slamm@netscape.com?subject=About the Build Warnings">'
-      .'slamm</a><p>\';'."\n";
+  my $warn_log = "$tree/warnings.dat";
+  $fh->open(">>$warn_log") or die "Unable to open $warn_log: $!\n";
+  print $fh "$log_file|$total_unignored_warnings\n";
   $fh->close;
-
-  # Make the summary live.
-  move($warn_summary, "$tree/warn.pl");
-
-  warn "$total_unignored_warnings warnings ($total_ignored_count ignored),"
-      ." updated $time_str\n";
 
   last;
 }

@@ -160,12 +160,6 @@ sub do_tinderbox {
 sub print_page_head {
   print "Content-type: text/html\n\n<HTML>\n" unless $form{static};
 
-  # Get the message of the day only on the first pageful
-  do "$tree/mod.pl" if $nowdate eq $maxdate;
-
-  # Get the warnings summary
-  do "$tree/warn.pl" if $nowdate eq $maxdate;
-
   use POSIX qw(strftime);
   # Print time in format, "HH:MM timezone"
   my $now = strftime("%H:%M %Z", localtime);
@@ -175,9 +169,10 @@ sub print_page_head {
 
   &print_javascript;
 
+  # Get the message of the day only on the first pageful
+  do "$tree/mod.pl" if $nowdate eq $maxdate;
   print "$message_of_day\n";  # from $tree/mod.pl
-  print "$warning_summary\n"; # from $tree/warn.pl
-  
+
   # Quote and Lengend
   #
   unless ($form{nocrap}) {
@@ -351,12 +346,19 @@ BEGIN {
       }
       
       # Leak/Bloat
-      #
       if (defined $td->{bloaty}{$logfile}) {
         my ($leaks, $bloat, $leaks_cmp, $bloat_cmp)
             = @{ $td->{bloaty}{$logfile} };
         print "<br>Lk:", print_bloat_delta($leaks, $leaks_cmp),
               "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
+      }
+
+      # Warnings
+      if (defined $td->{warnings}{$logfile}) {
+        my ($warning_count) = $td->{warnings}{$logfile};
+        my $warn_file = "$tree/warn$logfile";
+        $warn_file =~ s/\.gz$/.html/;
+        print "<br><br><a href='${rel_path}$warn_file'>Warn:$warning_count</a>";
       }
 
       print "</tt>\n</td>";

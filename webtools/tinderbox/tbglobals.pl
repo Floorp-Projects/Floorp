@@ -131,6 +131,7 @@ sub tb_load_data {
   &make_build_table($td, $build_list);
 
   $td->{bloaty} = load_bloaty($td);
+  $td->{warnings} = load_warnings($td);
 
   return $td;
 }
@@ -394,6 +395,24 @@ sub load_bloaty {
     $bloaty->{$logfile} = [ $leaks, $bloat, $leaks_cmp, $bloat_cmp ];
   }
   return $bloaty;
+}
+
+# Load data about build warnings
+#   File format: <logfile>|<warning_count>
+#
+sub load_warnings {
+  my $treedata = $_[0];
+  local $_;
+
+  my $warnings = {};
+
+  open(WARNINGLOG, "<$treedata->{name}/warnings.dat");
+  while (<WARNINGLOG>) {
+    chomp;
+    my ($logfile, $warning_count) = split /\|/;
+    $warnings->{$logfile} = $warning_count;
+  }
+  return $warnings;
 }
 
 sub get_build_name_index {
