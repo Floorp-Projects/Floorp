@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/04/27 00:47:30 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/04/27 01:13:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -237,12 +237,16 @@ sub split_cgi_args {
 # Environmental variables are checked for security.
 
 sub regenerate_HTML_pages {
-    local $ENV{"QUERY_STRING"} = '';
+    my $old_query_string =  $ENV{"QUERY_STRING"};
+
+    $ENV{"QUERY_STRING"} = '';
 
     system(
            $FileStructure::CGIBIN_DIR.'tinder.cgi', 
            '--daemon-mode',
            );
+
+    $ENV{"QUERY_STRING"} = $old_query_string;
 
     return 0;
 }
