@@ -31,7 +31,7 @@
  * Threading: ??
  */
 %{C++
-#define NS_PK11TOKENDB_CONTRACTID "thayes@netscape.com/pk11tokendb;1"
+#define NS_PK11TOKENDB_CONTRACTID "@mozilla.org/security/pk11tokendb;1"
 %}
 
 [scriptable, uuid(51191434-1dd2-11b2-a17c-e49c4e99a4e3)]
