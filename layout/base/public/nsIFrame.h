@@ -390,7 +390,27 @@ public:
   NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
                                nsIFrame**     aFrame) = 0;
   
-                            
+  
+  /**
+   * Get a point (in the frame's coordinate space) given an offset into
+   * the content. This point should be on the baseline of text with
+   * the correct horizontal offset
+   */
+  NS_IMETHOD  GetPointFromOffset(nsIPresContext*          inPresContext,
+															   nsIRenderingContext*     inRendContext,
+                                 PRInt32                  inOffset,
+                                 nsPoint*                 outPoint) = 0;
+  
+  /**
+   * Get the child frame of this frame which contains the given
+   * content offset. outChildFrame may be this frame, or nsnull on return.
+   * outContentOffset returns the content offset relative to the start
+   * of the returned node
+   */
+  NS_IMETHOD  GetChildFrameContainingOffset(PRInt32       inContentOffset,
+                                 PRInt32*                 outFrameContentOffset,
+                                 nsIFrame*                *outChildFrame) = 0;
+
  /**
    * Get the current frame-state value for this frame. aResult is
    * filled in with the state bits. The return value has no

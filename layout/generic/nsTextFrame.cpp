@@ -46,7 +46,6 @@
 #include "nsTextReflow.h"/* XXX rename to nsTextRun */
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
-#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
@@ -134,6 +133,15 @@ public:
                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
 
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
+
+  NS_IMETHOD GetPointFromOffset(nsIPresContext*         inPresContext,
+                                nsIRenderingContext*    inRendContext,
+                                PRInt32                 inOffset,
+                                nsPoint*                outPoint);
+                                
+  NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+                                PRInt32*                outFrameContentOffset,
+                                nsIFrame*               *outChildFrame);
 
   // nsIHTMLReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
@@ -840,10 +848,10 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
-        aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
-        RenderSelectionCursor(aRenderingContext,
-                            dx + textWidth, dy, mRect.height,
-                            CURSOR_COLOR);
+        //aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
+        //RenderSelectionCursor(aRenderingContext,
+        //                    dx + textWidth, dy, mRect.height,
+        //                    CURSOR_COLOR);
       }
       else 
       {
@@ -879,6 +887,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         if (textLength != selectionEnd) {
           PRInt32 thirdLen = textLength - selectionEnd;
 
+          NS_ASSERTION(thirdLen >= 0, "Text length is negative");
+          
           // Render third (unselected) section
           aRenderingContext.GetWidth(text + selectionEnd, PRUint32(thirdLen),
                                      textWidth);
@@ -1165,11 +1175,11 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
       if (si.mEmptySelection) {
         RenderString(aRenderingContext, aStyleContext, aTextStyle,
                      text, textLength, dx, dy, width);
-        GetWidth(aRenderingContext, aTextStyle,
-                 text, PRUint32(si.mStartOffset), textWidth);
-        RenderSelectionCursor(aRenderingContext,
-                              dx + textWidth, dy, mRect.height,
-                              CURSOR_COLOR);
+        //GetWidth(aRenderingContext, aTextStyle,
+        //         text, PRUint32(si.mStartOffset), textWidth);
+        //RenderSelectionCursor(aRenderingContext,
+        //                      dx + textWidth, dy, mRect.height,
+        //                      CURSOR_COLOR);
       }
       else {
         nscoord x = dx;
@@ -1308,10 +1318,10 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
-        aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
-        RenderSelectionCursor(aRenderingContext,
-                            dx + textWidth, dy, mRect.height,
-                            CURSOR_COLOR);
+        //aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
+        //RenderSelectionCursor(aRenderingContext,
+        //                    dx + textWidth, dy, mRect.height,
+        //                    CURSOR_COLOR);
       }
       else 
       {
@@ -1628,9 +1638,87 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
 }
 
 
+NS_IMETHODIMP
+TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
+{
+  NS_PRECONDITION(inPresContext && inRendContext && outPoint, "Null ptr");
+  
+  // Make enough space to transform
+  PRUnichar     wordBufMem[WORD_BUF_SIZE];
+  PRUnichar     paintBufMem[TEXT_BUF_SIZE];
+  PRUnichar*    paintBuf = paintBufMem;
+
+  PRInt32       indicies[TEXT_BUF_SIZE];
+  PRInt32*      ip = indicies;
+  
+  if (mContentLength > TEXT_BUF_SIZE)
+  {
+    ip = new PRInt32[mContentLength+1];
+    paintBuf = new PRUnichar[mContentLength];
+  }
+   
+  nscoord width = mRect.width;
+  PRInt32 textLength;
+
+  TextStyle ts(*inPresContext, *inRendContext, mStyleContext);
+
+  // Transform text from content into renderable form
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
+  PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
+
+  PRUnichar* text = paintBuf;
+
+	nsPoint		bottomLeft(0, 0);
+	nscoord	 textWidth;
+	
+	PRUint32  measureLen = ip[inOffset - mContentOffset] - mContentOffset;
+	
+	// do I need to do special stuff with small caps etc here?
+	inRendContext->GetWidth(text, measureLen, textWidth);
+
+	bottomLeft.x = textWidth;
+  *outPoint = bottomLeft;
+
+  // Cleanup
+  if (paintBuf != paintBufMem)
+    delete [] paintBuf;
+
+  if (ip != indicies)
+    delete [] ip;
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
-TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, nsIFrame **aResultFrame, 
+TextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
+{
+  if (nsnull == outChildFrame)
+    return NS_ERROR_NULL_POINTER;
+
+  PRInt32 contentOffset = inContentOffset;
+  
+  if (contentOffset != -1) //-1 signified the end of the current content
+    contentOffset = inContentOffset - mContentOffset;
+
+  if (contentOffset >= mContentLength)
+  {
+    //this is not the frame we are looking for.
+    nsIFrame *nextInFlow = GetNextInFlow();
+    if (nextInFlow)
+      return nextInFlow->GetChildFrameContainingOffset(inContentOffset, outFrameContentOffset, outChildFrame);
+    else
+      return NS_ERROR_FAILURE;
+  }
+  
+  *outFrameContentOffset = contentOffset;
+  *outChildFrame = this;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, nsIFrame **aResultFrame, 
                       PRInt32 *aFrameOffset, PRInt32 *aContentOffset)
 {
   //default, no matter what grab next/ previous sibling. 
@@ -1652,8 +1740,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt3
 
   // Transform text from content into renderable form
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(tx,
-                     ip, paintBuf, textLength, width);
+  PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
 
   ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   nsresult result(NS_OK);
@@ -1670,7 +1757,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt3
     if (aDirection == eDirPrevious){
       PRInt32 i;
       for (i = aStartOffset -1; i >=0;  i--){
-        if (ip[i] < ip [aStartOffset]){
+        if (ip[i] < ip[aStartOffset]){
           *aResultFrame = this;
           *aFrameOffset = i;
           break;
@@ -1692,7 +1779,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt3
       if (aDirection == eDirNext){
         PRInt32 i;
         for (i = aStartOffset +1; i <= mContentLength;  i++){
-          if (ip[i] > ip [aStartOffset]){
+          if (ip[i] > ip[aStartOffset]){
             *aResultFrame = this;
             *aFrameOffset = i;
             break;
