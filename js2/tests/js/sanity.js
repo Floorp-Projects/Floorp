@@ -2,13 +2,6 @@ class BaseClass {
     
     static var gBC = 12;
 
-    operator function "+" (a:BaseClass, b:Number) 
-    {    
-        gBC++;
-        return a.mBC + b;
-    }
-
-
     var mBC;
 
     function fBC(a)
@@ -48,12 +41,6 @@ class Extended extends BaseClass {
     {
         mEx = 2;
     }
-
-    operator function "+" (a:Extended, b:BaseClass)
-    {
-        return a.mEx + b.mBC;
-    }
-
 
 }
 
@@ -220,16 +207,28 @@ test++; //23
 if (f1(2, "e":1, "c":5, "g":-16) != 0)  badTest += test + " ";
 
 import MentalState, exclude(lunacy);
+
 test++; //24
+
 if (!Normal::functioning)  badTest += test + " ";
+
 var ok:Boolean = false;
+
 try {
+
     eval("lunacy");
+
 }
+
 catch (x) {
+
     ok = true;
+
 }
+
 test++; //25
+
 if (!ok)  badTest += test + " ";
+
 
 if (badTest == 0) print("still sane (after " + test + " tests)") else print("gone off the deep end at test #" + badTest);
