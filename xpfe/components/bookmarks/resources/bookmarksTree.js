@@ -41,6 +41,7 @@ function BookmarksTree (aID)
 BookmarksTree.prototype = {
   __proto__: BookmarksUIElement.prototype,
 
+  // XXX - change this to .element and move into base. 
   get tree ()
   {
     return document.getElementById(this.id);
@@ -82,6 +83,13 @@ BookmarksTree.prototype = {
     return xulElement;
   },
 
+  // XXX - ideally this would be in the base. this.tree needs to change to 
+  // this.element and then we can do just that. 
+  setRoot: function (aRoot)
+  {
+    this.tree.setAttribute("ref", aRoot);
+  },
+
   // Command implementation
   commands: {
     openFolder: function (aSelectedItem)
@@ -101,6 +109,9 @@ BookmarksTree.prototype = {
       var editCell = aSelectedItem.firstChild.childNodes[aCell];
       if (editCell.getAttribute("editable") != "true")
         return;
+      
+      // Cause the inline edit cell binding to be used.
+      editCell.setAttribute("class", "treecell-indent treecell-editable");
       var editColGroup = document.getElementById("theColumns");
       var count = 0;
       var property = "";
@@ -121,7 +132,7 @@ BookmarksTree.prototype = {
       if (property) {
         editCell.setMode("edit");
         editCell.addObserver(this.postModifyCallback, "accept",
-                             [gBookmarksShell, aSelectedItem, property]);
+                             [editCell, aSelectedItem, property]);
       }
     },
 
@@ -130,13 +141,16 @@ BookmarksTree.prototype = {
     // needs to be modified in the datasource.
     postModifyCallback: function (aParams)
     {
-      var aShell = aParams[0];
       var selItemURI = NODE_ID(aParams[1]);
-      aShell.propertySet(selItemURI, aParams[2], aParams[3]);
+      gBookmarksShell.propertySet(selItemURI, aParams[2], aParams[3]);
       gBookmarksShell.selectFolderItem(NODE_ID(gBookmarksShell.findRDFNode(aParams[1], false)),
                                        selItemURI, false);
       gBookmarksShell.tree.focus();
       gSelectionTracker.clickCount = 0;
+      
+      // Set the cell back to use the standard treecell binding.
+      var editCell = aParams[0];
+      editCell.setAttribute("class", "treecell-indent");
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -153,7 +167,7 @@ BookmarksTree.prototype = {
       var shell = gBookmarksShell.commands; // suck
       var dummyItem = aParams[2];
       var relativeNode = aParams[1];
-      var parentNode = gBookmarksShell.findRDFNode(relativeNode, false);
+      var parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.tree;
 
       dummyItem.parentNode.removeChild(dummyItem);
 
@@ -163,15 +177,16 @@ BookmarksTree.prototype = {
         return;
       }
 
-
-      // If we're attempting to create a folder as a subfolder of an open folder,
-      // we need to set the parentFolder to be relativeNode, which will be the
-      // parent of the new folder, rather than the parent of the relativeNode,
-      // which will result in the folder being created in an incorrect position
-      // (adjacent to the relativeNode).
-      var selKids = ContentUtils.childByLocalName(relativeNode, "treechildren");
-      if (selKids && selKids.hasChildNodes() && selKids.lastChild == dummyItem)
-        parentNode = relativeNode;
+      if (relativeNode) {
+        // If we're attempting to create a folder as a subfolder of an open folder,
+        // we need to set the parentFolder to be relativeNode, which will be the
+        // parent of the new folder, rather than the parent of the relativeNode,
+        // which will result in the folder being created in an incorrect position
+        // (adjacent to the relativeNode).
+        var selKids = ContentUtils.childByLocalName(relativeNode, "treechildren");
+        if (selKids && selKids.hasChildNodes() && selKids.lastChild == dummyItem)
+          parentNode = relativeNode;
+      }
 
       var args = [{ property: NC_NS + "parent",
                     resource: NODE_ID(parentNode) },
@@ -180,8 +195,8 @@ BookmarksTree.prototype = {
 
       const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
       kBMDS.AddObserver(newFolderRDFObserver);
-      BookmarksUtils.doBookmarksCommand(NODE_ID(relativeNode),
-                                         NC_NS_CMD + "newfolder", args);
+      var relId = relativeNode ? NODE_ID(relativeNode) : "NC:BookmarksRoot";
+      BookmarksUtils.doBookmarksCommand(relId, NC_NS_CMD + "newfolder", args);
       kBMDS.RemoveObserver(newFolderRDFObserver);
       var newFolderItem = document.getElementById(newFolderRDFObserver._newFolderURI);
       gBookmarksShell.tree.focus();
@@ -206,7 +221,6 @@ BookmarksTree.prototype = {
       if (aTopic == "reject") {
         if (aOldSelectedItem)
           gBookmarksShell.tree.selectItem(aOldSelectedItem);
-        aDummyItem.parentNode.removeChild(aDummyItem);
         return false;
       }
       return true;
@@ -217,43 +231,55 @@ BookmarksTree.prototype = {
     // to create new bookmarks/folders.
     createBookmarkItem: function (aMode, aSelectedItem)
     {
-      aSelectedItem.removeAttribute("selected");
-      var dummyItem = aSelectedItem.cloneNode(true);
-      dummyItem.removeAttribute("id");
-      dummyItem.removeAttribute("selected");
-      if (aMode == "folder")
-        dummyItem.setAttribute("container", "true");
-      for (var i = 0; i < dummyItem.firstChild.childNodes.length; ++i)
-        dummyItem.firstChild.childNodes[i].removeAttribute("label");
-      var editCell = dummyItem.firstChild.firstChild;
-      editCell.setAttribute("label",
-                            gBookmarksShell.getLocaleString(aMode == "folder" ? "ile_newfolder" :
-                                                                                "ile_newbookmark"));
-      editCell.setAttribute("type", NC_NS + (aMode == "folder" ? "Folder" : "Bookmark"));
-      // By default, create adjacent to the selected item
-      var relativeNode = aSelectedItem;
-      if (relativeNode.getAttribute("container") == "true" && 
-          relativeNode.getAttribute("open") == "true") {
-        // But if it's an open container, the relative node should be the last child. 
-        var treechildren = ContentUtils.childByLocalName(relativeNode, "treechildren");
-        if (treechildren && treechildren.hasChildNodes()) 
-          relativeNode = treechildren.lastChild;
-      }
-      if (dummyItem.getAttribute("container") == "true") {
-        for (i = 0; i < dummyItem.childNodes.length; ++i) {
-          if (dummyItem.childNodes[i].localName == "treechildren")
-            dummyItem.removeChild(dummyItem.childNodes[i]);
+      const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      var dummyItem = document.createElementNS(kXULNS, "treeitem");
+      dummyItem = gBookmarksShell.createBookmarkFolderDecorations(dummyItem);
+      dummyItem.setAttribute("class", "bookmark-item");
+
+      var dummyRow    = document.createElementNS(kXULNS, "treerow");
+      var dummyCell   = document.createElementNS(kXULNS, "treecell");
+      var dummyCell2  = document.createElementNS(kXULNS, "treecell");
+      dummyCell.setAttribute("label", gBookmarksShell.getLocaleString("ile_newfolder") + "  ");
+      dummyCell.setAttribute("type", NC_NS + "Folder");
+      dummyCell.setAttribute("editable", "true");
+      dummyCell.setAttribute("class", "treecell-indent treecell-editable");
+      dummyRow.appendChild(dummyCell);
+      dummyItem.appendChild(dummyRow);
+      
+      var relativeNode = null;
+
+      // If there are selected items, try to create the dummy item relative to the 
+      // best item, and position the bookmark there when created. Otherwise just
+      // append to the root. 
+      if (aSelectedItem && aSelectedItem.localName != "tree") {
+        // By default, create adjacent to the selected item
+        relativeNode = aSelectedItem;
+        if (relativeNode.getAttribute("container") == "true" && 
+            relativeNode.getAttribute("open") == "true") {
+          // But if it's an open container, the relative node should be the last child. 
+          var treechildren = ContentUtils.childByLocalName(relativeNode, "treechildren");
+          if (treechildren && treechildren.hasChildNodes()) 
+            relativeNode = treechildren.lastChild;
         }
 
-        if (dummyItem.getAttribute("open") == "true") {
-          var treechildren = ContentUtils.childByLocalName(aSelectedItem, "treechildren");
-          if (!treechildren) {
-            const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-            treechildren = document.createElementNS(kXULNS, "treechildren");
-            aSelectedItem.appendChild(treechildren);
+        if (aSelectedItem.getAttribute("container") == "true") {
+          if (aSelectedItem.getAttribute("open") == "true") {
+            var treechildren = ContentUtils.childByLocalName(aSelectedItem, "treechildren");
+            if (!treechildren) {
+              treechildren = document.createElementNS(kXULNS, "treechildren");
+              aSelectedItem.appendChild(treechildren);
+            }
+            // Insert new item after last item.
+            treechildren.appendChild(dummyItem);
           }
-          // Insert new item after last item.
-          treechildren.appendChild(dummyItem);
+          else {
+            if (aSelectedItem.nextSibling)
+              aSelectedItem.parentNode.insertBefore(dummyItem, aSelectedItem.nextSibling);
+            else
+              aSelectedItem.parentNode.appendChild(dummyItem);
+          }
+          var index = gBookmarksShell.tree.getIndexOfItem(dummyItem);
+          gBookmarksShell.tree.ensureIndexIsVisible(index);
         }
         else {
           if (aSelectedItem.nextSibling)
@@ -261,19 +287,16 @@ BookmarksTree.prototype = {
           else
             aSelectedItem.parentNode.appendChild(dummyItem);
         }
-        var index = gBookmarksShell.tree.getIndexOfItem(dummyItem);
-        gBookmarksShell.tree.ensureIndexIsVisible(index);
       }
       else {
-        if (aSelectedItem.nextSibling)
-          aSelectedItem.parentNode.insertBefore(dummyItem, aSelectedItem.nextSibling);
-        else
-          aSelectedItem.parentNode.appendChild(dummyItem);
+        // No items in the tree. Append to the root. 
+        var rootKids = document.getElementById("treechildren-bookmarks");
+        rootKids.appendChild(dummyItem);
       }
-      editCell.setMode("edit");
-      var fn = aMode == "folder" ? this.onEditFolderName : this.onEditBookmarkName;
-      editCell.addObserver(fn, "accept", [editCell, relativeNode, dummyItem]);
-      editCell.addObserver(fn, "reject", [editCell, relativeNode, dummyItem]);
+
+      dummyCell.setMode("edit");
+      dummyCell.addObserver(this.onEditFolderName, "accept", [dummyCell, relativeNode, dummyItem]);
+      dummyCell.addObserver(this.onEditFolderName, "reject", [dummyCell, relativeNode, dummyItem]);
     }
   },
 
@@ -335,11 +358,11 @@ BookmarksTree.prototype = {
     var seln = this.getSelection ();
     if (seln.length < 1) {
       var kids = ContentUtils.childByLocalName(this.tree, "treechildren");
-      if (kids) return kids.lastChild;
+      return kids.lastChild || this.tree;
     }
     else
       return seln[0];
-    return null;
+    return this.tree;
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -359,18 +382,18 @@ BookmarksTree.prototype = {
       if (selectedItems[i] == aItemNode)
         return selectedItems;
     }
-    this.tree.selectItem(aItemNode);
-    return this.tree.selectedItems;
+    if (aItemNode.localName == "treeitem")
+      this.tree.selectItem(aItemNode);
+    return this.tree.selectedItems.length ? this.tree.selectedItems : [this.tree];
   },
 
   getSelectedFolder: function ()
   {
     var selectedItem = this.getBestItem();
     if (!selectedItem) return "NC:BookmarksRoot";
-    // If we don't check for localName we walk the DOM tree up to the window node,
-    // which is Bad.
-    while (selectedItem.localName == "treeitem") {
-      if (selectedItem.getAttribute("container") == "true")
+    while (selectedItem && selectedItem.nodeType == Node.ELEMENT_NODE) {
+      if (selectedItem.getAttribute("container") == "true" && 
+          selectedItem.getAttribute("open") == "true")
         return NODE_ID(selectedItem);
       selectedItem = selectedItem.parentNode.parentNode;
     }
@@ -388,22 +411,6 @@ BookmarksTree.prototype = {
     return temp || this.tree;
   },
 
-  beginBatch: function ()
-  {
-    /*
-    var bo = this.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
-    bo.beginBatch();
-    */
-  },
-
-  endBatch: function ()
-  {
-    /*
-    var bo = this.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
-    bo.endBatch();
-    */
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // Tree click events. This handles when to go into inline-edit mode for
   // editable cells.
@@ -418,6 +425,10 @@ BookmarksTree.prototype = {
       ++gSelectionTracker.clickCount;
     else
       gSelectionTracker.clickCount = 0;
+
+    if (!this.tree.currentItem)
+      return;
+
     gSelectionTracker.currentItem = this.tree.currentItem;
     gSelectionTracker.currentCell = aEvent.target;
 
@@ -523,6 +534,7 @@ BookmarksTree.prototype = {
       case "cmd_setnewsearchfolder":
       case "cmd_import":
       case "cmd_export":
+      case "cmd_bm_fileBookmark":
         return true;
       default:
         return false;
@@ -563,19 +575,25 @@ BookmarksTree.prototype = {
         return numSelectedItems == 1;
       case "cmd_setnewbookmarkfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        if (!seln.length) return false;
-        var folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
-        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder") && folderType;
+        var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
+        var folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
+        var bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
+        return bItemCountCorrect && !(NODE_ID(firstSelected) == "NC:NewBookmarkFolder") && folderType;
       case "cmd_setpersonaltoolbarfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        if (!seln.length) return false;
-        folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
-        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder") && folderType;
+        var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
+        var folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
+        var bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
+        return bItemCountCorrect && !(NODE_ID(firstSelected) == "NC:PersonalToolbarFolder") && folderType;
       case "cmd_setnewsearchfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        if (!seln.length) return false;
-        folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
-        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewSearchFolder") && folderType;
+        var firstSelected = seln.length ? seln[0] : gBookmarksShell.tree;
+        var folderType = firstSelected.getAttribute("type") == (NC_NS + "Folder");
+        var bItemCountCorrect = seln.length ? numSelectedItems == 1 : true;
+        return bItemCountCorrect == 1 && !(NODE_ID(firstSelected) == "NC:NewSearchFolder") && folderType;
+      case "cmd_bm_fileBookmark":
+        var seln = gBookmarksShell.tree.selectedItems;
+        return seln.length > 0;
       default:
         return false;
       }
@@ -605,6 +623,7 @@ BookmarksTree.prototype = {
       case "cmd_find":
       case "cmd_import":
       case "cmd_export":
+      case "cmd_bm_fileBookmark":
         gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
         break;
       case "cmd_bm_selectAll":
@@ -627,7 +646,8 @@ BookmarksTree.prototype = {
       var commands = ["cmd_properties", "cmd_rename", "cmd_bm_copy",
                       "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
                       "cmd_setpersonaltoolbarfolder", "cmd_setnewbookmarkfolder",
-                      "cmd_setnewsearchfolder"];
+                      "cmd_setnewsearchfolder", "cmd_bm_fileBookmark", 
+                      "cmd_openfolderinnewwindow", "cmd_openfolder"];
       for (var i = 0; i < commands.length; ++i)
         goUpdateCommand(commands[i]);
     }

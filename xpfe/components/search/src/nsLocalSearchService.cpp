@@ -31,6 +31,7 @@
 #include "nsLocalSearchService.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsXPIDLString.h"
 #include "xp_core.h"
@@ -470,84 +471,102 @@ LocalSearchDataSource::dateMatches(nsIRDFDate *aDate,
 NS_METHOD
 LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 {
-	findTokenStruct		tokens[5];
-	nsresult		rv;
+  findTokenStruct		tokens[5];
+  nsresult rv;
 
-	/* build up a token list */
-	tokens[0].token = "datasource";
-	tokens[1].token = "match";
-	tokens[2].token = "method";
-	tokens[3].token = "text";
-	tokens[4].token = NULL;
+  // build up a token list
+  tokens[0].token = "datasource";
+  tokens[1].token = "match";
+  tokens[2].token = "method";
+  tokens[3].token = "text";
+  tokens[4].token = NULL;
 
-	// parse find URI, get parameters, search in appropriate
-	// datasource(s), return results
-        rv = parseResourceIntoFindTokens(u, tokens);
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCAutoString       dsName;
-        dsName.AssignWithConversion(tokens[0].value);
-        
-        nsCOMPtr<nsIRDFDataSource>  datasource;
-        rv = gRDFService->GetDataSource(dsName, getter_AddRefs(datasource));
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsISimpleEnumerator>   cursor;
-        rv = datasource->GetAllResources(getter_AddRefs(cursor));
-        if (NS_FAILED(rv)) return rv;
-        
-        while (PR_TRUE) 
-        {
-            PRBool hasMore;
-            rv = cursor->HasMoreElements(&hasMore);
-            if (NS_FAILED(rv))
-                break;
-                
-            if (! hasMore)
-                break;
-                        
-            nsCOMPtr<nsISupports> isupports;
-            rv = cursor->GetNext(getter_AddRefs(isupports));
-            if (NS_FAILED(rv))
-                continue;
-            
-            nsCOMPtr<nsIRDFResource>    source(do_QueryInterface(isupports));
-            if (!source) continue;
-            
-            const char	*uri = nsnull;
-            source->GetValueConst(&uri);
+  // parse find URI, get parameters, search in appropriate
+  // datasource(s), return results
+  rv = parseResourceIntoFindTokens(u, tokens);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-            if (!uri) continue;
-            
-            // never match against a "find:" URI
-            if (PL_strncmp(uri, kFindProtocol, sizeof(kFindProtocol)-1) == 0)
-                continue;
-            
-            nsCOMPtr<nsIRDFResource>    property;
-            rv = gRDFService->GetUnicodeResource(tokens[1].value.GetUnicode(),
-                                                 getter_AddRefs(property));
-            
-            if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !property)
-                continue;
-            
-            nsCOMPtr<nsIRDFNode>    value;
-            rv = datasource->GetTarget(source, property,
-                                       PR_TRUE, getter_AddRefs(value));
-            if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !value)
-                continue;
-            
-            PRBool found = PR_FALSE;
-            found = matchNode(value, tokens[2].value, tokens[3].value);
-                
-            if (found)
-                array->AppendElement(source);
-        }
+  nsCAutoString dsName;
+  dsName.AssignWithConversion(tokens[0].value);
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
-        {
-            rv = NS_OK;
-        }
-	return(rv);
+  nsCOMPtr<nsIRDFDataSource> datasource;
+  rv = gRDFService->GetDataSource(dsName, getter_AddRefs(datasource));
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> cursor;
+  rv = datasource->GetAllResources(getter_AddRefs(cursor));
+  if (NS_FAILED(rv)) 
+    return rv;
+        
+  while (PR_TRUE) {
+    PRBool hasMore;
+    rv = cursor->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) 
+      break;
+
+    if (!hasMore) 
+      break;
+
+    nsCOMPtr<nsISupports> isupports;
+    rv = cursor->GetNext(getter_AddRefs(isupports));
+    if (NS_FAILED(rv)) 
+      continue;
+
+    nsCOMPtr<nsIRDFResource> source(do_QueryInterface(isupports));
+    if (!source) 
+      continue;
+
+    const char	*uri = nsnull;
+    source->GetValueConst(&uri);
+
+    if (!uri) 
+      continue;
+            
+    // never match against a "find:" URI
+    if (PL_strncmp(uri, kFindProtocol, sizeof(kFindProtocol)-1) == 0)
+      continue;
+
+    // never match against a container. Searching for folders just isn't
+    // much of a utility, and this fixes an infinite recursion crash. (65063)
+    PRBool isContainer = PR_FALSE;
+
+    // Check to see if this source is an RDF container
+    nsCOMPtr<nsIRDFContainerUtils> cUtils(do_GetService("@mozilla.org/rdf/container-utils;1"));
+    if (cUtils)
+      cUtils->IsContainer(datasource, source, &isContainer);
+    // Check to see if this source is a pseudo-container
+    if (!isContainer)
+      datasource->HasArcOut(source, kNC_Child, &isContainer);
+
+    if (isContainer) 
+      continue;
+
+    nsCOMPtr<nsIRDFResource> property;
+    rv = gRDFService->GetUnicodeResource(tokens[1].value.GetUnicode(),
+    getter_AddRefs(property));
+
+    if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !property)
+      continue;
+
+    nsCOMPtr<nsIRDFNode>    value;
+    rv = datasource->GetTarget(source, property,
+    PR_TRUE, getter_AddRefs(value));
+    if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !value)
+      continue;
+
+    PRBool found = PR_FALSE;
+    found = matchNode(value, tokens[2].value, tokens[3].value);
+
+    if (found)
+      array->AppendElement(source);
+   }
+
+  if (rv == NS_RDF_CURSOR_EMPTY)
+    rv = NS_OK;
+
+  return rv;
 }
 
 // could speed up date/integer matching signifigantly by caching the

@@ -38,13 +38,23 @@ function Startup()
   const windowNode = document.getElementById("bookmark-window");
   // If we've been opened with a parameter, root the tree on it.
   if ("arguments" in window && window.arguments[0]) {
-    bookmarksTree.setAttribute("ref", window.arguments[0]);
-    const krNameArc = gBookmarksShell.RDF.GetResource(NC_NS + "Name");
-    const krRoot = gBookmarksShell.RDF.GetResource(window.arguments[0]);
-    var rName = gBookmarksShell.db.GetTarget(krRoot, krNameArc, true);
-    rName = rName.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    var uri = window.arguments[0];
+    bookmarksTree.setAttribute("ref", uri);
+    var title = "";
+    if (uri.substring(0,5) == "find:") {
+      title = gBookmarksShell.getLocaleString("search_results_title");
+      // Update the windowtype so that future searches are directed 
+      // there and the window is not re-used for bookmarks. 
+      windowNode.setAttribute("windowtype", "bookmarks:searchresults");
+    }
+    else {
+      const krNameArc = gBookmarksShell.RDF.GetResource(NC_NS + "Name");
+      const krRoot = gBookmarksShell.RDF.GetResource(window.arguments[0]);
+      var rName = gBookmarksShell.db.GetTarget(krRoot, krNameArc, true);
+      title = rName.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    }
     const titleString = gBookmarksShell.getLocaleString("window_title");
-    windowNode.setAttribute("title", titleString.replace(/%folder_name%/gi, rName));
+    windowNode.setAttribute("title", titleString.replace(/%folder_name%/gi, title));
   }
   else {
     var rootfoldername = gBookmarksShell.getLocaleString("bookmarks_root");
@@ -57,6 +67,10 @@ function Startup()
 
   // Update to the last sort.
   RefreshSort();
+
+  var kids = document.getElementById("treechildren-bookmarks");
+  if (kids.firstChild)
+    bookmarksTree.selectItem(kids.firstChild);
 
   bookmarksTree.focus();
 }
@@ -122,14 +136,25 @@ BookmarksWindowTree.prototype = {
         catch (e) {
         }
       }
-      else
-        displayValue = LITERAL(this.db, currItem, NC_NS + "URL");
+      else {
+        try {
+          displayValue = LITERAL(this.db, currItem, NC_NS + "URL");
+        }
+        catch (e) {
+          displayValue = "";
+        }
+      }
       if (displayValue.substring(0, 3) == "NC:")
         displayValue = "";
     }
     kStatusBar.label = displayValue;
   }
+
 };
+
+/*
+Not used anymore but keeping code around in case it comes in handy for bookmarks button D&D
+or personal toolbar D&D.
 
 ///////////////////////////////////////////////////////////////////////////////
 // This will not work properly until drag & drop is asynchronous and allows
@@ -267,3 +292,4 @@ var fileButton = {
   }
 };
 
+*/

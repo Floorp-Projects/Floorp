@@ -21,6 +21,62 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  */
 
+/**
+ * Add Bookmark Dialog. 
+ * ====================
+ * 
+ * This is a generic bookmark dialog that allows for bookmark addition
+ * and folder selection. It can be opened with various parameters that 
+ * result in appearance/purpose differences and initial state. 
+ * 
+ * Use: Open with 'openDialog', with the flags 
+ *        'centerscreen,chrome,dialog=no,resizable=yes'
+ * 
+ * Parameters: 
+ *   Apart from the standard openDialog parameters, this dialog can 
+ *   be passed additional information, which gets mapped to the 
+ *   window.arguments array:
+ * 
+ *   window.arguments[0]: Bookmark Name. The value to be prefilled
+ *                        into the "Name: " field (if visible).
+ *   window.arguments[1]: Bookmark URL: The location of the bookmark.
+ *                        The value to be filled in the "Location: "
+ *                        field (if visible).
+ *   window.arguments[2]: Bookmark Folder. The RDF Resource URI of the
+ *                        folder that this bookmark should be created in.
+ *   window.arguments[3]: Bookmark Charset. The charset that should be
+ *                        used when adding a bookmark to the specified
+ *                        URL. (Usually the charset of the current 
+ *                        document when launching this window). 
+ *   window.arguments[4]: The mode of operation. See notes for details.
+ *
+ * Mode of Operation Notes:
+ * ------------------------
+ * This dialog can be opened in four different ways by using a parameter
+ * passed through the call to openDialog. The 'mode' of operation
+ * of the window is expressed in window.arguments[4]. The valid modes are:
+ *
+ * 1) <default> (no fifth open parameter).
+ *      Opens this dialog with the bookmark Name, URL and folder selection
+ *      components visible, as well as a checkbox which allows the user
+ *      to bypass the dialog for future bookmark additions. Only useful
+ *      for a browser implementation which users BookmarksUtils methods for
+ *      adding bookmarks
+ * 2) "addBookmark" (fifth open parameter = String("addBookmark"))
+ *      Opens the dialog as in (1) above but with no checkbox. Useful
+ *      in situations where user ability to choose not to see this dialog
+ *      is not applicable, or for clients wishing to customize the launch
+ *      behaviour.
+ * 3) "newBookmark" (fifth open parameter = String("newBookmark"))
+ *      Opens the dialog as in (1) above except the folder selection tree
+ *      is hidden. This type of mode is useful when the creation folder 
+ *      is pre-determined.
+ * 4) "selectFolder" (fifth open parameter = String("selectFolder"))
+ *      Opens the dialog as in (1) above except the Name/Location section
+ *      is hidden, and the dialog takes on the utility of a Folder chooser.
+ *      Used when the user must select a Folder for some purpose. 
+ */
+
 var gFld_Name   = null;
 var gFld_URL    = null; 
 var gFolderTree = null;
@@ -35,6 +91,8 @@ var gSelectItemObserver = null;
 
 var gCreateInFolder = "NC:NewBookmarkFolder";
 
+var gCanBypassDialogMode = true;
+
 function Startup()
 {
   doSetOKCancel(onOK);
@@ -44,30 +102,68 @@ function Startup()
   
   var shouldSetOKButton = true;
   if ("arguments" in window) {
-    // If we're being opened as a folder selection window
-    if (window.arguments[4] == "selectFolder") {
-      document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
-      toggleCreateIn();
+    switch (window.arguments[4]) {
+    case "selectFolder":
+      // If we're being opened as a folder selection window
       document.getElementById("dontaskagain").setAttribute("hidden", "true");
+      document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
       document.getElementById("createinseparator").setAttribute("hidden", "true");
+      document.getElementById("nameseparator").setAttribute("hidden", "true");
       sizeToContent();
-      const kWindowNode = document.getElementById("newBookmarkWindow");
-      kWindowNode.setAttribute("title", kWindowNode.getAttribute("title-selectFolder"));
+      var windowNode = document.getElementById("newBookmarkWindow");
+      windowNode.setAttribute("title", windowNode.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
-    }
-    else {
-      gFld_Name.value = window.arguments[0] || "";
-      gFld_URL.value = window.arguments[1] || "";
-      gBookmarkCharset = window.arguments [3] || null;
-      if (window.arguments[2]) 
+      var folderItem = document.getElementById(window.arguments[2]);
+      if (folderItem)
+        gFolderTree.selectItem(folderItem);
+      gCanBypassDialogMode = false;
+      break;
+    case "newBookmark":
+      setupFields();
+      if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
+      document.getElementById("folderbox").setAttribute("hidden", "true");
+      document.getElementById("dontaskagain").setAttribute("hidden", "true");
+      windowNode = document.getElementById("newBookmarkWindow");
+      windowNode.removeAttribute("persist");
+      windowNode.setAttribute("height", "0");
+      windowNode.setAttribute("width", "0");
+      windowNode.setAttribute("style", windowNode.getAttribute("style"));
+      sizeToContent();
+      gCanBypassDialogMode = false;
+      break;
+    case "addBookmark":
+      // Regular add bookmark window, but for some sinister purpose...
+      document.getElementById("dontaskagain").setAttribute("hidden", "true");
+      gCanBypassDialogMode = false;
+      // Fall through... --->
+    default:
+      // Regular Add Bookmark
+      setupFields();
+      if (window.arguments[2]) {
+        gCreateInFolder = window.arguments[2];
+        var folderItem = document.getElementById(gCreateInFolder);
+        if (folderItem)
+          gFolderTree.selectItem(folderItem);
+      }
     }
   }
   
   if (shouldSetOKButton)
-    onLocationInput();
   gFld_Name.focus();
+  gFld_Input
 } 
+
+function setupFields()
+{
+  // New bookmark in predetermined folder. 
+  gFld_Name.value = window.arguments[0] || "";
+  gFld_URL.value = window.arguments[1] || "";
+  onLocationInput();
+  gFld_Name.select();
+  gFld_Name.focus();
+  gBookmarkCharset = window.arguments [3] || null;
+}
 
 function onLocationInput ()
 {
@@ -77,9 +173,13 @@ function onLocationInput ()
 
 function onOK()
 {
+  // In Select Folder Mode, do nothing but tell our caller what
+  // folder was selected. 
   if (window.arguments[4] == "selectFolder")
     window.arguments[5].selectedFolder = gCreateInFolder;
   else {
+    // Otherwise add a bookmark to the selected folder. 
+
     const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
     const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
     const kBMSIID = Components.interfaces.nsIBookmarksService;
@@ -113,15 +213,17 @@ function onOK()
     
     kBMS.AddBookmarkToFolder(url, rFolder, gFld_Name.value, gBookmarkCharset);
   
-    // Persist the 'show this dialog again' preference.   
-    var checkbox = document.getElementById("dontaskagain");
-    const kPrefContractID = "@mozilla.org/preferences;1";
-    const kPrefIID = Components.interfaces.nsIPref;
-    const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
-    try {
-      kPrefSvc.SetBoolPref("browser.bookmarks.add_without_dialog", checkbox.checked);
-    }
-    catch (e) {
+    if (gCanBypassDialogMode) {
+      // Persist the 'show this dialog again' preference.   
+      var checkbox = document.getElementById("dontaskagain");
+      const kPrefContractID = "@mozilla.org/preferences;1";
+      const kPrefIID = Components.interfaces.nsIPref;
+      const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
+      try {
+        kPrefSvc.SetBoolPref("browser.bookmarks.add_without_dialog", checkbox.checked);
+      }
+      catch (e) {
+      }
     }
   }
   close();

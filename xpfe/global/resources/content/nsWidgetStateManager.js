@@ -16,7 +16,7 @@
  * Reserved.
  *
  * Contributor(s):
- *   Ben "Count XULula" Goodger <ben@netscape.com>
+ *   Ben Goodger <ben@netscape.com> (Original Author)
  */
 
 /** Presenting widgetStateManager the Third.
@@ -307,7 +307,11 @@ nsWidgetStateManager.prototype =
       function ( aElementID, aDataObject )
         {
           var element = wsm.contentArea.document.getElementById( aElementID );
+          // Set generic properites. 
           wsm.generic_Set( element, aDataObject );
+          // Handle reversed boolean values.
+          if ( "checked" in aDataObject && element.getAttribute( "reversed" ) == "true" )
+            element.checked = !aDataObject.checked; 
         },
 
     get_Checkbox:
@@ -317,7 +321,8 @@ nsWidgetStateManager.prototype =
           var dataObject = wsm.generic_Get( element );
           if( dataObject )
             {
-              dataObject.checked = wsm.contentArea.document.getElementById( aElementID ).checked;
+              var checked = wsm.contentArea.document.getElementById( aElementID ).checked;
+              dataObject.checked = element.getAttribute("reversed") == "true" ? !checked : checked;
               return dataObject;
             }
           return null;
@@ -341,8 +346,9 @@ nsWidgetStateManager.prototype =
   }
 
 
-/* it will be dark soon */
-/* MANOS MADE ME PERMANENT! */
-/* there is no way out of here */
-
+// M:tHoF Greatest Hits Section (Append one line per edit):
+// it will be dark soon 
+// MANOS MADE ME PERMANENT! 
+// there is no way out of here
+// [The Master] not dead as you know it. He is with us always.
 

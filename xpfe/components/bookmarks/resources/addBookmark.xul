@@ -56,7 +56,7 @@
   
   <keyset id="dialogKeys"/>
   
-  <separator class="thin"/>
+  <separator id="nameseparator" class="thin"/>
   
   <grid id="bookmarknamegrid">
     <columns>
@@ -128,6 +128,7 @@
     <separator/>
   </vbox>
 
+  <!-- XXX - need to use an "Add Bookmark" string here -->
   <box id="okCancelButtonsRight"/>
-  
+
 </window>        

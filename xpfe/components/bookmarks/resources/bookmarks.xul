@@ -79,7 +79,8 @@
     <commandset id="tasksCommands"/>
     <commandset id="bookmarksItems"/>
   
-     <!-- File Menu -->
+
+    <!-- File Menu -->
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
     <command id="cmd_close" oncommand="close()"/>
@@ -88,10 +89,8 @@
     <command id="cmd_undo"/>
   </commands>
 
-  <popupset id="popupset"/>
-
   <stringbundleset id="stringbundleset"/>
-  
+
   <keyset id="tasksKeys">
     <!-- File Menu -->
     <key id="key_newNavigator"/>
@@ -100,17 +99,25 @@
     <key id="key_quit"/>
     <!-- Edit Menu -->
     <key id="key_undo"/>
-    <key id="key_cut"/>
-    <key id="key_copy"/>
-    <key id="key_paste"/>
-    <key id="key_bm_delete" keycode="VK_DELETE" observes="cmd_bm_delete"/>
-    <key id="key_selectAll"/>
+
+    <!-- These keybindings do not have a command specified in the overlay, 
+         which is good, but we need to specify it ourselves here -->
+    <key id="key_cut" command="cmd_bm_cut"/>
+    <key id="key_copy" command="cmd_bm_copy"/>
+    <key id="key_paste" command="cmd_bm_paste"/>
+    <key id="key_selectAll" command="cmd_bm_selectAll"/>
+
+    <!-- We need to provide our own delete key binding because the key_delete
+         handler in platformGlobalOverlay.xul maps command to "cmd_delete" which
+         is NOT what we want! -->
+    <key id="key_bm_delete" keycode="VK_DELETE" command="cmd_bm_delete"/>
+
     <key id="bm_key_find"  
          key="&edit.find.keybinding;"  
-         observes="cmd_find" modifiers="accel"/>
+         command="cmd_find" modifiers="accel"/>
     <key id="bm_key_properties" 
          key="&edit.properties.keybinding;"  
-         observes="cmd_properties" modifiers="accel"/>
+         command="cmd_properties" modifiers="accel"/>
   </keyset>
   
   <toolbox id="bookmarks-toolbox">
@@ -138,26 +145,20 @@
         <menupopup>
           <menuitem id="menu_undo" disabled="true"/>
           <menuseparator/>
-          <menuitem id="menu_cut"/>
-          <menuitem id="menu_copy"/>
-          <menuitem id="menu_paste"/>
-          <menuitem id="menu_delete"/>
+          <menuitem id="menu_cut" command="cmd_bm_cut"/>
+          <menuitem id="menu_copy" command="cmd_bm_copy"/>
+          <menuitem id="menu_paste" command="cmd_bm_paste"/>
+          <menuitem id="menu_delete" command="cmd_bm_delete"/>
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
           <menuseparator/>
-          <menu id="file-bookmarks-menu" label="&command.fileBookmark.label;"
-                accesskey="&command.fileBookmark.accesskey;"
-                ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
-                template="file-bookmarks-template">
-            <menupopup oncreate="fileButton.createPopupHeader(event);"/>
-          </menu>
+          <menuitem label="&command.fileBookmark.label;"
+                    accesskey="&command.fileBookmark.accesskey;"
+                    command="cmd_bm_fileBookmark"/>
           <menuseparator/>
-          <menuitem observes="cmd_find" key="bm_key_find"
+          <menuitem command="cmd_find" key="bm_key_find"
                     label="&menuitem.find.label;" 
                     accesskey="&menuitem.find.accesskey;"/>
-          <menuseparator/>
-          <menuitem id="menu_preferences" 
-                    oncommand="goPreferences('navigator', 'chrome://communicator/content/bookmarks/pref-bookmarks.xul', 'bookmarks')"/>
         </menupopup>
       </menu>
   
@@ -207,41 +208,25 @@
 
     <toolbar id="command-toolbar" tbautostretch="always" grippy="false">
       <button class="button-toolbar" id="newfolder" label="&command.newFolder.label;" 
-              observes="cmd_newfolder"/>
+              command="cmd_newfolder"/>
       <button class="button-toolbar" id="newseparator" label="&command.newSeparator.label;" 
-              observes="cmd_newseparator"/>
+              command="cmd_newseparator"/>
       <toolbarseparator/>
-      <menubutton id="file-bookmarks" label="&command.fileBookmark.label;"
-                  crop="right" class="button-toolbar" 
-                  ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
-                  template="file-bookmarks-template"
-                  ondragover="nsDragAndDrop.dragOver(event, fileButton);"
-                  ondragdrop="nsDragAndDrop.drop(event, fileButton);">
-        <template id="file-bookmarks-template">
-          <rule iscontainer="true">
-            <menupopup ondestroy="fileButton.onPopupDestroy(event);">
-              <menu uri="rdf:*" persist="open" class="menu-iconic bookmark-item"
-                    label="rdf:http://home.netscape.com/NC-rdf#Name"
-                    src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    loading="rdf:http://home.netscape.com/NC-rdf#loading"/>
-            </menupopup>
-          </rule>
-        </template>
-        <menupopup oncreate="fileButton.createPopupHeader(event);"/>
-      </menubutton>
+      <button class="button-toolbar" id="fileBookmark" label="&command.fileBookmark.label;"
+              command="cmd_bm_fileBookmark"/>
       <toolbarseparator/>
       <button class="button-toolbar" id="properties" label="&command.properties.label;"
-              observes="cmd_properties"/>
+              command="cmd_properties"/>
       <button class="button-toolbar" id="rename" label="&command.rename.label;"
-              observes="cmd_rename"/>
+              command="cmd_rename"/>
       <button class="button-toolbar" id="delete" label="&command.delete.label;"
-              observes="cmd_bm_delete"/>
+              command="cmd_bm_delete"/>
     </toolbar>
   </toolbox>
   
   <tree id="bookmarksTree" class="bookmarks-window-tree" ref="NC:BookmarksRoot"
-        datasources="rdf:bookmarks rdf:localsearch rdf:internetsearch"
+        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:localsearch"
+        type="http://home.netscape.com/NC-rdf#Folder"
         multiple="true" flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
         ondraggesture="nsDragAndDrop.startDrag(event, bookmarksDNDObserver);"
@@ -277,11 +262,11 @@
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
-              <treecell class="treecell-indent treecell-editable"
-                        editable="true" label="rdf:http://home.netscape.com/NC-rdf#Name"
+              <treecell class="treecell-indent" editable="true" 
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
               <treecell crop="right" class="treecell-editable" editable="true"
                         label="rdf:http://home.netscape.com/NC-rdf#URL"/>
