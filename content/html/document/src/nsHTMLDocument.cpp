@@ -166,6 +166,7 @@ nsHTMLDocument::nsHTMLDocument()
   nsHTMLAtoms::AddRefAtoms();
   mDTDMode = eDTDMode_Nav;
   mCSSLoader = nsnull;
+  mDocTypeStr=nsnull;
 
   // Find/Search Init
   mSearchStr             = nsnull;
@@ -223,6 +224,10 @@ nsHTMLDocument::~nsHTMLDocument()
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();  // release weak ref
     NS_RELEASE(mCSSLoader);
+  }
+  if (nsnull != mDocTypeStr) {
+    delete mDocTypeStr;
+    mDocTypeStr = nsnull;
   }
 
 // XXX don't bother doing this until the dll is unloaded???
@@ -882,7 +887,47 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   if (mCSSLoader) {
     mCSSLoader->SetQuirkMode(PRBool(eDTDMode_NoQuirks != mDTDMode));
   }
+
+  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+  if (nsnull != shell) {
+    nsCOMPtr<nsIPresContext> pc;
+    shell->GetPresContext(getter_AddRefs(pc));
+     if (pc) {
+        pc->SetCompatibilityMode(((eDTDMode_NoQuirks == mDTDMode) ? 
+                                    eCompatibility_Standard : 
+                                    eCompatibility_NavQuirks));
+     }
+  }
+
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetDocTypeStr(nsString& aDocTypeString)
+{
+  if(mDocTypeStr) aDocTypeString = *mDocTypeStr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::AddDocTypeDecl(const nsString& aDocTypeString, nsDTDMode aMode)
+{
+  nsresult result=NS_OK;
+   
+  result=SetDTDMode(aMode);
+  if(result==NS_OK) {
+    if (mDocTypeStr == nsnull) {
+      if(aDocTypeString.Length()>0) {
+        mDocTypeStr = new nsString(aDocTypeString);
+        if (mDocTypeStr==nsnull) result=NS_ERROR_OUT_OF_MEMORY;
+      }
+    } 
+    else {
+      mDocTypeStr->SetLength(0);
+      mDocTypeStr->Append(aDocTypeString);
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP

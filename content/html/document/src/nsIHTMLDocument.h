@@ -33,9 +33,14 @@ class nsICSSLoader;
 {0xb2a848b0, 0xd0a9, 0x11d1, {0x89, 0xb1, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81}}
 
 enum nsDTDMode {
-  eDTDMode_NoQuirks = 0,
-  eDTDMode_Nav = 1,
-  eDTDMode_Other = 2
+
+  eDTDMode_Unknown    =0,
+  eDTDMode_Raptor     =1, //5.0 version of nav. and greater
+  eDTDMode_Nav        =2, //pre 5.0 versions
+  eDTDMode_NoQuirks   =3, //pre 5.0 without quirks (as best as we can...)
+  eDTDMode_Other      =4,
+  eDTDMode_Autodetect =5
+
 };
 
 /**
@@ -70,6 +75,9 @@ public:
    */
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode) = 0;
   NS_IMETHOD SetDTDMode(nsDTDMode aMode) = 0;
+
+  NS_IMETHOD GetDocTypeStr(nsString& aDocTypeString)=0;
+  NS_IMETHOD AddDocTypeDecl(const nsString& aDocTypeString, nsDTDMode aMode)=0;
 
 };
 
