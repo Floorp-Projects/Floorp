@@ -459,7 +459,6 @@ protected:
   PRBool IsElementInBody(nsIDOMElement* aElement);
 
   // inline style caching
-  void CacheInlineStyles(nsIDOMNode *aNode);
   void ClearInlineStylesCache();
   
   // key event helpers
@@ -684,8 +683,6 @@ protected:
   PRBool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   PRBool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   PRBool IsOnlyAttribute(nsIDOMNode *aElement, const nsAReadableString *aAttribute);
-  PRBool HasMatchingAttributes(nsIDOMNode *aNode1, 
-                               nsIDOMNode *aNode2);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
   nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
@@ -701,8 +698,12 @@ protected:
   nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
+
+#ifdef XXX_DEAD_CODE
+  // these should be removed some day by jfrancis:  GetFirstEditableLeaf & GetLastEditableLeaf
   nsresult GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf);
   nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
+#endif
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 

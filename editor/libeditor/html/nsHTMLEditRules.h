@@ -117,7 +117,9 @@ protected:
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsert(nsISelection *aSelection, PRBool *aCancel);
+#ifdef XXX_DEAD_CODE
   nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
+#endif
   nsresult WillInsertText(  PRInt32          aAction,
                             nsISelection *aSelection, 
                             PRBool          *aCancel,
@@ -149,7 +151,6 @@ protected:
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAReadableString *alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *alignType);
   nsresult GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOfNodes, PRBool aList = PR_TRUE, PRBool aTble = PR_TRUE);
-  nsresult InsertTab(nsISelection *aSelection, nsAWritableString *outString);
   nsCOMPtr<nsIDOMNode> IsInListItem(nsIDOMNode *aNode);
   nsresult ReturnInHeader(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
@@ -178,8 +179,10 @@ protected:
                                nsCOMPtr<nsIDOMNode> *outBRNode, PRInt32 aOffset=0);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
+#ifdef XXX_DEAD_CODE
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
   PRBool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
+#endif
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                             PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   nsresult GetPromotedRanges(nsISelection *inSelection, 
@@ -230,9 +233,7 @@ protected:
   nsresult InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2, PRBool *aResult);
   nsresult RemoveEmptyNodes();
   nsresult SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult);
-  nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
-  nsresult ConvertWhitespace(const nsAReadableString & inString, nsAWritableString & outString);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
   PRBool   IsVisBreak(nsIDOMNode *aNode);
