@@ -91,13 +91,16 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);
+  *aInstancePtr = 0;
 
   /* WindowCreator wants the main content shell when it asks a chrome window
      for this interface. */
   if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
-    nsIDOMWindow *contentWin;
-    mBrowserWindow->mWebBrowser->GetContentDOMWindow(&contentWin);
-    *aInstancePtr = contentWin;
+    if (mBrowserWindow && mBrowserWindow->mWebBrowser) {
+      nsIDOMWindow *contentWin;
+      mBrowserWindow->mWebBrowser->GetContentDOMWindow(&contentWin);
+      *aInstancePtr = contentWin;
+    }
     return NS_OK;
   }
   return QueryInterface(aIID, aInstancePtr);
