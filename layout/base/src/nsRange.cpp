@@ -1131,7 +1131,9 @@ nsresult nsRange::DeleteContents()
   
   nsCOMPtr<nsIContentIterator> iter;
   res = NS_NewContentIterator(getter_AddRefs(iter));
-  iter->Init(this);
+  if (NS_FAILED(res))  return res;
+  res = iter->Init(this);
+  if (NS_FAILED(res))  return res;
 
 
   // XXX Note that this chunk is also thread unsafe, since we
@@ -1154,7 +1156,12 @@ nsresult nsRange::DeleteContents()
     {
       deleteList.AppendElement(NS_STATIC_CAST(void*,cN));
     }
-    iter->Next();
+    res = iter->Next();
+    if (NS_FAILED(res)) // a little noise here to catch bugs
+    {
+      NS_NOTREACHED("nsRange::DeleteContents() : iterator failed to advance");
+      return res;
+    }
     res = iter->CurrentNode(getter_AddRefs(cN));
   }
   
@@ -1474,7 +1481,8 @@ nsresult nsRange::ToString(nsString& aReturn)
  
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and grab the text from any text node
-  iter->CurrentNode(getter_AddRefs(cN));
+  nsresult res = iter->CurrentNode(getter_AddRefs(cN));
+  if (NS_FAILED(res))  return res;
   while (NS_COMFALSE == iter->IsDone())
   {
     nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(cN) );
@@ -1498,8 +1506,14 @@ nsresult nsRange::ToString(nsString& aReturn)
         aReturn += tempString;
       }
     }
-    iter->Next();
-    iter->CurrentNode(getter_AddRefs(cN));
+    res = iter->Next();
+    if (NS_FAILED(res)) // a little noise here to catch bugs
+    {
+      NS_NOTREACHED("nsRange::ToString() : iterator failed to advance");
+      return res;
+    }
+    res = iter->CurrentNode(getter_AddRefs(cN));
+    if (NS_FAILED(res))  return res;
   }
   return NS_OK;
 }

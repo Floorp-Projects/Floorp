@@ -562,13 +562,13 @@ nsresult nsContentIterator::Last()
 nsresult nsContentIterator::Next()
 {
   if (mIsDone) 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   if (!mCurNode) 
     return NS_OK;
   if (mCurNode == mLast) 
   {
     mIsDone = PR_TRUE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
   
   return NextNode(&mCurNode);
@@ -578,13 +578,13 @@ nsresult nsContentIterator::Next()
 nsresult nsContentIterator::Prev()
 {
   if (mIsDone) 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   if (!mCurNode) 
     return NS_OK;
   if (mCurNode == mFirst) 
   {
     mIsDone = PR_TRUE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
   
   return PrevNode(&mCurNode);
@@ -878,18 +878,18 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 nsresult nsContentSubtreeIterator::Next()
 {
   if (mIsDone) 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   if (!mCurNode) 
     return NS_OK;
   if (mCurNode == mLast) 
   {
     mIsDone = PR_TRUE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
   
   nsCOMPtr<nsIContent> nextNode;
   if (NS_FAILED(GetNextSibling(mCurNode, &nextNode)))
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   nextNode = GetDeepFirstChild(nextNode);
   return GetTopAncestorInRange(nextNode, &mCurNode);
 }
@@ -898,19 +898,19 @@ nsresult nsContentSubtreeIterator::Next()
 nsresult nsContentSubtreeIterator::Prev()
 {
   if (mIsDone) 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   if (!mCurNode) 
     return NS_OK;
   if (mCurNode == mFirst) 
   {
     mIsDone = PR_TRUE;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
   
   nsCOMPtr<nsIContent> prevNode;
   prevNode = GetDeepFirstChild(mCurNode);
   if (NS_FAILED(PrevNode(&prevNode)))
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   prevNode = GetDeepLastChild(prevNode);
   return GetTopAncestorInRange(prevNode, &mCurNode);
 }
