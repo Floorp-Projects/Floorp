@@ -59,6 +59,7 @@
 #include "nsIViewManager.h"
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
+#include "nsITextToSubURI.h"
 
 #define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
@@ -673,9 +674,19 @@ nsresult nsImageDocument::UpdateTitle()
 
     nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
     if (url) {
+      nsresult rv;
       nsCAutoString fileName;
       url->GetFileName(fileName);
-      fileStr.Assign(NS_ConvertUTF8toUCS2(fileName));
+      nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCAutoString originCharset;
+        rv = url->GetOriginCharset(originCharset);
+        if (NS_SUCCEEDED(rv)) 
+          rv = textToSubURI->UnEscapeURIForUI(originCharset, fileName, fileStr);
+      }
+      if (NS_FAILED(rv))
+        fileStr.Assign(NS_ConvertUTF8toUCS2(fileName));
     }
 
     widthStr.AppendInt(mImageWidth);

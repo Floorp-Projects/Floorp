@@ -198,6 +198,9 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
     }
   }
 
+  // empty charset could indicate UTF-8, but aURI turns out not to be UTF-8.
+  NS_ENSURE_FALSE(aCharset.IsEmpty(), NS_ERROR_INVALID_ARG);
+
   nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
 
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
