@@ -194,6 +194,7 @@ bin\defaults\pref\initpref.js
 bin\defaults\pref\psm-glue.js
 bin\defaults\pref\winpref.js
 bin\defaults\pref\xpinstall.js
+bin\defaults\pref\editor.js
 bin\defaults\profile\*
 bin\plugins\*
 bin\searchplugins\*
