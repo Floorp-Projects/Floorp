@@ -5173,6 +5173,8 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
     rv = mScriptGlobalObject->GetContext(getter_AddRefs(context));
     if (NS_FAILED(rv)) return rv;
 
+    if (! context) return NS_ERROR_UNEXPECTED;
+
     rv = context->ExecuteScript(aScriptObject, nsnull, nsnull, nsnull);
     return rv;
 }

@@ -1593,7 +1593,7 @@ static void ShowConsole(nsBrowserWindow* aWindow)
       nsIScriptContext *context = nsnull;
       nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(aWindow->mDocShell));
       if (scriptGlobal) {       
-        if (NS_OK == scriptGlobal->GetContext(&context)) {
+        if ((NS_OK == scriptGlobal->GetContext(&context)) && context) {
 
           // create the console
           gConsole = JSConsole::CreateConsole();

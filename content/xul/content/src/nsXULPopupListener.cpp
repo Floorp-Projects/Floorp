@@ -813,7 +813,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   nsCOMPtr<nsIScriptGlobalObject> global;
   document->GetScriptGlobalObject(getter_AddRefs(global));
   if (global) {
-    if (NS_OK == global->GetContext(getter_AddRefs(context))) {
+    if ((NS_OK == global->GetContext(getter_AddRefs(context))) && context) {
       // Get the DOM window
       nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
