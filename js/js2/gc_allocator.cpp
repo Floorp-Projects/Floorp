@@ -84,8 +84,7 @@ void main(int /* argc */, char* /* argv[] */)
 	cout << "testing the GC allocator." << endl;
 
 	typedef gc_types<char>::string char_string;
-	auto_ptr<char_string> ptr(new char_string("This is a garbage collectable string."));
-	char_string& str = *ptr;
+	char_string str("This is a garbage collectable string.");
 	cout << str << endl;
 	
 	// question, how can we partially evaluate a template?
@@ -104,9 +103,9 @@ void main(int /* argc */, char* /* argv[] */)
 		// allocate an object that has a finalizer to call its destructor.
 		A* a = new A();
 	}
-	
+
 	// run a collection.
-	GC_gcollect();
+	gc_allocator<void>::collect();
 	
 	// sort the values.
 	sort(values.begin(), values.end());
