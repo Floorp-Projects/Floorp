@@ -136,7 +136,8 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   PRUnichar buffer[NSDATETIME_FORMAT_BUFFER_LEN] = {0};         
   UniStrcat( uFmtD, (UniChar*)L" ");
   UniStrcat( uFmtD, uFmtT);
-  int length = UniStrftime(locObj, buffer, NSDATETIME_FORMAT_BUFFER_LEN, uFmtD, tmTime);
+  int length = UniStrftime(locObj, NS_REINTERPRET_CAST(UniChar *, buffer),
+                           NSDATETIME_FORMAT_BUFFER_LEN, uFmtD, tmTime);
   UniFreeLocaleObject(locObj);
 
   if ( length != 0) {
