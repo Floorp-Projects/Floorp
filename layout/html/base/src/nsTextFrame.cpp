@@ -903,6 +903,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   nsIDocument* doc = shell->GetDocument();
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
+  displaySelection = PR_FALSE;
 
   // Make enough space to transform
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -1213,6 +1214,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
   nsIDocument* doc = shell->GetDocument();
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
+  displaySelection = PR_FALSE;
 
   // Make enough space to transform
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -1337,6 +1339,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   nsIDocument* doc = shell->GetDocument();
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
+  displaySelection = PR_FALSE;
 
   // Make enough space to transform
   PRUnichar wordBufMem[WORD_BUF_SIZE];
