@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nsMsgBiffManager.h"
 #include "nsCRT.h"
 #include "nsIMsgMailSession.h"
@@ -43,8 +47,11 @@
 #include "nsIObserverService.h"
 #include "nsStatusBarBiffManager.h"
 #include "nsCOMArray.h"
+#include "prlog.h"
 
 static NS_DEFINE_CID(kStatusBarBiffManagerCID, NS_STATUSBARBIFFMANAGER_CID);
+
+static PRLogModuleInfo *MsgBiffLogModule = nsnull;
 
 NS_IMPL_ISUPPORTS4(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener, nsIObserver, nsISupportsWeakReference)
 
@@ -120,6 +127,9 @@ NS_IMETHODIMP nsMsgBiffManager::Init()
   nsCOMPtr<nsStatusBarBiffManager> statusBarBiffService = 
     do_GetService(kStatusBarBiffManagerCID, &rv);
   
+  if (!MsgBiffLogModule)
+    MsgBiffLogModule = PR_NewLogModule("MsgBiff");
+
   return NS_OK;
 }
 
@@ -260,6 +270,7 @@ nsresult nsMsgBiffManager::AddBiffEntry(nsBiffEntry *biffEntry)
       break;
     
   }
+  PR_LOG(MsgBiffLogModule, PR_LOG_ALWAYS, ("inserting biff entry at %d\n", i));
   mBiffArray->InsertElementAt(biffEntry, i);
   return NS_OK;
 }
@@ -297,7 +308,12 @@ nsresult nsMsgBiffManager::SetupNextBiff()
     nsInt64 biffDelay;
     nsInt64 ms(1000);
     if(currentTime > biffEntry->nextBiffTime)
-      biffDelay = 1;
+    {
+      PRInt64 microSecondsPerSecond;
+  
+      LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+      LL_MUL(biffDelay, 30, microSecondsPerSecond); //let's wait 30 seconds before firing biff again
+    }
     else
       biffDelay = biffEntry->nextBiffTime - currentTime;
     //Convert biffDelay into milliseconds
@@ -309,6 +325,7 @@ nsresult nsMsgBiffManager::SetupNextBiff()
     {
       mBiffTimer->Cancel();
     }
+    PR_LOG(MsgBiffLogModule, PR_LOG_ALWAYS, ("setting %d timer\n", timeInMSUint32));
     mBiffTimer = do_CreateInstance("@mozilla.org/timer;1");
     mBiffTimer->InitWithFuncCallback(OnBiffTimer, (void*)this, timeInMSUint32, 
                                      nsITimer::TYPE_ONE_SHOT);
@@ -322,6 +339,7 @@ nsresult nsMsgBiffManager::PerformBiff()
 {
   nsTime currentTime;
   nsCOMArray <nsIMsgFolder> targetFolders;
+  PR_LOG(MsgBiffLogModule, PR_LOG_ALWAYS, ("performing biffs\n"));
 
   for(PRInt32 i = 0; i < mBiffArray->Count(); i++)
   {
@@ -346,7 +364,17 @@ nsresult nsMsgBiffManager::PerformBiff()
       // (since we don't want to prompt the user for password UI)
       // and make sure the server isn't already in the middle of downloading new messages
       if(!serverBusy && (!serverRequiresPassword || !passwordPromptRequired) && targetFolderIndex == kNotFound)
-        current->server->PerformBiff(nsnull);
+      {
+        nsXPIDLCString serverKey;
+        current->server->GetKey(getter_Copies(serverKey));
+        nsresult rv = current->server->PerformBiff(nsnull);
+        PR_LOG(MsgBiffLogModule, PR_LOG_ALWAYS, ("biffing server %s rv = %x\n", serverKey.get(), rv));
+      }
+      else
+      {
+        PR_LOG(MsgBiffLogModule, PR_LOG_ALWAYS, ("not biffing server serverBusy = %d requirespassword = %d password prompt required = %d targetFolderIndex = %d\n",
+          serverBusy, serverRequiresPassword, passwordPromptRequired, targetFolderIndex));
+      }
       // if we didn't do this server because the destination server was already being
       // biffed into, leave this server in the biff array so it will fire next.
       if (targetFolderIndex == kNotFound)
