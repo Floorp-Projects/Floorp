@@ -6039,21 +6039,16 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
       nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
   }
   else {
-    if (!(mState & NS_FRAME_IS_DIRTY)) {
-      // If the parent frame is not an area frame
-      nsCOMPtr<nsIAtom> frameType;
-      mParent->GetFrameType(getter_AddRefs(frameType));      
-      if (frameType.get() != nsLayoutAtoms::areaFrame) {
-        // Mark yourself as dirty
-        mState |= NS_FRAME_IS_DIRTY;
+    if (!(mState & NS_FRAME_IS_DIRTY)) {      
+      // Mark yourself as dirty
+      mState |= NS_FRAME_IS_DIRTY;
 
-        // Cancel the dirty children reflow command you posted earlier
-        nsIReflowCommand::ReflowType type = nsIReflowCommand::ReflowDirty;
-        aPresShell->CancelReflowCommand(this, &type);
+      // Cancel the dirty children reflow command you posted earlier
+      nsIReflowCommand::ReflowType type = nsIReflowCommand::ReflowDirty;
+      aPresShell->CancelReflowCommand(this, &type);
 
-        // Pass up the reflow request to the parent frame.
-        mParent->ReflowDirtyChild(aPresShell, this);
-      }
+      // Pass up the reflow request to the parent frame.
+      mParent->ReflowDirtyChild(aPresShell, this);
     }
   }
   
