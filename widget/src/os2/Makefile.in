@@ -44,10 +44,6 @@ REQUIRES	= gfx \
 		  webbrowserpersist \
 		  $(NULL)
 
-ifdef ENABLE_TESTS
-#DIRS		+= tests
-endif
-
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
