@@ -100,6 +100,5 @@ libs::
 	$(INSTALL) $(ICON_FILES) $(DIST)/bin/chrome/icons/default
 
 install::
-	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)\
-		/chrome/icons/default
+	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/chrome/icons/default
 
