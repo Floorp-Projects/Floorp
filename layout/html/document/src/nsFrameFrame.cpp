@@ -484,7 +484,7 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
         nsCOMPtr<nsISHistory> hist;
         webShell->GetSessionHistory(getter_AddRefs(hist));
         if (hist)
-          boxObject->SetPropertyAsSupports(NS_LITERAL_STRING("history"), hist);
+          boxObject->SetPropertyAsSupports(NS_LITERAL_STRING("history").get(), hist);
       }
     }
   }
@@ -908,7 +908,7 @@ static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
       nsCOMPtr<nsIBrowserBoxObject> browser(do_QueryInterface(boxObject));
       if (browser) {
         nsCOMPtr<nsISupports> supp;
-        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("history"), getter_AddRefs(supp));
+        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("history").get(), getter_AddRefs(supp));
         if (supp) {
           nsCOMPtr<nsISHistory> hist(do_QueryInterface(supp));
           if (hist) {
@@ -916,7 +916,7 @@ static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
             webNav->SetSessionHistory(hist);
             nsCOMPtr<nsIWebNavigation> histNav(do_QueryInterface(hist));
             histNav->Reload(0);
-            boxObject->RemoveProperty(NS_LITERAL_STRING("history"));
+            boxObject->RemoveProperty(NS_LITERAL_STRING("history").get());
             return PR_FALSE;
           }
         }

@@ -1155,7 +1155,7 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
   if (NS_FAILED(res)) return res;
 
   if (value != NULL) {
-    res = AddFromStringToMenu(NS_ConvertUCS2toUTF8(value), aArray, aContainer, 
+    res = AddFromStringToMenu(NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(value).get()), aArray, aContainer, 
       aDecs, aIDPrefix);
     nsMemory::Free(value);
   }
@@ -1300,7 +1300,7 @@ nsresult nsCharsetMenu::WriteCacheToPrefs(nsVoidArray * aArray,
   }
 
   // write the pref
-  res = mPrefService->SetCharPref(aKey, NS_ConvertUCS2toUTF8(cache.GetUnicode()));
+  res = mPrefService->SetCharPref(aKey, NS_ConvertUCS2toUTF8(cache).get());
 
   return res;
 }

@@ -797,9 +797,9 @@ class basic_nsLiteralString
 
       virtual PRUint32 Length() const;
 
+      const CharT* get() const { return mStart; }
 
-      const CharT* get() const        { return mStart; }
-      operator const CharT*() const   { return get(); }   // to be deprecated, prefer |get()|
+      // operator const CharT*() const; // use |get()|
 
     private:
       const CharT* mStart;
@@ -1456,8 +1456,9 @@ class basic_nsPromiseFlatString
       virtual PRUint32  Length() const { return mLength; }
       virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const;
 
-      const CharT* get() const        { return mBuffer; }
-      operator const CharT*() const   { return get(); } // to be deprecated, prefer |get()|
+      const CharT* get() const { return mBuffer; }
+
+      // operator const CharT*() const; // use |get()|
 
     protected:
       PRUint32      mLength;

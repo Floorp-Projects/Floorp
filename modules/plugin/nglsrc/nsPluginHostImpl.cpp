@@ -4202,19 +4202,19 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
   PRUnichar *message = nsnull;
   PRUnichar *checkboxMessage = nsnull;
 
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle"), 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle").get(), 
                                  &title);
   if (NS_FAILED(rv))
     return rv;
 
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage"), 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(), 
                                  &message);
   if (NS_FAILED(rv))
   {
     nsMemory::Free((void *)title);
     return rv;
   }
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage"), 
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(), 
                                  &checkboxMessage);
   if (NS_FAILED(rv))
   {

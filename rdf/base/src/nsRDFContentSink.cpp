@@ -1018,7 +1018,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(uri);
 
-            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(NS_STATIC_CAST(const char*, docURI)), uri);
+            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), uri);
 
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
@@ -1039,7 +1039,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             // attribute.
             name.Insert(PRUnichar('#'), 0);
             
-            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(NS_STATIC_CAST(const char*, docURI)), name);
+            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), name);
 
             return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
         }
@@ -1625,7 +1625,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
         nsRDFParserUtils::StripAndConvert(uri);
 
         // Open a local namespace
-        NameSpaceEntry* ns = new NameSpaceEntry(prefix, NS_ConvertUCS2toUTF8(uri.GetUnicode()));
+        NameSpaceEntry* ns = new NameSpaceEntry(prefix, NS_ConvertUCS2toUTF8(uri).get());
         if (! ns)
             return NS_ERROR_OUT_OF_MEMORY;
 

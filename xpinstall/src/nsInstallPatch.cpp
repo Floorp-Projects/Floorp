@@ -81,7 +81,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
     char tempTargetFile[MAXREGPATHLEN];
 
-    PRInt32 err = VR_GetPath( NS_ConvertUCS2toUTF8(inVRName), 
+    PRInt32 err = VR_GetPath( NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(inVRName).get()),
                               sizeof(tempTargetFile), tempTargetFile );
     
     if (err != REGERR_OK)
@@ -310,9 +310,9 @@ PRInt32 nsInstallPatch::Complete()
             // DO NOT propogate version registry errors, it will abort 
             // FinalizeInstall() leaving things hosed. These piddly errors
             // aren't worth that.
-            VR_Install( NS_ConvertUCS2toUTF8(mRegistryName->GetUnicode()), 
-                        (char*)(const char*)tempPath,
-                        NS_ConvertUCS2toUTF8(tempVersionString), 
+            VR_Install( NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(*mRegistryName).get()),
+                        NS_CONST_CAST(char *, tempPath.get()),
+                        NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(tempVersionString).get()),
                         PR_FALSE );
         }
         else

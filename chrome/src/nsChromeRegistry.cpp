@@ -1430,7 +1430,7 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const PRUnichar *aLocale,
                                                        const PRUnichar *aProfilePath)
 {
   // to be changed to use given path
-  return SetProvider(nsCAutoString("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath), PR_TRUE);
+  return SetProvider(nsCAutoString("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath).get(), PR_TRUE);
 }
 
 /* wstring getSelectedLocale (); */

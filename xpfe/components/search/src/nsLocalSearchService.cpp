@@ -436,7 +436,7 @@ LocalSearchDataSource::parseDate(const nsAReadableString& aDate,
     // parse the time
     PRTime *outTime = NS_STATIC_CAST(PRTime*,aResult);
     PRStatus err;
-    err = PR_ParseTimeString(NS_ConvertUCS2toUTF8(aDate),
+    err = PR_ParseTimeString(NS_ConvertUCS2toUTF8(aDate).get(),
                              PR_FALSE, // PR_FALSE == use current timezone
                              outTime);
     NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);

@@ -227,7 +227,7 @@ nsFilePicker :: IsExtensionInFilterList ( StrFileName & inFileName )
   
   // see if it is in our list
   for ( int i = 0; i < mFlatFilters.Count(); ++i ) {
-    if ( *mFlatFilters[i] == extension )
+    if ( mFlatFilters[i]->Equals(extension) )
       return true;
   }
   return false;

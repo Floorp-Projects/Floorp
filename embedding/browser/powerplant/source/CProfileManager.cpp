@@ -81,9 +81,9 @@ void CProfileManager::StartUp()
         // Make a new default profile
         NS_NAMED_LITERAL_STRING(newProfileName, "default");
 
-        rv = profileService->CreateNewProfile(newProfileName, nsnull, nsnull, PR_FALSE);
+        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
         ThrowIfError_(rv);
-        rv = profileService->SetCurrentProfile(newProfileName);
+        rv = profileService->SetCurrentProfile(newProfileName.get());
         ThrowIfError_(rv);
     }
     else
@@ -327,7 +327,7 @@ nsresult CProfileManager::GetShowDialogOnStart(PRBool* showIt)
     nsRegistryKey profilesTreeKey;
     
     rv = registry->GetKey(nsIRegistry::Common, 
-                          kRegistryGlobalPrefsSubtreeString, 
+                          kRegistryGlobalPrefsSubtreeString.get(), 
                           &profilesTreeKey);
 
     if (NS_SUCCEEDED(rv)) 
@@ -355,13 +355,13 @@ nsresult CProfileManager::SetShowDialogOnStart(PRBool showIt)
     nsRegistryKey profilesTreeKey;
     
     rv = registry->GetKey(nsIRegistry::Common, 
-                          kRegistryGlobalPrefsSubtreeString, 
+                          kRegistryGlobalPrefsSubtreeString.get(), 
                           &profilesTreeKey);
 
     if (NS_FAILED(rv)) 
     {
         rv = registry->AddKey(nsIRegistry::Common, 
-                              kRegistryGlobalPrefsSubtreeString, 
+                              kRegistryGlobalPrefsSubtreeString.get(), 
                               &profilesTreeKey);
     }
     if (NS_SUCCEEDED(rv))

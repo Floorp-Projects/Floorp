@@ -134,10 +134,7 @@ static void DebugDump(const char* str1,const nsAReadableString& str2,PRInt32 tab
     PR_fprintf(PR_STDOUT, " "); //add some tabbing to debug output...
   }
 
-  const char* cp = NS_ConvertUCS2toUTF8(str2);
-  PR_fprintf(PR_STDOUT, "%s%s>\n", str1, cp);
-  // should this be deleted?  
-  //    delete[] cp;
+  PR_fprintf(PR_STDOUT, "%s%s>\n", str1, NS_ConvertUCS2toUTF8(str2).get());
 }
 #endif
 

@@ -31,7 +31,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h" /* for nsAutoString */
 #include "nsIPref.h"
 //#define DEBUG_UNIX_COLLATION
 
@@ -87,7 +86,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     PRUnichar *prefValue;
     res = prefs->GetLocalizedUnicharPref("intl.collationOption", &prefValue);
     if (NS_SUCCEEDED(res)) {
-      mUseCodePointOrder = !nsCRT::strcasecmp(prefValue, NS_LITERAL_STRING("useCodePointOrder"));
+      mUseCodePointOrder = !nsCRT::strcasecmp(prefValue, NS_LITERAL_STRING("useCodePointOrder").get());
       nsMemory::Free(prefValue);
     }
   }

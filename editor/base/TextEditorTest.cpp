@@ -71,13 +71,13 @@ nsresult TextEditorTest::RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsF
   // shouldn't we just bail on error here?
   
   // insert some simple text
-  result = mTextEditor->InsertText(NS_LITERAL_STRING("1234567890abcdefghij1234567890"));
+  result = mTextEditor->InsertText(NS_LITERAL_STRING("1234567890abcdefghij1234567890").get());
   TEST_RESULT(result);
   (*outNumTests)++;
   (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
   
   // insert some more text
-  result = mTextEditor->InsertText(NS_LITERAL_STRING("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere"));
+  result = mTextEditor->InsertText(NS_LITERAL_STRING("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere").get());
   TEST_RESULT(result);
   (*outNumTests)++;
   (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);

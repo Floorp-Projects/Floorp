@@ -218,7 +218,7 @@ LocationImpl::SetHash(const nsAReadableString& aHash)
     nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &result));
 
     if (url) {
-      url->SetRef(NS_ConvertUCS2toUTF8(aHash));
+      url->SetRef(NS_ConvertUCS2toUTF8(aHash).get());
 
       SetURL(url);
     }
@@ -281,7 +281,7 @@ LocationImpl::SetHost(const nsAReadableString& aHost)
     result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (uri) {
-      uri->SetHost(NS_ConvertUCS2toUTF8(aHost));
+      uri->SetHost(NS_ConvertUCS2toUTF8(aHost).get());
 
       SetURL(uri);
     }
@@ -331,7 +331,7 @@ LocationImpl::SetHostname(const nsAReadableString& aHostname)
     result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (uri) {
-      uri->SetHost(NS_ConvertUCS2toUTF8(aHostname));
+      uri->SetHost(NS_ConvertUCS2toUTF8(aHostname).get());
       SetURL(uri);
     }
   }
@@ -495,7 +495,7 @@ LocationImpl::SetPathname(const nsAReadableString& aPathname)
     result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (uri) {
-      uri->SetPath(NS_ConvertUCS2toUTF8(aPathname));
+      uri->SetPath(NS_ConvertUCS2toUTF8(aPathname).get());
       SetURL(uri);
     }
   }
@@ -608,7 +608,7 @@ LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
     result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (uri) {
-      uri->SetScheme(NS_ConvertUCS2toUTF8(aProtocol));
+      uri->SetScheme(NS_ConvertUCS2toUTF8(aProtocol).get());
       SetURL(uri);
     }
   }
@@ -667,7 +667,7 @@ LocationImpl::SetSearch(const nsAReadableString& aSearch)
       nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &result));
 
       if (url) {
-        result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
+        result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch).get());
 
         SetURL(uri);
       }

@@ -108,7 +108,7 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
   PRUint32 i=0;
   PRUint32 theLen=GetStringValue().Length();
   for(i=0;i<theLen;i++){
-    anOutputStream << (const char*)NS_ConvertUCS2toUTF8(GetStringValue());
+    anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
   }
   anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;
 }
@@ -121,7 +121,7 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
  *  @param  ostream -- output stream to accept output data
  */
 void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
-  anOutputStream << (const char*)NS_ConvertUCS2toUTF8(GetStringValue());
+  anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
 }
 
 

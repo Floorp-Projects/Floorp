@@ -163,7 +163,7 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
         {
 			if(nsCRT::strlen(detector_name) > 0) {
 				PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
-				PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_CONTRACTID_MAX);
+				PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get(),DETECTOR_CONTRACTID_MAX);
 				gPlugDetector = PR_TRUE;
 			} else {
 				g_detector_contractid[0]=0;
@@ -779,7 +779,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                  &detector_name)))
         {
           PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
-          PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_CONTRACTID_MAX);
+          PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get(),DETECTOR_CONTRACTID_MAX);
           gPlugDetector = PR_TRUE;
           PR_FREEIF(detector_name);
         }
@@ -905,7 +905,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   if(cachedData) {
        rv=cachedData->SetAnnotation("charset",charset.Length()+1,
-               NS_ConvertUCS2toUTF8(charset.GetUnicode()));
+                                    NS_ConvertUCS2toUTF8(charset).get());
        NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetAnnotation");
   }
 

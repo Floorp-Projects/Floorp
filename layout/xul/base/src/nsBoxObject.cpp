@@ -32,7 +32,7 @@
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsIFrame.h"
-#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
@@ -283,16 +283,16 @@ nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName,
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
     switch (metricResult) {
       case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtBottom:
-        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("doublebottom"));
+        *aResult = ToNewUnicode(NS_LITERAL_STRING("doublebottom"));
         break;
       case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtEachEnd:
-        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("double"));
+        *aResult = ToNewUnicode(NS_LITERAL_STRING("double"));
         break;
       case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtTop:
-        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("doubletop"));
+        *aResult = ToNewUnicode(NS_LITERAL_STRING("doubletop"));
         break;
       default:
-        *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("single"));
+        *aResult = ToNewUnicode(NS_LITERAL_STRING("single"));
         break;   
     } 
   }
@@ -300,9 +300,9 @@ nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName,
     PRInt32 metricResult;
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollSliderStyle, metricResult);
     if ( metricResult == nsILookAndFeel::eMetric_ScrollThumbStyleNormal )
-      *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("fixed"));
+      *aResult = ToNewUnicode(NS_LITERAL_STRING("fixed"));
     else
-      *aResult = nsXPIDLString::Copy(NS_LITERAL_STRING("proportional"));   
+      *aResult = ToNewUnicode(NS_LITERAL_STRING("proportional"));   
   }
   return NS_OK;
 }
@@ -342,7 +342,7 @@ nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
   nsresult rv = mPresState->GetStateProperty(propertyName, result);
   if (NS_FAILED(rv))
     return rv;
-  *aResult = nsXPIDLString::Copy(result.GetUnicode());
+  *aResult = ToNewUnicode(result);
   return NS_OK;
 }
 

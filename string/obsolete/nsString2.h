@@ -76,6 +76,8 @@ protected:
   virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
 
+public:
+  virtual const PRUnichar* get() const { return GetUnicode(); }
 
 public:
   /**
@@ -122,7 +124,6 @@ public:
    * @return string length
    */
   virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-
 
   /**
    * Call this method if you want to force a different string length
@@ -588,14 +589,7 @@ class NS_COM NS_ConvertASCIItoUCS2
       NS_ConvertASCIItoUCS2( const char*, PRUint32 );
       explicit NS_ConvertASCIItoUCS2( char );
 
-      const PRUnichar* get() const { return GetUnicode(); }
-
-      operator const PRUnichar*() const
-        {
-          return GetUnicode();
-        }
-
-      operator nsLiteralString() const
+      operator const nsLiteralString() const
         {
           return nsLiteralString(mUStr, mLength);
         }
@@ -647,11 +641,6 @@ class NS_COM NS_ConvertUTF8toUCS2
       NS_ConvertUTF8toUCS2( char aChar )
         {
           Init( &aChar, 1 );
-        }
-
-      operator const PRUnichar*() const
-        {
-          return GetUnicode();
         }
 
     protected:

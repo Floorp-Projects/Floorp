@@ -1525,7 +1525,7 @@ FileSystemDataSource::GetExtension(nsIRDFResource *source, nsIRDFLiteral **aResu
     nsAutoString filename(unicodeLeafName);
     PRInt32 lastDot = filename.RFindChar('.');
     if (lastDot == -1) {
-        gRDFService->GetLiteral(NS_LITERAL_STRING(""), aResult);
+        gRDFService->GetLiteral(NS_LITERAL_STRING("").get(), aResult);
     } else {
       nsAutoString extension;
       filename.Right(extension, (filename.Length() - lastDot));

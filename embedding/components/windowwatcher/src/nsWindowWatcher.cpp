@@ -615,9 +615,9 @@ nsWindowWatcher::RegisterNotification(nsIObserver *aObserver)
   
   nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (os) {
-    rv = os->AddObserver(aObserver, NOTIFICATION_OPENED);
+    rv = os->AddObserver(aObserver, NOTIFICATION_OPENED.get());
     if (NS_SUCCEEDED(rv))
-      rv = os->AddObserver(aObserver, NOTIFICATION_CLOSED);
+      rv = os->AddObserver(aObserver, NOTIFICATION_CLOSED.get());
   }
   return rv;
 }
@@ -633,8 +633,8 @@ nsWindowWatcher::UnregisterNotification(nsIObserver *aObserver)
   
   nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (os) {
-    os->RemoveObserver(aObserver, NOTIFICATION_OPENED);
-    os->RemoveObserver(aObserver, NOTIFICATION_CLOSED);
+    os->RemoveObserver(aObserver, NOTIFICATION_OPENED.get());
+    os->RemoveObserver(aObserver, NOTIFICATION_CLOSED.get());
   }
   return rv;
 }
@@ -702,7 +702,7 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (os) {
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(aWindow));
-    rv = os->Notify(domwin, NOTIFICATION_OPENED, 0);
+    rv = os->Notify(domwin, NOTIFICATION_OPENED.get(), 0);
   }
 
   return rv;
@@ -776,11 +776,11 @@ nsresult nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
 #ifdef USEWEAKREFS
     nsCOMPtr<nsISupports> domwin(do_QueryReferent(inInfo->mWindow));
     if (domwin)
-      rv = os->Notify(domwin, NOTIFICATION_CLOSED, 0);
+      rv = os->Notify(domwin, NOTIFICATION_CLOSED.get(), 0);
     // else bummer. since the window is gone, there's nothing to notify with.
 #else
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(inInfo->mWindow));
-    rv = os->Notify(domwin, NOTIFICATION_CLOSED, 0);
+    rv = os->Notify(domwin, NOTIFICATION_CLOSED.get(), 0);
 #endif
   }
 

@@ -157,7 +157,7 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
     mLogStream->seek(logFile->GetFileSize());
 
     *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << NS_ConvertUCS2toUTF8(URL) << "  --  " << time << nsEndl;
+    *mLogStream << NS_ConvertUCS2toUTF8(URL).get() << "  --  " << time << nsEndl;
     *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
     *mLogStream << nsEndl;
 
@@ -225,7 +225,7 @@ nsLoggingProgressListener::FinalizeProgress(const PRUnichar* message, PRInt32 it
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     [" << (itemNum) << "/" << totNum << "]\t" << NS_ConvertUCS2toUTF8(message) << nsEndl;
+    *mLogStream << "     [" << (itemNum) << "/" << totNum << "]\t" << NS_ConvertUCS2toUTF8(message).get() << nsEndl;
     return NS_OK;
 }
 
@@ -277,7 +277,7 @@ nsLoggingProgressListener::LogComment(const PRUnichar* comment)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     ** " << NS_ConvertUCS2toUTF8(comment) << nsEndl;    
+    *mLogStream << "     ** " << NS_ConvertUCS2toUTF8(comment).get() << nsEndl;
     return NS_OK;
 }
 

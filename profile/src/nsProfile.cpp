@@ -1314,7 +1314,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
             nsFileURL  fileURL(fileSpec);
             const char* fileStr = fileURL.GetURLString();
             rv = chromeRegistry->SelectLocaleForProfile(langcode, 
-                                                        NS_ConvertUTF8toUCS2(fileStr));
+                                                        NS_ConvertUTF8toUCS2(fileStr).get());
         }
     }
     // Copy contents from defaults folder.
@@ -1707,7 +1707,7 @@ nsProfile::DefineLocaleDefaultsDir()
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLString localeName;
-            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region"), getter_Copies(localeName));
+            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
             if (NS_SUCCEEDED(rv))
                 rv = localeDefaults->AppendUnicode(localeName);
         }
