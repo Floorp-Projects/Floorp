@@ -41,6 +41,8 @@
 #include "DefinesMozilla.h"
 
 /* ...then undefine the Mozilla specific stuff */
+#undef CookieManagement
+#undef SingleSignon
 #undef PRIVACY_POLICIES
 
 /* ...and define the Raptor specific things */
