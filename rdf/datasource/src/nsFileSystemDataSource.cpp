@@ -1051,12 +1051,12 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsAutoString	name(baseFilename);
-	PRInt32		nameLen = name.Length();
 
 #ifdef	XP_WIN
 
 	// special hack for IE favorites under Windows; strip off the
 	// trailing ".url" or ".lnk" at the end of IE favorites names
+	PRInt32			nameLen = name.Length();
 	nsAutoString		theURI(uri);
 	if ((theURI.Find(ieFavoritesDir) == 0) && (nameLen > 4))
 	{
