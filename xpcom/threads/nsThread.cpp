@@ -561,29 +561,49 @@ nsThreadPool::GetRequest(nsIThread* currentThread)
             return request;
         }
     
+        if (mShuttingDown)
+            break;
+        
         // no requests, and we're not shutting down yet...
         // if we have more than the minimum required threads already then
-        // we can just go away
+        // then we may be able to go away.
         PRUint32 threadCnt;
         rv = mThreads->Count(&threadCnt);
         if (NS_FAILED(rv)) break;
               
         if (threadCnt > mMinThreads) {
+            // to avoid multiple thread spawns/exits, we need to
+            // wait for some period of time while waiting for any
+            // additional requests.  If this this wait yeilds no
+            // request, then we can exit.
+            //
+            // TODO: determine what the optimal timeout value is.  
+            // For now, just use 5 seconds.
+
+            PRIntervalTime interval = PR_SecondsToInterval(5);
             PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+                  ("nsIThreadPool thread %p waiting for %d seconds before exiting (%d threads in pool)\n",
+                    currentThread, interval, threadCnt));
+
+            (void) PR_WaitCondVar( mRequestAdded, interval);  
+            
+            rv = mRequests->Count(&requestCnt);
+            if (NS_FAILED(rv) || requestCnt == 0) {
+                PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                    ("nsIThreadPool thread %p: %d threads in pool, min = %d, exiting...\n",
                     currentThread, threadCnt, mMinThreads));
             RemoveThread(currentThread);
             return nsnull;   // causes nsThreadPoolRunnable::Run to quit
         }
-
+        }
+        else
+        {
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
                ("nsIThreadPool thread %p waiting (%d threads in pool)\n",
                 currentThread, threadCnt));
         
-        if (mShuttingDown)
-            break;
-        
         (void)PR_WaitCondVar(mRequestAdded, PR_INTERVAL_NO_TIMEOUT);
+    }
     }
     // no requests, we are going to dump the thread.
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
@@ -723,7 +743,6 @@ nsThreadPool::Init(PRUint32 minThreadCount,
         
     return NS_ERROR_OUT_OF_MEMORY;
 }
-
 
 nsresult
 nsThreadPool::AddThread()
