@@ -36,6 +36,7 @@
 #define nspr_netbsd_defs_h___
 
 #include <sys/syscall.h>
+#include <sys/param.h>  /* for __NetBSD_Version__ */
 
 #define PR_LINKER_ARCH	"netbsd"
 #define _PR_SI_SYSNAME  "NetBSD"
