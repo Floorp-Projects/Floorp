@@ -437,7 +437,7 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
   sevent.point.x = event->xconfigure.x;
   sevent.point.y = event->xconfigure.y;
   sevent.mWinWidth = event->xconfigure.width;
-  sevent.mWinWidth = event->xconfigure.height;
+  sevent.mWinHeight = event->xconfigure.height;
   // XXX fix this
   sevent.time = 0;
   NS_ADDREF(aWidget);
