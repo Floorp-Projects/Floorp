@@ -191,13 +191,9 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
     aResult.SetStringValue(src);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  else if ((aAttribute == nsHTMLAtoms::left) ||
-           (aAttribute == nsHTMLAtoms::top)) {
-    if (nsGenericHTMLElement::ParseValue(aValue, _I32_MIN, aResult, eHTMLUnit_Pixel)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if ((aAttribute == nsHTMLAtoms::width) ||
+  else if ((aAttribute == nsHTMLAtoms::top)   ||
+           (aAttribute == nsHTMLAtoms::left)  ||
+           (aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
     if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
@@ -263,12 +259,18 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       position->mOffset.SetLeft(nsStyleCoord(twips));
     }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      position->mOffset.SetLeft(nsStyleCoord(value.GetPercentValue(), eStyleUnit_Percent));
+    }
 
     // Top
     aAttributes->GetAttribute(nsHTMLAtoms::top, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       position->mOffset.SetTop(nsStyleCoord(twips));
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      position->mOffset.SetTop(nsStyleCoord(value.GetPercentValue(), eStyleUnit_Percent));
     }
 
     // Width
