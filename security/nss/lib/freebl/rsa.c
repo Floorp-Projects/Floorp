@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.13 2000/09/19 06:03:52 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.14 2000/09/19 06:18:04 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -67,7 +67,6 @@ rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
     CHECK_MPI_OK( mp_init(&tmp)   );
     /* 1.  Compute n = p*q */
     CHECK_MPI_OK( mp_mul(p, q, &n) );
-    MPINT_TO_SECITEM(&n, &key->modulus, key->arena);
     /* 2.  Compute phi = (p-1)*(q-1) */
     CHECK_MPI_OK( mp_sub_d(p, 1, &psub1) );
     CHECK_MPI_OK( mp_sub_d(q, 1, &qsub1) );
@@ -81,6 +80,7 @@ rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
 	rv = SECFailure;
 	goto cleanup;
     }
+    MPINT_TO_SECITEM(&n, &key->modulus, key->arena);
     MPINT_TO_SECITEM(&d, &key->privateExponent, key->arena);
     /* 4.  Compute exponent1 = d mod (p-1) */
     CHECK_MPI_OK( mp_mod(&d, &psub1, &tmp) );
