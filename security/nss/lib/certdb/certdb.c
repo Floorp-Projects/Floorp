@@ -34,13 +34,14 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.45 2002/10/23 20:50:51 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.46 2002/10/23 22:00:48 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
 #include "prmon.h"
 #include "prtime.h"
 #include "cert.h"
+#include "certi.h"
 #include "secder.h"
 #include "secoid.h"
 #include "secasn1.h"
