@@ -464,7 +464,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
 
   nsWidgetInitData initData;
-  initData.mBorderStyle = eBorderStyle_dialog;
+  initData.mBorderStyle = eBorderStyle_window;
 
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent, nsnull, aAppShell, nsnull, &initData);

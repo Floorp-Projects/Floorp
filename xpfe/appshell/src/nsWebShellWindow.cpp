@@ -271,7 +271,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
     return rv;
   }
 
-  initData.mBorderStyle = eBorderStyle_dialog;
+  initData.mBorderStyle = eBorderStyle_window;
 
   if (!aParent || NS_FAILED(aParent->GetWidget(parentWidget)))
     parentWidget = nsnull;

@@ -229,7 +229,7 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   mWindow->SetClientData(this);
 
   nsWidgetInitData initData;
-  initData.mBorderStyle = eBorderStyle_dialog;
+  initData.mBorderStyle = eBorderStyle_window;
 
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleXPDialogEvent,
