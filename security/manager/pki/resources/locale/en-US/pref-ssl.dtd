@@ -25,6 +25,7 @@
 <!ENTITY  SSLWarnings                  "SSL Warnings">
 <!ENTITY  SSLClientAuthMethod          "Client Certificate Selection">
 
+<!ENTITY prefheader.title "SSL">
 <!ENTITY enable.ssl2 "Enable SSL version 2">
 <!ENTITY enable.ssl3 "Enable SSL version 3">
 <!ENTITY enable.tls "Enable TLS">
