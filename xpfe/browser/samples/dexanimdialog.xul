@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window>
-<!-- dialog containing a control requiring initial setup -->
+<!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
+<!-- dialog containing a control requiring initial setup, including some
+     JavaScript-testing animations -->
 <xul:window
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
