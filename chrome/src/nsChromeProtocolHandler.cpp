@@ -135,22 +135,17 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsIURI* chromeURI;
-    rv = uri->Clone(&chromeURI);        // don't mangle the original
+    nsCOMPtr<nsIURI> chromeURI;
+    rv = uri->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
     if (NS_FAILED(rv)) return rv;
 
     rv = reg->ConvertChromeURL(chromeURI);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(chromeURI);
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
+
 
     // now fetch the converted URI
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(chromeURI);
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     rv = serv->NewChannelFromURI(verb, chromeURI,
                                  aLoadGroup,
@@ -175,7 +170,6 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         (*result)->SetOwner(owner);
     }
 
-    NS_RELEASE(chromeURI);
     return rv;
 }
 
