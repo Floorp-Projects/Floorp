@@ -70,9 +70,9 @@ typedef int (*SECU_PPFunc)(FILE *out, SECItem *item, char *msg, int level);
 
 typedef struct {
     enum {
-	PW_NONE,
-	PW_FROMFILE,
-	PW_PLAINTEXT
+	PW_NONE = 0,
+	PW_FROMFILE = 1,
+	PW_PLAINTEXT = 2
     } source;
     char *data;
 } secuPWData;
