@@ -589,16 +589,33 @@ int main(int argc, char* argv[])
 
 		profileService->GetProfileCount(&numProfiles); 
 
+		char *isPregInfoSet = nsnull;
+		profileService->IsPregCookieSet(&isPregInfoSet); 
+		
+		PRBool pregPref = PR_FALSE;
+		rv = prefs->GetBoolPref(PREG_PREF, &pregPref);
+
 		if (!profstr)
 		{
 			// This means that there was no command-line argument to force
 			// profile UI to come up. But we need the UI anyway if there
 			// are no profiles yet, or if there is more than one.
 			if (numProfiles == 0)
-				profstr = "resource:/res/profile/cpw.xul"; 
+			{
+				if (pregPref)
+					profstr = "resource:/res/profile/cpwPreg.xul"; 
+				else
+					profstr = "resource:/res/profile/cpw.xul"; 
+			}
 			else if (numProfiles > 1)
 				profstr = "resource:/res/profile/profileManagerContainer.xul"; 
 		}
+
+
+		// Provide Preg information
+		if (pregPref && (PL_strcmp(isPregInfoSet, "true") != 0))
+			profstr = "resource:/res/profile/cpwPreg.xul"; 
+
 
 		if (profstr)
 		{
@@ -628,6 +645,9 @@ int main(int argc, char* argv[])
 			 */	
 			rv = profAppShell->Run();
 		}
+
+		if (pregPref && PL_strcmp(isPregInfoSet, "true") != 0)
+			profileService->ProcessPRegCookie();
 	}
 #endif
 
