@@ -177,20 +177,9 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight)
   logFont->lfWeight = aWeight;
   logFont->lfItalic = (mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE))
     ? TRUE : FALSE;   // XXX need better oblique support
-  float app2dev, app2twip, scale;
+  float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  mDeviceContext->GetDevUnitsToTwips(app2twip);
-  mDeviceContext->GetCanonicalPixelScale(scale);
-  app2twip *= app2dev * scale;
-
-  // this interesting bit of code rounds the font size off to the floor point value
-  // this is necessary for proper font scaling under windows
-  PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip));
-  float rounded = ((float)NSIntPointsToTwips(sizePoints)) / app2twip;
-
-  // round font size off to floor point size to be windows compatible
-  logFont->lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
-//  logFont->lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
+  logFont->lfHeight = - NSToIntRound(mFont->size * app2dev);
 
 #ifdef NS_DEBUG
   // Make Purify happy
