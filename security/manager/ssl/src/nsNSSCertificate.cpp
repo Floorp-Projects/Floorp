@@ -1506,28 +1506,130 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
   return NS_OK;  
 }
 
-
-PRBool
-nsNSSCertificate::verifyFailed(PRUint32 *_verified)
+class UsageArrayHelper
 {
-  SECCertUsage certUsage;
-  switch (nsNSSCertificateDB::getCertType(mCert)) {
-  case EMAIL_CERT:   /* fall through */
-  case USER_CERT:    certUsage = certUsageEmailRecipient; break;
-  case CA_CERT:      certUsage = certUsageSSLCA;          break;
-  // Chances are if we don't know the cert type, it's because 
-  // of an SSL site we're visiting.
-  default: 
-  case SERVER_CERT:  certUsage = certUsageSSLServer;      break;
+public:
+  UsageArrayHelper(CERTCertificate *aCert);
+
+  nsresult GetUsageArray(char *suffix,
+               PRUint32 outArraySize,
+               PRUint32 *_verified,
+               PRUint32 *_count,
+               PRUnichar **tmpUsages);
+
+  enum { max_returned_out_array_size = 12 };
+
+private:
+  CERTCertificate *mCert;
+  nsresult m_rv;
+  CERTCertDBHandle *defaultcertdb;
+  nsCOMPtr<nsINSSComponent> nssComponent;
+  int mCached_NonInadequateReason;
+
+  void check(char *suffix,
+             SECCertUsage aCertUsage,
+             PRUint32 &aCounter,
+             PRUnichar **outUsages);
+
+  void verifyFailed(PRUint32 *_verified);
+};
+
+UsageArrayHelper::UsageArrayHelper(CERTCertificate *aCert)
+:mCert(aCert)
+{
+  defaultcertdb = CERT_GetDefaultCertDB();
+  nssComponent = do_GetService(kNSSComponentCID, &m_rv);
+  mCached_NonInadequateReason = SECSuccess;
+}
+
+void
+UsageArrayHelper::check(char *suffix,
+                        SECCertUsage aCertUsage,
+                        PRUint32 &aCounter,
+                        PRUnichar **outUsages)
+{
+  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
+                         aCertUsage, NULL) == SECSuccess) {
+    nsAutoString typestr;
+    switch (aCertUsage) {
+      case certUsageSSLClient:
+        typestr = NS_LITERAL_STRING("VerifySSLClient");
+        break;
+      case certUsageSSLServer:
+        typestr = NS_LITERAL_STRING("VerifySSLServer");
+        break;
+      case certUsageSSLServerWithStepUp:
+        typestr = NS_LITERAL_STRING("VerifySSLStepUp");
+        break;
+      case certUsageEmailSigner:
+        typestr = NS_LITERAL_STRING("VerifyEmailSigner");
+        break;
+      case certUsageEmailRecipient:
+        typestr = NS_LITERAL_STRING("VerifyEmailRecip");
+        break;
+      case certUsageObjectSigner:
+        typestr = NS_LITERAL_STRING("VerifyObjSign");
+        break;
+      case certUsageProtectedObjectSigner:
+        typestr = NS_LITERAL_STRING("VerifyProtectObjSign");
+        break;
+      case certUsageUserCertImport:
+        typestr = NS_LITERAL_STRING("VerifyUserImport");
+        break;
+      case certUsageSSLCA:
+        typestr = NS_LITERAL_STRING("VerifySSLCA");
+        break;
+      case certUsageVerifyCA:
+        typestr = NS_LITERAL_STRING("VerifyCAVerifier");
+        break;
+      case certUsageStatusResponder:
+        typestr = NS_LITERAL_STRING("VerifyStatusResponder");
+        break;
+      case certUsageAnyCA:
+        typestr = NS_LITERAL_STRING("VerifyAnyCA");
+        break;
+      default:
+        break;
+    }
+    if (!typestr.IsEmpty()) {
+      typestr.AppendWithConversion(suffix);
+      nsAutoString verifyDesc;
+      m_rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
+      if (NS_SUCCEEDED(m_rv)) {
+        outUsages[aCounter++] = ToNewUnicode(verifyDesc);
+      }
+    }
   }
-  CERT_VerifyCertNow(CERT_GetDefaultCertDB(), mCert, PR_TRUE, certUsage, NULL);
-  int err = PR_GetError();
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("not verified because: %d\n", err));
-  switch (err) {
+  else {
+    int err = PR_GetError();
+    
+    if (SECSuccess == mCached_NonInadequateReason) {
+      // we have not yet cached anything
+      mCached_NonInadequateReason = err;
+    }
+    else {
+      switch (err) {
+        case SEC_ERROR_INADEQUATE_KEY_USAGE:
+        case SEC_ERROR_INADEQUATE_CERT_TYPE:
+          // this code should not override a possibly cached more informative reason
+          break;
+        
+        default:
+          mCached_NonInadequateReason = err;
+          break;
+      }
+    }
+  }
+}
+
+void
+UsageArrayHelper::verifyFailed(PRUint32 *_verified)
+{
+  switch (mCached_NonInadequateReason) {
   /* For these cases, verify only failed for the particular usage */
   case SEC_ERROR_INADEQUATE_KEY_USAGE:
   case SEC_ERROR_INADEQUATE_CERT_TYPE:
-    return PR_FALSE;
+    *_verified = nsNSSCertificate::USAGE_NOT_ALLOWED; break;
   /* These are the cases that have individual error messages */
   case SEC_ERROR_REVOKED_CERTIFICATE:
     *_verified = nsNSSCertificate::CERT_REVOKED; break;
@@ -1544,145 +1646,54 @@ nsNSSCertificate::verifyFailed(PRUint32 *_verified)
     *_verified = nsNSSCertificate::INVALID_CA; break;
   case SEC_ERROR_CERT_USAGES_INVALID: // XXX what is this?
   // there are some OCSP errors from PSM 1.x to add here
+  case SECSuccess:
+    // this means, no verification result has ever been received
   default:
     *_verified = nsNSSCertificate::NOT_VERIFIED_UNKNOWN; break;
   }
-  return PR_TRUE;
 }
 
 nsresult
-nsNSSCertificate::GetUsageArray(char     *suffix,
-                                PRUint32 *_verified,
-                                PRUint32 *_count,
-                                PRUnichar **tmpUsages)
+UsageArrayHelper::GetUsageArray(char *suffix,
+                      PRUint32 outArraySize,
+                      PRUint32 *_verified,
+                      PRUint32 *_count,
+                      PRUnichar **outUsages)
 {
-  nsresult rv;
-  int tmpCount = 0;
+  if (NS_FAILED(m_rv))
+    return m_rv;
 
-  CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv)) return rv; 
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageSSLClient, NULL) == SECSuccess) {
-    // add client to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLClient"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageSSLServer, NULL) == SECSuccess) {
-    // add server to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLServer"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageSSLServerWithStepUp, NULL) == SECSuccess) {
-    // add stepup to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLStepUp"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageEmailSigner, NULL) == SECSuccess) {
-    // add signer to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailSigner"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageEmailRecipient, NULL) == SECSuccess) {
-    // add recipient to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailRecip"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageObjectSigner, NULL) == SECSuccess) {
-    // add objsigner to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyObjSign"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
+  if (outArraySize < max_returned_out_array_size)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 &count = *_count;
+  count = 0;
+  
+  // The following list of checks must be < max_returned_out_array_size
+  
+  check(suffix, certUsageSSLClient, count, outUsages);
+  check(suffix, certUsageSSLServer, count, outUsages);
+  check(suffix, certUsageSSLServerWithStepUp, count, outUsages);
+  check(suffix, certUsageEmailSigner, count, outUsages);
+  check(suffix, certUsageEmailRecipient, count, outUsages);
+  check(suffix, certUsageObjectSigner, count, outUsages);
 #if 0
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageProtectedObjectSigner, NULL) == SECSuccess) {
-    // add protected objsigner to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyProtectObjSign"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageUserCertImport, NULL) == SECSuccess) {
-    // add user import to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyUserImport"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
+  check(suffix, certUsageProtectedObjectSigner, count, outUsages);
+  check(suffix, certUsageUserCertImport, count, outUsages);
 #endif
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageSSLCA, NULL) == SECSuccess) {
-    // add SSL CA to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLCA"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
+  check(suffix, certUsageSSLCA, count, outUsages);
 #if 0
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageVerifyCA, NULL) == SECSuccess) {
-    // add verify CA to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyCAVerifier"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
+  check(suffix, certUsageVerifyCA, count, outUsages);
 #endif
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageStatusResponder, NULL) == SECSuccess) {
-    // add status responder to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyStatusResponder"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
+  check(suffix, certUsageStatusResponder, count, outUsages);
 #if 0
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         certUsageAnyCA, NULL) == SECSuccess) {
-    // add any CA to usage
-    nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyAnyCA"));
-    typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
-  }
+  check(suffix, certUsageAnyCA, count, outUsages);
 #endif
-  if (tmpCount == 0) {
+  if (count == 0) {
     verifyFailed(_verified);
   } else {
-    *_count = tmpCount;
     *_verified = nsNSSCertificate::VERIFIED_OK;
   }
-  *_count = tmpCount;
   return NS_OK;
 }
 
@@ -2186,7 +2197,8 @@ nsNSSCertificate::GetUsages(PRUint32 *_verified,
   PRUnichar *tmpUsages[13];
   char *suffix = "";
   PRUint32 tmpCount;
-  rv = GetUsageArray(suffix, _verified, &tmpCount, tmpUsages);
+  UsageArrayHelper uah(mCert);
+  rv = uah.GetUsageArray(suffix, 13, _verified, &tmpCount, tmpUsages);
   if (tmpCount > 0) {
     *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * tmpCount);
     for (PRUint32 i=0; i<tmpCount; i++) {
@@ -2209,7 +2221,8 @@ nsNSSCertificate::GetPurposes(PRUint32   *_verified,
   PRUnichar *tmpUsages[13];
   char *suffix = "_p";
   PRUint32 tmpCount;
-  rv = GetUsageArray(suffix, _verified, &tmpCount, tmpUsages);
+  UsageArrayHelper uah(mCert);
+  rv = uah.GetUsageArray(suffix, 13, _verified, &tmpCount, tmpUsages);
   nsAutoString porpoises;
   for (PRUint32 i=0; i<tmpCount; i++) {
     if (i>0) porpoises.Append(NS_LITERAL_STRING(","));
