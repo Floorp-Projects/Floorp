@@ -245,29 +245,31 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
 
 NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsISupports * aDisplayConsumer,  
+                                            nsIMsgWindow * aMsgWindow,
                                             nsIUrlListener * aUrlListener,
                                             nsIURI ** aURL) 
 {
 	nsresult rv = NS_OK;
-    nsCOMPtr<nsIMsgFolder> folder;
-    nsXPIDLCString msgKey;
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsXPIDLCString msgKey;
 
   rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
 	if (NS_SUCCEEDED(rv))
 	{
     	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
 		if (NS_SUCCEEDED(rv))
-        {
-           nsCOMPtr<nsIImapUrl> imapUrl;
-           nsCAutoString urlSpec;
-           PRUnichar hierarchySeparator = '/';
-           rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
-           if (NS_FAILED(rv)) return rv;
-
-		   imapUrl->AddChannelToLoadGroup();
-           rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
-                              aURL, aDisplayConsumer, msgKey, PR_TRUE);
-        }
+    {
+      nsCOMPtr<nsIImapUrl> imapUrl;
+      nsCAutoString urlSpec;
+      PRUnichar hierarchySeparator = '/';
+      rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+      if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+      msgurl->SetMsgWindow(aMsgWindow);
+		  imapUrl->AddChannelToLoadGroup();
+      rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+                        aURL, aDisplayConsumer, msgKey, PR_TRUE);
+    }
 	}
 	return rv;
 }

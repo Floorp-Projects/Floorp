@@ -57,6 +57,7 @@ protected:
 
   nsresult FetchMessage(const char* aMessageURI,
                         nsISupports * aDisplayConsumer, 
+                        nsIMsgWindow * aMsgWindow,
 										    nsIUrlListener * aUrlListener,
                         nsMailboxAction mailboxAction,
                         nsIURI ** aURL);

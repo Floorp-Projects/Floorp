@@ -220,7 +220,7 @@ nsresult  rv;
     *aMsgToReplace = GetIMessageFromURI(msgURI);
 
   // Now, just plug the two together and get the hell out of the way!
-  rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull, nsnull);
+  rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull, nsnull, nsnull);
 
   ReleaseMessageServiceFromURI(mURI, mMessageService);
   mMessageService = nsnull;

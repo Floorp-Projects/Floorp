@@ -141,7 +141,8 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
   return rv;
 }
 
-nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURI ** aURL)
+nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+                                       nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
   
@@ -168,7 +169,9 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   rv = ConstructNntpUrl(uri, newsgroupName, key, aUrlListener, getter_AddRefs(myuri));
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(myuri);
+    nsCOMPtr<nsINntpUrl> nntpUrl (do_QueryInterface(myuri));
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(nntpUrl));
+    msgUrl->SetMsgWindow(aMsgWindow);
     nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
 
     // now is where our behavior differs....if the consumer is the webshell then we want to 
@@ -317,7 +320,7 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
     if (!aSrcMailboxURI || !aMailboxCopyHandler) return rv;
     streamSupport = do_QueryInterface(aMailboxCopyHandler, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = DisplayMessage(aSrcMailboxURI, streamSupport, aUrlListener, aURL);
+        rv = DisplayMessage(aSrcMailboxURI, streamSupport, nsnull, aUrlListener, aURL);
 	return rv;
 }
 

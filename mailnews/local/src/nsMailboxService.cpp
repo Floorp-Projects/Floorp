@@ -94,12 +94,13 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
     nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
     if (!moveMessage)
         mailboxAction = nsIMailboxUrl::ActionCopyMessage;
-  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, aUrlListener, mailboxAction, 
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, mailboxAction, 
                       aURL);
 }
 
 nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
                                         nsISupports * aDisplayConsumer, 
+                                        nsIMsgWindow * aMsgWindow,
 										                    nsIUrlListener * aUrlListener,
                                         nsMailboxAction mailboxAction,
                                         nsIURI ** aURL)
@@ -112,6 +113,8 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 	if (NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
+    msgUrl->SetMsgWindow(aMsgWindow);
 
 		// instead of running the mailbox url like we used to, let's try to run the url in the webshell...
 		nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(aDisplayConsumer, &rv);
@@ -130,11 +133,12 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 
 
 nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
-                                          nsISupports * aDisplayConsumer, 
+                                          nsISupports * aDisplayConsumer,
+                                          nsIMsgWindow * aMsgWindow,
 										                      nsIUrlListener * aUrlListener,
                                           nsIURI ** aURL)
 {
-  return FetchMessage(aMessageURI, aDisplayConsumer, aUrlListener, nsIMailboxUrl::ActionDisplayMessage, aURL);
+  return FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, nsIMailboxUrl::ActionDisplayMessage, aURL);
 }
 
 NS_IMETHODIMP 
