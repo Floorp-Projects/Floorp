@@ -105,6 +105,11 @@ nsImageLoader::Load(const nsAReadableString &aURI)
 
   NS_NewURI(getter_AddRefs(uri), aURI, baseURI);
 
+  // NS_NewURI can fail to return a uri instance
+  if (uri == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (mRequest) {
     nsCOMPtr<nsIURI> oldURI;
     mRequest->GetURI(getter_AddRefs(oldURI));
