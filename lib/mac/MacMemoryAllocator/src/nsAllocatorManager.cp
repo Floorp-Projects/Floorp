@@ -162,7 +162,7 @@ void nsHeapZoneHeader::DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk)
 
 const SInt32	nsAllocatorManager::kNumMasterPointerBlocks = 30;
 const SInt32	nsAllocatorManager::kApplicationStackSizeIncrease = (32 * 1024);
-const float 	nsAllocatorManager::kHeapZoneHeapPercentage = 0.6;
+const float 	nsAllocatorManager::kHeapZoneHeapPercentage = 0.5;
 const SInt32	nsAllocatorManager::kSmallHeapByteRange = 16;
 
 nsAllocatorManager* 	nsAllocatorManager::sAllocatorManager = nil;
