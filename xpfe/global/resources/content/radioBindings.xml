@@ -20,7 +20,7 @@
     </handlers>
   </binding>
   
-  <binding id="radiogroup">
+  <binding id="radiogroup" extends="xul:box">
 
     <interface>
       <property name="data" onset="this.setAttribute('data',val); return val;"
