@@ -47,6 +47,7 @@ extern int MK_SIGNON_NOTIFICATION;
 extern int MK_SIGNON_NOTIFICATION_1;
 extern int MK_SIGNON_NAG;
 extern int MK_SIGNON_REMEMBER;
+extern int MK_SIGNON_SELECTUSER;
 
 /* locks for signon cache */
 
@@ -453,7 +454,6 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
     si_SignonDataStruct* data;
     XP_List * data_ptr=0;
     XP_List * user_ptr=0;
-    XP_List * old_user_ptr=0;
 
     /* get to node for this URL */
     URL = si_GetURL(URLName);
@@ -478,8 +478,6 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	    char ** list2;
 	    si_SignonUserStruct** users;
 	    si_SignonUserStruct** users2;
-	    char * caption = 0;
-
 	    list = XP_ALLOC(user_count*sizeof(char*));
 	    users = XP_ALLOC(user_count*sizeof(si_SignonUserStruct*));
 	    list2 = list;
@@ -491,23 +489,22 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	     * most-recently-used so the first one in the list is the most
 	     * likely one to be chosen.
 	     */
-	    URL->firsttime_chosing_user = FALSE;
-	    old_user_ptr = user_ptr;
-
 	    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
 		data_ptr = user->signonData_list;
 		/* consider first item in data list to be the identifying item */
 		data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-		if (!caption) {
-		    caption = data->name;
-		}
 		*(list2++) = data->value;
 		*(users2++) = user;
 	    }
 
-	    /* have user select an item from the list */
-	    if (FE_SelectDialog(context, caption, list, &user_count)) {
-		/* user selected an item */
+	    /* have user select a username from the list */
+	    if (FE_SelectDialog(
+		    context, XP_GetString(MK_SIGNON_SELECTUSER),
+		    list, &user_count)) {
+		/* user pressed OK */
+		if (user_count == -1) {
+                    user_count = 0; /* user didn't select, so use first one */
+		}
 		user = users[user_count]; /* this is the selected item */
 		URL->chosen_user = user;
 		/* item selected is now most-recently used, put at head of list */
@@ -518,6 +515,20 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	    }
 	    XP_FREE(list);
 	    XP_FREE(users);
+
+            /* if we don't remove the URL from the cache at this point, the
+	     * cached copy will be brought in containing the last-used username
+	     * rather than the username that was just selected
+	     */
+	    NET_RemoveURLFromCache
+		(NET_CreateURLStruct((char *)URLName, NET_DONT_RELOAD));
+
+	    /* the following assignment must come after (rather than before)
+	     * calling FE_SelectDialog because during that dialog a call to
+	     * NET_GetURL could be made which will call SI_LogNewURL
+	     * which sets firsttime_chosing_user to TRUE
+	     */
+	    URL->firsttime_chosing_user = FALSE;
 
 	} else {
 	    user = URL->chosen_user;
@@ -1422,6 +1433,22 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 }
 
 /*
+ * if we leave a form without submitting it, the URL's state variable
+ * will not get reset.  So we test for that case now and reset the
+ * state variables if necessary
+ */
+PUBLIC void
+SI_LogNewURL() {
+    if (lastURL) {
+	si_lock_signon_list();
+	lastURL -> chosen_user = NULL;
+	lastURL -> firsttime_chosing_user = TRUE;
+	lastURL = NULL;
+	si_unlock_signon_list();
+    }
+}
+
+/*
  * Check for remembered data from a previous signon submission and
  * restore it if so
  */
@@ -1442,18 +1469,6 @@ SI_RestoreOldSignonData
     /* get URL */
     si_lock_signon_list();
     URL = si_GetURL(URLName);
-
-    /*
-     * if we leave a form without submitting it, the URL's state variable
-     * will not get reset.  So we test for that case now and reset the
-     * state variables if necessary
-     */
-    if (lastURL != URL) {
-	if (lastURL) {
-	    lastURL -> chosen_user = NULL;
-	    lastURL -> firsttime_chosing_user = TRUE;
-	}
-    }
     lastURL = URL;
 
     /* see if this is first item in form and is a password */
@@ -2004,8 +2019,8 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     si_Reject *reject;
     SignonViewerDialog *dlg;
     int i;
-    char * view_sites = NULL;
-    char * view_cookies = NULL;
+    char * view_signons = NULL;
+    char * view_rejects = NULL;
     char * heading = NULL;
 
     static XPDialogInfo dialogInfo = {
@@ -2021,14 +2036,14 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 	return;
     }
     StrAllocCopy(buffer2, "");
-    StrAllocCopy (view_cookies, XP_GetString(MK_SIGNON_VIEW_SIGNONS));
-    StrAllocCopy (view_sites, XP_GetString(MK_SIGNON_VIEW_REJECTS));
+    StrAllocCopy (view_signons, XP_GetString(MK_SIGNON_VIEW_SIGNONS));
+    StrAllocCopy (view_rejects, XP_GetString(MK_SIGNON_VIEW_REJECTS));
 
     /* generate initial section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "<HTML>\n"
 "<HEAD>\n"
-"  <TITLE>Cookies</TITLE>\n"
+"  <TITLE>Signons</TITLE>\n"
 "  <SCRIPT>\n"
 "    index_frame = 0;\n"
 "    title_frame = 1;\n"
@@ -2172,7 +2187,7 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "                  \"<P>\" +\n"
 "                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
 "      );\n",
-	view_cookies, view_sites, heading);
+	view_signons, view_rejects, heading);
     FLUSH_BUFFER
     PR_FREEIF(heading);
 
@@ -2255,7 +2270,7 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "                  \"<P>\" +\n"
 "                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
 "      );\n",
-	view_cookies, view_sites, heading);
+	view_signons, view_rejects, heading);
     FLUSH_BUFFER
     PR_FREEIF(heading);
 
@@ -2399,8 +2414,8 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     si_unlock_signon_list();
 
     /* free some strings that are no longer needed */
-    PR_FREEIF(view_cookies);
-    PR_FREEIF(view_sites);
+    PR_FREEIF(view_signons);
+    PR_FREEIF(view_rejects);
     PR_FREEIF(buffer);
 
     /* put html just generated into strings->arg[2] and invoke HTML dialog */
