@@ -236,12 +236,12 @@ nsresult
 nsMsgDraft::OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace,
                          nsIMsgIdentity * identity, PRBool addInlineHeaders)
 {
-PRUnichar     *HackUpAURIToPlayWith(void);      // RICHIE - forward declare for now
+PRUnichar     *HackUpAURIToPlayWith(nsIMsgIdentity*);      // RICHIE - forward declare for now
 
   if (!msgURI)
   {
     printf("RICHIE: DO THIS UNTIL THE FE CAN REALLY SUPPORT US!\n");
-    msgURI = HackUpAURIToPlayWith();
+    msgURI = HackUpAURIToPlayWith(identity);
   }
   
   mAddInlineHeaders = addInlineHeaders;
@@ -264,23 +264,13 @@ nsMsgDraft::OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToRepla
 // RICHIE - EVERYTHING AFTER THIS COMMENT IS A TEMP HACK!!!
 //////////////////////////////////////////////////////////////////////////////////////////
 PRUnichar *
-HackUpAURIToPlayWith(void)
+HackUpAURIToPlayWith(nsIMsgIdentity *identity)
 {
   //PRUnichar           *playURI = nsnull;
   char                *folderURI = nsnull;
   nsresult            rv = NS_OK;
 
-  // temporary hack to get the current identity
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) 
-    return nsnull;
-  
-  nsCOMPtr<nsIMsgIdentity> identity = nsnull;
-  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
+  if (!identity) return nsnull;
   // 
   // Find the users drafts folder...
   //
