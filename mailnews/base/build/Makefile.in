@@ -30,6 +30,7 @@ MODULE		= msgbase
 LIBRARY_NAME	= mailnews
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= msgbase
+RESFILE		= mail.res
 endif
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
@@ -89,4 +90,8 @@ EXTRA_DSO_LDOPTS = \
 LOCAL_INCLUDES = -I$(srcdir)/../src
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS	+= shell32.lib
+endif
 
