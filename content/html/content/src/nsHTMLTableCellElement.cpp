@@ -108,7 +108,7 @@ public:
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
 // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  NS_IMPL_IHTMLCONTENT_USING_GENERIC2(mInner)
 
 protected:
   nsresult GetRow(nsIDOMHTMLTableRowElement** aRow);
@@ -271,6 +271,37 @@ nsHTMLTableCellElement::SetCellIndex(PRInt32 aCellIndex)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLTableCellElement::GetContentStyleRules(nsISupportsArray* aRules)
+{
+  // get table, add its rules too
+  nsIContent* row = nsnull; // XXX can we safely presume structure or do we need to QI on the way up?
+  if (NS_SUCCEEDED(GetParent(row)) && row) {
+    nsIContent* section = nsnull;
+    if (NS_SUCCEEDED(row->GetParent(section)) && section) {
+      nsIContent* table = nsnull;
+      if (NS_SUCCEEDED(section->GetParent(table)) && table) {
+        nsIStyledContent* styledTable = nsnull;
+        if (NS_SUCCEEDED(table->QueryInterface(kIStyledContentIID, (void**)&styledTable))) {
+          styledTable->GetContentStyleRules(aRules);
+          NS_RELEASE(styledTable);
+        }
+        NS_RELEASE(table);
+      }
+      NS_RELEASE(section);
+    }
+    NS_RELEASE(row);
+  }
+  return mInner.GetContentStyleRules(aRules);
+}
+
+NS_IMETHODIMP
+nsHTMLTableCellElement::GetInlineStyleRules(nsISupportsArray* aRules)
+{
+  return mInner.GetInlineStyleRules(aRules);
+}
+
 
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Abbr, abbr)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Align, align)
