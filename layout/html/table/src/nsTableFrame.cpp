@@ -1523,6 +1523,7 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags)
 {
+  PRBool visibleBCBorders = PR_FALSE;
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
@@ -1540,17 +1541,20 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *border, mStyleContext, skipSides);
       }
+      else {
+        visibleBCBorders = PR_TRUE;
+      }
     }
   }
 
   // for collapsed borders paint the backgrounds of cells, but not their contents (that happens below)
   PRUint32 flags = aFlags;
-  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) && IsBorderCollapse()) {
+  if (visibleBCBorders) {
     flags &= ~BORDER_COLLAPSE_BACKGROUNDS; // set bit to 0
   }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, flags);
 
-  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) && IsBorderCollapse()) {
+  if (visibleBCBorders) {
     // for collapsed borders, paint the borders and then the backgrounds of cell
     // contents but not the backgrounds of the cells
     PaintBCBorders(aPresContext, aRenderingContext, aDirtyRect);
