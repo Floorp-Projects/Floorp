@@ -99,6 +99,7 @@ typedef struct _XfeToolBarPart
 	/* Indicator resources */
     int					indicator_position;		/* Indicator Position	*/
 	unsigned char		indicator_location;		/* Indicator Location	*/
+	Boolean				dynamic_indicator;		/* Dynamic indicator ?	*/
 
 	/* Geometry resources */
 	Boolean				child_use_pref_width;	/* Child use pref width	*/

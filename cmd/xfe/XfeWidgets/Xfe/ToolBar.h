@@ -128,7 +128,7 @@ extern Widget
 XfeToolBarGetLastItem			(Widget		w);
 /*----------------------------------------------------------------------*/
 extern Widget
-XfeToolBarGetIndicator			(Widget		w);
+XfeToolBarGetIndicatorItem		(Widget		w);
 /*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/

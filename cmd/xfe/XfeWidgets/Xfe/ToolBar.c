@@ -70,13 +70,6 @@ static XtGeometryResult GeometryManager	(Widget,XtWidgetGeometry *,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Composite XtOrderProc for XmNinsertPosition							*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static Cardinal	InsertPosition		(Widget);
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -156,11 +149,11 @@ static void		ButtonSelectedCB	(Widget,XtPointer,XtPointer);
 /* Indicator functions													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		IndicatorCreate			(Widget);
-static void		IndicatorCheckPosition	(Widget);
-static Widget	IndicatorGetTarget		(Widget);
-static Boolean	IndicatorIsShown		(Widget);
-static Boolean	IndicatorIsIndicator	(Widget);
+static void		IndicatorCreate				(Widget);
+static void		IndicatorCheckPosition		(Widget);
+static Widget	IndicatorGetTarget			(Widget);
+static int		IndicatorGetTargetPosition	(Widget);
+static Boolean	IndicatorIsShown			(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -382,6 +375,15 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) XmINDICATOR_LOCATION_BEGINNING
     },
+    { 
+		XmNdynamicIndicator,
+		XmCDynamicIndicator,
+		XmRBoolean,
+		sizeof(Boolean),
+		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . dynamic_indicator),
+		XmRImmediate, 
+		(XtPointer) True
+    },
 
 	/* Geometry resources */
 	{ 
@@ -401,17 +403,6 @@ static XtResource resources[] =
 		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . max_child_width),
 		XmRImmediate, 
 		(XtPointer) DEFAULT_MAX_CHILD_WIDTH
-    },
-
-
-	{ 
-		XmNinsertPosition,
-		XmCInsertPosition,
-		XmRFunction,
-		sizeof(XtOrderProc),
-		XtOffsetOf(XfeToolBarRec , composite . insert_position),
-		XmRImmediate, 
-		(XtPointer) InsertPosition
     },
 };   
 
@@ -791,13 +782,23 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 
 		layout_indicator = True;
 	}
-
-	/* Layout the indicator if needed */
-	if (layout_indicator && !(_XfemConfigFlags(nw) & XfeConfigLayout))
+    
+	/* Layout the indicator if needed */ 
+    if (layout_indicator)
 	{
-		_XfeToolBarLayoutIndicator(nw);
+		if (np->dynamic_indicator)
+		{
+			_XfemConfigFlags(nw) |= XfeConfigLayout;
+		}
+		else
+		{
+			if (!(_XfemConfigFlags(nw) & XfeConfigLayout))
+			{ 
+				_XfeToolBarLayoutIndicator(nw); 
+			}
+		}
 	}
-
+	
     return _XfeManagerChainSetValues(ow,rw,nw,xfeToolBarWidgetClass);
 }
 /*----------------------------------------------------------------------*/
@@ -976,34 +977,6 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Composite XtOrderProc for XmNinsertPosition							*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static Cardinal
-InsertPosition(Widget child)
-{
-	Widget				w = _XfeParent(child);
-	XfeToolBarPart *	tp = _XfeToolBarPart(w);
-
-	/* Always insert the indicator at the tail */
-	if (IndicatorIsIndicator(child))
-	{
-		return _XfemNumChildren(w);
-	}
-	
-	/* Insert children before the indicator if it is alive */
-	if (_XfeIsAlive(tp->indicator))
-	{
-		return _XfemNumChildren(w) - 1;
-	}
-
-	/* Otherwise return the default position - tail */
-	return _XfemNumChildren(w);
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -1018,7 +991,6 @@ InsertChild(Widget child)
 {
     Widget					w = XtParent(child);
     XfeToolBarPart *		tp = _XfeToolBarPart(w);
-
 
 	/* Configure children that are not private components */
 	if (!_XfeManagerPrivateComponent(child))
@@ -1111,7 +1083,7 @@ PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 static void
 LayoutComponents(Widget w)
 {
-	_XfeToolBarLayoutIndicator(w);
+/* 	_XfeToolBarLayoutIndicator(w); */
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1131,6 +1103,9 @@ LayoutChildren(Widget w)
 		
 		break;
     }
+
+	/* The indicator requires the children to be layed out first */
+	_XfeToolBarLayoutIndicator(w);
 }
 /*----------------------------------------------------------------------*/
 
@@ -1236,20 +1211,39 @@ LayoutIndicator(Widget w)
 	/* Horizontal */
     if (_XfeOrientedOrientation(w) == XmHORIZONTAL)
 	{
+		/* XfeCascade items */
 		if (XfeIsCascade(tp->indicator_target))
 		{
 			/* Beginning */
 			if (tp->indicator_location == XmINDICATOR_LOCATION_BEGINNING)
 			{
-				x = _XfeX(tp->indicator_target) - 
-					_XfeWidth(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					x = _XfeX(tp->indicator_target) -
+						_XfeOrientedSpacing(w) -
+						_XfeWidth(tp->indicator);
+				}
+				else
+				{
+					x = _XfeX(tp->indicator_target) -  
+						_XfeWidth(tp->indicator) / 2; 
+				}
 			}
 			/* End */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_END)
 			{
-				x = _XfeX(tp->indicator_target) + 
-					_XfeWidth(tp->indicator_target) - 
-					_XfeWidth(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					x = _XfeX(tp->indicator_target) + 
+						_XfeWidth(tp->indicator_target) + 
+						_XfeOrientedSpacing(w);
+				}
+				else
+				{
+					x = _XfeX(tp->indicator_target) +  
+						_XfeWidth(tp->indicator_target) -  
+						_XfeWidth(tp->indicator) / 2; 
+				}
 			}
 			/* Middle */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_MIDDLE)
@@ -1261,27 +1255,48 @@ LayoutIndicator(Widget w)
 				return;
 			}
 		}
+		/* Other items */
 		else
 		{
 			/* Beginning */
 			if (tp->indicator_location == XmINDICATOR_LOCATION_BEGINNING)
 			{
-				x = _XfeX(tp->indicator_target) - 
-					_XfeWidth(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					x = _XfeX(tp->indicator_target) -
+						_XfeOrientedSpacing(w) -
+						_XfeWidth(tp->indicator);
+				}
+				else
+				{
+					x = _XfeX(tp->indicator_target) -  
+						_XfeWidth(tp->indicator) / 2; 
+				}
 			}
 			/* End */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_END)
 			{
-				x = _XfeX(tp->indicator_target) + 
-					_XfeWidth(tp->indicator_target) - 
-					_XfeWidth(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					x = _XfeX(tp->indicator_target) + 
+						_XfeWidth(tp->indicator_target) + 
+						_XfeOrientedSpacing(w);
+				}
+				else
+				{
+					x = _XfeX(tp->indicator_target) +  
+						_XfeWidth(tp->indicator_target) -  
+						_XfeWidth(tp->indicator) / 2; 
+				}
 			}
 			/* Middle */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_MIDDLE)
 			{
-				x = _XfeX(tp->indicator_target) + 
-					_XfeWidth(tp->indicator_target) / 2 - 
-					_XfeWidth(tp->indicator) / 2;
+				/*
+				 * This should not happen - items other than cascade 
+				 * cannot have indicators in the middle.
+				 */
+				assert( 0 );
 			}
 		}
 
@@ -1296,15 +1311,32 @@ LayoutIndicator(Widget w)
 			/* Beginning */
 			if (tp->indicator_location == XmINDICATOR_LOCATION_BEGINNING)
 			{
-				y = _XfeY(tp->indicator_target) - 
-					_XfeHeight(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					y = _XfeY(tp->indicator_target) - 
+						_XfeHeight(tp->indicator) / 2;
+				}
+				else
+				{
+					y = _XfeY(tp->indicator_target) -  
+						_XfeHeight(tp->indicator) / 2; 
+				}
 			}
 			/* End */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_END)
 			{
-				y = _XfeY(tp->indicator_target) + 
-					_XfeHeight(tp->indicator_target) - 
-					_XfeHeight(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					y = _XfeY(tp->indicator_target) + 
+						_XfeHeight(tp->indicator_target) - 
+						_XfeHeight(tp->indicator) / 2;
+				}
+				else
+				{
+					y = _XfeY(tp->indicator_target) +  
+						_XfeHeight(tp->indicator_target) -  
+						_XfeHeight(tp->indicator) / 2; 
+				}
 			}
 			/* Middle */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_MIDDLE)
@@ -1321,22 +1353,41 @@ LayoutIndicator(Widget w)
 			/* Beginning */
 			if (tp->indicator_location == XmINDICATOR_LOCATION_BEGINNING)
 			{
-				y = _XfeY(tp->indicator_target) - 
-					_XfeHeight(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					y = _XfeY(tp->indicator_target) - 
+						_XfeHeight(tp->indicator) / 2;
+				}
+				else
+				{
+					y = _XfeY(tp->indicator_target) -  
+						_XfeHeight(tp->indicator) / 2; 
+				}
 			}
 			/* End */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_END)
 			{
-				y = _XfeY(tp->indicator_target) + 
-					_XfeHeight(tp->indicator_target) - 
-					_XfeHeight(tp->indicator) / 2;
+				if (tp->dynamic_indicator)
+				{
+					y = _XfeY(tp->indicator_target) + 
+						_XfeHeight(tp->indicator_target) - 
+						_XfeHeight(tp->indicator) / 2;
+				}
+				else
+				{
+					y = _XfeY(tp->indicator_target) +  
+						_XfeHeight(tp->indicator_target) -  
+						_XfeHeight(tp->indicator) / 2; 
+				}
 			}
 			/* Middle */
 			else if (tp->indicator_location == XmINDICATOR_LOCATION_MIDDLE)
 			{
-				y = _XfeY(tp->indicator_target) + 
-					_XfeHeight(tp->indicator_target) / 2 - 
-					_XfeHeight(tp->indicator) / 2;
+				/*
+				 * This should not happen - items other than cascade 
+				 * cannot have indicators in the middle.
+				 */
+				assert( 0 );
 			}
 		}
 
@@ -1437,9 +1488,9 @@ PreferredVertical(Widget w,Dimension * width,Dimension * height)
 	*width += tp->max_child_width;
 
 	/* Indicator */
-	if (IndicatorIsShown(w))
+	if (IndicatorIsShown(w) && tp->dynamic_indicator)
 	{
-/* 		*height += _XfeHeight(tp->indicator); */
+ 		*height += (_XfeHeight(tp->indicator) + _XfeOrientedSpacing(w));
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -1491,9 +1542,9 @@ PreferredHorizontal(Widget w,Dimension * width,Dimension * height)
 	*height += tp->max_child_height;
 
 	/* Indicator */
-	if (IndicatorIsShown(w))
+	if (IndicatorIsShown(w) && tp->dynamic_indicator)
 	{
-/* 		*width += _XfeWidth(tp->indicator); */
+		*width += (_XfeWidth(tp->indicator) + _XfeOrientedSpacing(w));
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -1506,14 +1557,23 @@ LayoutVertical(Widget w)
 	Position			y;
 	Dimension			width;
 	Dimension			height;
-	Boolean				show_indicator = IndicatorIsShown(w);
-	Cardinal			count = 0;
+	int					indicator_target_pos = XmINDICATOR_DONT_SHOW;
+
+	if (IndicatorIsShown(w) && tp->dynamic_indicator)
+	{
+		indicator_target_pos = IndicatorGetTargetPosition(w);
+	}
 	
 	y = _XfemOffsetTop(w) + tp->raise_border_thickness;
 
 	for (i = 0; i < _XfemNumChildren(w); i++)
 	{
 		Widget child = _XfemChildren(w)[i];
+
+		if (indicator_target_pos == (int) i)
+		{
+			y += (_XfeHeight(tp->indicator) + _XfeOrientedSpacing(w));
+		}
 
 		if (IsLayableChild(child))
 		{
@@ -1559,6 +1619,9 @@ LayoutVertical(Widget w)
 				assert( 0 );
 			}
 		} /* IsLayableChild */
+		else
+		{
+		}
 	} /* for */
 }
 /*----------------------------------------------------------------------*/
@@ -1571,14 +1634,23 @@ LayoutHorizontal(Widget w)
 	Position			y;
 	Dimension			width;
 	Dimension			height;
-	Boolean				show_indicator = IndicatorIsShown(w);
-	Cardinal			layable_index = 0;
+	int					indicator_target_pos = XmINDICATOR_DONT_SHOW;
 
+	if (IndicatorIsShown(w) && tp->dynamic_indicator)
+	{
+		indicator_target_pos = IndicatorGetTargetPosition(w);
+	}
+	
 	x = _XfemOffsetLeft(w) + tp->raise_border_thickness;
 
 	for (i = 0; i < _XfemNumChildren(w); i++)
 	{
 		Widget child = _XfemChildren(w)[i];
+
+		if (indicator_target_pos == (int) i)
+		{
+			x += (_XfeWidth(tp->indicator) + _XfeOrientedSpacing(w));
+		}
 
 		if (IsLayableChild(child))
 		{
@@ -1587,7 +1659,7 @@ LayoutHorizontal(Widget w)
 				/* The button's width */
 				width = 
 					tp->child_force_width ? 
-					tp->max_child_width : 
+						tp->max_child_width : 
 					_XfeWidth(child);
 				
 				/* The button's height */
@@ -1595,11 +1667,11 @@ LayoutHorizontal(Widget w)
 					tp->child_force_height ? 
 					(_XfemRectHeight(w) - 2 * tp->raise_border_thickness) : 
 					_XfeHeight(child);
-
+					
 				y = (_XfeHeight(w) - height) / 2;
 				
 				_XfeConfigureWidget(child,x,y,width,height);
-
+				
 				x += (_XfeWidth(child) + _XfeOrientedSpacing(w));
 			}
 			else if (IsSeparatorChild(child))
@@ -1610,9 +1682,9 @@ LayoutHorizontal(Widget w)
 				{
 					width = _XfeWidth(child);
 					height = (_XfeHeight(w) * tp->separator_thickness) / 100;
-
+					
 					y = (_XfeHeight(w) - height) / 2;
-
+					
 					_XfeConfigureWidget(child,x,y,width,height);
 					
 					x += (width + _XfeOrientedSpacing(w));
@@ -1622,8 +1694,6 @@ LayoutHorizontal(Widget w)
 			{
 				assert( 0 );
 			}
-
-			layable_index++;
 		} /* IsLayableChild */
 	} /* for */
 }
@@ -1937,27 +2007,27 @@ IndicatorCreate(Widget w)
 {
 	XfeToolBarPart *	tp = _XfeToolBarPart(w);
 
-#if 1
-	tp->indicator = XtVaCreateManagedWidget(
-		INDICATOR_NAME,
-		xmSeparatorWidgetClass,
-		w,
-		XmNprivateComponent,	True,
-
-/* 		XmNbackground,			_XfeBackgroundPixel(w), */
-/* 		XmNbackgroundPixmap,	_XfeBackgroundPixmap(w), */
-		XmNwidth,				8,
-		XmNshadowThickness,		4,
-		NULL);
-#else
-	tp->indicator = XtVaCreateManagedWidget(
-		INDICATOR_NAME,
-		xfeButtonWidgetClass,
-		w,
-		XmNprivateComponent,	True,
-		XmNraised,				True,
-		NULL);
-#endif
+	if (tp->dynamic_indicator)
+	{
+		tp->indicator = XtVaCreateManagedWidget(
+			INDICATOR_NAME,
+			xfeButtonWidgetClass,
+			w,
+			XmNprivateComponent,	True,
+ 			XmNraised,				True,
+			NULL);
+	}
+	else
+	{
+		tp->indicator = XtVaCreateManagedWidget(
+			INDICATOR_NAME,
+			xmSeparatorWidgetClass,
+			w,
+			XmNprivateComponent,	True,
+			XmNwidth,				8,
+			XmNshadowThickness,		4,
+			NULL);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -2032,12 +2102,6 @@ IndicatorIsShown(Widget w)
 	return shown;
 }
 /*----------------------------------------------------------------------*/
-static Boolean
-IndicatorIsIndicator(Widget w)
-{
-	return (XfeIsButton(w) && _XfeManagerPrivateComponent(w));
-}
-/*----------------------------------------------------------------------*/
 static Widget
 IndicatorGetTarget(Widget w)
 {
@@ -2055,6 +2119,33 @@ IndicatorGetTarget(Widget w)
 	}
 
 	return target;
+}
+/*----------------------------------------------------------------------*/
+static int
+IndicatorGetTargetPosition(Widget w)
+{
+    XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Widget				target = IndicatorGetTarget(w);
+
+	if (_XfeIsAlive(target))
+	{
+		if (XfeIsCascade(target) && 
+			(tp->indicator_location == XmINDICATOR_LOCATION_MIDDLE))
+		{
+			return XmINDICATOR_DONT_SHOW;
+		}
+
+		if (tp->indicator_location == XmINDICATOR_LOCATION_BEGINNING)
+		{
+			return tp->indicator_position;
+		}
+		else if (tp->indicator_location == XmINDICATOR_LOCATION_END)
+		{
+			return tp->indicator_position + 1;
+		}
+	}
+
+	return XmINDICATOR_DONT_SHOW;
 }
 /*----------------------------------------------------------------------*/
 
@@ -2163,7 +2254,6 @@ XfeToolBarSetSelectedButton(Widget w,Widget button)
 /* extern */ unsigned char
 XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 {
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
 	unsigned char		result = XmINDICATOR_LOCATION_NONE;
 	int					start_pos;
 	int					end_pos;
@@ -2179,7 +2269,7 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 	{
 		if (XfeIsCascade(item))
 		{
-			start_pos = _XfeWidth(item) / 3;
+			start_pos = _XfeWidth(item) / 4;
 			end_pos = _XfeWidth(item) - start_pos;
 		}
 		else
@@ -2195,7 +2285,7 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 	{
 		if (XfeIsCascade(item))
 		{
-			start_pos = _XfeHeight(item) / 3;
+			start_pos = _XfeHeight(item) / 4;
 			end_pos = _XfeHeight(item) - start_pos;
 		}
 		else
@@ -2229,8 +2319,7 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 /* extern */ Widget
 XfeToolBarGetLastItem(Widget w)
 {
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
-	Widget *			wp;
+	Widget * wp;
 	
 	assert( XfeIsToolBar(w) );
 	assert( _XfeIsAlive(w) );
@@ -2240,7 +2329,7 @@ XfeToolBarGetLastItem(Widget w)
 		*wp != _XfeChildrenIndex(w,0);
 		wp--)
 	{
-		if (IsLayableChild(*wp))
+		if (IsLayableChild(*wp) && !_XfeManagerPrivateComponent(*wp))
 		{
 			return *wp;
 		}
@@ -2250,7 +2339,7 @@ XfeToolBarGetLastItem(Widget w)
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Widget
-XfeToolBarGetIndicator(Widget w)
+XfeToolBarGetIndicatorItem(Widget w)
 {
     XfeToolBarPart *	tp = _XfeToolBarPart(w);
 	
