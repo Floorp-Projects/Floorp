@@ -223,7 +223,7 @@ foreach $checkin (@list) {
      print "<TR>\n";
      print "<TD><INPUT TYPE=CHECKBOX NAME=\"$checkin\"></TD>\n" if $tweak;
      print "<TD><a href=editcheckin.cgi?id=$checkin" . BatchIdPart(). ">\n";
-     print time2str("<font size=-1>%m/%d/%Y %H:%M</font>" , $$info{date}) .
+     print time2str("<font size=-1>%Y-%m-%d %H:%M</font>" , $$info{date}) .
           "</a></TD>\n";
      print "<TD>" . (($$info{treeopen})? "open": "CLOSED") . "\n";
      print "<br>$$info{notes}\n" if $$info{notes};

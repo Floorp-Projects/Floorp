@@ -320,7 +320,7 @@ sub parse_rcs_tree {
 
         # Pretty print the date string
         my @ltime = localtime($::timestamp{$revision});
-        my $formated_date = strftime("%d %b %Y %H:%M", @ltime);
+        my $formated_date = strftime("%Y-%m-%d %H:%M", @ltime);
         $::revision_ctime{$revision} = $formated_date;
 
         # Save age

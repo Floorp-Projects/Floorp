@@ -346,22 +346,7 @@ foreach $revision (@revisions)
         my @t = gmtime($current_time);
         my ($csec, $cmin, $chour, $cmday, $cmon, $cyear) = @t;
         $cyear += 1900;
-
         $_ = $rev_time;
-        my ($rday, $rmon, $ryear, $rhour, $rmin) =
-            m/([0-9]+) ([A-Z][a-z]+) ([0-9][0-9]+) +([0-9]+):([0-9]+)/;
-        $rmon =~ s/^(...).*$/$1/;
-
-        if (!$rday) {
-            # parse error -- be annoying so somebody complains.
-            $rev_time = "<BLINK>\"$rev_time\"</BLINK>";
-        } elsif ($cyear ne $ryear) {
-            $rev_time = sprintf("%s %2d  %04d", $rmon, $rday, $ryear);
-        } else {
-            $rev_time = sprintf("%s %2d %02d:%02d",
-                                $rmon, $rday, $rhour, $rmin);
-        }
-
         $rev_time = "<FONT SIZE=\"-1\">$rev_time</FONT>";
     }
 

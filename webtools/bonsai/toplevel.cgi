@@ -87,7 +87,7 @@ if (Param('readonly')) {
 Be aware that this is <em>not</em> the <a href='toplevel.cgi?$treepart$branchpart'>current 
 hook!</a></font></h2>\n";
 } else {
-    print "<div><tt>" . time2str("%m/%d/%Y %T %Z", time())."</tt>:";
+    print "<div><tt>" . time2str("%Y-%m-%d %T %Z", time())."</tt>:";
 }
 print " The tree is currently $openword<br>\n";
 unless ($::TreeOpen) {
@@ -96,7 +96,7 @@ unless ($::TreeOpen) {
 }
 
 print "</div>The last known good tree had a timestamp of <tt>";
-print time2str("%m/%d/%Y %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
+print time2str("%Y-%m-%d %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
 print "<hr><pre variable>$::MOTD</pre><hr>";
 print "<br clear=all>";
 

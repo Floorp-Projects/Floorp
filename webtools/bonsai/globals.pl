@@ -315,7 +315,7 @@ sub Log {
     local (*LOGFID);
 
     LockOpen(\*LOGFID, ">>data/log", "Can't write to data/log");
-    print LOGFID time2str("%D %H:%M", time()) . ": $str\n";
+    print LOGFID time2str("%Y-%m-%d %H:%M", time()) . ": $str\n";
     close LOGFID;
     chmod 0666, "data/log";
     Unlock();
@@ -685,7 +685,7 @@ sub MyFmtClock {
      my ($time) = @_;
 
      $time = 1 * 365 * 24 * 60 * 60 + 1 if ($time <= 0);
-     return time2str("%m/%d/%Y %T", $time);
+     return time2str("%Y-%m-%d %T", $time);
 }
 
 sub SqlFmtClock {
