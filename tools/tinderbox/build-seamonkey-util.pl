@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.156 $ ';
+$::UtilsVersion = '$Revision: 1.157 $ ';
 
 package TinderUtils;
 
@@ -814,6 +814,54 @@ sub create_profile {
 }
 
 
+sub find_pref_file {
+    my $build_dir = shift;
+
+    # profile $Settings::MozProfileName must exist before calling this sub
+
+    # default to *nix
+    my $pref_file = "prefs.js";
+    my $profile_dir = "$build_dir/.mozilla";
+
+    # win32: works on win98 and win2k (file bugs on jrgm@netscape.com if it 
+    # doesn't work on Me, XP, NT...)
+    if ($Settings::OS =~ /^WIN/) {
+        my $is9x = eval 'use Win32; return Win32::IsWin95();';
+        if ($is9x) {
+            $profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
+            $profile_dir .= "\\Application Data";
+        } else {
+            $profile_dir = $ENV{APPDATA};
+        }
+        $profile_dir .= "\\Mozilla\\Profiles\\$Settings::MozProfileName";
+        $profile_dir =~ s|\\|/|g;
+    }
+
+    unless (-e $profile_dir) {
+	print_log "ERROR: profile $profile_dir does not exist\n";
+	#XXX should make 'run_all_tests' throw a 'testfailed' exception
+	# and just skip all the continual checking for $test_result
+	return; # empty list
+    }
+
+    my $found = undef;
+    my $sub = sub {$pref_file = $File::Find::name, $found++ if $pref_file eq $_};
+    File::Find::find($sub, $profile_dir);
+    unless ($found) {
+	print_log "ERROR: couldn't find prefs.js in $profile_dir\n";
+	return; # empty list
+    }
+
+    # Find full profile_dir while we're at it.
+    $profile_dir = File::Basename::dirname($pref_file);
+
+    print_log "profile dir = $profile_dir\n";
+    print_log "prefs.js    = $pref_file\n";
+
+    return ($pref_file, $profile_dir);
+}
+
+
 #
 # Run all tests.  Had to pass in both binary and embed_binary.
 #
@@ -881,87 +929,68 @@ sub run_all_tests {
 
     }
 
-
     #
     # Find the prefs file, remember we have that random string now
     # e.g. <build-dir>/.mozilla/default/uldx6pyb.slt/prefs.js
-    # so find command should find the prefs.js file.
+    # so File::Path::find will find the prefs.js file.
     #
-    # If prefs.js is not found, this little perl blurb fails
-    # with an uninitialized variable error, this needs fixing. -mcafee
-    #
-    my $pref_file = "prefs.js";
-    my $moz_profile_dir = "$build_dir/.mozilla";
-    if ($Settings::OS =~ /^WIN/) {
-        my $is9x = eval 'use Win32; return Win32::IsWin95();';
-        if ($is9x) {
-            # works on win98 and win2k. (Different on Me, XP, NT??)
-            $moz_profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
-            $moz_profile_dir .= "\\Application Data";
-        } else {
-            $moz_profile_dir = $ENV{APPDATA};
-        }
-        $moz_profile_dir .= "\\Mozilla\\Profiles\\$Settings::MozProfileName";
-        $moz_profile_dir =~ s|\\|/|g;
-        print "moz_profile_dir: $moz_profile_dir\n";
-    }
-    my $sub = sub { $pref_file eq $_ and $pref_file = $File::Find::name; };
-    File::Find::find($sub, $moz_profile_dir);
-
-    # Find profile_dir while we're at it.
-    my $profile_dir = $pref_file;
-    $profile_dir =~ s!(.*)/.*!$1!;
-
+    my ($pref_file, $profile_dir) = find_pref_file($build_dir);
+    #XXX this is ugly and hacky 
+    $test_result = 'testfailed' unless $pref_file;;
 
 
     #
     # Set prefs to run tests properly.
     #
-    if($Settings::LayoutPerformanceTest  or
-       $Settings::XULWindowOpenTest      or
-       $Settings::StartupPerformanceTest or
-       $Settings::MailBloatTest          or
-       $Settings::BloatTest2             or
-       $Settings::BloatTest) {
-
-        # Chances are we will be timing these tests.  Bring gettime() into memory
-        # by calling it once, before any tests run.
-        Time::PossiblyHiRes::getTime();
-
-        # Some tests need browser.dom.window.dump.enabled set to true, so
-        # that JS dump() will work in optimized builds.
-        if (system("\\grep -s browser.dom.window.dump.enabled $pref_file > /dev/null")) {
-            print_log "Setting browser.dom.window.dump.enabled\n";
-            open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-            print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
-            close PREFS;
-        } else {
-            print_log "Already set browser.dom.window.dump.enabled\n";
+    if ($pref_file) { #XXX lame
+        if($Settings::LayoutPerformanceTest  or
+           $Settings::XULWindowOpenTest      or
+           $Settings::StartupPerformanceTest or
+           $Settings::MailBloatTest          or
+           $Settings::BloatTest2             or
+           $Settings::BloatTest) {
+            
+            # Chances are we will be timing these tests.  Bring gettime() into memory
+            # by calling it once, before any tests run.
+            Time::PossiblyHiRes::getTime();
+            
+            # Some tests need browser.dom.window.dump.enabled set to true, so
+            # that JS dump() will work in optimized builds.
+            if (system("\\grep -s browser.dom.window.dump.enabled $pref_file > /dev/null")) {
+                print_log "Setting browser.dom.window.dump.enabled\n";
+                open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+                print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
+                close PREFS;
+            } else {
+                print_log "Already set browser.dom.window.dump.enabled\n";
+            }
+            
+            # Set security prefs to allow us to close our own window,
+            # pageloader test (and possibly other tests) needs this on.
+            if (system("\\grep -s dom.allow_scripts_to_close_windows $pref_file > /dev/null")) {
+                print_log "Setting dom.allow_scripts_to_close_windows to 2.\n";
+                open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+                print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", 2);\n";
+                close PREFS;
+            } else {
+                print_log "Already set dom.allow_scripts_to_close_windows\n";
+            }
+            
         }
-
-        # Set security prefs to allow us to close our own window,
-        # pageloader test (and possibly other tests) needs this on.
-        if (system("\\grep -s dom.allow_scripts_to_close_windows $pref_file > /dev/null")) {
-            print_log "Setting dom.allow_scripts_to_close_windows to 2.\n";
-            open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-            print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", 2);\n";
-            close PREFS;
-        } else {
-            print_log "Already set dom.allow_scripts_to_close_windows\n";
-        }
-
     }
 
     #
     # Assume that we want to test modern skin for all tests.
     #
-    if (system("\\grep -s general.skins.selectedSkin $pref_file > /dev/null")) {
-        print_log "Setting general.skins.selectedSkin to modern/1.0\n";
-        open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-        print PREFS "user_pref(\"general.skins.selectedSkin\", \"modern/1.0\");\n";
-        close PREFS;
-    } else {
-        print_log "Modern skin already set.\n";
+    if ($pref_file) { #XXX lame
+        if (system("\\grep -s general.skins.selectedSkin $pref_file > /dev/null")) {
+            print_log "Setting general.skins.selectedSkin to modern/1.0\n";
+            open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+            print PREFS "user_pref(\"general.skins.selectedSkin\", \"modern/1.0\");\n";
+            close PREFS;
+        } else {
+            print_log "Modern skin already set.\n";
+        }
     }
 
     # Mozilla alive test
