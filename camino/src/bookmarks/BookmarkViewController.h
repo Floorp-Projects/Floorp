@@ -109,6 +109,8 @@
   BookmarkFolder*         mRootBookmarks;
   NSArray*                mSearchResultArray;
   int                     mOpenActionFlag;
+  
+  HistoryDataSource*      mHistoryDataSource;
 }
 
 + (NSAttributedString*)greyStringWithItemCount:(int)itemCount;

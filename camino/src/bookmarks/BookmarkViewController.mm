@@ -169,6 +169,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mBookmarksHostView release];
   [mHistoryHostView release];
   
+  [mHistoryDataSource release];
+
   [super dealloc];
 }
 
@@ -202,6 +204,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [self setupAppearanceOfTableView:mHistoryOutlineView];
 
   // set up history outliner
+  mHistoryDataSource = [[HistoryDataSource alloc] init];
+  [mHistoryOutlineView setDataSource:mHistoryDataSource];
   [mHistoryOutlineViewDelegate setBrowserWindowController:mBrowserWindowController];
   [mHistoryOutlineView setTarget:mHistoryOutlineViewDelegate];
   [mHistoryOutlineView setDoubleAction:@selector(openHistoryItem:)];
