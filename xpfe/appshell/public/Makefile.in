@@ -34,7 +34,7 @@ EXPORTS =                         \
 	nsIFileLocator.h          \
 	nsIDOMXPConnectFactory.h  \
 	nsIGlobalHistory.h	  \
-	nsINetSupportDialogsService.h \
+	nsINetSupportDialogService.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
