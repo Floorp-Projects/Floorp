@@ -105,12 +105,71 @@ public:
         PR_Lock(mLock);
     }
 
-
     ~nsAutoLock(void) {
         PR_Unlock(mLock);
     }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Same sort of shit here. Imagine if you will:
+//
+//    nsresult MyClass::MyMethod(...) {
+//       nsAutoMonitor mon(this);   // or some random object as a monitor
+//       ...
+//       // go ahead and do deeply nested returns...
+//                    return NS_ERROR_FAILURE;
+//       ...
+//       // or call Wait or Notify...
+//       mon.Wait();
+//       ...
+//       // cleanup is automatic
+//    }
+
+#include "prcmon.h"
+
+class nsAutoMonitor {
+public:
+    nsAutoMonitor(void* lockObject)
+        : mLockObject(lockObject)
+    {
+        NS_ASSERTION(lockObject, "null lock object");
+        PR_CEnterMonitor(mLockObject);
+    }
+
+    ~nsAutoMonitor() {
+        PR_CExitMonitor(mLockObject);
+    }
+
+    PRStatus Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
+        return PR_CWait(mLockObject, interval);
+    }
+
+    PRStatus Notify() {
+        return PR_CNotify(mLockObject);
+    }
+
+    PRStatus NotifyAll() {
+        return PR_CNotifyAll(mLockObject);
+    }
+
+private:
+    void* mLockObject;
+
+    // Not meant to be implemented. This makes it a compiler error to
+    // construct or assign an nsAutoLock object incorrectly.
+    nsAutoMonitor(void) {}
+    nsAutoMonitor(nsAutoMonitor& aMon) {}
+    nsAutoMonitor& operator =(nsAutoMonitor& aMon) {
+        return *this;
+    }
+
+    // Not meant to be implemented. This makes it a compiler error to
+    // attempt to create an nsAutoLock object on the heap.
+    static void* operator new(size_t size) {
+        return nsnull;
+    }
+    static void operator delete(void* memory) {}
+};
 
 #endif // nsAutoLock_h__
 
