@@ -315,6 +315,23 @@ JS::ExprNode *JS::Parser::parseSuper(size_t pos, SuperState superState)
 }
 
 
+// Parse and return a FunctionExpression.  The 'function' token has already been read; pos is its position.
+//
+// After parseFunctionExpression finishes, the next token might have been peeked with preferRegExp set to false.
+JS::FunctionExprNode *JS::Parser::parseFunctionExpression(size_t pos)
+{
+    FunctionExprNode *f = new(arena) FunctionExprNode(pos);
+    const Token &t = lexer.peek(true);
+    if (t.hasIdentifierKind()) {
+        f->function.name = &t.getIdentifier();
+        lexer.skip();
+    }
+    parseFunctionSignature(f->function);
+    f->function.body = parseBody(0);
+    return f;
+}
+
+
 // Parse and return a PrimaryExpression.  If superState is ssExpr, also allow a SuperExpression;
 // if superState is ssStmt, also allow a SuperExpression or a SuperStatement.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
@@ -399,17 +416,7 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression(SuperState superState)
         break;
 
       case Token::Function:
-        {
-            FunctionExprNode *f = new(arena) FunctionExprNode(t.getPos());
-            const Token &t2 = lexer.peek(true);
-            if (t2.hasIdentifierKind()) {
-                f->function.name = &t.getIdentifier();
-                lexer.skip();
-            }
-            parseFunctionSignature(f->function);
-            f->function.body = parseBody(0);
-            e = f;
-        }
+        e = parseFunctionExpression(t.getPos());
         break;
 
       case Token::Super:
@@ -1238,7 +1245,8 @@ JS::StmtNode *JS::Parser::parseBlockContents(bool inSwitch)
 // optional and if it is omitted, *semicolonWanted is set to true.
 //
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
-// After parseBody finishes, the next token might have been peeked with preferRegExp set to true.
+// If semicolonWanted isn't nil, after parseBody finishes the next token might have been peeked
+// with preferRegExp set to true.
 JS::BlockStmtNode *JS::Parser::parseBody(bool *semicolonWanted)
 {
     const Token *tBrace = lexer.eat(true, Token::openBrace);

@@ -802,6 +802,9 @@ namespace JavaScript {
         PairListExprNode *parseObjectLiteral(const Token &initialToken);
         ExprNode *parseUnitSuffixes(ExprNode *e);
         ExprNode *parseSuper(size_t pos, SuperState superState);
+      public:
+        FunctionExprNode *parseFunctionExpression(size_t pos);
+      private:
         ExprNode *parsePrimaryExpression(SuperState superState);
         ExprNode *parseMember(ExprNode *target, const Token &tOperator, bool preferRegExp);
         InvokeExprNode *parseInvoke(ExprNode *target, size_t pos, Token::Kind closingTokenKind, ExprNode::Kind invokeKind);
