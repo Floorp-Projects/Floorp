@@ -21,8 +21,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 
-#DIRS=public src editor signonviewer cookieviewer walletpreview build
-DIRS=public src
+DIRS=public src editor signonviewer cookieviewer walletpreview build
+#DIRS=public src
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
