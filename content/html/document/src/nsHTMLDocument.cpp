@@ -541,23 +541,37 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   webShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
      muCV = do_QueryInterface(cv);            
+  } else {
+    // in this block of code, if we get an error result, we return it
+    // but if we get a null pointer, that's perfectly legal for parent and parentContentViewer
+    nsCOMPtr<nsIWebShell> parent;
+    rv = webShell->GetParent(*getter_AddRefs(parent));
+    if (NS_FAILED(rv)) { return rv; }
+    if (parent) {
+      nsCOMPtr<nsIContentViewer> parentContentViewer;
+      rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
+      if (NS_FAILED(rv)) { return rv; }
+      if (parentContentViewer) {
+        muCV = do_QueryInterface(parentContentViewer);
+      }
+    }
   }
 	if(kCharsetFromUserDefault > charsetSource) 
   {
 		PRUnichar* defaultCharsetFromWebShell = NULL;
     if (muCV) {
   		rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
-    }
-    if(NS_SUCCEEDED(rv)) {
+      if(NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_charset
    		nsAutoString d(defaultCharsetFromWebShell);
  			char* cCharset = d.ToNewCString();
  			printf("From default charset, charset = %s\n", cCharset);
  			Recycle(cCharset);
  #endif
-      charset = defaultCharsetFromWebShell;
-      Recycle(defaultCharsetFromWebShell);
-      charsetSource = kCharsetFromUserDefault;
+        charset = defaultCharsetFromWebShell;
+        Recycle(defaultCharsetFromWebShell);
+        charsetSource = kCharsetFromUserDefault;
+      }
     }
     // for html, we need to find out the Meta tag from the hint.
     if (muCV) {
