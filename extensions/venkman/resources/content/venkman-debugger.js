@@ -41,6 +41,7 @@ const jsdIProperty = Components.interfaces.jsdIProperty;
 
 var $ = new Array(); /* array to store results from evals in debug frames */
 console._scripts = new Object();
+console._sources = new Object();
 
 console._scriptHook = {
     onScriptCreated: function scripthook (script) {       
@@ -125,6 +126,14 @@ function removeScript (script)
     for (var s in console._scripts)
         if (removeScriptEntry(script, console._scripts[s]))
             return true;
+
+    for (var b in console._breakpoints)
+        for (s in console._breakpoints[b])
+            if (console._breakpoints[b][s].script == script)
+                if (console._breakpoints[b].length > 1)
+                    arrayRemoveAt (console._breakpoints[b], s);
+                else
+                    delete console._breakpoints[b];
     
     return false;    
 }
@@ -144,6 +153,9 @@ function addScript(script)
 function debugTrap (frame, type, rv)
 {
     var tn = "";
+    var showFrame = true;
+    var sourceContext = 2;
+    
     switch (type)
     {
         case jsdIExecutionHook.TYPE_BREAKPOINT:
@@ -162,6 +174,8 @@ function debugTrap (frame, type, rv)
             if (console._stepPast == frame.script.fileName + frame.line)
                 return jsdIExecutionHook.RETURN_CONTINUE;
             delete console._stepPast;
+            showFrame = false;
+            sourceContext = 0;
             console.jsds.interruptHook = null;
             break;
         default:
@@ -184,7 +198,13 @@ function debugTrap (frame, type, rv)
     while ((frame = frame.callingFrame))
         console.frames.push(frame);
 
-    display (formatStackFrame(console.frames[console.currentFrameIndex]));
+    frame = console.frames[0];
+    
+    if (showFrame)
+        display (formatFrame(frame));
+    
+    if (sourceContext > -1)
+        displaySource (frame.script.fileName, frame.line, sourceContext);
     
     console.jsds.enterNestedEventLoop(); 
 
@@ -219,6 +239,12 @@ function detachDebugger()
     console.jsds.off();
 }
 
+function findNextExecutableLine (script, line)
+{
+    var pc = script.lineToPc (line + 1);
+    
+}
+
 function formatProperty (p)
 {
     if (!p)
@@ -251,7 +277,7 @@ function formatScript (scr)
     return MSG_TYPE_FUNCTION + " " + scr.functionName + " in " + scr.fileName;
 }
 
-function formatStackFrame (f)
+function formatFrame (f)
 {
     if (!f)
         throw BadMojo (ERR_REQUIRED_PARAM, "f");
@@ -327,6 +353,24 @@ function formatValue (v)
     return s;
 }
 
+function loadSource (url, cb)
+{
+    var observer = {
+        onComplete: function oncomplete (data, url, status) {
+            console._sources[url] = data.split("\n");
+            cb(data, url, status);
+        }
+    };
+
+    if (url.search (/^(chrome:|file:)/) != -1)
+    {
+        console._sources[url] = loadURLNow(url).split("\n");
+        cb (console._sources[url], url, Components.results.NS_OK);
+    }
+    else
+        loadURLAsync (url, observer);
+}
+        
 function initDebugger()
 {   
     console._continueCodeStack = new Array();
@@ -365,7 +409,32 @@ function displayProperties (v)
     for (var i in p.value) display(formatProperty (p.value[i]));
 }
 
-function displayFrame (f, idx)
+function displaySource (url, line, contextLines)
+{
+    function onSourceLoaded (data, url, status)
+    {
+        if (status == Components.results.NS_OK)
+            displaySource (url, line, contextLines);
+        else
+            display (getMsg(MSN_ERR_SOURCE_LOAD_FAILED, url), MT_ERROR);
+    }
+    
+    if (!url)
+    {
+        display (MSG_ERR_NO_SOURCE, MT_ERROR);
+        return;
+    }
+    
+    var source = console._sources[url];
+    if (source)
+        for (var i = line - contextLines; i <= line + contextLines; ++i)
+            display (getMsg(MSN_SOURCE_LINE, [zeroPad (i, 3), source[i - 1]]),
+                     i == line ? MT_STEP : MT_SOURCE);
+    else
+        loadSource (url, onSourceLoaded);
+}
+    
+function displayFrame (f, idx, showSource)
 {
     if (!f)
         throw BadMojo (ERR_REQUIRED_PARAM, "f");
@@ -383,16 +452,50 @@ function displayFrame (f, idx)
     if (typeof idx == "number")
         idx = "#" + idx;
     
-    display(idx + ": " + formatStackFrame (f));
+    display(idx + ": " + formatFrame (f));
+    if (showSource)
+            displaySource (f.script.fileName, f.line, 2);
 }
 
+function getBreakpoint (fileName, line)
+{
+    for (var b in console._breakpoints)
+        if (console._breakpoints[b].fileName == fileName &&
+            console._breakpoints[b].line == line)
+            return console._breakpoints[b];
+    return null;
+}
+
+function clearBreakpoint (fileName, line)
+{
+    for (var b in console._breakpoints)
+        if (console._breakpoints[b].fileName == fileName &&
+            console._breakpoints[b].line == line)
+            return clearBreakpointByNumber (Number(b));
+
+    return 0;
+}
+
+function clearBreakpointByNumber (number)
+{
+    var bp = console._breakpoints[number];
+    if (!bp)
+        return 0;
+
+    var matches = bp.length;
+    for (var i = 0; i < bp.length; ++i)
+        bp[i].script.clearBreakpoint(bp[i].pc);
+    arrayRemoveAt (console._breakpoints, number);
+    return matches;
+}
+    
 function setBreakpoint (fileName, line)
 {
     var ary = console._scripts[fileName];
     
     if (!ary)
     {
-        display (getMsg(MSN_ERR_NOTLOADED, fileName), MT_ERROR);
+        display (getMsg(MSN_ERR_NOSCRIPT, fileName), MT_ERROR);
         return false;
     }
     
@@ -410,6 +513,9 @@ function setBreakpoint (fileName, line)
         }
     }
 
+    bpList.fileName = fileName;
+    bpList.line = line;
+    
     if (bpList.length > 0)
         console._breakpoints.push (bpList);
     
