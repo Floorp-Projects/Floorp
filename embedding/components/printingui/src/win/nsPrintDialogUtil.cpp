@@ -1005,8 +1005,9 @@ ShowNativePrintDialog(HWND              aHWnd,
     printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
 #endif
     // fill the print options with the info from the dialog
-    nsString printerName;
-    printerName.AssignWithConversion(device);
+    nsDependentCString printerNameNative(device);
+    nsAutoString printerName;
+    NS_CopyNativeToUnicode(printerNameNative, printerName);
 
     aPrintSettings->SetPrinterName(printerName.get());
 
