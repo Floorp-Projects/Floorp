@@ -27,6 +27,10 @@ ifeq ($(USE_PTHREADS), 1)
 	DIRS += pthreads
 endif
 
+ifeq ($(USE_CPLUS), 1)
+	DIRS += cplus
+endif
+
 #
 # Define platform-dependent OS_LIBS
 #
@@ -203,9 +207,22 @@ OBJS += \
 	threads/combined/$(OBJDIR)/pruthr.$(OBJ_SUFFIX)
 endif
 
-
 ifeq ($(USE_IPV6), 1)
 OBJS += io/$(OBJDIR)/pripv6.$(OBJ_SUFFIX)
+endif
+
+ifeq ($(USE_CPLUS), 1)
+OBJS += \
+	cplus/$(OBJDIR)/rcbase.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rccv.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcfileio.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcinrval.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcio.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rclock.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcnetdb.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcnetio.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rcthread.$(OBJ_SUFFIX) \
+	cplus/$(OBJDIR)/rctime.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
@@ -284,15 +301,11 @@ endif
 
 else
 
-	THREAD_DIR=threads/combined/$(OBJDIR)
+# Unix
+include md/unix/objs.mk
 
-ifeq ($(OS_ARCH), MAC)
-	MD_DIR = md/mac/$(OBJDIR)
-else
-	MD_DIR = md/unix/$(OBJDIR)
-	include md/unix/objs.mk
 endif
-endif
+
 LIBRARY_NAME = nspr
 LIBRARY_VERSION = $(MOD_VERSION)
 
