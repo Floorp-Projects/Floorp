@@ -48,6 +48,8 @@ interface imgILoader : nsISupports
   /**
    * Start the load and decode of an image.
    * @param aURI the URI to load
+   * @param aInitialDocumentURI the URI that 'initiated' the load -- used for 3rd party cookie blocking
+   * @param aReferrerURI the 'referring' URI
    * @param aLoadGroup Loadgroup to put the image load into
    * @param aObserver the observer
    * @param aCX some random data
@@ -57,9 +59,14 @@ interface imgILoader : nsISupports
    * @param aRequest A newly created, unused imgIRequest object or NULL for one to
                      be created for you.
    */
-  imgIRequest loadImage(in nsIURI aURI, in nsIURI parentURL, in nsILoadGroup aLoadGroup,
-                        in imgIDecoderObserver aObserver, in nsISupports aCX,
-                        in nsLoadFlags aLoadFlags, in nsISupports cacheKey,
+  imgIRequest loadImage(in nsIURI aURI,
+                        in nsIURI aInitialDocumentURL,
+                        in nsIURI aReferrerURI,
+                        in nsILoadGroup aLoadGroup,
+                        in imgIDecoderObserver aObserver,
+                        in nsISupports aCX,
+                        in nsLoadFlags aLoadFlags,
+                        in nsISupports cacheKey,
                         in imgIRequest aRequest);
 
   /**

@@ -1863,8 +1863,14 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 
     nsresult rv;
     nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+
+    // Get the documment URI for the referrer.
+    nsCOMPtr<nsIURI> documentURI;
+    doc->GetDocumentURL(getter_AddRefs(documentURI));
+
     mImageGuard = PR_TRUE;
-    rv = il->LoadImage(srcURI, nsnull, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
+    // XXX: initialDocumentURI is NULL!
+    rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
     mImageGuard = PR_FALSE;
 
     // In a case it was already cached.

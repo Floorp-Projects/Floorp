@@ -92,8 +92,6 @@ nsImageLoader::Load(nsIURI *aURI)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIURI> baseURI;
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
@@ -105,6 +103,10 @@ nsImageLoader::Load(nsIURI *aURI)
 
   // Get the document's loadgroup
   doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+  // Get the document URI (for the referrer).
+  nsCOMPtr<nsIURI> documentURI;
+  doc->GetDocumentURL(getter_AddRefs(documentURI));
 
   if (mRequest) {
     nsCOMPtr<nsIURI> oldURI;
@@ -119,7 +121,8 @@ nsImageLoader::Load(nsIURI *aURI)
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
-  return il->LoadImage(aURI, nsnull, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
+  // XXX: initialDocumentURI is NULL!
+  return il->LoadImage(aURI, nsnull, documentURI, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
                        nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(mRequest));
 }
 

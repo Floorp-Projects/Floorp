@@ -134,6 +134,16 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIURI> imgURI;
     NS_NewURI(getter_AddRefs(imgURI), myList->mListStyleImage, nsnull, baseURI);
 
+    // Get the document URI for the referrer...
+    nsCOMPtr<nsIURI> documentURI;
+    nsCOMPtr<nsIDocument> doc;
+    if (mContent) {
+      (void) mContent->GetDocument(*getter_AddRefs(doc));
+      if (doc) {
+        doc->GetDocumentURL(getter_AddRefs(documentURI));
+      }
+    }
+
     if (!mListener) {
       nsBulletListener *listener;
       NS_NEWXPCOM(listener, nsBulletListener);
@@ -144,7 +154,8 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
       NS_RELEASE(listener);
     }
 
-    il->LoadImage(imgURI, nsnull, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
+    // XXX: initialDocumentURI is NULL !
+    il->LoadImage(imgURI, nsnull, documentURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
   }
 
   return NS_OK;
@@ -1529,7 +1540,19 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         nsCOMPtr<nsILoadGroup> loadGroup;
         GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-        il->LoadImage(newURI, nsnull, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
+        // Get the document URI for the referrer...
+        nsCOMPtr<nsIURI> documentURI;
+        nsCOMPtr<nsIDocument> doc;
+        if (mContent) {
+          (void) mContent->GetDocument(*getter_AddRefs(doc));
+          if (doc) {
+            doc->GetDocumentURL(getter_AddRefs(documentURI));
+          }
+        }
+
+
+        // XXX: initialDocumentURI is NULL !
+        il->LoadImage(newURI, nsnull, documentURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
       }
     }
   }
