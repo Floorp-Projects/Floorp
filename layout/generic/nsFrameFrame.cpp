@@ -29,6 +29,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -62,9 +63,7 @@
 
 class nsHTMLFrame;
 
-static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
@@ -186,7 +185,7 @@ public:
   nsresult ReloadURL();
 
 protected:
-  nsresult CreateWebShell(nsIPresContext* aPresContext, const nsSize& aSize);
+  nsresult CreateDocShell(nsIPresContext* aPresContext, const nsSize& aSize);
 
   virtual ~nsHTMLFrameInnerFrame();
 
@@ -194,7 +193,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  nsCOMPtr<nsIWebShell> mWebShell;
+  nsCOMPtr<nsIBaseWindow> mSubShell;
   PRBool mCreatingViewer;
 };
 
@@ -446,10 +445,9 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
    //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
 
-   nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-   if(webShellWin)
-      webShellWin->Destroy();
-   mWebShell = nsnull; // This is the location it was released before...
+   if(mSubShell)
+      mSubShell->Destroy();
+   mSubShell = nsnull; // This is the location it was released before...
                         // Not sure if there is ordering depending on this.
 }
 
@@ -613,7 +611,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   // if there is not web shell paint based on our background color, 
   // otherwise let the web shell paint the sub document 
-  if (!mWebShell) {
+  if (!mSubShell) {
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(color->mBackgroundColor);
@@ -686,53 +684,57 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
+nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
                                       const nsSize& aSize)
 {
   nsresult rv;
-  nsIContent* content;
-  GetParentContent(content);
+  nsCOMPtr<nsIContent> parentContent;
+  GetParentContent(*getter_AddRefs(parentContent));
 
-  mWebShell = do_CreateInstance(kWebShellCID);
-  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+  mSubShell = do_CreateInstance(kWebShellCID);
+  NS_ENSURE_TRUE(mSubShell, NS_ERROR_FAILURE);
 
   // notify the pres shell that a docshell has been created
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell)
   {
-    nsCOMPtr<nsISupports> webShellAsSupports(do_QueryInterface(mWebShell));
-    NS_ENSURE_TRUE(webShellAsSupports, NS_ERROR_FAILURE);
-    presShell->SetSubShellFor(mContent, webShellAsSupports);
+    nsCOMPtr<nsISupports> subShellAsSupports(do_QueryInterface(mSubShell));
+    NS_ENSURE_TRUE(subShellAsSupports, NS_ERROR_FAILURE);
+    presShell->SetSubShellFor(mContent, subShellAsSupports);
   }
   
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   // pass along marginwidth, marginheight, scrolling so sub document can use it
-  mWebShell->SetMarginWidth(GetMarginWidth(aPresContext, content));
-  mWebShell->SetMarginHeight(GetMarginHeight(aPresContext, content));
+  docShell->SetMarginWidth(GetMarginWidth(aPresContext, parentContent));
+  docShell->SetMarginHeight(GetMarginHeight(aPresContext, parentContent));
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode);
   // Current and initial scrolling is set so that all succeeding docs
   // will use the scrolling value set here, regardless if scrolling is
   // set by viewing a particular document (e.g. XUL turns off scrolling)
-  nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mWebShell, &rv);
-  if (NS_SUCCEEDED(rv) && scrollableContainer) {
-    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, GetScrolling(content, mode));
-    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, GetScrolling(content, mode));
+  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mSubShell));
+  if (scrollableContainer) {
+    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
+      GetScrolling(parentContent, mode));
+    scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
+      GetScrolling(parentContent, mode));
   }
 
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mSubShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   nsString frameName;
-  if (GetName(content, frameName)) {
+  if (GetName(parentContent, frameName)) {
     docShellAsItem->SetName(frameName.GetUnicode());
   }
 
   // If our container is a web-shell, inform it that it has a new
   // child. If it's not a web-shell then some things will not operate
   // properly.
-  nsISupports* container;
-  aPresContext->GetContainer(&container);
-  if (nsnull != container) {
+  nsCOMPtr<nsISupports> container;
+  aPresContext->GetContainer(getter_AddRefs(container));
+  if (container) {
     nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
     if (parentAsNode) {
       nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsNode));
@@ -744,7 +746,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
       PRBool isContent;
 
       isContent = PR_FALSE;
-      if (NS_SUCCEEDED(content->GetAttribute(kNameSpaceID_None, typeAtom, value))) {
+      if (NS_SUCCEEDED(parentContent->GetAttribute(kNameSpaceID_None,
+         typeAtom, value))) {
 
         // we accept "content" and "content-xxx" values.
         // at time of writing, we expect "xxx" to be "primary", but
@@ -776,9 +779,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
             value.GetUnicode());
       }
       // connect the container...
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mSubShell));
       nsCOMPtr<nsIWebShellContainer> outerContainer(do_QueryInterface(container));
       if (outerContainer)
-        mWebShell->SetContainer(outerContainer);
+        webShell->SetContainer(outerContainer);
 
 
       // Make sure all shells have links back to the content element in the
@@ -797,9 +801,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
         parentShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
       }
 
-      mWebShell->SetChromeEventHandler(chromeEventHandler);
+      docShell->SetChromeEventHandler(chromeEventHandler);
     }
-    NS_RELEASE(container);
   }
 
   float t2p;
@@ -833,20 +836,14 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
     view->SetVisibility(nsViewVisibility_kHide);
   }
 
-  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-  NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
   nsCOMPtr<nsIWidget> widget;
   view->GetWidget(*getter_AddRefs(widget));
-  nsRect webBounds(0, 0, NSToCoordRound(aSize.width * t2p), 
-                   NSToCoordRound(aSize.height * t2p));
 
-  mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
-                  webBounds.x, webBounds.y,
-                  webBounds.width, webBounds.height);
-                  //GetScrolling(content, PR_FALSE));
-  NS_RELEASE(content);
+  mSubShell->InitWindow(nsnull, widget, 0, 0, NSToCoordRound(aSize.width * t2p),
+    NSToCoordRound(aSize.height * t2p));
+  mSubShell->Create();
 
-  webShellWin->SetVisibility(PR_TRUE);
+  mSubShell->SetVisibility(PR_TRUE);
 
   return NS_OK;
 }
@@ -868,8 +865,8 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 
   // use the max size set in aReflowState by the nsHTMLFrameOuterFrame as our size
   if (!mCreatingViewer) {
-    nsIContent* content;
-    GetParentContent(content);
+    nsCOMPtr<nsIContent> content;
+    GetParentContent(*getter_AddRefs(content));
 
     nsAutoString url;
     PRBool hasURL = GetURL(content, url);
@@ -877,9 +874,9 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
     // create the web shell
     // we do this even if the size is not positive (bug 11762)
     // we do this even if there is no src (bug 16218)
-    if (!mWebShell) {
+    if (!mSubShell) {
       nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-      rv = CreateWebShell(aPresContext, maxSize);
+      rv = CreateDocShell(aPresContext, maxSize);
 #ifdef INCLUDE_XUL
       // The URL can be destructively altered when a content shell is made.
       // Refetch it to ensure we have the actual URL to load.
@@ -887,7 +884,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 #endif // INCLUDE_XUL
     }
 
-    if (mWebShell) {
+    if (mSubShell) {
       mCreatingViewer=PR_TRUE;
       if (hasURL) {
         // load the document
@@ -906,11 +903,12 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
           rv = securityManager->CheckLoadURI(baseURI, newURI, PR_FALSE);
 
         if (NS_SUCCEEDED(rv)) {
-          rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
+          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSubShell));
+          NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+          webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
         }
       }
     }
-    NS_RELEASE(content);
   }
 
   aDesiredSize.width  = aReflowState.availableWidth;
@@ -925,18 +923,17 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // resize the sub document
-  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-  if(webShellWin) {
+  if(mSubShell) {
     float t2p;
     aPresContext->GetTwipsToPixels(&t2p);
-    nsRect subBounds;
 
-    webShellWin->GetPositionAndSize(&subBounds.x, &subBounds.y,
-                       &subBounds.width, &subBounds.height);
-    subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
-    subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
-    webShellWin->SetPositionAndSize(subBounds.x, subBounds.y,
-                       subBounds.width, subBounds.height, PR_FALSE);
+    PRInt32 x = 0;
+    PRInt32 y = 0;
+
+    mSubShell->GetPositionAndSize(&x, &y, nsnull, nsnull);
+    PRInt32 cx  = NSToCoordRound(aDesiredSize.width * t2p);
+    PRInt32 cy = NSToCoordRound(aDesiredSize.height * t2p);
+    mSubShell->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
 
     NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
       ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
@@ -959,14 +956,17 @@ nsHTMLFrameInnerFrame::ReloadURL()
 
     // load a new url if the size is not 0
     if ((mRect.width > 0) && (mRect.height > 0)) {
-      if (mWebShell) {
+      if (mSubShell) {
         mCreatingViewer=PR_TRUE;
 
         // load the document
         nsString absURL;
         TempMakeAbsURL(content, url, absURL);
 
-        rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSubShell));
+        NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+        rv = webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
       }
     } else {
       mCreatingViewer = PR_TRUE;
