@@ -1148,7 +1148,24 @@ static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* 
                       nsRect bounds;
                       view->GetBounds(bounds);
                       if (bounds.width > 0 && bounds.height > 0) {
-                        aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                        nsIView* viewParent = nsnull;
+                        view->GetParent(viewParent);
+
+                        while (viewParent && viewParent != aRootView) {
+                          nsRect parentBounds;
+
+                          viewParent->GetBounds(parentBounds);
+                          bounds.x += parentBounds.x;
+                          bounds.y += parentBounds.y;
+                          viewParent->GetParent(viewParent);
+                        }
+
+                        // maybe we couldn't get the view into the coordinate
+                        // system of aRootView (maybe it's not a descendant
+                        // view of aRootView?); if so, don't use it
+                        if (viewParent) {
+                          aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                        }
                       }
                     }
                   }
