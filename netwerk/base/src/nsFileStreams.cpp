@@ -526,31 +526,32 @@ nsSafeFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
 }
 
 NS_IMETHODIMP
-nsSafeFileOutputStream::SetWriteSucceeded(PRBool aWriteSucceeded)
-{
-    mWriteSucceeded = aWriteSucceeded;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSafeFileOutputStream::GetWriteSucceeded(PRBool *aWriteSucceeded)
-{
-    *aWriteSucceeded = mWriteSucceeded && mInternalWriteSucceeded;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSafeFileOutputStream::Close()
+{
+    nsresult rv = nsFileOutputStream::Close();
+
+    // the consumer doesn't want the original file overwritten -
+    // so clean up by removing the temp file.
+    if (mTempFile) {
+        mTempFile->Remove(PR_FALSE);
+        mTempFile = nsnull;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSafeFileOutputStream::Finish()
 {
     nsresult rv = nsFileOutputStream::Close();
 
     // if there is no temp file, don't try to move it over the original target.
     // It would destroy the targetfile if close() is called twice.
     if (!mTempFile)
-        return NS_OK;
+        return rv;
 
     // Only overwrite if everything was ok, and the temp file could be closed.
-    if (mWriteSucceeded && mInternalWriteSucceeded && NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(mWriteResult) && NS_SUCCEEDED(rv)) {
         NS_ENSURE_STATE(mTargetFile);
 
         if (!mTargetFileExists) {
@@ -573,7 +574,11 @@ nsSafeFileOutputStream::Close()
             rv = mTempFile->MoveToNative(nsnull, targetFilename); // This will replace target
     }
     else {
-        rv = mTempFile->Remove(PR_FALSE);
+        mTempFile->Remove(PR_FALSE);
+
+        // if writing failed, propagate the failure code to the caller.
+        if (NS_FAILED(mWriteResult))
+            rv = mWriteResult;
     }
     mTempFile = nsnull;
     return rv;
@@ -583,8 +588,15 @@ NS_IMETHODIMP
 nsSafeFileOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
 {
     nsresult rv = nsFileOutputStream::Write(buf, count, result);
-    if (NS_FAILED(rv) || count != *result)
-        mInternalWriteSucceeded = PR_FALSE;
+    if (NS_SUCCEEDED(mWriteResult)) {
+        if (NS_FAILED(rv))
+            mWriteResult = rv;
+        else if (count != *result)
+            mWriteResult = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+
+        if (NS_FAILED(mWriteResult))
+            NS_WARNING("writing to output stream failed! data may be lost");
+    } 
     return rv;
 }
 

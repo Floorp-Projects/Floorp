@@ -936,7 +936,7 @@ nsPermissionManager::Write()
   // that for us
   nsCOMPtr<nsISafeFileOutputStream> safeStream = do_QueryInterface(fileOutputStream);
   if (safeStream)
-    safeStream->SetWriteSucceeded(PR_TRUE);
+    safeStream->Finish();
 
   return NS_OK;
 }
