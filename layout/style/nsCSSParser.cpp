@@ -2348,9 +2348,12 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32& aErrorCode,
     aComponent = (PRUint8) value;
     return PR_TRUE;
   }
+  PRUnichar stopString[2];
+  stopString[0] = PRUnichar(aStop);
+  stopString[1] = PRUnichar(0);
   REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ") +
-                           nsLiteralPRUnichar(PRUnichar(aStop)) +
-                           NS_LITERAL_STRING(" but found"));
+                          nsLocalString(stopString, 1) +
+                          NS_LITERAL_STRING(" but found"));
   return PR_FALSE;
 }
 
