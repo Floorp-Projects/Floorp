@@ -118,6 +118,7 @@ NS_METHOD BRFrame::Reflow(nsIPresContext* aPresContext,
     if (nsnull != lineLayoutState) {
       lineLayoutState->mReflowResult =
         NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+      lineLayoutState->LineBreak();
     }
   }
 
