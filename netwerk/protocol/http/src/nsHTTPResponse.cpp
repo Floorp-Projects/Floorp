@@ -51,6 +51,7 @@ nsHTTPResponse::nsHTTPResponse()
 
     // The content length is unknown...
     mContentLength = -1;
+	mChunkedResponse = PR_FALSE;
 }
 
 nsHTTPResponse::~nsHTTPResponse()
@@ -433,6 +434,8 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
             SetContentLength(length);
         }
     }
+	else if (nsHTTPAtoms::Transfer_Encoding == aHeader && !PL_strcmp (aValue, "chunked"))
+			mChunkedResponse = PR_TRUE;
 
     //
     // Set the response header...
@@ -514,6 +517,11 @@ nsresult nsHTTPResponse::GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent)
     return NS_OK;
 }
 
+
+PRBool nsHTTPResponse::isChunkedResponse ()
+{
+	return mChunkedResponse;
+}
 
 // Check to see if a (cached) HTTP response is stale and, therefore,
 // must be revalidated with the origin server.

@@ -25,10 +25,13 @@
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
+#include "nsISocketTransport.h"
 #include "nsIBufferInputStream.h"
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponse.h"
 #include "nsCRT.h"
+#include "nsIStreamConverterService.h"
+#include "nsIStreamConverter.h"
 
 #include "nsHTTPAtoms.h"
 #include "nsIHttpNotify.h"
@@ -53,12 +56,8 @@ extern PRLogModuleInfo* gHTTPLog;
 //
 static const int kMAX_HEADER_SIZE = 60000;
 
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// nsHTTPResponseListener Implementation (abstract base class)
-//
-///////////////////////////////////////////////////////////////////////////////
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel)
                        : mChannel(aChannel)
 {
@@ -216,12 +215,15 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel)
                       mResponse(nsnull),
                       mFirstLineParsed(PR_FALSE),
                       mHeadersDone(PR_FALSE),
-                      mBytesReceived(0)
+                      mBytesReceived(0),
+                      mBodyBytesReceived (0)
 {
     mChannel->mHTTPServerListener = this;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPServerListener [this=%x].\n", this));
+
+	mChunkConverterPushed = PR_FALSE;
 }
 
 nsHTTPServerListener::~nsHTTPServerListener()
@@ -305,6 +307,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         //
         rv = FinishedResponseHeaders();
         if (NS_FAILED(rv)) return rv;
+
     }
 
     // At this point we've digested headers from the server and we're
@@ -334,6 +337,35 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
         if (NS_SUCCEEDED(rv)) {
             if (i_Length) {
+
+                PRInt32 cl = -1;
+				mResponse -> GetContentLength (&cl);
+
+                mBodyBytesReceived += i_Length;
+
+                if (cl != -1)
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+
+                    if (NS_SUCCEEDED (rv))
+					    trans -> SetBytesExpected (cl - mBodyBytesReceived);
+				}
+
+				if (!mChunkConverterPushed && mResponse -> isChunkedResponse ())
+				{
+					NS_WITH_SERVICE (nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+					if (NS_FAILED(rv)) return rv;
+
+					nsString2 fromStr ( "chunked" );
+					nsString2 toStr   ("unchunked");
+				    nsCOMPtr<nsIStreamListener> converterListener;
+					rv = StreamConvService -> AsyncConvertData (fromStr.GetUnicode(), toStr.GetUnicode(), mResponseDataListener, channel, getter_AddRefs (converterListener));
+					if (NS_FAILED(rv)) return rv;
+					mResponseDataListener = converterListener;
+					mChunkConverterPushed = PR_TRUE;
+				}
+
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("\tOnDataAvailable [this=%x]. Calling consumer "
                         "OnDataAvailable.\tlength:%d\n", this, i_Length));

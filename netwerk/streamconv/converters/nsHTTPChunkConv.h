@@ -25,6 +25,7 @@
 
 #include "nsIStreamConverter.h"
 #include "nsIFactory.h"
+#include "nsCOMPtr.h"
 
 #define NS_HTTPCHUNKCONVERTER_CID					\
 {													\
@@ -51,7 +52,7 @@ typedef	enum enum_ChunkState
 			CHUNK_STATE_DATA,
 			CHUNK_STATE_CR_FINAL,
 			CHUNK_STATE_LF_FINAL,
-			CHUNK_STATE_FINAL,
+			CHUNK_STATE_FINAL
 		}	ChunkState;
 
 #define	HTTP_CHUNK_TYPE		"chunked"
@@ -83,6 +84,8 @@ private:
 	
 	char mLenBuf[20];
 	PRUint32	mLenBufCnt;
+    
+    nsCOMPtr<nsISupports>   mAsyncConvContext;
 };
 
 

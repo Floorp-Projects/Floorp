@@ -62,6 +62,7 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
                                      in unsigned long encodeFlags);
 
     attribute string acceptLanguages; 
+    attribute unsigned long httpVersion; 
     /* i'll file a bug on the http guys to make nsAuthEngine scriptable
 	   and then we can get rid of this no script code! */
 	[noscript] void getAuthEngine(out nsAuthEnginePtr authEngine);

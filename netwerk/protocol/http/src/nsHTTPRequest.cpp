@@ -40,6 +40,7 @@
 #include "nsIIOService.h"
 #include "nsAuthEngine.h"
 #include "nsIServiceManager.h"
+#include "plstr.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -120,6 +121,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
         if (acceptLanguages && *acceptLanguages)
             SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
     }
+
+    httpHandler -> GetHttpVersion (&mVersion);
 }
     
 
@@ -292,7 +295,18 @@ nsresult nsHTTPRequest::WriteRequest()
     if (-1 != refLocation)
         mRequestBuffer.Truncate(refLocation);
 
-    mRequestBuffer.Append(" HTTP/1.0"CRLF);
+	char * httpVersion = " HTTP/1.0" CRLF;
+
+	switch (mVersion)
+	{
+		case HTTP_ZERO_NINE:
+			httpVersion = " HTTP/0.9"CRLF;
+			break;
+		case HTTP_ONE_ONE:
+			httpVersion = " HTTP/1.1"CRLF;
+	}
+
+    mRequestBuffer.Append (httpVersion);
 
     //
     // Write the request headers, if any...
@@ -407,13 +421,13 @@ nsresult nsHTTPRequest::GetHeader(nsIAtom* i_Header, char* *o_Value)
 }
 
 
-nsresult nsHTTPRequest::SetHTTPVersion(HTTPVersion i_Version)
+nsresult nsHTTPRequest::SetHTTPVersion (PRUint32  i_Version)
 {
     mVersion = i_Version;
     return NS_OK;
 }
 
-nsresult nsHTTPRequest::GetHTTPVersion(HTTPVersion* o_Version) 
+nsresult nsHTTPRequest::GetHTTPVersion (PRUint32 * o_Version) 
 {
     *o_Version = mVersion;
     return NS_OK;

@@ -76,12 +76,14 @@ public:
     nsresult            ParseHeaders(nsCString& aAllHeaders);
     nsresult            ProcessHeader(nsIAtom* aHeader, nsCString& aValue);
     nsresult            EmitHeaders(nsCString& aResult);
-
-    nsresult            UpdateHeaders(nsISimpleEnumerator *aEnumerator);
-         
+     
     PRBool              IsStale(PRBool aUseHeuristicExpiration);
-    nsresult            ParseDateHeader(nsIAtom *aAtom, PRTime *aResultTime, PRBool *aHeaderIsPresent);
+	PRBool				isChunkedResponse ();
+
+    nsresult            UpdateHeaders(nsISimpleEnumerator *aEnumerator);        
  
+    nsresult            ParseDateHeader(nsIAtom *aAtom, PRTime *aResultTime, PRBool *aHeaderIsPresent);
+
 protected:
     virtual ~nsHTTPResponse();
     nsresult            ParseDateHeader(nsIAtom *aAtom, PRUint32 *aResultTime, PRBool *aHeaderIsPresent);
@@ -94,6 +96,8 @@ protected:
     PRUint32                    mStatus;
     PRInt32                     mContentLength;
     nsHTTPHeaderArray           mHeaders;
+private:
+	PRBool						mChunkedResponse;
 };
 
 #endif /* _nsHTTPResponse_h_ */

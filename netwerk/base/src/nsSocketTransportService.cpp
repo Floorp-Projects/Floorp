@@ -412,6 +412,7 @@ nsSocketTransportService::Run(void)
     int i;
 
     count = PR_Poll(mSelectFDSet, mSelectFDSetCount, pollTimeout);
+
     if (-1 == count) {
       // XXX: PR_Poll failed...  What should happen?
     }
@@ -584,6 +585,29 @@ nsSocketTransportService::ReuseTransport(nsIChannel* i_Transport,
         i_Transport);
     if (!trans) return rv;
     *o_Reuse = trans->CanBeReused();
+    return NS_OK;
+}
+
+/**
+ * wakeup the transport from PR_Poll ()
+ */
+
+NS_IMETHODIMP
+nsSocketTransportService::Wakeup (nsIChannel* i_Transport)
+{
+    nsSocketTransport *transport = NS_STATIC_CAST (nsSocketTransport *, i_Transport);
+
+    if (transport == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    AddToWorkQ (transport);
+
+#ifdef USE_POLLABLE_EVENT
+    PR_SetPollableEvent (mThreadEvent);
+#else
+    // XXX/ruslan: normally we would call PR_Interrupt (), but since it did work
+    //  wait till NSPR fixes it one day
+#endif
     return NS_OK;
 }
 

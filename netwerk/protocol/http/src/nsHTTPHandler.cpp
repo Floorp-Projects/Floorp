@@ -371,6 +371,23 @@ nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
 }
 
 NS_IMETHODIMP
+nsHTTPHandler::SetHttpVersion (unsigned int i_HttpVersion) 
+{
+	mHttpVersion = i_HttpVersion;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetHttpVersion (unsigned int * o_HttpVersion)
+{
+    if (!o_HttpVersion)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_HttpVersion = mHttpVersion;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
 {
   *o_AuthEngine = &mAuthEngine;
@@ -532,6 +549,7 @@ nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
+	mHttpVersion(HTTP_ONE_ZERO),
     mDoKeepAlive(PR_FALSE),
     mReferrerLevel(0)
 {
@@ -764,7 +782,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (port == -1)
         GetDefaultPort(&port);
 
-    nsIChannel* trans;
+    nsIChannel* trans = nsnull;
     // Check in the idle transports for a host/port match
     count = 0;
     PRInt32 index = 0;
@@ -772,7 +790,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     {
         mIdleTransports->Count(&count);
 
-        for (index=count-1; index >= 0; --index) 
+        for (index=count-1; index >= 0; --index, trans = nsnull)
         {
             nsCOMPtr<nsIURI> uri;
             trans = (nsIChannel*) mIdleTransports->ElementAt(index);
@@ -796,7 +814,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                 NS_ADDREF(trans);
                                 // Remove it from the idle
                                 mIdleTransports->RemoveElement(trans);
-                                //break;// break out of the for loop 
+                                break;// break out of the for loop 
                             }
                         }
                     }
@@ -806,7 +824,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         }
     }
     // if we didn't find any from the keep-alive idlelist
-    if (*o_pTrans == nsnull)
+    if (trans == nsnull)
     {
         // Ask the channel for proxy info... since that overrides
         PRBool usingProxy = PR_FALSE;
@@ -1054,6 +1072,22 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         if (NS_SUCCEEDED(rv) && referrerLevel>0) 
            mReferrerLevel = referrerLevel; 
     }
+
+	nsXPIDLCString httpVersion;
+    rv = mPrefs -> CopyCharPref("network.http.version", getter_Copies(httpVersion));
+	if (NS_SUCCEEDED (rv) && httpVersion)
+	{
+		if (!PL_strcmp (httpVersion, "1.1"))
+			mHttpVersion = HTTP_ONE_ONE;
+		else
+		if (!PL_strcmp (httpVersion, "0.9"))
+			mHttpVersion = HTTP_ZERO_NINE;
+	}
+	else
+		mHttpVersion = HTTP_ONE_ZERO;
+
+	if (mHttpVersion == HTTP_ONE_ONE)
+		mDoKeepAlive = PR_TRUE;
 
     // Things read only during initialization...
     if (bChangedAll) // intl.accept_languages
