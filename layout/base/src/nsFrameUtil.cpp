@@ -537,6 +537,7 @@ nsFrameUtil::DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
 PRBool
 nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
 {
+  PRBool result = PR_TRUE;
   for (;;) {
     // Make sure both nodes are non-null, or at least agree with each other
     if (nsnull == tree1) {
@@ -563,6 +564,11 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
     if (tree1->state != tree2->state) {
       printf("frame state mismatch: 0x%x vs. 0x%x\n",
              tree1->state, tree2->state);
+      printf("Node 1:\n");
+      DumpNode(tree1, stdout, 1);
+      printf("Node 2:\n");
+      DumpNode(tree2, stdout, 1);
+      //result = PR_FALSE; // we have a non-critical failure, so remember that but continue
     }
     if (tree1->bbox != tree2->bbox) {
       printf("frame bbox mismatch: %d,%d,%d,%d vs. %d,%d,%d,%d\n",
@@ -570,6 +576,11 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
              tree1->bbox.width, tree1->bbox.height,
              tree2->bbox.x, tree2->bbox.y,
              tree2->bbox.width, tree2->bbox.height);
+      printf("Node 1:\n");
+      DumpNode(tree1, stdout, 1);
+      printf("Node 2:\n");
+      DumpNode(tree2, stdout, 1);
+      result = PR_FALSE; // we have a non-critical failure, so remember that but continue
     }
     if (tree1->styleData != tree2->styleData) {
       printf("frame style data mismatch: %s vs. %s\n",
@@ -606,6 +617,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
         printf("child-list name mismatch: %s vs. %s\n",
                list1->name ? list1->name : "(null)",
                list2->name ? list2->name : "(null)");
+        result = PR_FALSE; // we have a non-critical failure, so remember that but continue
       }
       else {
         PRBool equiv = CompareTrees(list1->node, list2->node);
@@ -621,7 +633,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
     tree1 = tree1->next;
     tree2 = tree2->next;
   }
-  return PR_TRUE;
+  return result;
 }
 
 NS_IMETHODIMP

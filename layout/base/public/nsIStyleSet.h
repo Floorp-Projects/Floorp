@@ -37,6 +37,7 @@ class nsIFrame;
 class nsIDocument;
 class nsIFrameManager;
 class nsISupportsArray;
+struct nsFindFrameHint;
 
 #include "nsVoidArray.h"
 class nsISizeOfHandler;
@@ -192,13 +193,22 @@ public:
                                    nsIFrame*       aParentFrame,
                                    nsIFrame**      aContinuingFrame) = 0;
 
-  // Request to find the primary frame associated with a given content object.
-  // This is typically called by the pres shell when there is no mapping in
-  // the pres shell hash table
+  /** Request to find the primary frame associated with a given content object.
+    * This is typically called by the pres shell when there is no mapping in
+    * the pres shell hash table.
+    * @param aPresContext   the pres context
+    * @param aFrameManager  the frame manager
+    * @param aContent       the content we need to find a frame for
+    * @param aFrame         [OUT] the resulting frame
+    * @param aHint          optional performance hint, may be null
+    *
+    * @return NS_OK.  aFrame will be null if no frame could be found
+    */
   NS_IMETHOD FindPrimaryFrameFor(nsIPresContext*  aPresContext,
                                  nsIFrameManager* aFrameManager,
                                  nsIContent*      aContent,
-                                 nsIFrame**       aFrame) = 0;
+                                 nsIFrame**       aFrame,
+                                 nsFindFrameHint* aHint=0) = 0;
 
   // APIs for registering objects that can supply additional
   // rules during processing.
@@ -296,5 +306,16 @@ protected:
   nsUniqueStyleItems* ##_name = nsUniqueStyleItems::GetUniqueStyleItems(); \
   NS_ASSERTION(##_name != nsnull, "UniqueItems cannot be null: error in nsUniqueStyleImtes factory");
 
+/** a simple struct (that may someday be expanded) 
+  * that contains data supplied by the caller to help
+  * the style set find a frame for a content node
+  */
+struct nsFindFrameHint
+{
+  nsIFrame *mPrimaryFrameForPrevSibling;  // weak ref to the primary frame for the content for which we need a frame
+  nsFindFrameHint() { 
+    mPrimaryFrameForPrevSibling = nsnull;
+  };
+};
 
 #endif /* nsIStyleSet_h___ */

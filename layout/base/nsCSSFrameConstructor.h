@@ -133,7 +133,8 @@ public:
   NS_IMETHOD FindPrimaryFrameFor(nsIPresContext*  aPresContext,
                                  nsIFrameManager* aFrameManager,
                                  nsIContent*      aContent,
-                                 nsIFrame**       aFrame);
+                                 nsIFrame**       aFrame,
+                                 nsFindFrameHint* aHint);
 
   NS_IMETHOD CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                         nsIFrame*       aParentFrame,
@@ -817,13 +818,21 @@ protected:
 
   nsresult RecreateEntireFrameTree(nsIPresContext* aPresContext);
 
-  // Helper function that searches the immediate child frames 
-  // (and their children if the frames are "special")
-  // for a frame that maps the specified content object
-  nsIFrame* FindFrameWithContent(nsIPresContext* aPresContext,
-                                 nsIFrame*       aParentFrame,
-                                 nsIContent*     aParentContent,
-                                 nsIContent*     aContent);
+  /** Helper function that searches the immediate child frames 
+    * (and their children if the frames are "special")
+    * for a frame that maps the specified content object
+    *
+    * @param aPresContext   the presentation context
+    * @param aParentFrame   the primary frame for aParentContent
+    * @param aContent       the content node for which we seek a frame
+    * @param aParentContent the parent for aContent 
+    * @param aHint          an optional hint used to make the search for aFrame faster
+    */
+  nsIFrame* FindFrameWithContent(nsIPresContext*  aPresContext,
+                                 nsIFrame*        aParentFrame,
+                                 nsIContent*      aParentContent,
+                                 nsIContent*      aContent,
+                                 nsFindFrameHint* aHint);
 
   //----------------------------------------
 
@@ -944,6 +953,11 @@ protected:
   // Cached Prefs
   PRBool              mGotGfxPrefs;
   PRBool              mHasGfxScrollbars;
+
+#ifdef NS_DEBUG
+  PRBool              mVerifyFastFindFrame; // if true, run both the old and new find frame code
+                                            // to validate that both ways get the same answer
+#endif
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 };

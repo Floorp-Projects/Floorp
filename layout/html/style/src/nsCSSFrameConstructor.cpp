@@ -268,6 +268,14 @@ NS_NewResizerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
+#ifdef NOISY_FINDFRAME
+static PRInt32 FFWC_totalCount=0;
+static PRInt32 FFWC_doLoop=0;
+static PRInt32 FFWC_doSibling=0;
+static PRInt32 FFWC_recursions=0;
+static PRInt32 FFWC_nextInFlows=0;
+static PRInt32 FFWC_slowSearchForText=0;
+#endif
 
 //----------------------------------------------------------------------
 //
@@ -809,6 +817,17 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mGfxScrollFrame(nsnull)
 {
   NS_INIT_REFCNT();
+#ifdef NS_DEBUG
+  mVerifyFastFindFrame = PR_FALSE;
+  // Get the pref for verifying the new fast find frame with hint code.
+  // Note that this makes finding frames *slower* than it was before the fix.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    prefs->GetBoolPref("nglayout.debug.verifyFastFindFrame", &mVerifyFastFindFrame);
+  }
+#endif
 }
 
 nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
@@ -4058,7 +4077,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       nsIFrame * comboboxFrame;
       rv = NS_NewComboboxControlFrame(aPresShell, &comboboxFrame, flags);
 
-        // Determine geometric parent for the combobox frame
+      // Determine geometric parent for the combobox frame
       nsIFrame* geometricParent = aParentFrame;
       if (aIsAbsolutelyPositioned) {
         geometricParent = aState.mAbsoluteItems.containingBlock;
@@ -8422,6 +8441,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             const nsStyleDisplay* display = (const nsStyleDisplay*)
               styleContext->GetStyleData(eStyleStruct_Display);
 
+            // XXX: perf question: why do we build "state" here?
             nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                     GetAbsoluteContainingBlock(aPresContext, innerFrame),
                                     GetFloaterContainingBlock(aPresContext, innerFrame),
@@ -10823,20 +10843,80 @@ nsIFrame*
 nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext* aPresContext,
                                             nsIFrame*       aParentFrame,
                                             nsIContent*     aParentContent,
-                                            nsIContent*     aContent)
+                                            nsIContent*     aContent,
+                                            nsFindFrameHint* aHint)
 {
+  
+#ifdef NOISY_FINDFRAME
+  FFWC_totalCount++;
+  printf("looking for content=%p, given aParentFrame %p parentContent %p, hint is %s\n", 
+         aContent, aParentFrame, aParentContent, aHint ? "set" : "NULL");
+#endif
+
   NS_PRECONDITION(aParentFrame, "No frame to search!");
   if (!aParentFrame) {
     return nsnull;
   }
+
+  nsCOMPtr<nsIContent> parentContent = aParentContent;  // because we might change this when using the hint
+
+  PRBool firstTime = PR_TRUE; // marker to let us know to only use aHint the very first time through
+                              // must be declared outside loop and above goto label "keepLooking"
 
 keepLooking:
   // Search for the frame in each child list that aParentFrame supports
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   do {
-    nsIFrame* kidFrame;
-    aParentFrame->FirstChild(aPresContext, listName, &kidFrame);
+#ifdef NOISY_FINDFRAME
+    FFWC_doLoop++;
+#endif
+    nsIFrame* kidFrame=nsnull;
+    if (aHint && firstTime)  
+    { // if we were given an hint, try to use it here, unless the parent frame is special
+      if (!IsFrameSpecial(aParentFrame))
+      {
+#ifdef NOISY_FINDFRAME
+        printf("  hint frame is %p\n", aHint->mPrimaryFrameForPrevSibling);
+#endif
+        kidFrame = aHint->mPrimaryFrameForPrevSibling; // start with the primary frame for aContent's previous sibling
+        if (kidFrame) {                               // if we have this
+          kidFrame->GetNextSibling(&kidFrame);        //   then use the next sibling frame as our starting point
+          if (!kidFrame)
+          { // the hint frame had no next frame.  try the next-in-flow fo the parent of the hint frame
+            // if there is one
+            nsIFrame *parentFrame=nsnull;
+            aHint->mPrimaryFrameForPrevSibling->GetParent(&parentFrame);
+            if (parentFrame) {
+              parentFrame->GetNextInFlow(&parentFrame);
+            }
+            if (parentFrame) 
+            { // if we found the next-in-flow for the parent of the hint frame, start with it's first child
+              parentFrame->FirstChild(aPresContext, listName, &kidFrame);
+              if (kidFrame)
+              {
+                aParentFrame = parentFrame; // if we found a match, make this the new starting point
+                aParentFrame->GetContent(getter_AddRefs(parentContent));
+              }
+            }
+          }
+#ifdef NOISY_FINDFRAME
+          printf("  hint gives us kidFrame=%p with parent frame %p content %p\n", 
+                  kidFrame, aParentFrame, parentContent);
+#endif
+        }
+      }
+      else 
+      {
+#ifdef NOISY_FINDFRAME
+      printf("skipping hint because parent frame is special\n");
+#endif
+      }
+      firstTime = PR_FALSE;
+    }
+    if (!kidFrame) {  // we didn't have enough info to prune, start searching from the beginning
+      aParentFrame->FirstChild(aPresContext, listName, &kidFrame);
+    }
     while (kidFrame) {
       nsCOMPtr<nsIContent>  kidContent;
       
@@ -10866,10 +10946,16 @@ keepLooking:
       // to the parent content.
       nsCOMPtr<nsIContent> parentScope;
       kidContent->GetBindingParent(getter_AddRefs(parentScope));
-      if (kidContent.get() == aParentContent || IsFrameSpecial(kidFrame) || 
-          (aParentContent && (aParentContent == parentScope.get()))) {
-        nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, aParentContent,
-                                                       aContent);
+      if (kidContent.get() == parentContent || IsFrameSpecial(kidFrame) || 
+          (parentContent && (parentContent == parentScope.get()))) 
+      {
+#ifdef NOISY_FINDFRAME
+        FFWC_recursions++;
+        printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
+               kidFrame, parentContent);
+#endif
+        nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, parentContent,
+                                                       aContent, nsnull);
 
         if (matchingFrame) {
           return matchingFrame;
@@ -10878,6 +10964,12 @@ keepLooking:
 
       // Get the next sibling frame
       kidFrame->GetNextSibling(&kidFrame);
+#ifdef NOISY_FINDFRAME
+      FFWC_doSibling++;
+      if (kidFrame) {
+        printf("  searching sibling frame %p\n", kidFrame);
+      }
+#endif
     }
 
     NS_IF_RELEASE(listName);
@@ -10888,6 +10980,10 @@ keepLooking:
   // then continue looking there
   aParentFrame->GetNextInFlow(&aParentFrame);
   if (aParentFrame) {
+#ifdef NOISY_FINDFRAME
+    FFWC_nextInFlows++;
+    printf("  searching NIF frame %p\n", aParentFrame);
+#endif
     goto keepLooking;
   }
 
@@ -10902,8 +10998,11 @@ NS_IMETHODIMP
 nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
                                            nsIFrameManager* aFrameManager,
                                            nsIContent*      aContent,
-                                           nsIFrame**       aFrame)
+                                           nsIFrame**       aFrame,
+                                           nsFindFrameHint* aHint)
 {
+  NS_ASSERTION(aPresContext && aFrameManager && aContent && aFrame, "bad arg");
+
   *aFrame = nsnull;  // initialize OUT parameter 
 
   // Get the pres shell
@@ -10930,8 +11029,28 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
     aFrameManager->GetPrimaryFrameFor(parentContent, &parentFrame);
     while (parentFrame) {
       // Search the child frames for a match
-      *aFrame = FindFrameWithContent(aPresContext, parentFrame, parentContent.get(), aContent);
+      *aFrame = FindFrameWithContent(aPresContext, parentFrame, parentContent.get(), aContent, aHint);
+#ifdef NOISY_FINDFRAME
+      printf("FindFrameWithContent returned %p\n", *aFrame);
+#endif
 
+#ifdef NS_DEBUG
+      // if we're given a hint and we were told to verify, then compare the resulting frame with
+      // the frame we get by calling FindFrameWithContent *without* the hint.  
+      // Assert if they do not match
+      // Note that this makes finding frames *slower* than it was before the fix.
+      if (mVerifyFastFindFrame && aHint) 
+      {
+#ifdef NOISY_FINDFRAME
+        printf("VERIFYING...\n");
+#endif
+        nsIFrame *verifyTestFrame = FindFrameWithContent(aPresContext, parentFrame, parentContent.get(), aContent, nsnull);
+#ifdef NOISY_FINDFRAME
+        printf("VERIFY returned %p\n", verifyTestFrame);
+#endif
+        NS_ASSERTION(verifyTestFrame == *aFrame, "hint shortcut found wrong frame");
+      }
+#endif
       // If we found a match, then add a mapping to the hash table so
       // next time this will be quick
       if (*aFrame) {
@@ -10952,6 +11071,28 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
       }
     }
   }
+
+  if (aHint && !*aFrame)
+  { // if we had a hint, and we didn't get a frame, see if we should try the slow way
+    nsCOMPtr<nsIAtom>tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    if (nsLayoutAtoms::textTagName == tag.get()) 
+    {
+#ifdef NOISY_FINDFRAME
+      FFWC_slowSearchForText++;
+#endif
+      // since we're passing in a null hint, we're guaranteed to only recurse once
+      return FindPrimaryFrameFor(aPresContext, aFrameManager, aContent, aFrame, nsnull);
+    }
+  }
+
+#ifdef NOISY_FINDFRAME
+  printf("%10s %10s %10s %10s %10s \n", 
+         "total", "doLoop", "doSibling", "recur", "nextIF", "slowSearch");
+  printf("%10d %10d %10d %10d %10d \n", 
+         FFWC_totalCount, FFWC_doLoop, FFWC_doSibling, FFWC_recursions, 
+         FFWC_nextInFlows, FFWC_slowSearchForText);
+#endif
 
   return NS_OK;
 }
