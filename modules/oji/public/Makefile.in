@@ -28,14 +28,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= oji
 
-XPIDLSRCS	= nsIJVMManager.idl
+XPIDLSRCS	= \
+		nsIJVMManager.idl \
+		nsIJVMPluginInstance.idl \
+		$(NULL)
 
 EXPORTS		= \
 		nsjvm.h \
 		nsIJRIPlugin.h \
 		nsIJVMConsole.h \
 		nsIJVMPlugin.h \
-		nsIJVMPluginInstance.h \
 		nsIJVMPluginTagInfo.h \
 		nsIJVMPrefsWindow.h \
 		nsIJVMWindow.h \
