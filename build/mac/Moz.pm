@@ -158,7 +158,7 @@ sub log_recent_errors($)
 
 				while( <RECENT_ERRORS> )
 					{
-						if ( $_ =~ m/^Error/ )
+						if ( /^Error/ || /^Couldn’t find project file/ )
 							{
 								$found_errors = 1;
 							}
@@ -214,9 +214,12 @@ sub MakeAlias($;$)
 				$new_file .= $1;
 			}
 
-		die "Can't make an alias \"$new_file\" for \"$old_file\"; it doesn't exist.\n" unless -e $old_file;
+		my $message = "Can't create a Finder alias (at \"$new_file\") for \"$old_file\";";
+		# die "$message symlink doesn't work on directories.\n" if -d $old_file;
+		die "$message because \"$old_file\" doesn't exit.\n" unless -e $old_file;
+
 		unlink $new_file;
-		symlink($old_file, $new_file) || die "Can't make an alias \"$new_file\" for \"$old_file\"; unknown error.\n";
+		symlink($old_file, $new_file) || die "$message symlink returned an unexpected error.\n";
 	}
 
 
