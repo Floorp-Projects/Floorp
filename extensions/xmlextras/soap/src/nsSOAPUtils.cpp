@@ -599,7 +599,7 @@ PRBool nsSOAPUtils::GetAttribute(nsISOAPEncoding *aEncoding,
     return PR_TRUE;
   }
   SetAStringToNull(aValue);
-  return false;
+  return PR_FALSE;
 }
 
 PRBool nsSOAPUtils::StartsWith(nsAString & aSuper, nsAString & aSub)

@@ -154,7 +154,7 @@ NS_IMETHODIMP
   }
   return NS_OK;
 }
-PRBool PropertyBagEnumFunc(nsHashKey * aKey, void *aData, void *aClosure)
+PRBool PR_CALLBACK PropertyBagEnumFunc(nsHashKey * aKey, void *aData, void *aClosure)
 {
   nsISupportsArray *properties =
       NS_STATIC_CAST(nsISupportsArray *, aClosure);
