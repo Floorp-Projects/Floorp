@@ -678,7 +678,7 @@ nsFormFrame::URLEncode(nsString& aString, nsIUnicodeEncoder* encoder)
   if(nsnull == inBuf)
     inBuf  = aString.ToNewCString();
 
-  char* outBuf = nsEscape(inBuf, url_Path);
+  char* outBuf = nsEscape(inBuf, url_XPAlphas);
   nsString* result = new nsString(outBuf);
   nsCRT::free(outBuf);
   nsCRT::free(inBuf);
