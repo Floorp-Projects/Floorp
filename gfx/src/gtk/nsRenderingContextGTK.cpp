@@ -20,6 +20,7 @@
 #include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
 #include "nsRegionGTK.h"
+#include "nsGraphicsStateGTK.h"
 #include "nsGfxCIID.h"
 #include <math.h>
 
@@ -35,35 +36,6 @@
   PR_END_MACRO
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-class GraphicsState
-{
-public:
-  GraphicsState();
-  virtual ~GraphicsState();
-
-  nsTransform2D  *mMatrix;
-  nsRegionGTK    *mClipRegion;
-  nscolor         mColor;
-  nsLineStyle     mLineStyle;
-  nsIFontMetrics *mFontMetrics;
-};
-
-GraphicsState::GraphicsState()
-{
-  mMatrix = nsnull;
-  mClipRegion = nsnull;
-  mColor = NS_RGB(0, 0, 0);
-  mLineStyle = nsLineStyle_kSolid;
-  mFontMetrics = nsnull;
-}
-
-GraphicsState::~GraphicsState()
-{
-  NS_IF_RELEASE(mClipRegion);
-  NS_IF_RELEASE(mFontMetrics);
-}
-
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
@@ -245,7 +217,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDeviceContext(nsIDeviceContext *&aContex
 
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
-  GraphicsState *state = new GraphicsState();
+  nsGraphicsState *state = new nsGraphicsState();
 
   // Push into this state object, add to vector
   state->mMatrix = mTMatrix;
@@ -279,10 +251,10 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
 {
   PRUint32 cnt = mStateCache->Count();
-  GraphicsState * state;
+  nsGraphicsState * state;
 
   if (cnt > 0) {
-    state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
     mStateCache->RemoveElementAt(cnt - 1);
 
     // Assign all local attributes from the state object just popped

@@ -35,16 +35,18 @@ CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 
 CPPSRCS = \
-	nsDrawingSurfaceGTK.cpp \
 	nsDeviceContextGTK.cpp \
 	nsDeviceContextSpecFactoryG.cpp \
 	nsDeviceContextSpecG.cpp \
+	nsDrawingSurfaceGTK.cpp \
 	nsFontMetricsGTK.cpp \
 	nsGfxFactoryGTK.cpp \
-	nsRenderingContextGTK.cpp \
+	nsGraphicsStateGTK.cpp \
 	nsImageGTK.cpp \
 	nsRegionGTK.cpp \
-	nsTimer.cpp 
+	nsRenderingContextGTK.cpp \
+	nsTimer.cpp \
+	$(NULL)
 
 CSRCS = \
 	nsPrintdGTK.c

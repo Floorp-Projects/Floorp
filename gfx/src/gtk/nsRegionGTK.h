@@ -21,6 +21,8 @@
 
 #include "nsIRegion.h"
 
+#include <gdk/gdk.h>
+
 class nsRegionGTK : public nsIRegion
 {
 public:
