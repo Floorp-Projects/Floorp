@@ -22,6 +22,8 @@ Contributor(s): ______________________________________. -->
 
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<!-- XXX - the placement of this include could be temporary -->
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksToolbar.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
@@ -41,86 +43,87 @@ Contributor(s): ______________________________________. -->
 ]>
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Startup()"
-  onunload="Shutdown()"
-  contenttitlesettting="true"
-  title="&mainWindow.title;" 
-  titlemodifier="&mainWindow.titlemodifier;" 
-  titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
-  viewsourcetitlepreface="&viewsourcetitle.preface;"
-  windowtype="navigator:browser"
-  align="vertical"
-  width="640" height="480"
-  screenX="10" screenY="10"
-  persist="screenX screenY width height sizemode"> 
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup()" onunload="Shutdown()"
+        contenttitlesettting="true"
+        title="&mainWindow.title;" 
+        titlemodifier="&mainWindow.titlemodifier;" 
+        titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+        viewsourcetitlepreface="&viewsourcetitle.preface;"
+        windowtype="navigator:browser" orient="vertical"
+        width="640" height="480"
+        screenX="10" screenY="10"
+        persist="screenX screenY width height sizemode"> 
 
-<script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-<script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
-<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
-<script type="text/javascript" src="chrome://global/content/nsClipboard.js"/>
-<script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="text/javascript" src="chrome://global/content/strres.js"/>
-<script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-<script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-<script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-<script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
-<script type="text/javascript" src="tooltip.js"/>
-<script type="text/javascript" src="navigatorDD.js"/>
-<!-- UI services -->
-<script type="text/javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsClipboard.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="text/javascript" src="chrome://navigator/content/navigator.js"/>
+  <script type="text/javascript" src="tooltip.js"/>
+  <script type="text/javascript" src="navigatorDD.js"/>
+  <!-- UI services -->
+  <script type="text/javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
-<!-- hook for stringbundle overlays -->
-<stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
-  <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
-</stringbundleset>
+  <!-- hook for stringbundle overlays -->
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
+    <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
+  </stringbundleset>
+  
+  <commands id="commands">
+  	<commandset id="globalEditMenuItems"/>
+  	<commandset id="selectEditMenuItems"/>
+  	<commandset id="undoEditMenuItems"/>
+  	<commandset id="clipboardEditMenuItems"/>
+  </commands>
+  
+  <!-- broadcasters are appended from the overlay -->
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="canPrint"/>
+    <broadcaster id="args" value=""/>
+    <broadcaster id="cmd_pageSetup"/>
+  </broadcasterset>
 
-<commands id="commands">
-	<commandset id="globalEditMenuItems"/>
-	<commandset id="selectEditMenuItems"/>
-	<commandset id="undoEditMenuItems"/>
-	<commandset id="clipboardEditMenuItems"/>
-</commands>
+  <!-- keys are appended from the overlay -->
+  <keyset id="keyset"/>
 
-<!-- broadcasters are appended from the overlay -->
-<broadcasterset id="broadcasterset">
-  <broadcaster id="canPrint"/>
-  <broadcaster id="args" value=""/>
-  <broadcaster id="cmd_pageSetup"/>
-</broadcasterset>
-<!-- keys are appended from the overlay -->
-<keyset id="keyset"/>
-<!-- tooltips -->
-<popupset id="aTooltipSet"/>
-<!-- XXX-TEMP this needs to move into an XBL binding for browser!!! -->
-<popupset id="aHTMLTooltipSet">
-  <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
-    <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
-  </popup>
-</popupset>
+  <!-- tooltips -->
+  <popupset id="aTooltipSet"/>
 
-<popupset>
-  <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-</popupset>
-
-<popupset>
-  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'innermostBox');" >
-	  <menu />
-  </popup>
-</popupset>
-
-<!-- context menu -->
-<popupset id="contentAreaContextSet"/>
-
-<script language="javascript">
-  var gBookmarkPopup = null;
-</script>
+  <!-- XXX-TEMP this needs to move into an XBL binding for browser!!! -->
+  <popupset id="aHTMLTooltipSet">
+    <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
+      <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
+    </popup>
+  </popupset>
+  
+  <popupset>
+    <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  </popupset>
+  
+  <popupset>
+    <popup id="contextual" oncreate="return fillContextMenu('contextual', 'innermostBox');" >
+  	  <menu />
+    </popup>
+  </popupset>
+  
+  <!-- context menu -->
+  <popupset id="contentAreaContextSet"/>
+  
+  <script language="javascript">
+    var gBookmarkPopup = null;
+  </script>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
@@ -129,7 +132,7 @@ Contributor(s): ______________________________________. -->
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
              grippytooltip="aTooltip" tooltiptext="&navigationBar.tooltip;"
              tbautostretch="always">
-      <box id="nav-bar-buttons">
+      <hbox id="nav-bar-buttons">
         <menubutton id="back-button" value="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
@@ -145,25 +148,25 @@ Contributor(s): ______________________________________. -->
                 tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
         <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" oncommand="BrowserStop();" value="&stopButton.label;" 
                 tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
-      </box>
+      </hbox>
                 
-      <box id="nav-bar-inner" flex="1">
-        <box id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
-          <box autostretch="never" valign="middle" flex="1" id="urlbar-container">
+      <hbox id="nav-bar-inner" flex="1">
+        <hbox id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
+          <hbox autostretch="never" valign="middle" flex="1" id="urlbar-container">
     	      <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/> 
 	          <textfield autocomplete="true" timeout="300" class="plain" 
 	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                          onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
                          onblur="URLBarBlurHandler(event);"
 						 onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
-          </box>
+          </hbox>
           <menubutton class="menubutton-icon" id="ubhist">
             <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"
                        oncreate="createUBHistoryMenu(event.target);" oncommand="executeUrlBarHistoryCommand(event.target);"> 
             </menupopup>                       
           </menubutton>
           
-        </box>
+        </hbox>
 
         <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
                   tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
@@ -172,8 +175,8 @@ Contributor(s): ______________________________________. -->
                 id="search-button" value="&searchButton.label;" 
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
-      </box>
-/* foo */
+      </hbox>
+
       <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" value="&printButton.label;" 
                   crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
@@ -181,9 +184,9 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <box id="throbber-box" autostretch="never">
+      <hbox id="throbber-box" autostretch="never">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
-      </box>
+      </hbox>
     </toolbar>
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
@@ -196,7 +199,7 @@ Contributor(s): ______________________________________. -->
 
       <!-- "Bookmarks" button on personal toolbar -->                           
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
-                  persist="hidden" value="&bookmarksButton.label;"
+                  persist="hidden" value="&bookmarksButton.label;" hidden="false"
                   datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
                   ref="NC:BookmarksRoot" container="true" flags="dont-test-empty">
         <template>
@@ -231,11 +234,11 @@ Contributor(s): ______________________________________. -->
       </menubutton>
  
       <!-- Personal toolbar items -->
-      <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
-           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-           ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
+      <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
+            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
+            ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
         <template>
-          <rule parent="box" iscontainer="true">
+          <rule parent="hbox" iscontainer="true">
             <menubutton class="button-toolbar bookmark-item" uri="rdf:*" 
                         tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
                         value="rdf:http://home.netscape.com/NC-rdf#Name">
@@ -243,15 +246,15 @@ Contributor(s): ______________________________________. -->
             </menubutton>
           </rule>
 
-          <rule parent="box" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <toolbarseparator/>
           </rule>
 
-          <rule parent="box">
-            <button class="button-toolbar bookmark-item" uri="rdf:*" 
-              tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-              value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
-              oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
+          <rule parent="hbox">
+            <button class="button-toolbar bookmark-item" uri="rdf:*"
+                    tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+                    value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
+                    oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
           </rule>
         
           <rule iscontainer="true">
@@ -286,28 +289,27 @@ Contributor(s): ______________________________________. -->
     
         <toolbarseparator/>
     
-      </box>
-
+      </hbox>
     </toolbar>
 
   </toolbox>
     
-  <box flex="1" >
+  <hbox flex="1" >
     <box id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
-    <box id="appcontent" align="vertical" flex="100%"
+    <vbox id="appcontent" flex="1"
          ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
          ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
       <!-- this box is temporary, pending XBLified <browser> -->
-      <box id="browser" flex="1">
+      <hbox id="browser" flex="1">
         <browser id="content" type="content-primary" src="about:blank"
                  flex="1" tooltip="aHTMLTooltip"
                  context="contentAreaContextMenu"
                  onclick="return contentAreaClick(event);"
                  ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
-      </box>
+      </hbox>
       
       <statusbar id="status-bar" class="chromeclass-status">
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
@@ -316,10 +318,10 @@ Contributor(s): ______________________________________. -->
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
       </statusbar>  
     
-    </box>
+    </vbox>
 
-  </box>
+  </hbox>
 
-  <box id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
+  <hbox id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
 
 </window>
