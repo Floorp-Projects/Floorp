@@ -71,6 +71,7 @@ public:
 
   NS_IMETHOD  GetDepth(PRUint32& aDepth);
 
+
 #ifdef COLOR_256
   NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
@@ -97,6 +98,7 @@ public:
 
   // Static Helper Methods
   static char* GetACPString(const nsString& aStr);
+  nsresult   SetDPI(PRInt32 aPrefDPI);
 
 protected:
   virtual ~nsDeviceContextOS2();
@@ -123,6 +125,7 @@ protected:
 
   nsCOMPtr<nsIScreenManager> mScreenManager;
   static PRUint32 sNumberOfScreens;
+  static nscoord mDpi;
 
 public:
   HDC                   mPrintDC;
@@ -140,5 +143,7 @@ public:
   PRBool SupportsRasterFonts();
   nsresult nsDeviceContextOS2::CreateFontAliasTable();
 };
+
+static int PR_CALLBACK prefChanged(const char *aPref, void *aClosure);
 
 #endif /* nsDeviceContextOS2_h___ */
