@@ -37,6 +37,10 @@ CPPSRCS =			 \
 	nsJSScreen.cpp		 \
 	nsHistory.cpp		 \
 	nsJSHistory.cpp		 \
+	nsJSPlugin.cpp		 \
+	nsJSPluginArray.cpp  \
+	nsJSMimeTypeArray.cpp \
+	nsJSMimeType.cpp \
 	$(NULL)
 
 EXPORTS=nsJSUtils.h
@@ -60,6 +64,10 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSScreen.obj		\
 	.\$(OBJDIR)\nsHistory.obj		\
 	.\$(OBJDIR)\nsJSHistory.obj		\
+	.\$(OBJDIR)\nsJSPlugin.obj		 \
+	.\$(OBJDIR)\nsJSPluginArray.obj  \
+	.\$(OBJDIR)\nsJSMimeTypeArray.obj \
+	.\$(OBJDIR)\nsJSMimeType.obj \
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \

@@ -45,6 +45,10 @@ CPPSRCS =			 \
 	nsJSScreen.cpp		 \
 	nsHistory.cpp		 \
 	nsJSHistory.cpp		 \
+	nsJSPlugin.cpp		 \
+	nsJSPluginArray.cpp  \
+	nsJSMimeTypeArray.cpp \
+	nsJSMimeType.cpp \
 	$(NULL)
 
 EXPORTS = nsJSUtils.h
