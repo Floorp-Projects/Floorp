@@ -744,7 +744,7 @@ int TabSort(const void *w1, const void *w2)
 		return -1;
 
 	// Primary key is equal, Secondary key is x coordinate
-	return (widget2->location.x - widget1->location.x);
+	return (widget1->location.x - widget2->location.x);
 }
 
 void CWizardUI::SortWidgetsForTabOrder()
