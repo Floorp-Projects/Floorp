@@ -23,9 +23,6 @@ CPPSRCS =				\
   nsJSCSSUnknownRule.cpp \
   nsJSCSSValue.cpp \
   nsJSCSSPrimitiveValue.cpp \
-  nsJSCounter.cpp \
-  nsJSRect.cpp \
-  nsJSRGBColor.cpp \
   $(NULL)
 
 CPP_OBJS=						\
@@ -42,9 +39,6 @@ CPP_OBJS=						\
   .\$(OBJDIR)\nsJSCSSUnknownRule.obj \
   .\$(OBJDIR)\nsJSCSSValue.obj \
   .\$(OBJDIR)\nsJSCSSPrimitiveValue.obj \
-  .\$(OBJDIR)\nsJSCounter.obj \
-  .\$(OBJDIR)\nsJSRect.obj \
-  .\$(OBJDIR)\nsJSRGBColor.obj \
   $(NULL)
 
 
