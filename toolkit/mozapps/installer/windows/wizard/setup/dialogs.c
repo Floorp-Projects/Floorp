@@ -28,7 +28,7 @@
 
 // needed to build with mingw
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
+#define _WIN32_IE 0x0500
 #endif
 
 #include "extern.h"
@@ -51,8 +51,12 @@
 #define DEFAULT_SAFE_UPGRADE FALSE
 
 static WNDPROC OldListBoxWndProc;
+static WNDPROC OldDialogWndProc;
 static DWORD   gdwACFlag;
 static BOOL    gDidShowUpgradePanel;
+
+// function prototype
+LRESULT CALLBACK NewDialogWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 ///////////////////////////////////////////////////////////////////////////////
 // INSTALL WIZARD SEQUENCER
@@ -195,8 +199,7 @@ void InitSequence(HINSTANCE hInstance)
   psh.hInstance         = hSetupRscInst;
   psh.hwndParent        = NULL;
   psh.phpage            = pages;
-  psh.dwFlags           = PSH_WIZARD97|PSH_WATERMARK|PSH_HEADER;
-  psh.pszbmWatermark    = MAKEINTRESOURCE(IDB_WATERMARK);
+  psh.dwFlags           = PSH_WIZARD97|PSH_HEADER;
   psh.pszbmHeader       = MAKEINTRESOURCE(IDB_HEADER);
   psh.nStartPage        = 0;
   psh.nPages            = count;
@@ -305,6 +308,8 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     wsprintf(szBuf, diWelcome.szMessage3, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_STATIC3, szBuf);
 
+    // Subclass dialog to paint all static controls white.
+    OldDialogWndProc = SubclassWindow(hDlg, (WNDPROC)NewDialogWndProc);
     break;
 
   case WM_NOTIFY:
@@ -1082,6 +1087,22 @@ WNDPROC SubclassWindow( HWND hWnd, WNDPROC NewWndProc)
   SetWindowLong(hWnd, GWL_WNDPROC, (LONG) NewWndProc);
 
   return OldWndProc;
+}
+
+// ************************************************************************
+// FUNCTION : NewDialogWndProc( HWND, UINT, WPARAM, LPARAM )
+// PURPOSE  : Processes messages for the Welcome and Finish dialogs.
+// COMMENTS : Paints all static control backgrounds in white.
+// ************************************************************************
+LRESULT CALLBACK NewDialogWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  switch(uMsg)
+  {
+    case WM_CTLCOLORSTATIC:
+      return (HRESULT)GetStockObject(WHITE_BRUSH);
+  }
+  
+  return(CallWindowProc(OldDialogWndProc, hWnd, uMsg, wParam, lParam));
 }
 
 // ************************************************************************
@@ -1982,6 +2003,9 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
   LPNMHDR notifyMessage;
   HWND ctrl;
   static BOOL launchAppChecked = TRUE;
+  static BOOL resetHomepageChecked = TRUE;
+  DWORD result;
+  HKEY theKey;
   
   switch(msg) {
   case WM_INITDIALOG:
@@ -1996,9 +2020,18 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
     SetDlgItemText(hDlg, IDC_STATIC1, diInstallSuccessful.szMessage1);
     wsprintf(szBuf, diInstallSuccessful.szLaunchApp, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_START_APP, szBuf);
+    SetDlgItemText(hDlg, IDC_RESET_HOMEPAGE, diInstallSuccessful.szResetHomepage);
+
+#ifndef MOZ_PHOENIX
+    // Hide the "Reset Homepage" item for non-Firefox installers. 
+    ShowWindow(GetDlgItem(hDlg, IDC_RESET_HOMEPAGE), SW_HIDE);
+#endif
 
     launchAppChecked = diInstallSuccessful.bLaunchAppChecked;
+    resetHomepageChecked = diInstallSuccessful.bResetHomepageChecked;
 
+    // Subclass dialog to paint all static controls white.
+    OldDialogWndProc = SubclassWindow(hDlg, (WNDPROC)NewDialogWndProc);
     break;
 
   case WM_NOTIFY:
@@ -2011,6 +2044,8 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
       // Restore state from default or cached value. 
       CheckDlgButton(hDlg, IDC_START_APP, 
                      launchAppChecked ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_RESET_HOMEPAGE, 
+                     resetHomepageChecked ? BST_CHECKED : BST_UNCHECKED);
 
       // Don't show the back button here UNLESS the previous 
       // page was Windows Integration - and that only happens on a custom
@@ -2022,10 +2057,26 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
       // Store the checkbox state in case the user goes back to any post-install
       // pages that we might add.
       launchAppChecked = IsDlgButtonChecked(hDlg, IDC_START_APP) == BST_CHECKED;
+      resetHomepageChecked = IsDlgButtonChecked(hDlg, IDC_RESET_HOMEPAGE) == BST_CHECKED;
       
       break;
 
     case PSN_WIZFINISH:
+#ifdef MOZ_PHOENIX
+      // Store the "Reset Homepage" preference in the Registry. 
+      resetHomepageChecked = IsDlgButtonChecked(hDlg, IDC_RESET_HOMEPAGE) == BST_CHECKED;
+      if (resetHomepageChecked) {
+        result = RegOpenKeyEx(HKEY_CURRENT_USER, diInstallSuccessful.szRegistryKey, 0, KEY_READ | KEY_WRITE, &theKey);
+        if (result == ERROR_FILE_NOT_FOUND)
+          result = RegCreateKey(HKEY_CURRENT_USER, diInstallSuccessful.szRegistryKey, &theKey);
+        if (result == ERROR_SUCCESS) {
+          RegSetValueEx(theKey, "Reset Home Page", 0, REG_DWORD, 
+                        (LPBYTE)&(resetHomepageChecked), 
+                        sizeof(DWORD));
+        }
+      }
+#endif
+
       // Store state from the "Run App Now" checkbox. ProcessFileOpsForAll
       // uses this variable to decide whether or not to launch the browser.
       gbIgnoreRunAppX = IsDlgButtonChecked(hDlg, IDC_START_APP) != BST_CHECKED;
@@ -2289,4 +2340,5 @@ void InitPathDisplay (HWND aWindow, char* aPath, int aFolderIcon, int aFolderFie
                  aPath, buf, sizeof(buf));
   SetDlgItemText(aWindow, aFolderField, buf);
 }
+
 

@@ -3786,6 +3786,7 @@ HRESULT InitDlgInstallSuccessful(diIS *diDialog)
 {
   diDialog->bShowDialog = FALSE;
   diDialog->bLaunchAppChecked = TRUE;
+  diDialog->bResetHomepageChecked = TRUE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3793,6 +3794,10 @@ HRESULT InitDlgInstallSuccessful(diIS *diDialog)
   if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szLaunchApp = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szResetHomepage = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szRegistryKey = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessageHeader = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -3806,6 +3811,8 @@ void DeInitDlgInstallSuccessful(diIS *diDialog)
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
   FreeMemory(&(diDialog->szLaunchApp));
+  FreeMemory(&(diDialog->szResetHomepage));
+  FreeMemory(&(diDialog->szRegistryKey));
   FreeMemory(&(diDialog->szMessageHeader));
 }
 
@@ -7298,6 +7305,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   }
 
   /* get main install path */
+
+  // goats VerifyRestrictedAccess
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
   {
     GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
@@ -7654,6 +7663,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Install Successful",  "Launch App Checked", "", szShowDialog,                         MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diInstallSuccessful.bLaunchAppChecked = TRUE;
+  GetPrivateProfileString("Dialog Install Successful",  "Reset Homepage",         "", diInstallSuccessful.szResetHomepage, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Install Successful",  "Reset Homepage Checked", "", szShowDialog,                          MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diInstallSuccessful.bResetHomepageChecked = TRUE;
+  GetPrivateProfileString("Dialog Install Successful",  "Registry Key",         "", diInstallSuccessful.szRegistryKey, MAX_BUF, szFileIniConfig);
   
   /* Download dialog */
   GetPrivateProfileString("Dialog Download",       "Show Dialog",        "", szShowDialog,                   sizeof(szShowDialog),        szFileIniConfig);
