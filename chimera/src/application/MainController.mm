@@ -160,7 +160,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   // Now open the new window.
   NSString* homePage = mStartURL ? mStartURL : [mPreferenceManager homePage:YES];
-  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage];
+  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil];
 
   if ([homePage isEqualToString: @"about:blank"])
     [controller focusURLBar];
@@ -215,11 +215,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         // ----------------------
         NSWindow* mainWindow = [mApplication mainWindow];
         if (mainWindow) {
-          [[mainWindow windowController] loadURL:[url absoluteString]];
+          [[mainWindow windowController] loadURL:[url absoluteString] referrer:nil];
           [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] setActive: YES];
         }
         else
-          [self openBrowserWindowWithURL:[url absoluteString]];
+          [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil];
     }
 }
 
@@ -227,7 +227,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     NSWindow* mainWindow = [mApplication mainWindow];
     if (!mainWindow) {
-      [self openBrowserWindowWithURL: @"about:blank"];
+      [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
       mainWindow = [mApplication mainWindow];
     }
     
@@ -357,16 +357,16 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 }
 
 // open a new URL. This method always makes a new browser window
--(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL
+-(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer
 {
 	BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
-  [browser loadURL: aURL];
+  [browser loadURL: aURL referrer:aReferrer];
   [browser showWindow: self];
   return browser;
 }
 
 // open a new URL, observing the prefs on how to behave
-- (void)openNewWindowOrTabWithURL:(NSString*)inURLString
+- (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer: (NSString*)aReferrer
 {
   // make sure we're initted
   [self preferenceManager];
@@ -388,12 +388,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
   if (reuseWindow && browserWindow) {
     controller = [browserWindow windowController];
-    [controller openNewTabWithURL:inURLString loadInBackground:loadInBackground];
+    [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
   }
   else {
     // should use BrowserWindowController openNewWindowWithURL, but that method
     // really needs to be on the MainController
-    controller = [self openBrowserWindowWithURL: inURLString];
+    controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer];
   }
   
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
@@ -472,7 +472,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     NSWindow* mainWind = [mApplication mainWindow];
     if (!mainWind) {
-        [self openBrowserWindowWithURL: @"about:blank"];
+        [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
         mainWind = [mApplication mainWindow];
     }
 
@@ -483,7 +483,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   NSWindow* mainWindow = [mApplication mainWindow];
   if (!mainWindow) {
-    [self openBrowserWindowWithURL: @"about:blank"];
+    [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
     mainWindow = [mApplication mainWindow];
   }
 
@@ -531,7 +531,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
   }
 */
-  [self openNewWindowOrTabWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
+  [self openNewWindowOrTabWithURL:[[NSURL fileURLWithPath:filename] absoluteString] andReferrer:nil];
   
   return YES;    
 }
@@ -677,7 +677,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   NSWindow* mainWindow = [mApplication mainWindow];
   if (!mainWindow) {
-    [self openBrowserWindowWithURL: @"about:blank"];
+    [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil];
     mainWindow = [mApplication mainWindow];
   }
 
@@ -695,7 +695,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"FeedbackPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"FeedbackPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
 }
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
@@ -809,7 +809,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [urlString appendString:tmpString];
   }
   
-  [self openBrowserWindowWithURL:urlString];
+  [self openBrowserWindowWithURL:urlString andReferrer:nil];
 }
 
 @end

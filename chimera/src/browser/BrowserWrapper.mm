@@ -85,7 +85,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (IBAction)load:(id)sender
 {
-  [mBrowserView loadURI:[urlbar stringValue] flags:NSLoadFlagsNone];
+  [mBrowserView loadURI:[urlbar stringValue] referrer:nil flags:NSLoadFlagsNone];
 }
 
 -(void)disconnectView

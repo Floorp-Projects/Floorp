@@ -300,12 +300,14 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     pref->GetBoolPref("browser.tabs.opentabfor.middleclick", &useTab);
     PRBool loadInBackground;
     pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+    NSString* referrer = [[[mBrowserController getBrowserWrapper] getBrowserView] getFocusedURLString];
+    
     if (shiftKey)
       loadInBackground = !loadInBackground;
     if (useTab)
-      [mBrowserController openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
+      [mBrowserController openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
     else
-      [mBrowserController openNewWindowWithURL: hrefStr loadInBackground: loadInBackground];
+      [mBrowserController openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
   }
   else if (altKey) {
     // The user wants to save this link.
