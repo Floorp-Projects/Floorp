@@ -82,7 +82,7 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
     CopyUCS2toASCII(nsDependentString(wideName), asciiName);
 
     for(const char** p = list; *p; p++)
-        if(!strcmp(*p, asciiName))
+        if(!strcmp(*p, asciiName.get()))
             return xpc_CloneAllAccess();
     
     return nsnull;
