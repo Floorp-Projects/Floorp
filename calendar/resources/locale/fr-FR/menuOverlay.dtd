@@ -49,11 +49,11 @@
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "T">
 
-<!ENTITY calendar.new.server.label              "Nouveau fichier du calendrier…">
+<!ENTITY calendar.new.server.label              "Nouveau fichier d'agenda…">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "a">
 
-<!ENTITY calendar.open.file.label               "Ouvrez le fichier du calendrier…">
+<!ENTITY calendar.open.file.label               "Ouvrez le fichier d'agenda…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
@@ -71,7 +71,7 @@
 <!ENTITY event.mail.event.key                   "M">
 <!ENTITY event.mail.event.accesskey             "m">
 
-<!ENTITY calendar.print.label                   "Imprimer les calendriers actif(s)…">
+<!ENTITY calendar.print.label                   "Imprimer les agendas actif(s)…">
 <!ENTITY calendar.print.key                     "P">
 <!ENTITY calendar.print.accesskey               "r">
 
@@ -91,10 +91,10 @@
 <!ENTITY calendar.export.label                  "Exporter les événements sélectionnés…">
 <!ENTITY calendar.export.accesskey              "e">
 
-<!ENTITY calendar.subscribe.label               "S'abonner à un calendrier distant…">
+<!ENTITY calendar.subscribe.label               "S'abonner à un agenda distant…">
 <!ENTITY calendar.subscribe.accesskey           "s">
 
-<!ENTITY calendar.reloadserver.label            "Actualiser les calendriers distants">
+<!ENTITY calendar.reloadserver.label            "Actualiser les agendas distants">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 

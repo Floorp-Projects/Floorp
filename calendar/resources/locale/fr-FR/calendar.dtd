@@ -40,7 +40,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- General -->
-<!ENTITY calendar.file.default.name  "Mon calendrier" >
+<!ENTITY calendar.file.default.name  "Mon agenda" >
 
 <!-- Alarm -->
 <!ENTITY alarm.units.minutes  "Minutes" >
@@ -85,7 +85,7 @@
 <!ENTITY newevent.private.label      "Privé" >
 <!ENTITY newevent.private.note       "Cet événement est privé." >
 <!ENTITY newevent.alarm.label        "Alarme" >
-<!ENTITY newevent.server.label       "Calendrier" >
+<!ENTITY newevent.server.label       "Agenda" >
 <!ENTITY newevent.invite.label       "Inviter" >
 <!ENTITY newevent.email.label        "Envoyer l'alarme par courriel à :" >
 <!ENTITY newevent.beforealarm.label  "avant le début de l'événement" >
@@ -215,10 +215,10 @@
 <!ENTITY calendar.unifinder.hidecompletedtodos.label "Cacher les tâches accomplies">
 
 <!ENTITY calendar.calendartab.label "Calendrier">
-<!ENTITY calendar.listofcalendarstab.label "Calendriers">
+<!ENTITY calendar.listofcalendarstab.label "Agendas">
 <!ENTITY calendar.gototoday.button.label        "Aller à aujourd'hui" >
 
-<!ENTITY calendar.calendarlistbox.label "Calendriers">
+<!ENTITY calendar.calendarlistbox.label "Agendas">
 
 <!ENTITY calendar.events.filter.all.label "Tous les événements">
 <!ENTITY calendar.events.filter.today.label "Événements du jour">
@@ -243,7 +243,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Catégories">
 <!ENTITY calendar.unifinder.tree.location.label    "Lieu">
 <!ENTITY calendar.unifinder.tree.status.label    "Statut">
-<!ENTITY calendar.unifinder.tree.filename.label    "Nom du calendrier">
+<!ENTITY calendar.unifinder.tree.filename.label    "Nom de l'agenda">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Aller à aujourd'hui" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choisir la date à atteindre" >
@@ -270,7 +270,7 @@
 <!ENTITY calendar.cut.button.tooltip            "Couper" >
 <!ENTITY calendar.copy.button.tooltip           "Copier" >
 <!ENTITY calendar.paste.button.tooltip          "Coller" >
-<!ENTITY calendar.print.button.tooltip          "Imprimer le calendrier" >
+<!ENTITY calendar.print.button.tooltip          "Imprimer l'agenda" >
 
 <!ENTITY calendar.cut.button.label              "Couper" >
 <!ENTITY calendar.copy.button.label             "Copier" >
@@ -279,7 +279,7 @@
 
 <!ENTITY calendar.import.button.tooltip            "Importer : Importer des événements à partir d'un fichier local." >
 <!ENTITY calendar.export.button.tooltip            "Exporter : Exporter événements vers un fichier local." >
-<!ENTITY calendar.subscribe.button.tooltip         "Souscrire : Souscrire à un fichier de calendrier sur une machine distante." >
+<!ENTITY calendar.subscribe.button.tooltip         "Souscrire : Souscrire à un fichier d'agenda sur une machine distante." >
 <!ENTITY calendar.publish.button.tooltip            "Publier : Publier des événements sur une machine distante." >
 
 <!ENTITY calendar.import.button.label              "Importer" >
@@ -288,9 +288,9 @@
 <!ENTITY calendar.publish.button.label             "Publier" >
 
 <!ENTITY calendar.localreload.button.label   "Actualiser localement" >
-<!ENTITY calendar.localreload.button.tooltip  "Actualiser tous les calendriers locaux" >
+<!ENTITY calendar.localreload.button.tooltip  "Actualiser tous les agendas locaux" >
 <!ENTITY calendar.remotereload.button.label   "Actualiser" >
-<!ENTITY calendar.remotereload.button.tooltip   "Actualiser tous les calendriers locaux" >
+<!ENTITY calendar.remotereload.button.tooltip   "Actualiser tous les agendas locaux" >
 
 <!ENTITY calendar.dayview.button.label          "1 jour par vue" >
 <!ENTITY calendar.weekview.button.label         "1 semaine par vue" >
@@ -402,15 +402,15 @@
 <!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
-<!ENTITY calendar.context.newserver.label              "Nouveau calendrier">
+<!ENTITY calendar.context.newserver.label              "Nouvel agenda">
 <!ENTITY calendar.context.newserver.accesskey          "N">
-<!ENTITY calendar.context.editserver.label             "Modifier le calendrier">
+<!ENTITY calendar.context.editserver.label             "Modifier l'agenda">
 <!ENTITY calendar.context.editserver.accesskey         "M">
-<!ENTITY calendar.context.deleteserver.label           "Supprimer le calendrier">
+<!ENTITY calendar.context.deleteserver.label           "Supprimer l'agenda">
 <!ENTITY calendar.context.deleteserver.accesskey       "S">
-<!ENTITY calendar.context.reloadserver.label           "Actualiser les calendriers distants">
+<!ENTITY calendar.context.reloadserver.label           "Actualiser les agendas distants">
 <!ENTITY calendar.context.reloadserver.accesskey       "R">
-<!ENTITY calendar.context.publish.label                "Publier le calendrier en entier">
+<!ENTITY calendar.context.publish.label                "Publier l'agenda en entier">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
@@ -430,24 +430,24 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nouveau fichier de calendrier">
-<!ENTITY calendar.server.dialog.title.open          "Ouvrez le fichier du calendrier">
-<!ENTITY calendar.server.dialog.title.edit          "Modifier le calendrier">
-<!ENTITY calendar.server.dialog.name.label          "Nom du calendrier :">
-<!ENTITY calendar.server.dialog.publish.label       "Publier automatiquement les modifications vers le calendrier distant ? Quand ceci est activé, une version à jour du calendrier est téléchargée avant toute modification que vous avez effectuée. Vos changements sont alors appliqués et le calendrier est renvoyé vers le serveur.">
+<!ENTITY calendar.server.dialog.title.new           "Nouveau fichier d'agenda">
+<!ENTITY calendar.server.dialog.title.open          "Ouvrez le fichier d'agenda">
+<!ENTITY calendar.server.dialog.title.edit          "Modifier l'agenda">
+<!ENTITY calendar.server.dialog.name.label          "Nom de l'agenda :">
+<!ENTITY calendar.server.dialog.publish.label       "Publier automatiquement les modifications vers l'agenda distant ? Quand ceci est activé, une version à jour de l'agenda est téléchargée avant toute modification que vous avez effectuée. Vos changements sont alors appliqués et l'agenda est renvoyé vers le serveur.">
 <!ENTITY calendar.server.dialog.location.label      "URL du serveur distant :">
 <!ENTITY calendar.server.dialog.local.location.label "Emplacement du fichier local :">
 <!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local…">
 <!ENTITY calendar.server.dialog.help.label          "Vous pouvez entrer un chemin local, ou un chemin distant comme http://www.mozilla.org/projects/calendar/caldata/FranceHolidays.ics">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Vous pouvez utiliser ceci pour indiquer où le fichier de calendrier sera créé sur votre ordinateur. Ceci est optionnel.">
-<!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication du calendrier à une adresse distante.">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Vous pouvez utiliser ceci pour indiquer où le fichier d'agenda sera créé sur votre ordinateur. Ceci est optionnel.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication de l'agenda à une adresse distante.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Couleur :">
 
 
 <!-- Calendar Publish Dialog -->
-<!ENTITY calendar.publish.dialog.title              "Publier le calendrier">
+<!ENTITY calendar.publish.dialog.title              "Publier l'agenda">
 <!ENTITY calendar.publish.url.label                 "URL de publication">
 <!ENTITY calendar.publish.publish.button            "Publier">
 <!ENTITY calendar.publish.close.button              "Fermer">
@@ -458,16 +458,16 @@
 <!ENTITY allDayEvents.label "Événement durant toute la journée">
 
 <!-- Calendar Wizard Dialog -->
-<!ENTITY calendar.wizard.import.label              "Importer : importer les événements d'un fichier local dans un calendrier existant.">
-<!ENTITY calendar.wizard.export.label              "Exporter : exporter les événements d'un calendrier existant dans un fichier local.">
-<!ENTITY calendar.wizard.subscribe.label           "Souscrire : souscrire à un fichier calendrier sur une machine distante (càd. sur Internet)">
+<!ENTITY calendar.wizard.import.label              "Importer : importer les événements d'un fichier local dans un agenda existant.">
+<!ENTITY calendar.wizard.export.label              "Exporter : exporter les événements d'un agenda existant dans un fichier local.">
+<!ENTITY calendar.wizard.subscribe.label           "Souscrire : souscrire à un fichier agenda sur une machine distante (càd. sur Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publier : publier des événements sur une machine distante (càd. sur Internet) pour permettre à d'autres d'y souscrire.">
 
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
 <!ENTITY calendar.importoutlook.dialog.title "Importation d'un fichier CSV d'Outlook" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Faites correspondre les concepts de calendrier suivants avec leurs équivalents CSV d'Outlook :" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Faites correspondre les concepts d'agenda suivants avec leurs équivalents CSV d'Outlook :" >
 <!ENTITY calendar.importoutlook.outlooksubject.label "Objet" >
 <!ENTITY calendar.importoutlook.outlookstartdate.label "Début" >
 <!ENTITY calendar.importoutlook.outlookstarttime.label "Début" >
@@ -486,7 +486,7 @@
 <!ENTITY calendar.importoutlook.false.label "Faux" >
 
 <!-- Calendar Printing -->
-<!ENTITY calendar.print.window.title "Imprimer un calendrier">
+<!ENTITY calendar.print.window.title "Imprimer un agenda">
 <!ENTITY calendar.print.selectoptions.label "Sélectionnez vos options ci-dessous et cliquez sur OK pour imprimer">
 <!ENTITY calendar.print.selectviews.label "Sélectionnez la vue à imprimer">
 <!ENTITY calendar.print.listselected.label "Lister les événements sélectionnés">

@@ -130,7 +130,7 @@
 <!ENTITY pref.categories.add.prompt   "Saisissez le nom de la catégorie">
 <!ENTITY pref.categories.edit.title   "Éditer une catégorie">
 
-<!ENTITY pref.reloadonlaunch       "Recharger les calendriers distants au démarrage">
+<!ENTITY pref.reloadonlaunch       "Recharger les agendas distants au démarrage">
 
 <!ENTITY pref.publish.caption        "Paramètres de publication">
 <!ENTITY pref.publish.path.label     "Nom par défaut du fichier distant">
@@ -329,7 +329,7 @@
 <!ENTITY pref.timezone.Asia.Aqtau "Asie/Aqtau" >
 <!ENTITY pref.timezone.Asia.Aqtobe "Asie/Aqtobe" >
 <!ENTITY pref.timezone.Asia.Ashgabat "Asie/Ashgabat" >
-<!ENTITY pref.timezone.Asia.Baghdad "Asie/Baghdad" >
+<!ENTITY pref.timezone.Asia.Baghdad "Asie/Bagdad" >
 <!ENTITY pref.timezone.Asia.Bahrain "Asie/Bahreïn" >
 <!ENTITY pref.timezone.Asia.Baku "Asie/Baku" >
 <!ENTITY pref.timezone.Asia.Bangkok "Asie/Bangkok" >
