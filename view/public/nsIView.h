@@ -40,10 +40,14 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "nsRect.h"
+#include "nsPoint.h"
 #include <stdio.h>
 #include "nsIWidget.h"
 
 class nsIViewManager;
+class nsViewManager;
+class nsView;
 struct nsRect;
 
 // Enumerated type to indicate the visibility of a layer.
@@ -59,6 +63,47 @@ enum nsViewVisibility {
 #define NS_IVIEW_IID    \
 { 0xf0a21c40, 0xa7e1, 0x11d1, \
 { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+
+//Flag to determine whether the view will check if events can be handled
+//by its children or just handle the events itself
+#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
+
+// indicates that the view is or contains a placeholder view
+#define NS_VIEW_FLAG_CONTAINS_PLACEHOLDER 0x0002
+
+//the view is transparent
+#define NS_VIEW_FLAG_TRANSPARENT          0x0004
+
+//indicates that the view should not be bitblt'd when moved
+//or scrolled and instead must be repainted
+#define NS_VIEW_FLAG_DONT_BITBLT          0x0010
+
+// indicates that the view is using auto z-indexing
+#define NS_VIEW_FLAG_AUTO_ZINDEX          0x0020
+
+// indicates that the view is a floating view.
+#define NS_VIEW_FLAG_FLOATING             0x0040
+
+// set if our widget resized. 
+#define NS_VIEW_FLAG_WIDGET_RESIZED       0x0080
+
+// set if our widget moved. 
+#define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
+#define NS_VIEW_FLAG_CLIPCHILDREN         0x0200
+
+// if set it indicates that this view should be 
+// displayed above z-index:auto views if this view 
+// is z-index:auto also
+#define NS_VIEW_FLAG_TOPMOST              0x0400
+
+struct nsViewZIndex {
+  PRBool mIsAuto;
+  PRInt32 mZIndex;
+  PRBool mIsTopmost;
+  
+  nsViewZIndex(PRBool aIsAuto, PRInt32 aZIndex, PRBool aIsTopmost)
+    : mIsAuto(aIsAuto), mZIndex(aZIndex), mIsTopmost(aIsTopmost) {}
+};
 
 //----------------------------------------------------------------------
 
@@ -113,7 +158,8 @@ public:
    * view manager from somewhere else, do that instead.
    * @result the view manager
    */
-  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const = 0;
+  nsIViewManager* GetViewManager() const
+  { return NS_REINTERPRET_CAST(nsIViewManager*, mViewManager); }
 
   /**
    * Called to get the position of a view.
@@ -122,7 +168,12 @@ public:
    * @param x out parameter for x position
    * @param y out parameter for y position
    */
-  NS_IMETHOD  GetPosition(nscoord *aX, nscoord *aY) const = 0;
+  nsPoint GetPosition() const {
+     // this assertion should go away once we're confident that it's not needed
+    NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
+                 "root views should always have explicit position of (0,0)");
+    return nsPoint(mPosX, mPosY);
+  }
   
   /**
    * Called to get the dimensions and position of the view's bounds.
@@ -131,25 +182,31 @@ public:
    * if the view has content above or to the left of its origin.
    * @param aBounds out parameter for bounds
    */
-  NS_IMETHOD  GetBounds(nsRect &aBounds) const = 0;
+  nsRect GetBounds() const {
+    // this assertion should go away once we're confident that it's not needed
+    NS_ASSERTION(!IsRoot() || (mDimBounds.x == 0 && mDimBounds.y == 0),
+                 "root views should always have explicit position of (0,0)");
+    return mDimBounds;
+  }
 
   /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
-  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const = 0;
+  nsViewVisibility GetVisibility() const { return mVis; }
 
   /**
    * Called to query the z-index of a view.
    * The z-index is relative to all siblings of the view.
-   * @param aAuto  PR_TRUE if the view is zindex:auto
-   * @param aZIndex explicit z-index value. 
-   * @param aTopMost used when this view is zindex:auto
-   *        PR_TRUE if the view is topmost when compared
-   *        with another z-index:auto view
-   *        
+   * @result mZIndex: explicit z-index value or 0 if none is set
+   *         mIsAuto: PR_TRUE if the view is zindex:auto
+   *         mIsTopMost: used when this view is zindex:auto
+   *                     PR_TRUE if the view is topmost when compared
+   *                     with another z-index:auto view
    */
-  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const = 0;
+  nsViewZIndex GetZIndex() const { return nsViewZIndex((mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0,
+                                                       mZIndex,
+                                                       (mVFlags & NS_VIEW_FLAG_TOPMOST) != 0); }
 
   /**
    * Get whether the view "floats" above all other views,
@@ -159,25 +216,25 @@ public:
    * views that need to be drawn in front of all other views.
    * @result PR_TRUE if the view floats, PR_FALSE otherwise.
    */
-  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const = 0;
+  PRBool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
 
   /**
    * Called to query the parent of the view.
    * @result view's parent
    */
-  NS_IMETHOD  GetParent(nsIView *&aParent) const = 0;
+  nsIView* GetParent() const { return NS_REINTERPRET_CAST(nsIView*, mParent); }
 
   /**
    * The view's first child is the child which is earliest in document order.
    * @result first child
    */
-  NS_IMETHOD  GetFirstChild(nsIView* &aChild) const = 0;
+  nsIView* GetFirstChild() const { return NS_REINTERPRET_CAST(nsIView*, mFirstChild); }
 
   /**
    * Called to query the next sibling of the view.
    * @result view's next sibling
    */
-  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const = 0;
+  nsIView* GetNextSibling() const { return NS_REINTERPRET_CAST(nsIView*, mNextSibling); }
 
   /**
    * Note: This didn't exist in 4.0. Called to get the opacity of a view. 
@@ -185,15 +242,7 @@ public:
    * completely opaque.
    * @result view's opacity value
    */
-  NS_IMETHOD  GetOpacity(float &aOpacity) const = 0;
-
-  /**
-   * Used to ask a view if it has any areas within its bounding box
-   * that are transparent. This is not the same as opacity - opacity can
-   * be set externally, transparency is a quality of the view itself.
-   * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
-   */
-  NS_IMETHOD  HasTransparency(PRBool &aTransparent) const = 0;
+  float GetOpacity() const { return mOpacity; }
 
   /**
    * Set the view's link to client owned data.
@@ -205,7 +254,7 @@ public:
    * Query the view for it's link to client owned data.
    * @result data associated with view or nsnull if there is none.
    */
-  NS_IMETHOD  GetClientData(void *&aData) const = 0;
+  void* GetClientData() const { return mClientData; }
 
   /**
    * Get the nearest widget in this view or a parent of this view and
@@ -246,13 +295,12 @@ public:
    * @param aWidget out parameter for widget that this view contains,
    *        or nsnull if there is none.
    */
-  NS_IMETHOD GetWidget(nsIWidget *&aWidget) const = 0;
+  nsIWidget* GetWidget() const { return mWindow; }
 
   /**
    * Returns PR_TRUE if the view has a widget associated with it.
-   * @param aHasWidget out parameter that indicates whether a view has a widget.
    */
-  NS_IMETHOD HasWidget(PRBool *aHasWidget) const = 0;
+  PRBool HasWidget() const { return mWindow != nsnull; }
 
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore) = 0;
@@ -264,9 +312,43 @@ public:
    */
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent = 0) const = 0;
 
+  /**
+   * @result true iff this is the root view for its view manager
+   */
+  virtual PRBool IsRoot() const = 0;
+
+  // DEPRECATED METHODS to be removed by roc
+  NS_IMETHOD HasWidget(PRBool *aHasWidget) const = 0;
+  NS_IMETHOD GetWidget(nsIWidget *&aWidget) const = 0;
+  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const = 0;
+  NS_IMETHOD  GetParent(nsIView *&aParent) const = 0;
+  NS_IMETHOD  GetFirstChild(nsIView* &aChild) const = 0;
+  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const = 0;
+  NS_IMETHOD  GetOpacity(float &aOpacity) const = 0;
+  NS_IMETHOD  GetClientData(void *&aData) const = 0;
+  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const = 0;
+  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const = 0;
+  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const = 0;
+  NS_IMETHOD  GetPosition(nscoord *aX, nscoord *aY) const = 0;
+  NS_IMETHOD  GetBounds(nsRect &aBounds) const = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+
+protected:
+  nsViewManager     *mViewManager;
+  nsView            *mParent;
+  nsIWidget         *mWindow;
+  nsView            *mNextSibling;
+  nsView            *mFirstChild;
+  void              *mClientData;
+  PRInt32           mZIndex;
+  nsViewVisibility  mVis;
+  nscoord           mPosX, mPosY;
+  nsRect            mDimBounds; // relative to parent
+  float             mOpacity;
+  PRUint32          mVFlags;
 };
 
 #endif

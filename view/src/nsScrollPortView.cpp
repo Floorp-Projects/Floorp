@@ -442,19 +442,16 @@ void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *
 
 NS_IMETHODIMP nsScrollPortView::SetScrolledView(nsIView *aScrolledView)
 {
-  PRInt32 count = GetChildCount();
-
-  NS_ASSERTION(count <= 1,"Error scroll port has too many children");
+  NS_ASSERTION(GetFirstChild() == nsnull || GetFirstChild()->GetNextSibling() == nsnull,
+               "Error scroll port has too many children");
 
   // if there is already a child so remove it
-  if (count == 1)
+  if (GetFirstChild() != nsnull)
   {
-    nsView* child = GetFirstChild();
-    mViewManager->RemoveChild(child);
+    mViewManager->RemoveChild(GetFirstChild());
   }
 
   return mViewManager->InsertChild(this, aScrolledView, 0);
-
 }
 
 NS_IMETHODIMP nsScrollPortView::GetScrolledView(nsIView *&aScrolledView) const

@@ -66,37 +66,6 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPVIEW_IID)
 };
 
-//Flag to determine whether the view will check if events can be handled
-//by its children or just handle the events itself
-#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
-
-// indicates that the view is or contains a placeholder view
-#define NS_VIEW_FLAG_CONTAINS_PLACEHOLDER 0x0002
-
-//the view is transparent
-#define NS_VIEW_FLAG_TRANSPARENT          0x0004
-
-//indicates that the view should not be bitblt'd when moved
-//or scrolled and instead must be repainted
-#define NS_VIEW_FLAG_DONT_BITBLT          0x0010
-
-// indicates that the view is using auto z-indexing
-#define NS_VIEW_FLAG_AUTO_ZINDEX          0x0020
-
-// indicates that the view is a floating view.
-#define NS_VIEW_FLAG_FLOATING             0x0040
-
-// set if our widget resized. 
-#define NS_VIEW_FLAG_WIDGET_RESIZED       0x0080
-
-// set if our widget moved. 
-#define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
-#define NS_VIEW_FLAG_CLIPCHILDREN         0x0200
-
-// if set it indicates that this view should be 
-// displayed above z-index:auto views if this view 
-// is z-index:auto also
-#define NS_VIEW_FLAG_TOPMOST              0x0400
 
 class nsView : public nsIView
 {
@@ -118,13 +87,17 @@ public:
   NS_IMETHOD  GetBounds(nsRect &aBounds) const;
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
   NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const;
-  PRInt32     GetZIndex() const { return mZIndex; }
-  PRBool      GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
   NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
   NS_IMETHOD  GetParent(nsIView *&aParent) const;
   NS_IMETHOD  GetFirstChild(nsIView* &aChild) const;
   NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
   NS_IMETHOD  GetOpacity(float &aOpacity) const;
+  /**
+   * Used to ask a view if it has any areas within its bounding box
+   * that are transparent. This is not the same as opacity - opacity can
+   * be set externally, transparency is a quality of the view itself.
+   * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
+   */
   NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
   NS_IMETHOD  SetClientData(void *aData);
   NS_IMETHOD  GetClientData(void *&aData) const;
@@ -292,7 +265,7 @@ public:
   static nsView*  GetViewFor(nsIWidget* aWidget);
 
    // Helper function to determine if the view instance is the root view
-  PRBool IsRoot();
+  virtual PRBool IsRoot() const;
 
    // Helper function to determine if the view point is inside of a view
   PRBool PointIsInside(nsView& aView, nscoord x, nscoord y) const;
@@ -301,17 +274,27 @@ public:
   // parent, if we can)
   void DropMouseGrabbing();
 
-public: // NOT in nsIView, so only available in view module
+public:
+  // NOT in nsIView, so only available in view module
+  nsZPlaceholderView* GetZParent() const { return mZParent; }
+  // These are also present in nsIView, but these versions return nsView and nsViewManager
+  // instead of nsIView and nsIViewManager.
   nsView* GetFirstChild() const { return mFirstChild; }
   nsView* GetNextSibling() const { return mNextSibling; }
   nsView* GetParent() const { return mParent; }
-  nsZPlaceholderView* GetZParent() const { return mZParent; }
   nsViewManager* GetViewManager() const { return mViewManager; }
-  nsViewVisibility GetVisibility() const { return mVis; }
-  void* GetClientData() const { return mClientData; }
+  // These are superceded by a better interface in nsIView
+  PRInt32 GetZIndex() const { return mZIndex; }
+  PRBool GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
+  // This is a better interface than GetDimensions(nsRect&) above
+  nsRect GetDimensions() const { nsRect r = mDimBounds; r.MoveBy(-mPosX, -mPosY); return r; }
+  // These are defined exactly the same in nsIView, but for now they have to be redeclared
+  // here because of stupid C++ method hiding rules
   PRBool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
+  float GetOpacity() const { return mOpacity; }
+  void* GetClientData() const { return mClientData; }
+  nsViewVisibility GetVisibility() const { return mVis; }
 
-  PRInt32 GetChildCount() const { return mNumKids; }
   nsView* GetChild(PRInt32 aIndex) const;
 
   void InsertChild(nsView *aChild, nsView *aSibling);
@@ -335,24 +318,10 @@ protected:
   virtual nsresult LoadWidget(const nsCID &aClassIID);
 
 protected:
-  nsViewManager     *mViewManager;
-  nsView            *mParent;
-  nsIWidget         *mWindow;
-
   nsZPlaceholderView*mZParent;
 
   //XXX should there be pointers to last child so backward walking is fast?
-  nsView            *mNextSibling;
-  nsView            *mFirstChild;
-  void              *mClientData;
-  PRInt32           mZIndex;
-  nsViewVisibility  mVis;
-  PRInt32           mNumKids;
-  nscoord           mPosX, mPosY;
-  nsRect            mDimBounds; // relative to parent
   nsRect            mChildClip;
-  float             mOpacity;
-  PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
   // Bug #19416
   PRPackedBool      mShouldIgnoreSetPosition;

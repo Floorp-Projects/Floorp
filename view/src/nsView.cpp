@@ -640,7 +640,6 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
       mFirstChild = aChild;
     }
     aChild->SetParent(this);
-    mNumKids++;
   }
 }
 
@@ -662,7 +661,6 @@ void nsView::RemoveChild(nsView *child)
           mFirstChild = kid->GetNextSibling();
         }
         child->SetParent(nsnull);
-        mNumKids--;
         found = PR_TRUE;
         break;
       }
@@ -943,7 +941,7 @@ nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
   return NS_OK;
 }
 
-PRBool nsView::IsRoot()
+PRBool nsView::IsRoot() const
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
   return mViewManager->GetRootView() == this;
