@@ -49,6 +49,8 @@ pippki.jar:
     content/pippki/crlManager.js             (content/crlManager.js)
     content/pippki/pref-masterpass.js        (content/pref-masterpass.js)
     content/pippki/pref-masterpass.xul       (content/pref-masterpass.xul)
+
+en-US.jar:
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)

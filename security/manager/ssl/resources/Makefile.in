@@ -30,4 +30,4 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(REGCHROME) content pipnss pipnss.jar
-	$(REGCHROME) locale en-US/pipnss pipnss.jar
+	$(REGCHROME) locale en-US/pipnss en-US.jar

@@ -30,4 +30,4 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(REGCHROME) content pippki pippki.jar
-	$(REGCHROME) locale en-US/pippki pippki.jar
+	$(REGCHROME) locale en-US/pippki en-US.jar
