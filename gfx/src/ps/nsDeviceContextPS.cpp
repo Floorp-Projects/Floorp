@@ -36,24 +36,12 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-/* PostScript/Xprint print modules do not support more than one object
- * instance because they use global vars which cannot be shared between
- * multiple instances...
- * bug 119491 ("Cleanup global vars in PostScript and Xprint modules) will fix
- * that...
- */
-#define WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS 1
 
 #include "nsDeviceContextPS.h"
 #include "nsRenderingContextPS.h"
 #include "nsString.h"
 #include "nsFontMetricsPS.h"
 #include "nsPostScriptObj.h"
-
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-static int instance_counter = 0;
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -64,11 +52,6 @@ nsDeviceContextPS :: nsDeviceContextPS()
 {
   mSpec = nsnull; 
   mParentDeviceContext = nsnull;
-  
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  instance_counter++;
-  NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 }
 
 /** ---------------------------------------------------
@@ -80,24 +63,12 @@ nsDeviceContextPS :: ~nsDeviceContextPS()
   /* nsCOMPtr<> will dispose the objects... */
   mSpec = nsnull;
   mParentDeviceContext = nsnull;
-
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  instance_counter--;
-  NS_ASSERTION(instance_counter >= 0, "We cannot have less than zero instances.");
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 }
 
 NS_IMETHODIMP
 nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
 {
   nsresult  rv = NS_ERROR_FAILURE;
-
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
-  if (instance_counter > 1) {
-    return NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW;
-  }
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 
   mSpec = aSpec;
   
@@ -128,13 +99,6 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
 {
 float origscale, newscale;
 float t2d, a2d;
-
-#ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
-  NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
-  if (instance_counter > 1) {
-    return NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW;
-  }
-#endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 
   mDepth = 1;     // just for arguments sake
 
