@@ -433,7 +433,6 @@ Rights Reserved.
       <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
       <separator/>
 	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" observes="cmd_saveDefault"/>
-	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') Stop()"/>
 	    <spring flex="100%"/>
 		</box>
     <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("compose.throbber.url")'>
