@@ -47,7 +47,7 @@
    <html:table>
    <html:tr >
    	<html:td>
-   		<html:img html:src="resource:/res/samples/alertl.gif"></html:img>
+   		<html:img html:src="chrome://navigator/skin/alertl.gif"></html:img>
    	</html:td>
    	
    	<html:td>	
