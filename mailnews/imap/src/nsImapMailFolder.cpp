@@ -1687,6 +1687,11 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
             if (!msgWindow) return NS_ERROR_NULL_POINTER;
             nsCOMPtr<nsIDocShell> docShell;
             msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+			//If we can't find the trash folder and we are supposed to move it to the trash
+			//return failure.
+			if((NS_FAILED(rv) || !trashFolder) && !deleteNoTrash)
+				return NS_ERROR_FAILURE;
+
             nsCOMPtr<nsIPrompt> dialog;
             if (docShell) dialog = do_GetInterface(docShell);
             if (!deleteNoTrash)
