@@ -394,7 +394,7 @@ public:
      * @result the block of memory
      */
     NS_IMETHOD_(void*)
-    Alloc(PRUint32 size);
+    Alloc(size_t size);
 
     /**
      * Reallocates a block of memory to a new size.
@@ -404,14 +404,14 @@ public:
      * @result the rellocated block of memory
      */
     NS_IMETHOD_(void*)
-    Realloc(void* ptr, PRUint32 size);
+    Realloc(void* ptr, size_t size);
 
     /**
      * Frees a block of memory. 
      *
      * @param ptr - the block of memory to free
      */
-    NS_IMETHOD
+    NS_IMETHOD_(void)
     Free(void* ptr);
 
     /**
@@ -419,6 +419,12 @@ public:
      */
     NS_IMETHOD
     HeapMinimize(void);
+
+    NS_IMETHOD
+    RegisterObserver(nsIMemoryPressureObserver *obs) { return NS_OK; }
+
+    NS_IMETHOD
+    UnregisterObserver(nsIMemoryPressureObserver *obs) { return NS_OK; }
 
 private:
 	nsILiveconnect* mLiveconnect;
@@ -1912,13 +1918,13 @@ CPluginManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 //////////////////////////////
 
 NS_METHOD_(void*)
-CPluginManager::Alloc(PRUint32 size)
+CPluginManager::Alloc(size_t size)
 {
 	return ::NPN_MemAlloc(size);
 }
 
 NS_METHOD_(void*)
-CPluginManager::Realloc(void* ptr, PRUint32 size)
+CPluginManager::Realloc(void* ptr, size_t size)
 {
 	if (ptr != NULL) {
 		void* new_ptr = Alloc(size);
@@ -1931,14 +1937,12 @@ CPluginManager::Realloc(void* ptr, PRUint32 size)
 	return ptr;
 }
 
-NS_METHOD
+NS_METHOD_(void)
 CPluginManager::Free(void* ptr)
 {
 	if (ptr != NULL) {
 		::NPN_MemFree(ptr);
-		return NS_OK;
 	}
-	return NS_ERROR_NULL_POINTER;
 }
 
 NS_METHOD
