@@ -876,7 +876,9 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         eHTMLTags theGrandParentTag=mBodyContext->TagAt(theCount-2);
         
         nsAutoString  theNumber;
-        PRInt32   theCounter=mBodyContext->IncrementCounter(theGrandParentTag,aNode,theNumber);
+        
+        mBodyContext->IncrementCounter(theGrandParentTag,aNode,theNumber);
+
         CTextToken theToken(theNumber);
         PRInt32 theLineNumber=0;
         nsCParserNode theNode(&theToken,theLineNumber);

@@ -508,7 +508,9 @@ public:
 		  case	eSpelled:		  SpelledString(aValue,aString);  break;
 		  case	eRoman:		    RomanString(aValue,aString);    break;
 		  case	eFootnote:	  FootnoteString(aValue,aString); break;
-		  case	eUserSeries:	SeriesString(aValue,aString,aCharSet,anOffset,aBase);
+		  case	eUserSeries:	SeriesString(aValue,aString,aCharSet,anOffset,aBase); break;
+      default:
+        DecimalString(aValue,aString);  break;
 	  }
   }
 
@@ -551,7 +553,6 @@ public:
 	  PRInt32	root=1000000000;
 	  PRInt32	expn=4;
 	  PRInt32	modu=0;
-	  PRInt32	div=0;
 	  PRInt32	temp=0;
     
 	  aValue=abs(aValue);
@@ -559,12 +560,14 @@ public:
 
 	    while(root && aValue) {		
 		    if(temp=aValue/root) {
-          if (div=temp/100) {//start with hundreds part
+          PRInt32 div=temp/100;
+          if (div) {//start with hundreds part
             aString.AppendWithConversion(ones[div]);
             aString.AppendWithConversion(bases[1]);
 		      }
 			    modu=(temp%10);
-          if (div=((temp%100)/10)) {
+          div=(temp%100)/10;
+          if (div) {
 				    if (div<2) {
               aString.AppendWithConversion(teens[modu]);
 						  modu=0;
@@ -655,7 +658,6 @@ public:
   static void FootnoteString(PRInt32 aValue,nsString& aString) {
     static char	kFootnoteSet[]="abcdefg";
 
-	  PRBool  negative=(aValue<0);
 	  int			seriesLen = strlen (kFootnoteSet) - 1;
 	  int			count=0;
     int     repCount=0;

@@ -558,6 +558,38 @@ public:
 };
 
 /**********************************************************
+  This defines the form element itself
+ **********************************************************/
+class CFormElement: public CBlockElement {
+public:
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CElement::Initialize(anElement,aTag,CBlockElement::GetGroup(),CBlockElement::GetBlockGroupMembers());
+  }
+
+  CFormElement() : CBlockElement(eHTMLTag_form) {
+    CFormElement::Initialize(*this,eHTMLTag_form);
+    mContainsGroups.mBits.mSelf=0;
+    mContainsGroups.mBits.mFormControl=1;
+  }
+
+  virtual PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
+    PRBool result=CElement::CanContain(anElement,aContext);
+    if((!result) && (aContext->mTransitional)) {
+
+      //If we're in transitional mode, then also allow inline elements...
+        
+      CGroupMembers& theFlowGroup=CFlowElement::GetContainedGroups();
+      result=ContainsGroup(theFlowGroup,anElement->mGroup);            
+    }
+    return result;
+  }
+
+
+
+};
+
+/**********************************************************
   This defines the fontstyle element group
  **********************************************************/
 class CFontStyleElement: public CElement {
@@ -956,9 +988,9 @@ public:
     PRInt32   theCount=aContext->GetCount();
     eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
 
-    nsCParserNode *theNode=(nsCParserNode*)aNode;
+    nsCParserNode *theNode=(nsCParserNode*)aNode;   
     nsAutoString  theNumber;
-    PRInt32   theCounter=aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
+    aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
 
     CTextToken theToken(theNumber);
     PRInt32 theLineNumber=0;
@@ -1226,6 +1258,7 @@ public:
   CTextAreaElement() : CTextContainer(eHTMLTag_textarea) {
     mGroup.mBits.mHeadMisc=1;
     mGroup=CFormControlElement::GetGroup();
+    mProperties.mIsSinkContainer=0;
   }
 
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
@@ -1244,6 +1277,7 @@ public:
     return result;
   }
 
+ 
 };
 
 /**********************************************************
@@ -1662,7 +1696,7 @@ public:
     if(theNode) {
       nsString  theStr=theNode->mToken->GetStringValueXXX();
       PRInt32   theLen=theStr.Length();
-      PRInt32   thePos=theStr.RFindChar(kGreaterThan);
+      //PRInt32   thePos=theStr.RFindChar(kGreaterThan);
 
       theStr.Truncate(theLen-1);
       theStr.Cut(0,2);
@@ -1904,7 +1938,8 @@ public:
     mAppletElement(eHTMLTag_applet),
     mObjectElement(eHTMLTag_object),
     mFieldsetElement(),
-    mCounterElement()
+    mCounterElement(),
+    mFormElement()
   {
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
@@ -1950,6 +1985,7 @@ public:
   CAppletElement    mObjectElement;
   CFieldsetElement  mFieldsetElement;
   CCounterElement   mCounterElement;
+  CFormElement      mFormElement;
 };
 
 
@@ -2074,6 +2110,7 @@ void CElementTable::InitializeElements() {
 
   CSpecialElement::Initialize(      mDfltElements[eHTMLTag_font],       eHTMLTag_font);
   CElement::Initialize(             mDfltElements[eHTMLTag_form],       eHTMLTag_form, CBlockElement::GetGroup(), CBlockElement::GetBlockGroupMembers());
+  mDfltElements[eHTMLTag_form].mContainsGroups.mBits.mFormControl=1;
   mDfltElements[eHTMLTag_form].mIncludeKids=kFormKids;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_frame],      eHTMLTag_frame, CFrameElement::GetGroup(), CLeafElement::GetContainedGroups());
@@ -2251,6 +2288,7 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_object]=&mObjectElement;
   mElements[eHTMLTag_fieldset]=&mFieldsetElement;
   mElements[eHTMLTag_counter]=&mCounterElement;
+  mElements[eHTMLTag_form]=&mFormElement;
 }
 
 void CElementTable::DebugDumpGroups(CElement* aTag){
@@ -2378,7 +2416,7 @@ void CElementTable::DebugDumpBlockElements(const char* aTitle) {
   PRInt32   theTagID=eHTMLTag_unknown;
   PRBool    result=PR_FALSE;
 
-  printf("Block Elements -- %s: \n");
+  printf("Block Elements -- %s: \n",aTitle);
   while(theTagID<=eHTMLTag_userdefined) {
     CElement *theTag=GetElement((eHTMLTags)theTagID);
     if(theTag) {
