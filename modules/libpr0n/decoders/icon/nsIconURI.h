@@ -43,6 +43,9 @@
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+class nsStaticAtom;
+
+class nsIAtom;
 
 #define NS_MOZICONURI_CID                            \
 {                                                    \
@@ -59,6 +62,8 @@ public:
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
 
+  static void InitAtoms();
+
   // nsJARURI
   nsMozIconURI();
   virtual ~nsMozIconURI();
@@ -68,6 +73,12 @@ protected:
   PRUint32 mSize; // the # of pixels in a row that we want for this image. Typically 16, 32, 128, etc.
   nsCString mContentType; // optional field explicitly specifying the content type
   nsCString mDummyFilePath; // if we don't have a valid file url, the file path is stored here....i.e if mFileIcon is null.....
+  nsCString mStockIcon;
+  nsCOMPtr<nsIAtom> mIconSize;
+  nsCOMPtr<nsIAtom> mIconState;
+
+  static const nsStaticAtom sSizeAtoms[];
+  static const nsStaticAtom sStateAtoms[];
 
   nsresult FormatSpec(nsACString &result);
 };

@@ -45,7 +45,7 @@
 
 /**
  * This class is the gnome implementation of nsIconChannel. It basically asks
- * gnome for the filename to a given mime type, and creates a new channel for
+ * gtk/gnome for an icon, saves it as a tmp icon, and creates a new channel for
  * that file to which all calls will be proxied.
  */
 class nsIconChannel : public nsIChannel {
@@ -53,6 +53,11 @@ class nsIconChannel : public nsIChannel {
     NS_DECL_ISUPPORTS
     NS_FORWARD_NSIREQUEST(mRealChannel->)
     NS_FORWARD_NSICHANNEL(mRealChannel->)
+
+    nsIconChannel() {}
+    ~nsIconChannel() {}
+
+    static void Shutdown();
 
     /**
      * Called by nsIconProtocolHandler after it creates this channel.
@@ -62,8 +67,7 @@ class nsIconChannel : public nsIChannel {
     NS_HIDDEN_(nsresult) Init(nsIURI* aURI);
   private:
     /**
-     * The channel to the real icon file (e.g. to
-     * /usr/share/icons/gnome/16x16/mimetypes/gnome-mime-application-msword.png).
+     * The channel to the temp icon file (e.g. to /tmp/2qy9wjqw.html).
      * Will always be non-null after a successful Init.
      */
     nsCOMPtr<nsIChannel> mRealChannel;
@@ -71,8 +75,11 @@ class nsIconChannel : public nsIChannel {
      * The moz-icon URI we're loading. Always non-null after a successful Init.
      */
     nsCOMPtr<nsIMozIconURI> mURI;
+
+    /**
+     * Called by Init if we need to use the gnomeui library.
+     */
+    nsresult InitWithGnome();
 };
-
-
 
 #endif

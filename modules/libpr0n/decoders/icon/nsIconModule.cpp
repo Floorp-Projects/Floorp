@@ -44,6 +44,8 @@
 #include "nsIconDecoder.h"
 #endif
 #include "nsIconProtocolHandler.h"
+#include "nsIconURI.h"
+#include "nsIconChannel.h"
 
 // objects that just require generic constructors
 /******************************************************************************
@@ -72,4 +74,20 @@ static const nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE(nsIconDecoderModule, components)
+PR_STATIC_CALLBACK(nsresult)
+IconDecoderModuleCtor(nsIModule* aSelf)
+{
+  nsMozIconURI::InitAtoms();
+  return NS_OK;
+}
+
+PR_STATIC_CALLBACK(void)
+IconDecoderModuleDtor(nsIModule* aSelf)
+{
+#ifdef MOZ_ENABLE_GNOMEUI
+  nsIconChannel::Shutdown();
+#endif
+}
+
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsIconDecoderModule, components,
+                                   IconDecoderModuleCtor, IconDecoderModuleDtor)
