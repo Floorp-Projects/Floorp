@@ -71,7 +71,7 @@ PCK4BITS(     6,     6,     6,     6,eError,eError,eStart,eStart) //30-37
 
 
 static nsVerifier nsUCS2BEVerifier = {
-     "ISO-10646-UCS-2",
+     "UTF-16BE",
     {
        eIdxSft4bits, 
        eSftMsk4bits, 

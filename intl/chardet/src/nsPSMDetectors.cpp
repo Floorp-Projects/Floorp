@@ -187,8 +187,8 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
                   );
 #endif
             Report( mVerifier[mItemIdx[j]]->charset);
-            mDone = mDone;
-            return PR_TRUE;
+            mDone = PR_TRUE;
+            return mDone;
         } else if (eError == st) 
         {
 #ifdef DETECTOR_DEBUG
