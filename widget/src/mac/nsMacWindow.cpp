@@ -354,14 +354,18 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 #if TARGET_CARBON
               if (nsToolkit::OnMacOSX() && aParent && (aInitData->mBorderStyle & eBorderStyle_sheet))
               {
-                  nsWindowType parentType;
-                  aParent->GetWindowType(parentType);
-                  if (parentType != eWindowType_invisible)
+                nsWindowType parentType;
+                aParent->GetWindowType(parentType);
+                if (parentType != eWindowType_invisible)
+                {
+                  // Mac OS X sheet support
+                  mIsSheet = PR_TRUE;
+                  wDefProcID = kWindowSheetProc;
+                  if (aInitData->mBorderStyle & eBorderStyle_resizeh)
                   {
-                      // Mac OS X sheet support
-                      mIsSheet = PR_TRUE;
-                      wDefProcID = kWindowSheetProc;
+                    resizable = true;
                   }
+                }
               }
               else
 #endif
@@ -541,12 +545,16 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
     if (mIsSheet)
     {
-        // Mac OS X sheet support
-        ::SetWindowClass(mWindowPtr, kSheetWindowClass);
-        EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowUpdate},
-                                          {kEventClassWindow, kEventWindowDrawContent} };
-        OSStatus err1 = ::InstallWindowEventHandler ( mWindowPtr,
-            NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
+      // Mac OS X sheet support
+      if ( resizable )
+      {
+        ::ChangeWindowAttributes ( mWindowPtr, kWindowResizableAttribute, kWindowNoAttributes );
+      }
+      ::SetWindowClass(mWindowPtr, kSheetWindowClass);
+      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowUpdate},
+                                        {kEventClassWindow, kEventWindowDrawContent} };
+      OSStatus err1 = ::InstallWindowEventHandler ( mWindowPtr,
+          NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
     }
     
     // Setup the live window resizing if appropriate
