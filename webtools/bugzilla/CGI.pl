@@ -695,15 +695,12 @@ sub quietly_check_login() {
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
-        if (!defined $ENV{'REMOTE_HOST'}) {
-            $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
-        }
         SendSQL("SELECT profiles.userid, profiles.groupset, " .
                 "profiles.login_name, " .
                 "profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND logincookies.hostname = " .
-                SqlQuote($ENV{"REMOTE_HOST"}) .
+                " AND logincookies.ipaddr = " .
+                SqlQuote($ENV{"REMOTE_ADDR"}) .
                 ", profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
                 SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
@@ -988,10 +985,7 @@ sub confirm_login {
      # the cookies.
      if($enteredlogin ne "") {
        $::COOKIE{"Bugzilla_login"} = $enteredlogin;
-       if (!defined $ENV{'REMOTE_HOST'}) {
-         $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
-       }
-       SendSQL("insert into logincookies (userid,hostname) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_HOST'})]})");
+       SendSQL("insert into logincookies (userid,ipaddr) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_ADDR'})]})");
        SendSQL("select LAST_INSERT_ID()");
        my $logincookie = FetchOneColumn();
 

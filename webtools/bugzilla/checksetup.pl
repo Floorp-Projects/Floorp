@@ -1155,11 +1155,10 @@ $table{groups} =
     unique(bit),
     unique(name)';
 
-
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    hostname varchar(128),
+    ipaddr varchar(40) NOT NULL,
     lastused timestamp,
 
     index(lastused)';
@@ -2704,6 +2703,17 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
 
     DropField("bugs", "qacontact_accessible");
     DropField("bugs", "assignee_accessible");
+}
+
+# 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
+# Use the ip, not the hostname, in the logincookies table
+if (GetFieldDef("logincookies", "hostname")) {
+    # We've changed what we match against, so all entries are now invalid
+    $dbh->do("DELETE FROM logincookies");
+
+    # Now update the logincookies schema
+    DropField("logincookies", "hostname");
+    AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your
