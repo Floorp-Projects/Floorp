@@ -2545,7 +2545,15 @@ main(int argc, char **argv)
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
 	PR_Close(outFile);
 	inFile  = PR_Open(certreqfile, PR_RDONLY, 0);
+	if (!inFile) {
+	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\".\n", certreqfile);
+	    return -1;
+	}
 	outFile = PR_Open(certfile, PR_RDWR | PR_CREATE_FILE, 00660);
+	if (!outFile) {
+	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\".\n", certfile);
+	    return -1;
+	}
     }
 
     /*  Create a certificate (-C or -S).  */
