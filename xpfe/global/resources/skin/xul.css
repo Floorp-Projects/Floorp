@@ -292,3 +292,6 @@ text[editable="true"][mode="edit"] {
   behavior: url(resource:/chrome/xulBindings.xml#text-editable-edit);
 }
 
+colorpicker {
+  behavior: url(resource:/chrome/xulBindings.xml#colorpicker);
+}
