@@ -637,17 +637,16 @@
 
   [% ELSIF error == "too_many_votes_for_bug" %]
     [% title = "Illegal Vote" %]
-    You may only use at most [% max FILTER html %] votes for a single 
+    You may only use at most [% max FILTER html %] votes for a single
     [%+ terms.bug %] in the
-    <tt>[% prod FILTER html %]</tt> product, but you are trying to use
-    [% votes FILTER html %].
+    <tt>[% prod FILTER html %]</tt> product, but you are trying to
+    use [% votes FILTER html %].
 
   [% ELSIF error == "too_many_votes_for_product" %]
     [% title = "Illegal Vote" %]
-    You may only use at most [% max FILTER html %] votes for [% terms.bugs %] 
-    in the
-    <tt>[% prod FILTER html %]</tt> product, but you are trying to use
-    [% votes FILTER html %].
+    You tried to use [% votes FILTER html %] votes,
+    which exceeds the [% max FILTER html %] vote per [% terms.bug %] limit
+    for the <tt>[% prod FILTER html %]</tt> product.
 
   [% ELSIF error == "token_inexistent" %]
     [% title = "Token Does Not Exist" %]
