@@ -639,6 +639,15 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
                     return MK_CHANGING_CONTEXT;
                 }
             }
+#else
+            // Fix for bug 138116 - similar code to that in MOZ_MAIL_NEWS block above,
+            //  so this makes "about:" URLs work in Composer without Mail/News module
+            //  (We must always find or create a Navigator window to display in)
+            if( bForceNew && EDT_IS_EDITOR(GetContext()) )
+            {
+                SwitchToBrowserContext(pUrl);
+                return MK_CHANGING_CONTEXT;
+            }
 #endif // MOZ_MAIL_NEWS
 
         	//	Our first (well, almost) task is to interrupt the load.
@@ -777,7 +786,8 @@ void CAbstractCX::NiceReload(int usePassInType, NET_ReloadMethod iReloadType )	{
 			return;
 		}
 
-		if (MAIL_NEWS_TYPE(context->type)) {
+		// Fix for 92797. Checking for editor flag covers both Mail and Page Composers 
+        if (EDT_IS_EDITOR(context) /*MAIL_NEWS_TYPE(context->type)*/) {
 		    Reload(NET_NORMAL_RELOAD);
 		}
 		else {
