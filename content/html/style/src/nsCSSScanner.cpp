@@ -31,11 +31,12 @@ static char* kNullPointer = "null pointer";
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 #include "nsIURI.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsIServiceManager.h"
-#include "nsComponentManagerUtils.h"
+#include "nsComponentManagerUtils.h"  // put this higher and gcc barfs...
 #endif
 
 // Don't bother collecting whitespace characters in token's mIdent buffer
@@ -212,9 +213,9 @@ void nsCSSScanner::InitErrorReporting(nsIURI* aURI)
   mColNumber = 0;
 }
 
-void nsCSSScanner::ReportError(const PRUnichar* aError)
+void nsCSSScanner::ReportError(const nsAReadableString& aError)
 {
-  printf("CSS Error (%s :%lu.%lu): %s.\n",
+  printf("CSS Error (%s :%u.%u): %s.\n",
          mFileName.get(),
          mLineNumber,
          mColNumber,
@@ -228,13 +229,15 @@ void nsCSSScanner::ReportError(const PRUnichar* aError)
 
   if (consoleService && errorObject) {
     nsresult rv;
-    rv = errorObject->Init(aError,
+    PRUnichar *error = ToNewUnicode(aError);
+    rv = errorObject->Init(error,
                            NS_ConvertASCIItoUCS2(mFileName.get()).GetUnicode(),
                            NS_LITERAL_STRING(""),
                            mLineNumber,
                            mColNumber,
                            0,
                            "CSS Parser");
+    nsMemory::Free(error);
     if (NS_SUCCEEDED(rv))
       consoleService->LogMessage(errorObject);
   }

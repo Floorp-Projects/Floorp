@@ -107,7 +107,7 @@ class nsCSSScanner {
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   void InitErrorReporting(nsIURI* aURI);
-  void ReportError(const PRUnichar* aError);
+  void ReportError(const nsAReadableString& aError);
 #endif
 
   // Get the next token. Return nsfalse on EOF or ERROR. aTokenResult
