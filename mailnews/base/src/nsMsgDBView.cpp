@@ -3464,9 +3464,12 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
     // pTemp - pBase = the space we have used so far
     // sizeof(EntryInfo) + fieldLen = space we need for this entry
     // allocSize = size of the current block
-    if ((PRUint32)(pTemp - pBase) + (keyOffset + actualFieldLen) >= allocSize) {
+    if ((PRUint32)(pTemp - pBase) + (keyOffset + actualFieldLen) >= allocSize)
+    {
       maxSize = (keyOffset + maxLen) * (arraySize - numSoFar);
       allocSize = PR_MIN(maxBlockSize, maxSize);
+      // make sure allocSize is big enough for the current value
+      allocSize = PR_MAX(allocSize, keyOffset + actualFieldLen);
       pTemp = (char *) PR_Malloc(allocSize);
       NS_ASSERTION(pTemp, "out of memory, can't sort");
       if (!pTemp) 
