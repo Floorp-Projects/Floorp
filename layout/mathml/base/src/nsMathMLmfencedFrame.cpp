@@ -138,7 +138,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators(nsIPresContext* aPresContext)
     data = value;
   }
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
-    data = '('; // default as per the MathML REC
+    data = PRUnichar('('); // default as per the MathML REC
   else
     data = nsAutoString();
 
