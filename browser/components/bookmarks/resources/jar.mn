@@ -41,4 +41,4 @@ en-US.jar:
 	locale/en-US/browser/bookmarks/bookmarks.dtd           (locale/bookmarks.dtd)
 	locale/en-US/browser/bookmarks/bookmark.properties     (locale/bookmark.properties)
 	locale/en-US/browser/bookmarks/bookmarksOverlay.dtd    (locale/bookmarksOverlay.dtd)
-	locale/en-US/browser/bookmarks/findBookmark.dtd	      (locale/findBookmark.dtd)
+	locale/en-US/browser/bookmarks/findBookmark.dtd	       (locale/findBookmark.dtd)
