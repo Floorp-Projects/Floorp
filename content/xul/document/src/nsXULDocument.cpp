@@ -5421,7 +5421,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                   scriptProto->mSrcURI, 1,
                                   this, mMasterPrototype);
         aStatus = rv;
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv) && scriptProto->mScriptObject) {
             rv = ExecuteScript(scriptProto->mScriptObject);
         }
         // ignore any evaluation errors
@@ -5449,7 +5449,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nsnull;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus)) {
+        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject) {
             doc->ExecuteScript(scriptProto->mScriptObject);
         }
         doc->ResumeWalk();
@@ -5463,6 +5463,10 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 nsresult
 nsXULDocument::ExecuteScript(JSObject* aScriptObject)
 {
+    NS_PRECONDITION(aScriptObject != nsnull, "null ptr");
+    if (! aScriptObject)
+        return NS_ERROR_NULL_POINTER;
+
     // Execute the precompiled script with the given version
     nsresult rv;
 
