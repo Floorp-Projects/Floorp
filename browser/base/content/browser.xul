@@ -160,6 +160,8 @@
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
+    
+    <command id="Tools:Search" oncommand="focusSearchBar();"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
@@ -194,7 +196,7 @@
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
     <key id="focusURLBar"      key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
-    <key id="focusSearchBar"     key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+    <key id="focusSearchBar"     key="&searchFocus.commandkey;" command="Tools:Search" modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
@@ -587,6 +589,7 @@
                           command="cmd_newNavigator"/>
                 <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
+                <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
                 <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
                 <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
@@ -813,7 +816,7 @@
               </menupopup>
             </menu>
         
-          <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+          <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="menu_ToolsPopup">
               <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
               <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>          
