@@ -198,7 +198,7 @@ public:
                  nsIRDFNode* aValue);
 
 	PRBool
-	IsTreeElement(nsIContent* aElement);
+	IsTreeBodyElement(nsIContent* aElement);
 
     PRBool
     IsTreeItemElement(nsIContent* aElement);
@@ -1014,25 +1014,30 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
     //   </xul:treechildren>
     //   ...
     // </xul:treeitem>
+    //
+    // We can also handle the case where they've specified RDF
+    // contents on the <xul:treebody> tag, in which case we'll just
+    // dangle the new row directly off the treebody.
 
     nsresult rv;
 
     nsCOMPtr<nsIContent> treeChildren;
-    if (IsTreeElement(aElement)) {
-        // Ensure that the <xul:treebody> exists on the root
-        if (NS_FAILED(rv = EnsureElementHasGenericChild(aElement,
-                                                        kNameSpaceID_XUL,
-                                                        kTreeBodyAtom,
-                                                        getter_AddRefs(treeChildren))))
-            return rv;
-    }
-    else if (IsTreeItemElement(aElement)) {
+    if (IsTreeItemElement(aElement)) {
         // Ensure that the <xul:treechildren> element exists on the parent.
         if (NS_FAILED(rv = EnsureElementHasGenericChild(aElement,
                                                         kNameSpaceID_XUL,
                                                         kTreeChildrenAtom,
                                                         getter_AddRefs(treeChildren))))
             return rv;
+    }
+    else if (IsTreeBodyElement(aElement)) {
+        // We'll just use the <xul:treebody> as the element onto which
+        // we'll dangle a new row.
+        treeChildren = do_QueryInterface(aElement);
+        if (! treeChildren) {
+            NS_ERROR("aElement is not nsIContent!?!");
+            return NS_ERROR_UNEXPECTED;
+        }
     }
     else {
         NS_ERROR("new tree row doesn't fit here!");
@@ -1463,18 +1468,29 @@ RDFTreeBuilderImpl::SetCellValue(nsIContent* aTreeItemElement,
 
 
 PRBool
-RDFTreeBuilderImpl::IsTreeElement(nsIContent* element)
+RDFTreeBuilderImpl::IsTreeBodyElement(nsIContent* element)
 {
-    // Returns PR_TRUE if the element is a <xul:tree> element.
+    // Returns PR_TRUE if the element is a <xul:treebody> element.
     nsresult rv;
 
-    // "element" must be xul:tree
-    nsCOMPtr<nsIAtom> elementTag;
-    if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(elementTag))))
+    // "element" must be xul:treebody
+    PRInt32 nameSpaceID;
+    if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID))) {
+        NS_ERROR("unable to get namespace ID");
         return PR_FALSE;
+    }
 
-    if (elementTag.get() != kTreeAtom)
+    if (nameSpaceID != kNameSpaceID_XUL)
+        return PR_FALSE; // not a XUL element
+
+    nsCOMPtr<nsIAtom> elementTag;
+    if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(elementTag)))) {
+        NS_ERROR("unable to get tag");
         return PR_FALSE;
+    }
+
+    if (elementTag.get() != kTreeBodyAtom)
+        return PR_FALSE; // not a <xul:treebody>
 
     return PR_TRUE;
 }
