@@ -112,6 +112,12 @@ interface nsIMsgFolder : nsIFolder {
 
 	void DeleteMessage(in nsIMessage message);
 
+    void AcquireSemaphore (in nsISupports semHolder);
+    void ReleaseSemaphore (in nsISupports semHolder);
+    boolean TestSemaphore (in nsISupports semHolder);
+    boolean IsLocked();
+
+
 };
 
 

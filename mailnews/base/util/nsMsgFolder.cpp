@@ -48,9 +48,7 @@ nsMsgFolder::nsMsgFolder(void)
   mMaster = NULL;
 #endif
 
-#ifdef HAVE_SEMAPHORE
   mSemaphoreHolder = NULL;
-#endif
 
 #ifdef HAVE_DB
 	mLastMessageLoaded	= nsMsgKey_None;
@@ -1203,11 +1201,12 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 
 				folderInfo->GetNumMessages(&mNumTotalMessages);
 				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
-				
-				mNumPendingTotalMessages = folderInfo->GetImapTotalPendingMessages();
-				mNumPendingUnreadMessages = folderInfo->GetImapUnreadPendingMessages();
+			
+				//These should be put in IMAP folder only.
+//				mNumPendingTotalMessages = folderInfo->GetImapTotalPendingMessages();
+//				mNumPendingUnreadMessages = folderInfo->GetImapUnreadPendingMessages();
 
-				mCsid = folderInfo->GetCSID();
+//				mCsid = folderInfo->GetCSID();
 				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
 					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
             }
@@ -1220,27 +1219,48 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 	
 }
 
-#ifdef HAVE_SEMAPHORE
-NS_IMETHODIMP nsMsgFolder::AcquireSemaphore(void *semHolder)
+NS_IMETHODIMP nsMsgFolder::AcquireSemaphore(nsISupports *semHolder)
 {
+	nsresult rv = NS_OK;
+
+	if (mSemaphoreHolder == NULL)
+	{
+		mSemaphoreHolder = semHolder;
+		mSemaphoreHolder->AddRef();
+	}
+	else
+		rv = NS_MSG_FOLDER_BUSY;
+
+	return rv;
 
 }
 
-NS_IMETHODIMP nsMsgFolder::ReleaseSemaphore(void *semHolder)
+NS_IMETHODIMP nsMsgFolder::ReleaseSemaphore(nsISupports *semHolder)
 {
-
+	if (!mSemaphoreHolder || mSemaphoreHolder == semHolder)
+	{
+		if(mSemaphoreHolder)
+			mSemaphoreHolder->Release();
+		mSemaphoreHolder = NULL;
+	}
+	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::TestSemaphore(void *semHolder, PRBool *result)
+NS_IMETHODIMP nsMsgFolder::TestSemaphore(nsISupports *semHolder, PRBool *result)
 {
+	if(!result)
+		return NS_ERROR_NULL_POINTER;
 
+	*result = (mSemaphoreHolder == semHolder);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::IsLocked(PRBool *isLocked)
 { 
 	*isLocked =  mSemaphoreHolder != NULL;
- }
-#endif
+	return  NS_OK;
+}
 
 #ifdef HAVE_PANE
     MWContext *GetFolderPaneContext();

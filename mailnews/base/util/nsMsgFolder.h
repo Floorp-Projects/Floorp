@@ -233,12 +233,11 @@ public:
    NS_IMETHOD ReadDBFolderInfo(PRBool force);
 
 
-#ifdef HAVE_SEMAPHORE
-  nsresult AcquireSemaphore(void *semHolder);
-  void ReleaseSemaphore(void *semHolder);
-  PRBool TestSemaphore(void *semHolder);
-  PRBool IsLocked() { return m_semaphoreHolder != NULL; }
-#endif
+	//For file contention
+	NS_IMETHOD AcquireSemaphore (nsISupports *semHolder);
+	NS_IMETHOD ReleaseSemaphore (nsISupports *semHolder);
+	NS_IMETHOD TestSemaphore (nsISupports *semHolder, PRBool *isSemaphoreHolder);
+	NS_IMETHOD IsLocked(PRBool *isLocked);
 
 #ifdef HAVE_PANE
   MWContext *GetFolderPaneContext();
@@ -295,9 +294,7 @@ protected:
   PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
   PRUint8 mDepth;
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
-#ifdef HAVE_SEMAPHORE
-  void *mSemaphoreHolder; // set when the folder is being written to
-#endif
+  nsISupports *mSemaphoreHolder; // set when the folder is being written to
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;

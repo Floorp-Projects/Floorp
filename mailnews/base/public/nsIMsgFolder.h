@@ -189,6 +189,18 @@ class nsIMsgFolder : public nsIFolder {
   /* void DeleteMessage (in nsIMessage message); */
   NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
 
+  /* void AcquireSemaphore (in nsISupports semHolder); */
+  NS_IMETHOD AcquireSemaphore(nsISupports *semHolder) = 0;
+
+  /* void ReleaseSemaphore (in nsISupports semHolder); */
+  NS_IMETHOD ReleaseSemaphore(nsISupports *semHolder) = 0;
+
+  /* boolean TestSemaphore (in nsISupports semHolder); */
+  NS_IMETHOD TestSemaphore(nsISupports *semHolder, PRBool *_retval) = 0;
+
+  /* boolean IsLocked (); */
+  NS_IMETHOD IsLocked(PRBool *_retval) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgFolder *priv);
