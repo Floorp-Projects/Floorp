@@ -231,7 +231,7 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999043018">
+<!ENTITY  buildId.label "Build ID: 1999052616">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -344,21 +344,21 @@
       <menuitem name="&pageInfoCmd.label;" onclick="BrowserReload();"/>
       <separator />
       <menu name="&translateMenu.label;">
-	      <menuitem name="&translateFrentoEngCmd.label; " onclick="BrowserReload();"/>
-	      <menuitem name="&translateGermtoEngCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&tanslateSpantoEngCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr');"/>
+	      <menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de');"/>
+	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es');"/>
 	      <separator />
-	      <menuitem name="&translateEngtoFrenCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&translateGermtoFrenCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&translateSpantoFrenCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateFrentoEngCmd.label; " onclick="Translate('fr', 'en');"/>
+	      <menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de');"/>
+	      <menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es');"/>
 	      <separator />
-	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&translateFrentoGermCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&translateSpantoGermCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en');"/>
+	      <menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr');"/>
+	      <menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es');"/>
 	      <separator />
-	      <menuitem name="&translateEngtoSpanCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&translateFrentoSpanCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&translateGermtoSpanCmd.label;" onclick="BrowserReload();"/>
+	      <menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en');"/>
+	      <menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr');"/>
+	      <menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de');"/>
     </menu>
       <menu name="&dcharMenu.label;">
 	         <menuitem name="&dcharIso1Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>

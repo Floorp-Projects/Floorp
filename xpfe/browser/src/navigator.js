@@ -28,6 +28,16 @@
     }
   }
 
+  function Translate(src, dest)
+  {
+	var service = "http://levis.alis.com:8080";
+	service += "?AlisSourceLang=" + src;
+	service += "&AlisTargetLang=" + dest;
+	service += "&AlisMTEngine=SSI";
+	service += "&AlisTargetURI=" + window.frames[0].frames[1].location.href;
+	window.frames[0].frames[1].location.href = service;
+  }
+
   function RefreshUrlbar()
   {
    //Refresh the urlbar bar
