@@ -1356,8 +1356,7 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
     {
       // Compute min and max x/y values for the reflowed frame's
       // combined areas
-      nsRect lineCombinedArea;
-      line->GetCombinedArea(&lineCombinedArea);
+      nsRect lineCombinedArea(line->GetCombinedArea());
       nscoord x = lineCombinedArea.x;
       nscoord y = lineCombinedArea.y;
       nscoord xmost = x + lineCombinedArea.width;
@@ -1983,8 +1982,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   for ( ; line != line_end; ++line, aState.AdvanceToNextLine()) {
 #ifdef DEBUG
     if (gNoisyReflow) {
-      nsRect lca;
-      line->GetCombinedArea(&lca);
+      nsRect lca(line->GetCombinedArea());
       IndentBy(stdout, gNoiseIndent);
       printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
              NS_STATIC_CAST(void*, line.get()), aState.mY,
@@ -2072,8 +2070,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // aState.mY.
       nscoord oldY = line->mBounds.y;
       nscoord oldYMost = line->mBounds.YMost();
-      nsRect oldCombinedArea;
-      line->GetCombinedArea(&oldCombinedArea);
 
       // Reflow the dirty line. If it's an incremental reflow, then force
       // it to invalidate the dirty area if necessary
@@ -2117,8 +2113,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #ifdef DEBUG
     if (gNoisyReflow) {
       gNoiseIndent--;
-      nsRect lca;
-      line->GetCombinedArea(&lca);
+      nsRect lca(line->GetCombinedArea());
       IndentBy(stdout, gNoiseIndent);
       printf("line=%p mY=%d newBounds={%d,%d,%d,%d} newCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
              NS_STATIC_CAST(void*, line.get()), aState.mY,
@@ -2290,8 +2285,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   aLine->ClearDirty();
 
   // Now that we know what kind of line we have, reflow it
-  nsRect oldCombinedArea;
-  aLine->GetCombinedArea(&oldCombinedArea);
+  nsRect oldCombinedArea(aLine->GetCombinedArea());
 
   if (aLine->IsBlock()) {
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
@@ -2300,8 +2294,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // dirty; however, if the frame changes size or position then we
     // need to do some repainting
     if (aDamageDirtyArea) {
-      nsRect lineCombinedArea;
-      aLine->GetCombinedArea(&lineCombinedArea);
+      nsRect lineCombinedArea(aLine->GetCombinedArea());
       if ((oldCombinedArea.x != lineCombinedArea.x) ||
           (oldCombinedArea.y != lineCombinedArea.y)) {
         // The block has moved, and so to be safe we need to repaint
@@ -2462,11 +2455,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // SEC: added "aLine->IsForceInvalidate()" for bug 45152
     if (aDamageDirtyArea || aLine->IsForceInvalidate()) {
       aLine->SetForceInvalidate(PR_FALSE);  // doing the invalidate now, force flag to off
-      nsRect combinedArea;
-      aLine->GetCombinedArea(&combinedArea);
 
       nsRect dirtyRect;
-      dirtyRect.UnionRect(oldCombinedArea, combinedArea);
+      dirtyRect.UnionRect(oldCombinedArea, aLine->GetCombinedArea());
 #ifdef NOISY_BLOCK_INVALIDATE
       printf("%p invalidate because %s is true (%d, %d, %d, %d)\n",
              this, aDamageDirtyArea ? "aDamageDirtyArea" : "aLine->IsForceInvalidate",
@@ -2563,9 +2554,6 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       fromLine->mFirstChild = frame->GetNextSibling();
     }
     else {
-      nsRect combinedArea;
-      fromLine->GetCombinedArea(&combinedArea);
-
       // Free up the fromLine now that it's empty
       // Its bounds might need to be redrawn, though.
       if (aDamageDeletedLines && !fromLine->mBounds.IsEmpty()) {
@@ -2573,6 +2561,8 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       }
       if (aFromLine.next() != end_lines())
         aFromLine.next()->MarkPreviousMarginDirty();
+
+      nsRect combinedArea = fromLine->GetCombinedArea();
       if (!combinedArea.IsEmpty())
         Invalidate(aState.mPresContext, combinedArea);
       aFromContainer.erase(aFromLine);
@@ -2623,8 +2613,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 {
   NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
 
-  nsRect lineCombinedArea;
-  aLine->GetCombinedArea(&lineCombinedArea);
+  nsRect lineCombinedArea(aLine->GetCombinedArea());
 
   PRBool doInvalidate = !lineCombinedArea.IsEmpty();
   if (doInvalidate)
@@ -2632,8 +2621,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
   // Adjust line state
   aLine->SlideBy(aDY);
   if (doInvalidate) {
-    aLine->GetCombinedArea(&lineCombinedArea);
-    Invalidate(aState.mPresContext, lineCombinedArea);
+    Invalidate(aState.mPresContext, aLine->GetCombinedArea());
   }
 
   // Adjust the frames in the line
@@ -4120,8 +4108,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aLine->HasFloats()) {
     // Combine the float combined area (stored in aState) and the
     // value computed by the line layout code.
-    nsRect lineCombinedArea;
-    aLine->GetCombinedArea(&lineCombinedArea);
+    nsRect lineCombinedArea(aLine->GetCombinedArea());
 #ifdef NOISY_COMBINED_AREA
     ListTag(stdout);
     printf(": lineCA=%d,%d,%d,%d floatCA=%d,%d,%d,%d\n",
@@ -4809,8 +4796,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         // XXX We need to do this if we're removing a frame as a result of
         // a call to RemoveFrame(), but we may not need to do this in all
         // cases...
-        nsRect lineCombinedArea;
-        cur->GetCombinedArea(&lineCombinedArea);
+        nsRect lineCombinedArea(cur->GetCombinedArea());
 #ifdef NOISY_BLOCK_INVALIDATE
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
                this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
@@ -5134,8 +5120,7 @@ static void ComputeCombinedArea(nsLineList& aLines,
        ++line) {
     // Compute min and max x/y values for the reflowed frame's
     // combined areas
-    nsRect lineCombinedArea;
-    line->GetCombinedArea(&lineCombinedArea);
+    nsRect lineCombinedArea(line->GetCombinedArea());
     nscoord x = lineCombinedArea.x;
     nscoord y = lineCombinedArea.y;
     nscoord xmost = x + lineCombinedArea.width;
@@ -5378,8 +5363,7 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
 #ifdef DEBUG
       if (gNoisyDamageRepair &&
           (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
-        nsRect lineCombinedArea;
-        line->GetCombinedArea(&lineCombinedArea);
+        nsRect lineCombinedArea(line->GetCombinedArea());
         nsFrame::IndentBy(stdout, depth+1);
         printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                NS_STATIC_CAST(void*, line.get()),
@@ -5404,8 +5388,7 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
     else {
       if (gNoisyDamageRepair &&
           (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
-        nsRect lineCombinedArea;
-        line->GetCombinedArea(&lineCombinedArea);
+        nsRect lineCombinedArea(line->GetCombinedArea());
         nsFrame::IndentBy(stdout, depth+1);
         printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                NS_STATIC_CAST(void*, line.get()),
