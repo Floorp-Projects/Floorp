@@ -821,25 +821,6 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     *o_pTrans = nsnull;
     PRUint32 count = 0;
 
-    count = 0;
-    mTransportList->Count(&count);
-    if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
-
-        // XXX this method incorrectly returns a bool
-        rv = mPendingChannelList->AppendElement(
-                (nsISupports*)(nsIRequest*)i_Channel) 
-            ? NS_OK : NS_ERROR_FAILURE;  
-        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
-
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("nsHTTPHandler::RequestTransport."
-                "\tAll socket transports are busy."
-                "\tAdding nsHTTPChannel [%x] to pending list.\n",
-                i_Channel));
-
-        return NS_ERROR_BUSY;
-    }
-
     PRInt32 port;
     nsXPIDLCString host;
 
