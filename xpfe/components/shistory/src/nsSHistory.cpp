@@ -113,6 +113,16 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
   nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_CONTRACTID));
   NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
 
+  // Notify any listener about the new addition
+  if (mListener) {
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    if (listener) {
+      nsCOMPtr<nsIURI> uri;
+      aSHEntry->GetURI(getter_AddRefs(uri));
+      listener->OnHistoryNewEntry(uri);
+    }
+  }
+
   // Set the ShEntry and parent for the transaction. setting the 
   // parent will properly set the parent child relationship
   txn->SetPersist(aPersist);
@@ -346,7 +356,21 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
   if (mLength <= 0 || aEntries <= 0)
     return NS_ERROR_FAILURE;
         
-  PRInt32 cnt = 0;    
+  PRBool purgeHistory = PR_TRUE;
+  // Notify the listener about the history purge
+  if (mListener) {
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    if (listener) {
+      listener->OnHistoryPurge(aEntries, &purgeHistory);
+    } 
+  }
+
+  if (!purgeHistory) {
+    // Listener asked us not to purge
+    return NS_OK;
+  }
+
+  PRInt32 cnt = 0;
   while (cnt < aEntries) {
     nsCOMPtr<nsISHTransaction>  txn = mListRoot;
     nsCOMPtr<nsISHTransaction> nextTxn;
@@ -358,6 +382,29 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
   }
   mLength -= cnt;
   mIndex -= cnt;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::AddSHistoryListener(nsISHistoryListener * aListener)
+{
+  NS_ENSURE_ARG_POINTER(aListener);
+
+  // Check if the listener supports Weak Reference. This is a must.
+  // This listener functionality is used by embedders and we want to 
+  // have the right ownership with who ever listens to SHistory
+  nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));
+  if (!listener) return NS_ERROR_FAILURE;
+  mListener = listener;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::RemoveSHistoryListener(nsISHistoryListener * aListener)
+{
+  mListener = nsnull;
   return NS_OK;
 }
 
@@ -405,7 +452,7 @@ nsSHistory::GoBack()
 	GetCanGoBack(&canGoBack);
 	if (!canGoBack)  // Can't go back
 		return NS_ERROR_UNEXPECTED;
-    return GotoIndex(mIndex-1);
+  return GotoIndex(mIndex-1);
 }
 
 
@@ -417,13 +464,14 @@ nsSHistory::GoForward()
 	GetCanGoForward(&canGoForward);
 	if (!canGoForward)  // Can't go forward
 		return NS_ERROR_UNEXPECTED;
-    return GotoIndex(mIndex+1);
+  return GotoIndex(mIndex+1);
 
 }
 
 NS_IMETHODIMP
 nsSHistory::Reload(PRUint32 aReloadFlags)
 {
+  nsresult rv;
 	nsDocShellInfoLoadType loadType;
 	if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
 	    aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
@@ -442,7 +490,25 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
 	{
 		loadType = nsIDocShellLoadInfo::loadReloadNormal;
 	}
-	return LoadEntry(mIndex, PR_TRUE, loadType);
+  
+  // Notify listeners
+  PRBool canNavigate = PR_TRUE;
+  if (mListener) {
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    // We are reloading. Send Reload notifications. 
+    // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
+    // is public. So send the reload notifications with the
+    // nsIWebNavigation flags. 
+    if (listener) {
+      nsCOMPtr<nsIURI> currentURI;
+      rv = GetCurrentURI(getter_AddRefs(currentURI));
+      listener->OnHistoryReload(currentURI, aReloadFlags, &canNavigate);
+    }
+  }
+  if (!canNavigate)
+    return NS_OK;
+
+	return LoadEntry(mIndex, loadType);
 }
 
 NS_IMETHODIMP
@@ -463,12 +529,15 @@ nsSHistory::GetDocument(nsIDOMDocument** aDocument)
 
 
 NS_IMETHODIMP
-nsSHistory::GetCurrentURI(nsIURI** aCurrentURI)
+nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 {
-  // Not implemented
-  return NS_OK;
-}
+  NS_ENSURE_ARG_POINTER(aResultURI);
 
+  nsCOMPtr<nsISHEntry> currentEntry;
+  nsresult rv = GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(currentEntry));
+  if (NS_FAILED(rv) && !currentEntry) return rv;
+  return currentEntry->GetURI(aResultURI);
+}
 
 
 NS_IMETHODIMP
@@ -496,11 +565,11 @@ nsSHistory::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
-	return LoadEntry(aIndex, PR_FALSE, nsIDocShellLoadInfo::loadHistory);
+	return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory);
 }
 
 NS_IMETHODIMP
-nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
+nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
 {
    nsCOMPtr<nsIDocShell> docShell;
    nsCOMPtr<nsISHEntry> shEntry;
@@ -512,6 +581,35 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    
    nsCOMPtr<nsISHEntry> nextEntry;
    GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
+
+  // Send appropriate listener notifications
+  PRBool canNavigate = PR_TRUE;
+  if(mListener) {
+    nsCOMPtr<nsIURI> uri;
+    nextEntry->GetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mListener));
+    if (listener) {
+      if (mIndex+1 == oldIndex) {
+        // We are going back one entry. Send GoBack notifications
+        listener->OnHistoryGoBack(uri, &canNavigate);
+      }
+      else if (mIndex-1 == oldIndex) {
+        // We are going forward. Send GoForward notification
+        listener->OnHistoryGoForward(uri, &canNavigate);
+      }
+      else if (mIndex != oldIndex) {
+        // We are going somewhere else. This is not reload either
+        listener->OnHistoryGotoIndex(mIndex, uri, &canNavigate);
+      }
+    }
+  }
+
+  if (!canNavigate) {
+    // reset the index back to what it was, if the listener
+    // asked us not to proceed with the operation.
+    mIndex = oldIndex;
+    return NS_OK;  // XXX Maybe I can return some other error code?
+  }
 
    nsCOMPtr<nsIURI> nexturi;
    PRInt32 pCount=0, nCount=0;
