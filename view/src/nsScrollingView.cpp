@@ -1707,22 +1707,30 @@ NS_IMETHODIMP nsScrollingView :: ScrollByPages(PRInt32 aNumPages)
   return NS_OK;
 }
 
+PRBool nsScrollingView :: CannotBitBlt(nsIView* aScrolledView)
+{
+  PRBool    trans;
+  float     opacity;
+  PRUint32  scrolledViewFlags;
+
+  HasTransparency(trans);
+  GetOpacity(opacity);
+  aScrolledView->GetViewFlags(&scrolledViewFlags);
+
+  return ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
+         (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
+         (scrolledViewFlags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+}
+
 void nsScrollingView :: Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags)
 {
   if ((aDx != 0) || (aDy != 0))
   {
     nsIWidget *clipWidget;
-    PRBool    trans;
-    float     opacity;
 
     mClipView->GetWidget(clipWidget);
 
-    HasTransparency(trans);
-    GetOpacity(opacity);
-
-    if ((nsnull == clipWidget) ||
-        ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
-        (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT))
+    if ((nsnull == clipWidget) || CannotBitBlt(aScrolledView))
     {
       // XXX Repainting is really slow. The widget's Scroll() member function
       // needs an argument that specifies whether child widgets are scrolled,

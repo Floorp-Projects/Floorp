@@ -108,6 +108,7 @@ protected:
   void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
   void UpdateScrollControls(PRBool aPaint);
   void Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
+  PRBool CannotBitBlt(nsIView* aScrolledView);
 
 
 protected:
