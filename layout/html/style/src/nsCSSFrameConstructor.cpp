@@ -6005,8 +6005,10 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                                nsIFrame*       aParentFrame,
+                                               nsIFrame*       aPrevFrame,
                                                nsIContent*     aChild,
-                                               nsIFrame**      aNewFrame)
+                                               nsIFrame**      aNewFrame,
+                                               PRBool          aIsAppend)
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -6026,8 +6028,11 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
       // Notify the parent frame
-      rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
-      
+      if (aIsAppend)
+        rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
+      else
+        rv = ((nsTreeRowGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
+        
       // If there are new absolutely positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to

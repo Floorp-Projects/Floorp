@@ -88,6 +88,7 @@ protected:
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
 
   void SetContentChain(nsISupportsArray* aContentChain);
+  void InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFrame);
 
   void ConstructContentChain(nsIContent* aRowContent);
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
@@ -97,6 +98,7 @@ protected:
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
   nsIFrame* mBottomFrame; // The current bottom frame in the view.
+  nsIFrame* mLinkupFrame; // An old top frame that we're trying to link up with.
 
   PRBool mIsLazy; // Whether or not we're a lazily instantiated beast
   PRBool mIsFull; // Whether or not we have any more room.

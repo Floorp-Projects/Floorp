@@ -63,7 +63,8 @@ NS_NewTreeRowGroupFrame (nsIFrame** aNewFrame)
 // Constructor
 nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 :nsTableRowGroupFrame(), mScrollbar(nsnull), mFrameConstructor(nsnull),
- mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), mContentChain(nsnull)
+ mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), 
+ mContentChain(nsnull), mLinkupFrame(nsnull)
 { }
 
 // Destructor
@@ -534,6 +535,7 @@ nsIFrame*
 nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext) 
 { 
   // Clear ourselves out.
+  mLinkupFrame = nsnull;
   mBottomFrame = mTopFrame;
   mIsFull = PR_FALSE;
 
@@ -567,26 +569,21 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
       // The two content nodes are the same.  Our content chain has
       // been synched up, and we can now remove our element and
       // pass the content chain inwards.
-      mContentChain->RemoveElementAt(0);
-      PRUint32 chainSize;
-      mContentChain->Count(&chainSize);
-      if (chainSize > 0) {
-        ((nsTreeRowGroupFrame*)mTopFrame)->SetContentChain(mContentChain);
-      }
-      
-      // The chain is dead. Long live the chain.
-      NS_RELEASE(mContentChain);
-      mContentChain = nsnull;
+      InitSubContentChain((nsTreeRowGroupFrame*)mTopFrame);
     }
+    else mLinkupFrame = mTopFrame; // We have some frames that we'll eventually catch up with.
+                                   // Cache the pointer to the first of these frames, so
+                                   // we'll know it when we hit it.
+
     startContent = chainContent;
   }
 
   // We don't have a top frame instantiated. Let's
   // try to make one.
 
-  // If we have a content chain, use that content node to make our frame,
-  // and prepare a sub-content chain for the new child frame that we make.
-  // Otherwise just grab the first child.
+  // If startContent is initialized, we have a content chain, and 
+  // we're using that content node to make our frame.
+  // Otherwise we have nothing, and we should just try to grab the first child.
   if (!startContent) {
     PRInt32 childCount;
     mContent->ChildCount(childCount);
@@ -598,8 +595,10 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
   }
 
   if (startContent) {
-    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, startContent,
-                                               &mTopFrame);
+    PRBool isAppend = (mLinkupFrame == nsnull);
+
+    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, startContent,
+                                               &mTopFrame, isAppend);
     printf("Created a frame\n");
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
@@ -607,6 +606,14 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
       ((nsTableRowFrame *)mTopFrame)->InitChildren();
     }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay && mContentChain) {
+      // We have just instantiated a row group, and we have a content chain. This
+      // means we need to potentially pass a sub-content chain to the instantiated
+      // frame, so that it can also sync up with its children.
+      InitSubContentChain((nsTreeRowGroupFrame*)mTopFrame);
+    }
+
+    SetContentChain(nsnull);
     return mTopFrame;
   }
   
@@ -619,6 +626,27 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
   if (mIsLazy) {
     // We're ultra-cool. We build our frames on the fly.
     LocateFrame(aFrame, aResult);
+    if (*aResult && (*aResult == mLinkupFrame)) {
+      // We haven't really found a result. We've only found a result if
+      // the linkup frame is really the next frame following the
+      // previous frame.
+      nsCOMPtr<nsIContent> prevContent;
+      aFrame->GetContent(getter_AddRefs(prevContent));
+      nsCOMPtr<nsIContent> linkupContent;
+      mLinkupFrame->GetContent(getter_AddRefs(linkupContent));
+      PRInt32 i, j;
+      mContent->IndexOf(prevContent, i);
+      mContent->IndexOf(linkupContent, j);
+      if (i+1==j) {
+        // We have found a match and successfully linked back up with our
+        // old frame. 
+        mBottomFrame = mLinkupFrame;
+        mLinkupFrame = nsnull;
+        return;
+      }
+      else *aResult = nsnull; // No true linkup. We need to make a frame.
+    }
+
     if (!*aResult) {
       // No result found. See if there's a content node that wants a frame.
       PRInt32 i, childCount;
@@ -631,23 +659,31 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
         // There is a content node that wants a frame.
         nsCOMPtr<nsIContent> nextContent;
         mContent->ChildAt(i+1, *getter_AddRefs(nextContent));
-        mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nextContent,
-                                                   aResult);
-        mBottomFrame = *aResult;
+        nsIFrame* prevFrame = nsnull; // Default is to append
+        PRBool isAppend = PR_TRUE;
+        if (mLinkupFrame) {
+          // This will be an insertion, since we have frames on the end.
+          prevFrame = aFrame;
+          isAppend = PR_FALSE;
+        }
+        mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, prevFrame, nextContent,
+                                                   aResult, isAppend);
         printf("Created a frame\n");
         const nsStyleDisplay *rowDisplay;
-        mBottomFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
+        (*aResult)->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
         if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
-          ((nsTableRowFrame *)mBottomFrame)->InitChildren();
+          ((nsTableRowFrame *)(*aResult))->InitChildren();
         }
       }
     }
+
+    mBottomFrame = *aResult;
     return;
   }
   
   // Ho-hum. Move along, nothing to see here.
   aFrame->GetNextSibling(aResult);
-}
+} 
 
 NS_IMETHODIMP
 nsTreeRowGroupFrame::TreeInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameList)
@@ -704,4 +740,18 @@ void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)
   NS_IF_RELEASE(mContentChain);
   mContentChain = aContentChain;
   NS_IF_ADDREF(mContentChain);
+}
+
+void nsTreeRowGroupFrame::InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFrame)
+{
+  if (mContentChain) {
+    mContentChain->RemoveElementAt(0);
+    PRUint32 chainSize;
+    mContentChain->Count(&chainSize);
+    if (chainSize > 0 && aRowGroupFrame) {
+      aRowGroupFrame->SetContentChain(mContentChain);
+    }
+    // The chain is dead. Long live the chain.
+    SetContentChain(nsnull);
+  }
 }
