@@ -53,6 +53,17 @@ var attachmentMessageUriArray = new Array();
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
 
+// All these variables are introduced to keep track of insertion and deletion of the toggle button either
+// as the first node in the list of emails or the last node.
+var numOfEmailsInEnumerator;
+var numOfEmailsInToField = 0;
+var numOfEmailsInCcField = 0;
+var numOfEmailsInFromField = 0;
+
+// var used to determine whether to show the toggle button at the
+// beginning or at the end of a list of emails in to/cc fields.
+var gNumOfEmailsToShowToggleButtonInFront = 15;
+
 function OnLoadMsgHeaderPane()
 {
    // build a document object for the header pane so we can cache fetches for elements
@@ -147,10 +158,11 @@ var messageHeaderSink = {
       ClearEmailField(msgPaneData.FromValue);
       ClearEmailField(msgPaneData.ReplyToValue);
 
-      ClearEmailFieldWithButton(msgPaneData.ToValueShort);
-      ClearEmailFieldWithButton(msgPaneData.CcValueShort);
-      ClearEmailFieldWithButton(msgPaneData.ToValueLong);
-      ClearEmailFieldWithButton(msgPaneData.CcValueLong);
+      // When calling the ClearEmailFieldWithButton, pass in the name of the header too.
+      ClearEmailFieldWithButton(msgPaneData.ToValueShort, "to");
+      ClearEmailFieldWithButton(msgPaneData.CcValueShort, "cc");
+      ClearEmailFieldWithButton(msgPaneData.ToValueLong, "to");
+      ClearEmailFieldWithButton(msgPaneData.CcValueLong, "cc");
 
       // be sure to re-hide the toggle button, we'll re-enable it later if we need it...
       msgPaneData.ToValueToggleIcon.setAttribute('collapsed', 'true');
@@ -173,7 +185,7 @@ var messageHeaderSink = {
 
       // for consistancy sake, let's force all header names to be lower case so
       // we don't have to worry about looking for: Cc and CC, etc.
-      lowerCaseHeaderName = headerName.toLowerCase();
+      var lowerCaseHeaderName = headerName.toLowerCase();
       var foo = new Object;
       foo.headerValue = headerValue;
       foo.headerName = headerName;
@@ -329,14 +341,36 @@ function ClearAttachmentMenu()
 // Assumes that all the child nodes of the parent div need removed..leaving
 // an empty parent div...This is used to clear the To/From/cc lines where
 // we had to insert email addresses one at a time into their parent divs...
-function ClearEmailFieldWithButton(parentDiv)
+function ClearEmailFieldWithButton(parentDiv, headerName)
 {
   if (parentDiv)
   {
-    // the toggle button is the last child in the child nodes..
-    // we should never remove it...
+    // the toggle button could be the very first child (if there are many email addresses)
+    // or it could be the last child in the child nodes..
+    // we should never remove the toggle button...
+
+    // We use the delIndex variable to keep track of whether the toggle button is the:
+    // first child -- in which case it is set to 1 and first element is never deleted
+    // last child -- in which case it is set to 0 and the last element is never deleted.
+    var delIndex = 1;
+
+    // Depending on the headerName and the numOfEmails inserted into that header,
+    // decide what the delIndex should be.
+    if (headerName == "to") {
+        if (numOfEmailsInToField < gNumOfEmailsToShowToggleButtonInFront)
+            delIndex = 0;
+    }
+    else if (headerName == "cc") {
+        if (numOfEmailsInCcField < gNumOfEmailsToShowToggleButtonInFront)
+            delIndex = 0;
+    }
+    else {
+        if (numOfEmailsInFromField < gNumOfEmailsToShowToggleButtonInFront)
+            delIndex = 0;
+    }
+
     while (parentDiv.childNodes.length > 1)
-      parentDiv.removeChild(parentDiv.childNodes[0]);
+      parentDiv.removeChild(parentDiv.childNodes[delIndex]);
   }
 }
 
@@ -375,7 +409,7 @@ function OutputNewsgroups(boxNode, textNode, currentHeaderData, headerName)
 // address views for this header field. If true, then pass in a another div which is the div the long
 // view will be added too...
 
-function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, includeShortLongToggle, optionalLongDiv, optionalToggleButton)
+function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, includeShortLongToggle, optionalLongDiv, optionalToggleButton, currentHeaderName)
 {
   // if we don't have any addresses for this field, hide the parent box!
 	if ( !emailAddresses )
@@ -385,6 +419,27 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
 	}
   if (msgHeaderParser)
   {
+    // Count the number of email addresses being inserted into each header
+    // The headers could be "to", "cc", "from"
+    var myEnum = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
+    myEnum = myEnum.QueryInterface(Components.interfaces.nsISimpleEnumerator);
+
+    numOfEmailsInEnumerator = 0;
+    while (myEnum.hasMoreElements())
+    {
+        myEnum.getNext();
+        numOfEmailsInEnumerator++;
+    }
+
+    // Depending on the headerName and the variable that keeps track of the
+    // numOfEmails inserted into that header,
+    if (currentHeaderName == "to")
+        numOfEmailsInToField = numOfEmailsInEnumerator;
+    else if (currentHeaderName == "cc")
+        numOfEmailsInCcField = numOfEmailsInEnumerator;
+    else if (currentHeaderName == "from") 
+        numOfEmailsInFromField = numOfEmailsInEnumerator;
+
     var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
     enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
     var numAddressesParsed = 0;
@@ -456,12 +511,12 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, includesToggl
           var textNode = document.createElement("text");
           textNode.setAttribute("value", ", ");
           textNode.setAttribute("class", "emailSeparator");
-          if (includesToggleButton)
+          if (includesToggleButton && numOfEmailsInEnumerator < gNumOfEmailsToShowToggleButtonInFront)
             parentDiv.insertBefore(textNode, child);
           else
             parentDiv.appendChild(textNode);
         }
-        if (includesToggleButton)
+        if (includesToggleButton && numOfEmailsInEnumerator < gNumOfEmailsToShowToggleButtonInFront)
           itemInDocument = parentDiv.insertBefore(item, child);
         else
           itemInDocument = parentDiv.appendChild(item);
@@ -499,9 +554,9 @@ function UpdateMessageHeaders()
      hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, "");
 
   if (currentHeaderData["from"])
-    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData["from"].headerValue, false, "", ""); 
+    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData["from"].headerValue, false, "", "", "from"); 
   else
-    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, "", false, "", ""); 
+    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, "", false, "", "", ""); 
 
   if (currentHeaderData["date"])
     hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData["date"].headerValue); 
@@ -509,14 +564,14 @@ function UpdateMessageHeaders()
     hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, ""); 
   
   if (currentHeaderData["to"])
-    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData["to"].headerValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
+    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData["to"].headerValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon, "to");
   else
-    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, "", true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
+    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, "", true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon, "");
 
   if (currentHeaderData["cc"])
-    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"].headerValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
+    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"].headerValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon, "cc");
   else
-    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, "", true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
+    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, "", true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon, "");
   
   if (currentHeaderData["newsgroups"])
     OutputNewsgroups(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData, "newsgroups");
@@ -713,7 +768,7 @@ function ProcessHeaderValue(containingBox, containerNode, header, boxPartOfPopup
     headerName = headerName.toLowerCase();
     if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to"))
     {
-      OutputEmailAddresses(containingBox, containerNode, header.headerValue, false, "", "")
+      OutputEmailAddresses(containingBox, containerNode, header.headerValue, false, "", "", headerName)
       return;
     }
     
