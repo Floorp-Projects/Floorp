@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
+#include "nsIInputStream.h"
 
 #define NS_IPARSER_IID      \
   {0x355cbba0, 0xbf7d,  0x11d1,  \
@@ -67,12 +68,10 @@ class nsIParser : public nsISupports {
      *  until you wind up with HTML in your actual content model.
      ******************************************************************************************/
     virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,nsIDTDDebug * aDTDDebug = 0) = 0;
-    virtual PRInt32 Parse(const char* aFilename)=0;
+    virtual PRInt32 Parse(nsIInputStream* pIStream,nsIStreamObserver* aListener,nsIDTDDebug* aDTDDebug = 0)=0;
+    virtual PRInt32 Parse(nsString& aFilename)=0;
     virtual PRInt32 Parse(fstream& aStream)=0;
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
-
-
-    virtual PRInt32 ResumeParse(void)=0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -80,7 +79,7 @@ class nsIParser : public nsISupports {
      * @update	gess5/11/98
      * @return  YES if model building went well -- NO otherwise.
      */
-    virtual PRInt32 IterateTokens(void)=0;
+    virtual PRInt32 BuildModel(void)=0;
 
 };
 

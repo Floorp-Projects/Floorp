@@ -60,7 +60,7 @@
 #include "nsParserNode.h"
 #include "nsParserTypes.h"
 #include "nsIURL.h"
-
+#include "CParserContext.h"
 
 #define NS_PARSER_IID      \
   {0x2ce606b0, 0xbee6,  0x11d1,  \
@@ -69,7 +69,6 @@
 
 class IContentSink;
 class nsIHTMLContentSink;
-class nsIURL;
 class nsIDTD;
 class nsIDTDDebug;
 class CScanner;
@@ -119,14 +118,26 @@ friend class CTokenHandler;
     virtual CScanner* GetScanner(void);
 
     /**
-     * Cause parser to parse input from given URL in given mode
+     * Cause parser to parse input from given URL 
      * @update	gess5/11/98
      * @param   aURL is a descriptor for source document
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual PRInt32 Parse(nsIURL* aURL,
-                          nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug = 0);
+                          nsIStreamObserver* aListener, 
+                          nsIDTDDebug* aDTDDebug = 0);
+
+    /**
+     * Cause parser to parse input from given nsIInputStream 
+     * @update	gess5/11/98
+     * @param   pIStream is an nsIInputStream
+     * @param   aListener is a listener to forward notifications to
+     * @return  TRUE if all went well -- FALSE otherwise
+     */
+    virtual PRInt32 Parse(nsIInputStream* pIStream,
+                          nsIStreamObserver* aListener, 
+                          nsIDTDDebug* aDTDDebug = 0);
 
     /**
      * Cause parser to parse input from given file in given mode
@@ -134,7 +145,7 @@ friend class CTokenHandler;
      * @param   aFilename is a path for file document
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(const char* aFilename);
+    virtual PRInt32 Parse(nsString& aFilename);
 
     /**
      * Cause parser to parse input from given stream 
@@ -157,7 +168,7 @@ friend class CTokenHandler;
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual PRInt32 ResumeParse(void);
+    virtual PRInt32 ResumeParse();
 
     /**
      * Causes the parser to scan foward, collecting nearby (sequential)
@@ -208,7 +219,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 WillBuildModel(const char* aFilename=0);
+    PRInt32 WillBuildModel(nsString& aFilename);
 
     /**
      * 
@@ -224,7 +235,7 @@ protected:
      * @update	gess5/11/98
      * @return  YES if model building went well -- NO otherwise.
      */
-    virtual PRInt32 IterateTokens(void);
+    virtual PRInt32 BuildModel(void);
   
 private:
 
@@ -251,15 +262,9 @@ private:
      *  @param   
      *  @return  TRUE if it's ok to proceed
      */
-    PRBool WillTokenize(void);
+    PRBool WillTokenize();
 
-    /**
-     *  
-     *  @update  gess 3/25/98
-     *  @return  TRUE if it's ok to proceed
-     */
-    PRInt32 Tokenize(nsString& aSourceBuffer,PRBool appendTokens);
-
+   
     /**
      *  This is the primary control routine. It iteratively
      *  consumes tokens until an error occurs or you run out
@@ -268,7 +273,7 @@ private:
      *  @update  gess 3/25/98
      *  @return  error code 
      */
-    PRInt32 Tokenize(void);
+    PRInt32 Tokenize();
 
     /**
      *  This is the tail-end of the code sandwich for the
@@ -279,7 +284,7 @@ private:
      *  @param   
      *  @return  TRUE if all went well
      */
-    PRBool DidTokenize(void);
+    PRBool DidTokenize();
 
     /**
      *  This debug routine is used to cause the tokenizer to
@@ -311,27 +316,42 @@ protected:
     // And now, some data members...
     //*********************************************
 
-    nsIStreamObserver*  mObserver;
-    nsIContentSink*     mSink;
-    nsIParserFilter*    mParserFilter;
-
-    nsDequeIterator*    mCurrentPos;
-    nsDequeIterator*    mMarkPos;
-
-    nsIDTD*             mDTD;
-    eParseMode          mParseMode;
-    char*               mTransferBuffer;
+  /*****************************************************
+    All of these moved into the parse-context object:
 
     PRInt32             mMajorIteration;
     PRInt32             mMinorIteration;
 
-    nsDeque             mTokenDeque;
-    CScanner*           mScanner;
     nsIURL*             mURL;
-	  nsIDTDDebug*		    mDTDDebug;
     nsString            mSourceType;
     nsString            mTargetType;
     eAutoDetectResult   mAutoDetectStatus;
+
+    nsDequeIterator*    mCurrentPos;
+    nsDequeIterator*    mMarkPos;
+    nsDeque             mTokenDeque;
+    CScanner*           mScanner;
+    nsIDTD*             mDTD;
+
+    eParseMode          mParseMode;
+    char*               mTransferBuffer;
+   *****************************************************/
+
+    CParserContext*     mParserContext;
+
+  /*****************************************************
+    The above fields are moving into parse-context 
+   *****************************************************/
+
+
+    nsIStreamObserver*  mObserver;
+    nsIContentSink*     mSink;
+    nsIParserFilter*    mParserFilter;
+
+
+	  nsIDTDDebug*		    mDTDDebug;
+
+
 };
 
 

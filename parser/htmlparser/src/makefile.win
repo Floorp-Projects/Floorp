@@ -34,6 +34,7 @@ CPPSRCS=					\
 	nsHTMLTags.obj				\
 	nsHTMLTokens.obj			\
 	nsParser.obj				\
+	CParserContext.obj				\
 	nsParserNode.obj			\
 	nsScanner.obj				\
 	nsToken.obj				\
@@ -53,6 +54,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLTags.obj		\
 	.\$(OBJDIR)\nsHTMLTokens.obj		\
 	.\$(OBJDIR)\nsParser.obj		\
+	.\$(OBJDIR)\CParserContext.obj		\
 	.\$(OBJDIR)\nsParserNode.obj		\
 	.\$(OBJDIR)\nsScanner.obj		\
 	.\$(OBJDIR)\nsToken.obj			\

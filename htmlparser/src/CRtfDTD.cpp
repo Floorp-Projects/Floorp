@@ -251,7 +251,7 @@ eAutoDetectResult CRtfDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-PRInt32 CRtfDTD::WillBuildModel(const char* aFilename){
+PRInt32 CRtfDTD::WillBuildModel(nsString& aFilename){
   PRInt32 result=0;
   return result;
 }

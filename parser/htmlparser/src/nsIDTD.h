@@ -99,7 +99,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0)=0;
+    virtual PRInt32 WillBuildModel(nsString& aFilename)=0;
 
     /**
      * 

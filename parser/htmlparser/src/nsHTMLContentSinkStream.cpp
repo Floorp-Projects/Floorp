@@ -30,7 +30,7 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLTokens.h"
 #include <iostream.h>
-#include "nsString.h"
+#include "nsstring.h"
 #include "nsParserTypes.h"
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);                 
@@ -89,8 +89,8 @@ NS_IMPL_RELEASE(CHTMLContentSinkStream)
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(CHTMLContentSinkStream** aInstancePtrResult) {
-  CHTMLContentSinkStream* it = new CHTMLContentSinkStream();
+NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(CHTMLContentSinkStream** aInstancePtrResult,ostream* aStream) {
+  CHTMLContentSinkStream* it = new CHTMLContentSinkStream(aStream);
 
   if (it == 0) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -99,25 +99,14 @@ NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(CHTMLContentSinkStream** aIns
   return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
 }
 
-
 /**
  * Construct a content sink stream.
  * @update	gess7/7/98
  * @param 
  * @return
  */
-CHTMLContentSinkStream::CHTMLContentSinkStream()  {
-  mOutput=&cout;
-}
-
-/**
- * Construct a content sink stream.
- * @update	gess7/7/98
- * @param 
- * @return
- */
-CHTMLContentSinkStream::CHTMLContentSinkStream(ostream& aStream)  {
-  mOutput=&aStream;
+CHTMLContentSinkStream::CHTMLContentSinkStream(ostream* aStream)  {
+  mOutput=(0==aStream) ? &cout : aStream;
 }
 
 
@@ -129,17 +118,6 @@ CHTMLContentSinkStream::CHTMLContentSinkStream(ostream& aStream)  {
  */
 CHTMLContentSinkStream::~CHTMLContentSinkStream() {
   mOutput=0;  //we don't own the stream we're given; just forget it.
-}
-
-
-/**
- * 
- * @update	gess7/7/98
- * @param 
- * @return
- */
-void CHTMLContentSinkStream::SetOutputStream(ostream& aStream) {
-  mOutput=&aStream;
 }
 
 
@@ -171,7 +149,7 @@ void WriteAttributes(const nsIParserNode& aNode,ostream& aStream) {
  * @param 
  * @return
  */
-void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,PRBool aNewline) {
+void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,bool aNewline) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
     aStream << " ";
@@ -189,7 +167,7 @@ void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab
  * @param 
  * @return
  */
-void OpenTag(const char* theTag,int tab,ostream& aStream,PRBool aNewline) {
+void OpenTag(const char* theTag,int tab,ostream& aStream,bool aNewline) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
     aStream << " ";
@@ -221,7 +199,7 @@ void CloseTag(const char* theTag,int tab,ostream& aStream) {
  */
 void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,PR_FALSE);
+  OpenTag(titleStr,tab,aStream,false);
   theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
   aStream << gBuffer;
   CloseTag(titleStr,0,aStream);
@@ -237,7 +215,7 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
  */
 void WriteSingleton(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,PR_FALSE);
+  OpenTag(titleStr,tab,aStream,false);
   if(theContent.Length()) {
     theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
     aStream << gBuffer;
@@ -275,7 +253,7 @@ PRInt32 CHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_html);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
   }
   return result;
 }
@@ -311,7 +289,7 @@ PRInt32 CHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_head);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
   }
   return result;
 }
@@ -347,7 +325,7 @@ PRInt32 CHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_body);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
   }
   return result;
 }
@@ -383,7 +361,7 @@ PRInt32 CHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_form);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
   }
   return result;
 }
@@ -419,7 +397,7 @@ PRInt32 CHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_frameset);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
   }
   return result;
 }
@@ -487,7 +465,7 @@ PRInt32 CHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
         {
           const nsString& name=aNode.GetName();
           const char* tagName= GetTagName(nodeType);
-          OpenTagWithAttributes(tagName,aNode,mTabLevel,*mOutput,PR_TRUE);
+          OpenTagWithAttributes(tagName,aNode,mTabLevel,*mOutput,true);
         }
         break;
     }

@@ -108,7 +108,7 @@ class CValidDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0);
+    virtual PRInt32 WillBuildModel(nsString& aFilename);
 
     /**
      * 

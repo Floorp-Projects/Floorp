@@ -26,7 +26,6 @@
 #include "prenv.h"  //this is here for debug reasons...
 #include "plstr.h"
 #include <fstream.h>
-#include "nsIInputStream.h"
 #include "nsIParserFilter.h"
 #include "nsIDTDDebug.h"
 #include "nshtmlpars.h"
@@ -47,13 +46,10 @@ static const char* kNullURL = "Error: Null URL given";
 static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 static const char* kHTMLTextContentType = "text/html";
+static nsString    kUnknownFilename("unknown");
 
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
-#define DEBUG_SAVE_SOURCE_DOC 1
-#ifdef DEBUG_SAVE_SOURCE_DOC
-fstream* gTempStream=0;
-#endif
 
 
 /**
@@ -84,7 +80,7 @@ public:
   }
 };
 
-CTokenDeallocator gTokenDeallocator;
+CTokenDeallocator gTokenDeallocator2;
 
 class CDTDDeallocator: public nsDequeFunctor{
 public:
@@ -114,6 +110,7 @@ public:
 
   CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
   }
+
   ~CSharedParserObjects() {
   }
 
@@ -141,25 +138,13 @@ CSharedParserObjects gSharedParserObjects;
  *  @param   
  *  @return  
  */
-nsParser::nsParser() : 
-  mTokenDeque(gTokenDeallocator),
-  mSourceType(),
-  mTargetType()
-{
+nsParser::nsParser() {
   NS_INIT_REFCNT();
   mDTDDebug = 0;
   mParserFilter = 0;
   mObserver = 0;
-  mTransferBuffer=0;
   mSink=0;
-  mCurrentPos=0;
-  mMarkPos=0;
-  mParseMode=eParseMode_unknown;
-  mURL=0;
-  mDTD=0;
-  mScanner=0;
-  mTransferBuffer=new char[gTransferBufferSize+1];
-  mAutoDetectStatus=eUnknownDetect;
+  mParserContext=0;
 }
 
 
@@ -172,20 +157,12 @@ nsParser::nsParser() :
  */
 nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
-  NS_IF_RELEASE(mDTDDebug);
-  if(mTransferBuffer)
-    delete [] mTransferBuffer;
-  mTransferBuffer=0;
+//  NS_IF_RELEASE(mDTDDebug);
   NS_RELEASE(mSink);
-  if(mCurrentPos)
-    delete mCurrentPos;
-  mCurrentPos=0;
-  if(mScanner)
-    delete mScanner;
-  mScanner=0;
 
-  NS_IF_RELEASE(mURL);
-
+  //don't forget to add code here to delete 
+  //what may be several contexts...
+  delete mParserContext;
 }
 
 
@@ -298,7 +275,9 @@ void nsParser::RegisterDTD(nsIDTD* aDTD){
  *  @return  
  */
 CScanner* nsParser::GetScanner(void){
-  return mScanner;
+  if(mParserContext)
+    return mParserContext->mScanner;
+  return 0;
 }
 
 /**
@@ -311,6 +290,7 @@ CScanner* nsParser::GetScanner(void){
 eParseMode DetermineParseMode() {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
   const char* other="other";
+  
   eParseMode  result=eParseMode_navigator;
 
   if(theModeStr) 
@@ -326,25 +306,23 @@ eParseMode DetermineParseMode() {
  *  @param   
  *  @return  
  */
-PRBool FindSuitableDTD( eParseMode aMode,
-                        nsString& aSourceType, 
-                        nsString& aTargetType, 
-                        nsIDTD*& aDefaultDTD) {
+PRBool FindSuitableDTD( CParserContext& aParserContext) {
 
     //Let's start by tring the defaultDTD, if one exists...
-  if(aDefaultDTD && (aDefaultDTD->CanParse(aSourceType,0)))
+  if(aParserContext.mDTD && (aParserContext.mDTD->CanParse(aParserContext.mSourceType,0)))
     return PR_TRUE;
 
   PRBool  result=PR_FALSE;
+
   nsDequeIterator b=gSharedParserObjects.mDTDDeque.Begin(); 
   nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
 
   while(b<e){
     nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
     if(theDTD) {
-      result=theDTD->CanParse(aSourceType,0); 
+      result=theDTD->CanParse(aParserContext.mSourceType,0); 
       if(result){
-        aDefaultDTD=theDTD;
+        aParserContext.mDTD=theDTD;
         break;
       }
     }
@@ -371,22 +349,22 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
     //  recognize the content in the scanner.
     //  Somebody should say yes, or we can't continue.
 
-    //This method may change mSourceType and mDTD.
-    //It absolutely changes mAutoDetectStatus
+    //This method may change mSourceType and mParserContext->mDTD.
+    //It absolutely changes mParserContext->mAutoDetectStatus
 
   nsDequeIterator b=gSharedParserObjects.mDTDDeque.Begin(); 
   nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
 
-  mAutoDetectStatus=eUnknownDetect;
-  while((b<e) && (eUnknownDetect==mAutoDetectStatus)){
+  mParserContext->mAutoDetectStatus=eUnknownDetect;
+  while((b<e) && (eUnknownDetect==mParserContext->mAutoDetectStatus)){
     nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
     if(theDTD) {
-      mAutoDetectStatus=theDTD->AutoDetectContentType(aBuffer,aType);
+      mParserContext->mAutoDetectStatus=theDTD->AutoDetectContentType(aBuffer,aType);
     }
     b++;
   } 
 
-  return mAutoDetectStatus;  
+  return mParserContext->mAutoDetectStatus;  
 }
 
 
@@ -401,26 +379,17 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
  * @param 
  * @return
  */
-PRInt32 nsParser::WillBuildModel(const char* aFilename){
+PRInt32 nsParser::WillBuildModel(nsString& aFilename){
 
-  mMajorIteration=-1;
-  mMinorIteration=-1;
+  mParserContext->mMajorIteration=-1;
+  mParserContext->mMinorIteration=-1;
 
-  mParseMode=DetermineParseMode();  
-  if(PR_TRUE==FindSuitableDTD(mParseMode,mSourceType,mTargetType,mDTD)) {
-    mDTD->SetParser(this);
-    mDTD->SetContentSink(mSink);
-    mDTD->WillBuildModel(aFilename);
+  mParserContext->mParseMode=DetermineParseMode();  
+  if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
+    mParserContext->mDTD->SetParser(this);
+    mParserContext->mDTD->SetContentSink(mSink);
+    mParserContext->mDTD->WillBuildModel(aFilename);
   }
-
-#ifdef DEBUG_SAVE_SOURCE_DOC
-#if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
-  /* XXX: IRIX does not support ios::binary */
-  gTempStream =new fstream("/tmp/out.html",ios::out);
-#else
-  gTempStream = new fstream("c:/temp/out.html",ios::out|ios::binary);
-#endif
-#endif
 
   return kNoError;
 }
@@ -434,17 +403,9 @@ PRInt32 nsParser::WillBuildModel(const char* aFilename){
 PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   //One last thing...close any open containers.
   PRInt32 result=anErrorCode;
-  if(mDTD) {
-    result=mDTD->DidBuildModel(anErrorCode);
+  if(mParserContext->mDTD) {
+    result=mParserContext->mDTD->DidBuildModel(anErrorCode);
   }
-
-#ifdef DEBUG_SAVE_SOURCE_DOC
-  if(gTempStream) {
-    gTempStream->close();
-    delete gTempStream;
-    gTempStream=0;
-  }
-#endif
 
   return result;
 }
@@ -460,22 +421,21 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRBool nsParser::Parse(const char* aFilename){
-  NS_PRECONDITION(0!=aFilename,kNullFilename);
+PRInt32 nsParser::Parse(nsString& aFilename){
   PRInt32 status=kBadFilename;
   
   if(aFilename) {
 
     //ok, time to create our tokenizer and begin the process
-    mTargetType=kHTMLTextContentType;
-    mScanner=new CScanner(aFilename,mParseMode);
-    if(mScanner) {
-      mScanner->Eof();
-      if(eValidDetect==AutoDetectContentType(mScanner->GetBuffer(),mSourceType)) {
-        WillBuildModel(aFilename);
-        status=ResumeParse();
-        DidBuildModel(status);
-      }
+
+    mParserContext = new CParserContext(new CScanner(aFilename),mParserContext);
+    mParserContext->mScanner->Eof();
+    if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
+                                           mParserContext->mSourceType)) 
+    {
+      WillBuildModel(aFilename);
+      status=ResumeParse();
+      DidBuildModel(status);
     } //if
   }
   return status;
@@ -488,10 +448,34 @@ PRBool nsParser::Parse(const char* aFilename){
  * @return  TRUE if all went well -- FALSE otherwise
  */
 PRInt32 nsParser::Parse(fstream& aStream){
-  PRInt32 result=0;
-  return result;
+
+  PRInt32 status=kNoError;
+  
+  //ok, time to create our tokenizer and begin the process
+  mParserContext = new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),mParserContext);
+
+  mParserContext->mScanner->Eof();
+  if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
+                                         mParserContext->mSourceType)) {
+    WillBuildModel(mParserContext->mScanner->GetFilename());
+    status=ResumeParse();
+    DidBuildModel(status);
+  } //if
+
+  return status;
 }
 
+
+/**
+ * 
+ * @update	gess7/13/98
+ * @param 
+ * @return
+ */
+PRInt32 nsParser::Parse(nsIInputStream* pIStream,nsIStreamObserver* aListener,nsIDTDDebug* aDTDDebug){
+  PRInt32 result=kNoError;
+  return result;
+}
 
 /**
  *  This is the main controlling routine in the parsing process. 
@@ -512,19 +496,14 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
 
   PRInt32 status=kBadURL;
 
+/* Disable DTD Debug for now...
   mDTDDebug = aDTDDebug;
   NS_IF_ADDREF(mDTDDebug);
-
-  NS_IF_RELEASE(mURL);
-  mURL = aURL;
-  NS_IF_ADDREF(mURL);
-
-  NS_IF_RELEASE(mObserver);
-  mObserver = aListener;
-  NS_IF_ADDREF(mObserver);
+*/
  
-  if(mURL) {
-    mScanner=new CScanner(mParseMode);
+  if(aURL) {
+    nsAutoString theName(aURL->GetSpec());
+    mParserContext=new CParserContext(new CScanner(theName,PR_FALSE),mParserContext,aListener);
     status=NS_OK;
   }
   return status;
@@ -533,6 +512,8 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
 
 /**
  * Call this method if all you want to do is parse 1 string full of HTML text.
+ * In particular, this method should be called by the DOM when it has an HTML
+ * string to feed to the parser in real-time.
  *
  * @update	gess5/11/98
  * @param   anHTMLString contains a string-full of real HTML
@@ -542,11 +523,10 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
 PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
   PRInt32 result=kNoError;
 
-  mTargetType=kHTMLTextContentType;
-  mScanner=new CScanner(); 
-  mScanner->Append(aSourceBuffer);  
-  if(eValidDetect==AutoDetectContentType(aSourceBuffer,mSourceType)) {
-    WillBuildModel("");
+  mParserContext = new CParserContext(new CScanner(kUnknownFilename),mParserContext,0); 
+  mParserContext->mScanner->Append(aSourceBuffer);  
+  if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
+    WillBuildModel(mParserContext->mScanner->GetFilename());
     result=ResumeParse();
     DidBuildModel(result);
   }
@@ -567,12 +547,12 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
 PRInt32 nsParser::ResumeParse() {
   PRInt32 result=kNoError;
 
-  mDTD->WillResumeParse();
+  mParserContext->mDTD->WillResumeParse();
   if(kNoError==result) {
     result=Tokenize();
     if(kInterrupted==result)
-      mDTD->WillInterruptParse();
-    IterateTokens();
+      mParserContext->mDTD->WillInterruptParse();
+    BuildModel();
   }
   return result;
 }
@@ -585,26 +565,28 @@ PRInt32 nsParser::ResumeParse() {
  *  @param   
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsParser::IterateTokens() {
-  nsDequeIterator e=mTokenDeque.End(); 
+PRInt32 nsParser::BuildModel() {
+  
+  nsDequeIterator e=mParserContext->mTokenDeque.End(); 
   nsDequeIterator theMarkPos(e);
-  mMajorIteration++;
 
-  if(!mCurrentPos)
-    mCurrentPos=new nsDequeIterator(mTokenDeque.Begin());
+//  mParserContext->mMajorIteration++;
+
+  if(!mParserContext->mCurrentPos)
+    mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
 
   PRInt32 result=kNoError;
-  while((kNoError==result) && ((*mCurrentPos<e))){
-    mMinorIteration++;
-    CToken* theToken=(CToken*)mCurrentPos->GetCurrent();
+  while((kNoError==result) && ((*mParserContext->mCurrentPos<e))){
+    mParserContext->mMinorIteration++;
+    CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
 
-    theMarkPos=*mCurrentPos;
-    result=mDTD->HandleToken(theToken);
-    ++(*mCurrentPos);
+    theMarkPos=*mParserContext->mCurrentPos;
+    result=mParserContext->mDTD->HandleToken(theToken);
+    ++(*mParserContext->mCurrentPos);
   }
 
   if(kInterrupted==result)
-    *mCurrentPos=theMarkPos;
+    *mParserContext->mCurrentPos=theMarkPos;
 
   return result;
 }
@@ -619,17 +601,17 @@ PRInt32 nsParser::IterateTokens() {
  * @return error code (should be 0)
  */
 PRInt32 nsParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
-  nsDequeIterator end=mTokenDeque.End();
+  nsDequeIterator end=mParserContext->mTokenDeque.End();
 
   int attr=0;
   for(attr=0;attr<aCount;attr++) {
-    if(*mCurrentPos<end) {
-      CToken* tkn=(CToken*)(++(*mCurrentPos));
+    if(*mParserContext->mCurrentPos<end) {
+      CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
       if(tkn){
         if(eToken_attribute==eHTMLTokenTypes(tkn->GetTokenType())){
           aNode.AddAttribute(tkn);
         } 
-        else (*mCurrentPos)--;
+        else (*mParserContext->mCurrentPos)--;
       }
       else return kInterrupted;
     }
@@ -649,18 +631,18 @@ PRInt32 nsParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
  */
 PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   eHTMLTokenTypes   subtype=eToken_attribute;
-  nsDequeIterator   end=mTokenDeque.End();
+  nsDequeIterator   end=mParserContext->mTokenDeque.End();
   PRInt32           result=kNoError;
 
   aCount=0;
-  while((*mCurrentPos!=end) && (eToken_attribute==subtype)) {
-    CToken* tkn=(CToken*)(++(*mCurrentPos));
+  while((*mParserContext->mCurrentPos!=end) && (eToken_attribute==subtype)) {
+    CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
     subtype=eHTMLTokenTypes(tkn->GetTokenType());
     if(eToken_skippedcontent==subtype) {
       aNode.SetSkippedContent(tkn);
       aCount++;
     } 
-    else (*mCurrentPos)--;
+    else (*mParserContext->mCurrentPos)--;
   }
   return result;
 }
@@ -710,10 +692,9 @@ nsresult nsParser::OnStartBinding(const char *aSourceType){
   if (nsnull != mObserver) {
     mObserver->OnStartBinding(aSourceType);
   }
-  mAutoDetectStatus=eUnknownDetect;
-  mDTD=0;
-
-  mSourceType=aSourceType;
+  mParserContext->mAutoDetectStatus=eUnknownDetect;
+  mParserContext->mDTD=0;
+  mParserContext->mSourceType=aSourceType;
   return kNoError;
 }
 
@@ -732,37 +713,33 @@ nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
     mListener->OnDataAvailable(pIStream, length);
   }
 */
-  int len=0;
-  int offset=0;
 
-  if(eInvalidDetect==mAutoDetectStatus) {
-    if(mScanner) {
-      mScanner->GetBuffer().Truncate();
+  if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
+    if(mParserContext->mScanner) {
+      mParserContext->mScanner->GetBuffer().Truncate();
     }
   }
 
-  do {
-      PRInt32 err;
-      len = pIStream->Read(&err, mTransferBuffer, 0, gTransferBufferSize);
-      if(len>0) {
+  int len=1; //init to a non-zero value
+  int err;
+  int offset=0;
 
-        #ifdef DEBUG_SAVE_SOURCE_DOC
-          if(gTempStream) {
-            gTempStream->write(mTransferBuffer,len);
-          }
-        #endif
+  while (len > 0) {
+    len = pIStream->Read(&err, mParserContext->mTransferBuffer, 0, mParserContext->eTransferBufferSize);
+    if(len>0) {
 
-        if (mParserFilter)
-           mParserFilter->RawBuffer(mTransferBuffer, &len);
-        mScanner->Append(mTransferBuffer,len);
+      if(mParserFilter)
+         mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &len);
 
-        if(eUnknownDetect==mAutoDetectStatus) {
-          if(eValidDetect==AutoDetectContentType(mScanner->GetBuffer(),mSourceType)) {
-            nsresult result=WillBuildModel(mURL->GetSpec());
-          } //if
-        }
-      } //if
-  } while (len > 0);
+      mParserContext->mScanner->Append(mParserContext->mTransferBuffer,len);
+
+      if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
+        if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
+          nsresult result=WillBuildModel(mParserContext->mScanner->GetFilename());
+        } //if
+      }
+    } //if
+  }
 
   nsresult result=ResumeParse();
   return result;
@@ -797,7 +774,7 @@ nsresult nsParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
  *  @return  new token or null
  */
 PRInt32 nsParser::ConsumeToken(CToken*& aToken) {
-  PRInt32 result=mDTD->ConsumeToken(aToken);
+  PRInt32 result=mParserContext->mDTD->ConsumeToken(aToken);
   return result;
 }
 
@@ -811,39 +788,11 @@ PRInt32 nsParser::ConsumeToken(CToken*& aToken) {
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
-PRBool nsParser::WillTokenize(void){
+PRBool nsParser::WillTokenize(){
   PRBool result=PR_TRUE;
   return result;
 }
 
-/**
- *  
- *  @update  gess 3/25/98
- *  @return  TRUE if it's ok to proceed
- */
-PRInt32 nsParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
-  CToken* theToken=0;
-  PRInt32 result=kNoError;
-  PRInt32 debugCounter=0; //this can be removed. It's only for debugging...
-  
-  WillTokenize();
-
-  while(kNoError==result) {
-    debugCounter++;
-    result=ConsumeToken(theToken);
-    if(theToken && (kNoError==result)) {
-
-#ifdef VERBOSE_DEBUG
-        theToken->DebugDumpToken(cout);
-#endif
-      mTokenDeque.Push(theToken);
-    }
-  } 
-  if(kEOF==result)
-    result=kNoError;
-  DidTokenize();
-  return result;
-}
 
 /**
  *  This is the primary control routine. It iteratively
@@ -853,14 +802,14 @@ PRInt32 nsParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
  *  @update  gess 3/25/98
  *  @return  error code 
  */
-PRInt32 nsParser::Tokenize(void) {
+PRInt32 nsParser::Tokenize(){
   CToken* theToken=0;
   PRInt32 result=kNoError;
-  PRBool  done=(0==mMajorIteration) ? (!WillTokenize()) : PR_FALSE;
+  PRBool  done=(0==++mParserContext->mMajorIteration) ? (!WillTokenize()) : PR_FALSE;
   
 
   while((PR_FALSE==done) && (kNoError==result)) {
-    mScanner->Mark();
+    mParserContext->mScanner->Mark();
     result=ConsumeToken(theToken);
     if(kNoError==result) {
       if(theToken) {
@@ -868,14 +817,14 @@ PRInt32 nsParser::Tokenize(void) {
   #ifdef VERBOSE_DEBUG
           theToken->DebugDumpToken(cout);
   #endif
-        mTokenDeque.Push(theToken);
+        mParserContext->mTokenDeque.Push(theToken);
       }
 
     }
     else {
       if(theToken)
         delete theToken;
-      mScanner->RewindToMark();
+      mParserContext->mScanner->RewindToMark();
     }
   } 
   if((PR_TRUE==done)  && (kInterrupted!=result))
@@ -892,7 +841,7 @@ PRInt32 nsParser::Tokenize(void) {
  *  @param   
  *  @return  TRUE if all went well
  */
-PRBool nsParser::DidTokenize(void) {
+PRBool nsParser::DidTokenize(){
   PRBool result=PR_TRUE;
 
 #ifdef VERBOSE_DEBUG
@@ -912,8 +861,8 @@ PRBool nsParser::DidTokenize(void) {
  *  @return  
  */
 void nsParser::DebugDumpTokens(ostream& out) {
-  nsDequeIterator b=mTokenDeque.Begin();
-  nsDequeIterator e=mTokenDeque.End();
+  nsDequeIterator b=mParserContext->mTokenDeque.Begin();
+  nsDequeIterator e=mParserContext->mTokenDeque.End();
 
   CToken* theToken;
   while(b!=e) {
@@ -933,8 +882,8 @@ void nsParser::DebugDumpTokens(ostream& out) {
  *  @return  
  */
 void nsParser::DebugDumpSource(ostream& out) {
-  nsDequeIterator b=mTokenDeque.Begin();
-  nsDequeIterator e=mTokenDeque.End();
+  nsDequeIterator b=mParserContext->mTokenDeque.Begin();
+  nsDequeIterator e=mParserContext->mTokenDeque.End();
 
   CToken* theToken;
   while(b!=e) {

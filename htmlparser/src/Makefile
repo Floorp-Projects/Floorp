@@ -34,6 +34,7 @@ CPPSRCS =     \
   nsValidDTD.cpp \
   nsWellFormedDTD.cpp \
   nsParser.cpp  \
+  CParserContext.cpp  \
   nsHTMLTokens.cpp  \
   nsHTMLTags.cpp \
   prstrm.cpp \
