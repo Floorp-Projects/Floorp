@@ -37,8 +37,8 @@ PROGRAM = gtkEmbed
 
 LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(DIST)/lib/libmpfilelocprovider_s.$(LIB_SUFFIX) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(XPCOM_LIBS) \
 		-lgtksuperwin \
 		$(PROFILE_LIBS) \
