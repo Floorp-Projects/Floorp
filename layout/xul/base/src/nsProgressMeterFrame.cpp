@@ -507,7 +507,13 @@ nsProgressMeterFrame::PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingCo
 		nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
 		// how many pixel lines will fit?
-		int segments = (rect.height/2) / onePixel;
+    int segments = 0;
+    if(onePixel) {
+      segments = (rect.height/2) / onePixel;
+    } else {
+      // Zero-height rect?  Bail, don't paint.
+      return;
+    }
 
 		// get the skew in pixels;
 		int skewedPixels = int(skew * onePixel);
@@ -530,34 +536,40 @@ nsProgressMeterFrame::PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingCo
 		PRUint8 brightness = GetBrightness(color);
 
 		// we need to figure out how bright we can get.
-		PRUint8 units = (255 - brightness)/segments;
+    PRUint8 units = 0;
+    if(segments) {
+      units = (255 - brightness)/segments;
+    } else {
+      // Divide-by-zero case, zero-height rect?
+      units = 0;
+    }
 
 		// get a color we can set
 		nscolor c(color);
-
-        for (int i=0; i <= segments; i++)
-		{
-			// set the color and fill the top and bottom lines
+    
+    for (int i=0; i <= segments; i++)
+      {
+        // set the color and fill the top and bottom lines
 		    aRenderingContext.SetColor(c);
-
-			if (mHorizontal) {
-				aRenderingContext.FillRect(tr);
-				aRenderingContext.FillRect(br);
-			} else {
-				aRenderingContext.FillRect(TransformXtoY(tr));
-				aRenderingContext.FillRect(TransformXtoY(br));
-			}
-			// brighten the color
-			c = BrightenBy(c, units);
-
-			// move one line down
-			tr.x += skewedPixels;
-			tr.y += onePixel;
-
-			// move one line up
-			br.y -= onePixel;
-			br.x -= skewedPixels;
-		}
+        
+        if (mHorizontal) {
+          aRenderingContext.FillRect(tr);
+          aRenderingContext.FillRect(br);
+        } else {
+          aRenderingContext.FillRect(TransformXtoY(tr));
+          aRenderingContext.FillRect(TransformXtoY(br));
+        }
+        // brighten the color
+        c = BrightenBy(c, units);
+        
+        // move one line down
+        tr.x += skewedPixels;
+        tr.y += onePixel;
+        
+        // move one line up
+        br.y -= onePixel;
+        br.x -= skewedPixels;
+      }
 }
 
 
