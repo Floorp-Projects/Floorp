@@ -264,10 +264,12 @@ public:
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsSubmissionElement,
+NS_IMPL_ISUPPORTS_INHERITED4(nsXFormsSubmissionElement,
                              nsXFormsStubElement,
                              nsIRequestObserver,
-                             nsIXFormsSubmissionElement)
+                             nsIXFormsSubmissionElement,
+                             nsIInterfaceRequestor,
+                             nsIHttpEventSink)
 
 // nsIXTFElement
 
@@ -332,6 +334,38 @@ nsXFormsSubmissionElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   return NS_OK;
 }
 
+// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+nsXFormsSubmissionElement::GetInterface(const nsIID & aIID, void **aResult)
+{
+  *aResult = nsnull;
+  return QueryInterface(aIID, aResult);
+}
+
+// nsIHttpEventSink
+
+NS_IMETHODIMP
+nsXFormsSubmissionElement::OnRedirect(nsIHttpChannel *aHttpChannel,
+                                      nsIChannel *aNewChannel)
+{
+  NS_ENSURE_ARG_POINTER(aNewChannel);
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ENSURE_STATE(mElement);
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_STATE(doc);
+
+  if (!CheckSameOrigin(doc->GetDocumentURI(), newURI))
+    return NS_ERROR_ABORT;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXFormsSubmissionElement::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
@@ -353,16 +387,18 @@ nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, 
     mPipeIn->Available(&avail);
     if (avail > 0)
     {
-      nsAutoString replace;
-      mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
 
       nsresult rv;
-      if (replace.EqualsLiteral("instance"))
+      if (mIsReplaceInstance) {
         rv = LoadReplaceInstance(channel);
-      else if (replace.IsEmpty() || replace.EqualsLiteral("all"))
-        rv = LoadReplaceAll(channel);
-      else
-        rv = NS_OK;
+      } else {
+        nsAutoString replace;
+        mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
+        if (replace.IsEmpty() || replace.EqualsLiteral("all"))
+          rv = LoadReplaceAll(channel);
+        else
+          rv = NS_OK;
+      }
       succeeded = NS_SUCCEEDED(rv);
     }
   }
@@ -487,6 +523,12 @@ nsXFormsSubmissionElement::Submit()
   if (mActivator)
     mActivator->SetDisabled(PR_TRUE);
 
+  // Someone may change the "replace" attribute during submission
+  // and that would break the ::SameOriginCheck().
+  nsAutoString replace;
+  mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
+  mIsReplaceInstance = replace.EqualsLiteral("instance");
+  
   // XXX seems to be required by 
   // http://www.w3.org/TR/2003/REC-xforms-20031014/slice4.html#evt-revalidate
   // but is it really needed for us?
@@ -508,19 +550,19 @@ nsXFormsSubmissionElement::Submit()
 
 
   // 4. serialize instance data
-
-  PRUint32 format = GetSubmissionFormat(mElement);
-  NS_ENSURE_STATE(format != 0);
+  // Checking the format only before starting the submission.
+  mFormat = GetSubmissionFormat(mElement);
+  NS_ENSURE_STATE(mFormat != 0);
 
   nsCOMPtr<nsIInputStream> stream;
   nsCAutoString uri, contentType;
-  rv = SerializeData(data, format, uri, getter_AddRefs(stream), contentType);
+  rv = SerializeData(data, uri, getter_AddRefs(stream), contentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
 
   // 5. dispatch network request
   
-  rv = SendData(format, uri, stream, contentType);
+  rv = SendData(uri, stream, contentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
@@ -599,7 +641,6 @@ nsXFormsSubmissionElement::GetDefaultInstanceData(nsIDOMNode **result)
 
 nsresult
 nsXFormsSubmissionElement::SerializeData(nsIDOMNode *data,
-                                         PRUint32 format,
                                          nsCString &uri,
                                          nsIInputStream **stream,
                                          nsCString &contentType)
@@ -617,17 +658,17 @@ nsXFormsSubmissionElement::SerializeData(nsIDOMNode *data,
   //    character from the attribute separator is appended.
   //  o The serialized form data is appended to the URI.
 
-  if (format & ENCODING_XML)
-    return SerializeDataXML(data, format, stream, contentType, nsnull);
+  if (mFormat & ENCODING_XML)
+    return SerializeDataXML(data, stream, contentType, nsnull);
 
-  if (format & ENCODING_URL)
-    return SerializeDataURLEncoded(data, format, uri, stream, contentType);
+  if (mFormat & ENCODING_URL)
+    return SerializeDataURLEncoded(data, uri, stream, contentType);
 
-  if (format & ENCODING_MULTIPART_RELATED)
-    return SerializeDataMultipartRelated(data, format, stream, contentType);
+  if (mFormat & ENCODING_MULTIPART_RELATED)
+    return SerializeDataMultipartRelated(data, stream, contentType);
 
-  if (format & ENCODING_MULTIPART_FORM_DATA)
-    return SerializeDataMultipartFormData(data, format, stream, contentType);
+  if (mFormat & ENCODING_MULTIPART_FORM_DATA)
+    return SerializeDataMultipartFormData(data, stream, contentType);
 
   NS_WARNING("unsupported submission encoding");
   return NS_ERROR_UNEXPECTED;
@@ -635,7 +676,6 @@ nsXFormsSubmissionElement::SerializeData(nsIDOMNode *data,
 
 nsresult
 nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
-                                            PRUint32 format,
                                             nsIInputStream **stream,
                                             nsCString &contentType,
                                             SubmissionAttachmentArray *attachments)
@@ -716,6 +756,15 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   sink->Close();
 
   return storage->NewInputStream(0, stream);
+}
+
+PRBool
+nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
+{
+  // We require same-origin for replace="instance" or XML submission
+  if (mFormat & (ENCODING_XML | ENCODING_MULTIPART_RELATED) || mIsReplaceInstance)
+    return nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+  return PR_TRUE;
 }
 
 nsresult
@@ -952,7 +1001,6 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
 
 nsresult
 nsXFormsSubmissionElement::SerializeDataURLEncoded(nsIDOMNode *data,
-                                                   PRUint32 format,
                                                    nsCString &uri,
                                                    nsIInputStream **stream,
                                                    nsCString &contentType)
@@ -972,7 +1020,7 @@ nsXFormsSubmissionElement::SerializeDataURLEncoded(nsIDOMNode *data,
     }
   }
 
-  if (format & METHOD_GET)
+  if (mFormat & METHOD_GET)
   {
     if (uri.FindChar('?') == kNotFound)
       uri.Append('?');
@@ -983,7 +1031,7 @@ nsXFormsSubmissionElement::SerializeDataURLEncoded(nsIDOMNode *data,
     *stream = nsnull;
     contentType.Truncate();
   }
-  else if (format & METHOD_POST)
+  else if (mFormat & METHOD_POST)
   {
     nsCAutoString buf;
     AppendURLEncodedData(data, separator, buf);
@@ -1075,11 +1123,10 @@ nsXFormsSubmissionElement::AppendURLEncodedData(nsIDOMNode *data,
 
 nsresult
 nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
-                                                         PRUint32 format,
                                                          nsIInputStream **stream,
                                                          nsCString &contentType)
 {
-  NS_ASSERTION(format & METHOD_POST, "unexpected submission method");
+  NS_ASSERTION(mFormat & METHOD_POST, "unexpected submission method");
 
   nsCAutoString boundary;
   MakeMultipartBoundary(boundary);
@@ -1098,8 +1145,7 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
 
   nsCOMPtr<nsIInputStream> xml;
   SubmissionAttachmentArray attachments;
-  SerializeDataXML(data, ENCODING_XML | METHOD_POST, getter_AddRefs(xml), type,
-                   &attachments);
+  SerializeDataXML(data, getter_AddRefs(xml), type, &attachments);
 
   // XXX we should output a 'charset=' with the 'Content-Type' header
 
@@ -1164,11 +1210,10 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
 
 nsresult
 nsXFormsSubmissionElement::SerializeDataMultipartFormData(nsIDOMNode *data,
-                                                          PRUint32 format,
                                                           nsIInputStream **stream,
                                                           nsCString &contentType)
 {
-  NS_ASSERTION(format & METHOD_POST, "unexpected submission method");
+  NS_ASSERTION(mFormat & METHOD_POST, "unexpected submission method");
 
   // This format follows the rules for multipart/form-data MIME data streams in
   // [RFC 2388], with specific requirements of this serialization listed below:
@@ -1430,8 +1475,7 @@ nsXFormsSubmissionElement::CreateFileStream(const nsString &absURI,
 }
 
 nsresult
-nsXFormsSubmissionElement::SendData(PRUint32 format,
-                                    const nsCString &uriSpec,
+nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
                                     nsIInputStream *stream,
                                     const nsCString &contentType)
 {
@@ -1459,16 +1503,8 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
 
   nsresult rv;
 
-  // We require same-origin for replace="instance" or XML submission
-  
-  nsAutoString replace;
-  mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
-  if (format & (ENCODING_XML | ENCODING_MULTIPART_RELATED) ||
-      replace.EqualsLiteral("instance"))
-  {
-    if (!nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri))
-      return NS_ERROR_ABORT;
-  }
+  if (!CheckSameOrigin(doc->GetDocumentURI(), uri))
+    return NS_ERROR_ABORT;
 
   // wrap the entire upload stream in a buffered input stream, so that
   // it can be read in large chunks.
@@ -1494,7 +1530,7 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (format & METHOD_POST)
+  if (mFormat & METHOD_POST)
   {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     NS_ENSURE_STATE(httpChannel);
@@ -1507,17 +1543,6 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
 
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   channel->SetLoadGroup(loadGroup);
-
-  // the container is the docshell, and we use it as our provider of
-  // notification callbacks.
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(container);
-
-  // XXX this means that we allow redirects to any URI, and that is a
-  // security hole that will need to be plugged.  of course, we only
-  // need to worry about this problem for replace='instance'
-
-  channel->SetNotificationCallbacks(callbacks);
 
   // create a pipe in which to store the response (yeah, this kind of
   // sucks since we'll use a lot of memory if the response is large).
@@ -1539,6 +1564,7 @@ nsXFormsSubmissionElement::SendData(PRUint32 format,
   rv = NS_NewSimpleStreamListener(getter_AddRefs(listener), pipeOut, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  channel->SetNotificationCallbacks(this);
   rv = channel->AsyncOpen(listener, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 

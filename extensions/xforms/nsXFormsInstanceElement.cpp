@@ -53,11 +53,13 @@
 
 static const char* kLoadAsData = "loadAsData";
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInstanceElement,
+NS_IMPL_ISUPPORTS_INHERITED5(nsXFormsInstanceElement,
                              nsXFormsStubElement,
                              nsIInstanceElementPrivate,
                              nsIStreamListener,
-                             nsIRequestObserver)
+                             nsIRequestObserver,
+                             nsIInterfaceRequestor,
+                             nsIHttpEventSink)
 
 nsXFormsInstanceElement::nsXFormsInstanceElement()
   : mElement(nsnull)
@@ -153,6 +155,35 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
   return NS_OK;
+}
+
+// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::GetInterface(const nsIID & aIID, void **aResult)
+{
+  *aResult = nsnull;
+  return QueryInterface(aIID, aResult);
+}
+
+// nsIHttpEventSink
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::OnRedirect(nsIHttpChannel *aHttpChannel,
+                                    nsIChannel *aNewChannel)
+{
+  NS_ENSURE_ARG_POINTER(aNewChannel);
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  NS_ENSURE_STATE(mElement);
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_STATE(doc);
+  return nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), newURI) ?
+    NS_OK : NS_ERROR_ABORT;
 }
 
 // nsIStreamListener
@@ -364,8 +395,10 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
           if (docChannel) {
             rv = newDoc->StartDocumentLoad(kLoadAsData, docChannel, loadGroup, nsnull,
                                            getter_AddRefs(mListener), PR_TRUE);
-            if (NS_SUCCEEDED(rv))
+            if (NS_SUCCEEDED(rv)) {
+              docChannel->SetNotificationCallbacks(this);
               rv = docChannel->AsyncOpen(this, nsnull);
+            }
           }
         }
       }

@@ -46,6 +46,8 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsSubmitElement.h"
 #include "nsIXFormsSubmissionElement.h"
+#include "nsIHttpEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 class nsIMultiplexInputStream;
 class nsIDOMElement;
@@ -63,16 +65,22 @@ class SubmissionAttachmentArray;
  */
 class nsXFormsSubmissionElement : public nsXFormsStubElement,
                                   public nsIRequestObserver,
-                                  public nsIXFormsSubmissionElement
+                                  public nsIXFormsSubmissionElement,
+                                  public nsIHttpEventSink,
+                                  public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIXFORMSSUBMISSIONELEMENT
+  NS_DECL_NSIHTTPEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   nsXFormsSubmissionElement()
     : mElement(nsnull)
     , mSubmissionActive(PR_FALSE)
+    , mIsReplaceInstance(PR_FALSE)
+    , mFormat(0)
   {}
 
   // nsIXTFGenericElement overrides
@@ -88,28 +96,35 @@ public:
   NS_HIDDEN_(PRBool)   GetBooleanAttr(const nsAString &attrName, PRBool defaultVal = PR_FALSE);
   NS_HIDDEN_(void)     GetDefaultInstanceData(nsIDOMNode **result);
   NS_HIDDEN_(nsresult) GetSelectedInstanceData(nsIDOMNode **result);
-  NS_HIDDEN_(nsresult) SerializeData(nsIDOMNode *data, PRUint32 format, nsCString &uri, nsIInputStream **, nsCString &contentType);
-  NS_HIDDEN_(nsresult) SerializeDataXML(nsIDOMNode *data, PRUint32 format, nsIInputStream **, nsCString &contentType, SubmissionAttachmentArray *);
+  NS_HIDDEN_(nsresult) SerializeData(nsIDOMNode *data, nsCString &uri, nsIInputStream **, nsCString &contentType);
+  NS_HIDDEN_(nsresult) SerializeDataXML(nsIDOMNode *data, nsIInputStream **, nsCString &contentType, SubmissionAttachmentArray *);
   NS_HIDDEN_(nsresult) CreateSubmissionDoc(nsIDOMDocument *source, const nsString &encoding, SubmissionAttachmentArray *, nsIDOMDocument **result);
   NS_HIDDEN_(nsresult) CopyChildren(nsIDOMNode *source, nsIDOMNode *dest, nsIDOMDocument *destDoc, SubmissionAttachmentArray *, const nsString &cdataElements, PRBool indent, PRUint32 depth);
-  NS_HIDDEN_(nsresult) SerializeDataURLEncoded(nsIDOMNode *data, PRUint32 format, nsCString &uri, nsIInputStream **, nsCString &contentType);
+  NS_HIDDEN_(nsresult) SerializeDataURLEncoded(nsIDOMNode *data, nsCString &uri, nsIInputStream **, nsCString &contentType);
   NS_HIDDEN_(void)     AppendURLEncodedData(nsIDOMNode *data, const nsCString &sep, nsCString &buf);
-  NS_HIDDEN_(nsresult) SerializeDataMultipartRelated(nsIDOMNode *data, PRUint32 format, nsIInputStream **, nsCString &contentType);
-  NS_HIDDEN_(nsresult) SerializeDataMultipartFormData(nsIDOMNode *data, PRUint32 format, nsIInputStream **, nsCString &contentType);
+  NS_HIDDEN_(nsresult) SerializeDataMultipartRelated(nsIDOMNode *data, nsIInputStream **, nsCString &contentType);
+  NS_HIDDEN_(nsresult) SerializeDataMultipartFormData(nsIDOMNode *data, nsIInputStream **, nsCString &contentType);
   NS_HIDDEN_(nsresult) AppendMultipartFormData(nsIDOMNode *data, const nsCString &boundary, nsCString &buf, nsIMultiplexInputStream *);
   NS_HIDDEN_(nsresult) AppendPostDataChunk(nsCString &postDataChunk, nsIMultiplexInputStream *multiStream);
   NS_HIDDEN_(nsresult) GetElementEncodingType(nsIDOMNode *data, PRUint32 *encType);
   NS_HIDDEN_(nsresult) CreateFileStream(const nsString &absURI, nsIFile **file, nsIInputStream **stream);
-  NS_HIDDEN_(nsresult) SendData(PRUint32 format, const nsCString &uri, nsIInputStream *stream, const nsCString &contentType);
+  NS_HIDDEN_(nsresult) SendData(const nsCString &uri, nsIInputStream *stream, const nsCString &contentType);
 
 private:
   nsIDOMElement *mElement;
-  PRBool         mSubmissionActive;
+  PRPackedBool   mSubmissionActive;
+  PRPackedBool   mIsReplaceInstance; // Valid when mSubmissionActive == PR_TRUE
+  PRUint32       mFormat; // Valid when mSubmissionActive == PR_TRUE
   nsCOMPtr<nsIXFormsSubmitElement> mActivator;
 
   // input end of pipe, which contains response data.
   nsCOMPtr<nsIInputStream> mPipeIn;
 
+  /**
+   * @return true if aTestURI has the same origin as aBaseURI or if
+   * there is no need for a same origin check.
+   */
+  PRBool CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI);
   nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource);
 };
 

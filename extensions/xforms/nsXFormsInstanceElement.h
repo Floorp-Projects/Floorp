@@ -46,6 +46,8 @@
 #include "nsIInstanceElementPrivate.h"
 #include "nsIRequestObserver.h"
 #include "nsIStreamListener.h"
+#include "nsIHttpEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 class nsIDOMElement;
 
@@ -57,13 +59,17 @@ class nsIDOMElement;
 
 class nsXFormsInstanceElement : public nsXFormsStubElement,
                                 public nsIInstanceElementPrivate,
-                                public nsIStreamListener
+                                public nsIStreamListener,
+                                public nsIHttpEventSink,
+                                public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIINSTANCEELEMENTPRIVATE
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIHTTPEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   // nsIXTFGenericElement overrides
   NS_IMETHOD OnDestroyed();
