@@ -33,7 +33,7 @@ public:
 	NS_DECL_ISUPPORTS_INHERITED
 
 	// nsIURI override
-	NS_IMETHOD SetSpec(char * aSpec);
+	NS_IMETHOD SetSpec(const char * aSpec);
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
