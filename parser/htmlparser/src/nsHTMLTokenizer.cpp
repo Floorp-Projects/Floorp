@@ -790,7 +790,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
               // Ensure we have a /
               PRUnichar tempChar;  // Don't change non-debug vars in debug-only code
               result = aScanner.Peek(tempChar);
-              NS_ASSERTION(NS_SUCCEEDED(result) && theChar == kForwardSlash,
+              NS_ASSERTION(NS_SUCCEEDED(result) && tempChar == kForwardSlash,
                            "CTextToken::ConsumeUntil is broken!");
 #endif
               result = ConsumeEndTag(PRUnichar('/'),endToken,aScanner);
