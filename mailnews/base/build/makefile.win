@@ -37,7 +37,7 @@ LLIBS=										\
 			$(DIST)\lib\xpcom.lib			\
 			$(DIST)\lib\msgbaseutil.lib		\
 			$(DIST)\lib\msgbase_s.lib		\
-			$(DIST)\lib\msgsearch.lib			\
+ 			$(DIST)\lib\msgsearch_s.lib		\
 			$(DIST)\lib\netlib.lib			\
 			$(DIST)\lib\raptorgfxwin.lib    \
 			$(LIBNSPR)						\

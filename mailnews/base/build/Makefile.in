@@ -32,6 +32,7 @@ EXPORTS		= nsMsgBaseCID.h
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libmsgbase_s.a \
 		$(DIST)/lib/librdfutil_s.a \
+ 		$(DIST)/lib/libmsgsearch_s.a \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
