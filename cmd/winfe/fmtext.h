@@ -82,6 +82,12 @@ public:
 //	The edit field.
 private:
 	CODNetscapeEdit *m_pWidget;
+
+// a windproc for taking extra control of the associated widget
+public:
+	static LRESULT CALLBACK EXPORT TempWndProc(HWND,UINT,WPARAM,LPARAM);
+private:
+	WNDPROC mRealWndProc;
 };
 
 #endif // __FORM_TEXT_H

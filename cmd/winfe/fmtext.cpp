@@ -21,16 +21,17 @@
 #include "fmtext.h"
 #include "odctrl.h"
 #include "intl_csi.h"
-//	This file is dedicated to form type select one elements
-//		otherwise known as list boxes on windows and
-//		their implementation as requried by the XP layout
-//		library.
+//	This file is dedicated to form type text edit boxes on windows and
+//		their implementation as required by the XP layout library.
+
+static const char gWndProcProperty[] = "CFormTextWndProc";
 
 //	Construction simply clears all members.
 CFormText::CFormText()
 {
 	//	No widget yet.
 	m_pWidget = NULL;
+	mRealWndProc = 0;
 }
 
 //	Destruction cleans out all members.
@@ -169,6 +170,10 @@ void CFormText::DestroyWidget()
 {
 	//	Get rid of the widget if around.
 	if(m_pWidget)	{
+		RemoveProp(m_pWidget->m_hWnd, gWndProcProperty);
+		if (mRealWndProc)
+			SetWindowLong(m_pWidget->m_hWnd, GWL_WNDPROC,
+				(LONG)mRealWndProc);
 		m_pWidget->DestroyWindow();
 		delete m_pWidget;
 		m_pWidget = NULL;
@@ -246,6 +251,10 @@ void CFormText::CreateWidget()
 				m_pWidget = NULL;
 				return;
 			}
+
+			SetProp(m_pWidget->m_hWnd, gWndProcProperty, this);
+			mRealWndProc = (WNDPROC)SetWindowLong(m_pWidget->m_hWnd,
+				GWL_WNDPROC, (LONG)TempWndProc);
 
 			//	Next, need to size the widget.
 			//	Obtain a font.
@@ -514,4 +523,27 @@ void CFormText::UpdateCurrentData()
 HWND CFormText::GetRaw()
 {
     return(m_pWidget ? m_pWidget->m_hWnd : NULL);
+}
+
+
+LRESULT CALLBACK EXPORT CFormText::TempWndProc(HWND hWnd, UINT message,
+		WPARAM wParam, LPARAM lParam) {
+
+	LRESULT ret;
+	CFormText *thisObj = (CFormText *)GetProp(hWnd, gWndProcProperty);
+
+	ASSERT(thisObj);
+	if (!thisObj)
+		return 0;
+
+	/* Standard processing is fine, except for mouseactivate messages.  We explicitly
+	   activate the window if the standard windproc seems to think we should.  A
+	   doubleclick in an inactive window running under NT 4.0 will otherwise cause
+	   the window to lose focus (and textedit fields in forms seem to be inactive
+	   unless we take this step.)
+	*/
+	ret = CallWindowProc(thisObj->mRealWndProc, hWnd, message, wParam, lParam);
+	if (message == WM_MOUSEACTIVATE && (ret == MA_ACTIVATE || ret == MA_ACTIVATEANDEAT))
+			CallWindowProc(thisObj->mRealWndProc, hWnd, WM_ACTIVATE, WA_ACTIVE, NULL);
+	return ret;
 }
