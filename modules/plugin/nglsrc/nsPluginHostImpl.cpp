@@ -1490,9 +1490,9 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstan
       //instance->GetPeer(&peer);
       ((nsPluginInstancePeerImpl*)mActivePluginList[i].mPeer)->SetOwner(aOwner);
 
+      instance->Start();
       aOwner->CreateWidget();
       instance->SetWindow(window);
-      instance->Start();
 
       mActivePluginList[i].mStopped = PR_FALSE;
 
