@@ -34,6 +34,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDOMDocument.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDiskDocument.h"
@@ -2914,11 +2915,32 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
 
+  nsresult res = NS_OK;
   if (editor)
-    return editor->SetDocumentCharacterSet(characterSet);
+    res = editor->SetDocumentCharacterSet(characterSet);
+  
+  if(NS_SUCCEEDED(res)) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow));
+    if (!globalObj) {
+      return NS_ERROR_FAILURE;
+    }
 
-  return NS_ERROR_FAILURE;
-
+    nsCOMPtr<nsIDocShell> docShell;
+    globalObj->GetDocShell(getter_AddRefs(docShell));
+    if (docShell)
+    {
+      nsCOMPtr<nsIContentViewer> childCV;
+      NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+      if (childCV)
+      {
+        nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+        if (markupCV) {
+          NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(characterSet), NS_ERROR_FAILURE);
+        }
+      }
+    }
+  }
+  return res;
 }
 
 NS_IMETHODIMP
