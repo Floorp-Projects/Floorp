@@ -91,7 +91,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicAuth);
 #define NS_BASICAUTH_PROGID "mozilla.network.http-basic-auth.1"
 
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
-static nsresult
+static NS_METHOD
 RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
                   const char *registryLocation, const char *componentType)
 {
@@ -104,7 +104,7 @@ RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
-static nsresult
+static NS_METHOD
 UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
                   const char *registryLocation)
 {
