@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.6 2002/05/15 23:59:40 jpierre%netscape.com Exp $
+ * $Id: ocsp.c,v 1.7 2002/06/06 01:05:40 jpierre%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -1798,414 +1798,283 @@ loser:
 }
 
 /*
- * Read from "fd" into "buf" -- expect/attempt to read a "minimum" number
- * of bytes, but do not exceed "maximum".  (Obviously, stop at less than
- * "minimum" if hit end-of-stream.)  Only problems are low-level i/o errors.
+ * Read from "fd" into "buf" -- expect/attempt to read a given number of bytes
+ * Obviously, stop if hit end-of-stream. Timeout is passed in.
  */
+
 static int
-ocsp_MinMaxRead(PRFileDesc *fd, unsigned char *buf, int minimum, int maximum)
+ocsp_read(PRFileDesc *fd, char *buf, int toread, PRIntervalTime timeout)
 {
     int total = 0;
 
-    while (total < minimum) {
-	PRInt32 got;
+    while (total < toread)
+    {
+        PRInt32 got;
 
-	got = PR_Read(fd, buf + total, (PRInt32) (maximum - total));
-	if (got < 0) {
-	    if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
-		break;
-	    }
-	    continue;
-	} else if (got == 0) {			/* EOS */
-	    break;
-	}
+        got = PR_Recv(fd, buf + total, (PRInt32) (toread - total), 0, timeout);
+        if (got < 0)
+        {
+            if (0 == total)
+            {
+                total = -1; /* report the error if we didn't read anything yet */
+            }
+            break;
+        }
+        else
+        if (got == 0)
+        {			/* EOS */
+            break;
+        }
 
-	total += got;
+        total += got;
     }
 
     return total;
 }
 
-#ifdef BUFSIZ
-#define OCSP_BUFSIZE BUFSIZ
-#else
 #define OCSP_BUFSIZE 1024
-#endif
+
+#define AbortHttpDecode(error) \
+{ \
+        if (inBuffer) \
+            PORT_Free(inBuffer); \
+        PORT_SetError(error); \
+        return NULL; \
+}
+
 
 /*
- * Listens on the given socket and returns an encoded response when received.
- * Properly formatted HTTP response headers are expected to be read from the
- * socket, preceding a binary-encoded OCSP response.  Problems with parsing
- * cause the error SEC_ERROR_OCSP_BAD_HTTP_RESPONSE to be set; any other
- * problems are likely low-level i/o or memory allocation errors.
+ * Reads on the given socket and returns an encoded response when received.
+ * Properly formatted HTTP/1.0 response headers are expected to be read
+ * from the socket, preceding a binary-encoded OCSP response.  Problems
+ * with parsing cause the error SEC_ERROR_OCSP_BAD_HTTP_RESPONSE to be
+ * set; any other problems are likely low-level i/o or memory allocation
+ * errors.
  */
 static SECItem *
 ocsp_GetEncodedResponse(PRArenaPool *arena, PRFileDesc *sock)
 {
-    unsigned char *buf = NULL;
-    int bufsize, bytesRead, len;
-    const unsigned char *bufEnd;
-    const char *s;
-    const char *newline = NULL;
-    PRBool headersDone = PR_FALSE;
-    PRBool pendingCR = PR_FALSE;
-    PRBool contentTypeOK = PR_FALSE;
-    unsigned int contentLength = 0;
-    void *mark = NULL;
-    SECItem *result = NULL;
+    /* first read HTTP status line and headers */
 
+    char* inBuffer = NULL;
+    PRInt32 offset = 0;
+    PRInt32 inBufsize = 0;
+    const PRInt32 bufSizeIncrement = OCSP_BUFSIZE; /* 1 KB at a time */
+    const PRInt32 maxBufSize = 8 * bufSizeIncrement ; /* 8 KB max */
+    const char* CRLF = "\r\n";
+    const PRInt32 CRLFlen = strlen(CRLF);
+    const char* headerEndMark = "\r\n\r\n";
+    const PRInt32 markLen = strlen(headerEndMark);
+    const PRIntervalTime ocsptimeout =
+        PR_SecondsToInterval(30); /* hardcoded to 30s for now */
+    char* headerEnd = NULL;
+    PRBool EOS = PR_FALSE;
+    const char* httpprotocol = "HTTP/";
+    const PRInt32 httplen = strlen(httpprotocol);
+    const char* httpcode = NULL;
+    const char* contenttype = NULL;
+    PRInt32 contentlength = 0;
+    PRInt32 bytesRead = 0;
+    char* statusLineEnd = NULL;
+    char* space = NULL;
+    char* nextHeader = NULL;
+    SECItem* result = NULL;
 
-    bufsize = OCSP_BUFSIZE;
-    buf = PORT_Alloc(bufsize+1);
-    buf[bufsize] = 0; /* NULL termination so string functions are OK */
-    if (buf == NULL) {
-	goto loser;
-    }
-    /*
-     * I picked 128 because:
-     *	- It is a nice "round" number. ;-)
-     *  - I am sure it should cover at least the first line of the http
-     *	  response (on the order of 20 should be enough but I am allowing
-     *	  for excessive leading whitespace) so that I don't have to keep
-     *	  checking for going past the end of the buffer until after that.
-     *	- I am sure that any interesting response will be bigger than that;
-     *    the exception is one that is status-only, like "tryLater".
-     *  - Given a trim response (no extra whitespace), it should cover
-     *	  all of the http headers, and just a bit of the content.
-     *	  This is what I was aiming for, to minimize data copying.
-     */
-    bytesRead = ocsp_MinMaxRead(sock, buf, 128, bufsize);
-    if (bytesRead <= 0) {
-	if (bytesRead == 0)
-	    PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-	goto loser;
-    }
-    bufEnd = buf + bytesRead;
-    /*
-     * Skip leading whitespace.
-     */
-    for (s = (char *)buf; s < (char *)bufEnd; s++) {
-	if (*s != ' ' && *s != '\t') {
-	    break;
-	}
-    }
-    /*
-     * Here we expect to find something like "HTTP/1.x 200 OK\r\n".
-     * (The status code may be anything, but should be 3 digits.
-     * The comment (e.g. "OK") may be anything as well.)  I figure that
-     * the minimal line would be "HTTP/x.y zzz\n", which is 13 chars.
-     * That may not even meet the spec, but we will accept it -- anything
-     * less than that, though, we will not.
-     */
-    if (((char *)bufEnd - s) < 13 || PORT_Strncasecmp(s, "http/", 5) != 0) {
-	PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-	goto loser;
-    }
-    s += 5;			/* skip "http/" */
-    /*
-     * I don't see a reason to look at the version number.  Assuming that
-     * whatever version it is, it supports the one or two headers we are
-     * looking for, and doesn't completely change the interpretation of
-     * status values, it shouldn't matter.  We shouldn't reject something
-     * that would otherwise work just because the code was picky about
-     * version number.  So we just skip it, hoping real incompatibility
-     * will manifest itself in the parsing.
-     */
-    while (*s++ != ' ') {	/* skip "x.y ", without interpretation */
-	/*
-	 * We expect the version number to be only a few characters,
-	 * and that we should easily have enough in the buffer to cover.
-	 * So, if we go past the end, just bail.
-	 */
-	if (s >= (char *)bufEnd) {
-	    PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-	    goto loser;
-	}
-    }
-    /*
-     * Now get, and check, the status.  Accept 200-299; reject all else.
-     * There are some 200s that basically have no content, but that will
-     * fall out as bad below, and it's just easier to handle it that way
-     * than to try to know all the different status values.
-     */
+    /* read up to at least the end of the HTTP headers */
+    do
     {
-	int statusCode = PORT_Atoi(s);
+        inBufsize += bufSizeIncrement;
+        inBuffer = PORT_Realloc(inBuffer, inBufsize+1);
+        if (NULL == inBuffer)
+        {
+            AbortHttpDecode(SEC_ERROR_NO_MEMORY);
+        }
+        bytesRead = ocsp_read(sock, inBuffer + offset, bufSizeIncrement,
+            ocsptimeout);
+        if (bytesRead > 0)
+        {
+            PRInt32 searchOffset = (offset - markLen) >0 ? offset-markLen : 0;
+            offset += bytesRead;
+            *(inBuffer + offset) = '\0'; /* NULL termination */
+            headerEnd = strstr((const char*)inBuffer + searchOffset, headerEndMark);
+            if (bytesRead < bufSizeIncrement)
+            {
+                /* we read less data than requested, therefore we are at
+                   EOS or there was a read error */
+                EOS = PR_TRUE;
+            }
+        }
+        else
+        {
+            /* recv error or EOS */
+            EOS = PR_TRUE;
+        }
+    } while ( (!headerEnd) && (PR_FALSE == EOS) &&
+              (inBufsize < maxBufSize) );
 
-	if (statusCode < 200 || statusCode >= 300) {
-	    PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-	    goto loser;
-	}
-    }
-    s += 3;			/* skip 3-digit status code */
-    /*
-     * The rest of the line is a comment, which we just want to skip.
-     * The next thing to do is continue through all of the HTTP headers,
-     * watching for the couple we are interested in.  The end of the
-     * headers (and thus the beginning of the content) is marked by
-     * two consecutive newlines.  (According to spec that should be
-     * CRLF followed by CRLF, but we are being generous and allowing
-     * for people who send only CRs or only LFs, too.)
-     *
-     * XXX Explain better about how the following code works.
-     * Especially what the potential values of "newline" are and what
-     * each one means.
-     */
-    while (1) {
-	/*
-	 * Move forward to the next line, stopping when we find a CRLF,
-	 * CR, or LF, or the end of the buffer.  We have to be careful
-	 * when we find a lone CR at the end of the buffer, because if
-	 * the next character read is an LF we want to treat it as one
-	 * newline altogether.
-	 *
-	 * We also need to detect two newlines in a row, which is what
-	 * marks the end of the headers and time for us to quit out of
-	 * the outer loop.
-	 */
-	for (; s < (char *)bufEnd; s++) {
-	    if (*s == '\r' || *s == '\n') {
-		if (s == newline) {
-		    headersDone = PR_TRUE;	/* 2nd consecutive newline */
-		}
-		newline = s;
-		if (newline[0] == '\r') {
-		    if (s == (char *)bufEnd - 1) {
-			/* CR at end - wait for the next character */
-			newline = NULL;
-			pendingCR = PR_TRUE;
-			break;
-		    } else if (newline[1] == '\n') {
-			/* CRLF seen; swallow both */
-			newline++;
-		    }
-		}
-		newline++;
-		break;
-	    }
-	    /*
-	     * After the first time through, we no longer need to remember
-	     * where the previous line started.  We needed it for checking
-	     * for consecutive newlines, but now we need it to be clear in
-	     * case we finish the loop by finishing off the buffer.
-	     */
-	    newline = NULL;
-	}
-	if (headersDone) {
-	    s = newline;
-	    break;
-	}
-	/*
-	 * When we are here, either:
-	 *	- newline is NULL, meaning we're at the end of the buffer
-	 *	  and we need to refill it, or
-	 *	- newline points to the first character on the new line
-	 */
-	if (newline == NULL) {
-	    /* So, we need to refill the buffer. */
-	    len = pendingCR ? 1 : 0;
-	    bytesRead = ocsp_MinMaxRead(sock, buf + len, 64 - len,
-					bufsize - len);
-	    if (bytesRead <= 0) {
-		if (bytesRead == 0)
-		    PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-		goto loser;
-	    }
-	    s = (char *)buf;
-	    bufEnd = buf + len + bytesRead;
-	    if (pendingCR) {
-		buf[0] = '\r';
-		pendingCR = PR_FALSE;
-	    }
-	    continue;
-	}
-	/*
-	 * Okay, now we know that we are looking at an HTTP header line
-	 * with enough length to be safe for our comparisons.  See if it is
-	 * one of the ones we are interested in.  (That is, "Content-Length"
-	 * or "Content-Type".)
-	 */
-	if (PORT_Strncasecmp(newline, "content-", 8) == 0) {
-	    s = newline + 8;
-	    if (PORT_Strncasecmp(s, "type: ", 6) == 0) {
-		s += 6;
-		if (PORT_Strncasecmp(s, "application/ocsp-response",
-				     25) != 0) {
-		    break;
-		}
-		contentTypeOK = PR_TRUE;
-		s += 25;
-	    } else if (PORT_Strncasecmp(s, "length: ", 8) == 0) {
-		s += 8;
-		contentLength = PORT_Atoi(s);
-	    }
-	    newline = NULL;
-	} else {
-	    /*
-	     * Not an interesting header.  We will go around the loop
-	     * again to find the next line.
-	     */
-	    s = newline;
-	}
+    if (!headerEnd)
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
     }
 
-    /*
-     * Check that we got the correct content type.  (If !contentTypeOK,
-     * the content-type header was either bad or missing.)
-     */
-    if (!contentTypeOK) {
-	PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-	goto loser;
+    /* parse the HTTP status line  */
+    statusLineEnd = strstr((const char*)inBuffer, CRLF);
+    if (!statusLineEnd)
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+    }
+    *statusLineEnd = '\0';
+
+    /* check for HTTP/ response */
+    space = strchr((const char*)inBuffer, ' ');
+    if (!space || PORT_Strncasecmp((const char*)inBuffer, httpprotocol, httplen) != 0 )
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
     }
 
-    /*
-     * Now we need to handle the actual content.  We may not have a
-     * good content-length; things are harder if we do not -- in that
-     * case we will just read until we get EOS.
-     */
+    /* check the HTTP status code of 200 */
+    httpcode = space +1;
+    space = strchr(httpcode, ' ');
+    if (!space)
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+    }
+    *space = 0;
+    if (0 != strcmp(httpcode, "200"))
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+    }
 
-    /*
-     * We are finally about the allocate the return area; before that
-     * mark the arena so we can release-back on error.
-     */
-    if (arena != NULL) {
-	mark = PORT_ArenaMark(arena);
+    /* parse the HTTP headers in the buffer . We only care about
+       content-type and content-length
+    */
+
+    nextHeader = statusLineEnd + CRLFlen;
+    *headerEnd = '\0'; /* terminate */
+    do
+    {
+        char* thisHeaderEnd = NULL;
+        char* value = NULL;
+        char* colon = strchr(nextHeader, ':');
+        
+        if (!colon)
+        {
+            AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+        }
+
+        *colon = '\0';
+        value = colon + 1;
+
+        /* jpierre - note : the following code will only handle the basic form
+           of HTTP/1.0 response headers, of the form "name: value" . Headers
+           split among multiple lines are not supported. This is not common
+           and should not be an issue, but it could become one in the
+           future */
+
+        if (*value != ' ')
+        {
+            AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+        }
+
+        value++;
+        thisHeaderEnd  = strstr(value, CRLF);
+        if (thisHeaderEnd )
+        {
+            *thisHeaderEnd  = '\0';
+        }
+
+        if (0 == PORT_Strcasecmp(nextHeader, "content-type"))
+        {
+            contenttype = value;
+        }
+        else
+        if (0 == PORT_Strcasecmp(nextHeader, "content-length"))
+        {
+            contentlength = atoi(value);
+        }
+
+        if (thisHeaderEnd )
+        {
+            nextHeader = thisHeaderEnd + CRLFlen;
+        }
+        else
+        {
+            nextHeader = NULL;
+        }
+
+    } while (nextHeader && (nextHeader < (headerEnd + CRLFlen) ) );
+
+    /* check content-type */
+    if (!contenttype ||
+        (0 != PORT_Strcasecmp(contenttype, "application/ocsp-response")) )
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
     }
-    /*
-     * How much of the content is already in the buffer?
-     */ 
-    if (s == NULL) {
-	len = 0;
-    } else {
-	len = (char *)bufEnd - s;
-	if (contentLength && len > contentLength) {
-	    len = contentLength;
-	}
+
+    /* read the body of the OCSP response */
+    offset = offset - (PRInt32) (headerEnd - (const char*)inBuffer) - markLen;
+    if (offset)
+    {
+        /* move all data to the beginning of the buffer */
+        PORT_Memmove(inBuffer, headerEnd + markLen, offset);
     }
+
+    /* resize buffer to only what's needed to hold the current response */
+    inBufsize = (1 + (offset-1) / bufSizeIncrement ) * bufSizeIncrement ;
+
+    while ( (PR_FALSE == EOS) &&
+            ( (contentlength == 0) || (offset < contentlength) ) &&
+            (inBufsize < maxBufSize)
+            )
+    {
+        /* we still need to receive more body data */
+        inBufsize += bufSizeIncrement;
+        inBuffer = PORT_Realloc(inBuffer, inBufsize+1);
+        if (NULL == inBuffer)
+        {
+            AbortHttpDecode(SEC_ERROR_NO_MEMORY);
+        }
+        bytesRead = ocsp_read(sock, inBuffer + offset, bufSizeIncrement,
+                              ocsptimeout);
+        if (bytesRead > 0)
+        {
+            offset += bytesRead;
+            if (bytesRead < bufSizeIncrement)
+            {
+                /* we read less data than requested, therefore we are at
+                   EOS or there was a read error */
+                EOS = PR_TRUE;
+            }
+        }
+        else
+        {
+            /* recv error or EOS */
+            EOS = PR_TRUE;
+        }
+    }
+
+    if (0 == offset)
+    {
+        AbortHttpDecode(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
+    }
+
     /*
      * Now allocate the item to hold the data.
      */
-    result = SECITEM_AllocItem(arena, NULL,
-			       contentLength ? contentLength : len);
-    if (result == NULL) {
-	goto loser;
+    result = SECITEM_AllocItem(arena, NULL, offset);
+    if (NULL == result)
+    {
+        AbortHttpDecode(SEC_ERROR_NO_MEMORY);
     }
+
     /*
      * And copy the data left in the buffer.
-     */
-    if (len) {
-	PORT_Memcpy(result->data, s, len);
-    }
+    */
+    PORT_Memcpy(result->data, inBuffer, offset);
 
-    /*
-     * Now we need to read all of the (rest of the) content.  If we know
-     * the length, it's easy, just one big read.  If not, we need to loop,
-     * reading until there is nothing left to read.
-     */
-    if (contentLength) {
-	int remaining;
-
-	/*
-	 * It may be the case that our last buffer ended exactly on the
-	 * second CR of the CRLF pair which denotes the end of the headers.
-	 * If so, we have to be prepared to read, and skip over, an LF.
-	 * Since we want to read the rest of the content directly into
-	 * the buffer we are returning, we read one byte specifically and
-	 * see if it is an LF.  If not, we just copy that byte into the
-	 * first byte of our return value.
-	 */
-	if (pendingCR) {
-	    PORT_Assert(len == 0);
-	    bytesRead = ocsp_MinMaxRead(sock, buf, 1, 1);
-	    if (bytesRead < 1) {
-		goto loser;
-	    }
-	    if (buf[0] != '\n') {
-		result->data[0] = buf[0];
-		len = 1;
-	    }
-	}
-	remaining = contentLength - len;
-	if (remaining) {
-	    bytesRead = ocsp_MinMaxRead(sock, result->data + len,
-					remaining, remaining);
-	    if (bytesRead < remaining) {
-		if (bytesRead > 0) {
-		    PORT_SetError(SEC_ERROR_OCSP_BAD_HTTP_RESPONSE);
-		}
-		goto loser;
-	    }
-	}
-    } else while (1) {
-	/*
-	 * Read as much as we can.  There is no real minimum here,
-	 * we will just take whatever we can get and copy it over
-	 * into our result area.
-	 */
-	bytesRead = ocsp_MinMaxRead(sock, buf, 1, bufsize);
-	if (bytesRead < 0) {
-	    goto loser;
-	}
-	if (bytesRead == 0) {		/* EOS: all done reading */
-	    break;
-	}
-	/*
-	 * Now make room for that many more bytes in our result area.
-	 */
-	if (SECITEM_ReallocItem(arena, result, len,
-				len + bytesRead) != SECSuccess) {
-	    goto loser;
-	}
-	/*
-	 * The first time through this loop, it may be the case that
-	 * we have the final LF of our CRLF pair that ended the headers.
-	 * If so, we need to skip over it.
-	 */
-	if (pendingCR && buf[0] == '\n') {
-	    PORT_Memcpy(result->data + len, buf + 1, bytesRead - 1);
-	    len += bytesRead - 1;
-	} else {
-	    PORT_Memcpy(result->data + len, buf, bytesRead);
-	    len += bytesRead;
-	}
-	/*
-	 * In any case, after the first time through, we are done
-	 * looking for that LF.
-	 */
-	pendingCR = PR_FALSE;
-	/*
-	 * If we are reading "slowly", get ourselves a bigger buffer.
-	 */
-	if (bytesRead == bufsize) {
-	    bufsize *= 2;
-	    PORT_Free(buf);
-	    buf = PORT_Alloc(bufsize);
-	    if (buf == NULL) {
-		goto loser;
-	    }
-	}
-    }
-
-    /*
-     * Finally, we are done!  The encoded response (the content of the
-     * HTTP response) is now in "result".  We just have a little cleaning
-     * up to do before we return.
-     */
-    if (mark != NULL) {
-	PORT_ArenaUnmark(arena, mark);
-    }
-    PORT_Free(buf);
+    /* and free the temporary buffer */
+    PORT_Free(inBuffer);
     return result;
-
-loser:
-    if (mark != NULL) {
-	PORT_ArenaRelease(arena, mark);
-    } else if (result != NULL) {
-	SECITEM_FreeItem(result, PR_TRUE);
-    }
-    if (buf != NULL) {
-	PORT_Free(buf);
-    }
-    return NULL;
 }
 
 
