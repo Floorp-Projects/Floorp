@@ -183,6 +183,7 @@ public:
 
 #ifdef NS_DEBUG
   static nsWidget *debugWidget;
+  static PRBool    sDebugFeedback;
 #endif
 
 

@@ -57,10 +57,10 @@
 #define MODAL_TIMERS_BROKEN
 
 #define CAPS_LOCK_IS_ON \
-(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+(nsWidget::sDebugFeedback && (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK))
 
 #define WANT_PAINT_FLASHING \
-(debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
+(CAPS_LOCK_IS_ON && debug_WantPaintFlashing())
 
 gint handle_toplevel_focus_in(
     GtkWidget *      aWidget, 
