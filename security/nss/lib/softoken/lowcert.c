@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.10 2002/07/13 02:45:04 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.11 2002/07/25 03:59:38 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -47,22 +47,7 @@
 #include "secasn1.h"
 #include "secoid.h"
 
-/* should have been in a 'util' header */
-extern const SEC_ASN1Template CERT_ValidityTemplate[];
-
-static const SEC_ASN1Template nsslowcert_CertKeyTemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(NSSLOWCERTCertKey) },
-    { SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | 
-	  SEC_ASN1_CONTEXT_SPECIFIC | 0, 0, SEC_SkipTemplate },	/* version */ 
-    { SEC_ASN1_INTEGER, offsetof(NSSLOWCERTCertKey,serialNumber) },
-    { SEC_ASN1_SKIP },		/* signature algorithm */
-    { SEC_ASN1_ANY, offsetof(NSSLOWCERTCertKey,derIssuer) },
-    { SEC_ASN1_SKIP_REST },
-    { 0 }
-};
-
-const SEC_ASN1Template nsslowcert_SubjectPublicKeyInfoTemplate[] = {
+static const SEC_ASN1Template nsslowcert_SubjectPublicKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWCERTSubjectPublicKeyInfo) },
     { SEC_ASN1_INLINE, offsetof(NSSLOWCERTSubjectPublicKeyInfo,algorithm),
           SECOID_AlgorithmIDTemplate },
@@ -71,48 +56,17 @@ const SEC_ASN1Template nsslowcert_SubjectPublicKeyInfoTemplate[] = {
     { 0, }
 };
 
-const SEC_ASN1Template nsslowcert_CertificateTemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-      0, NULL, sizeof(NSSLOWCERTCertificate) },
-    { SEC_ASN1_EXPLICIT | SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED |
-          SEC_ASN1_CONTEXT_SPECIFIC | 0, 0, SEC_SkipTemplate }, /* version */
-    { SEC_ASN1_INTEGER, offsetof(NSSLOWCERTCertificate,serialNumber) },
-    { SEC_ASN1_SKIP }, /* Signature algorithm */
-    { SEC_ASN1_ANY, offsetof(NSSLOWCERTCertificate,derIssuer) },
-    { SEC_ASN1_INLINE,
-          offsetof(NSSLOWCERTCertificate,validity),
-          CERT_ValidityTemplate },
-    { SEC_ASN1_ANY, offsetof(NSSLOWCERTCertificate,derSubject) },
-    { SEC_ASN1_INLINE,
-          offsetof(NSSLOWCERTCertificate,subjectPublicKeyInfo),
-          nsslowcert_SubjectPublicKeyInfoTemplate },
-    { SEC_ASN1_SKIP_REST },
-    { 0 }
-};
-const SEC_ASN1Template nsslowcert_SignedCertificateTemplate[] =
-{
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWCERTCertificate) },
-    { SEC_ASN1_INLINE, 0, nsslowcert_CertificateTemplate },
-    { SEC_ASN1_SKIP_REST },
-    { 0 }
-};
-const SEC_ASN1Template nsslowcert_SignedDataTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWCERTSignedData) },
-    { SEC_ASN1_ANY, offsetof(NSSLOWCERTSignedData,data), },
-    { SEC_ASN1_SKIP_REST },
-    { 0, }
-};
-const SEC_ASN1Template nsslowcert_RSAPublicKeyTemplate[] = {
+static const SEC_ASN1Template nsslowcert_RSAPublicKeyTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWKEYPublicKey) },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.rsa.modulus), },
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.rsa.publicExponent), },
     { 0, }
 };
-const SEC_ASN1Template nsslowcert_DSAPublicKeyTemplate[] = {
+static const SEC_ASN1Template nsslowcert_DSAPublicKeyTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.dsa.publicValue), },
     { 0, }
 };
-const SEC_ASN1Template nsslowcert_DHPublicKeyTemplate[] = {
+static const SEC_ASN1Template nsslowcert_DHPublicKeyTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.dh.publicValue), },
     { 0, }
 };
