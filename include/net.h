@@ -113,9 +113,9 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_CRAWL_RESOURCE		34 /* for crawling images and resources */
 #define FO_ROBOTS_TXT			35 /* web robots control */
 #define FO_XMLCSS               36 /* CSS for formatting XML */
-#define FO_XMLHTML               37 /* HTML inclusions in XML */
+#define FO_XMLHTML              37 /* HTML inclusions in XML */
 #define FO_NGLAYOUT             38 /* NGLayout streams */
-
+#define FO_AUTOUPDATE           39 
 /* bitfield detectable CACHE FO's
  */
 #define FO_CACHE_ONLY					64
@@ -152,6 +152,7 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_CACHE_AND_CRAWL_RESOURCE		(FO_CACHE_ONLY | FO_CRAWL_RESOURCE)
 #define FO_CACHE_AND_ROBOTS_TXT			(FO_CACHE_ONLY | FO_ROBOTS_TXT)
 #define FO_CACHE_AND_NGLAYOUT           (FO_CACHE_ONLY | FO_NGLAYOUT)
+#define FO_CACHE_AND_AUTOUPDATE         (FO_CACHE_ONLY | FO_AUTOUPDATE)
 
 /* bitfield detectable ONLY_FROM_CACHE FO's
  */
@@ -1508,6 +1509,9 @@ extern int NET_InterruptSocket (PRFileDesc *socket);
  * cleared as well.
  */
 extern Bool NET_AreThereActiveConnectionsForWindow(MWContext * window_id);
+
+extern Bool NET_AreThereActiveConnections();
+
 
 #ifdef XP_MAC
 /* pchen - Fix bug #72831. Same as

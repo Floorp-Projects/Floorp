@@ -3962,6 +3962,20 @@ NET_AreThereActiveConnectionsForWindow(MWContext * window_id)
     return(FALSE);
 }
 
+
+PUBLIC Bool
+NET_AreThereActiveConnections()
+{
+    Bool ret_value;
+	LIBNET_LOCK();
+	ret_value = XP_ListIsEmpty(net_waiting_for_actives_url_list) &&
+                XP_ListIsEmpty(net_waiting_for_connection_url_list) &&
+                XP_ListIsEmpty(net_EntryList);
+	LIBNET_UNLOCK();
+    return !ret_value;
+}
+
+
 #ifdef XP_MAC
 /* pchen - Fix bug #72831. Same as NET_AreThereActiveConnectionsForWindow
  * except that it will return false if there is an active connection that
