@@ -28,21 +28,25 @@
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 
-/**
- * Native Win32 FileSelector wrapper
- */
+#include <FilePanel.h>
+#include <Looper.h>
+#include <String.h>
+
+//
+// Native BeOS FileSelector wrapper
+//
 
 class nsFileWidget : public nsIFileWidget 
 {
-  public:
-                            nsFileWidget(); 
-    virtual                 ~nsFileWidget();
+public:
+                          nsFileWidget(); 
+  virtual                 ~nsFileWidget();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    PRBool                  OnPaint(nsRect &r);
+  PRBool                  OnPaint(nsRect &r);
 
-    // nsIWidget interface
+  // nsIWidget interface
   
   NS_IMETHOD		Create(nsIWidget *aParent,
                        const nsString& aTitle,
@@ -78,21 +82,66 @@ class nsFileWidget : public nsIFileWidget
 
   NS_IMETHOD            GetSelectedType(PRInt16& theType);
 
-  protected:
+protected:
 
-//     HWND                   mWnd;
-     nsString               mTitle;
-     nsFileDlgMode          mMode;
-     nsString               mFile;
-     PRUint32               mNumberOfFilters;  
-     const nsString*        mTitles;
-     const nsString*        mFilters;
-     nsString               mDefault;
-  nsFileSpec    mDisplayDirectory;
-  PRInt16       mSelectedType;
+  BWindow*               mParentWindow;
+  nsString               mTitle;
+  nsFileDlgMode          mMode;
+  nsString               mFile;
+  PRUint32               mNumberOfFilters;  
+  const nsString*        mTitles;
+  const nsString*        mFilters;
+  nsString               mDefault;
+  nsFileSpec             mDisplayDirectory;
+  PRInt16                mSelectedType;
 
+  void GetFilterListArray(nsString& aFilterList);
+};
 
-     void GetFilterListArray(nsString& aFilterList);
+class nsFilePanelBeOS : public BLooper, public BFilePanel
+{
+public:
+  nsFilePanelBeOS(file_panel_mode mode, 
+                  uint32 node_flavors,
+                  bool allow_multiple_selection, 
+                  bool modal, 
+                  bool hide_when_done);
+  virtual ~nsFilePanelBeOS();
+
+  virtual void MessageReceived(BMessage *message);
+  virtual void WaitForSelection();
+
+  virtual bool IsOpenSelected() {
+    return (SelectedActivity() == OPEN_SELECTED);
+  }
+  virtual bool IsSaveSelected() {
+    return (SelectedActivity() == SAVE_SELECTED);
+  }
+  virtual bool IsCancelSelected() {
+    return (SelectedActivity() == CANCEL_SELECTED);
+  }
+  virtual uint32 SelectedActivity();
+
+  virtual BList *OpenRefs() { return &mOpenRefs; }
+  virtual BString SaveFileName() { return mSaveFileName; }
+  virtual entry_ref SaveDirRef() { return mSaveDirRef; }
+
+  enum {
+    NOT_SELECTED    = 0,
+    OPEN_SELECTED   = 1,
+    SAVE_SELECTED   = 2,
+    CANCEL_SELECTED = 3
+  };
+
+protected:
+
+  sem_id wait_sem ;
+  uint32 mSelectedActivity;
+  bool mIsSelected;
+  BString mSaveFileName;
+  entry_ref mSaveDirRef;
+  BList mOpenRefs;
+  
 };
 
 #endif // nsFileWidget_h__

@@ -38,6 +38,7 @@ CPPSRCS		= \
 		nsComboBox.cpp \
 		nsDragService.cpp \
 		nsFileWidget.cpp \
+		nsFilePicker.cpp \
 		nsFontRetrieverService.cpp \
 		nsFontSizeIterator.cpp \
 		nsLabel.cpp \
@@ -59,6 +60,7 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS = \
+		-ltracker \
 		$(TOOLKIT_DSO_LDOPTS) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \

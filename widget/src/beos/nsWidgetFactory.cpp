@@ -35,6 +35,7 @@
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
 #include "nsRadioButton.h"
+#include "nsFilePicker.h"
 #include "nsFileWidget.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
@@ -56,6 +57,7 @@ static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
@@ -175,6 +177,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
+    }
+    else if (mClassID.Equals(kCFilePicker)) {
+        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
     }
     else if (mClassID.Equals(kCListbox)) {
         inst = (nsISupports*)(nsWindow *)new nsListBox();

@@ -20,14 +20,14 @@
  * Contributor(s): 
  */
 
-// Define so header files for openfilename are included
-#ifdef WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#endif
-
 #include "nsFileWidget.h"
+#include "nsString.h"
 
-//NS_IMPL_ISUPPORTS(nsFileWidget, NS_IFILEWIDGET_IID)
+#include <StorageKit.h>
+#include <Message.h>
+#include <Window.h>
+#include <View.h>
+
 NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
 
@@ -37,9 +37,11 @@ NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
 //
 //-------------------------------------------------------------------------
 nsFileWidget::nsFileWidget() : nsIFileWidget()
+   , mParentWindow(nsnull)
+   , mTitles(nsnull)
+   , mFilters(nsnull)
 {
   NS_INIT_REFCNT();
-//  mWnd = NULL;
   mNumberOfFilters = 0;
 }
 
@@ -51,74 +53,107 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 
 PRBool nsFileWidget::Show()
 {
-printf("nsFileWidget::Show not implemented\n");
-#if 0
-  char fileBuffer[MAX_PATH+1] = "";
-  mDefault.ToCString(fileBuffer,MAX_PATH);
-
-  OPENFILENAME ofn;
-  memset(&ofn, 0, sizeof(ofn));
-
-  ofn.lStructSize = sizeof(ofn);
-
-  nsString filterList;
-  GetFilterListArray(filterList);
-  char *filterBuffer = filterList.ToNewCString();
-  char *title = mTitle.ToNewCString();
-  char *initialDir = mDisplayDirectory.ToNewCString();
-  if (mDisplayDirectory.Length() > 0) {
-     ofn.lpstrInitialDir = initialDir;
-  }
-
-  ofn.lpstrTitle = title;
-  ofn.lpstrFilter = filterBuffer;
-  ofn.nFilterIndex = 1;
-  ofn.hwndOwner = mWnd;
-  ofn.lpstrFile = fileBuffer;
-  ofn.nMaxFile = MAX_PATH;
-  ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-  
-  PRBool result;
-
-    // Save current directory, so we can reset if it changes.
-  char* currentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
+  PRBool result = PR_TRUE;
+  nsFilePanelBeOS *ppanel;
+  file_panel_mode panel_mode;
 
   if (mMode == eMode_load) {
-    result = GetOpenFileName(&ofn);
+    panel_mode = B_OPEN_PANEL;
   }
   else if (mMode == eMode_save) {
-    result = GetSaveFileName(&ofn);
+    panel_mode = B_SAVE_PANEL;
   }
   else {
-    NS_ASSERTION(0, "Only load and save are supported modes"); 
+    printf("nsFileWidget::Show() wrong mode");
+    return PR_FALSE;
   }
 
-   // Store the current directory in mDisplayDirectory
-  char* newCurrentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-  mDisplayDirectory.SetLength(0);
-  mDisplayDirectory.Append(newCurrentDirectory);
-  delete newCurrentDirectory;
+  ppanel = new nsFilePanelBeOS(
+      panel_mode,   //file_panel_mode mode
+      B_FILE_NODE,  //uint32 node_flavors
+      false,        //bool allow_multiple_selection
+      false,        //bool modal
+      true          //bool hide_when_done
+      );
+  if (!ppanel) return PR_FALSE;
 
+  // set title
+  if (mTitle.Length() > 0) {
+    char *title_utf8 = mTitle.ToNewUTF8String();
+    ppanel->Window()->SetTitle(title_utf8);
+    Recycle(title_utf8);
+  }
 
-  VERIFY(::SetCurrentDirectory(currentDirectory));
-  delete currentDirectory;
+  // set default text
+  if (mDefault.Length() > 0) {
+    char *defaultText = mDefault.ToNewCString();
+    ppanel->SetSaveText(defaultText);
+    Recycle(defaultText);
+  }
+
+  // set initial directory
+  nsString initialDirString;
+  mDisplayDirectory.GetNativePathString(initialDirString);
+  if (initialDirString.Length() > 0) {
+    char *initialDir_utf8 = initialDirString.ToNewUTF8String();
+    ppanel->SetPanelDirectory(initialDir_utf8);
+    Recycle(initialDir_utf8);
+  }
+
+  // set modal feel
+  if (ppanel->LockLooper()) {
+    ppanel->Window()->SetFeel(B_MODAL_APP_WINDOW_FEEL);
+    ppanel->UnlockLooper();
+  }
+
+  // Show File Panel
+  ppanel->Show();
+  ppanel->WaitForSelection();
   
-   // Clean up filter buffers
-  delete filterBuffer;
-  delete title;
-  delete initialDir;
+  if (ppanel->IsCancelSelected()) {
+    result = PR_FALSE;
+  }
 
-   // Set user-selected location of file or directory
-  mFile.SetLength(0);
-  if (result == PR_TRUE) {
-    mFile.Append(fileBuffer);
+  if (mMode == eMode_load && ppanel->IsOpenSelected()) {
+    BList *list = ppanel->OpenRefs();
+    if ((list) && list->CountItems() >= 1) {
+      entry_ref *ref = (entry_ref *)list->ItemAt(0);
+      BPath path(ref);
+      if (path.InitCheck() == B_OK) {
+        mFile.SetLength(0);
+        mFile.AppendWithConversion(path.Path());
+      }
+    }
+  }
+  else if (mMode == eMode_save && ppanel->IsSaveSelected()) {
+    BString savefilename = ppanel->SaveFileName();
+    entry_ref ref = ppanel->SaveDirRef();
+    BPath path(&ref);
+    if (path.InitCheck() == B_OK) {
+      path.Append(savefilename.String(), true);
+      mFile.SetLength(0);
+      mFile.AppendWithConversion(path.Path());
+    }
+  }
+  else {
+    result = PR_FALSE;  
   }
   
-  return((PRBool)result);
-#endif
-	return PR_TRUE;
+  // set current directory to mDisplayDirectory
+  entry_ref dir_ref;
+  ppanel->GetPanelDirectory(&dir_ref);
+  BEntry dir_entry(&dir_ref);
+  BPath dir_path;
+  dir_entry.GetPath(&dir_path);
+  mDisplayDirectory = dir_path.Path();
+
+  if (ppanel->Lock()) {
+    ppanel->Quit();
+  }
+  
+  return result;
+
+// TODO: implement filters
 }
 
 //-------------------------------------------------------------------------
@@ -164,8 +199,12 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString a
 
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
-  aFile = mFile;
+  nsFilePath filePath(mFile);
+  nsFileSpec fileSpec(filePath);
+
+  aFile = filePath;
   return NS_OK;
+
 }
 
 
@@ -209,12 +248,19 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
                        const nsString& aTitle,
                        nsFileDlgMode aMode,
-                       nsIDeviceContext *aContext = nsnull,
-                       nsIAppShell *aAppShell = nsnull,
-                       nsIToolkit *aToolkit = nsnull,
-                       void *aInitData = nsnull)
+                       nsIDeviceContext *aContext,
+                       nsIAppShell *aAppShell,
+                       nsIToolkit *aToolkit,
+                       void *aInitData)
 {
-//  mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+  mParentWindow = 0;
+  if (aParent) {
+    BView *view = (BView *) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    if (view && view->LockLooper()) {
+      mParentWindow = view->Window();
+      view->UnlockLooper();
+    }
+  }
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
@@ -236,14 +282,17 @@ nsFileDlgResults nsFileWidget::GetFile(nsIWidget *aParent,
                                        const nsString &promptString,
                                        nsFileSpec &theFileSpec)
 {
-	Create(aParent, promptString, eMode_load, nsnull, nsnull);
-	if (Show() == PR_TRUE)
-	{
-		GetFile(theFileSpec);
-		return nsFileDlgResults_OK;
-	}
+  Create(aParent, promptString, eMode_load, nsnull, nsnull);
+  PRBool result = Show();
+  nsFileDlgResults status = nsFileDlgResults_Cancel;
+  if (result && mFile.Length() > 0) {
+    nsFilePath filePath(mFile);
+    nsFileSpec fileSpec(filePath);
+    theFileSpec = fileSpec;
+    status = nsFileDlgResults_OK;
+  }
+  return status;
 
-  return nsFileDlgResults_Cancel;
 }
 
 nsFileDlgResults nsFileWidget::GetFolder(nsIWidget *aParent,
@@ -279,3 +328,106 @@ NS_METHOD  nsFileWidget::GetSelectedType(PRInt16& theType)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// BeOS native File Panel
+//
+//-------------------------------------------------------------------------
+
+nsFilePanelBeOS::nsFilePanelBeOS(file_panel_mode mode, 
+      uint32 node_flavors,
+      bool allow_multiple_selection, 
+      bool modal, 
+      bool hide_when_done)
+  : BLooper()
+  , BFilePanel(mode,
+      NULL, NULL,
+      node_flavors,
+      allow_multiple_selection,
+      NULL, NULL,
+      modal,
+      hide_when_done)
+  , mSelectedActivity(nsFilePanelBeOS::NOT_SELECTED)
+  , mIsSelected(false)
+  , mSaveFileName("")
+  , mSaveDirRef()
+  , mOpenRefs()
+{
+  if ((wait_sem = create_sem(1,"FilePanel")) < B_OK) 
+  	printf("nsFilePanelBeOS::nsFilePanelBeOS : create_sem error\n");
+  if (wait_sem > 0) acquire_sem(wait_sem);
+
+  SetTarget(BMessenger(this));
+  
+  this->Run();
+}
+
+nsFilePanelBeOS::~nsFilePanelBeOS()
+{
+  int count = mOpenRefs.CountItems();
+  for (int i=0 ; i<count ; i++) {
+    delete mOpenRefs.ItemAt(i);
+  }
+  if (wait_sem > 0) {
+    delete_sem(wait_sem);
+  }
+}
+
+void nsFilePanelBeOS::MessageReceived(BMessage *msg)
+{
+  switch ( msg->what ) {
+  case B_REFS_RECEIVED: // open
+    int32 count;
+    type_code code;
+    msg->GetInfo("refs", &code, &count);
+    if (code == B_REF_TYPE) {
+      for (int i=0 ; i<count ; i++) {
+        entry_ref *ref = new entry_ref;
+        if (msg->FindRef("refs", i, ref) == B_OK) {
+          mOpenRefs.AddItem((void *) ref);
+        } else {
+          delete ref;
+        }
+      }
+    } else {
+      printf("nsFilePanelBeOS::MessageReceived() no ref!\n");
+    }
+    mSelectedActivity = OPEN_SELECTED;
+    mIsSelected = true;
+    release_sem(wait_sem);
+    break;
+
+  case B_SAVE_REQUESTED: // save
+    msg->FindString("name", &mSaveFileName);
+    msg->FindRef("directory", &mSaveDirRef);
+    mSelectedActivity = SAVE_SELECTED;
+    mIsSelected = true;
+    release_sem(wait_sem);
+    break;
+
+  case B_CANCEL: // cancel
+    if (mIsSelected) break;
+    mSelectedActivity = CANCEL_SELECTED;
+    mIsSelected = true;
+    release_sem(wait_sem);
+    break;
+  default:
+    break;
+  }
+}
+
+void nsFilePanelBeOS::WaitForSelection()
+{
+  if (wait_sem > 0) {
+    acquire_sem(wait_sem);
+    release_sem(wait_sem);
+  }
+}
+
+uint32 nsFilePanelBeOS::SelectedActivity()
+{
+  uint32 result = 0;
+  result = mSelectedActivity;
+
+  return result;
+}
