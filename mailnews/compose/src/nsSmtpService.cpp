@@ -338,7 +338,20 @@ NS_IMETHODIMP nsMailtoChannel::Open(nsIInputStream **_retval)
 
 NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
-  return listener->OnStartRequest(this, ctxt);
+  mStatus = listener->OnStartRequest(this, ctxt);
+
+  // If OnStartRequest(...) failed, then propagate the error code...
+  if (NS_SUCCEEDED(mStatus)) {
+    // Otherwise, indicate that no content is available...
+    mStatus = NS_ERROR_NO_CONTENT;
+  }
+
+  // Call OnStopRequest(...) for correct-ness.
+  (void) listener->OnStopRequest(this, ctxt, mStatus);
+
+  // Always return NS_ERROR_NO_CONTENT since this channel never provides
+  // data...
+  return NS_ERROR_NO_CONTENT;
 }
 
 NS_IMETHODIMP nsMailtoChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
