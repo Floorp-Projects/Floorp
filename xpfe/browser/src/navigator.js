@@ -247,6 +247,38 @@
     }
   }
 
+  function BrowserNewEditorWindow()
+  {
+    core = XPAppCoresManager.Find("toolkitCore");
+    if ( !core ) {
+        core = new ToolkitCore();
+        if ( core ) {
+            core.Init("toolkitCore");
+        }
+    }
+    if ( core ) {
+        core.ShowWindowWithArgs( "chrome://editor/content", window, "" );
+    } else {
+        dump("Error; can't create toolkitCore\n");
+    }
+  }
+  
+  function BrowserEditPage(url)
+  {
+    core = XPAppCoresManager.Find("toolkitCore");
+    if ( !core ) {
+        core = new ToolkitCore();
+        if ( core ) {
+            core.Init("toolkitCore");
+        }
+    }
+    if ( core ) {
+        core.ShowWindowWithArgs( "chrome://editor/content", window, url);
+    } else {
+        dump("Error; can't create toolkitCore\n");
+    }
+  }
+  
   function BrowserOpenWindow()
   {
     core = XPAppCoresManager.Find("toolkitCore");
