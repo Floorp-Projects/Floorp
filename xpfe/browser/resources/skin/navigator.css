@@ -53,10 +53,6 @@ titledbutton#tinderbox-button {
 	list-style-image:url(resource:/res/toolbar/TB_Location.gif);
 }
 
-titledbutton#security-button {
-	list-style-image:url(resource:/res/toolbar/StatusBar-secure.gif);
-}
-
 titledbutton#Throbber
 {
 	list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
@@ -64,16 +60,6 @@ titledbutton#Throbber
 
 titledbutton#Throbber[busy="true"] {
 	list-style-image:url(chrome://navigator/skin/animthrob.gif);
-}
-
-
-
-box[class=insecure] {
-   border-top: 2px solid transparent;
-}
-
-box[class=secure] {
-   border-top: 2px solid yellow;
 }
 
 box#status-bar titledbutton {
@@ -98,25 +84,6 @@ box#status-bar titledbutton:active {
 
 box#status-bar {
    min-width: 1em;
-}
-
-titledbutton[class~=secure] {
-  background-color: yellow;
-}
-
-titledbutton[class~=insecure] {
-  display: none;
-}
- 
-
-
-
-box[type="secure"] {
-   border-top: 2px solid yellow;
-}
-
-box[type="unsecure"] {
-   border-top: 2px solid transparent;
 }
 
 toolbox#main-toolbox {
