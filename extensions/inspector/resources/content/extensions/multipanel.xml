@@ -2,6 +2,7 @@
 
 <bindings id="bdsMultipanel"
           xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="multipanelset">
@@ -23,7 +24,7 @@
     <content>
       <xul:box class="multipanel-label-box" onclick="this.parentNode.toggleOpen()">
         <xul:box class="multipanel-label-box-2" flex="1">
-          <xul:label class="multipanel-title" inherits="value=label"/>
+          <xul:label class="multipanel-title" xbl:inherits="value=label"/>
         </xul:box>
       </xul:box>
       <xul:box anonid="content-box" class="multipanel-content-box" flex="1">

@@ -4,6 +4,7 @@
 
 <bindings id="bdsTitledSplitter"
           xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="titledSplitter" extends="chrome://global/content/bindings/splitter.xml#splitter">
@@ -12,7 +13,7 @@
         <xul:spacer class="titledsplitter-dragbar"/>
         <xul:box class="titledsplitter-titlebox" flex="1" onmousedown="event.stopPropagation()">
           <xul:box align="center">
-            <xul:label class="titledsplitter-text" inherits="value=label"/>
+            <xul:label class="titledsplitter-text" xbl:inherits="value=label"/>
           </xul:box>
           <xul:spacer flex="1"/>
           <xul:button class="titledsplitter-closebutton" align="center" pack="center"
