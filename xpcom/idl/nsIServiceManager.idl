@@ -29,26 +29,26 @@
 interface nsIServiceManager : nsISupports {
 
     /* ProgID related stuff */
-    nsISupports GetServiceByProgID(in string progid, in nsIIDRef aIID);
+    nsISupports GetServiceByProgID(in string progid, in nsIID aIID);
     void ReleaseServiceByProgID(in string progid,
                                 in nsISupports service);
     
     void ShutdownServiceByProgID(in string progid);
 
     /* ClassID stuff */
-    nsISupports GetService(in nsCIDRef aClass,
-                           in nsIIDRef aIID);
+    nsISupports GetService(in nsCID aClass,
+                           in nsIID aIID);
     
-    nsISupports GetServiceWithListener(in nsCIDRef aClass,
-                                       in nsIIDRef aIID,
+    nsISupports GetServiceWithListener(in nsCID aClass,
+                                       in nsIID aIID,
                                        in nsIShutdownListener listener);
     
-    void ReleaseService(in nsCIDRef aClass,
+    void ReleaseService(in nsCID aClass,
                         in nsISupports service);
 
-    void ShutdownService(in nsCIDRef aClass);
+    void ShutdownService(in nsCID aClass);
     
-    void ReleaseServiceWithListener(in nsCIDRef aClass,
+    void ReleaseServiceWithListener(in nsCID aClass,
                                     in nsISupports service,
                                     in nsIShutdownListener listener);
     
