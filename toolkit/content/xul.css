@@ -648,6 +648,38 @@ textbox[type="timed"] {
 
 /********** autocomplete textbox **********/
 
+/* thunderbird doesn't use the new toolkit's autocomplete widget yet.... */
+#ifdef MOZ_THUNDERBIRD
+
+textbox[type="autocomplete"] {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
+}
+
+.autocomplete-result-popup {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
+}
+
+.autocomplete-history-popup {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
+}
+
+.autocomplete-tree {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-tree");
+}
+
+.autocomplete-treebody {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
+}
+
+.autocomplete-treerows {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treerows");
+}
+
+.autocomplete-history-dropmarker {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
+}
+
+#else
 
 textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#autocomplete");
@@ -678,6 +710,10 @@ popup[type="autocomplete"] {
   display: -moz-box;
   -moz-binding: url("chrome://global/content/widgets/autocomplete.xml#history-dropmarker");
 }
+
+#endif
+
+
 
 /* the C++ implementation of widgets is too eager to make popups visible.
    this causes problems (bug 120155 and others), thus this workaround: */
