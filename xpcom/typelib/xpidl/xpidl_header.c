@@ -90,7 +90,7 @@ header_prolog(TreeState *state)
      * NS_NO_VTABLE.
      */
     fprintf(state->file,
-            "/* For IDL files that don't want to to include root IDL files. */\n"
+            "/* For IDL files that don't want to include root IDL files. */\n"
             "#ifndef NS_NO_VTABLE\n"
             "#define NS_NO_VTABLE\n"
             "#endif\n");
