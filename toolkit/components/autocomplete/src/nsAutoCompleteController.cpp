@@ -98,7 +98,7 @@ nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput, const nsAS
 
   mInput = aInput;
   mSearchString = aSearchString;
-  
+
   // reset all search state members to default values
   mSearchString.Truncate(0);
   mEnterAfterSearch = PR_FALSE;
@@ -130,6 +130,9 @@ nsAutoCompleteController::AttachToInput(nsIAutoCompleteInput *aInput, const nsAS
     if (search)
       mSearches->AppendElement(search);
   }
+
+  if (!mSearchString.IsEmpty())
+    StartSearchTimer();
 
   return NS_OK;
 }
