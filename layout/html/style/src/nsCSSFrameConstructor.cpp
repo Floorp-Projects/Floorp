@@ -72,6 +72,7 @@
 #include "nsTreeFrame.h"
 #include "nsTreeOuterFrame.h"
 #include "nsTreeRowGroupFrame.h"
+#include "nsTreeRowFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
@@ -406,6 +407,7 @@ struct nsTreeCreator: public nsTableCreator {
   nsresult CreateTableFrame(nsIFrame** aNewFrame);
   nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
   nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
+  nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
 
   PRBool IsTreeCreator() { return PR_TRUE; };
 };
@@ -432,6 +434,11 @@ nsresult
 nsTreeCreator::CreateTableRowGroupFrame(nsIFrame** aNewFrame)
 {
   return NS_NewTreeRowGroupFrame(aNewFrame);
+}
+
+nsresult
+nsTreeCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
+  return NS_NewTreeRowFrame(aNewFrame);
 }
 
 #endif // INCLUDE_XUL
