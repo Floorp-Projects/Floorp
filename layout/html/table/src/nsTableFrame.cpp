@@ -5225,7 +5225,9 @@ void nsTableFrame::Dump(PRBool aDumpCols, PRBool aDumpCellMap)
   if (aDumpCellMap) {
     printf("\n");
     nsCellMap* cellMap = GetCellMap();
+#ifdef NS_DEBUG
     cellMap->Dump();
+#endif
   }
   printf(" ***END TABLE DUMP*** \n");
 }
