@@ -129,8 +129,7 @@
   </glossdiv>
 
   <glossdiv id="gloss-c">
-    <title>
-    </title>
+    <title>C</title>
 
     <glossentry id="gloss-cgi">
       <glossterm>Common Gateway Interface</glossterm>
@@ -252,14 +251,31 @@
         should familiarize yourself with all of the documentation, some high
         points are:
         </para>
-        <itemizedlist>
-          <listitem>
-            <para><ulink url="http://www.mysql.com/doc/P/r/Privilege_system.html">MySQL
-            Privilege System</ulink> - Much more detailed information about
-            the suggestions in <xref linkend="security-mysql"/>.
-            </para>
-          </listitem>
-        </itemizedlist>
+        <variablelist>
+          <varlistentry>
+            <term><ulink url="http://www.mysql.com/doc/en/Backup.html">Backup</ulink></term>
+            <listitem>
+              <para>Methods for backing up your Bugzilla database.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><ulink url="http://www.mysql.com/doc/en/Option_files.html">Option Files</ulink></term>
+            <listitem>
+              <para>Information about how to configure MySQL using
+              <filename>my.cnf</filename>.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><ulink url="http://www.mysql.com/doc/en/Privilege_system.html">Privilege System</ulink></term>
+            <listitem>
+              <para>Much more detailed information about the suggestions in
+              <xref linkend="security-mysql"/>.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -410,13 +426,34 @@
   <glossdiv id="gloss-z">
     <title>Z</title>
 
-    <glossentry id="zarro-boogs-found" xreflabel="Zarro Boogs Found">
+    <glossentry id="gloss-zarro">
       <glossterm>Zarro Boogs Found</glossterm>
 
       <glossdef>
-        <para>This is the cryptic response sent by Bugzilla when a query
-        returned no results. It is just a goofy way of saying "Zero Bugs
-        Found".</para>
+        <para>This is just a goofy way of saying that there were no bugs
+        found matching your query. When asked to explain this message,
+        Terry had the following to say:
+        </para>
+
+        <blockquote>
+          <attribution>Terry Weissman</attribution>
+          <para>I've been asked to explain this ... way back when, when
+          Netscape released version 4.0 of its browser, we had a release
+          party.  Naturally, there had been a big push to try and fix every
+          known bug before the release. Naturally, that hadn't actually
+          happened.  (This is not unique to Netscape or to 4.0; the same thing
+          has happened with every software project I've ever seen.)  Anyway,
+          at the release party, T-shirts were handed out that said something
+          like "Netscape 4.0: Zarro Boogs". Just like the software, the
+          T-shirt had no known bugs.  Uh-huh.
+          </para>
+
+          <para>So, when you query for a list of bugs, and it gets no results,
+          you can think of this as a friendly reminder.  Of *course* there are
+          bugs matching your query, they just aren't in the bugsystem yet...
+          </para>
+        </blockquote>
+
       </glossdef>
     </glossentry>
   </glossdiv>
