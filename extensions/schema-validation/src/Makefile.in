@@ -45,7 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= schemavalidation
 LIBRARY_NAME	= schemavalidation
 SHORT_LIBNAME	= schemval
-EXPORT_LIBRARY	= 1
+# Do not set EXPORT_LIBRARY as we do not want schema-validation in the static libs list
+#EXPORT_LIBRARY	= 1
+FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 GRE_MODULE      = 1
 MODULE_NAME	= schemavalidation
