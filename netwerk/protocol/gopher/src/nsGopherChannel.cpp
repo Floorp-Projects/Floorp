@@ -123,7 +123,7 @@ nsGopherChannel::Init(nsIURI* uri)
     PR_LOG(gGopherLog,
            PR_LOG_DEBUG,
            ("Status: mType = %c, mSelector = %s\n", mType, mSelector.get()));
-
+    
     return NS_OK;
 }
 
@@ -341,11 +341,6 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     mResponseContext = ctxt;
 
     nsresult rv;
-    
-    if (mLoadGroup) {
-        rv = mLoadGroup->AddRequest(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     if (mProxyChannel)
         return mProxyChannel->AsyncOpen(this, ctxt);
@@ -420,8 +415,8 @@ nsGopherChannel::GetContentType(char* *aContentType)
     case '6':
         *aContentType = nsCRT::strdup(APPLICATION_UUENCODE);
         break;
-    case '7': // search - returns a directory listing, not handled yet
-        *aContentType = nsCRT::strdup(TEXT_HTML);
+    case '7': // search - returns a directory listing
+        *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
         break;
     case '8': // telnet - type doesn't make sense
         *aContentType = nsCRT::strdup(TEXT_PLAIN);
@@ -447,6 +442,10 @@ nsGopherChannel::GetContentType(char* *aContentType)
     }
     if (!*aContentType)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    PR_LOG(gGopherLog,PR_LOG_DEBUG,
+           ("GetContentType returning %s\n",*aContentType));
+
     return NS_OK;
 }
 
@@ -514,6 +513,10 @@ NS_IMETHODIMP
 nsGopherChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
+    if (mCallbacks) {
+        mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
+                                 getter_AddRefs(mPrompter));
+    }
     return NS_OK;
 }
 
@@ -555,11 +558,8 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     nsresult rv = NS_OK;
 
     if (NS_FAILED(aStatus) || !mActAsObserver || mProxyChannel) {
-        if (NS_FAILED(aStatus) || mProxyChannel) // let the original caller know
-            aContext=mResponseContext;
-
         if (mListener) {
-            rv = mListener->OnStopRequest(this, aContext, aStatus);
+            rv = mListener->OnStopRequest(this, mResponseContext, aStatus);
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -581,7 +581,7 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
         if (NS_FAILED(rv)) return rv;
      
         // What we now do depends on what type of file we have
-        if (mType=='1') {
+        if (mType=='1' || mType=='7') {
             // Send the directory format back for a directory
             rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(),
                                                      NS_LITERAL_STRING("application/http-index-format").get(),
@@ -621,6 +621,8 @@ nsGopherChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                  nsIInputStream *aInputStream,
                                  PRUint32 aSourceOffset, PRUint32 aLength)
 {
+    PR_LOG(gGopherLog, PR_LOG_DEBUG,
+           ("OnDataAvailable called - [this=%x, aLength=%d]\n",this,aLength));
     mContentLength = aLength;
     return mListener->OnDataAvailable(this, aContext, aInputStream,
                                       aSourceOffset, aLength);
@@ -632,27 +634,80 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
     nsresult rv = NS_OK;
     nsCOMPtr<nsISupports> result;
     nsCOMPtr<nsIInputStream> charstream;
-    nsCString requestBuffer(mSelector);
 
-    if (mLoadGroup) {
-        mLoadGroup->AddRequest(this, nsnull);
+    // Note - you have to keep this as a class member, because the char input
+    // stream doesn't copy its buffer
+    mRequest.Assign(mSelector);
+
+    // So, we use the selector as is unless it is a search url
+    if (mType=='7') {
+        // Note that we don't use the "standard" nsIURL parsing stuff here
+        // because the only special character is ?, and its possible to search
+        // for a string containing a #, and so on
+        
+        // XXX - should this find the last or first entry?
+        // '?' is valid in both the search string and the url
+        // so no matter what this does, it may be incorrect
+        // This only affects people codeing the query directly into the URL
+        PRInt32 pos = mRequest.RFindChar('?');
+        if (pos == -1) {
+            // We require a query string here - if we don't have one,
+            // then we need to ask the user
+            if (!mPrompter) {
+                NS_ERROR("We need a prompter!");
+                return NS_ERROR_FAILURE;
+            }
+            nsXPIDLString search;
+            PRBool res;
+            mPrompter->Prompt(NS_LITERAL_STRING("Search").get(),
+                              NS_LITERAL_STRING("Enter a search term:").get(),
+                              getter_Copies(search),
+                              NULL,
+                              NULL,
+                              &res);
+            if (!res || !(*search.get()))
+                return NS_ERROR_FAILURE;
+    
+            if (mLoadGroup) {
+                rv = mLoadGroup->AddRequest(this, nsnull);
+                if (NS_FAILED(rv)) return rv;
+            }
+            
+            mRequest.Append('\t');
+            mRequest.AppendWithConversion(search.get());
+
+            // and update our uri
+            nsXPIDLCString spec;
+            rv = mUrl->GetSpec(getter_Copies(spec));
+            if (NS_FAILED(rv))
+                return rv;
+
+            nsCString strSpec(spec.get());
+            strSpec.Append('?');
+            strSpec.AppendWithConversion(search.get());
+            rv = mUrl->SetSpec(strSpec.get());
+            if (NS_FAILED(rv))
+                return rv;
+        } else {
+            // Just replace it with a tab
+            mRequest.SetCharAt('\t',pos);
+        }
     }
 
-    requestBuffer.Append(CRLF);
-    mRequest = requestBuffer.ToNewCString();
-
-    rv = NS_NewCharInputStream(getter_AddRefs(result), mRequest);
+    mRequest.Append(CRLF);
+    
+    rv = NS_NewCharInputStream(getter_AddRefs(result), mRequest.get());
     if (NS_FAILED(rv)) return rv;
 
     charstream = do_QueryInterface(result, &rv);
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gGopherLog,PR_LOG_DEBUG,
-           ("Sending: %s\n", requestBuffer.get()));
+           ("Sending: %s\n", mRequest.get()));
 
     rv = NS_AsyncWriteFromStream(getter_AddRefs(mTransportRequest),
                                  aTransport, charstream,
-                                 0, requestBuffer.Length(), 0,
+                                 0, mRequest.Length(), 0,
                                  this, nsnull);
     return rv;
 }

@@ -33,7 +33,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsGopherHandler.h"
-
+#include "nsIPrompt.h"
 #include "nsIProxy.h"
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
@@ -64,6 +64,7 @@ public:
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+    nsCOMPtr<nsIPrompt>                 mPrompter;
     nsCOMPtr<nsIURI>                    mUrl;
     nsCOMPtr<nsIStreamListener>         mListener;
     PRUint32                            mLoadFlags;
@@ -79,8 +80,7 @@ protected:
     PRInt32                             mPort;
     char                                mType;
     nsXPIDLCString                      mSelector;
-
-    nsXPIDLCString                      mRequest;
+    nsCString                           mRequest;
 
     nsCOMPtr<nsISupports>               mResponseContext;
     nsCOMPtr<nsITransport>              mTransport;
