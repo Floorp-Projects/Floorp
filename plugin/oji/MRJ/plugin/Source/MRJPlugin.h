@@ -127,17 +127,11 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    GetValue(nsPluginVariable variable, void *value)
-    {
-    	return NS_ERROR_FAILURE;
-    }
+    GetValue(nsPluginVariable variable, void *value);
 
     // (Corresponds to NPP_SetValue.)
     NS_IMETHOD
-    SetValue(nsPluginVariable variable, void *value)
-    {
-    	return NS_ERROR_FAILURE;
-    }
+    SetValue(nsPluginVariable variable, void *value);
 
 	// JVM Plugin Methods.
 
@@ -318,7 +312,6 @@ public:
 	NS_IMETHOD
 	SetWindow(nsPluginWindow* window);
 
-#ifdef NEW_PLUGIN_STREAM_API
     /**
      * Called to tell the plugin that the initial src/data stream is
 	 * ready.  Expects the plugin to return a nsIPluginStreamListener.
@@ -335,25 +328,6 @@ public:
 		AddRef();
 		return NS_OK;
 	}
-#else
-    /**
-     * Called when a new plugin stream must be constructed in order for the plugin
-     * instance to receive a stream of data from the browser. 
-     *
-     * (Corresponds to NPP_NewStream.)
-     *
-     * @param peer - the plugin stream peer, representing information about the
-     * incoming stream, and stream-specific callbacks into the browser
-     * @param result - the resulting plugin stream
-     * @result - NS_OK if this operation was successful
-     */
-	NS_IMETHOD
-	NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result)
-	{
-		*result = NULL;
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
-#endif
 
     // (Corresponds to NPP_Print.)
     NS_IMETHOD
@@ -378,10 +352,7 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    GetValue(nsPluginInstanceVariable variable, void *value)
-    {
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
+    GetValue(nsPluginInstanceVariable variable, void *value);
 
 	// nsIJVMPluginInstance methods.
 
@@ -407,7 +378,7 @@ public:
      * used to cancel the URL load..
      */
     NS_IMETHOD
-    OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo)
+    OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     {
     	return NS_OK;
     }
@@ -423,11 +394,10 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnDataAvailable(const char* url, nsIInputStream* input,
-                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo);
+    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length);
 
     NS_IMETHOD
-    OnFileAvailable(const char* url, const char* fileName)
+    OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName)
     {
 		return NS_ERROR_NOT_IMPLEMENTED;
 	}
@@ -444,13 +414,7 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo)
-    {
-    	return NS_OK;
-    }
-
-    NS_IMETHOD
-    OnNotify(const char* url, nsresult status)
+    OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status)
     {
     	return NS_OK;
     }
