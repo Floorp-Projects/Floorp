@@ -51,11 +51,6 @@
 - (void)awakeFromNib
 {
   [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, NSURLPboardType, nil]];
-
-  // on panther and later, use the alternating row bg color to make the table
-  // easier to read
-  if ([self respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)])
-    [self setUsesAlternatingRowBackgroundColors:YES];
 }
 
 -(NSMenu*)menu

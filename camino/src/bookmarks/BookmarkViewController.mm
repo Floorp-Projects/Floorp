@@ -71,6 +71,10 @@
 const long kMinContainerSplitWidth = 150;
 const long kMinSearchPaneHeight = 80;
 
+// The actual constant defined in 10.3.x and greater headers is NSTableViewSolidVerticalGridLineMask.
+// In order to compile with 10.2.x, the value has just been extracted and put here.
+// It is extremely unlikely that Apple will change it.
+static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 @interface BookmarkViewController (Private) <BookmarksClient, NetworkServicesClient>
 -(void) setSearchResultArray:(NSArray *)anArray;
@@ -139,20 +143,34 @@ const long kMinSearchPaneHeight = 80;
   NSTableColumn* searchNameColumn = [mSearchPane tableColumnWithIdentifier: @"title"];
   [searchNameColumn setDataCell:imageAndTextCell];
 
+  // set up the table appearance for item and search views
+  if ([mItemPane respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)]) {
+    [mItemPane setUsesAlternatingRowBackgroundColors:YES];
+    [mSearchPane setUsesAlternatingRowBackgroundColors:YES];
+    // if it responds to the above selector, then it will respond to this too...
+    [mItemPane setGridStyleMask:TableViewSolidVerticalGridLineMask];
+    [mSearchPane setGridStyleMask:TableViewSolidVerticalGridLineMask];
+  }
+  
   // set up the font on the item & search views to be smaller
+  // also don't let the cells draw their backgrounds
   NSArray* columns = [mItemPane tableColumns];
-  if ( columns ) {
+  if (columns) {
     int numColumns = [columns count];
     NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    for ( int i = 0; i < numColumns; ++i )
+    for (int i = 0; i < numColumns; i++) {
       [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
+      [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
+    }
   }
   columns = [mSearchPane tableColumns];
-  if ( columns ) {
+  if (columns) {
     int numColumns = [columns count];
     NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    for ( int i = 0; i < numColumns; ++i )
+    for (int i = 0; i < numColumns; i++) {
       [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
+      [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
+    }
   }
 
   // Generic notifications for Bookmark Client
@@ -186,7 +204,7 @@ const long kMinSearchPaneHeight = 80;
   // if we're on 10.2+, set the search field to be rounded
   if ([mSearchField respondsToSelector:@selector(setBezelStyle:)])
     [mSearchField setBezelStyle:NSTextFieldRoundedBezel];
-
+  
   mSetupComplete = YES;
 }
 
