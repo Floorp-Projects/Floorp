@@ -247,7 +247,6 @@ namespace JavaScript {
 
         Data &insert(Reference &r, Key key);
         Data &insert(Key key);
-        Data &insert(Data data);
         void erase(Reference &r);
         void erase(Key key);
         Data *operator[](Key key);
@@ -265,6 +264,7 @@ namespace JavaScript {
 #ifndef _WIN32
         template<class Value> Data &insert(Key key, Value value);
         template<class Value> Data &insert(Reference &r, Key key, Value value);
+        template<class Value> Data &insert(Data data);
 #else
         // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the
         // class
@@ -289,6 +289,14 @@ namespace JavaScript {
                 return *r = value;
             else
                 return insert(r, key, value);
+        }
+
+        template<class Value>
+        Data &HashTable<Data, Key, H>::insert(Data data)
+        {
+            Key key = data.key();
+            Value value = data.value();
+            return insert(key, value);
         }
 
 
@@ -356,9 +364,31 @@ namespace JavaScript {
 #endif
         return e->data;
     }
-#endif
 
-    // Same as above but without a Value argument.
+    // Insert the given key/value pair into the hash table.  If an entry with a
+    // matching key already exists, replace that entry's value.
+    // Return a reference to the new entry's value.
+
+    // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the class
+    template<class Data, class Key, class H> template<class Value>
+    Data &HashTable<Data, Key, H>::insert(Key key, Value value)
+    {
+        Reference r(*this, key);
+        if (r)
+            return *r = value;
+        else
+            return insert(r, key, value);
+    }
+
+    template<class Data, class Key, class H> template<class Value>
+    Data &HashTable<Data, Key, H>::insert(Data data)
+    {
+        Key key = data.key();
+        Value value = data.value();
+        return insert(key, value);
+    }
+#endif      // !_WIN32
+
     template<class Data, class Key, class H>
     inline Data &HashTable<Data, Key, H>::insert(Reference &r, Key key)
     {
@@ -374,25 +404,6 @@ namespace JavaScript {
         return e->data;
     }
 
-
-
-    // Insert the given key/value pair into the hash table.  If an entry with a
-    // matching key already exists, replace that entry's value.
-    // Return a reference to the new entry's value.
-#ifndef _WIN32
-    // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the class
-    template<class Data, class Key, class H> template<class Value>
-    Data &HashTable<Data, Key, H>::insert(Key key, Value value)
-    {
-        Reference r(*this, key);
-        if (r)
-            return *r = value;
-        else
-            return insert(r, key, value);
-    }
-#endif
-
-    // Same as above but without a Value argument.
     template<class Data, class Key, class H>
     Data &HashTable<Data, Key, H>::insert(Key key)
     {
@@ -403,15 +414,6 @@ namespace JavaScript {
             return insert(r, key);
     }
 
-
-    // Same as above but with just a Data argument.
-    template<class Data, class Key, class H>
-    Data &HashTable<Data, Key, H>::insert(Data data)
-    {
-        Key key = data.key();
-        Value value = data.value();
-        return insert(key, value);
-    }
 
 
     // Reference r must point to an existing entry.  Delete that entry.
