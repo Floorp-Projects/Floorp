@@ -190,6 +190,7 @@ viewer:chrome:sidebar:*
 viewer:chrome:wallet:*
 viewer:chrome:xpinstall:* 
 viewer:chrome:xul.css
+viewer:chrome:scrollbars.css
 viewer:chrome:xulBindings.xml
 viewer:defaults:pref:all.js 
 viewer:defaults:pref:config.js 
