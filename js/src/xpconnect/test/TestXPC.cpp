@@ -424,6 +424,11 @@ int main()
     JS_SetErrorReporter(cx, my_ErrorReporter);
 
     nsIXPConnect* xpc = XPC_GetXPConnect();
+    if(!xpc)
+    {
+        printf("XPC_GetXPConnect() returned NULL!\n");
+        return 1;
+    }
 
 /*
     // old code where global object was plain object
