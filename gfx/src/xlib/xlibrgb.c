@@ -180,8 +180,8 @@ xlib_get_prec_from_mask(unsigned long val)
 {
   unsigned long retval = 0;
   int cur_bit = 0;
-  // walk through the number, incrementing the value if
-  // the bit in question is set.
+  /* walk through the number, incrementing the value if
+     the bit in question is set. */
   while (cur_bit < (sizeof(unsigned long) * 8)) {
     if ((val >> cur_bit) & 0x1) {
       retval++;
@@ -195,7 +195,7 @@ static unsigned long
 xlib_get_shift_from_mask(unsigned long val)
 {
   unsigned long cur_bit = 0;
-  // walk through the number, looking for the first 1
+  /* walk through the number, looking for the first 1 */
   while (cur_bit < (sizeof(unsigned long) * 8)) {
     if ((val >> cur_bit) & 0x1) {
       return cur_bit;
