@@ -251,6 +251,30 @@ nsresult NS_NewURL(nsIUrl** aInstancePtrResult,
     return rv;
 }
 
+nsresult NS_NewConnection(nsIUrl* url,
+                          nsISupports* eventSink,
+                          nsIConnectionGroup* group,
+                          nsIProtocolConnection* *result) {
+
+    NS_PRECONDITION(nsnull != result, "null ptr");
+    if (nsnull == result) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsINetService *inet = nsnull;
+    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
+                                               kINetServiceIID,
+                                               (nsISupports **)&inet);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = inet->NewConnection(url, eventSink, group, result);
+
+    if (NS_FAILED(rv)) return rv;
+
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+    return rv;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
