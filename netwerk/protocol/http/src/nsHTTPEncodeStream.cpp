@@ -175,14 +175,12 @@ nsHTTPEncodeStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUin
 
     nsresult rv = Read (readBuf, count, &nBytes);
 
-    PRUint32 writeCount = 0;
     *_retval = 0;
 
     if (NS_SUCCEEDED (rv))
-        rv = writer (this, closure, readBuf, *_retval, nBytes, &writeCount);
+        rv = writer (this, closure, readBuf, *_retval, nBytes, _retval);
 
     PR_Free (readBuf);
-
     return rv;
 }
 
