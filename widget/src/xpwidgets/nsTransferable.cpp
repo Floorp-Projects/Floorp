@@ -18,15 +18,16 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Mike Pinkerton (pinkerton@netscape.com)
+ *  Dainis Jonitis (Dainis_Jonitis@swh-t.lv)
  */
 
 /*
 Notes to self:
 
-- fix QI
-- should DataStruct.mFlavor be a string or a nsISupportsString internally? Would save
-   on having to recreate it each time it is asked for externally. Would complicate things
-   if this the list is used internally a lot 
+- at some point, strings will be accessible from JS, so we won't have to wrap
+   flavors in an nsISupportsString. Until then, we're kinda stuck with
+   this crappy API of nsISupportsArrays.
 
 */
 
@@ -48,38 +49,56 @@ Notes to self:
 
 #include "nsSpecialSystemDirectory.h"
 
-NS_IMPL_ADDREF(nsTransferable)
-NS_IMPL_RELEASE(nsTransferable)
-NS_IMPL_QUERY_INTERFACE1(nsTransferable, nsITransferable)
+NS_IMPL_ISUPPORTS1(nsTransferable, nsITransferable)
 
 
-// million bytes
-#define LARGE_DATASET_SIZE 1000000 
-//#define LARGE_DATASET_SIZE 10 
-
-
+//
+// DataStruct
+//
+// Holds a flavor (a mime type) that describes the data and the associated data.
+//
 struct DataStruct
 {
   DataStruct ( const char* aFlavor )
     : mFlavor(aFlavor), mDataLen(0), mCacheFileName(nsnull) { }
   ~DataStruct();
   
+  const nsCString& GetFlavor() const { return mFlavor; }
   void SetData( nsISupports* inData, PRUint32 inDataLen );
   void GetData( nsISupports** outData, PRUint32 *outDataLen );
   nsIFileSpec * GetFileSpec(const char * aFileName);
-  PRBool IsDataAvilable() { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
-  nsCAutoString mFlavor;
-
+  PRBool IsDataAvilable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
+  
 protected:
+
+  enum {
+    // The size of data over which we write the data to disk rather than
+    // keep it around in memory.
+    kLargeDatasetSize = 1000000        // 1 million bytes
+  };
+  
   nsresult WriteCache(nsISupports* aData, PRUint32 aDataLen );
   nsresult ReadCache(nsISupports** aData, PRUint32* aDataLen );
   
   nsCOMPtr<nsISupports> mData;   // OWNER - some varient of primitive wrapper
   PRUint32 mDataLen;
+  const nsCAutoString mFlavor;
   char *   mCacheFileName;
 
 };
 
+DataStruct* GetDataForFlavor (const nsVoidArray* pArray, const char* aDataFlavor);
+
+DataStruct* GetDataForFlavor (const nsVoidArray* pArray, const char* aDataFlavor)
+{
+  for (PRInt32 i = 0 ; i < pArray->Count () ; ++i) {
+    DataStruct* data = (DataStruct*)pArray->ElementAt (i);
+    if (data->GetFlavor().Equals (aDataFlavor))
+      return data;
+  }
+
+  return nsnull;
+}
 
 //-------------------------------------------------------------------------
 DataStruct::~DataStruct() 
@@ -94,20 +113,14 @@ void
 DataStruct::SetData ( nsISupports* aData, PRUint32 aDataLen )
 {
   // Now, check to see if we consider the data to be "too large"
-  if (aDataLen > LARGE_DATASET_SIZE) {
+  if (aDataLen > kLargeDatasetSize) {
     // if so, cache it to disk instead of memory
-    if ( NS_SUCCEEDED(WriteCache(aData, aDataLen)) ) {
-//      printf("->>>>>>>>>>>>>> Wrote Clipboard to cache file\n");
+    if ( NS_SUCCEEDED(WriteCache(aData, aDataLen)) )
       return;
-    }
-    /*
     else
-	    printf("->>>>>>>>>>>>>> Writing Clipboard to cache file FAILED\n");
-    */
-  } else {
-//    printf("->>>>>>>>>>>>>> Write Clipboard to memory\n");
-  }
-  
+			NS_WARNING("Oh no, couldn't write data to the cache file");   
+  } 
+
   mData    = aData;
   mDataLen = aDataLen;  
 }
@@ -121,10 +134,8 @@ DataStruct::GetData ( nsISupports** aData, PRUint32 *aDataLen )
   if ( !mData && mCacheFileName ) {
     // if so, read it in and pass it back
     // ReadCache creates memory and copies the data into it.
-    if ( NS_SUCCEEDED(ReadCache(aData, aDataLen)) ) {
-//      printf("->>>>>>>>>>>>>> Read Clipboard from cache file\n");
+    if ( NS_SUCCEEDED(ReadCache(aData, aDataLen)) )
       return;
-    }
     else {
       // oh shit, something went horribly wrong here.
       NS_WARNING("Oh no, couldn't read data in from the cache file");
@@ -132,8 +143,6 @@ DataStruct::GetData ( nsISupports** aData, PRUint32 *aDataLen )
       *aDataLen = 0;
       return;
     }
-  } else {
-//    printf("->>>>>>>>>>>>>> Read Clipboard from memory\n");
   }
   
   *aData = mData;
@@ -273,8 +282,7 @@ nsTransferable::nsTransferable()
 //-------------------------------------------------------------------------
 nsTransferable::~nsTransferable()
 {
-  PRInt32 i;
-  for (i=0;i<mDataArray->Count();i++) {
+  for (PRInt32 i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     delete data;
   }
@@ -305,7 +313,7 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
       rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                                NS_GET_IID(nsISupportsString), getter_AddRefs(flavorWrapper));
       if ( flavorWrapper ) {
-        flavorWrapper->SetData ( NS_CONST_CAST(char*, data->mFlavor.GetBuffer()) );
+        flavorWrapper->SetData ( NS_CONST_CAST(char*, data->GetFlavor().GetBuffer()) );
         nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
         (*aDataFlavorList)->AppendElement( genericWrapper );
       }
@@ -337,10 +345,10 @@ nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUi
   PRInt32 i;
   for ( i=0; i<mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if ( data->mFlavor.Equals(aFlavor) ) {
+    if ( data->GetFlavor().Equals(aFlavor) ) {
       data->GetData(aData, aDataLen);
       if (*aData && *aDataLen > 0)
-        found = PR_TRUE;
+        return NS_OK;
     }
   }
 
@@ -349,12 +357,12 @@ nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUi
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       PRBool canConvert = PR_FALSE;
-      mFormatConv->CanConvert(data->mFlavor.GetBuffer(), aFlavor, &canConvert);
+      mFormatConv->CanConvert(data->GetFlavor().GetBuffer(), aFlavor, &canConvert);
       if ( canConvert ) {
         nsCOMPtr<nsISupports> dataBytes;
         PRUint32 len;
         data->GetData(getter_AddRefs(dataBytes), &len);
-        mFormatConv->Convert(data->mFlavor.GetBuffer(), dataBytes, len, aFlavor, aData, aDataLen);
+        mFormatConv->Convert(data->GetFlavor().GetBuffer(), dataBytes, len, aFlavor, aData, aDataLen);
         found = PR_TRUE;
       }
     }
@@ -378,7 +386,7 @@ nsTransferable::GetAnyTransferData(char **aFlavor, nsISupports **aData, PRUint32
   for ( PRInt32 i=0; i < mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if (data->IsDataAvilable()) {
-      *aFlavor = data->mFlavor.ToNewCString();
+      *aFlavor = data->GetFlavor().ToNewCString();
       data->GetData(aData, aDataLen);
       return NS_OK;
     }
@@ -399,15 +407,39 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint3
   if ( !aFlavor )
     return NS_ERROR_FAILURE;
 
-  for ( PRInt32 i=0; i<mDataArray->Count(); ++i ) {
+  // first check our intrinsic flavors to see if one has been registered.
+  PRInt32 i = 0;
+  for ( i=0; i<mDataArray->Count(); ++i ) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if ( data->mFlavor.Equals(aFlavor) ) {
+    if ( data->GetFlavor().Equals(aFlavor) ) {
       data->SetData ( aData, aDataLen );
       return NS_OK;
     }
   }
 
-  return NS_OK;
+  // if not, try using a format converter to find a flavor to put the data in
+  if ( mFormatConv ) {
+    for ( i=0; i<mDataArray->Count(); ++i) {
+      DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+      PRBool canConvert = PR_FALSE;
+      mFormatConv->CanConvert(aFlavor, data->GetFlavor().GetBuffer(), &canConvert);
+
+      if ( canConvert ) {
+        nsCOMPtr<nsISupports> ConvertedData;
+        PRUint32 ConvertedLen;
+        mFormatConv->Convert(aFlavor, aData, aDataLen, data->GetFlavor().GetBuffer(), getter_AddRefs(ConvertedData), &ConvertedLen);
+        data->SetData(ConvertedData, ConvertedLen);
+        return NS_OK;
+      }
+    }
+  }
+
+  // Can't set data neither directly or through converter. Just add this flavor and try again
+  nsresult result = NS_ERROR_FAILURE;
+  if ( NS_SUCCEEDED(AddDataFlavor(aFlavor)) );
+    result = SetTransferData (aFlavor, aData, aDataLen);
+    
+  return result;
 }
 
 
@@ -419,13 +451,8 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint3
 NS_IMETHODIMP
 nsTransferable :: AddDataFlavor(const char *aDataFlavor)
 {
-  // Do we have the data flavor already?
-  PRInt32 i;
-  for (i=0;i<mDataArray->Count();i++) {
-    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if ( data->mFlavor.Equals(aDataFlavor) )
-      return NS_ERROR_FAILURE;
-  }
+  if (GetDataForFlavor (mDataArray, aDataFlavor))
+    return NS_ERROR_FAILURE;
 
   // Create a new "slot" for the data
   DataStruct * data = new DataStruct ( aDataFlavor ) ;
@@ -444,17 +471,16 @@ nsTransferable :: AddDataFlavor(const char *aDataFlavor)
 NS_IMETHODIMP
 nsTransferable::RemoveDataFlavor(const char *aDataFlavor)
 {
-  // Do we have the data flavor already?
-  for ( PRInt32 i=0; i<mDataArray->Count(); ++i ) {
-    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if ( data->mFlavor.Equals(aDataFlavor) ) {
-      mDataArray->RemoveElementAt(i);
-      delete data;
-      return NS_OK;
-    }
-  }
+  DataStruct* data = GetDataForFlavor (mDataArray, aDataFlavor);
 
-  return NS_ERROR_FAILURE;
+  if ( data ) {
+    mDataArray->RemoveElement (data);
+    delete data;
+
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 
@@ -519,25 +545,32 @@ nsTransferable :: FlavorsTransferableCanImport(nsISupportsArray **_retval)
   // Get the flavor list, and on to the end of it, append the list of flavors we
   // can also get to through a converter. This is so that we can just walk the list
   // in one go, looking for the desired flavor.
-  GetTransferDataFlavors(_retval);  // addrefs
+  GetTransferDataFlavors(_retval);                        // addrefs
   nsCOMPtr<nsIFormatConverter> converter;
   GetConverter(getter_AddRefs(converter));
   if ( converter ) {
     nsCOMPtr<nsISupportsArray> convertedList;
     converter->GetInputDataFlavors(getter_AddRefs(convertedList));
+
     if ( convertedList ) {
       PRUint32 importListLen;
       convertedList->Count(&importListLen);
+
       for ( PRUint32 i=0; i < importListLen; ++i ) {
         nsCOMPtr<nsISupports> genericFlavor;
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-        (*_retval)->AppendElement(genericFlavor);
+
+        nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface (genericFlavor) );
+        char* aDataFlavor;
+        flavorWrapper->GetData (&aDataFlavor);
+
+        if (!GetDataForFlavor (mDataArray, aDataFlavor))    // Don't append if already in intrinsic list
+          (*_retval)->AppendElement (genericFlavor);
       } // foreach flavor that can be converted to
     }
   } // if a converter exists
 
-  return NS_OK;
-  
+  return NS_OK;  
 } // FlavorsTransferableCanImport
 
 
@@ -562,18 +595,24 @@ nsTransferable :: FlavorsTransferableCanExport(nsISupportsArray **_retval)
   if ( converter ) {
     nsCOMPtr<nsISupportsArray> convertedList;
     converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
-    PRUint32 importListLen;
+
     if ( convertedList ) {
+      PRUint32 importListLen;
       convertedList->Count(&importListLen);
+
       for ( PRUint32 i=0; i < importListLen; ++i ) {
         nsCOMPtr<nsISupports> genericFlavor;
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-        (*_retval)->AppendElement(genericFlavor);
+
+        nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface (genericFlavor) );
+        char* aDataFlavor;
+        flavorWrapper->GetData (&aDataFlavor);
+
+        if (!GetDataForFlavor (mDataArray, aDataFlavor))    // Don't append if already in intrinsic list
+          (*_retval)->AppendElement (genericFlavor);
       } // foreach flavor that can be converted to
     }
   } // if a converter exists
 
   return NS_OK;
-  
-} // FlavorsTransferableCanImport
-
+} // FlavorsTransferableCanExport
