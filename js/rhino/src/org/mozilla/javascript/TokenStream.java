@@ -259,154 +259,154 @@ public class TokenStream {
     public static String tokenToName(int token) {
         if (Context.printTrees || Context.printICode) {
             switch (token) {
-                case ERROR:           return "error";
-                case EOF:             return "eof";
-                case EOL:             return "eol";
-                case POPV:            return "popv";
-                case ENTERWITH:       return "enterwith";
-                case LEAVEWITH:       return "leavewith";
-                case RETURN:          return "return";
-                case GOTO:            return "goto";
-                case IFEQ:            return "ifeq";
-                case IFNE:            return "ifne";
-                case DUP:             return "dup";
-                case SETNAME:         return "setname";
-                case BITOR:           return "bitor";
-                case BITXOR:          return "bitxor";
-                case BITAND:          return "bitand";
-                case EQ:              return "eq";
-                case NE:              return "ne";
-                case LT:              return "lt";
-                case LE:              return "le";
-                case GT:              return "gt";
-                case GE:              return "ge";
-                case LSH:             return "lsh";
-                case RSH:             return "rsh";
-                case URSH:            return "ursh";
-                case ADD:             return "add";
-                case SUB:             return "sub";
-                case MUL:             return "mul";
-                case DIV:             return "div";
-                case MOD:             return "mod";
-                case BITNOT:          return "bitnot";
-                case NEG:             return "neg";
-                case NEW:             return "new";
-                case DELPROP:         return "delprop";
-                case TYPEOF:          return "typeof";
-                case NAMEINC:         return "nameinc";
-                case PROPINC:         return "propinc";
-                case ELEMINC:         return "eleminc";
-                case NAMEDEC:         return "namedec";
-                case PROPDEC:         return "propdec";
-                case ELEMDEC:         return "elemdec";
-                case GETPROP:         return "getprop";
-                case SETPROP:         return "setprop";
-                case GETELEM:         return "getelem";
-                case SETELEM:         return "setelem";
-                case CALL:            return "call";
-                case NAME:            return "name";
-                case NUMBER:          return "number";
-                case STRING:          return "string";
-                case ZERO:            return "zero";
-                case ONE:             return "one";
-                case NULL:            return "null";
-                case THIS:            return "this";
-                case FALSE:           return "false";
-                case TRUE:            return "true";
-                case SHEQ:            return "sheq";
-                case SHNE:            return "shne";
-                case CLOSURE:         return "closure";
-                case REGEXP:          return "object";
-                case POP:             return "pop";
-                case POS:             return "pos";
-                case VARINC:          return "varinc";
-                case VARDEC:          return "vardec";
-                case BINDNAME:        return "bindname";
-                case THROW:           return "throw";
-                case IN:              return "in";
-                case INSTANCEOF:      return "instanceof";
-                case GOSUB:           return "gosub";
-                case RETSUB:          return "retsub";
-                case CALLSPECIAL:     return "callspecial";
-                case GETTHIS:         return "getthis";
-                case NEWTEMP:         return "newtemp";
-                case USETEMP:         return "usetemp";
-                case GETBASE:         return "getbase";
-                case GETVAR:          return "getvar";
-                case SETVAR:          return "setvar";
-                case UNDEFINED:       return "undefined";
-                case TRY:             return "try";
-                case ENDTRY:          return "endtry";
-                case NEWSCOPE:        return "newscope";
-                case TYPEOFNAME:      return "typeofname";
-                case ENUMINIT:        return "enuminit";
-                case ENUMNEXT:        return "enumnext";
-                case GETPROTO:        return "getproto";
-                case GETPARENT:       return "getparent";
-                case SETPROTO:        return "setproto";
-                case SETPARENT:       return "setparent";
-                case SCOPE:           return "scope";
-                case GETSCOPEPARENT:  return "getscopeparent";
-                case THISFN:          return "thisfn";
-                case JTHROW:          return "jthrow";
-                case SEMI:            return "semi";
-                case LB:              return "lb";
-                case RB:              return "rb";
-                case LC:              return "lc";
-                case RC:              return "rc";
-                case LP:              return "lp";
-                case RP:              return "rp";
-                case COMMA:           return "comma";
-                case ASSIGN:          return "assign";
-                case HOOK:            return "hook";
-                case COLON:           return "colon";
-                case OR:              return "or";
-                case AND:             return "and";
-                case EQOP:            return "eqop";
-                case RELOP:           return "relop";
-                case SHOP:            return "shop";
-                case UNARYOP:         return "unaryop";
-                case INC:             return "inc";
-                case DEC:             return "dec";
-                case DOT:             return "dot";
-                case PRIMARY:         return "primary";
-                case FUNCTION:        return "function";
-                case EXPORT:          return "export";
-                case IMPORT:          return "import";
-                case IF:              return "if";
-                case ELSE:            return "else";
-                case SWITCH:          return "switch";
-                case CASE:            return "case";
-                case DEFAULT:         return "default";
-                case WHILE:           return "while";
-                case DO:              return "do";
-                case FOR:             return "for";
-                case BREAK:           return "break";
-                case CONTINUE:        return "continue";
-                case VAR:             return "var";
-                case WITH:            return "with";
-                case CATCH:           return "catch";
-                case FINALLY:         return "finally";
-                case RESERVED:        return "reserved";
-                case NOP:             return "nop";
-                case NOT:             return "not";
-                case PRE:             return "pre";
-                case POST:            return "post";
-                case VOID:            return "void";
-                case BLOCK:           return "block";
-                case ARRAYLIT:        return "arraylit";
-                case OBJLIT:          return "objlit";
-                case LABEL:           return "label";
-                case TARGET:          return "target";
-                case LOOP:            return "loop";
-                case ENUMDONE:        return "enumdone";
-                case EXPRSTMT:        return "exprstmt";
-                case PARENT:          return "parent";
-                case CONVERT:         return "convert";
-                case JSR:             return "jsr";
-                case NEWLOCAL:        return "newlocal";
-                case USELOCAL:        return "uselocal";
-                case SCRIPT:          return "script";
+            case ERROR:           return "error";
+            case EOF:             return "eof";
+            case EOL:             return "eol";
+            case POPV:            return "popv";
+            case ENTERWITH:       return "enterwith";
+            case LEAVEWITH:       return "leavewith";
+            case RETURN:          return "return";
+            case GOTO:            return "goto";
+            case IFEQ:            return "ifeq";
+            case IFNE:            return "ifne";
+            case DUP:             return "dup";
+            case SETNAME:         return "setname";
+            case BITOR:           return "bitor";
+            case BITXOR:          return "bitxor";
+            case BITAND:          return "bitand";
+            case EQ:              return "eq";
+            case NE:              return "ne";
+            case LT:              return "lt";
+            case LE:              return "le";
+            case GT:              return "gt";
+            case GE:              return "ge";
+            case LSH:             return "lsh";
+            case RSH:             return "rsh";
+            case URSH:            return "ursh";
+            case ADD:             return "add";
+            case SUB:             return "sub";
+            case MUL:             return "mul";
+            case DIV:             return "div";
+            case MOD:             return "mod";
+            case BITNOT:          return "bitnot";
+            case NEG:             return "neg";
+            case NEW:             return "new";
+            case DELPROP:         return "delprop";
+            case TYPEOF:          return "typeof";
+            case NAMEINC:         return "nameinc";
+            case PROPINC:         return "propinc";
+            case ELEMINC:         return "eleminc";
+            case NAMEDEC:         return "namedec";
+            case PROPDEC:         return "propdec";
+            case ELEMDEC:         return "elemdec";
+            case GETPROP:         return "getprop";
+            case SETPROP:         return "setprop";
+            case GETELEM:         return "getelem";
+            case SETELEM:         return "setelem";
+            case CALL:            return "call";
+            case NAME:            return "name";
+            case NUMBER:          return "number";
+            case STRING:          return "string";
+            case ZERO:            return "zero";
+            case ONE:             return "one";
+            case NULL:            return "null";
+            case THIS:            return "this";
+            case FALSE:           return "false";
+            case TRUE:            return "true";
+            case SHEQ:            return "sheq";
+            case SHNE:            return "shne";
+            case CLOSURE:         return "closure";
+            case REGEXP:          return "object";
+            case POP:             return "pop";
+            case POS:             return "pos";
+            case VARINC:          return "varinc";
+            case VARDEC:          return "vardec";
+            case BINDNAME:        return "bindname";
+            case THROW:           return "throw";
+            case IN:              return "in";
+            case INSTANCEOF:      return "instanceof";
+            case GOSUB:           return "gosub";
+            case RETSUB:          return "retsub";
+            case CALLSPECIAL:     return "callspecial";
+            case GETTHIS:         return "getthis";
+            case NEWTEMP:         return "newtemp";
+            case USETEMP:         return "usetemp";
+            case GETBASE:         return "getbase";
+            case GETVAR:          return "getvar";
+            case SETVAR:          return "setvar";
+            case UNDEFINED:       return "undefined";
+            case TRY:             return "try";
+            case ENDTRY:          return "endtry";
+            case NEWSCOPE:        return "newscope";
+            case TYPEOFNAME:      return "typeofname";
+            case ENUMINIT:        return "enuminit";
+            case ENUMNEXT:        return "enumnext";
+            case GETPROTO:        return "getproto";
+            case GETPARENT:       return "getparent";
+            case SETPROTO:        return "setproto";
+            case SETPARENT:       return "setparent";
+            case SCOPE:           return "scope";
+            case GETSCOPEPARENT:  return "getscopeparent";
+            case THISFN:          return "thisfn";
+            case JTHROW:          return "jthrow";
+            case SEMI:            return "semi";
+            case LB:              return "lb";
+            case RB:              return "rb";
+            case LC:              return "lc";
+            case RC:              return "rc";
+            case LP:              return "lp";
+            case RP:              return "rp";
+            case COMMA:           return "comma";
+            case ASSIGN:          return "assign";
+            case HOOK:            return "hook";
+            case COLON:           return "colon";
+            case OR:              return "or";
+            case AND:             return "and";
+            case EQOP:            return "eqop";
+            case RELOP:           return "relop";
+            case SHOP:            return "shop";
+            case UNARYOP:         return "unaryop";
+            case INC:             return "inc";
+            case DEC:             return "dec";
+            case DOT:             return "dot";
+            case PRIMARY:         return "primary";
+            case FUNCTION:        return "function";
+            case EXPORT:          return "export";
+            case IMPORT:          return "import";
+            case IF:              return "if";
+            case ELSE:            return "else";
+            case SWITCH:          return "switch";
+            case CASE:            return "case";
+            case DEFAULT:         return "default";
+            case WHILE:           return "while";
+            case DO:              return "do";
+            case FOR:             return "for";
+            case BREAK:           return "break";
+            case CONTINUE:        return "continue";
+            case VAR:             return "var";
+            case WITH:            return "with";
+            case CATCH:           return "catch";
+            case FINALLY:         return "finally";
+            case RESERVED:        return "reserved";
+            case NOP:             return "nop";
+            case NOT:             return "not";
+            case PRE:             return "pre";
+            case POST:            return "post";
+            case VOID:            return "void";
+            case BLOCK:           return "block";
+            case ARRAYLIT:        return "arraylit";
+            case OBJLIT:          return "objlit";
+            case LABEL:           return "label";
+            case TARGET:          return "target";
+            case LOOP:            return "loop";
+            case ENUMDONE:        return "enumdone";
+            case EXPRSTMT:        return "exprstmt";
+            case PARENT:          return "parent";
+            case CONVERT:         return "convert";
+            case JSR:             return "jsr";
+            case NEWLOCAL:        return "newlocal";
+            case USELOCAL:        return "uselocal";
+            case SCRIPT:          return "script";
             }
             return "<unknown="+token+">";
         }
@@ -422,21 +422,21 @@ public class TokenStream {
             String name = tokenToName(token);
 
             switch (token) {
-                case UNARYOP:
-                case ASSIGN:
-                case PRIMARY:
-                case EQOP:
-                case SHOP:
-                case RELOP:
-                    return name + " " + tokenToName(this.op);
+            case UNARYOP:
+            case ASSIGN:
+            case PRIMARY:
+            case EQOP:
+            case SHOP:
+            case RELOP:
+                return name + " " + tokenToName(this.op);
 
-                case STRING:
-                case REGEXP:
-                case NAME:
-                    return name + " `" + this.string + "'";
+            case STRING:
+            case REGEXP:
+            case NAME:
+                return name + " `" + this.string + "'";
 
-                case NUMBER:
-                    return "NUMBER " + this.number;
+            case NUMBER:
+                return "NUMBER " + this.number;
             }
 
             return name;
@@ -708,236 +708,237 @@ public class TokenStream {
             return result;
         }
 
-        // Eat whitespace, possibly sensitive to newlines.
-        for (;;) {
-            c = getChar();
-            if (c == EOF_CHAR) {
-                return EOF;
-            } else if (c == '\n') {
-                flags &= ~TSF_DIRTYLINE;
-                if ((flags & TSF_NEWLINES) != 0) {
+        {
+            // Eat whitespace, possibly sensitive to newlines.
+            for (;;) {
+                c = getChar();
+                if (c == EOF_CHAR) {
+                    return EOF;
+                } else if (c == '\n') {
+                    flags &= ~TSF_DIRTYLINE;
+                    if ((flags & TSF_NEWLINES) != 0) {
+                        break;
+                    }
+                } else if (!isJSSpace(c)) {
+                    if (c != '-') {
+                        flags |= TSF_DIRTYLINE;
+                    }
                     break;
                 }
-            } else if (!isJSSpace(c)) {
-                if (c != '-') {
-                    flags |= TSF_DIRTYLINE;
-                }
-                break;
             }
-        }
 
-        // identifier/keyword/instanceof?
-        // watch out for starting with a <backslash>
-        boolean identifierStart;
-        boolean isUnicodeEscapeStart = false;
-        if (c == '\\') {
-            c = getChar();
-            if (c == 'u') {
-                identifierStart = true;
-                isUnicodeEscapeStart = true;
-                stringBufferTop = 0;
-            } else {
-                identifierStart = false;
-                ungetChar(c);
-                c = '\\';
-            }
-        } else {
-            identifierStart = Character.isJavaIdentifierStart((char)c);
-            if (identifierStart) {
-                stringBufferTop = 0;
-                addToString(c);
-            }
-        }
-
-        if (identifierStart) {
-            boolean containsEscape = isUnicodeEscapeStart;
-            for (;;) {
-                if (isUnicodeEscapeStart) {
-                    // strictly speaking we should probably push-back
-                    // all the bad characters if the <backslash>uXXXX
-                    // sequence is malformed. But since there isn't a
-                    // correct context(is there?) for a bad Unicode
-                    // escape sequence in an identifier, we can report
-                    // an error here.
-                    int escapeVal = 0;
-                    for (int i = 0; i != 4; ++i) {
-                        c = getChar();
-                        escapeVal = (escapeVal << 4) | xDigitToInt(c);
-                        // Next check takes care about c < 0 and bad escape
-                        if (escapeVal < 0) { break; }
-                    }
-                    if (escapeVal < 0) {
-                        reportSyntaxError("msg.invalid.escape", null);
-                        return ERROR;
-                    }
-                    addToString(escapeVal);
-                    isUnicodeEscapeStart = false;
+            // identifier/keyword/instanceof?
+            // watch out for starting with a <backslash>
+            boolean identifierStart;
+            boolean isUnicodeEscapeStart = false;
+            if (c == '\\') {
+                c = getChar();
+                if (c == 'u') {
+                    identifierStart = true;
+                    isUnicodeEscapeStart = true;
+                    stringBufferTop = 0;
                 } else {
-                    c = getChar();
-                    if (c == '\\') {
-                        c = getChar();
-                        if (c == 'u') {
-                            isUnicodeEscapeStart = true;
-                            containsEscape = true;
-                        } else {
-                            reportSyntaxError("msg.illegal.character", null);
+                    identifierStart = false;
+                    ungetChar(c);
+                    c = '\\';
+                }
+            } else {
+                identifierStart = Character.isJavaIdentifierStart((char)c);
+                if (identifierStart) {
+                    stringBufferTop = 0;
+                    addToString(c);
+                }
+            }
+
+            if (identifierStart) {
+                boolean containsEscape = isUnicodeEscapeStart;
+                for (;;) {
+                    if (isUnicodeEscapeStart) {
+                        // strictly speaking we should probably push-back
+                        // all the bad characters if the <backslash>uXXXX
+                        // sequence is malformed. But since there isn't a
+                        // correct context(is there?) for a bad Unicode
+                        // escape sequence in an identifier, we can report
+                        // an error here.
+                        int escapeVal = 0;
+                        for (int i = 0; i != 4; ++i) {
+                            c = getChar();
+                            escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                            // Next check takes care about c < 0 and bad escape
+                            if (escapeVal < 0) { break; }
+                        }
+                        if (escapeVal < 0) {
+                            reportSyntaxError("msg.invalid.escape", null);
                             return ERROR;
                         }
+                        addToString(escapeVal);
+                        isUnicodeEscapeStart = false;
                     } else {
-                        if (c == EOF_CHAR
-                            || !Character.isJavaIdentifierPart((char)c))
+                        c = getChar();
+                        if (c == '\\') {
+                            c = getChar();
+                            if (c == 'u') {
+                                isUnicodeEscapeStart = true;
+                                containsEscape = true;
+                            } else {
+                                reportSyntaxError("msg.illegal.character", null);
+                                return ERROR;
+                            }
+                        } else {
+                            if (c == EOF_CHAR
+                                || !Character.isJavaIdentifierPart((char)c))
+                            {
+                                break;
+                            }
+                            addToString(c);
+                        }
+                    }
+                }
+                ungetChar(c);
+
+                String str = getStringFromBuffer();
+                if (!containsEscape) {
+                    // OPT we shouldn't have to make a string (object!) to
+                    // check if it's a keyword.
+
+                    // Return the corresponding token if it's a keyword
+                    int result = stringToKeyword(str);
+                    if (result != EOF) {
+                        if (result != RESERVED) {
+                            return result;
+                        }
+                        else if (!Context.getContext().hasFeature(
+                                Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER))
                         {
-                            break;
+                            return result;
+                        }
+                        else {
+                            // If implementation permits to use future reserved
+                            // keywords in violation with the EcmaScript standard,
+                            // treat it as name but issue warning
+                            Object[] errArgs = { str };
+                            reportSyntaxWarning("msg.reserved.keyword", errArgs);
+                        }
+                    }
+                }
+                this.string = (String)allStrings.intern(str);
+                return NAME;
+            }
+
+            // is it a number?
+            if (isDigit(c) || (c == '.' && isDigit(peekChar()))) {
+
+                stringBufferTop = 0;
+                int base = 10;
+
+                if (c == '0') {
+                    c = getChar();
+                    if (c == 'x' || c == 'X') {
+                        base = 16;
+                        c = getChar();
+                    } else if (isDigit(c)) {
+                        base = 8;
+                    } else {
+                        addToString('0');
+                    }
+                }
+
+                if (base == 16) {
+                    while (0 <= xDigitToInt(c)) {
+                        addToString(c);
+                        c = getChar();
+                    }
+                } else {
+                    while ('0' <= c && c <= '9') {
+                        /*
+                         * We permit 08 and 09 as decimal numbers, which
+                         * makes our behavior a superset of the ECMA
+                         * numeric grammar.  We might not always be so
+                         * permissive, so we warn about it.
+                         */
+                        if (base == 8 && c >= '8') {
+                            Object[] errArgs = { c == '8' ? "8" : "9" };
+                            reportSyntaxWarning("msg.bad.octal.literal", errArgs);
+                            base = 10;
                         }
                         addToString(c);
-                    }
-                }
-            }
-            ungetChar(c);
-
-            String str = getStringFromBuffer();
-            if (!containsEscape) {
-                // OPT we shouldn't have to make a string (object!) to
-                // check if it's a keyword.
-
-                // Return the corresponding token if it's a keyword
-                int result = stringToKeyword(str);
-                if (result != EOF) {
-                    if (result != RESERVED) {
-                        return result;
-                    }
-                    else if (!Context.getContext().hasFeature(
-                            Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER))
-                    {
-                        return result;
-                    }
-                    else {
-                        // If implementation permits to use future reserved
-                        // keywords in violation with the EcmaScript standard,
-                        // treat it as name but issue warning
-                        Object[] errArgs = { str };
-                        reportSyntaxWarning("msg.reserved.keyword", errArgs);
-                    }
-                }
-            }
-            this.string = (String)allStrings.intern(str);
-            return NAME;
-        }
-
-        // is it a number?
-        if (isDigit(c) || (c == '.' && isDigit(peekChar()))) {
-
-            stringBufferTop = 0;
-            int base = 10;
-
-            if (c == '0') {
-                c = getChar();
-                if (c == 'x' || c == 'X') {
-                    base = 16;
-                    c = getChar();
-                } else if (isDigit(c)) {
-                    base = 8;
-                } else {
-                    addToString('0');
-                }
-            }
-
-            if (base == 16) {
-                while (0 <= xDigitToInt(c)) {
-                    addToString(c);
-                    c = getChar();
-                }
-            } else {
-                while ('0' <= c && c <= '9') {
-                    /*
-                     * We permit 08 and 09 as decimal numbers, which
-                     * makes our behavior a superset of the ECMA
-                     * numeric grammar.  We might not always be so
-                     * permissive, so we warn about it.
-                     */
-                    if (base == 8 && c >= '8') {
-                        Object[] errArgs = { c == '8' ? "8" : "9" };
-                        reportSyntaxWarning("msg.bad.octal.literal", errArgs);
-                        base = 10;
-                    }
-                    addToString(c);
-                    c = getChar();
-                }
-            }
-
-            boolean isInteger = true;
-
-            if (base == 10 && (c == '.' || c == 'e' || c == 'E')) {
-                isInteger = false;
-                if (c == '.') {
-                    do {
-                        addToString(c);
-                        c = getChar();
-                    } while (isDigit(c));
-                }
-                if (c == 'e' || c == 'E') {
-                    addToString(c);
-                    c = getChar();
-                    if (c == '+' || c == '-') {
-                        addToString(c);
                         c = getChar();
                     }
-                    if (!isDigit(c)) {
-                        reportSyntaxError("msg.missing.exponent", null);
+                }
+
+                boolean isInteger = true;
+
+                if (base == 10 && (c == '.' || c == 'e' || c == 'E')) {
+                    isInteger = false;
+                    if (c == '.') {
+                        do {
+                            addToString(c);
+                            c = getChar();
+                        } while (isDigit(c));
+                    }
+                    if (c == 'e' || c == 'E') {
+                        addToString(c);
+                        c = getChar();
+                        if (c == '+' || c == '-') {
+                            addToString(c);
+                            c = getChar();
+                        }
+                        if (!isDigit(c)) {
+                            reportSyntaxError("msg.missing.exponent", null);
+                            return ERROR;
+                        }
+                        do {
+                            addToString(c);
+                            c = getChar();
+                        } while (isDigit(c));
+                    }
+                }
+                ungetChar(c);
+                String numString = getStringFromBuffer();
+
+                double dval;
+                if (base == 10 && !isInteger) {
+                    try {
+                        // Use Java conversion to number from string...
+                        dval = (Double.valueOf(numString)).doubleValue();
+                    }
+                    catch (NumberFormatException ex) {
+                        Object[] errArgs = { ex.getMessage() };
+                        reportSyntaxError("msg.caught.nfe", errArgs);
                         return ERROR;
                     }
-                    do {
-                        addToString(c);
+                } else {
+                    dval = ScriptRuntime.stringToNumber(numString, 0, base);
+                }
+
+                this.number = dval;
+                return NUMBER;
+            }
+
+            // is it a string?
+            if (c == '"' || c == '\'') {
+                // We attempt to accumulate a string the fast way, by
+                // building it directly out of the reader.  But if there
+                // are any escaped characters in the string, we revert to
+                // building it out of a StringBuffer.
+
+                int quoteChar = c;
+                stringBufferTop = 0;
+
+                c = getChar();
+            strLoop: while (c != quoteChar) {
+                    if (c == '\n' || c == EOF_CHAR) {
+                        ungetChar(c);
+                        reportSyntaxError("msg.unterminated.string.lit", null);
+                        return ERROR;
+                    }
+
+                    if (c == '\\') {
+                        // We've hit an escaped character
+                        int escapeVal;
+
                         c = getChar();
-                    } while (isDigit(c));
-                }
-            }
-            ungetChar(c);
-            String numString = getStringFromBuffer();
-
-            double dval;
-            if (base == 10 && !isInteger) {
-                try {
-                    // Use Java conversion to number from string...
-                    dval = (Double.valueOf(numString)).doubleValue();
-                }
-                catch (NumberFormatException ex) {
-                    Object[] errArgs = { ex.getMessage() };
-                    reportSyntaxError("msg.caught.nfe", errArgs);
-                    return ERROR;
-                }
-            } else {
-                dval = ScriptRuntime.stringToNumber(numString, 0, base);
-            }
-
-            this.number = dval;
-            return NUMBER;
-        }
-
-        // is it a string?
-        if (c == '"' || c == '\'') {
-            // We attempt to accumulate a string the fast way, by
-            // building it directly out of the reader.  But if there
-            // are any escaped characters in the string, we revert to
-            // building it out of a StringBuffer.
-
-            int quoteChar = c;
-            int val = 0;
-            stringBufferTop = 0;
-
-            c = getChar();
-        strLoop: while (c != quoteChar) {
-                if (c == '\n' || c == EOF_CHAR) {
-                    ungetChar(c);
-                    reportSyntaxError("msg.unterminated.string.lit", null);
-                    return ERROR;
-                }
-
-                if (c == '\\') {
-                    // We've hit an escaped character
-
-                    c = getChar();
-                    switch (c) {
+                        switch (c) {
                         case 'b': c = '\b'; break;
                         case 'f': c = '\f'; break;
                         case 'n': c = '\n'; break;
@@ -948,18 +949,17 @@ public class TokenStream {
                         // it is not in Java, so use 0xb
                         case 'v': c = 0xb; break;
 
-                        case 'u': {
-                            /*
-                             * Get 4 hex digits; if the u escape is not
-                             * followed by 4 hex digits, use 'u' + the literal
-                             * character sequence that follows.
-                             */
+                        case 'u':
+                            // Get 4 hex digits; if the u escape is not
+                            // followed by 4 hex digits, use 'u' + the
+                            // literal character sequence that follows.
                             int escapeStart = stringBufferTop;
                             addToString('u');
-                            int escapeVal = 0;
+                            escapeVal = 0;
                             for (int i = 0; i != 4; ++i) {
                                 c = getChar();
-                                escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                                escapeVal = (escapeVal << 4)
+                                            | xDigitToInt(c);
                                 if (escapeVal < 0) {
                                     continue strLoop;
                                 }
@@ -969,21 +969,20 @@ public class TokenStream {
                             // by escape value
                             stringBufferTop = escapeStart;
                             c = escapeVal;
-                        } break;
-
-                        case 'x': {
-                            /* Get 2 hex digits, defaulting to 'x' + literal
-                             * sequence, as above.
-                             */
+                            break;
+                        case 'x':
+                            // Get 2 hex digits, defaulting to 'x'+literal
+                            // sequence, as above.
                             c = getChar();
-                            int escapeVal = xDigitToInt(c);
+                            escapeVal = xDigitToInt(c);
                             if (escapeVal < 0) {
                                 addToString('x');
                                 continue strLoop;
                             } else {
                                 int c1 = c;
                                 c = getChar();
-                                escapeVal = (escapeVal << 4) | xDigitToInt(c);
+                                escapeVal = (escapeVal << 4)
+                                            | xDigitToInt(c);
                                 if (escapeVal < 0) {
                                     addToString('x');
                                     addToString(c1);
@@ -993,280 +992,281 @@ public class TokenStream {
                                     c = escapeVal;
                                 }
                             }
-                        } break;
+                            break;
 
-                        default: if ('0' <= c && c < '8') {
-                            val = c - '0';
-                            c = getChar();
+                        default:
                             if ('0' <= c && c < '8') {
-                                val = 8 * val + c - '0';
+                                int val = c - '0';
                                 c = getChar();
-                                if ('0' <= c && c < '8' && val <= 037) {
-                                    // c is 3rd char of octal sequence only if
-                                    // the resulting val <= 0377
+                                if ('0' <= c && c < '8') {
                                     val = 8 * val + c - '0';
                                     c = getChar();
+                                    if ('0' <= c && c < '8' && val <= 037) {
+                                        // c is 3rd char of octal sequence only
+                                        // if the resulting val <= 0377
+                                        val = 8 * val + c - '0';
+                                        c = getChar();
+                                    }
                                 }
+                                ungetChar(c);
+                                c = val;
                             }
-                            ungetChar(c);
-                            c = val;
                         }
                     }
+                    addToString(c);
+                    c = getChar();
                 }
-                addToString(c);
-                c = getChar();
+
+                String str = getStringFromBuffer();
+                this.string = (String)allStrings.intern(str);
+                return STRING;
             }
 
-            String str = getStringFromBuffer();
-            this.string = (String)allStrings.intern(str);
-            return STRING;
-        }
+            switch (c) {
+            case '\n': return EOL;
+            case ';': return SEMI;
+            case '[': return LB;
+            case ']': return RB;
+            case '{': return LC;
+            case '}': return RC;
+            case '(': return LP;
+            case ')': return RP;
+            case ',': return COMMA;
+            case '?': return HOOK;
+            case ':': return COLON;
+            case '.': return DOT;
 
-        switch (c)
-        {
-        case '\n': return EOL;
-        case ';': return SEMI;
-        case '[': return LB;
-        case ']': return RB;
-        case '{': return LC;
-        case '}': return RC;
-        case '(': return LP;
-        case ')': return RP;
-        case ',': return COMMA;
-        case '?': return HOOK;
-        case ':': return COLON;
-        case '.': return DOT;
-
-        case '|':
-            if (matchChar('|')) {
-                return OR;
-            } else if (matchChar('=')) {
-                this.op = BITOR;
-                return ASSIGN;
-            } else {
-                return BITOR;
-            }
-
-        case '^':
-            if (matchChar('=')) {
-                this.op = BITXOR;
-                return ASSIGN;
-            } else {
-                return BITXOR;
-            }
-
-        case '&':
-            if (matchChar('&')) {
-                return AND;
-            } else if (matchChar('=')) {
-                this.op = BITAND;
-                return ASSIGN;
-            } else {
-                return BITAND;
-            }
-
-        case '=':
-            if (matchChar('=')) {
-                if (matchChar('='))
-                    this.op = SHEQ;
-                else
-                    this.op = EQ;
-                return EQOP;
-            } else {
-                this.op = NOP;
-                return ASSIGN;
-            }
-
-        case '!':
-            if (matchChar('=')) {
-                if (matchChar('='))
-                    this.op = SHNE;
-                else
-                    this.op = NE;
-                return EQOP;
-            } else {
-                this.op = NOT;
-                return UNARYOP;
-            }
-
-        case '<':
-            /* NB:treat HTML begin-comment as comment-till-eol */
-            if (matchChar('!')) {
-                if (matchChar('-')) {
-                    if (matchChar('-')) {
-                        skipLine();
-                        return getToken();  // in place of 'goto retry'
-                    }
-                    ungetChar('-');
-                }
-                ungetChar('!');
-            }
-            if (matchChar('<')) {
-                if (matchChar('=')) {
-                    this.op = LSH;
+            case '|':
+                if (matchChar('|')) {
+                    return OR;
+                } else if (matchChar('=')) {
+                    this.op = BITOR;
                     return ASSIGN;
                 } else {
-                    this.op = LSH;
-                    return SHOP;
+                    return BITOR;
                 }
-            } else {
-                if (matchChar('=')) {
-                    this.op = LE;
-                    return RELOP;
-                } else {
-                    this.op = LT;
-                    return RELOP;
-                }
-            }
 
-        case '>':
-            if (matchChar('>')) {
+            case '^':
+                if (matchChar('=')) {
+                    this.op = BITXOR;
+                    return ASSIGN;
+                } else {
+                    return BITXOR;
+                }
+
+            case '&':
+                if (matchChar('&')) {
+                    return AND;
+                } else if (matchChar('=')) {
+                    this.op = BITAND;
+                    return ASSIGN;
+                } else {
+                    return BITAND;
+                }
+
+            case '=':
+                if (matchChar('=')) {
+                    if (matchChar('='))
+                        this.op = SHEQ;
+                    else
+                        this.op = EQ;
+                    return EQOP;
+                } else {
+                    this.op = NOP;
+                    return ASSIGN;
+                }
+
+            case '!':
+                if (matchChar('=')) {
+                    if (matchChar('='))
+                        this.op = SHNE;
+                    else
+                        this.op = NE;
+                    return EQOP;
+                } else {
+                    this.op = NOT;
+                    return UNARYOP;
+                }
+
+            case '<':
+                /* NB:treat HTML begin-comment as comment-till-eol */
+                if (matchChar('!')) {
+                    if (matchChar('-')) {
+                        if (matchChar('-')) {
+                            skipLine();
+                            return getToken();  // in place of 'goto retry'
+                        }
+                        ungetChar('-');
+                    }
+                    ungetChar('!');
+                }
+                if (matchChar('<')) {
+                    if (matchChar('=')) {
+                        this.op = LSH;
+                        return ASSIGN;
+                    } else {
+                        this.op = LSH;
+                        return SHOP;
+                    }
+                } else {
+                    if (matchChar('=')) {
+                        this.op = LE;
+                        return RELOP;
+                    } else {
+                        this.op = LT;
+                        return RELOP;
+                    }
+                }
+
+            case '>':
                 if (matchChar('>')) {
-                    if (matchChar('=')) {
-                        this.op = URSH;
-                        return ASSIGN;
+                    if (matchChar('>')) {
+                        if (matchChar('=')) {
+                            this.op = URSH;
+                            return ASSIGN;
+                        } else {
+                            this.op = URSH;
+                            return SHOP;
+                        }
                     } else {
-                        this.op = URSH;
-                        return SHOP;
+                        if (matchChar('=')) {
+                            this.op = RSH;
+                            return ASSIGN;
+                        } else {
+                            this.op = RSH;
+                            return SHOP;
+                        }
                     }
                 } else {
                     if (matchChar('=')) {
-                        this.op = RSH;
-                        return ASSIGN;
+                        this.op = GE;
+                        return RELOP;
                     } else {
-                        this.op = RSH;
-                        return SHOP;
+                        this.op = GT;
+                        return RELOP;
                     }
                 }
-            } else {
+
+            case '*':
                 if (matchChar('=')) {
-                    this.op = GE;
-                    return RELOP;
+                    this.op = MUL;
+                    return ASSIGN;
                 } else {
-                    this.op = GT;
-                    return RELOP;
+                    return MUL;
                 }
-            }
 
-        case '*':
-            if (matchChar('=')) {
-                this.op = MUL;
-                return ASSIGN;
-            } else {
-                return MUL;
-            }
-
-        case '/':
-            // is it a // comment?
-            if (matchChar('/')) {
-                skipLine();
-                return getToken();
-            }
-            if (matchChar('*')) {
-                while ((c = getChar()) != -1 &&
-                       !(c == '*' && matchChar('/'))) {
-                    ; // empty loop body
+            case '/':
+                // is it a // comment?
+                if (matchChar('/')) {
+                    skipLine();
+                    return getToken();
                 }
-                if (c == EOF_CHAR) {
-                    reportSyntaxError("msg.unterminated.comment", null);
-                    return ERROR;
-                }
-                return getToken();  // `goto retry'
-            }
-
-            // is it a regexp?
-            if ((flags & TSF_REGEXP) != 0) {
-                stringBufferTop = 0;
-                while ((c = getChar()) != '/') {
-                    if (c == '\n' || c == EOF_CHAR) {
-                        ungetChar(c);
-                        reportSyntaxError("msg.unterminated.re.lit", null);
+                if (matchChar('*')) {
+                    while ((c = getChar()) != -1 &&
+                           !(c == '*' && matchChar('/'))) {
+                        ; // empty loop body
+                    }
+                    if (c == EOF_CHAR) {
+                        reportSyntaxError("msg.unterminated.comment", null);
                         return ERROR;
                     }
-                    if (c == '\\') {
+                    return getToken();  // `goto retry'
+                }
+
+                // is it a regexp?
+                if ((flags & TSF_REGEXP) != 0) {
+                    stringBufferTop = 0;
+                    while ((c = getChar()) != '/') {
+                        if (c == '\n' || c == EOF_CHAR) {
+                            ungetChar(c);
+                            reportSyntaxError("msg.unterminated.re.lit", null);
+                            return ERROR;
+                        }
+                        if (c == '\\') {
+                            addToString(c);
+                            c = getChar();
+                        }
+
                         addToString(c);
-                        c = getChar();
+                    }
+                    int reEnd = stringBufferTop;
+
+                    while (true) {
+                        if (matchChar('g'))
+                            addToString('g');
+                        else if (matchChar('i'))
+                            addToString('i');
+                        else if (matchChar('m'))
+                            addToString('m');
+                        else
+                            break;
                     }
 
-                    addToString(c);
-                }
-                int reEnd = stringBufferTop;
-
-                while (true) {
-                    if (matchChar('g'))
-                        addToString('g');
-                    else if (matchChar('i'))
-                        addToString('i');
-                    else if (matchChar('m'))
-                        addToString('m');
-                    else
-                        break;
-                }
-
-                if (isAlpha(peekChar())) {
-                    reportSyntaxError("msg.invalid.re.flag", null);
-                    return ERROR;
-                }
-
-                this.string = new String(stringBuffer, 0, reEnd);
-                this.regExpFlags = new String(stringBuffer, reEnd,
-                                              stringBufferTop - reEnd);
-                return REGEXP;
-            }
-
-
-            if (matchChar('=')) {
-                this.op = DIV;
-                return ASSIGN;
-            } else {
-                return DIV;
-            }
-
-        case '%':
-            this.op = MOD;
-            if (matchChar('=')) {
-                return ASSIGN;
-            } else {
-                return MOD;
-            }
-
-        case '~':
-            this.op = BITNOT;
-            return UNARYOP;
-
-        case '+':
-            if (matchChar('=')) {
-                this.op = ADD;
-                return ASSIGN;
-            } else if (matchChar('+')) {
-                return INC;
-            } else {
-                return ADD;
-            }
-
-        case '-':
-            if (matchChar('=')) {
-                this.op = SUB;
-                c = ASSIGN;
-            } else if (matchChar('-')) {
-                if (0 == (flags & TSF_DIRTYLINE)) {
-                    // treat HTML end-comment after possible whitespace
-                    // after line start as comment-utill-eol
-                    if (matchChar('>')) {
-                        skipLine();
-                        return getToken();
+                    if (isAlpha(peekChar())) {
+                        reportSyntaxError("msg.invalid.re.flag", null);
+                        return ERROR;
                     }
-                }
-                c = DEC;
-            } else {
-                c = SUB;
-            }
-            flags |= TSF_DIRTYLINE;
-            return c;
 
-        default:
-            reportSyntaxError("msg.illegal.character", null);
-            return ERROR;
+                    this.string = new String(stringBuffer, 0, reEnd);
+                    this.regExpFlags = new String(stringBuffer, reEnd,
+                                                  stringBufferTop - reEnd);
+                    return REGEXP;
+                }
+
+
+                if (matchChar('=')) {
+                    this.op = DIV;
+                    return ASSIGN;
+                } else {
+                    return DIV;
+                }
+
+            case '%':
+                this.op = MOD;
+                if (matchChar('=')) {
+                    return ASSIGN;
+                } else {
+                    return MOD;
+                }
+
+            case '~':
+                this.op = BITNOT;
+                return UNARYOP;
+
+            case '+':
+                if (matchChar('=')) {
+                    this.op = ADD;
+                    return ASSIGN;
+                } else if (matchChar('+')) {
+                    return INC;
+                } else {
+                    return ADD;
+                }
+
+            case '-':
+                if (matchChar('=')) {
+                    this.op = SUB;
+                    c = ASSIGN;
+                } else if (matchChar('-')) {
+                    if (0 == (flags & TSF_DIRTYLINE)) {
+                        // treat HTML end-comment after possible whitespace
+                        // after line start as comment-utill-eol
+                        if (matchChar('>')) {
+                            skipLine();
+                            return getToken();
+                        }
+                    }
+                    c = DEC;
+                } else {
+                    c = SUB;
+                }
+                flags |= TSF_DIRTYLINE;
+                return c;
+
+            default:
+                reportSyntaxError("msg.illegal.character", null);
+                return ERROR;
+            }
         }
     }
 
