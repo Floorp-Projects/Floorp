@@ -41,6 +41,9 @@ public:
 
     static nsresult
     AttachTextNode(nsIContent* parent, nsIRDFNode* value);
+    
+    static nsresult
+    FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody);
 };
 
 

@@ -47,7 +47,7 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
-
+#include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "rdf_qsort.h"
 
@@ -132,6 +132,9 @@ public:
         return NS_OK;
     }
 
+    void
+    Notify(nsITimer *timer);
+
     // pseudo-constants
     static nsrefcnt gRefCnt;
  
@@ -189,6 +192,11 @@ RDFMenuBuilderImpl::~RDFMenuBuilderImpl(void)
         NS_RELEASE(kMenuItemAtom);
         NS_RELEASE(kMenuBarAtom);
     }
+}
+
+void
+RDFMenuBuilderImpl::Notify(nsITimer *timer)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////

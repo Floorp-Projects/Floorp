@@ -28,6 +28,8 @@
 #include "nsIRDFObserver.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsIDOMElementObserver.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 class nsIRDFDocument;
 class nsIRDFCompositeDataSource;
@@ -40,7 +42,8 @@ class nsIRDFService;
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,
                               public nsIRDFObserver,
                               public nsIDOMNodeObserver,
-                              public nsIDOMElementObserver
+                              public nsIDOMElementObserver,
+                              public nsITimerCallback
 {
 public:
     RDFGenericBuilderImpl();
@@ -163,6 +166,11 @@ protected:
     nsIRDFDocument*            mDocument;
     nsIRDFCompositeDataSource* mDB;
     nsIContent*                mRoot;
+
+    nsITimer			*mTimer;
+
+    virtual void
+    Notify(nsITimer *timer) = 0;
 
     // pseudo-constants
     static nsrefcnt gRefCnt;

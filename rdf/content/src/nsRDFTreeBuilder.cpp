@@ -62,10 +62,9 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
-
+#include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "rdf_qsort.h"
-
 #include "nsRDFGenericBuilder.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -92,6 +91,10 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+
+static NS_DEFINE_IID(kIDomXulElementIID,         NS_IDOMXULELEMENT_IID);
+
+#define	BUILDER_NOTIFY_MINIMUM_TIMEOUT	5000L
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -174,6 +177,12 @@ public:
         return NS_OK;
     }
 
+    nsresult
+    UpdateContainer(nsIContent *container);
+
+    void
+    Notify(nsITimer *timer);
+
     // pseudo-constants
     static nsrefcnt gRefCnt;
  
@@ -187,8 +196,9 @@ public:
     static nsIAtom* kTreeIconAtom;
     static nsIAtom* kTreeIndentationAtom;
     static nsIAtom* kTreeItemAtom;
-
     static nsIAtom* kTitledButtonAtom;
+    static nsIAtom* kPulseAtom;
+    static nsIAtom* kOpenAtom;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -205,8 +215,9 @@ nsIAtom* RDFTreeBuilderImpl::kTreeHeadAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIconAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIndentationAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
-
 nsIAtom* RDFTreeBuilderImpl::kTitledButtonAtom;
+nsIAtom* RDFTreeBuilderImpl::kPulseAtom;
+nsIAtom* RDFTreeBuilderImpl::kOpenAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -242,10 +253,10 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeIconAtom        = NS_NewAtom("treeicon");
         kTreeIndentationAtom = NS_NewAtom("treeindentation");
         kTreeItemAtom        = NS_NewAtom("treeitem");
-
         kTitledButtonAtom    = NS_NewAtom("titledbutton");
+        kPulseAtom           = NS_NewAtom("pulse");
+        kOpenAtom            = NS_NewAtom("open");
     }
-
     ++gRefCnt;
 }
 
@@ -263,11 +274,126 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeIconAtom);
         NS_RELEASE(kTreeIndentationAtom);
         NS_RELEASE(kTreeItemAtom);
-
         NS_RELEASE(kTitledButtonAtom);
+        NS_RELEASE(kPulseAtom);
+        NS_RELEASE(kOpenAtom);
     }
 }
 
+nsresult
+RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
+{
+	PRInt32			childIndex = 0, numChildren = 0, numGrandChildren, grandChildrenIndex, nameSpaceID;
+        nsCOMPtr<nsIContent>	child, grandChild;
+	nsresult		rv;
+
+	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+
+	for (childIndex=0; childIndex<numChildren; childIndex++)
+	{
+		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	break;
+		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	break;
+		if (nameSpaceID == kNameSpaceID_XUL)
+		{
+			nsCOMPtr<nsIAtom> tag;
+			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return rv;
+			if (tag.get() == kTreeItemAtom)
+			{
+				nsIDOMXULElement	*dom;
+				if (NS_SUCCEEDED(rv = child->QueryInterface(kIDomXulElementIID, (void **)&dom)))
+				{
+					nsAutoString	open("");
+					if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kOpenAtom, open)))
+					{
+						if (open.EqualsIgnoreCase("true"))
+						{
+							nsAutoString	pulse("");
+							if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kPulseAtom, pulse)))
+							{
+								if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (pulse.Length() > 0))
+								{
+#ifdef	DEBUG
+									nsIRDFResource		*res;
+									if (NS_SUCCEEDED(rv = dom->GetResource(&res)))
+									{
+										nsXPIDLCString	uri;
+										res->GetValue( getter_Copies(uri) );
+										const char *url = uri;
+										printf("    URL wants a pulse: '%s'\n", url);
+										NS_RELEASE(res);
+									}
+#endif
+								}
+							}
+
+							// recurse on grandchildren
+							if (NS_FAILED(rv = child->ChildCount(numGrandChildren)))	continue;
+							for (grandChildrenIndex=0; grandChildrenIndex<numGrandChildren; grandChildrenIndex++)
+							{
+								if (NS_FAILED(rv = child->ChildAt(grandChildrenIndex, *getter_AddRefs(grandChild))))
+									continue;
+								if (NS_FAILED(rv = grandChild->GetNameSpaceID(nameSpaceID)))	continue;
+								if (nameSpaceID == kNameSpaceID_XUL)
+								{
+									nsCOMPtr<nsIAtom> tag;
+									if (NS_FAILED(rv = grandChild->GetTag(*getter_AddRefs(tag))))
+										continue;
+									if (tag.get() == kTreeChildrenAtom)
+									{
+										UpdateContainer(grandChild);
+									}
+								}
+							}
+						}
+					}
+					NS_RELEASE(dom);
+				}
+			}
+		}
+	}
+	return(NS_OK);
+}
+
+void
+RDFTreeBuilderImpl::Notify(nsITimer *timer)
+{
+	NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)),
+		"couldn't get timer");
+	if (!mTimer)	return;
+
+	if (mRoot)
+	{
+#ifdef	DEBUG
+		nsIDOMXULElement	*domElement;
+		nsresult		rv;
+
+		if (NS_SUCCEEDED(rv = mRoot->QueryInterface(kIDomXulElementIID, (void **)&domElement)))
+		{
+			nsIRDFResource		*res;
+
+			if (NS_SUCCEEDED(rv = domElement->GetResource(&res)))
+			{
+				nsXPIDLCString	uri;
+				res->GetValue( getter_Copies(uri) );
+				const char	*url = uri;
+				printf("Timer fired for '%s'\n", url);
+
+				NS_RELEASE(res);
+			}
+			NS_RELEASE(domElement);
+		}
+#endif
+		nsIContent	*treeBody;
+		if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindTreeBodyElement(mRoot, &treeBody)))
+		{
+			UpdateContainer(treeBody);
+			NS_RELEASE(treeBody);
+		}
+	}
+
+	// reschedule
+	mTimer->Init(this, /* PR_TRUE, */ BUILDER_NOTIFY_MINIMUM_TIMEOUT);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContentModelBuilder interface
