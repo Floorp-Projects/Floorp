@@ -309,14 +309,15 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     // an un-checked radio menu
     if (mType == eMenuType_Checkbox ||
         (mType == eMenuType_Radio && !mChecked)) {
-      nsAutoString checked;
-
-      if (mChecked)
-        checked = "false";
-      else
-        checked = "true";
-      mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, checked,
+      if (mChecked) {
+        mContent->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                              PR_TRUE);
+      }
+      else {
+        mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, nsAutoString("true"),
+                             PR_TRUE);
+      }
+        
       /* the AttributeChanged code will update all the internal state */
     }
 
@@ -493,26 +494,6 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
         UpdateMenuSpecialState(aPresContext);
   } else if ( aAttribute == nsHTMLAtoms::type || aAttribute == nsHTMLAtoms::name )
     UpdateMenuType(aPresContext);
-
-  /* we need to reflow, if these change */
-  if (aAttribute == nsHTMLAtoms::value ||
-      aAttribute == nsXULAtoms::acceltext ||
-      aAttribute == nsHTMLAtoms::type ||
-      aAttribute == nsHTMLAtoms::checked) {
-
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                 nsIReflowCommand::StyleChanged);
-    if (NS_FAILED(rv))
-      return rv;
-
-    shell->AppendReflowCommand(reflowCmd);
-  }
 
   return NS_OK;
 }
