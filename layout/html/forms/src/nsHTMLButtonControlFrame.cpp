@@ -605,6 +605,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
 
 // XXX a hack until the reflow state does this correctly
 // XXX when it gets fixed, leave in the printf statements or add an assertion
+static
 void ButtonHack(nsHTMLReflowState& aReflowState, char* aMessage)
 {
   if (aReflowState.computedWidth == 0) {
