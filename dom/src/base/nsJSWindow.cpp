@@ -28,6 +28,8 @@
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMScreen.h"
+#include "nsIDOMHistory.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMWindow.h"
@@ -38,12 +40,16 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
+static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
 static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
 NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMDocument);
+NS_DEF_PTR(nsIDOMScreen);
+NS_DEF_PTR(nsIDOMHistory);
 NS_DEF_PTR(nsIDOMWindowCollection);
 NS_DEF_PTR(nsIDOMEventCapturer);
 NS_DEF_PTR(nsIDOMWindow);
@@ -56,22 +62,24 @@ enum Window_slots {
   WINDOW_SELF = -2,
   WINDOW_DOCUMENT = -3,
   WINDOW_NAVIGATOR = -4,
-  WINDOW_PARENT = -5,
-  WINDOW_TOP = -6,
-  WINDOW_CLOSED = -7,
-  WINDOW_FRAMES = -8,
-  WINDOW_OPENER = -9,
-  WINDOW_STATUS = -10,
-  WINDOW_DEFAULTSTATUS = -11,
-  WINDOW_NAME = -12,
-  WINDOW_INNERWIDTH = -13,
-  WINDOW_INNERHEIGHT = -14,
-  WINDOW_OUTERWIDTH = -15,
-  WINDOW_OUTERHEIGHT = -16,
-  WINDOW_SCREENX = -17,
-  WINDOW_SCREENY = -18,
-  WINDOW_PAGEXOFFSET = -19,
-  WINDOW_PAGEYOFFSET = -20
+  WINDOW_SCREEN = -5,
+  WINDOW_HISTORY = -6,
+  WINDOW_PARENT = -7,
+  WINDOW_TOP = -8,
+  WINDOW_CLOSED = -9,
+  WINDOW_FRAMES = -10,
+  WINDOW_OPENER = -11,
+  WINDOW_STATUS = -12,
+  WINDOW_DEFAULTSTATUS = -13,
+  WINDOW_NAME = -14,
+  WINDOW_INNERWIDTH = -15,
+  WINDOW_INNERHEIGHT = -16,
+  WINDOW_OUTERWIDTH = -17,
+  WINDOW_OUTERHEIGHT = -18,
+  WINDOW_SCREENX = -19,
+  WINDOW_SCREENY = -20,
+  WINDOW_PAGEXOFFSET = -21,
+  WINDOW_PAGEYOFFSET = -22
 };
 
 /***********************************************************************/
@@ -130,6 +138,30 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIDOMNavigator* prop;
         if (NS_OK == a->GetNavigator(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_SCREEN:
+      {
+        nsIDOMScreen* prop;
+        if (NS_OK == a->GetScreen(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_HISTORY:
+      {
+        nsIDOMHistory* prop;
+        if (NS_OK == a->GetHistory(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -1451,6 +1483,8 @@ static JSPropertySpec WindowProperties[] =
   {"self",    WINDOW_SELF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"screen",    WINDOW_SCREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},

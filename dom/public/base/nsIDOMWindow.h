@@ -27,6 +27,8 @@
 
 class nsIDOMNavigator;
 class nsIDOMDocument;
+class nsIDOMScreen;
+class nsIDOMHistory;
 class nsIDOMWindowCollection;
 class nsIDOMWindow;
 
@@ -45,6 +47,10 @@ public:
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument)=0;
 
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator)=0;
+
+  NS_IMETHOD    GetScreen(nsIDOMScreen** aScreen)=0;
+
+  NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory)=0;
 
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent)=0;
 
@@ -139,6 +145,8 @@ public:
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);  \
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);  \
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);  \
+  NS_IMETHOD    GetScreen(nsIDOMScreen** aScreen);  \
+  NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory);  \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
   NS_IMETHOD    GetClosed(PRBool* aClosed);  \
@@ -196,6 +204,8 @@ public:
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf) { return _to##GetSelf(aSelf); } \
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return _to##GetDocument(aDocument); } \
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator) { return _to##GetNavigator(aNavigator); } \
+  NS_IMETHOD    GetScreen(nsIDOMScreen** aScreen) { return _to##GetScreen(aScreen); } \
+  NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory) { return _to##GetHistory(aHistory); } \
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to##GetParent(aParent); } \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to##GetTop(aTop); } \
   NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to##GetClosed(aClosed); } \
