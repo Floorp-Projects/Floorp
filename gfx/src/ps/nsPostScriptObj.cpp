@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "nscore.h"
@@ -73,7 +79,11 @@ nsPostScriptObj::~nsPostScriptObj()
   if ( mPrintSetup->filename != (char *) NULL )
 	fclose( mPrintSetup->out );
   else
+#ifdef XP_OS2_VACPP
+        // pclose not defined OS2TODO
+#else
 	pclose( mPrintSetup->out );
+#endif
 #ifdef VMS
   if ( mPrintSetup->print_cmd != (char *) NULL ) {
     char VMSPrintCommand[1024];
@@ -145,7 +155,11 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
       if ( isAPrinter == PR_TRUE ) {
 #ifndef VMS
         aSpec->GetCommand( &buf );
+#ifdef XP_OS2_VACPP
+        // popen not defined OS2TODO
+#else
         mPrintSetup->out = popen( buf, "w" );
+#endif
         mPrintSetup->filename = (char *) NULL;  
 #else
         // We can not open a pipe and print the contents of it. Instead

@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "nsDeviceContext.h"
@@ -73,12 +79,11 @@ DeviceContextImpl :: DeviceContextImpl()
   mColorSpace = nsnull;
 }
 
-static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
+static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 {
   delete ((nsString*)aValue);
   return PR_TRUE;
 }
-
 
 DeviceContextImpl :: ~DeviceContextImpl()
 {
@@ -749,7 +754,7 @@ nsresult nsFontCache :: Flush()
   return NS_OK;
 }
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 // XXX I had to add this because I changed the link order on Windows
 void notCalled()
 {
