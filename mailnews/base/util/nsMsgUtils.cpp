@@ -283,14 +283,19 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
 {
 	// A file name has to be in native charset, convert from UTF-8.
 	nsCAutoString oldPath;
-	const char *fileCharset = nsMsgI18NFileSystemCharset();
-	char *nativeString = nsnull;
-	nsresult rv = ConvertFromUnicode(fileCharset, nsAutoString(NS_ConvertUTF8toUCS2(folderURI)), &nativeString);
-	if (NS_SUCCEEDED(rv) && nativeString && nativeString[0])
-		oldPath.Assign(nativeString);
-	else
-		oldPath.Assign(folderURI);
-	PR_FREEIF(nativeString);
+  if (nsCRT::IsAscii(folderURI))
+    oldPath.Assign(folderURI);
+  else
+  {
+    char *nativeString = nsnull;
+    nsresult rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), 
+                                     nsAutoString(NS_ConvertUTF8toUCS2(folderURI)), &nativeString);
+    if (NS_SUCCEEDED(rv) && nativeString && nativeString[0])
+      oldPath.Assign(nativeString);
+    else
+      oldPath.Assign(folderURI);
+    PR_FREEIF(nativeString);
+  }
 
 	nsCAutoString pathPiece;
 

@@ -746,7 +746,9 @@ nsMsgGetNativePathString(const char *aPath, nsString& aResult)
     aResult.Truncate();
     return;
   }
-
-  ConvertToUnicode(nsMsgI18NFileSystemCharset(), aPath, aResult);
+  if (nsCRT::IsAscii(aPath))
+    aResult.AssignWithConversion(aPath);
+  else
+    ConvertToUnicode(nsMsgI18NFileSystemCharset(), aPath, aResult);
 }
 
