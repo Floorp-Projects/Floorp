@@ -252,20 +252,18 @@ nsresult nsSocketTransportService::AddToSelectList(nsSocketTransport* aTransport
         break;
       }
     }
+    // Initialize/update the info in the entry...
+    pfd = &mSelectFDSet[i];
+    pfd->fd        = aTransport->GetSocket();;
+    pfd->in_flags  = aTransport->GetSelectFlags();
+    pfd->out_flags = 0;
     // Add the FileDesc to the PRPollDesc list...
     if (i == mSelectFDSetCount) {
-      pfd = &mSelectFDSet[mSelectFDSetCount];
-      pfd->fd        = aTransport->GetSocket();;
-      pfd->in_flags  = aTransport->GetSelectFlags();
-      pfd->out_flags = 0;
       // Add the transport instance to the corresponding active transport list...
       NS_ADDREF(aTransport);
       mActiveTransportList[mSelectFDSetCount] = aTransport;
       mSelectFDSetCount += 1;
     }
-  }
-  else {
-    rv = NS_ERROR_FAILURE;
   }
 
   return rv;

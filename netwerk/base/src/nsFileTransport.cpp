@@ -421,6 +421,12 @@ nsFileTransport::OnFull(nsIBuffer *buffer) {
 }
 
 NS_IMETHODIMP
+nsFileTransport::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileTransport::OnEmpty(nsIBuffer *buffer) {
     PR_EnterMonitor(mMonitor);
     PR_Notify(mMonitor);
