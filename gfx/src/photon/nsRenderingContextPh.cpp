@@ -863,6 +863,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform(nsTransform2D *&aTrans
 NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface this=<%p> aBounds=<%d,%d,%d,%d>\n", this, aBounds->x, aBounds->y, aBounds->width, aBounds->height));
+//  printf("nsRenderingContextPh::CreateDrawingSurface this=<%p> %p aBounds=<%d,%d,%d,%d>\n", this,aSurfFlags,aBounds->x, aBounds->y, aBounds->width, aBounds->height);
 
   if (nsnull==mSurface)
   {
@@ -888,6 +889,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
   aSurface = (nsDrawingSurface) surf;
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface  new surface = %p\n", aSurface));
+//  printf("nsRenderingContextPh::CreateDrawingSurface  new surface = %p\n", aSurface);
 
   return NS_OK;
 }
@@ -1691,9 +1693,32 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
 
   SELECT(mSurface);
 
+//  printf ("kedl: draw image 2: %d %d %d %d\n",x,y,w,h);
+int ww,hh;
+
+	ww = mSurface->mWidth;
+	hh = mSurface->mHeight;
+	if (x >= ww || y >=hh)
+	{
+//		printf ("skip\n");
+		return NS_OK;
+	}
+
+#if 0
+if (w==1000)
+{
+static int skip=0;
+
+if (skip++!=4) return NS_OK;
+skip=0;
+}
+#endif
+	if (x + w > ww) w = ww - x;
+	if (y + h > hh) h = hh - y;
+
   res = aImage->Draw(*this, mSurface, x, y, w, h);
 
- PgFLUSH();	//kedl
+// PgFLUSH();	//kedl
 
 #if 0
 #ifdef DEBUG
@@ -1759,6 +1784,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
 
   SELECT(mSurface);
 
+//  printf ("kedl: draw image 3\n");
   res = aImage->Draw(*this, mSurface,
                       sr.x, sr.y,
                       sr.width, sr.height,
@@ -1809,9 +1835,12 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   {
     NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
     destsurf = mSurface;
+//printf ("kedl: onscreen\n");
+//return NS_OK;
   }
   else
   {
+//printf ("kedl: offscreen\n");
     destsurf = mOffscreenSurface;
   }
 
@@ -1830,6 +1859,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits NS_COPYBITS_TO_BACK_BUFFER flag enabled\n"));
 #endif
+
 
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
     mTMatrix->TransformCoord(&srcX, &srcY);
@@ -1942,20 +1972,52 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 PhRect_t rsrc,rdst;
 PdOffscreenContext_t *d;
 int off;
-	
+int oldrid;
+PhGC_t *oldgc;
+int ww,hh;
+int rid;
+
+	oldgc = PgGetGC();
+	oldrid=(PgGetGC())->rid;
+
 	destsurf->IsOffscreen(&off);
 	if (off)
 	{
+//		printf ("really offscreen\n");
 		d = (PdOffscreenContext_t *) destsurf->GetDC();
+//		if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+//		{
+//			ApplyClipping(d->dc.gc);
+//		}
 	}
 	else
 	{
+//		printf ("really onscreen\n");
 		d=0;
-  		PhDCSetCurrent(NULL);
+ 		PhDCSetCurrent(NULL);
 		(PgGetGC())->target_rid = 0;	// kedl, fix the animations showing thru all regions
 						// darrin will fix in the photon lib shortly
+//		oldgc = PgGetGC();
+//		if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+//		{
+//			ApplyClipping(oldgc);
+//		}
 	}
 
+	ww = destsurf->mWidth;
+	hh = destsurf->mHeight;
+//	printf ("kedl: blit: %p, %d %d %d %d\n",d,pos.x,pos.y,size.w,size.h);
+//	printf ("kedl: %d %d\n",ww,hh);
+	if (d && (pos.x >= ww || pos.y >=hh))
+	{
+//		printf ("skip\n");
+		return NS_OK;
+	}
+	if (d)
+	{
+		if (pos.x + size.w > ww) size.w = ww - pos.x;
+		if (pos.y + size.h > hh) size.h = hh - pos.y;
+	}
 	rsrc.ul.x = 0;
 	rsrc.ul.y = 0;
 	rsrc.lr.x = size.w-1;
@@ -1965,12 +2027,14 @@ int off;
 	rdst.lr.x = pos.x+size.w-1;
 	rdst.lr.y = pos.y+size.h-1;		// kedl, fixes rip under blue bar for back/forward/etc
 
-int rid;
 	rid = PtWidgetRid(mWidget);
 //	printf ("the magic region is: %d\n",rid);
 //	printf ("kedl: blit: %p %p\n", ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(),d);
-	PgSetRegion(rid);
+  	PgSetRegion(rid);
 	PgContextBlit((PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &rsrc, d, &rdst);
+	PgSetRegion(oldrid);
+	PgSetGC(oldgc);
+	ApplyClipping(oldgc);
 
         err=0;
 }
