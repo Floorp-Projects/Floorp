@@ -167,14 +167,13 @@ static PRInt32 TestCompare_wcscmp(nsString& string1, nsString& string2)
 
 static void DebugDump(nsString& aString, ostream& aStream) {
 #ifdef WIN32
-  wchar_t *wchstring;
-
-  wchstring = new_wchar(aString);
-  if (wchstring) {
-    aStream.flush();
-    wprintf(L"%s\n", wchstring);
-    delete_wchar(wchstring);
-  }
+  char s[256];
+  int len = WideCharToMultiByte(GetACP(), 0,
+                                (LPCWSTR ) aString.GetUnicode(),  aString.Length(),
+                                s, 256, NULL,  NULL);
+  s[len] = '\0';
+  aStream.flush();
+  printf("%s\n", s);
 #else
   aString.DebugDump(aStream);
 #endif
@@ -388,7 +387,14 @@ static void TestSortPrintToFile(nsString *string_array, int len)
 {
   char cstr[4096];  //huge
   for (int i = 0; i < len; i++) {
+#ifdef WIN32
+  int len = WideCharToMultiByte(GetACP(), 0,
+                                (LPCWSTR ) string_array[i].GetUnicode(),  string_array[i].Length(),
+                                cstr, 256, NULL,  NULL);
+  cstr[len] = '\0';
+#else
     string_array[i].ToCString(cstr, 4096);
+#endif
     fprintf(g_outfp, "%s\n", cstr);
   }
   fprintf(g_outfp, "\n");
@@ -397,11 +403,12 @@ static void TestSortPrintToFile(nsString *string_array, int len)
 static void DebugPrintCompResult(nsString string1, nsString string2, int result)
 {
 #ifdef WIN32
-    wchar_t *wchstring = new_wchar(string1);
-    if (wchstring) {
-      wprintf(L"%s ", wchstring);
-      delete_wchar(wchstring);
-    }
+  char s[256];
+  int len = WideCharToMultiByte(GetACP(), 0,
+                                (LPCWSTR ) string1.GetUnicode(),  string1.Length(),
+                                s, 256, NULL,  NULL);
+  s[len] = '\0';
+  printf("%s ", s);
 
     switch ((int)result) {
     case 0:
@@ -415,11 +422,11 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
       break;
     }
 
-    wchstring = new_wchar(string2);
-    if (wchstring) {
-      wprintf(L" %s\n", wchstring);
-      delete_wchar(wchstring);
-    }
+  len = WideCharToMultiByte(GetACP(), 0,
+                            (LPCWSTR ) string2.GetUnicode(),  string2.Length(),
+                            s, 256, NULL,  NULL);
+  s[len] = '\0';
+  printf(" %s\n", s);
 #else
     // Warning: casting to char*
     char *cstr = string1.ToNewCString();
@@ -533,7 +540,13 @@ static void SortTestFile(nsICollation* collationInst, FILE* fp)
         break;
       cp--;
     }
+#ifdef WIN32
+    wchar_t wcs[256];
+    int len = MultiByteToWideChar(GetACP(), 0, buf, strlen(buf), wcs, 256);
+    string_array[i].SetString((PRUnichar *)wcs);
+#else
     string_array[i].SetString(buf);
+#endif
     i++;
   }  
   cout << "print string before sort\n";
@@ -719,7 +732,7 @@ static void TestDateTimeFormat(nsILocale *locale)
   cout << "Test 2 - FormatTime():\n";
   time( &timetTime );
   res = t->FormatTime(locale, kDateFormatShort, kTimeFormatSeconds, timetTime, dateString);
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
 
   cout << "Test 3 - FormatTMTime():\n";
   time_t ltime;
@@ -728,55 +741,55 @@ static void TestDateTimeFormat(nsILocale *locale)
   // try (almost) all format combination
   res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatNone, kTimeFormatNone:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatNone, kTimeFormatSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatNone, kTimeFormatNoSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatLong, kTimeFormatNone:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatLong, kTimeFormatSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatLong, kTimeFormatNoSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatShort, kTimeFormatNone:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatShort, kTimeFormatSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatShort, kTimeFormatNoSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatYearMonth, kTimeFormatNone:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatYearMonth, kTimeFormatSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatYearMonth, kTimeFormatNoSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatNone:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatNoSeconds:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSecondsForce24Hour, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatSecondsForce24Hour:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
   res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour:\n";
-  dateString.DebugDump(cout);
+  DebugDump(dateString, cout);
 
   res = t->Release();
   
