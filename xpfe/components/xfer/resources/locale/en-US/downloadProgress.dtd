@@ -1,8 +1,8 @@
 <!-- extracted from downloadProgress.xul -->
 
-<!ENTITY downloadWindow.title "Saving file"> 
-<!ENTITY location "Saving from:"> 
-<!ENTITY saving   "to:"> 
+<!ENTITY downloadWindow.title "Saving File"> 
+<!ENTITY location "Saving From:"> 
+<!ENTITY saving   "To:"> 
 <!ENTITY status   "Status:"> 
 
 <!ENTITY timeElapsed "Elapsed Time:">
