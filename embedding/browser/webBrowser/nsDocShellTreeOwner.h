@@ -145,7 +145,7 @@ public:
   NS_DECL_ISUPPORTS
   
   ChromeListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
-  ~ChromeListener ( ) ;
+  virtual ~ChromeListener ( ) ;
 
 	  // nsIDOMMouseListener
 	virtual nsresult HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
