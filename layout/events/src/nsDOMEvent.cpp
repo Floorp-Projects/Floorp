@@ -289,9 +289,12 @@ NS_METHOD nsDOMEvent::GetCompositionReply(nsTextEventReply** aReply)
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
-  // pinkerton -- i don't understand how we can assume that mEvent
-  // is a nsGUIEvent, but we are.
-  if ( !mEvent || !((nsGUIEvent*)mEvent)->widget )
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aScreenX = 0;
+    return NS_OK;
+  }
+
+  if (!((nsGUIEvent*)mEvent)->widget )
     return NS_ERROR_FAILURE;
     
   nsRect bounds, offset;
@@ -305,9 +308,12 @@ NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
-  // pinkerton -- i don't understand how we can assume that mEvent
-  // is a nsGUIEvent, but we are.
-  if ( !mEvent || !((nsGUIEvent*)mEvent)->widget )
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aScreenY = 0;
+    return NS_OK;
+  }
+
+  if (!((nsGUIEvent*)mEvent)->widget )
     return NS_ERROR_FAILURE;
 
   nsRect bounds, offset;
@@ -321,6 +327,11 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aClientX = 0;
+    return NS_OK;
+  }
+
   //My god, man, there *must* be a better way to do this.
   nsIPresShell* shell;
   nsIWidget* rootWidget = nsnull;
@@ -364,6 +375,11 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aClientY = 0;
+    return NS_OK;
+  }
+
   //My god, man, there *must* be a better way to do this.
   nsIPresShell* shell;
   nsIWidget* rootWidget = nsnull;
@@ -435,6 +451,11 @@ NS_METHOD nsDOMEvent::GetMetaKey(PRBool* aIsDown)
 
 NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 {
+  if (!mEvent || mEvent->eventStructType != NS_KEY_EVENT) {
+    *aCharCode = 0;
+    return NS_OK;
+  }
+
   switch (mEvent->message) {
   case NS_KEY_UP:
   case NS_KEY_DOWN:
@@ -458,6 +479,11 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 
 NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 {
+  if (!mEvent || mEvent->eventStructType != NS_KEY_EVENT) {
+    *aKeyCode = 0;
+    return NS_OK;
+  }
+
   switch (mEvent->message) {
   case NS_KEY_UP:
   case NS_KEY_PRESS:
@@ -472,6 +498,11 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 
 NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 {
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aButton = 0;
+    return NS_OK;
+  }
+
   switch (mEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -499,6 +530,11 @@ NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 
 NS_METHOD nsDOMEvent::GetClickCount(PRUint16* aClickCount) 
 {
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aClickCount = 0;
+    return NS_OK;
+  }
+
   switch (mEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -523,6 +559,11 @@ NS_METHOD nsDOMEvent::GetClickCount(PRUint16* aClickCount)
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aLayerX = 0;
+    return NS_OK;
+  }
+
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
   *aLayerX = NSTwipsToIntPixels(mEvent->point.x, t2p);
@@ -531,6 +572,11 @@ NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 
 NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 {
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aLayerY = 0;
+    return NS_OK;
+  }
+
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
   *aLayerY = NSTwipsToIntPixels(mEvent->point.y, t2p);
@@ -554,10 +600,14 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
     return GetKeyCode(aWhich);
   case NS_MOUSE_EVENT:
     {
-      PRUint16 button;
-      (void) GetButton(&button);
-      *aWhich = button;
+    PRUint16 button;
+    (void) GetButton(&button);
+    *aWhich = button;
+    break;
     }
+  default:
+    *aWhich = 0;
+    break;
   }
   return NS_OK;
 }
@@ -588,7 +638,8 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
       NS_IF_RELEASE(parent);
     }
   }
-  return NS_ERROR_FAILURE;
+  *aRangeParent = nsnull;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
@@ -614,7 +665,8 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
       return NS_OK;
     }
   }
-  return NS_ERROR_FAILURE;
+  *aRangeOffset = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetCancelBubble(PRBool* aCancelBubble)
