@@ -4169,7 +4169,7 @@ nsXULElement::GetBindingParent(nsIContent** aContent)
 {
   nsCOMPtr<nsIAtom> tag;
   GetTag(*getter_AddRefs(tag));
-  if (tag == nsXULAtoms::scrollbar) {
+  if (tag.get() == nsXULAtoms::scrollbar) {
     if (!mParent) {
       *aContent = (nsIStyledContent*)this;
     }
