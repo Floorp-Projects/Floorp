@@ -224,7 +224,7 @@ public:
   }
 };
 
-CNavTokenDeallocator gTokenKiller;
+static CNavTokenDeallocator gTokenKiller;
 
 /**
  *  Default constructor

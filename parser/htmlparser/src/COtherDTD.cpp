@@ -225,7 +225,7 @@ public:
   }
 };
 
-COtherTokenDeallocator gTokenKiller;
+static COtherTokenDeallocator gTokenKiller;
 
 /**
  *  Default constructor
