@@ -96,7 +96,7 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
   
   nsAutoString mailUrl; // -mail or -mail <some url> 
   rv = aCmdLine->HandleFlagWithParam(NS_LITERAL_STRING("mail"), PR_FALSE, mailUrl);
-  if (NS_SUCCEEDED(rv)) 
+  if (NS_SUCCEEDED(rv) && !mailUrl.IsEmpty()) 
   {
     nsCOMPtr<nsISupportsArray> argsArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
