@@ -20,7 +20,7 @@
 # Contributor(s): 
 DEPTH=..\..\..\..
 
-
+REQUIRES=xpcom string uconv chardet
 LCFLAGS= $(LCFLAGS) -D__STDC__
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
