@@ -4,3 +4,4 @@
 
 nsBlockBandData.h
 nsILineIterator.h
+nsIHTMLContent.h
