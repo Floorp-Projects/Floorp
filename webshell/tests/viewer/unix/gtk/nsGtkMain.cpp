@@ -181,15 +181,20 @@ int main(int argc, char **argv)
     gTheApp->Run();
     delete gTheApp;
 
-    //NS_FreeImageManager();
+    NS_FreeImageManager();
 
     // Shutdown XPCOM
     rv = NS_ShutdownXPCOM(nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
+    // XXX This is disabled because sometimes it hangs waiting for a
+    // netlib thread to exit, which isn't exiting :-(. Need more
+    // shutdown logic in necko first.
+#if 0
     // Shutdown NSPR
     PR_LogFlush();
     PR_Cleanup();
+#endif
   }
 
   return 0;
