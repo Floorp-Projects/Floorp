@@ -21,25 +21,9 @@ function verifyDiskSpace(dirPath, spaceRequired)
   return(true);
 }
 
-// this function deletes a file if it exists
-function deleteThisFile(dirKey, file)
-{
-  var fFileToDelete;
+var srDest = 100;
 
-  fFileToDelete = getFolder(dirKey, file);
-  logComment("File to delete: " + fFileToDelete);
-  if(File.isFile(fFileToDelete))
-  {
-    File.remove(fFileToDelete);
-    return(true);
-  }
-  else
-    return(false);
-}
-
-var srDest = 200;
-
-var err = initInstall("SQL Support", "SQL", "0.1"); 
+var err = initInstall("SQL test", "SQLTEST", "0.1"); 
 logComment("initInstall: " + err);
 
 var fProgram = getFolder("Program");
@@ -51,9 +35,8 @@ if (verifyDiskSpace(fProgram, srDest))
 
   logComment("addDirectory() returned: " + err);
 
-  var chromeFolder = getFolder("Chrome", "sql.jar");
-  registerChrome(CONTENT | DELAYED_CHROME, chromeFolder, "content/sql/");
-  registerChrome(LOCALE | DELAYED_CHROME, chromeFolder, "locale/en-US/sql/");
+  var chromeFolder = getFolder("Chrome", "sqltest.jar");
+  registerChrome(CONTENT | DELAYED_CHROME, chromeFolder, "content/sqltest/");
 
   err = getLastError();
   if (err == ACCESS_DENIED) {

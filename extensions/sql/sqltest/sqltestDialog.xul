@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog id="testDialog"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="Test dialog"
+  buttons="accept,cancel" buttonpack="center"
+  ondialogaccept="return onAccept();"
+  onload="init()">
+
+  <script type="application/x-javascript" src="sqltestDialog.js"/>
+
+  <grid flex="1">
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row>
+        <label value="Code:"/>  
+        <hbox>
+          <textbox id="code" size="2" maxlength="2" oninput="this.value = this.value.toUpperCase()"/>
+        </hbox>
+      </row>
+      <row>
+        <label value="Name:"/>
+        <textbox id="name" size="30" maxlength="30"/>
+      </row>
+    </rows>
+  </grid>
+
+</dialog>

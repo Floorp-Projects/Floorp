@@ -3,7 +3,19 @@ topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 DIRS            = \
 		src
 
 include $(topsrcdir)/config/rules.mk
+
+XPI_FILE = sql-$(shell date +%Y%m%d)-$(OS_ARCH).xpi
+
+xpi:
+	zip -j $(DIST)/$(XPI_FILE) $(srcdir)/install.js
+	cd $(DIST); zip -r $(XPI_FILE) \
+	bin/components/sql.xpt \
+	bin/components/sqlpgsql.xpt \
+	bin/components/$(LIB_PREFIX)sql$(DLL_SUFFIX) \
+	bin/chrome/sql.jar

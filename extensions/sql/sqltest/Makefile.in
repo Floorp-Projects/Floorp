@@ -1,0 +1,15 @@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+XPI_FILE = sqltest-$(shell date +%Y%m%d).xpi
+
+xpi:
+	zip -j $(DIST)/$(XPI_FILE) $(srcdir)/install.js
+	cd $(DIST); zip -r $(XPI_FILE) \
+	bin/chrome/sqltest.jar
