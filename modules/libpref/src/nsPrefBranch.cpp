@@ -41,7 +41,6 @@
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
-#include "nsObserverService.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
@@ -119,7 +118,7 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
   mIsDefault = aDefaultBranch;
 
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+           do_GetService("@mozilla.org/observer-service;1");
   if (observerService) {
     ++mRefCnt;    // Our refcnt must be > 0 when we call this, or we'll get deleted!
     // add weak so we don't have to clean up at shutdown
@@ -575,7 +574,8 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
 
 NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
 {
- PrefCallbackData *pCallback;
+  PrefCallbackData *pCallback;
+  const char *pref;
 
   NS_ENSURE_ARG_POINTER(aDomain);
   NS_ENSURE_ARG_POINTER(aObserver);
@@ -613,12 +613,15 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   mObservers->AppendElement(pCallback);
   mObserverDomains.AppendCString(nsCString(aDomain));
 
-  PREF_RegisterCallback(aDomain, NotifyObserver, pCallback);
+  // We must pass a fully qualified preference name to the callback
+  pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
+  PREF_RegisterCallback(pref, NotifyObserver, pCallback);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aObserver)
 {
+  const char *pref;
   PrefCallbackData *pCallback;
   PRInt32 count;
   PRInt32 i;
@@ -658,8 +661,10 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 
   if (i == count)             // not found, just return
     return NS_OK;
-    
-  rv = _convertRes(PREF_UnregisterCallback(aDomain, NotifyObserver, pCallback));
+
+  // We must pass a fully qualified preference name to remove the callback
+  pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
+  rv = _convertRes(PREF_UnregisterCallback(pref, NotifyObserver, pCallback));
   if (NS_SUCCEEDED(rv)) {
     NS_RELEASE(pCallback->pObserver);
     nsMemory::Free(pCallback);
@@ -681,6 +686,12 @@ NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, c
 static int PR_CALLBACK NotifyObserver(const char *newpref, void *data)
 {
   PrefCallbackData *pData = (PrefCallbackData *)data;
+  nsPrefBranch *prefBranch = NS_STATIC_CAST(nsPrefBranch *, pData->pBranch);
+
+  // remove any root this string may contain so as to not confuse the observer
+  // by passing them something other than what they passed us as a topic
+  PRUint32 len = prefBranch->GetRootLength();
+  nsCAutoString suffix(newpref + len);  
 
   nsCOMPtr<nsIObserver> observer;
   if (pData->bIsWeakRef) {
@@ -699,13 +710,14 @@ static int PR_CALLBACK NotifyObserver(const char *newpref, void *data)
     observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
 
   observer->Observe(pData->pBranch, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
-                    NS_ConvertASCIItoUCS2(newpref).get());
+                    NS_ConvertASCIItoUCS2(suffix).get());
   return 0;
 }
 
 
 void nsPrefBranch::freeObserverList(void)
 {
+  const char *pref;
   PrefCallbackData *pCallback;
 
   if (mObservers) {
@@ -720,7 +732,9 @@ void nsPrefBranch::freeObserverList(void)
         pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
         if (pCallback) {
           mObserverDomains.CStringAt(i, domain);
-          PREF_UnregisterCallback(domain.get(), NotifyObserver, pCallback);
+          // We must pass a fully qualified preference name to remove the callback
+          pref = getPrefName(domain.get()); // can't fail because domain must be valid
+          PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
           NS_RELEASE(pCallback->pObserver);
           nsMemory::Free(pCallback);
         }

@@ -65,6 +65,8 @@ public:
   nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch);
   virtual ~nsPrefBranch();
 
+  PRInt32 GetRootLength() { return mPrefRootLength; }
+
 protected:
   nsPrefBranch()	/* disallow use of this constructer */
     { };
