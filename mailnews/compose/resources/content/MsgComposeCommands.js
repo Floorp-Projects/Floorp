@@ -2468,20 +2468,6 @@ var attachmentBucketObserver = {
     }
 };
 
-function GetMsgFolderFromUri(uri)
-{
-  try {
-    var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-    var resource = RDF.GetResource(uri);
-		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        if (msgfolder && ( msgfolder.parent || msgfolder.isServer))
-		  return msgfolder;
-	}//try
-	catch (ex) { }//catch
-	return null;
-}
-
 function DisplaySaveFolderDlg(folderURI)
 {
   try{
@@ -2492,7 +2478,7 @@ function DisplaySaveFolderDlg(folderURI)
   }//catch
 
   if (showDialog){
-    var msgfolder = GetMsgFolderFromUri(folderURI);
+    var msgfolder = GetMsgFolderFromUri(folderURI, true);
     if (!msgfolder)
       return;
     var checkbox = {value:0};

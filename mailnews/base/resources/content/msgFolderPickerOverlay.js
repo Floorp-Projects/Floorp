@@ -55,7 +55,7 @@ function MsgFolderPickerOnLoad(pickerID)
 		// verify that the value we are attempting to
 		// pre-flight the menu with is valid for this
 		// picker type
-		var msgfolder = GetMsgFolderFromUri(uri);
+		var msgfolder = GetMsgFolderFromUri(uri, true);
         	if (!msgfolder) return; 
 		
 		var verifyFunction = null;
@@ -90,7 +90,7 @@ function SetFolderPicker(uri,pickerID)
     gMessengerBundle = document.getElementById("bundle_messenger");
 
 	var picker = document.getElementById(pickerID);
-	var msgfolder = GetMsgFolderFromUri(uri);
+	var msgfolder = GetMsgFolderFromUri(uri, true);
 
 	if (!msgfolder) return;
 

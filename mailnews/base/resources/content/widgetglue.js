@@ -172,7 +172,7 @@ function MsgCompactFolder(isAll)
 function MsgFolderProperties() 
 {
 	var preselectedURI = GetSelectedFolderURI();
-	var serverType = GetMsgFolderFromUri(preselectedURI).server.type;
+	var serverType = GetMsgFolderFromUri(preselectedURI, true).server.type;
 	var folderOutliner = GetFolderOutliner();
 
 	var name = GetFolderNameFromUri(preselectedURI, folderOutliner);
@@ -254,3 +254,40 @@ function MsgSetFolderCharset()
 {
   MsgFolderProperties() 
 }
+
+// Given a URI we would like to return corresponding message folder here.
+// An additonal input param which specifies whether or not to check folder 
+// attributes (like if there exists a parent or is it a server) is also passed
+// to this routine. Qualifying against those checks would return an existing 
+// folder. Callers who don't want to check those attributes will specify the
+// same and then this routine will simply return a msgfolder. This scenario
+// applies to a new imap account creation where special folders are created
+// on demand and hence needs to prior check of existence.
+function GetMsgFolderFromUri(uri, checkFolderAttributes)
+{
+    //dump("GetMsgFolderFromUri of " + uri + "\n");
+    var msgfolder = null;
+    try {
+        var resource = GetResourceFromUri(uri);
+        var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (checkFolderAttributes) {
+            if (!(msgfolder && (msgfolder.parent || msgfolder.isServer))) {
+                msgfolder = null;
+            }
+        }
+    }
+    catch (ex) {
+        //dump("failed to get the folder resource\n");
+    }
+    return msgfolder;
+}
+
+function GetResourceFromUri(uri)
+{
+    var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
+    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    var resource = RDF.GetResource(uri);
+
+    return resource;
+}  
+

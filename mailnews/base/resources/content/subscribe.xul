@@ -44,6 +44,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
   <grid flex="1" style="width: 40em; height: 25em;">
     <columns>

@@ -19,30 +19,6 @@
  */
 
 
-function GetMsgFolderFromUri(uri)
-{
-	//dump("GetMsgFolderFromUri of " + uri + "\n");
-	try {
-		var resource = GetResourceFromUri(uri);
-		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        if (msgfolder && (msgfolder.parent || msgfolder.isServer))
-		  return msgfolder;
-	}
-	catch (ex) {
-		//dump("failed to get the folder resource\n");
-	}
-	return null;
-}
-
-function GetResourceFromUri(uri)
-{
-	var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-        var resource = RDF.GetResource(uri);
-
-	return resource;
-}  
-
 function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 {
 	var commandResource = RDF.GetResource(command);
@@ -301,7 +277,7 @@ function Subscribe(preselectedMsgFolder)
 function SubscribeOKCallback(changeTable)
 {
 	for (var serverURI in changeTable) {
-	    var folder = GetMsgFolderFromUri(serverURI);
+	    var folder = GetMsgFolderFromUri(serverURI, true);
 	    var server = folder.server;
 	    var subscribableServer =
             server.QueryInterface(Components.interfaces.nsISubscribableServer);

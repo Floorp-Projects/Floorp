@@ -51,6 +51,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/FilterEditor.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
   <hbox align="start">
     <label value="&filterName.label;"/>

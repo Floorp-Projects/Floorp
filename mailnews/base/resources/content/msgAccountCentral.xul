@@ -40,7 +40,6 @@ Rights Reserved.
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>

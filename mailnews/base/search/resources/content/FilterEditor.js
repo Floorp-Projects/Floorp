@@ -427,13 +427,13 @@ function GetFirstSelectedMsgFolder()
 {
     var selectedFolder = gActionTargetElement.getAttribute("uri");
 
-    var msgFolder = GetMsgFolderFromUri(selectedFolder);
+    var msgFolder = GetMsgFolderFromUri(selectedFolder, true);
     return msgFolder;
 }
 
 function SearchNewFolderOkCallback(name,uri)
 {
-    var msgFolder = GetMsgFolderFromUri(uri);
+    var msgFolder = GetMsgFolderFromUri(uri, true);
     var msgWindow = GetFilterEditorMsgWindow();
     msgFolder.createSubfolder(name, msgWindow);
 

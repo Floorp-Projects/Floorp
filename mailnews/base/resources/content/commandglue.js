@@ -61,17 +61,11 @@ function GetMsgFolderFromResource(folderResource)
     return null;
 }
 
-function GetMsgFolderFromURI(folderURI)
-{
-  var folderResource = RDF.GetResource(folderURI);
-  return GetMsgFolderFromResource(folderResource);
-}
-
 function GetServer(uri)
 {
     if (!uri) return null;
     try {
-        var folder = GetMsgFolderFromUri(uri);
+        var folder = GetMsgFolderFromUri(uri, true);
         return folder.server;
     }
     catch (ex) {

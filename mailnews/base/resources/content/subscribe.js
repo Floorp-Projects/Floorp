@@ -39,7 +39,7 @@ function SetServerTypeSpecificTextValues()
 {
     if (!gServerURI) return;
 
-    var serverType = GetMsgFolderFromUri(gServerURI).server.type;
+    var serverType = GetMsgFolderFromUri(gServerURI, true).server.type;
 	
     // set the server specific ui elements
     var stringName = "foldersheaderfor-" + serverType;
@@ -117,7 +117,7 @@ function SetUpTree(forceToServer)
 	gStatusBar = document.getElementById('statusbar-icon');
 	if (!gServerURI) return;
 
-	var folder = GetMsgFolderFromUri(gServerURI);
+	var folder = GetMsgFolderFromUri(gServerURI, true);
 	var server = folder.server;
 
 	try {
@@ -198,7 +198,7 @@ function SubscribeOnLoad()
 	if (window.arguments[0].preselectedURI) {
 		var uri = window.arguments[0].preselectedURI;
 		//dump("subscribe: got a uri," + uri + "\n");
-		var folder = GetMsgFolderFromUri(uri);
+		var folder = GetMsgFolderFromUri(uri, true);
 		//dump("folder="+folder+"\n");
 		//dump("folder.server="+folder.server+"\n");
 		try {

@@ -189,7 +189,7 @@ function GetSelectedServer()
 function GetSelectedMsgFolder()
 {
     var folderURI = window.parent.GetSelectedFolderURI();
-    var msgFolder = window.parent.GetMsgFolderFromURI(folderURI);
+    var msgFolder = window.parent.GetMsgFolderFromUri(folderURI, true);
     return msgFolder;
 }
 
