@@ -45,6 +45,7 @@
 #include "nsAVLTree.h"
 #include "nsHashtableEnumerator.h"
 #include "nsPipe2.h"
+#include "nsCWeakReference.h"
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFormater.h"
@@ -103,6 +104,8 @@ void XXXNeverCalled()
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(NULL, NULL, NULL);
     NS_NewHashtableEnumerator(NULL, NULL, NULL, NULL);
+    nsCWeakProxy(0, 0);
+    nsCWeakReferent(0);
     NS_GetWeakReference(NULL);
 #ifdef DEBUG
     TestSegmentedBuffer();

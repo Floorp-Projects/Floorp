@@ -34,6 +34,7 @@ CPPSRCS		= \
 		nsTraceRefcnt.cpp \
 		nsCOMPtr.cpp \
 		nsID.cpp \
+		nsCWeakReference.cpp \
 		nsWeakReference.cpp \
 		$(NULL)
 
@@ -42,6 +43,7 @@ EXPORTS		= \
 		nsIAllocator.h \
 		nsCOMPtr.h \
 		nsCom.h \
+		nsCWeakReference.h \
 		nsDebug.h \
 		nsError.h \
 		nsID.h \

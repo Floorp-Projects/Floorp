@@ -2,6 +2,7 @@ nsAgg.h
 nsIAllocator.h
 nsCOMPtr.h
 nsCom.h
+nsCWeakReference.h
 nsDebug.h
 nsError.h
 nsID.h 
