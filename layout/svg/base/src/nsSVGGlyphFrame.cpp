@@ -88,6 +88,8 @@ public:
                                    nsIContent*     aChild,
                                    PRBool          aAppend);
 
+  NS_IMETHOD  DidSetStyleContext(nsPresContext* aPresContext);
+
   NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange*    aRange,
                           PRBool          aSelected,
@@ -261,6 +263,12 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext* aPresContext,
   outerSVGFrame->UnsuspendRedraw();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGlyphFrame::DidSetStyleContext(nsPresContext* aPresContext)
+{
+  return CharacterDataChanged(aPresContext, NULL, PR_FALSE);
 }
 
 NS_IMETHODIMP
