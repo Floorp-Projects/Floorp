@@ -407,6 +407,10 @@ static JSValue defineAdd(const JSValues& argv)
 
 void Context::initContext()
 {
+// if global has a parent, assume it's been initialized already.
+    if (mGlobal->getParent())
+        return;
+
 // predefine the predefined types;
 
     mGlobal->defineVariable(widenCString("any"), JSValue(&Any_Type));
