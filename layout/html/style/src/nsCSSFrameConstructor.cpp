@@ -5375,6 +5375,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
         if (frameManager && frame && explicitItems.childList) {
           frameManager->AppendFrames(aPresContext, *aPresShell, frame,
                                      nsnull, explicitItems.childList);
+          nsCOMPtr<nsIStyleContext> styleContext;
+          frame->GetStyleContext(getter_AddRefs(styleContext));
+          nsIFrame* walkit = explicitItems.childList;
+          while (walkit) {
+            aPresContext->ReParentStyleContext(walkit, styleContext);
+            walkit->GetNextSibling(&walkit);
+          }
         }
       }
       else if (multiple) {
@@ -5423,6 +5430,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           if (frameManager && frame) {
             frameManager->AppendFrames(aPresContext, *aPresShell, frame,
                                        nsnull, currFrame);
+            frame->GetStyleContext(getter_AddRefs(styleContext));
+            aPresContext->ReParentStyleContext(currFrame, styleContext);
           }
        
           currFrame = nextFrame;
