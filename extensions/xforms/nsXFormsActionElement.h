@@ -42,16 +42,26 @@
 #include "nsIXFormsActionElement.h"
 #include "nsXFormsActionModuleBase.h"
 #include "nsDataHashtable.h"
+#include "nsXFormsStubElement.h"
 
-class nsXFormsActionElement : public nsXFormsActionModuleBase,
-                              public nsIXFormsActionElement
+class nsXFormsActionElement : public nsIXFormsActionElement,
+                              public nsXFormsXMLVisualStub,
+                              public nsIXFormsActionModuleElement,
+                              public nsIDOMEventListener
 {
 public:
   nsXFormsActionElement();
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIXFORMSACTIONELEMENT
   NS_DECL_NSIXFORMSACTIONMODULEELEMENT
+  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
+  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
+  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
+  NS_IMETHOD OnDestroyed();
 private:
+  nsCOMPtr<nsIDOMElement> mElement;
+  nsCOMPtr<nsIDOMElement> mVisualElement;
   nsCOMPtr<nsIXFormsActionElement> mParentAction;
   nsDataHashtable<nsISupportsHashKey,PRUint32> mDeferredUpdates;
 };

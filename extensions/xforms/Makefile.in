@@ -69,6 +69,7 @@ REQUIRES	= \
 		layout \
 		transformiix \
 		schemavalidation \
+		intl \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -119,6 +120,7 @@ CPPSRCS		= \
 		nsXFormsSetFocusElement.cpp \
 		nsXFormsSetValueElement.cpp \
 		nsXFormsLoadElement.cpp \
+		nsXFormsMessageElement.cpp \
 		nsXFormsLabelElement.cpp \
 		nsXFormsToggleElement.cpp \
 		nsXFormsCaseElement.cpp \

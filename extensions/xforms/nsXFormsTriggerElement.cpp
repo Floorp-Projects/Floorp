@@ -84,6 +84,8 @@ nsXFormsTriggerElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_HANDLE_DEFAULT);
 
+  ResetHelpAndHint(PR_TRUE);
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_STATE(domDoc);

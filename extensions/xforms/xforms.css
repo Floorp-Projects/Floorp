@@ -42,3 +42,10 @@ switch,
 case {
   display: block;
 }
+
+message[level="ephemeral"], hint {
+  background: #ffffcc;
+  border: 1px black solid;
+  visibility: hidden !important;
+  position: absolute !important;
+}

@@ -78,7 +78,11 @@ NS_HIDDEN_(nsresult) NS_NewXFormsRefreshElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsActionElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsLoadElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSetValueElement(nsIXTFElement **aResult);
+NS_HIDDEN_(nsresult) NS_NewXFormsMessageElement(nsIXTFElement **aResult);
 
+NS_HIDDEN_(nsresult) NS_NewXFormsHintElement(nsIXTFElement **aResult);
+NS_HIDDEN_(nsresult) NS_NewXFormsHelpElement(nsIXTFElement **aResult);
+NS_HIDDEN_(nsresult) NS_NewXFormsAlertElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsToggleElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsCaseElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSwitchElement(nsIXTFElement **aResult);
@@ -144,6 +148,14 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsLoadElement(aElement);
   if (aTagName.EqualsLiteral("setvalue"))
     return NS_NewXFormsSetValueElement(aElement);
+  if (aTagName.EqualsLiteral("message"))
+    return NS_NewXFormsMessageElement(aElement);
+  if (aTagName.EqualsLiteral("hint"))
+    return NS_NewXFormsHintElement(aElement);
+  if (aTagName.EqualsLiteral("help"))
+    return NS_NewXFormsHelpElement(aElement);
+  if (aTagName.EqualsLiteral("alert"))
+    return NS_NewXFormsAlertElement(aElement);
   if (aTagName.EqualsLiteral("submission"))
     return NS_NewXFormsSubmissionElement(aElement);
   if (aTagName.EqualsLiteral("trigger"))

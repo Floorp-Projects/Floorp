@@ -50,6 +50,7 @@ nsIAtom* nsXFormsAtoms::constraint;
 nsIAtom* nsXFormsAtoms::p3ptype;
 nsIAtom* nsXFormsAtoms::modelListProperty;
 nsIAtom* nsXFormsAtoms::uploadFileProperty;
+nsIAtom* nsXFormsAtoms::messageProperty;
 nsIAtom *nsXFormsAtoms::ref;
 nsIAtom *nsXFormsAtoms::value;
 nsIAtom *nsXFormsAtoms::nodeset;
@@ -69,6 +70,7 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "p3ptype",                  &nsXFormsAtoms::p3ptype },
   { "ModelListProperty",        &nsXFormsAtoms::modelListProperty },
   { "UploadFileProperty",       &nsXFormsAtoms::uploadFileProperty },
+  { "messageProperty",          &nsXFormsAtoms::messageProperty },
   { "ref",                      &nsXFormsAtoms::ref },
   { "value",                    &nsXFormsAtoms::value },
   { "nodeset",                  &nsXFormsAtoms::nodeset },

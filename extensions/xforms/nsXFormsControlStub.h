@@ -46,6 +46,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIXTFElement.h"
+#include "nsIDOMEventListener.h"
 
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsControl.h"
@@ -131,6 +132,9 @@ protected:
   /** The model for the control */
   nsCOMPtr<nsIModelElementPrivate> mModel;
 
+  /** This event listener is used to create xforms-hint and xforms-help events. */
+  nsCOMPtr<nsIDOMEventListener> mEventListener;
+
   /** Returns the read only state of the control (ie. mBoundNode) */
   PRBool GetReadOnlyState();
   
@@ -156,6 +160,11 @@ protected:
   void ToggleProperty(const nsAString &aOn,
                       const nsAString &aOff);
 
+  /**
+   *  Reset (and reinitialize) the event listener, which is used to create 
+   *  xforms-hint and xforms-help events.
+   */
+  void ResetHelpAndHint(PRBool aInitialize);
 };
 
 #endif

@@ -42,6 +42,10 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMElement.h"
+#include "nsIXTFXMLVisualWrapper.h"
+
+#define ACTION_STYLE_HIDDEN \
+  "position:absolute;z-index:2147483647;visibility:hidden;"
 
 #define DEFERRED_REBUILD     0x01
 #define DEFERRED_RECALCULATE 0x02
@@ -52,11 +56,63 @@ nsXFormsActionElement::nsXFormsActionElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsActionElement,
-                             nsXFormsActionModuleBase,
-                             nsIXTFElement,
-                             nsIXTFGenericElement,
-                             nsIXFormsActionElement)
+NS_IMPL_ADDREF_INHERITED(nsXFormsActionElement, nsXFormsXMLVisualStub)
+NS_IMPL_RELEASE_INHERITED(nsXFormsActionElement, nsXFormsXMLVisualStub)
+
+NS_INTERFACE_MAP_BEGIN(nsXFormsActionElement)
+  NS_INTERFACE_MAP_ENTRY(nsIXFormsActionModuleElement)
+  NS_INTERFACE_MAP_ENTRY(nsIXFormsActionElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END_INHERITING(nsXFormsXMLVisualStub)
+
+NS_IMETHODIMP
+nsXFormsActionElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+{
+  nsresult rv;
+  rv = aWrapper->GetElementNode(getter_AddRefs(mElement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
+                               NS_LITERAL_STRING("div"),
+                               getter_AddRefs(mVisualElement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (mVisualElement)
+    mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                 NS_LITERAL_STRING(ACTION_STYLE_HIDDEN));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsActionElement::GetVisualContent(nsIDOMElement **aElement)
+{
+  NS_IF_ADDREF(*aElement = mVisualElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsActionElement::GetInsertionPoint(nsIDOMElement **aElement)
+{
+  NS_IF_ADDREF(*aElement = mVisualElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsActionElement::OnDestroyed() {
+  mParentAction = nsnull;
+  mVisualElement = nsnull;
+  mElement = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsActionElement::HandleEvent(nsIDOMEvent* aEvent)
+{
+  if (!aEvent) 
+    return NS_ERROR_INVALID_ARG;
+  return HandleAction(aEvent, nsnull);
+}
 
 PR_STATIC_CALLBACK(PLDHashOperator) DoDeferredActions(nsISupports * aModel, 
                                                       PRUint32 aDeferred,

@@ -42,8 +42,42 @@
 #include "nsXFormsMDGEngine.h"
 
 #include "nsIDOMEvent.h"
+#include "nsIDOMKeyEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIXTFXMLVisualWrapper.h"
+
+/** This class is used to generate xforms-hint and xforms-help events.*/
+class nsXFormsHintHelpListener : public nsIDOMEventListener {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
+};
+
+NS_IMPL_ISUPPORTS1(nsXFormsHintHelpListener, nsIDOMEventListener)
+
+NS_IMETHODIMP
+nsXFormsHintHelpListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  if (!aEvent)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetCurrentTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
+
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
+  if (keyEvent) {
+    PRUint32 code = 0;
+    keyEvent->GetKeyCode(&code);
+    if (code == nsIDOMKeyEvent::DOM_VK_F1)
+      nsXFormsUtils::DispatchEvent(targetNode, eEvent_Help);
+  } else {
+    nsXFormsUtils::DispatchEvent(targetNode, eEvent_Hint);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXFormsControlStub::GetBoundNode(nsIDOMNode **aBoundNode)
@@ -118,6 +152,35 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
   }
 
   return NS_OK;
+}
+
+void
+nsXFormsControlStub::ResetHelpAndHint(PRBool aInitialize)
+{
+  nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(mElement));
+  if (!targ)
+    return;
+
+  NS_NAMED_LITERAL_STRING(mouseover, "mouseover");
+  NS_NAMED_LITERAL_STRING(focus, "focus");
+  NS_NAMED_LITERAL_STRING(keypress, "keypress");
+
+  if (mEventListener) {
+    targ->RemoveEventListener(mouseover, mEventListener, PR_TRUE);
+    targ->RemoveEventListener(focus, mEventListener, PR_TRUE);
+    targ->RemoveEventListener(keypress, mEventListener, PR_TRUE);
+    mEventListener = nsnull;
+  }
+
+  if (aInitialize) {
+    mEventListener = new nsXFormsHintHelpListener();
+    if (!mEventListener)
+      return;
+
+    targ->AddEventListener(mouseover, mEventListener, PR_TRUE);
+    targ->AddEventListener(focus, mEventListener, PR_TRUE);
+    targ->AddEventListener(keypress, mEventListener, PR_TRUE);
+  }
 }
 
 PRBool
@@ -207,12 +270,16 @@ nsXFormsControlStub::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   aWrapper->GetElementNode(getter_AddRefs(mElement));
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
+  ResetHelpAndHint(PR_TRUE);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsControlStub::OnDestroyed()
 {
+  ResetHelpAndHint(PR_FALSE);
+
   if (mModel) {
     mModel->RemoveFormControl(this);
     mModel = nsnull;
