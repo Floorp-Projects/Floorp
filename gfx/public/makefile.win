@@ -19,7 +19,6 @@ DEPTH=..\..
 
 
 EXPORTS =				\
-	nsIDOMRenderingContext.h	\
   nsColor.h \
   nsColorNames.h \
   nsColorNameList.h \
