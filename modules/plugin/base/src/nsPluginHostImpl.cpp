@@ -3868,6 +3868,7 @@ static nsresult DoCharsetConversion(nsIUnicodeDecoder *aUnicodeDecoder,
                                      const char* aANSIString, nsAWritableString& aUnicodeString)
 {
   NS_ENSURE_TRUE(aUnicodeDecoder, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aANSIString, NS_ERROR_FAILURE);
   nsresult rv;
 
   PRInt32 numberOfBytes = nsCRT::strlen(aANSIString);
