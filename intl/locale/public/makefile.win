@@ -29,6 +29,7 @@ EXPORTS=\
 	nsILocale.h					\
 	nsILocaleFactory.h			\
 	nsLocaleCID.h				\
+	nsIWin32Locale.h			\
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

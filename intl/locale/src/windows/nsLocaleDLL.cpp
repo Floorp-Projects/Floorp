@@ -26,12 +26,16 @@
 #include "nsCollationWin.h"
 #include "nsDateTimeFormatWin.h"
 #include "nsLocaleFactoryWin.h"
+#include "nsIWin32LocaleImpl.h"
+#include "nsIWin32LocaleFactory.h"
 
 //
-// kLocaleFactory for the nsILocaleFactory interface
+// kLocaleFactory for the nsILocaleFactory interface and friends
 //
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
+NS_DEFINE_IID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 
 //
 // for the collation and formatting interfaces
@@ -55,18 +59,33 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 	//  
 	if (aCID.Equals(kLocaleFactoryCID))
 	{
-		nsLocaleFactory *factory = new nsLocaleFactory();
-		res = factory->QueryInterface(kILocaleFactoryIID, (void **) aFactory);
+		factoryInstance = new nsLocaleFactory();
+		res = factoryInstance->QueryInterface(kILocaleFactoryIID, (void **) aFactory);
 
 		if (NS_FAILED(res))
 		{
 			*aFactory = NULL;
-			delete factory;
+			delete factoryInstance;
 		}
 
 			return res;
 	}
 	
+	//
+	// okay about bout nsIWin32LocaleManager
+	//
+	if (aCID.Equals(kWin32LocaleFactoryCID))
+	{
+		factoryInstance = new nsIWin32LocaleFactory();
+		res = factoryInstance->QueryInterface(kIFactoryIID,(void**)aFactory);
+		if (NS_FAILED(res))
+		{
+			*aFactory=NULL;
+			delete factoryInstance;
+		}
+
+		return res;
+	}
 	//
 	// let the nsLocaleFactoryWin logic take over from here
 	//

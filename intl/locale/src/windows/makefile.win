@@ -30,11 +30,13 @@ DEFINES=-DWIN32_LEAN_AND_MEAN
 MISCDEP=                        \
  $(DIST)\lib\nslocale_s.lib
  
-OBJS =                                  \
-	.\$(OBJDIR)\nsCollationWin.obj   \
+OBJS =											\
+	.\$(OBJDIR)\nsCollationWin.obj				\
 	.\$(OBJDIR)\nsDateTimeFormatWin.obj         \
 	.\$(OBJDIR)\nsLocaleFactoryWin.obj          \
-	.\$(OBJDIR)\nsLocaleDLL.obj          \
+	.\$(OBJDIR)\nsLocaleDLL.obj					\
+	.\$(OBJDIR)\nsIWin32LocaleImpl.obj			\
+	.\$(OBJDIR)\nsIWin32LocaleFactory.obj		\
 	$(NULL)
 
 LINCS= \

@@ -20,10 +20,14 @@
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
 #include "nsRepository.h"
+#include "nsIWin32Locale.h"
+#ifdef XP_PC
+#include <windows.h>
+#endif
 
 #ifdef XP_MAC
 #define LOCALE_DLL_NAME "NSLOCALE_DLL"
-#elif defined(XP_WIN)
+#elif defined(XP_PC)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #else
 #define LOCALE_DLL_NAME "libnslocale.so"
@@ -36,6 +40,12 @@ NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
 NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+#ifdef XP_PC
+NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+#endif
+
 
 char* localeCatagoryList[6] = { "NSILOCALE_TIME",
 								"NSILOCALE_COLLATE",
@@ -271,8 +281,86 @@ factory_get_locale(void)
 
 }
 
+#ifdef XP_PC
 
+void
+win32factory_create_interface(void)
+{
+	nsresult			result;
+	nsIFactory*			factory;
+	nsIWin32Locale*		win32Locale;
 
+	result = nsRepository::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIFactoryIID,
+									(void**)&factory);
+	NS_ASSERTION(factory!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	factory->Release();
+
+	result = nsRepository::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIWin32LocaleIID,
+									(void**)&win32Locale);
+	NS_ASSERTION(win32Locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	win32Locale->Release();
+}
+
+void
+win32locale_test(void)
+{
+	nsresult			result;
+	nsIWin32Locale*		win32Locale;
+	nsString*			locale;
+	LCID				loc_id;
+
+	//
+	// test with a simple locale
+	//
+	locale = new nsString("en-US");
+	loc_id = 0;
+
+	result = nsRepository::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIWin32LocaleIID,
+									(void**)&win32Locale);
+	NS_ASSERTION(win32Locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id!=0,"nsLocaleTest: GetPlatformLocale failed.");
+
+	delete locale;
+
+	//
+	// test with a not so simple locale
+	//
+	locale = new nsString("x-netscape");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id!=0,"nsLocaleTest: GetPlatformLocale failed.");
+
+	delete locale;
+
+	locale = new nsString("en");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id!=0,"nsLocaleTest: GetPlatformLocale failed.");
+
+	delete locale;
+	win32Locale->Release();
+}
+	
+	
+#endif XP_PC
 
 int
 main(int argc, char** argv)
@@ -295,12 +383,35 @@ main(int argc, char** argv)
                                  PR_FALSE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
 
+#ifdef XP_PC
+
+	//
+	// register the Windows specific factory
+	//
+	res = nsRepository::RegisterFactory(kWin32LocaleFactoryCID,
+								LOCALE_DLL_NAME,
+								PR_FALSE,
+								PR_FALSE);
+	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
+
+#endif
 	//
 	// run the nsILocaleFactory tests (nsILocale gets tested in the prcoess)
 	//
 	factory_create_interface();
 	factory_get_locale();
 	factory_new_locale();
+
+#ifdef XP_PC
+
+	//
+	// run the nsIWin32LocaleFactory tests
+	//
+	win32factory_create_interface();
+	win32locale_test();
+
+#endif
+
 
 	//
 	// we done
