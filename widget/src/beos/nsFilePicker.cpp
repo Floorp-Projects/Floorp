@@ -111,7 +111,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   // set default text
   if (mDefault.Length() > 0) {
-    char *defaultText = ToNewCString(mDefault);
+  	char *defaultText = ToNewUTF8String(mDefault);
     ppanel->SetSaveText(defaultText);
     Recycle(defaultText);
   }
