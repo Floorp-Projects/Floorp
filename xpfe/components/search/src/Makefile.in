@@ -26,7 +26,10 @@ MODULE		= search
 LIBRARY_NAME	= search
 IS_COMPONENT	= 1
 
-CPPSRCS		= nsSearchService.cpp
+CPPSRCS         = nsInternetSearchService.cpp  \
+                  nsLocalSearchService.cpp     \
+                  nsRegisterSearch.cpp         \
+                  $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_NECKO_UTIL_LIBS) \
