@@ -1226,6 +1226,7 @@ static PRBool IsPseudoClass(const nsIAtom* aAtom)
                 (nsCSSAtoms::dragPseudo == aAtom) ||
                 (nsCSSAtoms::enabledPseudo == aAtom) ||
                 (nsCSSAtoms::firstChildPseudo == aAtom) ||
+                (nsCSSAtoms::firstNodePseudo == aAtom) ||
                 (nsCSSAtoms::focusPseudo == aAtom) ||
                 (nsCSSAtoms::hoverPseudo == aAtom) ||
                 (nsCSSAtoms::langPseudo == aAtom) ||
