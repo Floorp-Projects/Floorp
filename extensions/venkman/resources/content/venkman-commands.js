@@ -44,6 +44,7 @@ function initCommands(commandObject)
     }
 
     add (CMD_BREAK,  "onInputBreak",     CMD_BREAK_PARAMS,  CMD_BREAK_HELP);
+    add (CMD_CLEAR,  "onInputClear",     CMD_CLEAR_PARAMS,  CMD_CLEAR_HELP);
     add (CMD_CMDS,   "onInputCommands",  CMD_CMDS_PARAMS,   CMD_CMDS_HELP);
     add (CMD_CONT,   "onInputCont",      CMD_CONT_PARAMS,   CMD_CONT_HELP);
     add (CMD_EVAL,   "onInputEval",      CMD_EVAL_PARAMS,   CMD_EVAL_HELP);
