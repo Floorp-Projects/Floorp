@@ -740,11 +740,13 @@ XPCNativeSet::NewInstance(XPCCallContext& ccx,
     PRUint16 slots = count+1;
 
     PRUint16 i;
-    XPCNativeInterface* cur;
+    XPCNativeInterface** pcur;
 
-    for(i = 0, cur = *array; i < count; i++, cur++)
-        if(cur == isup)
+    for(i = 0, pcur = array; i < count; i++, pcur++)
+    {
+        if(*pcur == isup)
             slots--;
+    }
 
     // Use placement new to create an object with the right amount of space
     // to hold the members array
@@ -766,6 +768,8 @@ XPCNativeSet::NewInstance(XPCCallContext& ccx,
 
         for(i = 0; i < count; i++)
         {
+            XPCNativeInterface* cur;
+
             if(isup == (cur = *(inp++)))
                 continue;
             *(outp++) = cur;
