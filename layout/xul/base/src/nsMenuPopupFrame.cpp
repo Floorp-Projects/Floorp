@@ -1309,44 +1309,98 @@ nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
+
+//
+// Notify
+//
+// The item selection timer has fired, we might have to readjust the 
+// selected item. There are two cases here that we are trying to deal with:
+//   (1) diagonal movement from a parent menu to a submenu passing briefly over
+//       other items, and
+//   (2) moving out from a submenu to a parent or grandparent menu.
+// In both cases, |mTimerMenu| is the menu item that might have an open submenu and
+// |mCurrentMenu| is the item the mouse is currently over, which could be none of them.
+//
+// case (1):
+//  As the mouse moves from the parent item of a submenu (we'll call 'A') diagonally into the
+//  submenu, it probably passes through one or more sibilings (B). As the mouse passes
+//  through B, it becomes the current menu item and the timer is set and mTimerMenu is 
+//  set to A. Before the timer fires, the mouse leaves the menu containing A and B and
+//  enters the submenus. Now when the timer fires, |mCurrentMenu| is null (!= |mTimerMenu|)
+//  so we have to see if anything in A's children is selected (recall that even disabled
+//  items are selected, the style just doesn't show it). If that is the case, we need to
+//  set the selected item back to A.
+//
+// case (2);
+//  Item A has an open submenu, and in it there is an item (B) which also has an open
+//  submenu (so there are 3 menus displayed right now). The mouse then leaves B's child
+//  submenu and selects an item that is a sibling of A, call it C. When the mouse enters C,
+//  the timer is set and |mTimerMenu| is A and |mCurrentMenu| is C. As the timer fires,
+//  the mouse is still within C. The correct behavior is to set the current item to C
+//  and close up the chain parented at A.
+//
+//  This brings up the question of is the logic of case (1) enough? The answer is no,
+//  and is discussed in bugzilla bug 29400. Case (1) asks if A's submenu has a selected
+//  child, and if it does, set the selected item to A. Because B has a submenu open, it
+//  is selected and as a result, A is set to be the selected item even though the mouse
+//  rests in C -- very wrong. 
+//
+//  The solution is to use the same idea, but instead of only checking one level, 
+//  drill all the way down to the deepest open submenu and check if it has something 
+//  selected. Since the mouse is in a grandparent, it won't, and we know that we can
+//  safely close up A and all its children.
+//
+// The code below melds the two cases together.
+//
 NS_IMETHODIMP_(void)
 nsMenuPopupFrame::Notify(nsITimer* aTimer)
 {
-  // Our timer has fired.
+  // Our timer has fired. 
   if (aTimer == mCloseTimer.get()) {
     PRBool menuOpen = PR_FALSE;
     mTimerMenu->MenuIsOpen(menuOpen);
     if (menuOpen) {
       if (mCurrentMenu != mTimerMenu) {
-#if 1
-        // See if our child has a current menu.
-        // If so, then we need to be selected.
+        // Walk through all of the sub-menus of this menu item until we get to the
+        // last sub-menu, then check if that sub-menu has an active menu item.  If it
+        // does, then keep that menu open.  If it doesn't, close menu and its sub-menus.
         nsIFrame* child;
         mTimerMenu->GetMenuChild(&child);
-        if (child) {
-          nsCOMPtr<nsIMenuParent> menuPopup = do_QueryInterface(child);
-          nsCOMPtr<nsIMenuFrame> frame;
-          menuPopup->GetCurrentMenuItem(getter_AddRefs(frame));
-          if (frame) {
-            SetCurrentMenuItem(mTimerMenu);
-          }
-          else {
-            // Close up.
-            mTimerMenu->OpenMenu(PR_FALSE);
-          }
+        nsCOMPtr<nsIMenuFrame> currentMenuItem = nsnull;
+
+        nsCOMPtr<nsIMenuParent> menuParent = do_QueryInterface(child);
+        while (menuParent)
+        {
+          // get the selected menu item for this sub-menu
+          menuParent->GetCurrentMenuItem(getter_AddRefs(currentMenuItem));
+          menuParent = nsnull;
+          if (currentMenuItem)
+          {
+            // this sub-menu has a selected menu item - does that item open a sub-menu?
+            currentMenuItem->GetMenuChild(&child);
+            if (child) {
+              // the selected menu item opens a sub-menu - move down
+              // to that sub-menu and then go through the loop again
+              menuParent = do_QueryInterface(child);
+            } 
+          } // if item is selected
+        } // while we're not at the last submenu
+
+        if (currentMenuItem)
+        {
+          // the sub-menu has a selected menu item, we're dealing with case (1)
+          SetCurrentMenuItem(mTimerMenu);
         }
         else {
-          // Close up.
+          // Nothing selected. Either the mouse never made it to the submenu 
+          // in case (1) or we're in a sibling of a grandparent in case (2).
+          // Regardless, close up the open chain.
           mTimerMenu->OpenMenu(PR_FALSE);
         }
-#else
-        // this isn't current anymore -- close up.
-        mTimerMenu->OpenMenu(PR_FALSE);
-#endif
-      }
-    }
+      } // if not the menu with an open submenu
+    } // if menu open
+    
     mCloseTimer->Cancel();
-    mCloseTimer = nsnull;
   }
   
   mCloseTimer = nsnull;
