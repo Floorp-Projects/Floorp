@@ -95,14 +95,15 @@ GetPopupSetFrame(nsPresContext* aPresContext)
  
   nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
   if (!rootBox)
-    return NS_OK;
+    return nsnsull;
 
   nsIFrame* popupSetFrame;
   rootBox->GetPopupSetFrame(&popupSetFrame);
   if (!popupSetFrame)
     return nsnull;
 
-  nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
+  nsIPopupSetFrame* popupSet = nsnull;
+  CallQueryInterface(popupSetFrame, &popupSet);
   return popupSet;
 }
 
@@ -254,23 +255,25 @@ nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
   if (layout)
     layout->BecameDirty(this, aState);
 
-  nsIBox* parent = nsnull;
-  GetParentBox(&parent);
-  nsIMenuFrame* menuFrame = nsnull;
+  nsIFrame* parent = GetParent();
+  nsIMenuFrame* menuFrame;
   CallQueryInterface(parent, &menuFrame);
 
   if (menuFrame)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-    nsIFrame *frame;
-    CallQueryInterface(popupSet, &frame);
-    if (frame && frame->IsBoxFrame()) {
-      nsBoxLayoutState state(mPresContext);
-      frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
-    }
-    else {
-      return GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
+    NS_ASSERTION(popupSet, "popup frame created without a popup set or menu");
+    if (popupSet) {
+      nsIFrame *frame;
+      CallQueryInterface(popupSet, &frame);
+      if (frame->IsBoxFrame()) {
+        nsBoxLayoutState state(mPresContext);
+        frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
+      }
+      else {
+        return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
+      }
     }
   }
   return NS_OK;
@@ -303,23 +306,25 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
     return NS_OK;
   }
 
-  nsIBox* parent = nsnull;
-  GetParentBox(&parent);
-  nsIMenuFrame* menuFrame = nsnull;
+  nsIFrame* parent = GetParent();
+  nsIMenuFrame* menuFrame;
   CallQueryInterface(parent, &menuFrame);
 
   if (menuFrame)
      return parent->RelayoutDirtyChild(aState, this);
   else {
     nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-    nsIFrame *frame;
-    CallQueryInterface(popupSet, &frame);
-    if (frame && frame->IsBoxFrame()) {
-      nsBoxLayoutState state(mPresContext);
-      frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
-    }
-    else {
-      return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
+    NS_ASSERTION(popupSet, "popup frame created without a popup set or menu");
+    if (popupSet) {
+      nsIFrame *frame;
+      CallQueryInterface(popupSet, &frame);
+      if (frame->IsBoxFrame()) {
+        nsBoxLayoutState state(mPresContext);
+        frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
+      }
+      else {
+        return frame->GetParent()->ReflowDirtyChild(aState.PresShell(), frame);
+      }
     }
   }
 
@@ -342,17 +347,18 @@ nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     NeedsRecalc();
 
-    nsIBox* parentBox = nsnull;
-    GetParentBox(&parentBox);
-    nsIMenuFrame* menuFrame = nsnull;
-    CallQueryInterface(parentBox, &menuFrame);
+    nsIFrame* parent = GetParent();
+    nsIMenuFrame* menuFrame;
+    CallQueryInterface(parent, &menuFrame);
 
     if (menuFrame)
-      return parentBox->RelayoutDirtyChild(aState, this);
+      return parent->RelayoutDirtyChild(aState, this);
     else {
       nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
-      nsIFrame *frame;
-      CallQueryInterface(popupSet, &frame);
+      NS_ASSERTION(popupSet, "popup frame created without a popup set or menu");
+      nsIFrame *frame = nsnull;
+      if (popupSet)
+        CallQueryInterface(popupSet, &frame);
       if (frame && frame->IsBoxFrame()) {
         nsBoxLayoutState state(mPresContext);
         frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
